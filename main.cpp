@@ -1,7 +1,7 @@
 #include <random>
 #include "Common.h"
 #include "RLP.h"
-#include "PatriciaTree.h"
+#include "Trie.h"
 #include "VirtualMachine.h"
 using namespace std;
 using namespace eth;
