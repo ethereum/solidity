@@ -1,6 +1,7 @@
 cmake_policy(SET CMP0015 NEW)
 
 aux_source_directory(. SRC_LIST)
+include_directories(../../secp256k1/include)
 include_directories(../libethereum)
 link_directories(../libethereum)
 link_directories(../../secp256k1)

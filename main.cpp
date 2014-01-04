@@ -1,5 +1,6 @@
 #include <random>
 #include <Common.h>
+#include <secp256k1.h>
 #include "RLP.h"
 #include "Trie.h"
 #include "VirtualMachine.h"
@@ -19,6 +20,8 @@ std::string randomWord()
 
 int main()
 {
+
+
 	{
 		Trie t;
 		t.insert("dog", "puppy");
@@ -85,7 +88,9 @@ int main()
 
 	// 2-item list
 	RLP twoItemList("\x82\x0f\x43""dog");
-	assert(twoItemList.itemCount() == 2 && twoItemList[0] == 15 && twoItemList[1] == "dog");
+	assert(twoItemList.itemCount() == 2);
+	assert(twoItemList[0] == 15);
+	assert(twoItemList[1] == "dog");
 	assert(rlpList(15, "dog") == "\x82\x0f\x43""dog");
 
 	// 1-byte (8-bit) int
