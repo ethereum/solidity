@@ -8,6 +8,6 @@ link_directories(../../secp256k1)
 
 add_executable(testeth ${SRC_LIST})
 
-target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth ethereum)
+target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth gmp)
