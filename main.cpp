@@ -3,7 +3,7 @@
 #include <secp256k1.h>
 #include "RLP.h"
 #include "Trie.h"
-#include "VirtualMachine.h"
+#include "State.h"
 using namespace std;
 using namespace eth;
 
