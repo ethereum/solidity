@@ -93,9 +93,20 @@ int main()
 */
 	{
 		Trie t;
-		cout << hex << hash256(StringMap({})) << endl;
+		t.insert("dog", "puppy");
 		cout << hex << t.hash256() << endl;
+		cout << RLP(t.rlp()) << endl;
+	}
+	{
+		Trie t;
+		t.insert("bed", "d");
+		t.insert("be", "e");
+		cout << hex << t.hash256() << endl;
+		cout << RLP(t.rlp()) << endl;
+	}
+	{
 		cout << hex << hash256({{"dog", "puppy"}, {"doe", "reindeer"}}) << endl;
+		Trie t;
 		t.insert("dog", "puppy");
 		t.insert("doe", "reindeer");
 		cout << hex << t.hash256() << endl;
