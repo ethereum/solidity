@@ -33,6 +33,7 @@ using namespace eth;
 
 int main()
 {
+/*
 	// Test transaction.
 	bytes tx = fromUserHex("88005401010101010101010101010101010101010101011f0de0b6b3a76400001ce8d4a5100080181c373130a009ba1f10285d4e659568bfcfec85067855c5a3c150100815dad4ef98fd37cf0593828c89db94bd6c64e210a32ef8956eaa81ea9307194996a3b879441f5d");
 	cout << "TX: " << RLP(tx) << endl;
@@ -46,10 +47,10 @@ int main()
 	auto msg = t.rlp(false);
 	cout << "TX w/o SIG: " << RLP(msg) << endl;
 	cout << "RLP(TX w/o SIG): " << asHex(t.rlpString(false)) << endl;
-	std::string hmsg = sha256(t.rlpString(false), false);
+	std::string hmsg = sha3(t.rlpString(false), false);
 	cout << "SHA256(RLP(TX w/o SIG)): 0x" << asHex(hmsg) << endl;
 
-	bytes privkey = sha256Bytes("123");
+	bytes privkey = sha3Bytes("123");
 
 	secp256k1_start();
 
@@ -87,20 +88,32 @@ int main()
 		int ret = secp256k1_ecdsa_recover_compact((byte const*)hmsg.data(), hmsg.size(), (byte const*)sig64.data(), pubkey.data(), &pubkeylen, 0, (int)t.vrs.v - 27);
 		pubkey.resize(pubkeylen);
 		cout << "RECPUB: " << dec << ret << " " << pubkeylen << " " << asHex(pubkey) << endl;
-		cout << "SENDER: " << hex << low160(eth::sha256(bytesConstRef(&pubkey).cropped(1))) << endl;
+		cout << "SENDER: " << hex << low160(eth::sha3(bytesConstRef(&pubkey).cropped(1))) << endl;
 	}
-
+*/
 	{
 		Trie t;
+		cout << hex << hash256(StringMap({})) << endl;
+		cout << hex << t.hash256() << endl;
+		cout << hex << hash256({{"dog", "puppy"}, {"doe", "reindeer"}}) << endl;
 		t.insert("dog", "puppy");
-		assert(t.sha256() == hash256({{"dog", "puppy"}}));
+		t.insert("doe", "reindeer");
+		cout << hex << t.hash256() << endl;
+		cout << RLP(t.rlp()) << endl;
+		cout << asHex(t.rlp()) << endl;
+	}
+	{
+		Trie t;
+
+		t.insert("dog", "puppy");
+		assert(t.hash256() == hash256({{"dog", "puppy"}}));
 		assert(t.at("dog") == "puppy");
 		t.insert("doe", "reindeer");
-		assert(t.sha256() == hash256({{"dog", "puppy"}, {"doe", "reindeer"}}));
+		assert(t.hash256() == hash256({{"dog", "puppy"}, {"doe", "reindeer"}}));
 		assert(t.at("doe") == "reindeer");
 		assert(t.at("dog") == "puppy");
 		t.insert("dogglesworth", "cat");
-		assert(t.sha256() == hash256({{"doe", "reindeer"}, {"dog", "puppy"}, {"dogglesworth", "cat"}}));
+		assert(t.hash256() == hash256({{"doe", "reindeer"}, {"dog", "puppy"}, {"dogglesworth", "cat"}}));
 		assert(t.at("doe") == "reindeer");
 		assert(t.at("dog") == "puppy");
 		assert(t.at("dogglesworth") == "cat");
@@ -109,11 +122,11 @@ int main()
 		assert(t.at("doe").empty());
 		assert(t.at("dogglesworth").empty());
 		assert(t.at("dog") == "puppy");
-		assert(t.sha256() == hash256({{"dog", "puppy"}}));
+		assert(t.hash256() == hash256({{"dog", "puppy"}}));
 		t.insert("horse", "stallion");
 		t.insert("do", "verb");
 		t.insert("doge", "coin");
-		assert(t.sha256() == hash256({{"dog", "puppy"}, {"horse", "stallion"}, {"do", "verb"}, {"doge", "coin"}}));
+		assert(t.hash256() == hash256({{"dog", "puppy"}, {"horse", "stallion"}, {"do", "verb"}, {"doge", "coin"}}));
 		assert(t.at("doge") == "coin");
 		assert(t.at("do") == "verb");
 		assert(t.at("horse") == "stallion");
@@ -121,7 +134,7 @@ int main()
 		t.remove("horse");
 		t.remove("do");
 		t.remove("doge");
-		assert(t.sha256() == hash256({{"dog", "puppy"}}));
+		assert(t.hash256() == hash256({{"dog", "puppy"}}));
 		assert(t.at("dog") == "puppy");
 		t.remove("dog");
 
@@ -134,14 +147,14 @@ int main()
 				auto v = toString(i);
 				m.insert(make_pair(k, v));
 				t.insert(k, v);
-				assert(hash256(m) == t.sha256());
+				assert(hash256(m) == t.hash256());
 			}
 			while (!m.empty())
 			{
 				auto k = m.begin()->first;
 				t.remove(k);
 				m.erase(k);
-				assert(hash256(m) == t.sha256());
+				assert(hash256(m) == t.hash256());
 			}
 		}
 	}
