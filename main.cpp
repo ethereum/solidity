@@ -21,18 +21,28 @@
  */
 
 #include <random>
+#include <chrono>
 #include <Common.h>
 #include <secp256k1.h>
+#include "Dagger.h"
 #include "RLP.h"
 #include "Trie.h"
 #include "State.h"
 using namespace std;
+using namespace std::chrono;
 using namespace eth;
 
 // TODO: utilise the shared testdata.
 
 int main()
 {
+	// Test dagger
+	{
+		Dagger d(1);
+		auto s = steady_clock::now();
+		cout << hex << d.eval(0);
+		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
+	}
 /*
 	// Test transaction.
 	bytes tx = fromUserHex("88005401010101010101010101010101010101010101011f0de0b6b3a76400001ce8d4a5100080181c373130a009ba1f10285d4e659568bfcfec85067855c5a3c150100815dad4ef98fd37cf0593828c89db94bd6c64e210a32ef8956eaa81ea9307194996a3b879441f5d");
