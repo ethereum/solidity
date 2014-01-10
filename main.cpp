@@ -42,6 +42,16 @@ int main()
 		auto s = steady_clock::now();
 		cout << hex << d.eval(0);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
+		cout << hex << d.eval(1);
+		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
+	}
+	{
+		Dagger d(1);
+		auto s = steady_clock::now();
+		cout << hex << d.eval(0);
+		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
+		cout << hex << d.eval(1);
+		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
 	}
 /*
 	// Test transaction.
