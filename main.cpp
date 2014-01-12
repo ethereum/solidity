@@ -38,7 +38,7 @@ int main()
 {
 	// Test dagger
 	{
-		Dagger d(0);
+		Dagger d((h256)0);
 		auto s = steady_clock::now();
 		cout << hex << d.eval(0);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
@@ -46,7 +46,7 @@ int main()
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
 	}
 	{
-		Dagger d(1);
+		Dagger d((h256)1);
 		auto s = steady_clock::now();
 		cout << hex << d.eval(0);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
