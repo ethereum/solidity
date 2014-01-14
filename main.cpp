@@ -36,6 +36,7 @@ using namespace eth;
 
 int main()
 {
+/*
 	// Test dagger
 	{
 		Dagger d((h256)0);
@@ -53,6 +54,7 @@ int main()
 		cout << hex << d.eval(1);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
 	}
+	*/
 /*
 	// Test transaction.
 	bytes tx = fromUserHex("88005401010101010101010101010101010101010101011f0de0b6b3a76400001ce8d4a5100080181c373130a009ba1f10285d4e659568bfcfec85067855c5a3c150100815dad4ef98fd37cf0593828c89db94bd6c64e210a32ef8956eaa81ea9307194996a3b879441f5d");
@@ -111,6 +113,9 @@ int main()
 		cout << "SENDER: " << hex << low160(eth::sha3(bytesConstRef(&pubkey).cropped(1))) << endl;
 	}
 */
+	cout << escaped(asString(rlp256({{"b", "B"}, {"a", "A"}})), false) << " == " << RLP(rlp256({{"b", "B"}, {"a", "A"}})) << endl;
+	cout << escaped(asString(rlp256({{"test", "test"}})), false) << " == " << RLP(rlp256({{"test", "test"}})) << endl;
+	cout << asHex(rlp256({{"test", "test"}, {"te", "test"}})) << endl;
 	{
 		Trie t;
 		t.insert("dog", "puppy");
