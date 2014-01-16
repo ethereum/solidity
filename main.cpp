@@ -142,7 +142,7 @@ int main()
 		Trie t;
 
 		t.insert("dog", "puppy");
-		assert(t.hash256() == hash256({{"dog", "puppy"}}));
+		assert(t.hash256() == hash256(StringMap({{"dog", "puppy"}})));
 		assert(t.at("dog") == "puppy");
 		t.insert("doe", "reindeer");
 		assert(t.hash256() == hash256({{"dog", "puppy"}, {"doe", "reindeer"}}));
@@ -158,7 +158,7 @@ int main()
 		assert(t.at("doe").empty());
 		assert(t.at("dogglesworth").empty());
 		assert(t.at("dog") == "puppy");
-		assert(t.hash256() == hash256({{"dog", "puppy"}}));
+		assert(t.hash256() == hash256(StringMap({{"dog", "puppy"}})));
 		t.insert("horse", "stallion");
 		t.insert("do", "verb");
 		t.insert("doge", "coin");
@@ -170,7 +170,7 @@ int main()
 		t.remove("horse");
 		t.remove("do");
 		t.remove("doge");
-		assert(t.hash256() == hash256({{"dog", "puppy"}}));
+		assert(t.hash256() == hash256(StringMap({{"dog", "puppy"}})));
 		assert(t.at("dog") == "puppy");
 		t.remove("dog");
 
