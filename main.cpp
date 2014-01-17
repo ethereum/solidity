@@ -204,7 +204,8 @@ int main()
 	assert(asString(rlp("dog")) == "\x43""dog");
 
 	// 2-item list
-	RLP twoItemList("\x82\x0f\x43""dog");
+	string twoItemListString = "\x82\x0f\x43""dog";
+	RLP twoItemList(twoItemListString);
 	assert(twoItemList.itemCount() == 2);
 	assert(twoItemList[0] == 15);
 	assert(twoItemList[1] == "dog");
