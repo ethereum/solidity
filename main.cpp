@@ -229,13 +229,6 @@ int main()
 			}
 		};
 
-		add("doe", "reindeer");
-		add("do", "verb");
-		add("doge", "coin");
-		m.clear();
-		d.init();
-		t.remove("doe"); t.remove("do"); t.remove("doge");
-		s.clear();
 		add("dogglesworth", "cat");
 		add("doe", "reindeer");
 		remove("dogglesworth");
@@ -247,10 +240,10 @@ int main()
 		remove("doge");
 		remove("doe");
 
-		for (int a = 0; a < 200; ++a)
+		for (int a = 0; a < 20; ++a)
 		{
 			StringMap m;
-			for (int i = 0; i < 200; ++i)
+			for (int i = 0; i < 20; ++i)
 			{
 				auto k = randomWord();
 				auto v = toString(i);
