@@ -39,22 +39,23 @@ int main()
 /*
 	// Test dagger
 	{
-		Dagger d((h256)0);
+		Dagger d;
 		auto s = steady_clock::now();
-		cout << hex << d.eval(0);
+		cout << hex << d.eval((h256)1, 0);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
-		cout << hex << d.eval(1);
+		cout << hex << d.eval((h256)1, 1);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
 	}
 	{
-		Dagger d((h256)1);
+		Dagger d;
 		auto s = steady_clock::now();
-		cout << hex << d.eval(0);
+		cout << hex << d.eval((h256)1, 0);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
-		cout << hex << d.eval(1);
+		cout << hex << d.eval((h256)1, 1);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
 	}
-	*/
+	//*/
+
 /*
 	// Test transaction.
 	bytes tx = fromUserHex("88005401010101010101010101010101010101010101011f0de0b6b3a76400001ce8d4a5100080181c373130a009ba1f10285d4e659568bfcfec85067855c5a3c150100815dad4ef98fd37cf0593828c89db94bd6c64e210a32ef8956eaa81ea9307194996a3b879441f5d");
@@ -239,7 +240,6 @@ int main()
 		remove("do");
 		remove("doge");
 		remove("doe");
-
 		for (int a = 0; a < 20; ++a)
 		{
 			StringMap m;
@@ -274,7 +274,8 @@ int main()
 	assert(asString(rlp("dog")) == "\x43""dog");
 
 	// 2-item list
-	RLP twoItemList((byte const*)"\x82\x0f\x43""dog", 6);
+	string twoItemListString = "\x82\x0f\x43""dog";
+	RLP twoItemList(twoItemListString);
 	assert(twoItemList.itemCount() == 2);
 	assert(twoItemList[0] == 15);
 	assert(twoItemList[1] == "dog");
