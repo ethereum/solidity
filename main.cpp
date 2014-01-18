@@ -122,15 +122,28 @@ int main()
 		cout << t.root() << endl;
 		cout << hash256(StringMap()) << endl;
 
-		t.insert(string("test"), string("test"));
+		t.insert(string("tesz"), string("test"));
 		cout << m;
 		cout << t.root() << endl;
 		cout << hash256({{"test", "test"}}) << endl;
 
-		t.insert(string("te"), string("test"));
+		t.insert(string("tesa"), string("testy"));
 		cout << m;
 		cout << t.root() << endl;
-		cout << hash256({{"test", "test"}, {"te", "test"}}) << endl;
+		cout << hash256({{"test", "test"}, {"te", "testy"}}) << endl;
+		cout << t.at(string("test")) << endl;
+		cout << t.at(string("te")) << endl;
+		cout << t.at(string("t")) << endl;
+
+		t.remove(string("te"));
+		cout << m;
+		cout << t.root() << endl;
+		cout << hash256({{"test", "test"}}) << endl;
+
+		t.remove(string("test"));
+		cout << m;
+		cout << t.root() << endl;
+		cout << hash256(StringMap()) << endl;
 	}
 	{
 		BasicMap m;
@@ -143,10 +156,6 @@ int main()
 		cout << hash256({{"b", "B"}, {"a", "A"}}) << endl;
 		cout << RLP(rlp256({{"b", "B"}, {"a", "A"}})) << endl;
 	}
-	return 0;
-	cout << escaped(asString(rlp256({{"b", "B"}, {"a", "A"}})), false) << " == " << RLP(rlp256({{"b", "B"}, {"a", "A"}})) << endl;
-	cout << escaped(asString(rlp256({{"test", "test"}})), false) << " == " << RLP(rlp256({{"test", "test"}})) << endl;
-	cout << asHex(rlp256({{"test", "test"}, {"te", "test"}})) << endl;
 	{
 		Trie t;
 		t.insert("dog", "puppy");
@@ -170,58 +179,95 @@ int main()
 		cout << asHex(t.rlp()) << endl;
 	}
 	{
+		BasicMap m;
+		GenericTrieDB<BasicMap> d(&m);
+		d.init();	// initialise as empty tree.
 		Trie t;
+		StringMap s;
 
-		t.insert("dog", "puppy");
-		assert(t.hash256() == hash256({{"dog", "puppy"}}));
-		assert(t.at("dog") == "puppy");
-		t.insert("doe", "reindeer");
-		assert(t.hash256() == hash256({{"dog", "puppy"}, {"doe", "reindeer"}}));
-		assert(t.at("doe") == "reindeer");
-		assert(t.at("dog") == "puppy");
-		t.insert("dogglesworth", "cat");
-		assert(t.hash256() == hash256({{"doe", "reindeer"}, {"dog", "puppy"}, {"dogglesworth", "cat"}}));
-		assert(t.at("doe") == "reindeer");
-		assert(t.at("dog") == "puppy");
-		assert(t.at("dogglesworth") == "cat");
-		t.remove("dogglesworth");
-		t.remove("doe");
-		assert(t.at("doe").empty());
-		assert(t.at("dogglesworth").empty());
-		assert(t.at("dog") == "puppy");
-		assert(t.hash256() == hash256({{"dog", "puppy"}}));
-		t.insert("horse", "stallion");
-		t.insert("do", "verb");
-		t.insert("doge", "coin");
-		assert(t.hash256() == hash256({{"dog", "puppy"}, {"horse", "stallion"}, {"do", "verb"}, {"doge", "coin"}}));
-		assert(t.at("doge") == "coin");
-		assert(t.at("do") == "verb");
-		assert(t.at("horse") == "stallion");
-		assert(t.at("dog") == "puppy");
-		t.remove("horse");
-		t.remove("do");
-		t.remove("doge");
-		assert(t.hash256() == hash256({{"dog", "puppy"}}));
-		assert(t.at("dog") == "puppy");
-		t.remove("dog");
+		auto add = [&](char const* a, char const* b)
+		{
+			d.insert(string(a), string(b));
+			t.insert(a, b);
+			s[a] = b;
 
-		for (int a = 0; a < 20; ++a)
+			cout << endl << "-------------------------------" << endl;
+			cout << a << " -> " << b << endl;
+			cout << m;
+			cout << d.root() << endl;
+			cout << hash256(s) << endl;
+
+			assert(t.hash256() == hash256(s));
+			assert(d.root() == hash256(s));
+			for (auto const& i: s)
+			{
+				assert(t.at(i.first) == i.second);
+				assert(d.at(i.first) == i.second);
+			}
+		};
+
+		auto remove = [&](char const* a)
+		{
+			s.erase(a);
+			t.remove(a);
+			d.remove(string(a));
+
+			cout << endl << "-------------------------------" << endl;
+			cout << "X " << a << endl;
+			cout << m;
+			cout << d.root() << endl;
+			cout << hash256(s) << endl;
+
+			assert(t.at(a).empty());
+			assert(d.at(string(a)).empty());
+			assert(t.hash256() == hash256(s));
+			assert(d.root() == hash256(s));
+			for (auto const& i: s)
+			{
+				assert(t.at(i.first) == i.second);
+				assert(d.at(i.first) == i.second);
+			}
+		};
+
+		add("doe", "reindeer");
+		add("do", "verb");
+		add("doge", "coin");
+		m.clear();
+		d.init();
+		t.remove("doe"); t.remove("do"); t.remove("doge");
+		s.clear();
+		add("dogglesworth", "cat");
+		add("doe", "reindeer");
+		remove("dogglesworth");
+		add("horse", "stallion");
+		add("do", "verb");
+		add("doge", "coin");
+		remove("horse");
+		remove("do");
+		remove("doge");
+		remove("doe");
+
+		for (int a = 0; a < 200; ++a)
 		{
 			StringMap m;
-			for (int i = 0; i < 20; ++i)
+			for (int i = 0; i < 200; ++i)
 			{
 				auto k = randomWord();
 				auto v = toString(i);
 				m.insert(make_pair(k, v));
 				t.insert(k, v);
+				d.insert(k, v);
 				assert(hash256(m) == t.hash256());
+				assert(hash256(m) == d.root());
 			}
 			while (!m.empty())
 			{
 				auto k = m.begin()->first;
+				d.remove(k);
 				t.remove(k);
 				m.erase(k);
 				assert(hash256(m) == t.hash256());
+				assert(hash256(m) == d.root());
 			}
 		}
 	}
