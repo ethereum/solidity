@@ -113,6 +113,37 @@ int main()
 		cout << "SENDER: " << hex << low160(eth::sha3(bytesConstRef(&pubkey).cropped(1))) << endl;
 	}
 */
+
+	{
+		BasicMap m;
+		GenericTrieDB<BasicMap> t(&m);
+		t.init();	// initialise as empty tree.
+		cout << m;
+		cout << t.root() << endl;
+		cout << hash256(StringMap()) << endl;
+
+		t.insert(string("test"), string("test"));
+		cout << m;
+		cout << t.root() << endl;
+		cout << hash256({{"test", "test"}}) << endl;
+
+		t.insert(string("te"), string("test"));
+		cout << m;
+		cout << t.root() << endl;
+		cout << hash256({{"test", "test"}, {"te", "test"}}) << endl;
+	}
+	{
+		BasicMap m;
+		GenericTrieDB<BasicMap> t(&m);
+		t.init();	// initialise as empty tree.
+		t.insert(string("a"), string("A"));
+		t.insert(string("b"), string("B"));
+		cout << m;
+		cout << t.root() << endl;
+		cout << hash256({{"b", "B"}, {"a", "A"}}) << endl;
+		cout << RLP(rlp256({{"b", "B"}, {"a", "A"}})) << endl;
+	}
+	return 0;
 	cout << escaped(asString(rlp256({{"b", "B"}, {"a", "A"}})), false) << " == " << RLP(rlp256({{"b", "B"}, {"a", "A"}})) << endl;
 	cout << escaped(asString(rlp256({{"test", "test"}})), false) << " == " << RLP(rlp256({{"test", "test"}})) << endl;
 	cout << asHex(rlp256({{"test", "test"}, {"te", "test"}})) << endl;
@@ -204,7 +235,7 @@ int main()
 	assert(asString(rlp("dog")) == "\x43""dog");
 
 	// 2-item list
-	RLP twoItemList("\x82\x0f\x43""dog");
+	RLP twoItemList((byte const*)"\x82\x0f\x43""dog", 6);
 	assert(twoItemList.itemCount() == 2);
 	assert(twoItemList[0] == 15);
 	assert(twoItemList[1] == "dog");
