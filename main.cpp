@@ -119,16 +119,19 @@ int main()
 		BasicMap m;
 		GenericTrieDB<BasicMap> t(&m);
 		t.init();	// initialise as empty tree.
+		cout << t;
 		cout << m;
 		cout << t.root() << endl;
 		cout << hash256(StringMap()) << endl;
 
 		t.insert(string("tesz"), string("test"));
+		cout << t;
 		cout << m;
 		cout << t.root() << endl;
 		cout << hash256({{"test", "test"}}) << endl;
 
 		t.insert(string("tesa"), string("testy"));
+		cout << t;
 		cout << m;
 		cout << t.root() << endl;
 		cout << hash256({{"test", "test"}, {"te", "testy"}}) << endl;
@@ -152,6 +155,7 @@ int main()
 		t.init();	// initialise as empty tree.
 		t.insert(string("a"), string("A"));
 		t.insert(string("b"), string("B"));
+		cout << t;
 		cout << m;
 		cout << t.root() << endl;
 		cout << hash256({{"b", "B"}, {"a", "A"}}) << endl;
@@ -194,6 +198,7 @@ int main()
 
 			cout << endl << "-------------------------------" << endl;
 			cout << a << " -> " << b << endl;
+			cout << d;
 			cout << m;
 			cout << d.root() << endl;
 			cout << hash256(s) << endl;
@@ -215,6 +220,7 @@ int main()
 
 			cout << endl << "-------------------------------" << endl;
 			cout << "X " << a << endl;
+			cout << d;
 			cout << m;
 			cout << d.root() << endl;
 			cout << hash256(s) << endl;
