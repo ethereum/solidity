@@ -24,9 +24,39 @@
 using namespace std;
 using namespace eth;
 
+struct KeyPair
+{
+	KeyPair() {}
+	KeyPair(PrivateKey _k): priv(_k), addr(toPublic(_k)) {}
+	PrivateKey priv;
+	Address addr;
+};
+
 int stateTest()
 {
-	State s(toPublic(sha3("123")));
+	KeyPair me = sha3("Gav Wood");
+	KeyPair myMiner = sha3("Gav's Miner");
+//	KeyPair you = sha3("123");
+
+	State s(myMiner.addr);
+
+	// Mine to get some ether!
+	s.mine();
+
+	bytes tx;
+	{
+		Transaction t;
+		t.nonce = s.transactionsFrom(myMiner.addr);
+		t.fee = 0;
+		t.value = 1;			// 1 wei.
+		t.receiveAddress = me.addr;
+		t.sign(myMiner.priv);
+		tx = t.rlp();
+	}
+	cout << RLP(tx) << endl;
+	s.execute(tx);
+
+	// TODO: Mine to set in stone.
 
 	return 0;
 }
