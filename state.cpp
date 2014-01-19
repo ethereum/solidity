@@ -14,29 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file main.cpp
+/** @file state.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
- * Main test functions.
+ * State test functions.
  */
 
-// TODO: utilise the shared testdata.
+#include <State.h>
+using namespace std;
+using namespace eth;
 
-int trieTest();
-int rlpTest();
-int daggerTest();
-int cryptoTest();
-int stateTest();
-int hexPrefixTest();
-
-int main()
+int stateTest()
 {
-	hexPrefixTest();
-	rlpTest();
-	trieTest();
-//	daggerTest();
-//	cryptoTest();
-	stateTest();
 	return 0;
 }
 
