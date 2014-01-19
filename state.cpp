@@ -26,6 +26,8 @@ using namespace eth;
 
 int stateTest()
 {
+	State s(toPublic(sha3("123")));
+
 	return 0;
 }
 
