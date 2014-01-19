@@ -26,7 +26,9 @@
 #include <secp256k1.h>
 #include "Dagger.h"
 #include "RLP.h"
-#include "Trie.h"
+#include "TrieHash.h"
+#include "TrieDB.h"
+#include "MemTrie.h"
 #include "State.h"
 using namespace std;
 using namespace std::chrono;
@@ -162,13 +164,13 @@ int main()
 		cout << RLP(rlp256({{"b", "B"}, {"a", "A"}})) << endl;
 	}
 	{
-		Trie t;
+		MemTrie t;
 		t.insert("dog", "puppy");
 		cout << hex << t.hash256() << endl;
 		cout << RLP(t.rlp()) << endl;
 	}
 	{
-		Trie t;
+		MemTrie t;
 		t.insert("bed", "d");
 		t.insert("be", "e");
 		cout << hex << t.hash256() << endl;
@@ -176,7 +178,7 @@ int main()
 	}
 	{
 		cout << hex << hash256({{"dog", "puppy"}, {"doe", "reindeer"}}) << endl;
-		Trie t;
+		MemTrie t;
 		t.insert("dog", "puppy");
 		t.insert("doe", "reindeer");
 		cout << hex << t.hash256() << endl;
@@ -187,7 +189,7 @@ int main()
 		BasicMap m;
 		GenericTrieDB<BasicMap> d(&m);
 		d.init();	// initialise as empty tree.
-		Trie t;
+		MemTrie t;
 		StringMap s;
 
 		auto add = [&](char const* a, char const* b)
