@@ -35,29 +35,42 @@ int stateTest()
 	BlockChain bc("/tmp");
 	State s(myMiner.address(), "/tmp");
 
+	cout << dec << "me: " << s.balance(me.address()) << endl;
+	cout << "myMiner: " << s.balance(myMiner.address()) << endl;
+
 	// Mine to get some ether!
 	s.commitToMine(bc);
 	while (!s.mine(100)) {}
 	bc.attemptImport(s.blockData());
 	s.sync(bc);
 
+	cout << "me: " << s.balance(me.address()) << endl;
+	cout << "myMiner: " << s.balance(myMiner.address()) << endl;
+
 	bytes tx;
 	{
 		Transaction t;
 		t.nonce = s.transactionsFrom(myMiner.address());
 		t.fee = 0;
-		t.value = 1000000000;			// 1e9 wei.
+		t.value = 1000;			// 1e3 wei.
 		t.receiveAddress = me.address();
 		t.sign(myMiner.secret());
+		assert(t.sender() == myMiner.address());
 		tx = t.rlp();
 	}
-	cout << RLP(tx) << endl;
 	s.execute(tx);
+
+	cout << "me: " << s.balance(me.address()) << endl;
+	cout << "myMiner: " << s.balance(myMiner.address()) << endl;
 
 	s.commitToMine(bc);
 	while (!s.mine(100)) {}
 	bc.attemptImport(s.blockData());
 	s.sync(bc);
+
+	cout << "me: " << s.balance(me.address()) << endl;
+	cout << "myMiner: " << s.balance(myMiner.address()) << endl;
+//	s.dumpAccounts();
 
 	return 0;
 }
