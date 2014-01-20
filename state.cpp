@@ -20,17 +20,11 @@
  * State test functions.
  */
 
+#include <secp256k1.h>
+#include <BlockChain.h>
 #include <State.h>
 using namespace std;
 using namespace eth;
-
-struct KeyPair
-{
-	KeyPair() {}
-	KeyPair(PrivateKey _k): priv(_k), addr(toPublic(_k)) {}
-	PrivateKey priv;
-	Address addr;
-};
 
 int stateTest()
 {
@@ -38,25 +32,32 @@ int stateTest()
 	KeyPair myMiner = sha3("Gav's Miner");
 //	KeyPair you = sha3("123");
 
-	State s(myMiner.addr);
+	BlockChain bc("/tmp");
+	State s(myMiner.address(), "/tmp");
 
 	// Mine to get some ether!
-	s.mine();
+	s.commitToMine(bc);
+	while (!s.mine(100)) {}
+	bc.attemptImport(s.blockData());
+	s.sync(bc);
 
 	bytes tx;
 	{
 		Transaction t;
-		t.nonce = s.transactionsFrom(myMiner.addr);
+		t.nonce = s.transactionsFrom(myMiner.address());
 		t.fee = 0;
-		t.value = 1;			// 1 wei.
-		t.receiveAddress = me.addr;
-		t.sign(myMiner.priv);
+		t.value = 1000000000;			// 1e9 wei.
+		t.receiveAddress = me.address();
+		t.sign(myMiner.secret());
 		tx = t.rlp();
 	}
 	cout << RLP(tx) << endl;
 	s.execute(tx);
 
-	// TODO: Mine to set in stone.
+	s.commitToMine(bc);
+	while (!s.mine(100)) {}
+	bc.attemptImport(s.blockData());
+	s.sync(bc);
 
 	return 0;
 }

@@ -35,7 +35,7 @@ int main()
 	rlpTest();
 	trieTest();
 //	daggerTest();
-//	cryptoTest();
+	cryptoTest();
 	stateTest();
 	return 0;
 }
