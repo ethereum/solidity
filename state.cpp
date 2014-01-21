@@ -32,21 +32,31 @@ int stateTest()
 	KeyPair myMiner = sha3("Gav's Miner");
 //	KeyPair you = sha3("123");
 
-	BlockChain bc("/tmp");
-	State s(myMiner.address(), "/tmp");
+	Defaults::setDBPath("/tmp");
 
-	cout << dec << "me: " << s.balance(me.address()) << endl;
-	cout << "myMiner: " << s.balance(myMiner.address()) << endl;
+	Overlay stateDB = State::openDB();
+	BlockChain bc;
+	State s(myMiner.address(), stateDB);
+
+	cout << bc;
+
+	// Sync up - this won't do much until we use the last state.
+	s.sync(bc);
+
+	cout << s;
 
 	// Mine to get some ether!
 	s.commitToMine(bc);
-	while (!s.mine(100)) {}
-	bc.attemptImport(s.blockData());
+	while (s.mine(100).empty()) {}
+	bc.attemptImport(s.blockData(), stateDB);
+
+	cout << bc;
+
 	s.sync(bc);
 
-	cout << "me: " << s.balance(me.address()) << endl;
-	cout << "myMiner: " << s.balance(myMiner.address()) << endl;
+	cout << s;
 
+	// Inject a transaction to transfer funds from miner to me.
 	bytes tx;
 	{
 		Transaction t;
@@ -60,17 +70,18 @@ int stateTest()
 	}
 	s.execute(tx);
 
-	cout << "me: " << s.balance(me.address()) << endl;
-	cout << "myMiner: " << s.balance(myMiner.address()) << endl;
+	cout << s;
 
+	// Mine to get some ether and set in stone.
 	s.commitToMine(bc);
-	while (!s.mine(100)) {}
-	bc.attemptImport(s.blockData());
+	while (s.mine(100).empty()) {}
+	bc.attemptImport(s.blockData(), stateDB);
+
+	cout << bc;
+
 	s.sync(bc);
 
-	cout << "me: " << s.balance(me.address()) << endl;
-	cout << "myMiner: " << s.balance(myMiner.address()) << endl;
-//	s.dumpAccounts();
+	cout << s;
 
 	return 0;
 }

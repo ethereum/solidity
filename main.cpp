@@ -31,11 +31,11 @@ int hexPrefixTest();
 
 int main()
 {
-	hexPrefixTest();
-	rlpTest();
-	trieTest();
+//	hexPrefixTest();
+//	rlpTest();
+//	trieTest();
 //	daggerTest();
-	cryptoTest();
+//	cryptoTest();
 	stateTest();
 	return 0;
 }
