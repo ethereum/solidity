@@ -28,15 +28,17 @@ int daggerTest();
 int cryptoTest();
 int stateTest();
 int hexPrefixTest();
+int peerTest(int argc, char** argv);
 
-int main()
+int main(int argc, char** argv)
 {
 //	hexPrefixTest();
 //	rlpTest();
-//	trieTest();
+	trieTest();
 //	daggerTest();
 //	cryptoTest();
-	stateTest();
+//	stateTest();
+	peerTest(argc, argv);
 	return 0;
 }
 

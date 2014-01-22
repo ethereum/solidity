@@ -121,6 +121,7 @@ int trieTest()
 			assert(d.root() == hash256(s));
 			for (auto const& i: s)
 			{
+				(void)i;
 				assert(t.at(i.first) == i.second);
 				assert(d.at(i.first) == i.second);
 			}
@@ -145,6 +146,7 @@ int trieTest()
 			assert(d.root() == hash256(s));
 			for (auto const& i: s)
 			{
+				(void)i;
 				assert(t.at(i.first) == i.second);
 				assert(d.at(i.first) == i.second);
 			}
