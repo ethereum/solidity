@@ -46,7 +46,7 @@ int peerTest(int argc, char** argv)
 	}
 
 	BlockChain ch("/tmp");
-	PeerServer pn(ch, 0, listenPort);
+	PeerServer pn("Test", ch, 0, listenPort);
 
 	if (!remoteHost.empty())
 		pn.connect(remoteHost, remotePort);
@@ -54,7 +54,7 @@ int peerTest(int argc, char** argv)
 	for (int i = 0; ; ++i)
 	{
 		usleep(100000);
-		pn.process();
+		pn.process(ch);
 		if (!(i % 10))
 			pn.pingAll();
 	}
