@@ -49,10 +49,12 @@ int peerTest(int argc, char** argv)
 	if (!remoteHost.empty())
 		pn.connect(remoteHost, remotePort);
 
-	while (true)
+	for (int i = 0; ; ++i)
 	{
 		usleep(100000);
 		pn.process();
+		if (!(i % 10))
+			pn.pingAll();
 	}
 
 	return 0;
