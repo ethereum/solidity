@@ -27,72 +27,33 @@ using boost::asio::ip::tcp;
 
 int peerTest(int argc, char** argv)
 {
-	int port = 30303;
-	PeerServer s(0, port);
-	s.run();
-  /*
-	if (argc == 1)
-	{
-		boost::asio::io_service io_service;
-		tcp::acceptor acceptor_(io_service, tcp::endpoint(tcp::v4(), port));
-		tcp::socket socket_(io_service);
-		function<void()> do_accept;
-		do_accept = [&]()
-		{
-			acceptor_.async_accept(socket_, [&](boost::system::error_code ec)
-			{
-				if (!ec)
-				{
-					auto s = move(socket_);
-					enum { max_length = 1024 };
-					char data_[max_length];
+	short listenPort = 30303;
+	string remoteHost;
+	short remotePort = 30303;
 
-					function<void()> do_read;
-					do_read = [&]()
-					{
-						s.async_read_some(boost::asio::buffer(data_, max_length), [&](boost::system::error_code ec, std::size_t length)
-						{
-							if (!ec)
-								boost::asio::async_write(s, boost::asio::buffer(data_, length), [&](boost::system::error_code ec, std::size_t)
-								{
-									if (!ec)
-										do_read();
-								});
-						});
-					};
-				}
-				do_accept();
-			});
-		};
-		io_service.run();
+	for (int i = 1; i < argc; ++i)
+	{
+		string arg = argv[i];
+		if (arg == "-l" && i + 1 < argc)
+			listenPort = atoi(argv[++i]);
+		else if (arg == "-r" && i + 1 < argc)
+			remoteHost = argv[++i];
+		else if (arg == "-p" && i + 1 < argc)
+			remotePort = atoi(argv[++i]);
+		else
+			remoteHost = argv[i];
 	}
-	else
+
+	PeerServer pn(0, listenPort);
+
+	if (!remoteHost.empty())
+		pn.connect(remoteHost, remotePort);
+
+	while (true)
 	{
-
-	}*/
-
-
-
-/*	if (argc == 1)
-	{
-		PeerNetwork pn(0, 30303);
-		while (true)
-		{
-			usleep(100000);
-			pn.process();
-		}
+		usleep(100000);
+		pn.process();
 	}
-	else
-	{
-		PeerNetwork pn(0);
-		if (pn.connect("127.0.0.1", 30303))
-			cout << "CONNECTED" << endl;
-		while (true)
-		{
-			usleep(100000);
-			pn.process();
-		}
-	}*/
 
 	return 0;
 }
