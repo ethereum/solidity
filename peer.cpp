@@ -20,6 +20,7 @@
  * Peer Network test functions.
  */
 
+#include <BlockChain.h>
 #include <PeerNetwork.h>
 using namespace std;
 using namespace eth;
@@ -44,7 +45,8 @@ int peerTest(int argc, char** argv)
 			remoteHost = argv[i];
 	}
 
-	PeerServer pn(0, listenPort);
+	BlockChain ch("/tmp");
+	PeerServer pn(ch, 0, listenPort);
 
 	if (!remoteHost.empty())
 		pn.connect(remoteHost, remotePort);
