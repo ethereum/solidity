@@ -13,6 +13,9 @@ link_directories(../libethereum)
 
 add_executable(testeth ${SRC_LIST})
 
+find_package(Threads REQUIRED)
+target_link_libraries(testeth ${CMAKE_THREAD_LIBS_INIT})
+
 target_link_libraries(testeth ethereum)
 target_link_libraries(testeth cryptopp)
 target_link_libraries(testeth secp256k1)
