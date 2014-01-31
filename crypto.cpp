@@ -35,7 +35,7 @@ int cryptoTest()
 	cout << "TX: " << RLP(tx) << endl;
 
 	Transaction t2(tx);
-	cout << "SENDER: " << hex << t2.sender() << endl;
+	cout << "SENDER: " << hex << t2.sender() << dec << endl;
 
 	secp256k1_start();
 
@@ -76,7 +76,7 @@ int cryptoTest()
 		int v = 0;
 		cout << asHex(hmsg) << endl;
 		cout << asHex(privkey) << endl;
-		cout << hex << nonce << endl;
+		cout << hex << nonce << dec << endl;
 		int ret = secp256k1_ecdsa_sign_compact((byte const*)hmsg.data(), hmsg.size(), sig.data(), privkey.data(), (byte const*)&nonce, &v);
 		cout << "MYSIG: " << dec << ret << " " << sig.size() << " " << asHex(sig) << " " << v << endl;
 
@@ -93,7 +93,7 @@ int cryptoTest()
 		int ret = secp256k1_ecdsa_recover_compact((byte const*)hmsg.data(), hmsg.size(), (byte const*)sig64.data(), pubkey.data(), &pubkeylen, 0, (int)t.vrs.v - 27);
 		pubkey.resize(pubkeylen);
 		cout << "RECPUB: " << dec << ret << " " << pubkeylen << " " << asHex(pubkey) << endl;
-		cout << "SENDER: " << hex << low160(eth::sha3(bytesConstRef(&pubkey).cropped(1))) << endl;
+		cout << "SENDER: " << hex << low160(eth::sha3(bytesConstRef(&pubkey).cropped(1))) << dec << endl;
 	}
 	return 0;
 }
