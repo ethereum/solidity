@@ -30,8 +30,17 @@ int stateTest();
 int hexPrefixTest();
 int peerTest(int argc, char** argv);
 
+#include <BlockInfo.h>
+using namespace eth;
+
 int main(int argc, char** argv)
 {
+	/*RLPStream s;
+	BlockInfo::genesis().fillStream(s, false);
+	std::cout << RLP(s.out()) << std::endl;
+	std::cout << asHex(s.out()) << std::endl;
+	std::cout << sha3(s.out()) << std::endl;*/
+
 //	hexPrefixTest();
 //	rlpTest();
 	trieTest();
