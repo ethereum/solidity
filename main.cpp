@@ -35,19 +35,19 @@ using namespace eth;
 
 int main(int argc, char** argv)
 {
-	RLPStream s;
+/*	RLPStream s;
 	BlockInfo::genesis().fillStream(s, false);
 	std::cout << RLP(s.out()) << std::endl;
 	std::cout << asHex(s.out()) << std::endl;
-	std::cout << sha3(s.out()) << std::endl;
+	std::cout << sha3(s.out()) << std::endl;*/
 
-//	hexPrefixTest();
-//	rlpTest();
+	hexPrefixTest();
+	rlpTest();
 	trieTest();
 //	daggerTest();
 //	cryptoTest();
 //	stateTest();
-	peerTest(argc, argv);
+//	peerTest(argc, argv);
 	return 0;
 }
 
