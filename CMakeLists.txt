@@ -2,6 +2,7 @@ cmake_policy(SET CMP0015 NEW)
 
 aux_source_directory(. SRC_LIST)
 
+include_directories(../secp256k1)
 include_directories(../libethereum)
 link_directories(../libethereum)
 
@@ -10,6 +11,7 @@ add_executable(testeth ${SRC_LIST})
 find_package(Threads REQUIRED)
 
 target_link_libraries(testeth ethereum)
+target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth miniupnpc)
 target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
 target_link_libraries(testeth gmp)
