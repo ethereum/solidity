@@ -23,6 +23,7 @@
 #include <secp256k1.h>
 #include <BlockChain.h>
 #include <State.h>
+#include <Defaults.h>
 using namespace std;
 using namespace eth;
 
