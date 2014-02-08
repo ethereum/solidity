@@ -10,6 +10,10 @@ add_executable(testeth ${SRC_LIST})
 
 find_package(Threads REQUIRED)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	include_directories(/usr/local/include)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
 target_link_libraries(testeth ethereum)
 target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth miniupnpc)
