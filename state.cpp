@@ -62,7 +62,6 @@ int stateTest()
 	{
 		Transaction t;
 		t.nonce = s.transactionsFrom(myMiner.address());
-		t.fee = 0;
 		t.value = 1000;			// 1e3 wei.
 		t.receiveAddress = me.address();
 		t.sign(myMiner.secret());
