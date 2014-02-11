@@ -30,6 +30,29 @@ using namespace eth;
 
 int cryptoTest()
 {
+	secp256k1_start();
+
+	KeyPair p(Secret(fromUserHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
+	assert(p.pub() == Public(fromUserHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
+	assert(p.address() == Address(fromUserHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
+	{
+		Transaction t;
+		t.nonce = 0;
+		t.receiveAddress = h160(fromUserHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
+		t.value = 1000;
+		t.data = u256s();
+		cnote << RLP(t.rlp(false));
+		cnote << asHex(t.rlp(false));
+		cnote << t.sha3(false);
+		t.sign(p.secret());
+		cnote << RLP(t.rlp(true));
+		cnote << asHex(t.rlp(true));
+		cnote << t.sha3(true);
+		assert(t.sender() == p.address());
+	}
+
+
+#if 0
 	// Test transaction.
 	bytes tx = fromUserHex("88005401010101010101010101010101010101010101011f0de0b6b3a76400001ce8d4a5100080181c373130a009ba1f10285d4e659568bfcfec85067855c5a3c150100815dad4ef98fd37cf0593828c89db94bd6c64e210a32ef8956eaa81ea9307194996a3b879441f5d");
 	cout << "TX: " << RLP(tx) << endl;
@@ -94,6 +117,7 @@ int cryptoTest()
 		cout << "RECPUB: " << dec << ret << " " << pubkeylen << " " << asHex(pubkey) << endl;
 		cout << "SENDER: " << hex << low160(eth::sha3(bytesConstRef(&pubkey).cropped(1))) << dec << endl;
 	}
+#endif
 	return 0;
 }
 
