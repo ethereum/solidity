@@ -87,7 +87,7 @@ int cryptoTest()
 
 		ret = secp256k1_ecdsa_pubkey_create(pubkey.data(), &pubkeylen, privkey.data(), 1);
 		pubkey.resize(pubkeylen);
-		int good = secp256k1_ecdsa_pubkey_verify(pubkey.data(), pubkey.size());
+		int good = secp256k1_ecdsa_pubkey_verify(pubkey.data(), (int)pubkey.size());
 		cout << "PUB: " << dec << ret << " " << pubkeylen << " " << asHex(pubkey) << (good ? " GOOD" : " BAD") << endl;
 	}
 
@@ -99,12 +99,12 @@ int cryptoTest()
 		cout << asHex(hmsg) << endl;
 		cout << asHex(privkey) << endl;
 		cout << hex << nonce << dec << endl;
-		int ret = secp256k1_ecdsa_sign_compact((byte const*)hmsg.data(), hmsg.size(), sig.data(), privkey.data(), (byte const*)&nonce, &v);
+		int ret = secp256k1_ecdsa_sign_compact((byte const*)hmsg.data(), (int)hmsg.size(), sig.data(), privkey.data(), (byte const*)&nonce, &v);
 		cout << "MYSIG: " << dec << ret << " " << sig.size() << " " << asHex(sig) << " " << v << endl;
 
 		bytes pubkey(65);
 		int pubkeylen = 65;
-		ret = secp256k1_ecdsa_recover_compact((byte const*)hmsg.data(), hmsg.size(), (byte const*)sig.data(), pubkey.data(), &pubkeylen, 0, v);
+		ret = secp256k1_ecdsa_recover_compact((byte const*)hmsg.data(), (int)hmsg.size(), (byte const*)sig.data(), pubkey.data(), &pubkeylen, 0, v);
 		pubkey.resize(pubkeylen);
 		cout << "MYREC: " << dec << ret << " " << pubkeylen << " " << asHex(pubkey) << endl;
 	}
@@ -112,7 +112,7 @@ int cryptoTest()
 	{
 		bytes pubkey(65);
 		int pubkeylen = 65;
-		int ret = secp256k1_ecdsa_recover_compact((byte const*)hmsg.data(), hmsg.size(), (byte const*)sig64.data(), pubkey.data(), &pubkeylen, 0, (int)t.vrs.v - 27);
+		int ret = secp256k1_ecdsa_recover_compact((byte const*)hmsg.data(), (int)hmsg.size(), (byte const*)sig64.data(), pubkey.data(), &pubkeylen, 0, (int)t.vrs.v - 27);
 		pubkey.resize(pubkeylen);
 		cout << "RECPUB: " << dec << ret << " " << pubkeylen << " " << asHex(pubkey) << endl;
 		cout << "SENDER: " << hex << low160(eth::sha3(bytesConstRef(&pubkey).cropped(1))) << dec << endl;

@@ -27,6 +27,11 @@
 using namespace std;
 using namespace eth;
 
+inline h256 stringMapHash256(StringMap const& _s)
+{
+	return hash256(_s);
+}
+
 int trieTest()
 {
 	{
@@ -42,13 +47,13 @@ int trieTest()
 		cout << t;
 		cout << m;
 		cout << t.root() << endl;
-		cout << hash256({{"test", "test"}}) << endl;
+		cout << stringMapHash256({{"test", "test"}}) << endl;
 
 		t.insert(string("tesa"), string("testy"));
 		cout << t;
 		cout << m;
 		cout << t.root() << endl;
-		cout << hash256({{"test", "test"}, {"te", "testy"}}) << endl;
+		cout << stringMapHash256({{"test", "test"}, {"te", "testy"}}) << endl;
 		cout << t.at(string("test")) << endl;
 		cout << t.at(string("te")) << endl;
 		cout << t.at(string("t")) << endl;
@@ -56,7 +61,7 @@ int trieTest()
 		t.remove(string("te"));
 		cout << m;
 		cout << t.root() << endl;
-		cout << hash256({{"test", "test"}}) << endl;
+		cout << stringMapHash256({{"test", "test"}}) << endl;
 
 		t.remove(string("test"));
 		cout << m;
@@ -72,7 +77,7 @@ int trieTest()
 		cout << t;
 		cout << m;
 		cout << t.root() << endl;
-		cout << hash256({{"b", "B"}, {"a", "A"}}) << endl;
+		cout << stringMapHash256({{"b", "B"}, {"a", "A"}}) << endl;
 		cout << RLP(rlp256({{"b", "B"}, {"a", "A"}})) << endl;
 	}
 	{
@@ -89,7 +94,7 @@ int trieTest()
 		cout << RLP(t.rlp()) << endl;
 	}
 	{
-		cout << hex << hash256({{"dog", "puppy"}, {"doe", "reindeer"}}) << endl;
+		cout << hex << stringMapHash256({{"dog", "puppy"}, {"doe", "reindeer"}}) << endl;
 		MemTrie t;
 		t.insert("dog", "puppy");
 		t.insert("doe", "reindeer");

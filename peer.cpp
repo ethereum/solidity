@@ -38,11 +38,11 @@ int peerTest(int argc, char** argv)
 	{
 		string arg = argv[i];
 		if (arg == "-l" && i + 1 < argc)
-			listenPort = atoi(argv[++i]);
+			listenPort = (short)atoi(argv[++i]);
 		else if (arg == "-r" && i + 1 < argc)
 			remoteHost = argv[++i];
 		else if (arg == "-p" && i + 1 < argc)
-			remotePort = atoi(argv[++i]);
+			remotePort = (short)atoi(argv[++i]);
 		else
 			remoteHost = argv[i];
 	}
