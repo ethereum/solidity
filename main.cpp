@@ -41,10 +41,10 @@ int main(int argc, char** argv)
 	std::cout << asHex(s.out()) << std::endl;
 	std::cout << sha3(s.out()) << std::endl;*/
 
-//	hexPrefixTest();
-//	rlpTest();
-//	trieTest();
-//	daggerTest();
+	hexPrefixTest();
+	rlpTest();
+	trieTest();
+	daggerTest();
 	cryptoTest();
 //	stateTest();
 //	peerTest(argc, argv);
