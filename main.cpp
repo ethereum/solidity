@@ -27,6 +27,7 @@ int rlpTest();
 int daggerTest();
 int cryptoTest();
 int stateTest();
+int vmTest();
 int hexPrefixTest();
 int peerTest(int argc, char** argv);
 
@@ -46,6 +47,7 @@ int main(int argc, char** argv)
 	trieTest();
 	daggerTest();
 	cryptoTest();
+	vmTest();
 //	stateTest();
 //	peerTest(argc, argv);
 	return 0;
