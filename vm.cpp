@@ -36,13 +36,19 @@ template <> class UnitTest<1>
 public:
 	int operator()()
 	{
+		c_genesisDifficulty = (u256)1;
+
 		KeyPair p = KeyPair::create();
-		Overlay o;
+		Overlay o(State::openDB("/tmp/vmTest", true));
 		State s(p.address(), o);
+		BlockChain bc("/tmp/vmTest", true);
 
 		cout << s;
 
-		s.addBalance(p.address(), Uether);
+		s.commitToMine(bc);
+		s.mine(1000000);
+		bc.attemptImport(s.blockData(), o);
+		s.sync(bc);
 
 		cout << s;
 
@@ -50,7 +56,7 @@ public:
 
 		c.receiveAddress = Address();
 		c.nonce = 0;
-		c.data = assemble("txsender load txvalue add txsender store stop");
+		c.data = assemble("txsender sload txvalue add txsender sstore stop");
 		c.value = ether;
 		c.sign(p.secret());
 		s.execute(c.rlp());
@@ -58,11 +64,14 @@ public:
 
 		cout << s;
 
-		s.commit();
+		s.commitToMine(bc);
+		s.mine(1000000);
+		bc.attemptImport(s.blockData(), o);
+		s.sync(bc);
 
 		cout << s;
 
-		cout << s.m_db;
+//		cout << s.m_db;
 
 		c.receiveAddress = ca;
 		c.nonce = 1;
@@ -70,6 +79,13 @@ public:
 		c.value = 69 * wei;
 		c.sign(p.secret());
 		s.execute(c.rlp());
+
+		cout << s;
+
+		s.commitToMine(bc);
+		s.mine();
+		bc.attemptImport(s.blockData(), o);
+		s.sync(bc);
 
 		cout << s;
 
