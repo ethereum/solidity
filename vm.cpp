@@ -21,6 +21,7 @@
  */
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <secp256k1.h>
 #include <BlockChain.h>
 #include <State.h>
@@ -38,10 +39,11 @@ public:
 	{
 		c_genesisDifficulty = (u256)1;
 
+		string tmpDir = (boost::filesystem::temp_directory_path() / "vmTest").string();
 		KeyPair p = KeyPair::create();
-		Overlay o(State::openDB("/tmp/vmTest", true));
+		Overlay o(State::openDB(tmpDir, true));
 		State s(p.address(), o);
-		BlockChain bc("/tmp/vmTest", true);
+		BlockChain bc(tmpDir, true);
 
 		cout << s;
 
