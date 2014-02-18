@@ -59,6 +59,7 @@ public:
 		c.receiveAddress = Address();
 		c.nonce = 0;
 		c.data = assemble("txsender sload txvalue add txsender sstore stop");
+		// (sstore (add (txvalue (sload txsender))))
 		c.value = ether;
 		c.sign(p.secret());
 		s.execute(c.rlp());
