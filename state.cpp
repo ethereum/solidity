@@ -20,6 +20,7 @@
  * State test functions.
  */
 
+#include <boost/filesystem/operations.hpp>
 #include <secp256k1.h>
 #include <BlockChain.h>
 #include <State.h>
@@ -33,7 +34,7 @@ int stateTest()
 	KeyPair myMiner = sha3("Gav's Miner");
 //	KeyPair you = sha3("123");
 
-	Defaults::setDBPath("/tmp");
+	Defaults::setDBPath(boost::filesystem::temp_directory_path().string());
 
 	Overlay stateDB = State::openDB();
 	BlockChain bc;
