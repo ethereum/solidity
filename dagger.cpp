@@ -31,16 +31,16 @@ int daggerTest()
 	// Test dagger
 	{
 		auto s = steady_clock::now();
-		cout << hex << Dagger().eval((h256)1, (h256)0);
+		cout << hex << Dagger().eval((h256)(u256)1, (h256)(u256)0);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
-		cout << hex << Dagger().eval((h256)1, (h256)1);
+		cout << hex << Dagger().eval((h256)(u256)1, (h256)(u256)1);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
 	}
 	{
 		auto s = steady_clock::now();
-		cout << hex << Dagger().eval((h256)1, (h256)0);
+		cout << hex << Dagger().eval((h256)(u256)1, (h256)(u256)0);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
-		cout << hex << Dagger().eval((h256)1, (h256)1);
+		cout << hex << Dagger().eval((h256)(u256)1, (h256)(u256)1);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
 	}
 	return 0;
