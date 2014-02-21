@@ -20,81 +20,79 @@
  * State test functions.
  */
 
-#include <boost/algorithm/string.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <secp256k1.h>
-#include <BlockChain.h>
-#include <State.h>
-#include <Defaults.h>
+#include <ExtVMFace.h>
+#include <Transaction.h>
+#include <VM.h>
 #include <Instruction.h>
 using namespace std;
 using namespace eth;
 
 namespace eth
 {
+
+class FakeExtVM: public ExtVMFace
+{
+public:
+	FakeExtVM(Address _myAddress, u256 _myBalance, u256 _myNonce, u256s _myData, Address _txSender, u256 _txValue, u256s const& _txData, FeeStructure const& _fees, BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, uint _currentNumber):
+		ExtVMFace(_myAddress, _txSender, _txValue, _txData, _fees, _previousBlock, _currentBlock, _currentNumber)
+	{
+		reset(_myBalance, _myNonce, _myData);
+	}
+
+	u256 store(u256 _n) { return get<3>(addresses[myAddress])[_n]; }
+	void setStore(u256 _n, u256 _v) { get<3>(addresses[myAddress])[_n] = _v; }
+	void mktx(Transaction& _t) { txs.push_back(_t); }
+	u256 balance(Address _a) { return get<0>(addresses[_a]); }
+	void payFee(bigint _fee) { get<0>(addresses[myAddress]) = (u256)(get<0>(addresses[myAddress]) - _fee); }
+	u256 txCount(Address _a) { return get<1>(addresses[_a]); }
+	u256 extro(Address _a, u256 _pos) { return get<3>(addresses[_a])[_pos]; }
+	u256 extroPrice(Address _a) { return get<2>(addresses[_a]); }
+	void suicide(Address _a) { dead = _a; }
+
+	void reset(u256 _myBalance, u256 _myNonce, u256s _myData)
+	{
+		txs.clear();
+		addresses.clear();
+		get<0>(addresses[myAddress]) = _myBalance;
+		get<1>(addresses[myAddress]) = _myNonce;
+		get<2>(addresses[myAddress]) = 0;
+		for (unsigned i = 0; i < _myData.size(); ++i)
+			get<3>(addresses[myAddress])[i] = _myData[i];
+		dead = Address();
+	}
+
+	map<Address, tuple<u256, u256, u256, map<u256, u256>>> addresses;
+	Transactions txs;
+	Address dead;
+};
+
 template <> class UnitTest<1>
 {
 public:
 	int operator()()
 	{
-		c_genesisDifficulty = (u256)1;
+		VM vm;
+		BlockInfo pb;
+		pb.hash = sha3("previousHash");
+		pb.nonce = sha3("previousNonce");
+		BlockInfo cb = pb;
+		cb.difficulty = 256;
+		cb.timestamp = 1;
+		cb.coinbaseAddress = toAddress(sha3("coinbase"));
+		FeeStructure fees;
+		fees.setMultiplier(1);
 
-		string tmpDir = (boost::filesystem::temp_directory_path() / "vmTest").string();
-		KeyPair p = KeyPair::create();
-		Overlay o(State::openDB(tmpDir, true));
-		State s(p.address(), o);
-		BlockChain bc(tmpDir, true);
+		string code = "(suicide (txsender))";
 
-		cout << s;
+		FakeExtVM fev(toAddress(sha3("contract")), ether, 0, compileLisp(code), toAddress(sha3("sender")), ether, u256s(), fees, pb, cb, 0);
 
-		s.commitToMine(bc);
-		s.mine(1000000);
-		bc.attemptImport(s.blockData(), o);
-		s.sync(bc);
-
-		cout << s;
-
-		Transaction c;
-
-		c.receiveAddress = Address();
-		c.nonce = 0;
-		c.data = assemble("txsender sload txvalue add txsender sstore stop");
-		// (sstore (add (txvalue (sload txsender))))
-		c.value = ether;
-		c.sign(p.secret());
-		s.execute(c.rlp());
-		Address ca = right160(c.sha3());
-
-		cout << s;
-
-		s.commitToMine(bc);
-		s.mine(1000000);
-		bc.attemptImport(s.blockData(), o);
-		s.sync(bc);
-
-		cout << s;
-
-//		cout << s.m_db;
-
-		c.receiveAddress = ca;
-		c.nonce = 1;
-		c.data = {};
-		c.value = 69 * wei;
-		c.sign(p.secret());
-		s.execute(c.rlp());
-
-		cout << s;
-
-		s.commitToMine(bc);
-		s.mine();
-		bc.attemptImport(s.blockData(), o);
-		s.sync(bc);
-
-		cout << s;
+		vm.go(fev);
+		cnote << fev.dead << formatBalance(fev.balance(toAddress(sha3("contract"))));
 
 		return 0;
 	}
 };
+
 }
 
 int vmTest()
