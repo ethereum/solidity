@@ -269,22 +269,24 @@ public:
 	Transactions txs;
 };
 
+#define CREATE_TESTS 0
+
 template <> class UnitTest<1>
 {
 public:
 	int operator()()
 	{
 		json_spirit::mValue v;
-		string s = asString(contents("/home/gav/Projects/cpp-ethereum/test/vmtests.json"));
-		cout << s << endl;
+#if CREATE_TESTS
+		string s = asString(contents("../../cpp-ethereum/test/vmtests.json"));
 		json_spirit::read_string(s, v);
-
-		doTests(v, true);
-
+		bool passed = doTests(v, true);
 		cout << json_spirit::write_string(v, true) << endl;
-
+#else
+		string s = asString(contents("../../tests/vmtests.json"));
+		json_spirit::read_string(s, v);
 		bool passed = doTests(v, false);
-
+#endif
 		return passed ? 0 : 1;
 	}
 
