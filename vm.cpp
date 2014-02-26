@@ -43,8 +43,34 @@ public:
 		ExtVMFace(Address(), Address(), 0, u256s(), _fees, _previousBlock, _currentBlock, _currentNumber)
 	{}
 
-	u256 store(u256 _n) { return get<3>(addresses[myAddress])[_n]; }
-	void setStore(u256 _n, u256 _v) { get<3>(addresses[myAddress])[_n] = _v; }
+	u256 store(u256 _n)
+	{
+#ifdef __clang__
+		tuple<u256, u256, u256, map<u256, u256> > & address = addresses[myAddress];
+		map<u256, u256> & third = get<3>(address);
+		auto sFinder = third.find(_n);
+		if (sFinder != third.end())
+			return sFinder->second;
+		else
+			return 0;
+#else
+		return get<3>(addresses[myAddress])[_n];
+#endif
+	}
+	void setStore(u256 _n, u256 _v)
+	{
+#ifdef __clang__
+		tuple<u256, u256, u256, map<u256, u256> > & address = addresses[myAddress];
+		map<u256, u256> & third = get<3>(address);
+		auto sFinder = third.find(_n);
+		if (sFinder != third.end())
+			sFinder->second = _v;
+		else
+			third.insert(std::make_pair(_n, _v));
+#else
+		get<3>(addresses[myAddress])[_n] = _v;
+#endif
+	}
 	void mktx(Transaction& _t)
 	{
 		if (get<0>(addresses[myAddress]) >= _t.value)
@@ -58,7 +84,20 @@ public:
 	u256 balance(Address _a) { return get<0>(addresses[_a]); }
 	void payFee(bigint _fee) { get<0>(addresses[myAddress]) = (u256)(get<0>(addresses[myAddress]) - _fee); }
 	u256 txCount(Address _a) { return get<1>(addresses[_a]); }
-	u256 extro(Address _a, u256 _pos) { return get<3>(addresses[_a])[_pos]; }
+	u256 extro(Address _a, u256 _pos)
+	{
+#ifdef __clang__
+		tuple<u256, u256, u256, map<u256, u256> > & address = addresses[_a];
+		map<u256, u256> & third = get<3>(address);
+		auto sFinder = third.find(_pos);
+		if (sFinder != third.end())
+			return sFinder->second;
+		else
+			return 0;
+#else
+		return get<3>(addresses[_a])[_pos];
+#endif
+	}
 	u256 extroPrice(Address _a) { return get<2>(addresses[_a]); }
 	void suicide(Address _a)
 	{
@@ -86,7 +125,19 @@ public:
 		get<1>(addresses[_a]) = _myNonce;
 		get<2>(addresses[_a]) = 0;
 		for (unsigned i = 0; i < _myData.size(); ++i)
+#ifdef __clang__
+		{
+			tuple<u256, u256, u256, map<u256, u256> > & address = addresses[_a];
+			map<u256, u256> & third = get<3>(address);
+			auto sFinder = third.find(i);
+			if (sFinder != third.end())
+				sFinder->second = _myData[i];
+			else
+				third.insert(std::make_pair(i, _myData[i]));
+		}
+#else
 			get<3>(addresses[_a])[i] = _myData[i];
+#endif
 	}
 
 	mObject exportEnv()
@@ -194,13 +245,36 @@ public:
 				{
 					u256 adr(j.first);
 					for (auto const& k: j.second.get_array())
+#ifdef __clang__
+					{
+						map<u256, u256> & third = get<3>(a);
+						auto sFinder = third.find(adr);
+						if (sFinder != third.end())
+							sFinder->second = toInt(k);
+						else
+							third.insert(std::make_pair(adr, toInt(k)));
+						adr++;
+					}
+#else
 						get<3>(a)[adr++] = toInt(k);
+#endif
 				}
 			if (o.count("code"))
 			{
 				u256s d = compileLisp(o["code"].get_str());
 				for (unsigned i = 0; i < d.size(); ++i)
+#ifdef __clang__
+				{
+					map<u256, u256> & third = get<3>(a);
+					auto sFinder = third.find(i);
+					if (sFinder != third.end())
+						sFinder->second = d[i];
+					else
+						third.insert(std::make_pair(i, d[i]));
+				}
+#else
 					get<3>(a)[(u256)i] = d[i];
+#endif
 			}
 		}
 	}
