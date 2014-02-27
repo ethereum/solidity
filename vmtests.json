@@ -1,29 +1,83 @@
 {
 	"suicide": {
-	    "env" : {
+		"env" : {
 		"previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
 		"previousNonce" : "9c9c6567b5ec0c5f3f25df79be42707090f1e62e9db84cbb556ae2a2f6ccccae",
 		"currentDifficulty" : "256",
 		"currentTimestamp" : 1,
 		"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
 		"feeMultiplier" : 1
-	    },
-	    "pre" : {
+		},
+		"pre" : {
 		"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-		    "balance" : 1000000000000000000,
-		    "nonce" : 0,
-		    "code" : "(suicide (txsender))"
+			"balance" : 1000000000000000000,
+			"nonce" : 0,
+			"code" : "(suicide (txsender))"
 		}
-	    },
-	    "exec" : [
+		},
+		"exec" : [
 		{
-		    "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
-		    "sender" : "cd1722f3947def4cf144679da39c4c32bdc35681",
-		    "value" : 1000000000000000000,
-		    "data" : [
-		    ]
+			"address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+			"sender" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+			"value" : 1000000000000000000,
+			"data" : [
+			]
 		}
-	    ]
+		]
+	},
+
+	"arith": {
+		"env" : {
+		"previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+		"previousNonce" : "9c9c6567b5ec0c5f3f25df79be42707090f1e62e9db84cbb556ae2a2f6ccccae",
+		"currentDifficulty" : "256",
+		"currentTimestamp" : 1,
+		"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+		"feeMultiplier" : 1
+		},
+		"pre" : {
+		"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+			"balance" : 1000000000000000000,
+			"nonce" : 0,
+			"code" : "(seq (mktx (txsender) (+ 2 2 (* 4 4 4) (/ 2 2) (% 3 2) (- 8 2 2)) 0) )"
+		}
+		},
+		"exec" : [
+		{
+			"address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+			"sender" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+			"value" : 1000000000000000000,
+			"data" : [
+			]
+		}
+		]
+	},
+
+	"boolean": {
+		"env" : {
+		"previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+		"previousNonce" : "9c9c6567b5ec0c5f3f25df79be42707090f1e62e9db84cbb556ae2a2f6ccccae",
+		"currentDifficulty" : "256",
+		"currentTimestamp" : 1,
+		"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+		"feeMultiplier" : 1
+		},
+		"pre" : {
+		"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+			"balance" : 1000000000000000000,
+			"nonce" : 0,
+			"code" : "(seq (when (and 1 1) (mktx (txsender) 2 0)) (when (and 1 0) (mktx (txsender) 3 0)) (when (and 0 1) (mktx (txsender) 4 0)) (when (and 0 0) (mktx (txsender) 5 0)) (when (or 1 1) (mktx (txsender) 12 0)) (when (or 1 0) (mktx (txsender) 13 0)) (when (or 0 1) (mktx (txsender) 14 0)) (when (or 0 0) (mktx (txsender) 15 0)) )"
+		}
+		},
+		"exec" : [
+		{
+			"address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+			"sender" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+			"value" : 1000000000000000000,
+			"data" : [
+			]
+		}
+		]
 	},
 
 	"mktx": {

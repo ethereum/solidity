@@ -343,7 +343,7 @@ public:
 	Transactions txs;
 };
 
-#define CREATE_TESTS 0
+#define CREATE_TESTS 1
 
 template <> class UnitTest<1>
 {
