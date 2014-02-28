@@ -30,6 +30,8 @@ using namespace eth;
 
 int stateTest()
 {
+	cnote << "Testing State...";
+
 	KeyPair me = sha3("Gav Wood");
 	KeyPair myMiner = sha3("Gav's Miner");
 //	KeyPair you = sha3("123");

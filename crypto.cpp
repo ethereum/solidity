@@ -30,6 +30,7 @@ using namespace eth;
 
 int cryptoTest()
 {
+	cnote << "Testing Crypto...";
 	secp256k1_start();
 
 	KeyPair p(Secret(fromUserHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));

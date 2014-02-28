@@ -20,48 +20,70 @@
  * RLP test functions.
  */
 
+#include <fstream>
+#include "../json_spirit/json_spirit_reader_template.h"
+#include "../json_spirit/json_spirit_writer_template.h"
 #include <RLP.h>
 using namespace std;
 using namespace eth;
+namespace js = json_spirit;
+
+namespace eth
+{
+
+template <> class UnitTest<2>
+{
+public:
+	static void buildRLP(js::mValue& _v, RLPStream& _rlp)
+	{
+		if (_v.type() == js::array_type)
+		{
+			RLPStream s;
+			for (auto& i: _v.get_array())
+				buildRLP(i, s);
+			_rlp.appendList(s.out());
+		}
+		else if (_v.type() == js::int_type)
+			_rlp.append(_v.get_uint64());
+		else if (_v.type() == js::str_type)
+		{
+			auto s = _v.get_str();
+			if (s.size() && s[0] == '#')
+				_rlp.append(bigint(s.substr(1)));
+			else
+				_rlp.append(s);
+		}
+	}
+
+	int operator()()
+	{
+		js::mValue v;
+		string s = asString(contents("../../tests/rlptest.json"));
+		js::read_string(s, v);
+		bool passed = true;
+		for (auto& i: v.get_obj())
+		{
+			js::mObject& o = i.second.get_obj();
+			cnote << i.first;
+			RLPStream s;
+			buildRLP(o["in"], s);
+			if (!o["out"].is_null() && o["out"].get_str() != asHex(s.out()))
+			{
+				cwarn << "Test failed.";
+				cwarn << "Test says:" << o["out"].get_str();
+				cwarn << "Impl says:" << asHex(s.out());
+				passed = false;
+			}
+		}
+		return passed ? 0 : 1;
+	}
+
+};
+
+}
 
 int rlpTest()
 {
-	// int of value 15
-	assert(RLP("\x0f") == 15);
-	assert(asString(rlp(15)) == "\x0f");
-
-	// 3-character string
-	assert(RLP("\x83""dog") == "dog");
-	assert(asString(rlp("dog")) == "\x83""dog");
-
-	// 2-item list
-	string twoItemListString = "\xc5\x0f\x83""dog";
-	RLP twoItemList(twoItemListString);
-	assert(twoItemList.itemCount() == 2);
-	assert(twoItemList[0] == 15);
-	assert(twoItemList[1] == "dog");
-	assert(asString(rlpList(15, "dog")) == "\xc5\x0f\x83""dog");
-
-	// null
-	assert(RLP("\x80") == "");
-	assert(asString(rlp("")) == "\x80");
-
-	// 1-byte (8-bit) int
-	assert(RLP("\x81\x80") == 128);
-	assert(asString(rlp(128)) == "\x81\x80");
-
-	// 2-byte (16-bit) int
-	assert(RLP("\x82\x01\x01") == 257);
-	assert(asString(rlp(257)) == "\x82\x01\x01");
-
-	// 32-byte (256-bit) int
-	assert(RLP("\xa0\x10\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f") == bigint("0x100102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"));
-	assert(asString(rlp(bigint("0x100102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"))) == "\xa0\x10\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f");
-
-	// 56-character string.
-	assert(RLP("\xb8\x38""Lorem ipsum dolor sit amet, consectetur adipisicing elit") == "Lorem ipsum dolor sit amet, consectetur adipisicing elit");
-	assert(asString(rlp("Lorem ipsum dolor sit amet, consectetur adipisicing elit")) == "\xb8\x38""Lorem ipsum dolor sit amet, consectetur adipisicing elit");
-
-	return 0;
+	cnote << "Testing RLP...";
+	return UnitTest<2>()();
 }
-

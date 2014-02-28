@@ -20,38 +20,51 @@
  * Main test functions.
  */
 
+#include <fstream>
+#include "../json_spirit/json_spirit_reader_template.h"
+#include "../json_spirit/json_spirit_writer_template.h"
 #include "TrieCommon.h"
 using namespace std;
 using namespace eth;
+namespace js = json_spirit;
+
+namespace eth
+{
+
+template <> class UnitTest<3>
+{
+public:
+	int operator()()
+	{
+		js::mValue v;
+		string s = asString(contents("../../tests/hexencodetest.json"));
+		js::read_string(s, v);
+		bool passed = true;
+		for (auto& i: v.get_obj())
+		{
+			js::mObject& o = i.second.get_obj();
+			cnote << i.first;
+			bytes v;
+			for (auto& i: o["seq"].get_array())
+				v.push_back(i.get_int());
+			auto e = hexPrefixEncode(v, o["term"].get_bool());
+			if (!o["out"].is_null() && o["out"].get_str() != asHex(e))
+			{
+				cwarn << "Test failed.";
+				cwarn << "Test says:" << o["out"].get_str();
+				cwarn << "Impl says:" << asHex(e);
+				passed = false;
+			}
+		}
+		return passed ? 0 : 1;
+	}
+
+};
+
+}
 
 int hexPrefixTest()
 {
-	/*
-	 * Hex-prefix Notation. First nibble has flags: oddness = 2^0 & termination = 2^1
-	 * [0,0,1,2,3,4,5]   0x10012345
-	 * [0,1,2,3,4,5]     0x00012345
-	 * [1,2,3,4,5]       0x112345
-	 * [0,0,1,2,3,4]     0x00001234
-	 * [0,1,2,3,4]       0x101234
-	 * [1,2,3,4]         0x001234
-	 * [0,0,1,2,3,4,5,T] 0x30012345
-	 * [0,0,1,2,3,4,T]   0x20001234
-	 * [0,1,2,3,4,5,T]   0x20012345
-	 * [1,2,3,4,5,T]     0x312345
-	 * [1,2,3,4,T]       0x201234
-	 */
-	assert(asHex(hexPrefixEncode({0, 0, 1, 2, 3, 4, 5}, false)) == "10012345");
-	assert(asHex(hexPrefixEncode({0, 1, 2, 3, 4, 5}, false)) == "00012345");
-	assert(asHex(hexPrefixEncode({1, 2, 3, 4, 5}, false)) == "112345");
-	assert(asHex(hexPrefixEncode({0, 0, 1, 2, 3, 4}, false)) == "00001234");
-	assert(asHex(hexPrefixEncode({0, 1, 2, 3, 4}, false)) == "101234");
-	assert(asHex(hexPrefixEncode({1, 2, 3, 4}, false)) == "001234");
-	assert(asHex(hexPrefixEncode({0, 0, 1, 2, 3, 4, 5}, true)) == "30012345");
-	assert(asHex(hexPrefixEncode({0, 0, 1, 2, 3, 4}, true)) == "20001234");
-	assert(asHex(hexPrefixEncode({0, 1, 2, 3, 4, 5}, true)) == "20012345");
-	assert(asHex(hexPrefixEncode({1, 2, 3, 4, 5}, true)) == "312345");
-	assert(asHex(hexPrefixEncode({1, 2, 3, 4}, true)) == "201234");
-
-	return 0;
+	cnote << "Testing Hex-Prefix-Encode...";
+	return UnitTest<3>()();
 }
-

@@ -28,6 +28,7 @@ using namespace eth;
 
 int daggerTest()
 {
+	cnote << "Testing Dagger...";
 	// Test dagger
 	{
 		auto s = steady_clock::now();

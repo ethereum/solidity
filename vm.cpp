@@ -343,7 +343,7 @@ public:
 	Transactions txs;
 };
 
-#define CREATE_TESTS 1
+#define CREATE_TESTS 0
 
 template <> class UnitTest<1>
 {
@@ -446,6 +446,7 @@ public:
 
 int vmTest()
 {
+	cnote << "Testing VM...";
 	return UnitTest<1>()();
 }
 
