@@ -46,7 +46,7 @@ public:
 			cnote << i.first;
 			bytes v;
 			for (auto& i: o["seq"].get_array())
-				v.push_back(i.get_int());
+				v.push_back((byte)i.get_int());
 			auto e = hexPrefixEncode(v, o["term"].get_bool());
 			if (!o["out"].is_null() && o["out"].get_str() != asHex(e))
 			{

@@ -53,7 +53,7 @@ public:
 			vector<pair<string, string>> ss;
 			for (auto& i: o["in"].get_obj())
 				ss.push_back(make_pair(i.first, i.second.get_str()));
-			for (unsigned j = 0; j < fac(ss.size()); ++j)
+			for (unsigned j = 0; j < fac((unsigned)ss.size()); ++j)
 			{
 				next_permutation(ss.begin(), ss.end());
 				BasicMap m;
