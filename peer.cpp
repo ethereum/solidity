@@ -24,7 +24,7 @@
 #include <thread>
 #include <boost/filesystem/operations.hpp>
 #include <BlockChain.h>
-#include <PeerNetwork.h>
+#include <PeerServer.h>
 using namespace std;
 using namespace eth;
 using boost::asio::ip::tcp;
