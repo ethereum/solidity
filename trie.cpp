@@ -24,9 +24,9 @@
 #include "../json_spirit/json_spirit_reader_template.h"
 #include "../json_spirit/json_spirit_writer_template.h"
 #include <random>
-#include <TrieHash.h>
 #include <TrieDB.h>
-#include <MemTrie.h>
+#include "TrieHash.h"
+#include "MemTrie.h"
 using namespace std;
 using namespace eth;
 
