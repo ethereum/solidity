@@ -24,6 +24,7 @@
 #include "../json_spirit/json_spirit_reader_template.h"
 #include "../json_spirit/json_spirit_writer_template.h"
 #include "TrieCommon.h"
+#include "Log.h"
 using namespace std;
 using namespace eth;
 namespace js = json_spirit;
@@ -48,11 +49,11 @@ public:
 			for (auto& i: o["seq"].get_array())
 				v.push_back((byte)i.get_int());
 			auto e = hexPrefixEncode(v, o["term"].get_bool());
-			if (!o["out"].is_null() && o["out"].get_str() != asHex(e))
+			if (!o["out"].is_null() && o["out"].get_str() != toHex(e))
 			{
 				cwarn << "Test failed.";
 				cwarn << "Test says:" << o["out"].get_str();
-				cwarn << "Impl says:" << asHex(e);
+				cwarn << "Impl says:" << toHex(e);
 				passed = false;
 			}
 		}

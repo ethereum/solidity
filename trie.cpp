@@ -61,11 +61,11 @@ public:
 				t.init();
 				for (auto const& k: ss)
 					t.insert(k.first, k.second);
-				if (!o["root"].is_null() && o["root"].get_str() != asHex(t.root().asArray()))
+				if (!o["root"].is_null() && o["root"].get_str() != toHex(t.root().asArray()))
 				{
 					cwarn << "Test failed on permutation " << j;
 					cwarn << "Test says:" << o["root"].get_str();
-					cwarn << "Impl says:" << asHex(t.root().asArray());
+					cwarn << "Impl says:" << toHex(t.root().asArray());
 					passed = false;
 				}
 			}
@@ -154,7 +154,7 @@ int trieTest()
 		t.insert("doe", "reindeer");
 		cout << hex << t.hash256() << endl;
 		cout << RLP(t.rlp()) << endl;
-		cout << asHex(t.rlp()) << endl;
+		cout << toHex(t.rlp()) << endl;
 	}
 	{
 		BasicMap m;

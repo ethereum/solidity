@@ -39,7 +39,7 @@ int main(int, char**)
 /*	RLPStream s;
 	BlockInfo::genesis().fillStream(s, false);
 	std::cout << RLP(s.out()) << std::endl;
-	std::cout << asHex(s.out()) << std::endl;
+	std::cout << toHex(s.out()) << std::endl;
 	std::cout << sha3(s.out()) << std::endl;*/
 
 	int r = 0;

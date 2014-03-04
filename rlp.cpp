@@ -23,6 +23,7 @@
 #include <fstream>
 #include "../json_spirit/json_spirit_reader_template.h"
 #include "../json_spirit/json_spirit_writer_template.h"
+#include <Log.h>
 #include <RLP.h>
 using namespace std;
 using namespace eth;
@@ -67,11 +68,11 @@ public:
 			cnote << i.first;
 			RLPStream s;
 			buildRLP(o["in"], s);
-			if (!o["out"].is_null() && o["out"].get_str() != asHex(s.out()))
+			if (!o["out"].is_null() && o["out"].get_str() != toHex(s.out()))
 			{
 				cwarn << "Test failed.";
 				cwarn << "Test says:" << o["out"].get_str();
-				cwarn << "Impl says:" << asHex(s.out());
+				cwarn << "Impl says:" << toHex(s.out());
 				passed = false;
 			}
 		}

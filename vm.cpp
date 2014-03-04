@@ -26,6 +26,7 @@
 #include <ExtVMFace.h>
 #include <Transaction.h>
 #include <VM.h>
+#include <Log.h>
 #include <Instruction.h>
 using namespace std;
 using namespace json_spirit;

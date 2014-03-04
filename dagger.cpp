@@ -21,6 +21,7 @@
  */
 
 #include <chrono>
+#include "Log.h"
 #include "Dagger.h"
 using namespace std;
 using namespace std::chrono;
