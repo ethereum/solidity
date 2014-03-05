@@ -21,13 +21,12 @@
  */
 
 #include <fstream>
-#include "../json_spirit/json_spirit_reader_template.h"
-#include "../json_spirit/json_spirit_writer_template.h"
 #include <ExtVMFace.h>
 #include <Transaction.h>
 #include <VM.h>
 #include <Log.h>
 #include <Instruction.h>
+#include "JsonSpiritHeaders.h"
 using namespace std;
 using namespace json_spirit;
 using namespace eth;

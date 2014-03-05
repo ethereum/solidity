@@ -21,9 +21,8 @@
  */
 
 #include <fstream>
-#include "../json_spirit/json_spirit_reader_template.h"
-#include "../json_spirit/json_spirit_writer_template.h"
 #include <random>
+#include "JsonSpiritHeaders.h"
 #include <TrieDB.h>
 #include "TrieHash.h"
 #include "MemTrie.h"
