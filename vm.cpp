@@ -39,7 +39,7 @@ class FakeExtVM: public ExtVMFace
 public:
 	FakeExtVM()
 	{}
-	FakeExtVM(FeeStructure const& _fees, BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, uint _currentNumber):
+	FakeExtVM(BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, uint _currentNumber):
 		ExtVMFace(Address(), Address(), 0, u256s(), _fees, _previousBlock, _currentBlock, _currentNumber)
 	{}
 
@@ -51,7 +51,7 @@ public:
 	{
 		get<3>(addresses[myAddress])[_n] = _v;
 	}
-	void mktx(Transaction& _t)
+	void transact(Transaction& _t)
 	{
 		if (get<0>(addresses[myAddress]) >= _t.value)
 		{
@@ -359,8 +359,6 @@ public:
 		cb.difficulty = 256;
 		cb.timestamp = 1;
 		cb.coinbaseAddress = toAddress(sha3("coinbase"));
-		FeeStructure fees;
-		fees.setMultiplier(1);
 		FakeExtVM fev(fees, pb, cb, 0);
 		fev.setContract(toAddress(sha3("contract")), ether, 0, compileLisp("(suicide (txsender))"));
 		o["env"] = fev.exportEnv();
