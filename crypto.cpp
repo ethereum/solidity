@@ -42,7 +42,6 @@ int cryptoTest()
 		t.nonce = 0;
 		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
 		t.value = 1000;
-		t.data = u256s();
 		cnote << RLP(t.rlp(false));
 		cnote << toHex(t.rlp(false));
 		cnote << t.sha3(false);

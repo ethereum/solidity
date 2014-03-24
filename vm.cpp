@@ -40,7 +40,7 @@ public:
 	FakeExtVM()
 	{}
 	FakeExtVM(BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, uint _currentNumber):
-		ExtVMFace(Address(), Address(), 0, u256s(), _fees, _previousBlock, _currentBlock, _currentNumber)
+		ExtVMFace(Address(), Address(), 0, 1, bytesConstRef(), _previousBlock, _currentBlock, _currentNumber)
 	{}
 
 	u256 store(u256 _n)
@@ -50,6 +50,14 @@ public:
 	void setStore(u256 _n, u256 _v)
 	{
 		get<3>(addresses[myAddress])[_n] = _v;
+	}
+	u256 balance(Address _a) { return get<0>(addresses[_a]); }
+	void subBalance(u256 _a) { get<0>(addresses[myAddress]) -= _a; }
+	u256 txCount(Address _a) { return get<1>(addresses[_a]); }
+	void suicide(Address _a)
+	{
+		get<0>(addresses[_a]) += get<0>(addresses[myAddress]);
+		addresses.erase(myAddress);
 	}
 	void transact(Transaction& _t)
 	{
@@ -61,41 +69,52 @@ public:
 			txs.push_back(_t);
 		}
 	}
-	u256 balance(Address _a) { return get<0>(addresses[_a]); }
-	void payFee(bigint _fee) { get<0>(addresses[myAddress]) = (u256)(get<0>(addresses[myAddress]) - _fee); }
-	u256 txCount(Address _a) { return get<1>(addresses[_a]); }
-	u256 extro(Address _a, u256 _pos)
+	h160 create(u256 _endowment, vector_ref<h256 const> _storage)
 	{
-		return get<3>(addresses[_a])[_pos];
-	}
-	u256 extroPrice(Address _a) { return get<2>(addresses[_a]); }
-	void suicide(Address _a)
-	{
-		for (auto const& i: get<3>(addresses[myAddress]))
-			if (i.second)
-				get<0>(addresses[_a]) += fees.m_memoryFee;
-		get<0>(addresses[_a]) += get<0>(addresses[myAddress]);
-		addresses.erase(myAddress);
+		Transaction t;
+		t.value = _endowment;
+		t.isCreation = true;
+		t.storage.reserve(_storage.size());
+		for (auto i: _storage)
+			t.storage.push_back(i);
+		t.gasPrice = gasPrice;
+		txs.push_back(t);
+		return right160(t.sha3(false));
 	}
 
-	void setTransaction(Address _txSender, u256 _txValue, u256s const& _txData)
+	bool call(Address _receiveAddress, u256 _txValue, bytesConstRef _txData, u256* _gas, bytesRef _txOut)
+	{
+		Transaction t;
+		t.isCreation = false;
+		t.value = _txValue;
+		t.data = _txData.toVector();
+		t.gas = *_gas;
+		t.gasPrice = gasPrice;
+		t.receiveAddress = _receiveAddress;
+		txs.push_back(t);
+		(void)_txOut;
+		return true;
+	}
+
+	void setTransaction(Address _txSender, u256 _txValue, u256 _gasPrice, bytes const& _txData)
 	{
 		txSender = _txSender;
 		txValue = _txValue;
-		txData = _txData;
+		txData = &_txData;
+		gasPrice = _gasPrice;
 	}
-	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, u256s _myData)
+	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, u256s const& _storage)
 	{
 		myAddress = _myAddress;
-		set(myAddress, _myBalance, _myNonce, _myData);
+		set(myAddress, _myBalance, _myNonce, _storage);
 	}
-	void set(Address _a, u256 _myBalance, u256 _myNonce, u256s _myData)
+	void set(Address _a, u256 _myBalance, u256 _myNonce, u256s const& _storage)
 	{
 		get<0>(addresses[_a]) = _myBalance;
 		get<1>(addresses[_a]) = _myNonce;
 		get<2>(addresses[_a]) = 0;
-		for (unsigned i = 0; i < _myData.size(); ++i)
-			get<3>(addresses[_a])[i] = _myData[i];
+		for (unsigned i = 0; i < _storage.size(); ++i)
+			get<3>(addresses[_a])[i] = _storage[i];
 	}
 
 	mObject exportEnv()
@@ -106,7 +125,6 @@ public:
 		push(ret, "currentDifficulty", currentBlock.difficulty);
 		push(ret, "currentTimestamp", currentBlock.timestamp);
 		ret["currentCoinbase"] = toString(currentBlock.coinbaseAddress);
-		push(ret, "feeMultiplier", fees.multiplier());
 		return ret;
 	}
 
@@ -117,7 +135,6 @@ public:
 		currentBlock.difficulty = toInt(_o["currentDifficulty"]);
 		currentBlock.timestamp = toInt(_o["currentTimestamp"]);
 		currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
-		fees.setMultiplier(toInt(_o["feeMultiplier"]));
 	}
 
 	static u256 toInt(mValue const& _v)
@@ -128,6 +145,19 @@ public:
 		case int_type: return (u256)_v.get_uint64();
 		case bool_type: return (u256)(uint64_t)_v.get_bool();
 		case real_type: return (u256)(uint64_t)_v.get_real();
+		default: cwarn << "Bad type for scalar: " << _v.type();
+		}
+		return 0;
+	}
+
+	static byte toByte(mValue const& _v)
+	{
+		switch (_v.type())
+		{
+		case str_type: return (byte)stoi(_v.get_str());
+		case int_type: return (byte)_v.get_uint64();
+		case bool_type: return (byte)_v.get_bool();
+		case real_type: return (byte)_v.get_real();
 		default: cwarn << "Bad type for scalar: " << _v.type();
 		}
 		return 0;
@@ -157,7 +187,6 @@ public:
 			mObject o;
 			push(o, "balance", get<0>(a.second));
 			push(o, "nonce", get<1>(a.second));
-			push(o, "extroPrice", get<2>(a.second));
 
 			mObject store;
 			string curKey;
@@ -197,7 +226,6 @@ public:
 			auto& a = addresses[Address(i.first)];
 			get<0>(a) = toInt(o["balance"]);
 			get<1>(a) = toInt(o["nonce"]);
-			get<2>(a) = toInt(o["extroPrice"]);
 			if (o.count("store"))
 				for (auto const& j: o["store"].get_obj())
 				{
@@ -220,6 +248,7 @@ public:
 		ret["address"] = toString(myAddress);
 		ret["sender"] = toString(txSender);
 		push(ret, "value", txValue);
+		push(ret, "gasPrice", gasPrice);
 		mArray d;
 		for (auto const& i: txData)
 			push(d, i);
@@ -232,8 +261,11 @@ public:
 		myAddress = Address(_o["address"].get_str());
 		txSender = Address(_o["sender"].get_str());
 		txValue = toInt(_o["value"]);
+		gasPrice = toInt(_o["gasPrice"]);
+		thisTxData.clear();
 		for (auto const& j: _o["data"].get_array())
-			txData.push_back(toInt(j));
+			thisTxData.push_back(toByte(j));
+		txData = &thisTxData;
 	}
 
 	mArray exportTxs()
@@ -262,7 +294,7 @@ public:
 			t.receiveAddress = Address(tx["destination"].get_str());
 			t.value = toInt(tx["value"]);
 			for (auto const& j: tx["data"].get_array())
-				t.data.push_back(toInt(j));
+				t.data.push_back(toByte(j));
 			txs.push_back(t);
 		}
 	}
@@ -276,6 +308,7 @@ public:
 
 	map<Address, tuple<u256, u256, u256, map<u256, u256>>> addresses;
 	Transactions txs;
+	bytes thisTxData;
 };
 
 #define CREATE_TESTS 0
@@ -315,21 +348,37 @@ public:
 			if (_fillin)
 				o["pre"] = mValue(fev.exportState());
 
+			bytes output;
 			for (auto i: o["exec"].get_array())
 			{
 				fev.importExec(i.get_obj());
-				vm.go(fev);
+				output = vm.go(fev).toBytes();
 			}
 			if (_fillin)
 			{
 				o["post"] = mValue(fev.exportState());
 				o["txs"] = fev.exportTxs();
+				mArray df;
+				for (auto const& i: output)
+					FakeExtVM::push(df, i);
+				o["out"] = df;
 			}
 			else
 			{
 				FakeExtVM test;
 				test.importState(o["post"].get_obj());
 				test.importTxs(o["txs"].get_array());
+				int i = 0;
+				for (auto const& d: o["out"].get_array())
+				{
+					if (output[i] != FakeExtVM::toInt(d))
+					{
+						cwarn << "Test failed: output byte" << i << "different.";
+						passed = false;
+					}
+					++i;
+				}
+
 				if (test.addresses != fev.addresses)
 				{
 					cwarn << "Test failed: state different.";
@@ -359,11 +408,11 @@ public:
 		cb.difficulty = 256;
 		cb.timestamp = 1;
 		cb.coinbaseAddress = toAddress(sha3("coinbase"));
-		FakeExtVM fev(fees, pb, cb, 0);
+		FakeExtVM fev(pb, cb, 0);
 		fev.setContract(toAddress(sha3("contract")), ether, 0, compileLisp("(suicide (txsender))"));
 		o["env"] = fev.exportEnv();
 		o["pre"] = fev.exportState();
-		fev.setTransaction(toAddress(sha3("sender")), ether, u256s());
+		fev.setTransaction(toAddress(sha3("sender")), ether, finney, bytes());
 		mArray execs;
 		execs.push_back(fev.exportExec());
 		o["exec"] = execs;
