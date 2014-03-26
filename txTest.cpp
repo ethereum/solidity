@@ -25,18 +25,9 @@
 #include <Client.h>
 #include <BlockChain.h>
 #include <PeerServer.h>
+#include "TestHelper.h"
 using namespace std;
 using namespace eth;
-
-void mine(Client &c, int numBlocks)
-{
-	auto startBlock = c.blockChain().details().number;
-
-	c.startMining();
-	while(c.blockChain().details().number < startBlock + numBlocks)
-		this_thread::sleep_for(chrono::milliseconds(1000));
-	c.stopMining();
-}
 
 BOOST_AUTO_TEST_CASE(mine_and_send_to_peer)
 {
