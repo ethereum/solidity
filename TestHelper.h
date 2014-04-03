@@ -25,5 +25,6 @@ namespace eth
 {
 
 void mine(Client& c, int numBlocks);
+void connectClients(Client& c1, Client& c2);
 
 }
