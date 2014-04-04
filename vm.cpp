@@ -40,7 +40,7 @@ public:
 	FakeExtVM()
 	{}
 	FakeExtVM(BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, uint _currentNumber):
-		ExtVMFace(Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock, _currentNumber)
+		ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock, _currentNumber)
 	{}
 
 	u256 store(u256 _n)
@@ -81,24 +81,24 @@ public:
 		return right160(t.sha3(false));
 	}
 
-	bool call(Address _receiveAddress, u256 _txValue, bytesConstRef _txData, u256* _gas, bytesRef _txOut)
+	bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out)
 	{
 		Transaction t;
-		t.value = _txValue;
+		t.value = _value;
 		t.gasPrice = gasPrice;
 		t.gas = *_gas;
-		t.data = _txData.toVector();
+		t.data = _data.toVector();
 		t.receiveAddress = _receiveAddress;
 		txs.push_back(t);
-		(void)_txOut;
+		(void)_out;
 		return true;
 	}
 
-	void setTransaction(Address _txSender, u256 _txValue, u256 _gasPrice, bytes const& _txData)
+	void setTransaction(Address _caller, u256 _value, u256 _gasPrice, bytes const& _data)
 	{
-		txSender = _txSender;
-		txValue = _txValue;
-		txData = &_txData;
+		caller = origin = _caller;
+		value = _value;
+		data = &_data;
 		gasPrice = _gasPrice;
 	}
 	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, bytes const& _code, map<u256, u256> const& _storage)
@@ -251,11 +251,12 @@ public:
 	{
 		mObject ret;
 		ret["address"] = toString(myAddress);
-		ret["sender"] = toString(txSender);
-		push(ret, "value", txValue);
+		ret["caller"] = toString(caller);
+		ret["origin"] = toString(origin);
+		push(ret, "value", value);
 		push(ret, "gasPrice", gasPrice);
 		mArray d;
-		for (auto const& i: txData)
+		for (auto const& i: data)
 			push(d, i);
 		ret["data"] = d;
 		return ret;
@@ -264,13 +265,14 @@ public:
 	void importExec(mObject& _o)
 	{
 		myAddress = Address(_o["address"].get_str());
-		txSender = Address(_o["sender"].get_str());
-		txValue = toInt(_o["value"]);
+		caller = Address(_o["caller"].get_str());
+		origin = Address(_o["origin"].get_str());
+		value = toInt(_o["value"]);
 		gasPrice = toInt(_o["gasPrice"]);
 		thisTxData.clear();
 		for (auto const& j: _o["data"].get_array())
 			thisTxData.push_back(toByte(j));
-		txData = &thisTxData;
+		data = &thisTxData;
 	}
 
 	mArray exportTxs()
