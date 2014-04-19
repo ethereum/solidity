@@ -26,8 +26,37 @@
 #include <RLP.h>
 #include <Log.h>
 #include <Transaction.h>
+#include <boost/test/unit_test.hpp>
+
 using namespace std;
 using namespace eth;
+
+
+BOOST_AUTO_TEST_CASE(crypto_tests)
+{
+	cnote << "Testing Crypto...";
+	secp256k1_start();
+
+	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
+	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
+	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
+	{
+		Transaction t;
+		t.nonce = 0;
+		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
+		t.value = 1000;
+		cnote << RLP(t.rlp(false));
+		cnote << toHex(t.rlp(false));
+		cnote << t.sha3(false);
+		t.sign(p.secret());
+		cnote << RLP(t.rlp(true));
+		cnote << toHex(t.rlp(true));
+		cnote << t.sha3(true);
+		BOOST_REQUIRE(t.sender() == p.address());
+	}
+
+} 
+ 
 
 int cryptoTest()
 {
