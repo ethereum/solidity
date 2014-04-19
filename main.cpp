@@ -46,7 +46,6 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 
 	int r = 0;
 	r += hexPrefixTest();
-	r += rlpTest();
 	r += trieTest();
 	r += vmTest();
 	r += cryptoTest();	// TODO: Put in tests repo.
