@@ -26,55 +26,55 @@
 #include <TrieDB.h>
 #include "TrieHash.h"
 #include "MemTrie.h"
+#include <boost/test/unit_test.hpp>
+
 using namespace std;
 using namespace eth;
 
 namespace js = json_spirit;
 
-namespace eth
-{
-
-unsigned fac(unsigned _i) { return _i > 2 ? _i * fac(_i - 1) : _i; }
-
-template <> class UnitTest<4>
-{
-public:
-	int operator()()
+namespace eth 
+{ 
+	namespace test
 	{
-		js::mValue v;
-		string s = asString(contents("../../tests/trietest.json"));
-		js::read_string(s, v);
-		bool passed = true;
-		for (auto& i: v.get_obj())
-		{
-			js::mObject& o = i.second.get_obj();
-			cnote << i.first;
-			vector<pair<string, string>> ss;
-			for (auto& i: o["in"].get_obj())
-				ss.push_back(make_pair(i.first, i.second.get_str()));
-			for (unsigned j = 0; j < fac((unsigned)ss.size()); ++j)
-			{
-				next_permutation(ss.begin(), ss.end());
-				BasicMap m;
-				GenericTrieDB<BasicMap> t(&m);
-				t.init();
-				for (auto const& k: ss)
-					t.insert(k.first, k.second);
-				if (!o["root"].is_null() && o["root"].get_str() != toHex(t.root().asArray()))
-				{
-					cwarn << "Test failed on permutation " << j;
-					cwarn << "Test says:" << o["root"].get_str();
-					cwarn << "Impl says:" << toHex(t.root().asArray());
-					passed = false;
-				}
-			}
+		static unsigned fac(unsigned _i) 
+		{ 
+			return _i > 2 ? _i * fac(_i - 1) : _i; 
 		}
-		return passed ? 0 : 1;
+
 	}
-
-};
-
 }
+
+
+BOOST_AUTO_TEST_CASE(trie_tests)
+{
+	cnote << "Testing Trie...";
+
+	js::mValue v;
+	string s = asString(contents("../../tests/trietest.json"));
+	BOOST_REQUIRE_MESSAGE( s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	js::read_string(s, v);
+	for (auto& i: v.get_obj())
+	{
+		js::mObject& o = i.second.get_obj();
+		cnote << i.first;
+		vector<pair<string, string>> ss;
+		for (auto& i: o["in"].get_obj())
+			ss.push_back(make_pair(i.first, i.second.get_str()));
+		for (unsigned j = 0; j < eth::test::fac((unsigned)ss.size()); ++j)
+		{
+			next_permutation(ss.begin(), ss.end());
+			BasicMap m;
+			GenericTrieDB<BasicMap> t(&m);
+			t.init();
+			for (auto const& k: ss)
+				t.insert(k.first, k.second);
+			BOOST_REQUIRE(!o["root"].is_null()); 
+			BOOST_CHECK(o["root"].get_str() == toHex(t.root().asArray()) ); 
+		}
+	}
+}
+
 
 inline h256 stringMapHash256(StringMap const& _s)
 {
@@ -83,8 +83,6 @@ inline h256 stringMapHash256(StringMap const& _s)
 
 int trieTest()
 {
-	cnote << "Testing Trie...";
-	return UnitTest<4>()();
 
 	// More tests...
 	{
