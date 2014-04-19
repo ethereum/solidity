@@ -45,7 +45,6 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 	std::cout << sha3(s.out()) << std::endl;*/
 
 	int r = 0;
-	r += hexPrefixTest();
 	r += trieTest();
 	r += vmTest();
 	r += cryptoTest();	// TODO: Put in tests repo.

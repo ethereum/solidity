@@ -24,47 +24,29 @@
 #include "JsonSpiritHeaders.h"
 #include "TrieCommon.h"
 #include "Log.h"
+#include <boost/test/unit_test.hpp>
+
 using namespace std;
 using namespace eth;
 namespace js = json_spirit;
 
-namespace eth
-{
-
-template <> class UnitTest<3>
-{
-public:
-	int operator()()
-	{
-		js::mValue v;
-		string s = asString(contents("../../tests/hexencodetest.json"));
-		js::read_string(s, v);
-		bool passed = true;
-		for (auto& i: v.get_obj())
-		{
-			js::mObject& o = i.second.get_obj();
-			cnote << i.first;
-			bytes v;
-			for (auto& i: o["seq"].get_array())
-				v.push_back((byte)i.get_int());
-			auto e = hexPrefixEncode(v, o["term"].get_bool());
-			if (!o["out"].is_null() && o["out"].get_str() != toHex(e))
-			{
-				cwarn << "Test failed.";
-				cwarn << "Test says:" << o["out"].get_str();
-				cwarn << "Impl says:" << toHex(e);
-				passed = false;
-			}
-		}
-		return passed ? 0 : 1;
-	}
-
-};
-
-}
-
-int hexPrefixTest()
+BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {
 	cnote << "Testing Hex-Prefix-Encode...";
-	return UnitTest<3>()();
+	js::mValue v;
+	string s = asString(contents("../../tests/hexencodetest.json"));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content from 'hexencodetest.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	js::read_string(s, v);
+	for (auto& i: v.get_obj())
+	{
+		js::mObject& o = i.second.get_obj();
+		cnote << i.first;
+		bytes v;
+		for (auto& i: o["seq"].get_array())
+			v.push_back((byte)i.get_int());
+		auto e = hexPrefixEncode(v, o["term"].get_bool());
+		BOOST_REQUIRE( ! o["out"].is_null() ); 
+		BOOST_CHECK( o["out"].get_str() == toHex(e) ); 
+	}
 }
+
