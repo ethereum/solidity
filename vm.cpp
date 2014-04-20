@@ -136,6 +136,12 @@ public:
 
 	void importEnv(mObject& _o)
 	{
+		BOOST_REQUIRE(_o.count("previousHash") > 0 ); 
+		BOOST_REQUIRE(_o.count("previousNonce") > 0 ); 
+		BOOST_REQUIRE(_o.count("currentDifficulty") > 0 ); 
+		BOOST_REQUIRE(_o.count("currentTimestamp") > 0 ); 
+		BOOST_REQUIRE(_o.count("currentCoinbase") > 0 ); 
+
 		previousBlock.hash = h256(_o["previousHash"].get_str());
 		previousBlock.nonce = h256(_o["previousNonce"].get_str());
 		currentBlock.difficulty = toInt(_o["currentDifficulty"]);
@@ -229,6 +235,10 @@ public:
 		for (auto const& i: _o)
 		{
 			mObject o = i.second.get_obj();
+			BOOST_REQUIRE(o.count("balance") > 0 ); 
+			BOOST_REQUIRE(o.count("nonce") > 0 ); 
+			BOOST_REQUIRE(o.count("store") > 0 ); 
+
 			auto& a = addresses[Address(i.first)];
 			get<0>(a) = toInt(o["balance"]);
 			get<1>(a) = toInt(o["nonce"]);
@@ -250,6 +260,7 @@ public:
 
 	mObject exportExec()
 	{
+
 		mObject ret;
 		ret["address"] = toString(myAddress);
 		ret["caller"] = toString(caller);
@@ -265,6 +276,13 @@ public:
 
 	void importExec(mObject& _o)
 	{
+		BOOST_REQUIRE(_o.count("address")> 0); 
+		BOOST_REQUIRE(_o.count("caller") > 0); 
+		BOOST_REQUIRE(_o.count("origin") > 0); 
+		BOOST_REQUIRE(_o.count("value") > 0); 
+		BOOST_REQUIRE(_o.count("gasPrice") > 0); 
+		BOOST_REQUIRE(_o.count("data") > 0 ); 
+
 		myAddress = Address(_o["address"].get_str());
 		caller = Address(_o["caller"].get_str());
 		origin = Address(_o["origin"].get_str());
@@ -298,6 +316,9 @@ public:
 		for (mValue& v: _txs)
 		{
 			auto tx = v.get_obj();
+			BOOST_REQUIRE(tx.count("destination") > 0); 
+			BOOST_REQUIRE(tx.count("value") > 0 ); 
+			BOOST_REQUIRE(tx.count("data") > 0 ); 
 			Transaction t;
 			t.receiveAddress = Address(tx["destination"].get_str());
 			t.value = toInt(tx["value"]);
@@ -319,6 +340,10 @@ public:
 		{
 			cnote << i.first;
 			mObject& o = i.second.get_obj();
+
+			BOOST_REQUIRE( o.count("env") > 0 ); 
+			BOOST_REQUIRE( o.count("pre") > 0 ); 
+			BOOST_REQUIRE( o.count("exec") > 0 ); 
 
 			VM vm;
 			eth::test::FakeExtVM fev;
@@ -345,6 +370,10 @@ public:
 			}
 			else
 			{
+				BOOST_REQUIRE( o.count("post") > 0 ); 
+				BOOST_REQUIRE( o.count("txs") > 0 ); 
+				BOOST_REQUIRE( o.count("out") > 0 ); 
+
 				eth::test::FakeExtVM test;
 				test.importState(o["post"].get_obj());
 				test.importTxs(o["txs"].get_array());
