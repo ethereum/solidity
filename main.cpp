@@ -44,8 +44,7 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 	std::cout << toHex(s.out()) << std::endl;
 	std::cout << sha3(s.out()) << std::endl;*/
 
-	int r = 0;
-
+//	int r = 0;
 //	r += daggerTest();
 //	r += stateTest();
 //	r += peerTest(argc, argv);
