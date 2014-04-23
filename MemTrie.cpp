@@ -21,8 +21,8 @@
 
 #include "MemTrie.h"
 
-#include <CommonEth.h>
-#include <TrieCommon.h>
+#include <libethcore/TrieCommon.h>
+#include <libethereum/CommonEth.h>
 using namespace std;
 using namespace eth;
 

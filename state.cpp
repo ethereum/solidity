@@ -21,10 +21,10 @@
  */
 
 #include <boost/filesystem/operations.hpp>
-#include <secp256k1.h>
-#include <BlockChain.h>
-#include <State.h>
-#include <Defaults.h>
+#include <secp256k1/secp256k1.h>
+#include <libethereum/BlockChain.h>
+#include <libethereum/State.h>
+#include <libethereum/Defaults.h>
 using namespace std;
 using namespace eth;
 

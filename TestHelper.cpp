@@ -21,7 +21,7 @@
 
 #include <thread>
 #include <chrono>
-#include <Client.h>
+#include <libethereum/Client.h>
 #include "TestHelper.h"
 
 namespace eth

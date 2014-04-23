@@ -33,7 +33,7 @@ int vmTest();
 int hexPrefixTest();
 int peerTest(int argc, char** argv);
 
-#include <BlockInfo.h>
+#include <libethereum/BlockInfo.h>
 using namespace eth;
 
 BOOST_AUTO_TEST_CASE(basic_tests)

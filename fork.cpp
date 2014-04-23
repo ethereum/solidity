@@ -22,9 +22,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <Client.h>
-#include <BlockChain.h>
-#include <PeerServer.h>
+#include <libethereum/Client.h>
+#include <libethereum/BlockChain.h>
+#include <libethereum/PeerServer.h>
 #include "TestHelper.h"
 using namespace std;
 using namespace eth;

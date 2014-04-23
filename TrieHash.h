@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include <Common.h>
-#include <FixedHash.h>
+#include <libethcore/Common.h>
+#include <libethcore/FixedHash.h>
 
 namespace eth
 {

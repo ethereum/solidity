@@ -23,7 +23,7 @@
 #include <fstream>
 #include <random>
 #include "JsonSpiritHeaders.h"
-#include <TrieDB.h>
+#include <libethcore/TrieDB.h>
 #include "TrieHash.h"
 #include "MemTrie.h"
 #include <boost/test/unit_test.hpp>

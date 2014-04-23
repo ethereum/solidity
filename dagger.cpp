@@ -21,8 +21,8 @@
  */
 
 #include <chrono>
-#include "Log.h"
-#include "Dagger.h"
+#include <libethcore/Log.h>
+#include <libethereum/Dagger.h>
 using namespace std;
 using namespace std::chrono;
 using namespace eth;

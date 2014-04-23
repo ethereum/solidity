@@ -23,8 +23,8 @@
 #include <chrono>
 #include <thread>
 #include <boost/filesystem/operations.hpp>
-#include <BlockChain.h>
-#include <PeerServer.h>
+#include <libethereum/BlockChain.h>
+#include <libethereum/PeerServer.h>
 using namespace std;
 using namespace eth;
 using boost::asio::ip::tcp;

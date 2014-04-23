@@ -21,11 +21,11 @@
  */
 
 #include <fstream>
-#include <ExtVMFace.h>
-#include <Transaction.h>
-#include <VM.h>
-#include <Log.h>
-#include <Instruction.h>
+#include <libethcore/Log.h>
+#include <libethereum/ExtVMFace.h>
+#include <libethereum/Transaction.h>
+#include <libethereum/VM.h>
+#include <libethereum/Instruction.h>
 #include "JsonSpiritHeaders.h"
 #include <boost/test/unit_test.hpp>
 

@@ -21,11 +21,11 @@
  */
 
 #include <random>
-#include <secp256k1.h>
-#include <Common.h>
-#include <RLP.h>
-#include <Log.h>
-#include <Transaction.h>
+#include <secp256k1/secp256k1.h>
+#include <libethcore/Common.h>
+#include <libethcore/RLP.h>
+#include <libethcore/Log.h>
+#include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
