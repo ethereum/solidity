@@ -70,14 +70,13 @@ public:
 			txs.push_back(_t);
 		}
 	}
-	h160 create(u256 _endowment, u256* _gas, bytesConstRef _code, bytesConstRef _init)
+	h160 create(u256 _endowment, u256* _gas, bytesConstRef _init)
 	{
 		Transaction t;
 		t.value = _endowment;
 		t.gasPrice = gasPrice;
 		t.gas = *_gas;
-		t.data = _code.toBytes();
-		t.init = _init.toBytes();
+		t.data = _init.toBytes();
 		txs.push_back(t);
 		return right160(t.sha3(false));
 	}
