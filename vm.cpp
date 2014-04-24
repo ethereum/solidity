@@ -41,8 +41,8 @@ class FakeExtVM: public ExtVMFace
 public:
 	FakeExtVM()
 	{}
-	FakeExtVM(BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, uint _currentNumber):
-		ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock, _currentNumber)
+	FakeExtVM(BlockInfo const& _previousBlock, BlockInfo const& _currentBlock):
+		ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock)
 	{}
 
 	u256 store(u256 _n)
