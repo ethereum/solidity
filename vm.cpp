@@ -21,6 +21,7 @@
  */
 
 #include <fstream>
+#include <cstdint>
 #include <libethcore/Log.h>
 #include <libethereum/ExtVMFace.h>
 #include <libethereum/Transaction.h>
