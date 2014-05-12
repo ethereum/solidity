@@ -29,6 +29,8 @@
 using namespace std;
 using namespace eth;
 
+// Disabled since tests shouldn't block (not the worst offender, but timeout should be reduced anyway).
+/*
 BOOST_AUTO_TEST_CASE(listen_port_busy)
 {
 	short port = 20000;
@@ -49,3 +51,4 @@ BOOST_AUTO_TEST_CASE(listen_port_busy)
 	BOOST_REQUIRE(c1.peerServer()->listenPort() != 0);
 	BOOST_REQUIRE(c1.peerServer()->listenPort() != port);
 }
+*/

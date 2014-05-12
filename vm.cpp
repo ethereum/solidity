@@ -47,11 +47,11 @@ public:
 
 	u256 store(u256 _n)
 	{
-		return get<3>(addresses[myAddress])[_n];
+		return get<2>(addresses[myAddress])[_n];
 	}
 	void setStore(u256 _n, u256 _v)
 	{
-		get<3>(addresses[myAddress])[_n] = _v;
+		get<2>(addresses[myAddress])[_n] = _v;
 	}
 	u256 balance(Address _a) { return get<0>(addresses[_a]); }
 	void subBalance(u256 _a) { get<0>(addresses[myAddress]) -= _a; }
@@ -61,36 +61,41 @@ public:
 		get<0>(addresses[_a]) += get<0>(addresses[myAddress]);
 		addresses.erase(myAddress);
 	}
-	void transact(Transaction& _t)
-	{
-		if (get<0>(addresses[myAddress]) >= _t.value)
-		{
-			get<0>(addresses[myAddress]) -= _t.value;
-			get<1>(addresses[myAddress])++;
-//			get<0>(addresses[_t.receiveAddress]) += _t.value;
-			txs.push_back(_t);
-		}
-	}
 	h160 create(u256 _endowment, u256* _gas, bytesConstRef _init)
 	{
+		Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
+		if (get<0>(addresses[myAddress]) >= _endowment)
+		{
+			get<0>(addresses[myAddress]) -= _endowment;
+			get<1>(addresses[myAddress])++;
+			get<0>(addresses[na]) = _endowment;
+			// TODO: actually execute...
+		}
 		Transaction t;
 		t.value = _endowment;
 		t.gasPrice = gasPrice;
 		t.gas = *_gas;
 		t.data = _init.toBytes();
-		txs.push_back(t);
-		return right160(t.sha3(false));
+		callcreates.push_back(t);
+		return na;
 	}
 
 	bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out)
 	{
+		if (get<0>(addresses[myAddress]) >= _value)
+		{
+			get<0>(addresses[myAddress]) -= _value;
+			get<1>(addresses[myAddress])++;
+			get<0>(addresses[_receiveAddress]) += _value;
+			// TODO: actually execute...
+		}
 		Transaction t;
 		t.value = _value;
 		t.gasPrice = gasPrice;
 		t.gas = *_gas;
 		t.data = _data.toVector();
 		t.receiveAddress = _receiveAddress;
-		txs.push_back(t);
+		callcreates.push_back(t);
 		(void)_out;
 		return true;
 	}
@@ -99,54 +104,69 @@ public:
 	{
 		caller = origin = _caller;
 		value = _value;
-		data = &_data;
+		data = &(thisTxData = _data);
 		gasPrice = _gasPrice;
 	}
-	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, bytes const& _code, map<u256, u256> const& _storage)
+	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, map<u256, u256> const& _storage, bytes const& _code)
 	{
 		myAddress = _myAddress;
-		set(myAddress, _myBalance, _myNonce, _code, _storage);
+		set(myAddress, _myBalance, _myNonce, _storage, _code);
 	}
-	void set(Address _a, u256 _myBalance, u256 _myNonce, bytes const& _code, map<u256, u256> const& _storage)
+	void set(Address _a, u256 _myBalance, u256 _myNonce, map<u256, u256> const& _storage, bytes const& _code)
 	{
 		get<0>(addresses[_a]) = _myBalance;
 		get<1>(addresses[_a]) = _myNonce;
-		get<2>(addresses[_a]) = 0;
-		get<3>(addresses[_a]) = _storage;
-		get<4>(addresses[_a]) = _code;
+		get<2>(addresses[_a]) = _storage;
+		get<3>(addresses[_a]) = _code;
 	}
 
 	void reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _storage)
 	{
-		txs.clear();
+		callcreates.clear();
 		addresses.clear();
-		set(myAddress, _myBalance, _myNonce, get<4>(addresses[myAddress]), _storage);
+		set(myAddress, _myBalance, _myNonce, _storage, get<3>(addresses[myAddress]));
 	}
 
 	mObject exportEnv()
 	{
 		mObject ret;
 		ret["previousHash"] = toString(previousBlock.hash);
-		ret["previousNonce"] = toString(previousBlock.nonce);
 		push(ret, "currentDifficulty", currentBlock.difficulty);
 		push(ret, "currentTimestamp", currentBlock.timestamp);
 		ret["currentCoinbase"] = toString(currentBlock.coinbaseAddress);
+		push(ret, "currentNumber", currentBlock.number);
+		push(ret, "currentGasLimit", currentBlock.gasLimit);
+
+		mArray c;
+		for (auto const& i: code)
+			push(c, i);
+		ret["code"] = c;
 		return ret;
 	}
 
 	void importEnv(mObject& _o)
 	{
-		BOOST_REQUIRE(_o.count("previousHash") > 0 ); 
-		BOOST_REQUIRE(_o.count("previousNonce") > 0 ); 
-		BOOST_REQUIRE(_o.count("currentDifficulty") > 0 ); 
-		BOOST_REQUIRE(_o.count("currentTimestamp") > 0 ); 
-		BOOST_REQUIRE(_o.count("currentCoinbase") > 0 ); 
+		BOOST_REQUIRE(_o.count("previousHash") > 0);
+		BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
+		BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
+		BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
+		BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
+		BOOST_REQUIRE(_o.count("currentNumber") > 0);
 
 		previousBlock.hash = h256(_o["previousHash"].get_str());
-		previousBlock.nonce = h256(_o["previousNonce"].get_str());
+		currentBlock.number = toInt(_o["currentNumber"]);
+		currentBlock.gasLimit = toInt(_o["gasLimit"]);
 		currentBlock.difficulty = toInt(_o["currentDifficulty"]);
 		currentBlock.timestamp = toInt(_o["currentTimestamp"]);
 		currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
+
+		thisTxCode.clear();
+		if (_o["code"].type() == str_type)
+			compileLisp(_o["code"].get_str(), false, thisTxCode);
+		else
+			for (auto const& j: _o["code"].get_array())
+				thisTxCode.push_back(toByte(j));
+		code = &thisTxCode;
 	}
 
 	static u256 toInt(mValue const& _v)
@@ -200,31 +220,38 @@ public:
 			push(o, "balance", get<0>(a.second));
 			push(o, "nonce", get<1>(a.second));
 
-			mObject store;
-			string curKey;
-			u256 li = 0;
-			mArray curVal;
-			for (auto const& s: get<3>(a.second))
 			{
-				if (!li || s.first > li + 8)
+				mObject store;
+				string curKey;
+				u256 li = 0;
+				mArray curVal;
+				for (auto const& s: get<2>(a.second))
 				{
-					if (li)
-						store[curKey] = curVal;
-					li = s.first;
-					curKey = toString(li);
-					curVal = mArray();
+					if (!li || s.first > li + 8)
+					{
+						if (li)
+							store[curKey] = curVal;
+						li = s.first;
+						curKey = toString(li);
+						curVal = mArray();
+					}
+					else
+						for (; li != s.first; ++li)
+							curVal.push_back(0);
+					push(curVal, s.second);
+					++li;
 				}
-				else
-					for (; li != s.first; ++li)
-						curVal.push_back(0);
-				push(curVal, s.second);
-				++li;
+				if (li)
+					store[curKey] = curVal;
+				o["storage"] = store;
 			}
-			if (li)
 			{
-				store[curKey] = curVal;
-				o["store"] = store;
+				mArray d;
+				for (auto const& i: get<3>(a.second))
+					push(d, i);
+				ret["code"] = d;
 			}
+
 			ret[toString(a.first)] = o;
 		}
 		return ret;
@@ -235,38 +262,40 @@ public:
 		for (auto const& i: _o)
 		{
 			mObject o = i.second.get_obj();
-			BOOST_REQUIRE(o.count("balance") > 0 ); 
-			BOOST_REQUIRE(o.count("nonce") > 0 ); 
-			BOOST_REQUIRE(o.count("store") > 0 ); 
+			BOOST_REQUIRE(o.count("balance") > 0);
+			BOOST_REQUIRE(o.count("nonce") > 0);
+			BOOST_REQUIRE(o.count("storage") > 0);
+			BOOST_REQUIRE(o.count("code") > 0);
 
 			auto& a = addresses[Address(i.first)];
 			get<0>(a) = toInt(o["balance"]);
 			get<1>(a) = toInt(o["nonce"]);
-			if (o.count("store"))
-				for (auto const& j: o["store"].get_obj())
-				{
-					u256 adr(j.first);
-					for (auto const& k: j.second.get_array())
-						get<3>(a)[adr++] = toInt(k);
-				}
-			if (o.count("code"))
+			for (auto const& j: o["storage"].get_obj())
 			{
-				bytes e;
-				bytes d = compileLisp(o["code"].get_str(), false, e);
-				get<4>(a) = d;
+				u256 adr(j.first);
+				for (auto const& k: j.second.get_array())
+					get<2>(a)[adr++] = toInt(k);
+			}
+			if (o["code"].type() == str_type)
+				compileLisp(o["code"].get_str(), false, get<3>(a));
+			else
+			{
+				get<3>(a).clear();
+				for (auto const& j: o["code"].get_array())
+					get<3>(a).push_back(toByte(j));
 			}
 		}
 	}
 
 	mObject exportExec()
 	{
-
 		mObject ret;
 		ret["address"] = toString(myAddress);
 		ret["caller"] = toString(caller);
 		ret["origin"] = toString(origin);
 		push(ret, "value", value);
 		push(ret, "gasPrice", gasPrice);
+		push(ret, "gas", gas);
 		mArray d;
 		for (auto const& i: data)
 			push(d, i);
@@ -277,30 +306,37 @@ public:
 	void importExec(mObject& _o)
 	{
 		BOOST_REQUIRE(_o.count("address")> 0); 
-		BOOST_REQUIRE(_o.count("caller") > 0); 
+		BOOST_REQUIRE(_o.count("caller") > 0);
 		BOOST_REQUIRE(_o.count("origin") > 0); 
 		BOOST_REQUIRE(_o.count("value") > 0); 
-		BOOST_REQUIRE(_o.count("gasPrice") > 0); 
-		BOOST_REQUIRE(_o.count("data") > 0 ); 
+		BOOST_REQUIRE(_o.count("data") > 0);
+		BOOST_REQUIRE(_o.count("gasPrice") > 0);
+		BOOST_REQUIRE(_o.count("gas") > 0);
 
 		myAddress = Address(_o["address"].get_str());
 		caller = Address(_o["caller"].get_str());
 		origin = Address(_o["origin"].get_str());
 		value = toInt(_o["value"]);
 		gasPrice = toInt(_o["gasPrice"]);
+		gas = toInt(_o["gas"]);
+
 		thisTxData.clear();
-		for (auto const& j: _o["data"].get_array())
-			thisTxData.push_back(toByte(j));
+		if (_o["data"].type() == str_type)
+			thisTxData = fromHex(_o["data"].get_str());
+		else
+			for (auto const& j: _o["data"].get_array())
+				thisTxData.push_back(toByte(j));
 		data = &thisTxData;
 	}
 
-	mArray exportTxs()
+	mArray exportCallCreates()
 	{
 		mArray ret;
-		for (Transaction const& tx: txs)
+		for (Transaction const& tx: callcreates)
 		{
 			mObject o;
 			o["destination"] = toString(tx.receiveAddress);
+			push(o, "gasLimit", tx.gas);
 			push(o, "value", tx.value);
 			mArray d;
 			for (auto const& i: tx.data)
@@ -311,93 +347,149 @@ public:
 		return ret;
 	}
 
-	void importTxs(mArray& _txs)
+	void importCallCreates(mArray& _callcreates)
 	{
-		for (mValue& v: _txs)
+		for (mValue& v: _callcreates)
 		{
 			auto tx = v.get_obj();
-			BOOST_REQUIRE(tx.count("destination") > 0); 
-			BOOST_REQUIRE(tx.count("value") > 0 ); 
-			BOOST_REQUIRE(tx.count("data") > 0 ); 
+			BOOST_REQUIRE(tx.count("data") > 0);
+			BOOST_REQUIRE(tx.count("value") > 0);
+			BOOST_REQUIRE(tx.count("destination") > 0);
+			BOOST_REQUIRE(tx.count("gasLimit") > 0);
 			Transaction t;
 			t.receiveAddress = Address(tx["destination"].get_str());
 			t.value = toInt(tx["value"]);
-			for (auto const& j: tx["data"].get_array())
-				t.data.push_back(toByte(j));
-			txs.push_back(t);
+			t.gas = toInt(tx["gasLimit"]);
+			if (tx["data"].type() == str_type)
+				t.data = fromHex(tx["data"].get_str());
+			else
+				for (auto const& j: tx["data"].get_array())
+					t.data.push_back(toByte(j));
+			callcreates.push_back(t);
 		}
 	}
 
-	map<Address, tuple<u256, u256, u256, map<u256, u256>, bytes>> addresses;
-	Transactions txs;
+	map<Address, tuple<u256, u256, map<u256, u256>, bytes>> addresses;
+	Transactions callcreates;
 	bytes thisTxData;
+	bytes thisTxCode;
+	u256 gas;
 };
 
-	void doTests(json_spirit::mValue& v, bool _fillin)
+void doTests(json_spirit::mValue& v, bool _fillin)
+{
+	for (auto& i: v.get_obj())
 	{
-		for (auto& i: v.get_obj())
+		cnote << i.first;
+		mObject& o = i.second.get_obj();
 
+		BOOST_REQUIRE(o.count("env") > 0);
+		BOOST_REQUIRE(o.count("pre") > 0);
+		BOOST_REQUIRE(o.count("exec") > 0);
+
+		VM vm;
+		eth::test::FakeExtVM fev;
+		fev.importEnv(o["env"].get_obj());
+		fev.importState(o["pre"].get_obj());
+
+		if (_fillin)
+			o["pre"] = mValue(fev.exportState());
+
+		bytes output;
+		for (auto i: o["exec"].get_array())
 		{
-			cnote << i.first;
-			mObject& o = i.second.get_obj();
+			fev.importExec(i.get_obj());
+			vm.reset(fev.gas);
+			output = vm.go(fev).toBytes();
+		}
+		if (_fillin)
+		{
+			o["post"] = mValue(fev.exportState());
+			o["callcreates"] = fev.exportCallCreates();
+			mArray df;
+			for (auto const& i: output)
+				FakeExtVM::push(df, i);
+			o["out"] = df;
+			fev.push(o, "gas", vm.gas());
+		}
+		else
+		{
+			BOOST_REQUIRE(o.count("post") > 0);
+			BOOST_REQUIRE(o.count("callcreates") > 0);
+			BOOST_REQUIRE(o.count("out") > 0);
+			BOOST_REQUIRE(o.count("gas") > 0);
 
-			BOOST_REQUIRE( o.count("env") > 0 ); 
-			BOOST_REQUIRE( o.count("pre") > 0 ); 
-			BOOST_REQUIRE( o.count("exec") > 0 ); 
-
-			VM vm;
-			eth::test::FakeExtVM fev;
-			fev.importEnv(o["env"].get_obj());
-			fev.importState(o["pre"].get_obj());
-
-			if (_fillin)
-				o["pre"] = mValue(fev.exportState());
-
-			bytes output;
-			for (auto i: o["exec"].get_array())
+			eth::test::FakeExtVM test;
+			test.importState(o["post"].get_obj());
+			test.importCallCreates(o["callcreates"].get_array());
+			int i = 0;
+			for (auto const& d: o["out"].get_array())
 			{
-				fev.importExec(i.get_obj());
-				output = vm.go(fev).toBytes();
+				BOOST_CHECK_MESSAGE(output[i] == FakeExtVM::toInt(d), "Output byte [" << i << "] different!");
+				++i;
 			}
-			if (_fillin)
-			{
-				o["post"] = mValue(fev.exportState());
-				o["txs"] = fev.exportTxs();
-				mArray df;
-				for (auto const& i: output)
-					FakeExtVM::push(df, i);
-				o["out"] = df;
-			}
-			else
-			{
-				BOOST_REQUIRE( o.count("post") > 0 ); 
-				BOOST_REQUIRE( o.count("txs") > 0 ); 
-				BOOST_REQUIRE( o.count("out") > 0 ); 
-
-				eth::test::FakeExtVM test;
-				test.importState(o["post"].get_obj());
-				test.importTxs(o["txs"].get_array());
-				int i = 0;
-				for (auto const& d: o["out"].get_array())
-				{
-					BOOST_CHECK_MESSAGE( output[i] == FakeExtVM::toInt(d), "Output byte [" << i << "] different!"); 
-					++i;
-				}
-				BOOST_CHECK( test.addresses == fev.addresses); 
-				BOOST_CHECK( test.txs == fev.txs ); 
-			}
+			BOOST_CHECK(FakeExtVM::toInt(o["gas"]) == vm.gas());
+			BOOST_CHECK(test.addresses == fev.addresses);
+			BOOST_CHECK(test.callcreates == fev.callcreates);
 		}
 	}
+}
+
+/*string makeTestCase()
+{
+	json_spirit::mObject o;
+
+	VM vm;
+	BlockInfo pb;
+	pb.hash = sha3("previousHash");
+	pb.nonce = sha3("previousNonce");
+	BlockInfo cb = pb;
+	cb.difficulty = 256;
+	cb.timestamp = 1;
+	cb.coinbaseAddress = toAddress(sha3("coinbase"));
+	FakeExtVM fev(pb, cb, 0);
+	bytes init;
+	fev.setContract(toAddress(sha3("contract")), ether, 0, compileLisp("(suicide (txsender))", false, init), map<u256, u256>());
+	o["env"] = fev.exportEnv();
+	o["pre"] = fev.exportState();
+	fev.setTransaction(toAddress(sha3("sender")), ether, finney, bytes());
+	mArray execs;
+	execs.push_back(fev.exportExec());
+	o["exec"] = execs;
+	vm.go(fev);
+	o["post"] = fev.exportState();
+	o["txs"] = fev.exportTxs();
+
+	return json_spirit::write_string(json_spirit::mValue(o), true);
+}*/
+
 } } // Namespace Close
 
 BOOST_AUTO_TEST_CASE(vm_tests)
 {
+	// Populate tests first:
+	try
+	{
+		cnote << "Populating VM tests...";
+		json_spirit::mValue v;
+		string s = asString(contents("../../cpp-ethereum/test/vmtests.json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
+		json_spirit::read_string(s, v);
+		eth::test::doTests(v, true);
+		writeFile("../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
+	}
+	catch( std::exception& e)
+	{
+		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
+	}
+
+
 	try
 	{
 		cnote << "Testing VM...";
 		json_spirit::mValue v;
 		string s = asString(contents("../../tests/vmtests.json"));
-		BOOST_REQUIRE_MESSAGE( s.length() > 0, "Contents of 'vmtests.json' is empty. Have you cloned the 'tests' repo branch develop?" );			
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty. Have you cloned the 'tests' repo branch develop?");
 		json_spirit::read_string(s, v);
 		eth::test::doTests(v, false);
 	}
@@ -406,38 +498,3 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what()); 
 	}
 }
-
-#if 0 
-	string makeTestCase()
-	{
-		json_spirit::mObject o;
-
-		VM vm;
-		BlockInfo pb;
-		pb.hash = sha3("previousHash");
-		pb.nonce = sha3("previousNonce");
-		BlockInfo cb = pb;
-		cb.difficulty = 256;
-		cb.timestamp = 1;
-		cb.coinbaseAddress = toAddress(sha3("coinbase"));
-		FakeExtVM fev(pb, cb, 0);
-		bytes init;
-		fev.setContract(toAddress(sha3("contract")), ether, 0, compileLisp("(suicide (txsender))", false, init), map<u256, u256>());
-		o["env"] = fev.exportEnv();
-		o["pre"] = fev.exportState();
-		fev.setTransaction(toAddress(sha3("sender")), ether, finney, bytes());
-		mArray execs;
-		execs.push_back(fev.exportExec());
-		o["exec"] = execs;
-		vm.go(fev);
-		o["post"] = fev.exportState();
-		o["txs"] = fev.exportTxs();
-
-		return json_spirit::write_string(json_spirit::mValue(o), true);
-	}
-};
-
-}
-
-
-#endif
