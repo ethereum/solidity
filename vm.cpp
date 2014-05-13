@@ -472,11 +472,11 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 	{
 		cnote << "Populating VM tests...";
 		json_spirit::mValue v;
-		string s = asString(contents("../../cpp-ethereum/test/vmtests.json"));
+		string s = asString(contents("../../../cpp-ethereum/test/vmtests.json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
 		json_spirit::read_string(s, v);
 		eth::test::doTests(v, true);
-		writeFile("../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
+		writeFile("../../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
 	}
 	catch( std::exception& e)
 	{
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 	{
 		cnote << "Testing VM...";
 		json_spirit::mValue v;
-		string s = asString(contents("../../tests/vmtests.json"));
+		string s = asString(contents("../../../tests/vmtests.json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty. Have you cloned the 'tests' repo branch develop?");
 		json_spirit::read_string(s, v);
 		eth::test::doTests(v, false);
