@@ -162,7 +162,7 @@ public:
 
 		thisTxCode.clear();
 		if (_o["code"].type() == str_type)
-			compileLisp(_o["code"].get_str(), false, thisTxCode);
+			thisTxCode = compileLLL(_o["code"].get_str(), nullptr);
 		else
 			for (auto const& j: _o["code"].get_array())
 				thisTxCode.push_back(toByte(j));
@@ -277,7 +277,7 @@ public:
 					get<2>(a)[adr++] = toInt(k);
 			}
 			if (o["code"].type() == str_type)
-				compileLisp(o["code"].get_str(), false, get<3>(a));
+				get<3>(a) = compileLLL(o["code"].get_str(), nullptr);
 			else
 			{
 				get<3>(a).clear();
