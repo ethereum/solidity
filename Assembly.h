@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <libethsupport/Common.h>
 #include <libethcore/Instruction.h>
 #include "Exceptions.h"
@@ -30,23 +31,24 @@ namespace eth
 
 enum AssemblyItemType { Operation, Push, PushString, PushTag, Tag, PushData };
 
+class Assembly;
+
 class AssemblyItem
 {
+	friend class Assembly;
+
 public:
 	AssemblyItem(u256 _push): m_type(Push), m_data(_push) {}
-	AssemblyItem(std::string const& _push): m_type(PushString), m_pushString(_push) {}
 	AssemblyItem(AssemblyItemType _type, AssemblyItem const& _tag): m_type(_type), m_data(_tag.m_data) { assert(_type == PushTag); assert(_tag.m_type == Tag); }
 	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
 	AssemblyItem(AssemblyItemType _type, u256 _data): m_type(_type), m_data(_data) {}
 
 	AssemblyItemType type() const { return m_type; }
 	u256 data() const { return m_data; }
-	std::string const& pushString() const { return m_pushString; }
 
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
-	std::string m_pushString;
 };
 
 class Assembly
@@ -54,8 +56,13 @@ class Assembly
 public:
 	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newData(bytes const& _data) { auto h = sha3(_data); m_data[h] = _data; return AssemblyItem(PushData, h); }
+	AssemblyItem newPushString(std::string const& _data) { auto b = asBytes(_data); auto h = sha3(b); m_data[h] = b; return AssemblyItem(PushString, h); }
+
+	void append(AssemblyItem const& _i) { m_items.push_back(_i); }
+
 	bytes assemble() const;
 	void append(Assembly const& _a);
+	std::ostream& streamOut(std::ostream& _out) const;
 
 private:
 	u256 m_usedTags = 0;

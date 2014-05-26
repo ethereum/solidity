@@ -34,31 +34,6 @@ namespace qi = boost::spirit::qi;
 namespace px = boost::phoenix;
 namespace sp = boost::spirit;
 
-void eth::debugOutAST(ostream& _out, sp::utree const& _this)
-{
-	switch (_this.which())
-	{
-	case sp::utree_type::list_type:
-		switch (_this.tag())
-		{
-		case 0: _out << "( "; for (auto const& i: _this) { debugOutAST(_out, i); _out << " "; } _out << ")"; break;
-		case 1: _out << "@ "; debugOutAST(_out, _this.front()); break;
-		case 2: _out << "@@ "; debugOutAST(_out, _this.front()); break;
-		case 3: _out << "[ "; debugOutAST(_out, _this.front()); _out << " ] "; debugOutAST(_out, _this.back()); break;
-		case 4: _out << "[[ "; debugOutAST(_out, _this.front()); _out << " ]] "; debugOutAST(_out, _this.back()); break;
-		case 5: _out << "{ "; for (auto const& i: _this) { debugOutAST(_out, i); _out << " "; } _out << "}"; break;
-		default:;
-		}
-
-		break;
-	case sp::utree_type::int_type: _out << _this.get<int>(); break;
-	case sp::utree_type::string_type: _out << "\"" << _this.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>() << "\""; break;
-	case sp::utree_type::symbol_type: _out << _this.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>(); break;
-	case sp::utree_type::any_type: _out << *_this.get<bigint*>(); break;
-	default: _out << "nil";
-	}
-}
-
 void CodeFragment::appendFragment(CodeFragment const& _f)
 {
 	m_locs.reserve(m_locs.size() + _f.m_locs.size());

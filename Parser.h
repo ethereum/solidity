@@ -33,6 +33,7 @@ namespace eth
 
 void killBigints(sp::utree const& _this);
 void parseTreeLLL(std::string const& _s, sp::utree& o_out);
+void debugOutAST(std::ostream& _out, sp::utree const& _this);
 
 }
 

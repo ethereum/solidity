@@ -32,8 +32,6 @@ namespace sp = boost::spirit;
 namespace eth
 {
 
-void debugOutAST(std::ostream& _out, sp::utree const& _this);
-
 class CompilerState;
 
 class CodeFragment
