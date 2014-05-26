@@ -23,6 +23,7 @@
 
 #include <libethsupport/Common.h>
 #include <libethcore/Instruction.h>
+#include "CodeLocation.h"
 #include "Exceptions.h"
 
 namespace boost { namespace spirit { class utree; } }
@@ -31,68 +32,9 @@ namespace sp = boost::spirit;
 namespace eth
 {
 
-class CompilerState;
-class CodeFragment;
-
 void debugOutAST(std::ostream& _out, sp::utree const& _this);
 
-class CodeLocation
-{
-	friend class CodeFragment;
-
-public:
-	CodeLocation(CodeFragment* _f);
-	CodeLocation(CodeFragment* _f, unsigned _p): m_f(_f), m_pos(_p) {}
-
-	unsigned get() const;
-	void increase(unsigned _val);
-	void set(unsigned _val);
-	void set(CodeLocation _loc) { assert(_loc.m_f == m_f); set(_loc.m_pos); }
-	void anchor();
-
-	CodeLocation operator+(unsigned _i) const { return CodeLocation(m_f, m_pos + _i); }
-
-private:
-	CodeFragment* m_f;
-	unsigned m_pos;
-};
-
 class CompilerState;
-
-enum AssemblyItemType { Operation, Push, PushString, PushTag, Tag, PushData };
-
-class AssemblyItem
-{
-public:
-	AssemblyItem(u256 _push): m_type(Push), m_data(_push) {}
-	AssemblyItem(std::string const& _push): m_type(PushString), m_pushString(_push) {}
-	AssemblyItem(AssemblyItemType _type, AssemblyItem const& _tag): m_type(_type), m_data(_tag.m_data) { assert(_type == PushTag); assert(_tag.m_type == Tag); }
-	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
-	AssemblyItem(AssemblyItemType _type, u256 _data): m_type(_type), m_data(_data) {}
-
-	AssemblyItemType type() const { return m_type; }
-	u256 data() const { return m_data; }
-	std::string const& pushString() const { return m_pushString; }
-
-private:
-	AssemblyItemType m_type;
-	u256 m_data;
-	std::string m_pushString;
-};
-
-class Assembly
-{
-public:
-	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
-	AssemblyItem newData(bytes const& _data) { auto h = sha3(_data); m_data[h] = _data; return AssemblyItem(PushData, h); }
-	bytes assemble() const;
-	void append(Assembly const& _a);
-
-private:
-	u256 m_usedTags = 0;
-	std::vector<AssemblyItem> m_items;
-	std::map<h256, bytes> m_data;
-};
 
 class CodeFragment
 {

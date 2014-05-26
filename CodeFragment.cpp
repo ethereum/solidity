@@ -59,40 +59,6 @@ void eth::debugOutAST(ostream& _out, sp::utree const& _this)
 	}
 }
 
-CodeLocation::CodeLocation(CodeFragment* _f)
-{
-	m_f = _f;
-	m_pos = _f->m_code.size();
-}
-
-unsigned CodeLocation::get() const
-{
-	assert(m_f->m_code[m_pos - 1] == (byte)Instruction::PUSH4);
-	bytesConstRef r(&m_f->m_code[m_pos], 4);
-	cdebug << toHex(r);
-	return fromBigEndian<uint32_t>(r);
-}
-
-void CodeLocation::set(unsigned _val)
-{
-	assert(m_f->m_code[m_pos - 1] == (byte)Instruction::PUSH4);
-	assert(!get());
-	bytesRef r(&m_f->m_code[m_pos], 4);
-	toBigEndian(_val, r);
-}
-
-void CodeLocation::anchor()
-{
-	set(m_f->m_code.size());
-}
-
-void CodeLocation::increase(unsigned _val)
-{
-	assert(m_f->m_code[m_pos - 1] == (byte)Instruction::PUSH4);
-	bytesRef r(&m_f->m_code[m_pos], 4);
-	toBigEndian(get() + _val, r);
-}
-
 void CodeFragment::appendFragment(CodeFragment const& _f)
 {
 	m_locs.reserve(m_locs.size() + _f.m_locs.size());
