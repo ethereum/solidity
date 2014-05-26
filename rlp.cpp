@@ -23,9 +23,9 @@
 #include <fstream>
 #include <sstream>
 #include "JsonSpiritHeaders.h"
-#include <libethcore/Log.h>
-#include <libethcore/RLP.h>
-#include <libethcore/Common.h>
+#include <libethsupport/Log.h>
+#include <libethsupport/RLP.h>
+#include <libethsupport/Common.h>
 #include <boost/test/unit_test.hpp>
 #include <algorithm>
 

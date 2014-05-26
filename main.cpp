@@ -31,8 +31,8 @@ int vmTest();
 int hexPrefixTest();
 int peerTest(int argc, char** argv);
 
-#include <libethcore/Log.h>
-#include <libethereum/BlockInfo.h>
+#include <libethsupport/Log.h>
+#include <libethcore/BlockInfo.h>
 using namespace std;
 using namespace eth;
 

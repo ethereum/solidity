@@ -22,8 +22,8 @@
 
 #include <fstream>
 #include "JsonSpiritHeaders.h"
-#include <libethcore/TrieCommon.h>
-#include <libethcore/Log.h>
+#include <libethsupport/TrieCommon.h>
+#include <libethsupport/Log.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;

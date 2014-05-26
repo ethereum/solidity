@@ -22,11 +22,12 @@
 
 #include <fstream>
 #include <cstdint>
-#include <libethcore/Log.h>
-#include <libethereum/ExtVMFace.h>
+#include <libethsupport/Log.h>
+#include <libethcore/Instruction.h>
+#include <libevm/ExtVMFace.h>
+#include <libevm/VM.h>
+#include <liblll/Compiler.h>
 #include <libethereum/Transaction.h>
-#include <libethereum/VM.h>
-#include <libethereum/Instruction.h>
 #include "JsonSpiritHeaders.h"
 #include <boost/test/unit_test.hpp>
 
