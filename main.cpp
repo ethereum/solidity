@@ -34,8 +34,12 @@ void help()
 	cout
 		<< "Usage lllc [OPTIONS] <file>" << endl
         << "Options:" << endl
-        << "    -h,--help  Show this help message and exit." << endl
-        << "    -V,--version  Show the version and exit." << endl;
+		<< "    -b,--binary  Parse, compile and assemble; output byte code in binary." << endl
+		<< "    -x,--hex  Parse, compile and assemble; output byte code in hex." << endl
+//		<< "    -a,--assembly  Only parse and compile; show assembly." << endl
+		<< "    -t,--parse-tree  Only parse; show parse tree." << endl
+		<< "    -h,--help  Show this help message and exit." << endl
+		<< "    -V,--version  Show the version and exit." << endl;
         exit(0);
 }
 
@@ -61,7 +65,7 @@ int main(int argc, char** argv)
 			help();
 		else if (arg == "-b" || arg == "--binary")
 			mode = Binary;
-		else if (arg == "-h" || arg == "--hex")
+		else if (arg == "-x" || arg == "--hex")
 			mode = Hex;
 		else if (arg == "-t" || arg == "--parse-tree")
 			mode = ParseTree;
