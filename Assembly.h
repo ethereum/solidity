@@ -46,6 +46,8 @@ public:
 	AssemblyItemType type() const { return m_type; }
 	u256 data() const { return m_data; }
 
+	std::ostream& streamOut(std::ostream& _out) const;
+
 private:
 	AssemblyItemType m_type;
 	u256 m_data;

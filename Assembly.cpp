@@ -40,9 +40,19 @@ void Assembly::append(Assembly const& _a)
 
 ostream& Assembly::streamOut(ostream& _out) const
 {
-	for (auto const& i: m_items)
-	{
-	}
+	for (AssemblyItem const& i: m_items)
+		switch (i.m_type)
+		{
+		case Operation:
+			_out << c_instructionInfo.at((Instruction)(byte)i.m_data).name << endl;
+			break;
+		case Push:
+			_out << i.m_data << endl;
+			break;
+/*		case PushString:
+			_out << i.m_data << endl;
+			break;*/
+		}
 	return _out;
 }
 
