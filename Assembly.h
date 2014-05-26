@@ -92,6 +92,7 @@ public:
 	std::string out() const { std::stringstream ret; streamOut(ret); return ret.str(); }
 	int deposit() const { return m_deposit; }
 	bytes assemble() const;
+	void optimise();
 	std::ostream& streamOut(std::ostream& _out) const;
 
 private:

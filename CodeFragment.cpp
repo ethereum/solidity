@@ -102,7 +102,7 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 
 void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 {
-	if (_t.empty())
+	if (_t.tag() == 0 && _t.empty())
 		error<EmptyList>();
 	else if (_t.tag() == 0 && _t.front().which() != sp::utree_type::symbol_type)
 		error<DataNotExecutable>();
@@ -361,14 +361,17 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		{
 			requireSize(3);
 			requireDeposit(0, 1);
+			int minDep = min(code[1].m_asm.deposit(), code[2].m_asm.deposit());
 
 			m_asm.append(code[0].m_asm);
 			auto pos = m_asm.appendJumpI();
 			m_asm.onePath();
-			m_asm << code[2].m_asm;
+			m_asm.append(code[2].m_asm, minDep);
 			auto end = m_asm.appendJump();
 			m_asm.otherPath();
-			m_asm << pos.tag() << code[1].m_asm << end.tag();
+			m_asm << pos.tag();
+			m_asm.append(code[1].m_asm, minDep);
+			m_asm << end.tag();
 			m_asm.donePaths();
 		}
 		else if (us == "WHEN" || us == "UNLESS")

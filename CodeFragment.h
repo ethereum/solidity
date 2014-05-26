@@ -43,10 +43,10 @@ public:
 	static CodeFragment compile(std::string const& _src, CompilerState& _s);
 
 	/// Consolidates data and compiles code.
-	bytes code() const { return m_asm.assemble(); }
+	bytes code() { m_asm.optimise(); return m_asm.assemble(); }
 
 	/// Consolidates data and compiles code.
-	std::string assembly() const { return m_asm.out(); }
+	std::string assembly() { m_asm.optimise(); return m_asm.out(); }
 
 private:
 	template <class T> void error() const { throw T(); }

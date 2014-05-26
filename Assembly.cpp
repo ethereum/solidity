@@ -142,6 +142,10 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	return back();
 }
 
+void Assembly::optimise()
+{
+}
+
 bytes Assembly::assemble() const
 {
 	bytes ret;
