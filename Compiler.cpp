@@ -27,12 +27,12 @@
 using namespace std;
 using namespace eth;
 
-bytes eth::compileLLL(string const& _s, vector<string>* _errors)
+bytes eth::compileLLL(string const& _src, vector<string>* _errors)
 {
 	try
 	{
 		CompilerState cs;
-		bytes ret = CodeFragment::compile(_s, cs).code();
+		bytes ret = CodeFragment::compile(_src, cs).code();
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret;
@@ -48,6 +48,29 @@ bytes eth::compileLLL(string const& _s, vector<string>* _errors)
 			_errors->push_back("Parse error.");
 	}
 	return bytes();
+}
+
+std::string eth::compileLLLToAsm(std::string const& _src, std::vector<std::string>* _errors)
+{
+	try
+	{
+		CompilerState cs;
+		string ret = CodeFragment::compile(_src, cs).assembly();
+		for (auto i: cs.treesToKill)
+			killBigints(i);
+		return ret;
+	}
+	catch (Exception const& _e)
+	{
+		if (_errors)
+			_errors->push_back(_e.description());
+	}
+	catch (std::exception)
+	{
+		if (_errors)
+			_errors->push_back("Parse error.");
+	}
+	return string();
 }
 
 string eth::parseLLL(string const& _src)

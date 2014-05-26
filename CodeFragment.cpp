@@ -34,100 +34,6 @@ namespace qi = boost::spirit::qi;
 namespace px = boost::phoenix;
 namespace sp = boost::spirit;
 
-void CodeFragment::appendFragment(CodeFragment const& _f)
-{
-	m_locs.reserve(m_locs.size() + _f.m_locs.size());
-	m_code.reserve(m_code.size() + _f.m_code.size());
-
-	unsigned os = m_code.size();
-
-	for (auto i: _f.m_code)
-		m_code.push_back(i);
-
-	for (auto i: _f.m_locs)
-	{
-		CodeLocation(this, i + os).increase(os);
-		m_locs.push_back(i + os);
-	}
-
-	for (auto i: _f.m_data)
-		m_data.insert(make_pair(i.first, i.second + os));
-
-	m_deposit += _f.m_deposit;
-}
-
-CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s)
-{
-	CodeFragment ret;
-	sp::utree o;
-	parseTreeLLL(_src, o);
-	if (!o.empty())
-		ret = CodeFragment(o, _s);
-	_s.treesToKill.push_back(o);
-	return ret;
-}
-
-void CodeFragment::consolidateData()
-{
-	m_code.push_back(0);
-	bytes ld;
-	for (auto const& i: m_data)
-	{
-		if (ld != i.first)
-		{
-			ld = i.first;
-			for (auto j: ld)
-				m_code.push_back(j);
-		}
-		CodeLocation(this, i.second).set(m_code.size() - ld.size());
-	}
-	m_data.clear();
-}
-
-void CodeFragment::appendFragment(CodeFragment const& _f, unsigned _deposit)
-{
-	if ((int)_deposit > _f.m_deposit)
-		error<InvalidDeposit>();
-	else
-	{
-		appendFragment(_f);
-		while (_deposit++ < (unsigned)_f.m_deposit)
-			appendInstruction(Instruction::POP);
-	}
-}
-
-CodeLocation CodeFragment::appendPushLocation(unsigned _locationValue)
-{
-	m_code.push_back((byte)Instruction::PUSH4);
-	CodeLocation ret(this, m_code.size());
-	m_locs.push_back(m_code.size());
-	m_code.resize(m_code.size() + 4);
-	bytesRef r(&m_code[m_code.size() - 4], 4);
-	toBigEndian(_locationValue, r);
-	m_deposit++;
-	return ret;
-}
-
-unsigned CodeFragment::appendPush(u256 _literalValue)
-{
-	unsigned br = max<unsigned>(1, bytesRequired(_literalValue));
-	m_code.push_back((byte)Instruction::PUSH1 + br - 1);
-	m_code.resize(m_code.size() + br);
-	for (unsigned i = 0; i < br; ++i)
-	{
-		m_code[m_code.size() - 1 - i] = (byte)(_literalValue & 0xff);
-		_literalValue >>= 8;
-	}
-	m_deposit++;
-	return br + 1;
-}
-
-void CodeFragment::appendInstruction(Instruction _i)
-{
-	m_code.push_back((byte)_i);
-	m_deposit += c_instructionInfo.at(_i).ret - c_instructionInfo.at(_i).args;
-}
-
 CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowASM)
 {
 /*	cdebug << "CodeFragment. Locals:";
@@ -151,12 +57,7 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 	{
 		auto sr = _t.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
 		string s(sr.begin(), sr.end());
-		if (s.size() > 32)
-			error<StringTooLong>();
-		h256 valHash;
-		memcpy(valHash.data(), s.data(), s.size());
-		memset(valHash.data() + s.size(), 0, 32 - s.size());
-		appendPush(valHash);
+		m_asm.append(s);
 		break;
 	}
 	case sp::utree_type::symbol_type:
@@ -164,21 +65,14 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 		auto sr = _t.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
 		string s(sr.begin(), sr.end());
 		string us = boost::algorithm::to_upper_copy(s);
-		if (_allowASM)
-		{
-			if (c_instructions.count(us))
-			{
-				auto it = c_instructions.find(us);
-				m_deposit = c_instructionInfo.at(it->second).ret - c_instructionInfo.at(it->second).args;
-				m_code.push_back((byte)it->second);
-			}
-		}
+		if (_allowASM && c_instructions.count(us))
+			m_asm.append(c_instructions.at(us));
 		if (_s.defs.count(s))
-			appendFragment(_s.defs.at(s));
+			m_asm.append(_s.defs.at(s).m_asm);
 		else if (_s.args.count(s))
-			appendFragment(_s.args.at(s));
+			m_asm.append(_s.args.at(s).m_asm);
 		else if (_s.outers.count(s))
-			appendFragment(_s.outers.at(s));
+			m_asm.append(_s.outers.at(s).m_asm);
 		else if (us.find_first_of("1234567890") != 0 && us.find_first_not_of("QWERTYUIOPASDFGHJKLZXCVBNM1234567890_") == string::npos)
 		{
 			auto it = _s.vars.find(s);
@@ -187,7 +81,7 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 				bool ok;
 				tie(it, ok) = _s.vars.insert(make_pair(s, _s.vars.size() * 32));
 			}
-			appendPush(it->second);
+			m_asm.append((u256)it->second);
 		}
 		else
 			error<BareSymbol>();
@@ -199,42 +93,11 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 		bigint i = *_t.get<bigint*>();
 		if (i < 0 || i > bigint(u256(0) - 1))
 			error<IntegerOutOfRange>();
-		appendPush((u256)i);
+		m_asm.append((u256)i);
 		break;
 	}
 	default: break;
 	}
-}
-
-void CodeFragment::appendPushDataLocation(bytes const& _data)
-{
-	m_code.push_back((byte)Instruction::PUSH4);
-	m_data.insert(make_pair(_data, m_code.size()));
-	m_code.resize(m_code.size() + 4);
-	memset(&m_code.back() - 3, 0, 4);
-	m_deposit++;
-}
-
-std::string CodeFragment::asPushedString() const
-{
-	string ret;
-	if (m_code.size())
-	{
-		unsigned bc = m_code[0] - (byte)Instruction::PUSH1 + 1;
-		if (m_code[0] >= (byte)Instruction::PUSH1 && m_code[0] <= (byte)Instruction::PUSH32)
-		{
-			for (unsigned s = 0; s < bc && m_code[1 + s]; ++s)
-				ret.push_back(m_code[1 + s]);
-			return ret;
-		}
-	}
-	error<ExpectedLiteral>();
-	return ret;
-}
-
-void CodeFragment::optimise()
-{
-//	map<string, function<bytes(vector<u256> const&)>> pattern = { { "PUSH,PUSH,ADD", [](vector<u256> const& v) { return CodeFragment(appendPush(v[0] + v[1])); } } };
 }
 
 void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
@@ -281,7 +144,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			int c = 0;
 			for (auto const& i: _t)
 				if (c++)
-					appendFragment(CodeFragment(i, _s, true));
+					m_asm.append(CodeFragment(i, _s, true).m_asm);
 		}
 		else if (us == "INCLUDE")
 		{
@@ -299,9 +162,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			else if (i.which() == sp::utree_type::symbol_type)
 			{
 				auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
-				n = _s.getDef(string(sr.begin(), sr.end())).asPushedString();
+				n = _s.getDef(string(sr.begin(), sr.end())).m_asm.backString();
 			}
-			appendFragment(CodeFragment::compile(asString(contents(n)), _s));
+			m_asm.append(CodeFragment::compile(asString(contents(n)), _s).m_asm);
 		}
 		else if (us == "DEF")
 		{
@@ -323,7 +186,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 					else if (i.which() == sp::utree_type::symbol_type)
 					{
 						auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
-						n = _s.getDef(string(sr.begin(), sr.end())).asPushedString();
+						n = _s.getDef(string(sr.begin(), sr.end())).m_asm.backString();
 					}
 				}
 				else if (ii == 2)
@@ -362,7 +225,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				if (ii == 1)
 				{
 					pos = CodeFragment(i, _s);
-					if (pos.m_deposit != 1)
+					if (pos.m_asm.deposit() != 1)
 						error<InvalidDeposit>();
 				}
 				else if (ii == 2 && !i.tag() && i.which() == sp::utree_type::string_type)
@@ -396,11 +259,11 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 					error<InvalidLiteral>();
 				++ii;
 			}
-			appendPush(data.size());
-			appendInstruction(Instruction::DUP);
-			appendPushDataLocation(data);
-			appendFragment(pos, 1);
-			appendInstruction(Instruction::CODECOPY);
+			m_asm.append((u256)data.size());
+			m_asm.append(Instruction::DUP);
+			m_asm.append(data);
+			m_asm.append(pos.m_asm, 1);
+			m_asm.append(Instruction::CODECOPY);
 		}
 		else
 			nonStandard = false;
@@ -427,7 +290,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		auto requireSize = [&](unsigned s) { if (code.size() != s) error<IncorrectParameterCount>(); };
 		auto requireMinSize = [&](unsigned s) { if (code.size() < s) error<IncorrectParameterCount>(); };
 		auto requireMaxSize = [&](unsigned s) { if (code.size() > s) error<IncorrectParameterCount>(); };
-		auto requireDeposit = [&](unsigned i, int s) { if (code[i].m_deposit != s) error<InvalidDeposit>(); };
+		auto requireDeposit = [&](unsigned i, int s) { if (code[i].m_asm.deposit() != s) error<InvalidDeposit>(); };
 
 		if (_s.macros.count(s) && _s.macros.at(s).args.size() == code.size())
 		{
@@ -443,7 +306,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				requireDeposit(i, 1);
 				cs.args[m.args[i]] = code[i];
 			}
-			appendFragment(CodeFragment(m.code, cs));
+			m_asm.append(CodeFragment(m.code, cs).m_asm);
 			for (auto const& i: cs.defs)
 				_s.defs[i.first] = i.second;
 			for (auto const& i: cs.macros)
@@ -459,8 +322,8 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				requireMinSize(-ea);
 
 			for (unsigned i = code.size(); i; --i)
-				appendFragment(code[i - 1], 1);
-			appendInstruction(it->second);
+				m_asm.append(code[i - 1].m_asm, 1);
+			m_asm.append(it->second);
 		}
 		else if (c_arith.count(us))
 		{
@@ -469,10 +332,10 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			for (unsigned i = code.size(); i; --i)
 			{
 				requireDeposit(i - 1, 1);
-				appendFragment(code[i - 1], 1);
+				m_asm.append(code[i - 1].m_asm, 1);
 			}
 			for (unsigned i = 1; i < code.size(); ++i)
-				appendInstruction(it->second);
+				m_asm.append(it->second);
 		}
 		else if (c_binary.count(us))
 		{
@@ -480,74 +343,75 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireSize(2);
 			requireDeposit(0, 1);
 			requireDeposit(1, 1);
-			appendFragment(code[1], 1);
-			appendFragment(code[0], 1);
-			appendInstruction(it->second.first);
+			m_asm.append(code[1].m_asm, 1);
+			m_asm.append(code[0].m_asm, 1);
+			m_asm.append(it->second.first);
 			if (it->second.second)
-				appendInstruction(Instruction::NOT);
+				m_asm.append(Instruction::NOT);
 		}
 		else if (c_unary.count(us))
 		{
 			auto it = c_unary.find(us);
 			requireSize(1);
 			requireDeposit(0, 1);
-			appendFragment(code[0], 1);
-			appendInstruction(it->second);
+			m_asm.append(code[0].m_asm, 1);
+			m_asm.append(it->second);
 		}
 		else if (us == "IF")
 		{
 			requireSize(3);
 			requireDeposit(0, 1);
-			appendFragment(code[0]);
-			auto pos = appendJumpI();
-			onePath();
-			appendFragment(code[2]);
-			auto end = appendJump();
-			otherPath();
-			pos.anchor();
-			appendFragment(code[1]);
-			donePaths();
-			end.anchor();
+
+			m_asm.append(code[0].m_asm);
+			auto pos = m_asm.appendJumpI();
+			m_asm.onePath();
+			m_asm << code[2].m_asm;
+			auto end = m_asm.appendJump();
+			m_asm.otherPath();
+			m_asm << pos.tag() << code[1].m_asm << end.tag();
+			m_asm.donePaths();
 		}
 		else if (us == "WHEN" || us == "UNLESS")
 		{
 			requireSize(2);
 			requireDeposit(0, 1);
-			appendFragment(code[0]);
+
+			m_asm.append(code[0].m_asm);
 			if (us == "WHEN")
-				appendInstruction(Instruction::NOT);
-			auto end = appendJumpI();
-			onePath();
-			otherPath();
-			appendFragment(code[1], 0);
-			donePaths();
-			end.anchor();
+				m_asm.append(Instruction::NOT);
+			auto end = m_asm.appendJumpI();
+			m_asm.onePath();
+			m_asm.otherPath();
+			m_asm << code[1].m_asm << end.tag();
+			m_asm.donePaths();
 		}
 		else if (us == "WHILE")
 		{
 			requireSize(2);
 			requireDeposit(0, 1);
-			auto begin = CodeLocation(this);
-			appendFragment(code[0], 1);
-			appendInstruction(Instruction::NOT);
-			auto end = appendJumpI();
-			appendFragment(code[1], 0);
-			appendJump(begin);
-			end.anchor();
+
+			auto begin = m_asm.append();
+			m_asm.append(code[0].m_asm);
+			m_asm.append(Instruction::NOT);
+			auto end = m_asm.appendJumpI();
+			m_asm.append(code[1].m_asm, 0);
+			m_asm.appendJump(begin);
+			m_asm << end.tag();
 		}
 		else if (us == "FOR")
 		{
 			requireSize(4);
 			requireDeposit(1, 1);
-			appendFragment(code[0], 0);
-			auto begin = CodeLocation(this);
-			appendFragment(code[1], 1);
-			appendInstruction(Instruction::NOT);
-			auto end = appendJumpI();
-			appendFragment(code[3], 0);
-			appendFragment(code[2], 0);
-			appendJump(begin);
-			end.anchor();
+
+			m_asm.append(code[0].m_asm, 0);
+			auto begin = m_asm.append();
+			m_asm.append(code[1].m_asm);
+			m_asm.append(Instruction::NOT);
+			auto end = m_asm.appendJumpI();
+			m_asm.append(code[3].m_asm, 0);
+			m_asm.append(code[2].m_asm, 0);
+			m_asm.appendJump(begin);
+			m_asm << end.tag();
 		}
 		else if (us == "LLL")
 		{
@@ -555,22 +419,22 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireMaxSize(3);
 			requireDeposit(1, 1);
 
-			CodeLocation codeloc(this, m_code.size() + 6);
 			bytes const& subcode = code[0].code();
-			appendPush(subcode.size());
-			appendInstruction(Instruction::DUP);
+
+			m_asm.append((u256)subcode.size());
+			m_asm.append(Instruction::DUP);
 			if (code.size() == 3)
 			{
 				requireDeposit(2, 1);
-				appendFragment(code[2], 1);
-				appendInstruction(Instruction::LT);
-				appendInstruction(Instruction::NOT);
-				appendInstruction(Instruction::MUL);
-				appendInstruction(Instruction::DUP);
+				m_asm.append(code[2].m_asm, 1);
+				m_asm.append(Instruction::LT);
+				m_asm.append(Instruction::NOT);
+				m_asm.append(Instruction::MUL);
+				m_asm.append(Instruction::DUP);
 			}
-			appendPushDataLocation(subcode);
-			appendFragment(code[1], 1);
-			appendInstruction(Instruction::CODECOPY);
+			m_asm.append(subcode);
+			m_asm.append(code[1].m_asm, 1);
+			m_asm.append(Instruction::CODECOPY);
 		}
 		else if (us == "&&" || us == "||")
 		{
@@ -578,53 +442,52 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			for (unsigned i = 0; i < code.size(); ++i)
 				requireDeposit(i, 1);
 
-			vector<CodeLocation> ends;
+			auto end = m_asm.newTag();
 			if (code.size() > 1)
 			{
-				appendPush(us == "||" ? 1 : 0);
+				m_asm.append((u256)(us == "||" ? 1 : 0));
 				for (unsigned i = 1; i < code.size(); ++i)
 				{
 					// Check if true - predicate
-					appendFragment(code[i - 1], 1);
+					m_asm.append(code[i - 1].m_asm, 1);
 					if (us == "&&")
-						appendInstruction(Instruction::NOT);
-					ends.push_back(appendJumpI());
+						m_asm.append(Instruction::NOT);
+					m_asm.appendJumpI(end);
 				}
-				appendInstruction(Instruction::POP);
+				m_asm.append(Instruction::POP);
 			}
 
 			// Check if true - predicate
-			appendFragment(code.back(), 1);
+			m_asm.append(code.back().m_asm, 1);
 
 			// At end now.
-			for (auto& i: ends)
-				i.anchor();
+			m_asm.append(end);
 		}
 		else if (us == "~")
 		{
 			requireSize(1);
 			requireDeposit(0, 1);
-			appendFragment(code[0], 1);
-			appendPush(1);
-			appendPush(0);
-			appendInstruction(Instruction::SUB);
-			appendInstruction(Instruction::SUB);
+
+			m_asm.append(code[0].m_asm, 1);
+			m_asm.append((u256)1);
+			m_asm.append((u256)0);
+			m_asm.append(Instruction::SUB);
+			m_asm.append(Instruction::SUB);
 		}
 		else if (us == "SEQ")
 		{
 			unsigned ii = 0;
 			for (auto const& i: code)
 				if (++ii < code.size())
-					appendFragment(i, 0);
+					m_asm.append(i.m_asm, 0);
 				else
-					appendFragment(i);
+					m_asm.append(i.m_asm);
 		}
 		else if (us == "RAW")
 		{
 			for (auto const& i: code)
-				appendFragment(i);
-			while (m_deposit > 1)
-				appendInstruction(Instruction::POP);
+				m_asm.append(i.m_asm);
+			m_asm.popTo(1);
 		}
 		else if (us.find_first_of("1234567890") != 0 && us.find_first_not_of("QWERTYUIOPASDFGHJKLZXCVBNM1234567890_") == string::npos)
 		{
@@ -634,9 +497,20 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				bool ok;
 				tie(it, ok) = _s.vars.insert(make_pair(s, _s.vars.size() * 32));
 			}
-			appendPush(it->second);
+			m_asm.append((u256)it->second);
 		}
 		else
 			error<InvalidOperation>();
 	}
+}
+
+CodeFragment CodeFragment::compile(string const& _src, CompilerState& _s)
+{
+	CodeFragment ret;
+	sp::utree o;
+	parseTreeLLL(_src, o);
+	if (!o.empty())
+		ret = CodeFragment(o, _s);
+	_s.treesToKill.push_back(o);
+	return ret;
 }

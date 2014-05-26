@@ -29,7 +29,8 @@ namespace eth
 {
 
 std::string parseLLL(std::string const& _src);
-bytes compileLLL(std::string const& _s, std::vector<std::string>* _errors = nullptr);
+std::string compileLLLToAsm(std::string const& _src, std::vector<std::string>* _errors = nullptr);
+bytes compileLLL(std::string const& _src, std::vector<std::string>* _errors = nullptr);
 
 }
 
