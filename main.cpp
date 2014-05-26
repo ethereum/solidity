@@ -36,7 +36,7 @@ void help()
         << "Options:" << endl
 		<< "    -b,--binary  Parse, compile and assemble; output byte code in binary." << endl
 		<< "    -x,--hex  Parse, compile and assemble; output byte code in hex." << endl
-//		<< "    -a,--assembly  Only parse and compile; show assembly." << endl
+		<< "    -a,--assembly  Only parse and compile; show assembly." << endl
 		<< "    -t,--parse-tree  Only parse; show parse tree." << endl
 		<< "    -h,--help  Show this help message and exit." << endl
 		<< "    -V,--version  Show the version and exit." << endl;
@@ -51,7 +51,7 @@ void version()
 	exit(0);
 }
 
-enum Mode { Binary, Hex, ParseTree };
+enum Mode { Binary, Hex, Assembly, ParseTree };
 
 int main(int argc, char** argv)
 {
@@ -67,6 +67,8 @@ int main(int argc, char** argv)
 			mode = Binary;
 		else if (arg == "-x" || arg == "--hex")
 			mode = Hex;
+		else if (arg == "-a" || arg == "--assembly")
+			mode = Assembly;
 		else if (arg == "-t" || arg == "--parse-tree")
 			mode = ParseTree;
 		else if (arg == "-V" || arg == "--version")
@@ -88,23 +90,23 @@ int main(int argc, char** argv)
 	else
 		src = asString(contents(infile));
 
+	vector<string> errors;
 	if (src.empty())
 		cerr << "Empty file." << endl;
 	else if (mode == Binary || mode == Hex)
 	{
-		vector<string> errors;
 		auto bs = compileLLL(src, &errors);
 		if (mode == Hex)
 			cout << toHex(bs) << endl;
 		else if (mode == Binary)
 			cout.write((char const*)bs.data(), bs.size());
-		for (auto const& i: errors)
-			cerr << i << endl;
 	}
 	else if (mode == ParseTree)
-	{
 		cout << parseLLL(src) << endl;
-	}
+	else if (mode == Assembly)
+		cout << compileLLLToAsm(src, &errors) << endl;
+	for (auto const& i: errors)
+		cerr << i << endl;
 
 	return 0;
 }
