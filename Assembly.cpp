@@ -144,6 +144,8 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 
 void Assembly::optimise()
 {
+	std::vector<pair<  vector<int>,  function< vector<AssemblyItem>(vector<AssemblyItem>) >  >> rules;
+//	rules.insert(make_pair({(int)Instruction::ADD, (int)Instruction::ADD, -(int)Push}, []() {}));
 }
 
 bytes Assembly::assemble() const

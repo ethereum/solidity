@@ -51,10 +51,14 @@ public:
 
 	int deposit() const;
 
+	bool operator==(int _mask) const { return -_mask == (int)m_type || (m_type == Operation && _mask == (int)m_data); }
+
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
 };
+
+inline bool operator==(int _i, AssemblyItem _ai) { return _ai.operator==(_i); }
 
 class Assembly
 {
