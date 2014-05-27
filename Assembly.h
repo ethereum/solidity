@@ -87,7 +87,7 @@ public:
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
 
 	AssemblyItem const& back() { return m_items.back(); }
-	std::string backString() const { return m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
+	std::string backString() const { return m_items.size() && m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
 
 	void onePath() { assert(!m_totalDeposit && !m_baseDeposit); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
 	void otherPath() { donePath(); m_totalDeposit = m_deposit; m_deposit = m_baseDeposit; }
