@@ -186,6 +186,9 @@ inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 	return true;
 }
 
+struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
+#define copt eth::LogOutputStream<OptimiserChannel, true>()
+
 void Assembly::optimise()
 {
 	map<Instruction, function<u256(u256, u256)>> c_simple =
@@ -210,7 +213,7 @@ void Assembly::optimise()
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules =
 	{
 		{ { Push, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
-		{ { Push, PushTag, Instruction::JUMPI }, [](AssemblyItemsConstRef m) -> AssemblyItems { return m[0].data() ? AssemblyItems({ m[1], Instruction::JUMP }) : AssemblyItems(); } },
+		{ { Push, PushTag, Instruction::JUMPI }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].data()) return { m[1], Instruction::JUMP }; else return {}; } },
 	};
 
 	for (auto const& i: c_simple)
@@ -219,19 +222,16 @@ void Assembly::optimise()
 	{
 		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
 		rules.push_back({ { Push, i.first, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[2].data(), m[0].data()), i.first }; } });
-		rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [&](AssemblyItemsConstRef m) -> AssemblyItems
-						{
-							if (m[0].m_data == m[2].m_data)
-								return {};
-							else
-								return m.toVector();
-						}});
+		rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [&](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {}; else return m.toVector(); }});
 	}
+
+	copt << *this;
 
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
 	{
 		count = 0;
+		map<u256, unsigned> tags;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 		{
 			for (auto const& r: rules)
@@ -242,23 +242,64 @@ void Assembly::optimise()
 					auto rw = r.second(vr);
 					if (rw.size() < vr.size())
 					{
-						cnote << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
+						copt << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
 						for (unsigned j = 0; j < vr.size(); ++j)
 							if (j < rw.size())
 								m_items[i + j] = rw[j];
 							else
 								m_items.erase(m_items.begin() + i + rw.size());
-						cnote << AssemblyItemsConstRef(&rw);
+						copt << AssemblyItemsConstRef(&rw);
 						count++;
+						copt << "Now:\n" << m_items;
 					}
 				}
 			}
+			if (m_items[i].type() == Operation && m_items[i].data() == (byte)Instruction::JUMP)
+			{
+				bool o = false;
+				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
+				{
+					m_items.erase(m_items.begin() + i + 1);
+					o = true;
+				}
+				if (o)
+				{
+					copt << "Jump with no tag. Now:\n" << m_items;
+					++count;
+				}
+			}
+		}
+
+		for (unsigned i = 0; i < m_items.size(); ++i)
+			if (m_items[i].type() == Tag)
+				tags.insert(make_pair(m_items[i].data(), i));
+
+		for (auto const& i: m_items)
+			if (i.type() == PushTag)
+				tags.erase(i.data());
+
+		if (tags.size())
+		{
+			auto t = *tags.begin();
+			unsigned i = t.second;
+			if (i && m_items[i - 1].type() == Operation && m_items[i - 1].data() == (byte)Instruction::JUMP)
+				while (i < m_items.size() && (m_items[i].type() != Tag || tags.count(m_items[i].data())))
+				{
+					if (m_items[i].type() == Tag && tags.count(m_items[i].data()))
+						tags.erase(m_items[i].data());
+					m_items.erase(m_items.begin() + i);
+				}
+			else
+			{
+				m_items.erase(m_items.begin() + i);
+				tags.erase(t.first);
+			}
+			copt << "Unused tag. Now:\n" << m_items;
+			++count;
 		}
 	}
 
-	// TODO: find all unused tags, for all those that have an unconditional jump immediately before, remove code between the tag and the next used tag (removing unused tags from the todo along the way).
-
-	cnote << total << " optimisations done.";
+	copt << total << " optimisations done.";
 }
 
 bytes Assembly::assemble() const
@@ -333,13 +374,16 @@ bytes Assembly::assemble() const
 		for (auto const& i: m_data)
 		{
 			auto its = dataRef.equal_range(i.first);
-			for (auto it = its.first; it != its.second; ++it)
+			if (its.first != its.second)
 			{
-				bytesRef r(ret.data() + it->second, bytesPerTag);
-				toBigEndian(ret.size(), r);
+				for (auto it = its.first; it != its.second; ++it)
+				{
+					bytesRef r(ret.data() + it->second, bytesPerTag);
+					toBigEndian(ret.size(), r);
+				}
+				for (auto b: i.second)
+					ret.push_back(b);
 			}
-			for (auto b: i.second)
-				ret.push_back(b);
 		}
 	}
 	return ret;

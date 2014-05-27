@@ -62,6 +62,7 @@ typedef std::vector<AssemblyItem> AssemblyItems;
 typedef vector_ref<AssemblyItem const> AssemblyItemsConstRef;
 
 std::ostream& operator<<(std::ostream& _out, AssemblyItemsConstRef _i);
+inline std::ostream& operator<<(std::ostream& _out, AssemblyItems const& _i) { return operator<<(_out, AssemblyItemsConstRef(&_i)); }
 
 class Assembly
 {

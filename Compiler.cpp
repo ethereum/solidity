@@ -27,12 +27,15 @@
 using namespace std;
 using namespace eth;
 
-bytes eth::compileLLL(string const& _src, vector<string>* _errors)
+bytes eth::compileLLL(string const& _src, bool _opt, vector<string>* _errors)
 {
 	try
 	{
 		CompilerState cs;
-		bytes ret = CodeFragment::compile(_src, cs).code();
+		auto f = CodeFragment::compile(_src, cs);
+		if (_opt)
+			f.optimise();
+		bytes ret = f.code();
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret;
@@ -50,12 +53,15 @@ bytes eth::compileLLL(string const& _src, vector<string>* _errors)
 	return bytes();
 }
 
-std::string eth::compileLLLToAsm(std::string const& _src, std::vector<std::string>* _errors)
+std::string eth::compileLLLToAsm(std::string const& _src, bool _opt, std::vector<std::string>* _errors)
 {
 	try
 	{
 		CompilerState cs;
-		string ret = CodeFragment::compile(_src, cs).assembly();
+		auto f = CodeFragment::compile(_src, cs);
+		if (_opt)
+			f.optimise();
+		string ret = f.assembly();
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret;
