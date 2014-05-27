@@ -55,6 +55,7 @@ enum Mode { Binary, Hex, Assembly, ParseTree };
 
 int main(int argc, char** argv)
 {
+	unsigned optimise = 1;
 	string infile;
 	Mode mode = Hex;
 
@@ -71,6 +72,8 @@ int main(int argc, char** argv)
 			mode = Assembly;
 		else if (arg == "-t" || arg == "--parse-tree")
 			mode = ParseTree;
+		else if ((arg == "-o" || arg == "--optimise") && argc > i + 1)
+			optimise = atoi(argv[++i]);
 		else if (arg == "-V" || arg == "--version")
 			version();
 		else
@@ -95,7 +98,7 @@ int main(int argc, char** argv)
 		cerr << "Empty file." << endl;
 	else if (mode == Binary || mode == Hex)
 	{
-		auto bs = compileLLL(src, &errors);
+		auto bs = compileLLL(src, optimise ? true : false, &errors);
 		if (mode == Hex)
 			cout << toHex(bs) << endl;
 		else if (mode == Binary)
@@ -104,7 +107,7 @@ int main(int argc, char** argv)
 	else if (mode == ParseTree)
 		cout << parseLLL(src) << endl;
 	else if (mode == Assembly)
-		cout << compileLLLToAsm(src, &errors) << endl;
+		cout << compileLLLToAsm(src, optimise ? true : false, &errors) << endl;
 	for (auto const& i: errors)
 		cerr << i << endl;
 
