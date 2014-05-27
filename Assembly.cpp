@@ -21,6 +21,7 @@
 
 #include "Assembly.h"
 
+#include <libethsupport/Log.h>
 #include <libethcore/CommonEth.h>
 
 using namespace std;
@@ -36,6 +37,7 @@ int AssemblyItem::deposit() const
 		return 1;
 	case Tag:
 		return 0;
+	default:;
 	}
 	assert(false);
 }
@@ -64,6 +66,7 @@ unsigned Assembly::bytesRequired() const
 			case PushData:
 				ret += 1 + br;
 			case Tag:;
+			default:;
 			}
 		if (eth::bytesRequired(ret) <= br)
 			return ret;
@@ -100,6 +103,36 @@ void Assembly::append(Assembly const& _a, int _deposit)
 	}
 }
 
+ostream& eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
+{
+	for (AssemblyItem const& i: _i)
+		switch (i.type())
+		{
+		case Operation:
+			_out << " " << c_instructionInfo.at((Instruction)(byte)i.data()).name;
+			break;
+		case Push:
+			_out << " PUSH" << i.data();
+			break;
+		case PushString:
+			_out << " PUSH'[" << h256(i.data()).abridged() << "]";
+			break;
+		case PushTag:
+			_out << " PUSH[tag" << i.data() << "]";
+			break;
+		case Tag:
+			_out << " tag" << i.data() << ":";
+			break;
+		case PushData:
+			_out << " PUSH*[" << h256(i.data()).abridged() << "]";
+			break;
+		case UndefinedItem:
+			_out << " ???";
+		default:;
+		}
+	return _out;
+}
+
 ostream& Assembly::streamOut(ostream& _out) const
 {
 	_out << ".code:" << endl;
@@ -124,6 +157,7 @@ ostream& Assembly::streamOut(ostream& _out) const
 		case PushData:
 			_out << "  PUSH [" << h256(i.m_data).abridged() << "]" << endl;
 			break;
+		default:;
 		}
 
 	if (m_data.size())
@@ -142,10 +176,89 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	return back();
 }
 
+inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
+{
+	if (_a.size() != _b.size())
+		return false;
+	for (unsigned i = 0; i < _a.size(); ++i)
+		if (!_a[i].match(_b[i]))
+			return false;
+	return true;
+}
+
 void Assembly::optimise()
 {
-	std::vector<pair<  vector<int>,  function< vector<AssemblyItem>(vector<AssemblyItem>) >  >> rules;
-//	rules.insert(make_pair({(int)Instruction::ADD, (int)Instruction::ADD, -(int)Push}, []() {}));
+	map<Instruction, function<u256(u256, u256)>> c_simple =
+	{
+		{ Instruction::SUB, [](u256 a, u256 b)->u256{return a - b;} },
+		{ Instruction::DIV, [](u256 a, u256 b)->u256{return a / b;} },
+		{ Instruction::SDIV, [](u256 a, u256 b)->u256{u256 r; (s256&)r = (s256&)a / (s256&)b; return r;} },
+		{ Instruction::MOD, [](u256 a, u256 b)->u256{return a % b;} },
+		{ Instruction::SMOD, [](u256 a, u256 b)->u256{u256 r; (s256&)r = (s256&)a % (s256&)b; return r;} },
+		{ Instruction::EXP, [](u256 a, u256 b)->u256{return boost::multiprecision::pow(a, (unsigned)b);} },
+		{ Instruction::LT, [](u256 a, u256 b)->u256{return a < b ? 1 : 0;} },
+		{ Instruction::GT, [](u256 a, u256 b)->u256{return a > b ? 1 : 0;} },
+		{ Instruction::SLT, [](u256 a, u256 b)->u256{return *(s256*)&a < *(s256*)&b ? 1 : 0;} },
+		{ Instruction::SGT, [](u256 a, u256 b)->u256{return *(s256*)&a > *(s256*)&b ? 1 : 0;} },
+		{ Instruction::EQ, [](u256 a, u256 b)->u256{return a == b ? 1 : 0;} },
+	};
+	map<Instruction, function<u256(u256, u256)>> c_associative =
+	{
+		{ Instruction::ADD, [](u256 a, u256 b)->u256{return a + b;} },
+		{ Instruction::MUL, [](u256 a, u256 b)->u256{return a * b;} },
+	};
+	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules =
+	{
+		{ { Push, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
+		{ { Push, PushTag, Instruction::JUMPI }, [](AssemblyItemsConstRef m) -> AssemblyItems { return m[0].data() ? AssemblyItems({ m[1], Instruction::JUMP }) : AssemblyItems(); } },
+	};
+
+	for (auto const& i: c_simple)
+		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
+	for (auto const& i: c_associative)
+	{
+		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
+		rules.push_back({ { Push, i.first, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[2].data(), m[0].data()), i.first }; } });
+		rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [&](AssemblyItemsConstRef m) -> AssemblyItems
+						{
+							if (m[0].m_data == m[2].m_data)
+								return {};
+							else
+								return m.toVector();
+						}});
+	}
+
+	unsigned total = 0;
+	for (unsigned count = 1; count > 0; total += count)
+	{
+		count = 0;
+		for (unsigned i = 0; i < m_items.size(); ++i)
+		{
+			for (auto const& r: rules)
+			{
+				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
+				if (matches(&r.first, vr))
+				{
+					auto rw = r.second(vr);
+					if (rw.size() < vr.size())
+					{
+						cnote << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
+						for (unsigned j = 0; j < vr.size(); ++j)
+							if (j < rw.size())
+								m_items[i + j] = rw[j];
+							else
+								m_items.erase(m_items.begin() + i + rw.size());
+						cnote << AssemblyItemsConstRef(&rw);
+						count++;
+					}
+				}
+			}
+		}
+	}
+
+	// TODO: find all unused tags, for all those that have an unconditional jump immediately before, remove code between the tag and the next used tag (removing unused tags from the todo along the way).
+
+	cnote << total << " optimisations done.";
 }
 
 bytes Assembly::assemble() const
@@ -205,6 +318,7 @@ bytes Assembly::assemble() const
 		case Tag:
 			tagPos[(unsigned)i.m_data] = ret.size();
 			break;
+		default:;
 		}
 
 	for (auto const& i: tagRef)

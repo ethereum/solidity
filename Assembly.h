@@ -30,7 +30,7 @@
 namespace eth
 {
 
-enum AssemblyItemType { Operation, Push, PushString, PushTag, Tag, PushData };
+enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, Tag, PushData };
 
 class Assembly;
 
@@ -41,7 +41,7 @@ class AssemblyItem
 public:
 	AssemblyItem(u256 _push): m_type(Push), m_data(_push) {}
 	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
-	AssemblyItem(AssemblyItemType _type, u256 _data): m_type(_type), m_data(_data) {}
+	AssemblyItem(AssemblyItemType _type, u256 _data = 0): m_type(_type), m_data(_data) {}
 
 	AssemblyItem tag() const { assert(m_type == PushTag || m_type == Tag); return AssemblyItem(Tag, m_data); }
 	AssemblyItem pushTag() const { assert(m_type == PushTag || m_type == Tag); return AssemblyItem(PushTag, m_data); }
@@ -51,14 +51,17 @@ public:
 
 	int deposit() const;
 
-	bool operator==(int _mask) const { return -_mask == (int)m_type || (m_type == Operation && _mask == (int)m_data); }
+	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
 
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
 };
 
-inline bool operator==(int _i, AssemblyItem _ai) { return _ai.operator==(_i); }
+typedef std::vector<AssemblyItem> AssemblyItems;
+typedef vector_ref<AssemblyItem const> AssemblyItemsConstRef;
+
+std::ostream& operator<<(std::ostream& _out, AssemblyItemsConstRef _i);
 
 class Assembly
 {
@@ -104,7 +107,7 @@ private:
 	unsigned bytesRequired() const;
 
 	unsigned m_usedTags = 0;
-	std::vector<AssemblyItem> m_items;
+	AssemblyItems m_items;
 	std::map<h256, bytes> m_data;
 	std::map<h256, std::string> m_strings;
 
