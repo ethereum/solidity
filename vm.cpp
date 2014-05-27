@@ -163,7 +163,7 @@ public:
 
 		thisTxCode.clear();
 		if (_o["code"].type() == str_type)
-			thisTxCode = compileLLL(_o["code"].get_str(), nullptr);
+			thisTxCode = compileLLL(_o["code"].get_str());
 		else
 			for (auto const& j: _o["code"].get_array())
 				thisTxCode.push_back(toByte(j));
@@ -278,7 +278,7 @@ public:
 					get<2>(a)[adr++] = toInt(k);
 			}
 			if (o["code"].type() == str_type)
-				get<3>(a) = compileLLL(o["code"].get_str(), nullptr);
+				get<3>(a) = compileLLL(o["code"].get_str());
 			else
 			{
 				get<3>(a).clear();
