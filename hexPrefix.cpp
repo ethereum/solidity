@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {
 	cnote << "Testing Hex-Prefix-Encode...";
 	js::mValue v;
-	string s = asString(contents("../../tests/hexencodetest.json"));
+	string s = asString(contents("../../../tests/hexencodetest.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content from 'hexencodetest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())

@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 	cnote << "Testing Trie...";
 
 	js::mValue v;
-	string s = asString(contents("../../tests/trietest.json"));
+	string s = asString(contents("../../../tests/trietest.json"));
 	BOOST_REQUIRE_MESSAGE( s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
@@ -83,7 +83,7 @@ inline h256 stringMapHash256(StringMap const& _s)
 
 int trieTest()
 {
-
+#if 0
 	// More tests...
 	{
 		BasicMap m;
@@ -218,6 +218,13 @@ int trieTest()
 		remove("do");
 		remove("doge");
 		remove("doe");
+	}
+#endif
+	{
+		BasicMap m;
+		GenericTrieDB<BasicMap> d(&m);
+		d.init();	// initialise as empty tree.
+		MemTrie t;
 		for (int a = 0; a < 20; ++a)
 		{
 			StringMap m;

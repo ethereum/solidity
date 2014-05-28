@@ -60,7 +60,7 @@ namespace eth
 
 		static void getRLPTestCases(js::mValue& v)
 		{
-			string s = asString(contents("../../tests/rlptest.json"));
+			string s = asString(contents("../../../tests/rlptest.json"));
 			BOOST_REQUIRE_MESSAGE( s.length() > 0, 
 				"Contents of 'rlptest.json' is empty. Have you cloned the 'tests' repo branch develop?"); 
 			js::read_string(s, v);

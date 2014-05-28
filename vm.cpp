@@ -156,7 +156,7 @@ public:
 
 		previousBlock.hash = h256(_o["previousHash"].get_str());
 		currentBlock.number = toInt(_o["currentNumber"]);
-		currentBlock.gasLimit = toInt(_o["gasLimit"]);
+		currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
 		currentBlock.difficulty = toInt(_o["currentDifficulty"]);
 		currentBlock.timestamp = toInt(_o["currentTimestamp"]);
 		currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
@@ -250,7 +250,7 @@ public:
 				mArray d;
 				for (auto const& i: get<3>(a.second))
 					push(d, i);
-				ret["code"] = d;
+				o["code"] = d;
 			}
 
 			ret[toString(a.first)] = o;

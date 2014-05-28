@@ -20,6 +20,10 @@
  * Main test functions.
  */
 
+#include <libethsupport/TrieDB.h>
+#include "TrieHash.h"
+#include "MemTrie.h"
+
 #include <boost/test/unit_test.hpp>
 
 int trieTest();
@@ -38,7 +42,35 @@ using namespace eth;
 
 BOOST_AUTO_TEST_CASE(basic_tests)
 {
-	cnote << "Hello";
+	{
+		BasicMap m;
+		GenericTrieDB<BasicMap> d(&m);
+		d.init();	// initialise as empty tree.
+		MemTrie t;
+		for (int a = 0; a < 20; ++a)
+		{
+			StringMap m;
+			for (int i = 0; i < 20; ++i)
+			{
+				auto k = randomWord();
+				auto v = toString(i);
+				m.insert(make_pair(k, v));
+				t.insert(k, v);
+				d.insert(k, v);
+				assert(hash256(m) == t.hash256());
+				assert(hash256(m) == d.root());
+			}
+			while (!m.empty())
+			{
+				auto k = m.begin()->first;
+				d.remove(k);
+				t.remove(k);
+				m.erase(k);
+				assert(hash256(m) == t.hash256());
+				assert(hash256(m) == d.root());
+			}
+		}
+	}
 
 /*	RLPStream s;
 	BlockInfo::genesis().fillStream(s, false);
