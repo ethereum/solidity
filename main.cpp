@@ -42,15 +42,18 @@ using namespace eth;
 
 BOOST_AUTO_TEST_CASE(basic_tests)
 {
+	cdebug << "Stress-testing Trie...";
 	{
 		BasicMap m;
+		EnforceRefs e(m, true);
 		GenericTrieDB<BasicMap> d(&m);
 		d.init();	// initialise as empty tree.
 		MemTrie t;
-		for (int a = 0; a < 20; ++a)
+		assert(d.check().empty());
+		for (int a = 0; a < 100; ++a)
 		{
 			StringMap m;
-			for (int i = 0; i < 20; ++i)
+			for (int i = 0; i < 100; ++i)
 			{
 				auto k = randomWord();
 				auto v = toString(i);
@@ -59,6 +62,7 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 				d.insert(k, v);
 				assert(hash256(m) == t.hash256());
 				assert(hash256(m) == d.root());
+				assert(d.check().empty());
 			}
 			while (!m.empty())
 			{
@@ -68,6 +72,7 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 				m.erase(k);
 				assert(hash256(m) == t.hash256());
 				assert(hash256(m) == d.root());
+				assert(d.check().empty());
 			}
 		}
 	}
