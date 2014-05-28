@@ -25,6 +25,7 @@
 #include <liblll/Compiler.h>
 #include <libethsupport/CommonIO.h>
 #include <libethsupport/CommonData.h>
+#include <libethcore/Instruction.h>
 #include "BuildInfo.h"
 using namespace std;
 using namespace eth;
@@ -51,7 +52,7 @@ void version()
 	exit(0);
 }
 
-enum Mode { Binary, Hex, Assembly, ParseTree };
+enum Mode { Binary, Hex, Assembly, ParseTree, Disassemble };
 
 int main(int argc, char** argv)
 {
@@ -74,6 +75,8 @@ int main(int argc, char** argv)
 			mode = ParseTree;
 		else if ((arg == "-o" || arg == "--optimise") && argc > i + 1)
 			optimise = atoi(argv[++i]);
+		else if (arg == "-d" || arg == "--disassemble")
+			mode = Disassemble;
 		else if (arg == "-V" || arg == "--version")
 			version();
 		else
@@ -96,6 +99,10 @@ int main(int argc, char** argv)
 	vector<string> errors;
 	if (src.empty())
 		cerr << "Empty file." << endl;
+	else if (mode == Disassemble)
+	{
+		cout << disassemble(fromHex(src)) << endl;
+	}
 	else if (mode == Binary || mode == Hex)
 	{
 		auto bs = compileLLL(src, optimise ? true : false, &errors);
