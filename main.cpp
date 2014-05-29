@@ -45,11 +45,12 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 	cdebug << "Stress-testing Trie...";
 	{
 		BasicMap m;
-		EnforceRefs e(m, true);
-		GenericTrieDB<BasicMap> d(&m);
+		BasicMap dm;
+		EnforceRefs e(dm, true);
+		GenericTrieDB<BasicMap> d(&dm);
 		d.init();	// initialise as empty tree.
 		MemTrie t;
-		assert(d.check().empty());
+		BOOST_REQUIRE(d.check());
 		for (int a = 0; a < 100; ++a)
 		{
 			StringMap m;
@@ -57,22 +58,55 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 			{
 				auto k = randomWord();
 				auto v = toString(i);
-				m.insert(make_pair(k, v));
+				cdebug << k << v;
+				m[k] = v;
 				t.insert(k, v);
 				d.insert(k, v);
-				assert(hash256(m) == t.hash256());
-				assert(hash256(m) == d.root());
-				assert(d.check().empty());
+				BOOST_REQUIRE_EQUAL(hash256(m), t.hash256());
+				BOOST_REQUIRE_EQUAL(hash256(m), d.root());
+				BOOST_REQUIRE(d.check());
 			}
 			while (!m.empty())
 			{
 				auto k = m.begin()->first;
+				auto v = m.begin()->second;
+				cdebug << k << m.size();
 				d.remove(k);
 				t.remove(k);
 				m.erase(k);
-				assert(hash256(m) == t.hash256());
-				assert(hash256(m) == d.root());
-				assert(d.check().empty());
+				if (!d.check())
+				{
+					cwarn << m;
+					for (auto i: d)
+						cwarn << i.first.toString() << i.second.toString();
+
+					BasicMap dm2;
+					EnforceRefs e2(dm2, true);
+					GenericTrieDB<BasicMap> d2(&dm2);
+					d2.init();	// initialise as empty tree.
+					for (auto i: d)
+						d2.insert(i.first, i.second);
+
+					cwarn << "Good:" << d2.root();
+					for (auto i: dm2.get())
+						cwarn << i.first.abridged() << ": " << RLP(i.second);
+					cwarn << "Broken:" << d.root();	// Leaves an extension -> extension (3c1... -> 742...)
+					for (auto i: dm.get())
+						cwarn << i.first.abridged() << ": " << RLP(i.second);
+
+					d2.insert(k, v);
+					cwarn << "Pres:" << d2.root();
+					for (auto i: dm2.get())
+						cwarn << i.first.abridged() << ": " << RLP(i.second);
+					g_logVerbosity = 99;
+					d2.remove(k);
+					g_logVerbosity = 4;
+
+					cwarn << "Good?" << d2.root();
+				}
+				BOOST_REQUIRE(d.check());
+				BOOST_REQUIRE_EQUAL(hash256(m), t.hash256());
+				BOOST_REQUIRE_EQUAL(hash256(m), d.root());
 			}
 		}
 	}
