@@ -49,6 +49,7 @@ namespace eth
 BOOST_AUTO_TEST_CASE(trie_tests)
 {
 	cnote << "Testing Trie...";
+
 	js::mValue v;
 	string s = asString(contents("../../../tests/trietest.json"));
 	BOOST_REQUIRE_MESSAGE( s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 	for (auto& i: v.get_obj())
 	{
 		js::mObject& o = i.second.get_obj();
-//		cnote << i.first;
+		cnote << i.first;
 		vector<pair<string, string>> ss;
 		for (auto& i: o["in"].get_obj())
 			ss.push_back(make_pair(i.first, i.second.get_str()));
@@ -66,14 +67,9 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 			BasicMap m;
 			GenericTrieDB<BasicMap> t(&m);
 			t.init();
-			BOOST_REQUIRE(t.check());
 			for (auto const& k: ss)
-			{
-//				cdebug << k.first << k.second;
 				t.insert(k.first, k.second);
-				BOOST_REQUIRE(t.check());
-			}
-			BOOST_REQUIRE(!o["root"].is_null());
+			BOOST_REQUIRE(!o["root"].is_null()); 
 			BOOST_CHECK(o["root"].get_str() == toHex(t.root().asArray()) ); 
 		}
 	}
@@ -85,9 +81,8 @@ inline h256 stringMapHash256(StringMap const& _s)
 	return hash256(_s);
 }
 
-BOOST_AUTO_TEST_CASE(moreTrieTests)
+int trieTest()
 {
-	cnote << "Testing Trie more...";
 #if 0
 	// More tests...
 	{
@@ -158,7 +153,6 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 		cout << RLP(t.rlp()) << endl;
 		cout << toHex(t.rlp()) << endl;
 	}
-#endif
 	{
 		BasicMap m;
 		GenericTrieDB<BasicMap> d(&m);
@@ -172,21 +166,20 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 			t.insert(a, b);
 			s[a] = b;
 
-			/*cout << endl << "-------------------------------" << endl;
+			cout << endl << "-------------------------------" << endl;
 			cout << a << " -> " << b << endl;
 			cout << d;
 			cout << m;
 			cout << d.root() << endl;
-			cout << hash256(s) << endl;*/
+			cout << hash256(s) << endl;
 
-			BOOST_REQUIRE(d.check());
-			BOOST_REQUIRE_EQUAL(t.hash256(), hash256(s));
-			BOOST_REQUIRE_EQUAL(d.root(), hash256(s));
+			assert(t.hash256() == hash256(s));
+			assert(d.root() == hash256(s));
 			for (auto const& i: s)
 			{
 				(void)i;
-				BOOST_REQUIRE_EQUAL(t.at(i.first), i.second);
-				BOOST_REQUIRE_EQUAL(d.at(i.first), i.second);
+				assert(t.at(i.first) == i.second);
+				assert(d.at(i.first) == i.second);
 			}
 		};
 
@@ -196,23 +189,22 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 			t.remove(a);
 			d.remove(string(a));
 
-			/*cout << endl << "-------------------------------" << endl;
+			cout << endl << "-------------------------------" << endl;
 			cout << "X " << a << endl;
 			cout << d;
 			cout << m;
 			cout << d.root() << endl;
-			cout << hash256(s) << endl;*/
+			cout << hash256(s) << endl;
 
-			BOOST_REQUIRE(d.check());
-			BOOST_REQUIRE(t.at(a).empty());
-			BOOST_REQUIRE(d.at(string(a)).empty());
-			BOOST_REQUIRE_EQUAL(t.hash256(), hash256(s));
-			BOOST_REQUIRE_EQUAL(d.root(), hash256(s));
+			assert(t.at(a).empty());
+			assert(d.at(string(a)).empty());
+			assert(t.hash256() == hash256(s));
+			assert(d.root() == hash256(s));
 			for (auto const& i: s)
 			{
 				(void)i;
-				BOOST_REQUIRE_EQUAL(t.at(i.first), i.second);
-				BOOST_REQUIRE_EQUAL(d.at(i.first), i.second);
+				assert(t.at(i.first) == i.second);
+				assert(d.at(i.first) == i.second);
 			}
 		};
 
@@ -227,5 +219,36 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 		remove("doge");
 		remove("doe");
 	}
+#endif
+	{
+		BasicMap m;
+		GenericTrieDB<BasicMap> d(&m);
+		d.init();	// initialise as empty tree.
+		MemTrie t;
+		for (int a = 0; a < 20; ++a)
+		{
+			StringMap m;
+			for (int i = 0; i < 20; ++i)
+			{
+				auto k = randomWord();
+				auto v = toString(i);
+				m.insert(make_pair(k, v));
+				t.insert(k, v);
+				d.insert(k, v);
+				assert(hash256(m) == t.hash256());
+				assert(hash256(m) == d.root());
+			}
+			while (!m.empty())
+			{
+				auto k = m.begin()->first;
+				d.remove(k);
+				t.remove(k);
+				m.erase(k);
+				assert(hash256(m) == t.hash256());
+				assert(hash256(m) == d.root());
+			}
+		}
+	}
+	return 0;
 }
 
