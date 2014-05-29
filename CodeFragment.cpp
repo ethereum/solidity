@@ -385,8 +385,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			auto end = m_asm.appendJumpI();
 			m_asm.onePath();
 			m_asm.otherPath();
-			m_asm.append(code[1].m_asm, 0);
-			m_asm << end.tag();
+			m_asm << code[1].m_asm << end.tag();
 			m_asm.donePaths();
 		}
 		else if (us == "WHILE")
