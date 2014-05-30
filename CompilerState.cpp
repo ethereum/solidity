@@ -42,8 +42,8 @@ void CompilerState::populateStandard()
 	static const string s = "{"
 	"(def 'gav 0x8a40bfaa73256b60764c1bf40675a99083efb075)"
 	"(def 'send (to value) (call (- (gas) 21) to value 0 0 0 0))"
-#if 0
 	"(def 'send (gaslimit to value) (call gaslimit to value 0 0 0 0))"
+#if 1
 	"(def 'alloc (len) (asm msize 0 1 len msize add sub mstore8))"
 	"(def 'msg (gaslimit to value data datasize outsize) { [32]:outsize [0]:(alloc @32) (call gaslimit to value data datasize @0 @32) @0 })"
 	"(def 'msg (gaslimit to value data datasize) { (call gaslimit to value data datasize 0 32) @0 })"

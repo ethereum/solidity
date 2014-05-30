@@ -43,7 +43,7 @@ struct CompilerState
 	std::map<std::string, CodeFragment> defs;
 	std::map<std::string, CodeFragment> args;
 	std::map<std::string, CodeFragment> outers;
-	std::map<std::string, Macro> macros;
+	std::map<std::pair<std::string, unsigned>, Macro> macros;
 	std::vector<boost::spirit::utree> treesToKill;
 };
 

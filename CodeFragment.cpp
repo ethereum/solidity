@@ -172,6 +172,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			unsigned ii = 0;
 			if (_t.size() != 3 && _t.size() != 4)
 				error<IncorrectParameterCount>();
+			vector<string> args;
 			for (auto const& i: _t)
 			{
 				if (ii == 1)
@@ -198,16 +199,18 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 							if (j.tag() || j.which() != sp::utree_type::symbol_type)
 								error<InvalidMacroArgs>();
 							auto sr = j.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
-							_s.macros[n].args.push_back(string(sr.begin(), sr.end()));
+							args.push_back(string(sr.begin(), sr.end()));
 						}
 				else if (ii == 3)
 				{
-					_s.macros[n].code = i;
-					_s.macros[n].env = _s.outers;
+					auto k = make_pair(n, args.size());
+					_s.macros[k].code = i;
+					_s.macros[k].env = _s.outers;
+					_s.macros[k].args = args;
 					for (auto const& i: _s.args)
-						_s.macros[n].env[i.first] = i.second;
+						_s.macros[k].env[i.first] = i.second;
 					for (auto const& i: _s.defs)
-						_s.macros[n].env[i.first] = i.second;
+						_s.macros[k].env[i.first] = i.second;
 				}
 				++ii;
 			}
@@ -292,9 +295,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		auto requireMaxSize = [&](unsigned s) { if (code.size() > s) error<IncorrectParameterCount>(); };
 		auto requireDeposit = [&](unsigned i, int s) { if (code[i].m_asm.deposit() != s) error<InvalidDeposit>(); };
 
-		if (_s.macros.count(s) && _s.macros.at(s).args.size() == code.size())
+		if (_s.macros.count(make_pair(s, code.size())))
 		{
-			Macro const& m = _s.macros.at(s);
+			Macro const& m = _s.macros.at(make_pair(s, code.size()));
 			CompilerState cs = _s;
 			for (auto const& i: m.env)
 				cs.outers[i.first] = i.second;
