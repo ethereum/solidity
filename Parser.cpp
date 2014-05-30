@@ -75,7 +75,7 @@ void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 
 	qi::rule<it, qi::ascii::space_type, sp::utree()> element;
 	qi::rule<it, string()> str = '"' > qi::lexeme[+(~qi::char_(std::string("\"") + '\0'))] > '"';
-	qi::rule<it, string()> strsh = '\'' > qi::lexeme[+(~qi::char_(std::string(" ;())") + '\0'))];
+	qi::rule<it, string()> strsh = '\'' > qi::lexeme[+(~qi::char_(std::string(" ;@()[]{}:") + '\0'))];
 	qi::rule<it, symbol_type()> symbol = qi::lexeme[+(~qi::char_(std::string(" @[]{}:();\"\x01-\x1f\x7f") + '\0'))];
 	qi::rule<it, string()> intstr = qi::lexeme[ qi::no_case["0x"][qi::_val = "0x"] >> *qi::char_("0-9a-fA-F")[qi::_val += qi::_1]] | qi::lexeme[+qi::char_("0-9")[qi::_val += qi::_1]];
 	qi::rule<it, bigint()> integer = intstr;
