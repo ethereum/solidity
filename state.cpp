@@ -38,7 +38,7 @@ int stateTest()
 
 	Defaults::setDBPath(boost::filesystem::temp_directory_path().string());
 
-	Overlay stateDB = State::openDB();
+	OverlayDB stateDB = State::openDB();
 	BlockChain bc;
 	State s(myMiner.address(), stateDB);
 

@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 		for (unsigned j = 0; j < eth::test::fac((unsigned)ss.size()); ++j)
 		{
 			next_permutation(ss.begin(), ss.end());
-			BasicMap m;
-			GenericTrieDB<BasicMap> t(&m);
+			MemoryDB m;
+			GenericTrieDB<MemoryDB> t(&m);
 			t.init();
 			BOOST_REQUIRE(t.check(true));
 			for (auto const& k: ss)
@@ -91,8 +91,8 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 #if 0
 	// More tests...
 	{
-		BasicMap m;
-		GenericTrieDB<BasicMap> t(&m);
+		MemoryDB m;
+		GenericTrieDB<MemoryDB> t(&m);
 		t.init();	// initialise as empty tree.
 		cout << t;
 		cout << m;
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 		cout << hash256(StringMap()) << endl;
 	}
 	{
-		BasicMap m;
-		GenericTrieDB<BasicMap> t(&m);
+		MemoryDB m;
+		GenericTrieDB<MemoryDB> t(&m);
 		t.init();	// initialise as empty tree.
 		t.insert(string("a"), string("A"));
 		t.insert(string("b"), string("B"));
@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 	}
 #endif
 	{
-		BasicMap m;
-		GenericTrieDB<BasicMap> d(&m);
+		MemoryDB m;
+		GenericTrieDB<MemoryDB> d(&m);
 		d.init();	// initialise as empty tree.
 		MemTrie t;
 		StringMap s;
@@ -233,10 +233,10 @@ BOOST_AUTO_TEST_CASE(trieStess)
 {
 	cnote << "Stress-testing Trie...";
 	{
-		BasicMap m;
-		BasicMap dm;
+		MemoryDB m;
+		MemoryDB dm;
 		EnforceRefs e(dm, true);
-		GenericTrieDB<BasicMap> d(&dm);
+		GenericTrieDB<MemoryDB> d(&dm);
 		d.init();	// initialise as empty tree.
 		MemTrie t;
 		BOOST_REQUIRE(d.check(true));
@@ -267,9 +267,9 @@ BOOST_AUTO_TEST_CASE(trieStess)
 					for (auto i: d)
 						cwarn << i.first.toString() << i.second.toString();
 
-					BasicMap dm2;
+					MemoryDB dm2;
 					EnforceRefs e2(dm2, true);
-					GenericTrieDB<BasicMap> d2(&dm2);
+					GenericTrieDB<MemoryDB> d2(&dm2);
 					d2.init();	// initialise as empty tree.
 					for (auto i: d)
 						d2.insert(i.first, i.second);
