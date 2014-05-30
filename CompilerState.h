@@ -37,6 +37,7 @@ struct Macro
 struct CompilerState
 {
 	CodeFragment const& getDef(std::string const& _s);
+	void populateStandard();
 
 	std::map<std::string, unsigned> vars;
 	std::map<std::string, CodeFragment> defs;

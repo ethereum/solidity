@@ -20,6 +20,7 @@
  */
 
 #include "CompilerState.h"
+#include "CodeFragment.h"
 
 using namespace std;
 using namespace eth;
@@ -34,4 +35,26 @@ CodeFragment const& CompilerState::getDef(std::string const& _s)
 		return outers.at(_s);
 	else
 		return NullCodeFragment;
+}
+
+void CompilerState::populateStandard()
+{
+	static const string s = "{"
+	"(def 'gav 0x8a40bfaa73256b60764c1bf40675a99083efb075)"
+	"(def 'send (to value) (call (- (gas) 21) to value 0 0 0 0))"
+#if 0
+	"(def 'send (gaslimit to value) (call gaslimit to value 0 0 0 0))"
+	"(def 'alloc (len) (asm msize 0 1 len msize add sub mstore8))"
+	"(def 'msg (gaslimit to value data datasize outsize) { [32]:outsize [0]:(alloc @32) (call gaslimit to value data datasize @0 @32) @0 })"
+	"(def 'msg (gaslimit to value data datasize) { (call gaslimit to value data datasize 0 32) @0 })"
+	"(def 'msg (gaslimit to value data) { [0]:data (msg gaslimit to value 0 32) })"
+	"(def 'create (to value code) { [0]:(msize) (create to value @0 (lll code @0)) })"
+	"(def 'sha3 (val) { [0]:val (sha3 0 32) })"
+	"(def 'return (val) { [0]:val (return 0 32) })"
+	"(def 'makeperm (name pos) { (def name (sload pos)) (def name (v) (sstore pos v)) } )"
+	"(def 'permcount 0)"
+	"(def 'perm (name) { (makeperm name permcount) (def 'permcount (+ permcount 1)) } )"
+#endif
+	"}";
+	CodeFragment::compile(s, *this);
 }

@@ -32,6 +32,7 @@ bytes eth::compileLLL(string const& _src, bool _opt, vector<string>* _errors)
 	try
 	{
 		CompilerState cs;
+		cs.populateStandard();
 		auto f = CodeFragment::compile(_src, cs);
 		if (_opt)
 			f.optimise();
@@ -58,6 +59,7 @@ std::string eth::compileLLLToAsm(std::string const& _src, bool _opt, std::vector
 	try
 	{
 		CompilerState cs;
+		cs.populateStandard();
 		auto f = CodeFragment::compile(_src, cs);
 		if (_opt)
 			f.optimise();
