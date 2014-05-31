@@ -43,18 +43,19 @@ void CompilerState::populateStandard()
 	"(def 'gav 0x8a40bfaa73256b60764c1bf40675a99083efb075)"
 	"(def 'send (to value) (call (- (gas) 21) to value 0 0 0 0))"
 	"(def 'send (gaslimit to value) (call gaslimit to value 0 0 0 0))"
-#if 1
 	"(def 'alloc (len) (asm msize 0 1 len msize add sub mstore8))"
 	"(def 'msg (gaslimit to value data datasize outsize) { [32]:outsize [0]:(alloc @32) (call gaslimit to value data datasize @0 @32) @0 })"
 	"(def 'msg (gaslimit to value data datasize) { (call gaslimit to value data datasize 0 32) @0 })"
 	"(def 'msg (gaslimit to value data) { [0]:data (msg gaslimit to value 0 32) })"
+	"(def 'msg (to value data) { [0]:data (msg 0 to value 0 32) })"
+	"(def 'msg (to data) { [0]:data (msg 0 to 0 0 32) })"
 	"(def 'create (value code) { [0]:(msize) (create value @0 (lll code @0)) })"
+	"(def 'create (code) { [0]:(msize) (create 0 @0 (lll code @0)) })"
 	"(def 'sha3 (val) { [0]:val (sha3 0 32) })"
 	"(def 'return (val) { [0]:val (return 0 32) })"
 	"(def 'makeperm (name pos) { (def name (sload pos)) (def name (v) (sstore pos v)) } )"
 	"(def 'permcount 0)"
 	"(def 'perm (name) { (makeperm name permcount) (def 'permcount (+ permcount 1)) } )"
-#endif
 	"}";
 	CodeFragment::compile(s, *this);
 }
