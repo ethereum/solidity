@@ -48,7 +48,7 @@ void CompilerState::populateStandard()
 	"(def 'msg (gaslimit to value data datasize outsize) { [32]:outsize [0]:(alloc @32) (call gaslimit to value data datasize @0 @32) @0 })"
 	"(def 'msg (gaslimit to value data datasize) { (call gaslimit to value data datasize 0 32) @0 })"
 	"(def 'msg (gaslimit to value data) { [0]:data (msg gaslimit to value 0 32) })"
-	"(def 'create (to value code) { [0]:(msize) (create to value @0 (lll code @0)) })"
+	"(def 'create (value code) { [0]:(msize) (create value @0 (lll code @0)) })"
 	"(def 'sha3 (val) { [0]:val (sha3 0 32) })"
 	"(def 'return (val) { [0]:val (return 0 32) })"
 	"(def 'makeperm (name pos) { (def name (sload pos)) (def name (v) (sstore pos v)) } )"
