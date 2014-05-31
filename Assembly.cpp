@@ -39,7 +39,7 @@ int AssemblyItem::deposit() const
 		return 0;
 	default:;
 	}
-	assert(false);
+	return 0;
 }
 
 unsigned Assembly::bytesRequired() const
