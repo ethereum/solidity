@@ -32,7 +32,7 @@ namespace sp = boost::spirit;
 namespace eth
 {
 
-class CompilerState;
+struct CompilerState;
 
 class CodeFragment
 {
