@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 
 	vector<string> errors;
 	if (src.empty())
-		cerr << "Empty file." << endl;
+		errors.push_back("Empty file.");
 	else if (mode == Disassemble)
 	{
 		cout << disassemble(fromHex(src)) << endl;
@@ -117,6 +117,7 @@ int main(int argc, char** argv)
 		cout << compileLLLToAsm(src, optimise ? true : false, &errors) << endl;
 	for (auto const& i: errors)
 		cerr << i << endl;
-
+	if ( errors.size() )
+		return 1;
 	return 0;
 }
