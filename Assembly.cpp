@@ -195,14 +195,14 @@ void Assembly::optimise()
 	{
 		{ Instruction::SUB, [](u256 a, u256 b)->u256{return a - b;} },
 		{ Instruction::DIV, [](u256 a, u256 b)->u256{return a / b;} },
-		{ Instruction::SDIV, [](u256 a, u256 b)->u256{u256 r; (s256&)r = (s256&)a / (s256&)b; return r;} },
+        { Instruction::SDIV, [](u256 a, u256 b)->u256{return s2u(u2s(a) / u2s(b));} },
 		{ Instruction::MOD, [](u256 a, u256 b)->u256{return a % b;} },
-		{ Instruction::SMOD, [](u256 a, u256 b)->u256{u256 r; (s256&)r = (s256&)a % (s256&)b; return r;} },
+        { Instruction::SMOD, [](u256 a, u256 b)->u256{return s2u(u2s(a) % u2s(b));} },
 		{ Instruction::EXP, [](u256 a, u256 b)->u256{return boost::multiprecision::pow(a, (unsigned)b);} },
 		{ Instruction::LT, [](u256 a, u256 b)->u256{return a < b ? 1 : 0;} },
 		{ Instruction::GT, [](u256 a, u256 b)->u256{return a > b ? 1 : 0;} },
-		{ Instruction::SLT, [](u256 a, u256 b)->u256{return *(s256*)&a < *(s256*)&b ? 1 : 0;} },
-		{ Instruction::SGT, [](u256 a, u256 b)->u256{return *(s256*)&a > *(s256*)&b ? 1 : 0;} },
+        { Instruction::SLT, [](u256 a, u256 b)->u256{return u2s(a) < u2s(b) ? 1 : 0;} },
+        { Instruction::SGT, [](u256 a, u256 b)->u256{return u2s(a) > u2s(b) ? 1 : 0;} },
 		{ Instruction::EQ, [](u256 a, u256 b)->u256{return a == b ? 1 : 0;} },
 	};
 	map<Instruction, function<u256(u256, u256)>> c_associative =
