@@ -79,9 +79,10 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 			if (it == _s.vars.end())
 			{
 				bool ok;
-				tie(it, ok) = _s.vars.insert(make_pair(s, _s.vars.size() * 32));
+				tie(it, ok) = _s.vars.insert(make_pair(s, make_pair(_s.stackSize, 32)));
+				_s.stackSize += 32;
 			}
-			m_asm.append((u256)it->second);
+			m_asm.append((u256)it->second.first);
 		}
 		else
 			error<BareSymbol>();
@@ -137,6 +138,36 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		default:;
 		}
 
+		auto firstAsString = [&]()
+		{
+			auto i = *++_t.begin();
+			if (i.tag())
+				error<InvalidName>();
+			if (i.which() == sp::utree_type::string_type)
+			{
+				auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
+				return string(sr.begin(), sr.end());
+			}
+			else if (i.which() == sp::utree_type::symbol_type)
+			{
+				auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
+				return _s.getDef(string(sr.begin(), sr.end())).m_asm.backString();
+			}
+			return string();
+		};
+
+		auto varAddress = [&](string const& n)
+		{
+			auto it = _s.vars.find(n);
+			if (it == _s.vars.end())
+			{
+				bool ok;
+				tie(it, ok) = _s.vars.insert(make_pair(n, make_pair(_s.stackSize, 32)));
+				_s.stackSize += 32;
+			}
+			return it->second.first;
+		};
+
 		// Operations who args are not standard stack-pushers.
 		bool nonStandard = true;
 		if (us == "ASM")
@@ -150,22 +181,28 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		{
 			if (_t.size() != 2)
 				error<IncorrectParameterCount>();
-			string n;
-			auto i = *++_t.begin();
-			if (i.tag())
-				error<InvalidName>();
-			if (i.which() == sp::utree_type::string_type)
-			{
-				auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::string_type>>();
-				n = string(sr.begin(), sr.end());
-			}
-			else if (i.which() == sp::utree_type::symbol_type)
-			{
-				auto sr = i.get<sp::basic_string<boost::iterator_range<char const*>, sp::utree_type::symbol_type>>();
-				n = _s.getDef(string(sr.begin(), sr.end())).m_asm.backString();
-			}
-			m_asm.append(CodeFragment::compile(asString(contents(n)), _s).m_asm);
+			m_asm.append(CodeFragment::compile(asString(contents(firstAsString())), _s).m_asm);
 		}
+		else if (us == "SET")
+		{
+			if (_t.size() != 3)
+				error<IncorrectParameterCount>();
+			int c = 0;
+			for (auto const& i: _t)
+				if (c++ == 2)
+					m_asm.append(CodeFragment(i, _s, false).m_asm);
+			m_asm.append((u256)varAddress(firstAsString()));
+			m_asm.append(Instruction::MSTORE);
+		}
+		else if (us == "GET")
+		{
+			if (_t.size() != 2)
+				error<IncorrectParameterCount>();
+			m_asm.append((u256)varAddress(firstAsString()));
+			m_asm.append(Instruction::MLOAD);
+		}
+		else if (us == "REF")
+			m_asm.append((u256)varAddress(firstAsString()));
 		else if (us == "DEF")
 		{
 			string n;
@@ -497,15 +534,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm.popTo(1);
 		}
 		else if (us.find_first_of("1234567890") != 0 && us.find_first_not_of("QWERTYUIOPASDFGHJKLZXCVBNM1234567890_") == string::npos)
-		{
-			auto it = _s.vars.find(s);
-			if (it == _s.vars.end())
-			{
-				bool ok;
-				tie(it, ok) = _s.vars.insert(make_pair(s, _s.vars.size() * 32));
-			}
-			m_asm.append((u256)it->second);
-		}
+			m_asm.append((u256)varAddress(s));
 		else
 			error<InvalidOperation>();
 	}

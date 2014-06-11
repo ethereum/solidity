@@ -36,10 +36,13 @@ struct Macro
 
 struct CompilerState
 {
+	CompilerState();
+
 	CodeFragment const& getDef(std::string const& _s);
 	void populateStandard();
 
-	std::map<std::string, unsigned> vars;
+	unsigned stackSize = 64;
+	std::map<std::string, std::pair<unsigned, unsigned>> vars;       ///< maps name to stack offset & size.
 	std::map<std::string, CodeFragment> defs;
 	std::map<std::string, CodeFragment> args;
 	std::map<std::string, CodeFragment> outers;

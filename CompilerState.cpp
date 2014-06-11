@@ -25,6 +25,10 @@
 using namespace std;
 using namespace eth;
 
+CompilerState::CompilerState()
+{
+}
+
 CodeFragment const& CompilerState::getDef(std::string const& _s)
 {
 	if (defs.count(_s))
