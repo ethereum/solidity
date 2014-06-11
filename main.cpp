@@ -46,7 +46,7 @@ void help()
 
 void version()
 {
-	cout << "LLLC, the Lovely Little Language Compiler " << ETH_QUOTED(ETH_VERSION) << endl;
+	cout << "LLLC, the Lovely Little Language Compiler " << eth::EthVersion << endl;
 	cout << "  By Gav Wood, (c) 2014." << endl;
 	cout << "Build: " << ETH_QUOTED(ETH_BUILD_PLATFORM) << "/" << ETH_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
