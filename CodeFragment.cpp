@@ -343,7 +343,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			cs.defs.clear();
 			for (unsigned i = 0; i < m.args.size(); ++i)
 			{
-				requireDeposit(i, 1);
+				//requireDeposit(i, 1);
 				cs.args[m.args[i]] = code[i];
 			}
 			m_asm.append(CodeFragment(m.code, cs).m_asm);

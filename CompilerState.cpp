@@ -44,7 +44,7 @@ CodeFragment const& CompilerState::getDef(std::string const& _s)
 void CompilerState::populateStandard()
 {
 	static const string s = "{"
-	"(def 'gav 0x8a40bfaa73256b60764c1bf40675a99083efb075)"
+	"(def 'gav 0x51ba59315b3a95761d0863b05ccc7a7f54703d99)"
 	"(def 'namereg 0x2d0aceee7e5ab874e22ccf8d1a649f59106d74e8)"
 	"(def 'config 0xccdeac59d35627b7de09332e819d5159e7bb7250)"
 	"(def 'gavcoin 0x5620133321fcac7f15a5c570016f6cb6dc263f9d)"
