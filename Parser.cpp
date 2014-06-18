@@ -87,9 +87,16 @@ void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> sload = qi::lit("@@") > element;
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> mstore = '[' > element > ']' > -qi::lit(":") > element;
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> sstore = qi::lit("[[") > element > qi::lit("]]") > -qi::lit(":") > element;
-	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = sload[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 2)] | mload[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 1)] | sstore[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 4)] | mstore[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 3)] | seq[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 5)];
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> list = '(' > *element > ')';
+
+	// todo: fix compound compile errors in this line for Visual Studio 2013
+#ifndef _MSC_VER
+	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = sload[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 2)] | mload[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 1)] | sstore[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 4)] | mstore[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 3)] | seq[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 5)];
 	element = atom | list | extra;
+#else
+	element = atom | list/* | extra*/;
+#endif
+	
 
 	string s;
 	s.reserve(_s.size());
