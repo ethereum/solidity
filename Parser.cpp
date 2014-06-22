@@ -118,6 +118,6 @@ void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 		if (!incomment)
 			s.push_back(i);
 	}
-	qi::phrase_parse(s.cbegin(), s.cend(), element, space, o_out);
+	qi::phrase_parse(s.cbegin(), s.cend(), element, space, qi::skip_flag::dont_postskip, o_out);
 }
 
