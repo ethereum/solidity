@@ -128,48 +128,6 @@ public:
 		set(myAddress, _myBalance, _myNonce, _storage, get<3>(addresses[myAddress]));
 	}
 
-	mObject exportEnv()
-	{
-		mObject ret;
-		ret["previousHash"] = toString(previousBlock.hash);
-		push(ret, "currentDifficulty", currentBlock.difficulty);
-		push(ret, "currentTimestamp", currentBlock.timestamp);
-		ret["currentCoinbase"] = toString(currentBlock.coinbaseAddress);
-		push(ret, "currentNumber", currentBlock.number);
-		push(ret, "currentGasLimit", currentBlock.gasLimit);
-
-		mArray c;
-		for (auto const& i: code)
-			push(c, i);
-		ret["code"] = c;
-		return ret;
-	}
-
-	void importEnv(mObject& _o)
-	{
-		BOOST_REQUIRE(_o.count("previousHash") > 0);
-		BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
-		BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
-		BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
-		BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
-		BOOST_REQUIRE(_o.count("currentNumber") > 0);
-
-		previousBlock.hash = h256(_o["previousHash"].get_str());
-		currentBlock.number = toInt(_o["currentNumber"]);
-		currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
-		currentBlock.difficulty = toInt(_o["currentDifficulty"]);
-		currentBlock.timestamp = toInt(_o["currentTimestamp"]);
-		currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
-
-		thisTxCode.clear();
-		if (_o["code"].type() == str_type)
-			thisTxCode = compileLLL(_o["code"].get_str());
-		else
-			for (auto const& j: _o["code"].get_array())
-				thisTxCode.push_back(toByte(j));
-		code = &thisTxCode;
-	}
-
 	static u256 toInt(mValue const& _v)
 	{
 		switch (_v.type())
@@ -210,6 +168,35 @@ public:
 			a.push_back((uint64_t)_v);
 		else
 			a.push_back(toString(_v));
+	}
+
+	mObject exportEnv()
+	{
+		mObject ret;
+		ret["previousHash"] = toString(previousBlock.hash);
+		push(ret, "currentDifficulty", currentBlock.difficulty);
+		push(ret, "currentTimestamp", currentBlock.timestamp);
+		ret["currentCoinbase"] = toString(currentBlock.coinbaseAddress);
+		push(ret, "currentNumber", currentBlock.number);
+		push(ret, "currentGasLimit", currentBlock.gasLimit);
+		return ret;
+	}
+
+	void importEnv(mObject& _o)
+	{
+		BOOST_REQUIRE(_o.count("previousHash") > 0);
+		BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
+		BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
+		BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
+		BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
+		BOOST_REQUIRE(_o.count("currentNumber") > 0);
+
+		previousBlock.hash = h256(_o["previousHash"].get_str());
+		currentBlock.number = toInt(_o["currentNumber"]);
+		currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
+		currentBlock.difficulty = toInt(_o["currentDifficulty"]);
+		currentBlock.timestamp = toInt(_o["currentTimestamp"]);
+		currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
 	}
 
 	mObject exportState()
@@ -301,6 +288,10 @@ public:
 		for (auto const& i: data)
 			push(d, i);
 		ret["data"] = d;
+		mArray c;
+		for (auto const& i: code)
+			push(c, i);
+		ret["code"] = c;
 		return ret;
 	}
 
@@ -320,6 +311,16 @@ public:
 		value = toInt(_o["value"]);
 		gasPrice = toInt(_o["gasPrice"]);
 		gas = toInt(_o["gas"]);
+
+		thisTxCode.clear();
+		code = &thisTxCode;
+		if (_o["code"].type() == str_type)
+			thisTxCode = compileLLL(_o["code"].get_str());
+		else if (_o["code"].type() == array_type)
+			for (auto const& j: _o["code"].get_array())
+				thisTxCode.push_back(toByte(j));
+		else
+			code.reset();
 
 		thisTxData.clear();
 		if (_o["data"].type() == str_type)
@@ -396,15 +397,15 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		if (_fillin)
 			o["pre"] = mValue(fev.exportState());
 
-		bytes output;
-		for (auto i: o["exec"].get_array())
-		{
-			fev.importExec(i.get_obj());
-			vm.reset(fev.gas);
-			output = vm.go(fev).toBytes();
-		}
+		fev.importExec(o["exec"].get_obj());
+		if (!fev.code)
+			fev.code = &get<3>(fev.addresses.at(fev.myAddress));
+		vm.reset(fev.gas);
+		bytes output = vm.go(fev).toBytes();
+
 		if (_fillin)
 		{
+			o["exec"] = mValue(fev.exportExec());
 			o["post"] = mValue(fev.exportState());
 			o["callcreates"] = fev.exportCallCreates();
 			mArray df;
@@ -479,11 +480,10 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 		eth::test::doTests(v, true);
 		writeFile("../../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
 	}
-	catch( std::exception& e)
+	catch (std::exception const& e)
 	{
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
 	}
-
 
 	try
 	{
@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 		json_spirit::read_string(s, v);
 		eth::test::doTests(v, false);
 	}
-	catch( std::exception& e)
+	catch (std::exception const& e)
 	{
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what()); 
 	}

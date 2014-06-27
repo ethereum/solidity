@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 	cnote << "Testing Trie...";
 	js::mValue v;
 	string s = asString(contents("../../../tests/trietest.json"));
-	BOOST_REQUIRE_MESSAGE( s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
 	{
@@ -60,6 +60,7 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 		vector<pair<string, string>> ss;
 		for (auto& i: o["in"].get_obj())
 			ss.push_back(make_pair(i.first, i.second.get_str()));
+		cnote << ss;
 		for (unsigned j = 0; j < eth::test::fac((unsigned)ss.size()); ++j)
 		{
 			next_permutation(ss.begin(), ss.end());
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 				BOOST_REQUIRE(t.check(true));
 			}
 			BOOST_REQUIRE(!o["root"].is_null());
-			BOOST_CHECK(o["root"].get_str() == toHex(t.root().asArray()) ); 
+			BOOST_CHECK_EQUAL(o["root"].get_str(), toHex(t.root().asArray()));
 		}
 	}
 }

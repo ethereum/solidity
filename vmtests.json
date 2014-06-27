@@ -6,8 +6,7 @@
 		"currentGasLimit" : "1000000",
 		"currentDifficulty" : "256",
 		"currentTimestamp" : 1,
-		"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-		"code" : "(suicide (caller))"
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
 		},
 		"pre" : {
 		"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -17,8 +16,7 @@
 			"storage": {}
 		}
 		},
-		"exec" : [
-		{
+        "exec" : {
 			"address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
 			"origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
 			"caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
@@ -27,7 +25,6 @@
 			"gasPrice" : "100000000000000",
 		    "gas" : "10000"
 		}
-		]
 	},
 
 	"arith": {
@@ -37,8 +34,7 @@
 		"currentGasLimit" : "1000000",
 		"currentDifficulty" : "256",
 		"currentTimestamp" : 1,
-		"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-		"code" : "{ (call (- (gas) 200) (caller) (+ 2 2 (* 4 4 4) (/ 2 2) (% 3 2) (- 8 2 2)) 0 0 0 0) }"
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
 		},
 		"pre" : {
 		"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -48,9 +44,8 @@
 			"storage": {}
 		}
 		},
-		"exec" : [
-		{
-			"address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
 			"origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
 			"caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
 			"value" : "1000000000000000000",
@@ -58,7 +53,6 @@
 			"gasPrice" : "100000000000000",
 		    "gas" : "10000"
 		}
-		]
 	},
 
 	"boolean": {
@@ -68,8 +62,7 @@
 		"currentGasLimit" : "1000000",
 		"currentDifficulty" : "256",
 		"currentTimestamp" : 1,
-		"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-		"code" : "(seq (when (and 1 1) (call (- (gas) 200) (caller) 2 0 0 0 0)) (when (and 1 0) (call (- (gas) 200) (caller) 3 0 0 0 0)) (when (and 0 1) (call (- (gas) 200) (caller) 4 0 0 0 0)) (when (and 0 0) (call (- (gas) 200) (caller) 5 0 0 0 0)) (when (or 1 1) (call (- (gas) 200) (caller) 12 0 0 0 0)) (when (or 1 0) (call (- (gas) 200) (caller) 13 0 0 0 0)) (when (or 0 1) (call (- (gas) 200) (caller) 14 0 0 0 0)) (when (or 0 0) (call (- (gas) 200) (caller) 15 0 0 0 0)) )"
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
 		},
 		"pre" : {
 		"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -78,9 +71,8 @@
 			"code" : "(seq (when (and 1 1) (call (- (gas) 200) (caller) 2 0 0 0 0)) (when (and 1 0) (call (- (gas) 200) (caller) 3 0 0 0 0)) (when (and 0 1) (call (- (gas) 200) (caller) 4 0 0 0 0)) (when (and 0 0) (call (- (gas) 200) (caller) 5 0 0 0 0)) (when (or 1 1) (call (- (gas) 200) (caller) 12 0 0 0 0)) (when (or 1 0) (call (- (gas) 200) (caller) 13 0 0 0 0)) (when (or 0 1) (call (- (gas) 200) (caller) 14 0 0 0 0)) (when (or 0 0) (call (- (gas) 200) (caller) 15 0 0 0 0)) )",
 			"storage": {}
 		}
-		},
-		"exec" : [
-		{
+        },
+        "exec" : {
 			"address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
 			"origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
 			"caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
@@ -89,7 +81,6 @@
 			"gasPrice" : "100000000000000",
 		    "gas" : "10000"
 		}
-		]
 	},
 
 	"mktx": {
@@ -99,8 +90,7 @@
 		"currentGasLimit" : "1000000",
 		"currentDifficulty" : "256",
 		"currentTimestamp" : 1,
-		"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-		"code" : "(call (- (gas) 200) (caller) 500000000000000000 0 0 0 0)"
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
 	    },
 	    "pre" : {
 		"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -110,7 +100,7 @@
 		    "storage": {}
 		}
 	    },
-	    "exec" : [
+        "exec" :
 		{
 		    "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
 		    "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
@@ -120,6 +110,5 @@
 		    "gas" : "10000",
 		    "data" : ""
 		}
-	    ]
 	}
 }
