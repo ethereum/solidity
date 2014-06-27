@@ -22,8 +22,8 @@
 
 #include <fstream>
 #include <cstdint>
-#include <libethsupport/Log.h>
-#include <libethcore/Instruction.h>
+#include <libethential/Log.h>
+#include <libevmface/Instruction.h>
 #include <libevm/ExtVMFace.h>
 #include <libevm/VM.h>
 #include <liblll/Compiler.h>
@@ -470,7 +470,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 BOOST_AUTO_TEST_CASE(vm_tests)
 {
 	// Populate tests first:
-	try
+	/*try
 	{
 		cnote << "Populating VM tests...";
 		json_spirit::mValue v;
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 	catch (std::exception const& e)
 	{
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
-	}
+	}*/
 
 	try
 	{

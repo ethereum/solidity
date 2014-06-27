@@ -20,7 +20,7 @@
  * Main test functions.
  */
 
-#include <libethsupport/TrieDB.h>
+#include <libethcore/TrieDB.h>
 #include "TrieHash.h"
 #include "MemTrie.h"
 
@@ -35,7 +35,7 @@ int vmTest();
 int hexPrefixTest();
 int peerTest(int argc, char** argv);
 
-#include <libethsupport/Log.h>
+#include <libethential/Log.h>
 #include <libethcore/BlockInfo.h>
 using namespace std;
 using namespace eth;

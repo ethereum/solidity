@@ -22,9 +22,9 @@
 
 #include <random>
 #include <secp256k1/secp256k1.h>
-#include <libethsupport/Common.h>
-#include <libethsupport/RLP.h>
-#include <libethsupport/Log.h>
+#include <libethential/Common.h>
+#include <libethential/RLP.h>
+#include <libethential/Log.h>
 #include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
 
