@@ -3,9 +3,6 @@ cmake_policy(SET CMP0015 NEW)
 aux_source_directory(. SRC_LIST)
 
 include_directories(..)
-#link_directories(../libethsupport)
-#link_directories(../libethcore)
-#link_directories(../liblll)
 
 set(EXECUTABLE lllc)
 
@@ -47,7 +44,6 @@ endif ()
 
 target_link_libraries(${EXECUTABLE} lll)
 target_link_libraries(${EXECUTABLE} ethcore)
-target_link_libraries(${EXECUTABLE} ethsupport)
 target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LS})
 target_link_libraries(${EXECUTABLE} ${LEVELDB_LS})
 target_link_libraries(${EXECUTABLE} gmp)

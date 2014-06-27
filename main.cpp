@@ -23,9 +23,9 @@
 #include <fstream>
 #include <iostream>
 #include <liblll/Compiler.h>
-#include <libethsupport/CommonIO.h>
-#include <libethsupport/CommonData.h>
-#include <libethcore/Instruction.h>
+#include <libethential/CommonIO.h>
+#include <libethential/CommonData.h>
+#include <libevmface/Instruction.h>
 #include "BuildInfo.h"
 using namespace std;
 using namespace eth;
