@@ -23,7 +23,7 @@
 
 #include <string>
 #include <vector>
-#include <libethsupport/Common.h>
+#include <libethential/Common.h>
 
 namespace eth
 {

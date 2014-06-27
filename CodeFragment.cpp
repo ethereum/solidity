@@ -24,8 +24,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/spirit/include/support_utree.hpp>
-#include <libethsupport/Log.h>
-#include <libethcore/Instruction.h>
+#include <libethential/Log.h>
+#include <libevmface/Instruction.h>
 #include <libethcore/CommonEth.h>
 #include "CompilerState.h"
 using namespace std;

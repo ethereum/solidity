@@ -18,16 +18,9 @@ endif()
 file(GLOB HEADERS "*.h") 
 
 include_directories(..)
-include_directories(${MINIUPNPC_ID})
-include_directories(${LEVELDB_ID})
-
-target_link_libraries(${EXECUTABLE} ethcore)
-target_link_libraries(${EXECUTABLE} ethsupport)
-target_link_libraries(${EXECUTABLE} secp256k1)
-target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LS})
-target_link_libraries(${EXECUTABLE} ${LEVELDB_LS})
+target_link_libraries(${EXECUTABLE} ethential)
+target_link_libraries(${EXECUTABLE} evmface)
 target_link_libraries(${EXECUTABLE} gmp)
-
 
 if(${TARGET_PLATFORM} STREQUAL "w64")
 	include_directories(/usr/x86_64-w64-mingw32/include/cryptopp)

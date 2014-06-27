@@ -23,8 +23,9 @@
 
 #include <iostream>
 #include <sstream>
-#include <libethsupport/Common.h>
-#include <libethcore/Instruction.h>
+#include <libethential/Common.h>
+#include <libevmface/Instruction.h>
+#include <libethcore/SHA3.h>
 #include "Exceptions.h"
 
 namespace eth
