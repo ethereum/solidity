@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(trieStess)
 				m.erase(k);
 				if (!d.check(true))
 				{
-					cwarn << m;
+					// cwarn << m;
 					for (auto i: d)
 						cwarn << i.first.toString() << i.second.toString();
 
