@@ -26,7 +26,6 @@
 #include <boost/spirit/include/support_utree.hpp>
 #include <libethential/Log.h>
 #include <libevmface/Instruction.h>
-#include <libethcore/CommonEth.h>
 #include "CompilerState.h"
 using namespace std;
 using namespace eth;

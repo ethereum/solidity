@@ -70,8 +70,8 @@ class Assembly
 public:
 	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
-	AssemblyItem newData(bytes const& _data) { auto h = sha3(_data); m_data[h] = _data; return AssemblyItem(PushData, h); }
-	AssemblyItem newPushString(std::string const& _data) { auto h = sha3(_data); m_strings[h] = _data; return AssemblyItem(PushString, h); }
+	AssemblyItem newData(bytes const& _data) { h256 h = (u256)std::hash<std::string>()(asString(_data)); m_data[h] = _data; return AssemblyItem(PushData, h); }
+	AssemblyItem newPushString(std::string const& _data) { h256 h = (u256)std::hash<std::string>()(_data); m_strings[h] = _data; return AssemblyItem(PushString, h); }
 
 	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
