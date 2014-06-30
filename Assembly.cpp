@@ -176,6 +176,11 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	return back();
 }
 
+void Assembly::injectStart(AssemblyItem const& _i)
+{
+	m_items.insert(m_items.begin(), _i);
+}
+
 inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 {
 	if (_a.size() != _b.size())

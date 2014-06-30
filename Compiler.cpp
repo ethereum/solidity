@@ -36,7 +36,7 @@ bytes eth::compileLLL(string const& _src, bool _opt, vector<string>* _errors)
 		auto f = CodeFragment::compile(_src, cs);
 		if (_opt)
 			f.optimise();
-		bytes ret = f.code();
+		bytes ret = f.code(cs);
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret;
@@ -63,7 +63,7 @@ std::string eth::compileLLLToAsm(std::string const& _src, bool _opt, std::vector
 		auto f = CodeFragment::compile(_src, cs);
 		if (_opt)
 			f.optimise();
-		string ret = f.assembly();
+		string ret = f.assembly(cs);
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret;

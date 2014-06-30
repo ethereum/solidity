@@ -48,6 +48,7 @@ struct CompilerState
 	std::map<std::string, CodeFragment> outers;
 	std::map<std::pair<std::string, unsigned>, Macro> macros;
 	std::vector<boost::spirit::utree> treesToKill;
+	bool usedAlloc = false;
 };
 
 }

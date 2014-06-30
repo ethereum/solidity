@@ -19,7 +19,6 @@
  * @date 2014
  */
 
-#include "Parser.h"
 #include "CodeFragment.h"
 
 #include <boost/algorithm/string.hpp>
@@ -27,11 +26,29 @@
 #include <libethential/Log.h>
 #include <libevmface/Instruction.h>
 #include "CompilerState.h"
+#include "Parser.h"
 using namespace std;
 using namespace eth;
 namespace qi = boost::spirit::qi;
 namespace px = boost::phoenix;
 namespace sp = boost::spirit;
+
+void CodeFragment::finalise(CompilerState const& _cs)
+{
+	if (_cs.usedAlloc && _cs.vars.size() && !m_finalised)
+	{
+		m_finalised = true;
+		m_asm.injectStart(Instruction::MSTORE8);
+		m_asm.injectStart((u256)((_cs.vars.size() + 2) * 32) - 1);
+		m_asm.injectStart((u256)1);
+	}
+}
+
+bytes CodeFragment::code(CompilerState const& _cs)
+{
+	finalise(_cs);
+	return m_asm.assemble();
+}
 
 CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowASM)
 {
@@ -317,6 +334,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		vector<CodeFragment> code;
 		CompilerState ns = _s;
 		ns.vars.clear();
+		ns.usedAlloc = false;
 		int c = _t.tag() ? 1 : 0;
 		for (auto const& i: _t)
 			if (c++)
@@ -456,13 +474,30 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm.appendJump(begin);
 			m_asm << end.tag();
 		}
+		else if (us == "ALLOC")
+		{
+			requireSize(1);
+			requireDeposit(0, 1);
+
+			m_asm.append(Instruction::MEMSIZE);
+			m_asm.append(u256(0));
+			m_asm.append(u256(1));
+			m_asm.append(code[0].m_asm, 1);
+			m_asm.append(Instruction::MEMSIZE);
+			m_asm.append(Instruction::ADD);
+			m_asm.append(Instruction::SUB);
+			m_asm.append(Instruction::MSTORE8);
+
+			_s.usedAlloc = true;
+		}
 		else if (us == "LLL")
 		{
 			requireMinSize(2);
 			requireMaxSize(3);
 			requireDeposit(1, 1);
 
-			bytes const& subcode = code[0].code();
+			code[0].optimise();
+			bytes subcode = code[0].code(ns);
 
 			m_asm.append((u256)subcode.size());
 			m_asm.append(Instruction::DUP);

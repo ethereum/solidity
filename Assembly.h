@@ -98,6 +98,8 @@ public:
 
 	void popTo(int _deposit) { while (m_deposit > _deposit) append(Instruction::POP); }
 
+	void injectStart(AssemblyItem const& _i);
+
 	std::string out() const { std::stringstream ret; streamOut(ret); return ret.str(); }
 	int deposit() const { return m_deposit; }
 	bytes assemble() const;
