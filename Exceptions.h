@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <libethcore/Exceptions.h>
-
 namespace eth
 {
 
