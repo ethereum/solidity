@@ -25,7 +25,6 @@
 #include <sstream>
 #include <libethential/Common.h>
 #include <libevmface/Instruction.h>
-#include <libethcore/SHA3.h>
 #include "Exceptions.h"
 
 namespace eth

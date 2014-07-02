@@ -24,7 +24,6 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/support_utree.hpp>
-#include <libethcore/CommonEth.h>
 
 using namespace std;
 using namespace eth;
@@ -72,6 +71,10 @@ void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	using qi::ascii::space;
 	typedef sp::basic_string<std::string, sp::utree_type::symbol_type> symbol_type;
 	typedef string::const_iterator it;
+
+	static const u256 ether = u256(1000000000) * 1000000000;
+	static const u256 finney = u256(1000000000) * 1000000;
+	static const u256 szabo = u256(1000000000) * 1000;
 
 	qi::rule<it, qi::ascii::space_type, sp::utree()> element;
 	qi::rule<it, string()> str = '"' > qi::lexeme[+(~qi::char_(std::string("\"") + '\0'))] > '"';

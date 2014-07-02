@@ -22,7 +22,6 @@
 #include "Assembly.h"
 
 #include <libethential/Log.h>
-#include <libethcore/CommonEth.h>
 
 using namespace std;
 using namespace eth;
