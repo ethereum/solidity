@@ -8,6 +8,10 @@ set(EXECUTABLE lllc)
 
 add_executable(${EXECUTABLE} ${SRC_LIST})
 
+target_link_libraries(${EXECUTABLE} lll)
+target_link_libraries(${EXECUTABLE} evmface)
+target_link_libraries(${EXECUTABLE} ethential)
+
 if (${TARGET_PLATFORM} STREQUAL "w64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
 	target_link_libraries(${EXECUTABLE} gcc)
@@ -23,11 +27,6 @@ else ()
 	find_package(Threads REQUIRED)
 	target_link_libraries(${EXECUTABLE} ${CMAKE_THREAD_LIBS_INIT})
 endif ()
-
-target_link_libraries(${EXECUTABLE} lll)
-target_link_libraries(${EXECUTABLE} evmface)
-target_link_libraries(${EXECUTABLE} ethential)
-target_link_libraries(${EXECUTABLE} gmp)
 
 install( TARGETS ${EXECUTABLE} DESTINATION bin )
 
