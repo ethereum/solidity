@@ -468,7 +468,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 BOOST_AUTO_TEST_CASE(vm_tests)
 {
 	// Populate tests first:
-	try
+/*	try
 	{
 		cnote << "Populating VM tests...";
 		json_spirit::mValue v;
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 	{
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
 	}
-
+*/
 	try
 	{
 		cnote << "Testing VM...";
