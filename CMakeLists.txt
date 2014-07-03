@@ -7,7 +7,11 @@ aux_source_directory(. SRC_LIST)
 set(EXECUTABLE lll)
 
 # set(CMAKE_INSTALL_PREFIX ../lib)
-add_library(${EXECUTABLE} SHARED ${SRC_LIST})
+if(ETH_STATIC)
+	add_library(${EXECUTABLE} STATIC ${SRC_LIST})
+else()
+	add_library(${EXECUTABLE} SHARED ${SRC_LIST})
+endif()
 
 file(GLOB HEADERS "*.h") 
 
@@ -15,7 +19,6 @@ include_directories(..)
 
 target_link_libraries(${EXECUTABLE} evmface)
 target_link_libraries(${EXECUTABLE} ethential)
-target_link_libraries(${EXECUTABLE} gmp)
 
 
 if(${TARGET_PLATFORM} STREQUAL "w64")

@@ -21,6 +21,8 @@
 
 #include "Parser.h"
 
+#define BOOST_RESULT_OF_USE_DECLTYPE
+#define BOOST_SPIRIT_USE_PHOENIX_V3
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/support_utree.hpp>
@@ -93,12 +95,13 @@ void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> list = '(' > *element > ')';
 
 	// todo: fix compound compile errors in this line for Visual Studio 2013
-#ifndef _MSC_VER
-	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = sload[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 2)] | mload[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 1)] | sstore[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 4)] | mstore[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 3)] | seq[qi::_val = qi::_1, bind(&sp::utree::tag, qi::_val, 5)];
+//#ifndef _MSC_VER
+	auto x = [](int a) { return [=](sp::utree& n, typename qi::rule<it, qi::ascii::space_type, sp::utree()>::context_type& c) { (boost::fusion::at_c<0>(c.attributes) = n).tag(a); }; };
+	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = mload[x(1)] | sload[x(2)] | mstore[x(3)] | sstore[x(4)] | seq[x(5)];
 	element = atom | list | extra;
-#else
-	element = atom | list/* | extra*/;
-#endif
+/*#else
+	element = atom | list;
+#endif*/
 	
 
 	string s;

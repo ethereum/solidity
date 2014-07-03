@@ -84,7 +84,11 @@ std::string eth::compileLLLToAsm(std::string const& _src, bool _opt, std::vector
 string eth::parseLLL(string const& _src)
 {
 	sp::utree o;
-	parseTreeLLL(_src, o);
+	try
+	{
+		parseTreeLLL(_src, o);
+	}
+	catch (...) {}
 	ostringstream ret;
 	debugOutAST(ret, o);
 	killBigints(o);
