@@ -65,13 +65,12 @@ public:
 	h160 create(u256 _endowment, u256* _gas, bytesConstRef _init)
 	{
 		Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
-		if (get<0>(addresses[myAddress]) >= _endowment)
+/*		if (get<0>(addresses[myAddress]) >= _endowment)
 		{
-			get<0>(addresses[myAddress]) -= _endowment;
 			get<1>(addresses[myAddress])++;
 			get<0>(addresses[na]) = _endowment;
 			// TODO: actually execute...
-		}
+		}*/
 		Transaction t;
 		t.value = _endowment;
 		t.gasPrice = gasPrice;
@@ -83,13 +82,12 @@ public:
 
 	bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out)
 	{
-		if (get<0>(addresses[myAddress]) >= _value)
+/*		if (get<0>(addresses[myAddress]) >= _value)
 		{
-			get<0>(addresses[myAddress]) -= _value;
 			get<1>(addresses[myAddress])++;
 			get<0>(addresses[_receiveAddress]) += _value;
 			// TODO: actually execute...
-		}
+		}*/
 		Transaction t;
 		t.value = _value;
 		t.gasPrice = gasPrice;
@@ -470,7 +468,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 BOOST_AUTO_TEST_CASE(vm_tests)
 {
 	// Populate tests first:
-	/*try
+	try
 	{
 		cnote << "Populating VM tests...";
 		json_spirit::mValue v;
@@ -483,7 +481,7 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 	catch (std::exception const& e)
 	{
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
-	}*/
+	}
 
 	try
 	{
