@@ -94,15 +94,9 @@ void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> sstore = qi::lit("[[") > element > qi::lit("]]") > -qi::lit(":") > element;
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> list = '(' > *element > ')';
 
-	// todo: fix compound compile errors in this line for Visual Studio 2013
-//#ifndef _MSC_VER
 	auto x = [](int a) { return [=](sp::utree& n, typename qi::rule<it, qi::ascii::space_type, sp::utree()>::context_type& c) { (boost::fusion::at_c<0>(c.attributes) = n).tag(a); }; };
-	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = mload[x(1)] | sload[x(2)] | mstore[x(3)] | sstore[x(4)] | seq[x(5)];
+	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = sload[x(2)] | mload[x(1)] | sstore[x(4)] | mstore[x(3)] | seq[x(5)];
 	element = atom | list | extra;
-/*#else
-	element = atom | list;
-#endif*/
-	
 
 	string s;
 	s.reserve(_s.size());
