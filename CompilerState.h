@@ -41,7 +41,7 @@ struct CompilerState
 	CodeFragment const& getDef(std::string const& _s);
 	void populateStandard();
 
-	unsigned stackSize = 64;
+	unsigned stackSize = 128;
 	std::map<std::string, std::pair<unsigned, unsigned>> vars;       ///< maps name to stack offset & size.
 	std::map<std::string, CodeFragment> defs;
 	std::map<std::string, CodeFragment> args;

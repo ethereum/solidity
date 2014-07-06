@@ -151,6 +151,9 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		case 5:
 			us = "SEQ";
 			break;
+		case 6:
+			us = "CALLDATALOAD";
+			break;
 		default:;
 		}
 

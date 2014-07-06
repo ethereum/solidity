@@ -74,12 +74,14 @@ unsigned Assembly::bytesRequired() const
 
 void Assembly::append(Assembly const& _a)
 {
+	auto newDeposit = m_deposit + _a.deposit();
 	for (AssemblyItem i: _a.m_items)
 	{
 		if (i.type() == Tag || i.type() == PushTag)
 			i.m_data += m_usedTags;
 		append(i);
 	}
+	m_deposit = newDeposit;
 	m_usedTags += _a.m_usedTags;
 	for (auto const& i: _a.m_data)
 		m_data.insert(i);
