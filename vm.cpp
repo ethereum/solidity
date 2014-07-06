@@ -231,21 +231,16 @@ public:
 					store[curKey] = curVal;
 				o["storage"] = store;
 			}
-			{
-				mArray d;
-				for (auto const& i: get<3>(a.second))
-					push(d, i);
-				o["code"] = d;
-			}
+			o["code"] = "0x" + toHex(get<3>(a.second));
 
 			ret[toString(a.first)] = o;
 		}
 		return ret;
 	}
 
-	void importState(mObject& _o)
+	void importState(mObject& _object)
 	{
-		for (auto const& i: _o)
+		for (auto const& i: _object)
 		{
 			mObject o = i.second.get_obj();
 			BOOST_REQUIRE(o.count("balance") > 0);
@@ -262,8 +257,12 @@ public:
 				for (auto const& k: j.second.get_array())
 					get<2>(a)[adr++] = toInt(k);
 			}
+
 			if (o["code"].type() == str_type)
-				get<3>(a) = compileLLL(o["code"].get_str());
+				if (o["code"].get_str().find_first_of("0x") != 0)
+					get<3>(a) = compileLLL(o["code"].get_str(), false);
+				else
+					get<3>(a) = fromHex(o["code"].get_str().substr(2));
 			else
 			{
 				get<3>(a).clear();
@@ -282,14 +281,8 @@ public:
 		push(ret, "value", value);
 		push(ret, "gasPrice", gasPrice);
 		push(ret, "gas", gas);
-		mArray d;
-		for (auto const& i: data)
-			push(d, i);
-		ret["data"] = d;
-		mArray c;
-		for (auto const& i: code)
-			push(c, i);
-		ret["code"] = c;
+		ret["data"] = "0x" + toHex(data);
+		ret["code"] = "0x" + toHex(code);
 		return ret;
 	}
 
@@ -313,7 +306,10 @@ public:
 		thisTxCode.clear();
 		code = &thisTxCode;
 		if (_o["code"].type() == str_type)
-			thisTxCode = compileLLL(_o["code"].get_str());
+			if (_o["code"].get_str().find_first_of("0x") == 0)
+				thisTxCode = compileLLL(_o["code"].get_str());
+			else
+				thisTxCode = fromHex(_o["code"].get_str().substr(2));
 		else if (_o["code"].type() == array_type)
 			for (auto const& j: _o["code"].get_array())
 				thisTxCode.push_back(toByte(j));
@@ -322,7 +318,10 @@ public:
 
 		thisTxData.clear();
 		if (_o["data"].type() == str_type)
-			thisTxData = fromHex(_o["data"].get_str());
+			if (_o["data"].get_str().find_first_of("0x") == 0)
+				thisTxData = fromHex(_o["data"].get_str().substr(2));
+			else
+				thisTxData = fromHex(_o["data"].get_str());
 		else
 			for (auto const& j: _o["data"].get_array())
 				thisTxData.push_back(toByte(j));
@@ -338,10 +337,7 @@ public:
 			o["destination"] = toString(tx.receiveAddress);
 			push(o, "gasLimit", tx.gas);
 			push(o, "value", tx.value);
-			mArray d;
-			for (auto const& i: tx.data)
-				push(d, i);
-			o["data"] = d;
+			o["data"] = "0x" + toHex(tx.data);
 			ret.push_back(o);
 		}
 		return ret;
@@ -361,7 +357,10 @@ public:
 			t.value = toInt(tx["value"]);
 			t.gas = toInt(tx["gasLimit"]);
 			if (tx["data"].type() == str_type)
-				t.data = fromHex(tx["data"].get_str());
+				if (tx["data"].get_str().find_first_of("0x") == 0)
+					t.data = fromHex(tx["data"].get_str().substr(2));
+				else
+					t.data = fromHex(tx["data"].get_str());
 			else
 				for (auto const& j: tx["data"].get_array())
 					t.data.push_back(toByte(j));
@@ -468,7 +467,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 BOOST_AUTO_TEST_CASE(vm_tests)
 {
 	// Populate tests first:
-/*	try
+//	try
 	{
 		cnote << "Populating VM tests...";
 		json_spirit::mValue v;
@@ -478,11 +477,11 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 		eth::test::doTests(v, true);
 		writeFile("../../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
 	}
-	catch (std::exception const& e)
+/*	catch (std::exception const& e)
 	{
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
-	}
-*/
+	}*/
+
 	try
 	{
 		cnote << "Testing VM...";
