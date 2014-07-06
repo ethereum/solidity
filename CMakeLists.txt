@@ -12,7 +12,7 @@ target_link_libraries(${EXECUTABLE} lll)
 target_link_libraries(${EXECUTABLE} evmface)
 target_link_libraries(${EXECUTABLE} ethential)
 
-if (${TARGET_PLATFORM} STREQUAL "w64")
+if ("${TARGET_PLATFORM}" STREQUAL "w64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
 	target_link_libraries(${EXECUTABLE} gcc)
 	target_link_libraries(${EXECUTABLE} gdi32)
