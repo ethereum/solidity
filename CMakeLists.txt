@@ -14,7 +14,7 @@ target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth gmp)
 target_link_libraries(testeth ${CRYPTOPP_LS})
 
-if (${TARGET_PLATFORM} STREQUAL "w64")
+if ("${TARGET_PLATFORM}" STREQUAL "w64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
 	target_link_libraries(testeth boost_system-mt-s)
 	target_link_libraries(testeth boost_filesystem-mt-s)
