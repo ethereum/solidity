@@ -69,9 +69,24 @@ void eth::debugOutAST(ostream& _out, sp::utree const& _this)
 	}
 }
 
+namespace eth {
+namespace parseTreeLLL_ {
+
+template<unsigned N>
+struct tagNode
+{
+	void operator()(sp::utree& n, qi::rule<string::const_iterator, qi::ascii::space_type, sp::utree()>::context_type& c) const
+	{
+		(boost::fusion::at_c<0>(c.attributes) = n).tag(N);
+	}
+};
+
+}}
+
 void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 {
 	using qi::ascii::space;
+	using eth::parseTreeLLL_::tagNode;
 	typedef sp::basic_string<std::string, sp::utree_type::symbol_type> symbol_type;
 	typedef string::const_iterator it;
 
@@ -96,8 +111,7 @@ void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> calldataload = qi::lit("$") > element;
 	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> list = '(' > *element > ')';
 
-	auto x = [](int a) { return [=](sp::utree& n, typename qi::rule<it, qi::ascii::space_type, sp::utree()>::context_type& c) { (boost::fusion::at_c<0>(c.attributes) = n).tag(a); }; };
-	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = sload[x(2)] | mload[x(1)] | sstore[x(4)] | mstore[x(3)] | seq[x(5)] | calldataload[x(6)];
+	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = sload[tagNode<2>()] | mload[tagNode<1>()] | sstore[tagNode<4>()] | mstore[tagNode<3>()] | seq[tagNode<5>()] | calldataload[tagNode<6>()];
 	element = atom | list | extra;
 
 	string s;
