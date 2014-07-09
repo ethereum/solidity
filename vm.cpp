@@ -62,7 +62,7 @@ public:
 		get<0>(addresses[_a]) += get<0>(addresses[myAddress]);
 		addresses.erase(myAddress);
 	}
-	h160 create(u256 _endowment, u256* _gas, bytesConstRef _init)
+	h160 create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc)
 	{
 		Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
 /*		if (get<0>(addresses[myAddress]) >= _endowment)
@@ -80,7 +80,7 @@ public:
 		return na;
 	}
 
-	bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out)
+	bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc)
 	{
 /*		if (get<0>(addresses[myAddress]) >= _value)
 		{
