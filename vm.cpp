@@ -396,7 +396,10 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 
 		fev.importExec(o["exec"].get_obj());
 		if (!fev.code)
-			fev.code = &get<3>(fev.addresses.at(fev.myAddress));
+		{
+			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
+			fev.code = &fev.thisTxCode;
+		}
 		vm.reset(fev.gas);
 		bytes output = vm.go(fev).toBytes();
 
