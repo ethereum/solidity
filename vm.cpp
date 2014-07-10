@@ -154,17 +154,17 @@ public:
 
 	static void push(mObject& o, string const& _n, u256 _v)
 	{
-		if (_v < (u256)1 << 64)
-			o[_n] = (uint64_t)_v;
-		else
+//		if (_v < (u256)1 << 64)
+//			o[_n] = (uint64_t)_v;
+//		else
 			o[_n] = toString(_v);
 	}
 
 	static void push(mArray& a, u256 _v)
 	{
-		if (_v < (u256)1 << 64)
-			a.push_back((uint64_t)_v);
-		else
+//		if (_v < (u256)1 << 64)
+//			a.push_back((uint64_t)_v);
+//		else
 			a.push_back(toString(_v));
 	}
 
@@ -405,6 +405,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 
 		if (_fillin)
 		{
+			o["env"] = mValue(fev.exportEnv());
 			o["exec"] = mValue(fev.exportExec());
 			o["post"] = mValue(fev.exportState());
 			o["callcreates"] = fev.exportCallCreates();
