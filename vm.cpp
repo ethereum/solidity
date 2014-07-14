@@ -409,10 +409,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			o["exec"] = mValue(fev.exportExec());
 			o["post"] = mValue(fev.exportState());
 			o["callcreates"] = fev.exportCallCreates();
-			mArray df;
-			for (auto const& i: output)
-				FakeExtVM::push(df, i);
-			o["out"] = df;
+			o["out"] = "0x" + toHex(output);
 			fev.push(o, "gas", vm.gas());
 		}
 		else
@@ -426,11 +423,17 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			test.importState(o["post"].get_obj());
 			test.importCallCreates(o["callcreates"].get_array());
 			int i = 0;
-			for (auto const& d: o["out"].get_array())
-			{
-				BOOST_CHECK_MESSAGE(output[i] == FakeExtVM::toInt(d), "Output byte [" << i << "] different!");
-				++i;
-			}
+			if (o["out"].type() == array_type)
+				for (auto const& d: o["out"].get_array())
+				{
+					BOOST_CHECK_MESSAGE(output[i] == FakeExtVM::toInt(d), "Output byte [" << i << "] different!");
+					++i;
+				}
+			else if (o["out"].get_str().find("0x") == 0)
+				BOOST_CHECK(output == fromHex(o["out"].get_str().substr(2)));
+			else
+				BOOST_CHECK(output == fromHex(o["out"].get_str()));
+
 			BOOST_CHECK(FakeExtVM::toInt(o["gas"]) == vm.gas());
 			BOOST_CHECK(test.addresses == fev.addresses);
 			BOOST_CHECK(test.callcreates == fev.callcreates);
