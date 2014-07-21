@@ -45,8 +45,6 @@ else ()
 	target_link_libraries(${EXECUTABLE} ${CMAKE_THREAD_LIBS_INIT})
 endif ()
 
-message("Installation path: ${CMAKE_INSTALL_PREFIX}")
-
 install( TARGETS ${EXECUTABLE} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
