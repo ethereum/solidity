@@ -57,7 +57,7 @@ int peerTest(int argc, char** argv)
 	for (int i = 0; ; ++i)
 	{
 		this_thread::sleep_for(chrono::milliseconds(100));
-		pn.sync();
+//		pn.sync();
 		if (!(i % 10))
 			pn.pingAll();
 	}
