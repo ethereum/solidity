@@ -116,7 +116,7 @@ ostream& eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 			_out << " PUSH" << i.data();
 			break;
 		case PushString:
-			_out << " PUSH'[" << h256(i.data()).abridged() << "]";
+			_out << " PUSH'[" << hex << (unsigned)i.data() << "]";
 			break;
 		case PushTag:
 			_out << " PUSH[tag" << i.data() << "]";
@@ -125,7 +125,7 @@ ostream& eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 			_out << " tag" << i.data() << ":";
 			break;
 		case PushData:
-			_out << " PUSH*[" << h256(i.data()).abridged() << "]";
+			_out << " PUSH*[" << hex << (unsigned)i.data() << "]";
 			break;
 		case UndefinedItem:
 			_out << " ???";
@@ -156,7 +156,7 @@ ostream& Assembly::streamOut(ostream& _out) const
 			_out << "tag" << i.m_data << ": " << endl;
 			break;
 		case PushData:
-			_out << "  PUSH [" << h256(i.m_data).abridged() << "]" << endl;
+			_out << "  PUSH [" << hex << (unsigned)i.m_data << "]" << endl;
 			break;
 		default:;
 		}
@@ -165,7 +165,7 @@ ostream& Assembly::streamOut(ostream& _out) const
 	{
 		_out << ".data:" << endl;
 		for (auto const& i: m_data)
-			_out << "  " << i.first.abridged() << ": " << toHex(i.second) << endl;
+			_out << "  " << hex << (unsigned)(u256)i.first << ": " << toHex(i.second) << endl;
 	}
 	return _out;
 }
