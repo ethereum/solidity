@@ -62,6 +62,8 @@ void CompilerState::populateStandard()
 	"(def 'create (value code) { [0]:(msize) (create value @0 (lll code @0)) })"
 	"(def 'create (code) { [0]:(msize) (create 0 @0 (lll code @0)) })"
 	"(def 'sha3 (val) { [0]:val (sha3 0 32) })"
+	"(def 'sha3pair (a b) { [0]:a [32]:b (sha3 0 64) })"
+	"(def 'sha3trip (a b c) { [0]:a [32]:b [64]:c (sha3 0 96) })"
 	"(def 'return (val) { [0]:val (return 0 32) })"
 	"(def 'returnlll (code) (return 0 (lll code 0)) )"
 	"(def 'makeperm (name pos) { (def name (sload pos)) (def name (v) (sstore pos v)) } )"
