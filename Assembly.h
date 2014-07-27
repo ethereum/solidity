@@ -30,7 +30,7 @@
 namespace eth
 {
 
-enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, Tag, PushData };
+enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, Tag, PushData };
 
 class Assembly;
 
@@ -70,7 +70,9 @@ public:
 	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
 	AssemblyItem newData(bytes const& _data) { h256 h = (u256)std::hash<std::string>()(asString(_data)); m_data[h] = _data; return AssemblyItem(PushData, h); }
+	AssemblyItem newSub(Assembly const& _sub) { h256 h = h256::random(s_fixedHashEngine); m_subs[h] = _sub; return AssemblyItem(PushSub, h); }
 	AssemblyItem newPushString(std::string const& _data) { h256 h = (u256)std::hash<std::string>()(_data); m_strings[h] = _data; return AssemblyItem(PushString, h); }
+	AssemblyItem newPushSubSize(h256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 
 	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
@@ -78,6 +80,7 @@ public:
 	AssemblyItem const& append(AssemblyItem const& _i);
 	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
+	AssemblyItem appendSubSize(Assembly const& _asm) { auto ret = newSub(_asm); append(newPushSubSize(ret.data())); return ret; }
 
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
@@ -102,8 +105,8 @@ public:
 	std::string out() const { std::stringstream ret; streamOut(ret); return ret.str(); }
 	int deposit() const { return m_deposit; }
 	bytes assemble() const;
-	void optimise();
-	std::ostream& streamOut(std::ostream& _out) const;
+	Assembly& optimise(bool _enable);
+	std::ostream& streamOut(std::ostream& _out, std::string const& _prefix = "") const;
 
 private:
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) throw InvalidDeposit(); }
@@ -111,7 +114,8 @@ private:
 
 	unsigned m_usedTags = 0;
 	AssemblyItems m_items;
-	std::map<h256, bytes> m_data;
+	mutable std::map<h256, bytes> m_data;
+	std::map<h256, Assembly> m_subs;
 	std::map<h256, std::string> m_strings;
 
 	int m_deposit = 0;

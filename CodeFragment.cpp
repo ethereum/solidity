@@ -44,12 +44,6 @@ void CodeFragment::finalise(CompilerState const& _cs)
 	}
 }
 
-bytes CodeFragment::code(CompilerState const& _cs)
-{
-	finalise(_cs);
-	return m_asm.assemble();
-}
-
 CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowASM)
 {
 /*	cdebug << "CodeFragment. Locals:";
@@ -499,10 +493,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireMaxSize(3);
 			requireDeposit(1, 1);
 
-			code[0].optimise();
-			bytes subcode = code[0].code(ns);
-
-			m_asm.append((u256)subcode.size());
+			auto subPush = m_asm.appendSubSize(code[0].assembly(ns));
 			m_asm.append(Instruction::DUP);
 			if (code.size() == 3)
 			{
@@ -513,7 +504,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				m_asm.append(Instruction::MUL);
 				m_asm.append(Instruction::DUP);
 			}
-			m_asm.append(subcode);
+			m_asm.append(subPush);
 			m_asm.append(code[1].m_asm, 1);
 			m_asm.append(Instruction::CODECOPY);
 		}

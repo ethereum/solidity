@@ -43,13 +43,7 @@ public:
 	static CodeFragment compile(std::string const& _src, CompilerState& _s);
 
 	/// Consolidates data and compiles code.
-	bytes code(CompilerState const& _cs);
-
-	/// Consolidates data and compiles code.
-	std::string assembly(CompilerState const& _cs) { finalise(_cs); return m_asm.out(); }
-
-	/// Optimise the code. Best do this just before calling code() or assembly().
-	void optimise() { m_asm.optimise(); }
+	Assembly& assembly(CompilerState const& _cs) { finalise(_cs); return m_asm; }
 
 private:
 	void finalise(CompilerState const& _cs);
