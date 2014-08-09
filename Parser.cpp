@@ -85,7 +85,8 @@ struct tagNode
 
 void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 {
-	using qi::ascii::space;
+	using qi::standard::space;
+	using qi::standard::space_type;
 	using eth::parseTreeLLL_::tagNode;
 	typedef sp::basic_string<std::string, sp::utree_type::symbol_type> symbol_type;
 	typedef string::const_iterator it;
@@ -94,24 +95,24 @@ void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	static const u256 finney = u256(1000000000) * 1000000;
 	static const u256 szabo = u256(1000000000) * 1000;
 
-	qi::rule<it, qi::ascii::space_type, sp::utree()> element;
+	qi::rule<it, space_type, sp::utree()> element;
 	qi::rule<it, string()> str = '"' > qi::lexeme[+(~qi::char_(std::string("\"") + '\0'))] > '"';
 	qi::rule<it, string()> strsh = '\'' > qi::lexeme[+(~qi::char_(std::string(" ;$@()[]{}:\n\t") + '\0'))];
 	qi::rule<it, symbol_type()> symbol = qi::lexeme[+(~qi::char_(std::string(" $@[]{}:();\"\x01-\x1f\x7f") + '\0'))];
 	qi::rule<it, string()> intstr = qi::lexeme[ qi::no_case["0x"][qi::_val = "0x"] >> *qi::char_("0-9a-fA-F")[qi::_val += qi::_1]] | qi::lexeme[+qi::char_("0-9")[qi::_val += qi::_1]];
 	qi::rule<it, bigint()> integer = intstr;
 	qi::rule<it, bigint()> multiplier = qi::lit("wei")[qi::_val = 1] | qi::lit("szabo")[qi::_val = szabo] | qi::lit("finney")[qi::_val = finney] | qi::lit("ether")[qi::_val = ether];
-	qi::rule<it, qi::ascii::space_type, bigint()> quantity = integer[qi::_val = qi::_1] >> -multiplier[qi::_val *= qi::_1];
-	qi::rule<it, qi::ascii::space_type, sp::utree()> atom = quantity[qi::_val = px::construct<sp::any_ptr>(px::new_<bigint>(qi::_1))] | (str | strsh)[qi::_val = qi::_1] | symbol[qi::_val = qi::_1];
-	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> seq = '{' > *element > '}';
-	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> mload = '@' > element;
-	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> sload = qi::lit("@@") > element;
-	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> mstore = '[' > element > ']' > -qi::lit(":") > element;
-	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> sstore = qi::lit("[[") > element > qi::lit("]]") > -qi::lit(":") > element;
-	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> calldataload = qi::lit("$") > element;
-	qi::rule<it, qi::ascii::space_type, sp::utree::list_type()> list = '(' > *element > ')';
+	qi::rule<it, space_type, bigint()> quantity = integer[qi::_val = qi::_1] >> -multiplier[qi::_val *= qi::_1];
+	qi::rule<it, space_type, sp::utree()> atom = quantity[qi::_val = px::construct<sp::any_ptr>(px::new_<bigint>(qi::_1))] | (str | strsh)[qi::_val = qi::_1] | symbol[qi::_val = qi::_1];
+	qi::rule<it, space_type, sp::utree::list_type()> seq = '{' > *element > '}';
+	qi::rule<it, space_type, sp::utree::list_type()> mload = '@' > element;
+	qi::rule<it, space_type, sp::utree::list_type()> sload = qi::lit("@@") > element;
+	qi::rule<it, space_type, sp::utree::list_type()> mstore = '[' > element > ']' > -qi::lit(":") > element;
+	qi::rule<it, space_type, sp::utree::list_type()> sstore = qi::lit("[[") > element > qi::lit("]]") > -qi::lit(":") > element;
+	qi::rule<it, space_type, sp::utree::list_type()> calldataload = qi::lit("$") > element;
+	qi::rule<it, space_type, sp::utree::list_type()> list = '(' > *element > ')';
 
-	qi::rule<it, qi::ascii::space_type, sp::utree()> extra = sload[tagNode<2>()] | mload[tagNode<1>()] | sstore[tagNode<4>()] | mstore[tagNode<3>()] | seq[tagNode<5>()] | calldataload[tagNode<6>()];
+	qi::rule<it, space_type, sp::utree()> extra = sload[tagNode<2>()] | mload[tagNode<1>()] | sstore[tagNode<4>()] | mstore[tagNode<3>()] | seq[tagNode<5>()] | calldataload[tagNode<6>()];
 	element = atom | list | extra;
 
 	string s;
