@@ -46,12 +46,7 @@ void CompilerState::populateStandard()
 	static const string s = "{"
 	"(def 'gav 0x51ba59315b3a95761d0863b05ccc7a7f54703d99)"
 	"(def 'config 0x661005d2720d855f1d9976f88bb10c1a3398c77f)"
-	"(def 'namereg 0x50441127ea5b9dfd835a9aba4e1dc9c1257b58ca)"
-	"(def 'gavcoin 0x5620133321fcac7f15a5c570016f6cb6dc263f9d)"
 	"(def 'allgas (- (gas) 21))"
-	"(def 'sendgavcoin (to value) { [0]'send [32]:to [64]:value (call allgas gavcoin 0 0 96 0 0) })"
-	"(def 'regname (name) { [0]'register [32]name (call allgas namereg 0 0 64 0 0) })"
-	"(def 'regcoins (name) { [0]'register [32]name (call allgas namereg 0 0 64 0 0) })"
 	"(def 'send (to value) (call allgas to value 0 0 0 0))"
 	"(def 'send (gaslimit to value) (call gaslimit to value 0 0 0 0))"
 	"(def 'msg (gaslimit to value data datasize outsize) { (set x outsize) (set y (alloc @32)) (call gaslimit to value data datasize @0 @32) @0 })"
@@ -69,6 +64,13 @@ void CompilerState::populateStandard()
 	"(def 'makeperm (name pos) { (def name (sload pos)) (def name (v) (sstore pos v)) } )"
 	"(def 'permcount 0)"
 	"(def 'perm (name) { (makeperm name permcount) (def 'permcount (+ permcount 1)) } )"
+	"(def 'namereg (msg config 0))"
+	"(def 'coinreg (msg config 1))"
+	"(def 'gavcoin (msg config 2))"
+	"(def 'sendgavcoin (to value) { [32]'send [64]:to [96]:value (call allgas gavcoin 0 32 96 0 0) })"
+	"(def 'regname (name) { [32]'register [64]name (call allgas namereg 0 32 64 0 0) })"
+	"(def 'regcoin (name) { [32]name (call allgas coinreg 0 32 32 0 0) })"
+	"(def 'regcoin (name denom) { [32]name [64]denom (call allgas coinreg 0 32 64 0 0) })"
 	"}";
 	CodeFragment::compile(s, *this);
 }
