@@ -77,7 +77,7 @@ CodeFragment::CodeFragment(sp::utree const& _t, CompilerState& _s, bool _allowAS
 		string us = boost::algorithm::to_upper_copy(s);
 		if (_allowASM && c_instructions.count(us))
 			m_asm.append(c_instructions.at(us));
-		if (_s.defs.count(s))
+		else if (_s.defs.count(s))
 			m_asm.append(_s.defs.at(s).m_asm);
 		else if (_s.args.count(s))
 			m_asm.append(_s.args.at(s).m_asm);
