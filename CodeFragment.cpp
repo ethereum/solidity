@@ -313,7 +313,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				++ii;
 			}
 			m_asm.append((u256)data.size());
-			m_asm.append(Instruction::DUP);
+			m_asm.append(Instruction::DUP1);
 			m_asm.append(data);
 			m_asm.append(pos.m_asm, 1);
 			m_asm.append(Instruction::CODECOPY);
@@ -494,7 +494,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			requireDeposit(1, 1);
 
 			auto subPush = m_asm.appendSubSize(code[0].assembly(ns));
-			m_asm.append(Instruction::DUP);
+			m_asm.append(Instruction::DUP1);
 			if (code.size() == 3)
 			{
 				requireDeposit(2, 1);
@@ -502,7 +502,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				m_asm.append(Instruction::LT);
 				m_asm.append(Instruction::NOT);
 				m_asm.append(Instruction::MUL);
-				m_asm.append(Instruction::DUP);
+				m_asm.append(Instruction::DUP1);
 			}
 			m_asm.append(subPush);
 			m_asm.append(code[1].m_asm, 1);
