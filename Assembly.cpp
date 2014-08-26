@@ -31,7 +31,7 @@ int AssemblyItem::deposit() const
 	switch (m_type)
 	{
 	case Operation:
-		return c_instructionInfo.at((Instruction)(byte)m_data).ret - c_instructionInfo.at((Instruction)(byte)m_data).args;
+		return instructionInfo((Instruction)(byte)m_data).ret - instructionInfo((Instruction)(byte)m_data).args;
 	case Push: case PushString: case PushTag: case PushData: case PushSub: case PushSubSize:
 		return 1;
 	case Tag:
@@ -116,7 +116,7 @@ ostream& eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 		switch (i.type())
 		{
 		case Operation:
-			_out << " " << c_instructionInfo.at((Instruction)(byte)i.data()).name;
+			_out << " " << instructionInfo((Instruction)(byte)i.data()).name;
 			break;
 		case Push:
 			_out << " PUSH" << i.data();
@@ -153,7 +153,7 @@ ostream& Assembly::streamOut(ostream& _out, string const& _prefix) const
 		switch (i.m_type)
 		{
 		case Operation:
-			_out << _prefix << "  " << c_instructionInfo.at((Instruction)(byte)i.m_data).name << endl;
+			_out << _prefix << "  " << instructionInfo((Instruction)(byte)i.m_data).name << endl;
 			break;
 		case Push:
 			_out << _prefix << "  PUSH " << i.m_data << endl;

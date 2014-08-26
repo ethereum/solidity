@@ -369,7 +369,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		else if (c_instructions.count(us))
 		{
 			auto it = c_instructions.find(us);
-			int ea = c_instructionInfo.at(it->second).args;
+			int ea = instructionInfo(it->second).args;
 			if (ea >= 0)
 				requireSize(ea);
 			else
