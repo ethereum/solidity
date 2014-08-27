@@ -24,7 +24,7 @@
 #include <thread>
 #include <boost/filesystem/operations.hpp>
 #include <libethereum/BlockChain.h>
-#include <libethereum/PeerServer.h>
+#include <libethereum/EthereumHost.h>
 using namespace std;
 using namespace eth;
 using boost::asio::ip::tcp;
@@ -49,7 +49,7 @@ int peerTest(int argc, char** argv)
 	}
 
 	BlockChain ch(boost::filesystem::temp_directory_path().string());
-	PeerServer pn("Test", ch, 0, listenPort);
+	EthereumHost pn("Test", ch, 0, listenPort);
 
 	if (!remoteHost.empty())
 		pn.connect(remoteHost, remotePort);
