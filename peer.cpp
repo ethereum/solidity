@@ -22,9 +22,7 @@
 
 #include <chrono>
 #include <thread>
-#include <boost/filesystem/operations.hpp>
-#include <libethereum/BlockChain.h>
-#include <libethereum/EthereumHost.h>
+#include <libethnet/PeerHost.h>
 using namespace std;
 using namespace eth;
 using boost::asio::ip::tcp;
@@ -48,18 +46,17 @@ int peerTest(int argc, char** argv)
 			remoteHost = argv[i];
 	}
 
-	BlockChain ch(boost::filesystem::temp_directory_path().string());
-	EthereumHost pn("Test", ch, 0, listenPort);
+	PeerHost ph("Test", listenPort);
 
 	if (!remoteHost.empty())
-		pn.connect(remoteHost, remotePort);
+		ph.connect(remoteHost, remotePort);
 
 	for (int i = 0; ; ++i)
 	{
 		this_thread::sleep_for(chrono::milliseconds(100));
 //		pn.sync();
 		if (!(i % 10))
-			pn.pingAll();
+			ph.pingAll();
 	}
 
 	return 0;
