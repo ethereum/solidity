@@ -22,10 +22,10 @@
 
 #include <chrono>
 #include <thread>
-#include <libethnet/PeerHost.h>
+#include <libp2p/PeerHost.h>
 using namespace std;
 using namespace eth;
-using boost::asio::ip::tcp;
+using namespace p2p;
 
 int peerTest(int argc, char** argv)
 {
