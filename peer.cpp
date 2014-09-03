@@ -22,7 +22,7 @@
 
 #include <chrono>
 #include <thread>
-#include <libp2p/PeerHost.h>
+#include <libp2p/Host.h>
 using namespace std;
 using namespace eth;
 using namespace p2p;
@@ -46,7 +46,7 @@ int peerTest(int argc, char** argv)
 			remoteHost = argv[i];
 	}
 
-	PeerHost ph("Test", listenPort);
+	Host ph("Test", listenPort);
 
 	if (!remoteHost.empty())
 		ph.connect(remoteHost, remotePort);
