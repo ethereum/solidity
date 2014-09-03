@@ -80,7 +80,7 @@ public:
 		return na;
 	}
 
-	bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc)
+	bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc, Address, Address)
 	{
 /*		if (get<0>(addresses[myAddress]) >= _value)
 		{
