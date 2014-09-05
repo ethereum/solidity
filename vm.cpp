@@ -33,9 +33,10 @@
 
 using namespace std;
 using namespace json_spirit;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
-namespace eth { namespace test {
+namespace dev { namespace test {
 
 class FakeExtVM: public ExtVMFace
 {
@@ -387,7 +388,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		BOOST_REQUIRE(o.count("exec") > 0);
 
 		VM vm;
-		eth::test::FakeExtVM fev;
+		dev::test::FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 
@@ -419,7 +420,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			BOOST_REQUIRE(o.count("out") > 0);
 			BOOST_REQUIRE(o.count("gas") > 0);
 
-			eth::test::FakeExtVM test;
+			dev::test::FakeExtVM test;
 			test.importState(o["post"].get_obj());
 			test.importCallCreates(o["callcreates"].get_array());
 			int i = 0;
@@ -481,7 +482,7 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 		string s = asString(contents("../../../cpp-ethereum/test/vmtests.json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
 		json_spirit::read_string(s, v);
-		eth::test::doTests(v, true);
+		dev::test::doTests(v, true);
 		writeFile("../../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
 	}
 /*	catch (std::exception const& e)
@@ -496,7 +497,7 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 		string s = asString(contents("../../../tests/vmtests.json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty. Have you cloned the 'tests' repo branch develop?");
 		json_spirit::read_string(s, v);
-		eth::test::doTests(v, false);
+		dev::test::doTests(v, false);
 	}
 	catch (std::exception const& e)
 	{

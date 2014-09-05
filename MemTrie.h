@@ -24,7 +24,7 @@
 #include <libethential/Common.h>
 #include <libethential/FixedHash.h>
 
-namespace eth
+namespace dev
 {
 
 class MemTrieNode;

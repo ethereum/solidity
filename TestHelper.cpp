@@ -19,11 +19,14 @@
  * @date 2014
  */
 
+#include "TestHelper.h"
+
 #include <thread>
 #include <chrono>
 #include <libethereum/Client.h>
-#include "TestHelper.h"
 
+namespace dev
+{
 namespace eth
 {
 
@@ -46,4 +49,5 @@ void connectClients(Client& c1, Client& c2)
 	c2.connect("127.0.0.1", c1Port);
 }
 
+}
 }

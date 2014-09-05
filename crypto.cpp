@@ -29,7 +29,8 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
 
 BOOST_AUTO_TEST_CASE(crypto_tests)
@@ -145,7 +146,7 @@ int cryptoTest()
 		int ret = secp256k1_ecdsa_recover_compact((byte const*)hmsg.data(), (int)hmsg.size(), (byte const*)sig64.data(), pubkey.data(), &pubkeylen, 0, (int)t.vrs.v - 27);
 		pubkey.resize(pubkeylen);
 		cout << "RECPUB: " << dec << ret << " " << pubkeylen << " " << toHex(pubkey) << endl;
-		cout << "SENDER: " << hex << toAddress(eth::sha3(bytesConstRef(&pubkey).cropped(1))) << dec << endl;
+		cout << "SENDER: " << hex << toAddress(dev::eth::sha3(bytesConstRef(&pubkey).cropped(1))) << dec << endl;
 	}
 #endif
 	return 0;

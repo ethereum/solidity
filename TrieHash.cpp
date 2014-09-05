@@ -25,9 +25,10 @@
 #include <libethcore/SHA3.h>
 #include <libethcore/CommonEth.h>
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
-namespace eth
+namespace dev
 {
 
 /*/
@@ -67,12 +68,12 @@ void hash256rlp(HexMap const& _s, HexMap::const_iterator _begin, HexMap::const_i
 	{
 		// find the number of common prefix nibbles shared
 		// i.e. the minimum number of nibbles shared at the beginning between the first hex string and each successive.
-		uint sharedPre = (uint)-1;
-		uint c = 0;
+		unsigned sharedPre = (unsigned)-1;
+		unsigned c = 0;
 		for (auto i = std::next(_begin); i != _end && sharedPre; ++i, ++c)
 		{
-			uint x = std::min(sharedPre, std::min((uint)_begin->first.size(), (uint)i->first.size()));
-			uint shared = _preLen;
+			unsigned x = std::min(sharedPre, std::min((unsigned)_begin->first.size(), (unsigned)i->first.size()));
+			unsigned shared = _preLen;
 			for (; shared < x && _begin->first[shared] == i->first[shared]; ++shared) {}
 			sharedPre = std::min(shared, sharedPre);
 		}

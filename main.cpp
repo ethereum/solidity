@@ -38,7 +38,8 @@ int peerTest(int argc, char** argv);
 #include <libethential/Log.h>
 #include <libethcore/BlockInfo.h>
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
 BOOST_AUTO_TEST_CASE(basic_tests)
 {

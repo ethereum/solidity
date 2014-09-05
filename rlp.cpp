@@ -30,10 +30,10 @@
 #include <algorithm>
 
 using namespace std;
-using namespace eth;
+using namespace dev;
 namespace js = json_spirit;
 
-namespace eth 
+namespace dev
 {
 	namespace test
 	{
@@ -116,7 +116,7 @@ namespace eth
 				BOOST_CHECK( !u.isData() ); 
 				js::mArray& arr = v.get_array(); 
 				BOOST_CHECK( u.itemCount() == arr.size() ); 
-				uint i; 
+				unsigned i; 
 				for( i = 0; i < arr.size(); i++ ) 
 				{ 
 					RLP item = u[i]; 
@@ -137,16 +137,16 @@ BOOST_AUTO_TEST_CASE(rlp_encoding_test)
 {
 	cnote << "Testing RLP Encoding...";
 	js::mValue v;
-	eth::test::getRLPTestCases(v); 
+	dev::test::getRLPTestCases(v);
 
 	for (auto& i: v.get_obj())
 	{
 		js::mObject& o = i.second.get_obj();
 		cnote << i.first;
-		eth::test::checkRLPTestCase(o); 
+		dev::test::checkRLPTestCase(o);
 
 		RLPStream s;
-		eth::test::buildRLP(o["in"], s);
+		dev::test::buildRLP(o["in"], s);
 
 		std::string expectedText(o["out"].get_str()); 
 		std::transform(expectedText.begin(), expectedText.end(), expectedText.begin(), ::tolower ); 
@@ -173,19 +173,19 @@ BOOST_AUTO_TEST_CASE(rlp_decoding_test)
 	// and then compare the output structure to the json of the 
 	// input object. 
 	js::mValue v;
-	eth::test::getRLPTestCases(v); 
+	dev::test::getRLPTestCases(v);
 	for (auto& i: v.get_obj())
 	{
 		js::mObject& o = i.second.get_obj();
 		cnote << i.first;
-		eth::test::checkRLPTestCase(o); 
+		dev::test::checkRLPTestCase(o);
 		
 		js::mValue& inputData = o["in"];
 		bytes payloadToDecode = fromHex(o["out"].get_str()); 
 
 		RLP payload(payloadToDecode); 
 
-		eth::test::checkRLPAgainstJson(inputData, payload); 
+		dev::test::checkRLPAgainstJson(inputData, payload);
 
 	}
 }

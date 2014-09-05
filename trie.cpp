@@ -29,22 +29,23 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
 namespace js = json_spirit;
 
-namespace eth 
-{ 
-	namespace test
-	{
-		static unsigned fac(unsigned _i) 
-		{ 
-			return _i > 2 ? _i * fac(_i - 1) : _i; 
-		}
+namespace dev
+{
+namespace test
+{
 
-	}
+static unsigned fac(unsigned _i)
+{
+	return _i > 2 ? _i * fac(_i - 1) : _i;
 }
 
+}
+}
 
 BOOST_AUTO_TEST_CASE(trie_tests)
 {
@@ -66,7 +67,7 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 			if (!ss.back().second.find("0x"))
 				ss.back().second = asString(fromHex(ss.back().second.substr(2)));
 		}
-		for (unsigned j = 0; j < min(1000u, eth::test::fac((unsigned)ss.size())); ++j)
+		for (unsigned j = 0; j < min(1000u, dev::test::fac((unsigned)ss.size())); ++j)
 		{
 			next_permutation(ss.begin(), ss.end());
 			MemoryDB m;

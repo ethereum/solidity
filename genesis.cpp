@@ -28,7 +28,8 @@
 #include <boost/test/unit_test.hpp>
 
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
 namespace js = json_spirit;
 

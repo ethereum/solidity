@@ -26,7 +26,8 @@
 #include <libethereum/State.h>
 #include <libethereum/Defaults.h>
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
 int stateTest()
 {

@@ -21,10 +21,15 @@
 
 #pragma once
 
+namespace dev
+{
 namespace eth
 {
+
+class Client;
 
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
 
+}
 }

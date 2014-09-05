@@ -25,9 +25,10 @@
 #include <libethcore/SHA3.h>
 #include <libethcore/CommonEth.h>
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
-namespace eth
+namespace dev
 {
 
 #define ENABLE_DEBUG_PRINT 0
@@ -54,7 +55,7 @@ public:
 #endif
 
 	/// 256-bit hash of the node - this is a SHA-3/256 hash of the RLP of the node.
-	h256 hash256() const { RLPStream s; makeRLP(s); return eth::sha3(s.out()); }
+	h256 hash256() const { RLPStream s; makeRLP(s); return dev::eth::sha3(s.out()); }
 	bytes rlp() const { RLPStream s; makeRLP(s); return s.out(); }
 	void mark() { m_hash256 = h256(); }
 
@@ -199,7 +200,7 @@ void MemTrieNode::putRLP(RLPStream& _parentStream) const
 	if (s.out().size() < 32)
 		_parentStream.APPEND_CHILD(s.out());
 	else
-		_parentStream << eth::sha3(s.out());
+		_parentStream << dev::eth::sha3(s.out());
 }
 
 void TrieBranchNode::makeRLP(RLPStream& _intoStream) const
@@ -228,7 +229,7 @@ void TrieInfixNode::makeRLP(RLPStream& _intoStream) const
 
 MemTrieNode* MemTrieNode::newBranch(bytesConstRef _k1, std::string const& _v1, bytesConstRef _k2, std::string const& _v2)
 {
-	uint prefix = commonPrefix(_k1, _k2);
+	unsigned prefix = commonPrefix(_k1, _k2);
 
 	MemTrieNode* ret;
 	if (_k1.size() == prefix)
@@ -347,7 +348,7 @@ MemTrieNode* TrieInfixNode::insert(bytesConstRef _key, std::string const& _value
 	}
 	else
 	{
-		uint prefix = commonPrefix(_key, m_ext);
+		unsigned prefix = commonPrefix(_key, m_ext);
 		if (prefix)
 		{
 			// one infix becomes two infixes, then insert into the second
@@ -478,3 +479,4 @@ void MemTrie::remove(std::string const& _key)
 }
 
 }
+
