@@ -23,7 +23,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/spirit/include/support_utree.hpp>
-#include <libethential/Log.h>
+#include <libdevcore/Log.h>
 #include <libevmface/Instruction.h>
 #include "CompilerState.h"
 #include "Parser.h"

@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libethential/Exceptions.h>
+#include <libdevcore/Exceptions.h>
 
 namespace dev
 {

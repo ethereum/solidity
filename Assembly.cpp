@@ -21,7 +21,7 @@
 
 #include "Assembly.h"
 
-#include <libethential/Log.h>
+#include <libdevcore/Log.h>
 
 using namespace std;
 using namespace dev;

@@ -23,7 +23,7 @@
 
 #include <iostream>
 #include <sstream>
-#include <libethential/Common.h>
+#include <libdevcore/Common.h>
 #include <libevmface/Instruction.h>
 #include "Exceptions.h"
 
