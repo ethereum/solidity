@@ -28,6 +28,8 @@
 namespace boost { namespace spirit { class utree; } }
 namespace sp = boost::spirit;
 
+namespace dev
+{
 namespace eth
 {
 
@@ -36,4 +38,4 @@ void parseTreeLLL(std::string const& _s, sp::utree& o_out);
 void debugOutAST(std::ostream& _out, sp::utree const& _this);
 
 }
-
+}

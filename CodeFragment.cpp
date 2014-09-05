@@ -28,7 +28,8 @@
 #include "CompilerState.h"
 #include "Parser.h"
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 namespace qi = boost::spirit::qi;
 namespace px = boost::phoenix;
 namespace sp = boost::spirit;

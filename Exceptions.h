@@ -21,11 +21,15 @@
 
 #pragma once
 
+#include <libethential/Exceptions.h>
+
+namespace dev
+{
 namespace eth
 {
 
 /// Compile a Low-level Lisp-like Language program into EVM-code.
-class CompilerException: public Exception {};
+class CompilerException: public dev::Exception {};
 class InvalidOperation: public CompilerException {};
 class IntegerOutOfRange: public CompilerException {};
 class StringTooLong: public CompilerException {};
@@ -39,4 +43,5 @@ class InvalidLiteral: public CompilerException {};
 class BareSymbol: public CompilerException {};
 class ExpectedLiteral: public CompilerException {};
 
+}
 }

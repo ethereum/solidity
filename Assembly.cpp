@@ -24,7 +24,8 @@
 #include <libethential/Log.h>
 
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
 int AssemblyItem::deposit() const
 {
@@ -59,7 +60,7 @@ unsigned Assembly::bytesRequired() const
 				ret += 33;
 				break;
 			case Push:
-				ret += 1 + max<unsigned>(1, eth::bytesRequired(i.m_data));
+				ret += 1 + max<unsigned>(1, dev::bytesRequired(i.m_data));
 				break;
 			case PushSubSize:
 				ret += 4;		// worst case: a 16MB program
@@ -71,7 +72,7 @@ unsigned Assembly::bytesRequired() const
 			case Tag:;
 			default:;
 			}
-		if (eth::bytesRequired(ret) <= br)
+		if (dev::bytesRequired(ret) <= br)
 			return ret;
 	}
 }
@@ -110,7 +111,7 @@ void Assembly::append(Assembly const& _a, int _deposit)
 	}
 }
 
-ostream& eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
+ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 {
 	for (AssemblyItem const& i: _i)
 		switch (i.type())
@@ -217,7 +218,7 @@ inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 }
 
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
-#define copt eth::LogOutputStream<OptimiserChannel, true>()
+#define copt dev::LogOutputStream<OptimiserChannel, true>()
 
 Assembly& Assembly::optimise(bool _enable)
 {
@@ -353,7 +354,7 @@ bytes Assembly::assemble() const
 	vector<unsigned> tagPos(m_usedTags);
 	map<unsigned, unsigned> tagRef;
 	multimap<h256, unsigned> dataRef;
-	unsigned bytesPerTag = eth::bytesRequired(totalBytes);
+	unsigned bytesPerTag = dev::bytesRequired(totalBytes);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
 
 	for (auto const& i: m_subs)
@@ -380,7 +381,7 @@ bytes Assembly::assemble() const
 		}
 		case Push:
 		{
-			byte b = max<unsigned>(1, eth::bytesRequired(i.m_data));
+			byte b = max<unsigned>(1, dev::bytesRequired(i.m_data));
 			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
 			ret.resize(ret.size() + b);
 			bytesRef byr(&ret.back() + 1 - b, b);
@@ -404,7 +405,7 @@ bytes Assembly::assemble() const
 		case PushSubSize:
 		{
 			auto s = m_data[i.m_data].size();
-			byte b = max<unsigned>(1, eth::bytesRequired(s));
+			byte b = max<unsigned>(1, dev::bytesRequired(s));
 			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
 			ret.resize(ret.size() + b);
 			bytesRef byr(&ret.back() + 1 - b, b);

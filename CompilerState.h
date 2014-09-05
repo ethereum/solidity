@@ -24,6 +24,8 @@
 #include <boost/spirit/include/support_utree.hpp>
 #include "CodeFragment.h"
 
+namespace dev
+{
 namespace eth
 {
 
@@ -51,4 +53,5 @@ struct CompilerState
 	bool usedAlloc = false;
 };
 
+}
 }

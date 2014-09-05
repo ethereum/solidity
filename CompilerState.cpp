@@ -23,7 +23,8 @@
 #include "CodeFragment.h"
 
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
 CompilerState::CompilerState()
 {

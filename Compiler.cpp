@@ -25,9 +25,10 @@
 #include "CodeFragment.h"
 
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
-bytes eth::compileLLL(string const& _src, bool _opt, vector<string>* _errors)
+bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _errors)
 {
 	try
 	{
@@ -52,7 +53,7 @@ bytes eth::compileLLL(string const& _src, bool _opt, vector<string>* _errors)
 	return bytes();
 }
 
-std::string eth::compileLLLToAsm(std::string const& _src, bool _opt, std::vector<std::string>* _errors)
+std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::vector<std::string>* _errors)
 {
 	try
 	{
@@ -76,7 +77,7 @@ std::string eth::compileLLLToAsm(std::string const& _src, bool _opt, std::vector
 	return string();
 }
 
-string eth::parseLLL(string const& _src)
+string dev::eth::parseLLL(string const& _src)
 {
 	sp::utree o;
 	try

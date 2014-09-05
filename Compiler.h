@@ -25,6 +25,8 @@
 #include <vector>
 #include <libethential/Common.h>
 
+namespace dev
+{
 namespace eth
 {
 
@@ -33,4 +35,4 @@ std::string compileLLLToAsm(std::string const& _src, bool _opt = true, std::vect
 bytes compileLLL(std::string const& _src, bool _opt = true, std::vector<std::string>* _errors = nullptr);
 
 }
-
+}

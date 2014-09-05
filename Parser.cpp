@@ -28,12 +28,13 @@
 #include <boost/spirit/include/support_utree.hpp>
 
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 namespace qi = boost::spirit::qi;
 namespace px = boost::phoenix;
 namespace sp = boost::spirit;
 
-void eth::killBigints(sp::utree const& _this)
+void dev::eth::killBigints(sp::utree const& _this)
 {
 	switch (_this.which())
 	{
@@ -43,7 +44,7 @@ void eth::killBigints(sp::utree const& _this)
 	}
 }
 
-void eth::debugOutAST(ostream& _out, sp::utree const& _this)
+void dev::eth::debugOutAST(ostream& _out, sp::utree const& _this)
 {
 	switch (_this.which())
 	{
@@ -69,7 +70,7 @@ void eth::debugOutAST(ostream& _out, sp::utree const& _this)
 	}
 }
 
-namespace eth {
+namespace dev { namespace eth {
 namespace parseTreeLLL_ {
 
 template<unsigned N>
@@ -81,13 +82,13 @@ struct tagNode
 	}
 };
 
-}}
+}}}
 
-void eth::parseTreeLLL(string const& _s, sp::utree& o_out)
+void dev::eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 {
 	using qi::standard::space;
 	using qi::standard::space_type;
-	using eth::parseTreeLLL_::tagNode;
+	using dev::eth::parseTreeLLL_::tagNode;
 	typedef sp::basic_string<std::string, sp::utree_type::symbol_type> symbol_type;
 	typedef string::const_iterator it;
 
