@@ -10,7 +10,7 @@ add_executable(${EXECUTABLE} ${SRC_LIST})
 
 target_link_libraries(${EXECUTABLE} lll)
 target_link_libraries(${EXECUTABLE} evmface)
-target_link_libraries(${EXECUTABLE} ethential)
+target_link_libraries(${EXECUTABLE} devcore)
 
 if ("${TARGET_PLATFORM}" STREQUAL "w64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")

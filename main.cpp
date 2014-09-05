@@ -23,8 +23,8 @@
 #include <fstream>
 #include <iostream>
 #include <liblll/Compiler.h>
-#include <libethential/CommonIO.h>
-#include <libethential/CommonData.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/CommonData.h>
 #include <libevmface/Instruction.h>
 #include "BuildInfo.h"
 using namespace std;
