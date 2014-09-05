@@ -23,7 +23,7 @@
 #include <fstream>
 #include <random>
 #include "JsonSpiritHeaders.h"
-#include <libethential/CommonIO.h>
+#include <libdevcore/CommonIO.h>
 #include <libethereum/BlockChain.h>
 #include <boost/test/unit_test.hpp>
 

@@ -22,7 +22,7 @@
 
 #include <fstream>
 #include <cstdint>
-#include <libethential/Log.h>
+#include <libdevcore/Log.h>
 #include <libevmface/Instruction.h>
 #include <libevm/ExtVMFace.h>
 #include <libevm/VM.h>

@@ -21,7 +21,7 @@
  */
 
 #include <chrono>
-#include <libethential/Log.h>
+#include <libdevcore/Log.h>
 #include <libethcore/Dagger.h>
 using namespace std;
 using namespace std::chrono;
