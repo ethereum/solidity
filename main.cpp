@@ -28,7 +28,8 @@
 #include <libevmface/Instruction.h>
 #include "BuildInfo.h"
 using namespace std;
-using namespace eth;
+using namespace dev;
+using namespace dev::eth;
 
 void help()
 {
@@ -46,9 +47,9 @@ void help()
 
 void version()
 {
-	cout << "LLLC, the Lovely Little Language Compiler " << eth::EthVersion << endl;
+	cout << "LLLC, the Lovely Little Language Compiler " << dev::Version << endl;
 	cout << "  By Gav Wood, (c) 2014." << endl;
-	cout << "Build: " << ETH_QUOTED(ETH_BUILD_PLATFORM) << "/" << ETH_QUOTED(ETH_BUILD_TYPE) << endl;
+	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
 }
 
