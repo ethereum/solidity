@@ -42,11 +42,13 @@ void mine(Client& c, int numBlocks)
 
 void connectClients(Client& c1, Client& c2)
 {
+#if 0
 	short c1Port = 20000;
 	short c2Port = 21000;
 	c1.startNetwork(c1Port);
 	c2.startNetwork(c2Port);
 	c2.connect("127.0.0.1", c1Port);
+#endif
 }
 
 }
