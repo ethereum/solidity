@@ -42,6 +42,7 @@ void mine(Client& c, int numBlocks)
 
 void connectClients(Client& c1, Client& c2)
 {
+	// TODO: Move to WebThree. eth::Client no longer handles networking.
 #if 0
 	short c1Port = 20000;
 	short c2Port = 21000;
