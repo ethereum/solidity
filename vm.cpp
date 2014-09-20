@@ -169,15 +169,6 @@ public:
 			a.push_back(toString(_v));
 	}
 
-	static string u256toHex(u256 const& _v)
-	{
-		std::ostringstream oss;
-		oss << std::hex << std::setfill('0') << std::setw(2)  << _v;
-		string ret = "0x" + oss.str();
-		std::transform(ret.begin(), ret.end(), ret.begin(), ::tolower);
-		return ret;
-	}
-
 	mObject exportEnv()
 	{
 		mObject ret;
@@ -228,13 +219,13 @@ public:
 						if (li)
 							store[curKey] = curVal;
 						li = s.first;
-						curKey = u256toHex(li);
+						curKey = "0x"+toHex(toCompactBigEndian(li));
 						curVal = mArray();
 					}
 					else
 						for (; li != s.first; ++li)
 							curVal.push_back(0);
-					curVal.push_back(u256toHex(s.second));
+					curVal.push_back("0x"+toHex(toCompactBigEndian(s.second)));
 					++li;
 				}
 				if (li)
@@ -483,18 +474,19 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 
 BOOST_AUTO_TEST_CASE(vm_tests)
 {
+	/*
 	// Populate tests first:
-//	try
-//	{
-//		cnote << "Populating VM tests...";
-//		json_spirit::mValue v;
-//		string s = asString(contents("../../../cpp-ethereum/test/vmtests.json"));
-//		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
-//		json_spirit::read_string(s, v);
-//		dev::test::doTests(v, true);
-//		writeFile("../../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
-//	}
-/*	catch (std::exception const& e)
+	try
+	{
+		cnote << "Populating VM tests...";
+		json_spirit::mValue v;
+		string s = asString(contents("../../../cpp-ethereum/test/vmtests.json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
+		json_spirit::read_string(s, v);
+		dev::test::doTests(v, true);
+		writeFile("../../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
+	}
+	catch (std::exception const& e)
 	{
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
 	}*/
@@ -516,15 +508,15 @@ BOOST_AUTO_TEST_CASE(vm_tests)
 
 BOOST_AUTO_TEST_CASE(vmArithmeticTest)
 {
-
-//			cnote << "Populating VM tests...";
-//			json_spirit::mValue v;
-//			string s = asString(contents("../../../cpp-ethereum/test/vmArithmeticTestFiller.json"));
-//			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
-//			json_spirit::read_string(s, v);
-//			dev::test::doTests(v, true);
-//			writeFile("../../../tests/vmArithmeticTest.json", asBytes(json_spirit::write_string(v, true)));
-
+	/*
+			cnote << "Populating VM tests...";
+			json_spirit::mValue v;
+			string s = asString(contents("../../../cpp-ethereum/test/vmArithmeticTestFiller.json"));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
+			json_spirit::read_string(s, v);
+			dev::test::doTests(v, true);
+			writeFile("../../../tests/vmArithmeticTest.json", asBytes(json_spirit::write_string(v, true)));
+	*/
 
 	try
 	{
