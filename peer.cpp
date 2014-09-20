@@ -46,7 +46,7 @@ int peerTest(int argc, char** argv)
 			remoteHost = argv[i];
 	}
 
-	Host ph("Test", listenPort);
+	Host ph("Test", NetworkPreferences(listenPort));
 
 	if (!remoteHost.empty())
 		ph.connect(remoteHost, remotePort);
