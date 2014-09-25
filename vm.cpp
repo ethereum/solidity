@@ -20,6 +20,8 @@
  * State test functions.
  */
 
+#define FILL_TESTS
+
 #include <fstream>
 #include <cstdint>
 #include <libdevcore/Log.h>
@@ -63,6 +65,9 @@ public:
 		get<0>(addresses[_a]) += get<0>(addresses[myAddress]);
 		addresses.erase(myAddress);
 	}
+
+	bytes const& codeAt(Address _a) { return get<3>(addresses[_a]); }
+
 	h160 create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc)
 	{
 		Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
@@ -256,7 +261,11 @@ public:
 			{
 				u256 adr(j.first);
 				for (auto const& k: j.second.get_array())
-					get<2>(a)[adr++] = toInt(k);
+				{
+					if ((toInt(k) != 0) || (j.second.get_array().size() == 1))
+						get<2>(a)[adr] = toInt(k);
+					adr++;
+				}
 			}
 
 			if (o["code"].type() == str_type)
@@ -370,6 +379,7 @@ public:
 	}
 
 	map<Address, tuple<u256, u256, map<u256, u256>, bytes>> addresses;
+	//map<Address, bytes> code;
 	Transactions callcreates;
 	bytes thisTxData;
 	bytes thisTxCode;
@@ -402,7 +412,16 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			fev.code = &fev.thisTxCode;
 		}
 		vm.reset(fev.gas);
-		bytes output = vm.go(fev).toBytes();
+		bytes output;
+		try
+		{
+			output = vm.go(fev).toBytes();
+		}
+		catch (std::exception const& e)
+		{
+			cnote << "VM did throw an exception: " << e.what();
+			//BOOST_ERROR("Failed VM Test with Exception: " << e.what());
+		}
 
 		if (_fillin)
 		{
@@ -470,65 +489,84 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 	return json_spirit::write_string(json_spirit::mValue(o), true);
 }*/
 
-} } // Namespace Close
-
-BOOST_AUTO_TEST_CASE(vm_tests)
-{
-	/*
-	// Populate tests first:
+void executeTests(const string& _name){
+#ifdef FILL_TESTS
 	try
 	{
 		cnote << "Populating VM tests...";
 		json_spirit::mValue v;
-		string s = asString(contents("../../../cpp-ethereum/test/vmtests.json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
+		string s = asString(contents("../../../cpp-ethereum/test/" + _name + "Filler.json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + "Filler.json is empty.");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, true);
-		writeFile("../../../tests/vmtests.json", asBytes(json_spirit::write_string(v, true)));
+		writeFile("../../../tests/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
 	}
 	catch (std::exception const& e)
 	{
 		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
-	}*/
+	}
+#endif
 
 	try
 	{
-		cnote << "Testing VM...";
+		cnote << "Testing VM..." << _name;
 		json_spirit::mValue v;
-		string s = asString(contents("../../../tests/vmtests.json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty. Have you cloned the 'tests' repo branch develop?");
+		string s = asString(contents("../../../tests/" + _name + ".json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + ".json is empty. Have you cloned the 'tests' repo branch develop?");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, false);
 	}
 	catch (std::exception const& e)
 	{
-		BOOST_ERROR("Failed VM Test with Exception: " << e.what()); 
+		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
 	}
+
+}
+
+} } // Namespace Close
+
+BOOST_AUTO_TEST_CASE(vm_tests)
+{
+	dev::test::executeTests("vmtests");
 }
 
 BOOST_AUTO_TEST_CASE(vmArithmeticTest)
 {
-	/*
-			cnote << "Populating VM tests...";
-			json_spirit::mValue v;
-			string s = asString(contents("../../../cpp-ethereum/test/vmArithmeticTestFiller.json"));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmtests.json' is empty.");
-			json_spirit::read_string(s, v);
-			dev::test::doTests(v, true);
-			writeFile("../../../tests/vmArithmeticTest.json", asBytes(json_spirit::write_string(v, true)));
-	*/
-
-	try
-	{
-		cnote << "Testing VM arithmetic commands...";
-		json_spirit::mValue v;
-		string s = asString(contents("../../../tests/vmArithmeticTest.json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'vmArithmeticTest.json' is empty. Have you cloned the 'tests' repo branch develop?");
-		json_spirit::read_string(s, v);
-		dev::test::doTests(v, false);
-	}
-	catch (std::exception const& e)
-	{
-		BOOST_ERROR("Failed VM arithmetic test with Exception: " << e.what());
-	}
+	dev::test::executeTests("vmArithmeticTest");
 }
+
+BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperationTest)
+{
+	dev::test::executeTests("vmBitwiseLogicOperationTest");
+}
+
+BOOST_AUTO_TEST_CASE(vmSha3Test)
+{
+	dev::test::executeTests("vmSha3Test");
+}
+
+BOOST_AUTO_TEST_CASE(vmEnvironmentalInfoTest)
+{
+	dev::test::executeTests("vmEnvironmentalInfoTest");
+}
+
+BOOST_AUTO_TEST_CASE(vmBlockInfoTest)
+{
+	dev::test::executeTests("vmBlockInfoTest");
+}
+
+BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
+{
+	dev::test::executeTests("vmIOandFlowOperationsTest");
+}
+
+BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
+{
+	dev::test::executeTests("vmPushDupSwapTest");
+}
+
+//BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
+//{
+//	dev::test::executeTests("vmSystemOperationsTest");
+//}
+
