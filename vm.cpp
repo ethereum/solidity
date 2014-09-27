@@ -22,7 +22,7 @@
 
 #include "vm.h"
 
-#define FILL_TESTS
+//#define FILL_TESTS
 
 using namespace std;
 using namespace json_spirit;
