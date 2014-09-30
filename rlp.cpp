@@ -22,12 +22,12 @@
 
 #include <fstream>
 #include <sstream>
-#include "JsonSpiritHeaders.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Common.h>
 #include <boost/test/unit_test.hpp>
 #include <algorithm>
+#include "JsonSpiritHeaders.h"
 
 using namespace std;
 using namespace dev;
