@@ -22,7 +22,7 @@
 
 #include "vm.h"
 
-//#define FILL_TESTS
+#define FILL_TESTS
 
 using namespace std;
 using namespace json_spirit;
@@ -30,12 +30,15 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
+FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock):
+	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock) {}
+
 h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc)
 {
 	m_s.noteSending(myAddress);
 	m_ms.internal.resize(m_ms.internal.size() + 1);
 	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &suicides, &posts, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
-	if ( !m_ms.internal.back().from)
+	if (!m_ms.internal.back().from)
 		m_ms.internal.pop_back();
 
 	if (get<0>(addresses[myAddress]) >= _endowment)
@@ -58,18 +61,14 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc, Address, Address)
 {
 	string codeOf_receiveAddress = toHex(get<3>(addresses[_receiveAddress]) );
-	string sizeOfCode = toHex(toCompactBigEndian(codeOf_receiveAddress.size()));
+	string sizeOfCode = toHex(toCompactBigEndian((codeOf_receiveAddress.size()+1)/2));
 
-	if (codeOf_receiveAddress.size() > 255)
+	if (codeOf_receiveAddress.size())
 	{
-		cnote << "codesize too large for FakeExtVM\n";
-		return false;
-	}
-	else if (codeOf_receiveAddress.size())
-	{
-		string initStringHex = "0x60" + sizeOfCode + "80600c6000396000f200" + codeOf_receiveAddress;
-		bytes initBytes = fromHex(initStringHex.substr(2));
-
+		// create init code that returns given contract code
+		string initStringHex = "{ (CODECOPY 0 (- (CODESIZE) 0x" + sizeOfCode + "  ) 0x" + sizeOfCode + ") (RETURN 0 0x" + sizeOfCode +")}";
+		bytes initBytes = compileLLL(initStringHex, true, NULL);
+		initBytes += fromHex(codeOf_receiveAddress);
 		bytesConstRef init(&initBytes);
 
 		if (!m_s.addresses().count(_receiveAddress))
@@ -77,7 +76,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 			m_s.noteSending(myAddress);
 			m_ms.internal.resize(m_ms.internal.size() + 1);
 			auto na = m_s.create(myAddress, 0, gasPrice, _gas, init, origin, &suicides, &posts, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
-			if ( !m_ms.internal.back().from)
+			if (!m_ms.internal.back().from)
 				m_ms.internal.pop_back();
 			if (!m_s.addresses().count(_receiveAddress))
 			{
@@ -130,11 +129,13 @@ void FakeExtVM::setTransaction(Address _caller, u256 _value, u256 _gasPrice, byt
 	data = &(thisTxData = _data);
 	gasPrice = _gasPrice;
 }
+
 void FakeExtVM::setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, map<u256, u256> const& _storage, bytes const& _code)
 {
 	myAddress = _myAddress;
 	set(myAddress, _myBalance, _myNonce, _storage, _code);
 }
+
 void FakeExtVM::set(Address _a, u256 _myBalance, u256 _myNonce, map<u256, u256> const& _storage, bytes const& _code)
 {
 	get<0>(addresses[_a]) = _myBalance;
@@ -400,7 +401,6 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 }
 
 
-
 namespace dev { namespace test {
 
 void doTests(json_spirit::mValue& v, bool _fillin)
@@ -428,6 +428,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
 			fev.code = &fev.thisTxCode;
 		}
+
 		vm.reset(fev.gas);
 		bytes output;
 		try
@@ -523,7 +524,8 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 	return json_spirit::write_string(json_spirit::mValue(o), true);
 }*/
 
-void executeTests(const string& _name){
+void executeTests(const string& _name)
+{
 #ifdef FILL_TESTS
 	try
 	{
@@ -603,5 +605,3 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
 }
-
-

@@ -23,9 +23,10 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <libethereum/State.h>
 #include <fstream>
 #include <cstdint>
+#include <boost/test/unit_test.hpp>
+#include "JsonSpiritHeaders.h"
 #include <libdevcore/Log.h>
 #include <libevmface/Instruction.h>
 #include <libevm/ExtVMFace.h>
@@ -33,8 +34,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <liblll/Compiler.h>
 #include <libethereum/Transaction.h>
 #include <libethereum/ExtVM.h>
-#include "JsonSpiritHeaders.h"
-#include <boost/test/unit_test.hpp>
+#include <libethereum/State.h>
 
 namespace dev { namespace test {
 
@@ -42,8 +42,7 @@ class FakeExtVM: public eth::ExtVMFace
 {
 public:
 	FakeExtVM()	{}
-	FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock):
-		ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock) {}
+	FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock);
 
 	u256 store(u256 _n) { return std::get<2>(addresses[myAddress])[_n]; }
 	void setStore(u256 _n, u256 _v) { std::get<2>(addresses[myAddress])[_n] = _v; }
