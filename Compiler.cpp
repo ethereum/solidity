@@ -43,7 +43,10 @@ bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _error
 	catch (Exception const& _e)
 	{
 		if (_errors)
-			_errors->push_back(_e.description());
+		{
+			_errors->push_back("Parse error.");
+			_errors->push_back(diagnostic_information(_e));
+		}
 	}
 	catch (std::exception)
 	{
@@ -67,7 +70,7 @@ std::string dev::eth::compileLLLToAsm(std::string const& _src, bool _opt, std::v
 	catch (Exception const& _e)
 	{
 		if (_errors)
-			_errors->push_back(_e.description());
+			_errors->push_back(diagnostic_information(_e));
 	}
 	catch (std::exception)
 	{

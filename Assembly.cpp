@@ -102,7 +102,7 @@ void Assembly::append(Assembly const& _a)
 void Assembly::append(Assembly const& _a, int _deposit)
 {
 	if (_deposit > _a.m_deposit)
-		throw InvalidDeposit();
+		BOOST_THROW_EXCEPTION(InvalidDeposit());
 	else
 	{
 		append(_a);

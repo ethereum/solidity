@@ -111,7 +111,7 @@ public:
 	std::ostream& streamOut(std::ostream& _out, std::string const& _prefix = "") const;
 
 private:
-	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) throw InvalidDeposit(); }
+	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired() const;
 
 	unsigned m_usedTags = 0;
