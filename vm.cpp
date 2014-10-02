@@ -435,9 +435,14 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		{
 			output = vm.go(fev).toBytes();
 		}
-		catch (std::exception const& e)
+		catch (Exception const& _e)
 		{
-			cnote << "VM did throw an exception: " << e.what();
+			cnote << "VM did throw an exception: " << diagnostic_information(_e);
+			//BOOST_ERROR("Failed VM Test with Exception: " << e.what());
+		}
+		catch (std::exception const& _e)
+		{
+			cnote << "VM did throw an exception: " << _e.what();
 			//BOOST_ERROR("Failed VM Test with Exception: " << e.what());
 		}
 
@@ -537,9 +542,13 @@ void executeTests(const string& _name)
 		dev::test::doTests(v, true);
 		writeFile("../../../tests/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
 	}
-	catch (std::exception const& e)
+	catch (Exception const& _e)
 	{
-		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
+		BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 	}
 #endif
 
@@ -552,9 +561,13 @@ void executeTests(const string& _name)
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, false);
 	}
-	catch (std::exception const& e)
+	catch (Exception const& _e)
 	{
-		BOOST_ERROR("Failed VM Test with Exception: " << e.what());
+		BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 	}
 
 }
