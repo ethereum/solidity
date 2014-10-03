@@ -46,12 +46,14 @@ BOOST_AUTO_TEST_CASE(crypto_tests)
 		t.nonce = 0;
 		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
 		t.value = 1000;
-		cnote << RLP(t.rlp(false));
-		cnote << toHex(t.rlp(false));
+		auto rlp = t.rlp(false);
+		cnote << RLP(rlp);
+		cnote << toHex(rlp);
 		cnote << t.sha3(false);
 		t.sign(p.secret());
-		cnote << RLP(t.rlp(true));
-		cnote << toHex(t.rlp(true));
+		rlp = t.rlp(true);
+		cnote << RLP(rlp);
+		cnote << toHex(rlp);
 		cnote << t.sha3(true);
 		BOOST_REQUIRE(t.sender() == p.address());
 	}
@@ -72,12 +74,14 @@ int cryptoTest()
 		t.nonce = 0;
 		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
 		t.value = 1000;
-		cnote << RLP(t.rlp(false));
-		cnote << toHex(t.rlp(false));
+		auto rlp = t.rlp(false);
+		cnote << RLP(rlp);
+		cnote << toHex(rlp);
 		cnote << t.sha3(false);
 		t.sign(p.secret());
-		cnote << RLP(t.rlp(true));
-		cnote << toHex(t.rlp(true));
+		rlp = t.rlp(true);
+		cnote << RLP(rlp);
+		cnote << toHex(rlp);
 		cnote << t.sha3(true);
 		assert(t.sender() == p.address());
 	}
