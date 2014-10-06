@@ -40,6 +40,13 @@ namespace dev { namespace test {
 
 struct FakeExtVMFailure : virtual Exception {};
 
+class FakeState: public eth::State
+{
+public:
+	/// Execute a contract-creation transaction.
+	h160 createNewAddress(Address _newAddress, Address _txSender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _originAddress = Address(), std::set<Address>* o_suicides = nullptr, eth::Manifest* o_ms = nullptr, eth::OnOpFunc const& _onOp = eth::OnOpFunc(), unsigned _level = 0);
+};
+
 class FakeExtVM: public eth::ExtVMFace
 {
 public:
@@ -63,6 +70,7 @@ public:
 	byte toByte(json_spirit::mValue const& _v);
 	void push(json_spirit::mObject& o, std::string const& _n, u256 _v);
 	void push(json_spirit::mArray& a, u256 _v);
+	u256 doPosts();
 	json_spirit::mObject exportEnv();
 	void importEnv(json_spirit::mObject& _o);
 	json_spirit::mObject exportState();
@@ -79,7 +87,7 @@ public:
 	u256 gas;
 
 private:
-	eth::State m_s;
+	FakeState m_s;
 	eth::Manifest m_ms;
 };
 
