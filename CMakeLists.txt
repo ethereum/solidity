@@ -12,6 +12,7 @@ target_link_libraries(testeth ethereum)
 target_link_libraries(testeth ethcore)
 target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth gmp)
+target_link_libraries(testeth solidity)
 target_link_libraries(testeth ${CRYPTOPP_LS})
 
 if ("${TARGET_PLATFORM}" STREQUAL "w64")
