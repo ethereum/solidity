@@ -35,6 +35,13 @@ FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const&
 
 h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc)
 {
+	Transaction t;
+	t.value = _endowment;
+	t.gasPrice = gasPrice;
+	t.gas = *_gas;
+	t.data = _init.toBytes();
+	callcreates.push_back(t);
+
 	m_s.noteSending(myAddress);
 	m_ms.internal.resize(m_ms.internal.size() + 1);
 	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &suicides, &posts, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
@@ -48,18 +55,18 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 		get<3>(addresses[ret]) = m_s.code(ret);
 	}
 
-	Transaction t;
-	t.value = _endowment;
-	t.gasPrice = gasPrice;
-	t.gas = *_gas;
-	t.data = _init.toBytes();
-	callcreates.push_back(t);
-
 	return ret;
 }
 
 bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc, Address, Address)
 {
+	Transaction t;
+	t.value = _value;
+	t.gasPrice = gasPrice;
+	t.gas = *_gas;
+	t.data = _data.toVector();
+	t.receiveAddress = _receiveAddress;
+
 	string codeOf_receiveAddress = toHex(get<3>(addresses[_receiveAddress]) );
 	string sizeOfCode = toHex(toCompactBigEndian((codeOf_receiveAddress.size()+1)/2));
 
@@ -82,6 +89,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 			{
 				cnote << "not able to call to : " << _receiveAddress << "\n";
 				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
+				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(_receiveAddress));
 				return false;
 			}
 		}
@@ -110,14 +118,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 	else
 		addresses.erase(_receiveAddress); // for the sake of comparison
 
-	Transaction t;
-	t.value = _value;
-	t.gasPrice = gasPrice;
-	t.gas = *_gas;
-	t.data = _data.toVector();
-	t.receiveAddress = _receiveAddress;
 	callcreates.push_back(t);
-	(void)_out;
 
 	return true;
 }

@@ -38,6 +38,8 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace dev { namespace test {
 
+struct FakeExtVMFailure : virtual Exception {};
+
 class FakeExtVM: public eth::ExtVMFace
 {
 public:
