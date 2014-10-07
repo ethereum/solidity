@@ -47,6 +47,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonData.h>
+#include <libsolidity/BaseTypes.h>
 #include <libsolidity/Token.h>
 
 namespace dev {
@@ -111,21 +112,6 @@ public:
         bool complete_;
     };
 
-    // Representation of an interval of source positions.
-    struct Location {
-        Location(int b, int e) : beg_pos(b), end_pos(e) { }
-        Location() : beg_pos(0), end_pos(0) { }
-
-        bool IsValid() const {
-            return beg_pos >= 0 && end_pos >= beg_pos;
-        }
-
-        static Location invalid() { return Location(-1, -1); }
-
-        int beg_pos;
-        int end_pos;
-    };
-
     explicit Scanner(const CharStream& _source);
 
     // Resets the scanner as if newly constructed with _input as input.
@@ -162,8 +148,6 @@ private:
         Location location;
         std::string literal;
     };
-
-    static const int kCharacterLookaheadBufferSize = 1;
 
     // Literal buffer support
     inline void startNewLiteral() {

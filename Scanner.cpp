@@ -82,16 +82,10 @@ void Scanner::reset(const CharStream& _source)
 {
     m_source = _source;
 
-    // Initialize current_ to not refer to a literal.
-    m_current_token.token = Token::ILLEGAL;
-    m_current_token.literal.clear();
-
-    m_hasLineTerminatorBeforeNext = true;
-    m_hasMultilineCommentBeforeNext = false;
-
     m_char = m_source.get();
     skipWhitespace();
     scanToken();
+    next();
 }
 
 
@@ -466,7 +460,7 @@ Token::Value Scanner::scanString()
     literal.Complete();
 
     advance();  // consume quote
-    return Token::STRING;
+    return Token::STRING_LITERAL;
 }
 
 
@@ -551,13 +545,17 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 // Keyword Matcher
 
 #define KEYWORDS(KEYWORD_GROUP, KEYWORD)                                     \
+  KEYWORD_GROUP('a')                                                         \
+  KEYWORD("address", Token::BREAK)                                           \
   KEYWORD_GROUP('b')                                                         \
   KEYWORD("break", Token::BREAK)                                             \
+  KEYWORD("bool", Token::BOOL)                                               \
   KEYWORD_GROUP('c')                                                         \
   KEYWORD("case", Token::CASE)                                               \
   KEYWORD("catch", Token::CATCH)                                             \
   KEYWORD("const", Token::CONST)                                             \
   KEYWORD("continue", Token::CONTINUE)                                       \
+  KEYWORD("contract", Token::CONTRACT)                                       \
   KEYWORD_GROUP('d')                                                         \
   KEYWORD("debugger", Token::DEBUGGER)                                       \
   KEYWORD("default", Token::DEFAULT)                                         \
@@ -571,31 +569,55 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
   KEYWORD("finally", Token::FINALLY)                                         \
   KEYWORD("for", Token::FOR)                                                 \
   KEYWORD("function", Token::FUNCTION)                                       \
+  KEYWORD_GROUP('h')                                                         \
+  KEYWORD("hash", Token::HASH)                                               \
+  KEYWORD("hash32", Token::HASH32)                                           \
+  KEYWORD("hash64", Token::HASH64)                                           \
+  KEYWORD("hash128", Token::HASH128)                                         \
+  KEYWORD("hash256", Token::HASH256)                                         \
   KEYWORD_GROUP('i')                                                         \
   KEYWORD("if", Token::IF)                                                   \
   KEYWORD("implements", Token::FUTURE_STRICT_RESERVED_WORD)                  \
   KEYWORD("in", Token::IN)                                                   \
   KEYWORD("instanceof", Token::INSTANCEOF)                                   \
+  KEYWORD("int", Token::INT)                                                 \
+  KEYWORD("int32", Token::INT32)                                             \
+  KEYWORD("int64", Token::INT64)                                             \
+  KEYWORD("int128", Token::INT128)                                           \
+  KEYWORD("int256", Token::INT256)                                           \
   KEYWORD("interface", Token::FUTURE_STRICT_RESERVED_WORD)                   \
   KEYWORD_GROUP('l')                                                         \
+  KEYWORD_GROUP('m')                                                         \
   KEYWORD_GROUP('n')                                                         \
+  KEYWORD("mapping", Token::MAPPING)                                         \
   KEYWORD("new", Token::NEW)                                                 \
   KEYWORD("null", Token::NULL_LITERAL)                                       \
   KEYWORD_GROUP('p')                                                         \
   KEYWORD("package", Token::FUTURE_STRICT_RESERVED_WORD)                     \
-  KEYWORD("private", Token::FUTURE_STRICT_RESERVED_WORD)                     \
+  KEYWORD("private", Token::PRIVATE)                                         \
   KEYWORD("protected", Token::FUTURE_STRICT_RESERVED_WORD)                   \
-  KEYWORD("public", Token::FUTURE_STRICT_RESERVED_WORD)                      \
+  KEYWORD("public", Token::PUBLIC)                                           \
   KEYWORD_GROUP('r')                                                         \
+  KEYWORD("real", Token::REAL)                                               \
   KEYWORD("return", Token::RETURN)                                           \
   KEYWORD_GROUP('s')                                                         \
+  KEYWORD("string", Token::STRING_TYPE)                                           \
+  KEYWORD("struct", Token::STRUCT)                                           \
   KEYWORD("switch", Token::SWITCH)                                           \
   KEYWORD_GROUP('t')                                                         \
+  KEYWORD("text", Token::TEXT)                                               \
   KEYWORD("this", Token::THIS)                                               \
   KEYWORD("throw", Token::THROW)                                             \
   KEYWORD("true", Token::TRUE_LITERAL)                                       \
   KEYWORD("try", Token::TRY)                                                 \
   KEYWORD("typeof", Token::TYPEOF)                                           \
+  KEYWORD_GROUP('u')                                                         \
+  KEYWORD("uint", Token::UINT)                                               \
+  KEYWORD("uint32", Token::UINT32)                                           \
+  KEYWORD("uint64", Token::UINT64)                                           \
+  KEYWORD("uint128", Token::UINT128)                                         \
+  KEYWORD("uint256", Token::UINT256)                                         \
+  KEYWORD("ureal", Token::UREAL)                                             \
   KEYWORD_GROUP('v')                                                         \
   KEYWORD("var", Token::VAR)                                                 \
   KEYWORD("void", Token::VOID)                                               \

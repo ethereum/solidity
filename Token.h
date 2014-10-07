@@ -152,6 +152,7 @@ namespace solidity {
   K(CASE, "case", 0)                                                 \
   K(CATCH, "catch", 0)                                               \
   K(CONTINUE, "continue", 0)                                         \
+  K(CONTRACT, "contract", 0)                                         \
   K(DEBUGGER, "debugger", 0)                                         \
   K(DEFAULT, "default", 0)                                           \
   /* DELETE */                                                       \
@@ -163,8 +164,12 @@ namespace solidity {
   K(IF, "if", 0)                                                     \
   /* IN */                                                           \
   /* INSTANCEOF */                                                   \
+  K(MAPPING, "mapping", 0)                                           \
   K(NEW, "new", 0)                                                   \
+  K(PUBLIC, "public", 0)                                             \
+  K(PRIVATE, "private", 0)                                           \
   K(RETURN, "return", 0)                                             \
+  K(STRUCT, "struct", 0)                                             \
   K(SWITCH, "switch", 0)                                             \
   K(THIS, "this", 0)                                                 \
   K(THROW, "throw", 0)                                               \
@@ -175,12 +180,36 @@ namespace solidity {
   K(WHILE, "while", 0)                                               \
   K(WITH, "with", 0)                                                 \
                                                                      \
+  /* type keywords, keep them in this order, keep int as first keyword TODO more to be added */ \
+  K(INT, "int", 0)                                                   \
+  K(INT32, "int32", 0)                                               \
+  K(INT64, "int64", 0)                                               \
+  K(INT128, "int128", 0)                                             \
+  K(INT256, "int256", 0)                                             \
+  K(UINT, "uint", 0)                                                 \
+  K(UINT32, "uint32", 0)                                             \
+  K(UINT64, "uint64", 0)                                             \
+  K(UINT128, "uint128", 0)                                           \
+  K(UINT256, "uint256", 0)                                           \
+  K(HASH, "hash", 0)                                                 \
+  K(HASH32, "hash32", 0)                                             \
+  K(HASH64, "hash64", 0)                                             \
+  K(HASH128, "hash128", 0)                                           \
+  K(HASH256, "hash256", 0)                                           \
+  K(ADDRESS, "address", 0)                                           \
+  K(BOOL, "bool", 0)                                                 \
+  K(STRING_TYPE, "string", 0)                                        \
+  K(TEXT, "text", 0)                                                 \
+  K(REAL, "real", 0)                                                 \
+  K(UREAL, "ureal", 0)                                               \
+  T(TYPES_END, NULL, 0) /* used as type enum end marker */           \
+                                                                     \
   /* Literals (ECMA-262, section 7.8, page 16). */                   \
   K(NULL_LITERAL, "null", 0)                                         \
   K(TRUE_LITERAL, "true", 0)                                         \
   K(FALSE_LITERAL, "false", 0)                                       \
   T(NUMBER, NULL, 0)                                                 \
-  T(STRING, NULL, 0)                                                 \
+  T(STRING_LITERAL, NULL, 0)                                         \
                                                                      \
   /* Identifiers (not keywords or future reserved words). */         \
   T(IDENTIFIER, NULL, 0)                                             \
@@ -229,6 +258,10 @@ class Token {
 
   static bool IsIdentifier(Value tok) {
       return tok == IDENTIFIER;
+  }
+
+  static bool IsElementaryTypeName(Value tok) {
+      return INT <= tok && tok < TYPES_END;
   }
 
   static bool IsAssignmentOp(Value tok) {
