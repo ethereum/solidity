@@ -22,8 +22,9 @@
 
 #include <fstream>
 #include "JsonSpiritHeaders.h"
-#include <libdevcrypto/TrieCommon.h>
 #include <libdevcore/Log.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcrypto/TrieCommon.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;

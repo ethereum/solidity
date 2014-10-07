@@ -21,6 +21,7 @@
  */
 
 #include "vm.h"
+#include <libdevcore/CommonIO.h>
 
 #define FILL_TESTS
 

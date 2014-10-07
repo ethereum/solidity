@@ -23,6 +23,7 @@
 #include <fstream>
 #include <random>
 #include "JsonSpiritHeaders.h"
+#include <libdevcore/CommonIO.h>
 #include <libdevcrypto/TrieDB.h>
 #include "TrieHash.h"
 #include "MemTrie.h"
