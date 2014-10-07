@@ -149,6 +149,17 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 
 ostream& Assembly::streamOut(ostream& _out, string const& _prefix) const
 {
+	_out << _prefix << ".pre:" << endl;
+	for (AssemblyItem const& i: m_items)
+		switch (i.m_type)
+		{
+		case PushTag:
+			_out << _prefix << "  PUSH [tag" << i.m_data << "]" << endl;
+			_out << _prefix << "  JUMPDEST" << endl;
+			break;
+		default:;
+		}
+
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
 		switch (i.m_type)
@@ -353,9 +364,11 @@ bytes Assembly::assemble() const
 	ret.reserve(totalBytes);
 	vector<unsigned> tagPos(m_usedTags);
 	map<unsigned, unsigned> tagRef;
+	map<unsigned, unsigned> pretagRef;
 	multimap<h256, unsigned> dataRef;
 	unsigned bytesPerTag = dev::bytesRequired(totalBytes);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
+	bytes preret;
 
 	for (auto const& i: m_subs)
 		m_data[i.first] = i.second.assemble();
@@ -393,6 +406,11 @@ bytes Assembly::assemble() const
 			ret.push_back(tagPush);
 			tagRef[ret.size()] = (unsigned)i.m_data;
 			ret.resize(ret.size() + bytesPerTag);
+
+			preret.push_back(tagPush);
+			pretagRef[preret.size()] = (unsigned)i.m_data;
+			preret.resize(preret.size() + bytesPerTag);
+			preret.push_back((byte)Instruction::JUMPDEST);
 			break;
 		}
 		case PushData: case PushSub:
@@ -424,6 +442,12 @@ bytes Assembly::assemble() const
 		toBigEndian(tagPos[i.second], r);
 	}
 
+	for (auto const& i: pretagRef)
+	{
+		bytesRef r(preret.data() + i.first, bytesPerTag);
+		toBigEndian(tagPos[i.second], r);
+	}
+
 	if (m_data.size())
 	{
 		ret.push_back(0);
@@ -442,5 +466,5 @@ bytes Assembly::assemble() const
 			}
 		}
 	}
-	return ret;
+	return preret + ret;
 }
