@@ -45,7 +45,7 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 
 	m_s.noteSending(myAddress);
 	m_ms.internal.resize(m_ms.internal.size() + 1);
-	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &suicides, &posts, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
+	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
 	if (!m_ms.internal.back().from)
 		m_ms.internal.pop_back();
 
@@ -83,7 +83,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		{
 			m_s.noteSending(myAddress);
 			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.create(myAddress, 0, gasPrice, _gas, init, origin, &suicides, &posts, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
+			auto na = m_s.create(myAddress, 0, gasPrice, _gas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
 			if (!m_ms.internal.back().from)
 				m_ms.internal.pop_back();
 			if (!m_s.addresses().count(_receiveAddress))
@@ -96,7 +96,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		}
 
 		m_ms.internal.resize(m_ms.internal.size() + 1);
-		auto ret = m_s.call(_receiveAddress, Address() ? Address() : _receiveAddress, Address() ? Address() : myAddress, _value, gasPrice, _data, _gas, _out, origin, &suicides, &posts,  &(m_ms.internal.back()), OnOpFunc(), 1);
+		auto ret = m_s.call(_receiveAddress, Address() ? Address() : _receiveAddress, Address() ? Address() : myAddress, _value, gasPrice, _data, _gas, _out, origin, &suicides, &(m_ms.internal.back()), OnOpFunc(), 1);
 		if (!m_ms.internal.back().from)
 			m_ms.internal.pop_back();
 		if (!ret)
