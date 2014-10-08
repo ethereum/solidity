@@ -169,6 +169,7 @@ namespace solidity {
   K(PUBLIC, "public", 0)                                             \
   K(PRIVATE, "private", 0)                                           \
   K(RETURN, "return", 0)                                             \
+  K(RETURNS, "returns", 0)                                           \
   K(STRUCT, "struct", 0)                                             \
   K(SWITCH, "switch", 0)                                             \
   K(THIS, "this", 0)                                                 \

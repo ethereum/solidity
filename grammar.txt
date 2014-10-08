@@ -1,18 +1,18 @@
 ContractDefinition = 'contract' Identifier '{' ContractPart* '}'
-ContractPart = VariableDeclaration ';' | StructDefinition ';' |
-               FunctionDefinition ';' | 'public:' | 'private:'
+ContractPart = VariableDeclaration ';' | StructDefinition |
+               FunctionDefinition | 'public:' | 'private:'
 
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration (';' VariableDeclaration)* )? '}
 
-FunctionDefinition = 'function' Identifier ArgumentList 'const'?
-                     'returns' ArgumentList Block
-ArgumentList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
+FunctionDefinition = 'function' Identifier ParameterList 'const'?
+                     ( 'returns' ParameterList )? Block
+ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
 VariableDeclaration = TypeName Identifier
-TypeName = PredefinedType | Identifier | MappingType
-MappingType = 'mapping' '(' SimplePredefinedType '=>' TypeName ')'
+TypeName = ElementaryTypeName | Identifier | Mapping
+Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | Continue | Break | Return | VariableAssignment | Expression ';' | Block

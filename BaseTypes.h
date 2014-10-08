@@ -4,19 +4,16 @@
 namespace dev {
 namespace solidity {
 
-// Representation of an interval of source positions.
+/// Representation of an interval of source positions.
+/// The interval includes start and excludes end.
 struct Location {
-    Location(int b, int e) : beg_pos(b), end_pos(e) { }
-    Location() : beg_pos(0), end_pos(0) { }
+    Location(int _start, int _end) : start(_start), end(_end) { }
+    Location() : start(-1), end(-1) { }
 
-    bool IsValid() const {
-        return beg_pos >= 0 && end_pos >= beg_pos;
-    }
+    bool IsValid() const { return start >= 0 && end >= start; }
 
-    static Location invalid() { return Location(-1, -1); }
-
-    int beg_pos;
-    int end_pos;
+    int start;
+    int end;
 };
 
 } }

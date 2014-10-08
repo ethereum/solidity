@@ -32,7 +32,7 @@ class Scanner;
 class Parser
 {
 public:
-    ptr<ASTNode> parse(Scanner& _scanner);
+    ptr<ASTNode> parse(std::shared_ptr<Scanner> const& _scanner);
 
 private:
     class ASTNodeFactory;
@@ -48,6 +48,10 @@ private:
     ptr<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
     ptr<StructDefinition> parseStructDefinition();
     ptr<VariableDeclaration> parseVariableDeclaration();
+    ptr<TypeName> parseTypeName();
+    ptr<Mapping> parseMapping();
+    ptr<ParameterList> parseParameterList();
+    ptr<Block> parseBlock();
     /// @}
 
     /// Helper functions
@@ -58,7 +62,7 @@ private:
     void throwExpectationError(const std::string& _description);
     /// @}
 
-    Scanner* m_scanner;
+    std::shared_ptr<Scanner> m_scanner;
 };
 
 } }

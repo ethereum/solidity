@@ -20,6 +20,7 @@
  * Solidity parser.
  */
 
+#include "libdevcore/Log.h"
 #include "libsolidity/BaseTypes.h"
 #include "libsolidity/Parser.h"
 #include "libsolidity/Scanner.h"
@@ -27,9 +28,9 @@
 namespace dev {
 namespace solidity {
 
-ptr<ASTNode> Parser::parse(Scanner& _scanner)
+ptr<ASTNode> Parser::parse(std::shared_ptr<Scanner> const& _scanner)
 {
-    m_scanner = &_scanner;
+    m_scanner = _scanner;
 
     return parseContractDefinition();
 }
@@ -41,20 +42,22 @@ class Parser::ASTNodeFactory
 {
 public:
     ASTNodeFactory(const Parser& _parser)
-        : m_parser(_parser),
-          m_location(_parser.getPosition(), -1)
+        : m_parser(_parser), m_location(_parser.getPosition(), -1)
     {}
 
-    void markEndPosition()
+    void markEndPosition() { m_location.end = m_parser.getEndPosition(); }
+
+    /// Set the end position to the one of the given node.
+    void setEndPositionFromNode(const ptr<ASTNode>& _node)
     {
-        m_location.end_pos = m_parser.getEndPosition();
+        m_location.end = _node->getLocation().end;
     }
 
     /// @todo: check that this actually uses perfect forwarding
     template <class NodeType, typename... Args>
     ptr<NodeType> createNode(Args&&... _args)
     {
-        if (m_location.end_pos < 0) markEndPosition();
+        if (m_location.end < 0) markEndPosition();
         return std::make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
     }
 
@@ -65,12 +68,12 @@ private:
 
 int Parser::getPosition() const
 {
-    return m_scanner->getCurrentLocation().beg_pos;
+    return m_scanner->getCurrentLocation().start;
 }
 
 int Parser::getEndPosition() const
 {
-    return m_scanner->getCurrentLocation().end_pos;
+    return m_scanner->getCurrentLocation().end;
 }
 
 
@@ -98,7 +101,6 @@ ptr<ContractDefinition> Parser::parseContractDefinition()
             functions.push_back(parseFunctionDefinition(visibilityIsPublic));
         } else if (currentToken == Token::STRUCT) {
             structs.push_back(parseStructDefinition());
-            expectToken(Token::SEMICOLON);
         } else if (currentToken == Token::IDENTIFIER || currentToken == Token::MAPPING ||
                    Token::IsElementaryTypeName(currentToken)) {
             stateVariables.push_back(parseVariableDeclaration());
@@ -117,19 +119,57 @@ ptr<ContractDefinition> Parser::parseContractDefinition()
 
 ptr<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 {
-    (void) _isPublic;
-    throwExpectationError("Function parsing is not yet implemented.");
+    ASTNodeFactory nodeFactory(*this);
+
+    expectToken(Token::FUNCTION);
+    std::string name(expectIdentifier());
+    ptr<ParameterList> parameters(parseParameterList());
+    bool isDeclaredConst = false;
+    if (m_scanner->getCurrentToken() == Token::CONST) {
+        isDeclaredConst = true;
+        m_scanner->next();
+    }
+    ptr<ParameterList> returnParameters;
+    if (m_scanner->getCurrentToken() == Token::RETURNS) {
+        m_scanner->next();
+        returnParameters = parseParameterList();
+    }
+    ptr<Block> block = parseBlock();
+    nodeFactory.setEndPositionFromNode(block);
+    return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, parameters,
+                                                      isDeclaredConst, returnParameters, block);
 }
 
 ptr<StructDefinition> Parser::parseStructDefinition()
 {
-    throwExpectationError("Struct definition parsing is not yet implemented.");
+    ASTNodeFactory nodeFactory(*this);
+
+    expectToken(Token::STRUCT);
+    std::string name = expectIdentifier();
+    vecptr<VariableDeclaration> members;
+    expectToken(Token::LBRACE);
+    while (m_scanner->getCurrentToken() != Token::RBRACE) {
+        members.push_back(parseVariableDeclaration());
+        expectToken(Token::SEMICOLON);
+    }
+    nodeFactory.markEndPosition();
+    expectToken(Token::RBRACE);
+
+    return nodeFactory.createNode<StructDefinition>(name, members);
 }
 
 ptr<VariableDeclaration> Parser::parseVariableDeclaration()
 {
     ASTNodeFactory nodeFactory(*this);
 
+    ptr<TypeName> type = parseTypeName();
+    nodeFactory.markEndPosition();
+    std::string name = expectIdentifier();
+    return nodeFactory.createNode<VariableDeclaration>(type, name);
+}
+
+ptr<TypeName> Parser::parseTypeName()
+{
     ptr<TypeName> type;
     Token::Value token = m_scanner->getCurrentToken();
     if (Token::IsElementaryTypeName(token)) {
@@ -139,17 +179,67 @@ ptr<VariableDeclaration> Parser::parseVariableDeclaration()
         type = ASTNodeFactory(*this).createNode<TypeName>();
         m_scanner->next();
     } else if (token == Token::MAPPING) {
-        // TODO
-        throwExpectationError("mappings are not yet implemented");
+        type = parseMapping();
     } else if (token == Token::IDENTIFIER) {
         type = ASTNodeFactory(*this).createNode<UserDefinedTypeName>(m_scanner->getCurrentLiteral());
         m_scanner->next();
     } else {
-        throwExpectationError("Expected variable declaration");
+        throwExpectationError("Expected type name");
+    }
+
+    return type;
+}
+
+ptr<Mapping> Parser::parseMapping()
+{
+    ASTNodeFactory nodeFactory(*this);
+
+    expectToken(Token::MAPPING);
+    expectToken(Token::LPAREN);
+
+    if (!Token::IsElementaryTypeName(m_scanner->getCurrentToken()))
+        throwExpectationError("Expected elementary type name for mapping key type");
+    ptr<ElementaryTypeName> keyType;
+    keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->getCurrentToken());
+    m_scanner->next();
+
+    expectToken(Token::ARROW);
+    ptr<TypeName> valueType = parseTypeName();
+    nodeFactory.markEndPosition();
+    expectToken(Token::RPAREN);
+
+    return nodeFactory.createNode<Mapping>(keyType, valueType);
+}
+
+ptr<ParameterList> Parser::parseParameterList()
+{
+    ASTNodeFactory nodeFactory(*this);
+
+    vecptr<VariableDeclaration> parameters;
+    expectToken(Token::LPAREN);
+    if (m_scanner->getCurrentToken() != Token::RPAREN) {
+        parameters.push_back(parseVariableDeclaration());
+        while (m_scanner->getCurrentToken() != Token::RPAREN) {
+            expectToken(Token::COMMA);
+            parameters.push_back(parseVariableDeclaration());
+        }
     }
     nodeFactory.markEndPosition();
-    std::string name = expectIdentifier();
-    return nodeFactory.createNode<VariableDeclaration>(type, name);
+    m_scanner->next();
+    return nodeFactory.createNode<ParameterList>(parameters);
+}
+
+ptr<Block> Parser::parseBlock()
+{
+    ASTNodeFactory nodeFactory(*this);
+    expectToken(Token::LBRACE);
+    while (m_scanner->getCurrentToken() != Token::RBRACE) {
+        m_scanner->next();
+        // @todo
+    }
+    nodeFactory.markEndPosition();
+    expectToken(Token::RBRACE);
+    return nodeFactory.createNode<Block>();
 }
 
 void Parser::expectToken(Token::Value _value)
@@ -171,9 +261,16 @@ std::string Parser::expectIdentifier()
 
 void Parser::throwExpectationError(const std::string& _description)
 {
-    (void) _description;
+    int line, column;
+    std::tie(line, column) = m_scanner->translatePositionToLineColumn(getPosition());
+    cwarn << "Solidity parser error: " << _description
+          << "at line " << (line + 1)
+          << ", column " << (column + 1);
+    cwarn << m_scanner->getLineAtPosition(getPosition());
+    cwarn << std::string(column, ' ') << "^";
+
     /// @todo make a proper exception hierarchy
-    throw std::exception();//_description);
+    throw std::exception();
 }
 
 

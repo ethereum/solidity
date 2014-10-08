@@ -40,6 +40,9 @@
 // You should have received a copy of the GNU General Public License
 // along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <algorithm>
+#include <tuple>
+
 #include <libsolidity/Scanner.h>
 
 namespace dev {
@@ -121,6 +124,7 @@ Token::Value Scanner::next()
     return m_current_token.token;
 }
 
+
 bool Scanner::skipWhitespace()
 {
     const int start_position = getSourcePos();
@@ -182,7 +186,7 @@ void Scanner::scanToken()
   Token::Value token;
   do {
     // Remember the position of the next token
-    m_next_token.location.beg_pos = getSourcePos();
+    m_next_token.location.start = getSourcePos();
 
     switch (m_char) {
       case '\n':
@@ -401,7 +405,7 @@ void Scanner::scanToken()
     // whitespace.
   } while (token == Token::WHITESPACE);
 
-  m_next_token.location.end_pos = getSourcePos();
+  m_next_token.location.end = getSourcePos();
   m_next_token.token = token;
 }
 
@@ -546,7 +550,7 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 
 #define KEYWORDS(KEYWORD_GROUP, KEYWORD)                                     \
   KEYWORD_GROUP('a')                                                         \
-  KEYWORD("address", Token::BREAK)                                           \
+  KEYWORD("address", Token::ADDRESS)                                           \
   KEYWORD_GROUP('b')                                                         \
   KEYWORD("break", Token::BREAK)                                             \
   KEYWORD("bool", Token::BOOL)                                               \
@@ -588,8 +592,8 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
   KEYWORD("interface", Token::FUTURE_STRICT_RESERVED_WORD)                   \
   KEYWORD_GROUP('l')                                                         \
   KEYWORD_GROUP('m')                                                         \
-  KEYWORD_GROUP('n')                                                         \
   KEYWORD("mapping", Token::MAPPING)                                         \
+  KEYWORD_GROUP('n')                                                         \
   KEYWORD("new", Token::NEW)                                                 \
   KEYWORD("null", Token::NULL_LITERAL)                                       \
   KEYWORD_GROUP('p')                                                         \
@@ -600,8 +604,9 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
   KEYWORD_GROUP('r')                                                         \
   KEYWORD("real", Token::REAL)                                               \
   KEYWORD("return", Token::RETURN)                                           \
+  KEYWORD("returns", Token::RETURNS)                                         \
   KEYWORD_GROUP('s')                                                         \
-  KEYWORD("string", Token::STRING_TYPE)                                           \
+  KEYWORD("string", Token::STRING_TYPE)                                      \
   KEYWORD("struct", Token::STRUCT)                                           \
   KEYWORD("switch", Token::SWITCH)                                           \
   KEYWORD_GROUP('t')                                                         \
@@ -669,6 +674,39 @@ Token::Value Scanner::scanIdentifierOrKeyword()
     literal.Complete();
 
     return KeywordOrIdentifierToken(m_next_token.literal);
+}
+
+std::string CharStream::getLineAtPosition(int _position) const
+{
+    // if _position points to \n, it returns the line before the \n
+    using size_type = std::string::size_type;
+    size_type searchStart = std::min<size_type>(m_source.size(), _position);
+    if (searchStart > 0) searchStart--;
+    size_type lineStart = m_source.rfind('\n', searchStart);
+    if (lineStart == std::string::npos)
+        lineStart = 0;
+    else
+        lineStart++;
+    return m_source.substr(lineStart,
+                           std::min(m_source.find('\n', lineStart),
+                                    m_source.size()) - lineStart);
+}
+
+std::tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
+{
+    using size_type = std::string::size_type;
+    size_type searchPosition = std::min<size_type>(m_source.size(), _position);
+    int lineNumber = std::count(m_source.begin(), m_source.begin() + searchPosition, '\n');
+
+    size_type lineStart;
+    if (searchPosition == 0) {
+        lineStart = 0;
+    } else {
+        lineStart = m_source.rfind('\n', searchPosition - 1);
+        lineStart = lineStart == std::string::npos ? 0 : lineStart + 1;
+    }
+
+    return std::tuple<int, int>(lineNumber, searchPosition - lineStart);
 }
 
 

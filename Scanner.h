@@ -82,6 +82,12 @@ public:
         return get();
     }
 
+    /// Functions that help pretty-printing parse errors
+    /// Do only use in error cases, they are quite expensive.
+    /// @{
+    std::string getLineAtPosition(int _position) const;
+    std::tuple<int, int> translatePositionToLineColumn(int _position) const;
+    /// @}
 private:
     std::string m_source;
     size_t m_pos;
@@ -133,6 +139,16 @@ public:
 
     Location peekLocation() const { return m_next_token.location; }
     const std::string& peekLiteral() const { return m_next_token.literal; }
+
+    /// Functions that help pretty-printing parse errors.
+    /// Do only use in error cases, they are quite expensive.
+    /// @{
+    std::string getLineAtPosition(int _position) const { return m_source.getLineAtPosition(_position); }
+    std::tuple<int, int> translatePositionToLineColumn(int _position) const
+    {
+        return m_source.translatePositionToLineColumn(_position);
+    }
+    /// @}
 
     // Returns true if there was a line terminator before the peek'ed token,
     // possibly inside a multi-line comment.

@@ -32,6 +32,9 @@
 namespace dev {
 namespace solidity {
 
+// Used as pointers to AST nodes, to be replaced by more clever pointers, e.g. pointers which do
+// not do reference counting but point to a special memory area that is completely released
+// explicitly.
 template <class T>
 using ptr = std::shared_ptr<T>;
 template <class T>
@@ -47,9 +50,11 @@ class Expression;
 class ASTNode
 {
 public:
-    explicit ASTNode(const Location& _location)
+    explicit ASTNode(Location const& _location)
         : m_location(_location)
     {}
+
+    Location getLocation() const { return m_location; }
 private:
     Location m_location;
 };
@@ -57,13 +62,12 @@ private:
 class ContractDefinition : public ASTNode
 {
 public:
-    ContractDefinition(const Location& _location,
-                       const std::string& _name,
-                       const vecptr<StructDefinition>& _definedStructs,
-                       const vecptr<VariableDeclaration>& _stateVariables,
-                       const vecptr<FunctionDefinition>& _definedFunctions)
-        : ASTNode(_location),
-          m_name(_name),
+    ContractDefinition(Location const& _location,
+                       std::string const& _name,
+                       vecptr<StructDefinition> const& _definedStructs,
+                       vecptr<VariableDeclaration> const& _stateVariables,
+                       vecptr<FunctionDefinition> const& _definedFunctions)
+        : ASTNode(_location), m_name(_name),
           m_definedStructs(_definedStructs),
           m_stateVariables(_stateVariables),
           m_definedFunctions(_definedFunctions)
@@ -78,33 +82,61 @@ private:
 
 class StructDefinition : public ASTNode
 {
+public:
+    StructDefinition(Location const& _location,
+                     std::string const& _name,
+                     vecptr<VariableDeclaration> const& _members)
+        : ASTNode(_location), m_name(_name), m_members(_members)
+    {}
 private:
     std::string m_name;
     vecptr<VariableDeclaration> m_members;
 };
 
+/// Used as function parameter list and return list
+/// None of the parameters is allowed to contain mappings (not even recursively
+/// inside structs)
+class ParameterList : public ASTNode
+{
+public:
+    ParameterList(Location const& _location, vecptr<VariableDeclaration> const& _parameters)
+        : ASTNode(_location), m_parameters(_parameters)
+    {}
+private:
+    vecptr<VariableDeclaration> m_parameters;
+};
+
 class FunctionDefinition : public ASTNode
 {
+public:
+    FunctionDefinition(Location const& _location, std::string const& _name, bool _isPublic,
+                       ptr<ParameterList> const& _parameters,
+                       bool _isDeclaredConst,
+                       ptr<ParameterList> const& _returnParameters,
+                       ptr<Block> const& _body)
+        : ASTNode(_location), m_name(_name), m_isPublic(_isPublic), m_parameters(_parameters),
+          m_isDeclaredConst(_isDeclaredConst), m_returnParameters(_returnParameters),
+          m_body(_body)
+    {}
 private:
     std::string m_name;
-    vecptr<VariableDeclaration> m_arguments;
+    bool m_isPublic;
+    ptr<ParameterList> m_parameters;
     bool m_isDeclaredConst;
-    vecptr<VariableDeclaration> m_returns;
+    ptr<ParameterList> m_returnParameters;
     ptr<Block> m_body;
 };
 
 class VariableDeclaration : public ASTNode
 {
 public:
-    VariableDeclaration(const Location& _location,
-                        const ptr<TypeName>& _type,
-                        const std::string& _name)
-        : ASTNode(_location),
-          m_type(_type),
-          m_name(_name)
+    VariableDeclaration(Location const& _location,
+                        ptr<TypeName> const& _type,
+                        std::string const& _name)
+        : ASTNode(_location), m_type(_type), m_name(_name)
     {}
 private:
-    ptr<TypeName> m_type; ///<s can be empty ("var")
+    ptr<TypeName> m_type; ///< can be empty ("var")
     std::string m_name;
 };
 
@@ -114,7 +146,7 @@ private:
 class TypeName : public ASTNode
 {
 public:
-    explicit TypeName(const Location& _location)
+    explicit TypeName(Location const& _location)
         : ASTNode(_location)
     {}
 };
@@ -123,7 +155,7 @@ public:
 class ElementaryTypeName : public TypeName
 {
 public:
-    explicit ElementaryTypeName(const Location& _location, Token::Value _type)
+    explicit ElementaryTypeName(Location const& _location, Token::Value _type)
         : TypeName(_location), m_type(_type)
     {}
 private:
@@ -133,18 +165,19 @@ private:
 class UserDefinedTypeName : public TypeName
 {
 public:
-    UserDefinedTypeName(const Location& _location, const std::string& _name)
+    UserDefinedTypeName(Location const& _location, std::string const& _name)
         : TypeName(_location), m_name(_name)
     {}
 private:
     std::string m_name;
 };
 
-class MappingTypeName : public TypeName
+class Mapping : public TypeName
 {
 public:
-    explicit MappingTypeName(const Location& _location)
-        : TypeName(_location)
+    Mapping(Location const& _location, ptr<ElementaryTypeName> const& _keyType,
+            ptr<TypeName> const& _valueType)
+        : TypeName(_location), m_keyType(_keyType), m_valueType(_valueType)
     {}
 private:
     ptr<ElementaryTypeName> m_keyType;
@@ -158,10 +191,18 @@ private:
 
 class Statement : public ASTNode
 {
+public:
+    explicit Statement(Location const& _location)
+        : ASTNode(_location)
+    {}
 };
 
 class Block : public Statement
 {
+public:
+    explicit Block(Location const& _location)
+        : Statement(_location)
+    {}
 private:
     vecptr<Statement> m_statements;
 };
@@ -245,10 +286,12 @@ private:
     Token::Value m_operator;
 };
 
+/// Can be ordinary function call, type cast or struct construction.
 class FunctionCall : public Expression
 {
 private:
-    std::string m_functionName; // TODO only calls to fixed, named functions for now
+    // if m_functionName is the name of a type, store the token directly
+    std::string m_functionName; // "in place" calls of return values are not possible for now
     vecptr<Expression> m_arguments;
 };
 
