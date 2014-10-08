@@ -22,6 +22,7 @@
 
 #include <string>
 
+#include <libdevcore/Log.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <boost/test/unit_test.hpp>
@@ -30,19 +31,103 @@ namespace dev {
 namespace solidity {
 namespace test {
 
+namespace {
+	ptr<ASTNode> parseText(const std::string& _source)
+	{
+		Parser parser;
+		return parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+	}
+}
+
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
-    std::string text = "contract test123 {\n"
-                       "\tuint256 stateVariable1;\n"
-                       "}\n";
-    Parser parser;
-    CharStream str(text);
-    // @todo: figure out why this does not compile
-    //Scanner scanner(CharStream(text));
-    Scanner scanner(str);
-    BOOST_CHECK_NO_THROW(parser.parse(scanner));
+	char const* text = "contract test {\n"
+					   "  uint256 stateVariable1;\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(missing_variable_name_in_declaration)
+{
+	char const* text = "contract test {\n"
+					   "  uint256 ;\n"
+					   "}\n";
+	cwarn << "The next error is expected.";
+	BOOST_CHECK_THROW(parseText(text), std::exception);
+}
+
+BOOST_AUTO_TEST_CASE(empty_function)
+{
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  function functionName(hash160 arg1, address addr) const\n"
+					   "    returns (int id)\n"
+					   "  { }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(no_function_params)
+{
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  function functionName() {}\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(single_function_param)
+{
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(struct_definition)
+{
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  struct MyStructName {\n"
+					   "    address addr;\n"
+					   "    uint256 count;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(mapping)
+{
+	char const* text = "contract test {\n"
+					   "  mapping(address => string) names;\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_in_struct)
+{
+	char const* text = "contract test {\n"
+					   "  struct test_struct {\n"
+					   "    address addr;\n"
+					   "    uint256 count;\n"
+					   "    mapping(hash => test_struct) self_reference;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_to_mapping_in_struct)
+{
+	char const* text = "contract test {\n"
+					   "  struct test_struct {\n"
+					   "    address addr;\n"
+					   "    mapping (uint64 => mapping (hash => uint)) complex_mapping;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
 

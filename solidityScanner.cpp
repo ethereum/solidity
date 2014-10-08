@@ -98,23 +98,23 @@ BOOST_AUTO_TEST_CASE(locations)
 {
     Scanner scanner(CharStream("function_identifier has ; -0x743/*comment*/\n ident //comment"));
     BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::IDENTIFIER);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().beg_pos, 0);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end_pos, 19);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 0);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 19);
     BOOST_CHECK_EQUAL(scanner.next(), Token::IDENTIFIER);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().beg_pos, 20);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end_pos, 23);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 20);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 23);
     BOOST_CHECK_EQUAL(scanner.next(), Token::SEMICOLON);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().beg_pos, 24);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end_pos, 25);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 24);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 25);
     BOOST_CHECK_EQUAL(scanner.next(), Token::SUB);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().beg_pos, 26);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end_pos, 27);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 26);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 27);
     BOOST_CHECK_EQUAL(scanner.next(), Token::NUMBER);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().beg_pos, 27);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end_pos, 32);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 27);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 32);
     BOOST_CHECK_EQUAL(scanner.next(), Token::IDENTIFIER);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().beg_pos, 45);
-    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end_pos, 50);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 45);
+    BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 50);
     BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
