@@ -413,8 +413,8 @@ bytes Assembly::assemble() const
 			break;
 		}
 		case Tag:
-			tagPos[(unsigned)i.m_data] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
+			tagPos[(unsigned)i.m_data] = ret.size();
 			break;
 		default:;
 		}
