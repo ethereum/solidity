@@ -44,7 +44,7 @@ class FakeExtVM: public eth::ExtVMFace
 {
 public:
 	FakeExtVM()	{}
-	FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock);
+	FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth = 0);
 
 	u256 store(u256 _n) { return std::get<2>(addresses[myAddress])[_n]; }
 	void setStore(u256 _n, u256 _v) { std::get<2>(addresses[myAddress])[_n] = _v; }
