@@ -60,37 +60,37 @@ class ParserRecorder;
 
 class CharStream {
 public:
-    CharStream()
-        : m_pos(0)
-    {}
+	CharStream()
+		: m_pos(0)
+	{}
 
-    explicit CharStream(const std::string& _source)
-        : m_source(_source), m_pos(0)
-    {}
-    int getPos() const { return m_pos; }
-    bool isPastEndOfInput() const { return m_pos >= m_source.size(); }
-    char get() const { return m_source[m_pos]; }
-    char advanceAndGet() {
-        if (isPastEndOfInput()) return 0;
-        ++m_pos;
-        if (isPastEndOfInput()) return 0;
-        return get();
-    }
-    char rollback(size_t _amount) {
-        BOOST_ASSERT(m_pos >= _amount);
-        m_pos -= _amount;
-        return get();
-    }
+	explicit CharStream(const std::string& _source)
+		: m_source(_source), m_pos(0)
+	{}
+	int getPos() const { return m_pos; }
+	bool isPastEndOfInput() const { return m_pos >= m_source.size(); }
+	char get() const { return m_source[m_pos]; }
+	char advanceAndGet() {
+		if (isPastEndOfInput()) return 0;
+		++m_pos;
+		if (isPastEndOfInput()) return 0;
+		return get();
+	}
+	char rollback(size_t _amount) {
+		BOOST_ASSERT(m_pos >= _amount);
+		m_pos -= _amount;
+		return get();
+	}
 
-    /// Functions that help pretty-printing parse errors
-    /// Do only use in error cases, they are quite expensive.
-    /// @{
-    std::string getLineAtPosition(int _position) const;
-    std::tuple<int, int> translatePositionToLineColumn(int _position) const;
-    /// @}
+	/// Functions that help pretty-printing parse errors
+	/// Do only use in error cases, they are quite expensive.
+	/// @{
+	std::string getLineAtPosition(int _position) const;
+	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
+	/// @}
 private:
-    std::string m_source;
-    size_t m_pos;
+	std::string m_source;
+	size_t m_pos;
 };
 
 // ----------------------------------------------------------------------------
@@ -98,155 +98,155 @@ private:
 
 class Scanner {
 public:
-    // Scoped helper for literal recording. Automatically drops the literal
-    // if aborting the scanning before it's complete.
-    class LiteralScope {
-    public:
-        explicit LiteralScope(Scanner* self)
-            : scanner_(self), complete_(false) {
-            scanner_->startNewLiteral();
-        }
-        ~LiteralScope() {
-            if (!complete_) scanner_->dropLiteral();
-        }
-        void Complete() {
-            complete_ = true;
-        }
+	// Scoped helper for literal recording. Automatically drops the literal
+	// if aborting the scanning before it's complete.
+	class LiteralScope {
+	public:
+		explicit LiteralScope(Scanner* self)
+			: scanner_(self), complete_(false) {
+			scanner_->startNewLiteral();
+		}
+		~LiteralScope() {
+			if (!complete_) scanner_->dropLiteral();
+		}
+		void Complete() {
+			complete_ = true;
+		}
 
-    private:
-        Scanner* scanner_;
-        bool complete_;
-    };
+	private:
+		Scanner* scanner_;
+		bool complete_;
+	};
 
-    explicit Scanner(const CharStream& _source);
+	explicit Scanner(const CharStream& _source);
 
-    // Resets the scanner as if newly constructed with _input as input.
-    void reset(const CharStream& _source);
+	// Resets the scanner as if newly constructed with _input as input.
+	void reset(const CharStream& _source);
 
-    // Returns the next token and advances input.
-    Token::Value next();
-    // Returns the current token again.
-    Token::Value getCurrentToken() { return m_current_token.token; }
-    // Returns the location information for the current token
-    // (the token last returned by Next()).
-    Location getCurrentLocation() const { return m_current_token.location; }
-    const std::string& getCurrentLiteral() const { return m_current_token.literal; }
+	// Returns the next token and advances input.
+	Token::Value next();
+	// Returns the current token again.
+	Token::Value getCurrentToken() { return m_current_token.token; }
+	// Returns the location information for the current token
+	// (the token last returned by Next()).
+	Location getCurrentLocation() const { return m_current_token.location; }
+	const std::string& getCurrentLiteral() const { return m_current_token.literal; }
 
-    // Similar functions for the upcoming token.
+	// Similar functions for the upcoming token.
 
-    // One token look-ahead (past the token returned by Next()).
-    Token::Value peek() const { return m_next_token.token; }
+	// One token look-ahead (past the token returned by Next()).
+	Token::Value peek() const { return m_next_token.token; }
 
-    Location peekLocation() const { return m_next_token.location; }
-    const std::string& peekLiteral() const { return m_next_token.literal; }
+	Location peekLocation() const { return m_next_token.location; }
+	const std::string& peekLiteral() const { return m_next_token.literal; }
 
-    /// Functions that help pretty-printing parse errors.
-    /// Do only use in error cases, they are quite expensive.
-    /// @{
-    std::string getLineAtPosition(int _position) const { return m_source.getLineAtPosition(_position); }
-    std::tuple<int, int> translatePositionToLineColumn(int _position) const
-    {
-        return m_source.translatePositionToLineColumn(_position);
-    }
-    /// @}
+	/// Functions that help pretty-printing parse errors.
+	/// Do only use in error cases, they are quite expensive.
+	/// @{
+	std::string getLineAtPosition(int _position) const { return m_source.getLineAtPosition(_position); }
+	std::tuple<int, int> translatePositionToLineColumn(int _position) const
+	{
+		return m_source.translatePositionToLineColumn(_position);
+	}
+	/// @}
 
-    // Returns true if there was a line terminator before the peek'ed token,
-    // possibly inside a multi-line comment.
-    bool hasAnyLineTerminatorBeforeNext() const {
-        return m_hasLineTerminatorBeforeNext ||
-                m_hasMultilineCommentBeforeNext;
-    }
+	// Returns true if there was a line terminator before the peek'ed token,
+	// possibly inside a multi-line comment.
+	bool hasAnyLineTerminatorBeforeNext() const {
+		return m_hasLineTerminatorBeforeNext ||
+				m_hasMultilineCommentBeforeNext;
+	}
 
 private:
-    // Used for the current and look-ahead token.
-    struct TokenDesc {
-        Token::Value token;
-        Location location;
-        std::string literal;
-    };
+	// Used for the current and look-ahead token.
+	struct TokenDesc {
+		Token::Value token;
+		Location location;
+		std::string literal;
+	};
 
-    // Literal buffer support
-    inline void startNewLiteral() {
-        m_next_token.literal.clear();
-    }
+	// Literal buffer support
+	inline void startNewLiteral() {
+		m_next_token.literal.clear();
+	}
 
-    inline void addLiteralChar(char c) {
-        m_next_token.literal.push_back(c);
-    }
+	inline void addLiteralChar(char c) {
+		m_next_token.literal.push_back(c);
+	}
 
-    inline void dropLiteral() {
-        m_next_token.literal.clear();
-    }
+	inline void dropLiteral() {
+		m_next_token.literal.clear();
+	}
 
-    inline void addLiteralCharAndAdvance() {
-        addLiteralChar(m_char);
-        advance();
-    }
+	inline void addLiteralCharAndAdvance() {
+		addLiteralChar(m_char);
+		advance();
+	}
 
-    // Low-level scanning support.
-    bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
-    void rollback(int amount) {
-        m_char = m_source.rollback(amount);
-    }
+	// Low-level scanning support.
+	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
+	void rollback(int amount) {
+		m_char = m_source.rollback(amount);
+	}
 
-    inline Token::Value selectToken(Token::Value tok) {
-        advance();
-        return tok;
-    }
+	inline Token::Value selectToken(Token::Value tok) {
+		advance();
+		return tok;
+	}
 
-    inline Token::Value selectToken(char next, Token::Value then, Token::Value else_) {
-        advance();
-        if (m_char == next) {
-            advance();
-            return then;
-        } else {
-            return else_;
-        }
-    }
+	inline Token::Value selectToken(char next, Token::Value then, Token::Value else_) {
+		advance();
+		if (m_char == next) {
+			advance();
+			return then;
+		} else {
+			return else_;
+		}
+	}
 
-    bool scanHexNumber(char& scanned_number, int expected_length);
+	bool scanHexNumber(char& scanned_number, int expected_length);
 
-    // Scans a single JavaScript token.
-    void scanToken();
+	// Scans a single JavaScript token.
+	void scanToken();
 
-    bool skipWhitespace();
-    Token::Value skipSingleLineComment();
-    Token::Value skipMultiLineComment();
+	bool skipWhitespace();
+	Token::Value skipSingleLineComment();
+	Token::Value skipMultiLineComment();
 
-    void scanDecimalDigits();
-    Token::Value scanNumber(bool _periodSeen);
-    Token::Value scanIdentifierOrKeyword();
+	void scanDecimalDigits();
+	Token::Value scanNumber(bool _periodSeen);
+	Token::Value scanIdentifierOrKeyword();
 
-    Token::Value scanString();
+	Token::Value scanString();
 
-    // Scans an escape-sequence which is part of a string and adds the
-    // decoded character to the current literal. Returns true if a pattern
-    // is scanned.
-    bool scanEscape();
+	// Scans an escape-sequence which is part of a string and adds the
+	// decoded character to the current literal. Returns true if a pattern
+	// is scanned.
+	bool scanEscape();
 
-    // Return the current source position.
-    int getSourcePos() {
-        return m_source.getPos();
-    }
-    bool isSourcePastEndOfInput() {
-        return m_source.isPastEndOfInput();
-    }
+	// Return the current source position.
+	int getSourcePos() {
+		return m_source.getPos();
+	}
+	bool isSourcePastEndOfInput() {
+		return m_source.isPastEndOfInput();
+	}
 
-    TokenDesc m_current_token;  // desc for current token (as returned by Next())
-    TokenDesc m_next_token;     // desc for next token (one token look-ahead)
+	TokenDesc m_current_token;  // desc for current token (as returned by Next())
+	TokenDesc m_next_token;     // desc for next token (one token look-ahead)
 
-    CharStream m_source;
+	CharStream m_source;
 
-    // one character look-ahead, equals 0 at end of input
-    char m_char;
+	// one character look-ahead, equals 0 at end of input
+	char m_char;
 
-    // Whether there is a line terminator whitespace character after
-    // the current token, and  before the next. Does not count newlines
-    // inside multiline comments.
-    bool m_hasLineTerminatorBeforeNext;
-    // Whether there is a multi-line comment that contains a
-    // line-terminator after the current token, and before the next.
-    bool m_hasMultilineCommentBeforeNext;
+	// Whether there is a line terminator whitespace character after
+	// the current token, and  before the next. Does not count newlines
+	// inside multiline comments.
+	bool m_hasLineTerminatorBeforeNext;
+	// Whether there is a multi-line comment that contains a
+	// line-terminator after the current token, and before the next.
+	bool m_hasMultilineCommentBeforeNext;
 };
 
 } }

@@ -47,21 +47,21 @@ namespace solidity {
 
 #define T(name, string, precedence) #name,
 const char* const Token::m_name[NUM_TOKENS] = {
-  TOKEN_LIST(T, T)
+	TOKEN_LIST(T, T)
 };
 #undef T
 
 
 #define T(name, string, precedence) string,
 const char* const Token::m_string[NUM_TOKENS] = {
-  TOKEN_LIST(T, T)
+	TOKEN_LIST(T, T)
 };
 #undef T
 
 
 #define T(name, string, precedence) precedence,
 const int8_t Token::m_precedence[NUM_TOKENS] = {
-  TOKEN_LIST(T, T)
+	TOKEN_LIST(T, T)
 };
 #undef T
 
@@ -69,7 +69,7 @@ const int8_t Token::m_precedence[NUM_TOKENS] = {
 #define KT(a, b, c) 'T',
 #define KK(a, b, c) 'K',
 const char Token::m_tokenType[] = {
-  TOKEN_LIST(KT, KK)
+	TOKEN_LIST(KT, KK)
 };
 #undef KT
 #undef KK

@@ -49,66 +49,66 @@ namespace dev {
 namespace solidity {
 
 namespace {
-    bool IsDecimalDigit(char c) {
-        return '0' <= c && c <= '9';
-    }
-    bool IsHexDigit(char c) {
-        return IsDecimalDigit(c)
-                || ('a' <= c && c <= 'f')
-                || ('A' <= c && c <= 'F');
-    }
-    bool IsLineTerminator(char c) { return c == '\n'; }
-    bool IsWhiteSpace(char c) {
-        return c == ' ' || c == '\n' || c == '\t';
-    }
-    bool IsIdentifierStart(char c) {
-        return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
-    }
-    bool IsIdentifierPart(char c) {
-        return IsIdentifierStart(c) || IsDecimalDigit(c);
-    }
+	bool IsDecimalDigit(char c) {
+		return '0' <= c && c <= '9';
+	}
+	bool IsHexDigit(char c) {
+		return IsDecimalDigit(c)
+				|| ('a' <= c && c <= 'f')
+				|| ('A' <= c && c <= 'F');
+	}
+	bool IsLineTerminator(char c) { return c == '\n'; }
+	bool IsWhiteSpace(char c) {
+		return c == ' ' || c == '\n' || c == '\t';
+	}
+	bool IsIdentifierStart(char c) {
+		return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+	}
+	bool IsIdentifierPart(char c) {
+		return IsIdentifierStart(c) || IsDecimalDigit(c);
+	}
 
-    int HexValue(char c) {
-        if (c >= '0' && c <= '9') return c - '0';
-        else if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-        else if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-        else return -1;
-    }
+	int HexValue(char c) {
+		if (c >= '0' && c <= '9') return c - '0';
+		else if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+		else if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+		else return -1;
+	}
 }
 
 Scanner::Scanner(const CharStream& _source)
 {
-    reset(_source);
+	reset(_source);
 }
 
 void Scanner::reset(const CharStream& _source)
 {
-    m_source = _source;
+	m_source = _source;
 
-    m_char = m_source.get();
-    skipWhitespace();
-    scanToken();
-    next();
+	m_char = m_source.get();
+	skipWhitespace();
+	scanToken();
+	next();
 }
 
 
 bool Scanner::scanHexNumber(char& scanned_number, int expected_length)
 {
-    BOOST_ASSERT(expected_length <= 4);  // prevent overflow
+	BOOST_ASSERT(expected_length <= 4);  // prevent overflow
 
-    char x = 0;
-    for (int i = 0; i < expected_length; i++) {
-        int d = HexValue(m_char);
-        if (d < 0) {
-            rollback(i);
-            return false;
-        }
-        x = x * 16 + d;
-        advance();
-    }
+	char x = 0;
+	for (int i = 0; i < expected_length; i++) {
+		int d = HexValue(m_char);
+		if (d < 0) {
+			rollback(i);
+			return false;
+		}
+		x = x * 16 + d;
+		advance();
+	}
 
-    scanned_number = x;
-    return true;
+	scanned_number = x;
+	return true;
 }
 
 
@@ -117,29 +117,29 @@ BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 
 Token::Value Scanner::next()
 {
-    m_current_token = m_next_token;
-    m_hasLineTerminatorBeforeNext = false;
-    m_hasMultilineCommentBeforeNext = false;
-    scanToken();
-    return m_current_token.token;
+	m_current_token = m_next_token;
+	m_hasLineTerminatorBeforeNext = false;
+	m_hasMultilineCommentBeforeNext = false;
+	scanToken();
+	return m_current_token.token;
 }
 
 
 bool Scanner::skipWhitespace()
 {
-    const int start_position = getSourcePos();
+	const int start_position = getSourcePos();
 
-    while (true) {
-      if (IsLineTerminator(m_char)) {
-        m_hasLineTerminatorBeforeNext = true;
-      } else if (!IsWhiteSpace(m_char)) {
-        break;
-      }
-      advance();
-    }
+	while (true) {
+	  if (IsLineTerminator(m_char)) {
+		m_hasLineTerminatorBeforeNext = true;
+	  } else if (!IsWhiteSpace(m_char)) {
+		break;
+	  }
+	  advance();
+	}
 
-    // Return whether or not we skipped any characters.
-    return getSourcePos() != start_position;
+	// Return whether or not we skipped any characters.
+	return getSourcePos() != start_position;
 }
 
 
@@ -156,28 +156,28 @@ Token::Value Scanner::skipSingleLineComment()
 
 Token::Value Scanner::skipMultiLineComment()
 {
-    BOOST_ASSERT(m_char == '*');
-    advance();
+	BOOST_ASSERT(m_char == '*');
+	advance();
 
-    while (!isSourcePastEndOfInput()) {
-        char ch = m_char;
-        advance();
-        if (IsLineTerminator(ch)) {
-            // Following ECMA-262, section 7.4, a comment containing
-            // a newline will make the comment count as a line-terminator.
-            m_hasMultilineCommentBeforeNext = true;
-        }
-        // If we have reached the end of the multi-line comment, we
-        // consume the '/' and insert a whitespace. This way all
-        // multi-line comments are treated as whitespace.
-        if (ch == '*' && m_char == '/') {
-            m_char = ' ';
-            return Token::WHITESPACE;
-        }
-    }
+	while (!isSourcePastEndOfInput()) {
+		char ch = m_char;
+		advance();
+		if (IsLineTerminator(ch)) {
+			// Following ECMA-262, section 7.4, a comment containing
+			// a newline will make the comment count as a line-terminator.
+			m_hasMultilineCommentBeforeNext = true;
+		}
+		// If we have reached the end of the multi-line comment, we
+		// consume the '/' and insert a whitespace. This way all
+		// multi-line comments are treated as whitespace.
+		if (ch == '*' && m_char == '/') {
+			m_char = ' ';
+			return Token::WHITESPACE;
+		}
+	}
 
-    // Unterminated multi-line comment.
-    return Token::ILLEGAL;
+	// Unterminated multi-line comment.
+	return Token::ILLEGAL;
 }
 
 void Scanner::scanToken()
@@ -185,224 +185,224 @@ void Scanner::scanToken()
   m_next_token.literal.clear();
   Token::Value token;
   do {
-    // Remember the position of the next token
-    m_next_token.location.start = getSourcePos();
+	// Remember the position of the next token
+	m_next_token.location.start = getSourcePos();
 
-    switch (m_char) {
-      case '\n':
-        m_hasLineTerminatorBeforeNext = true; // fall-through
-      case ' ':
-      case '\t':
-        token = selectToken(Token::WHITESPACE);
-        break;
+	switch (m_char) {
+	  case '\n':
+		m_hasLineTerminatorBeforeNext = true; // fall-through
+	  case ' ':
+	  case '\t':
+		token = selectToken(Token::WHITESPACE);
+		break;
 
-      case '"': case '\'':
-        token = scanString();
-        break;
+	  case '"': case '\'':
+		token = scanString();
+		break;
 
-      case '<':
-        // < <= << <<=
-        advance();
-        if (m_char == '=') {
-          token = selectToken(Token::LTE);
-        } else if (m_char == '<') {
-          token = selectToken('=', Token::ASSIGN_SHL, Token::SHL);
-        } else {
-          token = Token::LT;
-        }
-        break;
+	  case '<':
+		// < <= << <<=
+		advance();
+		if (m_char == '=') {
+		  token = selectToken(Token::LTE);
+		} else if (m_char == '<') {
+		  token = selectToken('=', Token::ASSIGN_SHL, Token::SHL);
+		} else {
+		  token = Token::LT;
+		}
+		break;
 
-      case '>':
-        // > >= >> >>= >>> >>>=
-        advance();
-        if (m_char == '=') {
-          token = selectToken(Token::GTE);
-        } else if (m_char == '>') {
-          // >> >>= >>> >>>=
-          advance();
-          if (m_char == '=') {
-            token = selectToken(Token::ASSIGN_SAR);
-          } else if (m_char == '>') {
-            token = selectToken('=', Token::ASSIGN_SHR, Token::SHR);
-          } else {
-            token = Token::SAR;
-          }
-        } else {
-          token = Token::GT;
-        }
-        break;
+	  case '>':
+		// > >= >> >>= >>> >>>=
+		advance();
+		if (m_char == '=') {
+		  token = selectToken(Token::GTE);
+		} else if (m_char == '>') {
+		  // >> >>= >>> >>>=
+		  advance();
+		  if (m_char == '=') {
+			token = selectToken(Token::ASSIGN_SAR);
+		  } else if (m_char == '>') {
+			token = selectToken('=', Token::ASSIGN_SHR, Token::SHR);
+		  } else {
+			token = Token::SAR;
+		  }
+		} else {
+		  token = Token::GT;
+		}
+		break;
 
-      case '=':
-        // = == =>
-        advance();
-        if (m_char == '=') {
-          token = selectToken(Token::EQ);
-        } else if (m_char == '>') {
-          token = selectToken(Token::ARROW);
-        } else {
-          token = Token::ASSIGN;
-        }
-        break;
+	  case '=':
+		// = == =>
+		advance();
+		if (m_char == '=') {
+		  token = selectToken(Token::EQ);
+		} else if (m_char == '>') {
+		  token = selectToken(Token::ARROW);
+		} else {
+		  token = Token::ASSIGN;
+		}
+		break;
 
-      case '!':
-        // ! != !==
-        advance();
-        if (m_char == '=') {
-          token = selectToken(Token::NE);
-        } else {
-          token = Token::NOT;
-        }
-        break;
+	  case '!':
+		// ! != !==
+		advance();
+		if (m_char == '=') {
+		  token = selectToken(Token::NE);
+		} else {
+		  token = Token::NOT;
+		}
+		break;
 
-      case '+':
-        // + ++ +=
-        advance();
-        if (m_char == '+') {
-          token = selectToken(Token::INC);
-        } else if (m_char == '=') {
-          token = selectToken(Token::ASSIGN_ADD);
-        } else {
-          token = Token::ADD;
-        }
-        break;
+	  case '+':
+		// + ++ +=
+		advance();
+		if (m_char == '+') {
+		  token = selectToken(Token::INC);
+		} else if (m_char == '=') {
+		  token = selectToken(Token::ASSIGN_ADD);
+		} else {
+		  token = Token::ADD;
+		}
+		break;
 
-      case '-':
-        // - -- -=
-        advance();
-        if (m_char == '-') {
-          advance();
-          token = Token::DEC;
-        } else if (m_char == '=') {
-          token = selectToken(Token::ASSIGN_SUB);
-        } else {
-          token = Token::SUB;
-        }
-        break;
+	  case '-':
+		// - -- -=
+		advance();
+		if (m_char == '-') {
+		  advance();
+		  token = Token::DEC;
+		} else if (m_char == '=') {
+		  token = selectToken(Token::ASSIGN_SUB);
+		} else {
+		  token = Token::SUB;
+		}
+		break;
 
-      case '*':
-        // * *=
-        token = selectToken('=', Token::ASSIGN_MUL, Token::MUL);
-        break;
+	  case '*':
+		// * *=
+		token = selectToken('=', Token::ASSIGN_MUL, Token::MUL);
+		break;
 
-      case '%':
-        // % %=
-        token = selectToken('=', Token::ASSIGN_MOD, Token::MOD);
-        break;
+	  case '%':
+		// % %=
+		token = selectToken('=', Token::ASSIGN_MOD, Token::MOD);
+		break;
 
-      case '/':
-        // /  // /* /=
-        advance();
-        if (m_char == '/') {
-          token = skipSingleLineComment();
-        } else if (m_char == '*') {
-          token = skipMultiLineComment();
-        } else if (m_char == '=') {
-          token = selectToken(Token::ASSIGN_DIV);
-        } else {
-          token = Token::DIV;
-        }
-        break;
+	  case '/':
+		// /  // /* /=
+		advance();
+		if (m_char == '/') {
+		  token = skipSingleLineComment();
+		} else if (m_char == '*') {
+		  token = skipMultiLineComment();
+		} else if (m_char == '=') {
+		  token = selectToken(Token::ASSIGN_DIV);
+		} else {
+		  token = Token::DIV;
+		}
+		break;
 
-      case '&':
-        // & && &=
-        advance();
-        if (m_char == '&') {
-          token = selectToken(Token::AND);
-        } else if (m_char == '=') {
-          token = selectToken(Token::ASSIGN_BIT_AND);
-        } else {
-          token = Token::BIT_AND;
-        }
-        break;
+	  case '&':
+		// & && &=
+		advance();
+		if (m_char == '&') {
+		  token = selectToken(Token::AND);
+		} else if (m_char == '=') {
+		  token = selectToken(Token::ASSIGN_BIT_AND);
+		} else {
+		  token = Token::BIT_AND;
+		}
+		break;
 
-      case '|':
-        // | || |=
-        advance();
-        if (m_char == '|') {
-          token = selectToken(Token::OR);
-        } else if (m_char == '=') {
-          token = selectToken(Token::ASSIGN_BIT_OR);
-        } else {
-          token = Token::BIT_OR;
-        }
-        break;
+	  case '|':
+		// | || |=
+		advance();
+		if (m_char == '|') {
+		  token = selectToken(Token::OR);
+		} else if (m_char == '=') {
+		  token = selectToken(Token::ASSIGN_BIT_OR);
+		} else {
+		  token = Token::BIT_OR;
+		}
+		break;
 
-      case '^':
-        // ^ ^=
-        token = selectToken('=', Token::ASSIGN_BIT_XOR, Token::BIT_XOR);
-        break;
+	  case '^':
+		// ^ ^=
+		token = selectToken('=', Token::ASSIGN_BIT_XOR, Token::BIT_XOR);
+		break;
 
-      case '.':
-        // . Number
-        advance();
-        if (IsDecimalDigit(m_char)) {
-          token = scanNumber(true);
-        } else {
-          token = Token::PERIOD;
-        }
-        break;
+	  case '.':
+		// . Number
+		advance();
+		if (IsDecimalDigit(m_char)) {
+		  token = scanNumber(true);
+		} else {
+		  token = Token::PERIOD;
+		}
+		break;
 
-      case ':':
-        token = selectToken(Token::COLON);
-        break;
+	  case ':':
+		token = selectToken(Token::COLON);
+		break;
 
-      case ';':
-        token = selectToken(Token::SEMICOLON);
-        break;
+	  case ';':
+		token = selectToken(Token::SEMICOLON);
+		break;
 
-      case ',':
-        token = selectToken(Token::COMMA);
-        break;
+	  case ',':
+		token = selectToken(Token::COMMA);
+		break;
 
-      case '(':
-        token = selectToken(Token::LPAREN);
-        break;
+	  case '(':
+		token = selectToken(Token::LPAREN);
+		break;
 
-      case ')':
-        token = selectToken(Token::RPAREN);
-        break;
+	  case ')':
+		token = selectToken(Token::RPAREN);
+		break;
 
-      case '[':
-        token = selectToken(Token::LBRACK);
-        break;
+	  case '[':
+		token = selectToken(Token::LBRACK);
+		break;
 
-      case ']':
-        token = selectToken(Token::RBRACK);
-        break;
+	  case ']':
+		token = selectToken(Token::RBRACK);
+		break;
 
-      case '{':
-        token = selectToken(Token::LBRACE);
-        break;
+	  case '{':
+		token = selectToken(Token::LBRACE);
+		break;
 
-      case '}':
-        token = selectToken(Token::RBRACE);
-        break;
+	  case '}':
+		token = selectToken(Token::RBRACE);
+		break;
 
-      case '?':
-        token = selectToken(Token::CONDITIONAL);
-        break;
+	  case '?':
+		token = selectToken(Token::CONDITIONAL);
+		break;
 
-      case '~':
-        token = selectToken(Token::BIT_NOT);
-        break;
+	  case '~':
+		token = selectToken(Token::BIT_NOT);
+		break;
 
-      default:
-        if (IsIdentifierStart(m_char)) {
-          token = scanIdentifierOrKeyword();
-        } else if (IsDecimalDigit(m_char)) {
-          token = scanNumber(false);
-        } else if (skipWhitespace()) {
-          token = Token::WHITESPACE;
-        } else if (isSourcePastEndOfInput()) {
-          token = Token::EOS;
-        } else {
-          token = selectToken(Token::ILLEGAL);
-        }
-        break;
-    }
+	  default:
+		if (IsIdentifierStart(m_char)) {
+		  token = scanIdentifierOrKeyword();
+		} else if (IsDecimalDigit(m_char)) {
+		  token = scanNumber(false);
+		} else if (skipWhitespace()) {
+		  token = Token::WHITESPACE;
+		} else if (isSourcePastEndOfInput()) {
+		  token = Token::EOS;
+		} else {
+		  token = selectToken(Token::ILLEGAL);
+		}
+		break;
+	}
 
-    // Continue scanning for tokens as long as we're just skipping
-    // whitespace.
+	// Continue scanning for tokens as long as we're just skipping
+	// whitespace.
   } while (token == Token::WHITESPACE);
 
   m_next_token.location.end = getSourcePos();
@@ -411,67 +411,67 @@ void Scanner::scanToken()
 
 bool Scanner::scanEscape()
 {
-    char c = m_char;
-    advance();
+	char c = m_char;
+	advance();
 
-    // Skip escaped newlines.
-    if (IsLineTerminator(c))
-        return true;
+	// Skip escaped newlines.
+	if (IsLineTerminator(c))
+		return true;
 
-    switch (c) {
-    case '\'':  // fall through
-    case '"' :  // fall through
-    case '\\': break;
-    case 'b' : c = '\b'; break;
-    case 'f' : c = '\f'; break;
-    case 'n' : c = '\n'; break;
-    case 'r' : c = '\r'; break;
-    case 't' : c = '\t'; break;
-    case 'u' : {
-        if (!scanHexNumber(c, 4)) return false;
-        break;
-    }
-    case 'v' : c = '\v'; break;
-    case 'x' : {
-        if (!scanHexNumber(c, 2)) return false;
-        break;
-    }
-    }
+	switch (c) {
+	case '\'':  // fall through
+	case '"' :  // fall through
+	case '\\': break;
+	case 'b' : c = '\b'; break;
+	case 'f' : c = '\f'; break;
+	case 'n' : c = '\n'; break;
+	case 'r' : c = '\r'; break;
+	case 't' : c = '\t'; break;
+	case 'u' : {
+		if (!scanHexNumber(c, 4)) return false;
+		break;
+	}
+	case 'v' : c = '\v'; break;
+	case 'x' : {
+		if (!scanHexNumber(c, 2)) return false;
+		break;
+	}
+	}
 
-    // According to ECMA-262, section 7.8.4, characters not covered by the
-    // above cases should be illegal, but they are commonly handled as
-    // non-escaped characters by JS VMs.
-    addLiteralChar(c);
-    return true;
+	// According to ECMA-262, section 7.8.4, characters not covered by the
+	// above cases should be illegal, but they are commonly handled as
+	// non-escaped characters by JS VMs.
+	addLiteralChar(c);
+	return true;
 }
 
 Token::Value Scanner::scanString()
 {
-    const char quote = m_char;
-    advance();  // consume quote
+	const char quote = m_char;
+	advance();  // consume quote
 
-    LiteralScope literal(this);
-    while (m_char != quote && !isSourcePastEndOfInput() && !IsLineTerminator(m_char)) {
-        char c = m_char;
-        advance();
-        if (c == '\\') {
-            if (isSourcePastEndOfInput() || !scanEscape()) return Token::ILLEGAL;
-        } else {
-            addLiteralChar(c);
-        }
-    }
-    if (m_char != quote) return Token::ILLEGAL;
-    literal.Complete();
+	LiteralScope literal(this);
+	while (m_char != quote && !isSourcePastEndOfInput() && !IsLineTerminator(m_char)) {
+		char c = m_char;
+		advance();
+		if (c == '\\') {
+			if (isSourcePastEndOfInput() || !scanEscape()) return Token::ILLEGAL;
+		} else {
+			addLiteralChar(c);
+		}
+	}
+	if (m_char != quote) return Token::ILLEGAL;
+	literal.Complete();
 
-    advance();  // consume quote
-    return Token::STRING_LITERAL;
+	advance();  // consume quote
+	return Token::STRING_LITERAL;
 }
 
 
 void Scanner::scanDecimalDigits()
 {
-    while (IsDecimalDigit(m_char))
-        addLiteralCharAndAdvance();
+	while (IsDecimalDigit(m_char))
+		addLiteralCharAndAdvance();
 }
 
 
@@ -483,53 +483,53 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 
   LiteralScope literal(this);
   if (_periodSeen) {
-    // we have already seen a decimal point of the float
-    addLiteralChar('.');
-    scanDecimalDigits();  // we know we have at least one digit
+	// we have already seen a decimal point of the float
+	addLiteralChar('.');
+	scanDecimalDigits();  // we know we have at least one digit
   } else {
-    // if the first character is '0' we must check for octals and hex
-    if (m_char == '0') {
-      addLiteralCharAndAdvance();
+	// if the first character is '0' we must check for octals and hex
+	if (m_char == '0') {
+	  addLiteralCharAndAdvance();
 
-      // either 0, 0exxx, 0Exxx, 0.xxx, a hex number, a binary number or
-      // an octal number.
-      if (m_char == 'x' || m_char == 'X') {
-        // hex number
-        kind = HEX;
-        addLiteralCharAndAdvance();
-        if (!IsHexDigit(m_char)) {
-          // we must have at least one hex digit after 'x'/'X'
-          return Token::ILLEGAL;
-        }
-        while (IsHexDigit(m_char)) {
-          addLiteralCharAndAdvance();
-        }
-      }
-    }
+	  // either 0, 0exxx, 0Exxx, 0.xxx, a hex number, a binary number or
+	  // an octal number.
+	  if (m_char == 'x' || m_char == 'X') {
+		// hex number
+		kind = HEX;
+		addLiteralCharAndAdvance();
+		if (!IsHexDigit(m_char)) {
+		  // we must have at least one hex digit after 'x'/'X'
+		  return Token::ILLEGAL;
+		}
+		while (IsHexDigit(m_char)) {
+		  addLiteralCharAndAdvance();
+		}
+	  }
+	}
 
-    // Parse decimal digits and allow trailing fractional part.
-    if (kind == DECIMAL) {
-      scanDecimalDigits();  // optional
-      if (m_char == '.') {
-        addLiteralCharAndAdvance();
-        scanDecimalDigits();  // optional
-      }
-    }
+	// Parse decimal digits and allow trailing fractional part.
+	if (kind == DECIMAL) {
+	  scanDecimalDigits();  // optional
+	  if (m_char == '.') {
+		addLiteralCharAndAdvance();
+		scanDecimalDigits();  // optional
+	  }
+	}
   }
 
   // scan exponent, if any
   if (m_char == 'e' || m_char == 'E') {
-    BOOST_ASSERT(kind != HEX);  // 'e'/'E' must be scanned as part of the hex number
-    if (kind != DECIMAL) return Token::ILLEGAL;
-    // scan exponent
-    addLiteralCharAndAdvance();
-    if (m_char == '+' || m_char == '-')
-      addLiteralCharAndAdvance();
-    if (!IsDecimalDigit(m_char)) {
-      // we must have at least one decimal digit after 'e'/'E'
-      return Token::ILLEGAL;
-    }
-    scanDecimalDigits();
+	BOOST_ASSERT(kind != HEX);  // 'e'/'E' must be scanned as part of the hex number
+	if (kind != DECIMAL) return Token::ILLEGAL;
+	// scan exponent
+	addLiteralCharAndAdvance();
+	if (m_char == '+' || m_char == '-')
+	  addLiteralCharAndAdvance();
+	if (!IsDecimalDigit(m_char)) {
+	  // we must have at least one decimal digit after 'e'/'E'
+	  return Token::ILLEGAL;
+	}
+	scanDecimalDigits();
   }
 
   // The source character immediately following a numeric literal must
@@ -537,7 +537,7 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
   // section 7.8.3, page 17 (note that we read only one decimal digit
   // if the value is 0).
   if (IsDecimalDigit(m_char) || IsIdentifierStart(m_char))
-    return Token::ILLEGAL;
+	return Token::ILLEGAL;
 
   literal.Complete();
 
@@ -637,76 +637,76 @@ static Token::Value KeywordOrIdentifierToken(const std::string& input)
   const int kMinLength = 2;
   const int kMaxLength = 10;
   if (input.size() < kMinLength || input.size() > kMaxLength) {
-    return Token::IDENTIFIER;
+	return Token::IDENTIFIER;
   }
   switch (input[0]) {
-    default:
+	default:
 #define KEYWORD_GROUP_CASE(ch)                                \
-      break;                                                  \
-    case ch:
+	  break;                                                  \
+	case ch:
 #define KEYWORD(keyword, token)                               \
-    {                                                         \
-      /* 'keyword' is a char array, so sizeof(keyword) is */  \
-      /* strlen(keyword) plus 1 for the NUL char. */          \
-      const int keyword_length = sizeof(keyword) - 1;         \
-      BOOST_STATIC_ASSERT(keyword_length >= kMinLength);      \
-      BOOST_STATIC_ASSERT(keyword_length <= kMaxLength);      \
-      if (input == keyword) {                                 \
-        return token;                                         \
-      }                                                       \
-    }
-    KEYWORDS(KEYWORD_GROUP_CASE, KEYWORD)
+	{                                                         \
+	  /* 'keyword' is a char array, so sizeof(keyword) is */  \
+	  /* strlen(keyword) plus 1 for the NUL char. */          \
+	  const int keyword_length = sizeof(keyword) - 1;         \
+	  BOOST_STATIC_ASSERT(keyword_length >= kMinLength);      \
+	  BOOST_STATIC_ASSERT(keyword_length <= kMaxLength);      \
+	  if (input == keyword) {                                 \
+		return token;                                         \
+	  }                                                       \
+	}
+	KEYWORDS(KEYWORD_GROUP_CASE, KEYWORD)
   }
   return Token::IDENTIFIER;
 }
 
 Token::Value Scanner::scanIdentifierOrKeyword()
 {
-    BOOST_ASSERT(IsIdentifierStart(m_char));
-    LiteralScope literal(this);
+	BOOST_ASSERT(IsIdentifierStart(m_char));
+	LiteralScope literal(this);
 
-    addLiteralCharAndAdvance();
+	addLiteralCharAndAdvance();
 
-    // Scan the rest of the identifier characters.
-    while (IsIdentifierPart(m_char))
-        addLiteralCharAndAdvance();
+	// Scan the rest of the identifier characters.
+	while (IsIdentifierPart(m_char))
+		addLiteralCharAndAdvance();
 
-    literal.Complete();
+	literal.Complete();
 
-    return KeywordOrIdentifierToken(m_next_token.literal);
+	return KeywordOrIdentifierToken(m_next_token.literal);
 }
 
 std::string CharStream::getLineAtPosition(int _position) const
 {
-    // if _position points to \n, it returns the line before the \n
-    using size_type = std::string::size_type;
-    size_type searchStart = std::min<size_type>(m_source.size(), _position);
-    if (searchStart > 0) searchStart--;
-    size_type lineStart = m_source.rfind('\n', searchStart);
-    if (lineStart == std::string::npos)
-        lineStart = 0;
-    else
-        lineStart++;
-    return m_source.substr(lineStart,
-                           std::min(m_source.find('\n', lineStart),
-                                    m_source.size()) - lineStart);
+	// if _position points to \n, it returns the line before the \n
+	using size_type = std::string::size_type;
+	size_type searchStart = std::min<size_type>(m_source.size(), _position);
+	if (searchStart > 0) searchStart--;
+	size_type lineStart = m_source.rfind('\n', searchStart);
+	if (lineStart == std::string::npos)
+		lineStart = 0;
+	else
+		lineStart++;
+	return m_source.substr(lineStart,
+						   std::min(m_source.find('\n', lineStart),
+									m_source.size()) - lineStart);
 }
 
 std::tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 {
-    using size_type = std::string::size_type;
-    size_type searchPosition = std::min<size_type>(m_source.size(), _position);
-    int lineNumber = std::count(m_source.begin(), m_source.begin() + searchPosition, '\n');
+	using size_type = std::string::size_type;
+	size_type searchPosition = std::min<size_type>(m_source.size(), _position);
+	int lineNumber = std::count(m_source.begin(), m_source.begin() + searchPosition, '\n');
 
-    size_type lineStart;
-    if (searchPosition == 0) {
-        lineStart = 0;
-    } else {
-        lineStart = m_source.rfind('\n', searchPosition - 1);
-        lineStart = lineStart == std::string::npos ? 0 : lineStart + 1;
-    }
+	size_type lineStart;
+	if (searchPosition == 0) {
+		lineStart = 0;
+	} else {
+		lineStart = m_source.rfind('\n', searchPosition - 1);
+		lineStart = lineStart == std::string::npos ? 0 : lineStart + 1;
+	}
 
-    return std::tuple<int, int>(lineNumber, searchPosition - lineStart);
+	return std::tuple<int, int>(lineNumber, searchPosition - lineStart);
 }
 
 
