@@ -48,7 +48,7 @@
             "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
             "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
             "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
-            "value" : "1000000000000000000",
+            "value" : "100",
             "data" : "",
             "gasPrice" : "100000000000000",
             "gas" : "10000"
@@ -76,7 +76,7 @@
             "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
             "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
             "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
-            "value" : "1000000000000000000",
+            "value" : "100",
             "data" : "",
             "gasPrice" : "100000000000000",
             "gas" : "10000"
@@ -104,7 +104,7 @@
             "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
             "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
             "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
-            "value" : "1000000000000000000",
+            "value" : "100",
             "data" : "",
             "gasPrice" : "100000000000000",
             "gas" : "10000"
@@ -638,7 +638,7 @@
             "address" : "cd1722f3947def4cf144679da39c4c32bdc35681",
             "origin" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
             "caller" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
-            "value" : "100000",
+            "value" : "23",
             "data" : "0xaa",
             "gasPrice" : "100000000000000",
             "gas" : "1000"
@@ -668,7 +668,7 @@
             "address" : "cd1722f3947def4cf144679da39c4c32bdc35681",
             "origin" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
             "caller" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
-            "value" : "100000",
+            "value" : "23",
             "data" : "0xaa",
             "gasPrice" : "100000000000000",
             "gas" : "1000"
@@ -698,7 +698,7 @@
             "address" : "cd1722f3947def4cf144679da39c4c32bdc35681",
             "origin" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
             "caller" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
-            "value" : "100000",
+            "value" : "23",
             "data" : "0xaa",
             "gasPrice" : "100000000000000",
             "gas" : "1000"
@@ -777,9 +777,6 @@
         }
     },
 
-
-
-
     "TestNameRegistrator": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
@@ -806,9 +803,149 @@
             "gasPrice" : "100000000000000",
             "gas" : "10000"
         }
+    },
+
+    "ABAcalls0": {
+        "env" : {
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+            "currentNumber" : "0",
+            "currentGasLimit" : "10000000",
+            "currentDifficulty" : "256",
+            "currentTimestamp" : 1,
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) }",
+                "storage": {}
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "balance" : "23",
+                "code" : " { [[ (PC) ]] (ADD 1 (CALL 500 0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6 23 0 0 0 0)) } ",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "100000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000000000000"
+        }
+    },
+
+    "ABAcalls0": {
+         "env" : {
+             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+             "currentNumber" : "0",
+             "currentGasLimit" : "10000000",
+             "currentDifficulty" : "256",
+             "currentTimestamp" : 1,
+             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+         },
+         "pre" : {
+             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                 "balance" : "1000000000000000000",
+                 "nonce" : 0,
+                 "code" : "{  [[ (PC) ]] (CALL (- (GAS) 1000) 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) }",
+                 "storage": {}
+             },
+             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                 "balance" : "23",
+                 "code" : " { [[ (PC) ]] (ADD 1 (CALL (- (GAS) 1000) 0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6 23 0 0 0 0)) } ",
+                 "nonce" : "0",
+                 "storage" : {
+                 }
+             }
+
+         },
+         "exec" : {
+             "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+             "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+             "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+             "value" : "100000",
+             "data" : "",
+             "gasPrice" : "100000000000000",
+             "gas" : "10000000000000"
+         }
+     },
+
+
+    "ABAcallsSuicide0": {
+        "env" : {
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+            "currentNumber" : "0",
+            "currentGasLimit" : "10000000",
+            "currentDifficulty" : "256",
+            "currentTimestamp" : 1,
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) (SUICIDE 0x945304eb96065b2a98b57a48a06ae28d285a71b5)  }",
+                "storage": {}
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "balance" : "23",
+                "code" : "{ [[ (PC) ]] (ADD 1 (CALL 500 0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6 23 0 0 0 0)) } ",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "100000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000000000000"
+        }
+    },
+
+    "ABAcallsSuicide1": {
+        "env" : {
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+            "currentNumber" : "0",
+            "currentGasLimit" : "10000000",
+            "currentDifficulty" : "256",
+            "currentTimestamp" : 1,
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0)   }",
+                "storage": {}
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "balance" : "23",
+                "code" : "{ [[ (PC) ]] (ADD 1 (CALL 500 0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6 23 0 0 0 0)) (SUICIDE 0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6) } ",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "100000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000000000000"
+        }
     }
-
-
-
-
 }
