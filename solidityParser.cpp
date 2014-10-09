@@ -130,6 +130,84 @@ BOOST_AUTO_TEST_CASE(mapping_to_mapping_in_struct)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(variable_definition)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    var b;\n"
+					   "    uint256 c;\n"
+					   "    mapping(address=>hash) d;\n"
+					   "    customtype varname;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(variable_definition_with_initialization)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    var b = 2;\n"
+					   "    uint256 c = 0x87;\n"
+					   "    mapping(address=>hash) d;\n"
+					   "    string name = \"Solidity\";"
+					   "    customtype varname;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(operator_expression)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    uint256 x = (1 + 4) || false && (1 - 12) + -9;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(complex_expression)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    uint256 x = (1 + 4).member(++67)[a/=9] || true;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(while_loop)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    uint256 x = (1 + 4).member(++67) || true;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(if_statement)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    if (a >= 8) return 2; else { var b = 7; }\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(else_if_statement)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) returns (address b) {\n"
+					   "    if (a < 0) b = 0x67; else if (a == 0) b = 0x12; else b = 0x78;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
