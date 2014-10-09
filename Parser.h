@@ -53,12 +53,22 @@ private:
 	ptr<ParameterList> parseParameterList();
 	ptr<Block> parseBlock();
 	ptr<Statement> parseStatement();
+	ptr<IfStatement> parseIfStatement();
+	ptr<WhileStatement> parseWhileStatement();
+	ptr<VariableDefinition> parseVariableDefinition();
+	ptr<Expression> parseExpression();
+	ptr<Expression> parseBinaryExpression(int _minPrecedence = 4);
+	ptr<Expression> parseUnaryExpression();
+	ptr<Expression> parseLeftHandSideExpression();
+	ptr<Expression> parsePrimaryExpression();
+	vecptr<Expression> parseFunctionCallArguments();
 	/// @}
 
 	/// Helper functions
 	/// @{
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
+	Token::Value expectAssignmentOperator();
 	std::string expectIdentifier();
 	void throwExpectationError(const std::string& _description);
 	/// @}

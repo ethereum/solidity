@@ -231,12 +231,10 @@ ptr<ParameterList> Parser::parseParameterList()
 
 ptr<Block> Parser::parseBlock()
 {
-
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::LBRACE);
 	vecptr<Statement> statements;
 	while (m_scanner->getCurrentToken() != Token::RBRACE) {
-		m_scanner->next();
 		statements.push_back(parseStatement());
 	}
 	nodeFactory.markEndPosition();
@@ -246,6 +244,7 @@ ptr<Block> Parser::parseBlock()
 
 ptr<Statement> Parser::parseStatement()
 {
+	ptr<Statement> statement;
 
 	switch (m_scanner->getCurrentToken()) {
 	case Token::IF:
@@ -254,10 +253,227 @@ ptr<Statement> Parser::parseStatement()
 		return parseWhileStatement();
 	case Token::LBRACE:
 		return parseBlock();
+
 	// starting from here, all statements must be terminated by a semicolon
-	case Token::CONTINUE: // all following
-		return
+	case Token::CONTINUE:
+		statement = ASTNodeFactory(*this).createNode<Continue>();
+		break;
+	case Token::BREAK:
+		statement = ASTNodeFactory(*this).createNode<Break>();
+		break;
+	case Token::RETURN:
+		{
+			ASTNodeFactory nodeFactory(*this);
+			ptr<Expression> expression;
+			if (m_scanner->next() != Token::SEMICOLON) {
+				expression = parseExpression();
+				nodeFactory.setEndPositionFromNode(expression);
+			}
+			statement = nodeFactory.createNode<Return>(expression);
+		}
+		break;
+	default:
+		// distinguish between variable definition (and potentially assignment) and expressions
+		// (which include assignments to other expressions and pre-declared variables)
+		// We have a variable definition if we ge a keyword that specifies a type name, or
+		// in the case of a user-defined type, we have two identifiers following each other.
+		if (m_scanner->getCurrentToken() == Token::MAPPING ||
+				m_scanner->getCurrentToken() == Token::VAR ||
+				Token::IsElementaryTypeName(m_scanner->getCurrentToken()) ||
+				(m_scanner->getCurrentToken() == Token::IDENTIFIER &&
+				 m_scanner->peek() == Token::IDENTIFIER)) {
+			statement = parseVariableDefinition();
+		} else {
+			// "ordinary" expression
+			statement = parseExpression();
+		}
 	}
+	expectToken(Token::SEMICOLON);
+	return statement;
+}
+
+ptr<IfStatement> Parser::parseIfStatement()
+{
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::IF);
+	expectToken(Token::LPAREN);
+	ptr<Expression> condition = parseExpression();
+	expectToken(Token::RPAREN);
+	ptr<Statement> trueBody = parseStatement();
+	ptr<Statement> falseBody;
+	if (m_scanner->getCurrentToken() == Token::ELSE) {
+		m_scanner->next();
+		falseBody = parseStatement();
+		nodeFactory.setEndPositionFromNode(falseBody);
+	} else {
+		nodeFactory.setEndPositionFromNode(trueBody);
+	}
+	return nodeFactory.createNode<IfStatement>(condition, trueBody, falseBody);
+}
+
+ptr<WhileStatement> Parser::parseWhileStatement()
+{
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::WHILE);
+	expectToken(Token::LPAREN);
+	ptr<Expression> condition = parseExpression();
+	expectToken(Token::RPAREN);
+	ptr<Statement> body = parseStatement();
+	nodeFactory.setEndPositionFromNode(body);
+	return nodeFactory.createNode<WhileStatement>(condition, body);
+}
+
+ptr<VariableDefinition> Parser::parseVariableDefinition()
+{
+	ASTNodeFactory nodeFactory(*this);
+	ptr<VariableDeclaration> variable = parseVariableDeclaration();
+	ptr<Expression> value;
+	if (m_scanner->getCurrentToken() == Token::ASSIGN) {
+		m_scanner->next();
+		value = parseExpression();
+		nodeFactory.setEndPositionFromNode(value);
+	} else {
+		nodeFactory.setEndPositionFromNode(variable);
+	}
+	return nodeFactory.createNode<VariableDefinition>(variable, value);
+}
+
+ptr<Expression> Parser::parseExpression()
+{
+	ASTNodeFactory nodeFactory(*this);
+	ptr<Expression> expression = parseBinaryExpression();
+	if (!Token::IsAssignmentOp(m_scanner->getCurrentToken()))
+		return expression;
+
+	Token::Value assignmentOperator = expectAssignmentOperator();
+	ptr<Expression> rightHandSide = parseExpression();
+	nodeFactory.setEndPositionFromNode(rightHandSide);
+	return nodeFactory.createNode<Assignment>(expression, assignmentOperator, rightHandSide);
+}
+
+ptr<Expression> Parser::parseBinaryExpression(int _minPrecedence)
+{
+	ASTNodeFactory nodeFactory(*this);
+	ptr<Expression> expression = parseUnaryExpression();
+	int precedence = Token::Precedence(m_scanner->getCurrentToken());
+	for (; precedence >= _minPrecedence; --precedence) {
+		while (Token::Precedence(m_scanner->getCurrentToken()) == precedence) {
+			Token::Value op = m_scanner->getCurrentToken();
+			m_scanner->next();
+			ptr<Expression> right = parseBinaryExpression(precedence + 1);
+			nodeFactory.setEndPositionFromNode(right);
+			expression = nodeFactory.createNode<BinaryOperation>(expression, op, right);
+		}
+	}
+	return expression;
+}
+
+ptr<Expression> Parser::parseUnaryExpression()
+{
+	ASTNodeFactory nodeFactory(*this);
+	Token::Value token = m_scanner->getCurrentToken();
+	if (Token::IsUnaryOp(token) || Token::IsCountOp(token)) {
+		// prefix expression
+		m_scanner->next();
+		ptr<Expression> subExpression = parseUnaryExpression();
+		nodeFactory.setEndPositionFromNode(subExpression);
+		return nodeFactory.createNode<UnaryOperation>(token, subExpression, true);
+	} else {
+		// potential postfix expression
+		ptr<Expression> subExpression = parseLeftHandSideExpression();
+		token = m_scanner->getCurrentToken();
+		if (!Token::IsCountOp(token))
+			return subExpression;
+		nodeFactory.markEndPosition();
+		m_scanner->next();
+		return nodeFactory.createNode<UnaryOperation>(token, subExpression, false);
+	}
+}
+
+ptr<Expression> Parser::parseLeftHandSideExpression()
+{
+	ASTNodeFactory nodeFactory(*this);
+	ptr<Expression> expression = parsePrimaryExpression();
+
+	while (true) {
+		switch (m_scanner->getCurrentToken()) {
+		case Token::LBRACK:
+			{
+				m_scanner->next();
+				ptr<Expression> index = parseExpression();
+				nodeFactory.markEndPosition();
+				expectToken(Token::RBRACK);
+				expression = nodeFactory.createNode<IndexAccess>(expression, index);
+			}
+			break;
+		case Token::PERIOD:
+			{
+				m_scanner->next();
+				nodeFactory.markEndPosition();
+				std::string memberName = expectIdentifier();
+				expression = nodeFactory.createNode<MemberAccess>(expression, memberName);
+			}
+			break;
+		case Token::LPAREN:
+			{
+				m_scanner->next();
+				vecptr<Expression> arguments = parseFunctionCallArguments();
+				nodeFactory.markEndPosition();
+				expectToken(Token::RPAREN);
+				expression = nodeFactory.createNode<FunctionCall>(expression, arguments);
+			}
+			break;
+		default:
+			return expression;
+		}
+	}
+}
+
+ptr<Expression> Parser::parsePrimaryExpression()
+{
+	Token::Value token = m_scanner->getCurrentToken();
+	switch (token) {
+	case Token::TRUE_LITERAL:
+	case Token::FALSE_LITERAL:
+		m_scanner->next();
+		return ASTNodeFactory(*this).createNode<Literal>(token, std::string());
+	case Token::NUMBER:
+	case Token::STRING_LITERAL:
+		m_scanner->next();
+		return ASTNodeFactory(*this).createNode<Literal>(token, m_scanner->getCurrentLiteral());
+	case Token::IDENTIFIER:
+		m_scanner->next();
+		return ASTNodeFactory(*this).createNode<Identifier>(m_scanner->getCurrentLiteral());
+	case Token::LPAREN:
+		{
+			m_scanner->next();
+			ptr<Expression> expression = parseExpression();
+			expectToken(Token::RPAREN);
+			return expression;
+		}
+	default:
+		if (Token::IsElementaryTypeName(token)) {
+			// used for casts
+			m_scanner->next();
+			return ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(token);
+		} else {
+			throwExpectationError("Expected primary expression.");
+			return ptr<Expression>(); // this is not reached
+		}
+	}
+}
+
+vecptr<Expression> Parser::parseFunctionCallArguments()
+{
+	vecptr<Expression> arguments;
+	if (m_scanner->getCurrentToken() != Token::RPAREN) {
+		arguments.push_back(parseExpression());
+		while (m_scanner->getCurrentToken() != Token::RPAREN) {
+			expectToken(Token::COMMA);
+			arguments.push_back(parseExpression());
+		}
+	}
+	return arguments;
 }
 
 void Parser::expectToken(Token::Value _value)
@@ -265,6 +481,15 @@ void Parser::expectToken(Token::Value _value)
 	if (m_scanner->getCurrentToken() != _value)
 		throwExpectationError(std::string("Expected token ") + std::string(Token::Name(_value)));
 	m_scanner->next();
+}
+
+Token::Value Parser::expectAssignmentOperator()
+{
+	Token::Value op = m_scanner->getCurrentToken();
+	if (!Token::IsAssignmentOp(op))
+		throwExpectationError(std::string("Expected assignment operator"));
+	m_scanner->next();
+	return op;
 }
 
 std::string Parser::expectIdentifier()

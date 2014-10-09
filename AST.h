@@ -54,6 +54,8 @@ public:
 		: m_location(_location)
 	{}
 
+	virtual ~ASTNode() {}
+
 	Location getLocation() const { return m_location; }
 private:
 	Location m_location;
@@ -146,9 +148,7 @@ private:
 class TypeName : public ASTNode
 {
 public:
-	explicit TypeName(Location const& _location)
-		: ASTNode(_location)
-	{}
+	explicit TypeName(Location const& _location) : ASTNode(_location) {}
 };
 
 /// any pre-defined type that is not a mapping
@@ -192,15 +192,13 @@ private:
 class Statement : public ASTNode
 {
 public:
-	explicit Statement(Location const& _location)
-		: ASTNode(_location)
-	{}
+	explicit Statement(Location const& _location) : ASTNode(_location) {}
 };
 
 class Block : public Statement
 {
 public:
-	explicit Block(Location const& _location, vecptr<Statement> const& _statements)
+	Block(Location const& _location, vecptr<Statement> const& _statements)
 		: Statement(_location), m_statements(_statements)
 	{}
 private:
@@ -209,7 +207,12 @@ private:
 
 class IfStatement : public Statement
 {
-
+public:
+	IfStatement(Location const& _location, ptr<Expression> const& _condition,
+				ptr<Statement> const& _trueBody, ptr<Statement> const& _falseBody)
+		: Statement(_location), m_condition(_condition),
+		  m_trueBody(_trueBody), m_falseBody(_falseBody)
+	{}
 private:
 	ptr<Expression> m_condition;
 	ptr<Statement> m_trueBody;
@@ -218,11 +221,17 @@ private:
 
 class BreakableStatement : public Statement
 {
-
+public:
+	BreakableStatement(Location const& _location) : Statement(_location) {}
 };
 
 class WhileStatement : public BreakableStatement
 {
+public:
+	WhileStatement(Location const& _location, ptr<Expression> const& _condition,
+				   ptr<Statement> const& _body)
+		: BreakableStatement(_location), m_condition(_condition), m_body(_body)
+	{}
 private:
 	ptr<Expression> m_condition;
 	ptr<Statement> m_body;
@@ -230,31 +239,42 @@ private:
 
 class Continue : public Statement
 {
-
+public:
+	Continue(Location const& _location) : Statement(_location) {}
 };
 
 class Break : public Statement
 {
-
+public:
+	Break(Location const& _location) : Statement(_location) {}
 };
 
 class Return : public Statement
 {
+public:
+	Return(Location const& _location, ptr<Expression> _expression)
+		: Statement(_location), m_expression(_expression)
+	{}
 private:
 	ptr<Expression> m_expression;
 };
 
-class VariableAssignment : public Statement
+class VariableDefinition : public Statement
 {
+public:
+	VariableDefinition(Location const& _location, ptr<VariableDeclaration> _variable,
+					   ptr<Expression> _value)
+		: Statement(_location), m_variable(_variable), m_value(_value)
+	{}
 private:
 	ptr<VariableDeclaration> m_variable;
-	Token::Value m_assigmentOperator;
-	ptr<Expression> m_rightHandSide; ///< can be missing
+	ptr<Expression> m_value; ///< can be missing
 };
 
 class Expression : public Statement
 {
-private:
+public:
+	Expression(Location const& _location) : Statement(_location) {}
 };
 
 /// @}
@@ -264,6 +284,12 @@ private:
 
 class Assignment : public Expression
 {
+public:
+	Assignment(Location const& _location, ptr<Expression> const& _leftHandSide,
+			   Token::Value _assignmentOperator, ptr<Expression> const& _rightHandSide)
+		: Expression(_location), m_leftHandSide(_leftHandSide),
+		  m_assigmentOperator(_assignmentOperator), m_rightHandSide(_rightHandSide)
+	{}
 private:
 	ptr<Expression> m_leftHandSide;
 	Token::Value m_assigmentOperator;
@@ -272,31 +298,52 @@ private:
 
 class UnaryOperation : public Expression
 {
+public:
+	UnaryOperation(Location const& _location, Token::Value _operator,
+				   ptr<Expression> const& _subExpression, bool _isPrefix)
+		: Expression(_location), m_operator(_operator),
+		  m_subExpression(_subExpression), m_isPrefix(_isPrefix)
+	{}
+
 private:
 	Token::Value m_operator;
 	ptr<Expression> m_subExpression;
-	bool isPrefix;
+	bool m_isPrefix;
 };
 
 class BinaryOperation : public Expression
 {
+public:
+	BinaryOperation(Location const& _location, ptr<Expression> const& _left,
+					Token::Value _operator, ptr<Expression> const& _right)
+		: Expression(_location), m_left(_left), m_operator(_operator), m_right(_right)
+	{}
 private:
 	ptr<Expression> m_left;
-	ptr<Expression> m_right;
 	Token::Value m_operator;
+	ptr<Expression> m_right;
 };
 
 /// Can be ordinary function call, type cast or struct construction.
 class FunctionCall : public Expression
 {
+public:
+	FunctionCall(Location const& _location, ptr<Expression> const& _expression,
+				 vecptr<Expression> const& _arguments)
+		: Expression(_location), m_expression(_expression), m_arguments(_arguments)
+	{}
 private:
-	// if m_functionName is the name of a type, store the token directly
-	std::string m_functionName; // "in place" calls of return values are not possible for now
+	ptr<Expression> m_expression;
 	vecptr<Expression> m_arguments;
 };
 
 class MemberAccess : public Expression
 {
+public:
+	MemberAccess(Location const& _location, ptr<Expression> _expression,
+				 std::string const& _memberName)
+		: Expression(_location), m_expression(_expression), m_memberName(_memberName)
+	{}
 private:
 	ptr<Expression> m_expression;
 	std::string m_memberName;
@@ -304,23 +351,48 @@ private:
 
 class IndexAccess : public Expression
 {
+public:
+	IndexAccess(Location const& _location, ptr<Expression> const& _base,
+				ptr<Expression> const& _index)
+		: Expression(_location), m_base(_base), m_index(_index)
+	{}
+private:
 	ptr<Expression> m_base;
 	ptr<Expression> m_index;
 };
 
 class PrimaryExpression : public Expression
 {
+public:
+	PrimaryExpression(Location const& _location) : Expression(_location) {}
 };
 
 class Identifier : public PrimaryExpression
 {
+public:
+	Identifier(Location const& _location, std::string const& _name)
+		: PrimaryExpression(_location), m_name(_name) {}
 private:
 	std::string m_name;
 };
 
+class ElementaryTypeNameExpression : public PrimaryExpression
+{
+public:
+	ElementaryTypeNameExpression(Location const& _location, Token::Value _type)
+		: PrimaryExpression(_location), m_type(_type) {}
+private:
+	Token::Value m_type;
+};
+
 class Literal : public PrimaryExpression
 {
+public:
+	Literal(Location const& _location, Token::Value _token, std::string const& _value)
+		: PrimaryExpression(_location), m_token(_token), m_value(_value)
+	{}
 private:
+	Token::Value m_token;
 	std::string m_value;
 };
 

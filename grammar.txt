@@ -15,18 +15,21 @@ TypeName = ElementaryTypeName | Identifier | Mapping
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 
 Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | Continue | Break | Return | VariableAssignment | Expression ';' | Block
+Statement = IfStatement | WhileStatement | Block |
+			( Continue | Break | Return | VariableDefinition | Expression ) ';'
 
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
 Continue = 'continue' ';'
 Break = 'break' ';'
 Return = 'return' Expression? ';'
-VariableAssignment = VariableDeclaration ( AssignmentOp Expression )? ';'
+VariableDefinition = VariableDeclaration ( = Expression )? ';'
 
-Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | IndexAccess | MemberAccess | PrimaryExpression
+Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | IndexAccess |
+			 MemberAccess | PrimaryExpression
+// The expression syntax is actually much more complicated
 Assignment = Expression (AssignmentOp Expression)
-FunctionCall = Identifier '(' ( Expression ( ',' Expression )* ) ')'
+FunctionCall = Expression '(' ( Expression ( ',' Expression )* ) ')'
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expresison ']'
-PrimaryExpression = Identifier | NumberLiteral | StringLiteral | '(' Expression ')'
+PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'
