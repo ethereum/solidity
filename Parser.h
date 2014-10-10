@@ -69,7 +69,8 @@ private:
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
 	Token::Value expectAssignmentOperator();
-	std::string expectIdentifier();
+	ptr<ASTString> expectIdentifierToken();
+	ptr<ASTString> getLiteralAndAdvance();
 	void throwExpectationError(const std::string& _description);
 	/// @}
 

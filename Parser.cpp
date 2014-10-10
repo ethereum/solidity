@@ -57,7 +57,8 @@ public:
 	template <class NodeType, typename... Args>
 	ptr<NodeType> createNode(Args&&... _args)
 	{
-		if (m_location.end < 0) markEndPosition();
+		if (m_location.end < 0)
+			markEndPosition();
 		return std::make_shared<NodeType>(m_location, std::forward<Args>(_args)...);
 	}
 
@@ -82,7 +83,7 @@ ptr<ContractDefinition> Parser::parseContractDefinition()
 	ASTNodeFactory nodeFactory(*this);
 
 	expectToken(Token::CONTRACT);
-	std::string name = expectIdentifier();
+	ptr<ASTString> name = expectIdentifierToken();
 	expectToken(Token::LBRACE);
 
 	vecptr<StructDefinition> structs;
@@ -111,7 +112,7 @@ ptr<ContractDefinition> Parser::parseContractDefinition()
 	}
 	nodeFactory.markEndPosition();
 
-	m_scanner->next();
+	expectToken(Token::RBRACE);
 	expectToken(Token::EOS);
 
 	return nodeFactory.createNode<ContractDefinition>(name, structs, stateVariables, functions);
@@ -122,7 +123,7 @@ ptr<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 	ASTNodeFactory nodeFactory(*this);
 
 	expectToken(Token::FUNCTION);
-	std::string name(expectIdentifier());
+	ptr<ASTString> name(expectIdentifierToken());
 	ptr<ParameterList> parameters(parseParameterList());
 	bool isDeclaredConst = false;
 	if (m_scanner->getCurrentToken() == Token::CONST) {
@@ -145,7 +146,7 @@ ptr<StructDefinition> Parser::parseStructDefinition()
 	ASTNodeFactory nodeFactory(*this);
 
 	expectToken(Token::STRUCT);
-	std::string name = expectIdentifier();
+	ptr<ASTString> name = expectIdentifierToken();
 	vecptr<VariableDeclaration> members;
 	expectToken(Token::LBRACE);
 	while (m_scanner->getCurrentToken() != Token::RBRACE) {
@@ -164,8 +165,7 @@ ptr<VariableDeclaration> Parser::parseVariableDeclaration()
 
 	ptr<TypeName> type = parseTypeName();
 	nodeFactory.markEndPosition();
-	std::string name = expectIdentifier();
-	return nodeFactory.createNode<VariableDeclaration>(type, name);
+	return nodeFactory.createNode<VariableDeclaration>(type, expectIdentifierToken());
 }
 
 ptr<TypeName> Parser::parseTypeName()
@@ -181,8 +181,9 @@ ptr<TypeName> Parser::parseTypeName()
 	} else if (token == Token::MAPPING) {
 		type = parseMapping();
 	} else if (token == Token::IDENTIFIER) {
-		type = ASTNodeFactory(*this).createNode<UserDefinedTypeName>(m_scanner->getCurrentLiteral());
-		m_scanner->next();
+		ASTNodeFactory nodeFactory(*this);
+		nodeFactory.markEndPosition();
+		type = nodeFactory.createNode<UserDefinedTypeName>(expectIdentifierToken());
 	} else {
 		throwExpectationError("Expected type name");
 	}
@@ -410,8 +411,7 @@ ptr<Expression> Parser::parseLeftHandSideExpression()
 			{
 				m_scanner->next();
 				nodeFactory.markEndPosition();
-				std::string memberName = expectIdentifier();
-				expression = nodeFactory.createNode<MemberAccess>(expression, memberName);
+				expression = nodeFactory.createNode<MemberAccess>(expression, expectIdentifierToken());
 			}
 			break;
 		case Token::LPAREN:
@@ -431,19 +431,25 @@ ptr<Expression> Parser::parseLeftHandSideExpression()
 
 ptr<Expression> Parser::parsePrimaryExpression()
 {
+	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->getCurrentToken();
+	ptr<Expression> expression;
+
 	switch (token) {
 	case Token::TRUE_LITERAL:
 	case Token::FALSE_LITERAL:
+		expression = nodeFactory.createNode<Literal>(token, ptr<ASTString>());
 		m_scanner->next();
-		return ASTNodeFactory(*this).createNode<Literal>(token, std::string());
+		break;
 	case Token::NUMBER:
 	case Token::STRING_LITERAL:
-		m_scanner->next();
-		return ASTNodeFactory(*this).createNode<Literal>(token, m_scanner->getCurrentLiteral());
+		nodeFactory.markEndPosition();
+		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
+		break;
 	case Token::IDENTIFIER:
-		m_scanner->next();
-		return ASTNodeFactory(*this).createNode<Identifier>(m_scanner->getCurrentLiteral());
+		nodeFactory.markEndPosition();
+		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
+		break;
 	case Token::LPAREN:
 		{
 			m_scanner->next();
@@ -454,13 +460,14 @@ ptr<Expression> Parser::parsePrimaryExpression()
 	default:
 		if (Token::IsElementaryTypeName(token)) {
 			// used for casts
+			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(token);
 			m_scanner->next();
-			return ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(token);
 		} else {
 			throwExpectationError("Expected primary expression.");
 			return ptr<Expression>(); // this is not reached
 		}
 	}
+	return expression;
 }
 
 vecptr<Expression> Parser::parseFunctionCallArguments()
@@ -492,14 +499,19 @@ Token::Value Parser::expectAssignmentOperator()
 	return op;
 }
 
-std::string Parser::expectIdentifier()
+ptr<ASTString> Parser::expectIdentifierToken()
 {
 	if (m_scanner->getCurrentToken() != Token::IDENTIFIER)
 		throwExpectationError("Expected identifier");
 
-	std::string literal = m_scanner->getCurrentLiteral();
+	return getLiteralAndAdvance();
+}
+
+ptr<ASTString> Parser::getLiteralAndAdvance()
+{
+	ptr<ASTString> identifier = std::make_shared<ASTString>(m_scanner->getCurrentLiteral());
 	m_scanner->next();
-	return literal;
+	return identifier;
 }
 
 void Parser::throwExpectationError(const std::string& _description)
