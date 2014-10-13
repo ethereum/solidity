@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	char const* text = "contract test {\n"
 					   "  uint256 stateVariable1;\n"
-					   "  function fun(uint256 arg1) { var x = 2; uint256 y = 3; x = 1; }"
+					   "  function fun(uint256 arg1) { var x; uint256 y; }"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
 BOOST_AUTO_TEST_CASE(double_function_declaration)
 {
 	char const* text = "contract test {\n"
-					   "  function fun() { var x = 2; }\n"
-					   "  function fun() { var y = 9; }\n"
+					   "  function fun() { var x; }\n"
+					   "  function fun() { var x; }\n"
 					   "}\n";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), std::exception);
 }
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(double_function_declaration)
 BOOST_AUTO_TEST_CASE(double_variable_declaration)
 {
 	char const* text = "contract test {\n"
-					   "  function f() { uint256 x = 9; if (true)  { uint256 x = 2;} x = 3; }\n"
+					   "  function f() { uint256 x; if (true)  { uint256 x; } }\n"
 					   "}\n";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), std::exception);
 }
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(name_shadowing)
 {
 	char const* text = "contract test {\n"
 					   "  uint256 variable;\n"
-					   "  function f() { uint8 variable = 2; }"
+					   "  function f() { uint32 variable ; }"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(name_references)
 {
 	char const* text = "contract test {\n"
 					   "  uint256 variable;\n"
-					   "  function f() { variable = 2; f(); test; }"
+					   "  function f(uint256 arg) returns (uint out) { f(variable); test; out; }"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(undeclared_name)
 {
 	char const* text = "contract test {\n"
 					   "  uint256 variable;\n"
-					   "  function f() { notfound = 2; }"
+					   "  function f(uint256 arg) { f(notfound); }"
 					   "}\n";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), std::exception);
 }
