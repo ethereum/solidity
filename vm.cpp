@@ -31,8 +31,8 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock):
-	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock) {}
+FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
+	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock, _depth) {}
 
 h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc)
 {
@@ -41,7 +41,6 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 	t.gasPrice = gasPrice;
 	t.gas = *_gas;
 	t.data = _init.toBytes();
-	callcreates.push_back(t);
 
 	m_s.noteSending(myAddress);
 	m_ms.internal.resize(m_ms.internal.size() + 1);
@@ -56,57 +55,103 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 		get<3>(addresses[ret]) = m_s.code(ret);
 	}
 
+	t.receiveAddress = ret;
+	callcreates.push_back(t);
 	return ret;
 }
 
-bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc, Address, Address)
+bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc, Address _myAddressOverride = Address(), Address _codeAddressOverride = Address())
 {
+
+	u256 contractgas = 0xffff;
+
 	Transaction t;
 	t.value = _value;
 	t.gasPrice = gasPrice;
 	t.gas = *_gas;
 	t.data = _data.toVector();
 	t.receiveAddress = _receiveAddress;
+	callcreates.push_back(t);
 
-	string codeOf_receiveAddress = toHex(get<3>(addresses[_receiveAddress]) );
-	string sizeOfCode = toHex(toCompactBigEndian((codeOf_receiveAddress.size()+1)/2));
+	string codeOf_CodeAddress = _codeAddressOverride ? toHex(get<3>(addresses[_codeAddressOverride])) : toHex(get<3>(addresses[_receiveAddress]) );
+	string sizeOfCode = toHex(toCompactBigEndian((codeOf_CodeAddress.size()+1)/2));
 
-	if (codeOf_receiveAddress.size())
+	string codeOf_SenderAddress = toHex(get<3>(addresses[myAddress]) );
+	string sizeOfSenderCode = toHex(toCompactBigEndian((codeOf_SenderAddress.size()+1)/2));
+
+	if (codeOf_SenderAddress.size())
+	{
+		// create init code that returns given contract code
+		string initStringHex = "{ (CODECOPY 0 (- (CODESIZE) 0x" + sizeOfSenderCode + "  ) 0x" + sizeOfSenderCode + ") (RETURN 0 0x" + sizeOfSenderCode +")}";
+		bytes initBytes = compileLLL(initStringHex, true, NULL);
+		initBytes += fromHex(codeOf_SenderAddress);
+		bytesConstRef init(&initBytes);
+
+		if (!m_s.addresses().count(myAddress))
+		{
+			m_ms.internal.resize(m_ms.internal.size() + 1);
+			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
+			if (!m_ms.internal.back().from)
+				m_ms.internal.pop_back();
+			if (na != myAddress)
+			{
+				cnote << "not able to call to : " << myAddress << "\n";
+				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
+				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(myAddress));
+				return false;
+			}
+		}
+	}
+
+	if (codeOf_CodeAddress.size())
 	{
 		// create init code that returns given contract code
 		string initStringHex = "{ (CODECOPY 0 (- (CODESIZE) 0x" + sizeOfCode + "  ) 0x" + sizeOfCode + ") (RETURN 0 0x" + sizeOfCode +")}";
 		bytes initBytes = compileLLL(initStringHex, true, NULL);
-		initBytes += fromHex(codeOf_receiveAddress);
+		initBytes += fromHex(codeOf_CodeAddress);
 		bytesConstRef init(&initBytes);
 
-		if (!m_s.addresses().count(_receiveAddress))
+		if (!m_s.addresses().count(_codeAddressOverride ? _codeAddressOverride : _receiveAddress))
 		{
 			m_s.noteSending(myAddress);
 			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.create(myAddress, 0, gasPrice, _gas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
+			auto na = m_s.createNewAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress, myAddress, balance(_codeAddressOverride ? _codeAddressOverride : _receiveAddress), gasPrice, &contractgas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
 			if (!m_ms.internal.back().from)
 				m_ms.internal.pop_back();
-			if (!m_s.addresses().count(_receiveAddress))
+
+			if (na != (_codeAddressOverride ? _codeAddressOverride : _receiveAddress))
 			{
-				cnote << "not able to call to : " << _receiveAddress << "\n";
+				cnote << "not able to call to : " << (_codeAddressOverride ? _codeAddressOverride : _receiveAddress) << "\n";
 				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(_receiveAddress));
+				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress));
 				return false;
 			}
 		}
 
 		m_ms.internal.resize(m_ms.internal.size() + 1);
-		auto ret = m_s.call(_receiveAddress, Address() ? Address() : _receiveAddress, Address() ? Address() : myAddress, _value, gasPrice, _data, _gas, _out, origin, &suicides, &(m_ms.internal.back()), OnOpFunc(), 1);
+
+		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &suicides, &(m_ms.internal.back()), OnOpFunc(), 1);
+
 		if (!m_ms.internal.back().from)
 			m_ms.internal.pop_back();
+
+		// get correct balances, (also for sucicides in the call function)
+		for (auto const& f: addresses)
+		{
+			if (m_s.addressInUse(f.first))
+				get<0>(addresses[f.first]) = m_s.balance(f.first);
+		}
+
 		if (!ret)
 			return false;
 
-		if (get<0>(addresses[myAddress]) >= _value)
-		{
-			get<1>(addresses[myAddress])++;
-			get<0>(addresses[_receiveAddress]) += _value;
+		// do suicides
+		for (auto const& f: suicides)
+			addresses.erase(f);
 
+		// get storage
+		if ((get<0>(addresses[myAddress]) >= _value) && (suicides.find(_receiveAddress) == suicides.end()))
+		{
 			for (auto const& j: m_s.storage(_receiveAddress))
 			{
 				u256 adr(j.first);
@@ -114,12 +159,9 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 					get<2>(addresses[_receiveAddress])[adr] = j.second;
 			}
 		}
-
 	}
 	else
 		addresses.erase(_receiveAddress); // for the sake of comparison
-
-	callcreates.push_back(t);
 
 	return true;
 }
@@ -235,30 +277,8 @@ mObject FakeExtVM::exportState()
 
 		{
 			mObject store;
-			string curKey;
-			u256 li = 0;
-			bool isOutOfRange = false;
-			mArray curVal;
 			for (auto const& s: get<2>(a.second))
-			{
-				if (!li || s.first > li + 8)
-				{
-					if (li || isOutOfRange)
-						store[curKey] = curVal;
-					li = s.first;
-					curKey = "0x"+toHex(toCompactBigEndian(li));
-					curVal = mArray();
-				}
-				else
-					for (; li != s.first; ++li)
-						curVal.push_back(0);
-				curVal.push_back("0x"+toHex(toCompactBigEndian(s.second)));
-				if ( toHex(toCompactBigEndian(li)) == "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
-					isOutOfRange = true;
-				++li;
-			}
-			if (li || isOutOfRange)
-				store[curKey] = curVal;
+				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
 			o["storage"] = store;
 		}
 		o["code"] = "0x" + toHex(get<3>(a.second));
@@ -282,15 +302,7 @@ void FakeExtVM::importState(mObject& _object)
 		get<0>(a) = toInt(o["balance"]);
 		get<1>(a) = toInt(o["nonce"]);
 		for (auto const& j: o["storage"].get_obj())
-		{
-			u256 adr(j.first);
-			for (auto const& k: j.second.get_array())
-			{
-				if ((toInt(k) != 0) || (j.second.get_array().size() == 1))
-					get<2>(a)[adr] = toInt(k);
-				adr++;
-			}
-		}
+			get<2>(a)[toInt(j.first)] = toInt(j.second);
 
 		if (o["code"].type() == str_type)
 			if (o["code"].get_str().find_first_of("0x") != 0)
@@ -401,6 +413,71 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		callcreates.push_back(t);
 	}
 }
+
+h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, std::set<Address>* o_suicides, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
+{
+	if (!_origin)
+		_origin = _sender;
+
+	if (o_ms)
+	{
+		o_ms->from = _sender;
+		o_ms->to = Address();
+		o_ms->value = _endowment;
+		o_ms->input = _code.toBytes();
+	}
+
+	// Set up new account...
+	m_cache[_newAddress] = AddressState(0, balance(_newAddress) + _endowment, h256(), h256());
+
+	// Execute init code.
+	VM vm(*_gas);
+	ExtVM evm(*this, _newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _code, o_ms, _level);
+	bool revert = false;
+	bytesConstRef out;
+
+	try
+	{
+		out = vm.go(evm, _onOp);
+		if (o_ms)
+			o_ms->output = out.toBytes();
+		if (o_suicides)
+			for (auto i: evm.suicides)
+				o_suicides->insert(i);
+	}
+	catch (OutOfGas const& /*_e*/)
+	{
+		clog(StateChat) << "Out of Gas! Reverting.";
+		revert = true;
+	}
+	catch (VMException const& _e)
+	{
+		clog(StateChat) << "VM Exception: " << diagnostic_information(_e);
+	}
+	catch (Exception const& _e)
+	{
+		clog(StateChat) << "Exception in VM: " << diagnostic_information(_e);
+	}
+	catch (std::exception const& _e)
+	{
+		clog(StateChat) << "std::exception in VM: " << _e.what();
+	}
+
+	// TODO: CHECK: IS THIS CORRECT?! (esp. given account created prior to revertion init.)
+
+	// Write state out only in the case of a non-out-of-gas transaction.
+	if (revert)
+		evm.revert();
+
+	// Set code.
+	if (addressInUse(_newAddress))
+		m_cache[_newAddress].setCode(out);
+
+	*_gas = vm.gas();
+
+	return _newAddress;
+}
+
 
 
 namespace dev { namespace test {
@@ -542,7 +619,7 @@ void executeTests(const string& _name)
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + "Filler.json is empty.");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, true);
-		writeFile("../../../tests/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+		writeFile("../../../tests/vmtests/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
 	}
 	catch (Exception const& _e)
 	{
@@ -558,7 +635,7 @@ void executeTests(const string& _name)
 	{
 		cnote << "Testing VM..." << _name;
 		json_spirit::mValue v;
-		string s = asString(contents("../../../tests/" + _name + ".json"));
+		string s = asString(contents("../../../tests/vmtests/" + _name + ".json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + ".json is empty. Have you cloned the 'tests' repo branch develop?");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, false);
@@ -620,3 +697,4 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
 }
+
