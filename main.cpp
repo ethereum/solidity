@@ -8,11 +8,12 @@
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/ASTPrinter.h>
+#include <libsolidity/NameAndTypeResolver.h>
 
 namespace dev {
 namespace solidity {
 
-ptr<ASTNode> parseAST(std::string const& _source)
+ptr<ContractDefinition> parseAST(std::string const& _source)
 {
 	ptr<Scanner> scanner = std::make_shared<Scanner>(CharStream(_source));
 	Parser parser;
@@ -70,9 +71,12 @@ int main(int argc, char** argv)
 
 	std::cout << "Parsing..." << std::endl;
 	// @todo catch exception
-	dev::solidity::ptr<dev::solidity::ASTNode> ast = dev::solidity::parseAST(src);
+	dev::solidity::ptr<dev::solidity::ContractDefinition> ast = dev::solidity::parseAST(src);
 	std::cout << "Syntax tree for the contract:" << std::endl;
 	dev::solidity::ASTPrinter printer(ast, src);
 	printer.print(std::cout);
+	std::cout << "Resolving identifiers..." << std::endl;
+	dev::solidity::NameAndTypeResolver resolver;
+	resolver.resolveNamesAndTypes(*ast.get());
 	return 0;
 }
