@@ -20,30 +20,29 @@
  * Scope - object that holds declaration of names.
  */
 
-#pragma once
-
-#include <map>
-
-#include <boost/noncopyable.hpp>
-
-#include <libsolidity/ASTForward.h>
+#include <libsolidity/Scope.h>
+#include <libsolidity/AST.h>
 
 namespace dev {
 namespace solidity {
 
-class Scope
-{
-public:
-	explicit Scope(Scope* _outerScope = nullptr) : m_outerScope(_outerScope) {}
-	/// Registers the declaration in the scope unless its name is already declared. Returns true iff
-	/// it was not yet declared.
-	bool registerDeclaration(Declaration& _declaration);
-	Declaration* resolveName(ASTString const& _name, bool _recursive = false) const;
-	Scope* getOuterScope() const { return m_outerScope; }
 
-private:
-	Scope* m_outerScope;
-	std::map<ASTString, Declaration*> m_declarations;
-};
+bool Scope::registerDeclaration(Declaration& _declaration)
+{
+	if (m_declarations.find(_declaration.getName()) != m_declarations.end())
+		return false;
+	m_declarations[_declaration.getName()] = &_declaration;
+	return true;
+}
+
+Declaration*Scope::resolveName(ASTString const& _name, bool _recursive) const
+{
+	auto result = m_declarations.find(_name);
+	if (result != m_declarations.end())
+		return result->second;
+	if (_recursive && m_outerScope != nullptr)
+		return m_outerScope->resolveName(_name, true);
+	return nullptr;
+}
 
 } }

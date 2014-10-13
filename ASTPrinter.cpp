@@ -233,7 +233,7 @@ bool ASTPrinter::visit(Identifier& _node)
 
 bool ASTPrinter::visit(ElementaryTypeNameExpression& _node)
 {
-	writeLine(std::string("ElementaryTypeNameExpression ") + Token::String(_node.getType()));
+	writeLine(std::string("ElementaryTypeNameExpression ") + Token::String(_node.getTypeToken()));
 	printSourcePart(_node);
 	return goDeeper();
 }

@@ -47,10 +47,10 @@ private:
 	ptr<ContractDefinition> parseContractDefinition();
 	ptr<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
 	ptr<StructDefinition> parseStructDefinition();
-	ptr<VariableDeclaration> parseVariableDeclaration();
-	ptr<TypeName> parseTypeName();
+	ptr<VariableDeclaration> parseVariableDeclaration(bool _allowVar);
+	ptr<TypeName> parseTypeName(bool _allowVar);
 	ptr<Mapping> parseMapping();
-	ptr<ParameterList> parseParameterList(bool _permitEmpty = true);
+	ptr<ParameterList> parseParameterList(bool _allowEmpty = true);
 	ptr<Block> parseBlock();
 	ptr<Statement> parseStatement();
 	ptr<IfStatement> parseIfStatement();

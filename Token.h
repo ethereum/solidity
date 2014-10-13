@@ -93,6 +93,7 @@ namespace solidity {
 	T(INIT_CONST, "=init_const", 2)               /* AST-use only. */  \
 	T(INIT_CONST_LEGACY, "=init_const_legacy", 2) /* AST-use only. */  \
 	T(ASSIGN, "=", 2)                                                  \
+	/* The following have to be in exactly the same order as the simple binary operators*/ \
 	T(ASSIGN_BIT_OR, "|=", 2)                                          \
 	T(ASSIGN_BIT_XOR, "^=", 2)                                         \
 	T(ASSIGN_BIT_AND, "&=", 2)                                         \
@@ -117,7 +118,6 @@ namespace solidity {
 	T(SHL, "<<", 11)                                                   \
 	T(SAR, ">>", 11)                                                   \
 	T(SHR, ">>>", 11)                                                  \
-	T(ROR, "rotate right", 11) /* only used by Crankshaft */           \
 	T(ADD, "+", 12)                                                    \
 	T(SUB, "-", 12)                                                    \
 	T(MUL, "*", 13)                                                    \
@@ -181,7 +181,9 @@ namespace solidity {
 	K(WHILE, "while", 0)                                               \
 	K(WITH, "with", 0)                                                 \
 	                                                                   \
-	/* type keywords, keep them in this order, keep int as first keyword TODO more to be added */ \
+	/* type keywords, keep them in this order, keep int as first keyword
+	 * the implementation in Types.cpp has to be synced to this here
+	 *  TODO more to be added */                                       \
 	K(INT, "int", 0)                                                   \
 	K(INT32, "int32", 0)                                               \
 	K(INT64, "int64", 0)                                               \
@@ -274,7 +276,7 @@ public:
 	}
 
 	static bool IsTruncatingBinaryOp(Value op) {
-		return BIT_OR <= op && op <= ROR;
+		return BIT_OR <= op && op <= SHR;
 	}
 
 	static bool IsCompareOp(Value op) {
@@ -330,6 +332,11 @@ public:
 			BOOST_ASSERT(false); // should not get here
 			return op;
 		}
+	}
+
+	static Value AssignmentToBinaryOp(Value op) {
+		BOOST_ASSERT(IsAssignmentOp(op) && op != ASSIGN);
+		return Token::Value(op + (BIT_OR - ASSIGN_BIT_OR));
 	}
 
 	static bool IsBitOp(Value op) {

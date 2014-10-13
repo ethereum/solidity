@@ -32,6 +32,7 @@ namespace dev {
 namespace solidity {
 
 class ASTNode;
+class Declaration;
 class ContractDefinition;
 class StructDefinition;
 class ParameterList;

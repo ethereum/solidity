@@ -47,6 +47,8 @@ public:
 
 	void markEndPosition() { m_location.end = m_parser.getEndPosition(); }
 
+	void setLocationEmpty() { m_location.end = m_location.start; }
+
 	/// Set the end position to the one of the given node.
 	void setEndPositionFromNode(const ptr<ASTNode>& _node)
 	{
@@ -104,7 +106,8 @@ ptr<ContractDefinition> Parser::parseContractDefinition()
 			structs.push_back(parseStructDefinition());
 		} else if (currentToken == Token::IDENTIFIER || currentToken == Token::MAPPING ||
 				   Token::IsElementaryTypeName(currentToken)) {
-			stateVariables.push_back(parseVariableDeclaration());
+			bool const allowVar = false;
+			stateVariables.push_back(parseVariableDeclaration(allowVar));
 			expectToken(Token::SEMICOLON);
 		} else {
 			throwExpectationError("Function, variable or struct declaration expected.");
@@ -135,6 +138,11 @@ ptr<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 		const bool permitEmptyParameterList = false;
 		m_scanner->next();
 		returnParameters = parseParameterList(permitEmptyParameterList);
+	} else {
+		// create an empty parameter list at a zero-length location
+		ASTNodeFactory nodeFactory(*this);
+		nodeFactory.setLocationEmpty();
+		returnParameters = nodeFactory.createNode<ParameterList>(vecptr<VariableDeclaration>());
 	}
 	ptr<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
@@ -151,7 +159,8 @@ ptr<StructDefinition> Parser::parseStructDefinition()
 	vecptr<VariableDeclaration> members;
 	expectToken(Token::LBRACE);
 	while (m_scanner->getCurrentToken() != Token::RBRACE) {
-		members.push_back(parseVariableDeclaration());
+		bool const allowVar = false;
+		members.push_back(parseVariableDeclaration(allowVar));
 		expectToken(Token::SEMICOLON);
 	}
 	nodeFactory.markEndPosition();
@@ -160,16 +169,16 @@ ptr<StructDefinition> Parser::parseStructDefinition()
 	return nodeFactory.createNode<StructDefinition>(name, members);
 }
 
-ptr<VariableDeclaration> Parser::parseVariableDeclaration()
+ptr<VariableDeclaration> Parser::parseVariableDeclaration(bool _allowVar)
 {
 	ASTNodeFactory nodeFactory(*this);
 
-	ptr<TypeName> type = parseTypeName();
+	ptr<TypeName> type = parseTypeName(_allowVar);
 	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<VariableDeclaration>(type, expectIdentifierToken());
 }
 
-ptr<TypeName> Parser::parseTypeName()
+ptr<TypeName> Parser::parseTypeName(bool _allowVar)
 {
 	ptr<TypeName> type;
 	Token::Value token = m_scanner->getCurrentToken();
@@ -177,7 +186,8 @@ ptr<TypeName> Parser::parseTypeName()
 		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(token);
 		m_scanner->next();
 	} else if (token == Token::VAR) {
-		type = ASTNodeFactory(*this).createNode<TypeName>();
+		if (!_allowVar)
+			throwExpectationError("Expected explicit type name.");
 		m_scanner->next();
 	} else if (token == Token::MAPPING) {
 		type = parseMapping();
@@ -206,24 +216,26 @@ ptr<Mapping> Parser::parseMapping()
 	m_scanner->next();
 
 	expectToken(Token::ARROW);
-	ptr<TypeName> valueType = parseTypeName();
+	bool const allowVar = false;
+	ptr<TypeName> valueType = parseTypeName(allowVar);
 	nodeFactory.markEndPosition();
 	expectToken(Token::RPAREN);
 
 	return nodeFactory.createNode<Mapping>(keyType, valueType);
 }
 
-ptr<ParameterList> Parser::parseParameterList(bool _permitEmpty)
+ptr<ParameterList> Parser::parseParameterList(bool _allowEmpty)
 {
 	ASTNodeFactory nodeFactory(*this);
 
 	vecptr<VariableDeclaration> parameters;
 	expectToken(Token::LPAREN);
-	if (!_permitEmpty || m_scanner->getCurrentToken() != Token::RPAREN) {
-		parameters.push_back(parseVariableDeclaration());
+	if (!_allowEmpty || m_scanner->getCurrentToken() != Token::RPAREN) {
+		bool const allowVar = false;
+		parameters.push_back(parseVariableDeclaration(allowVar));
 		while (m_scanner->getCurrentToken() != Token::RPAREN) {
 			expectToken(Token::COMMA);
-			parameters.push_back(parseVariableDeclaration());
+			parameters.push_back(parseVariableDeclaration(allowVar));
 		}
 	}
 	nodeFactory.markEndPosition();
@@ -328,7 +340,8 @@ ptr<WhileStatement> Parser::parseWhileStatement()
 ptr<VariableDefinition> Parser::parseVariableDefinition()
 {
 	ASTNodeFactory nodeFactory(*this);
-	ptr<VariableDeclaration> variable = parseVariableDeclaration();
+	bool const allowVar = true;
+	ptr<VariableDeclaration> variable = parseVariableDeclaration(allowVar);
 	ptr<Expression> value;
 	if (m_scanner->getCurrentToken() == Token::ASSIGN) {
 		m_scanner->next();

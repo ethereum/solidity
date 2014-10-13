@@ -24,13 +24,15 @@
 
 #include <map>
 
+#include <boost/noncopyable.hpp>
+
 #include <libsolidity/Scope.h>
 #include <libsolidity/ASTVisitor.h>
 
 namespace dev {
 namespace solidity {
 
-class NameAndTypeResolver
+class NameAndTypeResolver : private boost::noncopyable
 {
 public:
 	NameAndTypeResolver();
@@ -43,12 +45,13 @@ private:
 
 	void handleContract(ContractDefinition& _contract);
 	void handleFunction(FunctionDefinition& _function);
-	void handleFunctionBody(Block& _functionBody);
-	void registerVariablesInFunction(Block& _functionBody);
-	void resolveReferencesInFunction(Block& _functionBody);
+	void registerVariablesInFunction(FunctionDefinition& _function);
+	void resolveReferencesInFunction(ParameterList& _returnParameters,
+									 Block& _functionBody);
 
-	void registerName(ASTString const& _name, ASTNode& _declaration);
-	ASTNode* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
+	void registerVariableDeclarationAndResolveType(VariableDeclaration& _variable);
+	void registerDeclaration(Declaration& _declaration);
+	Declaration* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
 	void enterNewSubScope(ASTNode& _node);
 	void closeCurrentScope();

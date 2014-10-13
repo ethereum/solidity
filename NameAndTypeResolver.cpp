@@ -31,10 +31,10 @@ namespace solidity {
 
 class NameAndTypeResolver::ScopeHelper {
 public:
-	ScopeHelper(NameAndTypeResolver& _resolver, ASTString const& _name, ASTNode& _declaration)
+	ScopeHelper(NameAndTypeResolver& _resolver, Declaration& _declaration)
 		: m_resolver(_resolver)
 	{
-		m_resolver.registerName(_name, _declaration);
+		m_resolver.registerDeclaration(_declaration);
 		m_resolver.enterNewSubScope(_declaration);
 	}
 	~ScopeHelper()
@@ -60,16 +60,15 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 
 void NameAndTypeResolver::handleContract(ContractDefinition& _contract)
 {
-	ScopeHelper scopeHelper(*this, _contract.getName(), _contract);
+	ScopeHelper scopeHelper(*this, _contract);
+
+	// @todo structs (definition and usage)
 
 	for (ptr<VariableDeclaration> const& variable : _contract.getStateVariables())
-		registerName(variable->getName(), *variable);
-	// @todo structs
+		registerVariableDeclarationAndResolveType(*variable);
 
 	for (ptr<FunctionDefinition> const& function : _contract.getDefinedFunctions())
 		handleFunction(*function);
-
-	// @todo resolve names used in mappings
 }
 
 void NameAndTypeResolver::reset()
@@ -81,30 +80,20 @@ void NameAndTypeResolver::reset()
 
 void NameAndTypeResolver::handleFunction(FunctionDefinition& _function)
 {
-	ScopeHelper scopeHelper(*this, _function.getName(), _function);
+	ScopeHelper scopeHelper(*this, _function);
 
-	// @todo resolve names used in mappings
-	for (ptr<VariableDeclaration> const& variable  : _function.getParameters())
-		registerName(variable->getName(), *variable);
-	if (_function.hasReturnParameters())
-		for (ptr<VariableDeclaration> const& variable  : _function.getReturnParameters())
-			registerName(variable->getName(), *variable);
-	handleFunctionBody(_function.getBody());
+	registerVariablesInFunction(_function);
+	resolveReferencesInFunction(*_function.getReturnParameterList(), _function.getBody());
+	_function.getBody().checkTypeRequirements();
 }
 
-void NameAndTypeResolver::handleFunctionBody(Block& _functionBody)
-{
-	registerVariablesInFunction(_functionBody);
-	resolveReferencesInFunction(_functionBody);
-}
-
-void NameAndTypeResolver::registerVariablesInFunction(Block& _functionBody)
+void NameAndTypeResolver::registerVariablesInFunction(FunctionDefinition& _function)
 {
 	class VariableDeclarationFinder : public ASTVisitor {
 	public:
 		VariableDeclarationFinder(NameAndTypeResolver& _resolver) : m_resolver(_resolver) {}
 		virtual bool visit(VariableDeclaration& _variable) override {
-			m_resolver.registerName(_variable.getName(), _variable);
+			m_resolver.registerVariableDeclarationAndResolveType(_variable);
 			return false;
 		}
 	private:
@@ -112,37 +101,85 @@ void NameAndTypeResolver::registerVariablesInFunction(Block& _functionBody)
 	};
 
 	VariableDeclarationFinder declarationFinder(*this);
-	_functionBody.accept(declarationFinder);
+	_function.accept(declarationFinder);
 }
 
-void NameAndTypeResolver::resolveReferencesInFunction(Block& _functionBody)
+void NameAndTypeResolver::resolveReferencesInFunction(ParameterList& _returnParameters,
+													  Block& _functionBody)
 {
 	class ReferencesResolver : public ASTVisitor {
 	public:
-		ReferencesResolver(NameAndTypeResolver& _resolver) : m_resolver(_resolver) {}
+		ReferencesResolver(NameAndTypeResolver& _resolver,
+						   ParameterList& _returnParameters)
+			: m_resolver(_resolver), m_returnParameters(_returnParameters) {}
 		virtual bool visit(Identifier& _identifier) override {
-			ASTNode* node = m_resolver.getNameFromCurrentScope(_identifier.getName());
-			if (node == nullptr)
+			Declaration* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
+			if (declaration == nullptr)
 				throw std::exception(); // @todo
-			_identifier.setReferencedObject(*node);
+			_identifier.setReferencedDeclaration(*declaration);
 			return false;
+		}
+		virtual bool visit(Return& _return) override {
+			_return.setFunctionReturnParameters(m_returnParameters);
+			return true;
+		}
+	private:
+		NameAndTypeResolver& m_resolver;
+		ParameterList& m_returnParameters;
+	};
+
+	ReferencesResolver referencesResolver(*this, _returnParameters);
+	_functionBody.accept(referencesResolver);
+}
+
+void NameAndTypeResolver::registerVariableDeclarationAndResolveType(VariableDeclaration& _variable)
+{
+	registerDeclaration(_variable);
+	TypeName* typeName = _variable.getTypeName();
+	if (typeName == nullptr) // unknown type, to be resolved by first assignment
+		return;
+
+	// walk the AST to resolve user defined type references
+	// (walking is necessory because of mappings)
+	// @todo this could probably also be done at an earlier stage where we anyway
+	// walk the AST
+
+	class UserDefinedTypeNameResolver : public ASTVisitor {
+	public:
+		UserDefinedTypeNameResolver(NameAndTypeResolver& _resolver)
+			: m_resolver(_resolver) {}
+		virtual bool visit(UserDefinedTypeName& _typeName) override {
+			Declaration* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
+			if (declaration == nullptr)
+				throw std::exception(); // @todo
+			StructDefinition* referencedStruct = dynamic_cast<StructDefinition*>(declaration);
+			if (referencedStruct == nullptr)
+				throw std::exception(); // @todo we only allow structs as user defined types (later also contracts)
+			_typeName.setReferencedStruct(*referencedStruct);
+			return false;
+		}
+		virtual bool visit(Mapping&) override {
+			// @todo
+			return true;
 		}
 	private:
 		NameAndTypeResolver& m_resolver;
 	};
 
-	ReferencesResolver referencesResolver(*this);
-	_functionBody.accept(referencesResolver);
+	UserDefinedTypeNameResolver resolver(*this);
+	_variable.accept(resolver);
+
+	_variable.setType(typeName->toType());
 }
 
 
-void NameAndTypeResolver::registerName(ASTString const& _name, ASTNode& _declaration)
+void NameAndTypeResolver::registerDeclaration(Declaration& _declaration)
 {
-	if (!m_currentScope->registerName(_name, _declaration))
+	if (!m_currentScope->registerDeclaration(_declaration))
 		throw std::exception(); // @todo
 }
 
-ASTNode* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
+Declaration* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
 {
 	return m_currentScope->resolveName(_name, _recursive);
 }
