@@ -17,7 +17,7 @@ target_link_libraries(testeth ${CRYPTOPP_LS})
 target_link_libraries(testeth webthree)
 
 if(JSONRPC_LS)
-target_link_libraries(testeth ${JSONRPC_LS})
+target_link_libraries(testeth ethrpc)
 endif()
 
 if ("${TARGET_PLATFORM}" STREQUAL "w64")

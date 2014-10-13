@@ -5,9 +5,11 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/CommonJS.h>
 #include <libwebthree/WebThree.h>
-#include <eth/EthStubServer.h>
+#include <libethrpc/EthStubServer.h>
 #include <jsonrpc/connectors/httpserver.h>
+#include <jsonrpc/connectors/httpclient.h>
 #include "JsonSpiritHeaders.h"
 #include "ethstubclient.h"
 
@@ -17,11 +19,11 @@ using namespace dev::eth;
 namespace js = json_spirit;
 
 
-
-
 namespace jsonrpc_tests {
 
+KeyPair us;
 auto_ptr<EthStubServer> jsonrpcServer;
+auto_ptr<EthStubClient> jsonrpcClient;
 
 
 struct JsonrpcFixture  {
@@ -32,7 +34,13 @@ struct JsonrpcFixture  {
         string dbPath;
         dev::WebThreeDirect web3(name, dbPath);
         web3.setIdealPeerCount(5);
+        
+        us = KeyPair::create();
         jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(8080), web3));
+        jsonrpcServer->setKeys({us});
+        jsonrpcServer->StartListening();
+        
+        jsonrpcClient = auto_ptr<EthStubClient>(new EthStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
     }
     ~JsonrpcFixture()
     {
@@ -40,26 +48,25 @@ struct JsonrpcFixture  {
     }
 };
 
-//BOOST_AUTO_TEST_CASE(jsonrpc_test)
-//{
-//    cnote << "testing jsonrpc";
-//    js::mValue v;
-//    string s = asString(contents("../../jsonrpc.json"));
-//    BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content from 'jsonrpc.json' is empty. Have you cloned the 'tests' repo branch develop?");
-//    js::read_string(s, v);
-//}
-
 BOOST_GLOBAL_FIXTURE(JsonrpcFixture)
 
-BOOST_AUTO_TEST_CASE( test_case1 )
+BOOST_AUTO_TEST_CASE(jsonrpc_key)
 {
-//    BOOST_CHECK( i == 1 );
+    cnote << "Testing jsonrpc key...";
+    Json::Value key = jsonrpcClient->key();
+    BOOST_CHECK_EQUAL(key.isString(), true);
+    BOOST_CHECK_EQUAL(jsToSecret(key.asString()), us.secret());
+}
+    
+BOOST_AUTO_TEST_CASE(jsonrpc_keys)
+{
+    cnote << "Testing jsonrpc keys...";
+    Json::Value keys = jsonrpcClient->keys();
+    BOOST_CHECK_EQUAL(keys.isArray(), true);
+    BOOST_CHECK_EQUAL(keys.size(),  1);
+    BOOST_CHECK_EQUAL(jsToSecret(keys[0u].asString()) , us.secret());
 }
 
-BOOST_AUTO_TEST_CASE( test_case2 )
-{
-//    BOOST_CHECK_EQUAL( i, 0 );
-}
 
 }
 
