@@ -6,6 +6,7 @@ include_directories(..)
 link_directories(../libethcore)
 link_directories(../libethereum)
 
+
 add_executable(testeth ${SRC_LIST})
 
 target_link_libraries(testeth ethereum)
@@ -13,6 +14,11 @@ target_link_libraries(testeth ethcore)
 target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth gmp)
 target_link_libraries(testeth ${CRYPTOPP_LS})
+target_link_libraries(testeth webthree)
+
+if(JSONRPC_LS)
+target_link_libraries(testeth ${JSONRPC_LS})
+endif()
 
 if ("${TARGET_PLATFORM}" STREQUAL "w64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
