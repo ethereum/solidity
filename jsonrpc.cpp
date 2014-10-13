@@ -11,6 +11,7 @@
 #include <jsonrpc/connectors/httpserver.h>
 #include <jsonrpc/connectors/httpclient.h>
 #include "JsonSpiritHeaders.h"
+#include "TestHelper.h"
 #include "ethstubclient.h"
 
 using namespace std;
@@ -23,9 +24,10 @@ namespace jsonrpc_tests {
 
 string name = "Ethereum(++) tests";
 string dbPath;
-dev::WebThreeDirect web3(name, dbPath);
-    
-KeyPair us;
+dev::WebThreeDirect web3(name, dbPath, true);
+
+std::vector<dev::KeyPair> keys = {KeyPair::create()};
+
 auto_ptr<EthStubServer> jsonrpcServer;
 auto_ptr<EthStubClient> jsonrpcClient;
 
@@ -36,10 +38,9 @@ struct JsonrpcFixture  {
         cnote << "setup jsonrpc";
 
         web3.setIdealPeerCount(5);
-        
-        us = KeyPair::create();
+        web3.ethereum()->setForceMining(true);
         jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(8080), web3));
-        jsonrpcServer->setKeys({us});
+        jsonrpcServer->setKeys(keys);
         jsonrpcServer->StartListening();
         
         jsonrpcClient = auto_ptr<EthStubClient>(new EthStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
@@ -54,7 +55,10 @@ BOOST_GLOBAL_FIXTURE(JsonrpcFixture)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_balanceAt)
 {
-    
+    cnote << "Testing jsonrpc balanceAt...";
+    dev::KeyPair pair = keys[0];
+//    string balance = jsonrpcClient->balanceAt(toJS(pair.address()));
+
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_block)
@@ -120,18 +124,18 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isMining)
 BOOST_AUTO_TEST_CASE(jsonrpc_key)
 {
     cnote << "Testing jsonrpc key...";
-    Json::Value key = jsonrpcClient->key();
-    BOOST_CHECK_EQUAL(key.isString(), true);
-    BOOST_CHECK_EQUAL(jsToSecret(key.asString()), us.secret());
+    string key = jsonrpcClient->key();
+    BOOST_CHECK_EQUAL(jsToSecret(key), keys[0].secret());
 }
     
 BOOST_AUTO_TEST_CASE(jsonrpc_keys)
 {
     cnote << "Testing jsonrpc keys...";
-    Json::Value keys = jsonrpcClient->keys();
-    BOOST_CHECK_EQUAL(keys.isArray(), true);
-    BOOST_CHECK_EQUAL(keys.size(),  1);
-    BOOST_CHECK_EQUAL(jsToSecret(keys[0u].asString()) , us.secret());
+    Json::Value k = jsonrpcClient->keys();
+    BOOST_CHECK_EQUAL(k.isArray(), true);
+    BOOST_CHECK_EQUAL(k.size(),  keys.size());
+    for (unsigned i = 0; i < k.size(); i++)
+        BOOST_CHECK_EQUAL(jsToSecret(k[i].asString()) , keys[i].secret());
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_lll)
@@ -149,6 +153,17 @@ BOOST_AUTO_TEST_CASE(jsonrpc_number)
     BOOST_CHECK_EQUAL(number, web3.ethereum()->number() + 1);
 }
 
+BOOST_AUTO_TEST_CASE(jsonrpc_number2)
+{
+    cnote << "Testing jsonrpc number2...";
+    int number = jsonrpcClient->number();
+    BOOST_CHECK_EQUAL(number, web3.ethereum()->number() + 1);
+    dev::eth::mine(*(web3.ethereum()), 1);
+    int numberAfter = jsonrpcClient->number();
+    BOOST_CHECK_EQUAL(number + 1, numberAfter);
+    BOOST_CHECK_EQUAL(numberAfter, web3.ethereum()->number() + 1);
+}
+
 BOOST_AUTO_TEST_CASE(jsonrpc_peerCount)
 {
     cnote << "Testing jsonrpc peerCount...";
@@ -158,8 +173,9 @@ BOOST_AUTO_TEST_CASE(jsonrpc_peerCount)
 BOOST_AUTO_TEST_CASE(jsonrpc_secretToAddress)
 {
     cnote << "Testing jsonrpc secretToAddress...";
-    string address = jsonrpcClient->secretToAddress(toJS(us.secret()));
-    BOOST_CHECK_EQUAL(jsToAddress(address), us.address());
+    dev::KeyPair pair = dev::KeyPair::create();
+    string address = jsonrpcClient->secretToAddress(toJS(pair.secret()));
+    BOOST_CHECK_EQUAL(jsToAddress(address), pair.address());
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_setListening)
@@ -232,6 +248,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_uncle)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_watch)
 {
+
 }
 
 
