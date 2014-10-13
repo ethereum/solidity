@@ -50,15 +50,15 @@ struct JsonrpcFixture  {
         cnote << "teardown jsonrpc";
     }
 };
-
+    
 BOOST_GLOBAL_FIXTURE(JsonrpcFixture)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_balanceAt)
 {
     cnote << "Testing jsonrpc balanceAt...";
-    dev::KeyPair pair = keys[0];
-//    string balance = jsonrpcClient->balanceAt(toJS(pair.address()));
-
+    auto address = keys[0].address();
+    string balance = jsonrpcClient->balanceAt(toJS(address), 0);
+    BOOST_CHECK_EQUAL(jsToDecimal(toJS(web3.ethereum()->balanceAt(address))), balance);
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_block)
