@@ -32,7 +32,7 @@ class Scanner;
 class Parser
 {
 public:
-	ptr<ASTNode> parse(std::shared_ptr<Scanner> const& _scanner);
+	ptr<ContractDefinition> parse(std::shared_ptr<Scanner> const& _scanner);
 
 private:
 	class ASTNodeFactory;
@@ -50,7 +50,7 @@ private:
 	ptr<VariableDeclaration> parseVariableDeclaration();
 	ptr<TypeName> parseTypeName();
 	ptr<Mapping> parseMapping();
-	ptr<ParameterList> parseParameterList();
+	ptr<ParameterList> parseParameterList(bool _permitEmpty = true);
 	ptr<Block> parseBlock();
 	ptr<Statement> parseStatement();
 	ptr<IfStatement> parseIfStatement();

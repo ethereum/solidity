@@ -28,7 +28,7 @@
 namespace dev {
 namespace solidity {
 
-ptr<ASTNode> Parser::parse(std::shared_ptr<Scanner> const& _scanner)
+ptr<ContractDefinition> Parser::parse(std::shared_ptr<Scanner> const& _scanner)
 {
 	m_scanner = _scanner;
 
@@ -132,8 +132,9 @@ ptr<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 	}
 	ptr<ParameterList> returnParameters;
 	if (m_scanner->getCurrentToken() == Token::RETURNS) {
+		const bool permitEmptyParameterList = false;
 		m_scanner->next();
-		returnParameters = parseParameterList();
+		returnParameters = parseParameterList(permitEmptyParameterList);
 	}
 	ptr<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
@@ -212,13 +213,13 @@ ptr<Mapping> Parser::parseMapping()
 	return nodeFactory.createNode<Mapping>(keyType, valueType);
 }
 
-ptr<ParameterList> Parser::parseParameterList()
+ptr<ParameterList> Parser::parseParameterList(bool _permitEmpty)
 {
 	ASTNodeFactory nodeFactory(*this);
 
 	vecptr<VariableDeclaration> parameters;
 	expectToken(Token::LPAREN);
-	if (m_scanner->getCurrentToken() != Token::RPAREN) {
+	if (!_permitEmpty || m_scanner->getCurrentToken() != Token::RPAREN) {
 		parameters.push_back(parseVariableDeclaration());
 		while (m_scanner->getCurrentToken() != Token::RPAREN) {
 			expectToken(Token::COMMA);

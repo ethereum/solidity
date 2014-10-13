@@ -72,6 +72,9 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 
 	const ASTString& getName() const { return *m_name; }
+	vecptr<StructDefinition> const& getDefinedStructs() { return m_definedStructs; }
+	vecptr<VariableDeclaration> const& getStateVariables() { return m_stateVariables; }
+	vecptr<FunctionDefinition> const& getDefinedFunctions() { return m_definedFunctions; }
 private:
 	ptr<ASTString> m_name;
 	vecptr<StructDefinition> m_definedStructs;
@@ -105,6 +108,8 @@ public:
 		: ASTNode(_location), m_parameters(_parameters)
 	{}
 	virtual void accept(ASTVisitor& _visitor) override;
+
+	vecptr<VariableDeclaration> const& getParameters() { return m_parameters; }
 private:
 	vecptr<VariableDeclaration> m_parameters;
 };
@@ -126,12 +131,16 @@ public:
 	const ASTString& getName() const { return *m_name; }
 	bool isPublic() const { return m_isPublic; }
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
+	vecptr<VariableDeclaration> const& getParameters() { return m_parameters->getParameters(); }
+	bool hasReturnParameters() const { return m_returnParameters.get() != nullptr; }
+	vecptr<VariableDeclaration> const& getReturnParameters() { return m_returnParameters->getParameters(); }
+	Block& getBody() { return *m_body; }
 private:
 	ptr<ASTString> m_name;
 	bool m_isPublic;
 	ptr<ParameterList> m_parameters;
 	bool m_isDeclaredConst;
-	ptr<ParameterList> m_returnParameters;
+	ptr<ParameterList> m_returnParameters; //< either "null"pointer or pointer to non-empty parameter list
 	ptr<Block> m_body;
 };
 
@@ -145,6 +154,7 @@ public:
 	{}
 	virtual void accept(ASTVisitor& _visitor) override;
 
+	TypeName* getTypeName() const { return m_type.get(); }
 	const ASTString& getName() const { return *m_name; }
 private:
 	ptr<TypeName> m_type; ///< can be empty ("var")
@@ -416,8 +426,13 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 
 	ASTString const& getName() const { return *m_name; }
+	void setReferencedObject(ASTNode& _referencedObject) { m_referencedObject = &_referencedObject; }
+	ASTNode* getReferencedVariable() { return m_referencedObject; }
 private:
 	ptr<ASTString> m_name;
+
+	//! Node the name refers to. Has to be a declaration of some sort.
+	ASTNode* m_referencedObject;
 };
 
 class ElementaryTypeNameExpression : public PrimaryExpression

@@ -202,6 +202,13 @@ bool ASTPrinter::visit(PrimaryExpression& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(Identifier& _node)
+{
+	writeLine(std::string("Identifier ") + _node.getName());
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(ElementaryTypeNameExpression& _node)
 {
 	writeLine(std::string("ElementaryTypeNameExpression ") + Token::String(_node.getType()));
@@ -352,6 +359,11 @@ void ASTPrinter::endVisit(IndexAccess&)
 }
 
 void ASTPrinter::endVisit(PrimaryExpression&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(Identifier&)
 {
 	m_indentation--;
 }

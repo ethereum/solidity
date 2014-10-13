@@ -36,6 +36,7 @@ class FunctionCall;
 class MemberAccess;
 class IndexAccess;
 class PrimaryExpression;
+class Identifier;
 class ElementaryTypeNameExpression;
 class Literal;
 

@@ -39,6 +39,7 @@ public:
 	virtual bool visit(MemberAccess&) { return true; }
 	virtual bool visit(IndexAccess&) { return true; }
 	virtual bool visit(PrimaryExpression&) { return true; }
+	virtual bool visit(Identifier&) { return true; }
 	virtual bool visit(ElementaryTypeNameExpression&) { return true; }
 	virtual bool visit(Literal&) { return true; }
 
@@ -69,6 +70,7 @@ public:
 	virtual void endVisit(MemberAccess&) { }
 	virtual void endVisit(IndexAccess&) { }
 	virtual void endVisit(PrimaryExpression&) { }
+	virtual void endVisit(Identifier&) { }
 	virtual void endVisit(ElementaryTypeNameExpression&) { }
 	virtual void endVisit(Literal&) { }
 };
