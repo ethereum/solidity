@@ -22,6 +22,7 @@
 
 #include "vm.h"
 #include <libdevcore/CommonIO.h>
+#include <boost/filesystem/path.hpp>
 
 #define FILL_TESTS
 
@@ -97,7 +98,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 			{
 				cnote << "not able to call to : " << myAddress << "\n";
 				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(myAddress));
+				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(toString(myAddress)));
 				return false;
 			}
 		}
@@ -123,7 +124,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 			{
 				cnote << "not able to call to : " << (_codeAddressOverride ? _codeAddressOverride : _receiveAddress) << "\n";
 				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress));
+				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(toString(_codeAddressOverride ? _codeAddressOverride : _receiveAddress)));
 				return false;
 			}
 		}
@@ -610,16 +611,26 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 
 void executeTests(const string& _name)
 {
+	const char* testPath = getenv("ETHEREUM_TEST_PATH");
+	if (testPath == NULL)
+	{
+		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
+		testPath = "../../../tests/vmtests";
+	}
+
 #ifdef FILL_TESTS
 	try
 	{
 		cnote << "Populating VM tests...";
 		json_spirit::mValue v;
-		string s = asString(contents("../../../cpp-ethereum/test/" + _name + "Filler.json"));
+		boost::filesystem::path p(__FILE__);
+		boost::filesystem::path dir = p.parent_path();
+		string s = asString(contents(dir.string() + "/" + _name + "Filler.json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + "Filler.json is empty.");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, true);
-		writeFile("../../../tests/vmtests/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+
+		writeFile(*testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
 	}
 	catch (Exception const& _e)
 	{
@@ -635,7 +646,7 @@ void executeTests(const string& _name)
 	{
 		cnote << "Testing VM..." << _name;
 		json_spirit::mValue v;
-		string s = asString(contents("../../../tests/vmtests/" + _name + ".json"));
+		string s = asString(contents(*testPath + "/" + _name + ".json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + ".json is empty. Have you cloned the 'tests' repo branch develop?");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, false);
