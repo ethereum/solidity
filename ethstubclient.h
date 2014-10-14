@@ -261,27 +261,40 @@ p["s"] = s;
 
         }
 
-        Json::Value setListening(const bool& l) throw (jsonrpc::JsonRpcException)
+        bool setCoinbase(const std::string& address) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["l"] = l; 
+            p["address"] = address; 
 
-            Json::Value result = this->client->CallMethod("setListening",p);
-    if (result.isArray())
-        return result;
+            Json::Value result = this->client->CallMethod("setCoinbase",p);
+    if (result.isBool())
+        return result.asBool();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
         }
 
-        Json::Value setMining(const bool& l) throw (jsonrpc::JsonRpcException)
+        bool setListening(const bool& l) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p["l"] = l; 
+
+            Json::Value result = this->client->CallMethod("setListening",p);
+    if (result.isBool())
+        return result.asBool();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        bool setMining(const bool& l) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p["l"] = l; 
 
             Json::Value result = this->client->CallMethod("setMining",p);
-    if (result.isArray())
-        return result;
+    if (result.isBool())
+        return result.asBool();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
