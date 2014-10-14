@@ -8,6 +8,7 @@
 #include <libdevcore/CommonJS.h>
 #include <libwebthree/WebThree.h>
 #include <libethrpc/EthStubServer.h>
+#include <libethrpc/CorsHttpServer.h>
 #include <jsonrpc/connectors/httpserver.h>
 #include <jsonrpc/connectors/httpclient.h>
 #include "JsonSpiritHeaders.h"
@@ -39,7 +40,7 @@ struct JsonrpcFixture  {
 
         web3.setIdealPeerCount(5);
         web3.ethereum()->setForceMining(true);
-        jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(8080), web3));
+        jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::CorsHttpServer(8080), web3));
         jsonrpcServer->setKeys(keys);
         jsonrpcServer->StartListening();
         
@@ -78,6 +79,10 @@ BOOST_AUTO_TEST_CASE(jsonrpc_coinbase)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_countAt)
 {
+    cnote << "Testing jsonrpc countAt...";
+    auto address = keys[0].address();
+    double countAt = jsonrpcClient->countAt(toJS(address), 0);
+    BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3.ethereum()->countAt(address, 0));
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_defaultBlock)
@@ -89,10 +94,20 @@ BOOST_AUTO_TEST_CASE(jsonrpc_defaultBlock)
     
 BOOST_AUTO_TEST_CASE(jsonrpc_fromAscii)
 {
+    cnote << "Testing jsonrpc fromAscii...";
+    string testString = "1234567890987654";
+    string fromAscii = jsonrpcClient->fromAscii(32, testString);
+    BOOST_CHECK_EQUAL(fromAscii, jsFromBinary(testString, 32));
+
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_fromFixed)
 {
+    cnote << "Testing jsonrpc fromFixed...";
+    string testString = "1234567890987654";
+    double fromFixed = jsonrpcClient->fromFixed(testString);
+    BOOST_CHECK_EQUAL(jsFromFixed(testString), fromFixed);
+    BOOST_CHECK_EQUAL(testString, jsToFixed(fromFixed));
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_gasPrice)
@@ -106,6 +121,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isListening)
 {
     //TODO
     cnote << "Testing jsonrpc isListening...";
+    string testString = "1234567890987654";
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_isMining)
@@ -205,7 +221,10 @@ BOOST_AUTO_TEST_CASE(jsonrpc_sha3)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_stateAt)
 {
-    
+    cnote << "Testing jsonrpc stateAt...";
+    auto address = keys[0].address();
+    string stateAt = jsonrpcClient->stateAt(toJS(address), 0, "0");
+    BOOST_CHECK_EQUAL(toJS(web3.ethereum()->stateAt(address, jsToU256("0"), 0)), stateAt);
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_toAscii)
@@ -236,10 +255,36 @@ BOOST_AUTO_TEST_CASE(jsonrpc_toFixed)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 {
+    cnote << "Testing jsonrpc transact...";
+    web3.ethereum()->setAddress(keys[0].address());
+    auto receiver = KeyPair::create();
+    dev::eth::mine(*(web3.ethereum()), 1);
+    auto balance = web3.ethereum()->balanceAt(keys[0].address(), 0);
+    BOOST_REQUIRE(balance > 0);
+    auto txAmount = balance / 2u;
+    auto gasPrice = 10 * dev::eth::szabo;
+    auto gas = dev::eth::c_txGas;
+    
+    Json::Value t;
+    t["from"] = toJS(keys[0].secret());
+    t["value"] = toJS(txAmount);
+    t["to"] = toJS(receiver.address());
+    t["data"] = toJS(bytes());
+    t["gas"] = toJS(gas);
+    t["gasPrice"] = toJS(gasPrice);
+    
+    jsonrpcClient->transact(t);
+    
+    dev::eth::mine(*(web3.ethereum()), 1);
+    auto balance2 = web3.ethereum()->balanceAt(receiver.address());
+    BOOST_REQUIRE(balance2 > 0);
+    BOOST_CHECK_EQUAL(txAmount, balance2);
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_transaction)
 {
+
+
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_uncle)

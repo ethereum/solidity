@@ -85,15 +85,15 @@ p["block"] = block;
 
         }
 
-        std::string countAt(const std::string& a, const int& block) throw (jsonrpc::JsonRpcException)
+        double countAt(const std::string& a, const int& block) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p["a"] = a; 
 p["block"] = block; 
 
             Json::Value result = this->client->CallMethod("countAt",p);
-    if (result.isString())
-        return result.asString();
+    if (result.isDouble())
+        return result.asDouble();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -354,7 +354,7 @@ p["s"] = s;
 
         }
 
-        std::string transact(const std::string& json) throw (jsonrpc::JsonRpcException)
+        std::string transact(const Json::Value& json) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p["json"] = json; 
