@@ -274,10 +274,10 @@ p["s"] = s;
 
         }
 
-        bool setListening(const bool& l) throw (jsonrpc::JsonRpcException)
+        bool setListening(const bool& listening) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["l"] = l; 
+            p["listening"] = listening; 
 
             Json::Value result = this->client->CallMethod("setListening",p);
     if (result.isBool())
@@ -287,10 +287,10 @@ p["s"] = s;
 
         }
 
-        bool setMining(const bool& l) throw (jsonrpc::JsonRpcException)
+        bool setMining(const bool& mining) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["l"] = l; 
+            p["mining"] = mining; 
 
             Json::Value result = this->client->CallMethod("setMining",p);
     if (result.isBool())
