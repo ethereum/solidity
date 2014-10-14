@@ -1,6 +1,6 @@
 
 
-//#if ETH_JSONRPC && 1
+#if ETH_JSONRPC && 1
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
@@ -286,13 +286,18 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
     
     dev::eth::mine(*(web3.ethereum()), 1);
     auto balance2 = web3.ethereum()->balanceAt(receiver.address());
+    auto number = web3.ethereum()->number();
     BOOST_REQUIRE(balance2 > 0);
     BOOST_CHECK_EQUAL(txAmount, balance2);
+    
+    //    auto ax = jsToFixed(number);
+    //    Json::Value p = jsonrpcClient->transaction(0, jsToFixed(number));
+    // TODO, check transactions
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_transaction)
 {
-
+    
 
 }
 
@@ -310,7 +315,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_watch)
 
 }
 
-//#endif
+#endif
 
 
 
