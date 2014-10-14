@@ -129,11 +129,11 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isMining)
     cnote << "Testing jsonrpc isMining...";
 
     web3.ethereum()->startMining();
-    bool miningOn = jsonrpcClient->isMining();
+    bool miningOn = jsonrpcClient->mining();
     BOOST_CHECK_EQUAL(miningOn, web3.ethereum()->isMining());
 
     web3.ethereum()->stopMining();
-    bool miningOff = jsonrpcClient->isMining();
+    bool miningOff = jsonrpcClient->mining();
     BOOST_CHECK_EQUAL(miningOff, web3.ethereum()->isMining());
 }
 

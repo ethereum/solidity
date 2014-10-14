@@ -150,30 +150,6 @@ p["s"] = s;
 
         }
 
-        bool isListening() throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p = Json::nullValue;
-            Json::Value result = this->client->CallMethod("isListening",p);
-    if (result.isBool())
-        return result.asBool();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        bool isMining() throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p = Json::nullValue;
-            Json::Value result = this->client->CallMethod("isMining",p);
-    if (result.isBool())
-        return result.asBool();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
         std::string key() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -193,6 +169,18 @@ p["s"] = s;
             Json::Value result = this->client->CallMethod("keys",p);
     if (result.isArray())
         return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        bool listening() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->client->CallMethod("listening",p);
+    if (result.isBool())
+        return result.asBool();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -219,6 +207,18 @@ p["s"] = s;
             Json::Value result = this->client->CallMethod("messages",p);
     if (result.isArray())
         return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        bool mining() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->client->CallMethod("mining",p);
+    if (result.isBool())
+        return result.asBool();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
