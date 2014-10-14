@@ -252,12 +252,13 @@ mObject FakeExtVM::exportEnv()
 
 void FakeExtVM::importEnv(mObject& _o)
 {
-	BOOST_REQUIRE(_o.count("previousHash") > 0);
-	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
-	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
-	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
-	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
-	BOOST_REQUIRE(_o.count("currentNumber") > 0);
+	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+	assert(_o.count("previousHash") > 0);
+	assert(_o.count("currentGasLimit") > 0);
+	assert(_o.count("currentDifficulty") > 0);
+	assert(_o.count("currentTimestamp") > 0);
+	assert(_o.count("currentCoinbase") > 0);
+	assert(_o.count("currentNumber") > 0);
 
 	previousBlock.hash = h256(_o["previousHash"].get_str());
 	currentBlock.number = toInt(_o["currentNumber"]);
@@ -294,10 +295,11 @@ void FakeExtVM::importState(mObject& _object)
 	for (auto const& i: _object)
 	{
 		mObject o = i.second.get_obj();
-		BOOST_REQUIRE(o.count("balance") > 0);
-		BOOST_REQUIRE(o.count("nonce") > 0);
-		BOOST_REQUIRE(o.count("storage") > 0);
-		BOOST_REQUIRE(o.count("code") > 0);
+		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+		assert(o.count("balance") > 0);
+		assert(o.count("nonce") > 0);
+		assert(o.count("storage") > 0);
+		assert(o.count("code") > 0);
 
 		auto& a = addresses[Address(i.first)];
 		get<0>(a) = toInt(o["balance"]);
@@ -335,13 +337,14 @@ mObject FakeExtVM::exportExec()
 
 void FakeExtVM::importExec(mObject& _o)
 {
-	BOOST_REQUIRE(_o.count("address")> 0);
-	BOOST_REQUIRE(_o.count("caller") > 0);
-	BOOST_REQUIRE(_o.count("origin") > 0);
-	BOOST_REQUIRE(_o.count("value") > 0);
-	BOOST_REQUIRE(_o.count("data") > 0);
-	BOOST_REQUIRE(_o.count("gasPrice") > 0);
-	BOOST_REQUIRE(_o.count("gas") > 0);
+	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+	assert(_o.count("address")> 0);
+	assert(_o.count("caller") > 0);
+	assert(_o.count("origin") > 0);
+	assert(_o.count("value") > 0);
+	assert(_o.count("data") > 0);
+	assert(_o.count("gasPrice") > 0);
+	assert(_o.count("gas") > 0);
 
 	myAddress = Address(_o["address"].get_str());
 	caller = Address(_o["caller"].get_str());
@@ -611,12 +614,16 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 
 void executeTests(const string& _name)
 {
-	const char* testPath = getenv("ETHEREUM_TEST_PATH");
-	if (testPath == NULL)
+	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
+	string testPath;
+
+	if (ptestPath == NULL)
 	{
 		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
 		testPath = "../../../tests/vmtests";
 	}
+	else
+		testPath = ptestPath;
 
 #ifdef FILL_TESTS
 	try
@@ -629,8 +636,7 @@ void executeTests(const string& _name)
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + "Filler.json is empty.");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, true);
-
-		writeFile(*testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+		writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
 	}
 	catch (Exception const& _e)
 	{
@@ -646,8 +652,8 @@ void executeTests(const string& _name)
 	{
 		cnote << "Testing VM..." << _name;
 		json_spirit::mValue v;
-		string s = asString(contents(*testPath + "/" + _name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + ".json is empty. Have you cloned the 'tests' repo branch develop?");
+		string s = asString(contents(testPath + "/" + _name + ".json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, false);
 	}
