@@ -27,8 +27,6 @@ string name = "Ethereum(++) tests";
 string dbPath;
 dev::WebThreeDirect web3(name, dbPath, true);
 
-std::vector<dev::KeyPair> keys = {KeyPair::create()};
-
 auto_ptr<EthStubServer> jsonrpcServer;
 auto_ptr<EthStubClient> jsonrpcClient;
 
@@ -41,7 +39,6 @@ struct JsonrpcFixture  {
         web3.setIdealPeerCount(5);
         web3.ethereum()->setForceMining(true);
         jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::CorsHttpServer(8080), web3));
-        jsonrpcServer->setKeys(keys);
         jsonrpcServer->StartListening();
         
         jsonrpcClient = auto_ptr<EthStubClient>(new EthStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
@@ -57,7 +54,8 @@ BOOST_GLOBAL_FIXTURE(JsonrpcFixture)
 BOOST_AUTO_TEST_CASE(jsonrpc_balanceAt)
 {
     cnote << "Testing jsonrpc balanceAt...";
-    auto address = keys[0].address();
+    dev::KeyPair key = KeyPair::create();
+    auto address = key.address();
     string balance = jsonrpcClient->balanceAt(toJS(address), 0);
     BOOST_CHECK_EQUAL(jsToDecimal(toJS(web3.ethereum()->balanceAt(address))), balance);
 }
@@ -80,7 +78,8 @@ BOOST_AUTO_TEST_CASE(jsonrpc_coinbase)
 BOOST_AUTO_TEST_CASE(jsonrpc_countAt)
 {
     cnote << "Testing jsonrpc countAt...";
-    auto address = keys[0].address();
+    dev::KeyPair key = KeyPair::create();
+    auto address = key.address();
     double countAt = jsonrpcClient->countAt(toJS(address), 0);
     BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3.ethereum()->countAt(address, 0));
 }
@@ -140,14 +139,20 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isMining)
 BOOST_AUTO_TEST_CASE(jsonrpc_key)
 {
     cnote << "Testing jsonrpc key...";
-    string key = jsonrpcClient->key();
-    BOOST_CHECK_EQUAL(jsToSecret(key), keys[0].secret());
+    dev::KeyPair key = KeyPair::create();
+    jsonrpcServer->setKeys({key});
+    string clientSecret = jsonrpcClient->key();
+    jsonrpcServer->setKeys({});
+    BOOST_CHECK_EQUAL(jsToSecret(clientSecret), key.secret());
 }
     
 BOOST_AUTO_TEST_CASE(jsonrpc_keys)
 {
     cnote << "Testing jsonrpc keys...";
+    std::vector <dev::KeyPair> keys = {KeyPair::create(), KeyPair::create()};
+    jsonrpcServer->setKeys(keys);
     Json::Value k = jsonrpcClient->keys();
+    jsonrpcServer->setKeys({});
     BOOST_CHECK_EQUAL(k.isArray(), true);
     BOOST_CHECK_EQUAL(k.size(),  keys.size());
     for (unsigned i = 0; i < k.size(); i++)
@@ -222,7 +227,8 @@ BOOST_AUTO_TEST_CASE(jsonrpc_sha3)
 BOOST_AUTO_TEST_CASE(jsonrpc_stateAt)
 {
     cnote << "Testing jsonrpc stateAt...";
-    auto address = keys[0].address();
+    dev::KeyPair key = KeyPair::create();
+    auto address = key.address();
     string stateAt = jsonrpcClient->stateAt(toJS(address), 0, "0");
     BOOST_CHECK_EQUAL(toJS(web3.ethereum()->stateAt(address, jsToU256("0"), 0)), stateAt);
 }
@@ -256,18 +262,20 @@ BOOST_AUTO_TEST_CASE(jsonrpc_toFixed)
 BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 {
     cnote << "Testing jsonrpc transact...";
-    
-    web3.ethereum()->setAddress(keys[0].address());
+    dev::KeyPair key = KeyPair::create();
+    auto address = key.address();
     auto receiver = KeyPair::create();
+    
+    web3.ethereum()->setAddress(address);
     dev::eth::mine(*(web3.ethereum()), 1);
-    auto balance = web3.ethereum()->balanceAt(keys[0].address(), 0);
+    auto balance = web3.ethereum()->balanceAt(address, 0);
     BOOST_REQUIRE(balance > 0);
     auto txAmount = balance / 2u;
     auto gasPrice = 10 * dev::eth::szabo;
     auto gas = dev::eth::c_txGas;
     
     Json::Value t;
-    t["from"] = toJS(keys[0].secret());
+    t["from"] = toJS(key.secret());
     t["value"] = toJS(txAmount);
     t["to"] = toJS(receiver.address());
     t["data"] = toJS(bytes());
