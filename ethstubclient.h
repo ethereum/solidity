@@ -39,7 +39,7 @@ p["block"] = block;
             p["numberOrHash"] = numberOrHash; 
 
             Json::Value result = this->client->CallMethod("block",p);
-    if (result.isArray())
+    if (result.isObject())
         return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
@@ -374,7 +374,7 @@ p["s"] = s;
 p["numberOrHash"] = numberOrHash; 
 
             Json::Value result = this->client->CallMethod("transaction",p);
-    if (result.isArray())
+    if (result.isObject())
         return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
@@ -388,7 +388,7 @@ p["numberOrHash"] = numberOrHash;
 p["numberOrHash"] = numberOrHash; 
 
             Json::Value result = this->client->CallMethod("uncle",p);
-    if (result.isArray())
+    if (result.isObject())
         return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());

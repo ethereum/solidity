@@ -256,6 +256,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_toFixed)
 BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 {
     cnote << "Testing jsonrpc transact...";
+    
     web3.ethereum()->setAddress(keys[0].address());
     auto receiver = KeyPair::create();
     dev::eth::mine(*(web3.ethereum()), 1);
