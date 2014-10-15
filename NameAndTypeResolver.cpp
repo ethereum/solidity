@@ -23,6 +23,7 @@
 #include <libsolidity/NameAndTypeResolver.h>
 
 #include <libsolidity/AST.h>
+#include <libsolidity/Exceptions.h>
 #include <boost/assert.hpp>
 
 namespace dev {
@@ -115,7 +116,7 @@ void NameAndTypeResolver::resolveReferencesInFunction(ParameterList& _returnPara
 		virtual bool visit(Identifier& _identifier) override {
 			Declaration* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
 			if (declaration == nullptr)
-				throw std::exception(); // @todo
+				BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Undeclared identifier."));
 			_identifier.setReferencedDeclaration(*declaration);
 			return false;
 		}
@@ -151,10 +152,11 @@ void NameAndTypeResolver::registerVariableDeclarationAndResolveType(VariableDecl
 		virtual bool visit(UserDefinedTypeName& _typeName) override {
 			Declaration* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
 			if (declaration == nullptr)
-				throw std::exception(); // @todo
+				BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Undeclared identifier."));
 			StructDefinition* referencedStruct = dynamic_cast<StructDefinition*>(declaration);
+			//@todo later, contracts are also valid types
 			if (referencedStruct == nullptr)
-				throw std::exception(); // @todo we only allow structs as user defined types (later also contracts)
+				BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Identifier does not name a type name."));
 			_typeName.setReferencedStruct(*referencedStruct);
 			return false;
 		}
@@ -176,7 +178,7 @@ void NameAndTypeResolver::registerVariableDeclarationAndResolveType(VariableDecl
 void NameAndTypeResolver::registerDeclaration(Declaration& _declaration)
 {
 	if (!m_currentScope->registerDeclaration(_declaration))
-		throw std::exception(); // @todo
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Identifier already declared."));
 }
 
 Declaration* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)

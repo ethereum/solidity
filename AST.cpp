@@ -24,6 +24,7 @@
 
 #include <libsolidity/AST.h>
 #include <libsolidity/ASTVisitor.h>
+#include <libsolidity/Exceptions.h>
 
 namespace dev {
 namespace solidity {
@@ -245,7 +246,9 @@ void Literal::accept(ASTVisitor& _visitor)
 void Statement::expectType(Expression& _expression, const Type& _expectedType)
 {
 	if (!_expression.checkTypeRequirements()->isImplicitlyConvertibleTo(_expectedType))
-		throw std::exception(); // @todo
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Type not implicitly convertible "
+															 "to expected type."));
+	//@todo provide more information to the exception
 }
 
 ptr<Type> Block::checkTypeRequirements()
@@ -284,7 +287,9 @@ ptr<Type> Return::checkTypeRequirements()
 {
 	BOOST_ASSERT(m_returnParameters != nullptr);
 	if (m_returnParameters->getParameters().size() != 1)
-		throw std::exception(); // @todo
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Different number of arguments in "
+															 "return statement than in returns "
+															 "declaration."));
 	// this could later be changed such that the paramaters type is an anonymous struct type,
 	// but for now, we only allow one return parameter
 
@@ -318,7 +323,7 @@ ptr<Type> Assignment::checkTypeRequirements()
 	if (m_assigmentOperator != Token::ASSIGN) {
 		// complex assignment
 		if (!m_type->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_assigmentOperator)))
-			throw std::exception();
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
 	}
 	return m_type;
 }
@@ -328,7 +333,7 @@ ptr<Type> UnaryOperation::checkTypeRequirements()
 	// INC, DEC, NOT, BIT_NOT, DELETE
 	m_type = m_subExpression->checkTypeRequirements();
 	if (m_type->acceptsUnaryOperator(m_operator))
-		throw std::exception();
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Unary operator not compatible with type."));
 	return m_type;
 }
 
@@ -342,7 +347,7 @@ ptr<Type> BinaryOperation::checkTypeRequirements()
 	else if (m_left->getType()->isImplicitlyConvertibleTo(*m_right->getType()))
 		m_commonType = m_right->getType();
 	else
-		throw std::exception();
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("No common type found in binary operation."));
 
 	if (Token::IsCompareOp(m_operator)) {
 		m_type = std::make_shared<BoolType>();
@@ -350,7 +355,7 @@ ptr<Type> BinaryOperation::checkTypeRequirements()
 		BOOST_ASSERT(Token::IsBinaryOp(m_operator));
 		m_type = m_commonType;
 		if (!m_commonType->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_operator)))
-			throw std::exception();
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
 	}
 	return m_type;
 }
@@ -369,9 +374,11 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
 		if (m_arguments.size() != 1)
-			throw std::exception();
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("More than one argument for "
+																 "explicit type conersion."));
 		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type->getActualType()))
-			throw std::exception();
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Explicit type conversion not "
+																 "allowed."));
 		m_type = type->getActualType();
 	} else if (category == Type::Category::FUNCTION) {
 		//@todo would be nice to create a struct type from the arguments
@@ -382,10 +389,12 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 		FunctionDefinition const& fun = function->getFunction();
 		vecptr<VariableDeclaration> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
-			throw std::exception();
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Wrong argument count for "
+																 "function call."));
 		for (size_t i = 0; i < m_arguments.size(); ++i) {
 			if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
-				throw std::exception();
+				BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Invalid type for argument in "
+																	 "function call."));
 		}
 
 		// @todo actually the return type should be an anonymous struct,
@@ -395,7 +404,7 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 		else
 			m_type = fun.getReturnParameterList()->getParameters().front()->getType();
 	} else {
-		throw std::exception(); // type does not support invocation
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Type does not support invocation."));
 	}
 	return m_type;
 }
@@ -428,7 +437,8 @@ ptr<Type> Identifier::checkTypeRequirements()
 	VariableDeclaration* variable = dynamic_cast<VariableDeclaration*>(m_referencedDeclaration);
 	if (variable != nullptr) {
 		if (variable->getType().get() == nullptr)
-			throw std::exception(); // variable used before type could be determined
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Variable referenced before type "
+																 "could be determined."));
 		m_type = variable->getType();
 		return m_type;
 	}
@@ -452,7 +462,7 @@ ptr<Type> Identifier::checkTypeRequirements()
 		m_type = std::make_shared<TypeType>(std::make_shared<ContractType>(*contractDef));
 		return m_type;
 	}
-	throw std::exception(); // declaration reference of unknown/forbidden type
+	BOOST_ASSERT(false); // declaration reference of unknown/forbidden type
 	return m_type;
 }
 

@@ -20,10 +20,11 @@
  * Solidity parser.
  */
 
-#include "libdevcore/Log.h"
-#include "libsolidity/BaseTypes.h"
-#include "libsolidity/Parser.h"
-#include "libsolidity/Scanner.h"
+#include <libdevcore/Log.h>
+#include <libsolidity/BaseTypes.h>
+#include <libsolidity/Parser.h>
+#include <libsolidity/Scanner.h>
+#include <libsolidity/Exceptions.h>
 
 namespace dev {
 namespace solidity {
@@ -530,16 +531,17 @@ ptr<ASTString> Parser::getLiteralAndAdvance()
 
 void Parser::throwExpectationError(const std::string& _description)
 {
+	//@todo put some of this stuff into ParserError
 	int line, column;
 	std::tie(line, column) = m_scanner->translatePositionToLineColumn(getPosition());
-	cwarn << "Solidity parser error: " << _description
-		  << "at line " << (line + 1)
-		  << ", column " << (column + 1);
-	cwarn << m_scanner->getLineAtPosition(getPosition());
-	cwarn << std::string(column, ' ') << "^";
+	std::stringstream buf;
+	buf << "Solidity parser error: " << _description
+		<< " at line " << (line + 1)
+		<< ", column " << (column + 1) << "\n"
+		<< m_scanner->getLineAtPosition(getPosition()) << "\n"
+		<< std::string(column, ' ') << "^";
 
-	/// @todo make a proper exception hierarchy
-	throw std::exception();
+	BOOST_THROW_EXCEPTION(ParserError() << errinfo_comment(buf.str()));
 }
 
 
