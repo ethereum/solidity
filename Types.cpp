@@ -37,8 +37,8 @@ ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 			bits = (1 << (bits - 1)) * 32;
 		int modifier = offset / 5;
 		return std::make_shared<IntegerType>(bits,
-											 modifier == 0 ? IntegerType::Modifier::UNSIGNED :
-											 modifier == 1 ? IntegerType::Modifier::SIGNED :
+											 modifier == 0 ? IntegerType::Modifier::SIGNED :
+											 modifier == 1 ? IntegerType::Modifier::UNSIGNED :
 															 IntegerType::Modifier::HASH);
 	} else if (_typeToken == Token::ADDRESS) {
 		return std::make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS);
@@ -109,26 +109,34 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool IntegerType::isExplicitlyConvertibleTo(const Type& _convertTo) const
 {
-	// @todo
-	return false;
+	return _convertTo.getCategory() == Category::INTEGER;
 }
 
 bool IntegerType::acceptsBinaryOperator(Token::Value _operator) const
 {
-	//@todo
-	return true;
+	if (isAddress()) {
+		return Token::IsCompareOp(_operator);
+	} else if (isHash()) {
+		return Token::IsCompareOp(_operator) || Token::IsBitOp(_operator);
+	} else {
+		return true;
+	}
 }
 
 bool IntegerType::acceptsUnaryOperator(Token::Value _operator) const
 {
-	//@todo
-	return true;
+	return _operator == Token::DELETE || (!isAddress() && _operator == Token::BIT_NOT);
 }
 
 bool BoolType::isExplicitlyConvertibleTo(const Type& _convertTo) const
 {
-	//@todo conversion to integer is fine, but not to address
-	//@todo this is an example of explicit conversions being not transitive (though implicit should)
+	// conversion to integer is fine, but not to address
+	// this is an example of explicit conversions being not transitive (though implicit should be)
+	if (_convertTo.getCategory() == Category::INTEGER) {
+		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
+		if (!convertTo.isAddress())
+			return true;
+	}
 	return isImplicitlyConvertibleTo(_convertTo);
 }
 

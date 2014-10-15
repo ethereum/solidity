@@ -354,7 +354,7 @@ ptr<Type> BinaryOperation::checkTypeRequirements()
 	} else {
 		BOOST_ASSERT(Token::IsBinaryOp(m_operator));
 		m_type = m_commonType;
-		if (!m_commonType->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_operator)))
+		if (!m_commonType->acceptsBinaryOperator(m_operator))
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
 	}
 	return m_type;

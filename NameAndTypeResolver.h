@@ -32,34 +32,64 @@
 namespace dev {
 namespace solidity {
 
+
 class NameAndTypeResolver : private boost::noncopyable
 {
 public:
 	NameAndTypeResolver();
 
 	void resolveNamesAndTypes(ContractDefinition& _contract);
+	Declaration* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 private:
-	class ScopeHelper; //< RIIA helper to open and close scopes
-
 	void reset();
 
-	void handleContract(ContractDefinition& _contract);
-	void handleFunction(FunctionDefinition& _function);
-	void registerVariablesInFunction(FunctionDefinition& _function);
-	void resolveReferencesInFunction(ParameterList& _returnParameters,
-									 Block& _functionBody);
-
-	void registerVariableDeclarationAndResolveType(VariableDeclaration& _variable);
-	void registerDeclaration(Declaration& _declaration);
-	Declaration* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
-
-	void enterNewSubScope(ASTNode& _node);
-	void closeCurrentScope();
-
-	Scope m_globalScope; // not part of the map
+	//! Maps nodes declaring a scope to scopes, i.e. ContractDefinition, FunctionDeclaration and
+	//! StructDefinition (@todo not yet implemented), where nullptr denotes the global scope.
 	std::map<ASTNode*, Scope> m_scopes;
 
 	Scope* m_currentScope;
+};
+
+//! Traverses the given AST upon construction and fills _scopes with all declarations inside the
+//! AST.
+class DeclarationRegistrationHelper : private ASTVisitor
+{
+public:
+	DeclarationRegistrationHelper(std::map<ASTNode*, Scope>& _scopes, ASTNode& _astRoot);
+
+private:
+	bool visit(ContractDefinition& _contract);
+	void endVisit(ContractDefinition& _contract);
+	bool visit(StructDefinition& _struct);
+	void endVisit(StructDefinition& _struct);
+	bool visit(FunctionDefinition& _function);
+	void endVisit(FunctionDefinition& _function);
+	bool visit(VariableDeclaration& _declaration);
+	void endVisit(VariableDeclaration& _declaration);
+
+	void enterNewSubScope(ASTNode& _node);
+	void closeCurrentScope();
+	void registerDeclaration(Declaration& _declaration, bool _opensScope);
+
+	std::map<ASTNode*, Scope>& m_scopes;
+	Scope* m_currentScope;
+};
+
+//! Resolves references to declarations (of variables and types) and also establishes the link
+//! between a return statement and the return parameter list.
+class ReferencesResolver : private ASTVisitor
+{
+public:
+	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver, ParameterList* _returnParameters);
+private:
+	virtual void endVisit(VariableDeclaration& _variable) override;
+	virtual bool visit(Identifier& _identifier) override;
+	virtual bool visit(UserDefinedTypeName& _typeName) override;
+	virtual bool visit(Mapping&) override;
+	virtual bool visit(Return& _return) override;
+private:
+	NameAndTypeResolver& m_resolver;
+	ParameterList* m_returnParameters;
 };
 
 } }
