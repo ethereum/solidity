@@ -61,10 +61,10 @@ public:
 	static ptr<Type> forLiteral(Literal const& _literal);
 
 	virtual Category getCategory() const = 0;
-	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const { return false; }
+	virtual bool isImplicitlyConvertibleTo(const Type&) const { return false; }
 	virtual bool isExplicitlyConvertibleTo(const Type& _convertTo) const { return isImplicitlyConvertibleTo(_convertTo); }
-	virtual bool acceptsBinaryOperator(Token::Value _operator) const { return false; }
-	virtual bool acceptsUnaryOperator(Token::Value _operator) const { return false; }
+	virtual bool acceptsBinaryOperator(Token::Value) const { return false; }
+	virtual bool acceptsUnaryOperator(Token::Value) const { return false; }
 };
 
 class IntegerType : public Type
