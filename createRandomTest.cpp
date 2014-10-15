@@ -42,7 +42,7 @@ void doMyTests(json_spirit::mValue& v);
 
 int main(int argc, char *argv[])
 {
-	if (argc!=2)
+	if (argc != 2)
 	{
 		cout << "usage: createRandomTest <filename>\n";
 		return 0;
