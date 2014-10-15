@@ -26,6 +26,7 @@
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
+#include <libsolidity/Exceptions.h>
 #include <boost/test/unit_test.hpp>
 
 namespace dev {
@@ -60,7 +61,7 @@ BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
 					   "  uint256 variable;\n"
 					   "  uint128 variable;\n"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), std::exception);
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(double_function_declaration)
@@ -69,7 +70,7 @@ BOOST_AUTO_TEST_CASE(double_function_declaration)
 					   "  function fun() { var x; }\n"
 					   "  function fun() { var x; }\n"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), std::exception);
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(double_variable_declaration)
@@ -77,7 +78,7 @@ BOOST_AUTO_TEST_CASE(double_variable_declaration)
 	char const* text = "contract test {\n"
 					   "  function f() { uint256 x; if (true)  { uint256 x; } }\n"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), std::exception);
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(name_shadowing)
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(undeclared_name)
 					   "  uint256 variable;\n"
 					   "  function f(uint256 arg) { f(notfound); }"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), std::exception);
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -25,6 +25,7 @@
 #include <libdevcore/Log.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
+#include <libsolidity/Exceptions.h>
 #include <boost/test/unit_test.hpp>
 
 namespace dev {
@@ -54,8 +55,7 @@ BOOST_AUTO_TEST_CASE(missing_variable_name_in_declaration)
 	char const* text = "contract test {\n"
 					   "  uint256 ;\n"
 					   "}\n";
-	cwarn << "The next error is expected.";
-	BOOST_CHECK_THROW(parseText(text), std::exception);
+	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
 BOOST_AUTO_TEST_CASE(empty_function)
