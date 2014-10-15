@@ -27,13 +27,170 @@
 #include <libdevcore/Log.h>
 #include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
+#include "TestHelperCrypto.h"
 
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
 
+namespace dev
+{
+namespace crypto
+{
 
-BOOST_AUTO_TEST_CASE(crypto_tests)
+inline CryptoPP::AutoSeededRandomPool& PRNG() {
+	static CryptoPP::AutoSeededRandomPool prng;
+	return prng;
+}
+	
+}
+}
+
+using namespace CryptoPP;
+
+BOOST_AUTO_TEST_SUITE(crypto)
+
+BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
+{
+	cnote << "Testing cryptopp_ecies_message...";
+
+	string const message("Now is the time for all good men to come to the aide of humanity.");
+
+	AutoSeededRandomPool prng;
+
+	ECIES<ECP>::Decryptor localDecryptor(prng, ASN1::secp256r1());
+	SavePrivateKey(localDecryptor.GetPrivateKey());
+	
+	ECIES<ECP>::Encryptor localEncryptor(localDecryptor);
+	SavePublicKey(localEncryptor.GetPublicKey());
+
+	ECIES<ECP>::Decryptor futureDecryptor;
+	LoadPrivateKey(futureDecryptor.AccessPrivateKey());
+	futureDecryptor.GetPrivateKey().ThrowIfInvalid(prng, 3);
+	
+	ECIES<ECP>::Encryptor futureEncryptor;
+	LoadPublicKey(futureEncryptor.AccessPublicKey());
+	futureEncryptor.GetPublicKey().ThrowIfInvalid(prng, 3);
+
+	// encrypt/decrypt with local
+	string cipherLocal;
+	StringSource ss1 (message, true, new PK_EncryptorFilter(prng, localEncryptor, new StringSink(cipherLocal) ) );
+	string plainLocal;
+	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(prng, localDecryptor, new StringSink(plainLocal) ) );
+
+	// encrypt/decrypt with future
+	string cipherFuture;
+	StringSource ss3 (message, true, new PK_EncryptorFilter(prng, futureEncryptor, new StringSink(cipherFuture) ) );
+	string plainFuture;
+	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(prng, futureDecryptor, new StringSink(plainFuture) ) );
+	
+	// decrypt local w/future
+	string plainFutureFromLocal;
+	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(prng, futureDecryptor, new StringSink(plainFutureFromLocal) ) );
+	
+	// decrypt future w/local
+	string plainLocalFromFuture;
+	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(prng, localDecryptor, new StringSink(plainLocalFromFuture) ) );
+	
+	
+	assert(plainLocal == message);
+	assert(plainFuture == plainLocal);
+	assert(plainFutureFromLocal == plainLocal);
+	assert(plainLocalFromFuture == plainLocal);
+}
+
+BOOST_AUTO_TEST_CASE(cryptopp_ecdh_prime)
+{
+	cnote << "Testing cryptopp_ecdh_prime...";
+	
+	using namespace CryptoPP;
+	OID curve = ASN1::secp256r1();
+
+	ECDH<ECP>::Domain dhLocal(curve);
+	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
+	SecByteBlock pubLocal(dhLocal.PublicKeyLength());
+	dhLocal.GenerateKeyPair(dev::crypto::PRNG(), privLocal, pubLocal);
+	
+	ECDH<ECP>::Domain dhRemote(curve);
+	SecByteBlock privRemote(dhRemote.PrivateKeyLength());
+	SecByteBlock pubRemote(dhRemote.PublicKeyLength());
+	dhRemote.GenerateKeyPair(dev::crypto::PRNG(), privRemote, pubRemote);
+	
+	assert(dhLocal.AgreedValueLength() == dhRemote.AgreedValueLength());
+	
+	// local: send public to remote; remote: send public to local
+	
+	// Local
+	SecByteBlock sharedLocal(dhLocal.AgreedValueLength());
+	assert(dhLocal.Agree(sharedLocal, privLocal, pubRemote));
+	
+	// Remote
+	SecByteBlock sharedRemote(dhRemote.AgreedValueLength());
+	assert(dhRemote.Agree(sharedRemote, privRemote, pubLocal));
+	
+	// Test
+	Integer ssLocal, ssRemote;
+	ssLocal.Decode(sharedLocal.BytePtr(), sharedLocal.SizeInBytes());
+	ssRemote.Decode(sharedRemote.BytePtr(), sharedRemote.SizeInBytes());
+	
+	assert(ssLocal != 0);
+	assert(ssLocal == ssRemote);
+}
+
+BOOST_AUTO_TEST_CASE(cryptopp_ecdh_aes128_cbc_noauth)
+{
+	// ECDH gives 256-bit shared while aes uses 128-bits
+	// Use first 128-bits of shared secret as symmetric key
+	// IV is 0
+	// New connections require new ECDH keypairs
+	
+	
+}
+	
+BOOST_AUTO_TEST_CASE(cryptopp_eth_fbba)
+{
+	// Initial Authentication:
+	//
+	// New/Known Peer:
+	// pubkeyL = knownR? ? myKnown : myECDH
+	// pubkeyR = knownR? ? theirKnown : theirECDH
+	//
+	// Initial message = hmac(k=sha3(shared-secret[128..255]), address(pubkeyL)) || ECIES encrypt(pubkeyR, pubkeyL)
+	//
+	// Key Exchange (this could occur after handshake messages):
+	// If peers do not know each other they will need to exchange public keys.
+	//
+	// Drop ECDH (this could occur after handshake messages):
+	// After authentication and/or key exchange, both sides generate shared key
+	// from their 'known' keys and use this to encrypt all future messages.
+	//
+	// v2: If one side doesn't trust the other then a single-use key maybe sent.
+	// This will need to be tracked for future connections; when non-trusting peer
+	// wants to trust the other, it can request that it's old, 'new', public key be
+	// accepted. And, if the peer *really* doesn't trust the other side, it can request
+	// that a new, 'new', public key be accepted.
+	//
+	// Handshake (all or nothing, padded):
+	// All Peers (except blacklisted):
+	//
+	//
+	// New Peer:
+	//
+	//
+	// Known Untrusted Peer:
+	//
+	//
+	// Known Trusted Peer:
+	//
+	//
+	// Blacklisted Peeer:
+	// Already dropped by now.
+	//
+	//
+	// MAC:
+	// ...
+}
+	
+BOOST_AUTO_TEST_CASE(eth_keypairs)
 {
 	cnote << "Testing Crypto...";
 	secp256k1_start();
@@ -42,7 +199,7 @@ BOOST_AUTO_TEST_CASE(crypto_tests)
 	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
 	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
 	{
-		Transaction t;
+		eth::Transaction t;
 		t.nonce = 0;
 		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
 		t.value = 1000;
@@ -70,7 +227,7 @@ int cryptoTest()
 	assert(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
 	assert(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
 	{
-		Transaction t;
+		eth::Transaction t;
 		t.nonce = 0;
 		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
 		t.value = 1000;
@@ -155,4 +312,6 @@ int cryptoTest()
 #endif
 	return 0;
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
