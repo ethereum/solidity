@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdh_prime)
 	cnote << "Testing cryptopp_ecdh_prime...";
 	
 	using namespace CryptoPP;
-	OID curve = ASN1::secp256r1();
+	OID curve = ASN1::secp256k1();
 
 	ECDH<ECP>::Domain dhLocal(curve);
 	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
@@ -136,14 +136,51 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdh_prime)
 	assert(ssLocal == ssRemote);
 }
 
+BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
+{
+	const int aesKeyLen = 16;
+	assert(sizeof(char) == sizeof(byte));
+	
+	AutoSeededRandomPool rng;
+	SecByteBlock key(0x00, aesKeyLen);
+	rng.GenerateBlock(key, key.size());
+	
+	// Generate random IV
+	byte iv[AES::BLOCKSIZE];
+	rng.GenerateBlock(iv, AES::BLOCKSIZE);
+	
+	string string128("AAAAAAAAAAAAAAAA");
+	string plainOriginal = string128;
+	
+	CryptoPP::CBC_Mode<Rijndael>::Encryption cbcEncryption(key, key.size(), iv);
+	cbcEncryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
+	assert(string128 != plainOriginal);
+	
+	CBC_Mode<Rijndael>::Decryption cbcDecryption(key, key.size(), iv);
+	cbcDecryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
+	assert(plainOriginal == string128);
+	
+	
+	// plaintext whose size isn't divisible by block size must use stream filter for padding
+	string string192("AAAAAAAAAAAAAAAABBBBBBBB");
+	plainOriginal = string192;
+
+	string cipher;
+	StreamTransformationFilter* aesStream = new StreamTransformationFilter(cbcEncryption, new StringSink(cipher));
+	StringSource source(string192, true, aesStream);
+	assert(cipher.size() == 32);
+
+	cbcDecryption.ProcessData((byte*)&cipher[0], (byte*)&string192[0], cipher.size());
+	assert(string192 == plainOriginal);
+}
+	
 BOOST_AUTO_TEST_CASE(cryptopp_ecdh_aes128_cbc_noauth)
 {
 	// ECDH gives 256-bit shared while aes uses 128-bits
 	// Use first 128-bits of shared secret as symmetric key
 	// IV is 0
 	// New connections require new ECDH keypairs
-	
-	
+
 }
 	
 BOOST_AUTO_TEST_CASE(cryptopp_eth_fbba)

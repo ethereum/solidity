@@ -22,11 +22,13 @@
 #pragma once
 
 //#include <ostream>
-#include <eccrypto.h>
-#include <ecp.h>
-#include <files.h>
 #include <osrng.h>
-#include <oids.h>
+#include <eccrypto.h>		// secp256r1
+#include <oids.h>		// ec domain
+#include <ecp.h>			// ec prime field
+#include <files.h>		// also for buffer
+#include <aes.h>
+#include <modes.h>		// aes modes
 
 using namespace std;
 using namespace CryptoPP;
