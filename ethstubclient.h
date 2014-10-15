@@ -19,10 +19,10 @@ class EthStubClient
             delete this->client;
         }
 
-        std::string balanceAt(const std::string& a, const int& block) throw (jsonrpc::JsonRpcException)
+        std::string balanceAt(const std::string& address, const int& block) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["a"] = a; 
+            p["address"] = address; 
 p["block"] = block; 
 
             Json::Value result = this->client->CallMethod("balanceAt",p);
@@ -59,10 +59,10 @@ p["block"] = block;
 
         }
 
-        std::string codeAt(const std::string& a, const int& block) throw (jsonrpc::JsonRpcException)
+        std::string codeAt(const std::string& address, const int& block) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["a"] = a; 
+            p["address"] = address; 
 p["block"] = block; 
 
             Json::Value result = this->client->CallMethod("codeAt",p);
@@ -85,10 +85,10 @@ p["block"] = block;
 
         }
 
-        double countAt(const std::string& a, const int& block) throw (jsonrpc::JsonRpcException)
+        double countAt(const std::string& address, const int& block) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["a"] = a; 
+            p["address"] = address; 
 p["block"] = block; 
 
             Json::Value result = this->client->CallMethod("countAt",p);
@@ -313,12 +313,12 @@ p["s"] = s;
 
         }
 
-        std::string stateAt(const std::string& a, const int& block, const std::string& s) throw (jsonrpc::JsonRpcException)
+        std::string stateAt(const std::string& address, const int& block, const std::string& storage) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["a"] = a; 
+            p["address"] = address; 
 p["block"] = block; 
-p["s"] = s; 
+p["storage"] = storage; 
 
             Json::Value result = this->client->CallMethod("stateAt",p);
     if (result.isString())
