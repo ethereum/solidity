@@ -108,6 +108,64 @@ BOOST_AUTO_TEST_CASE(undeclared_name)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
 }
 
+BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
+{
+	char const* text = "contract test {\n"
+					   "  function g() { f(); }"
+					   "  function f() {  }"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(type_inference_smoke_test)
+{
+	char const* text = "contract test {\n"
+					   "  function f(uint256 arg1, uint32 arg2) returns (bool ret) { var x = arg1 + arg2 == 8; ret = x; }"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(type_checking_return)
+{
+	char const* text = "contract test {\n"
+					   "  function f() returns (bool r) { return 1 >= 2; }"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(type_checking_return_wrong_number)
+{
+	char const* text = "contract test {\n"
+					   "  function f() returns (bool r1, bool r2) { return 1 >= 2; }"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(type_checking_return_wrong_type)
+{
+	char const* text = "contract test {\n"
+					   "  function f() returns (uint256 r) { return 1 >= 2; }"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(type_checking_function_call)
+{
+	char const* text = "contract test {\n"
+					   "  function f() returns (bool r) { return g(12, true) == 3; }\n"
+					   "  function g(uint256 a, bool b) returns (uint256 r) { }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
+{
+	char const* text = "contract test {\n"
+					   "  function f() returns (int256 r) { var x = int256(uint32(2)); return x; }"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } } } // end namespaces
