@@ -88,9 +88,9 @@ std::shared_ptr<IntegerType> IntegerType::smallestTypeForLiteral(std::string con
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
-	BOOST_ASSERT(_bits > 0 && _bits <= 256 && _bits % 8 == 0);
 	if (isAddress())
 		_bits = 160;
+	BOOST_ASSERT(_bits > 0 && _bits <= 256 && _bits % 8 == 0);
 }
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const

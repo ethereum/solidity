@@ -536,16 +536,7 @@ ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 
 void Parser::throwExpectationError(std::string const& _description)
 {
-	//@todo put some of this stuff into ParserError
-	int line, column;
-	std::tie(line, column) = m_scanner->translatePositionToLineColumn(getPosition());
-	std::stringstream buf;
-	buf << "Solidity parser error: " << _description
-		<< " at line " << (line + 1)
-		<< ", column " << (column + 1) << "\n"
-		<< m_scanner->getLineAtPosition(getPosition()) << "\n"
-		<< std::string(column, ' ') << "^";
-	BOOST_THROW_EXCEPTION(ParserError() << errinfo_comment(buf.str()));
+	BOOST_THROW_EXCEPTION(ParserError(getPosition(), _description));
 }
 
 

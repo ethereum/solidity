@@ -22,16 +22,53 @@
 
 #pragma once
 
+#include <string>
 #include <libdevcore/Exceptions.h>
+#include <libsolidity/BaseTypes.h>
 
 namespace dev
 {
 namespace solidity
 {
 
-struct ParserError: virtual Exception {};
-struct TypeError: virtual Exception {};
-struct DeclarationError: virtual Exception {};
+class ParserError: public virtual Exception
+{
+public:
+	ParserError(int _position, std::string const& _description):
+		m_position(_position), m_description(_description) {}
+	virtual const char* what() const noexcept;
+	int getPosition() const { return m_position; }
+
+private:
+	int m_position;
+	std::string m_description;
+};
+
+class TypeError: public virtual Exception
+{
+public:
+	TypeError(Location const& _location, std::string const& _description):
+		m_location(_location), m_description(_description) {}
+	virtual const char* what() const noexcept;
+	Location const& getLocation() const { return m_location; }
+
+private:
+	Location m_location;
+	std::string m_description;
+};
+
+class DeclarationError: public virtual Exception
+{
+public:
+	DeclarationError(Location const& _location, std::string const& _description):
+		m_location(_location), m_description(_description) {}
+	virtual const char* what() const noexcept;
+	Location const& getLocation() const { return m_location; }
+
+private:
+	Location m_location;
+	std::string m_description;
+};
 
 }
 }
