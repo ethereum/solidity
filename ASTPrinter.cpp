@@ -172,6 +172,7 @@ bool ASTPrinter::visit(VariableDefinition& _node)
 bool ASTPrinter::visit(Expression& _node)
 {
 	writeLine("Expression");
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -179,6 +180,7 @@ bool ASTPrinter::visit(Expression& _node)
 bool ASTPrinter::visit(Assignment& _node)
 {
 	writeLine(std::string("Assignment using operator ") + Token::toString(_node.getAssignmentOperator()));
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -187,6 +189,7 @@ bool ASTPrinter::visit(UnaryOperation& _node)
 {
 	writeLine(std::string("UnaryOperation (") + (_node.isPrefixOperation() ? "prefix" : "postfix") +
 			  ") " + Token::toString(_node.getOperator()));
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -194,6 +197,7 @@ bool ASTPrinter::visit(UnaryOperation& _node)
 bool ASTPrinter::visit(BinaryOperation& _node)
 {
 	writeLine(std::string("BinaryOperation using operator ") + Token::toString(_node.getOperator()));
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -201,6 +205,7 @@ bool ASTPrinter::visit(BinaryOperation& _node)
 bool ASTPrinter::visit(FunctionCall& _node)
 {
 	writeLine("FunctionCall");
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -208,6 +213,7 @@ bool ASTPrinter::visit(FunctionCall& _node)
 bool ASTPrinter::visit(MemberAccess& _node)
 {
 	writeLine("MemberAccess to member " + _node.getMemberName());
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -215,6 +221,7 @@ bool ASTPrinter::visit(MemberAccess& _node)
 bool ASTPrinter::visit(IndexAccess& _node)
 {
 	writeLine("IndexAccess");
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -222,6 +229,7 @@ bool ASTPrinter::visit(IndexAccess& _node)
 bool ASTPrinter::visit(PrimaryExpression& _node)
 {
 	writeLine("PrimaryExpression");
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -229,6 +237,7 @@ bool ASTPrinter::visit(PrimaryExpression& _node)
 bool ASTPrinter::visit(Identifier& _node)
 {
 	writeLine(std::string("Identifier ") + _node.getName());
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -236,6 +245,7 @@ bool ASTPrinter::visit(Identifier& _node)
 bool ASTPrinter::visit(ElementaryTypeNameExpression& _node)
 {
 	writeLine(std::string("ElementaryTypeNameExpression ") + Token::toString(_node.getTypeToken()));
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -246,6 +256,7 @@ bool ASTPrinter::visit(Literal& _node)
 	if (tokenString == nullptr)
 		tokenString = "[no token]";
 	writeLine(std::string("Literal, token: ") + tokenString + " value: " + _node.getValue());
+	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -408,6 +419,14 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 		*m_ostream << getIndentation() << "   Source: |"
 				   << m_source.substr(location.start, location.end - location.start) << "|\n";
 	}
+}
+
+void ASTPrinter::printType(Expression const& _expression)
+{
+	if (_expression.getType())
+		*m_ostream << getIndentation() << "   Type: " << _expression.getType()->toString() << "\n";
+	else
+		*m_ostream << getIndentation() << "   Type unknown.\n";
 }
 
 std::string ASTPrinter::getIndentation() const

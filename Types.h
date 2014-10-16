@@ -59,6 +59,8 @@ public:
 	}
 	virtual bool acceptsBinaryOperator(Token::Value) const { return false; }
 	virtual bool acceptsUnaryOperator(Token::Value) const { return false; }
+
+	virtual std::string toString() const = 0;
 };
 
 class IntegerType: public Type
@@ -68,7 +70,7 @@ public:
 	{
 		UNSIGNED, SIGNED, HASH, ADDRESS
 	};
-	virtual Category getCategory() const { return Category::INTEGER; }
+	virtual Category getCategory() const override { return Category::INTEGER; }
 
 	static std::shared_ptr<IntegerType> smallestTypeForLiteral(std::string const& _literal);
 
@@ -78,6 +80,8 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool acceptsBinaryOperator(Token::Value _operator) const override;
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override;
+
+	virtual std::string toString() const override;
 
 	int getNumBits() const { return m_bits; }
 	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
@@ -106,14 +110,17 @@ public:
 	{
 		return _operator == Token::NOT || _operator == Token::DELETE;
 	}
+	virtual std::string toString() const override { return "bool"; }
 };
 
 class ContractType: public Type
 {
 public:
-	virtual Category getCategory() const { return Category::CONTRACT; }
+	virtual Category getCategory() const override { return Category::CONTRACT; }
 	ContractType(ContractDefinition const& _contract): m_contract(_contract) {}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const;
+
+	virtual std::string toString() const override { return "contract{...}"; }
 
 private:
 	ContractDefinition const& m_contract;
@@ -122,13 +129,16 @@ private:
 class StructType: public Type
 {
 public:
-	virtual Category getCategory() const { return Category::STRUCT; }
+	virtual Category getCategory() const override { return Category::STRUCT; }
 	StructType(StructDefinition const& _struct): m_struct(_struct) {}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const;
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override
 	{
 		return _operator == Token::DELETE;
 	}
+
+
+	virtual std::string toString() const override { return "struct{...}"; }
 
 private:
 	StructDefinition const& m_struct;
@@ -137,10 +147,12 @@ private:
 class FunctionType: public Type
 {
 public:
-	virtual Category getCategory() const { return Category::FUNCTION; }
+	virtual Category getCategory() const override { return Category::FUNCTION; }
 	FunctionType(FunctionDefinition const& _function): m_function(_function) {}
 
 	FunctionDefinition const& getFunction() const { return m_function; }
+
+	virtual std::string toString() const override { return "function(...)returns(...)"; }
 
 private:
 	FunctionDefinition const& m_function;
@@ -149,8 +161,10 @@ private:
 class MappingType: public Type
 {
 public:
-	virtual Category getCategory() const { return Category::MAPPING; }
+	virtual Category getCategory() const override { return Category::MAPPING; }
 	MappingType() {}
+	virtual std::string toString() const override { return "mapping(...=>...)"; }
+
 private:
 	//@todo
 };
@@ -159,17 +173,20 @@ private:
 class VoidType: public Type
 {
 public:
-	virtual Category getCategory() const { return Category::VOID; }
+	virtual Category getCategory() const override { return Category::VOID; }
 	VoidType() {}
+	virtual std::string toString() const override { return "void"; }
 };
 
 class TypeType: public Type
 {
 public:
-	virtual Category getCategory() const { return Category::TYPE; }
+	virtual Category getCategory() const override { return Category::TYPE; }
 	TypeType(std::shared_ptr<Type const> const& _actualType): m_actualType(_actualType) {}
 
 	std::shared_ptr<Type const> const& getActualType() const { return m_actualType; }
+
+	virtual std::string toString() const override { return "type(" + m_actualType->toString() + ")"; }
 
 private:
 	std::shared_ptr<Type const> m_actualType;
