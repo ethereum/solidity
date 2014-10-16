@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -26,8 +26,10 @@
 #include <libsolidity/Exceptions.h>
 #include <boost/assert.hpp>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 
 NameAndTypeResolver::NameAndTypeResolver()
@@ -38,15 +40,12 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
 	reset();
 	DeclarationRegistrationHelper registrar(m_scopes, _contract);
-
 	m_currentScope = &m_scopes[&_contract];
-
 	//@todo structs
-
-	for (ptr<VariableDeclaration> const& variable : _contract.getStateVariables())
+	for (ptr<VariableDeclaration> const & variable : _contract.getStateVariables())
 		ReferencesResolver resolver(*variable, *this, nullptr);
-
-	for (ptr<FunctionDefinition> const& function : _contract.getDefinedFunctions()) {
+	for (ptr<FunctionDefinition> const & function : _contract.getDefinedFunctions())
+	{
 		m_currentScope = &m_scopes[function.get()];
 		ReferencesResolver referencesResolver(*function, *this,
 											  function->getReturnParameterList().get());
@@ -54,7 +53,8 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	// First, all function parameter types need to be resolved before we can check
 	// the types, since it is possible to call functions that are only defined later
 	// in the source.
-	for (ptr<FunctionDefinition> const& function : _contract.getDefinedFunctions()) {
+	for (ptr<FunctionDefinition> const & function : _contract.getDefinedFunctions())
+	{
 		m_currentScope = &m_scopes[function.get()];
 		function->getBody().checkTypeRequirements();
 	}
@@ -141,7 +141,6 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 	BOOST_ASSERT(m_currentScope != nullptr);
 	if (!m_currentScope->registerDeclaration(_declaration))
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Identifier already declared."));
-
 	if (_opensScope)
 		enterNewSubScope(_declaration);
 }
@@ -198,4 +197,5 @@ bool ReferencesResolver::visit(Identifier& _identifier)
 }
 
 
-} }
+}
+}

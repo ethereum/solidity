@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -23,8 +23,10 @@
 #include <libsolidity/ASTPrinter.h>
 #include <libsolidity/AST.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 ASTPrinter::ASTPrinter(ptr<ASTNode> _ast, const std::string& _source)
 	: m_indentation(0), m_source(_source), m_ast(_ast)
@@ -85,7 +87,7 @@ bool ASTPrinter::visit(TypeName& _node)
 
 bool ASTPrinter::visit(ElementaryTypeName& _node)
 {
-	writeLine(std::string("ElementaryTypeName ") + Token::String(_node.getType()));
+	writeLine(std::string("ElementaryTypeName ") + Token::toString(_node.getType()));
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -176,7 +178,7 @@ bool ASTPrinter::visit(Expression& _node)
 
 bool ASTPrinter::visit(Assignment& _node)
 {
-	writeLine(std::string("Assignment using operator ") + Token::String(_node.getAssignmentOperator()));
+	writeLine(std::string("Assignment using operator ") + Token::toString(_node.getAssignmentOperator()));
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -184,14 +186,14 @@ bool ASTPrinter::visit(Assignment& _node)
 bool ASTPrinter::visit(UnaryOperation& _node)
 {
 	writeLine(std::string("UnaryOperation (") + (_node.isPrefixOperation() ? "prefix" : "postfix") +
-			  ") " + Token::String(_node.getOperator()));
+			  ") " + Token::toString(_node.getOperator()));
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(BinaryOperation& _node)
 {
-	writeLine(std::string("BinaryOperation using operator ") + Token::String(_node.getOperator()));
+	writeLine(std::string("BinaryOperation using operator ") + Token::toString(_node.getOperator()));
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -233,14 +235,14 @@ bool ASTPrinter::visit(Identifier& _node)
 
 bool ASTPrinter::visit(ElementaryTypeNameExpression& _node)
 {
-	writeLine(std::string("ElementaryTypeNameExpression ") + Token::String(_node.getTypeToken()));
+	writeLine(std::string("ElementaryTypeNameExpression ") + Token::toString(_node.getTypeToken()));
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(Literal& _node)
 {
-	const char* tokenString = Token::String(_node.getToken());
+	const char* tokenString = Token::toString(_node.getToken());
 	if (tokenString == nullptr)
 		tokenString = "----";
 	writeLine(std::string("Literal, token: ") + tokenString + " value: " + _node.getValue());
@@ -402,7 +404,8 @@ void ASTPrinter::endVisit(Literal&)
 
 void ASTPrinter::printSourcePart(ASTNode const& _node)
 {
-	if (!m_source.empty()) {
+	if (!m_source.empty())
+	{
 		Location const& location(_node.getLocation());
 		*m_ostream << getIndentation() << "   Source: |"
 				   << m_source.substr(location.start, location.end - location.start) << "|\n";
@@ -419,4 +422,5 @@ void ASTPrinter::writeLine(const std::string& _line)
 	*m_ostream << getIndentation() << _line << '\n';
 }
 
-} }
+}
+}

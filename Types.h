@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -29,8 +29,10 @@
 
 #include <libsolidity/Token.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 // AST forward declarations
 class ContractDefinition;
@@ -49,7 +51,8 @@ using ptr = std::shared_ptr<T>;
 class Type : private boost::noncopyable
 {
 public:
-	enum class Category {
+	enum class Category
+	{
 		INTEGER, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE
 	};
 
@@ -62,7 +65,10 @@ public:
 
 	virtual Category getCategory() const = 0;
 	virtual bool isImplicitlyConvertibleTo(const Type&) const { return false; }
-	virtual bool isExplicitlyConvertibleTo(const Type& _convertTo) const { return isImplicitlyConvertibleTo(_convertTo); }
+	virtual bool isExplicitlyConvertibleTo(const Type& _convertTo) const
+	{
+		return isImplicitlyConvertibleTo(_convertTo);
+	}
 	virtual bool acceptsBinaryOperator(Token::Value) const { return false; }
 	virtual bool acceptsUnaryOperator(Token::Value) const { return false; }
 };
@@ -70,7 +76,8 @@ public:
 class IntegerType : public Type
 {
 public:
-	enum class Modifier {
+	enum class Modifier
+	{
 		UNSIGNED, SIGNED, HASH, ADDRESS
 	};
 	virtual Category getCategory() const { return Category::INTEGER; }
@@ -98,12 +105,18 @@ class BoolType : public Type
 public:
 	virtual Category getCategory() const { return Category::BOOL; }
 	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const override
-		{ return _convertTo.getCategory() == Category::BOOL; }
+	{
+		return _convertTo.getCategory() == Category::BOOL;
+	}
 	virtual bool isExplicitlyConvertibleTo(const Type& _convertTo) const override;
 	virtual bool acceptsBinaryOperator(Token::Value _operator) const override
-		{ return _operator == Token::AND || _operator == Token::OR; }
+	{
+		return _operator == Token::AND || _operator == Token::OR;
+	}
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override
-		{ return _operator == Token::NOT || _operator == Token::DELETE; }
+	{
+		return _operator == Token::NOT || _operator == Token::DELETE;
+	}
 };
 
 class ContractType : public Type
@@ -123,7 +136,9 @@ public:
 	StructType(StructDefinition const& _struct) : m_struct(_struct) {}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const;
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override
-		{ return _operator == Token::DELETE; }
+	{
+		return _operator == Token::DELETE;
+	}
 private:
 	StructDefinition const& m_struct;
 };
@@ -168,4 +183,5 @@ private:
 };
 
 
-} }
+}
+}

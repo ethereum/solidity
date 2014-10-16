@@ -47,8 +47,10 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 // TOKEN_LIST takes a list of 3 macros M, all of which satisfy the
 // same signature M(name, string, precedence), where name is the
@@ -68,7 +70,7 @@ namespace solidity {
 #define TOKEN_LIST(T, K)                                               \
 	/* End of source indicator. */                                     \
 	T(EOS, "EOS", 0)                                                   \
-	                                                                   \
+	\
 	/* Punctuators (ECMA-262, section 7.7, page 15). */                \
 	T(LPAREN, "(", 0)                                                  \
 	T(RPAREN, ")", 0)                                                  \
@@ -83,7 +85,7 @@ namespace solidity {
 	T(INC, "++", 0)                                                    \
 	T(DEC, "--", 0)                                                    \
 	T(ARROW, "=>", 0)                                                  \
-	                                                                   \
+	\
 	/* Assignment operators. */                                        \
 	/* IsAssignmentOp() and Assignment::is_compound() relies on */     \
 	/* this block of enum values being contiguous and sorted in the */ \
@@ -105,7 +107,7 @@ namespace solidity {
 	T(ASSIGN_MUL, "*=", 2)                                             \
 	T(ASSIGN_DIV, "/=", 2)                                             \
 	T(ASSIGN_MOD, "%=", 2)                                             \
-	                                                                   \
+	\
 	/* Binary operators sorted by precedence. */                       \
 	/* IsBinaryOp() relies on this block of enum values */             \
 	/* being contiguous and sorted in the same order! */               \
@@ -123,7 +125,7 @@ namespace solidity {
 	T(MUL, "*", 13)                                                    \
 	T(DIV, "/", 13)                                                    \
 	T(MOD, "%", 13)                                                    \
-	                                                                   \
+	\
 	/* Compare operators sorted by precedence. */                      \
 	/* IsCompareOp() relies on this block of enum values */            \
 	/* being contiguous and sorted in the same order! */               \
@@ -137,7 +139,7 @@ namespace solidity {
 	T(GTE, ">=", 10)                                                   \
 	K(INSTANCEOF, "instanceof", 10)                                    \
 	K(IN, "in", 10)                                                    \
-	                                                                   \
+	\
 	/* Unary operators. */                                             \
 	/* IsUnaryOp() relies on this block of enum values */              \
 	/* being contiguous and sorted in the same order! */               \
@@ -146,7 +148,7 @@ namespace solidity {
 	K(DELETE, "delete", 0)                                             \
 	K(TYPEOF, "typeof", 0)                                             \
 	K(VOID, "void", 0)                                                 \
-	                                                                   \
+	\
 	/* Keywords (ECMA-262, section 7.5.2, page 13). */                 \
 	K(BREAK, "break", 0)                                               \
 	K(CASE, "case", 0)                                                 \
@@ -180,7 +182,7 @@ namespace solidity {
 	/* VOID */                                                         \
 	K(WHILE, "while", 0)                                               \
 	K(WITH, "with", 0)                                                 \
-	                                                                   \
+	\
 	/* type keywords, keep them in this order, keep int as first keyword
 	 * the implementation in Types.cpp has to be synced to this here
 	 *  TODO more to be added */                                       \
@@ -206,17 +208,17 @@ namespace solidity {
 	K(REAL, "real", 0)                                                 \
 	K(UREAL, "ureal", 0)                                               \
 	T(TYPES_END, NULL, 0) /* used as type enum end marker */           \
-	                                                                   \
+	\
 	/* Literals (ECMA-262, section 7.8, page 16). */                   \
 	K(NULL_LITERAL, "null", 0)                                         \
 	K(TRUE_LITERAL, "true", 0)                                         \
 	K(FALSE_LITERAL, "false", 0)                                       \
 	T(NUMBER, NULL, 0)                                                 \
 	T(STRING_LITERAL, NULL, 0)                                         \
-	                                                                   \
+	\
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(IDENTIFIER, NULL, 0)                                             \
-	                                                                   \
+	\
 	/* Future reserved words (ECMA-262, section 7.6.1.2). */           \
 	T(FUTURE_RESERVED_WORD, NULL, 0)                                   \
 	T(FUTURE_STRICT_RESERVED_WORD, NULL, 0)                            \
@@ -227,21 +229,23 @@ namespace solidity {
 	K(IMPORT, "import", 0)                                             \
 	K(LET, "let", 0)                                                   \
 	K(STATIC, "static", 0)                                             \
-/*  K(YIELD, "yield", 0) */                                            \
+	/*  K(YIELD, "yield", 0) */                                            \
 	K(SUPER, "super", 0)                                               \
-	                                                                   \
+	\
 	/* Illegal token - not able to scan. */                            \
 	T(ILLEGAL, "ILLEGAL", 0)                                           \
-	                                                                   \
+	\
 	/* Scanner-internal use only. */                                   \
 	T(WHITESPACE, NULL, 0)
 
 
-class Token {
+class Token
+{
 public:
 	// All token values.
 #define T(name, string, precedence) name,
-	enum Value {
+	enum Value
+	{
 		TOKEN_LIST(T, T)
 		NUM_TOKENS
 	};
@@ -249,123 +253,110 @@ public:
 
 	// Returns a string corresponding to the C++ token name
 	// (e.g. "LT" for the token LT).
-	static const char* Name(Value tok) {
+	static const char* getName(Value tok)
+	{
 		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned
 		return m_name[tok];
 	}
 
 	// Predicates
-	static bool IsKeyword(Value tok) {
-		return m_tokenType[tok] == 'K';
-	}
-
-	static bool IsIdentifier(Value tok) {
-			return tok == IDENTIFIER;
-	}
-
-	static bool IsElementaryTypeName(Value tok) {
-			return INT <= tok && tok < TYPES_END;
-	}
-
-	static bool IsAssignmentOp(Value tok) {
-		return INIT_VAR <= tok && tok <= ASSIGN_MOD;
-	}
-
-	static bool IsBinaryOp(Value op) {
-		return COMMA <= op && op <= MOD;
-	}
-
-	static bool IsTruncatingBinaryOp(Value op) {
-		return BIT_OR <= op && op <= SHR;
-	}
-
-	static bool IsCompareOp(Value op) {
-		return EQ <= op && op <= IN;
-	}
-
-	static bool IsOrderedRelationalCompareOp(Value op) {
+	static bool isKeyword(Value tok) { return m_tokenType[tok] == 'K'; }
+	static bool isIdentifier(Value tok) { return tok == IDENTIFIER; }
+	static bool isElementaryTypeName(Value tok) { return INT <= tok && tok < TYPES_END; }
+	static bool isAssignmentOp(Value tok) { return INIT_VAR <= tok && tok <= ASSIGN_MOD; }
+	static bool isBinaryOp(Value op) { return COMMA <= op && op <= MOD; }
+	static bool isTruncatingBinaryOp(Value op) { return BIT_OR <= op && op <= SHR; }
+	static bool isCompareOp(Value op) { return EQ <= op && op <= IN; }
+	static bool isOrderedRelationalCompareOp(Value op)
+	{
 		return op == LT || op == LTE || op == GT || op == GTE;
 	}
-
-	static bool IsEqualityOp(Value op) {
-		return op == EQ || op == EQ_STRICT;
+	static bool isEqualityOp(Value op) { return op == EQ || op == EQ_STRICT; }
+	static bool isInequalityOp(Value op) { return op == NE || op == NE_STRICT; }
+	static bool isArithmeticCompareOp(Value op)
+	{
+		return isOrderedRelationalCompareOp(op) ||
+			   isEqualityOp(op) || isInequalityOp(op);
 	}
 
-	static bool IsInequalityOp(Value op) {
-		return op == NE || op == NE_STRICT;
-	}
-
-	static bool IsArithmeticCompareOp(Value op) {
-		return IsOrderedRelationalCompareOp(op) ||
-				IsEqualityOp(op) || IsInequalityOp(op);
-	}
-
-	static Value NegateCompareOp(Value op) {
-		BOOST_ASSERT(IsArithmeticCompareOp(op));
-		switch (op) {
-		case EQ: return NE;
-		case NE: return EQ;
-		case EQ_STRICT: return NE_STRICT;
-		case NE_STRICT: return EQ_STRICT;
-		case LT: return GTE;
-		case GT: return LTE;
-		case LTE: return GT;
-		case GTE: return LT;
+	static Value negateCompareOp(Value op)
+	{
+		BOOST_ASSERT(isArithmeticCompareOp(op));
+		switch (op)
+		{
+		case EQ:
+			return NE;
+		case NE:
+			return EQ;
+		case EQ_STRICT:
+			return NE_STRICT;
+		case NE_STRICT:
+			return EQ_STRICT;
+		case LT:
+			return GTE;
+		case GT:
+			return LTE;
+		case LTE:
+			return GT;
+		case GTE:
+			return LT;
 		default:
 			BOOST_ASSERT(false); // should not get here
 			return op;
 		}
 	}
 
-	static Value ReverseCompareOp(Value op) {
-		BOOST_ASSERT(IsArithmeticCompareOp(op));
-		switch (op) {
-		case EQ: return EQ;
-		case NE: return NE;
-		case EQ_STRICT: return EQ_STRICT;
-		case NE_STRICT: return NE_STRICT;
-		case LT: return GT;
-		case GT: return LT;
-		case LTE: return GTE;
-		case GTE: return LTE;
+	static Value reverseCompareOp(Value op)
+	{
+		BOOST_ASSERT(isArithmeticCompareOp(op));
+		switch (op)
+		{
+		case EQ:
+			return EQ;
+		case NE:
+			return NE;
+		case EQ_STRICT:
+			return EQ_STRICT;
+		case NE_STRICT:
+			return NE_STRICT;
+		case LT:
+			return GT;
+		case GT:
+			return LT;
+		case LTE:
+			return GTE;
+		case GTE:
+			return LTE;
 		default:
 			BOOST_ASSERT(false); // should not get here
 			return op;
 		}
 	}
 
-	static Value AssignmentToBinaryOp(Value op) {
-		BOOST_ASSERT(IsAssignmentOp(op) && op != ASSIGN);
+	static Value AssignmentToBinaryOp(Value op)
+	{
+		BOOST_ASSERT(isAssignmentOp(op) && op != ASSIGN);
 		return Token::Value(op + (BIT_OR - ASSIGN_BIT_OR));
 	}
 
-	static bool IsBitOp(Value op) {
-		return (BIT_OR <= op && op <= SHR) || op == BIT_NOT;
-	}
-
-	static bool IsUnaryOp(Value op) {
-		return (NOT <= op && op <= VOID) || op == ADD || op == SUB;
-	}
-
-	static bool IsCountOp(Value op) {
-		return op == INC || op == DEC;
-	}
-
-	static bool IsShiftOp(Value op) {
-		return (SHL <= op) && (op <= SHR);
-	}
+	static bool isBitOp(Value op) { return (BIT_OR <= op && op <= SHR) || op == BIT_NOT; }
+	static bool isUnaryOp(Value op) { return (NOT <= op && op <= VOID) || op == ADD || op == SUB; }
+	static bool isCountOp(Value op) { return op == INC || op == DEC; }
+	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
 
 	// Returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
 	// have a (unique) string (e.g. an IDENTIFIER).
-	static const char* String(Value tok) {
+	static const char* toString(Value tok)
+	{
 		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned.
 		return m_string[tok];
 	}
 
 	// Returns the precedence > 0 for binary and compare
 	// operators; returns 0 otherwise.
-	static int Precedence(Value tok) {
+	static int precedence(Value tok)
+	{
 		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned.
 		return m_precedence[tok];
 	}
@@ -377,4 +368,5 @@ private:
 	static const char m_tokenType[NUM_TOKENS];
 };
 
-} }
+}
+}

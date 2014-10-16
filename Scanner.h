@@ -50,33 +50,36 @@
 #include <libsolidity/BaseTypes.h>
 #include <libsolidity/Token.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 
 class AstRawString;
 class AstValueFactory;
 class ParserRecorder;
 
-class CharStream {
+class CharStream
+{
 public:
 	CharStream()
 		: m_pos(0)
 	{}
 
-	explicit CharStream(const std::string& _source)
-		: m_source(_source), m_pos(0)
-	{}
+	explicit CharStream(const std::string& _source) : m_source(_source), m_pos(0) {}
 	int getPos() const { return m_pos; }
 	bool isPastEndOfInput() const { return m_pos >= m_source.size(); }
 	char get() const { return m_source[m_pos]; }
-	char advanceAndGet() {
+	char advanceAndGet()
+	{
 		if (isPastEndOfInput()) return 0;
 		++m_pos;
 		if (isPastEndOfInput()) return 0;
 		return get();
 	}
-	char rollback(size_t _amount) {
+	char rollback(size_t _amount)
+	{
 		BOOST_ASSERT(m_pos >= _amount);
 		m_pos -= _amount;
 		return get();
@@ -96,22 +99,17 @@ private:
 // ----------------------------------------------------------------------------
 // JavaScript Scanner.
 
-class Scanner {
+class Scanner
+{
 public:
 	// Scoped helper for literal recording. Automatically drops the literal
 	// if aborting the scanning before it's complete.
-	class LiteralScope {
+	class LiteralScope
+	{
 	public:
-		explicit LiteralScope(Scanner* self)
-			: scanner_(self), complete_(false) {
-			scanner_->startNewLiteral();
-		}
-		~LiteralScope() {
-			if (!complete_) scanner_->dropLiteral();
-		}
-		void Complete() {
-			complete_ = true;
-		}
+		explicit LiteralScope(Scanner* self) : scanner_(self), complete_(false) { scanner_->startNewLiteral(); }
+		~LiteralScope() { if (!complete_) scanner_->dropLiteral(); }
+		void Complete() { complete_ = true; }
 
 	private:
 		Scanner* scanner_;
@@ -143,7 +141,10 @@ public:
 	/// Functions that help pretty-printing parse errors.
 	/// Do only use in error cases, they are quite expensive.
 	/// @{
-	std::string getLineAtPosition(int _position) const { return m_source.getLineAtPosition(_position); }
+	std::string getLineAtPosition(int _position) const
+	{
+		return m_source.getLineAtPosition(_position);
+	}
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const
 	{
 		return m_source.translatePositionToLineColumn(_position);
@@ -152,56 +153,46 @@ public:
 
 	// Returns true if there was a line terminator before the peek'ed token,
 	// possibly inside a multi-line comment.
-	bool hasAnyLineTerminatorBeforeNext() const {
+	bool hasAnyLineTerminatorBeforeNext() const
+	{
 		return m_hasLineTerminatorBeforeNext ||
-				m_hasMultilineCommentBeforeNext;
+			   m_hasMultilineCommentBeforeNext;
 	}
 
 private:
 	// Used for the current and look-ahead token.
-	struct TokenDesc {
+	struct TokenDesc
+	{
 		Token::Value token;
 		Location location;
 		std::string literal;
 	};
 
 	// Literal buffer support
-	inline void startNewLiteral() {
-		m_next_token.literal.clear();
-	}
+	inline void startNewLiteral() { m_next_token.literal.clear(); }
 
-	inline void addLiteralChar(char c) {
-		m_next_token.literal.push_back(c);
-	}
+	inline void addLiteralChar(char c) { m_next_token.literal.push_back(c); }
 
-	inline void dropLiteral() {
-		m_next_token.literal.clear();
-	}
+	inline void dropLiteral() { m_next_token.literal.clear(); }
 
-	inline void addLiteralCharAndAdvance() {
-		addLiteralChar(m_char);
-		advance();
-	}
+	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
 
 	// Low-level scanning support.
 	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
-	void rollback(int amount) {
-		m_char = m_source.rollback(amount);
-	}
+	void rollback(int amount) { m_char = m_source.rollback(amount); }
 
-	inline Token::Value selectToken(Token::Value tok) {
-		advance();
-		return tok;
-	}
+	inline Token::Value selectToken(Token::Value tok) { advance(); return tok; }
 
-	inline Token::Value selectToken(char next, Token::Value then, Token::Value else_) {
+	inline Token::Value selectToken(char next, Token::Value then, Token::Value else_)
+	{
 		advance();
-		if (m_char == next) {
+		if (m_char == next)
+		{
 			advance();
 			return then;
-		} else {
-			return else_;
 		}
+		else
+			return else_;
 	}
 
 	bool scanHexNumber(char& scanned_number, int expected_length);
@@ -225,12 +216,8 @@ private:
 	bool scanEscape();
 
 	// Return the current source position.
-	int getSourcePos() {
-		return m_source.getPos();
-	}
-	bool isSourcePastEndOfInput() {
-		return m_source.isPastEndOfInput();
-	}
+	int getSourcePos() { return m_source.getPos(); }
+	bool isSourcePastEndOfInput() { return m_source.isPastEndOfInput(); }
 
 	TokenDesc m_current_token;  // desc for current token (as returned by Next())
 	TokenDesc m_next_token;     // desc for next token (one token look-ahead)
@@ -249,4 +236,5 @@ private:
 	bool m_hasMultilineCommentBeforeNext;
 };
 
-} }
+}
+}

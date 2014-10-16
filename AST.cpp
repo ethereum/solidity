@@ -1,18 +1,18 @@
 /*
-	This file is part of cpp-ethereum.
+    This file is part of cpp-ethereum.
 
-	cpp-ethereum is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    cpp-ethereum is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	cpp-ethereum is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    cpp-ethereum is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
  * @author Christian <c@ethdev.com>
@@ -26,12 +26,15 @@
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/Exceptions.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 void ContractDefinition::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		listAccept(m_definedStructs, _visitor);
 		listAccept(m_stateVariables, _visitor);
 		listAccept(m_definedFunctions, _visitor);
@@ -41,7 +44,8 @@ void ContractDefinition::accept(ASTVisitor& _visitor)
 
 void StructDefinition::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		listAccept(m_members, _visitor);
 	}
 	_visitor.endVisit(*this);
@@ -49,7 +53,8 @@ void StructDefinition::accept(ASTVisitor& _visitor)
 
 void ParameterList::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		listAccept(m_parameters, _visitor);
 	}
 	_visitor.endVisit(*this);
@@ -57,7 +62,8 @@ void ParameterList::accept(ASTVisitor& _visitor)
 
 void FunctionDefinition::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_parameters->accept(_visitor);
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);
@@ -68,7 +74,8 @@ void FunctionDefinition::accept(ASTVisitor& _visitor)
 
 void VariableDeclaration::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		if (m_typeName)
 			m_typeName->accept(_visitor);
 	}
@@ -95,7 +102,8 @@ void UserDefinedTypeName::accept(ASTVisitor& _visitor)
 
 void Mapping::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_keyType->accept(_visitor);
 		m_valueType->accept(_visitor);
 	}
@@ -110,7 +118,8 @@ void Statement::accept(ASTVisitor& _visitor)
 
 void Block::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		listAccept(m_statements, _visitor);
 	}
 	_visitor.endVisit(*this);
@@ -118,7 +127,8 @@ void Block::accept(ASTVisitor& _visitor)
 
 void IfStatement::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_condition->accept(_visitor);
 		m_trueBody->accept(_visitor);
 		if (m_falseBody)
@@ -135,7 +145,8 @@ void BreakableStatement::accept(ASTVisitor& _visitor)
 
 void WhileStatement::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_condition->accept(_visitor);
 		m_body->accept(_visitor);
 	}
@@ -156,7 +167,8 @@ void Break::accept(ASTVisitor& _visitor)
 
 void Return::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		if (m_expression)
 			m_expression->accept(_visitor);
 	}
@@ -165,7 +177,8 @@ void Return::accept(ASTVisitor& _visitor)
 
 void VariableDefinition::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_variable->accept(_visitor);
 		if (m_value)
 			m_value->accept(_visitor);
@@ -175,7 +188,8 @@ void VariableDefinition::accept(ASTVisitor& _visitor)
 
 void Assignment::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_leftHandSide->accept(_visitor);
 		m_rightHandSide->accept(_visitor);
 	}
@@ -184,7 +198,8 @@ void Assignment::accept(ASTVisitor& _visitor)
 
 void UnaryOperation::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_subExpression->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
@@ -192,7 +207,8 @@ void UnaryOperation::accept(ASTVisitor& _visitor)
 
 void BinaryOperation::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_left->accept(_visitor);
 		m_right->accept(_visitor);
 	}
@@ -201,7 +217,8 @@ void BinaryOperation::accept(ASTVisitor& _visitor)
 
 void FunctionCall::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_expression->accept(_visitor);
 		listAccept(m_arguments, _visitor);
 	}
@@ -210,7 +227,8 @@ void FunctionCall::accept(ASTVisitor& _visitor)
 
 void MemberAccess::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_expression->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
@@ -218,7 +236,8 @@ void MemberAccess::accept(ASTVisitor& _visitor)
 
 void IndexAccess::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this)) {
+	if (_visitor.visit(*this))
+	{
 		m_base->accept(_visitor);
 		m_index->accept(_visitor);
 	}
@@ -253,7 +272,7 @@ void Statement::expectType(Expression& _expression, const Type& _expectedType)
 
 ptr<Type> Block::checkTypeRequirements()
 {
-	for (ptr<Statement> const& statement : m_statements)
+	for (ptr<Statement> const & statement : m_statements)
 		statement->checkTypeRequirements();
 	return ptr<Type>();
 }
@@ -292,7 +311,6 @@ ptr<Type> Return::checkTypeRequirements()
 															 "declaration."));
 	// this could later be changed such that the paramaters type is an anonymous struct type,
 	// but for now, we only allow one return parameter
-
 	expectType(*m_expression, *m_returnParameters->getParameters().front()->getType());
 	return ptr<Type>();
 }
@@ -303,10 +321,14 @@ ptr<Type> VariableDefinition::checkTypeRequirements()
 	// setsthe type.
 	// Note that assignments before the first declaration are legal because of the special scoping
 	// rules inherited from JavaScript.
-	if (m_value) {
-		if (m_variable->getType()) {
+	if (m_value)
+	{
+		if (m_variable->getType())
+		{
 			expectType(*m_value, *m_variable->getType());
-		} else {
+		}
+		else
+		{
 			// no type declared and no previous assignment, infer the type
 			m_variable->setType(m_value->checkTypeRequirements());
 		}
@@ -320,7 +342,8 @@ ptr<Type> Assignment::checkTypeRequirements()
 	// add a feature to the type system to check that
 	expectType(*m_rightHandSide, *m_leftHandSide->checkTypeRequirements());
 	m_type = m_leftHandSide->getType();
-	if (m_assigmentOperator != Token::ASSIGN) {
+	if (m_assigmentOperator != Token::ASSIGN)
+	{
 		// complex assignment
 		if (!m_type->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_assigmentOperator)))
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
@@ -341,18 +364,19 @@ ptr<Type> BinaryOperation::checkTypeRequirements()
 {
 	m_right->checkTypeRequirements();
 	m_left->checkTypeRequirements();
-
 	if (m_right->getType()->isImplicitlyConvertibleTo(*m_left->getType()))
 		m_commonType = m_left->getType();
 	else if (m_left->getType()->isImplicitlyConvertibleTo(*m_right->getType()))
 		m_commonType = m_right->getType();
 	else
 		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("No common type found in binary operation."));
-
-	if (Token::IsCompareOp(m_operator)) {
+	if (Token::isCompareOp(m_operator))
+	{
 		m_type = std::make_shared<BoolType>();
-	} else {
-		BOOST_ASSERT(Token::IsBinaryOp(m_operator));
+	}
+	else
+	{
+		BOOST_ASSERT(Token::isBinaryOp(m_operator));
 		m_type = m_commonType;
 		if (!m_commonType->acceptsBinaryOperator(m_operator))
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
@@ -363,12 +387,12 @@ ptr<Type> BinaryOperation::checkTypeRequirements()
 ptr<Type> FunctionCall::checkTypeRequirements()
 {
 	m_expression->checkTypeRequirements();
-	for (ptr<Expression> const& argument : m_arguments)
+	for (ptr<Expression> const & argument : m_arguments)
 		argument->checkTypeRequirements();
-
 	ptr<Type> expressionType = m_expression->getType();
 	Type::Category const category = expressionType->getCategory();
-	if (category == Type::Category::TYPE) {
+	if (category == Type::Category::TYPE)
+	{
 		TypeType* type = dynamic_cast<TypeType*>(expressionType.get());
 		BOOST_ASSERT(type != nullptr);
 		//@todo for structs, we have to check the number of arguments to be equal to the
@@ -378,9 +402,11 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 																 "explicit type conersion."));
 		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type->getActualType()))
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Explicit type conversion not "
-																 "allowed."));
+								  "allowed."));
 		m_type = type->getActualType();
-	} else if (category == Type::Category::FUNCTION) {
+	}
+	else if (category == Type::Category::FUNCTION)
+	{
 		//@todo would be nice to create a struct type from the arguments
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
@@ -390,20 +416,22 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 		vecptr<VariableDeclaration> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Wrong argument count for "
-																 "function call."));
-		for (size_t i = 0; i < m_arguments.size(); ++i) {
+								  "function call."));
+		for (size_t i = 0; i < m_arguments.size(); ++i)
+		{
 			if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
 				BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Invalid type for argument in "
 																	 "function call."));
 		}
-
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
 		if (fun.getReturnParameterList()->getParameters().empty())
 			m_type = std::make_shared<VoidType>();
 		else
 			m_type = fun.getReturnParameterList()->getParameters().front()->getType();
-	} else {
+	}
+	else
+	{
 		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Type does not support invocation."));
 	}
 	return m_type;
@@ -435,7 +463,8 @@ ptr<Type> Identifier::checkTypeRequirements()
 	// var y = x;
 	// the type of x is not yet determined.
 	VariableDeclaration* variable = dynamic_cast<VariableDeclaration*>(m_referencedDeclaration);
-	if (variable != nullptr) {
+	if (variable != nullptr)
+	{
 		if (variable->getType().get() == nullptr)
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Variable referenced before type "
 																 "could be determined."));
@@ -444,13 +473,15 @@ ptr<Type> Identifier::checkTypeRequirements()
 	}
 	//@todo can we unify these with TypeName::toType()?
 	StructDefinition* structDef = dynamic_cast<StructDefinition*>(m_referencedDeclaration);
-	if (structDef != nullptr) {
+	if (structDef != nullptr)
+	{
 		// note that we do not have a struct type here
 		m_type = std::make_shared<TypeType>(std::make_shared<StructType>(*structDef));
 		return m_type;
 	}
 	FunctionDefinition* functionDef = dynamic_cast<FunctionDefinition*>(m_referencedDeclaration);
-	if (functionDef != nullptr) {
+	if (functionDef != nullptr)
+	{
 		// a function reference is not a TypeType, because calling a TypeType converts to the type.
 		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
 		// conversion.
@@ -458,7 +489,8 @@ ptr<Type> Identifier::checkTypeRequirements()
 		return m_type;
 	}
 	ContractDefinition* contractDef = dynamic_cast<ContractDefinition*>(m_referencedDeclaration);
-	if (contractDef != nullptr) {
+	if (contractDef != nullptr)
+	{
 		m_type = std::make_shared<TypeType>(std::make_shared<ContractType>(*contractDef));
 		return m_type;
 	}
@@ -478,4 +510,5 @@ ptr<Type> Literal::checkTypeRequirements()
 	return m_type;
 }
 
-} }
+}
+}
