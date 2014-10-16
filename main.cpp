@@ -9,21 +9,10 @@
 #include <libsolidity/Parser.h>
 #include <libsolidity/ASTPrinter.h>
 #include <libsolidity/NameAndTypeResolver.h>
+#include <libsolidity/Exceptions.h>
 
-namespace dev
-{
-namespace solidity
-{
-
-ASTPointer<ContractDefinition> parseAST(std::string const& _source)
-{
-	ASTPointer<Scanner> scanner = std::make_shared<Scanner>(CharStream(_source));
-	Parser parser;
-	return parser.parse(scanner);
-}
-
-}
-} // end namespaces
+using namespace dev;
+using namespace solidity;
 
 void help()
 {
@@ -44,6 +33,33 @@ void version()
 	exit(0);
 }
 
+void printSourcePart(std::ostream& _stream, Location const& _location, Scanner const& _scanner)
+{
+	int startLine;
+	int startColumn;
+	std::tie(startLine, startColumn) = _scanner.translatePositionToLineColumn(_location.start);
+	_stream << " starting at line " << (startLine + 1) << ", column " << (startColumn + 1) << "\n";
+	int endLine;
+	int endColumn;
+	std::tie(endLine, endColumn) = _scanner.translatePositionToLineColumn(_location.end);
+	if (startLine == endLine)
+	{
+		_stream << _scanner.getLineAtPosition(_location.start) << "\n"
+				<< std::string(startColumn, ' ') << "^";
+		if (endColumn > startColumn + 2)
+			_stream << std::string(endColumn - startColumn - 2, '-');
+		if (endColumn > startColumn + 1)
+			_stream << "^";
+		_stream << "\n";
+	}
+	else
+	{
+		_stream << _scanner.getLineAtPosition(_location.start) << "\n"
+				<< std::string(startColumn, ' ') << "^\n"
+				<< "Spanning multiple lines.\n";
+	}
+}
+
 int main(int argc, char** argv)
 {
 	std::string infile;
@@ -57,28 +73,57 @@ int main(int argc, char** argv)
 		else
 			infile = argv[i];
 	}
-	std::string src;
+	std::string sourceCode;
 	if (infile.empty())
 	{
 		std::string s;
 		while (!std::cin.eof())
 		{
 			getline(std::cin, s);
-			src.append(s);
+			sourceCode.append(s);
 		}
 	}
 	else
+		sourceCode = asString(dev::contents(infile));
+
+	ASTPointer<ContractDefinition> ast;
+	std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(CharStream(sourceCode));
+	Parser parser;
+	try
 	{
-		src = dev::asString(dev::contents(infile));
+		ast = parser.parse(scanner);
 	}
-	std::cout << "Parsing..." << std::endl;
-	// @todo catch exception
-	dev::solidity::ASTPointer<dev::solidity::ContractDefinition> ast = dev::solidity::parseAST(src);
-	std::cout << "Syntax tree for the contract:" << std::endl;
-	dev::solidity::ASTPrinter printer(ast, src);
-	printer.print(std::cout);
-	std::cout << "Resolving identifiers..." << std::endl;
+	catch (ParserError const& exc)
+	{
+		int line;
+		int column;
+		std::tie(line, column) = scanner->translatePositionToLineColumn(exc.getPosition());
+		std::cerr << exc.what() << " at line " << (line + 1) << ", column " << (column + 1) << std::endl;
+		std::cerr << scanner->getLineAtPosition(exc.getPosition()) << std::endl;
+		std::cerr << std::string(column, ' ') << "^" << std::endl;
+		return -1;
+	}
+
 	dev::solidity::NameAndTypeResolver resolver;
-	resolver.resolveNamesAndTypes(*ast.get());
+	try
+	{
+		resolver.resolveNamesAndTypes(*ast.get());
+	}
+	catch (DeclarationError const& exc)
+	{
+		std::cerr << exc.what() << std::endl;
+		printSourcePart(std::cerr, exc.getLocation(), *scanner);
+		return -1;
+	}
+	catch (TypeError const& exc)
+	{
+		std::cerr << exc.what() << std::endl;
+		printSourcePart(std::cerr, exc.getLocation(), *scanner);
+		return -1;
+	}
+
+	std::cout << "Syntax tree for the contract:" << std::endl;
+	dev::solidity::ASTPrinter printer(ast, sourceCode);
+	printer.print(std::cout);
 	return 0;
 }
