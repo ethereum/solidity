@@ -55,7 +55,7 @@ public:
 #endif
 
 	/// 256-bit hash of the node - this is a SHA-3/256 hash of the RLP of the node.
-	h256 hash256() const { RLPStream s; makeRLP(s); return dev::eth::sha3(s.out()); }
+	h256 hash256() const { RLPStream s; makeRLP(s); return dev::sha3(s.out()); }
 	bytes rlp() const { RLPStream s; makeRLP(s); return s.out(); }
 	void mark() { m_hash256 = h256(); }
 
@@ -200,7 +200,7 @@ void MemTrieNode::putRLP(RLPStream& _parentStream) const
 	if (s.out().size() < 32)
 		_parentStream.APPEND_CHILD(s.out());
 	else
-		_parentStream << dev::eth::sha3(s.out());
+		_parentStream << dev::sha3(s.out());
 }
 
 void TrieBranchNode::makeRLP(RLPStream& _intoStream) const
