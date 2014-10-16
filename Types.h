@@ -48,7 +48,7 @@ using ptr = std::shared_ptr<T>;
 
 // @todo realMxN, string<N>, mapping
 
-class Type : private boost::noncopyable
+class Type: private boost::noncopyable
 {
 public:
 	enum class Category
@@ -73,7 +73,7 @@ public:
 	virtual bool acceptsUnaryOperator(Token::Value) const { return false; }
 };
 
-class IntegerType : public Type
+class IntegerType: public Type
 {
 public:
 	enum class Modifier
@@ -100,7 +100,7 @@ private:
 	Modifier m_modifier;
 };
 
-class BoolType : public Type
+class BoolType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::BOOL; }
@@ -119,21 +119,21 @@ public:
 	}
 };
 
-class ContractType : public Type
+class ContractType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::CONTRACT; }
-	ContractType(ContractDefinition const& _contract) : m_contract(_contract) {}
+	ContractType(ContractDefinition const& _contract): m_contract(_contract) {}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const;
 private:
 	ContractDefinition const& m_contract;
 };
 
-class StructType : public Type
+class StructType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::STRUCT; }
-	StructType(StructDefinition const& _struct) : m_struct(_struct) {}
+	StructType(StructDefinition const& _struct): m_struct(_struct) {}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const;
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override
 	{
@@ -143,18 +143,18 @@ private:
 	StructDefinition const& m_struct;
 };
 
-class FunctionType : public Type
+class FunctionType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::FUNCTION; }
-	FunctionType(FunctionDefinition const& _function) : m_function(_function) {}
+	FunctionType(FunctionDefinition const& _function): m_function(_function) {}
 
 	FunctionDefinition const& getFunction() const { return m_function; }
 private:
 	FunctionDefinition const& m_function;
 };
 
-class MappingType : public Type
+class MappingType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::MAPPING; }
@@ -164,18 +164,18 @@ private:
 };
 
 //@todo should be changed into "empty anonymous struct"
-class VoidType : public Type
+class VoidType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::VOID; }
 	VoidType() {}
 };
 
-class TypeType : public Type
+class TypeType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::TYPE; }
-	TypeType(ptr<Type> const& _actualType) : m_actualType(_actualType) {}
+	TypeType(ptr<Type> const& _actualType): m_actualType(_actualType) {}
 
 	ptr<Type> const& getActualType() { return m_actualType; }
 private:

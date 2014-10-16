@@ -30,7 +30,7 @@ namespace dev
 namespace solidity
 {
 
-class ASTPrinter : public ASTVisitor
+class ASTPrinter: public ASTVisitor
 {
 public:
 	/// Create a printer for the given abstract syntax tree. If the source is specified,

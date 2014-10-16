@@ -42,18 +42,18 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	DeclarationRegistrationHelper registrar(m_scopes, _contract);
 	m_currentScope = &m_scopes[&_contract];
 	//@todo structs
-	for (ptr<VariableDeclaration> const & variable : _contract.getStateVariables())
+	for (ptr<VariableDeclaration> const& variable: _contract.getStateVariables())
 		ReferencesResolver resolver(*variable, *this, nullptr);
-	for (ptr<FunctionDefinition> const & function : _contract.getDefinedFunctions())
+	for (ptr<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 	{
 		m_currentScope = &m_scopes[function.get()];
 		ReferencesResolver referencesResolver(*function, *this,
 											  function->getReturnParameterList().get());
 	}
-	// First, all function parameter types need to be resolved before we can check
+	// First, the parameter types of all functions need to be resolved before we can check
 	// the types, since it is possible to call functions that are only defined later
 	// in the source.
-	for (ptr<FunctionDefinition> const & function : _contract.getDefinedFunctions())
+	for (ptr<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 	{
 		m_currentScope = &m_scopes[function.get()];
 		function->getBody().checkTypeRequirements();

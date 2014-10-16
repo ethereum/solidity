@@ -28,7 +28,6 @@ namespace dev
 namespace solidity
 {
 
-
 bool Scope::registerDeclaration(Declaration& _declaration)
 {
 	if (m_declarations.find(_declaration.getName()) != m_declarations.end())

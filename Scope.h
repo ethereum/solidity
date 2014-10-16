@@ -36,7 +36,7 @@ namespace solidity
 class Scope
 {
 public:
-	explicit Scope(Scope* _outerScope = nullptr) : m_outerScope(_outerScope) {}
+	explicit Scope(Scope* _outerScope = nullptr): m_outerScope(_outerScope) {}
 	/// Registers the declaration in the scope unless its name is already declared. Returns true iff
 	/// it was not yet declared.
 	bool registerDeclaration(Declaration& _declaration);

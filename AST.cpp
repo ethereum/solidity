@@ -45,18 +45,14 @@ void ContractDefinition::accept(ASTVisitor& _visitor)
 void StructDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-	{
 		listAccept(m_members, _visitor);
-	}
 	_visitor.endVisit(*this);
 }
 
 void ParameterList::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-	{
 		listAccept(m_parameters, _visitor);
-	}
 	_visitor.endVisit(*this);
 }
 
@@ -75,10 +71,8 @@ void FunctionDefinition::accept(ASTVisitor& _visitor)
 void VariableDeclaration::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-	{
 		if (m_typeName)
 			m_typeName->accept(_visitor);
-	}
 	_visitor.endVisit(*this);
 }
 
@@ -119,9 +113,7 @@ void Statement::accept(ASTVisitor& _visitor)
 void Block::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-	{
 		listAccept(m_statements, _visitor);
-	}
 	_visitor.endVisit(*this);
 }
 
@@ -168,10 +160,8 @@ void Break::accept(ASTVisitor& _visitor)
 void Return::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-	{
 		if (m_expression)
 			m_expression->accept(_visitor);
-	}
 	_visitor.endVisit(*this);
 }
 
@@ -199,9 +189,7 @@ void Assignment::accept(ASTVisitor& _visitor)
 void UnaryOperation::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-	{
 		m_subExpression->accept(_visitor);
-	}
 	_visitor.endVisit(*this);
 }
 
@@ -228,9 +216,7 @@ void FunctionCall::accept(ASTVisitor& _visitor)
 void MemberAccess::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-	{
 		m_expression->accept(_visitor);
-	}
 	_visitor.endVisit(*this);
 }
 
@@ -272,7 +258,7 @@ void Statement::expectType(Expression& _expression, const Type& _expectedType)
 
 ptr<Type> Block::checkTypeRequirements()
 {
-	for (ptr<Statement> const & statement : m_statements)
+	for (ptr<Statement> const& statement: m_statements)
 		statement->checkTypeRequirements();
 	return ptr<Type>();
 }
@@ -281,7 +267,8 @@ ptr<Type> IfStatement::checkTypeRequirements()
 {
 	expectType(*m_condition, BoolType());
 	m_trueBody->checkTypeRequirements();
-	if (m_falseBody) m_falseBody->checkTypeRequirements();
+	if (m_falseBody)
+		m_falseBody->checkTypeRequirements();
 	return ptr<Type>();
 }
 
@@ -324,14 +311,10 @@ ptr<Type> VariableDefinition::checkTypeRequirements()
 	if (m_value)
 	{
 		if (m_variable->getType())
-		{
 			expectType(*m_value, *m_variable->getType());
-		}
 		else
-		{
 			// no type declared and no previous assignment, infer the type
 			m_variable->setType(m_value->checkTypeRequirements());
-		}
 	}
 	return ptr<Type>();
 }
@@ -371,9 +354,7 @@ ptr<Type> BinaryOperation::checkTypeRequirements()
 	else
 		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("No common type found in binary operation."));
 	if (Token::isCompareOp(m_operator))
-	{
 		m_type = std::make_shared<BoolType>();
-	}
 	else
 	{
 		BOOST_ASSERT(Token::isBinaryOp(m_operator));
@@ -387,7 +368,7 @@ ptr<Type> BinaryOperation::checkTypeRequirements()
 ptr<Type> FunctionCall::checkTypeRequirements()
 {
 	m_expression->checkTypeRequirements();
-	for (ptr<Expression> const & argument : m_arguments)
+	for (ptr<Expression> const& argument: m_arguments)
 		argument->checkTypeRequirements();
 	ptr<Type> expressionType = m_expression->getType();
 	Type::Category const category = expressionType->getCategory();
@@ -418,11 +399,9 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Wrong argument count for "
 								  "function call."));
 		for (size_t i = 0; i < m_arguments.size(); ++i)
-		{
 			if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
 				BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Invalid type for argument in "
 																	 "function call."));
-		}
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
 		if (fun.getReturnParameterList()->getParameters().empty())

@@ -244,7 +244,7 @@ bool ASTPrinter::visit(Literal& _node)
 {
 	const char* tokenString = Token::toString(_node.getToken());
 	if (tokenString == nullptr)
-		tokenString = "----";
+		tokenString = "[no token]";
 	writeLine(std::string("Literal, token: ") + tokenString + " value: " + _node.getValue());
 	printSourcePart(_node);
 	return goDeeper();
@@ -255,8 +255,6 @@ void ASTPrinter::endVisit(ASTNode&)
 	m_indentation--;
 }
 
-// @todo instead of this, we could make the default implementation of endVisit call the
-// superclass' endVisit
 void ASTPrinter::endVisit(ContractDefinition&)
 {
 	m_indentation--;

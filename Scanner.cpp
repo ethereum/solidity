@@ -103,11 +103,11 @@ void Scanner::reset(const CharStream& _source)
 }
 
 
-bool Scanner::scanHexNumber(char& scanned_number, int expected_length)
+bool Scanner::scanHexNumber(char& o_scannedNumber, int _expectedLength)
 {
-	BOOST_ASSERT(expected_length <= 4);  // prevent overflow
+	BOOST_ASSERT(_expectedLength <= 4);  // prevent overflow
 	char x = 0;
-	for (int i = 0; i < expected_length; i++)
+	for (int i = 0; i < _expectedLength; i++)
 	{
 		int d = HexValue(m_char);
 		if (d < 0)
@@ -118,7 +118,7 @@ bool Scanner::scanHexNumber(char& scanned_number, int expected_length)
 		x = x * 16 + d;
 		advance();
 	}
-	scanned_number = x;
+	o_scannedNumber = x;
 	return true;
 }
 
@@ -129,24 +129,25 @@ BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 Token::Value Scanner::next()
 {
 	m_current_token = m_next_token;
-	m_hasLineTerminatorBeforeNext = false;
-	m_hasMultilineCommentBeforeNext = false;
 	scanToken();
 	return m_current_token.token;
+}
+
+Token::Value Scanner::selectToken(char _next, Token::Value _then, Token::Value _else)
+{
+	advance();
+	if (m_char == _next)
+		selectToken(_then);
+	else
+		return _else;
 }
 
 
 bool Scanner::skipWhitespace()
 {
 	const int start_position = getSourcePos();
-	while (true)
-	{
-		if (IsLineTerminator(m_char))
-			m_hasLineTerminatorBeforeNext = true;
-		else if (!IsWhiteSpace(m_char))
-			break;
+	while (IsWhiteSpace(m_char))
 		advance();
-	}
 	// Return whether or not we skipped any characters.
 	return getSourcePos() != start_position;
 }
@@ -170,12 +171,7 @@ Token::Value Scanner::skipMultiLineComment()
 	{
 		char ch = m_char;
 		advance();
-		if (IsLineTerminator(ch))
-		{
-			// Following ECMA-262, section 7.4, a comment containing
-			// a newline will make the comment count as a line-terminator.
-			m_hasMultilineCommentBeforeNext = true;
-		}
+
 		// If we have reached the end of the multi-line comment, we
 		// consume the '/' and insert a whitespace. This way all
 		// multi-line comments are treated as whitespace.
@@ -199,8 +195,7 @@ void Scanner::scanToken()
 		m_next_token.location.start = getSourcePos();
 		switch (m_char)
 		{
-		case '\n':
-			m_hasLineTerminatorBeforeNext = true; // fall-through
+		case '\n': // fall-through
 		case ' ':
 		case '\t':
 			token = selectToken(Token::WHITESPACE);
@@ -395,37 +390,35 @@ bool Scanner::scanEscape()
 	switch (c)
 	{
 	case '\'':  // fall through
-	case '"' :  // fall through
+	case '"':  // fall through
 	case '\\':
 		break;
-	case 'b' :
+	case 'b':
 		c = '\b';
 		break;
-	case 'f' :
+	case 'f':
 		c = '\f';
 		break;
-	case 'n' :
+	case 'n':
 		c = '\n';
 		break;
-	case 'r' :
+	case 'r':
 		c = '\r';
 		break;
-	case 't' :
+	case 't':
 		c = '\t';
 		break;
-	case 'u' :
+	case 'u':
 		if (!scanHexNumber(c, 4)) return false;
 		break;
-	case 'v' :
+	case 'v':
 		c = '\v';
 		break;
-	case 'x' :
+	case 'x':
 		if (!scanHexNumber(c, 2)) return false;
 		break;
 	}
-	// According to ECMA-262, section 7.8.4, characters not covered by the
-	// above cases should be illegal, but they are commonly handled as
-	// non-escaped characters by JS VMs.
+
 	addLiteralChar(c);
 	return true;
 }
@@ -651,6 +644,21 @@ Token::Value Scanner::scanIdentifierOrKeyword()
 		addLiteralCharAndAdvance();
 	literal.Complete();
 	return KeywordOrIdentifierToken(m_next_token.literal);
+}
+
+char CharStream::advanceAndGet()
+{
+	if (isPastEndOfInput()) return 0;
+	++m_pos;
+	if (isPastEndOfInput()) return 0;
+	return get();
+}
+
+char CharStream::rollback(size_t _amount)
+{
+	BOOST_ASSERT(m_pos >= _amount);
+	m_pos -= _amount;
+	return get();
 }
 
 std::string CharStream::getLineAtPosition(int _position) const

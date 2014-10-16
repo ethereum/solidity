@@ -29,9 +29,9 @@ namespace dev
 namespace solidity
 {
 
-struct ParserError : virtual Exception {};
-struct TypeError : virtual Exception {};
-struct DeclarationError : virtual Exception {};
+struct ParserError: virtual Exception {};
+struct TypeError: virtual Exception {};
+struct DeclarationError: virtual Exception {};
 
 }
 }

@@ -34,8 +34,9 @@ namespace dev
 namespace solidity
 {
 
-
-class NameAndTypeResolver : private boost::noncopyable
+//! Resolves name references, resolves all types and checks that all operations are valid for the
+//! inferred types. An exception is throw on the first error.
+class NameAndTypeResolver: private boost::noncopyable
 {
 public:
 	NameAndTypeResolver();
@@ -54,7 +55,7 @@ private:
 
 //! Traverses the given AST upon construction and fills _scopes with all declarations inside the
 //! AST.
-class DeclarationRegistrationHelper : private ASTVisitor
+class DeclarationRegistrationHelper: private ASTVisitor
 {
 public:
 	DeclarationRegistrationHelper(std::map<ASTNode*, Scope>& _scopes, ASTNode& _astRoot);
@@ -79,7 +80,7 @@ private:
 
 //! Resolves references to declarations (of variables and types) and also establishes the link
 //! between a return statement and the return parameter list.
-class ReferencesResolver : private ASTVisitor
+class ReferencesResolver: private ASTVisitor
 {
 public:
 	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver, ParameterList* _returnParameters);
