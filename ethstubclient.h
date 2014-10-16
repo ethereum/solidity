@@ -33,10 +33,10 @@ p["block"] = block;
 
         }
 
-        Json::Value block(const std::string& numberOrHash) throw (jsonrpc::JsonRpcException)
+        Json::Value block(const Json::Value& params) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["numberOrHash"] = numberOrHash; 
+            p["params"] = params; 
 
             Json::Value result = this->client->CallMethod("block",p);
     if (result.isObject())
@@ -199,10 +199,10 @@ p["s"] = s;
 
         }
 
-        Json::Value messages(const Json::Value& json) throw (jsonrpc::JsonRpcException)
+        Json::Value messages(const Json::Value& params) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["json"] = json; 
+            p["params"] = params; 
 
             Json::Value result = this->client->CallMethod("messages",p);
     if (result.isArray())
@@ -380,11 +380,11 @@ p["storage"] = storage;
 
         }
 
-        Json::Value transaction(const int& i, const std::string& numberOrHash) throw (jsonrpc::JsonRpcException)
+        Json::Value transaction(const int& i, const Json::Value& params) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p["i"] = i; 
-p["numberOrHash"] = numberOrHash; 
+p["params"] = params; 
 
             Json::Value result = this->client->CallMethod("transaction",p);
     if (result.isObject())
@@ -394,11 +394,11 @@ p["numberOrHash"] = numberOrHash;
 
         }
 
-        Json::Value uncle(const int& i, const std::string& numberOrHash) throw (jsonrpc::JsonRpcException)
+        Json::Value uncle(const int& i, const Json::Value& params) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p["i"] = i; 
-p["numberOrHash"] = numberOrHash; 
+p["params"] = params; 
 
             Json::Value result = this->client->CallMethod("uncle",p);
     if (result.isObject())
@@ -408,10 +408,10 @@ p["numberOrHash"] = numberOrHash;
 
         }
 
-        std::string watch(const std::string& json) throw (jsonrpc::JsonRpcException)
+        std::string watch(const std::string& params) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["json"] = json; 
+            p["params"] = params; 
 
             Json::Value result = this->client->CallMethod("watch",p);
     if (result.isString())

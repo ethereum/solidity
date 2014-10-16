@@ -58,11 +58,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_balanceAt)
     dev::KeyPair key = KeyPair::create();
     auto address = key.address();
     string balance = jsonrpcClient->balanceAt(toJS(address), 0);
-    BOOST_CHECK_EQUAL(jsToDecimal(toJS(web3.ethereum()->balanceAt(address))), balance);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_block)
-{
+    BOOST_CHECK_EQUAL(toJS(web3.ethereum()->balanceAt(address)), balance);
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_call)
@@ -162,17 +158,23 @@ BOOST_AUTO_TEST_CASE(jsonrpc_keys)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_lll)
 {
+	
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_messages)
 {
+	cnote << "Testing jsonrpc messages...";
+	Json::Value msgs = jsonrpcClient->messages(Json::Value());
+	auto messages = web3.ethereum()->messages(dev::eth::MessageFilter());
+	BOOST_CHECK_EQUAL(msgs.isArray(), true);
+	BOOST_CHECK_EQUAL(msgs.size(), messages.size());
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_number)
 {
-    cnote << "Testing jsonrpc number...";
-    int number = jsonrpcClient->number();
-    BOOST_CHECK_EQUAL(number, web3.ethereum()->number() + 1);
+	cnote << "Testing jsonrpc number...";
+	int number = jsonrpcClient->number();
+	BOOST_CHECK_EQUAL(number, web3.ethereum()->number() + 1);
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_number2)
@@ -291,19 +293,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
     BOOST_REQUIRE(balance2 > 0);
     BOOST_CHECK_EQUAL(txAmount, balance2);
     BOOST_CHECK_EQUAL(txAmount, jsToU256(messages[0u]["value"].asString()));
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_transaction)
-{
-    // TODO! not working?
-//    auto messages = jsonrpcClient->messages(Json::Value());
-//    auto transactionNumber = messages[0u]["path"][0u].asInt();
-//    auto transactionBlock = messages[0u]["block"].asString();
-//    Json::Value p = jsonrpcClient->transaction(transactionNumber, transactionBlock);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_uncle)
-{
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_watch)
