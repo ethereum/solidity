@@ -27,29 +27,30 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonJS.h>
 #include <libwebthree/WebThree.h>
-#include <libethrpc/EthStubServer.h>
+#include <libethrpc/WebThreeStubServer.h>
 #include <libethrpc/CorsHttpServer.h>
 #include <jsonrpc/connectors/httpserver.h>
 #include <jsonrpc/connectors/httpclient.h>
+#include <set>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
-#include "ethstubclient.h"
+#include "webthreestubclient.h"
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 namespace js = json_spirit;
 
-
 namespace jsonrpc_tests {
 
 string name = "Ethereum(++) tests";
 string dbPath;
-dev::WebThreeDirect web3(name, dbPath, true);
+auto s = set<string>{"eth", "shh"};
+dev::p2p::NetworkPreferences np(30303, std::string(), false);
+dev::WebThreeDirect web3(name, dbPath, true, s, np);
 
-auto_ptr<EthStubServer> jsonrpcServer;
-auto_ptr<EthStubClient> jsonrpcClient;
-
+auto_ptr<WebThreeStubServer> jsonrpcServer;
+auto_ptr<WebThreeStubClient> jsonrpcClient;
 
 struct JsonrpcFixture  {
 	JsonrpcFixture()
@@ -58,10 +59,10 @@ struct JsonrpcFixture  {
 
 		web3.setIdealPeerCount(5);
 		web3.ethereum()->setForceMining(true);
-		jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::CorsHttpServer(8080), web3));
+		jsonrpcServer = auto_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), web3));
 		jsonrpcServer->StartListening();
 		
-		jsonrpcClient = auto_ptr<EthStubClient>(new EthStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
+		jsonrpcClient = auto_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
 	}
 	~JsonrpcFixture()
 	{
@@ -321,7 +322,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	BOOST_CHECK_EQUAL(txAmount, balance2);
 	BOOST_CHECK_EQUAL(txAmount, jsToU256(messages[0u]["value"].asString()));
 }
-
 
 }
 
