@@ -28,16 +28,20 @@
 #include <libsolidity/Exceptions.h>
 #include <boost/test/unit_test.hpp>
 
-namespace dev {
-namespace solidity {
-namespace test {
+namespace dev
+{
+namespace solidity
+{
+namespace test
+{
 
-namespace {
-	ptr<ASTNode> parseText(const std::string& _source)
-	{
-		Parser parser;
-		return parser.parse(std::make_shared<Scanner>(CharStream(_source)));
-	}
+namespace
+{
+ptr<ASTNode> parseText(const std::string& _source)
+{
+	Parser parser;
+	return parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+}
 }
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
@@ -211,5 +215,7 @@ BOOST_AUTO_TEST_CASE(else_if_statement)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} } } // end namespaces
+}
+}
+} // end namespaces
 

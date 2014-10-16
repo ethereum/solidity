@@ -29,19 +29,23 @@
 #include <libsolidity/Exceptions.h>
 #include <boost/test/unit_test.hpp>
 
-namespace dev {
-namespace solidity {
-namespace test {
+namespace dev
+{
+namespace solidity
+{
+namespace test
+{
 
-namespace {
-	void parseTextAndResolveNames(const std::string& _source)
-	{
-		Parser parser;
-		ptr<ContractDefinition> contract = parser.parse(
-												std::make_shared<Scanner>(CharStream(_source)));
-		NameAndTypeResolver resolver;
-		resolver.resolveNamesAndTypes(*contract);
-	}
+namespace
+{
+void parseTextAndResolveNames(const std::string& _source)
+{
+	Parser parser;
+	ptr<ContractDefinition> contract = parser.parse(
+										   std::make_shared<Scanner>(CharStream(_source)));
+	NameAndTypeResolver resolver;
+	resolver.resolveNamesAndTypes(*contract);
+}
 }
 
 BOOST_AUTO_TEST_SUITE(SolidityNameAndTypeResolution)
@@ -168,5 +172,7 @@ BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} } } // end namespaces
+}
+}
+} // end namespaces
 
