@@ -10,8 +10,10 @@
 #include <libsolidity/ASTPrinter.h>
 #include <libsolidity/NameAndTypeResolver.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 ptr<ContractDefinition> parseAST(std::string const& _source)
 {
@@ -20,15 +22,16 @@ ptr<ContractDefinition> parseAST(std::string const& _source)
 	return parser.parse(scanner);
 }
 
-} } // end namespaces
+}
+} // end namespaces
 
 void help()
 {
 	std::cout
-		<< "Usage solc [OPTIONS] <file>" << std::endl
-		<< "Options:" << std::endl
-		<< "    -h,--help  Show this help message and exit." << std::endl
-		<< "    -V,--version  Show the version and exit." << std::endl;
+			<< "Usage solc [OPTIONS] <file>" << std::endl
+			<< "Options:" << std::endl
+			<< "    -h,--help  Show this help message and exit." << std::endl
+			<< "    -V,--version  Show the version and exit." << std::endl;
 	exit(0);
 }
 
@@ -44,7 +47,6 @@ void version()
 int main(int argc, char** argv)
 {
 	std::string infile;
-
 	for (int i = 1; i < argc; ++i)
 	{
 		std::string arg = argv[i];
@@ -55,7 +57,6 @@ int main(int argc, char** argv)
 		else
 			infile = argv[i];
 	}
-
 	std::string src;
 	if (infile.empty())
 	{
@@ -65,10 +66,11 @@ int main(int argc, char** argv)
 			getline(std::cin, s);
 			src.append(s);
 		}
-	} else {
+	}
+	else
+	{
 		src = dev::asString(dev::contents(infile));
 	}
-
 	std::cout << "Parsing..." << std::endl;
 	// @todo catch exception
 	dev::solidity::ptr<dev::solidity::ContractDefinition> ast = dev::solidity::parseAST(src);
