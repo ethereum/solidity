@@ -262,6 +262,20 @@ p["s"] = s;
 
         }
 
+        std::string offset(const int& o, const std::string& s) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p["o"] = o; 
+p["s"] = s; 
+
+            Json::Value result = this->client->CallMethod("offset",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         int peerCount() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
