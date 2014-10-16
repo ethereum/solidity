@@ -79,7 +79,7 @@ namespace dev
 			if ( v.type() == js::str_type ) 
 			{ 
 				const std::string& expectedText = v.get_str();
-				if ( expectedText.front() == '#' ) 
+				if ( !expectedText.empty() && expectedText.front() == '#' ) 
 				{ 
 					// Deal with bigint instead of a raw string 
 					std::string bigIntStr = expectedText.substr(1,expectedText.length()-1); 
