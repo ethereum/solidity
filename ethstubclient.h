@@ -59,6 +59,19 @@ p["block"] = block;
 
         }
 
+        bool check(const int& id) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p["id"] = id; 
+
+            Json::Value result = this->client->CallMethod("check",p);
+    if (result.isBool())
+        return result.asBool();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         std::string codeAt(const std::string& address, const int& block) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -169,6 +182,19 @@ p["s"] = s;
             Json::Value result = this->client->CallMethod("keys",p);
     if (result.isArray())
         return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        bool killWatch(const int& id) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p["id"] = id; 
+
+            Json::Value result = this->client->CallMethod("killWatch",p);
+    if (result.isBool())
+        return result.asBool();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -408,14 +434,14 @@ p["params"] = params;
 
         }
 
-        std::string watch(const std::string& params) throw (jsonrpc::JsonRpcException)
+        int watch(const std::string& params) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p["params"] = params; 
 
             Json::Value result = this->client->CallMethod("watch",p);
-    if (result.isString())
-        return result.asString();
+    if (result.isInt())
+        return result.asInt();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
