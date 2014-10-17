@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_sha3)
 	cnote << "Testing jsonrpc sha3...";
 	string testString = "1234567890987654";
 	string sha3 = jsonrpcClient->sha3(testString);
-	BOOST_CHECK_EQUAL(jsToFixed<32>(sha3), dev::eth::sha3(jsToBytes(testString)));
+	BOOST_CHECK_EQUAL(jsToFixed<32>(sha3), dev::sha3(jsToBytes(testString)));
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_stateAt)
