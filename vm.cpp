@@ -512,7 +512,10 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		u256 gas;
 		try
 		{
-			auto useJit = true;
+			auto argc = boost::unit_test::framework::master_test_suite().argc;
+			auto argv = boost::unit_test::framework::master_test_suite().argv;
+
+			auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
 			if (useJit)
 			{
 				jit::VM vm(fev.gas);
