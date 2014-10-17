@@ -22,13 +22,24 @@
 #pragma once
 
 //#include <ostream>
+
+#pragma warning(push)
+#pragma warning(disable:4100 4244)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
+#pragma GCC diagnostic ignored "-Wextra"
 #include <osrng.h>
-#include <eccrypto.h>		// secp256r1
+#include <eccrypto.h>		// secp256k1
 #include <oids.h>		// ec domain
 #include <ecp.h>			// ec prime field
-#include <files.h>		// also for buffer
+#include <files.h>		// cryptopp buffer
 #include <aes.h>
 #include <modes.h>		// aes modes
+#pragma warning(pop)
+#pragma GCC diagnostic pop
 
 using namespace std;
 using namespace CryptoPP;
