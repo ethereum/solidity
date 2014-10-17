@@ -137,7 +137,7 @@ Token::Value Scanner::selectToken(char _next, Token::Value _then, Token::Value _
 {
 	advance();
 	if (m_char == _next)
-		selectToken(_then);
+		return selectToken(_then);
 	else
 		return _else;
 }
@@ -530,21 +530,18 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD("bool", Token::BOOL)                                               \
 	KEYWORD_GROUP('c')                                                         \
 	KEYWORD("case", Token::CASE)                                               \
-	KEYWORD("catch", Token::CATCH)                                             \
 	KEYWORD("const", Token::CONST)                                             \
 	KEYWORD("continue", Token::CONTINUE)                                       \
 	KEYWORD("contract", Token::CONTRACT)                                       \
 	KEYWORD_GROUP('d')                                                         \
-	KEYWORD("debugger", Token::DEBUGGER)                                       \
 	KEYWORD("default", Token::DEFAULT)                                         \
 	KEYWORD("delete", Token::DELETE)                                           \
 	KEYWORD("do", Token::DO)                                                   \
 	KEYWORD_GROUP('e')                                                         \
 	KEYWORD("else", Token::ELSE)                                               \
-	KEYWORD("enum", Token::FUTURE_RESERVED_WORD)                               \
+	KEYWORD("extends", Token::EXTENDS)                                         \
 	KEYWORD_GROUP('f')                                                         \
 	KEYWORD("false", Token::FALSE_LITERAL)                                     \
-	KEYWORD("finally", Token::FINALLY)                                         \
 	KEYWORD("for", Token::FOR)                                                 \
 	KEYWORD("function", Token::FUNCTION)                                       \
 	KEYWORD_GROUP('h')                                                         \
@@ -555,15 +552,12 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD("hash256", Token::HASH256)                                         \
 	KEYWORD_GROUP('i')                                                         \
 	KEYWORD("if", Token::IF)                                                   \
-	KEYWORD("implements", Token::FUTURE_STRICT_RESERVED_WORD)                  \
 	KEYWORD("in", Token::IN)                                                   \
-	KEYWORD("instanceof", Token::INSTANCEOF)                                   \
 	KEYWORD("int", Token::INT)                                                 \
 	KEYWORD("int32", Token::INT32)                                             \
 	KEYWORD("int64", Token::INT64)                                             \
 	KEYWORD("int128", Token::INT128)                                           \
 	KEYWORD("int256", Token::INT256)                                           \
-	KEYWORD("interface", Token::FUTURE_STRICT_RESERVED_WORD)                   \
 	KEYWORD_GROUP('l')                                                         \
 	KEYWORD_GROUP('m')                                                         \
 	KEYWORD("mapping", Token::MAPPING)                                         \
@@ -571,9 +565,7 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD("new", Token::NEW)                                                 \
 	KEYWORD("null", Token::NULL_LITERAL)                                       \
 	KEYWORD_GROUP('p')                                                         \
-	KEYWORD("package", Token::FUTURE_STRICT_RESERVED_WORD)                     \
 	KEYWORD("private", Token::PRIVATE)                                         \
-	KEYWORD("protected", Token::FUTURE_STRICT_RESERVED_WORD)                   \
 	KEYWORD("public", Token::PUBLIC)                                           \
 	KEYWORD_GROUP('r')                                                         \
 	KEYWORD("real", Token::REAL)                                               \
@@ -586,10 +578,7 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD_GROUP('t')                                                         \
 	KEYWORD("text", Token::TEXT)                                               \
 	KEYWORD("this", Token::THIS)                                               \
-	KEYWORD("throw", Token::THROW)                                             \
 	KEYWORD("true", Token::TRUE_LITERAL)                                       \
-	KEYWORD("try", Token::TRY)                                                 \
-	KEYWORD("typeof", Token::TYPEOF)                                           \
 	KEYWORD_GROUP('u')                                                         \
 	KEYWORD("uint", Token::UINT)                                               \
 	KEYWORD("uint32", Token::UINT32)                                           \
@@ -599,10 +588,8 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD("ureal", Token::UREAL)                                             \
 	KEYWORD_GROUP('v')                                                         \
 	KEYWORD("var", Token::VAR)                                                 \
-	KEYWORD("void", Token::VOID)                                               \
 	KEYWORD_GROUP('w')                                                         \
 	KEYWORD("while", Token::WHILE)                                             \
-	KEYWORD("with", Token::WITH)
 
 
 static Token::Value KeywordOrIdentifierToken(const std::string& input)
