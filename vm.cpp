@@ -24,7 +24,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libevmjit/VM.h>
 
-#define FILL_TESTS
+//#define FILL_TESTS
 
 using namespace std;
 using namespace json_spirit;
