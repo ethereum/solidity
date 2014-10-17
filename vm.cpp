@@ -22,6 +22,7 @@
 
 #include "vm.h"
 #include <libdevcore/CommonIO.h>
+#include <libevmjit/VM.h>
 
 #define FILL_TESTS
 
@@ -511,9 +512,19 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		u256 gas;
 		try
 		{
-			VM vm(fev.gas);
-			output = vm.go(fev).toVector();
-			gas = vm.gas(); // Get the remaining gas
+			auto useJit = true;
+			if (useJit)
+			{
+				jit::VM vm(fev.gas);
+				output = vm.go(fev);
+				gas = vm.gas();
+			}
+			else
+			{
+				VM vm(fev.gas);
+				output = vm.go(fev).toVector();
+				gas = vm.gas(); // Get the remaining gas
+			}
 		}
 		catch (Exception const& _e)
 		{
