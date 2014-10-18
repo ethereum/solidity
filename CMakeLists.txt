@@ -22,7 +22,6 @@ target_link_libraries(createRandomTest ethcore)
 target_link_libraries(createRandomTest boost_chrono)
 target_link_libraries(createRandomTest boost_unit_test_framework)
 
-
 if ("${TARGET_PLATFORM}" STREQUAL "w64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
 	target_link_libraries(testeth boost_system-mt-s)
