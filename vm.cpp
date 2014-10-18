@@ -497,7 +497,6 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre") > 0);
 		BOOST_REQUIRE(o.count("exec") > 0);
 
-		VM vm;
 		dev::test::FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
@@ -512,11 +511,13 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			fev.code = &fev.thisTxCode;
 		}
 
-		vm.reset(fev.gas);
 		bytes output;
+		u256 gas;
 		try
 		{
-			output = vm.go(fev).toBytes();
+			VM vm(fev.gas);
+			output = vm.go(fev).toVector();
+			gas = vm.gas(); // Get the remaining gas
 		}
 		catch (Exception const& _e)
 		{
@@ -553,7 +554,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			o["post"] = mValue(fev.exportState());
 			o["callcreates"] = fev.exportCallCreates();
 			o["out"] = "0x" + toHex(output);
-			fev.push(o, "gas", vm.gas());
+			fev.push(o, "gas", gas);
 		}
 		else
 		{
@@ -577,7 +578,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			else
 				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
-			BOOST_CHECK(test.toInt(o["gas"]) == vm.gas());
+			BOOST_CHECK(test.toInt(o["gas"]) == gas);
 			BOOST_CHECK(test.addresses == fev.addresses);
 			BOOST_CHECK(test.callcreates == fev.callcreates);
 		}
