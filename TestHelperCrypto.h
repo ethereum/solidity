@@ -21,8 +21,6 @@
 
 #pragma once
 
-//#include <ostream>
-
 #pragma warning(push)
 #pragma warning(disable:4100 4244)
 #pragma GCC diagnostic push
