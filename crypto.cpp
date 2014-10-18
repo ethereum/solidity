@@ -41,14 +41,18 @@ BOOST_AUTO_TEST_SUITE(devcrypto)
 BOOST_AUTO_TEST_CASE(ecies)
 {
 	ECKeyPair k = ECKeyPair::create();
-	
+
 	string message("Now is the time for all good men to come to the aide of humanity.");
-	bytes b = bytesConstRef(message).toBytes();
+	bytes b = bytesRef(message).toBytes();
 	ECIESEncryptor(&k).encrypt(b);
 
 	bytesConstRef br(&b);
 	bytes plain = ECIESDecryptor(&k).decrypt(br);
+
+	// ideally, decryptor will go a step further, accept a bytesRef and zero input.
+	assert(plain != b);
 	
+	// plaintext is same as output
 	assert(plain == bytesConstRef(message).toBytes());
 }
 
