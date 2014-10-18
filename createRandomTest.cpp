@@ -22,8 +22,8 @@
 
 #include <string>
 #include <iostream>
+#include <chrono>
 #include <boost/random.hpp>
-#include <boost/chrono.hpp>
 #include <boost/filesystem/path.hpp>
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <json_spirit/json_spirit.h>
@@ -52,8 +52,8 @@ int main(int argc, char *argv[])
 
 	boost::random::mt19937 gen;
 
-	auto now = boost::chrono::steady_clock::now().time_since_epoch();
-	auto timeSinceEpoch = boost::chrono::duration_cast<boost::chrono::nanoseconds>(now).count();
+	auto now = chrono::steady_clock::now().time_since_epoch();
+	auto timeSinceEpoch = chrono::duration_cast<chrono::nanoseconds>(now).count();
 	gen.seed(static_cast<unsigned int>(timeSinceEpoch));
 	boost::random::uniform_int_distribution<> lengthOfCodeDist(2, 16);
 	boost::random::uniform_int_distribution<> opcodeDist(0, 255);
