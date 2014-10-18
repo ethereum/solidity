@@ -64,9 +64,7 @@ int main(int argc, char *argv[])
 	string randomCode;
 
 	for (int i = 0; i < lengthOfCode; ++i)
-	{
 		randomCode += toHex(toCompactBigEndian(randGen()));
-	}
 
 	// read template test file
 
