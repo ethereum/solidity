@@ -328,7 +328,7 @@ void Assignment::checkTypeRequirements()
 	m_type = m_leftHandSide->getType();
 	if (m_assigmentOperator != Token::ASSIGN)
 	{
-		// complex assignment
+		// compound assignment
 		if (!m_type->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_assigmentOperator)))
 			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
 	}
@@ -339,7 +339,7 @@ void UnaryOperation::checkTypeRequirements()
 	// INC, DEC, NOT, BIT_NOT, DELETE
 	m_subExpression->checkTypeRequirements();
 	m_type = m_subExpression->getType();
-	if (m_type->acceptsUnaryOperator(m_operator))
+	if (!m_type->acceptsUnaryOperator(m_operator))
 		BOOST_THROW_EXCEPTION(createTypeError("Unary operator not compatible with type."));
 }
 
@@ -369,11 +369,11 @@ void FunctionCall::checkTypeRequirements()
 	m_expression->checkTypeRequirements();
 	for (ASTPointer<Expression> const& argument: m_arguments)
 		argument->checkTypeRequirements();
-	Type const& expressionType = *m_expression->getType();
-	Type::Category const category = expressionType.getCategory();
-	if (category == Type::Category::TYPE)
+
+	Type const* expressionType = m_expression->getType().get();
+	if (isTypeConversion())
 	{
-		TypeType const* type = dynamic_cast<TypeType const*>(&expressionType);
+		TypeType const* type = dynamic_cast<TypeType const*>(expressionType);
 		BOOST_ASSERT(type);
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
@@ -384,12 +384,12 @@ void FunctionCall::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
 		m_type = type->getActualType();
 	}
-	else if (category == Type::Category::FUNCTION)
+	else
 	{
 		//@todo would be nice to create a struct type from the arguments
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
-		FunctionType const* function = dynamic_cast<FunctionType const*>(&expressionType);
+		FunctionType const* function = dynamic_cast<FunctionType const*>(expressionType);
 		BOOST_ASSERT(function);
 		FunctionDefinition const& fun = function->getFunction();
 		std::vector<ASTPointer<VariableDeclaration>> const& parameters = fun.getParameters();
@@ -405,8 +405,11 @@ void FunctionCall::checkTypeRequirements()
 		else
 			m_type = fun.getReturnParameterList()->getParameters().front()->getType();
 	}
-	else
-		BOOST_THROW_EXCEPTION(createTypeError("Type does not support invocation."));
+}
+
+bool FunctionCall::isTypeConversion() const
+{
+	return m_expression->getType()->getCategory() == Type::Category::TYPE;
 }
 
 void MemberAccess::checkTypeRequirements()

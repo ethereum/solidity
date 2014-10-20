@@ -61,6 +61,12 @@ public:
 	/// the given description
 	TypeError createTypeError(std::string const& _description);
 
+	///@{
+	/// Equality relies on the fact that nodes cannot be copied.
+	bool operator==(ASTNode const& _other) const { return this == &_other; }
+	bool operator!=(ASTNode const& _other) const { return !operator==(_other); }
+	///@}
+
 private:
 	Location m_location;
 };
@@ -386,7 +392,9 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
+	Expression& getLeftHandSide() const { return *m_leftHandSide; }
 	Token::Value getAssignmentOperator() const { return m_assigmentOperator; }
+	Expression& getRightHandSide() const { return *m_rightHandSide; }
 
 private:
 	ASTPointer<Expression> m_leftHandSide;
@@ -422,6 +430,8 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
+	Expression& getLeftExpression() const { return *m_left; }
+	Expression& getRightExpression() const { return *m_right; }
 	Token::Value getOperator() const { return m_operator; }
 
 private:
@@ -441,6 +451,9 @@ public:
 		Expression(_location), m_expression(_expression), m_arguments(_arguments) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
+	/// Returns true if this is not an actual function call, but an explicit type conversion
+	/// or constructor call.
+	bool isTypeConversion() const;
 
 private:
 	ASTPointer<Expression> m_expression;

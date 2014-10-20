@@ -236,6 +236,7 @@ public:
 	static bool isAssignmentOp(Value tok) { return ASSIGN <= tok && tok <= ASSIGN_MOD; }
 	static bool isBinaryOp(Value op) { return COMMA <= op && op <= MOD; }
 	static bool isTruncatingBinaryOp(Value op) { return BIT_OR <= op && op <= SHR; }
+	static bool isArithmeticOp(Value op) { return ADD <= op && op <= MOD; }
 	static bool isCompareOp(Value op) { return EQ <= op && op <= IN; }
 	static bool isOrderedRelationalCompareOp(Value op)
 	{

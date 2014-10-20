@@ -26,6 +26,7 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 #include <boost/assert.hpp>
+#include <libdevcore/Common.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Token.h>
 
@@ -52,7 +53,7 @@ public:
 	static std::shared_ptr<Type> forLiteral(Literal const& _literal);
 
 	virtual Category getCategory() const = 0;
-	virtual bool isImplicitlyConvertibleTo(Type const&) const { return false; }
+	virtual bool isImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const
 	{
 		return isImplicitlyConvertibleTo(_convertTo);
@@ -60,7 +61,11 @@ public:
 	virtual bool acceptsBinaryOperator(Token::Value) const { return false; }
 	virtual bool acceptsUnaryOperator(Token::Value) const { return false; }
 
+	virtual bool operator==(Type const& _other) const { return getCategory() == _other.getCategory(); }
+	virtual bool operator!=(Type const& _other) const { return !this->operator ==(_other); }
+
 	virtual std::string toString() const = 0;
+	virtual bytes literalToBigEndian(Literal const&) const { return NullBytes; }
 };
 
 class IntegerType: public Type
@@ -81,7 +86,10 @@ public:
 	virtual bool acceptsBinaryOperator(Token::Value _operator) const override;
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override;
 
+	virtual bool operator==(Type const& _other) const override;
+
 	virtual std::string toString() const override;
+	virtual bytes literalToBigEndian(Literal const& _literal) const override;
 
 	int getNumBits() const { return m_bits; }
 	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
@@ -97,10 +105,6 @@ class BoolType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::BOOL; }
-	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override
-	{
-		return _convertTo.getCategory() == Category::BOOL;
-	}
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool acceptsBinaryOperator(Token::Value _operator) const override
 	{
@@ -110,7 +114,9 @@ public:
 	{
 		return _operator == Token::NOT || _operator == Token::DELETE;
 	}
+
 	virtual std::string toString() const override { return "bool"; }
+	virtual bytes literalToBigEndian(Literal const& _literal) const override;
 };
 
 class ContractType: public Type
@@ -118,7 +124,8 @@ class ContractType: public Type
 public:
 	virtual Category getCategory() const override { return Category::CONTRACT; }
 	ContractType(ContractDefinition const& _contract): m_contract(_contract) {}
-	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const;
+
+	virtual bool operator==(Type const& _other) const override;
 
 	virtual std::string toString() const override { return "contract{...}"; }
 
@@ -131,12 +138,12 @@ class StructType: public Type
 public:
 	virtual Category getCategory() const override { return Category::STRUCT; }
 	StructType(StructDefinition const& _struct): m_struct(_struct) {}
-	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const;
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override
 	{
 		return _operator == Token::DELETE;
 	}
 
+	virtual bool operator==(Type const& _other) const override;
 
 	virtual std::string toString() const override { return "struct{...}"; }
 
@@ -154,6 +161,8 @@ public:
 
 	virtual std::string toString() const override { return "function(...)returns(...)"; }
 
+	virtual bool operator==(Type const& _other) const override;
+
 private:
 	FunctionDefinition const& m_function;
 };
@@ -165,8 +174,11 @@ public:
 	MappingType() {}
 	virtual std::string toString() const override { return "mapping(...=>...)"; }
 
+	virtual bool operator==(Type const& _other) const override;
+
 private:
-	//@todo
+	std::shared_ptr<Type const> m_keyType;
+	std::shared_ptr<Type const> m_valueType;
 };
 
 //@todo should be changed into "empty anonymous struct"
@@ -175,6 +187,7 @@ class VoidType: public Type
 public:
 	virtual Category getCategory() const override { return Category::VOID; }
 	VoidType() {}
+
 	virtual std::string toString() const override { return "void"; }
 };
 
@@ -185,6 +198,8 @@ public:
 	TypeType(std::shared_ptr<Type const> const& _actualType): m_actualType(_actualType) {}
 
 	std::shared_ptr<Type const> const& getActualType() const { return m_actualType; }
+
+	virtual bool operator==(Type const& _other) const override;
 
 	virtual std::string toString() const override { return "type(" + m_actualType->toString() + ")"; }
 
