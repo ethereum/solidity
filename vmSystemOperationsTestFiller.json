@@ -129,7 +129,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -255,6 +255,42 @@
         }
     },
 
+    "callcodeToReturn1": {
+        "env" : {
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+            "currentNumber" : "0",
+            "currentGasLimit" : "10000000",
+            "currentDifficulty" : "256",
+            "currentTimestamp" : 1,
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 0 2 ) }",
+                "storage": {}
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "balance" : "23",
+                "code" : "0x6001600157603760005560026000f2",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "100000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000000000000"
+        }
+    },
+
 
     "CallToNameRegistratorOutOfGas": {
         "env" : {
@@ -274,7 +310,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -310,7 +346,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -346,7 +382,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -382,7 +418,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -419,7 +455,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -455,7 +491,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -525,7 +561,7 @@
             },
             "cd1722f3947def4cf144679da39c4c32bdc35681" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -561,7 +597,7 @@
             },
             "cd1722f3947def4cf144679da39c4c32bdc35681" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -597,7 +633,7 @@
             },
             "cd1722f3947def4cf144679da39c4c32bdc35681" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -723,7 +759,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -759,7 +795,43 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "100000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000000000000"
+        }
+    },
+
+  "callcodeToNameRegistrator0": {
+        "env" : {
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+            "currentNumber" : "0",
+            "currentGasLimit" : "10000000",
+            "currentDifficulty" : "256",
+            "currentTimestamp" : 1,
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
+                "storage": {}
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "balance" : "23",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -790,7 +862,7 @@
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "1000000000000000000",
                 "nonce" : 0,
-                "code" : "0x600035560f6009590060203560003557",
+                "code" : "0x600035560f600a59005d60203560003557",
                 "storage": {}
             }
         },
@@ -841,7 +913,7 @@
         }
     },
 
-    "ABAcalls0": {
+    "ABAcalls1": {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
              "currentNumber" : "0",
