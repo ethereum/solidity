@@ -162,27 +162,22 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isMining)
 	BOOST_CHECK_EQUAL(miningOff, web3.ethereum()->isMining());
 }
 
-BOOST_AUTO_TEST_CASE(jsonrpc_key)
+BOOST_AUTO_TEST_CASE(jsonrpc_accounts)
 {
-	cnote << "Testing jsonrpc key...";
-	dev::KeyPair key = KeyPair::create();
-	jsonrpcServer->setKeys({key});
-	string clientSecret = jsonrpcClient->key();
-	jsonrpcServer->setKeys({});
-	BOOST_CHECK_EQUAL(jsToSecret(clientSecret), key.secret());
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_keys)
-{
-	cnote << "Testing jsonrpc keys...";
+	cnote << "Testing jsonrpc accounts...";
 	std::vector <dev::KeyPair> keys = {KeyPair::create(), KeyPair::create()};
-	jsonrpcServer->setKeys(keys);
-	Json::Value k = jsonrpcClient->keys();
-	jsonrpcServer->setKeys({});
+	jsonrpcServer->setAccounts(keys);
+	Json::Value k = jsonrpcClient->accounts();
+	jsonrpcServer->setAccounts({});
 	BOOST_CHECK_EQUAL(k.isArray(), true);
 	BOOST_CHECK_EQUAL(k.size(),  keys.size());
-	for (unsigned i = 0; i < k.size(); i++)
-		BOOST_CHECK_EQUAL(jsToSecret(k[i].asString()) , keys[i].secret());
+	for (auto &i:k)
+	{
+		auto it = std::find_if(keys.begin(), keys.end(), [i](dev::KeyPair const& keyPair){
+			return jsToAddress(i.asString()) == keyPair.address();
+		});
+		BOOST_CHECK_EQUAL(it != keys.end(), true);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_messages)
@@ -299,6 +294,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	auto receiver = KeyPair::create();
 	
 	web3.ethereum()->setAddress(address);
+	jsonrpcServer->setAccounts({key});
 	dev::eth::mine(*(web3.ethereum()), 1);
 	auto balance = web3.ethereum()->balanceAt(address, 0);
 	BOOST_REQUIRE(balance > 0);
@@ -307,7 +303,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	auto gas = dev::eth::c_txGas;
 	
 	Json::Value t;
-	t["from"] = toJS(key.secret());
+	t["from"] = toJS(address);
 	t["value"] = jsToDecimal(toJS(txAmount));
 	t["to"] = toJS(receiver.address());
 	t["data"] = toJS(bytes());
@@ -315,10 +311,11 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	t["gasPrice"] = toJS(gasPrice);
 	
 	jsonrpcClient->transact(t);
-	
+	jsonrpcServer->setAccounts({});
 	dev::eth::mine(*(web3.ethereum()), 1);
 	auto balance2 = web3.ethereum()->balanceAt(receiver.address());
 	auto messages = jsonrpcClient->messages(Json::Value());
+	
 	BOOST_REQUIRE(balance2 > 0);
 	BOOST_CHECK_EQUAL(txAmount, balance2);
 	BOOST_CHECK_EQUAL(txAmount, jsToU256(messages[0u]["value"].asString()));
