@@ -37,7 +37,7 @@ namespace test
 
 namespace
 {
-ptr<ASTNode> parseText(const std::string& _source)
+ASTPointer<ASTNode> parseText(const std::string& _source)
 {
 	Parser parser;
 	return parser.parse(std::make_shared<Scanner>(CharStream(_source)));

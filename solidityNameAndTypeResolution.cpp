@@ -41,7 +41,7 @@ namespace
 void parseTextAndResolveNames(const std::string& _source)
 {
 	Parser parser;
-	ptr<ContractDefinition> contract = parser.parse(
+	ASTPointer<ContractDefinition> contract = parser.parse(
 										   std::make_shared<Scanner>(CharStream(_source)));
 	NameAndTypeResolver resolver;
 	resolver.resolveNamesAndTypes(*contract);
