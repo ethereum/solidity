@@ -60,7 +60,7 @@ struct JsonrpcFixture  {
 
 		web3.setIdealPeerCount(5);
 		web3.ethereum()->setForceMining(true);
-		jsonrpcServer = auto_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), web3));
+		jsonrpcServer = auto_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), web3, {}));
 		jsonrpcServer->StartListening();
 		
 		jsonrpcClient = auto_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));

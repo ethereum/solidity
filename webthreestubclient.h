@@ -19,6 +19,18 @@ class WebThreeStubClient
             delete this->client;
         }
 
+        Json::Value accounts() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->client->CallMethod("accounts",p);
+    if (result.isArray())
+        return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         std::string balanceAt(const std::string& address, const int& block) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -158,30 +170,6 @@ p["s"] = s;
             Json::Value result = this->client->CallMethod("gasPrice",p);
     if (result.isString())
         return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        std::string key() throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p = Json::nullValue;
-            Json::Value result = this->client->CallMethod("key",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        Json::Value keys() throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p = Json::nullValue;
-            Json::Value result = this->client->CallMethod("keys",p);
-    if (result.isArray())
-        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
