@@ -15,9 +15,9 @@ namespace dev
 namespace solidity
 {
 
-ptr<ContractDefinition> parseAST(std::string const& _source)
+ASTPointer<ContractDefinition> parseAST(std::string const& _source)
 {
-	ptr<Scanner> scanner = std::make_shared<Scanner>(CharStream(_source));
+	ASTPointer<Scanner> scanner = std::make_shared<Scanner>(CharStream(_source));
 	Parser parser;
 	return parser.parse(scanner);
 }
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 	}
 	std::cout << "Parsing..." << std::endl;
 	// @todo catch exception
-	dev::solidity::ptr<dev::solidity::ContractDefinition> ast = dev::solidity::parseAST(src);
+	dev::solidity::ASTPointer<dev::solidity::ContractDefinition> ast = dev::solidity::parseAST(src);
 	std::cout << "Syntax tree for the contract:" << std::endl;
 	dev::solidity::ASTPrinter printer(ast, src);
 	printer.print(std::cout);
