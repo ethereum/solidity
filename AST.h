@@ -58,6 +58,7 @@ public:
 	}
 
 	Location const& getLocation() const { return m_location; }
+
 private:
 	Location m_location;
 };
@@ -69,6 +70,7 @@ public:
 		: ASTNode(_location), m_name(_name) {}
 
 	const ASTString& getName() const { return *m_name; }
+
 private:
 	ASTPointer<ASTString> m_name;
 };
@@ -92,6 +94,7 @@ public:
 	std::vector<ASTPointer<StructDefinition>> const& getDefinedStructs() { return m_definedStructs; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() { return m_stateVariables; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() { return m_definedFunctions; }
+
 private:
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
@@ -122,6 +125,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 
 	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() { return m_parameters; }
+
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_parameters;
 };
@@ -145,6 +149,7 @@ public:
 	ParameterList& getParameterList() { return *m_parameters; }
 	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
 	Block& getBody() { return *m_body; }
+
 private:
 	bool m_isPublic;
 	ASTPointer<ParameterList> m_parameters;
@@ -168,6 +173,7 @@ public:
 	//! declared and there is no assignment to the variable that fixes the type.
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
+
 private:
 	ASTPointer<TypeName> m_typeName; ///< can be empty ("var")
 
@@ -196,6 +202,7 @@ public:
 	virtual std::shared_ptr<Type> toType() override { return Type::fromElementaryTypeName(m_type); }
 
 	Token::Value getType() const { return m_type; }
+
 private:
 	Token::Value m_type;
 };
@@ -211,6 +218,7 @@ public:
 	const ASTString& getName() const { return *m_name; }
 	void setReferencedStruct(StructDefinition& _referencedStruct) { m_referencedStruct = &_referencedStruct; }
 	StructDefinition const* getReferencedStruct() const { return m_referencedStruct; }
+
 private:
 	ASTPointer<ASTString> m_name;
 
@@ -225,6 +233,7 @@ public:
 		: TypeName(_location), m_keyType(_keyType), m_valueType(_valueType) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual std::shared_ptr<Type> toType() override { return Type::fromMapping(*this); }
+
 private:
 	ASTPointer<ElementaryTypeName> m_keyType;
 	ASTPointer<TypeName> m_valueType;
@@ -245,6 +254,7 @@ public:
 	//! For expressions, this also returns the inferred type of the expression. For other
 	//! statements, returns the empty pointer.
 	virtual void checkTypeRequirements() = 0;
+
 protected:
 	//! Check that the inferred type for _expression is _expectedType or at least implicitly
 	//! convertible to _expectedType. If not, throw exception.
@@ -259,6 +269,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 
 	virtual void checkTypeRequirements() override;
+
 private:
 	std::vector<ASTPointer<Statement>> m_statements;
 };
@@ -272,6 +283,7 @@ public:
 		  m_trueBody(_trueBody), m_falseBody(_falseBody) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
+
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_trueBody;
@@ -293,6 +305,7 @@ public:
 		: BreakableStatement(_location), m_condition(_condition), m_body(_body) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
+
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_body;
@@ -323,6 +336,7 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	void setFunctionReturnParameters(ParameterList& _parameters) { m_returnParameters = &_parameters; }
+
 private:
 	ASTPointer<Expression> m_expression; //< value to return, optional
 
@@ -348,6 +362,7 @@ class Expression: public Statement
 public:
 	Expression(Location const& _location): Statement(_location) {}
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
+
 protected:
 	//! Inferred type of the expression, only filled after a call to checkTypeRequirements().
 	std::shared_ptr<Type const> m_type;
@@ -369,6 +384,7 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	Token::Value getAssignmentOperator() const { return m_assigmentOperator; }
+
 private:
 	ASTPointer<Expression> m_leftHandSide;
 	Token::Value m_assigmentOperator;
@@ -387,6 +403,7 @@ public:
 
 	Token::Value getOperator() const { return m_operator; }
 	bool isPrefixOperation() const { return m_isPrefix; }
+
 private:
 	Token::Value m_operator;
 	ASTPointer<Expression> m_subExpression;
@@ -403,6 +420,7 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	Token::Value getOperator() const { return m_operator; }
+
 private:
 	ASTPointer<Expression> m_left;
 	Token::Value m_operator;
@@ -420,6 +438,7 @@ public:
 		: Expression(_location), m_expression(_expression), m_arguments(_arguments) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
+
 private:
 	ASTPointer<Expression> m_expression;
 	std::vector<ASTPointer<Expression>> m_arguments;
@@ -434,6 +453,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	const ASTString& getMemberName() const { return *m_memberName; }
 	virtual void checkTypeRequirements() override;
+
 private:
 	ASTPointer<Expression> m_expression;
 	ASTPointer<ASTString> m_memberName;
@@ -447,6 +467,7 @@ public:
 		: Expression(_location), m_base(_base), m_index(_index) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
+
 private:
 	ASTPointer<Expression> m_base;
 	ASTPointer<Expression> m_index;
@@ -469,6 +490,7 @@ public:
 	ASTString const& getName() const { return *m_name; }
 	void setReferencedDeclaration(Declaration& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
 	Declaration* getReferencedDeclaration() { return m_referencedDeclaration; }
+
 private:
 	ASTPointer<ASTString> m_name;
 
@@ -485,6 +507,7 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	Token::Value getTypeToken() const { return m_typeToken; }
+
 private:
 	Token::Value m_typeToken;
 };
@@ -499,6 +522,7 @@ public:
 
 	Token::Value getToken() const { return m_token; }
 	ASTString const& getValue() const { return *m_value; }
+
 private:
 	Token::Value m_token;
 	ASTPointer<ASTString> m_value;

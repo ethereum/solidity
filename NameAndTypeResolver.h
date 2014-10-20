@@ -42,6 +42,7 @@ public:
 
 	void resolveNamesAndTypes(ContractDefinition& _contract);
 	Declaration* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
+
 private:
 	void reset();
 
@@ -83,13 +84,14 @@ class ReferencesResolver: private ASTVisitor
 {
 public:
 	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver, ParameterList* _returnParameters);
+
 private:
 	virtual void endVisit(VariableDeclaration& _variable) override;
 	virtual bool visit(Identifier& _identifier) override;
 	virtual bool visit(UserDefinedTypeName& _typeName) override;
 	virtual bool visit(Mapping&) override;
 	virtual bool visit(Return& _return) override;
-private:
+
 	NameAndTypeResolver& m_resolver;
 	ParameterList* m_returnParameters;
 };

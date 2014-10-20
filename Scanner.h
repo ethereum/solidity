@@ -77,6 +77,7 @@ public:
 	std::string getLineAtPosition(int _position) const;
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
 	/// @}
+
 private:
 	std::string m_source;
 	size_t m_pos;
