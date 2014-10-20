@@ -223,7 +223,7 @@ public:
 
 	// Returns a string corresponding to the C++ token name
 	// (e.g. "LT" for the token LT).
-	static const char* getName(Value tok)
+	static char const* getName(Value tok)
 	{
 		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned
 		return m_name[tok];
@@ -309,7 +309,7 @@ public:
 	// Returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
 	// have a (unique) string (e.g. an IDENTIFIER).
-	static const char* toString(Value tok)
+	static char const* toString(Value tok)
 	{
 		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned.
 		return m_string[tok];
@@ -324,10 +324,10 @@ public:
 	}
 
 private:
-	static const char* const m_name[NUM_TOKENS];
-	static const char* const m_string[NUM_TOKENS];
-	static const int8_t m_precedence[NUM_TOKENS];
-	static const char m_tokenType[NUM_TOKENS];
+	static char const* const m_name[NUM_TOKENS];
+	static char const* const m_string[NUM_TOKENS];
+	static int8_t const m_precedence[NUM_TOKENS];
+	static char const m_tokenType[NUM_TOKENS];
 };
 
 }

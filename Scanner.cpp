@@ -88,12 +88,12 @@ int HexValue(char c)
 }
 }
 
-Scanner::Scanner(const CharStream& _source)
+Scanner::Scanner(CharStream const& _source)
 {
 	reset(_source);
 }
 
-void Scanner::reset(const CharStream& _source)
+void Scanner::reset(CharStream const& _source)
 {
 	m_source = _source;
 	m_char = m_source.get();
@@ -145,7 +145,7 @@ Token::Value Scanner::selectToken(char _next, Token::Value _then, Token::Value _
 
 bool Scanner::skipWhitespace()
 {
-	const int start_position = getSourcePos();
+	int const start_position = getSourcePos();
 	while (IsWhiteSpace(m_char))
 		advance();
 	// Return whether or not we skipped any characters.
@@ -425,7 +425,7 @@ bool Scanner::scanEscape()
 
 Token::Value Scanner::scanString()
 {
-	const char quote = m_char;
+	char const quote = m_char;
 	advance();  // consume quote
 	LiteralScope literal(this);
 	while (m_char != quote && !isSourcePastEndOfInput() && !IsLineTerminator(m_char))
@@ -592,11 +592,11 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD("while", Token::WHILE)                                             \
 
 
-static Token::Value KeywordOrIdentifierToken(const std::string& input)
+static Token::Value KeywordOrIdentifierToken(std::string const& input)
 {
 	BOOST_ASSERT(!input.empty());
-	const int kMinLength = 2;
-	const int kMaxLength = 10;
+	int const kMinLength = 2;
+	int const kMaxLength = 10;
 	if (input.size() < kMinLength || input.size() > kMaxLength)
 		return Token::IDENTIFIER;
 	switch (input[0])
@@ -609,7 +609,7 @@ case ch:
 	{                                                         \
 		/* 'keyword' is a char array, so sizeof(keyword) is */  \
 		/* strlen(keyword) plus 1 for the NUL char. */          \
-		const int keyword_length = sizeof(keyword) - 1;         \
+		int const keyword_length = sizeof(keyword) - 1;         \
 		BOOST_STATIC_ASSERT(keyword_length >= kMinLength);      \
 		BOOST_STATIC_ASSERT(keyword_length <= kMaxLength);      \
 		if (input == keyword) {                                 \

@@ -28,7 +28,7 @@ namespace dev
 namespace solidity
 {
 
-ASTPrinter::ASTPrinter(ptr<ASTNode> _ast, const std::string& _source)
+ASTPrinter::ASTPrinter(ptr<ASTNode> _ast, std::string const& _source)
 	: m_indentation(0), m_source(_source), m_ast(_ast)
 {
 }
@@ -242,7 +242,7 @@ bool ASTPrinter::visit(ElementaryTypeNameExpression& _node)
 
 bool ASTPrinter::visit(Literal& _node)
 {
-	const char* tokenString = Token::toString(_node.getToken());
+	char const* tokenString = Token::toString(_node.getToken());
 	if (tokenString == nullptr)
 		tokenString = "[no token]";
 	writeLine(std::string("Literal, token: ") + tokenString + " value: " + _node.getValue());
@@ -415,7 +415,7 @@ std::string ASTPrinter::getIndentation() const
 	return std::string(m_indentation * 2, ' ');
 }
 
-void ASTPrinter::writeLine(const std::string& _line)
+void ASTPrinter::writeLine(std::string const& _line)
 {
 	*m_ostream << getIndentation() << _line << '\n';
 }

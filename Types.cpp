@@ -52,18 +52,18 @@ ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 		BOOST_ASSERT(false); // @todo add other tyes
 }
 
-ptr<Type> Type::fromUserDefinedTypeName(const UserDefinedTypeName& _typeName)
+ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
 {
 	return std::make_shared<StructType>(*_typeName.getReferencedStruct());
 }
 
-ptr<Type> Type::fromMapping(const Mapping&)
+ptr<Type> Type::fromMapping(Mapping const&)
 {
 	BOOST_ASSERT(false); //@todo not yet implemented
 	return ptr<Type>();
 }
 
-ptr<Type> Type::forLiteral(const Literal& _literal)
+ptr<Type> Type::forLiteral(Literal const& _literal)
 {
 	switch (_literal.getToken())
 	{
@@ -110,7 +110,7 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return !convertTo.isSigned() || convertTo.m_bits > m_bits;
 }
 
-bool IntegerType::isExplicitlyConvertibleTo(const Type& _convertTo) const
+bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.getCategory() == Category::INTEGER;
 }
@@ -130,7 +130,7 @@ bool IntegerType::acceptsUnaryOperator(Token::Value _operator) const
 	return _operator == Token::DELETE || (!isAddress() && _operator == Token::BIT_NOT);
 }
 
-bool BoolType::isExplicitlyConvertibleTo(const Type& _convertTo) const
+bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	// conversion to integer is fine, but not to address
 	// this is an example of explicit conversions being not transitive (though implicit should be)
@@ -143,7 +143,7 @@ bool BoolType::isExplicitlyConvertibleTo(const Type& _convertTo) const
 	return isImplicitlyConvertibleTo(_convertTo);
 }
 
-bool ContractType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.getCategory() != Category::CONTRACT)
 		return false;
@@ -151,7 +151,7 @@ bool ContractType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	return &m_contract == &convertTo.m_contract;
 }
 
-bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+bool StructType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.getCategory() != Category::STRUCT)
 		return false;

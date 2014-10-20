@@ -64,7 +64,7 @@ class CharStream
 {
 public:
 	CharStream() : m_pos(0) {}
-	explicit CharStream(const std::string& _source): m_source(_source), m_pos(0) {}
+	explicit CharStream(std::string const& _source): m_source(_source), m_pos(0) {}
 	int getPos() const { return m_pos; }
 	bool isPastEndOfInput() const { return m_pos >= m_source.size(); }
 	char get() const { return m_source[m_pos]; }
@@ -100,10 +100,10 @@ public:
 		bool complete_;
 	};
 
-	explicit Scanner(const CharStream& _source);
+	explicit Scanner(CharStream const& _source);
 
 	/// Resets the scanner as if newly constructed with _input as input.
-	void reset(const CharStream& _source);
+	void reset(CharStream const& _source);
 
 	/// Returns the next token and advances input.
 	Token::Value next();

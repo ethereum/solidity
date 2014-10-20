@@ -51,7 +51,7 @@ public:
 
 	virtual void accept(ASTVisitor& _visitor) = 0;
 	template <class T>
-	static void listAccept(vecptr<T>& _list, ASTVisitor& _visitor)
+	static void listAccept(std::vector<ptr<T>>& _list, ASTVisitor& _visitor)
 	{
 		for (ptr<T>& element: _list)
 			element->accept(_visitor);
@@ -78,9 +78,9 @@ class ContractDefinition: public Declaration
 public:
 	ContractDefinition(Location const& _location,
 					   ptr<ASTString> const& _name,
-					   vecptr<StructDefinition> const& _definedStructs,
-					   vecptr<VariableDeclaration> const& _stateVariables,
-					   vecptr<FunctionDefinition> const& _definedFunctions)
+					   std::vector<ptr<StructDefinition>> const& _definedStructs,
+					   std::vector<ptr<VariableDeclaration>> const& _stateVariables,
+					   std::vector<ptr<FunctionDefinition>> const& _definedFunctions)
 		: Declaration(_location, _name),
 		  m_definedStructs(_definedStructs),
 		  m_stateVariables(_stateVariables),
@@ -89,13 +89,13 @@ public:
 
 	virtual void accept(ASTVisitor& _visitor) override;
 
-	vecptr<StructDefinition> const& getDefinedStructs() { return m_definedStructs; }
-	vecptr<VariableDeclaration> const& getStateVariables() { return m_stateVariables; }
-	vecptr<FunctionDefinition> const& getDefinedFunctions() { return m_definedFunctions; }
+	std::vector<ptr<StructDefinition>> const& getDefinedStructs() { return m_definedStructs; }
+	std::vector<ptr<VariableDeclaration>> const& getStateVariables() { return m_stateVariables; }
+	std::vector<ptr<FunctionDefinition>> const& getDefinedFunctions() { return m_definedFunctions; }
 private:
-	vecptr<StructDefinition> m_definedStructs;
-	vecptr<VariableDeclaration> m_stateVariables;
-	vecptr<FunctionDefinition> m_definedFunctions;
+	std::vector<ptr<StructDefinition>> m_definedStructs;
+	std::vector<ptr<VariableDeclaration>> m_stateVariables;
+	std::vector<ptr<FunctionDefinition>> m_definedFunctions;
 };
 
 class StructDefinition: public Declaration
@@ -103,12 +103,12 @@ class StructDefinition: public Declaration
 public:
 	StructDefinition(Location const& _location,
 					 ptr<ASTString> const& _name,
-					 vecptr<VariableDeclaration> const& _members)
+					 std::vector<ptr<VariableDeclaration>> const& _members)
 		: Declaration(_location, _name), m_members(_members) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
 private:
-	vecptr<VariableDeclaration> m_members;
+	std::vector<ptr<VariableDeclaration>> m_members;
 };
 
 /// Used as function parameter list and return list
@@ -117,13 +117,13 @@ private:
 class ParameterList: public ASTNode
 {
 public:
-	ParameterList(Location const& _location, vecptr<VariableDeclaration> const& _parameters)
+	ParameterList(Location const& _location, std::vector<ptr<VariableDeclaration>> const& _parameters)
 		: ASTNode(_location), m_parameters(_parameters) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
-	vecptr<VariableDeclaration> const& getParameters() { return m_parameters; }
+	std::vector<ptr<VariableDeclaration>> const& getParameters() { return m_parameters; }
 private:
-	vecptr<VariableDeclaration> m_parameters;
+	std::vector<ptr<VariableDeclaration>> m_parameters;
 };
 
 class FunctionDefinition: public Declaration
@@ -141,7 +141,7 @@ public:
 
 	bool isPublic() const { return m_isPublic; }
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
-	vecptr<VariableDeclaration> const& getParameters() const { return m_parameters->getParameters(); }
+	std::vector<ptr<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
 	ParameterList& getParameterList() { return *m_parameters; }
 	ptr<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
 	Block& getBody() { return *m_body; }
@@ -254,13 +254,13 @@ protected:
 class Block: public Statement
 {
 public:
-	Block(Location const& _location, vecptr<Statement> const& _statements)
+	Block(Location const& _location, std::vector<ptr<Statement>> const& _statements)
 		: Statement(_location), m_statements(_statements) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
 	virtual ptr<Type> checkTypeRequirements() override;
 private:
-	vecptr<Statement> m_statements;
+	std::vector<ptr<Statement>> m_statements;
 };
 
 class IfStatement: public Statement
@@ -415,13 +415,13 @@ class FunctionCall: public Expression
 {
 public:
 	FunctionCall(Location const& _location, ptr<Expression> const& _expression,
-				 vecptr<Expression> const& _arguments)
+				 std::vector<ptr<Expression>> const& _arguments)
 		: Expression(_location), m_expression(_expression), m_arguments(_arguments) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual ptr<Type> checkTypeRequirements() override;
 private:
 	ptr<Expression> m_expression;
-	vecptr<Expression> m_arguments;
+	std::vector<ptr<Expression>> m_arguments;
 };
 
 class MemberAccess: public Expression

@@ -43,12 +43,12 @@ ptr<ContractDefinition> Parser::parse(std::shared_ptr<Scanner> const& _scanner)
 class Parser::ASTNodeFactory
 {
 public:
-	ASTNodeFactory(const Parser& _parser) : m_parser(_parser), m_location(_parser.getPosition(), -1) {}
+	ASTNodeFactory(Parser const& _parser) : m_parser(_parser), m_location(_parser.getPosition(), -1) {}
 
 	void markEndPosition() { m_location.end = m_parser.getEndPosition(); }
 	void setLocationEmpty() { m_location.end = m_location.start; }
 	/// Set the end position to the one of the given node.
-	void setEndPositionFromNode(const ptr<ASTNode>& _node) { m_location.end = _node->getLocation().end; }
+	void setEndPositionFromNode(ptr<ASTNode> const& _node) { m_location.end = _node->getLocation().end; }
 
 	template <class NodeType, typename... Args>
 	ptr<NodeType> createNode(Args&& ... _args)
@@ -59,7 +59,7 @@ public:
 	}
 
 private:
-	const Parser& m_parser;
+	Parser const& m_parser;
 	Location m_location;
 };
 
@@ -80,9 +80,9 @@ ptr<ContractDefinition> Parser::parseContractDefinition()
 	expectToken(Token::CONTRACT);
 	ptr<ASTString> name = expectIdentifierToken();
 	expectToken(Token::LBRACE);
-	vecptr<StructDefinition> structs;
-	vecptr<VariableDeclaration> stateVariables;
-	vecptr<FunctionDefinition> functions;
+	std::vector<ptr<StructDefinition>> structs;
+	std::vector<ptr<VariableDeclaration>> stateVariables;
+	std::vector<ptr<FunctionDefinition>> functions;
 	bool visibilityIsPublic = true;
 	while (true)
 	{
@@ -130,7 +130,7 @@ ptr<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 	ptr<ParameterList> returnParameters;
 	if (m_scanner->getCurrentToken() == Token::RETURNS)
 	{
-		const bool permitEmptyParameterList = false;
+		bool const permitEmptyParameterList = false;
 		m_scanner->next();
 		returnParameters = parseParameterList(permitEmptyParameterList);
 	}
@@ -139,7 +139,7 @@ ptr<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 		// create an empty parameter list at a zero-length location
 		ASTNodeFactory nodeFactory(*this);
 		nodeFactory.setLocationEmpty();
-		returnParameters = nodeFactory.createNode<ParameterList>(vecptr<VariableDeclaration>());
+		returnParameters = nodeFactory.createNode<ParameterList>(std::vector<ptr<VariableDeclaration>>());
 	}
 	ptr<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
@@ -152,7 +152,7 @@ ptr<StructDefinition> Parser::parseStructDefinition()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::STRUCT);
 	ptr<ASTString> name = expectIdentifierToken();
-	vecptr<VariableDeclaration> members;
+	std::vector<ptr<VariableDeclaration>> members;
 	expectToken(Token::LBRACE);
 	while (m_scanner->getCurrentToken() != Token::RBRACE)
 	{
@@ -224,7 +224,7 @@ ptr<Mapping> Parser::parseMapping()
 ptr<ParameterList> Parser::parseParameterList(bool _allowEmpty)
 {
 	ASTNodeFactory nodeFactory(*this);
-	vecptr<VariableDeclaration> parameters;
+	std::vector<ptr<VariableDeclaration>> parameters;
 	expectToken(Token::LPAREN);
 	if (!_allowEmpty || m_scanner->getCurrentToken() != Token::RPAREN)
 	{
@@ -245,7 +245,7 @@ ptr<Block> Parser::parseBlock()
 {
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::LBRACE);
-	vecptr<Statement> statements;
+	std::vector<ptr<Statement>> statements;
 	while (m_scanner->getCurrentToken() != Token::RBRACE)
 		statements.push_back(parseStatement());
 	nodeFactory.markEndPosition();
@@ -433,7 +433,7 @@ ptr<Expression> Parser::parseLeftHandSideExpression()
 		case Token::LPAREN:
 			{
 				m_scanner->next();
-				vecptr<Expression> arguments = parseFunctionCallArguments();
+				std::vector<ptr<Expression>> arguments = parseFunctionCallArguments();
 				nodeFactory.markEndPosition();
 				expectToken(Token::RPAREN);
 				expression = nodeFactory.createNode<FunctionCall>(expression, arguments);
@@ -490,9 +490,9 @@ ptr<Expression> Parser::parsePrimaryExpression()
 	return expression;
 }
 
-vecptr<Expression> Parser::parseFunctionCallArguments()
+std::vector<ptr<Expression>> Parser::parseFunctionCallArguments()
 {
-	vecptr<Expression> arguments;
+	std::vector<ptr<Expression>> arguments;
 	if (m_scanner->getCurrentToken() != Token::RPAREN)
 	{
 		arguments.push_back(parseExpression());
@@ -535,7 +535,7 @@ ptr<ASTString> Parser::getLiteralAndAdvance()
 	return identifier;
 }
 
-void Parser::throwExpectationError(const std::string& _description)
+void Parser::throwExpectationError(std::string const& _description)
 {
 	//@todo put some of this stuff into ParserError
 	int line, column;

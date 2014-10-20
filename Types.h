@@ -64,8 +64,8 @@ public:
 	static ptr<Type> forLiteral(Literal const& _literal);
 
 	virtual Category getCategory() const = 0;
-	virtual bool isImplicitlyConvertibleTo(const Type&) const { return false; }
-	virtual bool isExplicitlyConvertibleTo(const Type& _convertTo) const
+	virtual bool isImplicitlyConvertibleTo(Type const&) const { return false; }
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const
 	{
 		return isImplicitlyConvertibleTo(_convertTo);
 	}
@@ -87,7 +87,7 @@ public:
 	explicit IntegerType(int _bits, Modifier _modifier = Modifier::UNSIGNED);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
-	virtual bool isExplicitlyConvertibleTo(const Type& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool acceptsBinaryOperator(Token::Value _operator) const override;
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override;
 
@@ -104,11 +104,11 @@ class BoolType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::BOOL; }
-	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const override
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override
 	{
 		return _convertTo.getCategory() == Category::BOOL;
 	}
-	virtual bool isExplicitlyConvertibleTo(const Type& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool acceptsBinaryOperator(Token::Value _operator) const override
 	{
 		return _operator == Token::AND || _operator == Token::OR;

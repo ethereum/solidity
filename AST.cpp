@@ -394,7 +394,7 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 		FunctionType* function = dynamic_cast<FunctionType*>(expressionType.get());
 		BOOST_ASSERT(function != nullptr);
 		FunctionDefinition const& fun = function->getFunction();
-		vecptr<VariableDeclaration> const& parameters = fun.getParameters();
+		std::vector<ptr<VariableDeclaration>> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Wrong argument count for "
 								  "function call."));

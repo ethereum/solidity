@@ -70,8 +70,6 @@ class Literal;
 // explicitly.
 template <class T>
 using ptr = std::shared_ptr<T>;
-template <class T>
-using vecptr = std::vector<ptr<T>>;
 
 using ASTString = std::string;
 

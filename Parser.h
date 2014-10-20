@@ -63,7 +63,7 @@ private:
 	ptr<Expression> parseUnaryExpression();
 	ptr<Expression> parseLeftHandSideExpression();
 	ptr<Expression> parsePrimaryExpression();
-	vecptr<Expression> parseFunctionCallArguments();
+	std::vector<ptr<Expression>> parseFunctionCallArguments();
 	/// @}
 
 	/// Helper functions
@@ -73,7 +73,7 @@ private:
 	Token::Value expectAssignmentOperator();
 	ptr<ASTString> expectIdentifierToken();
 	ptr<ASTString> getLiteralAndAdvance();
-	void throwExpectationError(const std::string& _description);
+	void throwExpectationError(std::string const& _description);
 	/// @}
 
 	std::shared_ptr<Scanner> m_scanner;
