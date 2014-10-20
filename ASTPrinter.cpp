@@ -28,7 +28,7 @@ namespace dev
 namespace solidity
 {
 
-ASTPrinter::ASTPrinter(ptr<ASTNode> _ast, std::string const& _source)
+ASTPrinter::ASTPrinter(ASTPointer<ASTNode> const& _ast, std::string const& _source)
 	: m_indentation(0), m_source(_source), m_ast(_ast)
 {
 }

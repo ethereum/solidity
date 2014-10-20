@@ -34,7 +34,7 @@ class Scanner;
 class Parser
 {
 public:
-	ptr<ContractDefinition> parse(std::shared_ptr<Scanner> const& _scanner);
+	ASTPointer<ContractDefinition> parse(std::shared_ptr<Scanner> const& _scanner);
 
 private:
 	class ASTNodeFactory;
@@ -46,24 +46,24 @@ private:
 
 	/// Parsing functions for the AST nodes
 	/// @{
-	ptr<ContractDefinition> parseContractDefinition();
-	ptr<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
-	ptr<StructDefinition> parseStructDefinition();
-	ptr<VariableDeclaration> parseVariableDeclaration(bool _allowVar);
-	ptr<TypeName> parseTypeName(bool _allowVar);
-	ptr<Mapping> parseMapping();
-	ptr<ParameterList> parseParameterList(bool _allowEmpty = true);
-	ptr<Block> parseBlock();
-	ptr<Statement> parseStatement();
-	ptr<IfStatement> parseIfStatement();
-	ptr<WhileStatement> parseWhileStatement();
-	ptr<VariableDefinition> parseVariableDefinition();
-	ptr<Expression> parseExpression();
-	ptr<Expression> parseBinaryExpression(int _minPrecedence = 4);
-	ptr<Expression> parseUnaryExpression();
-	ptr<Expression> parseLeftHandSideExpression();
-	ptr<Expression> parsePrimaryExpression();
-	std::vector<ptr<Expression>> parseFunctionCallArguments();
+	ASTPointer<ContractDefinition> parseContractDefinition();
+	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
+	ASTPointer<StructDefinition> parseStructDefinition();
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar);
+	ASTPointer<TypeName> parseTypeName(bool _allowVar);
+	ASTPointer<Mapping> parseMapping();
+	ASTPointer<ParameterList> parseParameterList(bool _allowEmpty = true);
+	ASTPointer<Block> parseBlock();
+	ASTPointer<Statement> parseStatement();
+	ASTPointer<IfStatement> parseIfStatement();
+	ASTPointer<WhileStatement> parseWhileStatement();
+	ASTPointer<VariableDefinition> parseVariableDefinition();
+	ASTPointer<Expression> parseExpression();
+	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4);
+	ASTPointer<Expression> parseUnaryExpression();
+	ASTPointer<Expression> parseLeftHandSideExpression();
+	ASTPointer<Expression> parsePrimaryExpression();
+	std::vector<ASTPointer<Expression>> parseFunctionCallArguments();
 	/// @}
 
 	/// Helper functions
@@ -71,8 +71,8 @@ private:
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
 	Token::Value expectAssignmentOperator();
-	ptr<ASTString> expectIdentifierToken();
-	ptr<ASTString> getLiteralAndAdvance();
+	ASTPointer<ASTString> expectIdentifierToken();
+	ASTPointer<ASTString> getLiteralAndAdvance();
 	void throwExpectationError(std::string const& _description);
 	/// @}
 

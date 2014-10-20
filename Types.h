@@ -26,25 +26,13 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 #include <boost/assert.hpp>
-
+#include <libsolidity/ASTForward.h>
 #include <libsolidity/Token.h>
 
 namespace dev
 {
 namespace solidity
 {
-
-// AST forward declarations
-class ContractDefinition;
-class FunctionDefinition;
-class StructDefinition;
-class Literal;
-class ElementaryTypeName;
-class UserDefinedTypeName;
-class Mapping;
-
-template <typename T>
-using ptr = std::shared_ptr<T>;
 
 // @todo realMxN, string<N>, mapping
 
@@ -57,11 +45,11 @@ public:
 	};
 
 	//! factory functions that convert an AST TypeName to a Type.
-	static ptr<Type> fromElementaryTypeName(Token::Value _typeToken);
-	static ptr<Type> fromUserDefinedTypeName(UserDefinedTypeName const& _typeName);
-	static ptr<Type> fromMapping(Mapping const& _typeName);
+	static std::shared_ptr<Type> fromElementaryTypeName(Token::Value _typeToken);
+	static std::shared_ptr<Type> fromUserDefinedTypeName(UserDefinedTypeName const& _typeName);
+	static std::shared_ptr<Type> fromMapping(Mapping const& _typeName);
 
-	static ptr<Type> forLiteral(Literal const& _literal);
+	static std::shared_ptr<Type> forLiteral(Literal const& _literal);
 
 	virtual Category getCategory() const = 0;
 	virtual bool isImplicitlyConvertibleTo(Type const&) const { return false; }
@@ -82,7 +70,7 @@ public:
 	};
 	virtual Category getCategory() const { return Category::INTEGER; }
 
-	static ptr<IntegerType> smallestTypeForLiteral(std::string const& _literal);
+	static std::shared_ptr<IntegerType> smallestTypeForLiteral(std::string const& _literal);
 
 	explicit IntegerType(int _bits, Modifier _modifier = Modifier::UNSIGNED);
 
@@ -95,6 +83,7 @@ public:
 	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
 	bool isAddress() const { return m_modifier == Modifier::ADDRESS; }
 	int isSigned() const { return m_modifier == Modifier::SIGNED; }
+
 private:
 	int m_bits;
 	Modifier m_modifier;
@@ -125,6 +114,7 @@ public:
 	virtual Category getCategory() const { return Category::CONTRACT; }
 	ContractType(ContractDefinition const& _contract): m_contract(_contract) {}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const;
+
 private:
 	ContractDefinition const& m_contract;
 };
@@ -139,6 +129,7 @@ public:
 	{
 		return _operator == Token::DELETE;
 	}
+
 private:
 	StructDefinition const& m_struct;
 };
@@ -150,6 +141,7 @@ public:
 	FunctionType(FunctionDefinition const& _function): m_function(_function) {}
 
 	FunctionDefinition const& getFunction() const { return m_function; }
+
 private:
 	FunctionDefinition const& m_function;
 };
@@ -175,11 +167,12 @@ class TypeType: public Type
 {
 public:
 	virtual Category getCategory() const { return Category::TYPE; }
-	TypeType(ptr<Type> const& _actualType): m_actualType(_actualType) {}
+	TypeType(std::shared_ptr<Type const> const& _actualType): m_actualType(_actualType) {}
 
-	ptr<Type> const& getActualType() { return m_actualType; }
+	std::shared_ptr<Type const> const& getActualType() const { return m_actualType; }
+
 private:
-	ptr<Type> m_actualType;
+	std::shared_ptr<Type const> m_actualType;
 };
 
 

@@ -250,46 +250,42 @@ void Literal::accept(ASTVisitor& _visitor)
 
 void Statement::expectType(Expression& _expression, const Type& _expectedType)
 {
-	if (!_expression.checkTypeRequirements()->isImplicitlyConvertibleTo(_expectedType))
+	_expression.checkTypeRequirements();
+	if (!_expression.getType()->isImplicitlyConvertibleTo(_expectedType))
 		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Type not implicitly convertible "
 															 "to expected type."));
 	//@todo provide more information to the exception
 }
 
-ptr<Type> Block::checkTypeRequirements()
+void Block::checkTypeRequirements()
 {
-	for (ptr<Statement> const& statement: m_statements)
+	for (std::shared_ptr<Statement> const& statement: m_statements)
 		statement->checkTypeRequirements();
-	return ptr<Type>();
 }
 
-ptr<Type> IfStatement::checkTypeRequirements()
+void IfStatement::checkTypeRequirements()
 {
 	expectType(*m_condition, BoolType());
 	m_trueBody->checkTypeRequirements();
 	if (m_falseBody)
 		m_falseBody->checkTypeRequirements();
-	return ptr<Type>();
 }
 
-ptr<Type> WhileStatement::checkTypeRequirements()
+void WhileStatement::checkTypeRequirements()
 {
 	expectType(*m_condition, BoolType());
 	m_body->checkTypeRequirements();
-	return ptr<Type>();
 }
 
-ptr<Type> Continue::checkTypeRequirements()
+void Continue::checkTypeRequirements()
 {
-	return ptr<Type>();
 }
 
-ptr<Type> Break::checkTypeRequirements()
+void Break::checkTypeRequirements()
 {
-	return ptr<Type>();
 }
 
-ptr<Type> Return::checkTypeRequirements()
+void Return::checkTypeRequirements()
 {
 	BOOST_ASSERT(m_returnParameters != nullptr);
 	if (m_returnParameters->getParameters().size() != 1)
@@ -299,10 +295,9 @@ ptr<Type> Return::checkTypeRequirements()
 	// this could later be changed such that the paramaters type is an anonymous struct type,
 	// but for now, we only allow one return parameter
 	expectType(*m_expression, *m_returnParameters->getParameters().front()->getType());
-	return ptr<Type>();
 }
 
-ptr<Type> VariableDefinition::checkTypeRequirements()
+void VariableDefinition::checkTypeRequirements()
 {
 	// Variables can be declared without type (with "var"), in which case the first assignment
 	// setsthe type.
@@ -313,17 +308,20 @@ ptr<Type> VariableDefinition::checkTypeRequirements()
 		if (m_variable->getType())
 			expectType(*m_value, *m_variable->getType());
 		else
+		{
 			// no type declared and no previous assignment, infer the type
-			m_variable->setType(m_value->checkTypeRequirements());
+			m_value->checkTypeRequirements();
+			m_variable->setType(m_value->getType());
+		}
 	}
-	return ptr<Type>();
 }
 
-ptr<Type> Assignment::checkTypeRequirements()
+void Assignment::checkTypeRequirements()
 {
 	//@todo lefthandside actually has to be assignable
 	// add a feature to the type system to check that
-	expectType(*m_rightHandSide, *m_leftHandSide->checkTypeRequirements());
+	m_leftHandSide->checkTypeRequirements();
+	expectType(*m_rightHandSide, *m_leftHandSide->getType());
 	m_type = m_leftHandSide->getType();
 	if (m_assigmentOperator != Token::ASSIGN)
 	{
@@ -331,19 +329,18 @@ ptr<Type> Assignment::checkTypeRequirements()
 		if (!m_type->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_assigmentOperator)))
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
 	}
-	return m_type;
 }
 
-ptr<Type> UnaryOperation::checkTypeRequirements()
+void UnaryOperation::checkTypeRequirements()
 {
 	// INC, DEC, NOT, BIT_NOT, DELETE
-	m_type = m_subExpression->checkTypeRequirements();
+	m_subExpression->checkTypeRequirements();
+	m_type = m_subExpression->getType();
 	if (m_type->acceptsUnaryOperator(m_operator))
 		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Unary operator not compatible with type."));
-	return m_type;
 }
 
-ptr<Type> BinaryOperation::checkTypeRequirements()
+void BinaryOperation::checkTypeRequirements()
 {
 	m_right->checkTypeRequirements();
 	m_left->checkTypeRequirements();
@@ -362,19 +359,18 @@ ptr<Type> BinaryOperation::checkTypeRequirements()
 		if (!m_commonType->acceptsBinaryOperator(m_operator))
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
 	}
-	return m_type;
 }
 
-ptr<Type> FunctionCall::checkTypeRequirements()
+void FunctionCall::checkTypeRequirements()
 {
 	m_expression->checkTypeRequirements();
-	for (ptr<Expression> const& argument: m_arguments)
+	for (ASTPointer<Expression> const& argument: m_arguments)
 		argument->checkTypeRequirements();
-	ptr<Type> expressionType = m_expression->getType();
-	Type::Category const category = expressionType->getCategory();
+	Type const& expressionType = *m_expression->getType();
+	Type::Category const category = expressionType.getCategory();
 	if (category == Type::Category::TYPE)
 	{
-		TypeType* type = dynamic_cast<TypeType*>(expressionType.get());
+		TypeType const* type = dynamic_cast<TypeType const*>(&expressionType);
 		BOOST_ASSERT(type != nullptr);
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
@@ -391,10 +387,10 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 		//@todo would be nice to create a struct type from the arguments
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
-		FunctionType* function = dynamic_cast<FunctionType*>(expressionType.get());
+		FunctionType const* function = dynamic_cast<FunctionType const*>(&expressionType);
 		BOOST_ASSERT(function != nullptr);
 		FunctionDefinition const& fun = function->getFunction();
-		std::vector<ptr<VariableDeclaration>> const& parameters = fun.getParameters();
+		std::vector<ASTPointer<VariableDeclaration>> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Wrong argument count for "
 								  "function call."));
@@ -413,24 +409,21 @@ ptr<Type> FunctionCall::checkTypeRequirements()
 	{
 		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Type does not support invocation."));
 	}
-	return m_type;
 }
 
-ptr<Type> MemberAccess::checkTypeRequirements()
+void MemberAccess::checkTypeRequirements()
 {
 	BOOST_ASSERT(false); // not yet implemented
 	// m_type = ;
-	return m_type;
 }
 
-ptr<Type> IndexAccess::checkTypeRequirements()
+void IndexAccess::checkTypeRequirements()
 {
 	BOOST_ASSERT(false); // not yet implemented
 	// m_type = ;
-	return m_type;
 }
 
-ptr<Type> Identifier::checkTypeRequirements()
+void Identifier::checkTypeRequirements()
 {
 	BOOST_ASSERT(m_referencedDeclaration != nullptr);
 	//@todo these dynamic casts here are not really nice...
@@ -444,11 +437,11 @@ ptr<Type> Identifier::checkTypeRequirements()
 	VariableDeclaration* variable = dynamic_cast<VariableDeclaration*>(m_referencedDeclaration);
 	if (variable != nullptr)
 	{
-		if (variable->getType().get() == nullptr)
+		if (!variable->getType())
 			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Variable referenced before type "
 																 "could be determined."));
 		m_type = variable->getType();
-		return m_type;
+		return;
 	}
 	//@todo can we unify these with TypeName::toType()?
 	StructDefinition* structDef = dynamic_cast<StructDefinition*>(m_referencedDeclaration);
@@ -456,7 +449,7 @@ ptr<Type> Identifier::checkTypeRequirements()
 	{
 		// note that we do not have a struct type here
 		m_type = std::make_shared<TypeType>(std::make_shared<StructType>(*structDef));
-		return m_type;
+		return;
 	}
 	FunctionDefinition* functionDef = dynamic_cast<FunctionDefinition*>(m_referencedDeclaration);
 	if (functionDef != nullptr)
@@ -465,28 +458,25 @@ ptr<Type> Identifier::checkTypeRequirements()
 		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
 		// conversion.
 		m_type = std::make_shared<FunctionType>(*functionDef);
-		return m_type;
+		return;
 	}
 	ContractDefinition* contractDef = dynamic_cast<ContractDefinition*>(m_referencedDeclaration);
 	if (contractDef != nullptr)
 	{
 		m_type = std::make_shared<TypeType>(std::make_shared<ContractType>(*contractDef));
-		return m_type;
+		return;
 	}
 	BOOST_ASSERT(false); // declaration reference of unknown/forbidden type
-	return m_type;
 }
 
-ptr<Type> ElementaryTypeNameExpression::checkTypeRequirements()
+void ElementaryTypeNameExpression::checkTypeRequirements()
 {
 	m_type = std::make_shared<TypeType>(Type::fromElementaryTypeName(m_typeToken));
-	return m_type;
 }
 
-ptr<Type> Literal::checkTypeRequirements()
+void Literal::checkTypeRequirements()
 {
 	m_type = Type::forLiteral(*this);
-	return m_type;
 }
 
 }

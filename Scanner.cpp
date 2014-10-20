@@ -81,12 +81,15 @@ bool IsIdentifierPart(char c)
 
 int HexValue(char c)
 {
-	if (c >= '0' && c <= '9') return c - '0';
-	else if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-	else if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	else if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	else if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
 	else return -1;
 }
-}
+} // end anonymous namespace
 
 Scanner::Scanner(CharStream const& _source)
 {
@@ -409,13 +412,15 @@ bool Scanner::scanEscape()
 		c = '\t';
 		break;
 	case 'u':
-		if (!scanHexNumber(c, 4)) return false;
+		if (!scanHexNumber(c, 4))
+			return false;
 		break;
 	case 'v':
 		c = '\v';
 		break;
 	case 'x':
-		if (!scanHexNumber(c, 2)) return false;
+		if (!scanHexNumber(c, 2))
+			return false;
 		break;
 	}
 
@@ -612,9 +617,8 @@ case ch:
 		int const keyword_length = sizeof(keyword) - 1;         \
 		BOOST_STATIC_ASSERT(keyword_length >= kMinLength);      \
 		BOOST_STATIC_ASSERT(keyword_length <= kMaxLength);      \
-		if (input == keyword) {                                 \
-			return token;                                         \
-		}                                                       \
+		if (input == keyword)                                   \
+			return token;                                       \
 	}
 		KEYWORDS(KEYWORD_GROUP_CASE, KEYWORD)
 	}
@@ -635,9 +639,11 @@ Token::Value Scanner::scanIdentifierOrKeyword()
 
 char CharStream::advanceAndGet()
 {
-	if (isPastEndOfInput()) return 0;
+	if (isPastEndOfInput())
+		return 0;
 	++m_pos;
-	if (isPastEndOfInput()) return 0;
+	if (isPastEndOfInput())
+		return 0;
 	return get();
 }
 
@@ -653,7 +659,8 @@ std::string CharStream::getLineAtPosition(int _position) const
 	// if _position points to \n, it returns the line before the \n
 	using size_type = std::string::size_type;
 	size_type searchStart = std::min<size_type>(m_source.size(), _position);
-	if (searchStart > 0) searchStart--;
+	if (searchStart > 0)
+		searchStart--;
 	size_type lineStart = m_source.rfind('\n', searchStart);
 	if (lineStart == std::string::npos)
 		lineStart = 0;

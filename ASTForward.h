@@ -69,7 +69,7 @@ class Literal;
 // not do reference counting but point to a special memory area that is completely released
 // explicitly.
 template <class T>
-using ptr = std::shared_ptr<T>;
+using ASTPointer = std::shared_ptr<T>;
 
 using ASTString = std::string;
 

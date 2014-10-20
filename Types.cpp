@@ -28,7 +28,7 @@ namespace dev
 namespace solidity
 {
 
-ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
+std::shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 {
 	if (Token::INT <= _typeToken && _typeToken <= Token::HASH256)
 	{
@@ -52,18 +52,18 @@ ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 		BOOST_ASSERT(false); // @todo add other tyes
 }
 
-ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
+std::shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
 {
 	return std::make_shared<StructType>(*_typeName.getReferencedStruct());
 }
 
-ptr<Type> Type::fromMapping(Mapping const&)
+std::shared_ptr<Type> Type::fromMapping(Mapping const&)
 {
 	BOOST_ASSERT(false); //@todo not yet implemented
-	return ptr<Type>();
+	return std::shared_ptr<Type>();
 }
 
-ptr<Type> Type::forLiteral(Literal const& _literal)
+std::shared_ptr<Type> Type::forLiteral(Literal const& _literal)
 {
 	switch (_literal.getToken())
 	{
@@ -73,13 +73,13 @@ ptr<Type> Type::forLiteral(Literal const& _literal)
 	case Token::NUMBER:
 		return IntegerType::smallestTypeForLiteral(_literal.getValue());
 	case Token::STRING_LITERAL:
-		return ptr<Type>(); // @todo
+		return std::shared_ptr<Type>(); // @todo
 	default:
-		return ptr<Type>();
+		return std::shared_ptr<Type>();
 	}
 }
 
-ptr<IntegerType> IntegerType::smallestTypeForLiteral(const std::string&)
+std::shared_ptr<IntegerType> IntegerType::smallestTypeForLiteral(std::string const&)
 {
 	//@todo
 	return std::make_shared<IntegerType>(256, Modifier::UNSIGNED);

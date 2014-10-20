@@ -23,7 +23,6 @@
 #pragma once
 
 #include <map>
-
 #include <boost/noncopyable.hpp>
 
 #include <libsolidity/ASTForward.h>
