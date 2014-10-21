@@ -22,11 +22,22 @@
 #pragma once
 
 //#include <ostream>
+
+#pragma warning(push)
+#pragma warning(disable:4100 4244)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
+#pragma GCC diagnostic ignored "-Wextra"
 #include <eccrypto.h>
 #include <ecp.h>
 #include <files.h>
 #include <osrng.h>
 #include <oids.h>
+#pragma warning(pop)
+#pragma GCC diagnostic pop
 
 using namespace std;
 using namespace CryptoPP;
