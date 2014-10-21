@@ -578,17 +578,6 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			else
 				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
-			//auto a = fev.addresses.at(fev.myAddress);
-			//auto b = test.addresses.at(fev.myAddress);
-
-			//auto t = a == b;
-			//auto t0 = get<0>(a) == get<0>(b);
-			//auto t1 = get<1>(a) == get<1>(b);
-			//auto t2 = get<2>(a) == get<2>(b);
-			//auto t3 = get<3>(a) == get<3>(b);
-
-			//BOOST_CHECK_EQUAL(get<0>(a), get<0>(b));
-
 			BOOST_CHECK(test.toInt(o["gas"]) == gas);
 			BOOST_CHECK(test.addresses == fev.addresses);
 			BOOST_CHECK(test.callcreates == fev.callcreates);
