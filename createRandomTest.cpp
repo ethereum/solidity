@@ -42,11 +42,7 @@ void doMyTests(json_spirit::mValue& v);
 
 int main(int argc, char *argv[])
 {
-//	if (argc != 2)
-//	{
-//		cout << "usage: createRandomTest <filename>\n";
-//		return 0;
-//	}
+	g_logVerbosity = 0;
 
 	// create random code
 
@@ -114,16 +110,8 @@ int main(int argc, char *argv[])
 	// execute code in vm
 	doMyTests(v);
 
-//	// write new test
-//	string filename = argv[1];
-//	writeFile(filename, asBytes(json_spirit::write_string(v, true)));
-
-	// write resultsing test to envirnoment variable
-	string str = "ETHEREUM_RANDOM_TEST=" + json_spirit::write_string(v, true);
-	char *cstr = new char[str.length() + 1];
-	strcpy(cstr, str.c_str());
-	putenv(cstr);
-	delete [] cstr;
+	// stream to output for further handling by the bash script
+	cout << json_spirit::write_string(v, true);
 
 	return 0;
 }
