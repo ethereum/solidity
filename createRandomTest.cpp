@@ -42,11 +42,11 @@ void doMyTests(json_spirit::mValue& v);
 
 int main(int argc, char *argv[])
 {
-	if (argc != 2)
-	{
-		cout << "usage: createRandomTest <filename>\n";
-		return 0;
-	}
+//	if (argc != 2)
+//	{
+//		cout << "usage: createRandomTest <filename>\n";
+//		return 0;
+//	}
 
 	// create random code
 
@@ -64,14 +64,48 @@ int main(int argc, char *argv[])
 	string randomCode;
 
 	for (int i = 0; i < lengthOfCode; ++i)
-		randomCode += toHex(toCompactBigEndian(randGen()));
+	{
+		uint8_t opcode = randGen();
 
-	// read template test file
+		// disregard all invalid commands, except of one (0x10)
+		if (dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || opcode == 0x10)
+			randomCode += toHex(toCompactBigEndian(opcode));
+		else
+			i--;
+	}
+
+	const string s =\
+"{\n\
+	\"randomVMtest\": {\n\
+		\"env\" : {\n\
+			\"previousHash\" : \"5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6\",\n\
+			\"currentNumber\" : \"0\",\n\
+			\"currentGasLimit\" : \"1000000\",\n\
+			\"currentDifficulty\" : \"256\",\n\
+			\"currentTimestamp\" : 1,\n\
+			\"currentCoinbase\" : \"2adc25665018aa1fe0e6bc666dac8fc2697ff9ba\"\n\
+		},\n\
+		\"pre\" : {\n\
+			\"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6\" : {\n\
+				\"balance\" : \"1000000000000000000\",\n\
+				\"nonce\" : 0,\n\
+				\"code\" : \"random\",\n\
+				\"storage\": {}\n\
+			}\n\
+		},\n\
+		\"exec\" : {\n\
+			\"address\" : \"0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6\",\n\
+			\"origin\" : \"cd1722f3947def4cf144679da39c4c32bdc35681\",\n\
+			\"caller\" : \"cd1722f3947def4cf144679da39c4c32bdc35681\",\n\
+			\"value\" : \"1000000000000000000\",\n\
+			\"data\" : \"\",\n\
+			\"gasPrice\" : \"100000000000000\",\n\
+			\"gas\" : \"10000\"\n\
+		}\n\
+	}\n\
+}";
 
 	mValue v;
-	boost::filesystem::path p(__FILE__);
-	boost::filesystem::path dir = p.parent_path();
-	string s = asString(contents(dir.string() + "/randomTestFiller.json"));
 	read_string(s, v);
 
 	// insert new random code
@@ -80,9 +114,16 @@ int main(int argc, char *argv[])
 	// execute code in vm
 	doMyTests(v);
 
-	// write new test
-	string filename = argv[1];
-	writeFile(filename, asBytes(json_spirit::write_string(v, true)));
+//	// write new test
+//	string filename = argv[1];
+//	writeFile(filename, asBytes(json_spirit::write_string(v, true)));
+
+	// write resultsing test to envirnoment variable
+	string str = "ETHEREUM_RANDOM_TEST=" + json_spirit::write_string(v, true);
+	char *cstr = new char[str.length() + 1];
+	strcpy(cstr, str.c_str());
+	putenv(cstr);
+	delete [] cstr;
 
 	return 0;
 }
