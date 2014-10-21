@@ -512,37 +512,35 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			fev.code = &fev.thisTxCode;
 		}
 
+
+		auto argc = boost::unit_test::framework::master_test_suite().argc;
+		auto argv = boost::unit_test::framework::master_test_suite().argv;
+		auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
+		
+		jit::VM jit(fev.gas);
+		VM interpreter(fev.gas);
 		bytes output;
-		u256 gas;
+		auto outOfGas = false;
 		try
 		{
-			auto argc = boost::unit_test::framework::master_test_suite().argc;
-			auto argv = boost::unit_test::framework::master_test_suite().argv;
-
-			auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
 			if (useJit)
-			{
-				jit::VM vm(fev.gas);
-				output = vm.go(fev);
-				gas = vm.gas();
-			}
+				output = jit.go(fev);
 			else
-			{
-				VM vm(fev.gas);
-				output = vm.go(fev).toVector();
-				gas = vm.gas(); // Get the remaining gas
+				output = interpreter.go(fev).toVector();
 		}
+		catch (OutOfGas const&)
+		{
+			outOfGas = true;
 		}
 		catch (Exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			//BOOST_ERROR("Failed VM Test with Exception: " << e.what());
 		}
 		catch (std::exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
-			//BOOST_ERROR("Failed VM Test with Exception: " << e.what());
 		}
+		auto gas = useJit ? jit.gas() : interpreter.gas();
 
 		// delete null entries in storage for the sake of comparison
 
@@ -593,6 +591,9 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
 			BOOST_CHECK_EQUAL(test.toInt(o["gas"]), gas);
+			
+			if (outOfGas)
+				BOOST_CHECK_MESSAGE(gas == 0, "Remaining gas not 0 in out-of-gas state");
 
 			auto& expectedAddrs = test.addresses;
 			auto& resultAddrs = fev.addresses;
