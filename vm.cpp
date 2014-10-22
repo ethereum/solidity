@@ -524,7 +524,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		try
 		{
 			if (useJit)
-				output = jit.go(fev);
+				output = jit.go(fev).toVector();
 			else
 				output = interpreter.go(fev).toVector();
 		}
