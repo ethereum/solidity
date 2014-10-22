@@ -28,7 +28,7 @@
 #include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
 #include <libdevcrypto/EC.h>
-#include <libdevcrypto/ECIES.h>
+//#include <libdevcrypto/ECIES.h>
 #include "TestHelperCrypto.h"
 
 using namespace std;
@@ -37,6 +37,21 @@ using namespace dev::crypto;
 using namespace CryptoPP;
 
 BOOST_AUTO_TEST_SUITE(devcrypto)
+
+BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
+{
+	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Encryptor e(d.GetKey());
+	
+	Public p = pp::exportPublicKey(e.GetKey());
+	Integer x(&p[0], 32);
+	Integer y(&p[32], 32);
+	
+	DL_PublicKey_EC<ECP> pub;
+	pub.Initialize(pp::secp256k1(), ECP::Point(x,y));
+	
+	assert(pub == e.GetKey());
+}
 
 BOOST_AUTO_TEST_CASE(eckeypair_encrypt)
 {
@@ -50,6 +65,11 @@ BOOST_AUTO_TEST_CASE(eckeypair_encrypt)
 	
 	bytes p = k.decrypt(&b);
 	assert(p == asBytes(original));
+
+	encrypt(p, k.publicKey());
+	assert(p != asBytes(original));
+	
+	// todo: test decrypt w/Secret
 }
 
 BOOST_AUTO_TEST_CASE(ecies)
