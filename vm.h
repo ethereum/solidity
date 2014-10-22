@@ -44,7 +44,7 @@ class FakeState: public eth::State
 {
 public:
 	/// Execute a contract-creation transaction.
-	h160 createNewAddress(Address _newAddress, Address _txSender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _originAddress = Address(), std::set<Address>* o_suicides = nullptr, eth::Manifest* o_ms = nullptr, eth::OnOpFunc const& _onOp = eth::OnOpFunc(), unsigned _level = 0);
+	h160 createNewAddress(Address _newAddress, Address _txSender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _originAddress = {}, std::set<Address>* o_suicides = nullptr, eth::Manifest* o_ms = nullptr, eth::OnOpFunc const& _onOp = {}, unsigned _level = 0);
 };
 
 class FakeExtVM: public eth::ExtVMFace
