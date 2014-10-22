@@ -436,7 +436,8 @@ h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _end
 	m_cache[_newAddress] = AddressState(0, balance(_newAddress) + _endowment, h256(), h256());
 
 	// Execute init code.
-	VM vm(*_gas);
+	auto vmObj = VMFace::create(VMFace::Interpreter, *_gas);
+	VMFace& vm = *vmObj;
 	ExtVM evm(*this, _newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _code, o_ms, _level);
 	bool revert = false;
 	bytesConstRef out;
@@ -517,8 +518,8 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		auto argv = boost::unit_test::framework::master_test_suite().argv;
 		auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
 		
-		auto vm = useJit ? std::unique_ptr<VMFace>(new jit::VM) : std::unique_ptr<VMFace>(new VM);
-		vm->reset(fev.gas);
+		auto vmKind = useJit ? VMFace::JIT : VMFace::Interpreter;
+		auto vm = VMFace::create(vmKind, fev.gas);
 		bytes output;
 		auto outOfGas = false;
 		try
