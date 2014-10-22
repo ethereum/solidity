@@ -24,7 +24,7 @@
 #include <libdevcore/CommonIO.h>
 #include <boost/filesystem/path.hpp>
 
-#define FILL_TESTS
+//#define FILL_TESTS
 
 using namespace std;
 using namespace json_spirit;
@@ -512,12 +512,10 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		bytes output;
-		u256 gas;
+		VM vm(fev.gas);
 		try
 		{
-			VM vm(fev.gas);
 			output = vm.go(fev).toVector();
-			gas = vm.gas(); // Get the remaining gas
 		}
 		catch (Exception const& _e)
 		{
@@ -554,7 +552,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			o["post"] = mValue(fev.exportState());
 			o["callcreates"] = fev.exportCallCreates();
 			o["out"] = "0x" + toHex(output);
-			fev.push(o, "gas", gas);
+			fev.push(o, "gas", vm.gas());
 		}
 		else
 		{
@@ -578,7 +576,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			else
 				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
-			BOOST_CHECK(test.toInt(o["gas"]) == gas);
+			BOOST_CHECK(test.toInt(o["gas"]) == vm.gas());
 			BOOST_CHECK(test.addresses == fev.addresses);
 			BOOST_CHECK(test.callcreates == fev.callcreates);
 		}
@@ -621,10 +619,12 @@ void executeTests(const string& _name)
 	if (ptestPath == NULL)
 	{
 		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests/vmtests";
+		testPath = "../../../tests";
 	}
 	else
 		testPath = ptestPath;
+
+	testPath += "/vmtests";
 
 #ifdef FILL_TESTS
 	try
@@ -654,7 +654,7 @@ void executeTests(const string& _name)
 		cnote << "Testing VM..." << _name;
 		json_spirit::mValue v;
 		string s = asString(contents(testPath + "/" + _name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, false);
 	}
@@ -715,4 +715,3 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
 }
-
