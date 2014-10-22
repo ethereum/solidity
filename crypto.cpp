@@ -38,22 +38,36 @@ using namespace CryptoPP;
 
 BOOST_AUTO_TEST_SUITE(devcrypto)
 
-BOOST_AUTO_TEST_CASE(ecies)
+BOOST_AUTO_TEST_CASE(eckeypair_encrypt)
 {
 	ECKeyPair k = ECKeyPair::create();
-
-	string message("Now is the time for all good men to come to the aide of humanity.");
-	bytes b = bytesRef(message).toBytes();
-	ECIESEncryptor(&k).encrypt(b);
-
-	bytesConstRef br(&b);
-	bytes plain = ECIESDecryptor(&k).decrypt(br);
-
-	// ideally, decryptor will go a step further, accept a bytesRef and zero input.
-	assert(plain != b);
+	string message("Now is the time for all good persons to come to the aide of humanity.");
+	string original = message;
 	
-	// plaintext is same as output
-	assert(plain == bytesConstRef(message).toBytes());
+	bytes b = asBytes(message);
+	k.encrypt(b);
+	assert(b != asBytes(original));
+	
+	bytes p = k.decrypt(&b);
+	assert(p == asBytes(original));
+}
+
+BOOST_AUTO_TEST_CASE(ecies)
+{
+//	ECKeyPair k = ECKeyPair::create();
+//
+//	string message("Now is the time for all good persons to come to the aide of humanity.");
+//	bytes b = bytesRef(message).toBytes();
+//	ECIESEncryptor(&k).encrypt(b);
+//
+//	bytesConstRef br(&b);
+//	bytes plain = ECIESDecryptor(&k).decrypt(br);
+//
+//	// ideally, decryptor will go a step further, accept a bytesRef and zero input.
+//	assert(plain != b);
+//	
+//	// plaintext is same as output
+//	assert(plain == bytesConstRef(message).toBytes());
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
@@ -73,9 +87,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 {
 	cnote << "Testing cryptopp_ecies_message...";
 
-	string const message("Now is the time for all good men to come to the aide of humanity.");
+	string const message("Now is the time for all good persons to come to the aide of humanity.");
 
-	ECIES<ECP>::Decryptor localDecryptor(crypto::PRNG(), crypto::secp256k1());
+	ECIES<ECP>::Decryptor localDecryptor(pp::PRNG(), pp::secp256k1());
 	SavePrivateKey(localDecryptor.GetPrivateKey());
 	
 	ECIES<ECP>::Encryptor localEncryptor(localDecryptor);
@@ -83,31 +97,31 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 
 	ECIES<ECP>::Decryptor futureDecryptor;
 	LoadPrivateKey(futureDecryptor.AccessPrivateKey());
-	futureDecryptor.GetPrivateKey().ThrowIfInvalid(crypto::PRNG(), 3);
+	futureDecryptor.GetPrivateKey().ThrowIfInvalid(pp::PRNG(), 3);
 	
 	ECIES<ECP>::Encryptor futureEncryptor;
 	LoadPublicKey(futureEncryptor.AccessPublicKey());
-	futureEncryptor.GetPublicKey().ThrowIfInvalid(crypto::PRNG(), 3);
+	futureEncryptor.GetPublicKey().ThrowIfInvalid(pp::PRNG(), 3);
 
 	// encrypt/decrypt with local
 	string cipherLocal;
-	StringSource ss1 (message, true, new PK_EncryptorFilter(crypto::PRNG(), localEncryptor, new StringSink(cipherLocal) ) );
+	StringSource ss1 (message, true, new PK_EncryptorFilter(pp::PRNG(), localEncryptor, new StringSink(cipherLocal) ) );
 	string plainLocal;
-	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(crypto::PRNG(), localDecryptor, new StringSink(plainLocal) ) );
+	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG(), localDecryptor, new StringSink(plainLocal) ) );
 
 	// encrypt/decrypt with future
 	string cipherFuture;
-	StringSource ss3 (message, true, new PK_EncryptorFilter(crypto::PRNG(), futureEncryptor, new StringSink(cipherFuture) ) );
+	StringSource ss3 (message, true, new PK_EncryptorFilter(pp::PRNG(), futureEncryptor, new StringSink(cipherFuture) ) );
 	string plainFuture;
-	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(crypto::PRNG(), futureDecryptor, new StringSink(plainFuture) ) );
+	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG(), futureDecryptor, new StringSink(plainFuture) ) );
 	
 	// decrypt local w/future
 	string plainFutureFromLocal;
-	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(crypto::PRNG(), futureDecryptor, new StringSink(plainFutureFromLocal) ) );
+	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG(), futureDecryptor, new StringSink(plainFutureFromLocal) ) );
 	
 	// decrypt future w/local
 	string plainLocalFromFuture;
-	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(crypto::PRNG(), localDecryptor, new StringSink(plainLocalFromFuture) ) );
+	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG(), localDecryptor, new StringSink(plainLocalFromFuture) ) );
 	
 	
 	assert(plainLocal == message);
@@ -126,12 +140,12 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdh_prime)
 	ECDH<ECP>::Domain dhLocal(curve);
 	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
 	SecByteBlock pubLocal(dhLocal.PublicKeyLength());
-	dhLocal.GenerateKeyPair(dev::crypto::PRNG(), privLocal, pubLocal);
+	dhLocal.GenerateKeyPair(pp::PRNG(), privLocal, pubLocal);
 	
 	ECDH<ECP>::Domain dhRemote(curve);
 	SecByteBlock privRemote(dhRemote.PrivateKeyLength());
 	SecByteBlock pubRemote(dhRemote.PublicKeyLength());
-	dhRemote.GenerateKeyPair(dev::crypto::PRNG(), privRemote, pubRemote);
+	dhRemote.GenerateKeyPair(pp::PRNG(), privRemote, pubRemote);
 	
 	assert(dhLocal.AgreedValueLength() == dhRemote.AgreedValueLength());
 	
@@ -168,7 +182,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	byte ctr[ AES::BLOCKSIZE ];
 	rng.GenerateBlock( ctr, sizeof(ctr) );
 	
-	string text = "Now is the time for all good men to come to the aide of humanity.";
+	string text = "Now is the time for all good persons to come to the aide of humanity.";
 	// c++11 ftw
 	unsigned char const* in = (unsigned char*)&text[0];
 	unsigned char* out = (unsigned char*)&text[0];
