@@ -517,16 +517,13 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		auto argv = boost::unit_test::framework::master_test_suite().argv;
 		auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
 		
-		jit::VM jit(fev.gas);
-		VM interpreter(fev.gas);
+		auto vm = useJit ? std::unique_ptr<VMFace>(new jit::VM) : std::unique_ptr<VMFace>(new VM);
+		vm->reset(fev.gas);
 		bytes output;
 		auto outOfGas = false;
 		try
 		{
-			if (useJit)
-				output = jit.go(fev).toVector();
-			else
-				output = interpreter.go(fev).toVector();
+			output = vm->go(fev).toVector();
 		}
 		catch (OutOfGas const&)
 		{
@@ -540,7 +537,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
 		}
-		auto gas = useJit ? jit.gas() : interpreter.gas();
+		auto gas = vm->gas();
 
 		// delete null entries in storage for the sake of comparison
 
