@@ -44,13 +44,25 @@ class WebThreeStubClient
 
         }
 
-        Json::Value block(const int& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        Json::Value blockByHash(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-p.append(param2);
 
-            Json::Value result = this->client->CallMethod("block",p);
+            Json::Value result = this->client->CallMethod("blockByHash",p);
+    if (result.isObject())
+        return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        Json::Value blockByNumber(const int& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("blockByNumber",p);
     if (result.isObject())
         return result;
      else 
@@ -299,14 +311,13 @@ p.append(param2);
 
         }
 
-        Json::Value transaction(const int& param1, const std::string& param2, const int& param3) throw (jsonrpc::JsonRpcException)
+        Json::Value transactionByHash(const std::string& param1, const int& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
 p.append(param2);
-p.append(param3);
 
-            Json::Value result = this->client->CallMethod("transaction",p);
+            Json::Value result = this->client->CallMethod("transactionByHash",p);
     if (result.isObject())
         return result;
      else 
@@ -314,14 +325,41 @@ p.append(param3);
 
         }
 
-        Json::Value uncle(const int& param1, const std::string& param2, const int& param3) throw (jsonrpc::JsonRpcException)
+        Json::Value transactionByNumber(const int& param1, const int& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
 p.append(param2);
-p.append(param3);
 
-            Json::Value result = this->client->CallMethod("uncle",p);
+            Json::Value result = this->client->CallMethod("transactionByNumber",p);
+    if (result.isObject())
+        return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        Json::Value uncleByHash(const std::string& param1, const int& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+p.append(param2);
+
+            Json::Value result = this->client->CallMethod("uncleByHash",p);
+    if (result.isObject())
+        return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        Json::Value uncleByNumber(const int& param1, const int& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+p.append(param2);
+
+            Json::Value result = this->client->CallMethod("uncleByNumber",p);
     if (result.isObject())
         return result;
      else 
