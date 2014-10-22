@@ -62,6 +62,11 @@ BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
 	// Every new connection requires a new EC keypair
 	// Every new trust requires a new EC keypair
 	// All connections should share seed for PRF (or PRNG) for nonces
+	
+	
+	
+	
+	
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
@@ -147,6 +152,74 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdh_prime)
 	
 	assert(ssLocal != 0);
 	assert(ssLocal == ssRemote);
+}
+
+BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
+{
+	const int aesKeyLen = 16;
+	assert(sizeof(char) == sizeof(byte));
+	
+	// generate test key
+	AutoSeededRandomPool rng;
+	SecByteBlock key(0x00, aesKeyLen);
+	rng.GenerateBlock(key, key.size());
+	
+	// cryptopp uses IV as nonce/counter which is same as using nonce w/0 ctr
+	byte ctr[ AES::BLOCKSIZE ];
+	rng.GenerateBlock( ctr, sizeof(ctr) );
+	
+	string text = "Now is the time for all good men to come to the aide of humanity.";
+	// c++11 ftw
+	unsigned char const* in = (unsigned char*)&text[0];
+	unsigned char* out = (unsigned char*)&text[0];
+	string original = text;
+	
+	string cipherCopy;
+	try
+	{
+		CTR_Mode< AES >::Encryption e;
+		e.SetKeyWithIV( key, key.size(), ctr );
+		e.ProcessData(out, in, text.size());
+		assert(text!=original);
+		cipherCopy = text;
+	}
+	catch( CryptoPP::Exception& e )
+	{
+		cerr << e.what() << endl;
+	}
+	
+	try
+	{
+		CTR_Mode< AES >::Decryption d;
+		d.SetKeyWithIV( key, key.size(), ctr );
+		d.ProcessData(out, in, text.size());
+		assert(text==original);
+	}
+	catch( CryptoPP::Exception& e )
+	{
+		cerr << e.what() << endl;
+	}
+	
+	
+	// reencrypt ciphertext...
+	try
+	{
+		assert(cipherCopy!=text);
+		in = (unsigned char*)&cipherCopy[0];
+		out = (unsigned char*)&cipherCopy[0];
+		
+		CTR_Mode< AES >::Encryption e;
+		e.SetKeyWithIV( key, key.size(), ctr );
+		e.ProcessData(out, in, text.size());
+		
+		// yep, ctr mode.
+		assert(cipherCopy==original);
+	}
+	catch( CryptoPP::Exception& e )
+	{
+		cerr << e.what() << endl;
+	}
+	
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
