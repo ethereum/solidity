@@ -578,8 +578,44 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			else
 				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
-			BOOST_CHECK(test.toInt(o["gas"]) == gas);
-			BOOST_CHECK(test.addresses == fev.addresses);
+			BOOST_CHECK_EQUAL(test.toInt(o["gas"]), gas);
+
+			auto& expectedAddrs = test.addresses;
+			auto& resultAddrs = fev.addresses;
+			for (auto&& expectedPair : expectedAddrs)
+			{
+				auto& expectedAddr = expectedPair.first;
+				auto resultAddrIt = resultAddrs.find(expectedAddr);
+				if (resultAddrIt == resultAddrs.end())
+					BOOST_ERROR("Missing expected address " << expectedAddr);
+				else
+				{
+					auto& expectedState = expectedPair.second;
+					auto& resultState = resultAddrIt->second;
+					BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
+					BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
+					BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
+
+					auto&& expectedStore = std::get<2>(expectedState);
+					auto&& resultStore = std::get<2>(resultState);
+
+					for (auto&& expectedStorePair : expectedStore)
+					{
+						auto& expectedStoreKey = expectedStorePair.first;
+						auto resultStoreIt = resultStore.find(expectedStoreKey);
+						if (resultStoreIt == resultStore.end())
+							BOOST_ERROR(expectedAddr << ": missing store key " << expectedStoreKey);
+						else
+						{
+							auto& expectedStoreValue = expectedStorePair.second;
+							auto& resultStoreValue = resultStoreIt->second;
+							BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
+						}
+					}
+				}
+			}
+
+			BOOST_CHECK(test.addresses == fev.addresses);	// Just to make sure nothing missed
 			BOOST_CHECK(test.callcreates == fev.callcreates);
 		}
 	}
