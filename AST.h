@@ -40,6 +40,10 @@ namespace solidity
 
 class ASTVisitor;
 
+
+/// The root (abstract) class of the AST inheritance tree.
+/// It is possible to traverse all direct and indirect children of an AST node by calling
+/// accept, providing an ASTVisitor.
 class ASTNode: private boost::noncopyable
 {
 public:
@@ -55,6 +59,7 @@ public:
 			element->accept(_visitor);
 	}
 
+	/// Returns the source code location of this node.
 	Location const& getLocation() const { return m_location; }
 
 	/// Creates a @ref TypeError exception and decorates it with the location of the node and
@@ -62,6 +67,7 @@ public:
 	TypeError createTypeError(std::string const& _description);
 
 	///@{
+	///@name equality operators
 	/// Equality relies on the fact that nodes cannot be copied.
 	bool operator==(ASTNode const& _other) const { return this == &_other; }
 	bool operator!=(ASTNode const& _other) const { return !operator==(_other); }
@@ -71,18 +77,23 @@ private:
 	Location m_location;
 };
 
+/// Abstract AST class for a declaration (contract, function, struct, variable).
 class Declaration: public ASTNode
 {
 public:
 	Declaration(Location const& _location, ASTPointer<ASTString> const& _name):
 		ASTNode(_location), m_name(_name) {}
 
+	/// Returns the declared name.
 	const ASTString& getName() const { return *m_name; }
 
 private:
 	ASTPointer<ASTString> m_name;
 };
 
+/// Definition of a contract. This is the only AST nodes where child nodes are not visited in
+/// document order. It first visits all struct declarations, then all variable declarations and
+/// finally all function declarations.
 class ContractDefinition: public Declaration
 {
 public:
@@ -122,9 +133,9 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
 };
 
-/// Used as function parameter list and return list
+/// Parameter list, used as function parameter list and return list.
 /// None of the parameters is allowed to contain mappings (not even recursively
-/// inside structs)
+/// inside structs), but (@todo) this is not yet enforced.
 class ParameterList: public ASTNode
 {
 public:
@@ -167,6 +178,8 @@ private:
 	ASTPointer<Block> m_body;
 };
 
+/// Declaration of a variable. This can be used in various places, e.g. in function parameter
+/// lists, struct definitions and even function bodys.
 class VariableDeclaration: public Declaration
 {
 public:
@@ -186,22 +199,26 @@ public:
 private:
 	ASTPointer<TypeName> m_typeName; ///< can be empty ("var")
 
-	std::shared_ptr<Type const> m_type;
+	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
 
-/// types
+/// Types
 /// @{
 
+/// Abstract base class of a type name, can be any built-in or user-defined type.
 class TypeName: public ASTNode
 {
 public:
 	explicit TypeName(Location const& _location): ASTNode(_location) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
+	/// Retrieve the element of the type hierarchy this node refers to. Can return an empty shared
+	/// pointer until the types have been resolved using the @ref NameAndTypeResolver.
 	virtual std::shared_ptr<Type> toType() = 0;
 };
 
-/// any pre-defined type that is not a mapping
+/// Any pre-defined type name represented by a single keyword, i.e. it excludes mappings,
+/// contracts, functions, etc.
 class ElementaryTypeName: public TypeName
 {
 public:
@@ -210,12 +227,14 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual std::shared_ptr<Type> toType() override { return Type::fromElementaryTypeName(m_type); }
 
-	Token::Value getType() const { return m_type; }
+	Token::Value getTypeName() const { return m_type; }
 
 private:
 	Token::Value m_type;
 };
 
+/// Name referring to a user-defined type (i.e. a struct).
+/// @todo some changes are necessary if this is also used to refer to contract types later
 class UserDefinedTypeName: public TypeName
 {
 public:
@@ -234,6 +253,7 @@ private:
 	StructDefinition* m_referencedStruct;
 };
 
+/// A mapping type. Its source form is "mapping('keyType' => 'valueType')"
 class Mapping: public TypeName
 {
 public:
@@ -253,6 +273,8 @@ private:
 /// Statements
 /// @{
 
+
+/// Abstract base class for statements.
 class Statement: public ASTNode
 {
 public:
@@ -260,16 +282,17 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 
 	//! Check all type requirements, throws exception if some requirement is not met.
-	//! For expressions, this also returns the inferred type of the expression. For other
-	//! statements, returns the empty pointer.
+	//! This includes checking that operators are applicable to their arguments but also that
+	//! the number of function call arguments matches the number of formal parameters and so forth.
 	virtual void checkTypeRequirements() = 0;
 
 protected:
-	//! Check that the inferred type for _expression is _expectedType or at least implicitly
-	//! convertible to _expectedType. If not, throw exception.
+	//! Helper function, check that the inferred type for @a _expression is @a _expectedType or at
+	//! least implicitly convertible to @a _expectedType. If not, throw exception.
 	void expectType(Expression& _expression, Type const& _expectedType);
 };
 
+/// Brace-enclosed block containing zero or more statements.
 class Block: public Statement
 {
 public:
@@ -283,6 +306,8 @@ private:
 	std::vector<ASTPointer<Statement>> m_statements;
 };
 
+/// If-statement with an optional "else" part. Note that "else if" is modeled by having a new
+/// if-statement as the false (else) body.
 class IfStatement: public Statement
 {
 public:
@@ -299,6 +324,8 @@ private:
 	ASTPointer<Statement> m_falseBody; //< "else" part, optional
 };
 
+/// Statement in which a break statement is legal.
+/// @todo actually check this requirement.
 class BreakableStatement: public Statement
 {
 public:
@@ -349,9 +376,13 @@ public:
 private:
 	ASTPointer<Expression> m_expression; //< value to return, optional
 
-	ParameterList* m_returnParameters; //< extracted from the function declaration
+	/// Pointer to the parameter list of the function, filled by the @ref NameAndTypeResolver.
+	ParameterList* m_returnParameters;
 };
 
+/// Definition of a variable as a statement inside a function. It requires a type name (which can
+/// also be "var") but the actual assignment can be missing.
+/// Examples: var a = 2; uint256 a;
 class VariableDefinition: public Statement
 {
 public:
@@ -363,13 +394,16 @@ public:
 
 private:
 	ASTPointer<VariableDeclaration> m_variable;
-	ASTPointer<Expression> m_value; ///< can be missing
+	ASTPointer<Expression> m_value; ///< the assigned value, can be missing
 };
 
+/// An expression, i.e. something that has a value (which can also be of type "void" in case
+/// of function calls).
 class Expression: public Statement
 {
 public:
 	Expression(Location const& _location): Statement(_location) {}
+
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
 
 protected:
@@ -382,6 +416,8 @@ protected:
 /// Expressions
 /// @{
 
+/// Assignment, can also be a compound assignment.
+/// Examples: (a = 7 + 8) or (a *= 2)
 class Assignment: public Expression
 {
 public:
@@ -402,6 +438,8 @@ private:
 	ASTPointer<Expression> m_rightHandSide;
 };
 
+/// Operation involving a unary operator, pre- or postfix.
+/// Examples: ++i, delete x or !true
 class UnaryOperation: public Expression
 {
 public:
@@ -421,6 +459,8 @@ private:
 	bool m_isPrefix;
 };
 
+/// Operation involving a binary operator.
+/// Examples: 1 + 2, true && false or 1 <= 4
 class BinaryOperation: public Expression
 {
 public:
@@ -451,6 +491,7 @@ public:
 		Expression(_location), m_expression(_expression), m_arguments(_arguments) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
+
 	/// Returns true if this is not an actual function call, but an explicit type conversion
 	/// or constructor call.
 	bool isTypeConversion() const;
@@ -460,6 +501,7 @@ private:
 	std::vector<ASTPointer<Expression>> m_arguments;
 };
 
+/// Access to a member of an object. Example: x.name
 class MemberAccess: public Expression
 {
 public:
@@ -475,6 +517,7 @@ private:
 	ASTPointer<ASTString> m_memberName;
 };
 
+/// Index access to an array. Example: a[2]
 class IndexAccess: public Expression
 {
 public:
@@ -489,12 +532,15 @@ private:
 	ASTPointer<Expression> m_index;
 };
 
+/// Primary expression, i.e. an expression that do not be divided any further like a literal or
+/// a variable reference.
 class PrimaryExpression: public Expression
 {
 public:
 	PrimaryExpression(Location const& _location): Expression(_location) {}
 };
 
+/// An identifier, i.e. a reference to a declaration by name like a variable or function.
 class Identifier: public PrimaryExpression
 {
 public:
@@ -504,6 +550,7 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	ASTString const& getName() const { return *m_name; }
+
 	void setReferencedDeclaration(Declaration& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
 	Declaration* getReferencedDeclaration() { return m_referencedDeclaration; }
 
@@ -514,6 +561,9 @@ private:
 	Declaration* m_referencedDeclaration;
 };
 
+/// An elementary type name expression is used in expressions like "a = uint32(2)" to change the
+/// type of an expression explicitly. Here, "uint32" is the elementary type name expression and
+/// "uint32(2)" is a @ref FunctionCall.
 class ElementaryTypeNameExpression: public PrimaryExpression
 {
 public:
@@ -528,6 +578,7 @@ private:
 	Token::Value m_typeToken;
 };
 
+/// A literal string or number. @see Type::literalToBigEndian is used to actually parse its value.
 class Literal: public PrimaryExpression
 {
 public:
@@ -537,6 +588,7 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	Token::Value getToken() const { return m_token; }
+	/// @returns the non-parsed value of the literal
 	ASTString const& getValue() const { return *m_value; }
 
 private:

@@ -81,12 +81,13 @@ public:
 	char advanceAndGet();
 	char rollback(size_t _amount);
 
+	///@{
+	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	/// @{
 	std::string getLineAtPosition(int _position) const;
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
-	/// @}
+	///@}
 
 private:
 	std::string m_source;
@@ -119,29 +120,31 @@ public:
 	/// Returns the next token and advances input.
 	Token::Value next();
 
-	/// Information about the current token
-	/// @{
+	///@{
+	///@name Information about the current token
 
 	/// Returns the current token
 	Token::Value getCurrentToken() { return m_current_token.token; }
 	Location getCurrentLocation() const { return m_current_token.location; }
 	const std::string& getCurrentLiteral() const { return m_current_token.literal; }
-	/// @}
+	///@}
 
-	/// Information about the next token
-	/// @{
+	///@{
+	///@name Information about the next token
+
 	/// Returns the next token without advancing input.
 	Token::Value peekNextToken() const { return m_next_token.token; }
 	Location peekLocation() const { return m_next_token.location; }
 	const std::string& peekLiteral() const { return m_next_token.literal; }
-	/// @}
+	///@}
 
-	/// Functions that help pretty-printing parse errors.
+	///@{
+	///@name Error printing helper functions
+	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	/// @{
 	std::string getLineAtPosition(int _position) const { return m_source.getLineAtPosition(_position); }
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source.translatePositionToLineColumn(_position); }
-	/// @}
+	///@}
 
 private:
 	// Used for the current and look-ahead token.
@@ -152,13 +155,13 @@ private:
 		std::string literal;
 	};
 
-	/// Literal buffer support
-	/// @{
+	///@{
+	///@name Literal buffer support
 	inline void startNewLiteral() { m_next_token.literal.clear(); }
 	inline void addLiteralChar(char c) { m_next_token.literal.push_back(c); }
 	inline void dropLiteral() { m_next_token.literal.clear(); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
-	/// @}
+	///@}
 
 	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
 	void rollback(int _amount) { m_char = m_source.rollback(_amount); }
@@ -169,9 +172,10 @@ private:
 
 	bool scanHexNumber(char& o_scannedNumber, int _expectedLength);
 
-	// Scans a single JavaScript token.
+	/// Scans a single JavaScript token.
 	void scanToken();
 
+	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();
 	Token::Value skipSingleLineComment();
 	Token::Value skipMultiLineComment();
