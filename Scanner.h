@@ -73,7 +73,7 @@ class ParserRecorder;
 class CharStream
 {
 public:
-	CharStream() : m_pos(0) {}
+	CharStream(): m_pos(0) {}
 	explicit CharStream(std::string const& _source): m_source(_source), m_pos(0) {}
 	int getPos() const { return m_pos; }
 	bool isPastEndOfInput() const { return m_pos >= m_source.size(); }

@@ -32,10 +32,6 @@ namespace solidity
 {
 
 
-NameAndTypeResolver::NameAndTypeResolver()
-{
-}
-
 void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
 	reset();
@@ -72,8 +68,9 @@ Declaration* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name
 }
 
 
-DeclarationRegistrationHelper::DeclarationRegistrationHelper(std::map<ASTNode*, Scope>& _scopes, ASTNode& _astRoot)
-	: m_scopes(_scopes), m_currentScope(&m_scopes[nullptr])
+DeclarationRegistrationHelper::DeclarationRegistrationHelper(std::map<ASTNode*, Scope>& _scopes,
+															 ASTNode& _astRoot):
+	m_scopes(_scopes), m_currentScope(&m_scopes[nullptr])
 {
 	_astRoot.accept(*this);
 }
@@ -146,8 +143,8 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 }
 
 ReferencesResolver::ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver,
-									   ParameterList* _returnParameters)
-	: m_resolver(_resolver), m_returnParameters(_returnParameters)
+									   ParameterList* _returnParameters):
+	m_resolver(_resolver), m_returnParameters(_returnParameters)
 {
 	_root.accept(*this);
 }

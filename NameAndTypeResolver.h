@@ -38,7 +38,7 @@ namespace solidity
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
-	NameAndTypeResolver();
+	NameAndTypeResolver() {}
 
 	void resolveNamesAndTypes(ContractDefinition& _contract);
 	Declaration* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);

@@ -85,8 +85,8 @@ std::shared_ptr<IntegerType> IntegerType::smallestTypeForLiteral(std::string con
 	return std::make_shared<IntegerType>(256, Modifier::UNSIGNED);
 }
 
-IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier)
-	: m_bits(_bits), m_modifier(_modifier)
+IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
+	m_bits(_bits), m_modifier(_modifier)
 {
 	BOOST_ASSERT(_bits > 0 && _bits <= 256 && _bits % 8 == 0);
 	if (isAddress())

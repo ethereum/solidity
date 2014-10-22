@@ -43,7 +43,7 @@ ASTPointer<ContractDefinition> Parser::parse(std::shared_ptr<Scanner> const& _sc
 class Parser::ASTNodeFactory
 {
 public:
-	ASTNodeFactory(Parser const& _parser) : m_parser(_parser), m_location(_parser.getPosition(), -1) {}
+	ASTNodeFactory(Parser const& _parser): m_parser(_parser), m_location(_parser.getPosition(), -1) {}
 
 	void markEndPosition() { m_location.end = m_parser.getEndPosition(); }
 	void setLocationEmpty() { m_location.end = m_location.start; }
@@ -72,7 +72,6 @@ int Parser::getEndPosition() const
 {
 	return m_scanner->getCurrentLocation().end;
 }
-
 
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
