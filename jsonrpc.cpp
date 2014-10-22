@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_balanceAt)
 	cnote << "Testing jsonrpc balanceAt...";
 	dev::KeyPair key = KeyPair::create();
 	auto address = key.address();
-	string balance = jsonrpcClient->balanceAt(toJS(address), 0);
+	string balance = jsonrpcClient->balanceAt(toJS(address));
 	BOOST_CHECK_EQUAL(toJS(web3.ethereum()->balanceAt(address)), balance);
 }
 
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_countAt)
 	cnote << "Testing jsonrpc countAt...";
 	dev::KeyPair key = KeyPair::create();
 	auto address = key.address();
-	double countAt = jsonrpcClient->countAt(toJS(address), 0);
+	double countAt = jsonrpcClient->countAt(toJS(address));
 	BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3.ethereum()->countAt(address, 0));
 }
 
@@ -107,26 +107,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_defaultBlock)
 	cnote << "Testing jsonrpc defaultBlock...";
 	int defaultBlock = jsonrpcClient->defaultBlock();
 	BOOST_CHECK_EQUAL(defaultBlock, web3.ethereum()->getDefault());
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_fromAscii)
-{
-	cnote << "Testing jsonrpc fromAscii...";
-	string testString = "1234567890987654";
-	string fromAscii = jsonrpcClient->fromAscii(32, testString);
-	BOOST_CHECK_EQUAL(fromAscii, jsFromBinary(testString, 32));
-
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_fromFixed)
-{
-	cnote << "Testing jsonrpc fromFixed...";
-	string testString = "0x1234567890987654";
-	double fromFixed = jsonrpcClient->fromFixed(testString);
-	double ff = jsFromFixed(testString);
-	string str1 = boost::lexical_cast<string> (fromFixed);
-	string str2 = boost::lexical_cast<string> (ff);
-	BOOST_CHECK_EQUAL(str1.substr(0, 3), str2.substr(0, 3));
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_gasPrice)
@@ -214,14 +194,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_peerCount)
 	BOOST_CHECK_EQUAL(web3.peerCount(), peerCount);
 }
 
-BOOST_AUTO_TEST_CASE(jsonrpc_secretToAddress)
-{
-	cnote << "Testing jsonrpc secretToAddress...";
-	dev::KeyPair pair = dev::KeyPair::create();
-	string address = jsonrpcClient->secretToAddress(toJS(pair.secret()));
-	BOOST_CHECK_EQUAL(jsToAddress(address), pair.address());
-}
-
 BOOST_AUTO_TEST_CASE(jsonrpc_setListening)
 {
 	cnote << "Testing jsonrpc setListening...";
@@ -244,46 +216,13 @@ BOOST_AUTO_TEST_CASE(jsonrpc_setMining)
 	BOOST_CHECK_EQUAL(web3.ethereum()->isMining(), false);
 }
 
-BOOST_AUTO_TEST_CASE(jsonrpc_sha3)
-{
-	cnote << "Testing jsonrpc sha3...";
-	string testString = "1234567890987654";
-	string sha3 = jsonrpcClient->sha3(testString);
-	BOOST_CHECK_EQUAL(jsToFixed<32>(sha3), dev::sha3(jsToBytes(testString)));
-}
-
 BOOST_AUTO_TEST_CASE(jsonrpc_stateAt)
 {
 	cnote << "Testing jsonrpc stateAt...";
 	dev::KeyPair key = KeyPair::create();
 	auto address = key.address();
-	string stateAt = jsonrpcClient->stateAt(toJS(address), 0, "0");
+	string stateAt = jsonrpcClient->stateAt(toJS(address), "0");
 	BOOST_CHECK_EQUAL(toJS(web3.ethereum()->stateAt(address, jsToU256("0"), 0)), stateAt);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_toAscii)
-{
-	cnote << "Testing jsonrpc toAscii...";
-	string testString = "1234567890987654";
-	string ascii = jsonrpcClient->toAscii(testString);
-	BOOST_CHECK_EQUAL(jsToBinary(testString), ascii);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_toDecimal)
-{
-	cnote << "Testing jsonrpc toDecimal...";
-	string testString = "1234567890987654";
-	string decimal = jsonrpcClient->toDecimal(testString);
-	BOOST_CHECK_EQUAL(jsToDecimal(testString), decimal);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_toFixed)
-{
-	cnote << "Testing jsonrpc toFixed...";
-	double testValue = 123567;
-	string fixed = jsonrpcClient->toFixed(testValue);
-	BOOST_CHECK_EQUAL(jsToFixed(testValue), fixed);
-	BOOST_CHECK_EQUAL(testValue, jsFromFixed(fixed));
 }
 
 BOOST_AUTO_TEST_CASE(jsonrpc_transact)

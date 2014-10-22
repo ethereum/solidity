@@ -31,11 +31,10 @@ class WebThreeStubClient
 
         }
 
-        std::string balanceAt(const std::string& address, const int& block) throw (jsonrpc::JsonRpcException)
+        std::string balanceAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["address"] = address; 
-p["block"] = block; 
+            p.append(param1);
 
             Json::Value result = this->client->CallMethod("balanceAt",p);
     if (result.isString())
@@ -45,10 +44,11 @@ p["block"] = block;
 
         }
 
-        Json::Value block(const Json::Value& params) throw (jsonrpc::JsonRpcException)
+        Json::Value block(const int& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["params"] = params; 
+            p.append(param1);
+p.append(param2);
 
             Json::Value result = this->client->CallMethod("block",p);
     if (result.isObject())
@@ -58,10 +58,10 @@ p["block"] = block;
 
         }
 
-        std::string call(const Json::Value& json) throw (jsonrpc::JsonRpcException)
+        std::string call(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["json"] = json; 
+            p.append(param1);
 
             Json::Value result = this->client->CallMethod("call",p);
     if (result.isString())
@@ -84,11 +84,10 @@ p["block"] = block;
 
         }
 
-        std::string codeAt(const std::string& address, const int& block) throw (jsonrpc::JsonRpcException)
+        std::string codeAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["address"] = address; 
-p["block"] = block; 
+            p.append(param1);
 
             Json::Value result = this->client->CallMethod("codeAt",p);
     if (result.isString())
@@ -110,11 +109,23 @@ p["block"] = block;
 
         }
 
-        double countAt(const std::string& address, const int& block) throw (jsonrpc::JsonRpcException)
+        std::string compile(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["address"] = address; 
-p["block"] = block; 
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("compile",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        double countAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
 
             Json::Value result = this->client->CallMethod("countAt",p);
     if (result.isDouble())
@@ -131,33 +142,6 @@ p["block"] = block;
             Json::Value result = this->client->CallMethod("defaultBlock",p);
     if (result.isInt())
         return result.asInt();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        std::string fromAscii(const int& padding, const std::string& s) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["padding"] = padding; 
-p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("fromAscii",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        double fromFixed(const std::string& s) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("fromFixed",p);
-    if (result.isDouble())
-        return result.asDouble();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -200,19 +184,6 @@ p["s"] = s;
 
         }
 
-        std::string lll(const std::string& s) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("lll",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
         Json::Value messages(const Json::Value& params) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -250,20 +221,6 @@ p["s"] = s;
 
         }
 
-        std::string offset(const int& o, const std::string& s) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["o"] = o; 
-p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("offset",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
         int peerCount() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -276,23 +233,10 @@ p["s"] = s;
 
         }
 
-        std::string secretToAddress(const std::string& s) throw (jsonrpc::JsonRpcException)
+        bool setCoinbase(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("secretToAddress",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        bool setCoinbase(const std::string& address) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["address"] = address; 
+            p.append(param1);
 
             Json::Value result = this->client->CallMethod("setCoinbase",p);
     if (result.isBool())
@@ -302,10 +246,10 @@ p["s"] = s;
 
         }
 
-        bool setListening(const bool& listening) throw (jsonrpc::JsonRpcException)
+        bool setListening(const bool& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["listening"] = listening; 
+            p.append(param1);
 
             Json::Value result = this->client->CallMethod("setListening",p);
     if (result.isBool())
@@ -315,10 +259,10 @@ p["s"] = s;
 
         }
 
-        bool setMining(const bool& mining) throw (jsonrpc::JsonRpcException)
+        bool setMining(const bool& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["mining"] = mining; 
+            p.append(param1);
 
             Json::Value result = this->client->CallMethod("setMining",p);
     if (result.isBool())
@@ -328,25 +272,11 @@ p["s"] = s;
 
         }
 
-        std::string sha3(const std::string& s) throw (jsonrpc::JsonRpcException)
+        std::string stateAt(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("sha3",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        std::string stateAt(const std::string& address, const int& block, const std::string& storage) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["address"] = address; 
-p["block"] = block; 
-p["storage"] = storage; 
+            p.append(param1);
+p.append(param2);
 
             Json::Value result = this->client->CallMethod("stateAt",p);
     if (result.isString())
@@ -356,63 +286,25 @@ p["storage"] = storage;
 
         }
 
-        std::string toAscii(const std::string& s) throw (jsonrpc::JsonRpcException)
+        Json::Value transact(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("toAscii",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        std::string toDecimal(const std::string& s) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("toDecimal",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        std::string toFixed(const double& s) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["s"] = s; 
-
-            Json::Value result = this->client->CallMethod("toFixed",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        std::string transact(const Json::Value& json) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["json"] = json; 
+            p.append(param1);
 
             Json::Value result = this->client->CallMethod("transact",p);
-    if (result.isString())
-        return result.asString();
+    if (result.isArray())
+        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
         }
 
-        Json::Value transaction(const int& i, const Json::Value& params) throw (jsonrpc::JsonRpcException)
+        Json::Value transaction(const int& param1, const std::string& param2, const int& param3) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["i"] = i; 
-p["params"] = params; 
+            p.append(param1);
+p.append(param2);
+p.append(param3);
 
             Json::Value result = this->client->CallMethod("transaction",p);
     if (result.isObject())
@@ -422,11 +314,12 @@ p["params"] = params;
 
         }
 
-        Json::Value uncle(const int& i, const Json::Value& params) throw (jsonrpc::JsonRpcException)
+        Json::Value uncle(const int& param1, const std::string& param2, const int& param3) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["i"] = i; 
-p["params"] = params; 
+            p.append(param1);
+p.append(param2);
+p.append(param3);
 
             Json::Value result = this->client->CallMethod("uncle",p);
     if (result.isObject())
