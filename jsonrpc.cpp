@@ -160,15 +160,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_accounts)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(jsonrpc_messages)
-{
-	cnote << "Testing jsonrpc messages...";
-	Json::Value msgs = jsonrpcClient->messages(Json::Value());
-	auto messages = web3.ethereum()->messages(dev::eth::MessageFilter());
-	BOOST_CHECK_EQUAL(msgs.isArray(), true);
-	BOOST_CHECK_EQUAL(msgs.size(), messages.size());
-}
-
 BOOST_AUTO_TEST_CASE(jsonrpc_number)
 {
 	cnote << "Testing jsonrpc number...";
@@ -253,11 +244,9 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	jsonrpcServer->setAccounts({});
 	dev::eth::mine(*(web3.ethereum()), 1);
 	auto balance2 = web3.ethereum()->balanceAt(receiver.address());
-	auto messages = jsonrpcClient->messages(Json::Value());
 	
 	BOOST_REQUIRE(balance2 > 0);
 	BOOST_CHECK_EQUAL(txAmount, balance2);
-	BOOST_CHECK_EQUAL(txAmount, jsToU256(messages[0u]["value"].asString()));
 }
 
 }
