@@ -436,8 +436,8 @@ h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _end
 	m_cache[_newAddress] = AddressState(0, balance(_newAddress) + _endowment, h256(), h256());
 
 	// Execute init code.
-	auto vmObj = VMFace::create(VMFace::Interpreter, *_gas);
-	VMFace& vm = *vmObj;
+	auto vmObj = VMFace::create(getVMKind(), *_gas);
+	auto& vm = *vmObj;
 	ExtVM evm(*this, _newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _code, o_ms, _level);
 	bool revert = false;
 	bytesConstRef out;
@@ -499,7 +499,14 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre") > 0);
 		BOOST_REQUIRE(o.count("exec") > 0);
 
+		auto argc = boost::unit_test::framework::master_test_suite().argc;
+		auto argv = boost::unit_test::framework::master_test_suite().argv;
+		auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
+		auto vmKind = useJit ? VMFace::JIT : VMFace::Interpreter;
+
 		dev::test::FakeExtVM fev;
+		fev.setVMKind(vmKind);
+
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 
@@ -512,14 +519,8 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
 			fev.code = &fev.thisTxCode;
 		}
-
-
-		auto argc = boost::unit_test::framework::master_test_suite().argc;
-		auto argv = boost::unit_test::framework::master_test_suite().argv;
-		auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
 		
-		auto vmKind = useJit ? VMFace::JIT : VMFace::Interpreter;
-		auto vm = VMFace::create(vmKind, fev.gas);
+		auto vm = VMFace::create(fev.getVMKind(), fev.gas);
 		bytes output;
 		auto outOfGas = false;
 		try
