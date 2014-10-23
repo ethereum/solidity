@@ -37,6 +37,24 @@ using namespace CryptoPP;
 
 BOOST_AUTO_TEST_SUITE(devcrypto)
 
+BOOST_AUTO_TEST_CASE(common_crypt)
+{
+	string message("Now is the time for all good persons to come to the aide of humanity.");
+	bytes m = asBytes(message);
+	bytesConstRef bcr(&m);
+
+	SecretKeyRef k;
+	bytes cipher;
+	encrypt(k.pub(), bcr, cipher);
+	assert(cipher != asBytes(message) && cipher.size() > 0);
+	
+	bytes plain;
+	decrypt(k.sec(), bytesConstRef(&cipher), plain);
+	
+	assert(asString(plain) == message);
+	assert(plain == asBytes(message));
+}
+
 BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 {
 	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
