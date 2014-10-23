@@ -83,12 +83,12 @@ class WebThreeStubClient
 
         }
 
-        bool check(const int& id) throw (jsonrpc::JsonRpcException)
+        bool changed(const int& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["id"] = id; 
+            p.append(param1);
 
-            Json::Value result = this->client->CallMethod("check",p);
+            Json::Value result = this->client->CallMethod("changed",p);
     if (result.isBool())
         return result.asBool();
      else 
@@ -171,14 +171,14 @@ class WebThreeStubClient
 
         }
 
-        bool killWatch(const int& id) throw (jsonrpc::JsonRpcException)
+        Json::Value getMessages(const int& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["id"] = id; 
+            p.append(param1);
 
-            Json::Value result = this->client->CallMethod("killWatch",p);
-    if (result.isBool())
-        return result.asBool();
+            Json::Value result = this->client->CallMethod("getMessages",p);
+    if (result.isArray())
+        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -196,19 +196,6 @@ class WebThreeStubClient
 
         }
 
-        Json::Value messages(const Json::Value& params) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p["params"] = params; 
-
-            Json::Value result = this->client->CallMethod("messages",p);
-    if (result.isArray())
-        return result;
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
         bool mining() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -216,6 +203,32 @@ class WebThreeStubClient
             Json::Value result = this->client->CallMethod("mining",p);
     if (result.isBool())
         return result.asBool();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        int newFilter(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("newFilter",p);
+    if (result.isInt())
+        return result.asInt();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        int newFilterString(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("newFilterString",p);
+    if (result.isInt())
+        return result.asInt();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -367,14 +380,14 @@ p.append(param2);
 
         }
 
-        int watch(const std::string& params) throw (jsonrpc::JsonRpcException)
+        bool uninstallFilter(const int& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p["params"] = params; 
+            p.append(param1);
 
-            Json::Value result = this->client->CallMethod("watch",p);
-    if (result.isInt())
-        return result.asInt();
+            Json::Value result = this->client->CallMethod("uninstallFilter",p);
+    if (result.isBool())
+        return result.asBool();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
