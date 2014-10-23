@@ -28,7 +28,6 @@
 #include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
 #include <libdevcrypto/EC.h>
-//#include <libdevcrypto/ECIES.h>
 #include "TestHelperCrypto.h"
 
 using namespace std;
@@ -38,22 +37,32 @@ using namespace CryptoPP;
 
 BOOST_AUTO_TEST_SUITE(devcrypto)
 
+BOOST_AUTO_TEST_CASE(cryptopp_private_secret_import)
+{
+	ECKeyPair k = ECKeyPair::create();
+	Integer e = k.m_decryptor.AccessKey().GetPrivateExponent();
+	assert(pp::ExponentFromSecret(k.secret()) == e);
+}
+
 BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 {
 	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
 	ECIES<ECP>::Encryptor e(d.GetKey());
 	
-	Public p = pp::exportPublicKey(e.GetKey());
+	Public p;
+	pp::exportDL_PublicKey_EC(e.GetKey(), p);
 	Integer x(&p[0], 32);
 	Integer y(&p[32], 32);
 	
 	DL_PublicKey_EC<ECP> pub;
 	pub.Initialize(pp::secp256k1(), ECP::Point(x,y));
-	
 	assert(pub == e.GetKey());
+	
+	DL_PublicKey_EC<ECP> pub2;
+	pub.Initialize(pp::secp256k1(), ECP::Point(x,y));
 }
 
-BOOST_AUTO_TEST_CASE(eckeypair_encrypt)
+BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 {
 	ECKeyPair k = ECKeyPair::create();
 	string message("Now is the time for all good persons to come to the aide of humanity.");
@@ -62,32 +71,16 @@ BOOST_AUTO_TEST_CASE(eckeypair_encrypt)
 	bytes b = asBytes(message);
 	k.encrypt(b);
 	assert(b != asBytes(original));
-	
-	bytes p = k.decrypt(&b);
-	assert(p == asBytes(original));
 
-	encrypt(p, k.publicKey());
-	assert(p != asBytes(original));
-	
-	// todo: test decrypt w/Secret
-}
+	Secret s = k.secret();
+	decrypt(s, b);
+	assert(b == asBytes(original));
 
-BOOST_AUTO_TEST_CASE(ecies)
-{
-//	ECKeyPair k = ECKeyPair::create();
-//
-//	string message("Now is the time for all good persons to come to the aide of humanity.");
-//	bytes b = bytesRef(message).toBytes();
-//	ECIESEncryptor(&k).encrypt(b);
-//
-//	bytesConstRef br(&b);
-//	bytes plain = ECIESDecryptor(&k).decrypt(br);
-//
-//	// ideally, decryptor will go a step further, accept a bytesRef and zero input.
-//	assert(plain != b);
-//	
-//	// plaintext is same as output
-//	assert(plain == bytesConstRef(message).toBytes());
+	// Fix Me!
+//	encrypt(k.publicKey(), b);
+//	assert(b != asBytes(original));
+//	bytes plain = k.decrypt(&b);
+//	assert(plain == asBytes(original));
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
