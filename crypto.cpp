@@ -67,20 +67,39 @@ BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_is_bad)
+BOOST_AUTO_TEST_CASE(cryptopp_keys_cryptor_sipaseckp256k1)
 {
 	SecretKeyRef k;
 	Secret s = k.sec();
 	
-	/// Convert secret to exponent used by pp
-	Integer e = pp::ExponentFromSecret(k.sec());
+	// Convert secret to exponent used by pp
+	Integer e = pp::ExponentFromSecret(s);
 
+	// Test that exported DL_EC private is same as exponent from Secret
+	CryptoPP::DL_PrivateKey_EC<CryptoPP::ECP> privatek;
+	privatek.AccessGroupParameters().Initialize(pp::secp256k1());
+	privatek.SetPrivateExponent(e);
+	assert(e == privatek.GetPrivateExponent());
+	
+	// Test that exported secret is same as decryptor(privatek) secret
 	ECIES<ECP>::Decryptor d;
-//	k.AccessGroupParameters().Initialize(ASN1::secp256r1());
-//	k.SetPrivateExponent(_e);
+	d.AccessKey().AccessGroupParameters().Initialize(pp::secp256k1());
+	d.AccessKey().SetPrivateExponent(e);
+	assert(d.AccessKey().GetPrivateExponent() == e);
 	
-	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	// Test that decryptor->encryptor->public == private->makepublic->public
+	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pubk;
+	pubk.AccessGroupParameters().Initialize(pp::secp256k1());
+	privatek.MakePublicKey(pubk);
 	
+	ECIES<ECP>::Encryptor enc(d);
+	assert(pubk.GetPublicElement() == enc.AccessKey().GetPublicElement());
+	
+	// Test against sipa/seckp256k1
+	Public p;
+	pp::PublicFromExponent(pp::ExponentFromSecret(s), p);
+	assert(toAddress(s) == dev::right160(dev::sha3(p.ref())));
+	assert(k.pub() == p);
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
@@ -101,9 +120,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 	DL_PublicKey_EC<ECP> pub;
 	pub.Initialize(pp::secp256k1(), pp::PointFromPublic(p));
 	assert(pub.GetPublicElement() == e.GetKey().GetPublicElement());
-	
-	
-	////
+
 	SecretKeyRef k;
 	Public p2;
 	pp::PublicFromExponent(pp::ExponentFromSecret(k.sec()), p2);
