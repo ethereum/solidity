@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 		
 		Secret s;
 		pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
-		assert(s!=previous);
+		assert(s != previous);
 		
 		Public p;
 		pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
@@ -274,8 +274,8 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	rng.GenerateBlock(key, key.size());
 	
 	// cryptopp uses IV as nonce/counter which is same as using nonce w/0 ctr
-	byte ctr[ AES::BLOCKSIZE ];
-	rng.GenerateBlock( ctr, sizeof(ctr) );
+	byte ctr[AES::BLOCKSIZE];
+	rng.GenerateBlock(ctr, sizeof(ctr));
 	
 	string text = "Now is the time for all good persons to come to the aide of humanity.";
 	// c++11 ftw
@@ -286,13 +286,13 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	string cipherCopy;
 	try
 	{
-		CTR_Mode< AES >::Encryption e;
-		e.SetKeyWithIV( key, key.size(), ctr );
+		CTR_Mode<AES>::Encryption e;
+		e.SetKeyWithIV(key, key.size(), ctr);
 		e.ProcessData(out, in, text.size());
-		assert(text!=original);
+		assert(text != original);
 		cipherCopy = text;
 	}
-	catch( CryptoPP::Exception& e )
+	catch(CryptoPP::Exception& e)
 	{
 		cerr << e.what() << endl;
 	}
@@ -300,11 +300,11 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	try
 	{
 		CTR_Mode< AES >::Decryption d;
-		d.SetKeyWithIV( key, key.size(), ctr );
+		d.SetKeyWithIV(key, key.size(), ctr);
 		d.ProcessData(out, in, text.size());
-		assert(text==original);
+		assert(text == original);
 	}
-	catch( CryptoPP::Exception& e )
+	catch(CryptoPP::Exception& e)
 	{
 		cerr << e.what() << endl;
 	}
@@ -313,18 +313,18 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	// reencrypt ciphertext...
 	try
 	{
-		assert(cipherCopy!=text);
+		assert(cipherCopy != text);
 		in = (unsigned char*)&cipherCopy[0];
 		out = (unsigned char*)&cipherCopy[0];
 		
-		CTR_Mode< AES >::Encryption e;
-		e.SetKeyWithIV( key, key.size(), ctr );
+		CTR_Mode<AES>::Encryption e;
+		e.SetKeyWithIV(key, key.size(), ctr);
 		e.ProcessData(out, in, text.size());
 		
 		// yep, ctr mode.
-		assert(cipherCopy==original);
+		assert(cipherCopy == original);
 	}
-	catch( CryptoPP::Exception& e )
+	catch(CryptoPP::Exception& e)
 	{
 		cerr << e.what() << endl;
 	}
