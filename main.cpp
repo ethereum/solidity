@@ -10,6 +10,7 @@
 #include <libsolidity/ASTPrinter.h>
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Exceptions.h>
+#include <libsolidity/SourceReferenceFormatter.h>
 
 using namespace dev;
 using namespace solidity;
@@ -31,33 +32,6 @@ void version()
 			<< "  by Christian <c@ethdev.com>, (c) 2014." << std::endl
 			<< "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << std::endl;
 	exit(0);
-}
-
-void printSourcePart(std::ostream& _stream, Location const& _location, Scanner const& _scanner)
-{
-	int startLine;
-	int startColumn;
-	std::tie(startLine, startColumn) = _scanner.translatePositionToLineColumn(_location.start);
-	_stream << " starting at line " << (startLine + 1) << ", column " << (startColumn + 1) << "\n";
-	int endLine;
-	int endColumn;
-	std::tie(endLine, endColumn) = _scanner.translatePositionToLineColumn(_location.end);
-	if (startLine == endLine)
-	{
-		_stream << _scanner.getLineAtPosition(_location.start) << "\n"
-				<< std::string(startColumn, ' ') << "^";
-		if (endColumn > startColumn + 2)
-			_stream << std::string(endColumn - startColumn - 2, '-');
-		if (endColumn > startColumn + 1)
-			_stream << "^";
-		_stream << "\n";
-	}
-	else
-	{
-		_stream << _scanner.getLineAtPosition(_location.start) << "\n"
-				<< std::string(startColumn, ' ') << "^\n"
-				<< "Spanning multiple lines.\n";
-	}
 }
 
 int main(int argc, char** argv)
@@ -93,14 +67,9 @@ int main(int argc, char** argv)
 	{
 		ast = parser.parse(scanner);
 	}
-	catch (ParserError const& exc)
+	catch (ParserError const& exception)
 	{
-		int line;
-		int column;
-		std::tie(line, column) = scanner->translatePositionToLineColumn(exc.getPosition());
-		std::cerr << exc.what() << " at line " << (line + 1) << ", column " << (column + 1) << std::endl;
-		std::cerr << scanner->getLineAtPosition(exc.getPosition()) << std::endl;
-		std::cerr << std::string(column, ' ') << "^" << std::endl;
+		SourceReferenceFormatter::printExceptionInformation(std::cerr, exception, "Parser error", *scanner);
 		return -1;
 	}
 
@@ -109,16 +78,14 @@ int main(int argc, char** argv)
 	{
 		resolver.resolveNamesAndTypes(*ast.get());
 	}
-	catch (DeclarationError const& exc)
+	catch (DeclarationError const& exception)
 	{
-		std::cerr << exc.what() << std::endl;
-		printSourcePart(std::cerr, exc.getLocation(), *scanner);
+		SourceReferenceFormatter::printExceptionInformation(std::cerr, exception, "Declaration error", *scanner);
 		return -1;
 	}
-	catch (TypeError const& exc)
+	catch (TypeError const& exception)
 	{
-		std::cerr << exc.what() << std::endl;
-		printSourcePart(std::cerr, exc.getLocation(), *scanner);
+		SourceReferenceFormatter::printExceptionInformation(std::cerr, exception, "Type error", *scanner);
 		return -1;
 	}
 
