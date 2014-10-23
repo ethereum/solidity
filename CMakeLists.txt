@@ -17,10 +17,7 @@ target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth gmp)
 target_link_libraries(testeth ${CRYPTOPP_LS})
 target_link_libraries(testeth webthree)
-
-if(JSONRPC_LS)
 target_link_libraries(testeth ethrpc)
-endif()
 
 target_link_libraries(createRandomTest ethereum)
 target_link_libraries(createRandomTest ethcore)

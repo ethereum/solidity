@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#if ETH_JSONRPC && 1
+#if 1
 
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
