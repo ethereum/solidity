@@ -144,7 +144,6 @@ BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 	pp::PublicFromExponent(pp::ExponentFromSecret(k.sec()), p2);
 	assert(k.pub() == p2);
 	
-	// Fix me:
 	Address a = k.address();
 	Address a2 = toAddress(k.sec());
 	assert(a2 == a);
@@ -164,13 +163,6 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 
 	decrypt(k.sec(), b);
 	assert(b == asBytes(original));
-
-//	// Fix Me!
-////	encrypt(k.publicKey(), b);
-//	k.encrypt(b);
-//	assert(b != asBytes(original));
-//	k.decrypt(b);
-//	assert(b == asBytes(original));
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
