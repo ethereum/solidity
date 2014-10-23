@@ -91,7 +91,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		if (!m_s.addresses().count(myAddress))
 		{
 			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
+			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
 			if (!m_ms.internal.back().from)
 				m_ms.internal.pop_back();
 			if (na != myAddress)
