@@ -51,15 +51,10 @@ BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 	
 	Public p;
 	pp::exportDL_PublicKey_EC(e.GetKey(), p);
-	Integer x(&p[0], 32);
-	Integer y(&p[32], 32);
-	
+
 	DL_PublicKey_EC<ECP> pub;
-	pub.Initialize(pp::secp256k1(), ECP::Point(x,y));
-	assert(pub == e.GetKey());
-	
-	DL_PublicKey_EC<ECP> pub2;
-	pub.Initialize(pp::secp256k1(), ECP::Point(x,y));
+	pub.Initialize(pp::secp256k1(), pp::PointFromPublic(p));
+	assert(pub.GetPublicElement() == e.GetKey().GetPublicElement());
 }
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
@@ -78,9 +73,10 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 
 	// Fix Me!
 //	encrypt(k.publicKey(), b);
-//	assert(b != asBytes(original));
-//	bytes plain = k.decrypt(&b);
-//	assert(plain == asBytes(original));
+	k.encrypt(b);
+	assert(b != asBytes(original));
+	k.decrypt(b);
+	assert(b == asBytes(original));
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
