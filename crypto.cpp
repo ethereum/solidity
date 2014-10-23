@@ -62,52 +62,80 @@ BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 		
 		Public p;
 		pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
-		
-		/// wow, this worked. the first time.
+
 		assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
 	}
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_private_secret_import)
+BOOST_AUTO_TEST_CASE(cryptopp_is_bad)
 {
-	ECKeyPair k = ECKeyPair::create();
-	Integer e = k.m_decryptor.AccessKey().GetPrivateExponent();
-	assert(pp::ExponentFromSecret(k.secret()) == e);
+	SecretKeyRef k;
+	Secret s = k.sec();
+	
+	/// Convert secret to exponent used by pp
+	Integer e = pp::ExponentFromSecret(k.sec());
+
+	ECIES<ECP>::Decryptor d;
+//	k.AccessGroupParameters().Initialize(ASN1::secp256r1());
+//	k.SetPrivateExponent(_e);
+	
+	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 {
 	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
 	ECIES<ECP>::Encryptor e(d.GetKey());
-	
+
+	Secret s;
+	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
 	Public p;
 	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
-
+	Address addr = right160(dev::sha3(p.ref()));
+	assert(toAddress(s) == addr);
+	
+	KeyPair l(s);
+	assert(l.address() == addr);
+	
 	DL_PublicKey_EC<ECP> pub;
 	pub.Initialize(pp::secp256k1(), pp::PointFromPublic(p));
 	assert(pub.GetPublicElement() == e.GetKey().GetPublicElement());
+	
+	
+	////
+	SecretKeyRef k;
+	Public p2;
+	pp::PublicFromExponent(pp::ExponentFromSecret(k.sec()), p2);
+	assert(k.pub() == p2);
+	
+	// Fix me:
+	Address a = k.address();
+	Address a2 = toAddress(k.sec());
+	assert(a2 == a);
 }
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 {
-	ECKeyPair k = ECKeyPair::create();
+	KeyPair l = KeyPair::create();
+	SecretKeyRef k(l.sec());
+
 	string message("Now is the time for all good persons to come to the aide of humanity.");
 	string original = message;
 	
 	bytes b = asBytes(message);
-	k.encrypt(b);
+	encrypt(k.pub(), b);
 	assert(b != asBytes(original));
 
-	Secret s = k.secret();
-	decrypt(s, b);
+	decrypt(k.sec(), b);
 	assert(b == asBytes(original));
 
-	// Fix Me!
-//	encrypt(k.publicKey(), b);
-	k.encrypt(b);
-	assert(b != asBytes(original));
-	k.decrypt(b);
-	assert(b == asBytes(original));
+//	// Fix Me!
+////	encrypt(k.publicKey(), b);
+//	k.encrypt(b);
+//	assert(b != asBytes(original));
+//	k.decrypt(b);
+//	assert(b == asBytes(original));
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
