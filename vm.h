@@ -79,8 +79,6 @@ public:
 	void importExec(json_spirit::mObject& _o);
 	json_spirit::mArray exportCallCreates();
 	void importCallCreates(json_spirit::mArray& _callcreates);
-	void setVMKind(eth::VMFace::Kind _kind) { m_s.setVMKind(_kind); }
-	eth::VMFace::Kind getVMKind() const { return m_s.getVMKind(); }
 
 	std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes>> addresses;
 	eth::Transactions callcreates;
