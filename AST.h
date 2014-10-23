@@ -22,16 +22,16 @@
 
 #pragma once
 
-#include <boost/noncopyable.hpp>
 
 #include <string>
 #include <vector>
 #include <memory>
-
+#include <boost/noncopyable.hpp>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/BaseTypes.h>
 #include <libsolidity/Token.h>
 #include <libsolidity/Types.h>
+#include <libsolidity/Exceptions.h>
 
 namespace dev
 {
@@ -56,6 +56,11 @@ public:
 	}
 
 	Location const& getLocation() const { return m_location; }
+
+protected:
+	/// Creates a @ref TypeError exception and decorates it with the current location and
+	/// the given description
+	TypeError createTypeError(std::string const& _description);
 
 private:
 	Location m_location;

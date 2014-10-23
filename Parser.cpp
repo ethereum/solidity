@@ -106,7 +106,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			expectToken(Token::SEMICOLON);
 		}
 		else
-			throwExpectationError("Function, variable or struct declaration expected.");
+			BOOST_THROW_EXCEPTION(createParserError("Function, variable or struct declaration expected."));
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBRACE);
@@ -184,7 +184,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::VAR)
 	{
 		if (!_allowVar)
-			throwExpectationError("Expected explicit type name.");
+			BOOST_THROW_EXCEPTION(createParserError("Expected explicit type name."));
 		m_scanner->next();
 	}
 	else if (token == Token::MAPPING)
@@ -198,7 +198,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 		type = nodeFactory.createNode<UserDefinedTypeName>(expectIdentifierToken());
 	}
 	else
-		throwExpectationError("Expected type name");
+		BOOST_THROW_EXCEPTION(createParserError("Expected type name"));
 	return type;
 }
 
@@ -208,7 +208,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	expectToken(Token::MAPPING);
 	expectToken(Token::LPAREN);
 	if (!Token::isElementaryTypeName(m_scanner->getCurrentToken()))
-		throwExpectationError("Expected elementary type name for mapping key type");
+		BOOST_THROW_EXCEPTION(createParserError("Expected elementary type name for mapping key type"));
 	ASTPointer<ElementaryTypeName> keyType;
 	keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->getCurrentToken());
 	m_scanner->next();
@@ -481,7 +481,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		}
 		else
 		{
-			throwExpectationError("Expected primary expression.");
+			BOOST_THROW_EXCEPTION(createParserError("Expected primary expression."));
 			return ASTPointer<Expression>(); // this is not reached
 		}
 		break;
@@ -507,7 +507,7 @@ std::vector<ASTPointer<Expression>> Parser::parseFunctionCallArguments()
 void Parser::expectToken(Token::Value _value)
 {
 	if (m_scanner->getCurrentToken() != _value)
-		throwExpectationError(std::string("Expected token ") + std::string(Token::getName(_value)));
+		BOOST_THROW_EXCEPTION(createParserError(std::string("Expected token ") + std::string(Token::getName(_value))));
 	m_scanner->next();
 }
 
@@ -515,7 +515,7 @@ Token::Value Parser::expectAssignmentOperator()
 {
 	Token::Value op = m_scanner->getCurrentToken();
 	if (!Token::isAssignmentOp(op))
-		throwExpectationError(std::string("Expected assignment operator"));
+		BOOST_THROW_EXCEPTION(createParserError("Expected assignment operator"));
 	m_scanner->next();
 	return op;
 }
@@ -523,7 +523,7 @@ Token::Value Parser::expectAssignmentOperator()
 ASTPointer<ASTString> Parser::expectIdentifierToken()
 {
 	if (m_scanner->getCurrentToken() != Token::IDENTIFIER)
-		throwExpectationError("Expected identifier");
+		BOOST_THROW_EXCEPTION(createParserError("Expected identifier"));
 	return getLiteralAndAdvance();
 }
 
@@ -534,9 +534,9 @@ ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 	return identifier;
 }
 
-void Parser::throwExpectationError(std::string const& _description)
+ParserError Parser::createParserError(std::string const& _description) const
 {
-	BOOST_THROW_EXCEPTION(ParserError(getPosition(), _description));
+	return ParserError() << errinfo_sourcePosition(getPosition()) << errinfo_comment(_description);
 }
 
 

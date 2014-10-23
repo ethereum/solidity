@@ -31,44 +31,12 @@ namespace dev
 namespace solidity
 {
 
-class ParserError: public virtual Exception
-{
-public:
-	ParserError(int _position, std::string const& _description):
-		m_position(_position), m_description(_description) {}
-	virtual const char* what() const noexcept;
-	int getPosition() const { return m_position; }
+struct ParserError: public virtual Exception {};
+struct TypeError: public virtual Exception {};
+struct DeclarationError: public virtual Exception {};
 
-private:
-	int m_position;
-	std::string m_description;
-};
-
-class TypeError: public virtual Exception
-{
-public:
-	TypeError(Location const& _location, std::string const& _description):
-		m_location(_location), m_description(_description) {}
-	virtual const char* what() const noexcept;
-	Location const& getLocation() const { return m_location; }
-
-private:
-	Location m_location;
-	std::string m_description;
-};
-
-class DeclarationError: public virtual Exception
-{
-public:
-	DeclarationError(Location const& _location, std::string const& _description):
-		m_location(_location), m_description(_description) {}
-	virtual const char* what() const noexcept;
-	Location const& getLocation() const { return m_location; }
-
-private:
-	Location m_location;
-	std::string m_description;
-};
+typedef boost::error_info<struct tag_sourcePosition, int> errinfo_sourcePosition;
+typedef boost::error_info<struct tag_sourceLocation, Location> errinfo_sourceLocation;
 
 }
 }

@@ -17,31 +17,32 @@
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
- * Solidity exception hierarchy.
+ * Formatting functions for errors referencing positions and locations in the source.
  */
 
-#include <libsolidity/Exceptions.h>
+#pragma once
 
+#include <ostream>
+#include <libsolidity/BaseTypes.h>
 
 namespace dev
 {
+
+class Exception; // forward
+
 namespace solidity
 {
 
-const char* ParserError::what() const noexcept
-{
-	ETH_RETURN_STRING("Parser error: " + m_description);
-}
+class Scanner; // forward
 
-const char* DeclarationError::what() const noexcept
+struct SourceReferenceFormatter
 {
-	ETH_RETURN_STRING("Declaration error: " + m_description);
-}
-
-const char* TypeError::what() const noexcept
-{
-	ETH_RETURN_STRING("Type error: " + m_description);
-}
+public:
+	static void printSourceLocation(std::ostream& _stream, Location const& _location, Scanner const& _scanner);
+	static void printSourcePosition(std::ostream& _stream, int _position, Scanner const& _scanner);
+	static void printExceptionInformation(std::ostream& _stream, Exception const& _exception,
+										  std::string const& _name, Scanner const& _scanner);
+};
 
 }
 }

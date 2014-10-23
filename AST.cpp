@@ -248,12 +248,17 @@ void Literal::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
+TypeError ASTNode::createTypeError(std::string const& _description)
+{
+	return TypeError() << errinfo_sourceLocation(getLocation()) << errinfo_comment(_description);
+}
+
 void Statement::expectType(Expression& _expression, const Type& _expectedType)
 {
 	_expression.checkTypeRequirements();
 	if (!_expression.getType()->isImplicitlyConvertibleTo(_expectedType))
-		BOOST_THROW_EXCEPTION(TypeError(_expression.getLocation(),
-										"Type not implicitly convertible to expected type."));
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_sourceLocation(_expression.getLocation())
+										  << errinfo_comment("Type not implicitly convertible to expected type."));
 	//@todo provide more information to the exception
 }
 
@@ -289,9 +294,8 @@ void Return::checkTypeRequirements()
 {
 	BOOST_ASSERT(m_returnParameters != nullptr);
 	if (m_returnParameters->getParameters().size() != 1)
-		BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Different number of arguments in "
-													   "return statement than in returns "
-													   "declaration."));
+		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
+											  "than in returns declaration."));
 	// this could later be changed such that the paramaters type is an anonymous struct type,
 	// but for now, we only allow one return parameter
 	expectType(*m_expression, *m_returnParameters->getParameters().front()->getType());
@@ -327,7 +331,7 @@ void Assignment::checkTypeRequirements()
 	{
 		// complex assignment
 		if (!m_type->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_assigmentOperator)))
-			BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Operator not compatible with type."));
+			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
 	}
 }
 
@@ -337,7 +341,7 @@ void UnaryOperation::checkTypeRequirements()
 	m_subExpression->checkTypeRequirements();
 	m_type = m_subExpression->getType();
 	if (m_type->acceptsUnaryOperator(m_operator))
-		BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Unary operator not compatible with type."));
+		BOOST_THROW_EXCEPTION(createTypeError("Unary operator not compatible with type."));
 }
 
 void BinaryOperation::checkTypeRequirements()
@@ -349,7 +353,7 @@ void BinaryOperation::checkTypeRequirements()
 	else if (m_left->getType()->isImplicitlyConvertibleTo(*m_right->getType()))
 		m_commonType = m_right->getType();
 	else
-		BOOST_THROW_EXCEPTION(TypeError(getLocation(), "No common type found in binary operation."));
+		BOOST_THROW_EXCEPTION(createTypeError("No common type found in binary operation."));
 	if (Token::isCompareOp(m_operator))
 		m_type = std::make_shared<BoolType>();
 	else
@@ -357,7 +361,7 @@ void BinaryOperation::checkTypeRequirements()
 		BOOST_ASSERT(Token::isBinaryOp(m_operator));
 		m_type = m_commonType;
 		if (!m_commonType->acceptsBinaryOperator(m_operator))
-			BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Operator not compatible with type."));
+			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
 	}
 }
 
@@ -375,10 +379,10 @@ void FunctionCall::checkTypeRequirements()
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
 		if (m_arguments.size() != 1)
-			BOOST_THROW_EXCEPTION(TypeError(getLocation(), "More than one argument for "
+			BOOST_THROW_EXCEPTION(createTypeError("More than one argument for "
 														   "explicit type conersion."));
 		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type->getActualType()))
-			BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Explicit type conversion not allowed."));
+			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
 		m_type = type->getActualType();
 	}
 	else if (category == Type::Category::FUNCTION)
@@ -391,10 +395,10 @@ void FunctionCall::checkTypeRequirements()
 		FunctionDefinition const& fun = function->getFunction();
 		std::vector<ASTPointer<VariableDeclaration>> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
-			BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Wrong argument count for function call."));
+			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 		for (size_t i = 0; i < m_arguments.size(); ++i)
 			if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
-				BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Invalid type for argument in function call."));
+				BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
 		if (fun.getReturnParameterList()->getParameters().empty())
@@ -404,7 +408,7 @@ void FunctionCall::checkTypeRequirements()
 	}
 	else
 	{
-		BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Type does not support invocation."));
+		BOOST_THROW_EXCEPTION(createTypeError("Type does not support invocation."));
 	}
 }
 
@@ -435,7 +439,7 @@ void Identifier::checkTypeRequirements()
 	if (variable != nullptr)
 	{
 		if (!variable->getType())
-			BOOST_THROW_EXCEPTION(TypeError(getLocation(), "Variable referenced before type "
+			BOOST_THROW_EXCEPTION(createTypeError("Variable referenced before type "
 														   "could be determined."));
 		m_type = variable->getType();
 		return;

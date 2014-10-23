@@ -137,7 +137,8 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 {
 	BOOST_ASSERT(m_currentScope != nullptr);
 	if (!m_currentScope->registerDeclaration(_declaration))
-		BOOST_THROW_EXCEPTION(DeclarationError(_declaration.getLocation(), "Identifier already declared."));
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_declaration.getLocation())
+												 << errinfo_comment("Identifier already declared."));
 	//@todo the exception should also contain the location of the first declaration
 	if (_opensScope)
 		enterNewSubScope(_declaration);
@@ -176,11 +177,13 @@ bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 {
 	Declaration* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
 	if (declaration == nullptr)
-		BOOST_THROW_EXCEPTION(DeclarationError(_typeName.getLocation(), "Undeclared identifier."));
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
+												 << errinfo_comment("Undeclared identifier."));
 	StructDefinition* referencedStruct = dynamic_cast<StructDefinition*>(declaration);
 	//@todo later, contracts are also valid types
 	if (referencedStruct == nullptr)
-		BOOST_THROW_EXCEPTION(TypeError(_typeName.getLocation(), "Identifier does not name a type name."));
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_sourceLocation(_typeName.getLocation())
+										  << errinfo_comment("Identifier does not name a type name."));
 	_typeName.setReferencedStruct(*referencedStruct);
 	return false;
 }
@@ -189,7 +192,8 @@ bool ReferencesResolver::visit(Identifier& _identifier)
 {
 	Declaration* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
 	if (declaration == nullptr)
-		BOOST_THROW_EXCEPTION(DeclarationError(_identifier.getLocation(), "Undeclared identifier."));
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_identifier.getLocation())
+												 << errinfo_comment("Undeclared identifier."));
 	_identifier.setReferencedDeclaration(*declaration);
 	return false;
 }
