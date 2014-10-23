@@ -37,7 +37,7 @@ using namespace CryptoPP;
 
 BOOST_AUTO_TEST_SUITE(devcrypto)
 
-BOOST_AUTO_TEST_CASE(common_crypt)
+BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 {
 	string message("Now is the time for all good persons to come to the aide of humanity.");
 	bytes m = asBytes(message);
