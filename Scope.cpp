@@ -41,8 +41,8 @@ Declaration* Scope::resolveName(ASTString const& _name, bool _recursive) const
 	auto result = m_declarations.find(_name);
 	if (result != m_declarations.end())
 		return result->second;
-	if (_recursive && m_outerScope)
-		return m_outerScope->resolveName(_name, true);
+	if (_recursive && m_enclosingScope)
+		return m_enclosingScope->resolveName(_name, true);
 	return nullptr;
 }
 

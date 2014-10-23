@@ -32,18 +32,20 @@ namespace dev
 namespace solidity
 {
 
+/// Container that stores mappings betwee names and declarations. It also contains a link to the
+/// enclosing scope.
 class Scope
 {
 public:
-	explicit Scope(Scope* _outerScope = nullptr): m_outerScope(_outerScope) {}
+	explicit Scope(Scope* _enclosingScope = nullptr): m_enclosingScope(_enclosingScope) {}
 	/// Registers the declaration in the scope unless its name is already declared. Returns true iff
 	/// it was not yet declared.
 	bool registerDeclaration(Declaration& _declaration);
 	Declaration* resolveName(ASTString const& _name, bool _recursive = false) const;
-	Scope* getOuterScope() const { return m_outerScope; }
+	Scope* getEnclosingScope() const { return m_enclosingScope; }
 
 private:
-	Scope* m_outerScope;
+	Scope* m_enclosingScope;
 	std::map<ASTString, Declaration*> m_declarations;
 };
 

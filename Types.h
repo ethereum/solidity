@@ -37,6 +37,7 @@ namespace solidity
 
 // @todo realMxN, string<N>, mapping
 
+/// Abstract base class that forms the root of the type hierarchy.
 class Type: private boost::noncopyable
 {
 public:
@@ -45,11 +46,15 @@ public:
 		INTEGER, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE
 	};
 
-	//! factory functions that convert an AST TypeName to a Type.
+	///@{
+	///@name Factory functions
+	/// Factory functions that convert an AST @ref TypeName to a Type.
 	static std::shared_ptr<Type> fromElementaryTypeName(Token::Value _typeToken);
 	static std::shared_ptr<Type> fromUserDefinedTypeName(UserDefinedTypeName const& _typeName);
 	static std::shared_ptr<Type> fromMapping(Mapping const& _typeName);
+	/// @}
 
+	/// Auto-detect the proper type for a literal
 	static std::shared_ptr<Type> forLiteral(Literal const& _literal);
 
 	virtual Category getCategory() const = 0;
@@ -68,6 +73,7 @@ public:
 	virtual bytes literalToBigEndian(Literal const&) const { return NullBytes; }
 };
 
+/// Any kind of integer type including hash and address.
 class IntegerType: public Type
 {
 public:
@@ -101,6 +107,7 @@ private:
 	Modifier m_modifier;
 };
 
+/// The boolean type.
 class BoolType: public Type
 {
 public:
@@ -119,6 +126,7 @@ public:
 	virtual bytes literalToBigEndian(Literal const& _literal) const override;
 };
 
+/// The type of a contract instance, there is one distinct type for each contract definition.
 class ContractType: public Type
 {
 public:
@@ -133,6 +141,7 @@ private:
 	ContractDefinition const& m_contract;
 };
 
+/// The type of a struct instance, there is one distinct type per struct definition.
 class StructType: public Type
 {
 public:
@@ -151,6 +160,7 @@ private:
 	StructDefinition const& m_struct;
 };
 
+/// The type of a function, there is one distinct type per function definition.
 class FunctionType: public Type
 {
 public:
@@ -167,6 +177,7 @@ private:
 	FunctionDefinition const& m_function;
 };
 
+/// The type of a mapping, there is one distinct type per key/value type pair.
 class MappingType: public Type
 {
 public:
@@ -181,7 +192,8 @@ private:
 	std::shared_ptr<Type const> m_valueType;
 };
 
-//@todo should be changed into "empty anonymous struct"
+/// The void type, can only be implicitly used as the type that is returned by functions without
+/// return parameters.
 class VoidType: public Type
 {
 public:
@@ -191,6 +203,8 @@ public:
 	virtual std::string toString() const override { return "void"; }
 };
 
+/// The type of a type reference. The type of "uint32" when used in "a = uint32(2)" is an example
+/// of a TypeType.
 class TypeType: public Type
 {
 public:

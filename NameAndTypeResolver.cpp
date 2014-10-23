@@ -130,7 +130,7 @@ void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _node)
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
 	BOOST_ASSERT(m_currentScope);
-	m_currentScope = m_currentScope->getOuterScope();
+	m_currentScope = m_currentScope->getEnclosingScope();
 }
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
