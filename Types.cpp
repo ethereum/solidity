@@ -20,9 +20,9 @@
  * Solidity data types
  */
 
+#include <libdevcore/CommonIO.h>
 #include <libsolidity/Types.h>
 #include <libsolidity/AST.h>
-#include <libdevcore/CommonIO.h>
 
 namespace dev
 {
