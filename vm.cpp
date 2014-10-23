@@ -24,7 +24,7 @@
 #include <libdevcore/CommonIO.h>
 #include <boost/filesystem/path.hpp>
 
-#define FILL_TESTS
+//#define FILL_TESTS
 
 using namespace std;
 using namespace json_spirit;
@@ -751,4 +751,3 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
 }
-
