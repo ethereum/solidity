@@ -37,6 +37,37 @@ using namespace CryptoPP;
 
 BOOST_AUTO_TEST_SUITE(devcrypto)
 
+BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
+{
+	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Encryptor e(d.GetKey());
+	
+	Secret s;
+	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	
+	Public p;
+	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+	
+	assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
+	
+	Secret previous = s;
+	for (auto i = 0; i < 30; i++)
+	{
+		ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+		ECIES<ECP>::Encryptor e(d.GetKey());
+		
+		Secret s;
+		pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+		assert(s!=previous);
+		
+		Public p;
+		pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+		
+		/// wow, this worked. the first time.
+		assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
+	}
+}
+
 BOOST_AUTO_TEST_CASE(cryptopp_private_secret_import)
 {
 	ECKeyPair k = ECKeyPair::create();
@@ -50,7 +81,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 	ECIES<ECP>::Encryptor e(d.GetKey());
 	
 	Public p;
-	pp::exportDL_PublicKey_EC(e.GetKey(), p);
+	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
 
 	DL_PublicKey_EC<ECP> pub;
 	pub.Initialize(pp::secp256k1(), pp::PointFromPublic(p));
