@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 	bytes m = asBytes(message);
 	bytesConstRef bcr(&m);
 
-	SecretKeyRef k;
+	KeyPair k = KeyPair::create();
 	bytes cipher;
 	encrypt(k.pub(), bcr, cipher);
 	assert(cipher != asBytes(message) && cipher.size() > 0);
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 
 BOOST_AUTO_TEST_CASE(cryptopp_keys_cryptor_sipaseckp256k1)
 {
-	SecretKeyRef k;
+	KeyPair k = KeyPair::create();
 	Secret s = k.sec();
 	
 	// Convert secret to exponent used by pp
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 	pub.Initialize(pp::secp256k1(), pp::PointFromPublic(p));
 	assert(pub.GetPublicElement() == e.GetKey().GetPublicElement());
 
-	SecretKeyRef k;
+	KeyPair k = KeyPair::create();
 	Public p2;
 	pp::PublicFromExponent(pp::ExponentFromSecret(k.sec()), p2);
 	assert(k.pub() == p2);
@@ -151,8 +151,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 {
-	KeyPair l = KeyPair::create();
-	SecretKeyRef k(l.sec());
+	KeyPair k = KeyPair::create();
 
 	string message("Now is the time for all good persons to come to the aide of humanity.");
 	string original = message;
@@ -223,44 +222,6 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 	assert(plainFuture == plainLocal);
 	assert(plainFutureFromLocal == plainLocal);
 	assert(plainLocalFromFuture == plainLocal);
-}
-
-BOOST_AUTO_TEST_CASE(cryptopp_ecdh_prime)
-{
-	cnote << "Testing cryptopp_ecdh_prime...";
-	
-	using namespace CryptoPP;
-	OID curve = ASN1::secp256k1();
-
-	ECDH<ECP>::Domain dhLocal(curve);
-	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
-	SecByteBlock pubLocal(dhLocal.PublicKeyLength());
-	dhLocal.GenerateKeyPair(pp::PRNG(), privLocal, pubLocal);
-	
-	ECDH<ECP>::Domain dhRemote(curve);
-	SecByteBlock privRemote(dhRemote.PrivateKeyLength());
-	SecByteBlock pubRemote(dhRemote.PublicKeyLength());
-	dhRemote.GenerateKeyPair(pp::PRNG(), privRemote, pubRemote);
-	
-	assert(dhLocal.AgreedValueLength() == dhRemote.AgreedValueLength());
-	
-	// local: send public to remote; remote: send public to local
-	
-	// Local
-	SecByteBlock sharedLocal(dhLocal.AgreedValueLength());
-	assert(dhLocal.Agree(sharedLocal, privLocal, pubRemote));
-	
-	// Remote
-	SecByteBlock sharedRemote(dhRemote.AgreedValueLength());
-	assert(dhRemote.Agree(sharedRemote, privRemote, pubLocal));
-	
-	// Test
-	Integer ssLocal, ssRemote;
-	ssLocal.Decode(sharedLocal.BytePtr(), sharedLocal.SizeInBytes());
-	ssRemote.Decode(sharedRemote.BytePtr(), sharedRemote.SizeInBytes());
-	
-	assert(ssLocal != 0);
-	assert(ssLocal == ssRemote);
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
