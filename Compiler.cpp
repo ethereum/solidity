@@ -20,7 +20,7 @@
  * Solidity AST to EVM bytecode compiler.
  */
 
-#include <boost/assert.hpp>
+#include <cassert>
 #include <utility>
 #include <libsolidity/AST.h>
 #include <libsolidity/Compiler.h>
@@ -32,14 +32,14 @@ namespace solidity {
 
 void CompilerContext::setLabelPosition(uint32_t _label, uint32_t _position)
 {
-	BOOST_ASSERT(m_labelPositions.find(_label) == m_labelPositions.end());
+	assert(m_labelPositions.find(_label) == m_labelPositions.end());
 	m_labelPositions[_label] = _position;
 }
 
 uint32_t CompilerContext::getLabelPosition(uint32_t _label) const
 {
 	auto iter = m_labelPositions.find(_label);
-	BOOST_ASSERT(iter != m_labelPositions.end());
+	assert(iter != m_labelPositions.end());
 	return iter->second;
 }
 
@@ -152,7 +152,7 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 		append(eth::Instruction::NEG);
 		break;
 	default:
-		BOOST_ASSERT(false); // invalid operation
+		assert(false); // invalid operation
 	}
 }
 
@@ -174,7 +174,7 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 		rightExpression.accept(*this);
 
 		// the types to compare have to be the same, but the resulting type is always bool
-		BOOST_ASSERT(*leftExpression.getType() == *rightExpression.getType());
+		assert(*leftExpression.getType() == *rightExpression.getType());
 		appendCompareOperatorCode(op, *leftExpression.getType());
 	}
 	else
@@ -226,14 +226,14 @@ void ExpressionCompiler::endVisit(Literal& _literal)
 	case Type::Category::BOOL:
 	{
 		bytes value = _literal.getType()->literalToBigEndian(_literal);
-		BOOST_ASSERT(value.size() <= 32);
-		BOOST_ASSERT(!value.empty());
+		assert(value.size() <= 32);
+		assert(!value.empty());
 		append(static_cast<byte>(eth::Instruction::PUSH1) + static_cast<byte>(value.size() - 1));
 		append(value);
 		break;
 	}
 	default:
-		BOOST_ASSERT(false); // @todo
+		assert(false); // @todo
 	}
 }
 
@@ -255,15 +255,15 @@ void ExpressionCompiler::cleanHigherOrderBitsIfNeeded(const Type& _typeOnStack, 
 	{
 		// If we get here, there is either an implementation missing to clean higher oder bits
 		// for non-integer types that are explicitly convertible or we got here in error.
-		BOOST_ASSERT(!_typeOnStack.isExplicitlyConvertibleTo(_targetType));
-		BOOST_ASSERT(false); // these types should not be convertible.
+		assert(!_typeOnStack.isExplicitlyConvertibleTo(_targetType));
+		assert(false); // these types should not be convertible.
 	}
 }
 
 void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation& _binaryOperation)
 {
 	Token::Value const op = _binaryOperation.getOperator();
-	BOOST_ASSERT(op == Token::OR || op == Token::AND);
+	assert(op == Token::OR || op == Token::AND);
 
 	_binaryOperation.getLeftExpression().accept(*this);
 	append(eth::Instruction::DUP1);
@@ -285,7 +285,7 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	else
 	{
 		IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
-		BOOST_ASSERT(type != nullptr);
+		assert(type);
 		bool const isSigned = type->isSigned();
 
 		// note that EVM opcodes compare like "stack[0] < stack[1]",
@@ -307,7 +307,7 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 			append(isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
 			break;
 		default:
-			BOOST_ASSERT(false);
+			assert(false);
 		}
 	}
 }
@@ -321,13 +321,13 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 	else if (Token::isShiftOp(_operator))
 		appendShiftOperatorCode(_operator);
 	else
-		BOOST_ASSERT(false); // unknown binary operator
+		assert(false); // unknown binary operator
 }
 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
 	IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
-	BOOST_ASSERT(type != nullptr);
+	assert(type);
 	bool const isSigned = type->isSigned();
 
 	switch (_operator)
@@ -349,7 +349,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		append(isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
 		break;
 	default:
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 }
 
@@ -367,7 +367,7 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 		append(eth::Instruction::XOR);
 		break;
 	default:
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 }
 
@@ -376,13 +376,13 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 	switch (_operator)
 	{
 	case Token::SHL:
-		BOOST_ASSERT(false); //@todo
+		assert(false); //@todo
 		break;
 	case Token::SAR:
-		BOOST_ASSERT(false); //@todo
+		assert(false); //@todo
 		break;
 	default:
-		BOOST_ASSERT(false);
+		assert(false);
 	}
 }
 
