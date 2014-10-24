@@ -57,8 +57,7 @@ public:
 
 	Location const& getLocation() const { return m_location; }
 
-protected:
-	/// Creates a @ref TypeError exception and decorates it with the current location and
+	/// Creates a @ref TypeError exception and decorates it with the location of the node and
 	/// the given description
 	TypeError createTypeError(std::string const& _description);
 

@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <ostream>
 
 namespace dev
 {
@@ -40,6 +41,12 @@ struct Location
 	int start;
 	int end;
 };
+
+/// Stream output for Location (used e.g. in boost exceptions).
+inline std::ostream& operator<<(std::ostream& _out, Location const& _location)
+{
+	return _out << "[" << _location.start << "," << _location.end << ")";
+}
 
 }
 }

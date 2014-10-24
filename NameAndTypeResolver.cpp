@@ -182,8 +182,7 @@ bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 	StructDefinition* referencedStruct = dynamic_cast<StructDefinition*>(declaration);
 	//@todo later, contracts are also valid types
 	if (referencedStruct == nullptr)
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_sourceLocation(_typeName.getLocation())
-										  << errinfo_comment("Identifier does not name a type name."));
+		BOOST_THROW_EXCEPTION(_typeName.createTypeError("Identifier does not name a type name."));
 	_typeName.setReferencedStruct(*referencedStruct);
 	return false;
 }

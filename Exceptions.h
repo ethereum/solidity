@@ -31,9 +31,9 @@ namespace dev
 namespace solidity
 {
 
-struct ParserError: public virtual Exception {};
-struct TypeError: public virtual Exception {};
-struct DeclarationError: public virtual Exception {};
+struct ParserError: virtual Exception {};
+struct TypeError: virtual Exception {};
+struct DeclarationError: virtual Exception {};
 
 typedef boost::error_info<struct tag_sourcePosition, int> errinfo_sourcePosition;
 typedef boost::error_info<struct tag_sourceLocation, Location> errinfo_sourceLocation;

@@ -257,8 +257,7 @@ void Statement::expectType(Expression& _expression, const Type& _expectedType)
 {
 	_expression.checkTypeRequirements();
 	if (!_expression.getType()->isImplicitlyConvertibleTo(_expectedType))
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_sourceLocation(_expression.getLocation())
-										  << errinfo_comment("Type not implicitly convertible to expected type."));
+		BOOST_THROW_EXCEPTION(_expression.createTypeError("Type not implicitly convertible to expected type."));
 	//@todo provide more information to the exception
 }
 
@@ -407,9 +406,7 @@ void FunctionCall::checkTypeRequirements()
 			m_type = fun.getReturnParameterList()->getParameters().front()->getType();
 	}
 	else
-	{
 		BOOST_THROW_EXCEPTION(createTypeError("Type does not support invocation."));
-	}
 }
 
 void MemberAccess::checkTypeRequirements()
