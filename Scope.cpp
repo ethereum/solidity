@@ -41,7 +41,7 @@ Declaration* Scope::resolveName(ASTString const& _name, bool _recursive) const
 	auto result = m_declarations.find(_name);
 	if (result != m_declarations.end())
 		return result->second;
-	if (_recursive && m_outerScope != nullptr)
+	if (_recursive && m_outerScope)
 		return m_outerScope->resolveName(_name, true);
 	return nullptr;
 }

@@ -248,12 +248,16 @@ void Literal::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
+TypeError ASTNode::createTypeError(std::string const& _description)
+{
+	return TypeError() << errinfo_sourceLocation(getLocation()) << errinfo_comment(_description);
+}
+
 void Statement::expectType(Expression& _expression, const Type& _expectedType)
 {
 	_expression.checkTypeRequirements();
 	if (!_expression.getType()->isImplicitlyConvertibleTo(_expectedType))
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Type not implicitly convertible "
-															 "to expected type."));
+		BOOST_THROW_EXCEPTION(_expression.createTypeError("Type not implicitly convertible to expected type."));
 	//@todo provide more information to the exception
 }
 
@@ -287,11 +291,10 @@ void Break::checkTypeRequirements()
 
 void Return::checkTypeRequirements()
 {
-	BOOST_ASSERT(m_returnParameters != nullptr);
+	BOOST_ASSERT(m_returnParameters);
 	if (m_returnParameters->getParameters().size() != 1)
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Different number of arguments in "
-															 "return statement than in returns "
-															 "declaration."));
+		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
+											  "than in returns declaration."));
 	// this could later be changed such that the paramaters type is an anonymous struct type,
 	// but for now, we only allow one return parameter
 	expectType(*m_expression, *m_returnParameters->getParameters().front()->getType());
@@ -327,7 +330,7 @@ void Assignment::checkTypeRequirements()
 	{
 		// complex assignment
 		if (!m_type->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_assigmentOperator)))
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
+			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
 	}
 }
 
@@ -337,7 +340,7 @@ void UnaryOperation::checkTypeRequirements()
 	m_subExpression->checkTypeRequirements();
 	m_type = m_subExpression->getType();
 	if (m_type->acceptsUnaryOperator(m_operator))
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Unary operator not compatible with type."));
+		BOOST_THROW_EXCEPTION(createTypeError("Unary operator not compatible with type."));
 }
 
 void BinaryOperation::checkTypeRequirements()
@@ -349,7 +352,7 @@ void BinaryOperation::checkTypeRequirements()
 	else if (m_left->getType()->isImplicitlyConvertibleTo(*m_right->getType()))
 		m_commonType = m_right->getType();
 	else
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("No common type found in binary operation."));
+		BOOST_THROW_EXCEPTION(createTypeError("No common type found in binary operation."));
 	if (Token::isCompareOp(m_operator))
 		m_type = std::make_shared<BoolType>();
 	else
@@ -357,7 +360,7 @@ void BinaryOperation::checkTypeRequirements()
 		BOOST_ASSERT(Token::isBinaryOp(m_operator));
 		m_type = m_commonType;
 		if (!m_commonType->acceptsBinaryOperator(m_operator))
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Operator not compatible with type."));
+			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
 	}
 }
 
@@ -371,15 +374,14 @@ void FunctionCall::checkTypeRequirements()
 	if (category == Type::Category::TYPE)
 	{
 		TypeType const* type = dynamic_cast<TypeType const*>(&expressionType);
-		BOOST_ASSERT(type != nullptr);
+		BOOST_ASSERT(type);
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
 		if (m_arguments.size() != 1)
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("More than one argument for "
-																 "explicit type conersion."));
+			BOOST_THROW_EXCEPTION(createTypeError("More than one argument for "
+														   "explicit type conersion."));
 		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type->getActualType()))
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Explicit type conversion not "
-								  "allowed."));
+			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
 		m_type = type->getActualType();
 	}
 	else if (category == Type::Category::FUNCTION)
@@ -388,16 +390,14 @@ void FunctionCall::checkTypeRequirements()
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
 		FunctionType const* function = dynamic_cast<FunctionType const*>(&expressionType);
-		BOOST_ASSERT(function != nullptr);
+		BOOST_ASSERT(function);
 		FunctionDefinition const& fun = function->getFunction();
 		std::vector<ASTPointer<VariableDeclaration>> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Wrong argument count for "
-								  "function call."));
+			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 		for (size_t i = 0; i < m_arguments.size(); ++i)
 			if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
-				BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Invalid type for argument in "
-																	 "function call."));
+				BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
 		if (fun.getReturnParameterList()->getParameters().empty())
@@ -406,9 +406,7 @@ void FunctionCall::checkTypeRequirements()
 			m_type = fun.getReturnParameterList()->getParameters().front()->getType();
 	}
 	else
-	{
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Type does not support invocation."));
-	}
+		BOOST_THROW_EXCEPTION(createTypeError("Type does not support invocation."));
 }
 
 void MemberAccess::checkTypeRequirements()
@@ -425,7 +423,7 @@ void IndexAccess::checkTypeRequirements()
 
 void Identifier::checkTypeRequirements()
 {
-	BOOST_ASSERT(m_referencedDeclaration != nullptr);
+	BOOST_ASSERT(m_referencedDeclaration);
 	//@todo these dynamic casts here are not really nice...
 	// is i useful to have an AST visitor here?
 	// or can this already be done in NameAndTypeResolver?
@@ -435,24 +433,24 @@ void Identifier::checkTypeRequirements()
 	// var y = x;
 	// the type of x is not yet determined.
 	VariableDeclaration* variable = dynamic_cast<VariableDeclaration*>(m_referencedDeclaration);
-	if (variable != nullptr)
+	if (variable)
 	{
 		if (!variable->getType())
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Variable referenced before type "
-																 "could be determined."));
+			BOOST_THROW_EXCEPTION(createTypeError("Variable referenced before type "
+														   "could be determined."));
 		m_type = variable->getType();
 		return;
 	}
 	//@todo can we unify these with TypeName::toType()?
 	StructDefinition* structDef = dynamic_cast<StructDefinition*>(m_referencedDeclaration);
-	if (structDef != nullptr)
+	if (structDef)
 	{
 		// note that we do not have a struct type here
 		m_type = std::make_shared<TypeType>(std::make_shared<StructType>(*structDef));
 		return;
 	}
 	FunctionDefinition* functionDef = dynamic_cast<FunctionDefinition*>(m_referencedDeclaration);
-	if (functionDef != nullptr)
+	if (functionDef)
 	{
 		// a function reference is not a TypeType, because calling a TypeType converts to the type.
 		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
@@ -461,7 +459,7 @@ void Identifier::checkTypeRequirements()
 		return;
 	}
 	ContractDefinition* contractDef = dynamic_cast<ContractDefinition*>(m_referencedDeclaration);
-	if (contractDef != nullptr)
+	if (contractDef)
 	{
 		m_type = std::make_shared<TypeType>(std::make_shared<ContractType>(*contractDef));
 		return;

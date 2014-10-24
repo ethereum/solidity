@@ -73,8 +73,11 @@ private:
 	Token::Value expectAssignmentOperator();
 	ASTPointer<ASTString> expectIdentifierToken();
 	ASTPointer<ASTString> getLiteralAndAdvance();
-	void throwExpectationError(std::string const& _description);
 	/// @}
+
+	/// Creates a @ref ParserError exception and annotates it with the current position and the
+	/// given @a _description.
+	ParserError createParserError(std::string const& _description) const;
 
 	std::shared_ptr<Scanner> m_scanner;
 };

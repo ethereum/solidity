@@ -129,15 +129,17 @@ void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _node)
 
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
-	BOOST_ASSERT(m_currentScope != nullptr);
+	BOOST_ASSERT(m_currentScope);
 	m_currentScope = m_currentScope->getOuterScope();
 }
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
-	BOOST_ASSERT(m_currentScope != nullptr);
+	BOOST_ASSERT(m_currentScope);
 	if (!m_currentScope->registerDeclaration(_declaration))
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Identifier already declared."));
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_declaration.getLocation())
+												 << errinfo_comment("Identifier already declared."));
+	//@todo the exception should also contain the location of the first declaration
 	if (_opensScope)
 		enterNewSubScope(_declaration);
 }
@@ -153,14 +155,14 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 {
 	// endVisit because the internal type needs resolving if it is a user defined type
 	// or mapping
-	if (_variable.getTypeName() != nullptr)
+	if (_variable.getTypeName())
 		_variable.setType(_variable.getTypeName()->toType());
 	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
 }
 
 bool ReferencesResolver::visit(Return& _return)
 {
-	BOOST_ASSERT(m_returnParameters != nullptr);
+	BOOST_ASSERT(m_returnParameters);
 	_return.setFunctionReturnParameters(*m_returnParameters);
 	return true;
 }
@@ -174,12 +176,13 @@ bool ReferencesResolver::visit(Mapping&)
 bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 {
 	Declaration* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
-	if (declaration == nullptr)
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Undeclared identifier."));
+	if (!declaration)
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
+												 << errinfo_comment("Undeclared identifier."));
 	StructDefinition* referencedStruct = dynamic_cast<StructDefinition*>(declaration);
 	//@todo later, contracts are also valid types
-	if (referencedStruct == nullptr)
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Identifier does not name a type name."));
+	if (!referencedStruct)
+		BOOST_THROW_EXCEPTION(_typeName.createTypeError("Identifier does not name a type name."));
 	_typeName.setReferencedStruct(*referencedStruct);
 	return false;
 }
@@ -187,8 +190,9 @@ bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 bool ReferencesResolver::visit(Identifier& _identifier)
 {
 	Declaration* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
-	if (declaration == nullptr)
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Undeclared identifier."));
+	if (!declaration)
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_identifier.getLocation())
+												 << errinfo_comment("Undeclared identifier."));
 	_identifier.setReferencedDeclaration(*declaration);
 	return false;
 }

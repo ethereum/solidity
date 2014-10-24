@@ -253,7 +253,7 @@ bool ASTPrinter::visit(ElementaryTypeNameExpression& _node)
 bool ASTPrinter::visit(Literal& _node)
 {
 	char const* tokenString = Token::toString(_node.getToken());
-	if (tokenString == nullptr)
+	if (!tokenString)
 		tokenString = "[no token]";
 	writeLine(std::string("Literal, token: ") + tokenString + " value: " + _node.getValue());
 	printType(_node);
@@ -417,7 +417,7 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 	{
 		Location const& location(_node.getLocation());
 		*m_ostream << getIndentation() << "   Source: |"
-				   << m_source.substr(location.start, location.end - location.start) << "|\n";
+				   << m_source.substr(location.start, location.end - location.start) << "|" << std::endl;
 	}
 }
 
@@ -436,7 +436,7 @@ std::string ASTPrinter::getIndentation() const
 
 void ASTPrinter::writeLine(std::string const& _line)
 {
-	*m_ostream << getIndentation() << _line << '\n';
+	*m_ostream << getIndentation() << _line << std::endl;
 }
 
 }
