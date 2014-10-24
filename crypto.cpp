@@ -27,37 +27,163 @@
 #include <libdevcore/Log.h>
 #include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
+#include <libdevcrypto/EC.h>
 #include "TestHelperCrypto.h"
 
 using namespace std;
 using namespace dev;
-
-namespace dev
-{
-namespace crypto
-{
-
-inline CryptoPP::AutoSeededRandomPool& PRNG() {
-	static CryptoPP::AutoSeededRandomPool prng;
-	return prng;
-}
-	
-}
-}
-
+using namespace dev::crypto;
 using namespace CryptoPP;
 
-BOOST_AUTO_TEST_SUITE(crypto)
+BOOST_AUTO_TEST_SUITE(devcrypto)
+
+BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
+{
+	string message("Now is the time for all good persons to come to the aide of humanity.");
+	bytes m = asBytes(message);
+	bytesConstRef bcr(&m);
+
+	KeyPair k = KeyPair::create();
+	bytes cipher;
+	encrypt(k.pub(), bcr, cipher);
+	assert(cipher != asBytes(message) && cipher.size() > 0);
+	
+	bytes plain;
+	decrypt(k.sec(), bytesConstRef(&cipher), plain);
+	
+	assert(asString(plain) == message);
+	assert(plain == asBytes(message));
+}
+
+BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
+{
+	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Encryptor e(d.GetKey());
+	
+	Secret s;
+	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	
+	Public p;
+	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+	
+	assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
+	
+	Secret previous = s;
+	for (auto i = 0; i < 30; i++)
+	{
+		ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+		ECIES<ECP>::Encryptor e(d.GetKey());
+		
+		Secret s;
+		pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+		assert(s != previous);
+		
+		Public p;
+		pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+
+		assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(cryptopp_keys_cryptor_sipaseckp256k1)
+{
+	KeyPair k = KeyPair::create();
+	Secret s = k.sec();
+	
+	// Convert secret to exponent used by pp
+	Integer e = pp::ExponentFromSecret(s);
+
+	// Test that exported DL_EC private is same as exponent from Secret
+	CryptoPP::DL_PrivateKey_EC<CryptoPP::ECP> privatek;
+	privatek.AccessGroupParameters().Initialize(pp::secp256k1());
+	privatek.SetPrivateExponent(e);
+	assert(e == privatek.GetPrivateExponent());
+	
+	// Test that exported secret is same as decryptor(privatek) secret
+	ECIES<ECP>::Decryptor d;
+	d.AccessKey().AccessGroupParameters().Initialize(pp::secp256k1());
+	d.AccessKey().SetPrivateExponent(e);
+	assert(d.AccessKey().GetPrivateExponent() == e);
+	
+	// Test that decryptor->encryptor->public == private->makepublic->public
+	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pubk;
+	pubk.AccessGroupParameters().Initialize(pp::secp256k1());
+	privatek.MakePublicKey(pubk);
+	
+	ECIES<ECP>::Encryptor enc(d);
+	assert(pubk.GetPublicElement() == enc.AccessKey().GetPublicElement());
+	
+	// Test against sipa/seckp256k1
+	Public p;
+	pp::PublicFromExponent(pp::ExponentFromSecret(s), p);
+	assert(toAddress(s) == dev::right160(dev::sha3(p.ref())));
+	assert(k.pub() == p);
+}
+
+BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
+{
+	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Encryptor e(d.GetKey());
+
+	Secret s;
+	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	Public p;
+	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+	Address addr = right160(dev::sha3(p.ref()));
+	assert(toAddress(s) == addr);
+	
+	KeyPair l(s);
+	assert(l.address() == addr);
+	
+	DL_PublicKey_EC<ECP> pub;
+	pub.Initialize(pp::secp256k1(), pp::PointFromPublic(p));
+	assert(pub.GetPublicElement() == e.GetKey().GetPublicElement());
+
+	KeyPair k = KeyPair::create();
+	Public p2;
+	pp::PublicFromExponent(pp::ExponentFromSecret(k.sec()), p2);
+	assert(k.pub() == p2);
+	
+	Address a = k.address();
+	Address a2 = toAddress(k.sec());
+	assert(a2 == a);
+}
+
+BOOST_AUTO_TEST_CASE(ecies_eckeypair)
+{
+	KeyPair k = KeyPair::create();
+
+	string message("Now is the time for all good persons to come to the aide of humanity.");
+	string original = message;
+	
+	bytes b = asBytes(message);
+	encrypt(k.pub(), b);
+	assert(b != asBytes(original));
+
+	decrypt(k.sec(), b);
+	assert(b == asBytes(original));
+}
+
+BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
+{
+	// New connections require new ECDH keypairs
+	// Every new connection requires a new EC keypair
+	// Every new trust requires a new EC keypair
+	// All connections should share seed for PRF (or PRNG) for nonces
+	
+	
+	
+	
+	
+}
 
 BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 {
 	cnote << "Testing cryptopp_ecies_message...";
 
-	string const message("Now is the time for all good men to come to the aide of humanity.");
+	string const message("Now is the time for all good persons to come to the aide of humanity.");
 
-	AutoSeededRandomPool prng;
-
-	ECIES<ECP>::Decryptor localDecryptor(prng, ASN1::secp256r1());
+	ECIES<ECP>::Decryptor localDecryptor(pp::PRNG(), pp::secp256k1());
 	SavePrivateKey(localDecryptor.GetPrivateKey());
 	
 	ECIES<ECP>::Encryptor localEncryptor(localDecryptor);
@@ -65,31 +191,31 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 
 	ECIES<ECP>::Decryptor futureDecryptor;
 	LoadPrivateKey(futureDecryptor.AccessPrivateKey());
-	futureDecryptor.GetPrivateKey().ThrowIfInvalid(prng, 3);
+	futureDecryptor.GetPrivateKey().ThrowIfInvalid(pp::PRNG(), 3);
 	
 	ECIES<ECP>::Encryptor futureEncryptor;
 	LoadPublicKey(futureEncryptor.AccessPublicKey());
-	futureEncryptor.GetPublicKey().ThrowIfInvalid(prng, 3);
+	futureEncryptor.GetPublicKey().ThrowIfInvalid(pp::PRNG(), 3);
 
 	// encrypt/decrypt with local
 	string cipherLocal;
-	StringSource ss1 (message, true, new PK_EncryptorFilter(prng, localEncryptor, new StringSink(cipherLocal) ) );
+	StringSource ss1 (message, true, new PK_EncryptorFilter(pp::PRNG(), localEncryptor, new StringSink(cipherLocal) ) );
 	string plainLocal;
-	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(prng, localDecryptor, new StringSink(plainLocal) ) );
+	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG(), localDecryptor, new StringSink(plainLocal) ) );
 
 	// encrypt/decrypt with future
 	string cipherFuture;
-	StringSource ss3 (message, true, new PK_EncryptorFilter(prng, futureEncryptor, new StringSink(cipherFuture) ) );
+	StringSource ss3 (message, true, new PK_EncryptorFilter(pp::PRNG(), futureEncryptor, new StringSink(cipherFuture) ) );
 	string plainFuture;
-	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(prng, futureDecryptor, new StringSink(plainFuture) ) );
+	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG(), futureDecryptor, new StringSink(plainFuture) ) );
 	
 	// decrypt local w/future
 	string plainFutureFromLocal;
-	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(prng, futureDecryptor, new StringSink(plainFutureFromLocal) ) );
+	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG(), futureDecryptor, new StringSink(plainFutureFromLocal) ) );
 	
 	// decrypt future w/local
 	string plainLocalFromFuture;
-	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(prng, localDecryptor, new StringSink(plainLocalFromFuture) ) );
+	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG(), localDecryptor, new StringSink(plainLocalFromFuture) ) );
 	
 	
 	assert(plainLocal == message);
@@ -98,98 +224,112 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 	assert(plainLocalFromFuture == plainLocal);
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_ecdh_prime)
+BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 {
-	cnote << "Testing cryptopp_ecdh_prime...";
+	const int aesKeyLen = 16;
+	assert(sizeof(char) == sizeof(byte));
 	
-	using namespace CryptoPP;
-	OID curve = ASN1::secp256r1();
-
-	ECDH<ECP>::Domain dhLocal(curve);
-	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
-	SecByteBlock pubLocal(dhLocal.PublicKeyLength());
-	dhLocal.GenerateKeyPair(dev::crypto::PRNG(), privLocal, pubLocal);
+	// generate test key
+	AutoSeededRandomPool rng;
+	SecByteBlock key(0x00, aesKeyLen);
+	rng.GenerateBlock(key, key.size());
 	
-	ECDH<ECP>::Domain dhRemote(curve);
-	SecByteBlock privRemote(dhRemote.PrivateKeyLength());
-	SecByteBlock pubRemote(dhRemote.PublicKeyLength());
-	dhRemote.GenerateKeyPair(dev::crypto::PRNG(), privRemote, pubRemote);
+	// cryptopp uses IV as nonce/counter which is same as using nonce w/0 ctr
+	byte ctr[AES::BLOCKSIZE];
+	rng.GenerateBlock(ctr, sizeof(ctr));
 	
-	assert(dhLocal.AgreedValueLength() == dhRemote.AgreedValueLength());
+	string text = "Now is the time for all good persons to come to the aide of humanity.";
+	// c++11 ftw
+	unsigned char const* in = (unsigned char*)&text[0];
+	unsigned char* out = (unsigned char*)&text[0];
+	string original = text;
 	
-	// local: send public to remote; remote: send public to local
+	string cipherCopy;
+	try
+	{
+		CTR_Mode<AES>::Encryption e;
+		e.SetKeyWithIV(key, key.size(), ctr);
+		e.ProcessData(out, in, text.size());
+		assert(text != original);
+		cipherCopy = text;
+	}
+	catch(CryptoPP::Exception& e)
+	{
+		cerr << e.what() << endl;
+	}
 	
-	// Local
-	SecByteBlock sharedLocal(dhLocal.AgreedValueLength());
-	assert(dhLocal.Agree(sharedLocal, privLocal, pubRemote));
+	try
+	{
+		CTR_Mode< AES >::Decryption d;
+		d.SetKeyWithIV(key, key.size(), ctr);
+		d.ProcessData(out, in, text.size());
+		assert(text == original);
+	}
+	catch(CryptoPP::Exception& e)
+	{
+		cerr << e.what() << endl;
+	}
 	
-	// Remote
-	SecByteBlock sharedRemote(dhRemote.AgreedValueLength());
-	assert(dhRemote.Agree(sharedRemote, privRemote, pubLocal));
 	
-	// Test
-	Integer ssLocal, ssRemote;
-	ssLocal.Decode(sharedLocal.BytePtr(), sharedLocal.SizeInBytes());
-	ssRemote.Decode(sharedRemote.BytePtr(), sharedRemote.SizeInBytes());
+	// reencrypt ciphertext...
+	try
+	{
+		assert(cipherCopy != text);
+		in = (unsigned char*)&cipherCopy[0];
+		out = (unsigned char*)&cipherCopy[0];
+		
+		CTR_Mode<AES>::Encryption e;
+		e.SetKeyWithIV(key, key.size(), ctr);
+		e.ProcessData(out, in, text.size());
+		
+		// yep, ctr mode.
+		assert(cipherCopy == original);
+	}
+	catch(CryptoPP::Exception& e)
+	{
+		cerr << e.what() << endl;
+	}
 	
-	assert(ssLocal != 0);
-	assert(ssLocal == ssRemote);
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_ecdh_aes128_cbc_noauth)
+BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 {
-	// ECDH gives 256-bit shared while aes uses 128-bits
-	// Use first 128-bits of shared secret as symmetric key
-	// IV is 0
-	// New connections require new ECDH keypairs
+	const int aesKeyLen = 16;
+	assert(sizeof(char) == sizeof(byte));
+	
+	AutoSeededRandomPool rng;
+	SecByteBlock key(0x00, aesKeyLen);
+	rng.GenerateBlock(key, key.size());
+	
+	// Generate random IV
+	byte iv[AES::BLOCKSIZE];
+	rng.GenerateBlock(iv, AES::BLOCKSIZE);
+	
+	string string128("AAAAAAAAAAAAAAAA");
+	string plainOriginal = string128;
+	
+	CryptoPP::CBC_Mode<Rijndael>::Encryption cbcEncryption(key, key.size(), iv);
+	cbcEncryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
+	assert(string128 != plainOriginal);
+	
+	CBC_Mode<Rijndael>::Decryption cbcDecryption(key, key.size(), iv);
+	cbcDecryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
+	assert(plainOriginal == string128);
 	
 	
+	// plaintext whose size isn't divisible by block size must use stream filter for padding
+	string string192("AAAAAAAAAAAAAAAABBBBBBBB");
+	plainOriginal = string192;
+
+	string cipher;
+	StreamTransformationFilter* aesStream = new StreamTransformationFilter(cbcEncryption, new StringSink(cipher));
+	StringSource source(string192, true, aesStream);
+	assert(cipher.size() == 32);
+
+	cbcDecryption.ProcessData((byte*)&cipher[0], (byte*)&string192[0], cipher.size());
+	assert(string192 == plainOriginal);
 }
-	
-BOOST_AUTO_TEST_CASE(cryptopp_eth_fbba)
-{
-	// Initial Authentication:
-	//
-	// New/Known Peer:
-	// pubkeyL = knownR? ? myKnown : myECDH
-	// pubkeyR = knownR? ? theirKnown : theirECDH
-	//
-	// Initial message = hmac(k=sha3(shared-secret[128..255]), address(pubkeyL)) || ECIES encrypt(pubkeyR, pubkeyL)
-	//
-	// Key Exchange (this could occur after handshake messages):
-	// If peers do not know each other they will need to exchange public keys.
-	//
-	// Drop ECDH (this could occur after handshake messages):
-	// After authentication and/or key exchange, both sides generate shared key
-	// from their 'known' keys and use this to encrypt all future messages.
-	//
-	// v2: If one side doesn't trust the other then a single-use key maybe sent.
-	// This will need to be tracked for future connections; when non-trusting peer
-	// wants to trust the other, it can request that it's old, 'new', public key be
-	// accepted. And, if the peer *really* doesn't trust the other side, it can request
-	// that a new, 'new', public key be accepted.
-	//
-	// Handshake (all or nothing, padded):
-	// All Peers (except blacklisted):
-	//
-	//
-	// New Peer:
-	//
-	//
-	// Known Untrusted Peer:
-	//
-	//
-	// Known Trusted Peer:
-	//
-	//
-	// Blacklisted Peeer:
-	// Already dropped by now.
-	//
-	//
-	// MAC:
-	// ...
-}
-	
+
 BOOST_AUTO_TEST_CASE(eth_keypairs)
 {
 	cnote << "Testing Crypto...";
