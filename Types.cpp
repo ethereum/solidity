@@ -20,6 +20,7 @@
  * Solidity data types
  */
 
+#include <cassert>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libsolidity/Types.h>
@@ -51,7 +52,7 @@ std::shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 	else if (_typeToken == Token::BOOL)
 		return std::make_shared<BoolType>();
 	else
-		BOOST_ASSERT(false); // @todo add other tyes
+		assert(false); // @todo add other tyes
 }
 
 std::shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
@@ -61,7 +62,7 @@ std::shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _
 
 std::shared_ptr<Type> Type::fromMapping(Mapping const&)
 {
-	BOOST_ASSERT(false); //@todo not yet implemented
+	assert(false); //@todo not yet implemented
 	return std::shared_ptr<Type>();
 }
 
@@ -92,7 +93,7 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 {
 	if (isAddress())
 		_bits = 160;
-	BOOST_ASSERT(_bits > 0 && _bits <= 256 && _bits % 8 == 0);
+	assert(_bits > 0 && _bits <= 256 && _bits % 8 == 0);
 }
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const

@@ -50,9 +50,9 @@
  * Solidity scanner.
  */
 
+#include <cassert>
 #include <algorithm>
 #include <tuple>
-
 #include <libsolidity/Scanner.h>
 
 namespace dev
@@ -118,7 +118,7 @@ void Scanner::reset(CharStream const& _source)
 
 bool Scanner::scanHexNumber(char& o_scannedNumber, int _expectedLength)
 {
-	BOOST_ASSERT(_expectedLength <= 4);  // prevent overflow
+	assert(_expectedLength <= 4);  // prevent overflow
 	char x = 0;
 	for (int i = 0; i < _expectedLength; i++)
 	{
@@ -178,7 +178,7 @@ Token::Value Scanner::skipSingleLineComment()
 
 Token::Value Scanner::skipMultiLineComment()
 {
-	BOOST_ASSERT(m_char == '*');
+	assert(m_char == '*');
 	advance();
 	while (!isSourcePastEndOfInput())
 	{
@@ -471,7 +471,7 @@ void Scanner::scanDecimalDigits()
 
 Token::Value Scanner::scanNumber(bool _periodSeen)
 {
-	BOOST_ASSERT(IsDecimalDigit(m_char));  // the first digit of the number or the fraction
+	assert(IsDecimalDigit(m_char));  // the first digit of the number or the fraction
 	enum { DECIMAL, HEX, OCTAL, IMPLICIT_OCTAL, BINARY } kind = DECIMAL;
 	LiteralScope literal(this);
 	if (_periodSeen)
@@ -513,7 +513,7 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	// scan exponent, if any
 	if (m_char == 'e' || m_char == 'E')
 	{
-		BOOST_ASSERT(kind != HEX);  // 'e'/'E' must be scanned as part of the hex number
+		assert(kind != HEX);  // 'e'/'E' must be scanned as part of the hex number
 		if (kind != DECIMAL) return Token::ILLEGAL;
 		// scan exponent
 		addLiteralCharAndAdvance();
@@ -609,7 +609,7 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 
 static Token::Value KeywordOrIdentifierToken(std::string const& input)
 {
-	BOOST_ASSERT(!input.empty());
+	assert(!input.empty());
 	int const kMinLength = 2;
 	int const kMaxLength = 10;
 	if (input.size() < kMinLength || input.size() > kMaxLength)
@@ -637,7 +637,7 @@ case ch:
 
 Token::Value Scanner::scanIdentifierOrKeyword()
 {
-	BOOST_ASSERT(IsIdentifierStart(m_char));
+	assert(IsIdentifierStart(m_char));
 	LiteralScope literal(this);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
@@ -659,7 +659,7 @@ char CharStream::advanceAndGet()
 
 char CharStream::rollback(size_t _amount)
 {
-	BOOST_ASSERT(m_pos >= _amount);
+	assert(m_pos >= _amount);
 	m_pos -= _amount;
 	return get();
 }

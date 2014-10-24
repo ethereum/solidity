@@ -42,8 +42,7 @@
 
 #pragma once
 
-#include <boost/assert.hpp>
-
+#include <cassert>
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 
@@ -225,7 +224,7 @@ public:
 	// (e.g. "LT" for the token LT).
 	static char const* getName(Value tok)
 	{
-		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned
+		assert(tok < NUM_TOKENS);  // tok is unsigned
 		return m_name[tok];
 	}
 
@@ -252,7 +251,7 @@ public:
 
 	static Value negateCompareOp(Value op)
 	{
-		BOOST_ASSERT(isArithmeticCompareOp(op));
+		assert(isArithmeticCompareOp(op));
 		switch (op)
 		{
 		case EQ:
@@ -268,14 +267,14 @@ public:
 		case GTE:
 			return LT;
 		default:
-			BOOST_ASSERT(false); // should not get here
+			assert(false); // should not get here
 			return op;
 		}
 	}
 
 	static Value reverseCompareOp(Value op)
 	{
-		BOOST_ASSERT(isArithmeticCompareOp(op));
+		assert(isArithmeticCompareOp(op));
 		switch (op)
 		{
 		case EQ:
@@ -291,14 +290,14 @@ public:
 		case GTE:
 			return LTE;
 		default:
-			BOOST_ASSERT(false); // should not get here
+			assert(false); // should not get here
 			return op;
 		}
 	}
 
 	static Value AssignmentToBinaryOp(Value op)
 	{
-		BOOST_ASSERT(isAssignmentOp(op) && op != ASSIGN);
+		assert(isAssignmentOp(op) && op != ASSIGN);
 		return Token::Value(op + (BIT_OR - ASSIGN_BIT_OR));
 	}
 
@@ -312,7 +311,7 @@ public:
 	// have a (unique) string (e.g. an IDENTIFIER).
 	static char const* toString(Value tok)
 	{
-		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned.
+		assert(tok < NUM_TOKENS);  // tok is unsigned.
 		return m_string[tok];
 	}
 
@@ -320,7 +319,7 @@ public:
 	// operators; returns 0 otherwise.
 	static int precedence(Value tok)
 	{
-		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned.
+		assert(tok < NUM_TOKENS);  // tok is unsigned.
 		return m_precedence[tok];
 	}
 

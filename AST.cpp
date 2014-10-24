@@ -291,7 +291,7 @@ void Break::checkTypeRequirements()
 
 void Return::checkTypeRequirements()
 {
-	BOOST_ASSERT(m_returnParameters);
+	assert(m_returnParameters);
 	if (m_returnParameters->getParameters().size() != 1)
 		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
 											  "than in returns declaration."));
@@ -357,7 +357,7 @@ void BinaryOperation::checkTypeRequirements()
 		m_type = std::make_shared<BoolType>();
 	else
 	{
-		BOOST_ASSERT(Token::isBinaryOp(m_operator));
+		assert(Token::isBinaryOp(m_operator));
 		m_type = m_commonType;
 		if (!m_commonType->acceptsBinaryOperator(m_operator))
 			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
@@ -374,7 +374,7 @@ void FunctionCall::checkTypeRequirements()
 	if (isTypeConversion())
 	{
 		TypeType const* type = dynamic_cast<TypeType const*>(expressionType);
-		BOOST_ASSERT(type);
+		assert(type);
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
 		if (m_arguments.size() != 1)
@@ -390,7 +390,7 @@ void FunctionCall::checkTypeRequirements()
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
 		FunctionType const* function = dynamic_cast<FunctionType const*>(expressionType);
-		BOOST_ASSERT(function);
+		assert(function);
 		FunctionDefinition const& fun = function->getFunction();
 		std::vector<ASTPointer<VariableDeclaration>> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
@@ -414,19 +414,19 @@ bool FunctionCall::isTypeConversion() const
 
 void MemberAccess::checkTypeRequirements()
 {
-	BOOST_ASSERT(false); // not yet implemented
+	assert(false); // not yet implemented
 	// m_type = ;
 }
 
 void IndexAccess::checkTypeRequirements()
 {
-	BOOST_ASSERT(false); // not yet implemented
+	assert(false); // not yet implemented
 	// m_type = ;
 }
 
 void Identifier::checkTypeRequirements()
 {
-	BOOST_ASSERT(m_referencedDeclaration);
+	assert(m_referencedDeclaration);
 	//@todo these dynamic casts here are not really nice...
 	// is i useful to have an AST visitor here?
 	// or can this already be done in NameAndTypeResolver?
@@ -467,7 +467,7 @@ void Identifier::checkTypeRequirements()
 		m_type = std::make_shared<TypeType>(std::make_shared<ContractType>(*contractDef));
 		return;
 	}
-	BOOST_ASSERT(false); // declaration reference of unknown/forbidden type
+	assert(false); // declaration reference of unknown/forbidden type
 }
 
 void ElementaryTypeNameExpression::checkTypeRequirements()

@@ -52,8 +52,6 @@
 
 #pragma once
 
-#include <boost/assert.hpp>
-
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonData.h>

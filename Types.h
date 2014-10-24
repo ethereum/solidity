@@ -25,7 +25,6 @@
 #include <memory>
 #include <string>
 #include <boost/noncopyable.hpp>
-#include <boost/assert.hpp>
 #include <libdevcore/Common.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Token.h>
