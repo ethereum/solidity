@@ -4,8 +4,6 @@ aux_source_directory(. SRC_LIST)
 list(REMOVE_ITEM SRC_LIST "./createRandomTest.cpp")
 
 include_directories(..)
-link_directories(../libethcore)
-link_directories(../libethereum)
 
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
