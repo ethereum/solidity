@@ -24,57 +24,59 @@
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Exceptions.h>
 
+using namespace std;
+
 namespace dev
 {
 namespace solidity
 {
 
-void SourceReferenceFormatter::printSourceLocation(std::ostream& _stream,
+void SourceReferenceFormatter::printSourceLocation(ostream& _stream,
 												   Location const& _location,
 												   Scanner const& _scanner)
 {
 	int startLine;
 	int startColumn;
-	std::tie(startLine, startColumn) = _scanner.translatePositionToLineColumn(_location.start);
+	tie(startLine, startColumn) = _scanner.translatePositionToLineColumn(_location.start);
 	_stream << "starting at line " << (startLine + 1) << ", column " << (startColumn + 1) << "\n";
 	int endLine;
 	int endColumn;
-	std::tie(endLine, endColumn) = _scanner.translatePositionToLineColumn(_location.end);
+	tie(endLine, endColumn) = _scanner.translatePositionToLineColumn(_location.end);
 	if (startLine == endLine)
 	{
-		_stream << _scanner.getLineAtPosition(_location.start) << std::endl
-				<< std::string(startColumn, ' ') << "^";
+		_stream << _scanner.getLineAtPosition(_location.start) << endl
+				<< string(startColumn, ' ') << "^";
 		if (endColumn > startColumn + 2)
-			_stream << std::string(endColumn - startColumn - 2, '-');
+			_stream << string(endColumn - startColumn - 2, '-');
 		if (endColumn > startColumn + 1)
 			_stream << "^";
-		_stream << std::endl;
+		_stream << endl;
 	}
 	else
-		_stream << _scanner.getLineAtPosition(_location.start) << std::endl
-				<< std::string(startColumn, ' ') << "^\n"
+		_stream << _scanner.getLineAtPosition(_location.start) << endl
+				<< string(startColumn, ' ') << "^\n"
 				<< "Spanning multiple lines.\n";
 }
 
-void SourceReferenceFormatter::printSourcePosition(std::ostream& _stream,
+void SourceReferenceFormatter::printSourcePosition(ostream& _stream,
 												   int _position,
 												   const Scanner& _scanner)
 {
 	int line;
 	int column;
-	std::tie(line, column) = _scanner.translatePositionToLineColumn(_position);
-	_stream << "at line " << (line + 1) << ", column " << (column + 1) << std::endl
-			<< _scanner.getLineAtPosition(_position) << std::endl
-			<< std::string(column, ' ') << "^" << std::endl;
+	tie(line, column) = _scanner.translatePositionToLineColumn(_position);
+	_stream << "at line " << (line + 1) << ", column " << (column + 1) << endl
+			<< _scanner.getLineAtPosition(_position) << endl
+			<< string(column, ' ') << "^" << endl;
 }
 
-void SourceReferenceFormatter::printExceptionInformation(std::ostream& _stream,
+void SourceReferenceFormatter::printExceptionInformation(ostream& _stream,
 														 Exception const& _exception,
-														 std::string const& _name,
+														 string const& _name,
 														 Scanner const& _scanner)
 {
 	_stream << _name;
-	if (std::string const* description = boost::get_error_info<errinfo_comment>(_exception))
+	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		_stream << ": " << *description;
 
 	if (int const* position = boost::get_error_info<errinfo_sourcePosition>(_exception))

@@ -25,6 +25,8 @@
 #include <libsolidity/AST.h>
 #include <libsolidity/Exceptions.h>
 
+using namespace std;
+
 namespace dev
 {
 namespace solidity
@@ -67,7 +69,7 @@ Declaration* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name
 }
 
 
-DeclarationRegistrationHelper::DeclarationRegistrationHelper(std::map<ASTNode*, Scope>& _scopes,
+DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode*, Scope>& _scopes,
 															 ASTNode& _astRoot):
 	m_scopes(_scopes), m_currentScope(&m_scopes[nullptr])
 {
@@ -119,9 +121,9 @@ void DeclarationRegistrationHelper::endVisit(VariableDeclaration&)
 
 void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _node)
 {
-	std::map<ASTNode*, Scope>::iterator iter;
+	map<ASTNode*, Scope>::iterator iter;
 	bool newlyAdded;
-	std::tie(iter, newlyAdded) = m_scopes.emplace(&_node, Scope(m_currentScope));
+	tie(iter, newlyAdded) = m_scopes.emplace(&_node, Scope(m_currentScope));
 	assert(newlyAdded);
 	m_currentScope = &iter->second;
 }

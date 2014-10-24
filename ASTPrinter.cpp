@@ -23,17 +23,19 @@
 #include <libsolidity/ASTPrinter.h>
 #include <libsolidity/AST.h>
 
+using namespace std;
+
 namespace dev
 {
 namespace solidity
 {
 
-ASTPrinter::ASTPrinter(ASTPointer<ASTNode> const& _ast, std::string const& _source):
+ASTPrinter::ASTPrinter(ASTPointer<ASTNode> const& _ast, string const& _source):
 	m_indentation(0), m_source(_source), m_ast(_ast)
 {
 }
 
-void ASTPrinter::print(std::ostream& _stream)
+void ASTPrinter::print(ostream& _stream)
 {
 	m_ostream = &_stream;
 	m_ast->accept(*this);
@@ -87,7 +89,7 @@ bool ASTPrinter::visit(TypeName& _node)
 
 bool ASTPrinter::visit(ElementaryTypeName& _node)
 {
-	writeLine(std::string("ElementaryTypeName ") + Token::toString(_node.getTypeName()));
+	writeLine(string("ElementaryTypeName ") + Token::toString(_node.getTypeName()));
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -179,7 +181,7 @@ bool ASTPrinter::visit(Expression& _node)
 
 bool ASTPrinter::visit(Assignment& _node)
 {
-	writeLine(std::string("Assignment using operator ") + Token::toString(_node.getAssignmentOperator()));
+	writeLine(string("Assignment using operator ") + Token::toString(_node.getAssignmentOperator()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -187,7 +189,7 @@ bool ASTPrinter::visit(Assignment& _node)
 
 bool ASTPrinter::visit(UnaryOperation& _node)
 {
-	writeLine(std::string("UnaryOperation (") + (_node.isPrefixOperation() ? "prefix" : "postfix") +
+	writeLine(string("UnaryOperation (") + (_node.isPrefixOperation() ? "prefix" : "postfix") +
 			  ") " + Token::toString(_node.getOperator()));
 	printType(_node);
 	printSourcePart(_node);
@@ -196,7 +198,7 @@ bool ASTPrinter::visit(UnaryOperation& _node)
 
 bool ASTPrinter::visit(BinaryOperation& _node)
 {
-	writeLine(std::string("BinaryOperation using operator ") + Token::toString(_node.getOperator()));
+	writeLine(string("BinaryOperation using operator ") + Token::toString(_node.getOperator()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -236,7 +238,7 @@ bool ASTPrinter::visit(PrimaryExpression& _node)
 
 bool ASTPrinter::visit(Identifier& _node)
 {
-	writeLine(std::string("Identifier ") + _node.getName());
+	writeLine(string("Identifier ") + _node.getName());
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -244,7 +246,7 @@ bool ASTPrinter::visit(Identifier& _node)
 
 bool ASTPrinter::visit(ElementaryTypeNameExpression& _node)
 {
-	writeLine(std::string("ElementaryTypeNameExpression ") + Token::toString(_node.getTypeToken()));
+	writeLine(string("ElementaryTypeNameExpression ") + Token::toString(_node.getTypeToken()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -255,7 +257,7 @@ bool ASTPrinter::visit(Literal& _node)
 	char const* tokenString = Token::toString(_node.getToken());
 	if (!tokenString)
 		tokenString = "[no token]";
-	writeLine(std::string("Literal, token: ") + tokenString + " value: " + _node.getValue());
+	writeLine(string("Literal, token: ") + tokenString + " value: " + _node.getValue());
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -417,7 +419,7 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 	{
 		Location const& location(_node.getLocation());
 		*m_ostream << getIndentation() << "   Source: |"
-				   << m_source.substr(location.start, location.end - location.start) << "|" << std::endl;
+				   << m_source.substr(location.start, location.end - location.start) << "|" << endl;
 	}
 }
 
@@ -429,14 +431,14 @@ void ASTPrinter::printType(Expression const& _expression)
 		*m_ostream << getIndentation() << "   Type unknown.\n";
 }
 
-std::string ASTPrinter::getIndentation() const
+string ASTPrinter::getIndentation() const
 {
-	return std::string(m_indentation * 2, ' ');
+	return string(m_indentation * 2, ' ');
 }
 
-void ASTPrinter::writeLine(std::string const& _line)
+void ASTPrinter::writeLine(string const& _line)
 {
-	*m_ostream << getIndentation() << _line << std::endl;
+	*m_ostream << getIndentation() << _line << endl;
 }
 
 }

@@ -55,6 +55,8 @@
 #include <tuple>
 #include <libsolidity/Scanner.h>
 
+using namespace std;
+
 namespace dev
 {
 namespace solidity
@@ -607,7 +609,7 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD("while", Token::WHILE)                                             \
 
 
-static Token::Value KeywordOrIdentifierToken(std::string const& input)
+static Token::Value KeywordOrIdentifierToken(string const& input)
 {
 	assert(!input.empty());
 	int const kMinLength = 2;
@@ -664,37 +666,36 @@ char CharStream::rollback(size_t _amount)
 	return get();
 }
 
-std::string CharStream::getLineAtPosition(int _position) const
+string CharStream::getLineAtPosition(int _position) const
 {
 	// if _position points to \n, it returns the line before the \n
-	using size_type = std::string::size_type;
-	size_type searchStart = std::min<size_type>(m_source.size(), _position);
+	using size_type = string::size_type;
+	size_type searchStart = min<size_type>(m_source.size(), _position);
 	if (searchStart > 0)
 		searchStart--;
 	size_type lineStart = m_source.rfind('\n', searchStart);
-	if (lineStart == std::string::npos)
+	if (lineStart == string::npos)
 		lineStart = 0;
 	else
 		lineStart++;
-	return m_source.substr(lineStart,
-						   std::min(m_source.find('\n', lineStart),
-									m_source.size()) - lineStart);
+	return m_source.substr(lineStart, min(m_source.find('\n', lineStart),
+										  m_source.size()) - lineStart);
 }
 
-std::tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
+tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 {
-	using size_type = std::string::size_type;
-	size_type searchPosition = std::min<size_type>(m_source.size(), _position);
-	int lineNumber = std::count(m_source.begin(), m_source.begin() + searchPosition, '\n');
+	using size_type = string::size_type;
+	size_type searchPosition = min<size_type>(m_source.size(), _position);
+	int lineNumber = count(m_source.begin(), m_source.begin() + searchPosition, '\n');
 	size_type lineStart;
 	if (searchPosition == 0)
 		lineStart = 0;
 	else
 	{
 		lineStart = m_source.rfind('\n', searchPosition - 1);
-		lineStart = lineStart == std::string::npos ? 0 : lineStart + 1;
+		lineStart = lineStart == string::npos ? 0 : lineStart + 1;
 	}
-	return std::tuple<int, int>(lineNumber, searchPosition - lineStart);
+	return tuple<int, int>(lineNumber, searchPosition - lineStart);
 }
 
 
