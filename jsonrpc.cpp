@@ -27,8 +27,8 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonJS.h>
 #include <libwebthree/WebThree.h>
-#include <libethrpc/WebThreeStubServer.h>
-#include <libethrpc/CorsHttpServer.h>
+#include <libweb3jsonrpc/WebThreeStubServer.h>
+#include <libweb3jsonrpc/CorsHttpServer.h>
 #include <jsonrpc/connectors/httpserver.h>
 #include <jsonrpc/connectors/httpclient.h>
 #include <set>
