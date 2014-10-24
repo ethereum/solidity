@@ -291,7 +291,7 @@ void Break::checkTypeRequirements()
 
 void Return::checkTypeRequirements()
 {
-	BOOST_ASSERT(m_returnParameters != nullptr);
+	BOOST_ASSERT(m_returnParameters);
 	if (m_returnParameters->getParameters().size() != 1)
 		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
 											  "than in returns declaration."));
@@ -374,7 +374,7 @@ void FunctionCall::checkTypeRequirements()
 	if (category == Type::Category::TYPE)
 	{
 		TypeType const* type = dynamic_cast<TypeType const*>(&expressionType);
-		BOOST_ASSERT(type != nullptr);
+		BOOST_ASSERT(type);
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
 		if (m_arguments.size() != 1)
@@ -390,7 +390,7 @@ void FunctionCall::checkTypeRequirements()
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
 		FunctionType const* function = dynamic_cast<FunctionType const*>(&expressionType);
-		BOOST_ASSERT(function != nullptr);
+		BOOST_ASSERT(function);
 		FunctionDefinition const& fun = function->getFunction();
 		std::vector<ASTPointer<VariableDeclaration>> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
@@ -423,7 +423,7 @@ void IndexAccess::checkTypeRequirements()
 
 void Identifier::checkTypeRequirements()
 {
-	BOOST_ASSERT(m_referencedDeclaration != nullptr);
+	BOOST_ASSERT(m_referencedDeclaration);
 	//@todo these dynamic casts here are not really nice...
 	// is i useful to have an AST visitor here?
 	// or can this already be done in NameAndTypeResolver?
@@ -433,7 +433,7 @@ void Identifier::checkTypeRequirements()
 	// var y = x;
 	// the type of x is not yet determined.
 	VariableDeclaration* variable = dynamic_cast<VariableDeclaration*>(m_referencedDeclaration);
-	if (variable != nullptr)
+	if (variable)
 	{
 		if (!variable->getType())
 			BOOST_THROW_EXCEPTION(createTypeError("Variable referenced before type "
@@ -443,14 +443,14 @@ void Identifier::checkTypeRequirements()
 	}
 	//@todo can we unify these with TypeName::toType()?
 	StructDefinition* structDef = dynamic_cast<StructDefinition*>(m_referencedDeclaration);
-	if (structDef != nullptr)
+	if (structDef)
 	{
 		// note that we do not have a struct type here
 		m_type = std::make_shared<TypeType>(std::make_shared<StructType>(*structDef));
 		return;
 	}
 	FunctionDefinition* functionDef = dynamic_cast<FunctionDefinition*>(m_referencedDeclaration);
-	if (functionDef != nullptr)
+	if (functionDef)
 	{
 		// a function reference is not a TypeType, because calling a TypeType converts to the type.
 		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
@@ -459,7 +459,7 @@ void Identifier::checkTypeRequirements()
 		return;
 	}
 	ContractDefinition* contractDef = dynamic_cast<ContractDefinition*>(m_referencedDeclaration);
-	if (contractDef != nullptr)
+	if (contractDef)
 	{
 		m_type = std::make_shared<TypeType>(std::make_shared<ContractType>(*contractDef));
 		return;

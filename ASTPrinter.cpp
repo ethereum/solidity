@@ -243,7 +243,7 @@ bool ASTPrinter::visit(ElementaryTypeNameExpression& _node)
 bool ASTPrinter::visit(Literal& _node)
 {
 	char const* tokenString = Token::toString(_node.getToken());
-	if (tokenString == nullptr)
+	if (!tokenString)
 		tokenString = "[no token]";
 	writeLine(std::string("Literal, token: ") + tokenString + " value: " + _node.getValue());
 	printSourcePart(_node);

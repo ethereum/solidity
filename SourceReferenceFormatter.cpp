@@ -74,18 +74,15 @@ void SourceReferenceFormatter::printExceptionInformation(std::ostream& _stream,
 														 Scanner const& _scanner)
 {
 	std::cerr << _name;
-	std::string const* description = boost::get_error_info<errinfo_comment>(_exception);
-	if (description != nullptr)
+	if (std::string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		std::cerr << ": " << *description;
 
-	int const* position = boost::get_error_info<errinfo_sourcePosition>(_exception);
-	if (position != nullptr)
+	if (int const* position = boost::get_error_info<errinfo_sourcePosition>(_exception))
 	{
 		std::cerr << " ";
 		printSourcePosition(std::cerr, *position, _scanner);
 	}
-	Location const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
-	if (location != nullptr)
+	if (Location const* location = boost::get_error_info<errinfo_sourceLocation>(_exception))
 	{
 		std::cerr << " ";
 		printSourceLocation(_stream, *location, _scanner);

@@ -169,7 +169,7 @@ public:
 		Declaration(_location, _name), m_typeName(_type) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
-	bool isTypeGivenExplicitly() const { return m_typeName.get() != nullptr; }
+	bool isTypeGivenExplicitly() const { return bool(m_typeName); }
 	TypeName* getTypeName() const { return m_typeName.get(); }
 
 	//! Returns the declared or inferred type. Can be an empty pointer if no type was explicitly
