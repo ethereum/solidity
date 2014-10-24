@@ -42,16 +42,16 @@ void SourceReferenceFormatter::printSourceLocation(std::ostream& _stream,
 	std::tie(endLine, endColumn) = _scanner.translatePositionToLineColumn(_location.end);
 	if (startLine == endLine)
 	{
-		_stream << _scanner.getLineAtPosition(_location.start) << "\n"
+		_stream << _scanner.getLineAtPosition(_location.start) << std::endl
 				<< std::string(startColumn, ' ') << "^";
 		if (endColumn > startColumn + 2)
 			_stream << std::string(endColumn - startColumn - 2, '-');
 		if (endColumn > startColumn + 1)
 			_stream << "^";
-		_stream << "\n";
+		_stream << std::endl;
 	}
 	else
-		_stream << _scanner.getLineAtPosition(_location.start) << "\n"
+		_stream << _scanner.getLineAtPosition(_location.start) << std::endl
 				<< std::string(startColumn, ' ') << "^\n"
 				<< "Spanning multiple lines.\n";
 }
@@ -63,8 +63,8 @@ void SourceReferenceFormatter::printSourcePosition(std::ostream& _stream,
 	int line;
 	int column;
 	std::tie(line, column) = _scanner.translatePositionToLineColumn(_position);
-	_stream << "at line " << (line + 1) << ", column " << (column + 1) << "\n"
-			<< _scanner.getLineAtPosition(_position) << "\n"
+	_stream << "at line " << (line + 1) << ", column " << (column + 1) << std::endl
+			<< _scanner.getLineAtPosition(_position) << std::endl
 			<< std::string(column, ' ') << "^" << std::endl;
 }
 
