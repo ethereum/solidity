@@ -51,6 +51,7 @@ std::shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 		return std::make_shared<BoolType>();
 	else
 		BOOST_ASSERT(false); // @todo add other tyes
+	return std::shared_ptr<Type>();
 }
 
 std::shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
