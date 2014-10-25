@@ -34,25 +34,24 @@
 #include <libsolidity/Compiler.h>
 #include <libsolidity/SourceReferenceFormatter.h>
 
+using namespace std;
 using namespace dev;
 using namespace solidity;
 
 void help()
 {
-	std::cout
-			<< "Usage solc [OPTIONS] <file>" << std::endl
-			<< "Options:" << std::endl
-			<< "    -h,--help  Show this help message and exit." << std::endl
-			<< "    -V,--version  Show the version and exit." << std::endl;
+	cout << "Usage solc [OPTIONS] <file>" << endl
+		 << "Options:" << endl
+		 << "    -h,--help  Show this help message and exit." << endl
+		 << "    -V,--version  Show the version and exit." << endl;
 	exit(0);
 }
 
 void version()
 {
-	std::cout
-			<< "solc, the solidity complier commandline interface " << dev::Version << std::endl
-			<< "  by Christian <c@ethdev.com>, (c) 2014." << std::endl
-			<< "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << std::endl;
+	cout << "solc, the solidity complier commandline interface " << dev::Version << endl
+		 << "  by Christian <c@ethdev.com>, (c) 2014." << endl
+		 << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
 }
 
@@ -87,10 +86,10 @@ private:
 
 int main(int argc, char** argv)
 {
-	std::string infile;
+	string infile;
 	for (int i = 1; i < argc; ++i)
 	{
-		std::string arg = argv[i];
+		string arg = argv[i];
 		if (arg == "-h" || arg == "--help")
 			help();
 		else if (arg == "-V" || arg == "--version")
@@ -98,13 +97,13 @@ int main(int argc, char** argv)
 		else
 			infile = argv[i];
 	}
-	std::string sourceCode;
+	string sourceCode;
 	if (infile.empty())
 	{
-		std::string s;
-		while (!std::cin.eof())
+		string s;
+		while (!cin.eof())
 		{
-			getline(std::cin, s);
+			getline(cin, s);
 			sourceCode.append(s);
 		}
 	}
@@ -112,7 +111,7 @@ int main(int argc, char** argv)
 		sourceCode = asString(dev::contents(infile));
 
 	ASTPointer<ContractDefinition> ast;
-	std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(CharStream(sourceCode));
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(sourceCode));
 	Parser parser;
 	try
 	{
@@ -120,39 +119,48 @@ int main(int argc, char** argv)
 	}
 	catch (ParserError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(std::cerr, exception, "Parser error", *scanner);
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Parser error", *scanner);
 		return -1;
 	}
 
-	dev::solidity::NameAndTypeResolver resolver;
+	NameAndTypeResolver resolver;
 	try
 	{
 		resolver.resolveNamesAndTypes(*ast.get());
 	}
 	catch (DeclarationError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(std::cerr, exception, "Declaration error", *scanner);
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Declaration error", *scanner);
 		return -1;
 	}
 	catch (TypeError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(std::cerr, exception, "Type error", *scanner);
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Type error", *scanner);
 		return -1;
 	}
 
-	std::cout << "Syntax tree for the contract:" << std::endl;
+	cout << "Syntax tree for the contract:" << endl;
 	dev::solidity::ASTPrinter printer(ast, sourceCode);
-	printer.print(std::cout);
+	printer.print(cout);
 
 	FirstExpressionExtractor extractor(*ast);
 
 	CompilerContext context;
 	ExpressionCompiler compiler(context);
-	compiler.compile(*extractor.getExpression());
+	try
+	{
+		compiler.compile(*extractor.getExpression());
+	}
+	catch (CompilerError const& exception)
+	{
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Compiler error", *scanner);
+		return -1;
+	}
+
 	bytes instructions = compiler.getAssembledBytecode();
-	// debug
-	std::cout << "Bytecode for the first expression: " << std::endl;
-	std::cout << eth::disassemble(instructions) << std::endl;
+
+	cout << "Bytecode for the first expression: " << endl;
+	cout << eth::disassemble(instructions) << endl;
 
 	return 0;
 }
