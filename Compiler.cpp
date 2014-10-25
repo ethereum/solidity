@@ -81,22 +81,29 @@ AssemblyItems ExpressionCompiler::compileExpression(CompilerContext& _context,
 	return compiler.getAssemblyItems();
 }
 
-void ExpressionCompiler::endVisit(Assignment& _assignment)
+bool ExpressionCompiler::visit(Assignment& _assignment)
 {
+	m_currentLValue = nullptr;
+	_assignment.getLeftHandSide().accept(*this);
+
 	Expression& rightHandSide = _assignment.getRightHandSide();
 	Token::Value op = _assignment.getAssignmentOperator();
 	if (op != Token::ASSIGN)
 	{
 		// compound assignment
-		// @todo retrieve lvalue value
 		rightHandSide.accept(*this);
 		Type const& resultType = *_assignment.getType();
 		cleanHigherOrderBitsIfNeeded(*rightHandSide.getType(), resultType);
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), resultType);
 	}
 	else
+	{
+		append(eth::Instruction::POP); //@todo do not retrieve the value in the first place
 		rightHandSide.accept(*this);
-	// @todo store value
+	}
+
+	storeInLValue(_assignment);
+	return false;
 }
 
 void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
@@ -114,30 +121,31 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 		append(eth::Instruction::BNOT);
 		break;
 	case Token::DELETE: // delete
+	{
 		// a -> a xor a (= 0).
-		// @todo this should also be an assignment
 		// @todo semantics change for complex types
 		append(eth::Instruction::DUP1);
 		append(eth::Instruction::XOR);
+		storeInLValue(_unaryOperation);
 		break;
+	}
 	case Token::INC: // ++ (pre- or postfix)
-		// @todo this should also be an assignment
-		if (_unaryOperation.isPrefixOperation())
-		{
-			append(eth::Instruction::PUSH1);
-			append(1);
-			append(eth::Instruction::ADD);
-		}
-		break;
 	case Token::DEC: // -- (pre- or postfix)
-		// @todo this should also be an assignment
-		if (_unaryOperation.isPrefixOperation())
+		if (!_unaryOperation.isPrefixOperation())
+			append(eth::Instruction::DUP1);
+		append(eth::Instruction::PUSH1);
+		append(1);
+		if (_unaryOperation.getOperator() == Token::INC)
+			append(eth::Instruction::ADD);
+		else
 		{
-			append(eth::Instruction::PUSH1);
-			append(1);
 			append(eth::Instruction::SWAP1); //@todo avoid this
 			append(eth::Instruction::SUB);
 		}
+		if (_unaryOperation.isPrefixOperation())
+			storeInLValue(_unaryOperation);
+		else
+			moveToLValue(_unaryOperation);
 		break;
 	case Token::ADD: // +
 		// unary add, so basically no-op
@@ -190,28 +198,38 @@ void ExpressionCompiler::endVisit(FunctionCall& _functionCall)
 {
 	if (_functionCall.isTypeConversion())
 	{
-		//@todo binary representation for all supported types (bool and int) is the same, so no-op
-		// here for now.
+		//@todo we only have integers and bools for now which cannot be explicitly converted
+		assert(_functionCall.getArguments().size() == 1);
+		cleanHigherOrderBitsIfNeeded(*_functionCall.getArguments().front()->getType(),
+									 *_functionCall.getType());
 	}
 	else
 	{
-		//@todo
+		//@todo: arguments are already on the stack
+		// push return label (below arguments?)
+		// jump to function label
+		// discard all but the first function return argument
 	}
 }
 
-void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
+void ExpressionCompiler::endVisit(MemberAccess&)
 {
 
 }
 
-void ExpressionCompiler::endVisit(IndexAccess& _indexAccess)
+void ExpressionCompiler::endVisit(IndexAccess&)
 {
 
 }
 
 void ExpressionCompiler::endVisit(Identifier& _identifier)
 {
-
+	m_currentLValue = _identifier.getReferencedDeclaration();
+	unsigned stackPos = stackPositionOfLValue();
+	if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_identifier.getLocation())
+											  << errinfo_comment("Stack too deep."));
+	appendDup(stackPos + 1);
 }
 
 void ExpressionCompiler::endVisit(Literal& _literal)
@@ -224,7 +242,7 @@ void ExpressionCompiler::endVisit(Literal& _literal)
 		bytes value = _literal.getType()->literalToBigEndian(_literal);
 		assert(value.size() <= 32);
 		assert(!value.empty());
-		append(static_cast<byte>(eth::Instruction::PUSH1) + static_cast<byte>(value.size() - 1));
+		appendPush(value.size());
 		append(value);
 		break;
 	}
@@ -391,11 +409,60 @@ uint32_t ExpressionCompiler::appendConditionalJump()
 	return label;
 }
 
+void ExpressionCompiler::appendPush(unsigned _number)
+{
+	assert(1 <= _number && _number <= 32);
+	append(eth::Instruction(unsigned(eth::Instruction::PUSH1) + _number - 1));
+}
+
+void ExpressionCompiler::appendDup(unsigned _number)
+{
+	assert(1 <= _number && _number <= 16);
+	append(eth::Instruction(unsigned(eth::Instruction::DUP1) + _number - 1));
+}
+
+void ExpressionCompiler::appendSwap(unsigned _number)
+{
+	assert(1 <= _number && _number <= 16);
+	append(eth::Instruction(unsigned(eth::Instruction::SWAP1) + _number - 1));
+}
+
 void ExpressionCompiler::append(bytes const& _data)
 {
 	m_assemblyItems.reserve(m_assemblyItems.size() + _data.size());
 	for (byte b: _data)
 		append(b);
+}
+
+void ExpressionCompiler::storeInLValue(Expression const& _expression)
+{
+	assert(m_currentLValue);
+	moveToLValue(_expression);
+	unsigned stackPos = stackPositionOfLValue();
+	if (stackPos > 16)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
+											  << errinfo_comment("Stack too deep."));
+	if (stackPos >= 1)
+		appendDup(stackPos);
+}
+
+void ExpressionCompiler::moveToLValue(Expression const& _expression)
+{
+	assert(m_currentLValue);
+	unsigned stackPos = stackPositionOfLValue();
+	if (stackPos > 16)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
+											  << errinfo_comment("Stack too deep."));
+	else if (stackPos > 0)
+	{
+		appendSwap(stackPos);
+		append(eth::Instruction::POP);
+	}
+}
+
+unsigned ExpressionCompiler::stackPositionOfLValue() const
+{
+	return 8; // @todo ask the context and track stack changes due to m_assemblyItems
 }
 
 

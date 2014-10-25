@@ -402,13 +402,17 @@ private:
 class Expression: public Statement
 {
 public:
-	Expression(Location const& _location): Statement(_location) {}
+	Expression(Location const& _location): Statement(_location), m_isLvalue(false) {}
 
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
+	bool isLvalue() const { return m_isLvalue; }
 
 protected:
 	//! Inferred type of the expression, only filled after a call to checkTypeRequirements().
 	std::shared_ptr<Type const> m_type;
+	//! Whether or not this expression is an lvalue, i.e. something that can be assigned to.
+	//! This is set during calls to @a checkTypeRequirements()
+	bool m_isLvalue;
 };
 
 /// @}
@@ -491,6 +495,9 @@ public:
 		Expression(_location), m_expression(_expression), m_arguments(_arguments) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
+
+	Expression& getExpression() const { return *m_expression; }
+	std::vector<ASTPointer<Expression>> const& getArguments() const { return m_arguments; }
 
 	/// Returns true if this is not an actual function call, but an explicit type conversion
 	/// or constructor call.

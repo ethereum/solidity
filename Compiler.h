@@ -87,7 +87,7 @@ private:
 class ExpressionCompiler: public ASTVisitor
 {
 public:
-	ExpressionCompiler(CompilerContext& _compilerContext): m_context(_compilerContext) {}
+	ExpressionCompiler(CompilerContext& _compilerContext): m_currentLValue(nullptr), m_context(_compilerContext) {}
 
 	/// Compile the given expression and (re-)populate the assembly item list.
 	void compile(Expression& _expression);
@@ -98,7 +98,7 @@ public:
 	static AssemblyItems compileExpression(CompilerContext& _context, Expression& _expression);
 
 private:
-	virtual void endVisit(Assignment& _assignment) override;
+	virtual bool visit(Assignment& _assignment) override;
 	virtual void endVisit(UnaryOperation& _unaryOperation) override;
 	virtual bool visit(BinaryOperation& _binaryOperation) override;
 	virtual void endVisit(FunctionCall& _functionCall) override;
@@ -123,6 +123,9 @@ private:
 
 	/// Appends a JUMPI instruction to a new label and returns the label
 	uint32_t appendConditionalJump();
+	void appendPush(unsigned _number);
+	void appendDup(unsigned _number);
+	void appendSwap(unsigned _number);
 
 	/// Append elements to the current instruction list.
 	void append(eth::Instruction const& _instruction) { m_assemblyItems.push_back(AssemblyItem(_instruction)); }
@@ -131,6 +134,15 @@ private:
 	void appendLabelref(byte _label) { m_assemblyItems.push_back(AssemblyItem::labelRef(_label)); }
 	void appendLabel(byte _label) { m_assemblyItems.push_back(AssemblyItem::label(_label)); }
 
+	/// Stores the value on top of the stack in the current lvalue and copies that value to the
+	/// top of the stack again
+	void storeInLValue(Expression const& _expression);
+	/// The same as storeInLValue but do not again retrieve the value to the top of the stack.
+	void moveToLValue(Expression const& _expression);
+	/// Returns the position of @a m_currentLValue in the stack, where 0 is the top of the stack.
+	unsigned stackPositionOfLValue() const;
+
+	Declaration* m_currentLValue;
 	AssemblyItems m_assemblyItems;
 	CompilerContext& m_context;
 };
