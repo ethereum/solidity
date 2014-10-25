@@ -200,22 +200,74 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 BOOST_AUTO_TEST_CASE(unary_operators)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = !(~+-(--(++1++)--) == 2); }"
+							 "  function f() { var x = !(~+-1 == 2); }"
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
 	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::ADD),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::SWAP1),
-					   byte(eth::Instruction::SUB),
 					   byte(eth::Instruction::PUSH1), 0x0,
 					   byte(eth::Instruction::SUB),
 					   byte(eth::Instruction::BNOT),
 					   byte(eth::Instruction::PUSH1), 0x2,
 					   byte(eth::Instruction::EQ),
 					   byte(eth::Instruction::NOT)});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(unary_inc_dec)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint a) { var x = ((a++ ^ ++a) ^ a--) ^ --a; }"
+							 "}\n";
+	bytes code = compileFirstExpression(sourceCode);
+
+	bytes expectation({byte(eth::Instruction::DUP9), // will change as soon as we have real stack tracking
+					   byte(eth::Instruction::DUP1),
+					   byte(eth::Instruction::PUSH1), 0x1,
+					   byte(eth::Instruction::ADD),
+					   byte(eth::Instruction::SWAP8), // will change
+					   byte(eth::Instruction::POP), // first ++
+					   byte(eth::Instruction::DUP9),
+					   byte(eth::Instruction::PUSH1), 0x1,
+					   byte(eth::Instruction::ADD),
+					   byte(eth::Instruction::SWAP8), // will change
+					   byte(eth::Instruction::POP), // second ++
+					   byte(eth::Instruction::DUP8), // will change
+					   byte(eth::Instruction::XOR),
+					   byte(eth::Instruction::DUP9), // will change
+					   byte(eth::Instruction::DUP1),
+					   byte(eth::Instruction::PUSH1), 0x1,
+					   byte(eth::Instruction::SWAP1),
+					   byte(eth::Instruction::SUB),
+					   byte(eth::Instruction::SWAP8), // will change
+					   byte(eth::Instruction::POP), // first --
+					   byte(eth::Instruction::XOR),
+					   byte(eth::Instruction::DUP9),
+					   byte(eth::Instruction::PUSH1), 0x1,
+					   byte(eth::Instruction::SWAP1),
+					   byte(eth::Instruction::SUB),
+					   byte(eth::Instruction::SWAP8), // will change
+					   byte(eth::Instruction::POP), // second ++
+					   byte(eth::Instruction::DUP8), // will change
+					   byte(eth::Instruction::XOR)});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(assignment)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint a, uint b) { (a += b) * 2; }"
+							 "}\n";
+	bytes code = compileFirstExpression(sourceCode);
+
+	bytes expectation({byte(eth::Instruction::DUP9), // will change as soon as we have real stack tracking
+					   byte(eth::Instruction::DUP9),
+					   byte(eth::Instruction::ADD),
+					   byte(eth::Instruction::SWAP8), // will change
+					   byte(eth::Instruction::POP), // first ++
+					   byte(eth::Instruction::DUP8),
+					   byte(eth::Instruction::PUSH1), 0x2,
+					   byte(eth::Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
