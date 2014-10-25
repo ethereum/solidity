@@ -28,6 +28,7 @@
 #include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
 #include <libdevcrypto/EC.h>
+#include <libdevcrypto/SHA3MAC.h>
 #include "TestHelperCrypto.h"
 
 using namespace std;
@@ -57,96 +58,81 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 
 BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 {
-	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Decryptor d(pp::PRNG, pp::secp256k1Curve);
 	ECIES<ECP>::Encryptor e(d.GetKey());
 	
 	Secret s;
-	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	pp::exportPrivateKey(d.GetKey(), s);
 	
 	Public p;
-	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+	pp::exportPublicKey(e.GetKey(), p);
 	
 	assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
 	
 	Secret previous = s;
 	for (auto i = 0; i < 30; i++)
 	{
-		ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+		ECIES<ECP>::Decryptor d(pp::PRNG, pp::secp256k1Curve);
 		ECIES<ECP>::Encryptor e(d.GetKey());
 		
 		Secret s;
-		pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+		pp::exportPrivateKey(d.GetKey(), s);
 		assert(s != previous);
 		
 		Public p;
-		pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+		pp::exportPublicKey(e.GetKey(), p);
 
 		assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
 	}
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_keys_cryptor_sipaseckp256k1)
+BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 {
 	KeyPair k = KeyPair::create();
 	Secret s = k.sec();
-	
-	// Convert secret to exponent used by pp
-	Integer e = pp::ExponentFromSecret(s);
 
-	// Test that exported DL_EC private is same as exponent from Secret
-	CryptoPP::DL_PrivateKey_EC<CryptoPP::ECP> privatek;
-	privatek.AccessGroupParameters().Initialize(pp::secp256k1());
-	privatek.SetPrivateExponent(e);
-	assert(e == privatek.GetPrivateExponent());
+	string emptystr(""), msgstr("test");
+	bytesConstRef empty(emptystr), msg(msgstr);
 	
-	// Test that exported secret is same as decryptor(privatek) secret
-	ECIES<ECP>::Decryptor d;
-	d.AccessKey().AccessGroupParameters().Initialize(pp::secp256k1());
-	d.AccessKey().SetPrivateExponent(e);
-	assert(d.AccessKey().GetPrivateExponent() == e);
+	// sha3 output of strings are the same
+	h256 hashpp;
+	sha3mac(empty, msg, hashpp.ref());
+	assert(sha3(msg) == hashpp);
+
+	// cryptopp sign and verify
+	Signature sigpp = crypto::sign(s, msg);
+	cout << std::hex << sigpp << endl;
+
+	ECDSA<ECP, SHA3_256>::Verifier verifier;
+	pp::initializeVerifier(k.pub(), verifier);
+	assert(verifier.VerifyMessage(msg.data(), msgstr.size(), sigpp.data(), sizeof(Signature)));
+
+	// seckp256k1lib sign and verify
+	h256 hashed(sha3(h256().asBytes()));
+	Signature sig = dev::sign(s, hashed);
+	Public recoveredp = dev::recover(sig, hashed);
+	bool result = dev::verify(k.pub(), sig, hashed);
+//	assert(result);
+
 	
-	// Test that decryptor->encryptor->public == private->makepublic->public
-	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pubk;
-	pubk.AccessGroupParameters().Initialize(pp::secp256k1());
-	privatek.MakePublicKey(pubk);
 	
-	ECIES<ECP>::Encryptor enc(d);
-	assert(pubk.GetPublicElement() == enc.AccessKey().GetPublicElement());
 	
-	// Test against sipa/seckp256k1
-	Public p;
-	pp::PublicFromExponent(pp::ExponentFromSecret(s), p);
-	assert(toAddress(s) == dev::right160(dev::sha3(p.ref())));
-	assert(k.pub() == p);
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 {
-	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Decryptor d(pp::PRNG, pp::secp256k1Curve);
 	ECIES<ECP>::Encryptor e(d.GetKey());
 
 	Secret s;
-	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	pp::exportPrivateKey(d.GetKey(), s);
 	Public p;
-	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+	pp::exportPublicKey(e.GetKey(), p);
 	Address addr = right160(dev::sha3(p.ref()));
 	assert(toAddress(s) == addr);
 	
 	KeyPair l(s);
 	assert(l.address() == addr);
-	
-	DL_PublicKey_EC<ECP> pub;
-	pub.Initialize(pp::secp256k1(), pp::PointFromPublic(p));
-	assert(pub.GetPublicElement() == e.GetKey().GetPublicElement());
-
-	KeyPair k = KeyPair::create();
-	Public p2;
-	pp::PublicFromExponent(pp::ExponentFromSecret(k.sec()), p2);
-	assert(k.pub() == p2);
-	
-	Address a = k.address();
-	Address a2 = toAddress(k.sec());
-	assert(a2 == a);
 }
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
@@ -172,9 +158,6 @@ BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
 	// All connections should share seed for PRF (or PRNG) for nonces
 	
 	
-	
-	
-	
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
@@ -183,7 +166,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 
 	string const message("Now is the time for all good persons to come to the aide of humanity.");
 
-	ECIES<ECP>::Decryptor localDecryptor(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Decryptor localDecryptor(pp::PRNG, pp::secp256k1Curve);
 	SavePrivateKey(localDecryptor.GetPrivateKey());
 	
 	ECIES<ECP>::Encryptor localEncryptor(localDecryptor);
@@ -191,31 +174,31 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 
 	ECIES<ECP>::Decryptor futureDecryptor;
 	LoadPrivateKey(futureDecryptor.AccessPrivateKey());
-	futureDecryptor.GetPrivateKey().ThrowIfInvalid(pp::PRNG(), 3);
+	futureDecryptor.GetPrivateKey().ThrowIfInvalid(pp::PRNG, 3);
 	
 	ECIES<ECP>::Encryptor futureEncryptor;
 	LoadPublicKey(futureEncryptor.AccessPublicKey());
-	futureEncryptor.GetPublicKey().ThrowIfInvalid(pp::PRNG(), 3);
+	futureEncryptor.GetPublicKey().ThrowIfInvalid(pp::PRNG, 3);
 
 	// encrypt/decrypt with local
 	string cipherLocal;
-	StringSource ss1 (message, true, new PK_EncryptorFilter(pp::PRNG(), localEncryptor, new StringSink(cipherLocal) ) );
+	StringSource ss1 (message, true, new PK_EncryptorFilter(pp::PRNG, localEncryptor, new StringSink(cipherLocal) ) );
 	string plainLocal;
-	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG(), localDecryptor, new StringSink(plainLocal) ) );
+	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG, localDecryptor, new StringSink(plainLocal) ) );
 
 	// encrypt/decrypt with future
 	string cipherFuture;
-	StringSource ss3 (message, true, new PK_EncryptorFilter(pp::PRNG(), futureEncryptor, new StringSink(cipherFuture) ) );
+	StringSource ss3 (message, true, new PK_EncryptorFilter(pp::PRNG, futureEncryptor, new StringSink(cipherFuture) ) );
 	string plainFuture;
-	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG(), futureDecryptor, new StringSink(plainFuture) ) );
+	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG, futureDecryptor, new StringSink(plainFuture) ) );
 	
 	// decrypt local w/future
 	string plainFutureFromLocal;
-	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG(), futureDecryptor, new StringSink(plainFutureFromLocal) ) );
+	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG, futureDecryptor, new StringSink(plainFutureFromLocal) ) );
 	
 	// decrypt future w/local
 	string plainLocalFromFuture;
-	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG(), localDecryptor, new StringSink(plainLocalFromFuture) ) );
+	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG, localDecryptor, new StringSink(plainLocalFromFuture) ) );
 	
 	
 	assert(plainLocal == message);
