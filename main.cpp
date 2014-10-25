@@ -17,7 +17,7 @@
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
- * Solidity abstract syntax tree.
+ * Solidity commandline compiler.
  */
 
 #include <string>
