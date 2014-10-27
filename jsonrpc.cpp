@@ -50,8 +50,8 @@ auto s = set<string>{"eth", "shh"};
 dev::p2p::NetworkPreferences np(30303, std::string(), false);
 dev::WebThreeDirect web3(name, dbPath, true, s, np);
 
-auto_ptr<WebThreeStubServer> jsonrpcServer;
-auto_ptr<WebThreeStubClient> jsonrpcClient;
+unique_ptr<WebThreeStubServer> jsonrpcServer;
+unique_ptr<WebThreeStubClient> jsonrpcClient;
 
 struct JsonrpcFixture  {
 	JsonrpcFixture()
@@ -60,10 +60,10 @@ struct JsonrpcFixture  {
 
 		web3.setIdealPeerCount(5);
 		web3.ethereum()->setForceMining(true);
-		jsonrpcServer = auto_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), web3, {}));
+		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), web3, {}));
 		jsonrpcServer->StartListening();
 		
-		jsonrpcClient = auto_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
+		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
 	}
 	~JsonrpcFixture()
 	{
@@ -72,35 +72,6 @@ struct JsonrpcFixture  {
 };
 
 BOOST_GLOBAL_FIXTURE(JsonrpcFixture)
-
-BOOST_AUTO_TEST_CASE(jsonrpc_balanceAt)
-{
-	cnote << "Testing jsonrpc balanceAt...";
-	dev::KeyPair key = KeyPair::create();
-	auto address = key.address();
-	string balance = jsonrpcClient->balanceAt(toJS(address));
-	BOOST_CHECK_EQUAL(toJS(web3.ethereum()->balanceAt(address)), balance);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_call)
-{
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_coinbase)
-{
-	cnote << "Testing jsonrpc coinbase...";
-	string coinbase = jsonrpcClient->coinbase();
-	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3.ethereum()->address());
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_countAt)
-{
-	cnote << "Testing jsonrpc countAt...";
-	dev::KeyPair key = KeyPair::create();
-	auto address = key.address();
-	double countAt = jsonrpcClient->countAt(toJS(address));
-	BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3.ethereum()->countAt(address, 0));
-}
 
 BOOST_AUTO_TEST_CASE(jsonrpc_defaultBlock)
 {
@@ -162,13 +133,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_accounts)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_number)
 {
-	cnote << "Testing jsonrpc number...";
-	int number = jsonrpcClient->number();
-	BOOST_CHECK_EQUAL(number, web3.ethereum()->number() + 1);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_number2)
-{
 	cnote << "Testing jsonrpc number2...";
 	int number = jsonrpcClient->number();
 	BOOST_CHECK_EQUAL(number, web3.ethereum()->number() + 1);
@@ -219,15 +183,35 @@ BOOST_AUTO_TEST_CASE(jsonrpc_stateAt)
 BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 {
 	cnote << "Testing jsonrpc transact...";
+	string coinbase = jsonrpcClient->coinbase();
+	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3.ethereum()->address());
+	
 	dev::KeyPair key = KeyPair::create();
 	auto address = key.address();
 	auto receiver = KeyPair::create();
-	
 	web3.ethereum()->setAddress(address);
+
+	coinbase = jsonrpcClient->coinbase();
+	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3.ethereum()->address());
+	BOOST_CHECK_EQUAL(jsToAddress(coinbase), address);
+	
 	jsonrpcServer->setAccounts({key});
-	dev::eth::mine(*(web3.ethereum()), 1);
 	auto balance = web3.ethereum()->balanceAt(address, 0);
-	BOOST_REQUIRE(balance > 0);
+	string balanceString = jsonrpcClient->balanceAt(toJS(address));
+	double countAt = jsonrpcClient->countAt(toJS(address));
+	
+	BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3.ethereum()->countAt(address));
+	BOOST_CHECK_EQUAL(countAt, 0);
+	BOOST_CHECK_EQUAL(toJS(balance), balanceString);
+	BOOST_CHECK_EQUAL(jsToDecimal(balanceString), "0");
+	
+	dev::eth::mine(*(web3.ethereum()), 1);
+	balance = web3.ethereum()->balanceAt(address, 0);
+	balanceString = jsonrpcClient->balanceAt(toJS(address));
+	
+	BOOST_CHECK_EQUAL(toJS(balance), balanceString);
+	BOOST_CHECK_EQUAL(jsToDecimal(balanceString), "1500000000000000000");
+	
 	auto txAmount = balance / 2u;
 	auto gasPrice = 10 * dev::eth::szabo;
 	auto gas = dev::eth::c_txGas;
@@ -243,9 +227,15 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	jsonrpcClient->transact(t);
 	jsonrpcServer->setAccounts({});
 	dev::eth::mine(*(web3.ethereum()), 1);
-	auto balance2 = web3.ethereum()->balanceAt(receiver.address());
 	
-	BOOST_REQUIRE(balance2 > 0);
+	countAt = jsonrpcClient->countAt(toJS(address));
+	auto balance2 = web3.ethereum()->balanceAt(receiver.address());
+	string balanceString2 = jsonrpcClient->balanceAt(toJS(receiver.address()));
+	
+	BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3.ethereum()->countAt(address));
+	BOOST_CHECK_EQUAL(countAt, 1);
+	BOOST_CHECK_EQUAL(toJS(balance2), balanceString2);
+	BOOST_CHECK_EQUAL(jsToDecimal(balanceString2), "750000000000000000");
 	BOOST_CHECK_EQUAL(txAmount, balance2);
 }
 

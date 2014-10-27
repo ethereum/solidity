@@ -311,14 +311,14 @@ p.append(param2);
 
         }
 
-        Json::Value transact(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        std::string transact(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
 
             Json::Value result = this->client->CallMethod("transact",p);
-    if (result.isArray())
-        return result;
+    if (result.isString())
+        return result.asString();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
