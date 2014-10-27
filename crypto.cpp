@@ -97,69 +97,79 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 	Secret secret(sha3(sbytes)); // 5fe7f977e71dba2ea1a68e21057beebb9be2ac30c6410aa38d4f3fbe41dcffd2
 	KeyPair key(secret);
 	
-	bytes m(fromHex("0x02"));
-	h256 hm(sha3(m)); // f2ee15ea639b73fa3db9b34a245bdfa015c260c598b211bf05a1ecc4b3e3b4f2
-	Integer hInt("f2ee15ea639b73fa3db9b34a245bdfa015c260c598b211bf05a1ecc4b3e3b4f2H"); // 32b msg hash
-	h256 k(hm ^ key.sec());
-	Integer kInt(k.asBytes().data(), 32);
-	
-	// raw sign w/cryptopp (doesn't pass through cryptopp hash filter)
-	ECDSA<ECP, SHA3_256>::Signer signer;
-	pp::initializeSigner(key.sec(), signer);
-	Integer r, s;
-	signer.RawSign(kInt, hInt, r, s);
-	cout << "cryptopp-raw r, s: " << endl << r << endl << s << endl;
+	bytes m(fromHex("0x01"));
+	int tests = 5;
+	while (m[0]++ && tests--)
+	{
+		h256 hm(sha3(m));
+		Integer hInt(hm.asBytes().data(), 32);
+		h256 k(hm ^ key.sec());
+		Integer kInt(k.asBytes().data(), 32);
+		
+		// raw sign w/cryptopp (doesn't pass through cryptopp hash filter)
+		ECDSA<ECP, SHA3_256>::Signer signer;
+		pp::initializeSigner(key.sec(), signer);
+		Integer r, s;
+		signer.RawSign(kInt, hInt, r, s);
 
-	// verify cryptopp raw-signature w/cryptopp
-	ECDSA<ECP, SHA3_256>::Verifier verifier;
-	pp::initializeVerifier(key.pub(), verifier);
-	Signature sigppraw;
-	r.Encode(sigppraw.data(), 32);
-	s.Encode(sigppraw.data()+32, 32);
-	BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppraw.data(), 64));
-	BOOST_REQUIRE(dev::recover(sigppraw, hm) == key.pub());
-	
-	// sign with sec256lib, verify with cryptopp
-	Signature seclibsig(dev::sign(key.sec(), hm));
-	r.Decode(seclibsig.data(), 32);
-	s.Decode(seclibsig.data()+32, 32);
-	cout << "sec256lib r, s: " << endl << r << endl << s << endl;
-	BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), seclibsig.data(), 64));
-	BOOST_REQUIRE(dev::recover(seclibsig, hm) == key.pub());
+		// verify cryptopp raw-signature w/cryptopp
+		ECDSA<ECP, SHA3_256>::Verifier verifier;
+		pp::initializeVerifier(key.pub(), verifier);
+		Signature sigppraw;
+		r.Encode(sigppraw.data(), 32);
+		s.Encode(sigppraw.data()+32, 32);
+		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppraw.data(), 64));
+		BOOST_REQUIRE(crypto::verify(key.pub(), sigppraw, bytesConstRef(&m)));
+		BOOST_REQUIRE(dev::verify(key.pub(), sigppraw, hm));
+		BOOST_CHECK(dev::recover(sigppraw, hm) == key.pub());
+		
+		// sign with sec256lib, verify with cryptopp
+		Signature seclibsig(dev::sign(key.sec(), hm));
+		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), seclibsig.data(), 64));
+		BOOST_REQUIRE(crypto::verify(key.pub(), seclibsig, bytesConstRef(&m)));
+		BOOST_REQUIRE(dev::verify(key.pub(), seclibsig, hm));
+		BOOST_CHECK(dev::recover(seclibsig, hm) == key.pub());
 
-	// sign with cryptopp (w/hash filter?), verify with cryptopp
-	bytes sigppb(signer.MaxSignatureLength());
-	size_t ssz = signer.SignMessage(pp::PRNG, m.data(), m.size(), sigppb.data());
-	r.Decode(sigppb.data(), 32);
-	s.Decode(sigppb.data()+32, 32);
-	cout << "cryptopp-signmsg r, s: " << endl << r << endl << s << endl;
-	BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppb.data(), ssz));
+		// sign with cryptopp (w/hash filter?), verify with cryptopp
+		bytes sigppb(signer.MaxSignatureLength());
+		size_t ssz = signer.SignMessage(pp::PRNG, m.data(), m.size(), sigppb.data());
+		Signature sigpp;
+		memcpy(sigpp.data(), sigppb.data(), 64);
+		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppb.data(), ssz));
+		BOOST_REQUIRE(crypto::verify(key.pub(), sigpp, bytesConstRef(&m)));
+		BOOST_REQUIRE(dev::verify(key.pub(), sigpp, hm));
+		BOOST_CHECK(dev::recover(sigpp, hm) == key.pub());
 
-	// this has a 25% of failing
-	Signature sigpp;
-	r.Encode(sigpp.data(), 32);
-	s.Encode(sigpp.data()+32, 32);
-	BOOST_WARN(dev::recover(sigpp, hm) == key.pub());
+		// sign with cryptopp and stringsource hash filter
+		string sigstr;
+		StringSource ssrc(asString(m), true, new SignerFilter(pp::PRNG, signer, new StringSink(sigstr)));
+		FixedHash<sizeof(Signature)> retsig((byte const*)sigstr.data(), Signature::ConstructFromPointer);
+		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), retsig.data(), 64));
+		BOOST_REQUIRE(crypto::verify(key.pub(), retsig, bytesConstRef(&m)));
+		BOOST_REQUIRE(dev::verify(key.pub(), retsig, hm));
+		BOOST_CHECK(dev::recover(retsig, hm) == key.pub());
+		
+		/// verification w/sec256lib
+		// requires public key and sig in standard format
+		byte encpub[65] = {0x04};
+		memcpy(&encpub[1], key.pub().data(), 64);
+		byte dersig[72];
+		
+		// verify sec256lib sig w/sec256lib
+		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, seclibsig.data(), 64, DSA_P1363);
+		BOOST_CHECK(cssz <= 72);
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), sizeof(hm), dersig, cssz, encpub, 65));
+		
+		// verify cryptopp-raw sig w/sec256lib
+		cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sigppraw.data(), 64, DSA_P1363);
+		BOOST_CHECK(cssz <= 72);
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), sizeof(hm), dersig, cssz, encpub, 65));
 
-	// sign with stringsource
-	string sigstr;
-	StringSource ssrc(asString(m), true, new SignerFilter(pp::PRNG, signer, new StringSink(sigstr)));
-	FixedHash<sizeof(Signature)> retsig((byte const*)sigstr.data(), Signature::ConstructFromPointer);
-	BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), retsig.data(), 64));
-	
-	
-	// need to serialize signature for secp256k1lib to verify compact sig, then
-	// test if secp256k1lib can verify cryptopp sigs
-	
-	
-//	byte dersig[70];
-//	DSAConvertSignatureFormat(dersig, 70, DSA_DER, sig.data(), 64, DSA_P1363);
-//	
-//	byte encpub[65] = {0x04};
-//	memcpy(&encpub[1], key.pub().data(), 64);
-//	int r = secp256k1_ecdsa_verify(msg.data(), msg.size(), dersig, 70, encpub, 65);
-//	assert(r);
-	
+		// verify cryptopp sig w/sec256lib
+		cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sigppb.data(), 64, DSA_P1363);
+		BOOST_CHECK(cssz <= 72);
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), sizeof(hm), dersig, cssz, encpub, 65));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
@@ -172,10 +182,10 @@ BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 	Public p;
 	pp::exportPublicKey(e.GetKey(), p);
 	Address addr = right160(dev::sha3(p.ref()));
-	assert(toAddress(s) == addr);
+	BOOST_REQUIRE(toAddress(s) == addr);
 	
 	KeyPair l(s);
-	assert(l.address() == addr);
+	BOOST_REQUIRE(l.address() == addr);
 }
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
@@ -187,10 +197,10 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	
 	bytes b = asBytes(message);
 	encrypt(k.pub(), b);
-	assert(b != asBytes(original));
+	BOOST_REQUIRE(b != asBytes(original));
 
 	decrypt(k.sec(), b);
-	assert(b == asBytes(original));
+	BOOST_REQUIRE(b == asBytes(original));
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
@@ -244,16 +254,16 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG, localDecryptor, new StringSink(plainLocalFromFuture) ) );
 	
 	
-	assert(plainLocal == message);
-	assert(plainFuture == plainLocal);
-	assert(plainFutureFromLocal == plainLocal);
-	assert(plainLocalFromFuture == plainLocal);
+	BOOST_REQUIRE(plainLocal == message);
+	BOOST_REQUIRE(plainFuture == plainLocal);
+	BOOST_REQUIRE(plainFutureFromLocal == plainLocal);
+	BOOST_REQUIRE(plainLocalFromFuture == plainLocal);
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 {
 	const int aesKeyLen = 16;
-	assert(sizeof(char) == sizeof(byte));
+	BOOST_REQUIRE(sizeof(char) == sizeof(byte));
 	
 	// generate test key
 	AutoSeededRandomPool rng;
@@ -276,7 +286,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		CTR_Mode<AES>::Encryption e;
 		e.SetKeyWithIV(key, key.size(), ctr);
 		e.ProcessData(out, in, text.size());
-		assert(text != original);
+		BOOST_REQUIRE(text != original);
 		cipherCopy = text;
 	}
 	catch(CryptoPP::Exception& e)
@@ -289,7 +299,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		CTR_Mode< AES >::Decryption d;
 		d.SetKeyWithIV(key, key.size(), ctr);
 		d.ProcessData(out, in, text.size());
-		assert(text == original);
+		BOOST_REQUIRE(text == original);
 	}
 	catch(CryptoPP::Exception& e)
 	{
@@ -300,7 +310,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	// reencrypt ciphertext...
 	try
 	{
-		assert(cipherCopy != text);
+		BOOST_REQUIRE(cipherCopy != text);
 		in = (unsigned char*)&cipherCopy[0];
 		out = (unsigned char*)&cipherCopy[0];
 		
@@ -309,7 +319,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		e.ProcessData(out, in, text.size());
 		
 		// yep, ctr mode.
-		assert(cipherCopy == original);
+		BOOST_REQUIRE(cipherCopy == original);
 	}
 	catch(CryptoPP::Exception& e)
 	{
@@ -321,7 +331,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 {
 	const int aesKeyLen = 16;
-	assert(sizeof(char) == sizeof(byte));
+	BOOST_REQUIRE(sizeof(char) == sizeof(byte));
 	
 	AutoSeededRandomPool rng;
 	SecByteBlock key(0x00, aesKeyLen);
@@ -336,11 +346,11 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	
 	CryptoPP::CBC_Mode<Rijndael>::Encryption cbcEncryption(key, key.size(), iv);
 	cbcEncryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
-	assert(string128 != plainOriginal);
+	BOOST_REQUIRE(string128 != plainOriginal);
 	
 	CBC_Mode<Rijndael>::Decryption cbcDecryption(key, key.size(), iv);
 	cbcDecryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
-	assert(plainOriginal == string128);
+	BOOST_REQUIRE(plainOriginal == string128);
 	
 	
 	// plaintext whose size isn't divisible by block size must use stream filter for padding
@@ -350,10 +360,10 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	string cipher;
 	StreamTransformationFilter* aesStream = new StreamTransformationFilter(cbcEncryption, new StringSink(cipher));
 	StringSource source(string192, true, aesStream);
-	assert(cipher.size() == 32);
+	BOOST_REQUIRE(cipher.size() == 32);
 
 	cbcDecryption.ProcessData((byte*)&cipher[0], (byte*)&string192[0], cipher.size());
-	assert(string192 == plainOriginal);
+	BOOST_REQUIRE(string192 == plainOriginal);
 }
 
 BOOST_AUTO_TEST_CASE(eth_keypairs)
@@ -390,8 +400,8 @@ int cryptoTest()
 	secp256k1_start();
 
 	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
-	assert(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
-	assert(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
+	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
+	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
 	{
 		eth::Transaction t;
 		t.nonce = 0;
@@ -406,7 +416,7 @@ int cryptoTest()
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
 		cnote << t.sha3(true);
-		assert(t.sender() == p.address());
+		BOOST_REQUIRE(t.sender() == p.address());
 	}
 
 
