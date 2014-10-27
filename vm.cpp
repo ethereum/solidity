@@ -486,9 +486,6 @@ h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _end
 	return _newAddress;
 }
 
-
-
-
 namespace dev { namespace test {
 
 void doTests(json_spirit::mValue& v, bool _fillin)
