@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 	
 	bytes m(fromHex("0x01"));
 	int tests = 5;
-	while (m[0]++ && tests--)
+	while (m[0]++, tests--)
 	{
 		h256 hm(sha3(m));
 		Integer hInt(hm.asBytes().data(), 32);
