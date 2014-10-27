@@ -56,7 +56,7 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 		get<3>(addresses[ret]) = m_s.code(ret);
 	}
 
-	t.receiveAddress = ret;
+	t.receiveAddress = Address();
 	callcreates.push_back(t);
 	return ret;
 }
