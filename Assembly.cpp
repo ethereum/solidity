@@ -147,7 +147,7 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 	return _out;
 }
 
-ostream& Assembly::streamOut(ostream& _out, string const& _prefix) const
+ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
 {
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
@@ -189,7 +189,7 @@ ostream& Assembly::streamOut(ostream& _out, string const& _prefix) const
 		for (auto const& i: m_subs)
 		{
 			_out << _prefix << "  " << hex << (unsigned)(u256)i.first << ": " << endl;
-			i.second.streamOut(_out, _prefix + "  ");
+			i.second.streamRLP(_out, _prefix + "  ");
 		}
 	}
 	return _out;

@@ -104,11 +104,11 @@ public:
 
 	void injectStart(AssemblyItem const& _i);
 
-	std::string out() const { std::stringstream ret; streamOut(ret); return ret.str(); }
+	std::string out() const { std::stringstream ret; streamRLP(ret); return ret.str(); }
 	int deposit() const { return m_deposit; }
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
-	std::ostream& streamOut(std::ostream& _out, std::string const& _prefix = "") const;
+	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "") const;
 
 private:
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
@@ -127,7 +127,7 @@ private:
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
 {
-	_a.streamOut(_out);
+	_a.streamRLP(_out);
 	return _out;
 }
 
