@@ -45,7 +45,7 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 
 	m_s.noteSending(myAddress);
 	m_ms.internal.resize(m_ms.internal.size() + 1);
-	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
+	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
 	if (!m_ms.internal.back().from)
 		m_ms.internal.pop_back();
 
@@ -91,7 +91,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		if (!m_s.addresses().count(myAddress))
 		{
 			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
+			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
 			if (!m_ms.internal.back().from)
 				m_ms.internal.pop_back();
 			if (na != myAddress)
@@ -116,7 +116,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		{
 			m_s.noteSending(myAddress);
 			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.createNewAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress, myAddress, balance(_codeAddressOverride ? _codeAddressOverride : _receiveAddress), gasPrice, &contractgas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
+			auto na = m_s.createNewAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress, myAddress, balance(_codeAddressOverride ? _codeAddressOverride : _receiveAddress), gasPrice, &contractgas, init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
 			if (!m_ms.internal.back().from)
 				m_ms.internal.pop_back();
 
@@ -131,7 +131,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 
 		m_ms.internal.resize(m_ms.internal.size() + 1);
 
-		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &suicides, &(m_ms.internal.back()), OnOpFunc(), 1);
+		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &sub, &(m_ms.internal.back()), OnOpFunc(), 1);
 
 		if (!m_ms.internal.back().from)
 			m_ms.internal.pop_back();
@@ -146,12 +146,15 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		if (!ret)
 			return false;
 
+		// TODO: @CJentzsch refund SSTORE stuff.
+		// TODO: @CJentzsch test logs.
+
 		// do suicides
-		for (auto const& f: suicides)
+		for (auto const& f: sub.suicides)
 			addresses.erase(f);
 
 		// get storage
-		if ((get<0>(addresses[myAddress]) >= _value) && (suicides.find(_receiveAddress) == suicides.end()))
+		if ((get<0>(addresses[myAddress]) >= _value) && (sub.suicides.find(_receiveAddress) == sub.suicides.end()))
 		{
 			for (auto const& j: m_s.storage(_receiveAddress))
 			{
@@ -419,8 +422,11 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 	}
 }
 
-h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, std::set<Address>* o_suicides, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
+// THIS IS BROKEN AND NEEDS TO BE REMOVED.
+h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, SubState* o_sub, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
 {
+	(void)o_sub;
+
 	if (!_origin)
 		_origin = _sender;
 
@@ -446,9 +452,7 @@ h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _end
 		out = vm.go(evm, _onOp);
 		if (o_ms)
 			o_ms->output = out.toBytes();
-		if (o_suicides)
-			for (auto i: evm.suicides)
-				o_suicides->insert(i);
+		// TODO: deal with evm.sub
 	}
 	catch (OutOfGas const& /*_e*/)
 	{
