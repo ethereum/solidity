@@ -80,6 +80,9 @@ public:
 	json_spirit::mArray exportCallCreates();
 	void importCallCreates(json_spirit::mArray& _callcreates);
 
+	static eth::OnOpFunc simpleTrace();
+	FakeState state() const { return m_s; }
+
 	std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes>> addresses;
 	eth::Transactions callcreates;
 	bytes thisTxData;

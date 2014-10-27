@@ -20,9 +20,9 @@
  * vm test functions.
  */
 
-#include "vm.h"
-#include <libdevcore/CommonIO.h>
 #include <boost/filesystem/path.hpp>
+#include <libdevcore/CommonIO.h>
+#include "vm.h"
 
 //#define FILL_TESTS
 
@@ -418,6 +418,26 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 	}
 }
 
+OnOpFunc FakeExtVM::simpleTrace()
+{
+	return [](uint64_t steps, Instruction inst, bigint newMemSize, bigint gasCost, void* voidVM, void const* voidExt)
+	{
+		FakeExtVM const& ext = *(FakeExtVM const*)voidExt;
+		VM& vm = *(VM*)voidVM;
+
+		ostringstream o;
+		o << endl << "    STACK" << endl;
+		for (auto i: vm.stack())
+			o << (h256)i << endl;
+		o << "    MEMORY" << endl << memDump(vm.memory());
+		o << "    STORAGE" << endl;
+		for (auto const& i: ext.state().storage(ext.myAddress))
+			o << showbase << hex << i.first << ": " << i.second << endl;
+		dev::LogOutputStream<VMTraceChannel, false>(true) << o.str();
+		dev::LogOutputStream<VMTraceChannel, false>(false) << " | " << dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << hex << setw(4) << setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << dec << vm.gas() << " | -" << dec << gasCost << " | " << newMemSize << "x32" << " ]";
+	};
+}
+
 h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, std::set<Address>* o_suicides, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
 {
 	if (!_origin)
@@ -484,6 +504,7 @@ h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _end
 
 
 
+
 namespace dev { namespace test {
 
 void doTests(json_spirit::mValue& v, bool _fillin)
@@ -515,7 +536,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		VM vm(fev.gas);
 		try
 		{
-			output = vm.go(fev).toVector();
+			output = vm.go(fev, fev.simpleTrace()).toVector();
 		}
 		catch (Exception const& _e)
 		{
@@ -750,4 +771,31 @@ BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
+}
+
+BOOST_AUTO_TEST_CASE(userDefinedFile)
+{
+
+	if (boost::unit_test::framework::master_test_suite().argc == 2)
+	{
+		string filename = boost::unit_test::framework::master_test_suite().argv[1];
+		g_logVerbosity = 12;
+		try
+		{
+			cnote << "Testing VM..." << "user defined test";
+			json_spirit::mValue v;
+			string s = asString(contents(filename));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
+			json_spirit::read_string(s, v);
+			dev::test::doTests(v, false);
+		}
+		catch (Exception const& _e)
+		{
+			BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
+		}
+		catch (std::exception const& _e)
+		{
+			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+		}
+	}
 }
