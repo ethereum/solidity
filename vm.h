@@ -37,7 +37,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libethereum/ExtVM.h>
 #include <libethereum/State.h>
 
-
 namespace dev { namespace test {
 
 struct FakeExtVMFailure : virtual Exception {};
