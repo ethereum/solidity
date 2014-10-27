@@ -271,6 +271,19 @@ class WebThreeStubClient
 
         }
 
+        bool setDefaultBlock(const int& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("setDefaultBlock",p);
+    if (result.isBool())
+        return result.asBool();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         bool setListening(const bool& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
