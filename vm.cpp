@@ -56,14 +56,13 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 		get<3>(addresses[ret]) = m_s.code(ret);
 	}
 
-	t.receiveAddress = ret;
+	t.type = eth::Transaction::ContractCreation;
 	callcreates.push_back(t);
 	return ret;
 }
 
 bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc const&, Address _myAddressOverride, Address _codeAddressOverride)
 {
-
 	u256 contractgas = 0xffff;
 
 	Transaction t;
@@ -71,6 +70,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 	t.gasPrice = gasPrice;
 	t.gas = *_gas;
 	t.data = _data.toVector();
+	t.type = eth::Transaction::MessageCall;
 	t.receiveAddress = _receiveAddress;
 	callcreates.push_back(t);
 
@@ -384,7 +384,7 @@ mArray FakeExtVM::exportCallCreates()
 	for (Transaction const& tx: callcreates)
 	{
 		mObject o;
-		o["destination"] = toString(tx.receiveAddress);
+		o["destination"] = tx.type == Transaction::ContractCreation ? "" : toString(tx.receiveAddress);
 		push(o, "gasLimit", tx.gas);
 		push(o, "value", tx.value);
 		o["data"] = "0x" + toHex(tx.data);
@@ -403,6 +403,7 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		BOOST_REQUIRE(tx.count("destination") > 0);
 		BOOST_REQUIRE(tx.count("gasLimit") > 0);
 		Transaction t;
+		t.type = tx["destination"].get_str().empty() ? Transaction::ContractCreation : Transaction::MessageCall;
 		t.receiveAddress = Address(tx["destination"].get_str());
 		t.value = toInt(tx["value"]);
 		t.gas = toInt(tx["gasLimit"]);
