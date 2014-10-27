@@ -437,12 +437,12 @@ MemTrie::~MemTrie()
 
 h256 MemTrie::hash256() const
 {
-	return m_root ? m_root->hash256() : h256();
+	return m_root ? m_root->hash256() : sha3(dev::rlp(bytesConstRef()));
 }
 
 bytes MemTrie::rlp() const
 {
-	return m_root ? m_root->rlp() : bytes();
+	return m_root ? m_root->rlp() : dev::rlp(bytesConstRef());
 }
 
 void MemTrie::debugPrint()

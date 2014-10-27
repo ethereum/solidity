@@ -45,7 +45,7 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 
 	m_s.noteSending(myAddress);
 	m_ms.internal.resize(m_ms.internal.size() + 1);
-	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
+	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
 	if (!m_ms.internal.back().from)
 		m_ms.internal.pop_back();
 
@@ -56,7 +56,7 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 		get<3>(addresses[ret]) = m_s.code(ret);
 	}
 
-	t.receiveAddress = Address();
+	t.type = eth::Transaction::ContractCreation;
 	callcreates.push_back(t);
 	return ret;
 }
@@ -71,6 +71,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 	t.gasPrice = gasPrice;
 	t.gas = *_gas;
 	t.data = _data.toVector();
+	t.type = eth::Transaction::MessageCall;
 	t.receiveAddress = _receiveAddress;
 	callcreates.push_back(t);
 
@@ -91,7 +92,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		if (!m_s.addresses().count(myAddress))
 		{
 			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
+			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
 			if (!m_ms.internal.back().from)
 				m_ms.internal.pop_back();
 			if (na != myAddress)
@@ -116,7 +117,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		{
 			m_s.noteSending(myAddress);
 			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.createNewAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress, myAddress, balance(_codeAddressOverride ? _codeAddressOverride : _receiveAddress), gasPrice, &contractgas, init, origin, &suicides, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
+			auto na = m_s.createNewAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress, myAddress, balance(_codeAddressOverride ? _codeAddressOverride : _receiveAddress), gasPrice, &contractgas, init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
 			if (!m_ms.internal.back().from)
 				m_ms.internal.pop_back();
 
@@ -131,7 +132,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 
 		m_ms.internal.resize(m_ms.internal.size() + 1);
 
-		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &suicides, &(m_ms.internal.back()), Executive::simpleTrace(), 1);
+		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &sub, &(m_ms.internal.back()), OnOpFunc(), 1);
 
 		if (!m_ms.internal.back().from)
 			m_ms.internal.pop_back();
@@ -146,12 +147,15 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 		if (!ret)
 			return false;
 
+		// TODO: @CJentzsch refund SSTORE stuff.
+		// TODO: @CJentzsch test logs.
+
 		// do suicides
-		for (auto const& f: suicides)
+		for (auto const& f: sub.suicides)
 			addresses.erase(f);
 
 		// get storage
-		if ((get<0>(addresses[myAddress]) >= _value) && (suicides.find(_receiveAddress) == suicides.end()))
+		if ((get<0>(addresses[myAddress]) >= _value) && (sub.suicides.find(_receiveAddress) == sub.suicides.end()))
 		{
 			for (auto const& j: m_s.storage(_receiveAddress))
 			{
@@ -384,7 +388,7 @@ mArray FakeExtVM::exportCallCreates()
 	for (Transaction const& tx: callcreates)
 	{
 		mObject o;
-		o["destination"] = toString(tx.receiveAddress);
+		o["destination"] = tx.type == Transaction::ContractCreation ? "" : toString(tx.receiveAddress);
 		push(o, "gasLimit", tx.gas);
 		push(o, "value", tx.value);
 		o["data"] = "0x" + toHex(tx.data);
@@ -403,6 +407,7 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		BOOST_REQUIRE(tx.count("destination") > 0);
 		BOOST_REQUIRE(tx.count("gasLimit") > 0);
 		Transaction t;
+		t.type = tx["destination"].get_str().empty() ? Transaction::ContractCreation : Transaction::MessageCall;
 		t.receiveAddress = Address(tx["destination"].get_str());
 		t.value = toInt(tx["value"]);
 		t.gas = toInt(tx["gasLimit"]);
@@ -418,28 +423,11 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 	}
 }
 
-OnOpFunc FakeExtVM::simpleTrace()
+// THIS IS BROKEN AND NEEDS TO BE REMOVED.
+h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, SubState* o_sub, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
 {
-	return [](uint64_t steps, Instruction inst, bigint newMemSize, bigint gasCost, void* voidVM, void const* voidExt)
-	{
-		FakeExtVM const& ext = *(FakeExtVM const*)voidExt;
-		VM& vm = *(VM*)voidVM;
+	(void)o_sub;
 
-		ostringstream o;
-		o << endl << "    STACK" << endl;
-		for (auto i: vm.stack())
-			o << (h256)i << endl;
-		o << "    MEMORY" << endl << memDump(vm.memory());
-		o << "    STORAGE" << endl;
-		for (auto const& i: ext.state().storage(ext.myAddress))
-			o << showbase << hex << i.first << ": " << i.second << endl;
-		dev::LogOutputStream<VMTraceChannel, false>(true) << o.str();
-		dev::LogOutputStream<VMTraceChannel, false>(false) << " | " << dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << hex << setw(4) << setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << dec << vm.gas() << " | -" << dec << gasCost << " | " << newMemSize << "x32" << " ]";
-	};
-}
-
-h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, std::set<Address>* o_suicides, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
-{
 	if (!_origin)
 		_origin = _sender;
 
@@ -465,9 +453,7 @@ h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _end
 		out = vm.go(evm, _onOp);
 		if (o_ms)
 			o_ms->output = out.toBytes();
-		if (o_suicides)
-			for (auto i: evm.suicides)
-				o_suicides->insert(i);
+		// TODO: deal with evm.sub
 	}
 	catch (OutOfGas const& /*_e*/)
 	{
@@ -504,7 +490,6 @@ h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _end
 
 
 
-
 namespace dev { namespace test {
 
 void doTests(json_spirit::mValue& v, bool _fillin)
@@ -536,7 +521,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		VM vm(fev.gas);
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace()).toVector();
+			output = vm.go(fev).toVector();
 		}
 		catch (Exception const& _e)
 		{
@@ -771,31 +756,4 @@ BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
-}
-
-BOOST_AUTO_TEST_CASE(userDefinedFile)
-{
-
-	if (boost::unit_test::framework::master_test_suite().argc == 2)
-	{
-		string filename = boost::unit_test::framework::master_test_suite().argv[1];
-		g_logVerbosity = 12;
-		try
-		{
-			cnote << "Testing VM..." << "user defined test";
-			json_spirit::mValue v;
-			string s = asString(contents(filename));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
-			json_spirit::read_string(s, v);
-			dev::test::doTests(v, false);
-		}
-		catch (Exception const& _e)
-		{
-			BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
-		}
-		catch (std::exception const& _e)
-		{
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-		}
-	}
 }
