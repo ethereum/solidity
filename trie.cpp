@@ -49,9 +49,20 @@ static unsigned fac(unsigned _i)
 
 BOOST_AUTO_TEST_CASE(trie_tests)
 {
+	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
+	string testPath;
+
+	if (ptestPath == NULL)
+	{
+		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
+		testPath = "../../../tests";
+	}
+	else
+		testPath = ptestPath;
+
 	cnote << "Testing Trie...";
 	js::mValue v;
-	string s = asString(contents("../../../tests/trietest.json"));
+	string s = asString(contents(testPath + "/trietest.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
