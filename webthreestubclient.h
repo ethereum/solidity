@@ -31,6 +31,20 @@ class WebThreeStubClient
 
         }
 
+        std::string addToGroup(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+p.append(param2);
+
+            Json::Value result = this->client->CallMethod("addToGroup",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         std::string balanceAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -212,6 +226,19 @@ p.append(param2);
 
         }
 
+        bool haveIdentity(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("haveIdentity",p);
+    if (result.isBool())
+        return result.asBool();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         bool listening() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -262,6 +289,32 @@ p.append(param2);
 
         }
 
+        std::string newGroup(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+p.append(param2);
+
+            Json::Value result = this->client->CallMethod("newGroup",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        std::string newIdentity() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->client->CallMethod("newIdentity",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         int number() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -281,6 +334,19 @@ p.append(param2);
             Json::Value result = this->client->CallMethod("peerCount",p);
     if (result.isInt())
         return result.asInt();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        bool post(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("post",p);
+    if (result.isBool())
+        return result.asBool();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
