@@ -130,7 +130,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 
 		m_ms.internal.resize(m_ms.internal.size() + 1);
 
-		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &sub, &(m_ms.internal.back()), simpleTrace<ExtVM>(), 1);
+		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &sub, &(m_ms.internal.back()), Executive::simpleTrace(), 1);
 
 		if (!m_ms.internal.back().from)
 			m_ms.internal.pop_back();
@@ -421,6 +421,39 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 	}
 }
 
+eth::OnOpFunc FakeExtVM::simpleTrace()
+{
+	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, void* voidVM, void const* voidExt)
+	{
+		FakeExtVM const& ext = *(FakeExtVM const*)voidExt;
+		eth::VM& vm = *(eth::VM*)voidVM;
+
+		std::ostringstream o;
+		o << std::endl << "    STACK" << std::endl;
+		for (auto i: vm.stack())
+			o << (h256)i << std::endl;
+		o << "    MEMORY" << std::endl << memDump(vm.memory());
+		o << "    STORAGE" << std::endl;
+
+		for (auto const& i: ext.state().storage(ext.myAddress))
+			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
+
+		for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
+			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
+
+		dev::LogOutputStream<eth::VMTraceChannel, false>(true) << o.str();
+		dev::LogOutputStream<eth::VMTraceChannel, false>(false) << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
+
+		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
+		{
+			std::ofstream f;
+			f.open("./vmtrace.log", std::ofstream::app);
+			f << o.str();
+			f << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32";
+		}
+	};
+}
+
 // THIS IS BROKEN AND NEEDS TO BE REMOVED.
 h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, SubState* o_sub, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
 {
@@ -517,7 +550,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		VM vm(fev.gas);
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace<FakeExtVM>()).toVector();
+			output = vm.go(fev, fev.simpleTrace()).toVector();
 		}
 		catch (Exception const& _e)
 		{
