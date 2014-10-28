@@ -41,7 +41,9 @@ namespace test
 namespace
 {
 
-/// Helper class that extracts the first expression in an AST.
+/**
+ * Helper class that extracts the first expression in an AST.
+ */
 class FirstExpressionExtractor: private ASTVisitor
 {
 public:
