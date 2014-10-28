@@ -210,11 +210,9 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 					   byte(eth::Instruction::PUSH1), 0x1,
 					   byte(eth::Instruction::SWAP1),
 					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::NEG),
-					   byte(eth::Instruction::PUSH1), 0x1,
 					   byte(eth::Instruction::PUSH1), 0x0,
 					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::XOR), // bitwise not
+					   byte(eth::Instruction::BNOT),
 					   byte(eth::Instruction::PUSH1), 0x2,
 					   byte(eth::Instruction::EQ),
 					   byte(eth::Instruction::NOT)});
