@@ -25,10 +25,8 @@
 #include <libsolidity/AST.h>
 #include <libsolidity/Compiler.h>
 
-
 namespace dev {
 namespace solidity {
-
 
 void CompilerContext::setLabelPosition(uint32_t _label, uint32_t _position)
 {
@@ -63,12 +61,10 @@ bytes ExpressionCompiler::getAssembledBytecode() const
 	}
 
 	for (AssemblyItem const& item: m_assemblyItems)
-	{
 		if (item.getType() == AssemblyItem::Type::LABELREF)
 			assembled.push_back(m_context.getLabelPosition(item.getLabel()));
 		else
 			assembled.push_back(item.getData());
-	}
 
 	return assembled;
 }
@@ -203,17 +199,17 @@ void ExpressionCompiler::endVisit(FunctionCall& _functionCall)
 	}
 }
 
-void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
+void ExpressionCompiler::endVisit(MemberAccess&)
 {
 
 }
 
-void ExpressionCompiler::endVisit(IndexAccess& _indexAccess)
+void ExpressionCompiler::endVisit(IndexAccess&)
 {
 
 }
 
-void ExpressionCompiler::endVisit(Identifier& _identifier)
+void ExpressionCompiler::endVisit(Identifier&)
 {
 
 }

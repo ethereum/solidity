@@ -191,8 +191,8 @@ public:
 	bool isTypeGivenExplicitly() const { return bool(m_typeName); }
 	TypeName* getTypeName() const { return m_typeName.get(); }
 
-	//! Returns the declared or inferred type. Can be an empty pointer if no type was explicitly
-	//! declared and there is no assignment to the variable that fixes the type.
+	/// Returns the declared or inferred type. Can be an empty pointer if no type was explicitly
+	/// declared and there is no assignment to the variable that fixes the type.
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
 
@@ -281,14 +281,14 @@ public:
 	explicit Statement(Location const& _location): ASTNode(_location) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
-	//! Check all type requirements, throws exception if some requirement is not met.
-	//! This includes checking that operators are applicable to their arguments but also that
-	//! the number of function call arguments matches the number of formal parameters and so forth.
+	/// Check all type requirements, throws exception if some requirement is not met.
+	/// This includes checking that operators are applicable to their arguments but also that
+	/// the number of function call arguments matches the number of formal parameters and so forth.
 	virtual void checkTypeRequirements() = 0;
 
 protected:
-	//! Helper function, check that the inferred type for @a _expression is @a _expectedType or at
-	//! least implicitly convertible to @a _expectedType. If not, throw exception.
+	/// Helper function, check that the inferred type for @a _expression is @a _expectedType or at
+	/// least implicitly convertible to @a _expectedType. If not, throw exception.
 	void expectType(Expression& _expression, Type const& _expectedType);
 };
 
@@ -407,7 +407,7 @@ public:
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
 
 protected:
-	//! Inferred type of the expression, only filled after a call to checkTypeRequirements().
+	/// Inferred type of the expression, only filled after a call to checkTypeRequirements().
 	std::shared_ptr<Type const> m_type;
 };
 
@@ -532,8 +532,8 @@ private:
 	ASTPointer<Expression> m_index;
 };
 
-/// Primary expression, i.e. an expression that do not be divided any further like a literal or
-/// a variable reference.
+/// Primary expression, i.e. an expression that cannot be divided any further. Examples are literals
+/// or variable references.
 class PrimaryExpression: public Expression
 {
 public:
@@ -557,7 +557,7 @@ public:
 private:
 	ASTPointer<ASTString> m_name;
 
-	//! Declaration the name refers to.
+	/// Declaration the name refers to.
 	Declaration* m_referencedDeclaration;
 };
 
