@@ -359,9 +359,9 @@ void FakeExtVM::importExec(mObject& _o)
 	code = &thisTxCode;
 	if (_o["code"].type() == str_type)
 		if (_o["code"].get_str().find_first_of("0x") == 0)
-			thisTxCode = compileLLL(_o["code"].get_str());
-		else
 			thisTxCode = fromHex(_o["code"].get_str().substr(2));
+		else
+			thisTxCode = compileLLL(_o["code"].get_str());
 	else if (_o["code"].type() == array_type)
 		for (auto const& j: _o["code"].get_array())
 			thisTxCode.push_back(toByte(j));
