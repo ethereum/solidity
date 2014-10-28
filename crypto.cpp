@@ -341,6 +341,7 @@ BOOST_AUTO_TEST_CASE(eth_keypairs)
 	{
 		eth::Transaction t;
 		t.nonce = 0;
+		t.type = eth::Transaction::MessageCall;
 		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
 		t.value = 1000;
 		auto rlp = t.rlp(false);
@@ -369,6 +370,7 @@ int cryptoTest()
 	{
 		eth::Transaction t;
 		t.nonce = 0;
+		t.type = eth::Transaction::MessageCall;
 		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
 		t.value = 1000;
 		auto rlp = t.rlp(false);
@@ -397,6 +399,7 @@ int cryptoTest()
 	Transaction t;
 	t.nonce = 0;
 	t.value = 1;			// 1 wei.
+	t.type = eth::Transaction::MessageCall;
 	t.receiveAddress = toAddress(sha3("123"));
 
 	bytes sig64 = toBigEndian(t.vrs.r) + toBigEndian(t.vrs.s);

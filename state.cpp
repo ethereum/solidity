@@ -68,6 +68,7 @@ int stateTest()
 		Transaction t;
 		t.nonce = s.transactionsFrom(myMiner.address());
 		t.value = 1000;			// 1e3 wei.
+		t.type = eth::Transaction::MessageCall;
 		t.receiveAddress = me.address();
 		t.sign(myMiner.secret());
 		assert(t.sender() == myMiner.address());

@@ -33,9 +33,20 @@ namespace js = json_spirit;
 
 BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {
+	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
+	string testPath;
+
+	if (ptestPath == NULL)
+	{
+		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
+		testPath = "../../../tests";
+	}
+	else
+		testPath = ptestPath;
+
 	cnote << "Testing Hex-Prefix-Encode...";
 	js::mValue v;
-	string s = asString(contents("../../../tests/hexencodetest.json"));
+	string s = asString(contents(testPath + "/hexencodetest.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content from 'hexencodetest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
