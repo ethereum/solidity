@@ -162,7 +162,7 @@ h256 hash256(StringMap const& _s)
 {
 	// build patricia tree.
 	if (_s.empty())
-		return h256();
+		return sha3(rlp(""));
 	HexMap hexMap;
 	for (auto i = _s.rbegin(); i != _s.rend(); ++i)
 		hexMap[asNibbles(i->first)] = i->second;
@@ -175,7 +175,7 @@ bytes rlp256(StringMap const& _s)
 {
 	// build patricia tree.
 	if (_s.empty())
-		return bytes();
+		return rlp("");
 	HexMap hexMap;
 	for (auto i = _s.rbegin(); i != _s.rend(); ++i)
 		hexMap[asNibbles(i->first)] = i->second;
@@ -188,7 +188,7 @@ h256 hash256(u256Map const& _s)
 {
 	// build patricia tree.
 	if (_s.empty())
-		return h256();
+		return sha3(rlp(""));
 	HexMap hexMap;
 	for (auto i = _s.rbegin(); i != _s.rend(); ++i)
 		hexMap[asNibbles(toBigEndianString(i->first))] = asString(rlp(i->second));

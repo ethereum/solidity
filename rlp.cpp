@@ -61,7 +61,18 @@ namespace dev
 
 		static void getRLPTestCases(js::mValue& v)
 		{
-			string s = asString(contents("../../../tests/rlptest.json"));
+			const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
+			string testPath;
+
+			if (ptestPath == NULL)
+			{
+				cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
+				testPath = "../../../tests";
+			}
+			else
+				testPath = ptestPath;
+
+			string s = asString(contents(testPath + "/rlptest.json"));
 			BOOST_REQUIRE_MESSAGE( s.length() > 0, 
 				"Contents of 'rlptest.json' is empty. Have you cloned the 'tests' repo branch develop?"); 
 			js::read_string(s, v);
