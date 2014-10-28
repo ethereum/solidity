@@ -107,13 +107,7 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 		append(eth::Instruction::NOT);
 		break;
 	case Token::BIT_NOT: // ~
-		// ~a modeled as "a xor (0 - 1)" for now
-		append(eth::Instruction::PUSH1);
-		append(1);
-		append(eth::Instruction::PUSH1);
-		append(0);
-		append(eth::Instruction::SUB);
-		append(eth::Instruction::XOR);
+		append(eth::Instruction::BNOT);
 		break;
 	case Token::DELETE: // delete
 		// a -> a xor a (= 0).
@@ -145,7 +139,10 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 		// unary add, so basically no-op
 		break;
 	case Token::SUB: // -
-		append(eth::Instruction::NEG);
+		// unary -x translates into "0-x"
+		append(eth::Instruction::PUSH1);
+		append(0);
+		append(eth::Instruction::SUB);
 		break;
 	default:
 		assert(false); // invalid operation
