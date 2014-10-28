@@ -41,9 +41,11 @@ namespace solidity
 class ASTVisitor;
 
 
-/// The root (abstract) class of the AST inheritance tree.
-/// It is possible to traverse all direct and indirect children of an AST node by calling
-/// accept, providing an ASTVisitor.
+/**
+ * The root (abstract) class of the AST inheritance tree.
+ * It is possible to traverse all direct and indirect children of an AST node by calling
+ * accept, providing an ASTVisitor.
+ */
 class ASTNode: private boost::noncopyable
 {
 public:
@@ -77,7 +79,9 @@ private:
 	Location m_location;
 };
 
-/// Abstract AST class for a declaration (contract, function, struct, variable).
+/**
+ * Abstract AST class for a declaration (contract, function, struct, variable).
+ */
 class Declaration: public ASTNode
 {
 public:
@@ -91,9 +95,11 @@ private:
 	ASTPointer<ASTString> m_name;
 };
 
-/// Definition of a contract. This is the only AST nodes where child nodes are not visited in
-/// document order. It first visits all struct declarations, then all variable declarations and
-/// finally all function declarations.
+/**
+ * Definition of a contract. This is the only AST nodes where child nodes are not visited in
+ * document order. It first visits all struct declarations, then all variable declarations and
+ * finally all function declarations.
+ */
 class ContractDefinition: public Declaration
 {
 public:
@@ -133,9 +139,11 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
 };
 
-/// Parameter list, used as function parameter list and return list.
-/// None of the parameters is allowed to contain mappings (not even recursively
-/// inside structs), but (@todo) this is not yet enforced.
+/**
+ * Parameter list, used as function parameter list and return list.
+ * None of the parameters is allowed to contain mappings (not even recursively
+ * inside structs), but (@todo) this is not yet enforced.
+ */
 class ParameterList: public ASTNode
 {
 public:
@@ -178,8 +186,10 @@ private:
 	ASTPointer<Block> m_body;
 };
 
-/// Declaration of a variable. This can be used in various places, e.g. in function parameter
-/// lists, struct definitions and even function bodys.
+/**
+ * Declaration of a variable. This can be used in various places, e.g. in function parameter
+ * lists, struct definitions and even function bodys.
+ */
 class VariableDeclaration: public Declaration
 {
 public:
@@ -205,7 +215,9 @@ private:
 /// Types
 /// @{
 
-/// Abstract base class of a type name, can be any built-in or user-defined type.
+/**
+ * Abstract base class of a type name, can be any built-in or user-defined type.
+ */
 class TypeName: public ASTNode
 {
 public:
@@ -217,8 +229,10 @@ public:
 	virtual std::shared_ptr<Type> toType() = 0;
 };
 
-/// Any pre-defined type name represented by a single keyword, i.e. it excludes mappings,
-/// contracts, functions, etc.
+/**
+ * Any pre-defined type name represented by a single keyword, i.e. it excludes mappings,
+ * contracts, functions, etc.
+ */
 class ElementaryTypeName: public TypeName
 {
 public:
@@ -233,8 +247,10 @@ private:
 	Token::Value m_type;
 };
 
-/// Name referring to a user-defined type (i.e. a struct).
-/// @todo some changes are necessary if this is also used to refer to contract types later
+/**
+ * Name referring to a user-defined type (i.e. a struct).
+ * @todo some changes are necessary if this is also used to refer to contract types later
+ */
 class UserDefinedTypeName: public TypeName
 {
 public:
@@ -253,7 +269,9 @@ private:
 	StructDefinition* m_referencedStruct;
 };
 
-/// A mapping type. Its source form is "mapping('keyType' => 'valueType')"
+/**
+ * A mapping type. Its source form is "mapping('keyType' => 'valueType')"
+ */
 class Mapping: public TypeName
 {
 public:
@@ -274,7 +292,9 @@ private:
 /// @{
 
 
-/// Abstract base class for statements.
+/**
+ * Abstract base class for statements.
+ */
 class Statement: public ASTNode
 {
 public:
@@ -292,7 +312,9 @@ protected:
 	void expectType(Expression& _expression, Type const& _expectedType);
 };
 
-/// Brace-enclosed block containing zero or more statements.
+/**
+ * Brace-enclosed block containing zero or more statements.
+ */
 class Block: public Statement
 {
 public:
@@ -306,8 +328,10 @@ private:
 	std::vector<ASTPointer<Statement>> m_statements;
 };
 
-/// If-statement with an optional "else" part. Note that "else if" is modeled by having a new
-/// if-statement as the false (else) body.
+/**
+ * If-statement with an optional "else" part. Note that "else if" is modeled by having a new
+ * if-statement as the false (else) body.
+ */
 class IfStatement: public Statement
 {
 public:
@@ -324,8 +348,10 @@ private:
 	ASTPointer<Statement> m_falseBody; //< "else" part, optional
 };
 
-/// Statement in which a break statement is legal.
-/// @todo actually check this requirement.
+/**
+ * Statement in which a break statement is legal.
+ * @todo actually check this requirement.
+ */
 class BreakableStatement: public Statement
 {
 public:
@@ -380,9 +406,11 @@ private:
 	ParameterList* m_returnParameters;
 };
 
-/// Definition of a variable as a statement inside a function. It requires a type name (which can
-/// also be "var") but the actual assignment can be missing.
-/// Examples: var a = 2; uint256 a;
+/**
+ * Definition of a variable as a statement inside a function. It requires a type name (which can
+ * also be "var") but the actual assignment can be missing.
+ * Examples: var a = 2; uint256 a;
+ */
 class VariableDefinition: public Statement
 {
 public:
@@ -397,8 +425,10 @@ private:
 	ASTPointer<Expression> m_value; ///< the assigned value, can be missing
 };
 
-/// An expression, i.e. something that has a value (which can also be of type "void" in case
-/// of function calls).
+/**
+ * An expression, i.e. something that has a value (which can also be of type "void" in case
+ * of function calls).
+ */
 class Expression: public Statement
 {
 public:
@@ -416,8 +446,10 @@ protected:
 /// Expressions
 /// @{
 
-/// Assignment, can also be a compound assignment.
-/// Examples: (a = 7 + 8) or (a *= 2)
+/**
+ * Assignment, can also be a compound assignment.
+ * Examples: (a = 7 + 8) or (a *= 2)
+ */
 class Assignment: public Expression
 {
 public:
@@ -438,8 +470,10 @@ private:
 	ASTPointer<Expression> m_rightHandSide;
 };
 
-/// Operation involving a unary operator, pre- or postfix.
-/// Examples: ++i, delete x or !true
+/**
+ * Operation involving a unary operator, pre- or postfix.
+ * Examples: ++i, delete x or !true
+ */
 class UnaryOperation: public Expression
 {
 public:
@@ -459,8 +493,10 @@ private:
 	bool m_isPrefix;
 };
 
-/// Operation involving a binary operator.
-/// Examples: 1 + 2, true && false or 1 <= 4
+/**
+ * Operation involving a binary operator.
+ * Examples: 1 + 2, true && false or 1 <= 4
+ */
 class BinaryOperation: public Expression
 {
 public:
@@ -482,7 +518,9 @@ private:
 	std::shared_ptr<Type const> m_commonType;
 };
 
-/// Can be ordinary function call, type cast or struct construction.
+/**
+ * Can be ordinary function call, type cast or struct construction.
+ */
 class FunctionCall: public Expression
 {
 public:
@@ -501,7 +539,9 @@ private:
 	std::vector<ASTPointer<Expression>> m_arguments;
 };
 
-/// Access to a member of an object. Example: x.name
+/**
+ * Access to a member of an object. Example: x.name
+ */
 class MemberAccess: public Expression
 {
 public:
@@ -517,7 +557,9 @@ private:
 	ASTPointer<ASTString> m_memberName;
 };
 
-/// Index access to an array. Example: a[2]
+/**
+ * Index access to an array. Example: a[2]
+ */
 class IndexAccess: public Expression
 {
 public:
@@ -532,15 +574,19 @@ private:
 	ASTPointer<Expression> m_index;
 };
 
-/// Primary expression, i.e. an expression that cannot be divided any further. Examples are literals
-/// or variable references.
+/**
+ * Primary expression, i.e. an expression that cannot be divided any further. Examples are literals
+ * or variable references.
+ */
 class PrimaryExpression: public Expression
 {
 public:
 	PrimaryExpression(Location const& _location): Expression(_location) {}
 };
 
-/// An identifier, i.e. a reference to a declaration by name like a variable or function.
+/**
+ * An identifier, i.e. a reference to a declaration by name like a variable or function.
+ */
 class Identifier: public PrimaryExpression
 {
 public:
@@ -561,9 +607,11 @@ private:
 	Declaration* m_referencedDeclaration;
 };
 
-/// An elementary type name expression is used in expressions like "a = uint32(2)" to change the
-/// type of an expression explicitly. Here, "uint32" is the elementary type name expression and
-/// "uint32(2)" is a @ref FunctionCall.
+/**
+ * An elementary type name expression is used in expressions like "a = uint32(2)" to change the
+ * type of an expression explicitly. Here, "uint32" is the elementary type name expression and
+ * "uint32(2)" is a @ref FunctionCall.
+ */
 class ElementaryTypeNameExpression: public PrimaryExpression
 {
 public:
@@ -578,7 +626,9 @@ private:
 	Token::Value m_typeToken;
 };
 
-/// A literal string or number. @see Type::literalToBigEndian is used to actually parse its value.
+/**
+ * A literal string or number. @see Type::literalToBigEndian is used to actually parse its value.
+ */
 class Literal: public PrimaryExpression
 {
 public:

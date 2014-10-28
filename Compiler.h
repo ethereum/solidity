@@ -28,9 +28,11 @@
 namespace dev {
 namespace solidity {
 
-/// A single item of compiled code that can be assembled to a single byte value in the final
-/// bytecode. Its main purpose is to inject jump labels and label references into the opcode stream,
-/// which can be resolved in the final step.
+/**
+ * A single item of compiled code that can be assembled to a single byte value in the final
+ * bytecode. Its main purpose is to inject jump labels and label references into the opcode stream,
+ * which can be resolved in the final step.
+ */
 class AssemblyItem
 {
 public:
@@ -64,9 +66,11 @@ private:
 using AssemblyItems = std::vector<AssemblyItem>;
 
 
-/// Context to be shared by all units that compile the same contract. Its current usage only
-/// concerns dispensing unique jump label IDs and storing their actual positions in the bytecode
-/// stream.
+/**
+ * Context to be shared by all units that compile the same contract. Its current usage only
+ * concerns dispensing unique jump label IDs and storing their actual positions in the bytecode
+ * stream.
+ */
 class CompilerContext
 {
 public:
@@ -81,9 +85,11 @@ private:
 	std::map<uint32_t, uint32_t> m_labelPositions;
 };
 
-/// Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
-/// of EVM instructions. It needs a compiler context that is the same for the whole compilation
-/// unit.
+/**
+ * Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
+ * of EVM instructions. It needs a compiler context that is the same for the whole compilation
+ * unit.
+ */
 class ExpressionCompiler: public ASTVisitor
 {
 public:

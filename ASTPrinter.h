@@ -30,7 +30,9 @@ namespace dev
 namespace solidity
 {
 
-/// Pretty-printer for the abstract syntax tree (the "pretty" is arguable) for debugging purposes.
+/**
+ * Pretty-printer for the abstract syntax tree (the "pretty" is arguable) for debugging purposes.
+ */
 class ASTPrinter: public ASTVisitor
 {
 public:

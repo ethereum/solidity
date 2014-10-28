@@ -33,8 +33,11 @@ namespace dev
 namespace solidity
 {
 
-/// Resolves name references, resolves all types and checks that all operations are valid for the
-/// inferred types. An exception is throw on the first error.
+/**
+ * Resolves name references, types and checks types of all expressions.
+ * Specifically, it checks that all operations are valid for the inferred types.
+ * An exception is throw on the first error.
+ */
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
@@ -53,8 +56,10 @@ private:
 	Scope* m_currentScope;
 };
 
-/// Traverses the given AST upon construction and fills _scopes with all declarations inside the
-/// AST.
+/**
+ * Traverses the given AST upon construction and fills _scopes with all declarations inside the
+ * AST.
+ */
 class DeclarationRegistrationHelper: private ASTVisitor
 {
 public:
@@ -78,8 +83,10 @@ private:
 	Scope* m_currentScope;
 };
 
-/// Resolves references to declarations (of variables and types) and also establishes the link
-/// between a return statement and the return parameter list.
+/**
+ * Resolves references to declarations (of variables and types) and also establishes the link
+ * between a return statement and the return parameter list.
+ */
 class ReferencesResolver: private ASTVisitor
 {
 public:
