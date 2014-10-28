@@ -81,7 +81,9 @@ public:
 	json_spirit::mArray exportCallCreates();
 	void importCallCreates(json_spirit::mArray& _callcreates);
 
+	template<typename ExtVMType>
 	eth::OnOpFunc simpleTrace();
+
 	FakeState state() const { return m_s; }
 
 	std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes>> addresses;
@@ -95,5 +97,32 @@ private:
 	eth::Manifest m_ms;
 };
 
+template<typename ExtVMType>
+eth::OnOpFunc FakeExtVM::simpleTrace()
+{
+	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, void* voidVM, void const* voidExt)
+	{
+		ExtVMType const& ext = *(ExtVMType const*)voidExt;
+		eth::VM& vm = *(eth::VM*)voidVM;
 
+		std::ostringstream o;
+		o << std::endl << "    STACK" << std::endl;
+		for (auto i: vm.stack())
+			o << (h256)i << std::endl;
+		o << "    MEMORY" << std::endl << memDump(vm.memory());
+		o << "    STORAGE" << std::endl;
+		for (auto const& i: ext.state().storage(ext.myAddress))
+			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
+		dev::LogOutputStream<eth::VMTraceChannel, false>(true) << o.str();
+		dev::LogOutputStream<eth::VMTraceChannel, false>(false) << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
+
+		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
+		{
+			std::ofstream f;
+			f.open("./vmtrace.log", std::ofstream::app);
+			f << o.str();
+			f << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32";
+		}
+	};
+}
 } } // Namespace Close
