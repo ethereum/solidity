@@ -230,7 +230,7 @@ void ExpressionCompiler::endVisit(Literal& _literal)
 	}
 }
 
-void ExpressionCompiler::cleanHigherOrderBitsIfNeeded(const Type& _typeOnStack, const Type& _targetType)
+void ExpressionCompiler::cleanHigherOrderBitsIfNeeded(Type const& _typeOnStack, Type const& _targetType)
 {
 	// If the type of one of the operands is extended, we need to remove all
 	// higher-order bits that we might have ignored in previous operations.
