@@ -86,6 +86,114 @@ BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_ecdsav)
+{
+	// cryptopp implementation of secp256k1lib sign_compact w/recid parameter for recovering public key from signature
+	
+	// cryptopp does this:
+	//	void Sign(const DL_GroupParameters<T> &params, const Integer &x, const Integer &k, const Integer &e, Integer &r, Integer &s) const
+	//	{
+	//		const Integer &q = params.GetSubgroupOrder();
+	//		r %= q;
+	//		Integer kInv = k.InverseMod(q);
+	//		s = (kInv * (x*r + e)) % q;
+	//		assert(!!r && !!s);
+	//	}
+	
+	// secp256k1lib does this, which we want cryptopp to do:
+	//	  secp256k1_gej_t rp;
+	//    secp256k1_ecmult_gen(&rp, nonce);
+	//    secp256k1_ge_t r;
+	//    secp256k1_ge_set_gej(&r, &rp);
+	//    unsigned char b[32];
+	//    secp256k1_fe_normalize(&r.x);
+	//    secp256k1_fe_normalize(&r.y);
+	//    secp256k1_fe_get_b32(b, &r.x);
+	//    secp256k1_num_set_bin(&sig->r, b, 32);
+	//    if (recid)
+	//        *recid = (secp256k1_num_cmp(&sig->r, &c->order) >= 0 ? 2 : 0) | (secp256k1_fe_is_odd(&r.y) ? 1 : 0);
+	//    secp256k1_num_mod(&sig->r, &c->order);
+	//    secp256k1_num_t n;
+	//    secp256k1_num_init(&n);
+	//    secp256k1_num_mod_mul(&n, &sig->r, seckey, &c->order);
+	//    secp256k1_num_add(&n, &n, message);
+	//    secp256k1_num_mod(&n, &c->order);
+	//    secp256k1_num_mod_inverse(&sig->s, nonce, &c->order);
+	//    secp256k1_num_mod_mul(&sig->s, &sig->s, &n, &c->order);
+	//    secp256k1_num_free(&n);
+	//    if (secp256k1_num_is_zero(&sig->s))
+	//        return 0;
+	//    if (secp256k1_num_cmp(&sig->s, &c->half_order) > 0) {
+	//        secp256k1_num_sub(&sig->s, &c->order, &sig->s);
+	//        if (recid)
+	//            *recid ^= 1;
+	//    }
+	
+	
+	// secret
+	Secret secret(sha3("privacy"));
+	
+	// e := sha3(msg)
+	bytes e(fromHex("0x01"));
+	e.resize(32);
+	int tests = 150; // Oct 29: successful @ 1500
+	while (sha3(&e, &e), secret = sha3(secret.asBytes()), tests--)
+	{
+		KeyPair key(secret);
+		
+		h256 he(sha3(e));
+		Integer heInt(he.asBytes().data(), 32);
+		h256 k(he ^ key.sec());
+		Integer kInt(k.asBytes().data(), 32);
+		
+		// we get ec params from signer
+		ECDSA<ECP, SHA3_256>::Signer signer;
+		pp::initializeSigner(key.sec(), signer);
+
+		const DL_GroupParameters<ECP::Point> &params = signer.GetKey().GetAbstractGroupParameters();
+
+		ECP::Point rp = params.ExponentiateBase(kInt);
+		Integer const& q = params.GetGroupOrder();
+		Integer r = params.ConvertElementToInteger(rp);
+		int recid = ((r >= q) ? 2 : 0) | (rp.y.IsOdd() ? 1 : 0);
+		BOOST_REQUIRE(!(r>=q)); // interesting, this never happens
+		r %= q;
+		
+		Integer kInv = kInt.InverseMod(q);
+		Integer s = (kInv * (Integer(key.sec().asBytes().data(), 32)*r + heInt)) % q;
+		BOOST_REQUIRE(!!r && !!s);
+		
+		if (s > params.GetSubgroupOrder())
+		{
+			// also interesting, this never happens
+			s = params.GetGroupOrder() - s;
+			if (recid)
+				recid ^= 1;
+		}
+		BOOST_REQUIRE(recid < 2);
+
+		Signature sig;
+		r.Encode(sig.data(), 32);
+		s.Encode(sig.data()+32, 32);
+		sig[64] = recid;
+
+		Public p = dev::recover(sig, he);
+		Public pkey = key.pub();
+		BOOST_REQUIRE(p == pkey);
+		
+		// verify w/cryptopp
+		BOOST_REQUIRE(crypto::verify(key.pub(), sig, bytesConstRef(&e)));
+		
+		// verify with secp256k1lib
+		byte encpub[65] = {0x04};
+		memcpy(&encpub[1], key.pub().data(), 64);
+		byte dersig[72];
+		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sig.data(), 64, DSA_P1363);
+		BOOST_CHECK(cssz <= 72);
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(he.data(), sizeof(he), dersig, cssz, encpub, 65));
+	}
+}
+
 BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 {
 	// cryptopp integer encoding
