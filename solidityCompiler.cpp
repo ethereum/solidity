@@ -71,7 +71,7 @@ private:
 	Expression* m_expression;
 };
 
-bytes compileFirstExpression(const std::string& _sourceCode)
+bytes compileFirstExpression(std::string const& _sourceCode)
 {
 	Parser parser;
 	ASTPointer<ContractDefinition> contract;
