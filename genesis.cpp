@@ -35,9 +35,20 @@ namespace js = json_spirit;
 
 BOOST_AUTO_TEST_CASE(genesis_tests)
 {
+	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
+	string testPath;
+
+	if (ptestPath == NULL)
+	{
+		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
+		testPath = "../../../tests";
+	}
+	else
+		testPath = ptestPath;
+
 	cnote << "Testing Genesis block...";
 	js::mValue v;
-	string s = asString(contents("../../../tests/genesishashestest.json"));
+	string s = asString(contents(testPath + "/genesishashestest.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'genesishashestest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 
