@@ -24,7 +24,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libevmjit/VM.h>
 #include <boost/filesystem/path.hpp>
-
+#include <chrono>
 //#define FILL_TESTS
 
 using namespace std;
@@ -357,7 +357,7 @@ void FakeExtVM::importExec(mObject& _o)
 	thisTxCode.clear();
 	code = &thisTxCode;
 	if (_o["code"].type() == str_type)
-		if (_o["code"].get_str().find_first_of("0x") == 0)
+		if (_o["code"].get_str().find_first_of("0x") != 0)
 			thisTxCode = compileLLL(_o["code"].get_str());
 		else
 			thisTxCode = fromHex(_o["code"].get_str().substr(2));
@@ -518,10 +518,16 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		auto argv = boost::unit_test::framework::master_test_suite().argv;
 		auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
 		
+		auto showTimes = false;
+		for (auto i = 0; i < argc; ++i)
+			showTimes |= std::string(argv[i]) == "--show-times";
+
 		auto vmKind = useJit ? VMFace::JIT : VMFace::Interpreter;
 		auto vm = VMFace::create(vmKind, fev.gas);
 		bytes output;
 		auto outOfGas = false;
+
+		auto startTime = std::chrono::high_resolution_clock::now();
 		try
 		{
 			output = vm->go(fev).toVector();
@@ -538,6 +544,16 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
 		}
+
+		auto endTime = std::chrono::high_resolution_clock::now();
+		if (showTimes)
+		{
+			auto testDuration = endTime - startTime;
+			cnote << "Execution time: "
+				  << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+				  << " ms";
+		}
+
 		auto gas = vm->gas();
 
 		// delete null entries in storage for the sake of comparison
@@ -760,8 +776,14 @@ BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 	dev::test::executeTests("vmPushDupSwapTest");
 }
 
+BOOST_AUTO_TEST_CASE(vmPerformanceTest)
+{
+	dev::test::executeTests("vmPerformanceTest");
+}
+
 BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
 }
+
 
