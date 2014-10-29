@@ -434,6 +434,45 @@ p.append(param3);
 
         }
 
+        Json::Value shhChanged(const int& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("shhChanged",p);
+    if (result.isArray())
+        return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        int shhNewFilter(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("shhNewFilter",p);
+    if (result.isInt())
+        return result.asInt();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        bool shhUninstallFilter(const int& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("shhUninstallFilter",p);
+    if (result.isBool())
+        return result.asBool();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         std::string stateAt(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
