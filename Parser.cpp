@@ -266,9 +266,11 @@ ASTPointer<Statement> Parser::parseStatement()
 		// starting from here, all statements must be terminated by a semicolon
 	case Token::CONTINUE:
 		statement = ASTNodeFactory(*this).createNode<Continue>();
+		m_scanner->next();
 		break;
 	case Token::BREAK:
 		statement = ASTNodeFactory(*this).createNode<Break>();
+		m_scanner->next();
 		break;
 	case Token::RETURN:
 	{
