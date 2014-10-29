@@ -80,6 +80,8 @@ public:
 	void importExec(json_spirit::mObject& _o);
 	json_spirit::mArray exportCallCreates();
 	void importCallCreates(json_spirit::mArray& _callcreates);
+	void setVMKind(eth::VMFace::Kind _kind) { m_s.setVMKind(_kind); }
+	eth::VMFace::Kind getVMKind() const { return m_s.getVMKind(); }
 
 	template<typename ExtVMType>
 	eth::OnOpFunc simpleTrace();
