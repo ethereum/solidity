@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(while_loop)
 {
 	char const* text = "contract test {\n"
 					   "  function fun(uint256 a) {\n"
-					   "    uint256 x = (1 + 4).member(++67) || true;\n"
+					   "    while (true) { uint256 x = 1; break; continue; } x = 9;\n"
 					   "  }\n"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseText(text));
