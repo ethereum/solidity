@@ -89,7 +89,7 @@ public:
 		ASTNode(_location), m_name(_name) {}
 
 	/// Returns the declared name.
-	const ASTString& getName() const { return *m_name; }
+	ASTString const& getName() const { return *m_name; }
 
 private:
 	ASTPointer<ASTString> m_name;
@@ -259,7 +259,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual std::shared_ptr<Type> toType() override { return Type::fromUserDefinedTypeName(*this); }
 
-	const ASTString& getName() const { return *m_name; }
+	ASTString const& getName() const { return *m_name; }
 	void setReferencedStruct(StructDefinition& _referencedStruct) { m_referencedStruct = &_referencedStruct; }
 	StructDefinition const* getReferencedStruct() const { return m_referencedStruct; }
 
@@ -549,7 +549,7 @@ public:
 				 ASTPointer<ASTString> const& _memberName):
 		Expression(_location), m_expression(_expression), m_memberName(_memberName) {}
 	virtual void accept(ASTVisitor& _visitor) override;
-	const ASTString& getMemberName() const { return *m_memberName; }
+	ASTString const& getMemberName() const { return *m_memberName; }
 	virtual void checkTypeRequirements() override;
 
 private:

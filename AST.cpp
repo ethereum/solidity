@@ -255,7 +255,7 @@ TypeError ASTNode::createTypeError(string const& _description)
 	return TypeError() << errinfo_sourceLocation(getLocation()) << errinfo_comment(_description);
 }
 
-void Statement::expectType(Expression& _expression, const Type& _expectedType)
+void Statement::expectType(Expression& _expression, Type const& _expectedType)
 {
 	_expression.checkTypeRequirements();
 	if (!_expression.getType()->isImplicitlyConvertibleTo(_expectedType))
