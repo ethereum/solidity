@@ -21,6 +21,9 @@
 
 #pragma once
 
+#include "JsonSpiritHeaders.h"
+#include <libethereum/State.h>
+
 namespace dev
 {
 namespace eth
@@ -31,5 +34,46 @@ class Client;
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
 
+namespace test
+{
+
+class ImportTest
+{
+public:
+	ImportTest() = default;
+	ImportTest(json_spirit::mObject& _o, bool isFiller);
+
+	// imports
+	void importEnv(json_spirit::mObject& _o);
+	void importState(json_spirit::mObject& _o, State& _state);
+	void importExec(json_spirit::mObject& _o);
+	void importCallCreates(json_spirit::mArray& _callcreates);
+	void importGas(json_spirit::mObject& _o);
+	void importOutput(json_spirit::mObject& _o);
+
+	void exportTest();
+	Manifest* getManifest(){ return &m_manifest;}
+
+	State m_statePre;
+	State m_statePost;
+	ExtVMFace m_environment;
+	u256 gas;
+	u256 gasExec;
+	Transactions callcreates;
+	bytes output;
+	Manifest m_manifest;
+
+private:
+	// needed for const refs
+	bytes code;
+	bytes data;
+};
+
+// helping functions
+
+u256 toInt(json_spirit::mValue const& _v);
+byte toByte(json_spirit::mValue const& _v);
+
+}
 }
 }

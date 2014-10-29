@@ -24,6 +24,9 @@
 #include <thread>
 #include <chrono>
 #include <libethereum/Client.h>
+#include <liblll/Compiler.h>
+
+using namespace std;
 
 namespace dev
 {
@@ -54,5 +57,193 @@ void connectClients(Client& c1, Client& c2)
 #endif
 }
 
+namespace test
+{
+
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller)
+{
+	importEnv(_o["env"].get_obj());
+	importState(_o["pre"].get_obj(), m_statePre);
+	importExec(_o["exec"].get_obj());
+
+	if (!isFiller)
+	{
+		importState(_o["post"].get_obj(), m_statePost);
+		importCallCreates(_o["callcreates"].get_array());
+		importGas(_o);
+		importOutput(_o);
+	}
 }
+
+void ImportTest::importEnv(json_spirit::mObject& _o)
+{
+	assert(_o.count("previousHash") > 0);
+	assert(_o.count("currentGasLimit") > 0);
+	assert(_o.count("currentDifficulty") > 0);
+	assert(_o.count("currentTimestamp") > 0);
+	assert(_o.count("currentCoinbase") > 0);
+	assert(_o.count("currentNumber") > 0);
+
+	m_environment.previousBlock.hash = h256(_o["previousHash"].get_str());
+	m_environment.currentBlock.number = toInt(_o["currentNumber"]);
+	m_environment.currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
+	m_environment.currentBlock.difficulty = toInt(_o["currentDifficulty"]);
+	m_environment.currentBlock.timestamp = toInt(_o["currentTimestamp"]);
+	m_environment.currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
 }
+
+void ImportTest::importState(json_spirit::mObject& _o, State& _state)
+{
+	for (auto const& i: _o)
+	{
+		json_spirit::mObject o = i.second.get_obj();
+
+		assert(o.count("balance") > 0);
+		assert(o.count("nonce") > 0);
+		assert(o.count("storage") > 0);
+		assert(o.count("code") > 0);
+
+		Address address = Address(i.first);
+		cout << "address: " << address.abridged() << endl;
+
+		_state.m_cache[address] = AddressState(toInt(o["nonce"]), toInt(o["balance"]), h256(), h256());
+
+		cout << "addressInUse: " << _state.addressInUse(address) << endl;
+		cout << "balance: " << _state.balance(address) << endl;
+
+		for (auto const& j: o["storage"].get_obj())
+			_state.setStorage(address, toInt(j.first), toInt(j.second));
+
+		bytes code;
+		if (o["code"].type() == json_spirit::str_type)
+			if (o["code"].get_str().find_first_of("0x") != 0)
+				code = compileLLL(o["code"].get_str(), false);
+			else
+				code = fromHex(o["code"].get_str().substr(2));
+		else
+		{
+			code.clear();
+			for (auto const& j: o["code"].get_array())
+				code.push_back(toByte(j));
+		}
+
+		_state.m_cache[address].setCode(bytesConstRef(&code));
+		_state.ensureCached(address, true, true);
+	}
+}
+
+void ImportTest::importExec(json_spirit::mObject& _o)
+{
+	assert(_o.count("address")> 0);
+	assert(_o.count("caller") > 0);
+	assert(_o.count("origin") > 0);
+	assert(_o.count("value") > 0);
+	assert(_o.count("data") > 0);
+	assert(_o.count("gasPrice") > 0);
+	assert(_o.count("gas") > 0);
+	assert(_o.count("code") > 0);
+
+	m_environment.myAddress = Address(_o["address"].get_str());
+	m_environment.caller = Address(_o["caller"].get_str());
+	m_environment.origin = Address(_o["origin"].get_str());
+	m_environment.value = toInt(_o["value"]);
+	m_environment.gasPrice = toInt(_o["gasPrice"]);
+	gasExec = toInt(_o["gas"]);
+
+	if (_o["code"].type() == json_spirit::str_type)
+		if (_o["code"].get_str().find_first_of("0x") == 0)
+			code = fromHex(_o["code"].get_str().substr(2));
+		else
+			code = compileLLL(_o["code"].get_str());
+	else if (_o["code"].type() == json_spirit::array_type)
+		for (auto const& j: _o["code"].get_array())
+			code.push_back(toByte(j));
+	else
+		m_environment.code.reset();
+	m_environment.code = &code;
+
+	if (_o["data"].type() == json_spirit::str_type)
+		if (_o["data"].get_str().find_first_of("0x") == 0)
+			data = fromHex(_o["data"].get_str().substr(2));
+		else
+			data = fromHex(_o["data"].get_str());
+	else
+		for (auto const& j: _o["data"].get_array())
+			data.push_back(toByte(j));
+	m_environment.data = &data;
+}
+
+void ImportTest::importCallCreates(json_spirit::mArray& _callcreates)
+{
+	for (json_spirit::mValue& v: _callcreates)
+	{
+		auto tx = v.get_obj();
+		assert(tx.count("data") > 0);
+		assert(tx.count("value") > 0);
+		assert(tx.count("destination") > 0);
+		assert(tx.count("gasLimit") > 0);
+		Transaction t;
+		t.type = tx["destination"].get_str().empty() ? Transaction::ContractCreation : Transaction::MessageCall;
+		t.receiveAddress = Address(tx["destination"].get_str());
+		t.value = toInt(tx["value"]);
+		t.gas = toInt(tx["gasLimit"]);
+		if (tx["data"].type() == json_spirit::str_type)
+			if (tx["data"].get_str().find_first_of("0x") == 0)
+				t.data = fromHex(tx["data"].get_str().substr(2));
+			else
+				t.data = fromHex(tx["data"].get_str());
+		else
+			for (auto const& j: tx["data"].get_array())
+				t.data.push_back(toByte(j));
+		callcreates.push_back(t);
+	}
+}
+
+void ImportTest::importGas(json_spirit::mObject& _o)
+{
+	gas = toInt(_o["gas"]);
+}
+
+void ImportTest::importOutput(json_spirit::mObject& _o)
+{
+	int i = 0;
+	if (_o["out"].type() == json_spirit::array_type)
+		for (auto const& d: _o["out"].get_array())
+		{
+			output[i] = uint8_t(toInt(d));
+			++i;
+		}
+	else if (_o["out"].get_str().find("0x") == 0)
+		output = fromHex(_o["out"].get_str().substr(2));
+	else
+		output = fromHex(_o["out"].get_str());
+}
+
+u256 toInt(json_spirit::mValue const& _v)
+{
+	switch (_v.type())
+	{
+	case json_spirit::str_type: return u256(_v.get_str());
+	case json_spirit::int_type: return (u256)_v.get_uint64();
+	case json_spirit::bool_type: return (u256)(uint64_t)_v.get_bool();
+	case json_spirit::real_type: return (u256)(uint64_t)_v.get_real();
+	default: cwarn << "Bad type for scalar: " << _v.type();
+	}
+	return 0;
+}
+
+byte toByte(json_spirit::mValue const& _v)
+{
+	switch (_v.type())
+	{
+	case json_spirit::str_type: return (byte)stoi(_v.get_str());
+	case json_spirit::int_type: return (byte)_v.get_uint64();
+	case json_spirit::bool_type: return (byte)_v.get_bool();
+	case json_spirit::real_type: return (byte)_v.get_real();
+	default: cwarn << "Bad type for scalar: " << _v.type();
+	}
+	return 0;
+}
+
+
+} } } // namespaces
