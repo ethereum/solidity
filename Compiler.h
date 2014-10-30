@@ -20,6 +20,7 @@
  * Solidity AST to EVM bytecode compiler.
  */
 
+#include <ostream>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/CompilerContext.h>
 
@@ -29,14 +30,20 @@ namespace solidity {
 class Compiler: private ASTVisitor
 {
 public:
+	Compiler(): m_returnTag(m_context.newTag()) {}
+
+	void compileContract(ContractDefinition& _contract);
+	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(); }
+	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
+
 	/// Compile the given contract and return the EVM bytecode.
 	static bytes compile(ContractDefinition& _contract);
 
 private:
-	Compiler(): m_returnTag(m_context.newTag()) {}
-
-	void compileContract(ContractDefinition& _contract);
-	void appendFunctionSelector(const std::vector<ASTPointer<FunctionDefinition> >& _functions);
+	void appendFunctionSelector(std::vector<ASTPointer<FunctionDefinition> > const& _functions);
+	void appendFunctionCallSection(FunctionDefinition const& _function);
+	void appendCalldataUnpacker(FunctionDefinition const& _function);
+	void appendReturnValuePacker(FunctionDefinition const& _function);
 
 	virtual bool visit(FunctionDefinition& _function) override;
 	virtual bool visit(IfStatement& _ifStatement) override;
@@ -47,7 +54,6 @@ private:
 	virtual bool visit(VariableDefinition& _variableDefinition) override;
 	virtual bool visit(ExpressionStatement& _expressionStatement) override;
 
-	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(); }
 
 	CompilerContext m_context;
 	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement

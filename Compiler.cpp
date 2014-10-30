@@ -51,16 +51,106 @@ void Compiler::compileContract(ContractDefinition& _contract)
 		function->accept(*this);
 }
 
-void Compiler::appendFunctionSelector(std::vector<ASTPointer<FunctionDefinition>> const&)
+void Compiler::appendFunctionSelector(vector<ASTPointer<FunctionDefinition>> const& _functions)
 {
-	// filter public functions, and sort by name. Then select function from first byte,
-	// unpack arguments from calldata, push to stack and jump. Pack return values to
-	// output and return.
+	// sort all public functions and store them together with a tag for their argument decoding section
+	map<string, pair<FunctionDefinition const*, eth::AssemblyItem>> publicFunctions;
+	for (ASTPointer<FunctionDefinition> const& f: _functions)
+		if (f->isPublic())
+			publicFunctions.insert(make_pair(f->getName(), make_pair(f.get(), m_context.newTag())));
+
+	//@todo remove constructor
+
+	if (publicFunctions.size() > 255)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("More than 255 public functions for contract."));
+
+	//@todo check for calldatasize?
+	// retrieve the first byte of the call data
+	m_context << u256(0) << eth::Instruction::CALLDATALOAD << u256(0) << eth::Instruction::BYTE;
+	// check that it is not too large
+	m_context << eth::Instruction::DUP1 << u256(publicFunctions.size() - 1) << eth::Instruction::LT;
+	eth::AssemblyItem returnTag = m_context.appendConditionalJump();
+
+	// otherwise, jump inside jump table (each entry of the table has size 4)
+	m_context << u256(4) << eth::Instruction::MUL;
+	eth::AssemblyItem jumpTableStart = m_context.pushNewTag();
+	m_context << eth::Instruction::ADD << eth::Instruction::JUMP;
+
+	// jump table @todo it could be that the optimizer destroys this
+	m_context << jumpTableStart;
+	for (pair<string, pair<FunctionDefinition const*, eth::AssemblyItem>> const& f: publicFunctions)
+		m_context.appendJumpTo(f.second.second) << eth::Instruction::JUMPDEST;
+
+	m_context << returnTag << eth::Instruction::RETURN;
+
+	for (pair<string, pair<FunctionDefinition const*, eth::AssemblyItem>> const& f: publicFunctions)
+	{
+		m_context << f.second.second;
+		appendFunctionCallSection(*f.second.first);
+	}
+}
+
+void Compiler::appendFunctionCallSection(FunctionDefinition const& _function)
+{
+	eth::AssemblyItem returnTag = m_context.pushNewTag();
+
+	appendCalldataUnpacker(_function);
+
+	m_context.appendJumpTo(m_context.getFunctionEntryLabel(_function));
+	m_context << returnTag;
+
+	appendReturnValuePacker(_function);
+}
+
+void Compiler::appendCalldataUnpacker(FunctionDefinition const& _function)
+{
+	// We do not check the calldata size, everything is zero-padded.
+	unsigned dataOffset = 1;
+
+	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
+	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
+	{
+		unsigned const numBytes = var->getType()->getCalldataEncodedSize();
+		if (numBytes == 0)
+			BOOST_THROW_EXCEPTION(CompilerError()
+								  << errinfo_sourceLocation(var->getLocation())
+								  << errinfo_comment("Type not yet supported."));
+		if (numBytes == 32)
+			m_context << u256(dataOffset) << eth::Instruction::CALLDATALOAD;
+		else
+			m_context << (u256(1) << ((32 - numBytes) * 8)) << u256(dataOffset)
+					  << eth::Instruction::CALLDATALOAD << eth::Instruction::DIV;
+		dataOffset += numBytes;
+	}
+}
+
+void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
+{
+	//@todo this can be also done more efficiently
+	unsigned dataOffset = 0;
+	vector<ASTPointer<VariableDeclaration>> const& parameters = _function.getReturnParameters();
+	for (unsigned i = 0 ; i < parameters.size(); ++i)
+	{
+		unsigned numBytes = parameters[i]->getType()->getCalldataEncodedSize();
+		if (numBytes == 0)
+			BOOST_THROW_EXCEPTION(CompilerError()
+								  << errinfo_sourceLocation(parameters[i]->getLocation())
+								  << errinfo_comment("Type not yet supported."));
+		m_context << eth::dupInstruction(parameters.size() - i);
+		if (numBytes == 32)
+			m_context << u256(dataOffset) << eth::Instruction::MSTORE;
+		else
+			m_context << u256(dataOffset) << (u256(1) << ((32 - numBytes) * 8))
+					  << eth::Instruction::MUL << eth::Instruction::MSTORE;
+		dataOffset += numBytes;
+	}
+	// note that the stack is not cleaned up here
+	m_context << u256(dataOffset) << u256(0) << eth::Instruction::RETURN;
 }
 
 bool Compiler::visit(FunctionDefinition& _function)
 {
-	//@todo to simplify this, the colling convention could by changed such that
+	//@todo to simplify this, the calling convention could by changed such that
 	// caller puts: [retarg0] ... [retargm] [return address] [arg0] ... [argn]
 	// although note that this reduces the size of the visible stack
 

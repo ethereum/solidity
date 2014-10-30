@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <ostream>
 #include <libevmface/Instruction.h>
 #include <liblll/Assembly.h>
 #include <libsolidity/Types.h>
@@ -69,7 +70,8 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
 
-	bytes getAssembledBytecode() { return m_asm.assemble(); }
+	void streamAssembly(std::ostream& _stream) const { _stream << m_asm; }
+	bytes getAssembledBytecode() const { return m_asm.assemble(); }
 private:
 	eth::Assembly m_asm;
 

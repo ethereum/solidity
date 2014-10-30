@@ -68,6 +68,10 @@ public:
 	virtual bool operator==(Type const& _other) const { return getCategory() == _other.getCategory(); }
 	virtual bool operator!=(Type const& _other) const { return !this->operator ==(_other); }
 
+	/// @returns number of bytes used by this type when encoded for CALL, or 0 if the encoding
+	/// is not a simple big-endian encoding or the type cannot be stored on the stack.
+	virtual unsigned getCalldataEncodedSize() const { return 0; }
+
 	virtual std::string toString() const = 0;
 	virtual u256 literalValue(Literal const&) const { assert(false); }
 };
@@ -92,6 +96,8 @@ public:
 	virtual bool acceptsUnaryOperator(Token::Value _operator) const override;
 
 	virtual bool operator==(Type const& _other) const override;
+
+	virtual unsigned getCalldataEncodedSize() const { return m_bits / 8; }
 
 	virtual std::string toString() const override;
 	virtual u256 literalValue(Literal const& _literal) const override;
@@ -120,6 +126,8 @@ public:
 	{
 		return _operator == Token::NOT || _operator == Token::DELETE;
 	}
+
+	virtual unsigned getCalldataEncodedSize() const { return 1; }
 
 	virtual std::string toString() const override { return "bool"; }
 	virtual u256 literalValue(Literal const& _literal) const override;
