@@ -22,14 +22,14 @@
  */
 
 #include <string>
-
+#include <iostream>
+#include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/AST.h>
-#include <boost/test/unit_test.hpp>
 
 using namespace std;
 using namespace dev::eth;
@@ -52,10 +52,22 @@ bytes compileContract(const string& _sourceCode)
 	NameAndTypeResolver resolver;
 	BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 
-	bytes instructions = Compiler::compile(*contract);
+	Compiler compiler;
+	compiler.compileContract(*contract);
 	// debug
-	//cout << eth::disassemble(instructions) << endl;
-	return instructions;
+	//compiler.streamAssembly(cout);
+	return compiler.getAssembledBytecode();
+}
+
+/// Checks that @a _compiledCode is present starting from offset @a _offset in @a _expectation.
+/// This is necessary since the compiler will add boilerplate add the beginning that is not
+/// tested here.
+void checkCodePresentAt(bytes const& _compiledCode, bytes const& _expectation, unsigned _offset)
+{
+	BOOST_REQUIRE(_compiledCode.size() >= _offset + _expectation.size());
+	auto checkStart = _compiledCode.begin() + _offset;
+	BOOST_CHECK_EQUAL_COLLECTIONS(checkStart, checkStart + _expectation.size(),
+								  _expectation.begin(), _expectation.end());
 }
 
 } // end anonymous namespace
@@ -69,6 +81,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
+	unsigned boilerplateSize = 39;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize local variable x
 					   byte(Instruction::PUSH1), 0x2,
@@ -77,7 +90,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::POP),
 					   byte(Instruction::JUMP)});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
 BOOST_AUTO_TEST_CASE(different_argument_numbers)
@@ -88,12 +101,13 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
+	unsigned boilerplateSize = 76;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize return variable d
 					   byte(Instruction::DUP3),
 					   byte(Instruction::SWAP1), // assign b to d
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0xa, // jump to return
+					   byte(Instruction::PUSH1), 0xa + boilerplateSize, // jump to return
 					   byte(Instruction::JUMP),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::SWAP4), // store d and fetch return address
@@ -105,11 +119,11 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 					   byte(Instruction::JUMPDEST), // beginning of g
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1), // initialized e and h
-					   byte(Instruction::PUSH1), 0x20, // ret address
+					   byte(Instruction::PUSH1), 0x20 + boilerplateSize, // ret address
 					   byte(Instruction::PUSH1), 0x1,
 					   byte(Instruction::PUSH1), 0x2,
 					   byte(Instruction::PUSH1), 0x3,
-					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::PUSH1), 0x1 + boilerplateSize,
 					   // stack here: ret e h 0x20 1 2 3 0x1
 					   byte(Instruction::JUMP),
 					   byte(Instruction::JUMPDEST),
@@ -129,7 +143,7 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 					   // f(1,2,3) e ret
 					   byte(Instruction::JUMP) // end of g
 					   });
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
 BOOST_AUTO_TEST_CASE(ifStatement)
@@ -139,27 +153,28 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
+	unsigned boilerplateSize = 39;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1),
-					   byte(Instruction::PUSH1), 0x1b, // "true" target
+					   byte(Instruction::PUSH1), 0x1b + boilerplateSize, // "true" target
 					   byte(Instruction::JUMPI),
 					   // new check "else if" condition
 					   byte(Instruction::DUP1),
 					   byte(Instruction::NOT),
-					   byte(Instruction::PUSH1), 0x13,
+					   byte(Instruction::PUSH1), 0x13 + boilerplateSize,
 					   byte(Instruction::JUMPI),
 					   // "else" body
 					   byte(Instruction::PUSH1), 0x4f,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x17, // exit path of second part
+					   byte(Instruction::PUSH1), 0x17 + boilerplateSize, // exit path of second part
 					   byte(Instruction::JUMP),
 					   // "else if" body
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x4e,
 					   byte(Instruction::POP),
 					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::PUSH1), 0x1f,
+					   byte(Instruction::PUSH1), 0x1f + boilerplateSize,
 					   byte(Instruction::JUMP),
 					   // "if" body
 					   byte(Instruction::JUMPDEST),
@@ -169,7 +184,7 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::POP),
 					   byte(Instruction::JUMP)});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
 BOOST_AUTO_TEST_CASE(loops)
@@ -179,33 +194,34 @@ BOOST_AUTO_TEST_CASE(loops)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
+	unsigned boilerplateSize = 39;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x1,
 					   byte(Instruction::NOT),
-					   byte(Instruction::PUSH1), 0x21,
+					   byte(Instruction::PUSH1), 0x21 + boilerplateSize,
 					   byte(Instruction::JUMPI),
 					   byte(Instruction::PUSH1), 0x1,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x21,
+					   byte(Instruction::PUSH1), 0x21 + boilerplateSize,
 					   byte(Instruction::JUMP), // break
 					   byte(Instruction::PUSH1), 0x2,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::PUSH1), 0x2 + boilerplateSize,
 					   byte(Instruction::JUMP), // continue
 					   byte(Instruction::PUSH1), 0x3,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x22,
+					   byte(Instruction::PUSH1), 0x22 + boilerplateSize,
 					   byte(Instruction::JUMP), // return
 					   byte(Instruction::PUSH1), 0x4,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::PUSH1), 0x2 + boilerplateSize,
 					   byte(Instruction::JUMP),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMP)});
 
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
