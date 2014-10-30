@@ -294,6 +294,8 @@ void Break::checkTypeRequirements()
 void Return::checkTypeRequirements()
 {
 	assert(m_returnParameters);
+	if (!m_expression)
+		return;
 	if (m_returnParameters->getParameters().size() != 1)
 		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
 											  "than in returns declaration."));
