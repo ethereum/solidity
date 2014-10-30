@@ -27,6 +27,7 @@
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
+#include <libsolidity/CompilerContext.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/AST.h>
 #include <boost/test/unit_test.hpp>
