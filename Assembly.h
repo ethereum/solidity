@@ -105,7 +105,11 @@ public:
 	void injectStart(AssemblyItem const& _i);
 
 	std::string out() const { std::stringstream ret; streamRLP(ret); return ret.str(); }
+
 	int deposit() const { return m_deposit; }
+	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assert(m_deposit >= 0); }
+	void setDeposit(int _deposit) { m_deposit = _deposit; assert(m_deposit >= 0); }
+
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
 	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "") const;

@@ -54,6 +54,7 @@ unsigned Assembly::bytesRequired() const
 			switch (i.m_type)
 			{
 			case Operation:
+			case Tag: // 1 byte for the JUMPDEST
 				ret++;
 				break;
 			case PushString:
@@ -69,7 +70,6 @@ unsigned Assembly::bytesRequired() const
 			case PushData:
 			case PushSub:
 				ret += 1 + br;
-			case Tag:;
 			default:;
 			}
 		if (dev::bytesRequired(ret) <= br)
