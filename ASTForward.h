@@ -53,6 +53,7 @@ class Continue;
 class Break;
 class Return;
 class VariableDefinition;
+class ExpressionStatement;
 class Expression;
 class Assignment;
 class UnaryOperation;

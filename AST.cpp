@@ -167,6 +167,14 @@ void Return::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
+void ExpressionStatement::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+		if (m_expression)
+			m_expression->accept(_visitor);
+	_visitor.endVisit(*this);
+}
+
 void VariableDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
@@ -255,14 +263,6 @@ TypeError ASTNode::createTypeError(string const& _description)
 	return TypeError() << errinfo_sourceLocation(getLocation()) << errinfo_comment(_description);
 }
 
-void Statement::expectType(Expression& _expression, const Type& _expectedType)
-{
-	_expression.checkTypeRequirements();
-	if (!_expression.getType()->isImplicitlyConvertibleTo(_expectedType))
-		BOOST_THROW_EXCEPTION(_expression.createTypeError("Type not implicitly convertible to expected type."));
-	//@todo provide more information to the exception
-}
-
 void Block::checkTypeRequirements()
 {
 	for (shared_ptr<Statement> const& statement: m_statements)
@@ -271,7 +271,7 @@ void Block::checkTypeRequirements()
 
 void IfStatement::checkTypeRequirements()
 {
-	expectType(*m_condition, BoolType());
+	m_condition->expectType(BoolType());
 	m_trueBody->checkTypeRequirements();
 	if (m_falseBody)
 		m_falseBody->checkTypeRequirements();
@@ -279,7 +279,7 @@ void IfStatement::checkTypeRequirements()
 
 void WhileStatement::checkTypeRequirements()
 {
-	expectType(*m_condition, BoolType());
+	m_condition->expectType(BoolType());
 	m_body->checkTypeRequirements();
 }
 
@@ -301,7 +301,7 @@ void Return::checkTypeRequirements()
 											  "than in returns declaration."));
 	// this could later be changed such that the paramaters type is an anonymous struct type,
 	// but for now, we only allow one return parameter
-	expectType(*m_expression, *m_returnParameters->getParameters().front()->getType());
+	m_expression->expectType(*m_returnParameters->getParameters().front()->getType());
 }
 
 void VariableDefinition::checkTypeRequirements()
@@ -313,7 +313,7 @@ void VariableDefinition::checkTypeRequirements()
 	if (m_value)
 	{
 		if (m_variable->getType())
-			expectType(*m_value, *m_variable->getType());
+			m_value->expectType(*m_variable->getType());
 		else
 		{
 			// no type declared and no previous assignment, infer the type
@@ -330,7 +330,7 @@ void Assignment::checkTypeRequirements()
 	m_leftHandSide->checkTypeRequirements();
 	if (!m_leftHandSide->isLvalue())
 		BOOST_THROW_EXCEPTION(createTypeError("Expression has to be an lvalue."));
-	expectType(*m_rightHandSide, *m_leftHandSide->getType());
+	m_rightHandSide->expectType(*m_leftHandSide->getType());
 	m_type = m_leftHandSide->getType();
 	if (m_assigmentOperator != Token::ASSIGN)
 	{
@@ -338,6 +338,19 @@ void Assignment::checkTypeRequirements()
 		if (!m_type->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_assigmentOperator)))
 			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
 	}
+}
+
+void ExpressionStatement::checkTypeRequirements()
+{
+	m_expression->checkTypeRequirements();
+}
+
+void Expression::expectType(const Type& _expectedType)
+{
+	checkTypeRequirements();
+	if (!getType()->isImplicitlyConvertibleTo(_expectedType))
+		BOOST_THROW_EXCEPTION(createTypeError("Type not implicitly convertible to expected type."));
+	//@todo provide more information to the exception
 }
 
 void UnaryOperation::checkTypeRequirements()
@@ -411,10 +424,10 @@ void FunctionCall::checkTypeRequirements()
 				BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
-		if (fun.getReturnParameterList()->getParameters().empty())
+		if (fun.getReturnParameters().empty())
 			m_type = make_shared<VoidType>();
 		else
-			m_type = fun.getReturnParameterList()->getParameters().front()->getType();
+			m_type = fun.getReturnParameters().front()->getType();
 	}
 }
 

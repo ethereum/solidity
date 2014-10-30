@@ -171,6 +171,13 @@ bool ASTPrinter::visit(VariableDefinition& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(ExpressionStatement& _node)
+{
+	writeLine("ExpressionStatement");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(Expression& _node)
 {
 	writeLine("Expression");
@@ -354,6 +361,11 @@ void ASTPrinter::endVisit(Return&)
 }
 
 void ASTPrinter::endVisit(VariableDefinition&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(ExpressionStatement&)
 {
 	m_indentation--;
 }

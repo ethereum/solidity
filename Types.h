@@ -69,7 +69,7 @@ public:
 	virtual bool operator!=(Type const& _other) const { return !this->operator ==(_other); }
 
 	virtual std::string toString() const = 0;
-	virtual bytes literalToBigEndian(Literal const&) const { return NullBytes; }
+	virtual u256 literalValue(Literal const&) const { assert(false); }
 };
 
 /// Any kind of integer type including hash and address.
@@ -94,7 +94,7 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 
 	virtual std::string toString() const override;
-	virtual bytes literalToBigEndian(Literal const& _literal) const override;
+	virtual u256 literalValue(Literal const& _literal) const override;
 
 	int getNumBits() const { return m_bits; }
 	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
@@ -122,7 +122,7 @@ public:
 	}
 
 	virtual std::string toString() const override { return "bool"; }
-	virtual bytes literalToBigEndian(Literal const& _literal) const override;
+	virtual u256 literalValue(Literal const& _literal) const override;
 };
 
 /// The type of a contract instance, there is one distinct type for each contract definition.

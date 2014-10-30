@@ -58,6 +58,7 @@ public:
 	bool visit(Break& _node) override;
 	bool visit(Return& _node) override;
 	bool visit(VariableDefinition& _node) override;
+	bool visit(ExpressionStatement& _node) override;
 	bool visit(Expression& _node) override;
 	bool visit(Assignment& _node) override;
 	bool visit(UnaryOperation& _node) override;
@@ -89,6 +90,7 @@ public:
 	void endVisit(Break&) override;
 	void endVisit(Return&) override;
 	void endVisit(VariableDefinition&) override;
+	void endVisit(ExpressionStatement&) override;
 	void endVisit(Expression&) override;
 	void endVisit(Assignment&) override;
 	void endVisit(UnaryOperation&) override;

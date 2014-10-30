@@ -58,6 +58,7 @@ private:
 	ASTPointer<IfStatement> parseIfStatement();
 	ASTPointer<WhileStatement> parseWhileStatement();
 	ASTPointer<VariableDefinition> parseVariableDefinition();
+	ASTPointer<ExpressionStatement> parseExpressionStatement();
 	ASTPointer<Expression> parseExpression();
 	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4);
 	ASTPointer<Expression> parseUnaryExpression();

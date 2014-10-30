@@ -159,14 +159,12 @@ std::string IntegerType::toString() const
 	return prefix + dev::toString(m_bits);
 }
 
-bytes IntegerType::literalToBigEndian(const Literal& _literal) const
+u256 IntegerType::literalValue(const Literal& _literal) const
 {
 	bigint value(_literal.getValue());
-	if (!isSigned() && value < 0)
-		return bytes(); // @todo this should already be caught by "smallestTypeforLiteral"
-	//@todo check that the number of bits is correct
-	//@todo does "toCompactBigEndian" work for signed numbers?
-	return toCompactBigEndian(value);
+	//@todo check that the number is not too large
+	//@todo does this work for signed numbers?
+	return u256(value);
 }
 
 bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -182,14 +180,14 @@ bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return isImplicitlyConvertibleTo(_convertTo);
 }
 
-bytes BoolType::literalToBigEndian(const Literal& _literal) const
+u256 BoolType::literalValue(const Literal& _literal) const
 {
 	if (_literal.getToken() == Token::TRUE_LITERAL)
-		return bytes(1, 1);
+		return u256(1);
 	else if (_literal.getToken() == Token::FALSE_LITERAL)
-		return bytes(1, 0);
+		return u256(0);
 	else
-		return NullBytes;
+		assert(false);
 }
 
 bool ContractType::operator==(const Type& _other) const

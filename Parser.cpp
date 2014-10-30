@@ -266,9 +266,11 @@ ASTPointer<Statement> Parser::parseStatement()
 		// starting from here, all statements must be terminated by a semicolon
 	case Token::CONTINUE:
 		statement = ASTNodeFactory(*this).createNode<Continue>();
+		m_scanner->next();
 		break;
 	case Token::BREAK:
 		statement = ASTNodeFactory(*this).createNode<Break>();
+		m_scanner->next();
 		break;
 	case Token::RETURN:
 	{
@@ -283,9 +285,9 @@ ASTPointer<Statement> Parser::parseStatement()
 	}
 	break;
 	default:
-		// distinguish between variable definition (and potentially assignment) and expressions
+		// distinguish between variable definition (and potentially assignment) and expression statement
 		// (which include assignments to other expressions and pre-declared variables)
-		// We have a variable definition if we ge a keyword that specifies a type name, or
+		// We have a variable definition if we get a keyword that specifies a type name, or
 		// in the case of a user-defined type, we have two identifiers following each other.
 		if (m_scanner->getCurrentToken() == Token::MAPPING ||
 			m_scanner->getCurrentToken() == Token::VAR ||
@@ -293,8 +295,8 @@ ASTPointer<Statement> Parser::parseStatement()
 			(m_scanner->getCurrentToken() == Token::IDENTIFIER &&
 			 m_scanner->peekNextToken() == Token::IDENTIFIER))
 			statement = parseVariableDefinition();
-		else // "ordinary" expression
-			statement = parseExpression();
+		else // "ordinary" expression statement
+			statement = parseExpressionStatement();
 	}
 	expectToken(Token::SEMICOLON);
 	return statement;
@@ -347,6 +349,14 @@ ASTPointer<VariableDefinition> Parser::parseVariableDefinition()
 	else
 		nodeFactory.setEndPositionFromNode(variable);
 	return nodeFactory.createNode<VariableDefinition>(variable, value);
+}
+
+ASTPointer<ExpressionStatement> Parser::parseExpressionStatement()
+{
+	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<Expression> expression = parseExpression();
+	nodeFactory.setEndPositionFromNode(expression);
+	return nodeFactory.createNode<ExpressionStatement>(expression);
 }
 
 ASTPointer<Expression> Parser::parseExpression()
@@ -453,8 +463,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	{
 	case Token::TRUE_LITERAL:
 	case Token::FALSE_LITERAL:
-		expression = nodeFactory.createNode<Literal>(token, ASTPointer<ASTString>());
-		m_scanner->next();
+		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::NUMBER:
 	case Token::STRING_LITERAL:

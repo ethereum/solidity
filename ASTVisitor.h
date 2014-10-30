@@ -58,6 +58,7 @@ public:
 	virtual bool visit(Break&) { return true; }
 	virtual bool visit(Return&) { return true; }
 	virtual bool visit(VariableDefinition&) { return true; }
+	virtual bool visit(ExpressionStatement&) { return true; }
 	virtual bool visit(Expression&) { return true; }
 	virtual bool visit(Assignment&) { return true; }
 	virtual bool visit(UnaryOperation&) { return true; }
@@ -89,6 +90,7 @@ public:
 	virtual void endVisit(Break&) { }
 	virtual void endVisit(Return&) { }
 	virtual void endVisit(VariableDefinition&) { }
+	virtual void endVisit(ExpressionStatement&) { }
 	virtual void endVisit(Expression&) { }
 	virtual void endVisit(Assignment&) { }
 	virtual void endVisit(UnaryOperation&) { }

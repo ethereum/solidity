@@ -144,7 +144,7 @@ public:
 		ASTNode(_location), m_parameters(_parameters) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
-	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() { return m_parameters; }
+	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters; }
 
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_parameters;
@@ -167,15 +167,20 @@ public:
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
 	ParameterList& getParameterList() { return *m_parameters; }
+	std::vector<ASTPointer<VariableDeclaration>> const& getReturnParameters() const { return m_returnParameters->getParameters(); }
 	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
 	Block& getBody() { return *m_body; }
 
+	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
+	std::vector<VariableDeclaration const*>const& getLocalVariables() const { return m_localVariables; }
 private:
 	bool m_isPublic;
 	ASTPointer<ParameterList> m_parameters;
 	bool m_isDeclaredConst;
 	ASTPointer<ParameterList> m_returnParameters;
 	ASTPointer<Block> m_body;
+
+	std::vector<VariableDeclaration const*> m_localVariables;
 };
 
 /// Declaration of a variable. This can be used in various places, e.g. in function parameter
@@ -285,11 +290,6 @@ public:
 	//! This includes checking that operators are applicable to their arguments but also that
 	//! the number of function call arguments matches the number of formal parameters and so forth.
 	virtual void checkTypeRequirements() = 0;
-
-protected:
-	//! Helper function, check that the inferred type for @a _expression is @a _expectedType or at
-	//! least implicitly convertible to @a _expectedType. If not, throw exception.
-	void expectType(Expression& _expression, Type const& _expectedType);
 };
 
 /// Brace-enclosed block containing zero or more statements.
@@ -318,6 +318,9 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
+	Expression& getCondition() const { return *m_condition; }
+	Statement& getTrueStatement() const { return *m_trueBody; }
+	Statement* getFalseStatement() const { return m_falseBody.get(); }
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_trueBody;
@@ -342,6 +345,8 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
+	Expression& getCondition() const { return *m_condition; }
+	Statement& getBody() const { return *m_body; }
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_body;
@@ -372,6 +377,8 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	void setFunctionReturnParameters(ParameterList& _parameters) { m_returnParameters = &_parameters; }
+	ParameterList const& getFunctionReturnParameters() const { assert(m_returnParameters); return *m_returnParameters; }
+	Expression* getExpression() const { return m_expression.get(); }
 
 private:
 	ASTPointer<Expression> m_expression; //< value to return, optional
@@ -392,20 +399,53 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
+	VariableDeclaration const& getDeclaration() const { return *m_variable; }
+	Expression* getExpression() const { return m_value.get(); }
+
 private:
 	ASTPointer<VariableDeclaration> m_variable;
 	ASTPointer<Expression> m_value; ///< the assigned value, can be missing
 };
 
-/// An expression, i.e. something that has a value (which can also be of type "void" in case
-/// of function calls).
-class Expression: public Statement
+/**
+ * A statement that contains only an expression (i.e. an assignment, function call, ...).
+ */
+class ExpressionStatement: public Statement
 {
 public:
-	Expression(Location const& _location): Statement(_location), m_isLvalue(false) {}
+	ExpressionStatement(Location const& _location, ASTPointer<Expression> _expression):
+		Statement(_location), m_expression(_expression) {}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void checkTypeRequirements() override;
+
+	Expression& getExpression() const { return *m_expression; }
+
+private:
+	ASTPointer<Expression> m_expression;
+};
+
+/// @}
+
+/// Expressions
+/// @{
+
+/**
+ * An expression, i.e. something that has a value (which can also be of type "void" in case
+ * of some function calls).
+ * @abstract
+ */
+class Expression: public ASTNode
+{
+public:
+	Expression(Location const& _location): ASTNode(_location), m_isLvalue(false) {}
+	virtual void checkTypeRequirements() = 0;
 
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
 	bool isLvalue() const { return m_isLvalue; }
+
+	/// Helper function, infer the type via @ref checkTypeRequirements and then check that it
+	/// is implicitly convertible to @a _expectedType. If not, throw exception.
+	void expectType(Type const& _expectedType);
 
 protected:
 	//! Inferred type of the expression, only filled after a call to checkTypeRequirements().
@@ -414,11 +454,6 @@ protected:
 	//! This is set during calls to @a checkTypeRequirements()
 	bool m_isLvalue;
 };
-
-/// @}
-
-/// Expressions
-/// @{
 
 /// Assignment, can also be a compound assignment.
 /// Examples: (a = 7 + 8) or (a *= 2)
