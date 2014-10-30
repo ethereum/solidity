@@ -115,9 +115,11 @@ int main(int argc, char** argv)
 	printer.print(cout);
 
 	bytes instructions;
+	Compiler compiler;
 	try
 	{
-		instructions = Compiler::compile(*ast);
+		compiler.compileContract(*ast);
+		instructions = compiler.getAssembledBytecode();
 	}
 	catch (CompilerError const& exception)
 	{
@@ -125,7 +127,9 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	cout << "EVM assembly: " << endl;
+	cout << "EVM assembly:" << endl;
+	compiler.streamAssembly(cout);
+	cout << "Opcodes:" << endl;
 	cout << eth::disassemble(instructions) << endl;
 	cout << "Binary: " << toHex(instructions) << endl;
 
