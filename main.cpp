@@ -55,35 +55,6 @@ void version()
 	exit(0);
 }
 
-
-/// Helper class that extracts the first expression in an AST.
-class FirstExpressionExtractor: private ASTVisitor
-{
-public:
-	FirstExpressionExtractor(ASTNode& _node): m_expression(nullptr) { _node.accept(*this); }
-	Expression* getExpression() const { return m_expression; }
-private:
-	virtual bool visit(Expression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Assignment& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(BinaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(FunctionCall& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(MemberAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(IndexAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(PrimaryExpression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Identifier& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(ElementaryTypeNameExpression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Literal& _expression) override { return checkExpression(_expression); }
-	bool checkExpression(Expression& _expression)
-	{
-		if (m_expression == nullptr)
-			m_expression = &_expression;
-		return false;
-	}
-private:
-	Expression* m_expression;
-};
-
 int main(int argc, char** argv)
 {
 	string infile;
@@ -143,13 +114,10 @@ int main(int argc, char** argv)
 	dev::solidity::ASTPrinter printer(ast, sourceCode);
 	printer.print(cout);
 
-	FirstExpressionExtractor extractor(*ast);
-
-	CompilerContext context;
-	ExpressionCompiler compiler(context);
+	bytes instructions;
 	try
 	{
-		compiler.compile(*extractor.getExpression());
+		instructions = Compiler::compile(*ast);
 	}
 	catch (CompilerError const& exception)
 	{
@@ -157,10 +125,9 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	bytes instructions = compiler.getAssembledBytecode();
-
-	cout << "Bytecode for the first expression: " << endl;
+	cout << "EVM assembly: " << endl;
 	cout << eth::disassemble(instructions) << endl;
+	cout << "Binary: " << toHex(instructions) << endl;
 
 	return 0;
 }
