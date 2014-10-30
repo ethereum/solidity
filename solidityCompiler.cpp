@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned boilerplateSize = 39;
+	unsigned boilerplateSize = 51;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize local variable x
 					   byte(Instruction::PUSH1), 0x2,
@@ -101,13 +101,14 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned boilerplateSize = 76;
+	unsigned shift = 76;
+	unsigned boilerplateSize = 88;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize return variable d
 					   byte(Instruction::DUP3),
 					   byte(Instruction::SWAP1), // assign b to d
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0xa + boilerplateSize, // jump to return
+					   byte(Instruction::PUSH1), 0xa + shift, // jump to return
 					   byte(Instruction::JUMP),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::SWAP4), // store d and fetch return address
@@ -119,11 +120,11 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 					   byte(Instruction::JUMPDEST), // beginning of g
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1), // initialized e and h
-					   byte(Instruction::PUSH1), 0x20 + boilerplateSize, // ret address
+					   byte(Instruction::PUSH1), 0x20 + shift, // ret address
 					   byte(Instruction::PUSH1), 0x1,
 					   byte(Instruction::PUSH1), 0x2,
 					   byte(Instruction::PUSH1), 0x3,
-					   byte(Instruction::PUSH1), 0x1 + boilerplateSize,
+					   byte(Instruction::PUSH1), 0x1 + shift,
 					   // stack here: ret e h 0x20 1 2 3 0x1
 					   byte(Instruction::JUMP),
 					   byte(Instruction::JUMPDEST),
@@ -153,28 +154,29 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned boilerplateSize = 39;
+	unsigned shift = 39;
+	unsigned boilerplateSize = 51;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1),
-					   byte(Instruction::PUSH1), 0x1b + boilerplateSize, // "true" target
+					   byte(Instruction::PUSH1), 0x1b + shift, // "true" target
 					   byte(Instruction::JUMPI),
 					   // new check "else if" condition
 					   byte(Instruction::DUP1),
 					   byte(Instruction::NOT),
-					   byte(Instruction::PUSH1), 0x13 + boilerplateSize,
+					   byte(Instruction::PUSH1), 0x13 + shift,
 					   byte(Instruction::JUMPI),
 					   // "else" body
 					   byte(Instruction::PUSH1), 0x4f,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x17 + boilerplateSize, // exit path of second part
+					   byte(Instruction::PUSH1), 0x17 + shift, // exit path of second part
 					   byte(Instruction::JUMP),
 					   // "else if" body
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x4e,
 					   byte(Instruction::POP),
 					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::PUSH1), 0x1f + boilerplateSize,
+					   byte(Instruction::PUSH1), 0x1f + shift,
 					   byte(Instruction::JUMP),
 					   // "if" body
 					   byte(Instruction::JUMPDEST),
@@ -194,28 +196,29 @@ BOOST_AUTO_TEST_CASE(loops)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned boilerplateSize = 39;
+	unsigned shift = 39;
+	unsigned boilerplateSize = 51;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x1,
 					   byte(Instruction::NOT),
-					   byte(Instruction::PUSH1), 0x21 + boilerplateSize,
+					   byte(Instruction::PUSH1), 0x21 + shift,
 					   byte(Instruction::JUMPI),
 					   byte(Instruction::PUSH1), 0x1,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x21 + boilerplateSize,
+					   byte(Instruction::PUSH1), 0x21 + shift,
 					   byte(Instruction::JUMP), // break
 					   byte(Instruction::PUSH1), 0x2,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x2 + boilerplateSize,
+					   byte(Instruction::PUSH1), 0x2 + shift,
 					   byte(Instruction::JUMP), // continue
 					   byte(Instruction::PUSH1), 0x3,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x22 + boilerplateSize,
+					   byte(Instruction::PUSH1), 0x22 + shift,
 					   byte(Instruction::JUMP), // return
 					   byte(Instruction::PUSH1), 0x4,
 					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), 0x2 + boilerplateSize,
+					   byte(Instruction::PUSH1), 0x2 + shift,
 					   byte(Instruction::JUMP),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
