@@ -103,11 +103,6 @@ int HexValue(char c)
 }
 } // end anonymous namespace
 
-Scanner::Scanner(CharStream const& _source)
-{
-	reset(_source);
-}
-
 void Scanner::reset(CharStream const& _source)
 {
 	m_source = _source;

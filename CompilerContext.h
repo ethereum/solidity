@@ -63,6 +63,9 @@ public:
 	eth::AssemblyItem pushNewTag() { return m_asm.append(m_asm.newPushTag()).tag(); }
 	/// @returns a new tag without pushing any opcodes or data
 	eth::AssemblyItem newTag() { return m_asm.newTag(); }
+	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
+	/// on the stack. @returns the assembly item corresponding to the pushed subroutine, i.e. its offset.
+	eth::AssemblyItem addSubroutine(eth::Assembly const& _assembly) { return m_asm.appendSubSize(_assembly); }
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
 	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
@@ -70,6 +73,7 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
 
+	eth::Assembly const& getAssembly() const { return m_asm; }
 	void streamAssembly(std::ostream& _stream) const { _stream << m_asm; }
 	bytes getAssembledBytecode() const { return m_asm.assemble(); }
 private:

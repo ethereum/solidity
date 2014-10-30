@@ -110,7 +110,8 @@ public:
 		bool complete_;
 	};
 
-	explicit Scanner(CharStream const& _source);
+	Scanner() { reset(CharStream()); }
+	explicit Scanner(CharStream const& _source) { reset(_source); }
 
 	/// Resets the scanner as if newly constructed with _input as input.
 	void reset(CharStream const& _source);

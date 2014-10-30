@@ -46,9 +46,22 @@ void Compiler::compileContract(ContractDefinition& _contract)
 
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 		m_context.addFunction(*function);
+
 	appendFunctionSelector(_contract.getDefinedFunctions());
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 		function->accept(*this);
+
+	packIntoContractCreator();
+}
+
+void Compiler::packIntoContractCreator()
+{
+	CompilerContext creatorContext;
+	eth::AssemblyItem sub = creatorContext.addSubroutine(m_context.getAssembly());
+	// stack contains sub size
+	creatorContext << eth::Instruction::DUP1 << sub << u256(0) << eth::Instruction::CODECOPY;
+	creatorContext << u256(0) << eth::Instruction::RETURN;
+	swap(m_context, creatorContext);
 }
 
 void Compiler::appendFunctionSelector(vector<ASTPointer<FunctionDefinition>> const& _functions)
