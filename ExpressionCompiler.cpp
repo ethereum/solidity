@@ -25,6 +25,7 @@
 #include <numeric>
 #include <libsolidity/AST.h>
 #include <libsolidity/ExpressionCompiler.h>
+#include <libsolidity/CompilerContext.h>
 
 using namespace std;
 

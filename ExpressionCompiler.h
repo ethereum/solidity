@@ -21,10 +21,11 @@
  */
 
 #include <libsolidity/ASTVisitor.h>
-#include <libsolidity/CompilerUtilities.h>
 
 namespace dev {
 namespace solidity {
+
+class CompilerContext; // forward
 
 /// Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
 /// of EVM instructions. It needs a compiler context that is the same for the whole compilation
@@ -68,7 +69,6 @@ private:
 	void moveToLValue(Expression const& _expression);
 	/// Returns the position of @a m_currentLValue in the stack, where 0 is the top of the stack.
 	unsigned stackPositionOfLValue() const;
-	void adjustStackOffset(eth::Instruction _instruction);
 
 	Declaration* m_currentLValue;
 	CompilerContext& m_context;

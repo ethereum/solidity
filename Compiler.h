@@ -21,7 +21,7 @@
  */
 
 #include <libsolidity/ASTVisitor.h>
-#include <libsolidity/CompilerUtilities.h>
+#include <libsolidity/CompilerContext.h>
 
 namespace dev {
 namespace solidity {
