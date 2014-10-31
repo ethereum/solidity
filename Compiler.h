@@ -38,10 +38,10 @@ class AssemblyItem
 public:
 	enum class Type
 	{
-		CODE,    //< m_data is opcode, m_label is empty.
-		DATA,    //< m_data is actual data, m_label is empty
-		LABEL,   //< m_data is JUMPDEST opcode, m_label is id of label
-		LABELREF //< m_data is empty, m_label is id of label
+		CODE,    ///< m_data is opcode, m_label is empty.
+		DATA,    ///< m_data is actual data, m_label is empty
+		LABEL,   ///< m_data is JUMPDEST opcode, m_label is id of label
+		LABELREF ///< m_data is empty, m_label is id of label
 	};
 
 	explicit AssemblyItem(eth::Instruction _instruction) : m_type(Type::CODE), m_data(byte(_instruction)) {}
@@ -59,8 +59,8 @@ private:
 	AssemblyItem(Type _type, byte _data, uint32_t _label): m_type(_type), m_data(_data), m_label(_label) {}
 
 	Type m_type;
-	byte m_data; //< data to be written to the bytecode stream (or filled by a label if this is a LABELREF)
-	uint32_t m_label; //< the id of a label either referenced or defined by this item
+	byte m_data; ///< data to be written to the bytecode stream (or filled by a label if this is a LABELREF)
+	uint32_t m_label; ///< the id of a label either referenced or defined by this item
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;

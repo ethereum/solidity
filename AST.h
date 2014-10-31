@@ -345,7 +345,7 @@ public:
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_trueBody;
-	ASTPointer<Statement> m_falseBody; //< "else" part, optional
+	ASTPointer<Statement> m_falseBody; ///< "else" part, optional
 };
 
 /**
@@ -400,7 +400,7 @@ public:
 	void setFunctionReturnParameters(ParameterList& _parameters) { m_returnParameters = &_parameters; }
 
 private:
-	ASTPointer<Expression> m_expression; //< value to return, optional
+	ASTPointer<Expression> m_expression; ///< value to return, optional
 
 	/// Pointer to the parameter list of the function, filled by the @ref NameAndTypeResolver.
 	ParameterList* m_returnParameters;
