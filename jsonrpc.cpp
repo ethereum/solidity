@@ -125,7 +125,8 @@ BOOST_AUTO_TEST_CASE(jsonrpc_accounts)
 	BOOST_CHECK_EQUAL(k.size(),  keys.size());
 	for (auto &i:k)
 	{
-		auto it = std::find_if(keys.begin(), keys.end(), [i](dev::KeyPair const& keyPair){
+		auto it = std::find_if(keys.begin(), keys.end(), [i](dev::KeyPair const& keyPair)
+		{
 			return jsToAddress(i.asString()) == keyPair.address();
 		});
 		BOOST_CHECK_EQUAL(it != keys.end(), true);
