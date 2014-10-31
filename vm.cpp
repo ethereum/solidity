@@ -471,7 +471,7 @@ h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _end
 	}
 
 	// Set up new account...
-	m_cache[_newAddress] = AddressState(0, balance(_newAddress) + _endowment, h256(), h256());
+	m_cache[_newAddress] = Account(0, balance(_newAddress) + _endowment, h256(), h256());
 
 	// Execute init code.
 	auto vmObj = VMFace::create(getVMKind(), *_gas);
