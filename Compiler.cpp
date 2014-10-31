@@ -94,25 +94,20 @@ void Compiler::appendFunctionSelector(vector<ASTPointer<FunctionDefinition>> con
 	for (pair<string, pair<FunctionDefinition const*, eth::AssemblyItem>> const& f: publicFunctions)
 		m_context.appendJumpTo(f.second.second) << eth::Instruction::JUMPDEST;
 
-	m_context << returnTag << eth::Instruction::RETURN;
+	m_context << returnTag << eth::Instruction::STOP;
 
 	for (pair<string, pair<FunctionDefinition const*, eth::AssemblyItem>> const& f: publicFunctions)
 	{
+		FunctionDefinition const& function = *f.second.first;
 		m_context << f.second.second;
-		appendFunctionCallSection(*f.second.first);
+
+		eth::AssemblyItem returnTag = m_context.pushNewTag();
+		appendCalldataUnpacker(function);
+		m_context.appendJumpTo(m_context.getFunctionEntryLabel(function));
+		m_context << returnTag;
+
+		appendReturnValuePacker(function);
 	}
-}
-
-void Compiler::appendFunctionCallSection(FunctionDefinition const& _function)
-{
-	eth::AssemblyItem returnTag = m_context.pushNewTag();
-
-	appendCalldataUnpacker(_function);
-
-	m_context.appendJumpTo(m_context.getFunctionEntryLabel(_function));
-	m_context << returnTag;
-
-	appendReturnValuePacker(_function);
 }
 
 void Compiler::appendCalldataUnpacker(FunctionDefinition const& _function)
@@ -142,7 +137,7 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 	//@todo this can be also done more efficiently
 	unsigned dataOffset = 0;
 	vector<ASTPointer<VariableDeclaration>> const& parameters = _function.getReturnParameters();
-	for (unsigned i = 0 ; i < parameters.size(); ++i)
+	for (unsigned i = 0; i < parameters.size(); ++i)
 	{
 		unsigned numBytes = parameters[i]->getType()->getCalldataEncodedSize();
 		if (numBytes == 0)
@@ -150,11 +145,9 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
 								  << errinfo_comment("Type not yet supported."));
 		m_context << eth::dupInstruction(parameters.size() - i);
-		if (numBytes == 32)
-			m_context << u256(dataOffset) << eth::Instruction::MSTORE;
-		else
-			m_context << u256(dataOffset) << (u256(1) << ((32 - numBytes) * 8))
-					  << eth::Instruction::MUL << eth::Instruction::MSTORE;
+		if (numBytes != 32)
+			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
+		m_context << u256(dataOffset) << eth::Instruction::MSTORE;
 		dataOffset += numBytes;
 	}
 	// note that the stack is not cleaned up here
@@ -215,6 +208,7 @@ bool Compiler::visit(FunctionDefinition& _function)
 			m_context << eth::swapInstruction(stackLayout.size() - stackLayout.back() - 1);
 			swap(stackLayout[stackLayout.back()], stackLayout.back());
 		}
+	//@todo assert that everything is in place now
 
 	m_context << eth::Instruction::JUMP;
 

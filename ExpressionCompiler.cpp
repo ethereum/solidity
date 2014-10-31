@@ -264,6 +264,7 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation& _binaryOperati
 	if (op == Token::AND)
 		m_context << eth::Instruction::ISZERO;
 	eth::AssemblyItem endLabel = m_context.appendConditionalJump();
+	m_context << eth::Instruction::POP;
 	_binaryOperation.getRightExpression().accept(*this);
 	m_context << endLabel;
 }

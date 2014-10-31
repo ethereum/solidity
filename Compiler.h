@@ -43,7 +43,6 @@ private:
 	/// Creates a new compiler context / assembly and packs the current code into the data part.
 	void packIntoContractCreator();
 	void appendFunctionSelector(std::vector<ASTPointer<FunctionDefinition> > const& _functions);
-	void appendFunctionCallSection(FunctionDefinition const& _function);
 	void appendCalldataUnpacker(FunctionDefinition const& _function);
 	void appendReturnValuePacker(FunctionDefinition const& _function);
 
