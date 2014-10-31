@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(comparison)
 					   byte(eth::Instruction::GT),
 					   byte(eth::Instruction::PUSH1), 0x1,
 					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::NOT)});
+					   byte(eth::Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -175,18 +175,18 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 					   byte(eth::Instruction::ADD),
 					   byte(eth::Instruction::PUSH1), 0x4,
 					   byte(eth::Instruction::GT),
-					   byte(eth::Instruction::NOT), // after this we have 10 + 8 >= 4
+					   byte(eth::Instruction::ISZERO), // after this we have 10 + 8 >= 4
 					   byte(eth::Instruction::DUP1),
 					   byte(eth::Instruction::PUSH1), 0x14,
 					   byte(eth::Instruction::JUMPI), // short-circuit if it is true
 					   byte(eth::Instruction::PUSH1), 0x2,
 					   byte(eth::Instruction::PUSH1), 0x9,
 					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::NOT), // after this we have 2 != 9
+					   byte(eth::Instruction::ISZERO), // after this we have 2 != 9
 					   byte(eth::Instruction::JUMPDEST),
 					   byte(eth::Instruction::PUSH1), 0x1,
 					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::NOT)});
+					   byte(eth::Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -228,10 +228,10 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
 					   byte(eth::Instruction::PUSH1), 0x0,
 					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::BNOT),
+					   byte(eth::Instruction::NOT),
 					   byte(eth::Instruction::PUSH1), 0x2,
 					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::NOT)});
+					   byte(eth::Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 

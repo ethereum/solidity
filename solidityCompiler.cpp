@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 					   byte(Instruction::JUMPI),
 					   // new check "else if" condition
 					   byte(Instruction::DUP1),
-					   byte(Instruction::NOT),
+					   byte(Instruction::ISZERO),
 					   byte(Instruction::PUSH1), 0x13 + shift,
 					   byte(Instruction::JUMPI),
 					   // "else" body
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(loops)
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::NOT),
+					   byte(Instruction::ISZERO),
 					   byte(Instruction::PUSH1), 0x21 + shift,
 					   byte(Instruction::JUMPI),
 					   byte(Instruction::PUSH1), 0x1,
