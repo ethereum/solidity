@@ -177,8 +177,9 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 					   byte(eth::Instruction::GT),
 					   byte(eth::Instruction::ISZERO), // after this we have 10 + 8 >= 4
 					   byte(eth::Instruction::DUP1),
-					   byte(eth::Instruction::PUSH1), 0x14,
+					   byte(eth::Instruction::PUSH1), 0x15,
 					   byte(eth::Instruction::JUMPI), // short-circuit if it is true
+					   byte(eth::Instruction::POP),
 					   byte(eth::Instruction::PUSH1), 0x2,
 					   byte(eth::Instruction::PUSH1), 0x9,
 					   byte(eth::Instruction::EQ),
