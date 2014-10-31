@@ -20,6 +20,8 @@
  * State test functions.
  */
 
+#define FILL_TESTS
+
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include "JsonSpiritHeaders.h"
@@ -58,7 +60,13 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre") > 0);
 		BOOST_REQUIRE(o.count("exec") > 0);
 
-		ImportTest importer(o,false);
+		ImportTest importer(o,_fillin);
+
+		if (_fillin)
+		{
+			importer.code = importer.m_statePre.code(importer.m_environment.myAddress);
+			importer.m_environment.code = &importer.code;
+		}
 
 		ExtVM evm(importer.m_statePre, importer.m_environment.myAddress,
 				  importer.m_environment.caller, importer.m_environment.origin,
@@ -83,71 +91,76 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 			//BOOST_ERROR("Failed VM Test with Exception: " << e.what());
 		}
 
-		BOOST_REQUIRE(o.count("post") > 0);
-		BOOST_REQUIRE(o.count("callcreates") > 0);
-		BOOST_REQUIRE(o.count("out") > 0);
-		BOOST_REQUIRE(o.count("gas") > 0);
-
-
-		// check output
-
-
-		//dev::test::FakeExtVM test;
-		//test.importState(o["post"].get_obj());
-		//test.importCallCreates(o["callcreates"].get_array());
-
-		int j = 0;
-		if (o["out"].type() == array_type)
-			for (auto const& d: o["out"].get_array())
-			{
-				BOOST_CHECK_MESSAGE(output[j] == toInt(d), "Output byte [" << j << "] different!");
-				++j;
-			}
-		else if (o["out"].get_str().find("0x") == 0)
-			BOOST_CHECK(output == fromHex(o["out"].get_str().substr(2)));
+		if (_fillin)
+			importer.exportTest(output, vm.gas(), evm.state());
 		else
-			BOOST_CHECK(output == fromHex(o["out"].get_str()));
+		{
+			BOOST_REQUIRE(o.count("post") > 0);
+			//BOOST_REQUIRE(o.count("callcreates") > 0);
+			BOOST_REQUIRE(o.count("out") > 0);
+			BOOST_REQUIRE(o.count("gas") > 0);
 
-		cout << "gas check: " << importer.gas << " " << toInt(o["gas"]) << " " << vm.gas() << endl;
-		BOOST_CHECK_EQUAL(toInt(o["gas"]), vm.gas());
 
-//		auto& expectedAddrs = test.addresses;
-//		auto& resultAddrs = fev.addresses;
-//		for (auto&& expectedPair : expectedAddrs)
-//		{
-//			auto& expectedAddr = expectedPair.first;
-//			auto resultAddrIt = resultAddrs.find(expectedAddr);
-//			if (resultAddrIt == resultAddrs.end())
-//				BOOST_ERROR("Missing expected address " << expectedAddr);
-//			else
-//			{
-//				auto& expectedState = expectedPair.second;
-//				auto& resultState = resultAddrIt->second;
-//				BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
-//				BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
-//				BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
+			// check output
 
-//				auto&& expectedStore = std::get<2>(expectedState);
-//				auto&& resultStore = std::get<2>(resultState);
+			int j = 0;
+			if (o["out"].type() == array_type)
+				for (auto const& d: o["out"].get_array())
+				{
+					BOOST_CHECK_MESSAGE(output[j] == toInt(d), "Output byte [" << j << "] different!");
+					++j;
+				}
+			else if (o["out"].get_str().find("0x") == 0)
+				BOOST_CHECK(output == fromHex(o["out"].get_str().substr(2)));
+			else
+				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
-//				for (auto&& expectedStorePair : expectedStore)
-//				{
-//					auto& expectedStoreKey = expectedStorePair.first;
-//					auto resultStoreIt = resultStore.find(expectedStoreKey);
-//					if (resultStoreIt == resultStore.end())
-//						BOOST_ERROR(expectedAddr << ": missing store key " << expectedStoreKey);
-//					else
-//					{
-//						auto& expectedStoreValue = expectedStorePair.second;
-//						auto& resultStoreValue = resultStoreIt->second;
-//						BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
-//					}
-//				}
-//			}
-//		}
+			BOOST_CHECK_EQUAL(toInt(o["gas"]), vm.gas());
 
-		BOOST_CHECK(evm.state().addresses() == importer.m_statePost.addresses());	// Just to make sure nothing missed
-		//BOOST_CHECK(evm.callcreates == importer.callcreates);
+			auto expectedAddrs = importer.m_statePost.addresses();
+			auto resultAddrs = evm.state().addresses();
+			for (auto& expectedPair : expectedAddrs)
+			{
+				auto& expectedAddr = expectedPair.first;
+				auto resultAddrIt = resultAddrs.find(expectedAddr);
+				if (resultAddrIt == resultAddrs.end())
+					BOOST_ERROR("Missing expected address " << expectedAddr);
+				else
+				{
+					BOOST_CHECK_MESSAGE(importer.m_statePost.balance(expectedAddr) ==  evm.state().balance(expectedAddr), expectedAddr << ": incorrect balance " << evm.state().balance(expectedAddr) << ", expected " << importer.m_statePost.balance(expectedAddr));
+					BOOST_CHECK_MESSAGE(importer.m_statePost.transactionsFrom(expectedAddr) ==  evm.state().transactionsFrom(expectedAddr), expectedAddr << ": incorrect txCount " << evm.state().transactionsFrom(expectedAddr) << ", expected " << importer.m_statePost.transactionsFrom(expectedAddr));
+					BOOST_CHECK_MESSAGE(importer.m_statePost.code(expectedAddr) == evm.state().code(expectedAddr), expectedAddr << ": incorrect code");
+
+					auto&& expectedStore = importer.m_statePost.storage(expectedAddr);
+					auto&& resultStore = evm.state().storage(expectedAddr);
+
+					for (auto&& expectedStorePair : expectedStore)
+					{
+						auto& expectedStoreKey = expectedStorePair.first;
+						auto resultStoreIt = resultStore.find(expectedStoreKey);
+						if (resultStoreIt == resultStore.end())
+							BOOST_ERROR(expectedAddr << ": missing store key " << expectedStoreKey);
+						else
+						{
+							auto& expectedStoreValue = expectedStorePair.second;
+							auto& resultStoreValue = resultStoreIt->second;
+							BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
+						}
+					}
+				}
+			}
+
+			for (auto& resultPair : resultAddrs)
+			{
+				auto& resultAddr = resultPair.first;
+				auto expectedAddrIt = expectedAddrs.find(resultAddr);
+				if (expectedAddrIt == expectedAddrs.end())
+					BOOST_ERROR("Missing result address " << resultAddr);
+			}
+
+			BOOST_CHECK(evm.state().addresses() == importer.m_statePost.addresses());	// Just to make sure nothing missed
+			//BOOST_CHECK(evm.callcreates == importer.callcreates);
+		}
 
 	}
 }
@@ -166,7 +179,7 @@ void executeStateTests(const string& _name)
 	else
 		testPath = ptestPath;
 
-	testPath += "/vmtests";
+	testPath += "/statetests";
 
 #ifdef FILL_TESTS
 	try
@@ -176,9 +189,9 @@ void executeStateTests(const string& _name)
 		boost::filesystem::path p(__FILE__);
 		boost::filesystem::path dir = p.parent_path();
 		string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + "Filler.json is empty.");
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
 		json_spirit::read_string(s, v);
-		dev::test::doStateTests(v, true);
+		doStateTests(v, true);
 		writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
 	}
 	catch (Exception const& _e)
@@ -212,22 +225,17 @@ void executeStateTests(const string& _name)
 }
 } } }// Namespace Close
 
-
 BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
+{
+	dev::eth::test::executeStateTests("stSystemOperationsTest");
+}
+
+BOOST_AUTO_TEST_CASE(tmp)
 {
 	std::cout << "Doing systemoperationsTest in state\n";
 	int currentVerbosity = g_logVerbosity;
 	g_logVerbosity = 12;
-	dev::eth::test::executeStateTests("vmSystemOperationsTest");
+	dev::eth::test::executeStateTests("tmp");
 	g_logVerbosity = currentVerbosity;
 }
-
-//BOOST_AUTO_TEST_CASE(tmp)
-//{
-//	std::cout << "Doing systemoperationsTest in state\n";
-//	int currentVerbosity = g_logVerbosity;
-//	g_logVerbosity = 12;
-//	dev::eth::test::executeStateTests("tmp");
-//	g_logVerbosity = currentVerbosity;
-//}
 

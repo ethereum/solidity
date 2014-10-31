@@ -60,8 +60,9 @@ void connectClients(Client& c1, Client& c2)
 namespace test
 {
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller)
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):m_TestObject(_o)
 {
+
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
 	importExec(_o["exec"].get_obj());
@@ -69,10 +70,12 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller)
 	if (!isFiller)
 	{
 		importState(_o["post"].get_obj(), m_statePost);
-		importCallCreates(_o["callcreates"].get_array());
+		//importCallCreates(_o["callcreates"].get_array());
 		importGas(_o);
 		importOutput(_o);
 	}
+//	else
+//		m_TestObject = &_o; // if Filler then change Test object to prepare for export
 }
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
@@ -90,11 +93,14 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	m_environment.currentBlock.difficulty = toInt(_o["currentDifficulty"]);
 	m_environment.currentBlock.timestamp = toInt(_o["currentTimestamp"]);
 	m_environment.currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
+
+	m_statePre.m_previousBlock = m_environment.previousBlock;
+	m_statePre.m_currentBlock = m_environment.currentBlock;
 }
 
 void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 {
-	for (auto const& i: _o)
+	for (auto& i: _o)
 	{
 		json_spirit::mObject o = i.second.get_obj();
 
@@ -104,12 +110,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		assert(o.count("code") > 0);
 
 		Address address = Address(i.first);
-		cout << "address: " << address.abridged() << endl;
-
-		_state.m_cache[address] = AddressState(toInt(o["nonce"]), toInt(o["balance"]), h256(), h256());
-
-		cout << "addressInUse: " << _state.addressInUse(address) << endl;
-		cout << "balance: " << _state.balance(address) << endl;
+		_state.m_cache[address] = AddressState(toInt(o["nonce"]), toInt(o["balance"]), EmptyTrie, h256());
 
 		for (auto const& j: o["storage"].get_obj())
 			_state.setStorage(address, toInt(j.first), toInt(j.second));
@@ -127,6 +128,8 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 				code.push_back(toByte(j));
 		}
 
+		i.second.get_obj()["code"] = "0x" + toHex(code); //preperation for export
+
 		_state.m_cache[address].setCode(bytesConstRef(&code));
 		_state.ensureCached(address, true, true);
 	}
@@ -141,7 +144,7 @@ void ImportTest::importExec(json_spirit::mObject& _o)
 	assert(_o.count("data") > 0);
 	assert(_o.count("gasPrice") > 0);
 	assert(_o.count("gas") > 0);
-	assert(_o.count("code") > 0);
+	//assert(_o.count("code") > 0);
 
 	m_environment.myAddress = Address(_o["address"].get_str());
 	m_environment.caller = Address(_o["caller"].get_str());
@@ -217,6 +220,56 @@ void ImportTest::importOutput(json_spirit::mObject& _o)
 		output = fromHex(_o["out"].get_str().substr(2));
 	else
 		output = fromHex(_o["out"].get_str());
+}
+
+void ImportTest::exportTest(bytes _output, u256 _gas, State& _statePost)
+{
+	// export gas
+	m_TestObject["gas"] = toString(_gas);
+
+	// export output
+	m_TestObject["out"] = "0x" + toHex(_output);
+
+	// export post state
+	json_spirit::mObject postState;
+
+	std::map<Address, AddressState> genesis = genesisState();
+
+	for (auto const& a: _statePost.addresses())
+	{
+		if (genesis.count(a.first))
+			continue;
+
+		json_spirit::mObject o;
+		o["balance"] = toString(_statePost.balance(a.first));
+		o["nonce"] = toString(_statePost.transactionsFrom(a.first));
+		{
+			json_spirit::mObject store;
+			for (auto const& s: _statePost.storage(a.first))
+				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
+			o["storage"] = store;
+		}
+		o["code"] = "0x" + toHex(_statePost.code(a.first));
+
+		postState[toString(a.first)] = o;
+	}
+	m_TestObject["post"] = json_spirit::mValue(postState);
+
+	m_TestObject["exec"].get_obj()["code"] = "0x" + toHex(code);
+
+//	// export callcreates
+//	m_TestObject["callcreates"] = exportCallCreates();
+
+//	for (int i = 0; i < (m_manifest.internal.size(); ++i)
+//	{
+//		 Transaction t;
+//		 t.value = m_manifest.internal[i].value;
+//		 t.gas = ;
+//		 t.data = m_manifest.internal[i].input; ;
+//		 t.receiveAddress = m_manifest.internal[i].to;
+//		 t.type =
+
+//	}
 }
 
 u256 toInt(json_spirit::mValue const& _v)

@@ -43,20 +43,6 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 	t.gasPrice = gasPrice;
 	t.gas = *_gas;
 	t.data = _init.toBytes();
-
-//	m_s.noteSending(myAddress);
-//	m_ms.internal.resize(m_ms.internal.size() + 1);
-//	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
-//	if (!m_ms.internal.back().from)
-//		m_ms.internal.pop_back();
-
-//	if (get<0>(addresses[myAddress]) >= _endowment)
-//	{
-//		get<1>(addresses[myAddress])++;
-//		get<0>(addresses[ret]) = _endowment;
-//		//get<3>(addresses[ret]) = m_s.code(ret);
-//	}
-
 	t.type = eth::Transaction::ContractCreation;
 	callcreates.push_back(t);
 	return na;
@@ -64,8 +50,6 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 
 bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc const&, Address _myAddressOverride, Address _codeAddressOverride)
 {
-//	u256 contractgas = 0xffff;
-
 	Transaction t;
 	t.value = _value;
 	t.gasPrice = gasPrice;
@@ -76,101 +60,6 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 	callcreates.push_back(t);
 	(void)_out;
 	return true;
-
-//	string codeOf_CodeAddress = _codeAddressOverride ? toHex(get<3>(addresses[_codeAddressOverride])) : toHex(get<3>(addresses[_receiveAddress]) );
-//	string sizeOfCode = toHex(toCompactBigEndian((codeOf_CodeAddress.size()+1)/2));
-
-//	string codeOf_SenderAddress = toHex(get<3>(addresses[myAddress]) );
-//	string sizeOfSenderCode = toHex(toCompactBigEndian((codeOf_SenderAddress.size()+1)/2));
-
-//	if (codeOf_SenderAddress.size())
-//	{
-//		// create init code that returns given contract code
-//		string initStringHex = "{ (CODECOPY 0 (- (CODESIZE) 0x" + sizeOfSenderCode + "  ) 0x" + sizeOfSenderCode + ") (RETURN 0 0x" + sizeOfSenderCode +")}";
-//		bytes initBytes = compileLLL(initStringHex, true, NULL);
-//		initBytes += fromHex(codeOf_SenderAddress);
-//		bytesConstRef init(&initBytes);
-
-//		if (!m_s.addresses().count(myAddress))
-//		{
-//			m_ms.internal.resize(m_ms.internal.size() + 1);
-//			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
-//			if (!m_ms.internal.back().from)
-//				m_ms.internal.pop_back();
-//			if (na != myAddress)
-//			{
-//				cnote << "not able to call to : " << myAddress << "\n";
-//				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-//				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(toString(myAddress)));
-//				return false;
-//			}
-//		}
-//	}
-
-//	if (codeOf_CodeAddress.size())
-//	{
-//		// create init code that returns given contract code
-//		string initStringHex = "{ (CODECOPY 0 (- (CODESIZE) 0x" + sizeOfCode + "  ) 0x" + sizeOfCode + ") (RETURN 0 0x" + sizeOfCode +")}";
-//		bytes initBytes = compileLLL(initStringHex, true, NULL);
-//		initBytes += fromHex(codeOf_CodeAddress);
-//		bytesConstRef init(&initBytes);
-
-//		if (!m_s.addresses().count(_codeAddressOverride ? _codeAddressOverride : _receiveAddress))
-//		{
-//			m_s.noteSending(myAddress);
-//			m_ms.internal.resize(m_ms.internal.size() + 1);
-//			auto na = m_s.createNewAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress, myAddress, balance(_codeAddressOverride ? _codeAddressOverride : _receiveAddress), gasPrice, &contractgas, init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
-//			if (!m_ms.internal.back().from)
-//				m_ms.internal.pop_back();
-
-//			if (na != (_codeAddressOverride ? _codeAddressOverride : _receiveAddress))
-//			{
-//				cnote << "not able to call to : " << (_codeAddressOverride ? _codeAddressOverride : _receiveAddress) << "\n";
-//				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-//				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(toString(_codeAddressOverride ? _codeAddressOverride : _receiveAddress)));
-//				return false;
-//			}
-//		}
-
-//		m_ms.internal.resize(m_ms.internal.size() + 1);
-
-//		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &sub, &(m_ms.internal.back()), Executive::simpleTrace(), 1);
-
-//		if (!m_ms.internal.back().from)
-//			m_ms.internal.pop_back();
-
-//		// get correct balances, (also for sucicides in the call function)
-//		for (auto const& f: addresses)
-//		{
-//			if (m_s.addressInUse(f.first))
-//				get<0>(addresses[f.first]) = m_s.balance(f.first);
-//		}
-
-//		if (!ret)
-//			return false;
-
-//		// TODO: @CJentzsch refund SSTORE stuff.
-//		// TODO: @CJentzsch test logs.
-
-//		// do suicides
-//		for (auto const& f: sub.suicides)
-//			addresses.erase(f);
-
-//		// get storage
-//		if ((get<0>(addresses[myAddress]) >= _value) && (sub.suicides.find(_receiveAddress) == sub.suicides.end()))
-//		{
-//			for (auto const& j: m_s.storage(_receiveAddress))
-//			{
-//				u256 adr(j.first);
-//				if ((j.second != 0) )
-//					get<2>(addresses[_receiveAddress])[adr] = j.second;
-//			}
-//		}
-//	}
-//	else
-//		addresses.erase(_receiveAddress); // for the sake of comparison
-
-//	return true;
 }
 
 void FakeExtVM::setTransaction(Address _caller, u256 _value, u256 _gasPrice, bytes const& _data)
@@ -363,9 +252,9 @@ void FakeExtVM::importExec(mObject& _o)
 	code = &thisTxCode;
 	if (_o["code"].type() == str_type)
 		if (_o["code"].get_str().find_first_of("0x") == 0)
-			thisTxCode = fromHex(_o["code"].get_str().substr(2));
-		else
 			thisTxCode = compileLLL(_o["code"].get_str());
+		else
+			thisTxCode = fromHex(_o["code"].get_str().substr(2));
 	else if (_o["code"].type() == array_type)
 		for (auto const& j: _o["code"].get_array())
 			thisTxCode.push_back(toByte(j));
@@ -439,9 +328,6 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 		o << "    MEMORY" << std::endl << memDump(vm.memory());
 		o << "    STORAGE" << std::endl;
 
-//		for (auto const& i: ext.state().storage(ext.myAddress))
-//			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
-
 		for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
 			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
 
@@ -457,71 +343,6 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 		}
 	};
 }
-
-//// THIS IS BROKEN AND NEEDS TO BE REMOVED.
-//h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, SubState* o_sub, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
-//{
-//	(void)o_sub;
-
-//	if (!_origin)
-//		_origin = _sender;
-
-//	if (o_ms)
-//	{
-//		o_ms->from = _sender;
-//		o_ms->to = Address();
-//		o_ms->value = _endowment;
-//		o_ms->input = _code.toBytes();
-//	}
-
-//	// Set up new account...
-//	m_cache[_newAddress] = AddressState(0, balance(_newAddress) + _endowment, h256(), h256());
-
-//	// Execute init code.
-//	VM vm(*_gas);
-//	ExtVM evm(*this, _newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _code, o_ms, _level);
-//	bool revert = false;
-//	bytesConstRef out;
-
-//	try
-//	{
-//		out = vm.go(evm, _onOp);
-//		if (o_ms)
-//			o_ms->output = out.toBytes();
-//		// TODO: deal with evm.sub
-//	}
-//	catch (OutOfGas const& /*_e*/)
-//	{
-//		clog(StateChat) << "Out of Gas! Reverting.";
-//		revert = true;
-//	}
-//	catch (VMException const& _e)
-//	{
-//		clog(StateChat) << "VM Exception: " << diagnostic_information(_e);
-//	}
-//	catch (Exception const& _e)
-//	{
-//		clog(StateChat) << "Exception in VM: " << diagnostic_information(_e);
-//	}
-//	catch (std::exception const& _e)
-//	{
-//		clog(StateChat) << "std::exception in VM: " << _e.what();
-//	}
-
-//	// TODO: CHECK: IS THIS CORRECT?! (esp. given account created prior to revertion init.)
-
-//	// Write state out only in the case of a non-out-of-gas transaction.
-//	if (revert)
-//		evm.revert();
-
-//	// Set code.
-//	if (addressInUse(_newAddress))
-//		m_cache[_newAddress].setCode(out);
-
-//	*_gas = vm.gas();
-
-//	return _newAddress;
-//}
 
 namespace dev { namespace test {
 
@@ -758,14 +579,13 @@ BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 	dev::test::executeTests("vmPushDupSwapTest");
 }
 
-BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
-{
-	dev::test::executeTests("vmSystemOperationsTest");
-}
+//BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
+//{
+//	dev::test::executeTests("vmSystemOperationsTest");
+//}
 
 BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
-
 	if (boost::unit_test::framework::master_test_suite().argc == 2)
 	{
 		string filename = boost::unit_test::framework::master_test_suite().argv[1];

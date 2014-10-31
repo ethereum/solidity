@@ -51,7 +51,7 @@ public:
 	void importGas(json_spirit::mObject& _o);
 	void importOutput(json_spirit::mObject& _o);
 
-	void exportTest();
+	void exportTest(bytes _output, u256 _gas, State& _statePost);
 	Manifest* getManifest(){ return &m_manifest;}
 
 	State m_statePre;
@@ -63,9 +63,13 @@ public:
 	bytes output;
 	Manifest m_manifest;
 
-private:
-	// needed for const refs
 	bytes code;
+
+private:
+	json_spirit::mObject& m_TestObject;
+
+	// needed for const refs
+
 	bytes data;
 };
 
