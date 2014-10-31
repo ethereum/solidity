@@ -251,7 +251,7 @@ Assembly& Assembly::optimise(bool _enable)
 		{ { PushSub, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 		{ { PushSubSize, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 		{ { Push, PushTag, Instruction::JUMPI }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].data()) return { m[1], Instruction::JUMP }; else return {}; } },
-		{ { Instruction::NOT, Instruction::NOT }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
+		{ { Instruction::ISZERO, Instruction::ISZERO }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 	};
 
 	for (auto const& i: c_simple)

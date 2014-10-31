@@ -328,7 +328,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 
 		std::map<std::string, Instruction> const c_arith = { { "+", Instruction::ADD }, { "-", Instruction::SUB }, { "*", Instruction::MUL }, { "/", Instruction::DIV }, { "%", Instruction::MOD }, { "&", Instruction::AND }, { "|", Instruction::OR }, { "^", Instruction::XOR } };
 		std::map<std::string, pair<Instruction, bool>> const c_binary = { { "<", { Instruction::LT, false } }, { "<=", { Instruction::GT, true } }, { ">", { Instruction::GT, false } }, { ">=", { Instruction::LT, true } }, { "S<", { Instruction::SLT, false } }, { "S<=", { Instruction::SGT, true } }, { "S>", { Instruction::SGT, false } }, { "S>=", { Instruction::SLT, true } }, { "=", { Instruction::EQ, false } }, { "!=", { Instruction::EQ, true } } };
-		std::map<std::string, Instruction> const c_unary = { { "!", Instruction::NOT } };
+		std::map<std::string, Instruction> const c_unary = { { "!", Instruction::ISZERO } };
 
 		vector<CodeFragment> code;
 		CompilerState ns = _s;
@@ -403,7 +403,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm.append(code[0].m_asm, 1);
 			m_asm.append(it->second.first);
 			if (it->second.second)
-				m_asm.append(Instruction::NOT);
+				m_asm.append(Instruction::ISZERO);
 		}
 		else if (c_unary.count(us))
 		{
@@ -437,7 +437,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 
 			m_asm.append(code[0].m_asm);
 			if (us == "WHEN")
-				m_asm.append(Instruction::NOT);
+				m_asm.append(Instruction::ISZERO);
 			auto end = m_asm.appendJumpI();
 			m_asm.onePath();
 			m_asm.otherPath();
@@ -452,7 +452,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 
 			auto begin = m_asm.append();
 			m_asm.append(code[0].m_asm);
-			m_asm.append(Instruction::NOT);
+			m_asm.append(Instruction::ISZERO);
 			auto end = m_asm.appendJumpI();
 			m_asm.append(code[1].m_asm, 0);
 			m_asm.appendJump(begin);
@@ -466,7 +466,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 			m_asm.append(code[0].m_asm, 0);
 			auto begin = m_asm.append();
 			m_asm.append(code[1].m_asm);
-			m_asm.append(Instruction::NOT);
+			m_asm.append(Instruction::ISZERO);
 			auto end = m_asm.appendJumpI();
 			m_asm.append(code[3].m_asm, 0);
 			m_asm.append(code[2].m_asm, 0);
@@ -502,7 +502,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				requireDeposit(2, 1);
 				m_asm.append(code[2].m_asm, 1);
 				m_asm.append(Instruction::LT);
-				m_asm.append(Instruction::NOT);
+				m_asm.append(Instruction::ISZERO);
 				m_asm.append(Instruction::MUL);
 				m_asm.append(Instruction::DUP1);
 			}
@@ -525,7 +525,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 					// Check if true - predicate
 					m_asm.append(code[i - 1].m_asm, 1);
 					if (us == "&&")
-						m_asm.append(Instruction::NOT);
+						m_asm.append(Instruction::ISZERO);
 					m_asm.appendJumpI(end);
 				}
 				m_asm.append(Instruction::POP);
