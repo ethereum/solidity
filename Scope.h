@@ -32,8 +32,10 @@ namespace dev
 namespace solidity
 {
 
-/// Container that stores mappings betwee names and declarations. It also contains a link to the
-/// enclosing scope.
+/**
+ * Container that stores mappings betwee names and declarations. It also contains a link to the
+ * enclosing scope.
+ */
 class Scope
 {
 public:

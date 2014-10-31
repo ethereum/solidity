@@ -243,7 +243,7 @@ bool Compiler::visit(WhileStatement& _whileStatement)
 
 	m_context << loopStart;
 	ExpressionCompiler::compileExpression(m_context, _whileStatement.getCondition());
-	m_context << eth::Instruction::NOT;
+	m_context << eth::Instruction::ISZERO;
 	m_context.appendConditionalJumpTo(loopEnd);
 
 	_whileStatement.getBody().accept(*this);

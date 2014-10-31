@@ -71,10 +71,10 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 	switch (_unaryOperation.getOperator())
 	{
 	case Token::NOT: // !
-		m_context << eth::Instruction::NOT;
+		m_context << eth::Instruction::ISZERO;
 		break;
 	case Token::BIT_NOT: // ~
-		m_context << eth::Instruction::BNOT;
+		m_context << eth::Instruction::NOT;
 		break;
 	case Token::DELETE: // delete
 	{
@@ -262,7 +262,7 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation& _binaryOperati
 	_binaryOperation.getLeftExpression().accept(*this);
 	m_context << eth::Instruction::DUP1;
 	if (op == Token::AND)
-		m_context << eth::Instruction::NOT;
+		m_context << eth::Instruction::ISZERO;
 	eth::AssemblyItem endLabel = m_context.appendConditionalJump();
 	_binaryOperation.getRightExpression().accept(*this);
 	m_context << endLabel;
@@ -274,7 +274,7 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	{
 		m_context << eth::Instruction::EQ;
 		if (_operator == Token::NE)
-			m_context << eth::Instruction::NOT;
+			m_context << eth::Instruction::ISZERO;
 	}
 	else
 	{
@@ -288,11 +288,11 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 		{
 		case Token::GTE:
 			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
-					  << eth::Instruction::NOT;
+					  << eth::Instruction::ISZERO;
 			break;
 		case Token::LTE:
 			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT)
-					  << eth::Instruction::NOT;
+					  << eth::Instruction::ISZERO;
 			break;
 		case Token::GT:
 			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT);

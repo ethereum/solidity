@@ -36,7 +36,9 @@ namespace solidity
 
 // @todo realMxN, string<N>, mapping
 
-/// Abstract base class that forms the root of the type hierarchy.
+/**
+ * Abstract base class that forms the root of the type hierarchy.
+ */
 class Type: private boost::noncopyable
 {
 public:
@@ -76,7 +78,9 @@ public:
 	virtual u256 literalValue(Literal const&) const { assert(false); }
 };
 
-/// Any kind of integer type including hash and address.
+/**
+ * Any kind of integer type including hash and address.
+ */
 class IntegerType: public Type
 {
 public:
@@ -112,7 +116,9 @@ private:
 	Modifier m_modifier;
 };
 
-/// The boolean type.
+/**
+ * The boolean type.
+ */
 class BoolType: public Type
 {
 public:
@@ -133,7 +139,9 @@ public:
 	virtual u256 literalValue(Literal const& _literal) const override;
 };
 
-/// The type of a contract instance, there is one distinct type for each contract definition.
+/**
+ * The type of a contract instance, there is one distinct type for each contract definition.
+ */
 class ContractType: public Type
 {
 public:
@@ -148,7 +156,9 @@ private:
 	ContractDefinition const& m_contract;
 };
 
-/// The type of a struct instance, there is one distinct type per struct definition.
+/**
+ * The type of a struct instance, there is one distinct type per struct definition.
+ */
 class StructType: public Type
 {
 public:
@@ -167,7 +177,9 @@ private:
 	StructDefinition const& m_struct;
 };
 
-/// The type of a function, there is one distinct type per function definition.
+/**
+ * The type of a function, there is one distinct type per function definition.
+ */
 class FunctionType: public Type
 {
 public:
@@ -184,7 +196,9 @@ private:
 	FunctionDefinition const& m_function;
 };
 
-/// The type of a mapping, there is one distinct type per key/value type pair.
+/**
+ * The type of a mapping, there is one distinct type per key/value type pair.
+ */
 class MappingType: public Type
 {
 public:
@@ -199,8 +213,10 @@ private:
 	std::shared_ptr<Type const> m_valueType;
 };
 
-/// The void type, can only be implicitly used as the type that is returned by functions without
-/// return parameters.
+/**
+ * The void type, can only be implicitly used as the type that is returned by functions without
+ * return parameters.
+ */
 class VoidType: public Type
 {
 public:
@@ -210,8 +226,10 @@ public:
 	virtual std::string toString() const override { return "void"; }
 };
 
-/// The type of a type reference. The type of "uint32" when used in "a = uint32(2)" is an example
-/// of a TypeType.
+/**
+ * The type of a type reference. The type of "uint32" when used in "a = uint32(2)" is an example
+ * of a TypeType.
+ */
 class TypeType: public Type
 {
 public:

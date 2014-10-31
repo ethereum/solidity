@@ -29,8 +29,10 @@ namespace dev
 namespace solidity
 {
 
-/// Representation of an interval of source positions.
-/// The interval includes start and excludes end.
+/**
+ * Representation of an interval of source positions.
+ * The interval includes start and excludes end.
+ */
 struct Location
 {
 	Location(int _start, int _end): start(_start), end(_end) { }

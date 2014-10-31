@@ -143,7 +143,7 @@ bool IntegerType::acceptsUnaryOperator(Token::Value _operator) const
 		   _operator == Token::INC || _operator == Token::DEC;
 }
 
-bool IntegerType::operator==(const Type& _other) const
+bool IntegerType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
@@ -159,7 +159,7 @@ std::string IntegerType::toString() const
 	return prefix + dev::toString(m_bits);
 }
 
-u256 IntegerType::literalValue(const Literal& _literal) const
+u256 IntegerType::literalValue(Literal const& _literal) const
 {
 	bigint value(_literal.getValue());
 	//@todo check that the number is not too large
@@ -180,7 +180,7 @@ bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return isImplicitlyConvertibleTo(_convertTo);
 }
 
-u256 BoolType::literalValue(const Literal& _literal) const
+u256 BoolType::literalValue(Literal const& _literal) const
 {
 	if (_literal.getToken() == Token::TRUE_LITERAL)
 		return u256(1);
@@ -190,7 +190,7 @@ u256 BoolType::literalValue(const Literal& _literal) const
 		assert(false);
 }
 
-bool ContractType::operator==(const Type& _other) const
+bool ContractType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
@@ -198,7 +198,7 @@ bool ContractType::operator==(const Type& _other) const
 	return other.m_contract == m_contract;
 }
 
-bool StructType::operator==(const Type& _other) const
+bool StructType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
@@ -206,7 +206,7 @@ bool StructType::operator==(const Type& _other) const
 	return other.m_struct == m_struct;
 }
 
-bool FunctionType::operator==(const Type& _other) const
+bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
@@ -214,7 +214,7 @@ bool FunctionType::operator==(const Type& _other) const
 	return other.m_function == m_function;
 }
 
-bool MappingType::operator==(const Type& _other) const
+bool MappingType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
@@ -222,7 +222,7 @@ bool MappingType::operator==(const Type& _other) const
 	return *other.m_keyType == *m_keyType && *other.m_valueType == *m_valueType;
 }
 
-bool TypeType::operator==(const Type& _other) const
+bool TypeType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;

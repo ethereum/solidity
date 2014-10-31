@@ -125,7 +125,7 @@ public:
 	/// Returns the current token
 	Token::Value getCurrentToken() { return m_current_token.token; }
 	Location getCurrentLocation() const { return m_current_token.location; }
-	const std::string& getCurrentLiteral() const { return m_current_token.literal; }
+	std::string const& getCurrentLiteral() const { return m_current_token.literal; }
 	///@}
 
 	///@{
@@ -134,7 +134,7 @@ public:
 	/// Returns the next token without advancing input.
 	Token::Value peekNextToken() const { return m_next_token.token; }
 	Location peekLocation() const { return m_next_token.location; }
-	const std::string& peekLiteral() const { return m_next_token.literal; }
+	std::string const& peekLiteral() const { return m_next_token.literal; }
 	///@}
 
 	///@{
