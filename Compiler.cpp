@@ -104,10 +104,10 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 	switch (_unaryOperation.getOperator())
 	{
 	case Token::NOT: // !
-		append(eth::Instruction::NOT);
+		append(eth::Instruction::ISZERO);
 		break;
 	case Token::BIT_NOT: // ~
-		append(eth::Instruction::BNOT);
+		append(eth::Instruction::NOT);
 		break;
 	case Token::DELETE: // delete
 		// a -> a xor a (= 0).
