@@ -535,7 +535,9 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 
 		auto argc = boost::unit_test::framework::master_test_suite().argc;
 		auto argv = boost::unit_test::framework::master_test_suite().argv;
-		auto useJit = argc >= 2 && std::string(argv[1]) == "--jit";
+		auto useJit = false;
+		for (auto i =  0; i < argc && !useJit; ++i)
+			useJit |= std::string(argv[i]) == "--jit";
 		auto vmKind = useJit ? VMFace::JIT : VMFace::Interpreter;
 
 		dev::test::FakeExtVM fev;
@@ -585,8 +587,8 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 				cnote << "Execution time: "
 				      << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
 				      << " ms";
+				break;
 			}
-			break;
 		}
 
 		auto gas = vm->gas();
@@ -826,7 +828,7 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
 
-	if (boost::unit_test::framework::master_test_suite().argc == 2)
+	if (boost::unit_test::framework::master_test_suite().argc >= 2)
 	{
 		string filename = boost::unit_test::framework::master_test_suite().argv[1];
 		int currentVerbosity = g_logVerbosity;
