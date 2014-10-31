@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#if ETH_JSONRPC && 1
+#if ETH_JSONRPC
 
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
@@ -35,6 +35,8 @@
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
 #include "webthreestubclient.h"
+
+BOOST_AUTO_TEST_SUITE(jsonrpc)
 
 using namespace std;
 using namespace dev;
@@ -242,5 +244,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 }
 
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 #endif
