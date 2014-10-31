@@ -1319,7 +1319,7 @@
     },
 
 
-    "neg0": {
+    "bnot0": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -1347,7 +1347,7 @@
         }
     },
 
-    "neg1": {
+    "bnot1": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -1375,7 +1375,7 @@
         }
     },
 
-    "neg2": {
+    "bnot2": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -1403,7 +1403,7 @@
         }
     },
 
-    "neg3": {
+    "bnot3": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -1431,7 +1431,7 @@
         }
     },
 
-    "neg4": {
+    "bnot4": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -1459,7 +1459,7 @@
         }
     },
 
-    "neg5": {
+    "bnot5": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
