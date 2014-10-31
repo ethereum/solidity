@@ -214,10 +214,10 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 					   byte(eth::Instruction::SUB),
 					   byte(eth::Instruction::PUSH1), 0x0,
 					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::BNOT),
+					   byte(eth::Instruction::NOT),
 					   byte(eth::Instruction::PUSH1), 0x2,
 					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::NOT)});
+					   byte(eth::Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
