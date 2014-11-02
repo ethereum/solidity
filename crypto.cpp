@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 	BOOST_REQUIRE(dev::toAddress(s) == right160(dev::sha3(p.ref())));
 	
 	Secret previous = s;
-	for (auto i = 0; i < 30; i++)
+	for (auto i = 0; i < 2; i++)
 	{
 		ECIES<ECP>::Decryptor d(pp::PRNG, pp::secp256k1Curve);
 		ECIES<ECP>::Encryptor e(d.GetKey());
@@ -82,7 +82,13 @@ BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 		Public p;
 		pp::exportPublicKey(e.GetKey(), p);
 
-		BOOST_REQUIRE(dev::toAddress(s) == right160(dev::sha3(p.ref())));
+		h160 secp256k1Addr = dev::toAddress(s);
+		h160 cryptoppAddr = right160(dev::sha3(p.ref()));
+		if (secp256k1Addr != cryptoppAddr)
+		{
+			BOOST_REQUIRE(secp256k1Addr == cryptoppAddr);
+			break;
+		}
 	}
 }
 
@@ -94,30 +100,29 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_ecdsav)
 	Secret secret(sha3("privacy"));
 	
 	// we get ec params from signer
+	const CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> params = pp::secp256k1Params;
 	ECDSA<ECP, SHA3_256>::Signer signer;
 	
 	// e := sha3(msg)
 	bytes e(fromHex("0x01"));
 	e.resize(32);
-	int tests = 15; // Oct 29: successful @ 1500
+	int tests = 2; // Oct 29: successful @ 1500
 	while (sha3(&e, &e), secret = sha3(secret.asBytes()), tests--)
 	{
 		KeyPair key(secret);
 		Public pkey = key.pub();
-		pp::initializeSigner(secret, signer);
+		pp::initializeDLScheme(secret, signer);
 		
 		h256 he(sha3(e));
 		Integer heInt(he.asBytes().data(), 32);
-		h256 k(he ^ secret);
+		h256 k(crypto::kdf(secret, he));
 		Integer kInt(k.asBytes().data(), 32);
-		
-		const DL_GroupParameters<ECP::Point> &params = signer.GetKey().GetAbstractGroupParameters();
+		kInt %= params.GetSubgroupOrder()-1;
 
 		ECP::Point rp = params.ExponentiateBase(kInt);
 		Integer const& q = params.GetGroupOrder();
 		Integer r = params.ConvertElementToInteger(rp);
 		int recid = ((r >= q) ? 2 : 0) | (rp.y.IsOdd() ? 1 : 0);
-		BOOST_REQUIRE(!(r >= q));
 
 		Integer kInv = kInt.InverseMod(q);
 		Integer s = (kInv * (Integer(secret.asBytes().data(), 32)*r + heInt)) % q;
@@ -164,7 +169,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 	KeyPair key(secret);
 	
 	bytes m(fromHex("0x01"));
-	int tests = 5;
+	int tests = 2;
 	while (m[0]++, tests--)
 	{
 		h256 hm(sha3(m));
@@ -174,27 +179,26 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		
 		// raw sign w/cryptopp (doesn't pass through cryptopp hash filter)
 		ECDSA<ECP, SHA3_256>::Signer signer;
-		pp::initializeSigner(key.sec(), signer);
+		pp::initializeDLScheme(key.sec(), signer);
 		Integer r, s;
 		signer.RawSign(kInt, hInt, r, s);
 
 		// verify cryptopp raw-signature w/cryptopp
 		ECDSA<ECP, SHA3_256>::Verifier verifier;
-		pp::initializeVerifier(key.pub(), verifier);
+		pp::initializeDLScheme(key.pub(), verifier);
 		Signature sigppraw;
 		r.Encode(sigppraw.data(), 32);
 		s.Encode(sigppraw.data()+32, 32);
 		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppraw.data(), 64));
 		BOOST_REQUIRE(crypto::verify(key.pub(), sigppraw, bytesConstRef(&m)));
 		BOOST_REQUIRE(dev::verify(key.pub(), sigppraw, hm));
-		BOOST_CHECK(dev::recover(sigppraw, hm) == key.pub());
 		
-		// sign with sec256lib, verify with cryptopp
+		// sign with cryptopp, verify, recover w/sec256lib
 		Signature seclibsig(dev::sign(key.sec(), hm));
 		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), seclibsig.data(), 64));
 		BOOST_REQUIRE(crypto::verify(key.pub(), seclibsig, bytesConstRef(&m)));
 		BOOST_REQUIRE(dev::verify(key.pub(), seclibsig, hm));
-		BOOST_CHECK(dev::recover(seclibsig, hm) == key.pub());
+		BOOST_REQUIRE(dev::recover(seclibsig, hm) == key.pub());
 
 		// sign with cryptopp (w/hash filter?), verify with cryptopp
 		bytes sigppb(signer.MaxSignatureLength());
@@ -204,7 +208,6 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppb.data(), ssz));
 		BOOST_REQUIRE(crypto::verify(key.pub(), sigpp, bytesConstRef(&m)));
 		BOOST_REQUIRE(dev::verify(key.pub(), sigpp, hm));
-		BOOST_CHECK(dev::recover(sigpp, hm) == key.pub());
 
 		// sign with cryptopp and stringsource hash filter
 		string sigstr;
@@ -213,7 +216,6 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), retsig.data(), 64));
 		BOOST_REQUIRE(crypto::verify(key.pub(), retsig, bytesConstRef(&m)));
 		BOOST_REQUIRE(dev::verify(key.pub(), retsig, hm));
-		BOOST_CHECK(dev::recover(retsig, hm) == key.pub());
 		
 		/// verification w/sec256lib
 		// requires public key and sig in standard format
