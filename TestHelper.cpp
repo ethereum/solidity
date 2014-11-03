@@ -67,7 +67,6 @@ namespace test
 
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):m_TestObject(_o)
 {
-
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
 	importTransaction(_o["transaction"].get_obj());
@@ -111,7 +110,6 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 
 		Address address = Address(i.first);
 
-
 		for (auto const& j: o["storage"].get_obj())
 			_state.setStorage(address, toInt(j.first), toInt(j.second));
 
@@ -120,7 +118,6 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		toInt(o["nonce"]);
 		if (toHex(code).size())
 		{
-			cout << "address: " << address << "has code: " << toHex(code) << endl;
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::ContractConception);
 			i.second.get_obj()["code"] = "0x" + toHex(code); //preperation for export
 			_state.m_cache[address].setCode(bytesConstRef(&code));

@@ -52,28 +52,18 @@ public:
 	void importState(json_spirit::mObject& _o, eth::State& _state);
 	void importTransaction(json_spirit::mObject& _o);
 	void exportTest(bytes _output, eth::State& _statePost);
-	eth::Manifest* getManifest(){ return &m_manifest;}
 
 	eth::State m_statePre;
 	eth::State m_statePost;
 	eth::ExtVMFace m_environment;
-	u256 gas;
-	u256 gasExec;
 	eth::Transaction m_transaction;
-	bytes output;
-	eth::Manifest m_manifest;
-
 	bytes code;
 
 private:
 	json_spirit::mObject& m_TestObject;
-
-	// needed for const ref
-	bytes data;
 };
 
 // helping functions
-
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
 bytes importCode(json_spirit::mObject &_o);

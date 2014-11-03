@@ -55,7 +55,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre") > 0);
 		BOOST_REQUIRE(o.count("transaction") > 0);
 
-		ImportTest importer(o,_fillin);
+		ImportTest importer(o, _fillin);
 
 		if (_fillin)
 		{
@@ -64,19 +64,8 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		State theState = importer.m_statePre;
-
 		bytes tx = importer.m_transaction.rlp();
-
 		bytes output;
-
-		// check
-
-		for (auto const& a: theState.addresses())
-		{
-			cout << "address: " << a.first << endl;
-			cout << "balance: " << theState.balance(a.first) << endl;
-			cout << "has code: " << theState.addressHasCode(a.first) << endl;
-		}
 
 		try
 		{
