@@ -336,10 +336,10 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << eth::Instruction::MUL;
 		break;
 	case Token::DIV:
-		m_context << (isSigned ? eth::Instruction::SDIV : eth::Instruction::DIV);
+		m_context << eth::Instruction::SWAP1 << (isSigned ? eth::Instruction::SDIV : eth::Instruction::DIV);
 		break;
 	case Token::MOD:
-		m_context << (isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
+		m_context << eth::Instruction::SWAP1 << (isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
 		break;
 	default:
 		assert(false);
