@@ -36,6 +36,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libethereum/Transaction.h>
 #include <libethereum/ExtVM.h>
 #include <libethereum/State.h>
+#include "TestHelper.h"
 
 namespace dev { namespace test {
 
@@ -60,8 +61,6 @@ public:
 	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage, bytes const& _code);
 	void set(Address _a, u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage, bytes const& _code);
 	void reset(u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage);
-	u256 toInt(json_spirit::mValue const& _v);
-	byte toByte(json_spirit::mValue const& _v);
 	void push(json_spirit::mObject& o, std::string const& _n, u256 _v);
 	void push(json_spirit::mArray& a, u256 _v);
 	u256 doPosts();

@@ -26,6 +26,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libethereum/BlockChain.h>
 #include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 
 using namespace std;
 using namespace dev;
@@ -33,18 +34,12 @@ using namespace dev::eth;
 
 namespace js = json_spirit;
 
+BOOST_AUTO_TEST_SUITE(BasicTests)
+
 BOOST_AUTO_TEST_CASE(genesis_tests)
 {
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-	string testPath;
-
-	if (ptestPath == NULL)
-	{
-		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
-	}
-	else
-		testPath = ptestPath;
+	string testPath = test::getTestPath();
+	testPath += "/BasicTests";
 
 	cnote << "Testing Genesis block...";
 	js::mValue v;
@@ -58,4 +53,6 @@ BOOST_AUTO_TEST_CASE(genesis_tests)
 	BOOST_CHECK_EQUAL(toHex(BlockChain::createGenesisBlock()), toHex(fromHex(o["genesis_rlp_hex"].get_str())));
 	BOOST_CHECK_EQUAL(sha3(BlockChain::createGenesisBlock()), h256(o["genesis_hash"].get_str()));
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 

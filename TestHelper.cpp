@@ -23,10 +23,14 @@
 
 #include <thread>
 #include <chrono>
+#include <boost/filesystem/path.hpp>
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 
+//#define FILL_TESTS
+
 using namespace std;
+using namespace dev::eth;
 
 namespace dev
 {
@@ -56,6 +60,7 @@ void connectClients(Client& c1, Client& c2)
 	c2.connect("127.0.0.1", c1Port);
 #endif
 }
+}
 
 namespace test
 {
@@ -65,17 +70,12 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):m_TestObject(_o)
 
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
-	importExec(_o["exec"].get_obj());
+	importTransaction(_o["transaction"].get_obj());
 
 	if (!isFiller)
 	{
 		importState(_o["post"].get_obj(), m_statePost);
-		//importCallCreates(_o["callcreates"].get_array());
-		importGas(_o);
-		importOutput(_o);
 	}
-//	else
-//		m_TestObject = &_o; // if Filler then change Test object to prepare for export
 }
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
@@ -110,130 +110,61 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		assert(o.count("code") > 0);
 
 		Address address = Address(i.first);
-		_state.m_cache[address] = AddressState(toInt(o["nonce"]), toInt(o["balance"]), EmptyTrie, h256());
+
 
 		for (auto const& j: o["storage"].get_obj())
 			_state.setStorage(address, toInt(j.first), toInt(j.second));
 
-		bytes code;
-		if (o["code"].type() == json_spirit::str_type)
-			if (o["code"].get_str().find_first_of("0x") != 0)
-				code = compileLLL(o["code"].get_str(), false);
-			else
-				code = fromHex(o["code"].get_str().substr(2));
-		else
+		bytes code = importCode(o);
+
+		toInt(o["nonce"]);
+		if (toHex(code).size())
 		{
-			code.clear();
-			for (auto const& j: o["code"].get_array())
-				code.push_back(toByte(j));
+			cout << "address: " << address << "has code: " << toHex(code) << endl;
+			_state.m_cache[address] = Account(toInt(o["balance"]), Account::ContractConception);
+			i.second.get_obj()["code"] = "0x" + toHex(code); //preperation for export
+			_state.m_cache[address].setCode(bytesConstRef(&code));
 		}
+		else
+			_state.m_cache[address] = Account(toInt(o["balance"]), Account::NormalCreation);
 
-		i.second.get_obj()["code"] = "0x" + toHex(code); //preperation for export
+		for(int i=0; i<toInt(o["nonce"]); ++i)
+			_state.noteSending(address);
 
-		_state.m_cache[address].setCode(bytesConstRef(&code));
-		_state.ensureCached(address, true, true);
+		_state.ensureCached(address, false, false);
 	}
 }
 
-void ImportTest::importExec(json_spirit::mObject& _o)
+void ImportTest::importTransaction(json_spirit::mObject& _o)
 {
-	assert(_o.count("address")> 0);
-	assert(_o.count("caller") > 0);
-	assert(_o.count("origin") > 0);
-	assert(_o.count("value") > 0);
-	assert(_o.count("data") > 0);
+	assert(_o.count("nonce")> 0);
 	assert(_o.count("gasPrice") > 0);
-	assert(_o.count("gas") > 0);
-	//assert(_o.count("code") > 0);
+	assert(_o.count("gasLimit") > 0);
+	assert(_o.count("to") > 0);
+	assert(_o.count("value") > 0);
+	assert(_o.count("secretKey") > 0);
+	assert(_o.count("data") > 0);
 
-	m_environment.myAddress = Address(_o["address"].get_str());
-	m_environment.caller = Address(_o["caller"].get_str());
-	m_environment.origin = Address(_o["origin"].get_str());
-	m_environment.value = toInt(_o["value"]);
-	m_environment.gasPrice = toInt(_o["gasPrice"]);
-	gasExec = toInt(_o["gas"]);
-
-	if (_o["code"].type() == json_spirit::str_type)
-		if (_o["code"].get_str().find_first_of("0x") == 0)
-			code = fromHex(_o["code"].get_str().substr(2));
-		else
-			code = compileLLL(_o["code"].get_str());
-	else if (_o["code"].type() == json_spirit::array_type)
-		for (auto const& j: _o["code"].get_array())
-			code.push_back(toByte(j));
-	else
-		m_environment.code.reset();
-	m_environment.code = &code;
-
-	if (_o["data"].type() == json_spirit::str_type)
-		if (_o["data"].get_str().find_first_of("0x") == 0)
-			data = fromHex(_o["data"].get_str().substr(2));
-		else
-			data = fromHex(_o["data"].get_str());
-	else
-		for (auto const& j: _o["data"].get_array())
-			data.push_back(toByte(j));
-	m_environment.data = &data;
+	m_transaction.nonce = toInt(_o["nonce"]);
+	m_transaction.gasPrice = toInt(_o["gasPrice"]);
+	m_transaction.gas = toInt(_o["gasLimit"]);
+	m_transaction.receiveAddress = Address(_o["to"].get_str());
+	m_transaction.type = m_transaction.receiveAddress ? Transaction::MessageCall : Transaction::ContractCreation;
+	m_transaction.value = toInt(_o["value"]);
+	Secret secretKey = Secret(_o["secretKey"].get_str());
+	m_transaction.sign(secretKey);
+	m_transaction.data = importData(_o);
 }
 
-void ImportTest::importCallCreates(json_spirit::mArray& _callcreates)
+void ImportTest::exportTest(bytes _output, State& _statePost)
 {
-	for (json_spirit::mValue& v: _callcreates)
-	{
-		auto tx = v.get_obj();
-		assert(tx.count("data") > 0);
-		assert(tx.count("value") > 0);
-		assert(tx.count("destination") > 0);
-		assert(tx.count("gasLimit") > 0);
-		Transaction t;
-		t.type = tx["destination"].get_str().empty() ? Transaction::ContractCreation : Transaction::MessageCall;
-		t.receiveAddress = Address(tx["destination"].get_str());
-		t.value = toInt(tx["value"]);
-		t.gas = toInt(tx["gasLimit"]);
-		if (tx["data"].type() == json_spirit::str_type)
-			if (tx["data"].get_str().find_first_of("0x") == 0)
-				t.data = fromHex(tx["data"].get_str().substr(2));
-			else
-				t.data = fromHex(tx["data"].get_str());
-		else
-			for (auto const& j: tx["data"].get_array())
-				t.data.push_back(toByte(j));
-		callcreates.push_back(t);
-	}
-}
-
-void ImportTest::importGas(json_spirit::mObject& _o)
-{
-	gas = toInt(_o["gas"]);
-}
-
-void ImportTest::importOutput(json_spirit::mObject& _o)
-{
-	int i = 0;
-	if (_o["out"].type() == json_spirit::array_type)
-		for (auto const& d: _o["out"].get_array())
-		{
-			output[i] = uint8_t(toInt(d));
-			++i;
-		}
-	else if (_o["out"].get_str().find("0x") == 0)
-		output = fromHex(_o["out"].get_str().substr(2));
-	else
-		output = fromHex(_o["out"].get_str());
-}
-
-void ImportTest::exportTest(bytes _output, u256 _gas, State& _statePost)
-{
-	// export gas
-	m_TestObject["gas"] = toString(_gas);
-
 	// export output
 	m_TestObject["out"] = "0x" + toHex(_output);
 
 	// export post state
 	json_spirit::mObject postState;
 
-	std::map<Address, AddressState> genesis = genesisState();
+	std::map<Address, Account> genesis = genesisState();
 
 	for (auto const& a: _statePost.addresses())
 	{
@@ -254,22 +185,6 @@ void ImportTest::exportTest(bytes _output, u256 _gas, State& _statePost)
 		postState[toString(a.first)] = o;
 	}
 	m_TestObject["post"] = json_spirit::mValue(postState);
-
-	m_TestObject["exec"].get_obj()["code"] = "0x" + toHex(code);
-
-//	// export callcreates
-//	m_TestObject["callcreates"] = exportCallCreates();
-
-//	for (int i = 0; i < (m_manifest.internal.size(); ++i)
-//	{
-//		 Transaction t;
-//		 t.value = m_manifest.internal[i].value;
-//		 t.gas = ;
-//		 t.data = m_manifest.internal[i].input; ;
-//		 t.receiveAddress = m_manifest.internal[i].to;
-//		 t.type =
-
-//	}
 }
 
 u256 toInt(json_spirit::mValue const& _v)
@@ -298,5 +213,131 @@ byte toByte(json_spirit::mValue const& _v)
 	return 0;
 }
 
+bytes importData(json_spirit::mObject & _o)
+{
+	bytes data;
+	if (_o["data"].type() == json_spirit::str_type)
+		if (_o["data"].get_str().find_first_of("0x") == 0)
+			data = fromHex(_o["data"].get_str().substr(2));
+		else
+			data = fromHex(_o["data"].get_str());
+	else
+		for (auto const& j: _o["data"].get_array())
+			data.push_back(toByte(j));
 
-} } } // namespaces
+	return data;
+}
+
+bytes importCode(json_spirit::mObject & _o)
+{
+	bytes code;
+	if (_o["code"].type() == json_spirit::str_type)
+		if (_o["code"].get_str().find_first_of("0x") != 0)
+			code = compileLLL(_o["code"].get_str(), false);
+		else
+			code = fromHex(_o["code"].get_str().substr(2));
+	else if (_o["code"].type() == json_spirit::array_type)
+	{
+		code.clear();
+		for (auto const& j: _o["code"].get_array())
+			code.push_back(toByte(j));
+	}
+	return code;
+}
+
+void checkOutput(bytes const& _output, json_spirit::mObject & _o)
+{
+	int j = 0;
+	if (_o["out"].type() == json_spirit::array_type)
+		for (auto const& d: _o["out"].get_array())
+		{
+			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
+			++j;
+		}
+	else if (_o["out"].get_str().find("0x") == 0)
+		BOOST_CHECK(_output == fromHex(_o["out"].get_str().substr(2)));
+	else
+		BOOST_CHECK(_output == fromHex(_o["out"].get_str()));
+}
+
+void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, Address _expectedAddr)
+{
+	for (auto&& expectedStorePair : _expectedStore)
+	{
+		auto& expectedStoreKey = expectedStorePair.first;
+		auto resultStoreIt = _resultStore.find(expectedStoreKey);
+		if (resultStoreIt == _resultStore.end())
+			BOOST_ERROR(_expectedAddr << ": missing store key " << expectedStoreKey);
+		else
+		{
+			auto& expectedStoreValue = expectedStorePair.second;
+			auto& resultStoreValue = resultStoreIt->second;
+			BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
+		}
+	}
+}
+
+std::string getTestPath()
+{
+	string testPath;
+	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
+
+	if (ptestPath == NULL)
+	{
+		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
+		testPath = "../../../tests";
+	}
+	else
+		testPath = ptestPath;
+
+	return testPath;
+}
+
+void executeTests(const string& _name, const string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests)
+{
+	string testPath = getTestPath();
+	testPath += _testPathAppendix;
+
+#ifdef FILL_TESTS
+	try
+	{
+		cnote << "Populating tests...";
+		json_spirit::mValue v;
+		boost::filesystem::path p(__FILE__);
+		boost::filesystem::path dir = p.parent_path();
+		string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
+		json_spirit::read_string(s, v);
+		doTests(v, true);
+		writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+	}
+	catch (Exception const& _e)
+	{
+		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed test with Exception: " << _e.what());
+	}
+#endif
+
+	try
+	{
+		cnote << "Testing ..." << _name;
+		json_spirit::mValue v;
+		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		json_spirit::read_string(s, v);
+		doTests(v, false);
+	}
+	catch (Exception const& _e)
+	{
+		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed test with Exception: " << _e.what());
+	}
+}
+
+} } // namespaces

@@ -20,10 +20,7 @@
  * vm test functions.
  */
 
-#include <boost/filesystem/path.hpp>
 #include "vm.h"
-
-//#define FILL_TESTS
 
 using namespace std;
 using namespace json_spirit;
@@ -59,6 +56,8 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 	t.receiveAddress = _receiveAddress;
 	callcreates.push_back(t);
 	(void)_out;
+	(void)_myAddressOverride;
+	(void)_codeAddressOverride;
 	return true;
 }
 
@@ -91,45 +90,13 @@ void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _st
 	set(myAddress, _myBalance, _myNonce, _storage, get<3>(addresses[myAddress]));
 }
 
-u256 FakeExtVM::toInt(mValue const& _v)
-{
-	switch (_v.type())
-	{
-	case str_type: return u256(_v.get_str());
-	case int_type: return (u256)_v.get_uint64();
-	case bool_type: return (u256)(uint64_t)_v.get_bool();
-	case real_type: return (u256)(uint64_t)_v.get_real();
-	default: cwarn << "Bad type for scalar: " << _v.type();
-	}
-	return 0;
-}
-
-byte FakeExtVM::toByte(mValue const& _v)
-{
-	switch (_v.type())
-	{
-	case str_type: return (byte)stoi(_v.get_str());
-	case int_type: return (byte)_v.get_uint64();
-	case bool_type: return (byte)_v.get_bool();
-	case real_type: return (byte)_v.get_real();
-	default: cwarn << "Bad type for scalar: " << _v.type();
-	}
-	return 0;
-}
-
 void FakeExtVM::push(mObject& o, string const& _n, u256 _v)
 {
-	//		if (_v < (u256)1 << 64)
-	//			o[_n] = (uint64_t)_v;
-	//		else
 	o[_n] = toString(_v);
 }
 
 void FakeExtVM::push(mArray& a, u256 _v)
 {
-	//		if (_v < (u256)1 << 64)
-	//			a.push_back((uint64_t)_v);
-	//		else
 	a.push_back(toString(_v));
 }
 
@@ -202,17 +169,7 @@ void FakeExtVM::importState(mObject& _object)
 		for (auto const& j: o["storage"].get_obj())
 			get<2>(a)[toInt(j.first)] = toInt(j.second);
 
-		if (o["code"].type() == str_type)
-			if (o["code"].get_str().find_first_of("0x") != 0)
-				get<3>(a) = compileLLL(o["code"].get_str(), false);
-			else
-				get<3>(a) = fromHex(o["code"].get_str().substr(2));
-		else
-		{
-			get<3>(a).clear();
-			for (auto const& j: o["code"].get_array())
-				get<3>(a).push_back(toByte(j));
-		}
+		get<3>(a) = importCode(o);
 	}
 }
 
@@ -250,26 +207,14 @@ void FakeExtVM::importExec(mObject& _o)
 
 	thisTxCode.clear();
 	code = &thisTxCode;
-	if (_o["code"].type() == str_type)
-		if (_o["code"].get_str().find_first_of("0x") == 0)
-			thisTxCode = fromHex(_o["code"].get_str().substr(2));
-		else
-			thisTxCode = compileLLL(_o["code"].get_str());
-	else if (_o["code"].type() == array_type)
-		for (auto const& j: _o["code"].get_array())
-			thisTxCode.push_back(toByte(j));
-	else
+
+	thisTxCode = importCode(_o);
+	if (_o["code"].type() != str_type && _o["code"].type() != array_type)
 		code.reset();
 
 	thisTxData.clear();
-	if (_o["data"].type() == str_type)
-		if (_o["data"].get_str().find_first_of("0x") == 0)
-			thisTxData = fromHex(_o["data"].get_str().substr(2));
-		else
-			thisTxData = fromHex(_o["data"].get_str());
-	else
-		for (auto const& j: _o["data"].get_array())
-			thisTxData.push_back(toByte(j));
+	thisTxData = importData(_o);
+
 	data = &thisTxData;
 }
 
@@ -302,14 +247,7 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		t.receiveAddress = Address(tx["destination"].get_str());
 		t.value = toInt(tx["value"]);
 		t.gas = toInt(tx["gasLimit"]);
-		if (tx["data"].type() == str_type)
-			if (tx["data"].get_str().find_first_of("0x") == 0)
-				t.data = fromHex(tx["data"].get_str().substr(2));
-			else
-				t.data = fromHex(tx["data"].get_str());
-		else
-			for (auto const& j: tx["data"].get_array())
-				t.data.push_back(toByte(j));
+		t.data = importData(tx);
 		callcreates.push_back(t);
 	}
 }
@@ -346,7 +284,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 
 namespace dev { namespace test {
 
-void doTests(json_spirit::mValue& v, bool _fillin)
+void doVMTests(json_spirit::mValue& v, bool _fillin)
 {
 	for (auto& i: v.get_obj())
 	{
@@ -424,19 +362,10 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			dev::test::FakeExtVM test;
 			test.importState(o["post"].get_obj());
 			test.importCallCreates(o["callcreates"].get_array());
-			int i = 0;
-			if (o["out"].type() == array_type)
-				for (auto const& d: o["out"].get_array())
-				{
-					BOOST_CHECK_MESSAGE(output[i] == test.toInt(d), "Output byte [" << i << "] different!");
-					++i;
-				}
-			else if (o["out"].get_str().find("0x") == 0)
-				BOOST_CHECK(output == fromHex(o["out"].get_str().substr(2)));
-			else
-				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
-			BOOST_CHECK_EQUAL(test.toInt(o["gas"]), vm.gas());
+			checkOutput(output, o);
+
+			BOOST_CHECK_EQUAL(toInt(o["gas"]), vm.gas());
 
 			auto& expectedAddrs = test.addresses;
 			auto& resultAddrs = fev.addresses;
@@ -454,134 +383,68 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 					BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
 					BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
 
-					auto&& expectedStore = std::get<2>(expectedState);
-					auto&& resultStore = std::get<2>(resultState);
-
-					for (auto&& expectedStorePair : expectedStore)
-					{
-						auto& expectedStoreKey = expectedStorePair.first;
-						auto resultStoreIt = resultStore.find(expectedStoreKey);
-						if (resultStoreIt == resultStore.end())
-							BOOST_ERROR(expectedAddr << ": missing store key " << expectedStoreKey);
-						else
-						{
-							auto& expectedStoreValue = expectedStorePair.second;
-							auto& resultStoreValue = resultStoreIt->second;
-							BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
-						}
-					}
+					checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
 				}
 			}
 
-			BOOST_CHECK(test.addresses == fev.addresses);	// Just to make sure nothing missed
+			checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
 			BOOST_CHECK(test.callcreates == fev.callcreates);
 		}
 	}
 }
 
-void executeTests(const string& _name)
-{
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-	string testPath;
-
-	if (ptestPath == NULL)
-	{
-		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
-	}
-	else
-		testPath = ptestPath;
-
-	testPath += "/vmtests";
-
-#ifdef FILL_TESTS
-	try
-	{
-		cnote << "Populating VM tests...";
-		json_spirit::mValue v;
-		boost::filesystem::path p(__FILE__);
-		boost::filesystem::path dir = p.parent_path();
-		string s = asString(contents(dir.string() + "/" + _name + "Filler.json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + "Filler.json is empty.");
-		json_spirit::read_string(s, v);
-		dev::test::doTests(v, true);
-		writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-	}
-#endif
-
-	try
-	{
-		cnote << "Testing VM..." << _name;
-		json_spirit::mValue v;
-		string s = asString(contents(testPath + "/" + _name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-		json_spirit::read_string(s, v);
-		dev::test::doTests(v, false);
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-	}
-
-}
-
 } } // Namespace Close
+
+BOOST_AUTO_TEST_SUITE(VMTests)
 
 BOOST_AUTO_TEST_CASE(vm_tests)
 {
-	dev::test::executeTests("vmtests");
+	dev::test::executeTests("vmtests", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmArithmeticTest)
 {
-	dev::test::executeTests("vmArithmeticTest");
+	dev::test::executeTests("vmArithmeticTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperationTest)
 {
-	dev::test::executeTests("vmBitwiseLogicOperationTest");
+	dev::test::executeTests("vmBitwiseLogicOperationTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmSha3Test)
 {
-	dev::test::executeTests("vmSha3Test");
+	dev::test::executeTests("vmSha3Test", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmEnvironmentalInfoTest)
 {
-	dev::test::executeTests("vmEnvironmentalInfoTest");
+	dev::test::executeTests("vmEnvironmentalInfoTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmBlockInfoTest)
 {
-	dev::test::executeTests("vmBlockInfoTest");
+	dev::test::executeTests("vmBlockInfoTest", "/VMTests", dev::test::doVMTests);
 }
 
-BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
-{
-	dev::test::executeTests("vmIOandFlowOperationsTest");
-}
+//BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
+//{
+//	dev::test::executeTests("vmIOandFlowOperationsTest", "/VMTests", dev::test::doVMTests);
+//}
 
 BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
-	dev::test::executeTests("vmPushDupSwapTest");
+	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", dev::test::doVMTests);
+}
+
+BOOST_AUTO_TEST_CASE(vmNamecoin)
+{
+	dev::test::executeTests("vmNamecoin", "/VMTests", dev::test::doVMTests);
 }
 
 //BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 //{
-//	dev::test::executeTests("vmSystemOperationsTest");
+//	dev::test::executeTests("vmSystemOperationsTest", "/VMTests", dev::test::doVMTests);
 //}
 
 BOOST_AUTO_TEST_CASE(userDefinedFile)
@@ -598,7 +461,7 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 			string s = asString(contents(filename));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
 			json_spirit::read_string(s, v);
-			dev::test::doTests(v, false);
+			dev::test::doVMTests(v, false);
 		}
 		catch (Exception const& _e)
 		{
@@ -611,3 +474,5 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 		g_logVerbosity = currentVerbosity;
 	}
 }
+
+BOOST_AUTO_TEST_SUITE_END()

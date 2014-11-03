@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <functional>
+#include <boost/test/unit_test.hpp>
 #include "JsonSpiritHeaders.h"
 #include <libethereum/State.h>
 
@@ -34,6 +36,8 @@ class Client;
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
 
+}
+
 namespace test
 {
 
@@ -45,31 +49,26 @@ public:
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);
-	void importState(json_spirit::mObject& _o, State& _state);
-	void importExec(json_spirit::mObject& _o);
-	void importCallCreates(json_spirit::mArray& _callcreates);
-	void importGas(json_spirit::mObject& _o);
-	void importOutput(json_spirit::mObject& _o);
+	void importState(json_spirit::mObject& _o, eth::State& _state);
+	void importTransaction(json_spirit::mObject& _o);
+	void exportTest(bytes _output, eth::State& _statePost);
+	eth::Manifest* getManifest(){ return &m_manifest;}
 
-	void exportTest(bytes _output, u256 _gas, State& _statePost);
-	Manifest* getManifest(){ return &m_manifest;}
-
-	State m_statePre;
-	State m_statePost;
-	ExtVMFace m_environment;
+	eth::State m_statePre;
+	eth::State m_statePost;
+	eth::ExtVMFace m_environment;
 	u256 gas;
 	u256 gasExec;
-	Transactions callcreates;
+	eth::Transaction m_transaction;
 	bytes output;
-	Manifest m_manifest;
+	eth::Manifest m_manifest;
 
 	bytes code;
 
 private:
 	json_spirit::mObject& m_TestObject;
 
-	// needed for const refs
-
+	// needed for const ref
 	bytes data;
 };
 
@@ -77,7 +76,25 @@ private:
 
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
+bytes importCode(json_spirit::mObject &_o);
+bytes importData(json_spirit::mObject &_o);
+void checkOutput(bytes const& _output, json_spirit::mObject &_o);
+void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
+void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
+std::string getTestPath();
 
+template<typename mapType>
+void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
+{
+	for (auto& resultPair : _resultAddrs)
+	{
+		auto& resultAddr = resultPair.first;
+		auto expectedAddrIt = _expectedAddrs.find(resultAddr);
+		if (expectedAddrIt == _expectedAddrs.end())
+			BOOST_ERROR("Missing result address " << resultAddr);
+	}
+	BOOST_CHECK(_expectedAddrs == _resultAddrs);
 }
+
 }
 }
