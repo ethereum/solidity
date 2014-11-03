@@ -134,10 +134,10 @@ void doMyTests(json_spirit::mValue& v)
 		o["pre"] = mValue(fev.exportState());
 
 		fev.importExec(o["exec"].get_obj());
-		if (!fev.code)
+		if (!fev.code.size())
 		{
 			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
-			fev.code = &fev.thisTxCode;
+			fev.code = fev.thisTxCode;
 		}
 
 		vm.reset(fev.gas);

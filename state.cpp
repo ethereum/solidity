@@ -20,8 +20,6 @@
  * State test functions.
  */
 
-#define FILL_TESTS
-
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include "JsonSpiritHeaders.h"
@@ -60,7 +58,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		if (_fillin)
 		{
 			importer.code = importer.m_statePre.code(importer.m_environment.myAddress);
-			importer.m_environment.code = &importer.code;
+			importer.m_environment.code = importer.code;
 		}
 
 		State theState = importer.m_statePre;
