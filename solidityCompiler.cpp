@@ -1,4 +1,3 @@
-
 /*
 	This file is part of cpp-ethereum.
 
@@ -101,7 +100,7 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 76;
+	unsigned shift = 75;
 	unsigned boilerplateSize = 88;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize return variable d
@@ -154,7 +153,7 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 39;
+	unsigned shift = 38;
 	unsigned boilerplateSize = 51;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0,
@@ -196,7 +195,7 @@ BOOST_AUTO_TEST_CASE(loops)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 39;
+	unsigned shift = 38;
 	unsigned boilerplateSize = 51;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),

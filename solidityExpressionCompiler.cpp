@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 					   byte(eth::Instruction::GT),
 					   byte(eth::Instruction::ISZERO), // after this we have 10 + 8 >= 4
 					   byte(eth::Instruction::DUP1),
-					   byte(eth::Instruction::PUSH1), 0x15,
+					   byte(eth::Instruction::PUSH1), 0x14,
 					   byte(eth::Instruction::JUMPI), // short-circuit if it is true
 					   byte(eth::Instruction::POP),
 					   byte(eth::Instruction::PUSH1), 0x2,
@@ -320,13 +320,13 @@ BOOST_AUTO_TEST_CASE(function_call)
 										{{"test", "f", "a"}, {"test", "f", "b"}});
 
 	// Stack: a, b
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x0b,
+	bytes expectation({byte(eth::Instruction::PUSH1), 0x0a,
 					   byte(eth::Instruction::DUP3),
 					   byte(eth::Instruction::PUSH1), 0x01,
 					   byte(eth::Instruction::ADD),
 					   // Stack here: a b <ret label> (a+1)
 					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::PUSH1), 0x15,
+					   byte(eth::Instruction::PUSH1), 0x14,
 					   byte(eth::Instruction::JUMP),
 					   byte(eth::Instruction::JUMPDEST),
 					   // Stack here: a b g(a+1, b)
