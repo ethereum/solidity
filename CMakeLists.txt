@@ -18,6 +18,7 @@ target_link_libraries(testeth ${CRYPTOPP_LS})
 target_link_libraries(testeth webthree)
 if(JSONRPC_LS)
 target_link_libraries(testeth web3jsonrpc)
+target_link_libraries(testeth ${JSONRPC_CLIENT_LS})
 endif()
 
 target_link_libraries(createRandomTest ethereum)
