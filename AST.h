@@ -180,7 +180,8 @@ public:
 	Block& getBody() { return *m_body; }
 
 	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
-	std::vector<VariableDeclaration const*>const& getLocalVariables() const { return m_localVariables; }
+	std::vector<VariableDeclaration const*> const& getLocalVariables() const { return m_localVariables; }
+
 private:
 	bool m_isPublic;
 	ASTPointer<ParameterList> m_parameters;
@@ -345,6 +346,7 @@ public:
 	Expression& getCondition() const { return *m_condition; }
 	Statement& getTrueStatement() const { return *m_trueBody; }
 	Statement* getFalseStatement() const { return m_falseBody.get(); }
+
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_trueBody;
@@ -373,6 +375,7 @@ public:
 
 	Expression& getCondition() const { return *m_condition; }
 	Statement& getBody() const { return *m_body; }
+
 private:
 	ASTPointer<Expression> m_condition;
 	ASTPointer<Statement> m_body;

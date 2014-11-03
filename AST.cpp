@@ -333,11 +333,9 @@ void Assignment::checkTypeRequirements()
 	m_rightHandSide->expectType(*m_leftHandSide->getType());
 	m_type = m_leftHandSide->getType();
 	if (m_assigmentOperator != Token::ASSIGN)
-	{
 		// compound assignment
 		if (!m_type->acceptsBinaryOperator(Token::AssignmentToBinaryOp(m_assigmentOperator)))
 			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
-	}
 }
 
 void ExpressionStatement::checkTypeRequirements()
@@ -358,10 +356,8 @@ void UnaryOperation::checkTypeRequirements()
 	// INC, DEC, ADD, SUB, NOT, BIT_NOT, DELETE
 	m_subExpression->checkTypeRequirements();
 	if (m_operator == Token::Value::INC || m_operator == Token::Value::DEC || m_operator == Token::Value::DELETE)
-	{
 		if (!m_subExpression->isLvalue())
 			BOOST_THROW_EXCEPTION(createTypeError("Expression has to be an lvalue."));
-	}
 	m_type = m_subExpression->getType();
 	if (!m_type->acceptsUnaryOperator(m_operator))
 		BOOST_THROW_EXCEPTION(createTypeError("Unary operator not compatible with type."));
