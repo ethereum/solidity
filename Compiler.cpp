@@ -336,9 +336,11 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		append(eth::Instruction::MUL);
 		break;
 	case Token::DIV:
+		append(eth::Instruction::SWAP1);
 		append(isSigned ? eth::Instruction::SDIV : eth::Instruction::DIV);
 		break;
 	case Token::MOD:
+		append(eth::Instruction::SWAP1);
 		append(isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
 		break;
 	default:
