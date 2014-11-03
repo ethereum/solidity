@@ -38,7 +38,7 @@ namespace test
 
 namespace
 {
-void parseTextAndResolveNames(const std::string& _source)
+void parseTextAndResolveNames(std::string const& _source)
 {
 	Parser parser;
 	ASTPointer<ContractDefinition> contract = parser.parse(
