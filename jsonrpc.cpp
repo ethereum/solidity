@@ -54,6 +54,7 @@ dev::WebThreeDirect web3(name, dbPath, true, s, np);
 
 unique_ptr<WebThreeStubServer> jsonrpcServer;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
+unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
 jsonrpc::HttpClient httpClient("http://localhost:8080");
 	
 struct JsonrpcFixture  {
@@ -63,7 +64,8 @@ struct JsonrpcFixture  {
 
 		web3.setIdealPeerCount(5);
 		web3.ethereum()->setForceMining(true);
-		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), web3, {}));
+		jsonrpcConnector = unique_ptr<jsonrpc::AbstractServerConnector>(new jsonrpc::CorsHttpServer(8080));
+		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(*jsonrpcConnector.get(), web3, {}));
 		jsonrpcServer->setIdentities({});
 		jsonrpcServer->StartListening();
 		
