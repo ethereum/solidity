@@ -193,7 +193,9 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 					   byte(eth::Instruction::SWAP1),
 					   byte(eth::Instruction::SUB),
 					   byte(eth::Instruction::ADD),
+					   byte(eth::Instruction::SWAP1),
 					   byte(eth::Instruction::MOD),
+					   byte(eth::Instruction::SWAP1),
 					   byte(eth::Instruction::DIV),
 					   byte(eth::Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
