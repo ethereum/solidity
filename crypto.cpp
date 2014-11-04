@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_ecdsav)
 
 		Signature sig;
 		r.Encode(sig.data(), 32);
-		s.Encode(sig.data()+32, 32);
+		s.Encode(sig.data() + 32, 32);
 		sig[64] = recid;
 
 		Public p = dev::recover(sig, he);
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		pp::initializeDLScheme(key.pub(), verifier);
 		Signature sigppraw;
 		r.Encode(sigppraw.data(), 32);
-		s.Encode(sigppraw.data()+32, 32);
+		s.Encode(sigppraw.data() + 32, 32);
 		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppraw.data(), 64));
 		BOOST_REQUIRE(crypto::verify(key.pub(), sigppraw, bytesConstRef(&m)));
 		BOOST_REQUIRE(dev::verify(key.pub(), sigppraw, hm));
