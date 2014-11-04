@@ -427,10 +427,10 @@ BOOST_AUTO_TEST_CASE(vmBlockInfoTest)
 	dev::test::executeTests("vmBlockInfoTest", "/VMTests", dev::test::doVMTests);
 }
 
-//BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
-//{
-//	dev::test::executeTests("vmIOandFlowOperationsTest", "/VMTests", dev::test::doVMTests);
-//}
+BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
+{
+	dev::test::executeTests("vmIOandFlowOperationsTest", "/VMTests", dev::test::doVMTests);
+}
 
 BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
