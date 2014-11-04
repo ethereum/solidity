@@ -136,15 +136,9 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 				cleanupNeeded = true;
 
 		leftExpression.accept(*this);
-		if (cleanupNeeded)
-			appendHighBitsCleanup(dynamic_cast<IntegerType const&>(*leftExpression.getType()));
-		else
-			appendTypeConversion(*leftExpression.getType(), commonType);
+		appendTypeConversion(*leftExpression.getType(), commonType, cleanupNeeded);
 		rightExpression.accept(*this);
-		if (cleanupNeeded)
-			appendHighBitsCleanup(dynamic_cast<IntegerType const&>(*leftExpression.getType()));
-		else
-			appendTypeConversion(*rightExpression.getType(), commonType);
+		appendTypeConversion(*rightExpression.getType(), commonType, cleanupNeeded);
 		if (Token::isCompareOp(op))
 			appendCompareOperatorCode(op, commonType);
 		else
@@ -368,20 +362,20 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 	}
 }
 
-void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type const& _targetType)
+void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
 {
 	// If the type of one of the operands is extended, we need to remove all
 	// higher-order bits that we might have ignored in previous operations.
 	// @todo: store in the AST whether the operand might have "dirty" higher
 	// order bits
 
-	if (_typeOnStack == _targetType)
+	if (_typeOnStack == _targetType && !_cleanupNeeded)
 		return;
 	if (_typeOnStack.getCategory() == Type::Category::INTEGER)
 	{
 		appendHighBitsCleanup(dynamic_cast<IntegerType const&>(_typeOnStack));
 	}
-	else
+	else if (_typeOnStack != _targetType)
 	{
 		// All other types should not be convertible to non-equal types.
 		assert(!_typeOnStack.isExplicitlyConvertibleTo(_targetType));

@@ -66,7 +66,9 @@ private:
 
 	/// Appends an implicit or explicit type conversion. For now this comprises only erasing
 	/// higher-order bits (@see appendHighBitCleanup) when widening integer types.
-	void appendTypeConversion(Type const& _typeOnStack, Type const& _targetType);
+	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
+	/// necessary.
+	void appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
 	//// Appends code that cleans higher-order bits for integer types.
 	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
 
