@@ -345,6 +345,7 @@ public:
 
 	Expression& getCondition() const { return *m_condition; }
 	Statement& getTrueStatement() const { return *m_trueBody; }
+	/// @returns the "else" part of the if statement or nullptr if there is no "else" part. 
 	Statement* getFalseStatement() const { return m_falseBody.get(); }
 
 private:
