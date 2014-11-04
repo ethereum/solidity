@@ -565,12 +565,15 @@ public:
 	Expression& getLeftExpression() const { return *m_left; }
 	Expression& getRightExpression() const { return *m_right; }
 	Token::Value getOperator() const { return m_operator; }
+	Type const& getCommonType() const { return *m_commonType; }
 
 private:
 	ASTPointer<Expression> m_left;
 	Token::Value m_operator;
 	ASTPointer<Expression> m_right;
 
+	/// The common type that is used for the operation, not necessarily the result type (e.g. for
+	/// comparisons, this is always bool).
 	std::shared_ptr<Type const> m_commonType;
 };
 

@@ -113,7 +113,7 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 {
 	Expression& leftExpression = _binaryOperation.getLeftExpression();
 	Expression& rightExpression = _binaryOperation.getRightExpression();
-	Type const& resultType = *_binaryOperation.getType();
+	Type const& commonType = _binaryOperation.getCommonType();
 	Token::Value const op = _binaryOperation.getOperator();
 
 	if (op == Token::AND || op == Token::OR)
@@ -121,23 +121,16 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 		// special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
 	}
-	else if (Token::isCompareOp(op))
-	{
-		leftExpression.accept(*this);
-		rightExpression.accept(*this);
-
-		// the types to compare have to be the same, but the resulting type is always bool
-		if (asserts(*leftExpression.getType() == *rightExpression.getType()))
-			BOOST_THROW_EXCEPTION(InternalCompilerError());
-		appendCompareOperatorCode(op, *leftExpression.getType());
-	}
 	else
 	{
 		leftExpression.accept(*this);
-		cleanHigherOrderBitsIfNeeded(*leftExpression.getType(), resultType);
+		cleanHigherOrderBitsIfNeeded(*leftExpression.getType(), commonType);
 		rightExpression.accept(*this);
-		cleanHigherOrderBitsIfNeeded(*rightExpression.getType(), resultType);
-		appendOrdinaryBinaryOperatorCode(op, resultType);
+		cleanHigherOrderBitsIfNeeded(*rightExpression.getType(), commonType);
+		if (Token::isCompareOp(op))
+			appendCompareOperatorCode(op, commonType);
+		else
+			appendOrdinaryBinaryOperatorCode(op, commonType);
 	}
 
 	// do not visit the child nodes, we already did that explicitly
