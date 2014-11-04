@@ -290,10 +290,10 @@ ASTPointer<Statement> Parser::parseStatement()
 		// We have a variable definition if we ge a keyword that specifies a type name, or
 		// in the case of a user-defined type, we have two identifiers following each other.
 		if (m_scanner->getCurrentToken() == Token::MAPPING ||
-			m_scanner->getCurrentToken() == Token::VAR ||
-			Token::isElementaryTypeName(m_scanner->getCurrentToken()) ||
-			(m_scanner->getCurrentToken() == Token::IDENTIFIER &&
-			 m_scanner->peekNextToken() == Token::IDENTIFIER))
+				m_scanner->getCurrentToken() == Token::VAR ||
+				((Token::isElementaryTypeName(m_scanner->getCurrentToken()) ||
+				m_scanner->getCurrentToken() == Token::IDENTIFIER) &&
+				m_scanner->peekNextToken() == Token::IDENTIFIER))
 			statement = parseVariableDefinition();
 		else // "ordinary" expression
 			statement = parseExpression();
