@@ -43,9 +43,6 @@ using namespace dev;
 using namespace dev::eth;
 namespace js = json_spirit;
 
-namespace jsonrpc_tests
-{
-
 string name = "Ethereum(++) tests";
 string dbPath;
 auto s = set<string>{"eth", "shh"};
@@ -74,7 +71,7 @@ struct JsonrpcFixture  {
 	}
 };
 
-BOOST_GLOBAL_FIXTURE(JsonrpcFixture)
+const JsonrpcFixture testJsonRpcServer;
 
 BOOST_AUTO_TEST_CASE(jsonrpc_defaultBlock)
 {
@@ -241,8 +238,6 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	BOOST_CHECK_EQUAL(toJS(balance2), balanceString2);
 	BOOST_CHECK_EQUAL(jsToDecimal(balanceString2), "750000000000000000");
 	BOOST_CHECK_EQUAL(txAmount, balance2);
-}
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
