@@ -36,6 +36,8 @@
 #include "TestHelper.h"
 #include "webthreestubclient.h"
 
+BOOST_AUTO_TEST_SUITE(jsonrpc)
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -44,34 +46,35 @@ namespace js = json_spirit;
 namespace jsonrpc_tests
 {
 
+string name = "Ethereum(++) tests";
+string dbPath;
+auto s = set<string>{"eth", "shh"};
+dev::p2p::NetworkPreferences np(30303, std::string(), false);
+dev::WebThreeDirect web3(name, dbPath, true, s, np);
+
+unique_ptr<WebThreeStubServer> jsonrpcServer;
+unique_ptr<WebThreeStubClient> jsonrpcClient;
+
 struct JsonrpcFixture  {
-	JsonrpcFixture():web3(name, dbPath, true, set<string>{"eth", "shh"}, dev::p2p::NetworkPreferences(30303, std::string(), false))
+	JsonrpcFixture()
 	{
 		cnote << "setup jsonrpc";
 
-		name = "Ethereum(++) tests";
 		web3.setIdealPeerCount(5);
 		web3.ethereum()->setForceMining(true);
 		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), web3, {}));
 		jsonrpcServer->setIdentities({});
 		jsonrpcServer->StartListening();
-
+		
 		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
 	}
 	~JsonrpcFixture()
 	{
 		cnote << "teardown jsonrpc";
 	}
-
-	string name;
-	string dbPath;
-	unique_ptr<WebThreeStubServer> jsonrpcServer;
-	unique_ptr<WebThreeStubClient> jsonrpcClient;
-	dev::WebThreeDirect web3;
-
 };
 
-BOOST_FIXTURE_TEST_SUITE(jsonrpc, JsonrpcFixture)
+BOOST_GLOBAL_FIXTURE(JsonrpcFixture)
 
 BOOST_AUTO_TEST_CASE(jsonrpc_defaultBlock)
 {
@@ -94,7 +97,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isListening)
 	web3.startNetwork();
 	bool listeningOn = jsonrpcClient->listening();
 	BOOST_CHECK_EQUAL(listeningOn, web3.isNetworkStarted());
-
+	
 	web3.stopNetwork();
 	bool listeningOff = jsonrpcClient->listening();
 	BOOST_CHECK_EQUAL(listeningOff, web3.isNetworkStarted());
@@ -156,7 +159,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_setListening)
 
 	jsonrpcClient->setListening(true);
 	BOOST_CHECK_EQUAL(web3.isNetworkStarted(), true);
-
+	
 	jsonrpcClient->setListening(false);
 	BOOST_CHECK_EQUAL(web3.isNetworkStarted(), false);
 }
@@ -186,7 +189,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	cnote << "Testing jsonrpc transact...";
 	string coinbase = jsonrpcClient->coinbase();
 	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3.ethereum()->address());
-
+	
 	dev::KeyPair key = KeyPair::create();
 	auto address = key.address();
 	auto receiver = KeyPair::create();
@@ -195,28 +198,28 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	coinbase = jsonrpcClient->coinbase();
 	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3.ethereum()->address());
 	BOOST_CHECK_EQUAL(jsToAddress(coinbase), address);
-
+	
 	jsonrpcServer->setAccounts({key});
 	auto balance = web3.ethereum()->balanceAt(address, 0);
 	string balanceString = jsonrpcClient->balanceAt(toJS(address));
 	double countAt = jsonrpcClient->countAt(toJS(address));
-
+	
 	BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3.ethereum()->countAt(address));
 	BOOST_CHECK_EQUAL(countAt, 0);
 	BOOST_CHECK_EQUAL(toJS(balance), balanceString);
 	BOOST_CHECK_EQUAL(jsToDecimal(balanceString), "0");
-
+	
 	dev::eth::mine(*(web3.ethereum()), 1);
 	balance = web3.ethereum()->balanceAt(address, 0);
 	balanceString = jsonrpcClient->balanceAt(toJS(address));
-
+	
 	BOOST_CHECK_EQUAL(toJS(balance), balanceString);
 	BOOST_CHECK_EQUAL(jsToDecimal(balanceString), "1500000000000000000");
-
+	
 	auto txAmount = balance / 2u;
 	auto gasPrice = 10 * dev::eth::szabo;
 	auto gas = dev::eth::c_txGas;
-
+	
 	Json::Value t;
 	t["from"] = toJS(address);
 	t["value"] = jsToDecimal(toJS(txAmount));
@@ -224,21 +227,24 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	t["data"] = toJS(bytes());
 	t["gas"] = toJS(gas);
 	t["gasPrice"] = toJS(gasPrice);
-
+	
 	jsonrpcClient->transact(t);
 	jsonrpcServer->setAccounts({});
 	dev::eth::mine(*(web3.ethereum()), 1);
-
+	
 	countAt = jsonrpcClient->countAt(toJS(address));
 	auto balance2 = web3.ethereum()->balanceAt(receiver.address());
 	string balanceString2 = jsonrpcClient->balanceAt(toJS(receiver.address()));
-
+	
 	BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3.ethereum()->countAt(address));
 	BOOST_CHECK_EQUAL(countAt, 1);
 	BOOST_CHECK_EQUAL(toJS(balance2), balanceString2);
 	BOOST_CHECK_EQUAL(jsToDecimal(balanceString2), "750000000000000000");
 	BOOST_CHECK_EQUAL(txAmount, balance2);
 }
-	BOOST_AUTO_TEST_SUITE_END()
+
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
 #endif
