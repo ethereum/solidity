@@ -497,6 +497,8 @@ void ElementaryTypeNameExpression::checkTypeRequirements()
 void Literal::checkTypeRequirements()
 {
 	m_type = Type::forLiteral(*this);
+	if (!m_type)
+		BOOST_THROW_EXCEPTION(createTypeError("Literal value too large."));
 }
 
 }

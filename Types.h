@@ -56,7 +56,8 @@ public:
 	static std::shared_ptr<Type> fromMapping(Mapping const& _typeName);
 	/// @}
 
-	/// Auto-detect the proper type for a literal
+	/// Auto-detect the proper type for a literal. @returns an empty pointer if the literal does
+	/// not fit any type.
 	static std::shared_ptr<Type> forLiteral(Literal const& _literal);
 
 	virtual Category getCategory() const = 0;
@@ -95,6 +96,8 @@ public:
 	};
 	virtual Category getCategory() const override { return Category::INTEGER; }
 
+	/// @returns the smallest integer type for the given literal or an empty pointer
+	/// if no type fits.
 	static std::shared_ptr<IntegerType> smallestTypeForLiteral(std::string const& _literal);
 
 	explicit IntegerType(int _bits, Modifier _modifier = Modifier::UNSIGNED);
