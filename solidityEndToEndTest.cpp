@@ -219,7 +219,33 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 	BOOST_CHECK(framework.callFunction(0, u256(1)) == toBigEndian(u256(8)));
 }
 
-//@todo test smaller types
+BOOST_AUTO_TEST_CASE(high_bits_cleaning)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function run() returns(uint256 y) {\n"
+							 "    uint32 x = uint32(0xffffffff) + 10;\n"
+							 "    if (x >= 0xffffffff) return 0;\n"
+							 "    return x;"
+							 "  }\n"
+							 "}\n";
+	ExecutionFramework framework;
+	framework.compileAndRun(sourceCode);
+	BOOST_CHECK(framework.callFunction(0, bytes()) == toBigEndian(u256(9)));
+}
+
+BOOST_AUTO_TEST_CASE(sign_extension)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function run() returns(uint256 y) {\n"
+							 "    int64 x = -int32(0xff);\n"
+							 "    if (x >= 0xff) return 0;\n"
+							 "    return -uint256(x);"
+							 "  }\n"
+							 "}\n";
+	ExecutionFramework framework;
+	framework.compileAndRun(sourceCode);
+	BOOST_CHECK(framework.callFunction(0, bytes()) == bytes(32, 0xff));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
