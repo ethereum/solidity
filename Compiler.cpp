@@ -273,7 +273,7 @@ bool Compiler::visit(Return& _return)
 	{
 		ExpressionCompiler::compileExpression(m_context, *expression);
 		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters().getParameters().front();
-		ExpressionCompiler::cleanHigherOrderBitsIfNeeded(*expression->getType(), *firstVariable.getType());
+		ExpressionCompiler::appendTypeConversion(m_context, *expression->getType(), *firstVariable.getType());
 		int stackPosition = m_context.getStackPositionOfVariable(firstVariable);
 		m_context << eth::swapInstruction(stackPosition) << eth::Instruction::POP;
 	}
@@ -286,8 +286,9 @@ bool Compiler::visit(VariableDefinition& _variableDefinition)
 	if (Expression* expression = _variableDefinition.getExpression())
 	{
 		ExpressionCompiler::compileExpression(m_context, *expression);
-		ExpressionCompiler::cleanHigherOrderBitsIfNeeded(*expression->getType(),
-														 *_variableDefinition.getDeclaration().getType());
+		ExpressionCompiler::appendTypeConversion(m_context,
+												 *expression->getType(),
+												 *_variableDefinition.getDeclaration().getType());
 		int stackPosition = m_context.getStackPositionOfVariable(_variableDefinition.getDeclaration());
 		m_context << eth::swapInstruction(stackPosition) << eth::Instruction::POP;
 	}
