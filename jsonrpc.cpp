@@ -31,8 +31,6 @@
 #include <libweb3jsonrpc/CorsHttpServer.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
-//#include <jsonrpc/connectors/httpserver.h>
-//#include <jsonrpc/connectors/httpclient.h>
 #include <set>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
