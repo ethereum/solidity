@@ -347,9 +347,11 @@ void ExpressionStatement::checkTypeRequirements()
 void Expression::expectType(Type const& _expectedType)
 {
 	checkTypeRequirements();
-	if (!getType()->isImplicitlyConvertibleTo(_expectedType))
-		BOOST_THROW_EXCEPTION(createTypeError("Type not implicitly convertible to expected type."));
-	//@todo provide more information to the exception
+	const Type& type = *getType();
+	if (!type.isImplicitlyConvertibleTo(_expectedType))
+		BOOST_THROW_EXCEPTION(createTypeError("Type " + type.toString() +
+											  " not implicitly convertible to expected type "
+											  + _expectedType.toString() + "."));
 }
 
 void UnaryOperation::checkTypeRequirements()
@@ -373,14 +375,18 @@ void BinaryOperation::checkTypeRequirements()
 	else if (m_left->getType()->isImplicitlyConvertibleTo(*m_right->getType()))
 		m_commonType = m_right->getType();
 	else
-		BOOST_THROW_EXCEPTION(createTypeError("No common type found in binary operation."));
+		BOOST_THROW_EXCEPTION(createTypeError("No common type found in binary operation: " +
+											  m_left->getType()->toString() + " vs. " +
+											  m_right->getType()->toString()));
 	if (Token::isCompareOp(m_operator))
 		m_type = make_shared<BoolType>();
 	else
 	{
 		m_type = m_commonType;
 		if (!m_commonType->acceptsBinaryOperator(m_operator))
-			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
+			BOOST_THROW_EXCEPTION(createTypeError("Operator " + string(Token::toString(m_operator)) +
+												  " not compatible with type " +
+												  m_commonType->toString()));
 	}
 }
 
