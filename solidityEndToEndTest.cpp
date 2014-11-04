@@ -192,6 +192,21 @@ BOOST_AUTO_TEST_CASE(many_local_variables)
 				== toBigEndian(u256(0x121121)));
 }
 
+BOOST_AUTO_TEST_CASE(packing_unpacking_types)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function run(bool a, uint32 b, uint64 c) returns(uint256 y) {\n"
+							 "    if (a) y = 1;\n"
+							 "    y = y * 0x100000000 | ~b;\n"
+							 "    y = y * 0x10000000000000000 | ~c;\n"
+							 "  }\n"
+							 "}\n";
+	ExecutionFramework framework;
+	framework.compileAndRun(sourceCode);
+	BOOST_CHECK(framework.callFunction(0, fromHex("01""0f0f0f0f""f0f0f0f0f0f0f0f0"))
+				== fromHex("00000000000000000000000000000000000000""01""f0f0f0f0""0f0f0f0f0f0f0f0f"));
+}
+
 BOOST_AUTO_TEST_CASE(multiple_return_values)
 {
 	char const* sourceCode = "contract test {\n"
@@ -244,7 +259,32 @@ BOOST_AUTO_TEST_CASE(sign_extension)
 							 "}\n";
 	ExecutionFramework framework;
 	framework.compileAndRun(sourceCode);
-	BOOST_CHECK(framework.callFunction(0, bytes()) == bytes(32, 0xff));
+	BOOST_CHECK(framework.callFunction(0, bytes()) == toBigEndian(u256(0xff)));
+}
+
+BOOST_AUTO_TEST_CASE(small_unsigned_types)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function run() returns(uint256 y) {\n"
+							 "    uint32 x = uint32(0xffffff) * 0xffffff;\n"
+							 "    return x / 0x100;"
+							 "  }\n"
+							 "}\n";
+	ExecutionFramework framework;
+	framework.compileAndRun(sourceCode);
+	BOOST_CHECK(framework.callFunction(0, bytes()) == toBigEndian(u256(0xfffe0000)));
+}
+
+BOOST_AUTO_TEST_CASE(small_signed_types)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function run() returns(int256 y) {\n"
+							 "    return -int32(10) * -int64(20);\n"
+							 "  }\n"
+							 "}\n";
+	ExecutionFramework framework;
+	framework.compileAndRun(sourceCode);
+	BOOST_CHECK(framework.callFunction(0, bytes()) == toBigEndian(u256(200)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
