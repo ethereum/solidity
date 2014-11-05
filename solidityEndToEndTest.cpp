@@ -151,6 +151,19 @@ BOOST_AUTO_TEST_CASE(while_loop)
 	BOOST_CHECK(framework.callFunction(0, u256(4)) == toBigEndian(u256(24)));
 }
 
+BOOST_AUTO_TEST_CASE(break_outside_loop)
+{
+	// break and continue outside loops should be simply ignored
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint x) returns(uint y) {\n"
+							 "    break; continue; return 2;\n"
+							 "  }\n"
+							 "}\n";
+	ExecutionFramework framework;
+	framework.compileAndRun(sourceCode);
+	BOOST_CHECK(framework.callFunction(0, u256(0)) == toBigEndian(u256(2)));
+}
+
 BOOST_AUTO_TEST_CASE(nested_loops)
 {
 	// tests that break and continue statements in nested loops jump to the correct place
