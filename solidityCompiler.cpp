@@ -1,4 +1,3 @@
-
 /*
 	This file is part of cpp-ethereum.
 
@@ -18,18 +17,21 @@
 /**
  * @author Christian <c@ethdev.com>
  * @date 2014
- * Unit tests for the name and type resolution of the solidity parser.
+ * Unit tests for the solidity compiler.
  */
 
 #include <string>
-
+#include <iostream>
+#include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/AST.h>
-#include <boost/test/unit_test.hpp>
+
+using namespace std;
+using namespace dev::eth;
 
 namespace dev
 {
@@ -41,186 +43,187 @@ namespace test
 namespace
 {
 
-/**
- * Helper class that extracts the first expression in an AST.
- */
-class FirstExpressionExtractor: private ASTVisitor
-{
-public:
-	FirstExpressionExtractor(ASTNode& _node): m_expression(nullptr) { _node.accept(*this); }
-	Expression* getExpression() const { return m_expression; }
-private:
-	virtual bool visit(Expression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Assignment& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(BinaryOperation& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(FunctionCall& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(MemberAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(IndexAccess& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(PrimaryExpression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Identifier& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(ElementaryTypeNameExpression& _expression) override { return checkExpression(_expression); }
-	virtual bool visit(Literal& _expression) override { return checkExpression(_expression); }
-	bool checkExpression(Expression& _expression)
-	{
-		if (m_expression == nullptr)
-			m_expression = &_expression;
-		return false;
-	}
-private:
-	Expression* m_expression;
-};
-
-bytes compileFirstExpression(std::string const& _sourceCode)
+bytes compileContract(const string& _sourceCode)
 {
 	Parser parser;
 	ASTPointer<ContractDefinition> contract;
-	BOOST_REQUIRE_NO_THROW(contract = parser.parse(std::make_shared<Scanner>(CharStream(_sourceCode))));
+	BOOST_REQUIRE_NO_THROW(contract = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
 	NameAndTypeResolver resolver;
 	BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
-	FirstExpressionExtractor extractor(*contract);
-	BOOST_REQUIRE(extractor.getExpression() != nullptr);
 
-	CompilerContext context;
-	ExpressionCompiler compiler(context);
-	compiler.compile(*extractor.getExpression());
-	bytes instructions = compiler.getAssembledBytecode();
+	Compiler compiler;
+	compiler.compileContract(*contract);
 	// debug
-	//std::cout << eth::disassemble(instructions) << std::endl;
-	return instructions;
+	//compiler.streamAssembly(cout);
+	return compiler.getAssembledBytecode();
+}
+
+/// Checks that @a _compiledCode is present starting from offset @a _offset in @a _expectation.
+/// This is necessary since the compiler will add boilerplate add the beginning that is not
+/// tested here.
+void checkCodePresentAt(bytes const& _compiledCode, bytes const& _expectation, unsigned _offset)
+{
+	BOOST_REQUIRE(_compiledCode.size() >= _offset + _expectation.size());
+	auto checkStart = _compiledCode.begin() + _offset;
+	BOOST_CHECK_EQUAL_COLLECTIONS(checkStart, checkStart + _expectation.size(),
+								  _expectation.begin(), _expectation.end());
 }
 
 } // end anonymous namespace
 
-BOOST_AUTO_TEST_SUITE(SolidityExpressionCompiler)
+BOOST_AUTO_TEST_SUITE(SolidityCompiler)
 
-BOOST_AUTO_TEST_CASE(literal_true)
+BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = true; }"
+							 "  function f() { var x = 2; }\n"
 							 "}\n";
-	bytes code = compileFirstExpression(sourceCode);
+	bytes code = compileContract(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x1});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	unsigned boilerplateSize = 51;
+	bytes expectation({byte(Instruction::JUMPDEST),
+					   byte(Instruction::PUSH1), 0x0, // initialize local variable x
+					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::SWAP1),
+					   byte(Instruction::POP),
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::POP),
+					   byte(Instruction::JUMP)});
+	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
-BOOST_AUTO_TEST_CASE(literal_false)
+BOOST_AUTO_TEST_CASE(different_argument_numbers)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = false; }"
+							 "  function f(uint a, uint b, uint c) returns(uint d) { return b; }\n"
+							 "  function g() returns (uint e, uint h) { h = f(1, 2, 3); }\n"
 							 "}\n";
-	bytes code = compileFirstExpression(sourceCode);
+	bytes code = compileContract(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x0});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	unsigned shift = 75;
+	unsigned boilerplateSize = 88;
+	bytes expectation({byte(Instruction::JUMPDEST),
+					   byte(Instruction::PUSH1), 0x0, // initialize return variable d
+					   byte(Instruction::DUP3),
+					   byte(Instruction::SWAP1), // assign b to d
+					   byte(Instruction::POP),
+					   byte(Instruction::PUSH1), 0xa + shift, // jump to return
+					   byte(Instruction::JUMP),
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::SWAP4), // store d and fetch return address
+					   byte(Instruction::SWAP3), // store return address
+					   byte(Instruction::POP),
+					   byte(Instruction::POP),
+					   byte(Instruction::POP),
+					   byte(Instruction::JUMP), // end of f
+					   byte(Instruction::JUMPDEST), // beginning of g
+					   byte(Instruction::PUSH1), 0x0,
+					   byte(Instruction::DUP1), // initialized e and h
+					   byte(Instruction::PUSH1), 0x20 + shift, // ret address
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::PUSH1), 0x3,
+					   byte(Instruction::PUSH1), 0x1 + shift,
+					   // stack here: ret e h 0x20 1 2 3 0x1
+					   byte(Instruction::JUMP),
+					   byte(Instruction::JUMPDEST),
+					   // stack here: ret e h f(1,2,3)
+					   byte(Instruction::DUP2),
+					   byte(Instruction::POP),
+					   byte(Instruction::SWAP1),
+					   // stack here: ret e f(1,2,3) h
+					   byte(Instruction::POP),
+					   byte(Instruction::DUP1), // retrieve it again as "value of expression"
+					   byte(Instruction::POP), // end of assignment
+					   // stack here: ret e f(1,2,3)
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::SWAP1),
+					   // ret e f(1,2,3)
+					   byte(Instruction::SWAP2),
+					   // f(1,2,3) e ret
+					   byte(Instruction::JUMP) // end of g
+					   });
+	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
-BOOST_AUTO_TEST_CASE(int_literal)
+BOOST_AUTO_TEST_CASE(ifStatement)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = 0x12345678901234567890; }"
+							 "  function f() { bool x; if (x) 77; else if (!x) 78; else 79; }"
 							 "}\n";
-	bytes code = compileFirstExpression(sourceCode);
+	bytes code = compileContract(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH10), 0x12, 0x34, 0x56, 0x78, 0x90,
-													   0x12, 0x34, 0x56, 0x78, 0x90});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	unsigned shift = 38;
+	unsigned boilerplateSize = 51;
+	bytes expectation({byte(Instruction::JUMPDEST),
+					   byte(Instruction::PUSH1), 0x0,
+					   byte(Instruction::DUP1),
+					   byte(Instruction::PUSH1), 0x1b + shift, // "true" target
+					   byte(Instruction::JUMPI),
+					   // new check "else if" condition
+					   byte(Instruction::DUP1),
+					   byte(Instruction::ISZERO),
+					   byte(Instruction::PUSH1), 0x13 + shift,
+					   byte(Instruction::JUMPI),
+					   // "else" body
+					   byte(Instruction::PUSH1), 0x4f,
+					   byte(Instruction::POP),
+					   byte(Instruction::PUSH1), 0x17 + shift, // exit path of second part
+					   byte(Instruction::JUMP),
+					   // "else if" body
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::PUSH1), 0x4e,
+					   byte(Instruction::POP),
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::PUSH1), 0x1f + shift,
+					   byte(Instruction::JUMP),
+					   // "if" body
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::PUSH1), 0x4d,
+					   byte(Instruction::POP),
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::POP),
+					   byte(Instruction::JUMP)});
+	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
-BOOST_AUTO_TEST_CASE(comparison)
+BOOST_AUTO_TEST_CASE(loops)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = (0x10aa < 0x11aa) != true; }"
+							 "  function f() { while(true){1;break;2;continue;3;return;4;} }"
 							 "}\n";
-	bytes code = compileFirstExpression(sourceCode);
+	bytes code = compileContract(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH2), 0x10, 0xaa,
-					   byte(eth::Instruction::PUSH2), 0x11, 0xaa,
-					   byte(eth::Instruction::GT),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::NOT)});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
-}
+	unsigned shift = 38;
+	unsigned boilerplateSize = 51;
+	bytes expectation({byte(Instruction::JUMPDEST),
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::ISZERO),
+					   byte(Instruction::PUSH1), 0x21 + shift,
+					   byte(Instruction::JUMPI),
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::POP),
+					   byte(Instruction::PUSH1), 0x21 + shift,
+					   byte(Instruction::JUMP), // break
+					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::POP),
+					   byte(Instruction::PUSH1), 0x2 + shift,
+					   byte(Instruction::JUMP), // continue
+					   byte(Instruction::PUSH1), 0x3,
+					   byte(Instruction::POP),
+					   byte(Instruction::PUSH1), 0x22 + shift,
+					   byte(Instruction::JUMP), // return
+					   byte(Instruction::PUSH1), 0x4,
+					   byte(Instruction::POP),
+					   byte(Instruction::PUSH1), 0x2 + shift,
+					   byte(Instruction::JUMP),
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::JUMP)});
 
-BOOST_AUTO_TEST_CASE(short_circuiting)
-{
-	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = (10 + 8 >= 4 || 2 != 9) != true; }"
-							 "}\n";
-	bytes code = compileFirstExpression(sourceCode);
-
-	bytes expectation({byte(eth::Instruction::PUSH1), 0xa,
-					   byte(eth::Instruction::PUSH1), 0x8,
-					   byte(eth::Instruction::ADD),
-					   byte(eth::Instruction::PUSH1), 0x4,
-					   byte(eth::Instruction::GT),
-					   byte(eth::Instruction::NOT), // after this we have 10 + 8 >= 4
-					   byte(eth::Instruction::DUP1),
-					   byte(eth::Instruction::PUSH1), 0x14,
-					   byte(eth::Instruction::JUMPI), // short-circuit if it is true
-					   byte(eth::Instruction::PUSH1), 0x2,
-					   byte(eth::Instruction::PUSH1), 0x9,
-					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::NOT), // after this we have 2 != 9
-					   byte(eth::Instruction::JUMPDEST),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::NOT)});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
-}
-
-BOOST_AUTO_TEST_CASE(arithmetics)
-{
-	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = (1 * (2 / (3 % (4 + (5 - (6 | (7 & (8 ^ 9)))))))); }"
-							 "}\n";
-	bytes code = compileFirstExpression(sourceCode);
-
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::PUSH1), 0x2,
-					   byte(eth::Instruction::PUSH1), 0x3,
-					   byte(eth::Instruction::PUSH1), 0x4,
-					   byte(eth::Instruction::PUSH1), 0x5,
-					   byte(eth::Instruction::PUSH1), 0x6,
-					   byte(eth::Instruction::PUSH1), 0x7,
-					   byte(eth::Instruction::PUSH1), 0x8,
-					   byte(eth::Instruction::PUSH1), 0x9,
-					   byte(eth::Instruction::XOR),
-					   byte(eth::Instruction::AND),
-					   byte(eth::Instruction::OR),
-					   byte(eth::Instruction::SWAP1),
-					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::ADD),
-					   byte(eth::Instruction::SWAP1),
-					   byte(eth::Instruction::MOD),
-					   byte(eth::Instruction::SWAP1),
-					   byte(eth::Instruction::DIV),
-					   byte(eth::Instruction::MUL)});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
-}
-
-BOOST_AUTO_TEST_CASE(unary_operators)
-{
-	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = !(~+-(--(++1++)--) == 2); }"
-							 "}\n";
-	bytes code = compileFirstExpression(sourceCode);
-
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::ADD),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::SWAP1),
-					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::PUSH1), 0x0,
-					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::NOT),
-					   byte(eth::Instruction::PUSH1), 0x2,
-					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::ISZERO)});
-	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
