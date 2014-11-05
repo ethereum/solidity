@@ -683,7 +683,7 @@ void executeTests(const string& _name)
 	else
 		testPath = ptestPath;
 
-	testPath += "/vmtests";
+	testPath += "/VMTests";
 
 #ifdef FILL_TESTS
 	try
@@ -768,11 +768,6 @@ BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
 BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
 	dev::test::executeTests("vmPushDupSwapTest");
-}
-
-BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
-{
-	dev::test::executeTests("vmSystemOperationsTest");
 }
 
 BOOST_AUTO_TEST_CASE(userDefinedFile)
