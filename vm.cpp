@@ -231,7 +231,7 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		BOOST_REQUIRE(tx.count("value") > 0);
 		BOOST_REQUIRE(tx.count("destination") > 0);
 		BOOST_REQUIRE(tx.count("gasLimit") > 0);
-Transaction t = tx["destination"].get_str().empty() ?
+		Transaction t = tx["destination"].get_str().empty() ?
 			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), data.toBytes()) :
 			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), data.toBytes());
 		callcreates.push_back(t);
