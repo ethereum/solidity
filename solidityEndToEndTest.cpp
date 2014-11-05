@@ -39,14 +39,12 @@ namespace test
 class ExecutionFramework
 {
 public:
-	ExecutionFramework(): m_executive(m_state) { g_logVerbosity = 0; }
+	ExecutionFramework() { g_logVerbosity = 0; }
 
 	bytes compileAndRun(std::string const& _sourceCode)
 	{
 		bytes code = dev::solidity::CompilerStack::compile(_sourceCode);
 		sendMessage(code, true);
-		m_contractAddress = m_executive.newAddress();
-		BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
 		return m_output;
 	}
 
@@ -65,27 +63,31 @@ public:
 private:
 	void sendMessage(bytes const& _data, bool _isCreation)
 	{
+		eth::Executive executive(m_state);
 		eth::Transaction t = _isCreation ? eth::Transaction(0, m_gasPrice, m_gas, _data)
 										 : eth::Transaction(0, m_gasPrice, m_gas, m_contractAddress, _data);
 		bytes transactionRLP = t.rlp();
 		try
 		{
 			// this will throw since the transaction is invalid, but it should nevertheless store the transaction
-			m_executive.setup(&transactionRLP);
+			executive.setup(&transactionRLP);
 		}
 		catch (...) {}
 		if (_isCreation)
-			BOOST_REQUIRE(!m_executive.create(Address(), 0, m_gasPrice, m_gas, &_data, Address()));
+		{
+			BOOST_REQUIRE(!executive.create(Address(), 0, m_gasPrice, m_gas, &_data, Address()));
+			m_contractAddress = executive.newAddress();
+			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
+		}
 		else
-			BOOST_REQUIRE(!m_executive.call(m_contractAddress, Address(), 0, m_gasPrice, &_data, m_gas, Address()));
-		BOOST_REQUIRE(m_executive.go());
-		m_executive.finalize();
-		m_output = m_executive.out().toBytes();
+			BOOST_REQUIRE(!executive.call(m_contractAddress, Address(), 0, m_gasPrice, &_data, m_gas, Address()));
+		BOOST_REQUIRE(executive.go());
+		executive.finalize();
+		m_output = executive.out().toBytes();
 	}
 
 	Address m_contractAddress;
 	eth::State m_state;
-	eth::Executive m_executive;
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 1000000;
 	bytes m_output;
