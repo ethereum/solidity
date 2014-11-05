@@ -27,7 +27,7 @@
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 
-#define FILL_TESTS
+//#define FILL_TESTS
 
 using namespace std;
 using namespace dev::eth;
@@ -149,8 +149,8 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	m_transaction.type = m_transaction.receiveAddress ? Transaction::MessageCall : Transaction::ContractCreation;
 	m_transaction.value = toInt(_o["value"]);
 	Secret secretKey = Secret(_o["secretKey"].get_str());
-	m_transaction.sign(secretKey);
 	m_transaction.data = importData(_o);
+	m_transaction.sign(secretKey);
 }
 
 void ImportTest::exportTest(bytes _output, State& _statePost)

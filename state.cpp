@@ -61,7 +61,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 			importer.m_environment.code = importer.code;
 		}
 
-		State theState = importer.m_statePre;
+		State theState = importer.m_statePre;		
 		bytes tx = importer.m_transaction.rlp();
 		bytes output;
 

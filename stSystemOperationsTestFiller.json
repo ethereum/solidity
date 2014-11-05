@@ -46,11 +46,11 @@
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
                 "nonce" : 0,
-                "code" : "{ (MSTORE 0 0x601080600c6000396000f20060003554156009570060203560003555) [[ 0 ]] (CREATE 230 4 28) }",
+                "code" : "{ (MSTORE 0 0x601080600c6000396000f20060003554156009570060203560003555) [[ 0 ]] (CREATE 1000 4 28) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "1000000000000000000",
+                "balance" : "1000",
                 "nonce" : 0,
                 "code" : "",
                 "storage": {}
@@ -148,7 +148,7 @@
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
                 "nonce" : 0,
-                "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
+                "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
@@ -195,7 +195,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x6001600153603760005360026000f2",
+                "code" : "0x6001600155603760005360026000f2",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -321,7 +321,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "0x6001600153603760005360026000f2",
+                "code" : "0x6001600155603760005360026000f2",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -736,7 +736,7 @@
         }
      },
 
-    "suicide0": {
+    "suicideCaller": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
             "currentNumber" : "0",
@@ -749,7 +749,75 @@
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
                 "nonce" : 0,
-                "code" : "{ (SUICIDE (CALLER))}",
+                "code" : "{ [[0]] (CALLER) (SUICIDE (CALLER))}",
+                "storage": {}
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "transaction" : {
+            "nonce" : "0",
+            "gasPrice" : "1",
+            "gasLimit" : "1000000",
+            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+            "value" : "100000",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "data" : ""
+        }
+    },
+
+    "suicideOrigin": {
+        "env" : {
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+            "currentNumber" : "0",
+            "currentGasLimit" : "10000000",
+            "currentDifficulty" : "256",
+            "currentTimestamp" : 1,
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "{ [[0]] (ORIGIN) (SUICIDE (ORIGIN))}",
+                "storage": {}
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "transaction" : {
+            "nonce" : "0",
+            "gasPrice" : "1",
+            "gasLimit" : "1000000",
+            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+            "value" : "100000",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "data" : ""
+        }
+    },
+
+    "suicideAddress": {
+        "env" : {
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+            "currentNumber" : "0",
+            "currentGasLimit" : "10000000",
+            "currentDifficulty" : "256",
+            "currentTimestamp" : 1,
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "1000000000000000000",
+                "nonce" : 0,
+                "code" : "{ [[0]] (ADDRESS) (SUICIDE (ADDRESS))}",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
@@ -780,7 +848,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
-            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
                 "nonce" : 0,
                 "code" : "{ (SUICIDE 0xaa1722f3947def4cf144679da39c4c32bdc35681 )}",
@@ -814,7 +882,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
-            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
                 "nonce" : 0,
                 "code" : "{ (SUICIDE (ADDRESS) )}",
@@ -997,7 +1065,7 @@
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
                 "nonce" : 0,
-                "code" : "0x600035560f600a59005d60203560003557",
+                "code" : "0x60003554156009570060203560003555",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
