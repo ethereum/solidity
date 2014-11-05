@@ -36,11 +36,7 @@ FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const&
 
 h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc const&)
 {
-	Transaction t;
-	t.value = _endowment;
-	t.gasPrice = gasPrice;
-	t.gas = *_gas;
-	t.data = _init.toBytes();
+	Transaction t(_endowment, gasPrice, *_gas, _init.toBytes());
 
 	m_s.noteSending(myAddress);
 	m_ms.internal.resize(m_ms.internal.size() + 1);
@@ -55,7 +51,6 @@ h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFun
 		get<3>(addresses[ret]) = m_s.code(ret);
 	}
 
-	t.type = eth::Transaction::ContractCreation;
 	callcreates.push_back(t);
 	return ret;
 }
@@ -64,13 +59,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 {
 	u256 contractgas = 0xffff;
 
-	Transaction t;
-	t.value = _value;
-	t.gasPrice = gasPrice;
-	t.gas = *_gas;
-	t.data = _data.toVector();
-	t.type = eth::Transaction::MessageCall;
-	t.receiveAddress = _receiveAddress;
+	Transaction t(_value, gasPrice, *_gas, _receiveAddress, _data.toVector());
 	callcreates.push_back(t);
 
 	string codeOf_CodeAddress = _codeAddressOverride ? toHex(get<3>(addresses[_codeAddressOverride])) : toHex(get<3>(addresses[_receiveAddress]) );
@@ -386,10 +375,10 @@ mArray FakeExtVM::exportCallCreates()
 	for (Transaction const& tx: callcreates)
 	{
 		mObject o;
-		o["destination"] = tx.type == Transaction::ContractCreation ? "" : toString(tx.receiveAddress);
-		push(o, "gasLimit", tx.gas);
-		push(o, "value", tx.value);
-		o["data"] = "0x" + toHex(tx.data);
+		o["destination"] = tx.type() == Transaction::ContractCreation ? "" : toString(tx.receiveAddress());
+		push(o, "gasLimit", tx.gas());
+		push(o, "value", tx.value());
+		o["data"] = "0x" + toHex(tx.data());
 		ret.push_back(o);
 	}
 	return ret;
@@ -404,19 +393,18 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		BOOST_REQUIRE(tx.count("value") > 0);
 		BOOST_REQUIRE(tx.count("destination") > 0);
 		BOOST_REQUIRE(tx.count("gasLimit") > 0);
-		Transaction t;
-		t.type = tx["destination"].get_str().empty() ? Transaction::ContractCreation : Transaction::MessageCall;
-		t.receiveAddress = Address(tx["destination"].get_str());
-		t.value = toInt(tx["value"]);
-		t.gas = toInt(tx["gasLimit"]);
+		bytes data;
 		if (tx["data"].type() == str_type)
 			if (tx["data"].get_str().find_first_of("0x") == 0)
-				t.data = fromHex(tx["data"].get_str().substr(2));
+				data = fromHex(tx["data"].get_str().substr(2));
 			else
-				t.data = fromHex(tx["data"].get_str());
+				data = fromHex(tx["data"].get_str());
 		else
 			for (auto const& j: tx["data"].get_array())
-				t.data.push_back(toByte(j));
+				data.push_back(toByte(j));
+		Transaction t = tx["destination"].get_str().empty() ?
+			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), data) :
+			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), data);
 		callcreates.push_back(t);
 	}
 }
