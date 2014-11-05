@@ -29,6 +29,7 @@
 #include <boost/test/unit_test.hpp>
 #include <algorithm>
 #include "JsonSpiritHeaders.h"
+#include "TestHelper.h"
 
 using namespace std;
 using namespace dev;
@@ -61,16 +62,8 @@ namespace dev
 
 		static void getRLPTestCases(js::mValue& v)
 		{
-			const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-			string testPath;
-
-			if (ptestPath == NULL)
-			{
-				cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-				testPath = "../../../tests";
-			}
-			else
-				testPath = ptestPath;
+			string testPath = getTestPath();
+			testPath += "/BasicTests";
 
 			string s = asString(contents(testPath + "/rlptest.json"));
 			BOOST_REQUIRE_MESSAGE( s.length() > 0, 
@@ -144,6 +137,7 @@ namespace dev
 	}
 } 
 
+BOOST_AUTO_TEST_SUITE(BasicTests)
 
 BOOST_AUTO_TEST_CASE(rlp_encoding_test)
 {
@@ -202,4 +196,5 @@ BOOST_AUTO_TEST_CASE(rlp_decoding_test)
 	}
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 

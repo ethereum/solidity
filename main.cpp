@@ -41,8 +41,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-BOOST_AUTO_TEST_CASE(basic_tests)
-{
+//BOOST_AUTO_TEST_CASE(basic_tests)
+//{
 /*	RLPStream s;
 	BlockInfo::genesis().streamRLP(s, false);
 	std::cout << RLP(s.out()) << std::endl;
@@ -54,5 +54,5 @@ BOOST_AUTO_TEST_CASE(basic_tests)
 //	r += stateTest();
 //	r += peerTest(argc, argv);
 //	BOOST_REQUIRE(!r);
-}
+//}
 
