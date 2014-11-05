@@ -340,14 +340,14 @@ BOOST_AUTO_TEST_CASE(eth_keypairs)
 	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
 	{
 		eth::Transaction t(1000, 0, 0, h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b")), bytes(), 0, p.secret());
-		auto rlp = t.rlp(false);
+		auto rlp = t.rlp(eth::WithoutSignature);
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
-		cnote << t.sha3(false);
-		rlp = t.rlp(true);
+		cnote << t.sha3(eth::WithoutSignature);
+		rlp = t.rlp(eth::WithSignature);
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
-		cnote << t.sha3(true);
+		cnote << t.sha3(eth::WithSignature);
 		BOOST_REQUIRE(t.sender() == p.address());
 	}
 
@@ -364,14 +364,14 @@ int cryptoTest()
 	assert(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
 	{
 		eth::Transaction t(1000, 0, 0, h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b")), bytes(), 0, p.secret());
-		auto rlp = t.rlp(false);
+		auto rlp = t.rlp(eth::WithoutSignature);
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
-		cnote << t.sha3(false);
-		rlp = t.rlp(true);
+		cnote << t.sha3(eth::WithoutSignature);
+		rlp = t.rlp(eth::WithSignature);
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
-		cnote << t.sha3(true);
+		cnote << t.sha3(eth::WithSignature);
 		assert(t.sender() == p.address());
 	}
 
