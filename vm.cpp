@@ -232,8 +232,8 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		BOOST_REQUIRE(tx.count("destination") > 0);
 		BOOST_REQUIRE(tx.count("gasLimit") > 0);
 Transaction t = tx["destination"].get_str().empty() ?
-			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), data) :
-			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), data);
+			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), data.toBytes()) :
+			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), data.toBytes());
 		callcreates.push_back(t);
 	}
 }
@@ -422,16 +422,6 @@ BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
 	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", dev::test::doVMTests);
 }
-
-BOOST_AUTO_TEST_CASE(vmNamecoin)
-{
-	dev::test::executeTests("vmNamecoin", "/VMTests", dev::test::doVMTests);
-}
-
-//BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
-//{
-//	dev::test::executeTests("vmSystemOperationsTest", "/VMTests", dev::test::doVMTests);
-//}
 
 BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
