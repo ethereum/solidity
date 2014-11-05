@@ -283,14 +283,6 @@ void WhileStatement::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-void Continue::checkTypeRequirements()
-{
-}
-
-void Break::checkTypeRequirements()
-{
-}
-
 void Return::checkTypeRequirements()
 {
 	if (!m_expression)
@@ -326,8 +318,6 @@ void VariableDefinition::checkTypeRequirements()
 
 void Assignment::checkTypeRequirements()
 {
-	//@todo lefthandside actually has to be assignable
-	// add a feature to the type system to check that
 	m_leftHandSide->checkTypeRequirements();
 	if (!m_leftHandSide->isLvalue())
 		BOOST_THROW_EXCEPTION(createTypeError("Expression has to be an lvalue."));
@@ -366,8 +356,8 @@ void UnaryOperation::checkTypeRequirements()
 
 void BinaryOperation::checkTypeRequirements()
 {
-	m_right->checkTypeRequirements();
 	m_left->checkTypeRequirements();
+	m_right->checkTypeRequirements();
 	if (m_right->getType()->isImplicitlyConvertibleTo(*m_left->getType()))
 		m_commonType = m_left->getType();
 	else if (m_left->getType()->isImplicitlyConvertibleTo(*m_right->getType()))
@@ -446,14 +436,6 @@ void Identifier::checkTypeRequirements()
 	if (asserts(m_referencedDeclaration))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier not resolved."));
 
-	//@todo these dynamic casts here are not really nice...
-	// is i useful to have an AST visitor here?
-	// or can this already be done in NameAndTypeResolver?
-	// the only problem we get there is that in
-	// var x;
-	// x = 2;
-	// var y = x;
-	// the type of x is not yet determined.
 	VariableDeclaration* variable = dynamic_cast<VariableDeclaration*>(m_referencedDeclaration);
 	if (variable)
 	{
