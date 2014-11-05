@@ -45,8 +45,8 @@ public:
 	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0): m_type(_type), m_data(_data) {}
 
-	AssemblyItem tag() const { assert(m_type == PushTag || m_type == Tag); return AssemblyItem(Tag, m_data); }
-	AssemblyItem pushTag() const { assert(m_type == PushTag || m_type == Tag); return AssemblyItem(PushTag, m_data); }
+	AssemblyItem tag() const { if (asserts(m_type == PushTag || m_type == Tag)) BOOST_THROW_EXCEPTION(Exception()); return AssemblyItem(Tag, m_data); }
+	AssemblyItem pushTag() const { if (asserts(m_type == PushTag || m_type == Tag)) BOOST_THROW_EXCEPTION(Exception()); return AssemblyItem(PushTag, m_data); }
 
 	AssemblyItemType type() const { return m_type; }
 	u256 data() const { return m_data; }
@@ -94,7 +94,7 @@ public:
 	AssemblyItem const& back() { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
 
-	void onePath() { assert(!m_totalDeposit && !m_baseDeposit); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
+	void onePath() { if (asserts(!m_totalDeposit && !m_baseDeposit)) BOOST_THROW_EXCEPTION(InvalidDeposit()); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
 	void otherPath() { donePath(); m_totalDeposit = m_deposit; m_deposit = m_baseDeposit; }
 	void donePaths() { donePath(); m_totalDeposit = m_baseDeposit = 0; }
 	void ignored() { m_baseDeposit = m_deposit; }
@@ -107,8 +107,8 @@ public:
 	std::string out() const { std::stringstream ret; streamRLP(ret); return ret.str(); }
 
 	int deposit() const { return m_deposit; }
-	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; assert(m_deposit >= 0); }
-	void setDeposit(int _deposit) { m_deposit = _deposit; assert(m_deposit >= 0); }
+	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
+	void setDeposit(int _deposit) { m_deposit = _deposit; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
