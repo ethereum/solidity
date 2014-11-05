@@ -27,7 +27,7 @@
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 
-//#define FILL_TESTS
+#define FILL_TESTS
 
 using namespace std;
 using namespace dev::eth;
@@ -118,7 +118,6 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		if (code.size())
 		{
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::ContractConception);
-			i.second.get_obj()["code"] = "0x" + toHex(code); //preperation for export
 			_state.m_cache[address].setCode(bytesConstRef(&code));
 		}
 		else
@@ -175,6 +174,29 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 		postState[toString(a.first)] = o;
 	}
 	m_TestObject["post"] = json_spirit::mValue(postState);
+
+	// export pre state
+	json_spirit::mObject preState;
+
+	for (auto const& a: m_statePre.addresses())
+	{
+		if (genesis.count(a.first))
+			continue;
+
+		json_spirit::mObject o;
+		o["balance"] = toString(m_statePre.balance(a.first));
+		o["nonce"] = toString(m_statePre.transactionsFrom(a.first));
+		{
+			json_spirit::mObject store;
+			for (auto const& s: m_statePre.storage(a.first))
+				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
+			o["storage"] = store;
+		}
+		o["code"] = "0x" + toHex(m_statePre.code(a.first));
+
+		preState[toString(a.first)] = o;
+	}
+	m_TestObject["pre"] = json_spirit::mValue(preState);
 }
 
 u256 toInt(json_spirit::mValue const& _v)
