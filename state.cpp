@@ -20,8 +20,6 @@
  * State test functions.
  */
 
-#define FILL_TESTS
-
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include "JsonSpiritHeaders.h"
