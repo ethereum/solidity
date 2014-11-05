@@ -375,7 +375,7 @@ mArray FakeExtVM::exportCallCreates()
 	for (Transaction const& tx: callcreates)
 	{
 		mObject o;
-		o["destination"] = tx.type() == Transaction::ContractCreation ? "" : toString(tx.receiveAddress());
+		o["destination"] = tx.isCreation() ? "" : toString(tx.receiveAddress());
 		push(o, "gasLimit", tx.gas());
 		push(o, "value", tx.value());
 		o["data"] = "0x" + toHex(tx.data());

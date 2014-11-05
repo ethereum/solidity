@@ -397,8 +397,8 @@ int cryptoTest()
 
 	auto msg = t.rlp(false);
 	cout << "TX w/o SIG: " << RLP(msg) << endl;
-	cout << "RLP(TX w/o SIG): " << toHex(t.rlpString(false)) << endl;
-	std::string hmsg = sha3(t.rlpString(false), false);
+	cout << "RLP(TX w/o SIG): " << toHex(t.rlp(false)) << endl;
+	std::string hmsg = sha3(t.rlp(false), false);
 	cout << "SHA256(RLP(TX w/o SIG)): 0x" << toHex(hmsg) << endl;
 
 	bytes privkey = sha3Bytes("123");
