@@ -20,7 +20,6 @@
  * Parser part that determines the declarations corresponding to names and the types of expressions.
  */
 
-#include <cassert>
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/Exceptions.h>
@@ -123,7 +122,8 @@ void DeclarationRegistrationHelper::endVisit(VariableDefinition& _variableDefini
 {
 	// Register the local variables with the function
 	// This does not fit here perfectly, but it saves us another AST visit.
-	assert(m_currentFunction);
+	if (asserts(m_currentFunction))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Variable definition without function."));
 	m_currentFunction->addLocalVariable(_variableDefinition.getDeclaration());
 }
 
@@ -138,19 +138,22 @@ void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _node)
 	map<ASTNode const*, Scope>::iterator iter;
 	bool newlyAdded;
 	tie(iter, newlyAdded) = m_scopes.emplace(&_node, Scope(m_currentScope));
-	assert(newlyAdded);
+	if (asserts(newlyAdded))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to add new scope."));
 	m_currentScope = &iter->second;
 }
 
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
-	assert(m_currentScope);
+	if (asserts(m_currentScope))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Closed non-existing scope."));
 	m_currentScope = m_currentScope->getEnclosingScope();
 }
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
-	assert(m_currentScope);
+	if (asserts(m_currentScope))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Declaration registered without scope."));
 	if (!m_currentScope->registerDeclaration(_declaration))
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_declaration.getLocation())
 												 << errinfo_comment("Identifier already declared."));
@@ -177,7 +180,8 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 
 bool ReferencesResolver::visit(Return& _return)
 {
-	assert(m_returnParameters);
+	if (asserts(m_returnParameters))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Return parameters not set."));
 	_return.setFunctionReturnParameters(*m_returnParameters);
 	return true;
 }

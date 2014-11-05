@@ -293,9 +293,10 @@ void Break::checkTypeRequirements()
 
 void Return::checkTypeRequirements()
 {
-	assert(m_returnParameters);
 	if (!m_expression)
 		return;
+	if (asserts(m_returnParameters))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Return parameters not assigned."));
 	if (m_returnParameters->getParameters().size() != 1)
 		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
 											  "than in returns declaration."));
@@ -377,7 +378,6 @@ void BinaryOperation::checkTypeRequirements()
 		m_type = make_shared<BoolType>();
 	else
 	{
-		assert(Token::isBinaryOp(m_operator));
 		m_type = m_commonType;
 		if (!m_commonType->acceptsBinaryOperator(m_operator))
 			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
@@ -393,25 +393,22 @@ void FunctionCall::checkTypeRequirements()
 	Type const* expressionType = m_expression->getType().get();
 	if (isTypeConversion())
 	{
-		TypeType const* type = dynamic_cast<TypeType const*>(expressionType);
-		assert(type);
+		TypeType const& type = dynamic_cast<TypeType const&>(*expressionType);
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
 		if (m_arguments.size() != 1)
 			BOOST_THROW_EXCEPTION(createTypeError("More than one argument for "
 														   "explicit type conersion."));
-		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type->getActualType()))
+		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type.getActualType()))
 			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
-		m_type = type->getActualType();
+		m_type = type.getActualType();
 	}
 	else
 	{
 		//@todo would be nice to create a struct type from the arguments
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
-		FunctionType const* function = dynamic_cast<FunctionType const*>(expressionType);
-		assert(function);
-		FunctionDefinition const& fun = function->getFunction();
+		FunctionDefinition const& fun = dynamic_cast<FunctionType const&>(*expressionType).getFunction();
 		vector<ASTPointer<VariableDeclaration>> const& parameters = fun.getParameters();
 		if (parameters.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
@@ -434,19 +431,21 @@ bool FunctionCall::isTypeConversion() const
 
 void MemberAccess::checkTypeRequirements()
 {
-	assert(false); // not yet implemented
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access not yet implemented."));
 	// m_type = ;
 }
 
 void IndexAccess::checkTypeRequirements()
 {
-	assert(false); // not yet implemented
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Index access not yet implemented."));
 	// m_type = ;
 }
 
 void Identifier::checkTypeRequirements()
 {
-	assert(m_referencedDeclaration);
+	if (asserts(m_referencedDeclaration))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier not resolved."));
+
 	//@todo these dynamic casts here are not really nice...
 	// is i useful to have an AST visitor here?
 	// or can this already be done in NameAndTypeResolver?
@@ -487,7 +486,7 @@ void Identifier::checkTypeRequirements()
 		m_type = make_shared<TypeType>(make_shared<ContractType>(*contractDef));
 		return;
 	}
-	assert(false); // declaration reference of unknown/forbidden type
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Declaration reference of unknown/forbidden type."));
 }
 
 void ElementaryTypeNameExpression::checkTypeRequirements()

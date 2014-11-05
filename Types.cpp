@@ -20,7 +20,6 @@
  * Solidity data types
  */
 
-#include <cassert>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libsolidity/Types.h>
@@ -33,6 +32,9 @@ namespace solidity
 
 std::shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 {
+	if (asserts(Token::isElementaryTypeName(_typeToken)))
+		BOOST_THROW_EXCEPTION(InternalCompilerError());
+
 	if (Token::INT <= _typeToken && _typeToken <= Token::HASH256)
 	{
 		int offset = _typeToken - Token::INT;
@@ -52,7 +54,8 @@ std::shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 	else if (_typeToken == Token::BOOL)
 		return std::make_shared<BoolType>();
 	else
-		assert(false); // @todo add other tyes
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
+																		 std::string(Token::toString(_typeToken)) + " to type."));
 	return std::shared_ptr<Type>();
 }
 
@@ -63,7 +66,7 @@ std::shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _
 
 std::shared_ptr<Type> Type::fromMapping(Mapping const&)
 {
-	assert(false); //@todo not yet implemented
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Mapping types not yet implemented."));
 	return std::shared_ptr<Type>();
 }
 
@@ -94,7 +97,8 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 {
 	if (isAddress())
 		_bits = 160;
-	assert(_bits > 0 && _bits <= 256 && _bits % 8 == 0);
+	if (asserts(_bits > 0 && _bits <= 256 && _bits % 8 == 0))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid bit number for integer type: " + dev::toString(_bits)));
 }
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -187,7 +191,7 @@ u256 BoolType::literalValue(Literal const& _literal) const
 	else if (_literal.getToken() == Token::FALSE_LITERAL)
 		return u256(0);
 	else
-		assert(false);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Bool type constructed from non-boolean literal."));
 }
 
 bool ContractType::operator==(Type const& _other) const

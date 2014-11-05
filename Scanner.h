@@ -169,7 +169,7 @@ private:
 	/// If the next character is _next, advance and return _then, otherwise return _else.
 	inline Token::Value selectToken(char _next, Token::Value _then, Token::Value _else);
 
-	bool scanHexNumber(char& o_scannedNumber, int _expectedLength);
+	bool scanHexByte(char& o_scannedByte);
 
 	/// Scans a single JavaScript token.
 	void scanToken();

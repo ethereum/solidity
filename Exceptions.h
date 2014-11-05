@@ -35,6 +35,7 @@ struct ParserError: virtual Exception {};
 struct TypeError: virtual Exception {};
 struct DeclarationError: virtual Exception {};
 struct CompilerError: virtual Exception {};
+struct InternalCompilerError: virtual Exception {};
 
 typedef boost::error_info<struct tag_sourcePosition, int> errinfo_sourcePosition;
 typedef boost::error_info<struct tag_sourceLocation, Location> errinfo_sourceLocation;

@@ -243,7 +243,10 @@ class ElementaryTypeName: public TypeName
 {
 public:
 	explicit ElementaryTypeName(Location const& _location, Token::Value _type):
-		TypeName(_location), m_type(_type) {}
+		TypeName(_location), m_type(_type)
+	{
+		if (asserts(Token::isElementaryTypeName(_type))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual std::shared_ptr<Type> toType() override { return Type::fromElementaryTypeName(m_type); }
 
@@ -407,7 +410,12 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	void setFunctionReturnParameters(ParameterList& _parameters) { m_returnParameters = &_parameters; }
-	ParameterList const& getFunctionReturnParameters() const { assert(m_returnParameters); return *m_returnParameters; }
+	ParameterList const& getFunctionReturnParameters() const
+	{
+		if (asserts(m_returnParameters))
+			BOOST_THROW_EXCEPTION(InternalCompilerError());
+		return *m_returnParameters;
+	}
 	Expression* getExpression() const { return m_expression.get(); }
 
 private:
@@ -495,7 +503,10 @@ public:
 	Assignment(Location const& _location, ASTPointer<Expression> const& _leftHandSide,
 			   Token::Value _assignmentOperator, ASTPointer<Expression> const& _rightHandSide):
 		Expression(_location), m_leftHandSide(_leftHandSide),
-		m_assigmentOperator(_assignmentOperator), m_rightHandSide(_rightHandSide) {}
+		m_assigmentOperator(_assignmentOperator), m_rightHandSide(_rightHandSide)
+	{
+		if (asserts(Token::isAssignmentOp(_assignmentOperator))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
@@ -519,7 +530,10 @@ public:
 	UnaryOperation(Location const& _location, Token::Value _operator,
 				   ASTPointer<Expression> const& _subExpression, bool _isPrefix):
 		Expression(_location), m_operator(_operator),
-		m_subExpression(_subExpression), m_isPrefix(_isPrefix) {}
+		m_subExpression(_subExpression), m_isPrefix(_isPrefix)
+	{
+		if (asserts(Token::isUnaryOp(_operator))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
@@ -541,7 +555,10 @@ class BinaryOperation: public Expression
 public:
 	BinaryOperation(Location const& _location, ASTPointer<Expression> const& _left,
 					Token::Value _operator, ASTPointer<Expression> const& _right):
-		Expression(_location), m_left(_left), m_operator(_operator), m_right(_right) {}
+		Expression(_location), m_left(_left), m_operator(_operator), m_right(_right)
+	{
+		if (asserts(Token::isBinaryOp(_operator) || Token::isCompareOp(_operator))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
@@ -658,7 +675,10 @@ class ElementaryTypeNameExpression: public PrimaryExpression
 {
 public:
 	ElementaryTypeNameExpression(Location const& _location, Token::Value _typeToken):
-		PrimaryExpression(_location), m_typeToken(_typeToken) {}
+		PrimaryExpression(_location), m_typeToken(_typeToken)
+	{
+		if (asserts(Token::isElementaryTypeName(_typeToken))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 

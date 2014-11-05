@@ -42,9 +42,9 @@
 
 #pragma once
 
-#include <cassert>
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
+#include <libsolidity/Exceptions.h>
 
 namespace dev
 {
@@ -81,8 +81,6 @@ namespace solidity
 	T(SEMICOLON, ";", 0)                                               \
 	T(PERIOD, ".", 0)                                                  \
 	T(CONDITIONAL, "?", 3)                                             \
-	T(INC, "++", 0)                                                    \
-	T(DEC, "--", 0)                                                    \
 	T(ARROW, "=>", 0)                                                  \
 	\
 	/* Assignment operators. */                                        \
@@ -136,6 +134,8 @@ namespace solidity
 	/* being contiguous and sorted in the same order! */               \
 	T(NOT, "!", 0)                                                     \
 	T(BIT_NOT, "~", 0)                                                 \
+	T(INC, "++", 0)                                                    \
+	T(DEC, "--", 0)                                                    \
 	K(DELETE, "delete", 0)                                             \
 	\
 	/* Keywords */                                                     \
@@ -224,7 +224,8 @@ public:
 	// (e.g. "LT" for the token LT).
 	static char const* getName(Value tok)
 	{
-		assert(tok < NUM_TOKENS);  // tok is unsigned
+		if (asserts(tok < NUM_TOKENS))
+			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		return m_name[tok];
 	}
 
@@ -249,55 +250,10 @@ public:
 			   isEqualityOp(op) || isInequalityOp(op);
 	}
 
-	static Value negateCompareOp(Value op)
-	{
-		assert(isArithmeticCompareOp(op));
-		switch (op)
-		{
-		case EQ:
-			return NE;
-		case NE:
-			return EQ;
-		case LT:
-			return GTE;
-		case GT:
-			return LTE;
-		case LTE:
-			return GT;
-		case GTE:
-			return LT;
-		default:
-			assert(false); // should not get here
-			return op;
-		}
-	}
-
-	static Value reverseCompareOp(Value op)
-	{
-		assert(isArithmeticCompareOp(op));
-		switch (op)
-		{
-		case EQ:
-			return EQ;
-		case NE:
-			return NE;
-		case LT:
-			return GT;
-		case GT:
-			return LT;
-		case LTE:
-			return GTE;
-		case GTE:
-			return LTE;
-		default:
-			assert(false); // should not get here
-			return op;
-		}
-	}
-
 	static Value AssignmentToBinaryOp(Value op)
 	{
-		assert(isAssignmentOp(op) && op != ASSIGN);
+		if (asserts(isAssignmentOp(op) && op != ASSIGN))
+			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		return Token::Value(op + (BIT_OR - ASSIGN_BIT_OR));
 	}
 
@@ -311,7 +267,8 @@ public:
 	// have a (unique) string (e.g. an IDENTIFIER).
 	static char const* toString(Value tok)
 	{
-		assert(tok < NUM_TOKENS);  // tok is unsigned.
+		if (asserts(tok < NUM_TOKENS))
+			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		return m_string[tok];
 	}
 
@@ -319,7 +276,8 @@ public:
 	// operators; returns 0 otherwise.
 	static int precedence(Value tok)
 	{
-		assert(tok < NUM_TOKENS);  // tok is unsigned.
+		if (asserts(tok < NUM_TOKENS))
+			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		return m_precedence[tok];
 	}
 

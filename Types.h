@@ -26,6 +26,7 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
+#include <libsolidity/Exceptions.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Token.h>
 
@@ -75,7 +76,11 @@ public:
 	virtual unsigned getCalldataEncodedSize() const { return 0; }
 
 	virtual std::string toString() const = 0;
-	virtual u256 literalValue(Literal const&) const { assert(false); }
+	virtual u256 literalValue(Literal const&) const
+	{
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Literal value requested "
+																		  "for type without literals."));
+	}
 };
 
 /**

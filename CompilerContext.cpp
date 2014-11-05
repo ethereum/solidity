@@ -20,7 +20,6 @@
  * Utilities for the solidity compiler.
  */
 
-#include <cassert>
 #include <utility>
 #include <numeric>
 #include <libsolidity/AST.h>
@@ -45,14 +44,16 @@ void CompilerContext::initializeLocalVariables(unsigned _numVariables)
 int CompilerContext::getStackPositionOfVariable(const Declaration& _declaration)
 {
 	auto res = find(begin(m_localVariables), end(m_localVariables), &_declaration);
-	assert(res != m_localVariables.end());
+	if (asserts(res != m_localVariables.end()))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Variable not found on stack."));
 	return end(m_localVariables) - res - 1 + m_asm.deposit();
 }
 
 eth::AssemblyItem CompilerContext::getFunctionEntryLabel(const FunctionDefinition& _function) const
 {
 	auto res = m_functionEntryLabels.find(&_function);
-	assert(res != m_functionEntryLabels.end());
+	if (asserts(res != m_functionEntryLabels.end()))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Function entry label not found."));
 	return res->second.tag();
 }
 

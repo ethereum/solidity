@@ -20,7 +20,6 @@
  * Solidity AST to EVM bytecode compiler for expressions.
  */
 
-#include <cassert>
 #include <utility>
 #include <numeric>
 #include <libsolidity/AST.h>
@@ -105,7 +104,8 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 		m_context << u256(0) << eth::Instruction::SUB;
 		break;
 	default:
-		assert(false); // invalid operation
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid unary operator: " +
+																		 string(Token::toString(_unaryOperation.getOperator()))));
 	}
 }
 
@@ -127,7 +127,8 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 		rightExpression.accept(*this);
 
 		// the types to compare have to be the same, but the resulting type is always bool
-		assert(*leftExpression.getType() == *rightExpression.getType());
+		if (asserts(*leftExpression.getType() == *rightExpression.getType()))
+			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		appendCompareOperatorCode(op, *leftExpression.getType());
 	}
 	else
@@ -148,7 +149,8 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 	if (_functionCall.isTypeConversion())
 	{
 		//@todo we only have integers and bools for now which cannot be explicitly converted
-		assert(_functionCall.getArguments().size() == 1);
+		if (asserts(_functionCall.getArguments().size() == 1))
+			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		Expression& firstArgument = *_functionCall.getArguments().front();
 		firstArgument.accept(*this);
 		cleanHigherOrderBitsIfNeeded(*firstArgument.getType(), *_functionCall.getType());
@@ -159,28 +161,28 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 		// Callee removes them and pushes return values
 		m_currentLValue = nullptr;
 		_functionCall.getExpression().accept(*this);
-		FunctionDefinition const* function = dynamic_cast<FunctionDefinition*>(m_currentLValue);
-		assert(function);
+		FunctionDefinition const& function = dynamic_cast<FunctionDefinition&>(*m_currentLValue);
 
 		eth::AssemblyItem returnLabel = m_context.pushNewTag();
 		std::vector<ASTPointer<Expression>> const& arguments = _functionCall.getArguments();
-		assert(arguments.size() == function->getParameters().size());
+		if (asserts(arguments.size() == function.getParameters().size()))
+			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		for (unsigned i = 0; i < arguments.size(); ++i)
 		{
 			arguments[i]->accept(*this);
 			cleanHigherOrderBitsIfNeeded(*arguments[i]->getType(),
-										 *function->getParameters()[i]->getType());
+										 *function.getParameters()[i]->getType());
 		}
 
-		m_context.appendJumpTo(m_context.getFunctionEntryLabel(*function));
+		m_context.appendJumpTo(m_context.getFunctionEntryLabel(function));
 		m_context << returnLabel;
 
 		// callee adds return parameters, but removes arguments and return label
-		m_context.adjustStackOffset(function->getReturnParameters().size() - arguments.size() - 1);
+		m_context.adjustStackOffset(function.getReturnParameters().size() - arguments.size() - 1);
 
 		// @todo for now, the return value of a function is its first return value, so remove
 		// all others
-		for (unsigned i = 1; i < function->getReturnParameters().size(); ++i)
+		for (unsigned i = 1; i < function.getReturnParameters().size(); ++i)
 			m_context << eth::Instruction::POP;
 	}
 	return false;
@@ -227,7 +229,7 @@ void ExpressionCompiler::endVisit(Literal& _literal)
 		m_context << _literal.getType()->literalValue(_literal);
 		break;
 	default:
-		assert(false); // @todo
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer and boolean literals implemented for now."));
 	}
 }
 
@@ -249,15 +251,15 @@ void ExpressionCompiler::cleanHigherOrderBitsIfNeeded(Type const& _typeOnStack, 
 	{
 		// If we get here, there is either an implementation missing to clean higher oder bits
 		// for non-integer types that are explicitly convertible or we got here in error.
-		assert(!_typeOnStack.isExplicitlyConvertibleTo(_targetType));
-		assert(false); // these types should not be convertible.
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));
 	}
 }
 
 void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation& _binaryOperation)
 {
 	Token::Value const op = _binaryOperation.getOperator();
-	assert(op == Token::OR || op == Token::AND);
+	if (asserts(op == Token::OR || op == Token::AND))
+		BOOST_THROW_EXCEPTION(InternalCompilerError());
 
 	_binaryOperation.getLeftExpression().accept(*this);
 	m_context << eth::Instruction::DUP1;
@@ -279,9 +281,8 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	}
 	else
 	{
-		IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
-		assert(type);
-		bool const isSigned = type->isSigned();
+		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+		bool const isSigned = type.isSigned();
 
 		// note that EVM opcodes compare like "stack[0] < stack[1]",
 		// but our left value is at stack[1], so everyhing is reversed.
@@ -302,7 +303,7 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
 			break;
 		default:
-			assert(false);
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
 		}
 	}
 }
@@ -316,14 +317,13 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 	else if (Token::isShiftOp(_operator))
 		appendShiftOperatorCode(_operator);
 	else
-		assert(false); // unknown binary operator
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown binary operator."));
 }
 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
-	IntegerType const* type = dynamic_cast<IntegerType const*>(&_type);
-	assert(type);
-	bool const isSigned = type->isSigned();
+	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+	bool const isSigned = type.isSigned();
 
 	switch (_operator)
 	{
@@ -343,7 +343,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << eth::Instruction::SWAP1 << (isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
 		break;
 	default:
-		assert(false);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
 	}
 }
 
@@ -361,22 +361,21 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 		m_context << eth::Instruction::XOR;
 		break;
 	default:
-		assert(false);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown bit operator."));
 	}
 }
 
 void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 {
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Shift operators not yet implemented."));
 	switch (_operator)
 	{
 	case Token::SHL:
-		assert(false); //@todo
 		break;
 	case Token::SAR:
-		assert(false); //@todo
 		break;
 	default:
-		assert(false);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown shift operator."));
 	}
 }
 
@@ -402,7 +401,8 @@ void ExpressionCompiler::moveToLValue(Expression const& _expression)
 
 unsigned ExpressionCompiler::stackPositionOfLValue() const
 {
-	assert(m_currentLValue);
+	if (asserts(m_currentLValue))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("LValue not available on request."));
 	return m_context.getStackPositionOfVariable(*m_currentLValue);
 }
 
