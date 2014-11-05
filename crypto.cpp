@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_ecdsav)
+BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 {
 	// cryptopp implementation of secp256k1lib sign_compact w/recid parameter and recovery of public key from signature
 		
@@ -128,6 +128,12 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_ecdsav)
 		Integer s = (kInv * (Integer(secret.asBytes().data(), 32)*r + heInt)) % q;
 		BOOST_REQUIRE(!!r && !!s);
 		
+/*
+		// For future reference:
+		// According to maths, this codepath can't be reached, however, it's in secp256k1.
+		// Commenting this out diverges from codebase implementation.
+		// To be removed after upstream PR and proof are evaulated.
+ 
 		if (s > params.GetSubgroupOrder())
 		{
 			// note: this rarely happens
@@ -135,6 +141,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_ecdsav)
 			if (recid)
 				recid ^= 1;
 		}
+ */
 
 		Signature sig;
 		r.Encode(sig.data(), 32);
