@@ -89,10 +89,14 @@ shared_ptr<Type> Type::forLiteral(Literal const& _literal)
 shared_ptr<IntegerType> IntegerType::smallestTypeForLiteral(string const& _literal)
 {
 	bigint value(_literal);
+	bool isSigned = value < 0 || (!_literal.empty() && _literal.front() == '-');
+	if (isSigned)
+		// convert to positive number of same bit requirements
+		value = ((-value) - 1) << 1;
 	unsigned bytes = max(bytesRequired(value), 1u);
 	if (bytes > 32)
 		return shared_ptr<IntegerType>();
-	return make_shared<IntegerType>(bytes * 8, Modifier::UNSIGNED);
+	return make_shared<IntegerType>(bytes * 8, isSigned ? Modifier::SIGNED : Modifier::UNSIGNED);
 }
 
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
@@ -169,8 +173,6 @@ string IntegerType::toString() const
 u256 IntegerType::literalValue(Literal const& _literal) const
 {
 	bigint value(_literal.getValue());
-	//@todo check that the number is not too large
-	//@todo does this work for signed numbers?
 	return u256(value);
 }
 

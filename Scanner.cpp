@@ -271,7 +271,7 @@ void Scanner::scanToken()
 				token = Token::ADD;
 			break;
 		case '-':
-			// - -- -=
+			// - -- -= Number
 			advance();
 			if (m_char == '-')
 			{
@@ -280,6 +280,8 @@ void Scanner::scanToken()
 			}
 			else if (m_char == '=')
 				token = selectToken(Token::ASSIGN_SUB);
+			else if (m_char == '.' || IsDecimalDigit(m_char))
+				token = scanNumber('-');
 			else
 				token = Token::SUB;
 			break;
@@ -331,7 +333,7 @@ void Scanner::scanToken()
 			// . Number
 			advance();
 			if (IsDecimalDigit(m_char))
-				token = scanNumber(true);
+				token = scanNumber('.');
 			else
 				token = Token::PERIOD;
 			break;
@@ -372,7 +374,7 @@ void Scanner::scanToken()
 			if (IsIdentifierStart(m_char))
 				token = scanIdentifierOrKeyword();
 			else if (IsDecimalDigit(m_char))
-				token = scanNumber(false);
+				token = scanNumber();
 			else if (skipWhitespace())
 				token = Token::WHITESPACE;
 			else if (isSourcePastEndOfInput())
@@ -461,14 +463,11 @@ void Scanner::scanDecimalDigits()
 }
 
 
-Token::Value Scanner::scanNumber(bool _periodSeen)
+Token::Value Scanner::scanNumber(char _charSeen)
 {
-	// the first digit of the number or the fraction
-	if (asserts(IsDecimalDigit(m_char)))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Number does not start with decimal digit."));
-	enum { DECIMAL, HEX, OCTAL, IMPLICIT_OCTAL, BINARY } kind = DECIMAL;
+	enum { DECIMAL, HEX, BINARY } kind = DECIMAL;
 	LiteralScope literal(this);
-	if (_periodSeen)
+	if (_charSeen == '.')
 	{
 		// we have already seen a decimal point of the float
 		addLiteralChar('.');
@@ -476,12 +475,13 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	}
 	else
 	{
+		if (_charSeen == '-')
+			addLiteralChar('-');
 		// if the first character is '0' we must check for octals and hex
 		if (m_char == '0')
 		{
 			addLiteralCharAndAdvance();
-			// either 0, 0exxx, 0Exxx, 0.xxx, a hex number, a binary number or
-			// an octal number.
+			// either 0, 0exxx, 0Exxx, 0.xxx or a hex number
 			if (m_char == 'x' || m_char == 'X')
 			{
 				// hex number
