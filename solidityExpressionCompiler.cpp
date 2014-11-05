@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 BOOST_AUTO_TEST_CASE(unary_operators)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = !(~+-1 == 2); }"
+							 "  function f() { var x = !(~+- 1 == 2); }"
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
@@ -344,6 +344,45 @@ BOOST_AUTO_TEST_CASE(function_call)
 					   byte(eth::Instruction::POP),
 					   byte(eth::Instruction::DUP2),
 					   byte(eth::Instruction::JUMPDEST)});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(negative_literals_8bits)
+{
+	// these all fit in 8 bits
+	char const* sourceCode = "contract test {\n"
+							 "  function f() { int8 x = -0 + -1 + -0x01 + -127 + -128; }\n"
+							 "}\n";
+	bytes code = compileFirstExpression(sourceCode);
+
+	bytes expectation(bytes({byte(eth::Instruction::PUSH1), 0x00,
+							 byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
+					  bytes({byte(eth::Instruction::ADD),
+							 byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
+					  bytes({byte(eth::Instruction::ADD),
+							 byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x81) +
+					  bytes({byte(eth::Instruction::ADD),
+							 byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x80) +
+					  bytes({byte(eth::Instruction::ADD)}));
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(negative_literals_16bits)
+{
+	// -1 should need 8 bits, -129 should need 16 bits, how many bits are used is visible
+	// from the SIGNEXTEND opcodes
+	char const* sourceCode = "contract test {\n"
+							 "  function f() { int64 x = int64(-1 + -129); }\n"
+							 "}\n";
+	bytes code = compileFirstExpression(sourceCode);
+
+	bytes expectation(bytes({byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
+					  bytes({byte(eth::Instruction::PUSH1), 0x00,
+							 byte(eth::Instruction::SIGNEXTEND),
+							 byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x7f) +
+					  bytes({byte(eth::Instruction::ADD),
+							 byte(eth::Instruction::PUSH1), 0x01,
+							 byte(eth::Instruction::SIGNEXTEND)}));
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
