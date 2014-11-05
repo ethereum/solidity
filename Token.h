@@ -169,19 +169,103 @@ namespace solidity
 	 * the implementation in Types.cpp has to be synced to this here
 	 *  TODO more to be added */                                       \
 	K(INT, "int", 0)                                                   \
+	K(INT8, "int8", 0)                                                 \
+	K(INT16, "int16", 0)                                               \
+	K(INT24, "int24", 0)                                               \
 	K(INT32, "int32", 0)                                               \
+	K(INT40, "int40", 0)                                               \
+	K(INT48, "int48", 0)                                               \
+	K(INT56, "int56", 0)                                               \
 	K(INT64, "int64", 0)                                               \
+	K(INT72, "int72", 0)                                               \
+	K(INT80, "int80", 0)                                               \
+	K(INT88, "int88", 0)                                               \
+	K(INT96, "int96", 0)                                               \
+	K(INT104, "int104", 0)                                             \
+	K(INT112, "int112", 0)                                             \
+	K(INT120, "int120", 0)                                             \
 	K(INT128, "int128", 0)                                             \
+	K(INT136, "int136", 0)                                             \
+	K(INT144, "int144", 0)                                             \
+	K(INT152, "int152", 0)                                             \
+	K(INT160, "int160", 0)                                             \
+	K(INT168, "int168", 0)                                             \
+	K(INT176, "int178", 0)                                             \
+	K(INT184, "int184", 0)                                             \
+	K(INT192, "int192", 0)                                             \
+	K(INT200, "int200", 0)                                             \
+	K(INT208, "int208", 0)                                             \
+	K(INT216, "int216", 0)                                             \
+	K(INT224, "int224", 0)                                             \
+	K(INT232, "int232", 0)                                             \
+	K(INT240, "int240", 0)                                             \
+	K(INT248, "int248", 0)                                             \
 	K(INT256, "int256", 0)                                             \
 	K(UINT, "uint", 0)                                                 \
+	K(UINT8, "uint8", 0)                                               \
+	K(UINT16, "uint16", 0)                                             \
+	K(UINT24, "uint24", 0)                                             \
 	K(UINT32, "uint32", 0)                                             \
+	K(UINT40, "uint40", 0)                                             \
+	K(UINT48, "uint48", 0)                                             \
+	K(UINT56, "uint56", 0)                                             \
 	K(UINT64, "uint64", 0)                                             \
+	K(UINT72, "uint72", 0)                                             \
+	K(UINT80, "uint80", 0)                                             \
+	K(UINT88, "uint88", 0)                                             \
+	K(UINT96, "uint96", 0)                                             \
+	K(UINT104, "uint104", 0)                                           \
+	K(UINT112, "uint112", 0)                                           \
+	K(UINT120, "uint120", 0)                                           \
 	K(UINT128, "uint128", 0)                                           \
+	K(UINT136, "uint136", 0)                                           \
+	K(UINT144, "uint144", 0)                                           \
+	K(UINT152, "uint152", 0)                                           \
+	K(UINT160, "uint160", 0)                                           \
+	K(UINT168, "uint168", 0)                                           \
+	K(UINT176, "uint178", 0)                                           \
+	K(UINT184, "uint184", 0)                                           \
+	K(UINT192, "uint192", 0)                                           \
+	K(UINT200, "uint200", 0)                                           \
+	K(UINT208, "uint208", 0)                                           \
+	K(UINT216, "uint216", 0)                                           \
+	K(UINT224, "uint224", 0)                                           \
+	K(UINT232, "uint232", 0)                                           \
+	K(UINT240, "uint240", 0)                                           \
+	K(UINT248, "uint248", 0)                                           \
 	K(UINT256, "uint256", 0)                                           \
 	K(HASH, "hash", 0)                                                 \
+	K(HASH8, "hash8", 0)                                               \
+	K(HASH16, "hash16", 0)                                             \
+	K(HASH24, "hash24", 0)                                             \
 	K(HASH32, "hash32", 0)                                             \
+	K(HASH40, "hash40", 0)                                             \
+	K(HASH48, "hash48", 0)                                             \
+	K(HASH56, "hash56", 0)                                             \
 	K(HASH64, "hash64", 0)                                             \
+	K(HASH72, "hash72", 0)                                             \
+	K(HASH80, "hash80", 0)                                             \
+	K(HASH88, "hash88", 0)                                             \
+	K(HASH96, "hash96", 0)                                             \
+	K(HASH104, "hash104", 0)                                           \
+	K(HASH112, "hash112", 0)                                           \
+	K(HASH120, "hash120", 0)                                           \
 	K(HASH128, "hash128", 0)                                           \
+	K(HASH136, "hash136", 0)                                           \
+	K(HASH144, "hash144", 0)                                           \
+	K(HASH152, "hash152", 0)                                           \
+	K(HASH160, "hash160", 0)                                           \
+	K(HASH168, "hash168", 0)                                           \
+	K(HASH176, "hash178", 0)                                           \
+	K(HASH184, "hash184", 0)                                           \
+	K(HASH192, "hash192", 0)                                           \
+	K(HASH200, "hash200", 0)                                           \
+	K(HASH208, "hash208", 0)                                           \
+	K(HASH216, "hash216", 0)                                           \
+	K(HASH224, "hash224", 0)                                           \
+	K(HASH232, "hash232", 0)                                           \
+	K(HASH240, "hash240", 0)                                           \
+	K(HASH248, "hash248", 0)                                           \
 	K(HASH256, "hash256", 0)                                           \
 	K(ADDRESS, "address", 0)                                           \
 	K(BOOL, "bool", 0)                                                 \

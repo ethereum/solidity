@@ -40,16 +40,14 @@ shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 	if (Token::INT <= _typeToken && _typeToken <= Token::HASH256)
 	{
 		int offset = _typeToken - Token::INT;
-		int bits = offset % 5;
-		if (bits == 0)
-			bits = 256;
-		else
-			bits = (1 << (bits - 1)) * 32;
-		int modifier = offset / 5;
-		return make_shared<IntegerType>(bits,
-											 modifier == 0 ? IntegerType::Modifier::SIGNED :
-											 modifier == 1 ? IntegerType::Modifier::UNSIGNED :
-											 IntegerType::Modifier::HASH);
+		int bytes = offset % 33;
+		if (bytes == 0)
+			bytes = 32;
+		int modifier = offset / 33;
+		return make_shared<IntegerType>(bytes * 8,
+										modifier == 0 ? IntegerType::Modifier::SIGNED :
+										modifier == 1 ? IntegerType::Modifier::UNSIGNED :
+										IntegerType::Modifier::HASH);
 	}
 	else if (_typeToken == Token::ADDRESS)
 		return make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS);
