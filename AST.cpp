@@ -344,7 +344,7 @@ void ExpressionStatement::checkTypeRequirements()
 	m_expression->checkTypeRequirements();
 }
 
-void Expression::expectType(const Type& _expectedType)
+void Expression::expectType(Type const& _expectedType)
 {
 	checkTypeRequirements();
 	if (!getType()->isImplicitlyConvertibleTo(_expectedType))

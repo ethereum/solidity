@@ -41,7 +41,7 @@ void CompilerContext::initializeLocalVariables(unsigned _numVariables)
 	}
 }
 
-int CompilerContext::getStackPositionOfVariable(const Declaration& _declaration)
+int CompilerContext::getStackPositionOfVariable(Declaration const& _declaration)
 {
 	auto res = find(begin(m_localVariables), end(m_localVariables), &_declaration);
 	if (asserts(res != m_localVariables.end()))
@@ -49,7 +49,7 @@ int CompilerContext::getStackPositionOfVariable(const Declaration& _declaration)
 	return end(m_localVariables) - res - 1 + m_asm.deposit();
 }
 
-eth::AssemblyItem CompilerContext::getFunctionEntryLabel(const FunctionDefinition& _function) const
+eth::AssemblyItem CompilerContext::getFunctionEntryLabel(FunctionDefinition const& _function) const
 {
 	auto res = m_functionEntryLabels.find(&_function);
 	if (asserts(res != m_functionEntryLabels.end()))
