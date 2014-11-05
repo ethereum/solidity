@@ -84,20 +84,26 @@ int main(int argc, char** argv)
 	ASTPointer<ContractDefinition> ast;
 	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(sourceCode));
 	Parser parser;
+	bytes instructions;
+	Compiler compiler;
 	try
 	{
 		ast = parser.parse(scanner);
+
+		NameAndTypeResolver resolver;
+		resolver.resolveNamesAndTypes(*ast.get());
+
+		cout << "Syntax tree for the contract:" << endl;
+		dev::solidity::ASTPrinter printer(ast, sourceCode);
+		printer.print(cout);
+
+		compiler.compileContract(*ast);
+		instructions = compiler.getAssembledBytecode();
 	}
 	catch (ParserError const& exception)
 	{
 		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Parser error", *scanner);
 		return -1;
-	}
-
-	NameAndTypeResolver resolver;
-	try
-	{
-		resolver.resolveNamesAndTypes(*ast.get());
 	}
 	catch (DeclarationError const& exception)
 	{
@@ -109,21 +115,24 @@ int main(int argc, char** argv)
 		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Type error", *scanner);
 		return -1;
 	}
-
-	cout << "Syntax tree for the contract:" << endl;
-	dev::solidity::ASTPrinter printer(ast, sourceCode);
-	printer.print(cout);
-
-	bytes instructions;
-	Compiler compiler;
-	try
-	{
-		compiler.compileContract(*ast);
-		instructions = compiler.getAssembledBytecode();
-	}
 	catch (CompilerError const& exception)
 	{
 		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Compiler error", *scanner);
+		return -1;
+	}
+	catch (InternalCompilerError const& exception)
+	{
+		cerr << "Internal compiler error: " << boost::diagnostic_information(exception) << endl;
+		return -1;
+	}
+	catch (Exception const& exception)
+	{
+		cerr << "Exception during compilation: " << boost::diagnostic_information(exception) << endl;
+		return -1;
+	}
+	catch (...)
+	{
+		cerr << "Unknown exception during compilation." << endl;
 		return -1;
 	}
 
