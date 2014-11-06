@@ -244,6 +244,14 @@ Assembly& Assembly::optimise(bool _enable)
 {
 	if (!_enable)
 		return *this;
+	auto signextend = [](u256 a, u256 b) -> u256
+	{
+		if (a >= 31)
+			return b;
+		unsigned testBit = unsigned(a) * 8 + 7;
+		u256 mask = (u256(1) << testBit) - 1;
+		return boost::multiprecision::bit_test(b, testBit) ? b | ~mask : b & mask;
+	};
 	map<Instruction, function<u256(u256, u256)>> c_simple =
 	{
 		{ Instruction::SUB, [](u256 a, u256 b)->u256{return a - b;} },
@@ -252,6 +260,7 @@ Assembly& Assembly::optimise(bool _enable)
 		{ Instruction::MOD, [](u256 a, u256 b)->u256{return a % b;} },
 		{ Instruction::SMOD, [](u256 a, u256 b)->u256{return s2u(u2s(a) % u2s(b));} },
 		{ Instruction::EXP, [](u256 a, u256 b)->u256{return (u256)boost::multiprecision::powm((bigint)a, (bigint)b, bigint(2) << 256);} },
+		{ Instruction::SIGNEXTEND, signextend },
 		{ Instruction::LT, [](u256 a, u256 b)->u256{return a < b ? 1 : 0;} },
 		{ Instruction::GT, [](u256 a, u256 b)->u256{return a > b ? 1 : 0;} },
 		{ Instruction::SLT, [](u256 a, u256 b)->u256{return u2s(a) < u2s(b) ? 1 : 0;} },
@@ -262,6 +271,9 @@ Assembly& Assembly::optimise(bool _enable)
 	{
 		{ Instruction::ADD, [](u256 a, u256 b)->u256{return a + b;} },
 		{ Instruction::MUL, [](u256 a, u256 b)->u256{return a * b;} },
+		{ Instruction::AND, [](u256 a, u256 b)->u256{return a & b;} },
+		{ Instruction::OR, [](u256 a, u256 b)->u256{return a | b;} },
+		{ Instruction::XOR, [](u256 a, u256 b)->u256{return a ^ b;} },
 	};
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules =
 	{
