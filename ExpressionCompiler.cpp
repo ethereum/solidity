@@ -376,8 +376,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	else if (_typeOnStack != _targetType)
 	{
 		// All other types should not be convertible to non-equal types.
-		assert(!_typeOnStack.isExplicitlyConvertibleTo(_targetType));
-		assert(false);
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));
 	}
 }
 
