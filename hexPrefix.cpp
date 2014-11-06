@@ -26,23 +26,19 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcrypto/TrieCommon.h>
 #include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 
 using namespace std;
 using namespace dev;
 namespace js = json_spirit;
 
+BOOST_AUTO_TEST_SUITE(BasicTests)
+
 BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-	string testPath;
 
-	if (ptestPath == NULL)
-	{
-		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
-	}
-	else
-		testPath = ptestPath;
+	string testPath = test::getTestPath();
+	testPath += "/BasicTests";
 
 	cnote << "Testing Hex-Prefix-Encode...";
 	js::mValue v;
@@ -62,3 +58,4 @@ BOOST_AUTO_TEST_CASE(hexPrefix_test)
 	}
 }
 
+BOOST_AUTO_TEST_SUITE_END()

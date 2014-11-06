@@ -8,7 +8,7 @@ link_directories(../libevm)
 
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
-add_executable(createRandomTest createRandomTest.cpp vm.cpp)
+add_executable(createRandomTest createRandomTest.cpp vm.cpp TestHelper.cpp)
 
 target_link_libraries(testeth ethereum)
 target_link_libraries(testeth ethcore)

@@ -21,10 +21,7 @@
  */
 
 #include <chrono>
-#include <boost/filesystem/path.hpp>
 #include "vm.h"
-//#define FILL_TESTS
-
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -36,136 +33,20 @@ FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const&
 
 h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc const&)
 {
-	Transaction t;
-	t.value = _endowment;
-	t.gasPrice = gasPrice;
-	t.gas = *_gas;
-	t.data = _init.toBytes();
+	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
 
-	m_s.noteSending(myAddress);
-	m_ms.internal.resize(m_ms.internal.size() + 1);
-	auto ret = m_s.create(myAddress, _endowment, gasPrice, _gas, _init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
-	if (!m_ms.internal.back().from)
-		m_ms.internal.pop_back();
-
-	if (get<0>(addresses[myAddress]) >= _endowment)
-	{
-		get<1>(addresses[myAddress])++;
-		get<0>(addresses[ret]) = _endowment;
-		get<3>(addresses[ret]) = m_s.code(ret);
-	}
-
-	t.type = eth::Transaction::ContractCreation;
+	Transaction t(_endowment, gasPrice, *_gas, _init.toBytes());
 	callcreates.push_back(t);
-	return ret;
+	return na;
 }
 
 bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc const&, Address _myAddressOverride, Address _codeAddressOverride)
 {
-	u256 contractgas = 0xffff;
-
-	Transaction t;
-	t.value = _value;
-	t.gasPrice = gasPrice;
-	t.gas = *_gas;
-	t.data = _data.toVector();
-	t.type = eth::Transaction::MessageCall;
-	t.receiveAddress = _receiveAddress;
+	Transaction t(_value, gasPrice, *_gas, _receiveAddress, _data.toVector());
 	callcreates.push_back(t);
-
-	string codeOf_CodeAddress = _codeAddressOverride ? toHex(get<3>(addresses[_codeAddressOverride])) : toHex(get<3>(addresses[_receiveAddress]) );
-	string sizeOfCode = toHex(toCompactBigEndian((codeOf_CodeAddress.size()+1)/2));
-
-	string codeOf_SenderAddress = toHex(get<3>(addresses[myAddress]) );
-	string sizeOfSenderCode = toHex(toCompactBigEndian((codeOf_SenderAddress.size()+1)/2));
-
-	if (codeOf_SenderAddress.size())
-	{
-		// create init code that returns given contract code
-		string initStringHex = "{ (CODECOPY 0 (- (CODESIZE) 0x" + sizeOfSenderCode + "  ) 0x" + sizeOfSenderCode + ") (RETURN 0 0x" + sizeOfSenderCode +")}";
-		bytes initBytes = compileLLL(initStringHex, true, NULL);
-		initBytes += fromHex(codeOf_SenderAddress);
-		bytesConstRef init(&initBytes);
-
-		if (!m_s.addresses().count(myAddress))
-		{
-			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.createNewAddress(myAddress, myAddress, balance(myAddress), gasPrice, &contractgas, init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, {}, 1);
-			if (!m_ms.internal.back().from)
-				m_ms.internal.pop_back();
-			if (na != myAddress)
-			{
-				cnote << "not able to call to : " << myAddress << "\n";
-				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(toString(myAddress)));
-				return false;
-			}
-		}
-	}
-
-	if (codeOf_CodeAddress.size())
-	{
-		// create init code that returns given contract code
-		string initStringHex = "{ (CODECOPY 0 (- (CODESIZE) 0x" + sizeOfCode + "  ) 0x" + sizeOfCode + ") (RETURN 0 0x" + sizeOfCode +")}";
-		bytes initBytes = compileLLL(initStringHex, true, NULL);
-		initBytes += fromHex(codeOf_CodeAddress);
-		bytesConstRef init(&initBytes);
-
-		if (!m_s.addresses().count(_codeAddressOverride ? _codeAddressOverride : _receiveAddress))
-		{
-			m_s.noteSending(myAddress);
-			m_ms.internal.resize(m_ms.internal.size() + 1);
-			auto na = m_s.createNewAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress, myAddress, balance(_codeAddressOverride ? _codeAddressOverride : _receiveAddress), gasPrice, &contractgas, init, origin, &sub, &m_ms ? &(m_ms.internal.back()) : nullptr, OnOpFunc(), 1);
-			if (!m_ms.internal.back().from)
-				m_ms.internal.pop_back();
-
-			if (na != (_codeAddressOverride ? _codeAddressOverride : _receiveAddress))
-			{
-				cnote << "not able to call to : " << (_codeAddressOverride ? _codeAddressOverride : _receiveAddress) << "\n";
-				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(toString(_codeAddressOverride ? _codeAddressOverride : _receiveAddress)));
-				return false;
-			}
-		}
-
-		m_ms.internal.resize(m_ms.internal.size() + 1);
-
-		auto ret = m_s.call(_receiveAddress,_codeAddressOverride ? _codeAddressOverride : _receiveAddress, _myAddressOverride ? _myAddressOverride : myAddress, _value, gasPrice, _data, _gas, _out, origin, &sub, &(m_ms.internal.back()), Executive::simpleTrace(), 1);
-
-		if (!m_ms.internal.back().from)
-			m_ms.internal.pop_back();
-
-		// get correct balances, (also for sucicides in the call function)
-		for (auto const& f: addresses)
-		{
-			if (m_s.addressInUse(f.first))
-				get<0>(addresses[f.first]) = m_s.balance(f.first);
-		}
-
-		if (!ret)
-			return false;
-
-		// TODO: @CJentzsch refund SSTORE stuff.
-		// TODO: @CJentzsch test logs.
-
-		// do suicides
-		for (auto const& f: sub.suicides)
-			addresses.erase(f);
-
-		// get storage
-		if ((get<0>(addresses[myAddress]) >= _value) && (sub.suicides.find(_receiveAddress) == sub.suicides.end()))
-		{
-			for (auto const& j: m_s.storage(_receiveAddress))
-			{
-				u256 adr(j.first);
-				if ((j.second != 0) )
-					get<2>(addresses[_receiveAddress])[adr] = j.second;
-			}
-		}
-	}
-	else
-		addresses.erase(_receiveAddress); // for the sake of comparison
-
+	(void)_out;
+	(void)_myAddressOverride;
+	(void)_codeAddressOverride;
 	return true;
 }
 
@@ -198,45 +79,13 @@ void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _st
 	set(myAddress, _myBalance, _myNonce, _storage, get<3>(addresses[myAddress]));
 }
 
-u256 FakeExtVM::toInt(mValue const& _v)
-{
-	switch (_v.type())
-	{
-	case str_type: return u256(_v.get_str());
-	case int_type: return (u256)_v.get_uint64();
-	case bool_type: return (u256)(uint64_t)_v.get_bool();
-	case real_type: return (u256)(uint64_t)_v.get_real();
-	default: cwarn << "Bad type for scalar: " << _v.type();
-	}
-	return 0;
-}
-
-byte FakeExtVM::toByte(mValue const& _v)
-{
-	switch (_v.type())
-	{
-	case str_type: return (byte)stoi(_v.get_str());
-	case int_type: return (byte)_v.get_uint64();
-	case bool_type: return (byte)_v.get_bool();
-	case real_type: return (byte)_v.get_real();
-	default: cwarn << "Bad type for scalar: " << _v.type();
-	}
-	return 0;
-}
-
 void FakeExtVM::push(mObject& o, string const& _n, u256 _v)
 {
-	//		if (_v < (u256)1 << 64)
-	//			o[_n] = (uint64_t)_v;
-	//		else
 	o[_n] = toString(_v);
 }
 
 void FakeExtVM::push(mArray& a, u256 _v)
 {
-	//		if (_v < (u256)1 << 64)
-	//			a.push_back((uint64_t)_v);
-	//		else
 	a.push_back(toString(_v));
 }
 
@@ -309,17 +158,7 @@ void FakeExtVM::importState(mObject& _object)
 		for (auto const& j: o["storage"].get_obj())
 			get<2>(a)[toInt(j.first)] = toInt(j.second);
 
-		if (o["code"].type() == str_type)
-			if (o["code"].get_str().find_first_of("0x") != 0)
-				get<3>(a) = compileLLL(o["code"].get_str(), false);
-			else
-				get<3>(a) = fromHex(o["code"].get_str().substr(2));
-		else
-		{
-			get<3>(a).clear();
-			for (auto const& j: o["code"].get_array())
-				get<3>(a).push_back(toByte(j));
-		}
+		get<3>(a) = importCode(o);
 	}
 }
 
@@ -357,26 +196,14 @@ void FakeExtVM::importExec(mObject& _o)
 
 	thisTxCode.clear();
 	code = &thisTxCode;
-	if (_o["code"].type() == str_type)
-		if (_o["code"].get_str().find_first_of("0x") == 0)
-			thisTxCode = fromHex(_o["code"].get_str().substr(2));
-		else
-			thisTxCode = compileLLL(_o["code"].get_str());
-	else if (_o["code"].type() == array_type)
-		for (auto const& j: _o["code"].get_array())
-			thisTxCode.push_back(toByte(j));
-	else
+
+	thisTxCode = importCode(_o);
+	if (_o["code"].type() != str_type && _o["code"].type() != array_type)
 		code.reset();
 
 	thisTxData.clear();
-	if (_o["data"].type() == str_type)
-		if (_o["data"].get_str().find_first_of("0x") == 0)
-			thisTxData = fromHex(_o["data"].get_str().substr(2));
-		else
-			thisTxData = fromHex(_o["data"].get_str());
-	else
-		for (auto const& j: _o["data"].get_array())
-			thisTxData.push_back(toByte(j));
+	thisTxData = importData(_o);
+
 	data = &thisTxData;
 }
 
@@ -386,10 +213,10 @@ mArray FakeExtVM::exportCallCreates()
 	for (Transaction const& tx: callcreates)
 	{
 		mObject o;
-		o["destination"] = tx.type == Transaction::ContractCreation ? "" : toString(tx.receiveAddress);
-		push(o, "gasLimit", tx.gas);
-		push(o, "value", tx.value);
-		o["data"] = "0x" + toHex(tx.data);
+		o["destination"] = tx.isCreation() ? "" : toString(tx.receiveAddress());
+		push(o, "gasLimit", tx.gas());
+		push(o, "value", tx.value());
+		o["data"] = "0x" + toHex(tx.data());
 		ret.push_back(o);
 	}
 	return ret;
@@ -404,19 +231,9 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		BOOST_REQUIRE(tx.count("value") > 0);
 		BOOST_REQUIRE(tx.count("destination") > 0);
 		BOOST_REQUIRE(tx.count("gasLimit") > 0);
-		Transaction t;
-		t.type = tx["destination"].get_str().empty() ? Transaction::ContractCreation : Transaction::MessageCall;
-		t.receiveAddress = Address(tx["destination"].get_str());
-		t.value = toInt(tx["value"]);
-		t.gas = toInt(tx["gasLimit"]);
-		if (tx["data"].type() == str_type)
-			if (tx["data"].get_str().find_first_of("0x") == 0)
-				t.data = fromHex(tx["data"].get_str().substr(2));
-			else
-				t.data = fromHex(tx["data"].get_str());
-		else
-			for (auto const& j: tx["data"].get_array())
-				t.data.push_back(toByte(j));
+		Transaction t = tx["destination"].get_str().empty() ?
+			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), data.toBytes()) :
+			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), data.toBytes());
 		callcreates.push_back(t);
 	}
 }
@@ -435,9 +252,6 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 		o << "    MEMORY" << std::endl << memDump(vm.memory());
 		o << "    STORAGE" << std::endl;
 
-		for (auto const& i: ext.state().storage(ext.myAddress))
-			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
-
 		for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
 			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
 
@@ -454,75 +268,9 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 	};
 }
 
-// THIS IS BROKEN AND NEEDS TO BE REMOVED.
-h160 FakeState::createNewAddress(Address _newAddress, Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, SubState* o_sub, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
-{
-	(void)o_sub;
-
-	if (!_origin)
-		_origin = _sender;
-
-	if (o_ms)
-	{
-		o_ms->from = _sender;
-		o_ms->to = Address();
-		o_ms->value = _endowment;
-		o_ms->input = _code.toBytes();
-	}
-
-	// Set up new account...
-	m_cache[_newAddress] = Account(0, balance(_newAddress) + _endowment, h256(), h256());
-
-	// Execute init code.
-	auto vmObj = VMFace::create(getVMKind(), *_gas);
-	auto& vm = *vmObj;
-	ExtVM evm(*this, _newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _code, o_ms, _level);
-	bool revert = false;
-	bytesConstRef out;
-
-	try
-	{
-		out = vm.go(evm, _onOp);
-		if (o_ms)
-			o_ms->output = out.toBytes();
-		// TODO: deal with evm.sub
-	}
-	catch (OutOfGas const& /*_e*/)
-	{
-		clog(StateChat) << "Out of Gas! Reverting.";
-		revert = true;
-	}
-	catch (VMException const& _e)
-	{
-		clog(StateChat) << "VM Exception: " << diagnostic_information(_e);
-	}
-	catch (Exception const& _e)
-	{
-		clog(StateChat) << "Exception in VM: " << diagnostic_information(_e);
-	}
-	catch (std::exception const& _e)
-	{
-		clog(StateChat) << "std::exception in VM: " << _e.what();
-	}
-
-	// TODO: CHECK: IS THIS CORRECT?! (esp. given account created prior to revertion init.)
-
-	// Write state out only in the case of a non-out-of-gas transaction.
-	if (revert)
-		evm.revert();
-
-	// Set code.
-	if (addressInUse(_newAddress))
-		m_cache[_newAddress].setCode(out);
-
-	*_gas = vm.gas();
-
-	return _newAddress;
-}
-
 namespace dev { namespace test {
 
-void doTests(json_spirit::mValue& v, bool _fillin)
+void doVMTests(json_spirit::mValue& v, bool _fillin)
 {
 	for (auto& i: v.get_obj())
 	{
@@ -541,7 +289,6 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		auto vmKind = useJit ? VMFace::JIT : VMFace::Interpreter;
 
 		dev::test::FakeExtVM fev;
-		fev.setVMKind(vmKind);
 
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
@@ -556,7 +303,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			fev.code = &fev.thisTxCode;
 		}
 
-		auto vm = VMFace::create(fev.getVMKind(), fev.gas);
+		auto vm = VMFace::create(vmKind, fev.gas);
 		bytes output;
 		auto outOfGas = false;
 
@@ -629,20 +376,11 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			dev::test::FakeExtVM test;
 			test.importState(o["post"].get_obj());
 			test.importCallCreates(o["callcreates"].get_array());
-			int i = 0;
-			if (o["out"].type() == array_type)
-				for (auto const& d: o["out"].get_array())
-				{
-					BOOST_CHECK_MESSAGE(output[i] == test.toInt(d), "Output byte [" << i << "] different!");
-					++i;
-				}
-			else if (o["out"].get_str().find("0x") == 0)
-				BOOST_CHECK(output == fromHex(o["out"].get_str().substr(2)));
-			else
-				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
-			BOOST_CHECK_EQUAL(test.toInt(o["gas"]), gas);
-			
+			checkOutput(output, o);
+
+            BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
+		
 			if (outOfGas)
 				BOOST_CHECK_MESSAGE(gas == 0, "Remaining gas not 0 in out-of-gas state");
 
@@ -662,172 +400,62 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 					BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
 					BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
 
-					auto&& expectedStore = std::get<2>(expectedState);
-					auto&& resultStore = std::get<2>(resultState);
-
-					for (auto&& expectedStorePair : expectedStore)
-					{
-						auto& expectedStoreKey = expectedStorePair.first;
-						auto resultStoreIt = resultStore.find(expectedStoreKey);
-						if (resultStoreIt == resultStore.end())
-							BOOST_ERROR(expectedAddr << ": missing store key " << expectedStoreKey);
-						else
-						{
-							auto& expectedStoreValue = expectedStorePair.second;
-							auto& resultStoreValue = resultStoreIt->second;
-							BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
-						}
-					}
+					checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
 				}
 			}
 
-			BOOST_CHECK(test.addresses == fev.addresses);	// Just to make sure nothing missed
+			checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
 			BOOST_CHECK(test.callcreates == fev.callcreates);
 		}
 	}
 }
 
-/*string makeTestCase()
-{
-	json_spirit::mObject o;
-
-	VM vm;
-	BlockInfo pb;
-	pb.hash = sha3("previousHash");
-	pb.nonce = sha3("previousNonce");
-	BlockInfo cb = pb;
-	cb.difficulty = 256;
-	cb.timestamp = 1;
-	cb.coinbaseAddress = toAddress(sha3("coinbase"));
-	FakeExtVM fev(pb, cb, 0);
-	bytes init;
-	fev.setContract(toAddress(sha3("contract")), ether, 0, compileLisp("(suicide (txsender))", false, init), map<u256, u256>());
-	o["env"] = fev.exportEnv();
-	o["pre"] = fev.exportState();
-	fev.setTransaction(toAddress(sha3("sender")), ether, finney, bytes());
-	mArray execs;
-	execs.push_back(fev.exportExec());
-	o["exec"] = execs;
-	vm.go(fev);
-	o["post"] = fev.exportState();
-	o["txs"] = fev.exportTxs();
-
-	return json_spirit::write_string(json_spirit::mValue(o), true);
-}*/
-
-void executeTests(const string& _name)
-{
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-	string testPath;
-
-	if (ptestPath == NULL)
-	{
-		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
-	}
-	else
-		testPath = ptestPath;
-
-	testPath += "/vmtests";
-
-#ifdef FILL_TESTS
-	try
-	{
-		cnote << "Populating VM tests...";
-		json_spirit::mValue v;
-		boost::filesystem::path p(__FILE__);
-		boost::filesystem::path dir = p.parent_path();
-		string s = asString(contents(dir.string() + "/" + _name + "Filler.json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + "Filler.json is empty.");
-		json_spirit::read_string(s, v);
-		dev::test::doTests(v, true);
-		writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-	}
-#endif
-
-	try
-	{
-		cnote << "Testing VM..." << _name;
-		json_spirit::mValue v;
-		string s = asString(contents(testPath + "/" + _name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-		json_spirit::read_string(s, v);
-		dev::test::doTests(v, false);
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-	}
-
-}
-
 } } // Namespace Close
+
+BOOST_AUTO_TEST_SUITE(VMTests)
 
 BOOST_AUTO_TEST_CASE(vm_tests)
 {
-	dev::test::executeTests("vmtests");
+	dev::test::executeTests("vmtests", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmArithmeticTest)
 {
-	dev::test::executeTests("vmArithmeticTest");
+	dev::test::executeTests("vmArithmeticTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperationTest)
 {
-	dev::test::executeTests("vmBitwiseLogicOperationTest");
+	dev::test::executeTests("vmBitwiseLogicOperationTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmSha3Test)
 {
-	dev::test::executeTests("vmSha3Test");
+	dev::test::executeTests("vmSha3Test", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmEnvironmentalInfoTest)
 {
-	dev::test::executeTests("vmEnvironmentalInfoTest");
+	dev::test::executeTests("vmEnvironmentalInfoTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmBlockInfoTest)
 {
-	dev::test::executeTests("vmBlockInfoTest");
+	dev::test::executeTests("vmBlockInfoTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
 {
-	dev::test::executeTests("vmIOandFlowOperationsTest");
+	dev::test::executeTests("vmIOandFlowOperationsTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
-	dev::test::executeTests("vmPushDupSwapTest");
-}
-
-BOOST_AUTO_TEST_CASE(vmPerformanceTest)
-{
-	dev::test::executeTests("vmPerformanceTest");
-}
-
-BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
-{
-	dev::test::executeTests("vmSystemOperationsTest");
+	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
-
 	if (boost::unit_test::framework::master_test_suite().argc >= 2)
 	{
 		string filename = boost::unit_test::framework::master_test_suite().argv[1];
@@ -840,7 +468,7 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 			string s = asString(contents(filename));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
 			json_spirit::read_string(s, v);
-			dev::test::doTests(v, false);
+			dev::test::doVMTests(v, false);
 		}
 		catch (Exception const& _e)
 		{
@@ -853,3 +481,5 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 		g_logVerbosity = currentVerbosity;
 	}
 }
+
+BOOST_AUTO_TEST_SUITE_END()
