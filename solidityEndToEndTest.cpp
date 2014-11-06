@@ -147,6 +147,55 @@ BOOST_AUTO_TEST_CASE(while_loop)
 	BOOST_CHECK(callFunction(0, u256(4)) == toBigEndian(u256(24)));
 }
 
+BOOST_AUTO_TEST_CASE(break_outside_loop)
+{
+	// break and continue outside loops should be simply ignored
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint x) returns(uint y) {\n"
+							 "    break; continue; return 2;\n"
+							 "  }\n"
+							 "}\n";
+	ExecutionFramework framework;
+	framework.compileAndRun(sourceCode);
+	BOOST_CHECK(framework.callFunction(0, u256(0)) == toBigEndian(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(nested_loops)
+{
+	// tests that break and continue statements in nested loops jump to the correct place
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint x) returns(uint y) {\n"
+							 "    while (x > 1) {\n"
+							 "      if (x == 10) break;\n"
+							 "      while (x > 5) {\n"
+							 "        if (x == 8) break;\n"
+							 "        x--;\n"
+							 "        if (x == 6) continue;\n"
+							 "        return x;\n"
+							 "      }\n"
+							 "      x--;\n"
+							 "      if (x == 3) continue;\n"
+							 "      break;\n"
+							 "    }\n"
+							 "    return x;\n"
+							 "  }\n"
+							 "}\n";
+	ExecutionFramework framework;
+	framework.compileAndRun(sourceCode);
+	BOOST_CHECK(framework.callFunction(0, u256(0)) == toBigEndian(u256(0)));
+	BOOST_CHECK(framework.callFunction(0, u256(1)) == toBigEndian(u256(1)));
+	BOOST_CHECK(framework.callFunction(0, u256(2)) == toBigEndian(u256(1)));
+	BOOST_CHECK(framework.callFunction(0, u256(3)) == toBigEndian(u256(2)));
+	BOOST_CHECK(framework.callFunction(0, u256(4)) == toBigEndian(u256(2)));
+	BOOST_CHECK(framework.callFunction(0, u256(5)) == toBigEndian(u256(4)));
+	BOOST_CHECK(framework.callFunction(0, u256(6)) == toBigEndian(u256(5)));
+	BOOST_CHECK(framework.callFunction(0, u256(7)) == toBigEndian(u256(5)));
+	BOOST_CHECK(framework.callFunction(0, u256(8)) == toBigEndian(u256(7)));
+	BOOST_CHECK(framework.callFunction(0, u256(9)) == toBigEndian(u256(8)));
+	BOOST_CHECK(framework.callFunction(0, u256(10)) == toBigEndian(u256(10)));
+	BOOST_CHECK(framework.callFunction(0, u256(11)) == toBigEndian(u256(10)));
+}
+
 BOOST_AUTO_TEST_CASE(calling_other_functions)
 {
 	// note that the index of a function is its index in the sorted sequence of functions
