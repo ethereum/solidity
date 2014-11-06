@@ -70,6 +70,8 @@ unsigned Assembly::bytesRequired() const
 			case PushData:
 			case PushSub:
 				ret += 1 + br;
+			case NoOptimizeBegin:
+			case NoOptimizeEnd:
 			default:;
 			}
 		if (dev::bytesRequired(ret) <= br)
@@ -140,6 +142,12 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 		case PushSubSize:
 			_out << " PUSHss[" << hex << h256(i.data()).abridged() << "]";
 			break;
+		case NoOptimizeBegin:
+			_out << " DoNotOptimze{{";
+			break;
+		case NoOptimizeEnd:
+			_out << " DoNotOptimze}}";
+			break;
 		case UndefinedItem:
 			_out << " ???";
 		default:;
@@ -176,6 +184,12 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
 			break;
 		case PushData:
 			_out << _prefix << "  PUSH [" << hex << (unsigned)i.m_data << "]" << endl;
+			break;
+		case NoOptimizeBegin:
+			_out << _prefix << "DoNotOptimze{{" << endl;
+			break;
+		case NoOptimizeEnd:
+			_out << _prefix << "DoNotOptimze}}" << endl;
 			break;
 		default:;
 		}
@@ -269,9 +283,14 @@ Assembly& Assembly::optimise(bool _enable)
 	for (unsigned count = 1; count > 0; total += count)
 	{
 		count = 0;
-		map<u256, unsigned> tags;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 		{
+			if (m_items[i].type() == NoOptimizeBegin)
+			{
+				while (i < m_items.size() && m_items[i].type() != NoOptimizeEnd)
+					++i;
+				continue;
+			}
 			for (auto const& r: rules)
 			{
 				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
@@ -297,6 +316,8 @@ Assembly& Assembly::optimise(bool _enable)
 				bool o = false;
 				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
 				{
+					if (m_items[i + 1].type() == NoOptimizeBegin)
+						break;
 					m_items.erase(m_items.begin() + i + 1);
 					o = true;
 				}
@@ -308,6 +329,7 @@ Assembly& Assembly::optimise(bool _enable)
 			}
 		}
 
+		map<u256, unsigned> tags;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 			if (m_items[i].type() == Tag)
 				tags.insert(make_pair(m_items[i].data(), i));
@@ -416,6 +438,8 @@ bytes Assembly::assemble() const
 			tagPos[(unsigned)i.m_data] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
 			break;
+		case NoOptimizeBegin:
+		case NoOptimizeEnd:
 		default:;
 		}
 
