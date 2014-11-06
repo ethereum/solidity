@@ -25,7 +25,7 @@
 #include <boost/spirit/include/support_utree.hpp>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include "CompilerState.h"
 #include "Parser.h"
 using namespace std;

@@ -22,8 +22,8 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#include <libevmface/Instruction.h>
-#include "Assembly.h"
+#include <libevmcore/Instruction.h>
+#include <libevmcore/Assembly.h>
 #include "Exceptions.h"
 
 namespace boost { namespace spirit { class utree; } }

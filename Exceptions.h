@@ -32,16 +32,13 @@ namespace eth
 class CompilerException: public dev::Exception {};
 class InvalidOperation: public CompilerException {};
 class IntegerOutOfRange: public CompilerException {};
-class StringTooLong: public CompilerException {};
 class EmptyList: public CompilerException {};
 class DataNotExecutable: public CompilerException {};
 class IncorrectParameterCount: public CompilerException {};
-class InvalidDeposit: public CompilerException {};
 class InvalidName: public CompilerException {};
 class InvalidMacroArgs: public CompilerException {};
 class InvalidLiteral: public CompilerException {};
 class BareSymbol: public CompilerException {};
-class ExpectedLiteral: public CompilerException {};
 
 }
 }

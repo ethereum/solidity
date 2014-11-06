@@ -15,7 +15,7 @@ endif()
 
 include_directories(..)
 
-target_link_libraries(${EXECUTABLE} evmface)
+target_link_libraries(${EXECUTABLE} evmcore)
 target_link_libraries(${EXECUTABLE} devcore)
 
 
