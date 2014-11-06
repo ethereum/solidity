@@ -4,18 +4,23 @@ aux_source_directory(. SRC_LIST)
 list(REMOVE_ITEM SRC_LIST "./createRandomTest.cpp")
 
 include_directories(..)
+include_directories(${CRYPTOPP_INCLUDE_DIR})
 
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 add_executable(createRandomTest createRandomTest.cpp vm.cpp)
+
 
 target_link_libraries(testeth ethereum)
 target_link_libraries(testeth ethcore)
 target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth gmp)
 target_link_libraries(testeth solidity)
-target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
 target_link_libraries(testeth webthree)
+
+#TODO this on should not be necessary, it should have been brought in from ethcore dependency...
+target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
+
 if(JSONRPC_LS)
 	target_link_libraries(testeth web3jsonrpc)
 endif()
@@ -24,6 +29,7 @@ target_link_libraries(createRandomTest ethereum)
 target_link_libraries(createRandomTest ethcore)
 target_link_libraries(createRandomTest boost_chrono)
 target_link_libraries(createRandomTest boost_unit_test_framework)
+target_link_libraries(createRandomTest ${CRYPTOPP_LIBRARIES})
 
 if ("${TARGET_PLATFORM}" STREQUAL "w64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
