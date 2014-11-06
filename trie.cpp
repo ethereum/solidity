@@ -28,6 +28,7 @@
 #include "TrieHash.h"
 #include "MemTrie.h"
 #include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 
 using namespace std;
 using namespace dev;
@@ -47,18 +48,14 @@ static unsigned fac(unsigned _i)
 }
 }
 
+BOOST_AUTO_TEST_SUITE(TrieTests)
+
 BOOST_AUTO_TEST_CASE(trie_tests)
 {
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-	string testPath;
+	string testPath = test::getTestPath();
 
-	if (ptestPath == NULL)
-	{
-		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
-	}
-	else
-		testPath = ptestPath;
+
+	testPath += "/TrieTests";
 
 	cnote << "Testing Trie...";
 	js::mValue v;
@@ -363,4 +360,7 @@ BOOST_AUTO_TEST_CASE(trieStess)
 		}
 	}
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
 
