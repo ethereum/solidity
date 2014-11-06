@@ -23,8 +23,8 @@
 #pragma once
 
 #include <ostream>
-#include <libevmface/Instruction.h>
-#include <liblll/Assembly.h>
+#include <libevmcore/Instruction.h>
+#include <libevmcore/Assembly.h>
 #include <libsolidity/Types.h>
 
 namespace dev {

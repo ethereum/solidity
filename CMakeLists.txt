@@ -16,8 +16,7 @@ file(GLOB HEADERS "*.h")
 
 include_directories(..)
 
-# @todo we only depend on Assembly, not on all of lll
-target_link_libraries(${EXECUTABLE} evmface devcore lll)
+target_link_libraries(${EXECUTABLE} evmcore devcore)
 
 install( TARGETS ${EXECUTABLE} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
