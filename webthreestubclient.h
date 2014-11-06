@@ -254,6 +254,19 @@ p.append(param3);
 
         }
 
+        std::string eth_lll(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("eth_lll",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         bool eth_mining() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
