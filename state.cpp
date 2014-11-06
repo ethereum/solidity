@@ -43,7 +43,6 @@ namespace dev {  namespace test {
 
 void doStateTests(json_spirit::mValue& v, bool _fillin)
 {
-	cout << "start state test\n";
 	for (auto& i: v.get_obj())
 	{
 		cnote << i.first;
@@ -122,6 +121,11 @@ BOOST_AUTO_TEST_CASE(stExample)
 BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
 {
 	dev::test::executeTests("stSystemOperationsTest", "/StateTests", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
+{
+	dev::test::executeTests("stPreCompiledContracts", "/StateTests", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(tmp)
