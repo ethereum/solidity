@@ -231,6 +231,12 @@ inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 	return true;
 }
 
+inline bool popCountIncreased(AssemblyItemsConstRef _pre, AssemblyItems const& _post)
+{
+	auto isPop = [](AssemblyItem const& _item) -> bool { return _item.match(AssemblyItem(Instruction::POP)); };
+	return count_if(begin(_post), end(_post), isPop) > count_if(begin(_pre), end(_pre), isPop);
+}
+
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
 #define copt dev::LogOutputStream<OptimiserChannel, true>()
 
@@ -275,7 +281,22 @@ Assembly& Assembly::optimise(bool _enable)
 		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
 		rules.push_back({ { Push, i.first, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[2].data(), m[0].data()), i.first }; } });
 	}
+	// jump to next instruction
 	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [&](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
+
+	// pop optimization, do not compute values that are popped again anyway
+	rules.push_back({ { AssemblyItem(UndefinedItem), Instruction::POP }, [](AssemblyItemsConstRef m) -> AssemblyItems
+					  {
+						  if (m[0].type() != Operation)
+							return m.toVector();
+						  Instruction instr = Instruction(byte(m[0].data()));
+						  if (Instruction::DUP1 <= instr && instr <= Instruction::DUP16)
+							return {};
+						  InstructionInfo info = instructionInfo(instr);
+						  if (info.sideEffects || info.additional != 0 || info.ret != 1)
+							  return m.toVector();
+						  return AssemblyItems(info.args, Instruction::POP);
+					  } });
 
 	copt << *this;
 
@@ -294,10 +315,10 @@ Assembly& Assembly::optimise(bool _enable)
 			for (auto const& r: rules)
 			{
 				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
-				if (matches(&r.first, vr))
+				if (matches(vr, &r.first))
 				{
 					auto rw = r.second(vr);
-					if (rw.size() < vr.size())
+					if (rw.size() < vr.size() || (rw.size() == vr.size() && popCountIncreased(vr, rw)))
 					{
 						copt << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
 						for (unsigned j = 0; j < vr.size(); ++j)
