@@ -34,7 +34,8 @@ namespace dev
 namespace solidity
 {
 
-bytes CompilerStack::compile(std::string const& _sourceCode, shared_ptr<Scanner> _scanner)
+bytes CompilerStack::compile(std::string const& _sourceCode, shared_ptr<Scanner> _scanner,
+							 bool _optimize)
 {
 	if (!_scanner)
 		_scanner = make_shared<Scanner>();
@@ -42,7 +43,7 @@ bytes CompilerStack::compile(std::string const& _sourceCode, shared_ptr<Scanner>
 
 	ASTPointer<ContractDefinition> contract = Parser().parse(_scanner);
 	NameAndTypeResolver().resolveNamesAndTypes(*contract);
-	return Compiler::compile(*contract);
+	return Compiler::compile(*contract, _optimize);
 }
 
 }

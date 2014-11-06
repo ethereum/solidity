@@ -75,7 +75,7 @@ public:
 
 	eth::Assembly const& getAssembly() const { return m_asm; }
 	void streamAssembly(std::ostream& _stream) const { _stream << m_asm; }
-	bytes getAssembledBytecode() const { return m_asm.assemble(); }
+	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
 private:
 	eth::Assembly m_asm;
 

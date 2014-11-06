@@ -36,7 +36,7 @@ class CompilerStack
 public:
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.
-	static bytes compile(std::string const& _sourceCode, std::shared_ptr<Scanner> _scanner = std::shared_ptr<Scanner>());
+	static bytes compile(std::string const& _sourceCode, std::shared_ptr<Scanner> _scanner = std::shared_ptr<Scanner>(), bool _optimize = false);
 };
 
 }
