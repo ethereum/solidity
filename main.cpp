@@ -25,7 +25,7 @@
 #include <liblll/Compiler.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include "BuildInfo.h"
 using namespace std;
 using namespace dev;
