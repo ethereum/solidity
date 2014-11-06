@@ -252,17 +252,15 @@ bool Compiler::visit(WhileStatement& _whileStatement)
 
 bool Compiler::visit(Continue&)
 {
-	if (asserts(!m_continueTags.empty()))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Jump tag not available for \"continue\"."));
-	m_context.appendJumpTo(m_continueTags.back());
+	if (!m_continueTags.empty())
+		m_context.appendJumpTo(m_continueTags.back());
 	return false;
 }
 
 bool Compiler::visit(Break&)
 {
-	if (asserts(!m_breakTags.empty()))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Jump tag not available for \"break\"."));
-	m_context.appendJumpTo(m_breakTags.back());
+	if (!m_breakTags.empty())
+		m_context.appendJumpTo(m_breakTags.back());
 	return false;
 }
 

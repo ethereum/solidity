@@ -390,7 +390,7 @@ class Continue: public Statement
 public:
 	Continue(Location const& _location): Statement(_location) {}
 	virtual void accept(ASTVisitor& _visitor) override;
-	virtual void checkTypeRequirements() override;
+	virtual void checkTypeRequirements() override {}
 };
 
 class Break: public Statement
@@ -398,7 +398,7 @@ class Break: public Statement
 public:
 	Break(Location const& _location): Statement(_location) {}
 	virtual void accept(ASTVisitor& _visitor) override;
-	virtual void checkTypeRequirements() override;
+	virtual void checkTypeRequirements() override {}
 };
 
 class Return: public Statement
