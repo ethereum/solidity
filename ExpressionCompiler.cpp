@@ -37,6 +37,13 @@ void ExpressionCompiler::compileExpression(CompilerContext& _context, Expression
 	_expression.accept(compiler);
 }
 
+void ExpressionCompiler::appendTypeConversion(CompilerContext& _context,
+											  Type const& _typeOnStack, Type const& _targetType)
+{
+	ExpressionCompiler compiler(_context);
+	compiler.appendTypeConversion(_typeOnStack, _targetType);
+}
+
 bool ExpressionCompiler::visit(Assignment& _assignment)
 {
 	m_currentLValue = nullptr;
@@ -44,7 +51,7 @@ bool ExpressionCompiler::visit(Assignment& _assignment)
 	Expression& rightHandSide = _assignment.getRightHandSide();
 	rightHandSide.accept(*this);
 	Type const& resultType = *_assignment.getType();
-	cleanHigherOrderBitsIfNeeded(*rightHandSide.getType(), resultType);
+	appendTypeConversion(*rightHandSide.getType(), resultType);
 	_assignment.getLeftHandSide().accept(*this);
 
 	Token::Value op = _assignment.getAssignmentOperator();
@@ -113,7 +120,7 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 {
 	Expression& leftExpression = _binaryOperation.getLeftExpression();
 	Expression& rightExpression = _binaryOperation.getRightExpression();
-	Type const& resultType = *_binaryOperation.getType();
+	Type const& commonType = _binaryOperation.getCommonType();
 	Token::Value const op = _binaryOperation.getOperator();
 
 	if (op == Token::AND || op == Token::OR)
@@ -121,23 +128,21 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 		// special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
 	}
-	else if (Token::isCompareOp(op))
-	{
-		leftExpression.accept(*this);
-		rightExpression.accept(*this);
-
-		// the types to compare have to be the same, but the resulting type is always bool
-		if (asserts(*leftExpression.getType() == *rightExpression.getType()))
-			BOOST_THROW_EXCEPTION(InternalCompilerError());
-		appendCompareOperatorCode(op, *leftExpression.getType());
-	}
 	else
 	{
+		bool cleanupNeeded = false;
+		if (commonType.getCategory() == Type::Category::INTEGER)
+			if (Token::isCompareOp(op) || op == Token::DIV || op == Token::MOD)
+				cleanupNeeded = true;
+
 		leftExpression.accept(*this);
-		cleanHigherOrderBitsIfNeeded(*leftExpression.getType(), resultType);
+		appendTypeConversion(*leftExpression.getType(), commonType, cleanupNeeded);
 		rightExpression.accept(*this);
-		cleanHigherOrderBitsIfNeeded(*rightExpression.getType(), resultType);
-		appendOrdinaryBinaryOperatorCode(op, resultType);
+		appendTypeConversion(*rightExpression.getType(), commonType, cleanupNeeded);
+		if (Token::isCompareOp(op))
+			appendCompareOperatorCode(op, commonType);
+		else
+			appendOrdinaryBinaryOperatorCode(op, commonType);
 	}
 
 	// do not visit the child nodes, we already did that explicitly
@@ -153,7 +158,7 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		Expression& firstArgument = *_functionCall.getArguments().front();
 		firstArgument.accept(*this);
-		cleanHigherOrderBitsIfNeeded(*firstArgument.getType(), *_functionCall.getType());
+		appendTypeConversion(*firstArgument.getType(), *_functionCall.getType());
 	}
 	else
 	{
@@ -170,7 +175,7 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 		for (unsigned i = 0; i < arguments.size(); ++i)
 		{
 			arguments[i]->accept(*this);
-			cleanHigherOrderBitsIfNeeded(*arguments[i]->getType(),
+			appendTypeConversion(*arguments[i]->getType(),
 										 *function.getParameters()[i]->getType());
 		}
 
@@ -230,28 +235,6 @@ void ExpressionCompiler::endVisit(Literal& _literal)
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer and boolean literals implemented for now."));
-	}
-}
-
-void ExpressionCompiler::cleanHigherOrderBitsIfNeeded(Type const& _typeOnStack, Type const& _targetType)
-{
-	// If the type of one of the operands is extended, we need to remove all
-	// higher-order bits that we might have ignored in previous operations.
-	// @todo: store in the AST whether the operand might have "dirty" higher
-	// order bits
-
-	if (_typeOnStack == _targetType)
-		return;
-	if (_typeOnStack.getCategory() == Type::Category::INTEGER &&
-			_targetType.getCategory() == Type::Category::INTEGER)
-	{
-		//@todo
-	}
-	else
-	{
-		// If we get here, there is either an implementation missing to clean higher oder bits
-		// for non-integer types that are explicitly convertible or we got here in error.
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));
 	}
 }
 
@@ -377,6 +360,32 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown shift operator."));
 	}
+}
+
+void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
+{
+	// If the type of one of the operands is extended, we need to remove all
+	// higher-order bits that we might have ignored in previous operations.
+	// @todo: store in the AST whether the operand might have "dirty" higher
+	// order bits
+
+	if (_typeOnStack == _targetType && !_cleanupNeeded)
+		return;
+	if (_typeOnStack.getCategory() == Type::Category::INTEGER)
+		appendHighBitsCleanup(dynamic_cast<IntegerType const&>(_typeOnStack));
+	else if (_typeOnStack != _targetType)
+		// All other types should not be convertible to non-equal types.
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));
+}
+
+void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
+{
+	if (_typeOnStack.getNumBits() == 256)
+		return;
+	else if (_typeOnStack.isSigned())
+		m_context << u256(_typeOnStack.getNumBits() / 8 - 1) << eth::Instruction::SIGNEXTEND;
+	else
+		m_context << ((u256(1) << _typeOnStack.getNumBits()) - 1) << eth::Instruction::AND;
 }
 
 void ExpressionCompiler::storeInLValue(Expression const& _expression)

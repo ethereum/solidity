@@ -180,7 +180,7 @@ private:
 	Token::Value skipMultiLineComment();
 
 	void scanDecimalDigits();
-	Token::Value scanNumber(bool _periodSeen);
+	Token::Value scanNumber(char _charSeen = 0);
 	Token::Value scanIdentifierOrKeyword();
 
 	Token::Value scanString();

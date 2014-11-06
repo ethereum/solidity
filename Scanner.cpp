@@ -271,7 +271,7 @@ void Scanner::scanToken()
 				token = Token::ADD;
 			break;
 		case '-':
-			// - -- -=
+			// - -- -= Number
 			advance();
 			if (m_char == '-')
 			{
@@ -280,6 +280,8 @@ void Scanner::scanToken()
 			}
 			else if (m_char == '=')
 				token = selectToken(Token::ASSIGN_SUB);
+			else if (m_char == '.' || IsDecimalDigit(m_char))
+				token = scanNumber('-');
 			else
 				token = Token::SUB;
 			break;
@@ -331,7 +333,7 @@ void Scanner::scanToken()
 			// . Number
 			advance();
 			if (IsDecimalDigit(m_char))
-				token = scanNumber(true);
+				token = scanNumber('.');
 			else
 				token = Token::PERIOD;
 			break;
@@ -372,7 +374,7 @@ void Scanner::scanToken()
 			if (IsIdentifierStart(m_char))
 				token = scanIdentifierOrKeyword();
 			else if (IsDecimalDigit(m_char))
-				token = scanNumber(false);
+				token = scanNumber();
 			else if (skipWhitespace())
 				token = Token::WHITESPACE;
 			else if (isSourcePastEndOfInput())
@@ -461,14 +463,11 @@ void Scanner::scanDecimalDigits()
 }
 
 
-Token::Value Scanner::scanNumber(bool _periodSeen)
+Token::Value Scanner::scanNumber(char _charSeen)
 {
-	// the first digit of the number or the fraction
-	if (asserts(IsDecimalDigit(m_char)))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Number does not start with decimal digit."));
-	enum { DECIMAL, HEX, OCTAL, IMPLICIT_OCTAL, BINARY } kind = DECIMAL;
+	enum { DECIMAL, HEX, BINARY } kind = DECIMAL;
 	LiteralScope literal(this);
-	if (_periodSeen)
+	if (_charSeen == '.')
 	{
 		// we have already seen a decimal point of the float
 		addLiteralChar('.');
@@ -476,12 +475,13 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	}
 	else
 	{
+		if (_charSeen == '-')
+			addLiteralChar('-');
 		// if the first character is '0' we must check for octals and hex
 		if (m_char == '0')
 		{
 			addLiteralCharAndAdvance();
-			// either 0, 0exxx, 0Exxx, 0.xxx, a hex number, a binary number or
-			// an octal number.
+			// either 0, 0exxx, 0Exxx, 0.xxx or a hex number
 			if (m_char == 'x' || m_char == 'X')
 			{
 				// hex number
@@ -556,17 +556,73 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD("function", Token::FUNCTION)                                       \
 	KEYWORD_GROUP('h')                                                         \
 	KEYWORD("hash", Token::HASH)                                               \
+	KEYWORD("hash8", Token::HASH8)                                             \
+	KEYWORD("hash16", Token::HASH16)                                           \
+	KEYWORD("hash24", Token::HASH24)                                           \
 	KEYWORD("hash32", Token::HASH32)                                           \
+	KEYWORD("hash40", Token::HASH40)                                           \
+	KEYWORD("hash48", Token::HASH48)                                           \
+	KEYWORD("hash56", Token::HASH56)                                           \
 	KEYWORD("hash64", Token::HASH64)                                           \
+	KEYWORD("hash72", Token::HASH72)                                           \
+	KEYWORD("hash80", Token::HASH80)                                           \
+	KEYWORD("hash88", Token::HASH88)                                           \
+	KEYWORD("hash96", Token::HASH96)                                           \
+	KEYWORD("hash104", Token::HASH104)                                         \
+	KEYWORD("hash112", Token::HASH112)                                         \
+	KEYWORD("hash120", Token::HASH120)                                         \
 	KEYWORD("hash128", Token::HASH128)                                         \
+	KEYWORD("hash136", Token::HASH136)                                         \
+	KEYWORD("hash144", Token::HASH144)                                         \
+	KEYWORD("hash152", Token::HASH152)                                         \
+	KEYWORD("hash160", Token::HASH160)                                         \
+	KEYWORD("hash168", Token::HASH168)                                         \
+	KEYWORD("hash178", Token::HASH176)                                         \
+	KEYWORD("hash184", Token::HASH184)                                         \
+	KEYWORD("hash192", Token::HASH192)                                         \
+	KEYWORD("hash200", Token::HASH200)                                         \
+	KEYWORD("hash208", Token::HASH208)                                         \
+	KEYWORD("hash216", Token::HASH216)                                         \
+	KEYWORD("hash224", Token::HASH224)                                         \
+	KEYWORD("hash232", Token::HASH232)                                         \
+	KEYWORD("hash240", Token::HASH240)                                         \
+	KEYWORD("hash248", Token::HASH248)                                         \
 	KEYWORD("hash256", Token::HASH256)                                         \
 	KEYWORD_GROUP('i')                                                         \
 	KEYWORD("if", Token::IF)                                                   \
 	KEYWORD("in", Token::IN)                                                   \
 	KEYWORD("int", Token::INT)                                                 \
+	KEYWORD("int8", Token::INT8)                                               \
+	KEYWORD("int16", Token::INT16)                                             \
+	KEYWORD("int24", Token::INT24)                                             \
 	KEYWORD("int32", Token::INT32)                                             \
+	KEYWORD("int40", Token::INT40)                                             \
+	KEYWORD("int48", Token::INT48)                                             \
+	KEYWORD("int56", Token::INT56)                                             \
 	KEYWORD("int64", Token::INT64)                                             \
+	KEYWORD("int72", Token::INT72)                                             \
+	KEYWORD("int80", Token::INT80)                                             \
+	KEYWORD("int88", Token::INT88)                                             \
+	KEYWORD("int96", Token::INT96)                                             \
+	KEYWORD("int104", Token::INT104)                                           \
+	KEYWORD("int112", Token::INT112)                                           \
+	KEYWORD("int120", Token::INT120)                                           \
 	KEYWORD("int128", Token::INT128)                                           \
+	KEYWORD("int136", Token::INT136)                                           \
+	KEYWORD("int144", Token::INT144)                                           \
+	KEYWORD("int152", Token::INT152)                                           \
+	KEYWORD("int160", Token::INT160)                                           \
+	KEYWORD("int168", Token::INT168)                                           \
+	KEYWORD("int178", Token::INT176)                                           \
+	KEYWORD("int184", Token::INT184)                                           \
+	KEYWORD("int192", Token::INT192)                                           \
+	KEYWORD("int200", Token::INT200)                                           \
+	KEYWORD("int208", Token::INT208)                                           \
+	KEYWORD("int216", Token::INT216)                                           \
+	KEYWORD("int224", Token::INT224)                                           \
+	KEYWORD("int232", Token::INT232)                                           \
+	KEYWORD("int240", Token::INT240)                                           \
+	KEYWORD("int248", Token::INT248)                                           \
 	KEYWORD("int256", Token::INT256)                                           \
 	KEYWORD_GROUP('l')                                                         \
 	KEYWORD_GROUP('m')                                                         \
@@ -591,9 +647,37 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	KEYWORD("true", Token::TRUE_LITERAL)                                       \
 	KEYWORD_GROUP('u')                                                         \
 	KEYWORD("uint", Token::UINT)                                               \
+	KEYWORD("uint8", Token::UINT8)                                             \
+	KEYWORD("uint16", Token::UINT16)                                           \
+	KEYWORD("uint24", Token::UINT24)                                           \
 	KEYWORD("uint32", Token::UINT32)                                           \
+	KEYWORD("uint40", Token::UINT40)                                           \
+	KEYWORD("uint48", Token::UINT48)                                           \
+	KEYWORD("uint56", Token::UINT56)                                           \
 	KEYWORD("uint64", Token::UINT64)                                           \
+	KEYWORD("uint72", Token::UINT72)                                           \
+	KEYWORD("uint80", Token::UINT80)                                           \
+	KEYWORD("uint88", Token::UINT88)                                           \
+	KEYWORD("uint96", Token::UINT96)                                           \
+	KEYWORD("uint104", Token::UINT104)                                         \
+	KEYWORD("uint112", Token::UINT112)                                         \
+	KEYWORD("uint120", Token::UINT120)                                         \
 	KEYWORD("uint128", Token::UINT128)                                         \
+	KEYWORD("uint136", Token::UINT136)                                         \
+	KEYWORD("uint144", Token::UINT144)                                         \
+	KEYWORD("uint152", Token::UINT152)                                         \
+	KEYWORD("uint160", Token::UINT160)                                         \
+	KEYWORD("uint168", Token::UINT168)                                         \
+	KEYWORD("uint178", Token::UINT176)                                         \
+	KEYWORD("uint184", Token::UINT184)                                         \
+	KEYWORD("uint192", Token::UINT192)                                         \
+	KEYWORD("uint200", Token::UINT200)                                         \
+	KEYWORD("uint208", Token::UINT208)                                         \
+	KEYWORD("uint216", Token::UINT216)                                         \
+	KEYWORD("uint224", Token::UINT224)                                         \
+	KEYWORD("uint232", Token::UINT232)                                         \
+	KEYWORD("uint240", Token::UINT240)                                         \
+	KEYWORD("uint248", Token::UINT248)                                         \
 	KEYWORD("uint256", Token::UINT256)                                         \
 	KEYWORD("ureal", Token::UREAL)                                             \
 	KEYWORD_GROUP('v')                                                         \

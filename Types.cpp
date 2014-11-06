@@ -25,12 +25,14 @@
 #include <libsolidity/Types.h>
 #include <libsolidity/AST.h>
 
+using namespace std;
+
 namespace dev
 {
 namespace solidity
 {
 
-std::shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
+shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 {
 	if (asserts(Token::isElementaryTypeName(_typeToken)))
 		BOOST_THROW_EXCEPTION(InternalCompilerError());
@@ -38,58 +40,63 @@ std::shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 	if (Token::INT <= _typeToken && _typeToken <= Token::HASH256)
 	{
 		int offset = _typeToken - Token::INT;
-		int bits = offset % 5;
-		if (bits == 0)
-			bits = 256;
-		else
-			bits = (1 << (bits - 1)) * 32;
-		int modifier = offset / 5;
-		return std::make_shared<IntegerType>(bits,
-											 modifier == 0 ? IntegerType::Modifier::SIGNED :
-											 modifier == 1 ? IntegerType::Modifier::UNSIGNED :
-											 IntegerType::Modifier::HASH);
+		int bytes = offset % 33;
+		if (bytes == 0)
+			bytes = 32;
+		int modifier = offset / 33;
+		return make_shared<IntegerType>(bytes * 8,
+										modifier == 0 ? IntegerType::Modifier::SIGNED :
+										modifier == 1 ? IntegerType::Modifier::UNSIGNED :
+										IntegerType::Modifier::HASH);
 	}
 	else if (_typeToken == Token::ADDRESS)
-		return std::make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS);
+		return make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS);
 	else if (_typeToken == Token::BOOL)
-		return std::make_shared<BoolType>();
+		return make_shared<BoolType>();
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
-	return std::shared_ptr<Type>();
+	return shared_ptr<Type>();
 }
 
-std::shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
+shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
 {
-	return std::make_shared<StructType>(*_typeName.getReferencedStruct());
+	return make_shared<StructType>(*_typeName.getReferencedStruct());
 }
 
-std::shared_ptr<Type> Type::fromMapping(Mapping const&)
+shared_ptr<Type> Type::fromMapping(Mapping const&)
 {
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Mapping types not yet implemented."));
-	return std::shared_ptr<Type>();
+	return shared_ptr<Type>();
 }
 
-std::shared_ptr<Type> Type::forLiteral(Literal const& _literal)
+shared_ptr<Type> Type::forLiteral(Literal const& _literal)
 {
 	switch (_literal.getToken())
 	{
 	case Token::TRUE_LITERAL:
 	case Token::FALSE_LITERAL:
-		return std::make_shared<BoolType>();
+		return make_shared<BoolType>();
 	case Token::NUMBER:
 		return IntegerType::smallestTypeForLiteral(_literal.getValue());
 	case Token::STRING_LITERAL:
-		return std::shared_ptr<Type>(); // @todo
+		return shared_ptr<Type>(); // @todo
 	default:
-		return std::shared_ptr<Type>();
+		return shared_ptr<Type>();
 	}
 }
 
-std::shared_ptr<IntegerType> IntegerType::smallestTypeForLiteral(std::string const&)
+shared_ptr<IntegerType> IntegerType::smallestTypeForLiteral(string const& _literal)
 {
-	//@todo
-	return std::make_shared<IntegerType>(256, Modifier::UNSIGNED);
+	bigint value(_literal);
+	bool isSigned = value < 0 || (!_literal.empty() && _literal.front() == '-');
+	if (isSigned)
+		// convert to positive number of same bit requirements
+		value = ((-value) - 1) << 1;
+	unsigned bytes = max(bytesRequired(value), 1u);
+	if (bytes > 32)
+		return shared_ptr<IntegerType>();
+	return make_shared<IntegerType>(bytes * 8, isSigned ? Modifier::SIGNED : Modifier::UNSIGNED);
 }
 
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
@@ -155,19 +162,17 @@ bool IntegerType::operator==(Type const& _other) const
 	return other.m_bits == m_bits && other.m_modifier == m_modifier;
 }
 
-std::string IntegerType::toString() const
+string IntegerType::toString() const
 {
 	if (isAddress())
 		return "address";
-	std::string prefix = isHash() ? "hash" : (isSigned() ? "int" : "uint");
+	string prefix = isHash() ? "hash" : (isSigned() ? "int" : "uint");
 	return prefix + dev::toString(m_bits);
 }
 
 u256 IntegerType::literalValue(Literal const& _literal) const
 {
 	bigint value(_literal.getValue());
-	//@todo check that the number is not too large
-	//@todo does this work for signed numbers?
 	return u256(value);
 }
 
