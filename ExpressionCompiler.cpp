@@ -374,10 +374,8 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	if (_typeOnStack.getCategory() == Type::Category::INTEGER)
 		appendHighBitsCleanup(dynamic_cast<IntegerType const&>(_typeOnStack));
 	else if (_typeOnStack != _targetType)
-	{
 		// All other types should not be convertible to non-equal types.
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));
-	}
 }
 
 void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
