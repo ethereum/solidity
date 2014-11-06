@@ -27,7 +27,7 @@
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 
-//#define FILL_TESTS
+#define FILL_TESTS
 
 using namespace std;
 using namespace dev::eth;
@@ -65,7 +65,7 @@ void connectClients(Client& c1, Client& c2)
 namespace test
 {
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):m_TestObject(_o)
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller): m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
@@ -79,12 +79,12 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):m_TestObject(_o)
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
-	assert(_o.count("previousHash") > 0);
-	assert(_o.count("currentGasLimit") > 0);
-	assert(_o.count("currentDifficulty") > 0);
-	assert(_o.count("currentTimestamp") > 0);
-	assert(_o.count("currentCoinbase") > 0);
-	assert(_o.count("currentNumber") > 0);
+	BOOST_REQUIRE(_o.count("previousHash") > 0);
+	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
+	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
+	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
+	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
+	BOOST_REQUIRE(_o.count("currentNumber") > 0);
 
 	m_environment.previousBlock.hash = h256(_o["previousHash"].get_str());
 	m_environment.currentBlock.number = toInt(_o["currentNumber"]);
@@ -103,10 +103,10 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 	{
 		json_spirit::mObject o = i.second.get_obj();
 
-		assert(o.count("balance") > 0);
-		assert(o.count("nonce") > 0);
-		assert(o.count("storage") > 0);
-		assert(o.count("code") > 0);
+		BOOST_REQUIRE(o.count("balance") > 0);
+		BOOST_REQUIRE(o.count("nonce") > 0);
+		BOOST_REQUIRE(o.count("storage") > 0);
+		BOOST_REQUIRE(o.count("code") > 0);
 
 		Address address = Address(i.first);
 
@@ -115,11 +115,9 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 
 		bytes code = importCode(o);
 
-		toInt(o["nonce"]);
-		if (toHex(code).size())
+		if (code.size())
 		{
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::ContractConception);
-			i.second.get_obj()["code"] = "0x" + toHex(code); //preperation for export
 			_state.m_cache[address].setCode(bytesConstRef(&code));
 		}
 		else
@@ -134,23 +132,17 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
 {
-	assert(_o.count("nonce")> 0);
-	assert(_o.count("gasPrice") > 0);
-	assert(_o.count("gasLimit") > 0);
-	assert(_o.count("to") > 0);
-	assert(_o.count("value") > 0);
-	assert(_o.count("secretKey") > 0);
-	assert(_o.count("data") > 0);
+	BOOST_REQUIRE(_o.count("nonce")> 0);
+	BOOST_REQUIRE(_o.count("gasPrice") > 0);
+	BOOST_REQUIRE(_o.count("gasLimit") > 0);
+	BOOST_REQUIRE(_o.count("to") > 0);
+	BOOST_REQUIRE(_o.count("value") > 0);
+	BOOST_REQUIRE(_o.count("secretKey") > 0);
+	BOOST_REQUIRE(_o.count("data") > 0);
 
-	m_transaction.nonce = toInt(_o["nonce"]);
-	m_transaction.gasPrice = toInt(_o["gasPrice"]);
-	m_transaction.gas = toInt(_o["gasLimit"]);
-	m_transaction.receiveAddress = Address(_o["to"].get_str());
-	m_transaction.type = m_transaction.receiveAddress ? Transaction::MessageCall : Transaction::ContractCreation;
-	m_transaction.value = toInt(_o["value"]);
-	Secret secretKey = Secret(_o["secretKey"].get_str());
-	m_transaction.data = importData(_o);
-	m_transaction.sign(secretKey);
+	m_transaction = _o["to"].get_str().empty() ?
+		Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
+		Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
 }
 
 void ImportTest::exportTest(bytes _output, State& _statePost)
@@ -182,6 +174,29 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 		postState[toString(a.first)] = o;
 	}
 	m_TestObject["post"] = json_spirit::mValue(postState);
+
+	// export pre state
+	json_spirit::mObject preState;
+
+	for (auto const& a: m_statePre.addresses())
+	{
+		if (genesis.count(a.first))
+			continue;
+
+		json_spirit::mObject o;
+		o["balance"] = toString(m_statePre.balance(a.first));
+		o["nonce"] = toString(m_statePre.transactionsFrom(a.first));
+		{
+			json_spirit::mObject store;
+			for (auto const& s: m_statePre.storage(a.first))
+				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
+			o["storage"] = store;
+		}
+		o["code"] = "0x" + toHex(m_statePre.code(a.first));
+
+		preState[toString(a.first)] = o;
+	}
+	m_TestObject["pre"] = json_spirit::mValue(preState);
 }
 
 u256 toInt(json_spirit::mValue const& _v)
@@ -210,7 +225,7 @@ byte toByte(json_spirit::mValue const& _v)
 	return 0;
 }
 
-bytes importData(json_spirit::mObject & _o)
+bytes importData(json_spirit::mObject& _o)
 {
 	bytes data;
 	if (_o["data"].type() == json_spirit::str_type)
@@ -225,7 +240,7 @@ bytes importData(json_spirit::mObject & _o)
 	return data;
 }
 
-bytes importCode(json_spirit::mObject & _o)
+bytes importCode(json_spirit::mObject& _o)
 {
 	bytes code;
 	if (_o["code"].type() == json_spirit::str_type)
@@ -242,7 +257,7 @@ bytes importCode(json_spirit::mObject & _o)
 	return code;
 }
 
-void checkOutput(bytes const& _output, json_spirit::mObject & _o)
+void checkOutput(bytes const& _output, json_spirit::mObject& _o)
 {
 	int j = 0;
 	if (_o["out"].type() == json_spirit::array_type)

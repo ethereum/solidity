@@ -66,9 +66,9 @@ private:
 // helping functions
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
-bytes importCode(json_spirit::mObject &_o);
-bytes importData(json_spirit::mObject &_o);
-void checkOutput(bytes const& _output, json_spirit::mObject &_o);
+bytes importCode(json_spirit::mObject& _o);
+bytes importData(json_spirit::mObject& _o);
+void checkOutput(bytes const& _output, json_spirit::mObject& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
 std::string getTestPath();
