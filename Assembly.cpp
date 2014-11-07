@@ -70,9 +70,12 @@ unsigned Assembly::bytesRequired() const
 			case PushData:
 			case PushSub:
 				ret += 1 + br;
+				break;
 			case NoOptimizeBegin:
 			case NoOptimizeEnd:
-			default:;
+				break;
+			default:
+				BOOST_THROW_EXCEPTION(InvalidOpcode());
 			}
 		if (dev::bytesRequired(ret) <= br)
 			return ret;
@@ -150,7 +153,9 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 			break;
 		case UndefinedItem:
 			_out << " ???";
-		default:;
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 	return _out;
 }
@@ -191,7 +196,8 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
 		case NoOptimizeEnd:
 			_out << _prefix << "DoNotOptimze}}" << endl;
 			break;
-		default:;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 
 	if (m_data.size() || m_subs.size())
@@ -473,7 +479,9 @@ bytes Assembly::assemble() const
 			break;
 		case NoOptimizeBegin:
 		case NoOptimizeEnd:
-		default:;
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 
 	for (auto const& i: tagRef)
