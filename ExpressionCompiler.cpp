@@ -46,12 +46,12 @@ void ExpressionCompiler::appendTypeConversion(CompilerContext& _context,
 
 bool ExpressionCompiler::visit(Assignment& _assignment)
 {
-	m_currentLValue = nullptr;
-
 	Expression& rightHandSide = _assignment.getRightHandSide();
 	rightHandSide.accept(*this);
 	Type const& resultType = *_assignment.getType();
 	appendTypeConversion(*rightHandSide.getType(), resultType);
+
+	m_currentLValue.reset();
 	_assignment.getLeftHandSide().accept(*this);
 
 	Token::Value op = _assignment.getAssignmentOperator();
@@ -99,10 +99,7 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 			m_context << eth::Instruction::ADD;
 		else
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::SUB; // @todo avoid the swap
-		if (_unaryOperation.isPrefixOperation())
-			storeInLValue(_unaryOperation);
-		else
-			moveToLValue(_unaryOperation);
+		storeInLValue(_unaryOperation, !_unaryOperation.isPrefixOperation());
 		break;
 	case Token::ADD: // +
 		// unary add, so basically no-op
@@ -164,9 +161,13 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 	{
 		// Calling convention: Caller pushes return address and arguments
 		// Callee removes them and pushes return values
-		m_currentLValue = nullptr;
+		m_currentLValue.reset();
 		_functionCall.getExpression().accept(*this);
-		FunctionDefinition const& function = dynamic_cast<FunctionDefinition&>(*m_currentLValue);
+		if (asserts(m_currentLValue.isInCode()))
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Code reference expected."));
+		eth::AssemblyItem functionTag(eth::PushTag, m_currentLValue.location);
+
+		FunctionDefinition const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType()).getFunction();
 
 		eth::AssemblyItem returnLabel = m_context.pushNewTag();
 		std::vector<ASTPointer<Expression>> const& arguments = _functionCall.getArguments();
@@ -179,7 +180,7 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 										 *function.getParameters()[i]->getType());
 		}
 
-		m_context.appendJumpTo(m_context.getFunctionEntryLabel(function));
+		m_context.appendJumpTo(functionTag);
 		m_context << returnLabel;
 
 		// callee adds return parameters, but removes arguments and return label
@@ -205,24 +206,20 @@ void ExpressionCompiler::endVisit(IndexAccess&)
 
 void ExpressionCompiler::endVisit(Identifier& _identifier)
 {
-	m_currentLValue = _identifier.getReferencedDeclaration();
-	switch (_identifier.getType()->getCategory())
-	{
-	case Type::Category::BOOL:
-	case Type::Category::INTEGER:
-	case Type::Category::REAL:
-	{
-		//@todo we also have to check where to retrieve them from once we add storage variables
-		unsigned stackPos = stackPositionOfLValue();
-		if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
-			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_identifier.getLocation())
-												  << errinfo_comment("Stack too deep."));
-		m_context << eth::dupInstruction(stackPos + 1);
-		break;
-	}
-	default:
-		break;
-	}
+	Declaration const* declaration = _identifier.getReferencedDeclaration();
+	if (m_context.isLocalVariable(declaration))
+		m_currentLValue = LValueLocation(LValueLocation::STACK,
+										 m_context.getBaseStackOffsetOfVariable(*declaration));
+	else if (m_context.isStateVariable(declaration))
+		m_currentLValue = LValueLocation(LValueLocation::STORAGE,
+										 m_context.getStorageLocationOfVariable(*declaration));
+	else if (m_context.isFunctionDefinition(declaration))
+		m_currentLValue = LValueLocation(LValueLocation::CODE,
+										 m_context.getFunctionEntryLabel(dynamic_cast<FunctionDefinition const&>(*declaration)).data());
+	else
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier type not supported or identifier not found."));
+
+	retrieveLValueValue(_identifier);
 }
 
 void ExpressionCompiler::endVisit(Literal& _literal)
@@ -388,31 +385,65 @@ void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.getNumBits()) - 1) << eth::Instruction::AND;
 }
 
-void ExpressionCompiler::storeInLValue(Expression const& _expression)
+void ExpressionCompiler::retrieveLValueValue(Expression const& _expression)
 {
-	moveToLValue(_expression);
-	unsigned stackPos = stackPositionOfLValue();
-	if (stackPos > 16)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
-											  << errinfo_comment("Stack too deep."));
-	m_context << eth::dupInstruction(stackPos + 1);
+	switch (m_currentLValue.locationType)
+	{
+	case LValueLocation::CODE:
+		// not stored on the stack
+		break;
+	case LValueLocation::STACK:
+	{
+		unsigned stackPos = m_context.baseToCurrentStackOffset(unsigned(m_currentLValue.location));
+		if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
+			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
+												  << errinfo_comment("Stack too deep."));
+		m_context << eth::dupInstruction(stackPos + 1);
+		break;
+	}
+	case LValueLocation::STORAGE:
+		m_context << m_currentLValue.location << eth::Instruction::SLOAD;
+		break;
+	case LValueLocation::MEMORY:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Location type not yet implemented."));
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unsupported location type."));
+		break;
+	}
 }
 
-void ExpressionCompiler::moveToLValue(Expression const& _expression)
+void ExpressionCompiler::storeInLValue(Expression const& _expression, bool _move)
 {
-	unsigned stackPos = stackPositionOfLValue();
-	if (stackPos > 16)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
-											  << errinfo_comment("Stack too deep."));
-	else if (stackPos > 0)
-		m_context << eth::swapInstruction(stackPos) << eth::Instruction::POP;
-}
-
-unsigned ExpressionCompiler::stackPositionOfLValue() const
-{
-	if (asserts(m_currentLValue))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("LValue not available on request."));
-	return m_context.getStackPositionOfVariable(*m_currentLValue);
+	switch (m_currentLValue.locationType)
+	{
+	case LValueLocation::STACK:
+	{
+		unsigned stackPos = m_context.baseToCurrentStackOffset(unsigned(m_currentLValue.location));
+		if (stackPos > 16)
+			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
+												  << errinfo_comment("Stack too deep."));
+		else if (stackPos > 0)
+			m_context << eth::swapInstruction(stackPos) << eth::Instruction::POP;
+		if (!_move)
+			retrieveLValueValue(_expression);
+		break;
+	}
+	case LValueLocation::STORAGE:
+		if (!_move)
+			m_context << eth::Instruction::DUP1;
+		m_context << m_currentLValue.location << eth::Instruction::SSTORE;
+		break;
+	case LValueLocation::CODE:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Location type does not support assignment."));
+		break;
+	case LValueLocation::MEMORY:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Location type not yet implemented."));
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unsupported location type."));
+		break;
+	}
 }
 
 }

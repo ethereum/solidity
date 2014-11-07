@@ -30,6 +30,12 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
+void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
+{
+	m_stateVariables[&_declaration] = m_stateVariablesSize;
+	m_stateVariablesSize += _declaration.getType()->getStorageSize();
+}
+
 void CompilerContext::initializeLocalVariables(unsigned _numVariables)
 {
 	if (_numVariables > 0)
@@ -41,12 +47,9 @@ void CompilerContext::initializeLocalVariables(unsigned _numVariables)
 	}
 }
 
-int CompilerContext::getStackPositionOfVariable(Declaration const& _declaration)
+bool CompilerContext::isLocalVariable(Declaration const* _declaration) const
 {
-	auto res = find(begin(m_localVariables), end(m_localVariables), &_declaration);
-	if (asserts(res != m_localVariables.end()))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Variable not found on stack."));
-	return end(m_localVariables) - res - 1 + m_asm.deposit();
+	return std::find(m_localVariables.begin(), m_localVariables.end(), _declaration) != m_localVariables.end();
 }
 
 eth::AssemblyItem CompilerContext::getFunctionEntryLabel(FunctionDefinition const& _function) const
@@ -56,6 +59,29 @@ eth::AssemblyItem CompilerContext::getFunctionEntryLabel(FunctionDefinition cons
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Function entry label not found."));
 	return res->second.tag();
 }
+
+unsigned CompilerContext::getBaseStackOffsetOfVariable(Declaration const& _declaration) const
+{
+	auto res = find(begin(m_localVariables), end(m_localVariables), &_declaration);
+	if (asserts(res != m_localVariables.end()))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Variable not found on stack."));
+	return unsigned(end(m_localVariables) - res - 1);
+}
+
+unsigned CompilerContext::baseToCurrentStackOffset(unsigned _baseOffset) const
+{
+	return _baseOffset + m_asm.deposit();
+}
+
+u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
+{
+	auto it = m_stateVariables.find(&_declaration);
+	if (it == m_stateVariables.end())
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Variable not found in storage."));
+	return it->second;
+}
+
+
 
 }
 }

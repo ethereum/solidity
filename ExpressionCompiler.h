@@ -20,18 +20,25 @@
  * Solidity AST to EVM bytecode compiler for expressions.
  */
 
+#include <libdevcore/Common.h>
 #include <libsolidity/ASTVisitor.h>
 
 namespace dev {
+namespace eth
+{
+class AssemblyItem; // forward
+}
 namespace solidity {
 
 class CompilerContext; // forward
 class Type; // forward
 class IntegerType; // forward
 
-/// Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
-/// of EVM instructions. It needs a compiler context that is the same for the whole compilation
-/// unit.
+/**
+ * Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
+ * of EVM instructions. It needs a compiler context that is the same for the whole compilation
+ * unit.
+ */
 class ExpressionCompiler: private ASTVisitor
 {
 public:
@@ -42,7 +49,7 @@ public:
 	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack, Type const& _targetType);
 
 private:
-	ExpressionCompiler(CompilerContext& _compilerContext): m_currentLValue(nullptr), m_context(_compilerContext) {}
+	ExpressionCompiler(CompilerContext& _compilerContext): m_context(_compilerContext) {}
 
 	virtual bool visit(Assignment& _assignment) override;
 	virtual void endVisit(UnaryOperation& _unaryOperation) override;
@@ -72,15 +79,36 @@ private:
 	//// Appends code that cleans higher-order bits for integer types.
 	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
 
-	/// Stores the value on top of the stack in the current lvalue and copies that value to the
-	/// top of the stack again
-	void storeInLValue(Expression const& _expression);
-	/// The same as storeInLValue but do not again retrieve the value to the top of the stack.
-	void moveToLValue(Expression const& _expression);
-	/// Returns the position of @a m_currentLValue in the stack, where 0 is the top of the stack.
-	unsigned stackPositionOfLValue() const;
+	/// Copies the value of the current lvalue to the top of the stack.
+	void retrieveLValueValue(Expression const& _expression);
+	/// Stores the value on top of the stack in the current lvalue. Removes it from the stack if
+	/// @a _move is true.
+	void storeInLValue(Expression const& _expression, bool _move = false);
 
-	Declaration* m_currentLValue;
+	/**
+	 * Location of an lvalue, either in code (for a function) on the stack, in the storage or memory.
+	 */
+	struct LValueLocation
+	{
+		enum LocationType { INVALID, CODE, STACK, MEMORY, STORAGE };
+
+		LValueLocation() { reset(); }
+		LValueLocation(LocationType _type, u256 const& _location): locationType(_type), location(_location) {}
+		void reset() { locationType = INVALID; location = 0; }
+		bool isValid() const { return locationType != INVALID; }
+		bool isInCode() const { return locationType == CODE; }
+		bool isInOnStack() const { return locationType == STACK; }
+		bool isInMemory() const { return locationType == MEMORY; }
+		bool isInStorage() const { return locationType == STORAGE; }
+
+		LocationType locationType;
+		/// Depending on the type, this is the id of a tag (code), the base offset of a stack
+		/// variable (@see CompilerContext::getBaseStackOffsetOfVariable) or the offset in
+		/// storage or memory.
+		u256 location;
+	};
+
+	LValueLocation m_currentLValue;
 	CompilerContext& m_context;
 };
 

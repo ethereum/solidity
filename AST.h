@@ -116,9 +116,9 @@ public:
 
 	virtual void accept(ASTVisitor& _visitor) override;
 
-	std::vector<ASTPointer<StructDefinition>> const& getDefinedStructs() { return m_definedStructs; }
-	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() { return m_stateVariables; }
-	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() { return m_definedFunctions; }
+	std::vector<ASTPointer<StructDefinition>> const& getDefinedStructs() const { return m_definedStructs; }
+	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() const { return m_stateVariables; }
+	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
 
 private:
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
@@ -134,6 +134,8 @@ public:
 					 std::vector<ASTPointer<VariableDeclaration>> const& _members):
 		Declaration(_location, _name), m_members(_members) {}
 	virtual void accept(ASTVisitor& _visitor) override;
+
+	std::vector<ASTPointer<VariableDeclaration>> const& getMembers() const { return m_members; }
 
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
