@@ -103,8 +103,8 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
 	if (isAddress())
-		_bits = 160;
-	if (asserts(_bits > 0 && _bits <= 256 && _bits % 8 == 0))
+		m_bits = 160;
+	if (asserts(m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid bit number for integer type: " + dev::toString(_bits)));
 }
 
