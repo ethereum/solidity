@@ -26,6 +26,8 @@ namespace dev {
 namespace solidity {
 
 class CompilerContext; // forward
+class Type; // forward
+class IntegerType; // forward
 
 /// Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
 /// of EVM instructions. It needs a compiler context that is the same for the whole compilation
@@ -37,7 +39,7 @@ public:
 	static void compileExpression(CompilerContext& _context, Expression& _expression);
 
 	/// Appends code to remove dirty higher order bits in case of an implicit promotion to a wider type.
-	static void cleanHigherOrderBitsIfNeeded(Type const& _typeOnStack, Type const& _targetType);
+	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack, Type const& _targetType);
 
 private:
 	ExpressionCompiler(CompilerContext& _compilerContext): m_currentLValue(nullptr), m_context(_compilerContext) {}
@@ -61,6 +63,14 @@ private:
 	void appendBitOperatorCode(Token::Value _operator);
 	void appendShiftOperatorCode(Token::Value _operator);
 	/// @}
+
+	/// Appends an implicit or explicit type conversion. For now this comprises only erasing
+	/// higher-order bits (@see appendHighBitCleanup) when widening integer types.
+	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
+	/// necessary.
+	void appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
+	//// Appends code that cleans higher-order bits for integer types.
+	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
 
 	/// Stores the value on top of the stack in the current lvalue and copies that value to the
 	/// top of the stack again
