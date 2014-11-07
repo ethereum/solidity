@@ -28,6 +28,7 @@
 #include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
 #include <libdevcrypto/EC.h>
+#include <libdevcrypto/SHA3MAC.h>
 #include "TestHelperCrypto.h"
 
 using namespace std;
@@ -46,107 +47,220 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 	KeyPair k = KeyPair::create();
 	bytes cipher;
 	encrypt(k.pub(), bcr, cipher);
-	assert(cipher != asBytes(message) && cipher.size() > 0);
+	BOOST_REQUIRE(cipher != asBytes(message) && cipher.size() > 0);
 	
 	bytes plain;
 	decrypt(k.sec(), bytesConstRef(&cipher), plain);
 	
-	assert(asString(plain) == message);
-	assert(plain == asBytes(message));
+	BOOST_REQUIRE(asString(plain) == message);
+	BOOST_REQUIRE(plain == asBytes(message));
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_vs_secp256k1)
 {
-	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Decryptor d(pp::PRNG, pp::secp256k1Curve);
 	ECIES<ECP>::Encryptor e(d.GetKey());
 	
 	Secret s;
-	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	pp::exportPrivateKey(d.GetKey(), s);
 	
 	Public p;
-	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+	pp::exportPublicKey(e.GetKey(), p);
 	
-	assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
+	BOOST_REQUIRE(dev::toAddress(s) == right160(dev::sha3(p.ref())));
 	
 	Secret previous = s;
-	for (auto i = 0; i < 30; i++)
+	for (auto i = 0; i < 2; i++)
 	{
-		ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+		ECIES<ECP>::Decryptor d(pp::PRNG, pp::secp256k1Curve);
 		ECIES<ECP>::Encryptor e(d.GetKey());
 		
 		Secret s;
-		pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
-		assert(s != previous);
+		pp::exportPrivateKey(d.GetKey(), s);
+		BOOST_REQUIRE(s != previous);
 		
 		Public p;
-		pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+		pp::exportPublicKey(e.GetKey(), p);
 
-		assert(dev::toAddress(s) == right160(dev::sha3(p.ref())));
+		h160 secp256k1Addr = dev::toAddress(s);
+		h160 cryptoppAddr = right160(dev::sha3(p.ref()));
+		if (secp256k1Addr != cryptoppAddr)
+		{
+			BOOST_REQUIRE(secp256k1Addr == cryptoppAddr);
+			break;
+		}
 	}
 }
 
-BOOST_AUTO_TEST_CASE(cryptopp_keys_cryptor_sipaseckp256k1)
+BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 {
-	KeyPair k = KeyPair::create();
-	Secret s = k.sec();
+	// cryptopp implementation of secp256k1lib sign_compact w/recid parameter and recovery of public key from signature
+		
+	// base secret
+	Secret secret(sha3("privacy"));
 	
-	// Convert secret to exponent used by pp
-	Integer e = pp::ExponentFromSecret(s);
+	// we get ec params from signer
+	const CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> params = pp::secp256k1Params;
+	ECDSA<ECP, SHA3_256>::Signer signer;
+	
+	// e := sha3(msg)
+	bytes e(fromHex("0x01"));
+	e.resize(32);
+	int tests = 2; // Oct 29: successful @ 1500
+	while (sha3(&e, &e), secret = sha3(secret.asBytes()), tests--)
+	{
+		KeyPair key(secret);
+		Public pkey = key.pub();
+		pp::initializeDLScheme(secret, signer);
+		
+		h256 he(sha3(e));
+		Integer heInt(he.asBytes().data(), 32);
+		h256 k(crypto::kdf(secret, he));
+		Integer kInt(k.asBytes().data(), 32);
+		kInt %= params.GetSubgroupOrder()-1;
 
-	// Test that exported DL_EC private is same as exponent from Secret
-	CryptoPP::DL_PrivateKey_EC<CryptoPP::ECP> privatek;
-	privatek.AccessGroupParameters().Initialize(pp::secp256k1());
-	privatek.SetPrivateExponent(e);
-	assert(e == privatek.GetPrivateExponent());
+		ECP::Point rp = params.ExponentiateBase(kInt);
+		Integer const& q = params.GetGroupOrder();
+		Integer r = params.ConvertElementToInteger(rp);
+		int recid = ((r >= q) ? 2 : 0) | (rp.y.IsOdd() ? 1 : 0);
+
+		Integer kInv = kInt.InverseMod(q);
+		Integer s = (kInv * (Integer(secret.asBytes().data(), 32)*r + heInt)) % q;
+		BOOST_REQUIRE(!!r && !!s);
+		
+/*
+		// For future reference:
+		// According to maths, this codepath can't be reached, however, it's in secp256k1.
+		// Commenting this out diverges from codebase implementation.
+		// To be removed after upstream PR and proof are evaulated.
+ 
+		if (s > params.GetSubgroupOrder())
+		{
+			// note: this rarely happens
+			s = params.GetGroupOrder() - s;
+			if (recid)
+				recid ^= 1;
+		}
+ */
+
+		Signature sig;
+		r.Encode(sig.data(), 32);
+		s.Encode(sig.data() + 32, 32);
+		sig[64] = recid;
+
+		Public p = dev::recover(sig, he);
+		BOOST_REQUIRE(p == pkey);
+		
+		// verify w/cryptopp
+		BOOST_REQUIRE(crypto::verify(pkey, sig, bytesConstRef(&e)));
+		
+		// verify with secp256k1lib
+		byte encpub[65] = {0x04};
+		memcpy(&encpub[1], pkey.data(), 64);
+		byte dersig[72];
+		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sig.data(), 64, DSA_P1363);
+		BOOST_CHECK(cssz <= 72);
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(he.data(), sizeof(he), dersig, cssz, encpub, 65));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
+{
+	// cryptopp integer encoding
+	Integer nHex("f2ee15ea639b73fa3db9b34a245bdfa015c260c598b211bf05a1ecc4b3e3b4f2H");
+	Integer nB(fromHex("f2ee15ea639b73fa3db9b34a245bdfa015c260c598b211bf05a1ecc4b3e3b4f2").data(), 32);
+	BOOST_REQUIRE(nHex == nB);
 	
-	// Test that exported secret is same as decryptor(privatek) secret
-	ECIES<ECP>::Decryptor d;
-	d.AccessKey().AccessGroupParameters().Initialize(pp::secp256k1());
-	d.AccessKey().SetPrivateExponent(e);
-	assert(d.AccessKey().GetPrivateExponent() == e);
+	bytes sbytes(fromHex("0x01"));
+	Secret secret(sha3(sbytes)); // 5fe7f977e71dba2ea1a68e21057beebb9be2ac30c6410aa38d4f3fbe41dcffd2
+	KeyPair key(secret);
 	
-	// Test that decryptor->encryptor->public == private->makepublic->public
-	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pubk;
-	pubk.AccessGroupParameters().Initialize(pp::secp256k1());
-	privatek.MakePublicKey(pubk);
-	
-	ECIES<ECP>::Encryptor enc(d);
-	assert(pubk.GetPublicElement() == enc.AccessKey().GetPublicElement());
-	
-	// Test against sipa/seckp256k1
-	Public p;
-	pp::PublicFromExponent(pp::ExponentFromSecret(s), p);
-	assert(toAddress(s) == dev::right160(dev::sha3(p.ref())));
-	assert(k.pub() == p);
+	bytes m(fromHex("0x01"));
+	int tests = 2;
+	while (m[0]++, tests--)
+	{
+		h256 hm(sha3(m));
+		Integer hInt(hm.asBytes().data(), 32);
+		h256 k(hm ^ key.sec());
+		Integer kInt(k.asBytes().data(), 32);
+		
+		// raw sign w/cryptopp (doesn't pass through cryptopp hash filter)
+		ECDSA<ECP, SHA3_256>::Signer signer;
+		pp::initializeDLScheme(key.sec(), signer);
+		Integer r, s;
+		signer.RawSign(kInt, hInt, r, s);
+
+		// verify cryptopp raw-signature w/cryptopp
+		ECDSA<ECP, SHA3_256>::Verifier verifier;
+		pp::initializeDLScheme(key.pub(), verifier);
+		Signature sigppraw;
+		r.Encode(sigppraw.data(), 32);
+		s.Encode(sigppraw.data() + 32, 32);
+		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppraw.data(), 64));
+		BOOST_REQUIRE(crypto::verify(key.pub(), sigppraw, bytesConstRef(&m)));
+		BOOST_REQUIRE(dev::verify(key.pub(), sigppraw, hm));
+		
+		// sign with cryptopp, verify, recover w/sec256lib
+		Signature seclibsig(dev::sign(key.sec(), hm));
+		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), seclibsig.data(), 64));
+		BOOST_REQUIRE(crypto::verify(key.pub(), seclibsig, bytesConstRef(&m)));
+		BOOST_REQUIRE(dev::verify(key.pub(), seclibsig, hm));
+		BOOST_REQUIRE(dev::recover(seclibsig, hm) == key.pub());
+
+		// sign with cryptopp (w/hash filter?), verify with cryptopp
+		bytes sigppb(signer.MaxSignatureLength());
+		size_t ssz = signer.SignMessage(pp::PRNG, m.data(), m.size(), sigppb.data());
+		Signature sigpp;
+		memcpy(sigpp.data(), sigppb.data(), 64);
+		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppb.data(), ssz));
+		BOOST_REQUIRE(crypto::verify(key.pub(), sigpp, bytesConstRef(&m)));
+		BOOST_REQUIRE(dev::verify(key.pub(), sigpp, hm));
+
+		// sign with cryptopp and stringsource hash filter
+		string sigstr;
+		StringSource ssrc(asString(m), true, new SignerFilter(pp::PRNG, signer, new StringSink(sigstr)));
+		FixedHash<sizeof(Signature)> retsig((byte const*)sigstr.data(), Signature::ConstructFromPointer);
+		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), retsig.data(), 64));
+		BOOST_REQUIRE(crypto::verify(key.pub(), retsig, bytesConstRef(&m)));
+		BOOST_REQUIRE(dev::verify(key.pub(), retsig, hm));
+		
+		/// verification w/sec256lib
+		// requires public key and sig in standard format
+		byte encpub[65] = {0x04};
+		memcpy(&encpub[1], key.pub().data(), 64);
+		byte dersig[72];
+		
+		// verify sec256lib sig w/sec256lib
+		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, seclibsig.data(), 64, DSA_P1363);
+		BOOST_CHECK(cssz <= 72);
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), sizeof(hm), dersig, cssz, encpub, 65));
+		
+		// verify cryptopp-raw sig w/sec256lib
+		cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sigppraw.data(), 64, DSA_P1363);
+		BOOST_CHECK(cssz <= 72);
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), sizeof(hm), dersig, cssz, encpub, 65));
+
+		// verify cryptopp sig w/sec256lib
+		cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sigppb.data(), 64, DSA_P1363);
+		BOOST_CHECK(cssz <= 72);
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), sizeof(hm), dersig, cssz, encpub, 65));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_public_export_import)
 {
-	ECIES<ECP>::Decryptor d(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Decryptor d(pp::PRNG, pp::secp256k1Curve);
 	ECIES<ECP>::Encryptor e(d.GetKey());
 
 	Secret s;
-	pp::SecretFromDL_PrivateKey_EC(d.GetKey(), s);
+	pp::exportPrivateKey(d.GetKey(), s);
 	Public p;
-	pp::PublicFromDL_PublicKey_EC(e.GetKey(), p);
+	pp::exportPublicKey(e.GetKey(), p);
 	Address addr = right160(dev::sha3(p.ref()));
-	assert(toAddress(s) == addr);
+	BOOST_REQUIRE(toAddress(s) == addr);
 	
 	KeyPair l(s);
-	assert(l.address() == addr);
-	
-	DL_PublicKey_EC<ECP> pub;
-	pub.Initialize(pp::secp256k1(), pp::PointFromPublic(p));
-	assert(pub.GetPublicElement() == e.GetKey().GetPublicElement());
-
-	KeyPair k = KeyPair::create();
-	Public p2;
-	pp::PublicFromExponent(pp::ExponentFromSecret(k.sec()), p2);
-	assert(k.pub() == p2);
-	
-	Address a = k.address();
-	Address a2 = toAddress(k.sec());
-	assert(a2 == a);
+	BOOST_REQUIRE(l.address() == addr);
 }
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
@@ -158,10 +272,10 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	
 	bytes b = asBytes(message);
 	encrypt(k.pub(), b);
-	assert(b != asBytes(original));
+	BOOST_REQUIRE(b != asBytes(original));
 
 	decrypt(k.sec(), b);
-	assert(b == asBytes(original));
+	BOOST_REQUIRE(b == asBytes(original));
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
@@ -172,9 +286,6 @@ BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
 	// All connections should share seed for PRF (or PRNG) for nonces
 	
 	
-	
-	
-	
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
@@ -183,7 +294,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 
 	string const message("Now is the time for all good persons to come to the aide of humanity.");
 
-	ECIES<ECP>::Decryptor localDecryptor(pp::PRNG(), pp::secp256k1());
+	ECIES<ECP>::Decryptor localDecryptor(pp::PRNG, pp::secp256k1Curve);
 	SavePrivateKey(localDecryptor.GetPrivateKey());
 	
 	ECIES<ECP>::Encryptor localEncryptor(localDecryptor);
@@ -191,43 +302,43 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
 
 	ECIES<ECP>::Decryptor futureDecryptor;
 	LoadPrivateKey(futureDecryptor.AccessPrivateKey());
-	futureDecryptor.GetPrivateKey().ThrowIfInvalid(pp::PRNG(), 3);
+	futureDecryptor.GetPrivateKey().ThrowIfInvalid(pp::PRNG, 3);
 	
 	ECIES<ECP>::Encryptor futureEncryptor;
 	LoadPublicKey(futureEncryptor.AccessPublicKey());
-	futureEncryptor.GetPublicKey().ThrowIfInvalid(pp::PRNG(), 3);
+	futureEncryptor.GetPublicKey().ThrowIfInvalid(pp::PRNG, 3);
 
 	// encrypt/decrypt with local
 	string cipherLocal;
-	StringSource ss1 (message, true, new PK_EncryptorFilter(pp::PRNG(), localEncryptor, new StringSink(cipherLocal) ) );
+	StringSource ss1 (message, true, new PK_EncryptorFilter(pp::PRNG, localEncryptor, new StringSink(cipherLocal) ) );
 	string plainLocal;
-	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG(), localDecryptor, new StringSink(plainLocal) ) );
+	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG, localDecryptor, new StringSink(plainLocal) ) );
 
 	// encrypt/decrypt with future
 	string cipherFuture;
-	StringSource ss3 (message, true, new PK_EncryptorFilter(pp::PRNG(), futureEncryptor, new StringSink(cipherFuture) ) );
+	StringSource ss3 (message, true, new PK_EncryptorFilter(pp::PRNG, futureEncryptor, new StringSink(cipherFuture) ) );
 	string plainFuture;
-	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG(), futureDecryptor, new StringSink(plainFuture) ) );
+	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG, futureDecryptor, new StringSink(plainFuture) ) );
 	
 	// decrypt local w/future
 	string plainFutureFromLocal;
-	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG(), futureDecryptor, new StringSink(plainFutureFromLocal) ) );
+	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG, futureDecryptor, new StringSink(plainFutureFromLocal) ) );
 	
 	// decrypt future w/local
 	string plainLocalFromFuture;
-	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG(), localDecryptor, new StringSink(plainLocalFromFuture) ) );
+	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG, localDecryptor, new StringSink(plainLocalFromFuture) ) );
 	
 	
-	assert(plainLocal == message);
-	assert(plainFuture == plainLocal);
-	assert(plainFutureFromLocal == plainLocal);
-	assert(plainLocalFromFuture == plainLocal);
+	BOOST_REQUIRE(plainLocal == message);
+	BOOST_REQUIRE(plainFuture == plainLocal);
+	BOOST_REQUIRE(plainFutureFromLocal == plainLocal);
+	BOOST_REQUIRE(plainLocalFromFuture == plainLocal);
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 {
 	const int aesKeyLen = 16;
-	assert(sizeof(char) == sizeof(byte));
+	BOOST_REQUIRE(sizeof(char) == sizeof(byte));
 	
 	// generate test key
 	AutoSeededRandomPool rng;
@@ -250,7 +361,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		CTR_Mode<AES>::Encryption e;
 		e.SetKeyWithIV(key, key.size(), ctr);
 		e.ProcessData(out, in, text.size());
-		assert(text != original);
+		BOOST_REQUIRE(text != original);
 		cipherCopy = text;
 	}
 	catch(CryptoPP::Exception& e)
@@ -263,7 +374,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		CTR_Mode< AES >::Decryption d;
 		d.SetKeyWithIV(key, key.size(), ctr);
 		d.ProcessData(out, in, text.size());
-		assert(text == original);
+		BOOST_REQUIRE(text == original);
 	}
 	catch(CryptoPP::Exception& e)
 	{
@@ -274,7 +385,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	// reencrypt ciphertext...
 	try
 	{
-		assert(cipherCopy != text);
+		BOOST_REQUIRE(cipherCopy != text);
 		in = (unsigned char*)&cipherCopy[0];
 		out = (unsigned char*)&cipherCopy[0];
 		
@@ -283,7 +394,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		e.ProcessData(out, in, text.size());
 		
 		// yep, ctr mode.
-		assert(cipherCopy == original);
+		BOOST_REQUIRE(cipherCopy == original);
 	}
 	catch(CryptoPP::Exception& e)
 	{
@@ -295,7 +406,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 {
 	const int aesKeyLen = 16;
-	assert(sizeof(char) == sizeof(byte));
+	BOOST_REQUIRE(sizeof(char) == sizeof(byte));
 	
 	AutoSeededRandomPool rng;
 	SecByteBlock key(0x00, aesKeyLen);
@@ -310,11 +421,11 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	
 	CryptoPP::CBC_Mode<Rijndael>::Encryption cbcEncryption(key, key.size(), iv);
 	cbcEncryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
-	assert(string128 != plainOriginal);
+	BOOST_REQUIRE(string128 != plainOriginal);
 	
 	CBC_Mode<Rijndael>::Decryption cbcDecryption(key, key.size(), iv);
 	cbcDecryption.ProcessData((byte*)&string128[0], (byte*)&string128[0], string128.size());
-	assert(plainOriginal == string128);
+	BOOST_REQUIRE(plainOriginal == string128);
 	
 	
 	// plaintext whose size isn't divisible by block size must use stream filter for padding
@@ -324,10 +435,10 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	string cipher;
 	StreamTransformationFilter* aesStream = new StreamTransformationFilter(cbcEncryption, new StringSink(cipher));
 	StringSource source(string192, true, aesStream);
-	assert(cipher.size() == 32);
+	BOOST_REQUIRE(cipher.size() == 32);
 
 	cbcDecryption.ProcessData((byte*)&cipher[0], (byte*)&string192[0], cipher.size());
-	assert(string192 == plainOriginal);
+	BOOST_REQUIRE(string192 == plainOriginal);
 }
 
 BOOST_AUTO_TEST_CASE(eth_keypairs)
@@ -339,20 +450,15 @@ BOOST_AUTO_TEST_CASE(eth_keypairs)
 	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
 	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
 	{
-		eth::Transaction t;
-		t.nonce = 0;
-		t.type = eth::Transaction::MessageCall;
-		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
-		t.value = 1000;
-		auto rlp = t.rlp(false);
+		eth::Transaction t(1000, 0, 0, h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b")), bytes(), 0, p.secret());
+		auto rlp = t.rlp(eth::WithoutSignature);
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
-		cnote << t.sha3(false);
-		t.sign(p.secret());
-		rlp = t.rlp(true);
+		cnote << t.sha3(eth::WithoutSignature);
+		rlp = t.rlp(eth::WithSignature);
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
-		cnote << t.sha3(true);
+		cnote << t.sha3(eth::WithSignature);
 		BOOST_REQUIRE(t.sender() == p.address());
 	}
 
@@ -365,23 +471,18 @@ int cryptoTest()
 	secp256k1_start();
 
 	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
-	assert(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
-	assert(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
+	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
+	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
 	{
-		eth::Transaction t;
-		t.nonce = 0;
-		t.type = eth::Transaction::MessageCall;
-		t.receiveAddress = h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b"));
-		t.value = 1000;
-		auto rlp = t.rlp(false);
+		eth::Transaction t(1000, 0, 0, h160(fromHex("944400f4b88ac9589a0f17ed4671da26bddb668b")), bytes(), 0, p.secret());
+		auto rlp = t.rlp(eth::WithoutSignature);
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
-		cnote << t.sha3(false);
-		t.sign(p.secret());
-		rlp = t.rlp(true);
+		cnote << t.sha3(eth::WithoutSignature);
+		rlp = t.rlp(eth::WithSignature);
 		cnote << RLP(rlp);
 		cnote << toHex(rlp);
-		cnote << t.sha3(true);
+		cnote << t.sha3(eth::WithSignature);
 		assert(t.sender() == p.address());
 	}
 
@@ -407,8 +508,8 @@ int cryptoTest()
 
 	auto msg = t.rlp(false);
 	cout << "TX w/o SIG: " << RLP(msg) << endl;
-	cout << "RLP(TX w/o SIG): " << toHex(t.rlpString(false)) << endl;
-	std::string hmsg = sha3(t.rlpString(false), false);
+	cout << "RLP(TX w/o SIG): " << toHex(t.rlp(false)) << endl;
+	std::string hmsg = sha3(t.rlp(false), false);
 	cout << "SHA256(RLP(TX w/o SIG)): 0x" << toHex(hmsg) << endl;
 
 	bytes privkey = sha3Bytes("123");

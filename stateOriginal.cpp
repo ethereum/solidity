@@ -65,12 +65,7 @@ int stateTest()
 	// Inject a transaction to transfer funds from miner to me.
 	bytes tx;
 	{
-		Transaction t;
-		t.nonce = s.transactionsFrom(myMiner.address());
-		t.value = 1000;			// 1e3 wei.
-		t.type = eth::Transaction::MessageCall;
-		t.receiveAddress = me.address();
-		t.sign(myMiner.secret());
+		Transaction t(1000, 0, 0, me.address(), bytes(), s.transactionsFrom(myMiner.address()), myMiner.secret());
 		assert(t.sender() == myMiner.address());
 		tx = t.rlp();
 	}

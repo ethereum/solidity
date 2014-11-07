@@ -119,10 +119,10 @@ BOOST_AUTO_TEST_CASE(stExample)
 	dev::test::executeTests("stExample", "/StateTests", dev::test::doStateTests);
 }
 
-//BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
-//{
-//	dev::test::executeStateTests("stSystemOperationsTest");
-//}
+BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
+{
+	dev::test::executeTests("stSystemOperationsTest", "/StateTests", dev::test::doStateTests);
+}
 
 BOOST_AUTO_TEST_CASE(tmp)
 {

@@ -31,7 +31,7 @@
 #include <json_spirit/json_spirit_writer_template.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include "vm.h"
 
 using namespace std;
