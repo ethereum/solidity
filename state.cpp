@@ -128,12 +128,4 @@ BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 	dev::test::executeTests("stPreCompiledContracts", "/StateTests", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(tmp)
-{
-	int currentVerbosity = g_logVerbosity;
-	g_logVerbosity = 12;
-	dev::test::executeTests("tmp", "/StateTests", dev::test::doStateTests);
-	g_logVerbosity = currentVerbosity;
-}
-
 BOOST_AUTO_TEST_SUITE_END()

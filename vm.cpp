@@ -20,6 +20,7 @@
  * vm test functions.
  */
 
+#include <boost/filesystem.hpp>
 #include "vm.h"
 
 using namespace std;
@@ -421,6 +422,41 @@ BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
 BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
 	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", dev::test::doVMTests);
+}
+
+BOOST_AUTO_TEST_CASE(vmRandom)
+{
+	string testPath = getTestPath();
+	testPath += "/VMTests/RandomTests";
+
+	vector<boost::filesystem::path> testFiles;
+	boost::filesystem::directory_iterator iterator(testPath);
+	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+			testFiles.push_back(iterator->path());
+
+	for (auto& path: testFiles)
+	{
+		try
+		{
+			cnote << "Testing ..." << path.filename();
+			json_spirit::mValue v;
+			string testpath(path.c_str());
+			string s = asString(dev::contents(testpath));
+
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testpath + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+			json_spirit::read_string(s, v);
+			doVMTests(v, false);
+		}
+		catch (Exception const& _e)
+		{
+			BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+		}
+		catch (std::exception const& _e)
+		{
+			BOOST_ERROR("Failed test with Exception: " << _e.what());
+		}
+	}
 }
 
 BOOST_AUTO_TEST_CASE(userDefinedFile)
