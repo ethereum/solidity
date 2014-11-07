@@ -119,10 +119,10 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 					   byte(Instruction::JUMPDEST), // beginning of g
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1), // initialized e and h
-					   byte(Instruction::PUSH1), byte(0x20 + shift), // ret address
-					   byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::PUSH1), 0x2,
-					   byte(Instruction::PUSH1), 0x3,
+					   byte(Instruction::PUSH1), 0x29 + shift, // ret address
+					   byte(Instruction::PUSH1), 0x1, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
+					   byte(Instruction::PUSH1), 0x2, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
+					   byte(Instruction::PUSH1), 0x3, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
 					   byte(Instruction::PUSH1), byte(0x1 + shift),
 					   // stack here: ret e h 0x20 1 2 3 0x1
 					   byte(Instruction::JUMP),

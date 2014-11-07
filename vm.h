@@ -29,7 +29,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include <libevm/ExtVMFace.h>
 #include <libevm/VM.h>
 #include <liblll/Compiler.h>
