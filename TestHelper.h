@@ -57,7 +57,6 @@ public:
 	eth::State m_statePost;
 	eth::ExtVMFace m_environment;
 	eth::Transaction m_transaction;
-	bytes code;
 
 private:
 	json_spirit::mObject& m_TestObject;
