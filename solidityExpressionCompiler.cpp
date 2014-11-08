@@ -154,10 +154,10 @@ BOOST_AUTO_TEST_CASE(comparison)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH2), 0x10, 0xaa, byte(eth::Instruction::PUSH2), 0xff, 0xff, byte(eth::Instruction::AND),
+	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
 					   byte(eth::Instruction::PUSH2), 0x11, 0xaa, byte(eth::Instruction::PUSH2), 0xff, 0xff, byte(eth::Instruction::AND),
-					   byte(eth::Instruction::GT),
-					   byte(eth::Instruction::PUSH1), 0x1,
+					   byte(eth::Instruction::PUSH2), 0x10, 0xaa, byte(eth::Instruction::PUSH2), 0xff, 0xff, byte(eth::Instruction::AND),
+					   byte(eth::Instruction::LT),
 					   byte(eth::Instruction::EQ),
 					   byte(eth::Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(comparison)
 BOOST_AUTO_TEST_CASE(short_circuiting)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = (10 + 8 >= 4 || 2 != 9) != true; }"
+							 "  function f() { var x = true != (4 <= 8 + 10 || 9 != 2); }"
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 BOOST_AUTO_TEST_CASE(arithmetics)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f() { var x = (1 * (2 / (3 % (4 + (5 - (6 | (7 & (8 ^ 9)))))))); }"
+							 "  function f() { var x = ((((((((9 ^ 8) & 7) | 6) - 5) + 4) % 3) / 2) * 1); }"
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
@@ -211,14 +211,11 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 					   byte(eth::Instruction::XOR),
 					   byte(eth::Instruction::AND),
 					   byte(eth::Instruction::OR),
-					   byte(eth::Instruction::SWAP1),
 					   byte(eth::Instruction::SUB),
 					   byte(eth::Instruction::ADD),
 					   byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
-					   byte(eth::Instruction::SWAP1),
 					   byte(eth::Instruction::MOD),
 					   byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
-					   byte(eth::Instruction::SWAP1),
 					   byte(eth::Instruction::DIV),
 					   byte(eth::Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
@@ -231,11 +228,11 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
+	bytes expectation({byte(eth::Instruction::PUSH1), 0x2, byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
+					   byte(eth::Instruction::PUSH1), 0x1,
 					   byte(eth::Instruction::PUSH1), 0x0,
 					   byte(eth::Instruction::SUB),
 					   byte(eth::Instruction::NOT), byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
-					   byte(eth::Instruction::PUSH1), 0x2, byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
 					   byte(eth::Instruction::EQ),
 					   byte(eth::Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
@@ -244,7 +241,7 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 BOOST_AUTO_TEST_CASE(unary_inc_dec)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f(uint a) { var x = ((a++ ^ ++a) ^ a--) ^ --a; }"
+							 "  function f(uint a) { var x = --a ^ (a-- ^ (++a ^ a++)); }"
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "x"}});
 
@@ -299,16 +296,15 @@ BOOST_AUTO_TEST_CASE(assignment)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "b"}});
 
 	// Stack: a, b
-	bytes expectation({byte(eth::Instruction::DUP1),
-					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::SWAP1),
-					   byte(eth::Instruction::ADD),
-					   // Stack here: a b a+b
-					   byte(eth::Instruction::SWAP2),
-					   byte(eth::Instruction::POP),
+	bytes expectation({byte(eth::Instruction::PUSH1), 0x2, byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
 					   byte(eth::Instruction::DUP2),
-					   // Stack here: a+b b a+b
-					   byte(eth::Instruction::PUSH1), 0x2, byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
+					   byte(eth::Instruction::DUP4),
+					   byte(eth::Instruction::ADD),
+					   // Stack here: a b 2 a+b
+					   byte(eth::Instruction::SWAP3),
+					   byte(eth::Instruction::POP),
+					   byte(eth::Instruction::DUP3),
+					   // Stack here: a+b b 2 a+b
 					   byte(eth::Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
@@ -323,21 +319,20 @@ BOOST_AUTO_TEST_CASE(function_call)
 										{{"test", "f", "a"}, {"test", "f", "b"}});
 
 	// Stack: a, b
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x0d,
-					   byte(eth::Instruction::DUP3),
+	bytes expectation({byte(eth::Instruction::PUSH1), 0x02, byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
+					   byte(eth::Instruction::PUSH1), 0x12,
 					   byte(eth::Instruction::PUSH1), 0x01, byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
+					   byte(eth::Instruction::DUP5),
 					   byte(eth::Instruction::ADD),
-					   // Stack here: a b <ret label> (a+1)
-					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::PUSH1), 0x1a,
+					   // Stack here: a b 2 <ret label> (a+1)
+					   byte(eth::Instruction::DUP4),
+					   byte(eth::Instruction::PUSH1), 0x19,
 					   byte(eth::Instruction::JUMP),
 					   byte(eth::Instruction::JUMPDEST),
-					   // Stack here: a b g(a+1, b)
-					   byte(eth::Instruction::PUSH1), 0x02, byte(eth::Instruction::PUSH1), 0xff, byte(eth::Instruction::AND),
+					   // Stack here: a b 2 g(a+1, b)
 					   byte(eth::Instruction::MUL),
 					   // Stack here: a b g(a+1, b)*2
 					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::SWAP1),
 					   byte(eth::Instruction::ADD),
 					   // Stack here: a b a+g(a+1, b)*2
 					   byte(eth::Instruction::SWAP2),
@@ -355,15 +350,15 @@ BOOST_AUTO_TEST_CASE(negative_literals_8bits)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation(bytes({byte(eth::Instruction::PUSH1), 0x00,
-							 byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
-					  bytes({byte(eth::Instruction::ADD),
-							 byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
-					  bytes({byte(eth::Instruction::ADD),
-							 byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x81) +
-					  bytes({byte(eth::Instruction::ADD),
-							 byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x80) +
-					  bytes({byte(eth::Instruction::ADD)}));
+	bytes expectation(bytes({byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x80) +
+					  bytes({byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x81) +
+					  bytes({byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
+					  bytes({byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
+					  bytes({byte(eth::Instruction::PUSH1), 0x00,
+							 byte(eth::Instruction::ADD),
+							 byte(eth::Instruction::ADD),
+							 byte(eth::Instruction::ADD),
+							 byte(eth::Instruction::ADD)}));
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -376,11 +371,11 @@ BOOST_AUTO_TEST_CASE(negative_literals_16bits)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation(bytes({byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
+	bytes expectation(bytes({byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x7f) +
+					  bytes({byte(eth::Instruction::PUSH32)}) + bytes(32, 0xff) +
 					  bytes({byte(eth::Instruction::PUSH1), 0x00,
 							 byte(eth::Instruction::SIGNEXTEND),
-							 byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x7f) +
-					  bytes({byte(eth::Instruction::ADD),
+							 byte(eth::Instruction::ADD),
 							 byte(eth::Instruction::PUSH1), 0x01,
 							 byte(eth::Instruction::SIGNEXTEND)}));
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
