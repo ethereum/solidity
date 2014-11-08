@@ -55,12 +55,6 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 		ImportTest importer(o, _fillin);
 
-		if (_fillin)
-		{
-			importer.code = importer.m_statePre.code(importer.m_environment.myAddress);
-			importer.m_environment.code = &importer.code;
-		}
-
 		State theState = importer.m_statePre;
 		bytes tx = importer.m_transaction.rlp();
 		bytes output;
@@ -122,14 +116,6 @@ BOOST_AUTO_TEST_CASE(stExample)
 BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
 {
 	dev::test::executeTests("stSystemOperationsTest", "/StateTests", dev::test::doStateTests);
-}
-
-BOOST_AUTO_TEST_CASE(tmp)
-{
-	int currentVerbosity = g_logVerbosity;
-	g_logVerbosity = 12;
-	dev::test::executeTests("tmp", "/StateTests", dev::test::doStateTests);
-	g_logVerbosity = currentVerbosity;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

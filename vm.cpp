@@ -29,7 +29,7 @@ using namespace dev::eth;
 using namespace dev::test;
 
 FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock, _depth) {}
+	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, _depth) {}
 
 h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc const&)
 {
@@ -195,11 +195,11 @@ void FakeExtVM::importExec(mObject& _o)
 	gas = toInt(_o["gas"]);
 
 	thisTxCode.clear();
-	code = &thisTxCode;
+	code = thisTxCode;
 
 	thisTxCode = importCode(_o);
 	if (_o["code"].type() != str_type && _o["code"].type() != array_type)
-		code.reset();
+		code.clear();
 
 	thisTxData.clear();
 	thisTxData = importData(_o);
@@ -289,10 +289,10 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			o["pre"] = mValue(fev.exportState());
 
 		fev.importExec(o["exec"].get_obj());
-		if (!fev.code)
+		if (fev.code.empty())
 		{
 			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
-			fev.code = &fev.thisTxCode;
+			fev.code = fev.thisTxCode;
 		}
 
 		bytes output;
