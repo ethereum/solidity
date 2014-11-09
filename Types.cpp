@@ -56,7 +56,6 @@ shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
-	return shared_ptr<Type>();
 }
 
 shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
@@ -67,7 +66,6 @@ shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeN
 shared_ptr<Type> Type::fromMapping(Mapping const&)
 {
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Mapping types not yet implemented."));
-	return shared_ptr<Type>();
 }
 
 shared_ptr<Type> Type::forLiteral(Literal const& _literal)

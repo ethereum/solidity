@@ -201,7 +201,7 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString() const override { return "function(...)returns(...)"; }
-	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable function type requested.")); return 1; }
+	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable function type requested.")); }
 
 private:
 	FunctionDefinition const& m_function;
@@ -235,7 +235,7 @@ public:
 	VoidType() {}
 
 	virtual std::string toString() const override { return "void"; }
-	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable void type requested.")); return 1; }
+	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable void type requested.")); }
 };
 
 /**
@@ -251,7 +251,7 @@ public:
 	std::shared_ptr<Type const> const& getActualType() const { return m_actualType; }
 
 	virtual bool operator==(Type const& _other) const override;
-	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); return 1; }
+	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); }
 	virtual std::string toString() const override { return "type(" + m_actualType->toString() + ")"; }
 
 private:
