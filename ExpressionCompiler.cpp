@@ -46,23 +46,16 @@ void ExpressionCompiler::appendTypeConversion(CompilerContext& _context,
 
 bool ExpressionCompiler::visit(Assignment& _assignment)
 {
-	Expression& rightHandSide = _assignment.getRightHandSide();
-	rightHandSide.accept(*this);
-	Type const& resultType = *_assignment.getType();
-	appendTypeConversion(*rightHandSide.getType(), resultType);
-
+	_assignment.getRightHandSide().accept(*this);
+	appendTypeConversion(*_assignment.getRightHandSide().getType(), *_assignment.getType());
 	m_currentLValue.reset();
 	_assignment.getLeftHandSide().accept(*this);
 
 	Token::Value op = _assignment.getAssignmentOperator();
-	if (op != Token::ASSIGN)
-	{
-		// compound assignment
-		m_context << eth::Instruction::SWAP1;
-		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), resultType);
-	}
+	if (op != Token::ASSIGN) // compound assignment
+		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
 	else
-		m_context << eth::Instruction::POP; //@todo do not retrieve the value in the first place
+		m_context << eth::Instruction::POP;
 
 	storeInLValue(_assignment);
 	return false;
@@ -120,11 +113,8 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 	Type const& commonType = _binaryOperation.getCommonType();
 	Token::Value const op = _binaryOperation.getOperator();
 
-	if (op == Token::AND || op == Token::OR)
-	{
-		// special case: short-circuiting
+	if (op == Token::AND || op == Token::OR) // special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
-	}
 	else
 	{
 		bool cleanupNeeded = false;
@@ -132,10 +122,10 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 			if (Token::isCompareOp(op) || op == Token::DIV || op == Token::MOD)
 				cleanupNeeded = true;
 
-		leftExpression.accept(*this);
-		appendTypeConversion(*leftExpression.getType(), commonType, cleanupNeeded);
 		rightExpression.accept(*this);
 		appendTypeConversion(*rightExpression.getType(), commonType, cleanupNeeded);
+		leftExpression.accept(*this);
+		appendTypeConversion(*leftExpression.getType(), commonType, cleanupNeeded);
 		if (Token::isCompareOp(op))
 			appendCompareOperatorCode(op, commonType);
 		else
@@ -176,8 +166,7 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 		for (unsigned i = 0; i < arguments.size(); ++i)
 		{
 			arguments[i]->accept(*this);
-			appendTypeConversion(*arguments[i]->getType(),
-										 *function.getParameters()[i]->getType());
+			appendTypeConversion(*arguments[i]->getType(), *function.getParameters()[i]->getType());
 		}
 
 		m_context.appendJumpTo(functionTag);
@@ -264,23 +253,21 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 		bool const isSigned = type.isSigned();
 
-		// note that EVM opcodes compare like "stack[0] < stack[1]",
-		// but our left value is at stack[1], so everyhing is reversed.
 		switch (_operator)
 		{
 		case Token::GTE:
-			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
-					  << eth::Instruction::ISZERO;
-			break;
-		case Token::LTE:
 			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT)
 					  << eth::Instruction::ISZERO;
 			break;
+		case Token::LTE:
+			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
+					  << eth::Instruction::ISZERO;
+			break;
 		case Token::GT:
-			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
+			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
 			break;
 		case Token::LT:
-			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
+			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
@@ -311,16 +298,16 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << eth::Instruction::ADD;
 		break;
 	case Token::SUB:
-		m_context << eth::Instruction::SWAP1 << eth::Instruction::SUB;
+		m_context << eth::Instruction::SUB;
 		break;
 	case Token::MUL:
 		m_context << eth::Instruction::MUL;
 		break;
 	case Token::DIV:
-		m_context << eth::Instruction::SWAP1 << (isSigned ? eth::Instruction::SDIV : eth::Instruction::DIV);
+		m_context  << (isSigned ? eth::Instruction::SDIV : eth::Instruction::DIV);
 		break;
 	case Token::MOD:
-		m_context << eth::Instruction::SWAP1 << (isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
+		m_context << (isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
@@ -361,10 +348,9 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 
 void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
 {
-	// If the type of one of the operands is extended, we need to remove all
-	// higher-order bits that we might have ignored in previous operations.
-	// @todo: store in the AST whether the operand might have "dirty" higher
-	// order bits
+	// For a type extension, we need to remove all higher-order bits that we might have ignored in
+	// previous operations.
+	// @todo: store in the AST whether the operand might have "dirty" higher order bits
 
 	if (_typeOnStack == _targetType && !_cleanupNeeded)
 		return;
