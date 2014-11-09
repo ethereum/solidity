@@ -133,7 +133,8 @@ BOOST_AUTO_TEST_CASE(recursive_calls)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	std::function<u256(u256)> recursive_calls_cpp = [&recursive_calls_cpp] (u256 const& n) -> u256 {
+	std::function<u256(u256)> recursive_calls_cpp = [&recursive_calls_cpp](u256 const& n) -> u256
+	{
 		if (n <= 1)
 			return 1;
 		else
@@ -158,7 +159,8 @@ BOOST_AUTO_TEST_CASE(while_loop)
 							 "}\n";
 	compileAndRun(sourceCode);
 
-	auto while_loop_cpp = [] (u256 const& n) -> u256 {
+	auto while_loop_cpp = [](u256 const& n) -> u256
+	{
 		u256 nfac = 1;
 		u256 i = 2;
 		while (i <= n)
@@ -210,7 +212,8 @@ BOOST_AUTO_TEST_CASE(nested_loops)
 	ExecutionFramework framework;
 	framework.compileAndRun(sourceCode);
 
-	auto nested_loops_cpp = [] (u256  n) -> u256 {
+	auto nested_loops_cpp = [](u256  n) -> u256
+	{
 		while (n > 1)
 		{
 			if (n == 10)
@@ -266,11 +269,13 @@ BOOST_AUTO_TEST_CASE(calling_other_functions)
 							 "}\n";
 	compileAndRun(sourceCode);
 
-	auto evenStep_cpp = [] (u256 const& n) -> u256 {
+	auto evenStep_cpp = [](u256 const& n) -> u256
+	{
 		return n / 2;
 	};
 
-	auto oddStep_cpp = [] (u256 const& n) -> u256 {
+	auto oddStep_cpp = [](u256 const& n) -> u256
+	{
 		return 3 * n + 1;
 	};
 
@@ -343,7 +348,8 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 							 "}\n";
 	compileAndRun(sourceCode);
 
-	auto short_circuiting_cpp = [] (u256 n) -> u256 {
+	auto short_circuiting_cpp = [](u256 n) -> u256
+	{
 		n == 0 || (n = 8) > 0;
 		return n;
 	};
@@ -362,7 +368,8 @@ BOOST_AUTO_TEST_CASE(high_bits_cleaning)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	auto high_bits_cleaning_cpp = []() -> u256 {
+	auto high_bits_cleaning_cpp = []() -> u256
+	{
 		uint32_t x = uint32_t(0xffffffff) + 10;
 		if (x >= 0xffffffff)
 			return 0;
@@ -381,7 +388,8 @@ BOOST_AUTO_TEST_CASE(sign_extension)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	auto sign_extension_cpp = []() -> u256 {
+	auto sign_extension_cpp = []() -> u256
+	{
 		int64_t x = -int32_t(0xff);
 		if (x >= 0xff)
 			return 0;
@@ -399,7 +407,8 @@ BOOST_AUTO_TEST_CASE(small_unsigned_types)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	auto small_unsigned_types_cpp = []() -> u256 {
+	auto small_unsigned_types_cpp = []() -> u256
+	{
 		uint32_t x = uint32_t(0xffffff) * 0xffffff;
 		return x / 0x100;
 	};
@@ -414,7 +423,8 @@ BOOST_AUTO_TEST_CASE(small_signed_types)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	auto small_signed_types_cpp = []() -> u256 {
+	auto small_signed_types_cpp = []() -> u256
+	{
 		return -int32_t(10) * -int64_t(20);
 	};
 	BOOST_CHECK(testSolidityAgainstCpp(0, small_signed_types_cpp));
