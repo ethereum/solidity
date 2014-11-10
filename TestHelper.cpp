@@ -305,6 +305,45 @@ std::string getTestPath()
 	return testPath;
 }
 
+void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg =  boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == testTypeFlag)
+		{
+			if (i + 1 >= boost::unit_test::framework::master_test_suite().argc)
+			{
+				cnote << "Missing filename\nUsage: testeth " << testTypeFlag << " <filename>\n";
+				return;
+			}
+			string filename = boost::unit_test::framework::master_test_suite().argv[i + 1];
+			int currentVerbosity = g_logVerbosity;
+			g_logVerbosity = 12;
+			try
+			{
+				cnote << "Testing user defined test: " << filename;
+				json_spirit::mValue v;
+				string s = asString(contents(filename));
+				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
+				json_spirit::read_string(s, v);
+				doTests(v, false);
+			}
+			catch (Exception const& _e)
+			{
+				BOOST_ERROR("Failed Test with Exception: " << diagnostic_information(_e));
+			}
+			catch (std::exception const& _e)
+			{
+				BOOST_ERROR("Failed Test with Exception: " << _e.what());
+			}
+			g_logVerbosity = currentVerbosity;
+		}
+		else
+			continue;
+	}
+}
+
 void executeTests(const string& _name, const string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	string testPath = getTestPath();

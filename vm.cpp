@@ -441,10 +441,8 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 		{
 			cnote << "Testing ..." << path.filename();
 			json_spirit::mValue v;
-			string testpath(path.c_str());
-			string s = asString(dev::contents(testpath));
-
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testpath + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+			string s = asString(dev::contents(path.string()));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
 			doVMTests(v, false);
 		}
@@ -461,41 +459,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 
 BOOST_AUTO_TEST_CASE(userDefinedFileVM)
 {
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	{
-		string arg =  boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--vmtest")
-		{
-			if (i + 1 >= boost::unit_test::framework::master_test_suite().argc)
-			{
-				cnote << "Missing filename\nUsage: testeth --vmtest <filename>\n";
-				return;
-			}
-			string filename = boost::unit_test::framework::master_test_suite().argv[i+1];
-			int currentVerbosity = g_logVerbosity;
-			g_logVerbosity = 12;
-			try
-			{
-				cnote << "Testing VM..." << "user defined test";
-				json_spirit::mValue v;
-				string s = asString(contents(filename));
-				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
-				json_spirit::read_string(s, v);
-				dev::test::doVMTests(v, false);
-			}
-			catch (Exception const& _e)
-			{
-				BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
-			}
-			catch (std::exception const& _e)
-			{
-				BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-			}
-			g_logVerbosity = currentVerbosity;
-		}
-		else
-			continue;
-	}
+	userDefinedTest("--vmtest", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
