@@ -19,18 +19,6 @@ class WebThreeStubClient
             delete this->client;
         }
 
-        std::string account() throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p = Json::nullValue;
-            Json::Value result = this->client->CallMethod("account",p);
-    if (result.isString())
-        return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
         Json::Value accounts() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -147,12 +135,40 @@ p.append(param2);
 
         }
 
-        std::string compile(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value compilers() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->client->CallMethod("compilers",p);
+    if (result.isArray())
+        return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        std::string contractCall(const std::string& param1, const std::string& param2, const Json::Value& param3) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
+p.append(param2);
+p.append(param3);
 
-            Json::Value result = this->client->CallMethod("compile",p);
+            Json::Value result = this->client->CallMethod("contractCall",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        std::string contractCreate(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+p.append(param2);
+
+            Json::Value result = this->client->CallMethod("contractCreate",p);
     if (result.isString())
         return result.asString();
      else 
@@ -258,6 +274,19 @@ p.append(param2);
             Json::Value result = this->client->CallMethod("listening",p);
     if (result.isBool())
         return result.asBool();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        std::string lll(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("lll",p);
+    if (result.isString())
+        return result.asString();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -480,6 +509,19 @@ p.append(param3);
             Json::Value result = this->client->CallMethod("shhUninstallFilter",p);
     if (result.isBool())
         return result.asBool();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        std::string solidity(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("solidity",p);
+    if (result.isString())
+        return result.asString();
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
