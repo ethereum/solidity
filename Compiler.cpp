@@ -81,35 +81,34 @@ void Compiler::appendFunctionSelector(vector<ASTPointer<FunctionDefinition>> con
 	if (publicFunctions.size() > 255)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("More than 255 public functions for contract."));
 
-	//@todo check for calldatasize?
-	// retrieve the first byte of the call data
-	m_context << u256(0) << eth::Instruction::CALLDATALOAD << u256(0) << eth::Instruction::BYTE;
-	// check that it is not too large
-	m_context << eth::Instruction::DUP1 << u256(publicFunctions.size() - 1) << eth::Instruction::LT;
-	eth::AssemblyItem returnTag = m_context.appendConditionalJump();
+	// retrieve the first byte of the call data, which determines the called function
+	// @todo This code had a jump table in a previous version which was more efficient but also
+	// error prone (due to the optimizer and variable length tag addresses)
+	m_context << u256(1) << u256(0) // some constants
+			  << eth::dupInstruction(1) << eth::Instruction::CALLDATALOAD
+			  << eth::dupInstruction(2) << eth::Instruction::BYTE
+			  << eth::dupInstruction(2);
 
-	// otherwise, jump inside jump table (each entry of the table has size 4)
-	m_context << u256(4) << eth::Instruction::MUL;
-	eth::AssemblyItem jumpTableStart = m_context.pushNewTag();
-	m_context << eth::Instruction::ADD << eth::Instruction::JUMP;
-
-	// jump table @todo it could be that the optimizer destroys this
-	m_context << jumpTableStart;
+	// stack here: 1 0 <funid> 0, stack top will be counted up until it matches funid
 	for (pair<string, pair<FunctionDefinition const*, eth::AssemblyItem>> const& f: publicFunctions)
-		m_context.appendJumpTo(f.second.second) << eth::Instruction::JUMPDEST;
-
-	m_context << returnTag << eth::Instruction::STOP;
+	{
+		eth::AssemblyItem const& callDataUnpackerEntry = f.second.second;
+		m_context << eth::dupInstruction(2) << eth::dupInstruction(2) << eth::Instruction::EQ;
+		m_context.appendConditionalJumpTo(callDataUnpackerEntry);
+		m_context << eth::dupInstruction(4) << eth::Instruction::ADD;
+		//@todo avoid the last ADD (or remove it in the optimizer)
+	}
+	m_context << eth::Instruction::STOP; // function not found
 
 	for (pair<string, pair<FunctionDefinition const*, eth::AssemblyItem>> const& f: publicFunctions)
 	{
 		FunctionDefinition const& function = *f.second.first;
-		m_context << f.second.second;
-
+		eth::AssemblyItem const& callDataUnpackerEntry = f.second.second;
+		m_context << callDataUnpackerEntry;
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		appendCalldataUnpacker(function);
 		m_context.appendJumpTo(m_context.getFunctionEntryLabel(function));
 		m_context << returnTag;
-
 		appendReturnValuePacker(function);
 	}
 }
