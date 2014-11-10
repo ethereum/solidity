@@ -459,31 +459,42 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(userDefinedFile)
+BOOST_AUTO_TEST_CASE(userDefinedFileVM)
 {
-	if (boost::unit_test::framework::master_test_suite().argc == 2)
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
-		string filename = boost::unit_test::framework::master_test_suite().argv[1];
-		int currentVerbosity = g_logVerbosity;
-		g_logVerbosity = 12;
-		try
+		string arg =  boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--vmtest")
 		{
-			cnote << "Testing VM..." << "user defined test";
-			json_spirit::mValue v;
-			string s = asString(contents(filename));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
-			json_spirit::read_string(s, v);
-			dev::test::doVMTests(v, false);
+			if (i + 1 >= boost::unit_test::framework::master_test_suite().argc)
+			{
+				cnote << "Missing filename\nUsage: testeth --vmtest <filename>\n";
+				return;
+			}
+			string filename = boost::unit_test::framework::master_test_suite().argv[i+1];
+			int currentVerbosity = g_logVerbosity;
+			g_logVerbosity = 12;
+			try
+			{
+				cnote << "Testing VM..." << "user defined test";
+				json_spirit::mValue v;
+				string s = asString(contents(filename));
+				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
+				json_spirit::read_string(s, v);
+				dev::test::doVMTests(v, false);
+			}
+			catch (Exception const& _e)
+			{
+				BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
+			}
+			catch (std::exception const& _e)
+			{
+				BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+			}
+			g_logVerbosity = currentVerbosity;
 		}
-		catch (Exception const& _e)
-		{
-			BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
-		}
-		catch (std::exception const& _e)
-		{
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-		}
-		g_logVerbosity = currentVerbosity;
+		else
+			continue;
 	}
 }
 
