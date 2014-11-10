@@ -22,6 +22,7 @@
  */
 
 #include <string>
+#include <tuple>
 #include <boost/test/unit_test.hpp>
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
@@ -49,25 +50,24 @@ public:
 		return m_output;
 	}
 
-	bytes const& callFunction(byte _index, bytes const& _data = bytes())
+	bytes const& callContractFunction(byte _index, bytes const& _data = bytes())
 	{
 		sendMessage(bytes(1, _index) + _data, false);
 		return m_output;
 	}
 
 	template <class... Args>
-	bytes const& callFunction(byte _index, Args const&... _arguments)
+	bytes const& callContractFunction(byte _index, Args const&... _arguments)
 	{
-		return callFunction(_index, argsToBigEndian(_arguments...));
+		return callContractFunction(_index, argsToBigEndian(_arguments...));
 	}
 
 	template <class CppFunction, class... Args>
-	void testSolidityAgainstCpp(byte _index, CppFunction const& _cppFunctions, Args const&... _arguments)
+	void testSolidityAgainstCpp(byte _index, CppFunction const& _cppFunction, Args const&... _arguments)
 	{
-		bytes solidityResult = callFunction(_index, _arguments...);
-		bytes cppResult = toBigEndian(_cppFunctions(_arguments...));
-		BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
-							"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult));
+		pair<bytes, bytes> result = callImplementations(_index, _cppFunction, _arguments...);
+		BOOST_CHECK_MESSAGE(result.first == result.second, "Computed values do not match."
+							"\nSolidity: " + toHex(result.first) + "\nC++:      " + toHex(result.second));
 	}
 
 	template <class CppFunction, class... Args>
@@ -76,15 +76,27 @@ public:
 	{
 		for (u256 argument = _rangeStart; argument < _rangeEnd; ++argument)
 		{
-			bytes solidityResult = callFunction(_index, argument);
-			bytes cppResult = toBigEndian(_cppFunction(argument));
-			BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
-								"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult) +
+			pair<bytes, bytes> result = callImplementations(_index, _cppFunction, argument);
+			BOOST_CHECK_MESSAGE(result.first == result.second, "Computed values do not match."
+								"\nSolidity: " + toHex(result.first) + "\nC++:      " + toHex(result.second) +
 								"\nArgument: " + toHex(toBigEndian(argument)));
 		}
 	}
 
 private:
+	template <class CppFunction, class... Args>
+	pair<bytes, bytes> callImplementations(byte _solidityIndex, CppFunction const& _cppFunction,
+										   Args const&... _arguments)
+	{
+		bytes solidityResult = callContractFunction(_solidityIndex, _arguments...);
+		bytes cppResult;
+		if (is_void<decltype(_cppFunction(_arguments...))>::value)
+			_cppFunction(_arguments...);
+		else
+			cppResult = toBigEndian(_cppFunction(_arguments...));
+		return make_pair(solidityResult, cppResult);
+	}
+
 	template <class FirstArg, class... Args>
 	bytes argsToBigEndian(FirstArg const& _firstArg, Args const&... _followingArgs) const
 	{
@@ -145,7 +157,7 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 	char const* sourceCode = "contract test {\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, bytes()).empty());
+	BOOST_CHECK(callContractFunction(0, bytes()).empty());
 }
 
 BOOST_AUTO_TEST_CASE(recursive_calls)
@@ -333,7 +345,7 @@ BOOST_AUTO_TEST_CASE(packing_unpacking_types)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, fromHex("01""0f0f0f0f""f0f0f0f0f0f0f0f0"))
+	BOOST_CHECK(callContractFunction(0, fromHex("01""0f0f0f0f""f0f0f0f0f0f0f0f0"))
 				== fromHex("00000000000000000000000000000000000000""01""f0f0f0f0""0f0f0f0f0f0f0f0f"));
 }
 
@@ -345,7 +357,7 @@ BOOST_AUTO_TEST_CASE(multiple_return_values)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, bytes(1, 1) + toBigEndian(u256(0xcd)))
+	BOOST_CHECK(callContractFunction(0, bytes(1, 1) + toBigEndian(u256(0xcd)))
 				== toBigEndian(u256(0xcd)) + bytes(1, 1) + toBigEndian(u256(0)));
 }
 
@@ -455,14 +467,14 @@ BOOST_AUTO_TEST_CASE(state_smoke_test)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0)));
-	BOOST_CHECK(callFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0)));
-	BOOST_CHECK(callFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x1234))) == bytes());
-	BOOST_CHECK(callFunction(1, bytes(1, 0x01) + toBigEndian(u256(0x8765))) == bytes());
-	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x1234)));
-	BOOST_CHECK(callFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0x8765)));
-	BOOST_CHECK(callFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x3))) == bytes());
-	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x3)));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0)));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0)));
+	BOOST_CHECK(callContractFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x1234))) == bytes());
+	BOOST_CHECK(callContractFunction(1, bytes(1, 0x01) + toBigEndian(u256(0x8765))) == bytes());
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x1234)));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0x8765)));
+	BOOST_CHECK(callContractFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x3))) == bytes());
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x3)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
