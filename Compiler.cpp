@@ -32,11 +32,11 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
-bytes Compiler::compile(ContractDefinition& _contract)
+bytes Compiler::compile(ContractDefinition& _contract, bool _optimize)
 {
 	Compiler compiler;
 	compiler.compileContract(_contract);
-	return compiler.m_context.getAssembledBytecode();
+	return compiler.m_context.getAssembledBytecode(_optimize);
 }
 
 void Compiler::compileContract(ContractDefinition& _contract)
@@ -93,10 +93,11 @@ void Compiler::appendFunctionSelector(vector<ASTPointer<FunctionDefinition>> con
 	eth::AssemblyItem jumpTableStart = m_context.pushNewTag();
 	m_context << eth::Instruction::ADD << eth::Instruction::JUMP;
 
-	// jump table @todo it could be that the optimizer destroys this
-	m_context << jumpTableStart;
+	// jump table, tell the optimizer not to remove the JUMPDESTs
+	m_context << eth::AssemblyItem(eth::NoOptimizeBegin) << jumpTableStart;
 	for (pair<string, pair<FunctionDefinition const*, eth::AssemblyItem>> const& f: publicFunctions)
 		m_context.appendJumpTo(f.second.second) << eth::Instruction::JUMPDEST;
+	m_context << eth::AssemblyItem(eth::NoOptimizeEnd);
 
 	m_context << returnTag << eth::Instruction::STOP;
 
