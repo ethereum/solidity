@@ -42,7 +42,8 @@ void help()
 {
 	cout << "Usage solc [OPTIONS] <file>" << endl
 		 << "Options:" << endl
-		 << "    -h,--help  Show this help message and exit." << endl
+		 << "    -o,--optimize Optimize the bytecode for size." << endl
+		 << "    -h,--help     Show this help message and exit." << endl
 		 << "    -V,--version  Show the version and exit." << endl;
 	exit(0);
 }
@@ -58,10 +59,13 @@ void version()
 int main(int argc, char** argv)
 {
 	string infile;
+	bool optimize = false;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
-		if (arg == "-h" || arg == "--help")
+		if (arg == "-o" || arg == "--optimize")
+			optimize = true;
+		else if (arg == "-h" || arg == "--help")
 			help();
 		else if (arg == "-V" || arg == "--version")
 			version();
@@ -98,7 +102,7 @@ int main(int argc, char** argv)
 		printer.print(cout);
 
 		compiler.compileContract(*ast);
-		instructions = compiler.getAssembledBytecode();
+		instructions = compiler.getAssembledBytecode(optimize);
 	}
 	catch (ParserError const& exception)
 	{
