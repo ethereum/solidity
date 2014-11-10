@@ -148,6 +148,22 @@ BOOST_AUTO_TEST_CASE(recursive_calls)
 	BOOST_CHECK(testSolidityAgainstCpp(0, recursive_calls_cpp, u256(4)));
 }
 
+BOOST_AUTO_TEST_CASE(multiple_functions)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a() returns(uint n) { return 0; }\n"
+							 "  function b() returns(uint n) { return 1; }\n"
+							 "  function c() returns(uint n) { return 2; }\n"
+							 "  function f() returns(uint n) { return 3; }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFunction(0, bytes()) == toBigEndian(u256(0)));
+	BOOST_CHECK(callFunction(1, bytes()) == toBigEndian(u256(1)));
+	BOOST_CHECK(callFunction(2, bytes()) == toBigEndian(u256(2)));
+	BOOST_CHECK(callFunction(3, bytes()) == toBigEndian(u256(3)));
+	BOOST_CHECK(callFunction(4, bytes()) == bytes());
+}
+
 BOOST_AUTO_TEST_CASE(while_loop)
 {
 	char const* sourceCode = "contract test {\n"
