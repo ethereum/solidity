@@ -65,7 +65,9 @@ public:
 	/// Appends a JUMPI instruction to @a _tag
 	CompilerContext& appendConditionalJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJumpI(_tag); return *this; }
 	/// Appends a JUMP to a new tag and @returns the tag
-	eth::AssemblyItem appendJump() { return m_asm.appendJump().tag(); }
+	eth::AssemblyItem appendJumpToNew() { return m_asm.appendJump().tag(); }
+	/// Appends a JUMP to a tag already on the stack
+	CompilerContext&  appendJump() { return *this << eth::Instruction::JUMP; }
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.

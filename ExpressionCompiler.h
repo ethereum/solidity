@@ -20,6 +20,7 @@
  * Solidity AST to EVM bytecode compiler for expressions.
  */
 
+#include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
 #include <libsolidity/ASTVisitor.h>
 
@@ -49,14 +50,15 @@ public:
 	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack, Type const& _targetType);
 
 private:
-	ExpressionCompiler(CompilerContext& _compilerContext): m_context(_compilerContext) {}
+	ExpressionCompiler(CompilerContext& _compilerContext):
+		m_context(_compilerContext), m_currentLValue(m_context) {}
 
 	virtual bool visit(Assignment& _assignment) override;
 	virtual void endVisit(UnaryOperation& _unaryOperation) override;
 	virtual bool visit(BinaryOperation& _binaryOperation) override;
 	virtual bool visit(FunctionCall& _functionCall) override;
 	virtual void endVisit(MemberAccess& _memberAccess) override;
-	virtual void endVisit(IndexAccess& _indexAccess) override;
+	virtual bool visit(IndexAccess& _indexAccess) override;
 	virtual void endVisit(Identifier& _identifier) override;
 	virtual void endVisit(Literal& _literal) override;
 
@@ -79,37 +81,58 @@ private:
 	//// Appends code that cleans higher-order bits for integer types.
 	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
 
-	/// Copies the value of the current lvalue to the top of the stack.
-	void retrieveLValueValue(Expression const& _expression);
-	/// Stores the value on top of the stack in the current lvalue. Removes it from the stack if
-	/// @a _move is true.
-	void storeInLValue(Expression const& _expression, bool _move = false);
-
 	/**
-	 * Location of an lvalue, either in code (for a function) on the stack, in the storage or memory.
+	 * Helper class to store and retrieve lvalues to and from various locations.
+	 * All types except STACK store a reference in a slot on the stack, STACK just stores the
+	 * base stack offset of the variable in @a m_baseStackOffset.
 	 */
-	struct LValueLocation
+	class LValue
 	{
-		enum LocationType { INVALID, CODE, STACK, MEMORY, STORAGE };
+	public:
+		enum LValueType { NONE, CODE, STACK, MEMORY, STORAGE };
 
-		LValueLocation() { reset(); }
-		LValueLocation(LocationType _type, u256 const& _location): locationType(_type), location(_location) {}
-		void reset() { locationType = INVALID; location = 0; }
-		bool isValid() const { return locationType != INVALID; }
-		bool isInCode() const { return locationType == CODE; }
-		bool isInOnStack() const { return locationType == STACK; }
-		bool isInMemory() const { return locationType == MEMORY; }
-		bool isInStorage() const { return locationType == STORAGE; }
+		explicit LValue(CompilerContext& _compilerContext): m_context(&_compilerContext) { reset(); }
+		LValue(CompilerContext& _compilerContext, LValueType _type, unsigned _baseStackOffset = 0):
+			m_context(&_compilerContext), m_type(_type), m_baseStackOffset(_baseStackOffset) {}
 
-		LocationType locationType;
-		/// Depending on the type, this is the id of a tag (code), the base offset of a stack
-		/// variable (@see CompilerContext::getBaseStackOffsetOfVariable) or the offset in
-		/// storage or memory.
-		u256 location;
+		/// Set type according to the declaration and retrieve the reference.
+		/// @a _expression is the current expression, used for error reporting.
+		void fromDeclaration(Expression const& _expression, Declaration const& _declaration);
+		void reset() { m_type = NONE; m_baseStackOffset = 0; }
+
+		bool isValid() const { return m_type != NONE; }
+		bool isInCode() const { return m_type == CODE; }
+		bool isInOnStack() const { return m_type == STACK; }
+		bool isInMemory() const { return m_type == MEMORY; }
+		bool isInStorage() const { return m_type == STORAGE; }
+
+		/// @returns true if this lvalue reference type occupies a slot on the stack.
+		bool storesReferenceOnStack() const { return m_type == STORAGE || m_type == MEMORY || m_type == CODE; }
+
+		/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
+		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).
+		/// @a _expression is the current expression, used for error reporting.
+		void retrieveValue(Expression const& _expression, bool _remove = false) const;
+		/// Stores a value (from the stack directly beneath the reference, which is assumed to
+		/// be on the top of the stack, if any) in the lvalue and removes the reference.
+		/// Also removes the stored value from the stack if @a _move is
+		/// true. @a _expression is the current expression, used for error reporting.
+		void storeValue(Expression const& _expression, bool _move = false) const;
+
+		/// Convenience function to convert the stored reference to a value and reset type to NONE if
+		/// the reference was not requested by @a _expression.
+		void retrieveValueIfLValueNotRequested(Expression const& _expression);
+
+	private:
+		CompilerContext* m_context;
+		LValueType m_type;
+		/// If m_type is STACK, this is base stack offset (@see
+		/// CompilerContext::getBaseStackOffsetOfVariable) of a local variable.
+		unsigned m_baseStackOffset;
 	};
 
-	LValueLocation m_currentLValue;
 	CompilerContext& m_context;
+	LValue m_currentLValue;
 };
 
 

@@ -63,9 +63,11 @@ shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeN
 	return make_shared<StructType>(*_typeName.getReferencedStruct());
 }
 
-shared_ptr<Type> Type::fromMapping(Mapping const&)
+shared_ptr<Type> Type::fromMapping(Mapping const& _typeName)
 {
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Mapping types not yet implemented."));
+	shared_ptr<Type const> keyType = _typeName.getKeyType().toType();
+	shared_ptr<Type const> valueType = _typeName.getValueType().toType();
+	return make_shared<MappingType>(keyType, valueType);
 }
 
 shared_ptr<Type> Type::forLiteral(Literal const& _literal)

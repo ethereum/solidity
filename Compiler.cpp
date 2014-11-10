@@ -225,7 +225,7 @@ bool Compiler::visit(IfStatement& _ifStatement)
 	eth::AssemblyItem trueTag = m_context.appendConditionalJump();
 	if (_ifStatement.getFalseStatement())
 		_ifStatement.getFalseStatement()->accept(*this);
-	eth::AssemblyItem endTag = m_context.appendJump();
+	eth::AssemblyItem endTag = m_context.appendJumpToNew();
 	m_context << trueTag;
 	_ifStatement.getTrueStatement().accept(*this);
 	m_context << endTag;

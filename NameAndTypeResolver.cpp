@@ -52,7 +52,7 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 	{
 		m_currentScope = &m_scopes[function.get()];
-		function->getBody().checkTypeRequirements();
+		function->checkTypeRequirements();
 	}
 	m_currentScope = &m_scopes[nullptr];
 }
@@ -186,9 +186,8 @@ bool ReferencesResolver::visit(Return& _return)
 	return true;
 }
 
-bool ReferencesResolver::visit(Mapping&)
+bool ReferencesResolver::visit(Mapping& _mapping)
 {
-	// @todo
 	return true;
 }
 

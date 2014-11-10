@@ -186,6 +186,8 @@ public:
 	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
 	std::vector<VariableDeclaration const*> const& getLocalVariables() const { return m_localVariables; }
 
+	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
+	void checkTypeRequirements();
 private:
 	bool m_isPublic;
 	ASTPointer<ParameterList> m_parameters;
@@ -236,7 +238,7 @@ public:
 
 	/// Retrieve the element of the type hierarchy this node refers to. Can return an empty shared
 	/// pointer until the types have been resolved using the @ref NameAndTypeResolver.
-	virtual std::shared_ptr<Type> toType() = 0;
+	virtual std::shared_ptr<Type> toType() const = 0;
 };
 
 /**
@@ -252,7 +254,7 @@ public:
 		if (asserts(Token::isElementaryTypeName(_type))) BOOST_THROW_EXCEPTION(InternalCompilerError());
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
-	virtual std::shared_ptr<Type> toType() override { return Type::fromElementaryTypeName(m_type); }
+	virtual std::shared_ptr<Type> toType() const override { return Type::fromElementaryTypeName(m_type); }
 
 	Token::Value getTypeName() const { return m_type; }
 
@@ -270,7 +272,7 @@ public:
 	UserDefinedTypeName(Location const& _location, ASTPointer<ASTString> const& _name):
 		TypeName(_location), m_name(_name) {}
 	virtual void accept(ASTVisitor& _visitor) override;
-	virtual std::shared_ptr<Type> toType() override { return Type::fromUserDefinedTypeName(*this); }
+	virtual std::shared_ptr<Type> toType() const override { return Type::fromUserDefinedTypeName(*this); }
 
 	ASTString const& getName() const { return *m_name; }
 	void setReferencedStruct(StructDefinition& _referencedStruct) { m_referencedStruct = &_referencedStruct; }
@@ -292,7 +294,10 @@ public:
 			ASTPointer<TypeName> const& _valueType):
 		TypeName(_location), m_keyType(_keyType), m_valueType(_valueType) {}
 	virtual void accept(ASTVisitor& _visitor) override;
-	virtual std::shared_ptr<Type> toType() override { return Type::fromMapping(*this); }
+	virtual std::shared_ptr<Type> toType() const override { return Type::fromMapping(*this); }
+
+	ElementaryTypeName const& getKeyType() const { return *m_keyType; }
+	TypeName const& getValueType() const { return *m_valueType; }
 
 private:
 	ASTPointer<ElementaryTypeName> m_keyType;
@@ -481,7 +486,7 @@ private:
 class Expression: public ASTNode
 {
 public:
-	Expression(Location const& _location): ASTNode(_location), m_isLvalue(false) {}
+	Expression(Location const& _location): ASTNode(_location), m_isLvalue(false), m_lvalueRequested(false) {}
 	virtual void checkTypeRequirements() = 0;
 
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
@@ -490,6 +495,12 @@ public:
 	/// Helper function, infer the type via @ref checkTypeRequirements and then check that it
 	/// is implicitly convertible to @a _expectedType. If not, throw exception.
 	void expectType(Type const& _expectedType);
+	/// Checks that this expression is an lvalue and also registers that an address and
+	/// not a value is generated during compilation. Can be called after checkTypeRequirements()
+	/// by an enclosing expression.
+	void requireLValue();
+	/// Returns true if @a requireLValue was previously called on this expression.
+	bool lvalueRequested() const { return m_lvalueRequested; }
 
 protected:
 	//! Inferred type of the expression, only filled after a call to checkTypeRequirements().
@@ -497,6 +508,8 @@ protected:
 	//! Whether or not this expression is an lvalue, i.e. something that can be assigned to.
 	//! This is set during calls to @a checkTypeRequirements()
 	bool m_isLvalue;
+	//! Whether the outer expression requested the address (true) or the value (false) of this expression.
+	bool m_lvalueRequested;
 };
 
 /// Assignment, can also be a compound assignment.
@@ -543,6 +556,7 @@ public:
 
 	Token::Value getOperator() const { return m_operator; }
 	bool isPrefixOperation() const { return m_isPrefix; }
+	Expression& getSubExpression() const { return *m_subExpression; }
 
 private:
 	Token::Value m_operator;
@@ -635,6 +649,8 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void checkTypeRequirements() override;
 
+	Expression& getBaseExpression() const { return *m_base; }
+	Expression& getIndexExpression() const { return *m_index; }
 private:
 	ASTPointer<Expression> m_base;
 	ASTPointer<Expression> m_index;
