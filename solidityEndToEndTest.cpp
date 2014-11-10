@@ -60,6 +60,16 @@ public:
 		return callFunction(_index, toBigEndian(_argument1));
 	}
 
+	bool testSolidityAgainstCpp(byte _index, std::function<u256(u256)> const& _cppfun, u256 const& _argument1)
+	{
+		return toBigEndian(_cppfun(_argument1)) == callFunction(_index, toBigEndian(_argument1));
+	}
+
+	bool testSolidityAgainstCpp(byte _index, std::function<u256()> const& _cppfun)
+	{
+		return toBigEndian(_cppfun()) == callFunction(_index, bytes());
+	}
+
 private:
 	void sendMessage(bytes const& _data, bool _isCreation)
 	{
@@ -123,11 +133,19 @@ BOOST_AUTO_TEST_CASE(recursive_calls)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, u256(0)) == toBigEndian(u256(1)));
-	BOOST_CHECK(callFunction(0, u256(1)) == toBigEndian(u256(1)));
-	BOOST_CHECK(callFunction(0, u256(2)) == toBigEndian(u256(2)));
-	BOOST_CHECK(callFunction(0, u256(3)) == toBigEndian(u256(6)));
-	BOOST_CHECK(callFunction(0, u256(4)) == toBigEndian(u256(24)));
+	std::function<u256(u256)> recursive_calls_cpp = [&recursive_calls_cpp](u256 const& n) -> u256
+	{
+		if (n <= 1)
+			return 1;
+		else
+			return n * recursive_calls_cpp(n - 1);
+	};
+
+	BOOST_CHECK(testSolidityAgainstCpp(0, recursive_calls_cpp, u256(0)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, recursive_calls_cpp, u256(1)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, recursive_calls_cpp, u256(2)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, recursive_calls_cpp, u256(3)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, recursive_calls_cpp, u256(4)));
 }
 
 BOOST_AUTO_TEST_CASE(while_loop)
@@ -140,11 +158,22 @@ BOOST_AUTO_TEST_CASE(while_loop)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, u256(0)) == toBigEndian(u256(1)));
-	BOOST_CHECK(callFunction(0, u256(1)) == toBigEndian(u256(1)));
-	BOOST_CHECK(callFunction(0, u256(2)) == toBigEndian(u256(2)));
-	BOOST_CHECK(callFunction(0, u256(3)) == toBigEndian(u256(6)));
-	BOOST_CHECK(callFunction(0, u256(4)) == toBigEndian(u256(24)));
+
+	auto while_loop_cpp = [](u256 const& n) -> u256
+	{
+		u256 nfac = 1;
+		u256 i = 2;
+		while (i <= n)
+			nfac *= i++;
+
+		return nfac;
+	};
+
+	BOOST_CHECK(testSolidityAgainstCpp(0, while_loop_cpp, u256(0)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, while_loop_cpp, u256(1)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, while_loop_cpp, u256(2)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, while_loop_cpp, u256(3)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, while_loop_cpp, u256(4)));
 }
 
 BOOST_AUTO_TEST_CASE(break_outside_loop)
@@ -182,18 +211,43 @@ BOOST_AUTO_TEST_CASE(nested_loops)
 							 "}\n";
 	ExecutionFramework framework;
 	framework.compileAndRun(sourceCode);
-	BOOST_CHECK(framework.callFunction(0, u256(0)) == toBigEndian(u256(0)));
-	BOOST_CHECK(framework.callFunction(0, u256(1)) == toBigEndian(u256(1)));
-	BOOST_CHECK(framework.callFunction(0, u256(2)) == toBigEndian(u256(1)));
-	BOOST_CHECK(framework.callFunction(0, u256(3)) == toBigEndian(u256(2)));
-	BOOST_CHECK(framework.callFunction(0, u256(4)) == toBigEndian(u256(2)));
-	BOOST_CHECK(framework.callFunction(0, u256(5)) == toBigEndian(u256(4)));
-	BOOST_CHECK(framework.callFunction(0, u256(6)) == toBigEndian(u256(5)));
-	BOOST_CHECK(framework.callFunction(0, u256(7)) == toBigEndian(u256(5)));
-	BOOST_CHECK(framework.callFunction(0, u256(8)) == toBigEndian(u256(7)));
-	BOOST_CHECK(framework.callFunction(0, u256(9)) == toBigEndian(u256(8)));
-	BOOST_CHECK(framework.callFunction(0, u256(10)) == toBigEndian(u256(10)));
-	BOOST_CHECK(framework.callFunction(0, u256(11)) == toBigEndian(u256(10)));
+
+	auto nested_loops_cpp = [](u256  n) -> u256
+	{
+		while (n > 1)
+		{
+			if (n == 10)
+				break;
+			while (n > 5)
+			{
+				if (n == 8)
+					break;
+				n--;
+				if (n == 6)
+					continue;
+				return n;
+			}
+			n--;
+			if (n == 3)
+				continue;
+			break;
+		}
+
+		return n;
+	};
+
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(0)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(1)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(2)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(3)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(4)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(5)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(6)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(7)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(8)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(9)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(10)));
+	BOOST_CHECK(framework.testSolidityAgainstCpp(0, nested_loops_cpp, u256(11)));
 }
 
 BOOST_AUTO_TEST_CASE(calling_other_functions)
@@ -214,11 +268,34 @@ BOOST_AUTO_TEST_CASE(calling_other_functions)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(2, u256(0)) == toBigEndian(u256(0)));
-	BOOST_CHECK(callFunction(2, u256(1)) == toBigEndian(u256(1)));
-	BOOST_CHECK(callFunction(2, u256(2)) == toBigEndian(u256(1)));
-	BOOST_CHECK(callFunction(2, u256(8)) == toBigEndian(u256(1)));
-	BOOST_CHECK(callFunction(2, u256(127)) == toBigEndian(u256(1)));
+
+	auto evenStep_cpp = [](u256 const& n) -> u256
+	{
+		return n / 2;
+	};
+
+	auto oddStep_cpp = [](u256 const& n) -> u256
+	{
+		return 3 * n + 1;
+	};
+
+	auto collatz_cpp = [&evenStep_cpp, &oddStep_cpp] (u256 n) -> u256 {
+		u256 y;
+		while ((y = n) > 1)
+		{
+			if (n % 2 == 0)
+				n = evenStep_cpp(n);
+			else
+				n = oddStep_cpp(n);
+		}
+		return y;
+	};
+
+	BOOST_CHECK(testSolidityAgainstCpp(2, collatz_cpp, u256(0)));
+	BOOST_CHECK(testSolidityAgainstCpp(2, collatz_cpp, u256(1)));
+	BOOST_CHECK(testSolidityAgainstCpp(2, collatz_cpp, u256(2)));
+	BOOST_CHECK(testSolidityAgainstCpp(2, collatz_cpp, u256(8)));
+	BOOST_CHECK(testSolidityAgainstCpp(2, collatz_cpp, u256(127)));
 }
 
 BOOST_AUTO_TEST_CASE(many_local_variables)
@@ -270,8 +347,15 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, u256(0)) == toBigEndian(u256(0)));
-	BOOST_CHECK(callFunction(0, u256(1)) == toBigEndian(u256(8)));
+
+	auto short_circuiting_cpp = [](u256 n) -> u256
+	{
+		n == 0 || (n = 8) > 0;
+		return n;
+	};
+
+	BOOST_CHECK(testSolidityAgainstCpp(0, short_circuiting_cpp, u256(0)));
+	BOOST_CHECK(testSolidityAgainstCpp(0, short_circuiting_cpp, u256(1)));
 }
 
 BOOST_AUTO_TEST_CASE(high_bits_cleaning)
@@ -284,7 +368,14 @@ BOOST_AUTO_TEST_CASE(high_bits_cleaning)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, bytes()) == toBigEndian(u256(9)));
+	auto high_bits_cleaning_cpp = []() -> u256
+	{
+		uint32_t x = uint32_t(0xffffffff) + 10;
+		if (x >= 0xffffffff)
+			return 0;
+		return x;
+	};
+	BOOST_CHECK(testSolidityAgainstCpp(0, high_bits_cleaning_cpp));
 }
 
 BOOST_AUTO_TEST_CASE(sign_extension)
@@ -297,7 +388,14 @@ BOOST_AUTO_TEST_CASE(sign_extension)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, bytes()) == toBigEndian(u256(0xff)));
+	auto sign_extension_cpp = []() -> u256
+	{
+		int64_t x = -int32_t(0xff);
+		if (x >= 0xff)
+			return 0;
+		return u256(x) * -1;
+	};
+	BOOST_CHECK(testSolidityAgainstCpp(0, sign_extension_cpp));
 }
 
 BOOST_AUTO_TEST_CASE(small_unsigned_types)
@@ -309,7 +407,12 @@ BOOST_AUTO_TEST_CASE(small_unsigned_types)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, bytes()) == toBigEndian(u256(0xfe0000)));
+	auto small_unsigned_types_cpp = []() -> u256
+	{
+		uint32_t x = uint32_t(0xffffff) * 0xffffff;
+		return x / 0x100;
+	};
+	BOOST_CHECK(testSolidityAgainstCpp(0, small_unsigned_types_cpp));
 }
 
 BOOST_AUTO_TEST_CASE(small_signed_types)
@@ -320,7 +423,36 @@ BOOST_AUTO_TEST_CASE(small_signed_types)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, bytes()) == toBigEndian(u256(200)));
+	auto small_signed_types_cpp = []() -> u256
+	{
+		return -int32_t(10) * -int64_t(20);
+	};
+	BOOST_CHECK(testSolidityAgainstCpp(0, small_signed_types_cpp));
+}
+
+BOOST_AUTO_TEST_CASE(state_smoke_test)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  uint256 value1;\n"
+							 "  uint256 value2;\n"
+							 "  function get(uint8 which) returns (uint256 value) {\n"
+							 "    if (which == 0) return value1;\n"
+							 "    else return value2;\n"
+							 "  }\n"
+							 "  function set(uint8 which, uint256 value) {\n"
+							 "    if (which == 0) value1 = value;\n"
+							 "    else value2 = value;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0)));
+	BOOST_CHECK(callFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0)));
+	BOOST_CHECK(callFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x1234))) == bytes());
+	BOOST_CHECK(callFunction(1, bytes(1, 0x01) + toBigEndian(u256(0x8765))) == bytes());
+	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x1234)));
+	BOOST_CHECK(callFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0x8765)));
+	BOOST_CHECK(callFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x3))) == bytes());
+	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x3)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
