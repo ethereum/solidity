@@ -21,7 +21,7 @@ target_link_libraries(testeth webthree)
 #TODO this on should not be necessary, it should have been brought in from ethcore dependency...
 target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
 
-if(JSONRPC_LS)
+if(JSON_RPC_CPP_FOUND)
 	target_link_libraries(testeth web3jsonrpc)
 endif()
 
