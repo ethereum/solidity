@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 
 BOOST_AUTO_TEST_CASE(userDefinedFileState)
 {
-	userDefinedTest("--statetest", dev::test::doStateTests);
+	dev::test::userDefinedTest("--statetest", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

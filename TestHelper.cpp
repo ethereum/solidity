@@ -309,7 +309,7 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
-		string arg =  boost::unit_test::framework::master_test_suite().argv[i];
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
 		if (arg == testTypeFlag)
 		{
 			if (i + 1 >= boost::unit_test::framework::master_test_suite().argc)
@@ -332,10 +332,12 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 			catch (Exception const& _e)
 			{
 				BOOST_ERROR("Failed Test with Exception: " << diagnostic_information(_e));
+				g_logVerbosity = currentVerbosity;
 			}
 			catch (std::exception const& _e)
 			{
 				BOOST_ERROR("Failed Test with Exception: " << _e.what());
+				g_logVerbosity = currentVerbosity;
 			}
 			g_logVerbosity = currentVerbosity;
 		}

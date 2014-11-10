@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 
 BOOST_AUTO_TEST_CASE(userDefinedFileVM)
 {
-	userDefinedTest("--vmtest", dev::test::doVMTests);
+	dev::test::userDefinedTest("--vmtest", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
