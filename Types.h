@@ -75,6 +75,9 @@ public:
 	/// @returns number of bytes used by this type when encoded for CALL, or 0 if the encoding
 	/// is not a simple big-endian encoding or the type cannot be stored on the stack.
 	virtual unsigned getCalldataEncodedSize() const { return 0; }
+	/// @returns number of bytes required to hold this value in storage.
+	/// For dynamically "allocated" types, it returns the size of the statically allocated head,
+	virtual u256 getStorageSize() const { return 1; }
 
 	virtual std::string toString() const = 0;
 	virtual u256 literalValue(Literal const&) const
@@ -157,7 +160,7 @@ public:
 	ContractType(ContractDefinition const& _contract): m_contract(_contract) {}
 
 	virtual bool operator==(Type const& _other) const override;
-
+	virtual u256 getStorageSize() const;
 	virtual std::string toString() const override { return "contract{...}"; }
 
 private:
@@ -178,7 +181,7 @@ public:
 	}
 
 	virtual bool operator==(Type const& _other) const override;
-
+	virtual u256 getStorageSize() const;
 	virtual std::string toString() const override { return "struct{...}"; }
 
 private:
@@ -196,9 +199,9 @@ public:
 
 	FunctionDefinition const& getFunction() const { return m_function; }
 
-	virtual std::string toString() const override { return "function(...)returns(...)"; }
-
 	virtual bool operator==(Type const& _other) const override;
+	virtual std::string toString() const override { return "function(...)returns(...)"; }
+	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable function type requested.")); }
 
 private:
 	FunctionDefinition const& m_function;
@@ -212,9 +215,9 @@ class MappingType: public Type
 public:
 	virtual Category getCategory() const override { return Category::MAPPING; }
 	MappingType() {}
-	virtual std::string toString() const override { return "mapping(...=>...)"; }
 
 	virtual bool operator==(Type const& _other) const override;
+	virtual std::string toString() const override { return "mapping(...=>...)"; }
 
 private:
 	std::shared_ptr<Type const> m_keyType;
@@ -232,6 +235,7 @@ public:
 	VoidType() {}
 
 	virtual std::string toString() const override { return "void"; }
+	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable void type requested.")); }
 };
 
 /**
@@ -247,7 +251,7 @@ public:
 	std::shared_ptr<Type const> const& getActualType() const { return m_actualType; }
 
 	virtual bool operator==(Type const& _other) const override;
-
+	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); }
 	virtual std::string toString() const override { return "type(" + m_actualType->toString() + ")"; }
 
 private:

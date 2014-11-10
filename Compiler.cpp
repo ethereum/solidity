@@ -21,6 +21,8 @@
  */
 
 #include <algorithm>
+#include <libevmcore/Instruction.h>
+#include <libevmcore/Assembly.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/ExpressionCompiler.h>
@@ -42,10 +44,12 @@ void Compiler::compileContract(ContractDefinition& _contract)
 	m_context = CompilerContext(); // clear it just in case
 
 	//@todo constructor
-	//@todo register state variables
 
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 		m_context.addFunction(*function);
+	//@todo sort them?
+	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
+		m_context.addStateVariable(*variable);
 
 	appendFunctionSelector(_contract.getDefinedFunctions());
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
@@ -123,7 +127,7 @@ void Compiler::appendCalldataUnpacker(FunctionDefinition const& _function)
 		if (numBytes == 0)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(var->getLocation())
-								  << errinfo_comment("Type not yet supported."));
+								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
 		if (numBytes == 32)
 			m_context << u256(dataOffset) << eth::Instruction::CALLDATALOAD;
 		else
@@ -140,11 +144,12 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 	vector<ASTPointer<VariableDeclaration>> const& parameters = _function.getReturnParameters();
 	for (unsigned i = 0; i < parameters.size(); ++i)
 	{
-		unsigned numBytes = parameters[i]->getType()->getCalldataEncodedSize();
+		Type const& paramType = *parameters[i]->getType();
+		unsigned numBytes = paramType.getCalldataEncodedSize();
 		if (numBytes == 0)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
-								  << errinfo_comment("Type not yet supported."));
+								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
 		m_context << eth::dupInstruction(parameters.size() - i);
 		if (numBytes != 32)
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
@@ -273,7 +278,8 @@ bool Compiler::visit(Return& _return)
 		ExpressionCompiler::compileExpression(m_context, *expression);
 		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters().getParameters().front();
 		ExpressionCompiler::appendTypeConversion(m_context, *expression->getType(), *firstVariable.getType());
-		int stackPosition = m_context.getStackPositionOfVariable(firstVariable);
+
+		unsigned stackPosition = m_context.baseToCurrentStackOffset(m_context.getBaseStackOffsetOfVariable(firstVariable));
 		m_context << eth::swapInstruction(stackPosition) << eth::Instruction::POP;
 	}
 	m_context.appendJumpTo(m_returnTag);
@@ -288,7 +294,8 @@ bool Compiler::visit(VariableDefinition& _variableDefinition)
 		ExpressionCompiler::appendTypeConversion(m_context,
 												 *expression->getType(),
 												 *_variableDefinition.getDeclaration().getType());
-		int stackPosition = m_context.getStackPositionOfVariable(_variableDefinition.getDeclaration());
+		unsigned baseStackOffset = m_context.getBaseStackOffsetOfVariable(_variableDefinition.getDeclaration());
+		unsigned stackPosition = m_context.baseToCurrentStackOffset(baseStackOffset);
 		m_context << eth::swapInstruction(stackPosition) << eth::Instruction::POP;
 	}
 	return false;

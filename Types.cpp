@@ -56,7 +56,6 @@ shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
-	return shared_ptr<Type>();
 }
 
 shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
@@ -67,7 +66,6 @@ shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeN
 shared_ptr<Type> Type::fromMapping(Mapping const&)
 {
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Mapping types not yet implemented."));
-	return shared_ptr<Type>();
 }
 
 shared_ptr<Type> Type::forLiteral(Literal const& _literal)
@@ -103,8 +101,8 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
 {
 	if (isAddress())
-		_bits = 160;
-	if (asserts(_bits > 0 && _bits <= 256 && _bits % 8 == 0))
+		m_bits = 160;
+	if (asserts(m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid bit number for integer type: " + dev::toString(_bits)));
 }
 
@@ -207,12 +205,28 @@ bool ContractType::operator==(Type const& _other) const
 	return other.m_contract == m_contract;
 }
 
+u256 ContractType::getStorageSize() const
+{
+	u256 size = 0;
+	for (ASTPointer<VariableDeclaration> const& variable: m_contract.getStateVariables())
+		size += variable->getType()->getStorageSize();
+	return max<u256>(1, size);
+}
+
 bool StructType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
 	StructType const& other = dynamic_cast<StructType const&>(_other);
 	return other.m_struct == m_struct;
+}
+
+u256 StructType::getStorageSize() const
+{
+	u256 size = 0;
+	for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
+		size += variable->getType()->getStorageSize();
+	return max<u256>(1, size);
 }
 
 bool FunctionType::operator==(Type const& _other) const

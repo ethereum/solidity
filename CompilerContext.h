@@ -38,18 +38,27 @@ namespace solidity {
 class CompilerContext
 {
 public:
-	CompilerContext() {}
+	CompilerContext(): m_stateVariablesSize(0) {}
 
+	void addStateVariable(VariableDeclaration const& _declaration);
 	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
 	void initializeLocalVariables(unsigned _numVariables);
 	void addVariable(VariableDeclaration const& _declaration) { m_localVariables.push_back(&_declaration); }
-	/// Returns the distance of the given local variable from the top of the stack.
-	int getStackPositionOfVariable(Declaration const& _declaration);
-
 	void addFunction(FunctionDefinition const& _function) { m_functionEntryLabels.insert(std::make_pair(&_function, m_asm.newTag())); }
-	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
 
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
+
+	bool isFunctionDefinition(Declaration const* _declaration) const { return m_functionEntryLabels.count(_declaration); }
+	bool isLocalVariable(Declaration const* _declaration) const;
+	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration); }
+
+	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
+	/// Returns the distance of the given local variable from the top of the local variable stack.
+	unsigned getBaseStackOffsetOfVariable(Declaration const& _declaration) const;
+	/// If supplied by a value returned by @ref getBaseStackOffsetOfVariable(variable), returns
+	/// the distance of that variable from the current top of the stack.
+	unsigned baseToCurrentStackOffset(unsigned _baseOffset) const;
+	u256 getStorageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
 	eth::AssemblyItem appendConditionalJump() { return m_asm.appendJumpI().tag(); }
@@ -79,10 +88,14 @@ public:
 private:
 	eth::Assembly m_asm;
 
+	/// Size of the state variables, offset of next variable to be added.
+	u256 m_stateVariablesSize;
+	/// Storage offsets of state variables
+	std::map<Declaration const*, u256> m_stateVariables;
 	/// Offsets of local variables on the stack.
 	std::vector<Declaration const*> m_localVariables;
 	/// Labels pointing to the entry points of funcitons.
-	std::map<FunctionDefinition const*, eth::AssemblyItem> m_functionEntryLabels;
+	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
 };
 
 }
