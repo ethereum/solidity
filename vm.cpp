@@ -20,6 +20,7 @@
  * vm test functions.
  */
 
+#include <boost/filesystem.hpp>
 #include "vm.h"
 
 using namespace std;
@@ -423,32 +424,42 @@ BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", dev::test::doVMTests);
 }
 
-BOOST_AUTO_TEST_CASE(userDefinedFile)
+BOOST_AUTO_TEST_CASE(vmRandom)
 {
-	if (boost::unit_test::framework::master_test_suite().argc == 2)
+	string testPath = getTestPath();
+	testPath += "/VMTests/RandomTests";
+
+	vector<boost::filesystem::path> testFiles;
+	boost::filesystem::directory_iterator iterator(testPath);
+	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+			testFiles.push_back(iterator->path());
+
+	for (auto& path: testFiles)
 	{
-		string filename = boost::unit_test::framework::master_test_suite().argv[1];
-		int currentVerbosity = g_logVerbosity;
-		g_logVerbosity = 12;
 		try
 		{
-			cnote << "Testing VM..." << "user defined test";
+			cnote << "Testing ..." << path.filename();
 			json_spirit::mValue v;
-			string s = asString(contents(filename));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
+			string s = asString(dev::contents(path.string()));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
-			dev::test::doVMTests(v, false);
+			doVMTests(v, false);
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
+			BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+			BOOST_ERROR("Failed test with Exception: " << _e.what());
 		}
-		g_logVerbosity = currentVerbosity;
 	}
+}
+
+BOOST_AUTO_TEST_CASE(userDefinedFileVM)
+{
+	dev::test::userDefinedTest("--vmtest", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
