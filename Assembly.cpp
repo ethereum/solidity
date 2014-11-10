@@ -70,7 +70,12 @@ unsigned Assembly::bytesRequired() const
 			case PushData:
 			case PushSub:
 				ret += 1 + br;
-			default:;
+				break;
+			case NoOptimizeBegin:
+			case NoOptimizeEnd:
+				break;
+			default:
+				BOOST_THROW_EXCEPTION(InvalidOpcode());
 			}
 		if (dev::bytesRequired(ret) <= br)
 			return ret;
@@ -140,9 +145,17 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 		case PushSubSize:
 			_out << " PUSHss[" << hex << h256(i.data()).abridged() << "]";
 			break;
+		case NoOptimizeBegin:
+			_out << " DoNotOptimze{{";
+			break;
+		case NoOptimizeEnd:
+			_out << " DoNotOptimze}}";
+			break;
 		case UndefinedItem:
 			_out << " ???";
-		default:;
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 	return _out;
 }
@@ -177,7 +190,14 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
 		case PushData:
 			_out << _prefix << "  PUSH [" << hex << (unsigned)i.m_data << "]" << endl;
 			break;
-		default:;
+		case NoOptimizeBegin:
+			_out << _prefix << "DoNotOptimze{{" << endl;
+			break;
+		case NoOptimizeEnd:
+			_out << _prefix << "DoNotOptimze}}" << endl;
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 
 	if (m_data.size() || m_subs.size())
@@ -217,6 +237,12 @@ inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 	return true;
 }
 
+inline bool popCountIncreased(AssemblyItemsConstRef _pre, AssemblyItems const& _post)
+{
+	auto isPop = [](AssemblyItem const& _item) -> bool { return _item.match(AssemblyItem(Instruction::POP)); };
+	return count_if(begin(_post), end(_post), isPop) > count_if(begin(_pre), end(_pre), isPop);
+}
+
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
 #define copt dev::LogOutputStream<OptimiserChannel, true>()
 
@@ -224,6 +250,14 @@ Assembly& Assembly::optimise(bool _enable)
 {
 	if (!_enable)
 		return *this;
+	auto signextend = [](u256 a, u256 b) -> u256
+	{
+		if (a >= 31)
+			return b;
+		unsigned testBit = unsigned(a) * 8 + 7;
+		u256 mask = (u256(1) << testBit) - 1;
+		return boost::multiprecision::bit_test(b, testBit) ? b | ~mask : b & mask;
+	};
 	map<Instruction, function<u256(u256, u256)>> c_simple =
 	{
 		{ Instruction::SUB, [](u256 a, u256 b)->u256{return a - b;} },
@@ -232,6 +266,7 @@ Assembly& Assembly::optimise(bool _enable)
 		{ Instruction::MOD, [](u256 a, u256 b)->u256{return a % b;} },
 		{ Instruction::SMOD, [](u256 a, u256 b)->u256{return s2u(u2s(a) % u2s(b));} },
 		{ Instruction::EXP, [](u256 a, u256 b)->u256{return (u256)boost::multiprecision::powm((bigint)a, (bigint)b, bigint(2) << 256);} },
+		{ Instruction::SIGNEXTEND, signextend },
 		{ Instruction::LT, [](u256 a, u256 b)->u256{return a < b ? 1 : 0;} },
 		{ Instruction::GT, [](u256 a, u256 b)->u256{return a > b ? 1 : 0;} },
 		{ Instruction::SLT, [](u256 a, u256 b)->u256{return u2s(a) < u2s(b) ? 1 : 0;} },
@@ -242,6 +277,9 @@ Assembly& Assembly::optimise(bool _enable)
 	{
 		{ Instruction::ADD, [](u256 a, u256 b)->u256{return a + b;} },
 		{ Instruction::MUL, [](u256 a, u256 b)->u256{return a * b;} },
+		{ Instruction::AND, [](u256 a, u256 b)->u256{return a & b;} },
+		{ Instruction::OR, [](u256 a, u256 b)->u256{return a | b;} },
+		{ Instruction::XOR, [](u256 a, u256 b)->u256{return a ^ b;} },
 	};
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules =
 	{
@@ -260,8 +298,23 @@ Assembly& Assembly::optimise(bool _enable)
 	{
 		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
 		rules.push_back({ { Push, i.first, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[2].data(), m[0].data()), i.first }; } });
-		rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [&](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {}; else return m.toVector(); }});
 	}
+	// jump to next instruction
+	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [&](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
+
+	// pop optimization, do not compute values that are popped again anyway
+	rules.push_back({ { AssemblyItem(UndefinedItem), Instruction::POP }, [](AssemblyItemsConstRef m) -> AssemblyItems
+					  {
+						  if (m[0].type() != Operation)
+							return m.toVector();
+						  Instruction instr = Instruction(byte(m[0].data()));
+						  if (Instruction::DUP1 <= instr && instr <= Instruction::DUP16)
+							return {};
+						  InstructionInfo info = instructionInfo(instr);
+						  if (info.sideEffects || info.additional != 0 || info.ret != 1)
+							  return m.toVector();
+						  return AssemblyItems(info.args, Instruction::POP);
+					  } });
 
 	copt << *this;
 
@@ -269,16 +322,21 @@ Assembly& Assembly::optimise(bool _enable)
 	for (unsigned count = 1; count > 0; total += count)
 	{
 		count = 0;
-		map<u256, unsigned> tags;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 		{
+			if (m_items[i].type() == NoOptimizeBegin)
+			{
+				while (i < m_items.size() && m_items[i].type() != NoOptimizeEnd)
+					++i;
+				continue;
+			}
 			for (auto const& r: rules)
 			{
 				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
-				if (matches(&r.first, vr))
+				if (matches(vr, &r.first))
 				{
 					auto rw = r.second(vr);
-					if (rw.size() < vr.size())
+					if (rw.size() < vr.size() || (rw.size() == vr.size() && popCountIncreased(vr, rw)))
 					{
 						copt << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
 						for (unsigned j = 0; j < vr.size(); ++j)
@@ -297,6 +355,8 @@ Assembly& Assembly::optimise(bool _enable)
 				bool o = false;
 				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
 				{
+					if (m_items[i + 1].type() == NoOptimizeBegin)
+						break;
 					m_items.erase(m_items.begin() + i + 1);
 					o = true;
 				}
@@ -308,6 +368,7 @@ Assembly& Assembly::optimise(bool _enable)
 			}
 		}
 
+		map<u256, unsigned> tags;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 			if (m_items[i].type() == Tag)
 				tags.insert(make_pair(m_items[i].data(), i));
@@ -416,7 +477,11 @@ bytes Assembly::assemble() const
 			tagPos[(unsigned)i.m_data] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
 			break;
-		default:;
+		case NoOptimizeBegin:
+		case NoOptimizeEnd:
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 
 	for (auto const& i: tagRef)

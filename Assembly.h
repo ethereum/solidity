@@ -32,7 +32,7 @@ namespace dev
 namespace eth
 {
 
-enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, Tag, PushData };
+enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, Tag, PushData, NoOptimizeBegin, NoOptimizeEnd };
 
 class Assembly;
 
