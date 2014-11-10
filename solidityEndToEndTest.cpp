@@ -430,6 +430,31 @@ BOOST_AUTO_TEST_CASE(small_signed_types)
 	BOOST_CHECK(testSolidityAgainstCpp(0, small_signed_types_cpp));
 }
 
+BOOST_AUTO_TEST_CASE(state_smoke_test)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  uint256 value1;\n"
+							 "  uint256 value2;\n"
+							 "  function get(uint8 which) returns (uint256 value) {\n"
+							 "    if (which == 0) return value1;\n"
+							 "    else return value2;\n"
+							 "  }\n"
+							 "  function set(uint8 which, uint256 value) {\n"
+							 "    if (which == 0) value1 = value;\n"
+							 "    else value2 = value;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0)));
+	BOOST_CHECK(callFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0)));
+	BOOST_CHECK(callFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x1234))) == bytes());
+	BOOST_CHECK(callFunction(1, bytes(1, 0x01) + toBigEndian(u256(0x8765))) == bytes());
+	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x1234)));
+	BOOST_CHECK(callFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0x8765)));
+	BOOST_CHECK(callFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x3))) == bytes());
+	BOOST_CHECK(callFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x3)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
