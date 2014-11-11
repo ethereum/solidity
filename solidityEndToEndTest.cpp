@@ -65,9 +65,10 @@ public:
 	template <class CppFunction, class... Args>
 	void testSolidityAgainstCpp(byte _index, CppFunction const& _cppFunction, Args const&... _arguments)
 	{
-		pair<bytes, bytes> result = callImplementations(_index, _cppFunction, _arguments...);
-		BOOST_CHECK_MESSAGE(result.first == result.second, "Computed values do not match."
-							"\nSolidity: " + toHex(result.first) + "\nC++:      " + toHex(result.second));
+		bytes solidityResult = callContractFunction(_index, _arguments...);
+		bytes cppResult = callCppAndEncodeResult(_cppFunction, _arguments...);
+		BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
+							"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult));
 	}
 
 	template <class CppFunction, class... Args>
@@ -76,27 +77,15 @@ public:
 	{
 		for (u256 argument = _rangeStart; argument < _rangeEnd; ++argument)
 		{
-			pair<bytes, bytes> result = callImplementations(_index, _cppFunction, argument);
-			BOOST_CHECK_MESSAGE(result.first == result.second, "Computed values do not match."
-								"\nSolidity: " + toHex(result.first) + "\nC++:      " + toHex(result.second) +
+			bytes solidityResult = callContractFunction(_index, argument);
+			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
+			BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
+								"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult) +
 								"\nArgument: " + toHex(toBigEndian(argument)));
 		}
 	}
 
 private:
-	template <class CppFunction, class... Args>
-	pair<bytes, bytes> callImplementations(byte _solidityIndex, CppFunction const& _cppFunction,
-										   Args const&... _arguments)
-	{
-		bytes solidityResult = callContractFunction(_solidityIndex, _arguments...);
-		bytes cppResult;
-		if (is_void<decltype(_cppFunction(_arguments...))>::value)
-			_cppFunction(_arguments...);
-		else
-			cppResult = toBigEndian(_cppFunction(_arguments...));
-		return make_pair(solidityResult, cppResult);
-	}
-
 	template <class FirstArg, class... Args>
 	bytes argsToBigEndian(FirstArg const& _firstArg, Args const&... _followingArgs) const
 	{
@@ -104,6 +93,20 @@ private:
 	}
 
 	bytes argsToBigEndian() const { return bytes(); }
+
+	template <class CppFunction, class... Args>
+	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
+	-> typename enable_if<is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
+	{
+		_cppFunction(_arguments...);
+		return bytes();
+	}
+	template <class CppFunction, class... Args>
+	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
+	-> typename enable_if<!is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
+	{
+		return toBigEndian(_cppFunction(_arguments...));
+	}
 
 	void sendMessage(bytes const& _data, bool _isCreation)
 	{
