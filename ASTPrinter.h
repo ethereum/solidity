@@ -38,7 +38,7 @@ class ASTPrinter: public ASTVisitor
 public:
 	/// Create a printer for the given abstract syntax tree. If the source is specified,
 	/// the corresponding parts of the source are printed with each node.
-	ASTPrinter(ASTPointer<ASTNode> const& _ast, std::string const& _source = std::string());
+	ASTPrinter(ASTNode& _ast, std::string const& _source = std::string());
 	/// Output the string representation of the AST to _stream.
 	void print(std::ostream& _stream);
 
@@ -114,7 +114,7 @@ private:
 
 	int m_indentation;
 	std::string m_source;
-	ASTPointer<ASTNode> m_ast;
+	ASTNode* m_ast;
 	std::ostream* m_ostream;
 };
 
