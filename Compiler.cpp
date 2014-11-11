@@ -32,11 +32,11 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
-bytes Compiler::compile(ContractDefinition& _contract)
+bytes Compiler::compile(ContractDefinition& _contract, bool _optimize)
 {
 	Compiler compiler;
 	compiler.compileContract(_contract);
-	return compiler.m_context.getAssembledBytecode();
+	return compiler.m_context.getAssembledBytecode(_optimize);
 }
 
 void Compiler::compileContract(ContractDefinition& _contract)

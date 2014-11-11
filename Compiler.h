@@ -33,11 +33,11 @@ public:
 	Compiler(): m_returnTag(m_context.newTag()) {}
 
 	void compileContract(ContractDefinition& _contract);
-	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(); }
+	bytes getAssembledBytecode(bool _optimize = false) { return m_context.getAssembledBytecode(_optimize); }
 	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
 
 	/// Compile the given contract and return the EVM bytecode.
-	static bytes compile(ContractDefinition& _contract);
+	static bytes compile(ContractDefinition& _contract, bool _optimize);
 
 private:
 	/// Creates a new compiler context / assembly and packs the current code into the data part.
