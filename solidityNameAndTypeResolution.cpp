@@ -162,6 +162,22 @@ BOOST_AUTO_TEST_CASE(type_checking_function_call)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(type_conversion_for_comparison)
+{
+	char const* text = "contract test {\n"
+					   "  function f() { uint32(2) == int64(2); }"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(type_conversion_for_comparison_invalid)
+{
+	char const* text = "contract test {\n"
+					   "  function f() { int32(2) == uint64(2); }"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 {
 	char const* text = "contract test {\n"

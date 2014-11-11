@@ -211,7 +211,15 @@ BOOST_AUTO_TEST_CASE(else_if_statement)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
-
+BOOST_AUTO_TEST_CASE(statement_starting_with_type_conversion)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
