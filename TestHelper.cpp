@@ -352,7 +352,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--createtest")
+		if (arg == "--filltests")
 		{
 			try
 			{
