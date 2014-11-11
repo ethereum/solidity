@@ -27,9 +27,10 @@
 #include <libdevcore/Log.h>
 #include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
-#include <libdevcrypto/EC.h>
 #include <libdevcrypto/SHA3MAC.h>
-#include "TestHelperCrypto.h"
+#include <libdevcrypto/EC.h>
+#include <libdevcrypto/ECDHE.h>
+#include <libdevcrypto/CryptoPP.h>
 
 using namespace std;
 using namespace dev;
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(devcrypto)
 
 BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 {
-	string message("Now is the time for all good persons to come to the aide of humanity.");
+	string message("Now is the time for all good persons to come to the aid of humanity.");
 	bytes m = asBytes(message);
 	bytesConstRef bcr(&m);
 
@@ -267,7 +268,7 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 {
 	KeyPair k = KeyPair::create();
 
-	string message("Now is the time for all good persons to come to the aide of humanity.");
+	string message("Now is the time for all good persons to come to the aid of humanity.");
 	string original = message;
 	
 	bytes b = asBytes(message);
@@ -278,6 +279,79 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	BOOST_REQUIRE(b == asBytes(original));
 }
 
+BOOST_AUTO_TEST_CASE(ecdh)
+{
+	cnote << "Testing ecdh...";
+
+	ECDH<ECP>::Domain dhLocal(pp::secp256k1Curve);
+	SecByteBlock privLocal(dhLocal.PrivateKeyLength());
+	SecByteBlock pubLocal(dhLocal.PublicKeyLength());
+	dhLocal.GenerateKeyPair(pp::PRNG, privLocal, pubLocal);
+	
+	ECDH<ECP>::Domain dhRemote(pp::secp256k1Curve);
+	SecByteBlock privRemote(dhRemote.PrivateKeyLength());
+	SecByteBlock pubRemote(dhRemote.PublicKeyLength());
+	dhRemote.GenerateKeyPair(pp::PRNG, privRemote, pubRemote);
+	
+	assert(dhLocal.AgreedValueLength() == dhRemote.AgreedValueLength());
+	
+	// local: send public to remote; remote: send public to local
+	
+	// Local
+	SecByteBlock sharedLocal(dhLocal.AgreedValueLength());
+	assert(dhLocal.Agree(sharedLocal, privLocal, pubRemote));
+	
+	// Remote
+	SecByteBlock sharedRemote(dhRemote.AgreedValueLength());
+	assert(dhRemote.Agree(sharedRemote, privRemote, pubLocal));
+	
+	// Test
+	Integer ssLocal, ssRemote;
+	ssLocal.Decode(sharedLocal.BytePtr(), sharedLocal.SizeInBytes());
+	ssRemote.Decode(sharedRemote.BytePtr(), sharedRemote.SizeInBytes());
+	
+	assert(ssLocal != 0);
+	assert(ssLocal == ssRemote);
+	
+	
+	// Now use our keys
+	KeyPair a = KeyPair::create();
+	byte puba[65] = {0x04};
+	memcpy(&puba[1], a.pub().data(), 64);
+	
+	KeyPair b = KeyPair::create();
+	byte pubb[65] = {0x04};
+	memcpy(&pubb[1], b.pub().data(), 64);
+	
+	ECDH<ECP>::Domain dhA(pp::secp256k1Curve);
+	Secret shared;
+	BOOST_REQUIRE(dhA.Agree(shared.data(), a.sec().data(), pubb));
+	BOOST_REQUIRE(shared);
+}
+
+BOOST_AUTO_TEST_CASE(ecdhe)
+{
+	cnote << "Testing ecdhe...";
+	
+	ECDHE a, b;
+	BOOST_CHECK_NE(a.pubkey(), b.pubkey());
+	
+	ECDHE local;
+	ECDHE remote;
+	
+	// local tx pubkey -> remote
+	Secret sremote;
+	remote.agree(local.pubkey(), sremote);
+	
+	// remote tx pbukey -> local
+	Secret slocal;
+	local.agree(remote.pubkey(), slocal);
+
+	BOOST_REQUIRE(sremote);
+	BOOST_REQUIRE(slocal);
+	BOOST_REQUIRE_EQUAL(sremote, slocal);
+}
+
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
 {
 	// New connections require new ECDH keypairs
@@ -286,53 +360,6 @@ BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
 	// All connections should share seed for PRF (or PRNG) for nonces
 	
 	
-}
-
-BOOST_AUTO_TEST_CASE(cryptopp_ecies_message)
-{
-	cnote << "Testing cryptopp_ecies_message...";
-
-	string const message("Now is the time for all good persons to come to the aide of humanity.");
-
-	ECIES<ECP>::Decryptor localDecryptor(pp::PRNG, pp::secp256k1Curve);
-	SavePrivateKey(localDecryptor.GetPrivateKey());
-	
-	ECIES<ECP>::Encryptor localEncryptor(localDecryptor);
-	SavePublicKey(localEncryptor.GetPublicKey());
-
-	ECIES<ECP>::Decryptor futureDecryptor;
-	LoadPrivateKey(futureDecryptor.AccessPrivateKey());
-	futureDecryptor.GetPrivateKey().ThrowIfInvalid(pp::PRNG, 3);
-	
-	ECIES<ECP>::Encryptor futureEncryptor;
-	LoadPublicKey(futureEncryptor.AccessPublicKey());
-	futureEncryptor.GetPublicKey().ThrowIfInvalid(pp::PRNG, 3);
-
-	// encrypt/decrypt with local
-	string cipherLocal;
-	StringSource ss1 (message, true, new PK_EncryptorFilter(pp::PRNG, localEncryptor, new StringSink(cipherLocal) ) );
-	string plainLocal;
-	StringSource ss2 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG, localDecryptor, new StringSink(plainLocal) ) );
-
-	// encrypt/decrypt with future
-	string cipherFuture;
-	StringSource ss3 (message, true, new PK_EncryptorFilter(pp::PRNG, futureEncryptor, new StringSink(cipherFuture) ) );
-	string plainFuture;
-	StringSource ss4 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG, futureDecryptor, new StringSink(plainFuture) ) );
-	
-	// decrypt local w/future
-	string plainFutureFromLocal;
-	StringSource ss5 (cipherLocal, true, new PK_DecryptorFilter(pp::PRNG, futureDecryptor, new StringSink(plainFutureFromLocal) ) );
-	
-	// decrypt future w/local
-	string plainLocalFromFuture;
-	StringSource ss6 (cipherFuture, true, new PK_DecryptorFilter(pp::PRNG, localDecryptor, new StringSink(plainLocalFromFuture) ) );
-	
-	
-	BOOST_REQUIRE(plainLocal == message);
-	BOOST_REQUIRE(plainFuture == plainLocal);
-	BOOST_REQUIRE(plainFutureFromLocal == plainLocal);
-	BOOST_REQUIRE(plainLocalFromFuture == plainLocal);
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
@@ -346,21 +373,29 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	rng.GenerateBlock(key, key.size());
 	
 	// cryptopp uses IV as nonce/counter which is same as using nonce w/0 ctr
-	byte ctr[AES::BLOCKSIZE];
-	rng.GenerateBlock(ctr, sizeof(ctr));
+	FixedHash<AES::BLOCKSIZE> ctr;
+	rng.GenerateBlock(ctr.data(), sizeof(ctr));
+
+	// used for decrypt
+	FixedHash<AES::BLOCKSIZE> ctrcopy(ctr);
 	
-	string text = "Now is the time for all good persons to come to the aide of humanity.";
-	// c++11 ftw
+	string text = "Now is the time for all good persons to come to the aid of humanity.";
 	unsigned char const* in = (unsigned char*)&text[0];
 	unsigned char* out = (unsigned char*)&text[0];
 	string original = text;
+	string doublespeak = text + text;
 	
 	string cipherCopy;
 	try
 	{
 		CTR_Mode<AES>::Encryption e;
-		e.SetKeyWithIV(key, key.size(), ctr);
+		e.SetKeyWithIV(key, key.size(), ctr.data());
+		
+		// 68 % 255 should be difference of counter
 		e.ProcessData(out, in, text.size());
+
+		(u128)ctr += (u128)(text.size() % 16);
+		
 		BOOST_REQUIRE(text != original);
 		cipherCopy = text;
 	}
@@ -372,7 +407,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	try
 	{
 		CTR_Mode< AES >::Decryption d;
-		d.SetKeyWithIV(key, key.size(), ctr);
+		d.SetKeyWithIV(key, key.size(), ctrcopy.data());
 		d.ProcessData(out, in, text.size());
 		BOOST_REQUIRE(text == original);
 	}
@@ -390,7 +425,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		out = (unsigned char*)&cipherCopy[0];
 		
 		CTR_Mode<AES>::Encryption e;
-		e.SetKeyWithIV(key, key.size(), ctr);
+		e.SetKeyWithIV(key, key.size(), ctrcopy.data());
 		e.ProcessData(out, in, text.size());
 		
 		// yep, ctr mode.
