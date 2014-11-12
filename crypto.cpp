@@ -172,19 +172,19 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 	Integer nB(fromHex("f2ee15ea639b73fa3db9b34a245bdfa015c260c598b211bf05a1ecc4b3e3b4f2").data(), 32);
 	BOOST_REQUIRE(nHex == nB);
 	
-	bytes sbytes(fromHex("0x01"));
+	bytes sbytes(fromHex("0xFFFF"));
 	Secret secret(sha3(sbytes)); // 5fe7f977e71dba2ea1a68e21057beebb9be2ac30c6410aa38d4f3fbe41dcffd2
 	KeyPair key(secret);
 	
-	bytes m(fromHex("0x01"));
-	int tests = 2;
+	bytes m(fromHex("0xFF"));
+	int tests = 3;
 	while (m[0]++, tests--)
 	{
 		h256 hm(sha3(m));
 		Integer hInt(hm.asBytes().data(), 32);
 		h256 k(hm ^ key.sec());
 		Integer kInt(k.asBytes().data(), 32);
-		
+
 		// raw sign w/cryptopp (doesn't pass through cryptopp hash filter)
 		ECDSA<ECP, SHA3_256>::Signer signer;
 		pp::initializeDLScheme(key.sec(), signer);
