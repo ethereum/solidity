@@ -191,12 +191,11 @@ p.append(param3);
 
         }
 
-        std::string eth_contractCall(const std::string& param1, const int& param2, const Json::Value& param3) throw (jsonrpc::JsonRpcException)
+        std::string eth_contractCall(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
 p.append(param2);
-p.append(param3);
 
             Json::Value result = this->client->CallMethod("eth_contractCall",p);
     if (result.isString())
