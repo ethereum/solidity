@@ -57,7 +57,6 @@ public:
 	eth::State m_statePost;
 	eth::ExtVMFace m_environment;
 	eth::Transaction m_transaction;
-	bytes code;
 
 private:
 	json_spirit::mObject& m_TestObject;
@@ -72,6 +71,7 @@ void checkOutput(bytes const& _output, json_spirit::mObject& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
 std::string getTestPath();
+void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
