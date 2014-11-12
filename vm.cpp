@@ -298,19 +298,27 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 		bytes output;
 		VM vm(fev.gas);
+
+		u256 gas;
 		try
 		{
 			output = vm.go(fev, fev.simpleTrace()).toVector();
+			gas = vm.gas();
+		}
+		catch (VMException const& _e)
+		{
+			cnote << "VM did throw an exception: " << diagnostic_information(_e);
+			gas = 0;
 		}
 		catch (Exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			//BOOST_ERROR("Failed VM Test with Exception: " << e.what());
+			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 		}
 		catch (std::exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
-			//BOOST_ERROR("Failed VM Test with Exception: " << e.what());
+			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 		}
 
 		// delete null entries in storage for the sake of comparison
@@ -337,7 +345,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			o["post"] = mValue(fev.exportState());
 			o["callcreates"] = fev.exportCallCreates();
 			o["out"] = "0x" + toHex(output);
-			fev.push(o, "gas", vm.gas());
+			fev.push(o, "gas", gas);
 		}
 		else
 		{
@@ -352,7 +360,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 			checkOutput(output, o);
 
-			BOOST_CHECK_EQUAL(toInt(o["gas"]), vm.gas());
+			BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
 
 			auto& expectedAddrs = test.addresses;
 			auto& resultAddrs = fev.addresses;
