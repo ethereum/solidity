@@ -20,9 +20,9 @@
  * Unit tests for the solidity compiler JSON Interface output.
  */
 
+#include <boost/test/unit_test.hpp>
 #include <libsolidity/CompilerStack.h>
 #include <jsonrpc/json/json.h>
-#include <boost/test/unit_test.hpp>
 
 namespace dev
 {
@@ -31,11 +31,12 @@ namespace solidity
 namespace test
 {
 
-class InterfaceChecker {
+class InterfaceChecker
+{
 public:
 	bool checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
-		m_compilerStack.compile(_code);
+		m_compilerStack.parse(_code);
 		std::string generatedInterfaceString = m_compilerStack.getInterface();
 		Json::Value generatedInterface;
 		m_reader.parse(generatedInterfaceString, generatedInterface);
