@@ -32,6 +32,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libevmcore/Instruction.h>
+#include <libevm/VM.h>
 #include "vm.h"
 
 using namespace std;
@@ -142,9 +143,15 @@ void doMyTests(json_spirit::mValue& v)
 
 		vm.reset(fev.gas);
 		bytes output;
+		u256 gas;
 		try
 		{
 			output = vm.go(fev).toBytes();
+		}
+		catch (eth::VMException const& _e)
+		{
+			cnote << "VM did throw an exception: " << diagnostic_information(_e);
+			gas = 0;
 		}
 		catch (Exception const& _e)
 		{
@@ -176,6 +183,6 @@ void doMyTests(json_spirit::mValue& v)
 		o["post"] = mValue(fev.exportState());
 		o["callcreates"] = fev.exportCallCreates();
 		o["out"] = "0x" + toHex(output);
-		fev.push(o, "gas", vm.gas());
+		fev.push(o, "gas", gas);
 	}
 }
