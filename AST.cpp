@@ -460,8 +460,17 @@ bool FunctionCall::isTypeConversion() const
 
 void MemberAccess::checkTypeRequirements()
 {
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access not yet implemented."));
-	// m_type = ;
+	m_expression->checkTypeRequirements();
+	m_expression->requireLValue();
+	if (m_expression->getType()->getCategory() != Type::Category::STRUCT)
+		BOOST_THROW_EXCEPTION(createTypeError("Member access to a non-struct (is " +
+													  m_expression->getType()->toString() + ")"));
+	StructType const& type = dynamic_cast<StructType const&>(*m_expression->getType());
+	unsigned memberIndex = type.memberNameToIndex(*m_memberName);
+	if (memberIndex >= type.getMemberCount())
+		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found in " + type.toString()));
+	m_type = type.getMemberByIndex(memberIndex).getType();
+	m_isLvalue = true;
 }
 
 void IndexAccess::checkTypeRequirements()

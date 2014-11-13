@@ -184,9 +184,14 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual u256 getStorageSize() const;
-	//@todo it can, if its members can
-	virtual bool canLiveOutsideStorage() const { return false; }
-	virtual std::string toString() const override { return "struct{...}"; }
+	virtual bool canLiveOutsideStorage() const;
+	virtual std::string toString() const override;
+
+	unsigned getMemberCount() const;
+	/// Returns the index of the member with name @a _name or unsigned(-1) if it does not exist.
+	unsigned memberNameToIndex(std::string const& _name) const;
+	VariableDeclaration const& getMemberByIndex(unsigned _index) const;
+	u256 getStorageOffsetOfMember(unsigned _index) const;
 
 private:
 	StructDefinition const& m_struct;
@@ -204,7 +209,7 @@ public:
 	FunctionDefinition const& getFunction() const { return m_function; }
 
 	virtual bool operator==(Type const& _other) const override;
-	virtual std::string toString() const override { return "function(...)returns(...)"; }
+	virtual std::string toString() const override;
 	virtual u256 getStorageSize() const { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable function type requested.")); }
 	virtual bool canLiveOutsideStorage() const { return false; }
 
@@ -223,11 +228,12 @@ public:
 		m_keyType(_keyType), m_valueType(_valueType) {}
 
 	virtual bool operator==(Type const& _other) const override;
-	virtual std::string toString() const override { return "mapping(...=>...)"; }
+	virtual std::string toString() const override;
 	virtual bool canLiveOutsideStorage() const { return false; }
 
 	std::shared_ptr<Type const> getKeyType() const { return m_keyType; }
 	std::shared_ptr<Type const> getValueType() const { return m_valueType; }
+
 private:
 	std::shared_ptr<Type const> m_keyType;
 	std::shared_ptr<Type const> m_valueType;

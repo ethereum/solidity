@@ -80,7 +80,7 @@ shared_ptr<Type> Type::forLiteral(Literal const& _literal)
 	case Token::NUMBER:
 		return IntegerType::smallestTypeForLiteral(_literal.getValue());
 	case Token::STRING_LITERAL:
-		return shared_ptr<Type>(); // @todo
+		return shared_ptr<Type>(); // @todo add string literals
 	default:
 		return shared_ptr<Type>();
 	}
@@ -231,6 +231,48 @@ u256 StructType::getStorageSize() const
 	return max<u256>(1, size);
 }
 
+bool StructType::canLiveOutsideStorage() const
+{
+	for (unsigned i = 0; i < getMemberCount(); ++i)
+		if (!getMemberByIndex(i).getType()->canLiveOutsideStorage())
+			return false;
+	return true;
+}
+
+string StructType::toString() const
+{
+	return string("struct ") + m_struct.getName();
+}
+
+unsigned StructType::getMemberCount() const
+{
+	return m_struct.getMembers().size();
+}
+
+unsigned StructType::memberNameToIndex(string const& _name) const
+{
+	vector<ASTPointer<VariableDeclaration>> const& members = m_struct.getMembers();
+	for (unsigned index = 0; index < members.size(); ++index)
+		if (members[index]->getName() == _name)
+			return index;
+	return unsigned(-1);
+}
+
+VariableDeclaration const& StructType::getMemberByIndex(unsigned _index) const
+{
+	return *m_struct.getMembers()[_index];
+}
+
+u256 StructType::getStorageOffsetOfMember(unsigned _index) const
+{
+	//@todo cache member offset?
+	u256 offset;
+	vector<ASTPointer<VariableDeclaration>> const& members = m_struct.getMembers();
+	for (unsigned index = 0; index < _index; ++index)
+		offset += getMemberByIndex(index).getType()->getStorageSize();
+	return offset;
+}
+
 bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
@@ -239,12 +281,23 @@ bool FunctionType::operator==(Type const& _other) const
 	return other.m_function == m_function;
 }
 
+string FunctionType::toString() const
+{
+	//@todo nice string for function types
+	return "function(...)returns(...)";
+}
+
 bool MappingType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
 	MappingType const& other = dynamic_cast<MappingType const&>(_other);
 	return *other.m_keyType == *m_keyType && *other.m_valueType == *m_valueType;
+}
+
+string MappingType::toString() const
+{
+	return "mapping(" + getKeyType()->toString() + " => " + getValueType()->toString() + ")";
 }
 
 bool TypeType::operator==(Type const& _other) const

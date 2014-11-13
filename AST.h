@@ -146,7 +146,7 @@ private:
 /**
  * Parameter list, used as function parameter list and return list.
  * None of the parameters is allowed to contain mappings (not even recursively
- * inside structs), but (@todo) this is not yet enforced.
+ * inside structs).
  */
 class ParameterList: public ASTNode
 {
@@ -368,7 +368,6 @@ private:
 
 /**
  * Statement in which a break statement is legal.
- * @todo actually check this requirement.
  */
 class BreakableStatement: public Statement
 {
@@ -629,6 +628,7 @@ public:
 				 ASTPointer<ASTString> const& _memberName):
 		Expression(_location), m_expression(_expression), m_memberName(_memberName) {}
 	virtual void accept(ASTVisitor& _visitor) override;
+	Expression& getExpression() const { return *m_expression; }
 	ASTString const& getMemberName() const { return *m_memberName; }
 	virtual void checkTypeRequirements() override;
 
@@ -651,6 +651,7 @@ public:
 
 	Expression& getBaseExpression() const { return *m_base; }
 	Expression& getIndexExpression() const { return *m_index; }
+
 private:
 	ASTPointer<Expression> m_base;
 	ASTPointer<Expression> m_index;

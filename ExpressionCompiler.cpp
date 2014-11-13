@@ -49,7 +49,6 @@ bool ExpressionCompiler::visit(Assignment& _assignment)
 {
 	_assignment.getRightHandSide().accept(*this);
 	appendTypeConversion(*_assignment.getRightHandSide().getType(), *_assignment.getType());
-	m_currentLValue.reset();
 	_assignment.getLeftHandSide().accept(*this);
 	if (asserts(m_currentLValue.isValid()))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("LValue not retrieved."));
@@ -63,6 +62,7 @@ bool ExpressionCompiler::visit(Assignment& _assignment)
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
 	}
 	m_currentLValue.storeValue(_assignment);
+	m_currentLValue.reset();
 
 	return false;
 }
@@ -90,6 +90,7 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1;
 		m_currentLValue.storeValue(_unaryOperation);
+		m_currentLValue.reset();
 		break;
 	case Token::INC: // ++ (pre- or postfix)
 	case Token::DEC: // -- (pre- or postfix)
@@ -113,6 +114,7 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1;
 		m_currentLValue.storeValue(_unaryOperation, !_unaryOperation.isPrefixOperation());
+		m_currentLValue.reset();
 		break;
 	case Token::ADD: // +
 		// unary add, so basically no-op
@@ -182,10 +184,10 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 			arguments[i]->accept(*this);
 			appendTypeConversion(*arguments[i]->getType(), *function.getParameters()[i]->getType());
 		}
-		m_currentLValue.reset();
 		_functionCall.getExpression().accept(*this);
 		if (asserts(m_currentLValue.isInCode()))
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Code reference expected."));
+		m_currentLValue.reset();
 
 		m_context.appendJump();
 		m_context << returnLabel;
@@ -201,9 +203,16 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 	return false;
 }
 
-void ExpressionCompiler::endVisit(MemberAccess&)
+void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 {
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access not yet implemented."));
+	if (asserts(m_currentLValue.isInStorage()))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to a non-storage value."));
+	StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
+	unsigned memberIndex = type.memberNameToIndex(_memberAccess.getMemberName());
+	if (asserts(memberIndex <= type.getMemberCount()))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member not found in struct during compilation."));
+	m_context << type.getStorageOffsetOfMember(memberIndex) << eth::Instruction::ADD;
+	m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 }
 
 bool ExpressionCompiler::visit(IndexAccess& _indexAccess)

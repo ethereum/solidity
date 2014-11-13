@@ -55,10 +55,13 @@ public:
 	Declaration* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
 private:
+	/// Throws if @a _struct contains a recursive loop. Note that recursion via mappings is fine.
+	void checkForRecursion(StructDefinition const& _struct);
 	void reset();
 
-	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition, FunctionDeclaration and
-	/// StructDefinition (@todo not yet implemented), where nullptr denotes the global scope.
+	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
+	/// where nullptr denotes the global scope. Note that structs are not scope since they do
+	/// not contain code.
 	std::map<ASTNode const*, Scope> m_scopes;
 
 	Scope* m_currentScope;
@@ -99,7 +102,8 @@ private:
 class ReferencesResolver: private ASTVisitor
 {
 public:
-	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver, ParameterList* _returnParameters);
+	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver,
+					   ParameterList* _returnParameters, bool _allowLazyTypes = true);
 
 private:
 	virtual void endVisit(VariableDeclaration& _variable) override;
@@ -110,6 +114,7 @@ private:
 
 	NameAndTypeResolver& m_resolver;
 	ParameterList* m_returnParameters;
+	bool m_allowLazyTypes;
 };
 
 }
