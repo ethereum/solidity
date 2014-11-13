@@ -663,6 +663,43 @@ BOOST_AUTO_TEST_CASE(multi_level_mapping)
 	testSolidityAgainstCpp(0, f, u256(5), u256(4), u256(0));
 }
 
+BOOST_AUTO_TEST_CASE(structs)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  struct s1 {\n"
+							 "    uint8 x;\n"
+							 "    bool y;\n"
+							 "  }\n"
+							 "  struct s2 {\n"
+							 "    uint32 z;\n"
+							 "    s1 s1data;\n"
+							 "    mapping(uint8 => s2) recursive;\n"
+							 "  }\n"
+							 "  s2 data;\n"
+							 "  function check() returns (bool ok) {\n"
+							 "    return data.z == 1 && data.s1data.x == 2 && \n"
+							 "        data.s1data.y == true && \n"
+							 "        data.recursive[3].recursive[4].z == 5 && \n"
+							 "        data.recursive[4].recursive[3].z == 6 && \n"
+							 "        data.recursive[0].s1data.y == false && \n"
+							 "        data.recursive[4].z == 9;\n"
+							 "  }\n"
+							 "  function set() {\n"
+							 "    data.z = 1;\n"
+							 "    data.s1data.x = 2;\n"
+							 "    data.s1data.y = true;\n"
+							 "    data.recursive[3].recursive[4].z = 5;\n"
+							 "    data.recursive[4].recursive[3].z = 6;\n"
+							 "    data.recursive[0].s1data.y = false;\n"
+							 "    data.recursive[4].z = 9;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction(0) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(1) == bytes());
+	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
