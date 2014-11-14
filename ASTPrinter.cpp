@@ -30,8 +30,8 @@ namespace dev
 namespace solidity
 {
 
-ASTPrinter::ASTPrinter(ASTPointer<ASTNode> const& _ast, string const& _source):
-	m_indentation(0), m_source(_source), m_ast(_ast)
+ASTPrinter::ASTPrinter(ASTNode& _ast, string const& _source):
+	m_indentation(0), m_source(_source), m_ast(&_ast)
 {
 }
 
@@ -430,8 +430,8 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 	if (!m_source.empty())
 	{
 		Location const& location(_node.getLocation());
-		*m_ostream << getIndentation() << "   Source: |"
-				   << m_source.substr(location.start, location.end - location.start) << "|" << endl;
+		*m_ostream << getIndentation() << "   Source: "
+				   << escaped(m_source.substr(location.start, location.end - location.start), false) << endl;
 	}
 }
 
