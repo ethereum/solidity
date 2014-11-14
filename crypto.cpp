@@ -340,8 +340,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		
 		// 68 % 255 should be difference of counter
 		e.ProcessData(out, in, text.size());
-
-		(u128)ctr += (u128)(text.size() % 16);
+		ctr = h128(u128(ctr) + text.size() % 16);
 		
 		BOOST_REQUIRE(text != original);
 		cipherCopy = text;
