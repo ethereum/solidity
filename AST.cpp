@@ -263,6 +263,21 @@ TypeError ASTNode::createTypeError(string const& _description)
 	return TypeError() << errinfo_sourceLocation(getLocation()) << errinfo_comment(_description);
 }
 
+vector<FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() const
+{
+	vector<FunctionDefinition const*> exportedFunctions;
+	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
+		if (f->isPublic() && f->getName() != getName())
+			exportedFunctions.push_back(f.get());
+	auto compareNames = [](FunctionDefinition const* _a, FunctionDefinition const* _b)
+	{
+		return _a->getName().compare(_b->getName()) < 0;
+	};
+
+	sort(exportedFunctions.begin(), exportedFunctions.end(), compareNames);
+	return exportedFunctions;
+}
+
 void Block::checkTypeRequirements()
 {
 	for (shared_ptr<Statement> const& statement: m_statements)

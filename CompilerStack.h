@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <ostream>
 #include <string>
 #include <memory>
 #include <libdevcore/Common.h>
@@ -30,13 +31,51 @@ namespace dev {
 namespace solidity {
 
 class Scanner; // forward
+class ContractDefinition; // forward
+class Compiler; // forward
 
+/**
+ * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
+ * It holds state and can be used to either step through the compilation stages (and abort e.g.
+ * before compilation to bytecode) or run the whole compilation in one call.
+ */
 class CompilerStack
 {
 public:
+	CompilerStack() {}
+	void reset() {  *this = CompilerStack(); }
+	void setSource(std::string const& _sourceCode);
+	void parse();
+	void parse(std::string const& _sourceCode);
+	/// Compiles the contract that was previously parsed.
+	bytes const& compile(bool _optimize = false);
+	/// Parses and compiles the given source code.
+	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);
+
+	bytes const& getBytecode() const { return m_bytecode; }
+	/// Streams a verbose version of the assembly to @a _outStream.
+	/// Prerequisite: Successful compilation.
+	void streamAssembly(std::ostream& _outStream);
+
+	/// Returns a string representing the contract interface in JSON.
+	/// Prerequisite: Successful call to parse or compile.
+	std::string const& getInterface();
+
+	/// Returns the previously used scanner, useful for counting lines during error reporting.
+	Scanner const& getScanner() const { return *m_scanner; }
+	ContractDefinition& getAST() const { return *m_contractASTNode; }
+
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.
-	static bytes compile(std::string const& _sourceCode, std::shared_ptr<Scanner> _scanner = std::shared_ptr<Scanner>(), bool _optimize = false);
+	static bytes staticCompile(std::string const& _sourceCode, bool _optimize = false);
+
+private:
+	std::shared_ptr<Scanner> m_scanner;
+	std::shared_ptr<ContractDefinition> m_contractASTNode;
+	bool m_parseSuccessful;
+	std::string m_interface;
+	std::shared_ptr<Compiler> m_compiler;
+	bytes m_bytecode;
 };
 
 }
