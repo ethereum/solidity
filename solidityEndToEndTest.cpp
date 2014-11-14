@@ -44,7 +44,7 @@ public:
 
 	bytes const& compileAndRun(string const& _sourceCode)
 	{
-		bytes code = dev::solidity::CompilerStack::compile(_sourceCode);
+		bytes code = dev::solidity::CompilerStack::staticCompile(_sourceCode);
 		sendMessage(code, true);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
