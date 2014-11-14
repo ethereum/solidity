@@ -287,6 +287,12 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 			BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
 		}
 	}
+
+    for (auto&& resultStorePair : _resultStore)
+    {
+        if (!_expectedStore.count(resultStorePair.first))
+            BOOST_ERROR("unexpected result store key " << resultStorePair.first);
+    }
 }
 
 std::string getTestPath()
