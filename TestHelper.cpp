@@ -27,8 +27,6 @@
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 
-//#define FILL_TESTS
-
 using namespace std;
 using namespace dev::eth;
 
@@ -253,7 +251,7 @@ bytes importCode(json_spirit::mObject& _o)
 		code.clear();
 		for (auto const& j: _o["code"].get_array())
 			code.push_back(toByte(j));
-	}	
+	}
 	return code;
 }
 
@@ -287,6 +285,12 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 			BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
 		}
 	}
+
+    for (auto&& resultStorePair : _resultStore)
+    {
+        if (!_expectedStore.count(resultStorePair.first))
+            BOOST_ERROR("unexpected result store key " << resultStorePair.first);
+    }
 }
 
 std::string getTestPath()
@@ -305,33 +309,79 @@ std::string getTestPath()
 	return testPath;
 }
 
+void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == testTypeFlag)
+		{
+			if (i + 1 >= boost::unit_test::framework::master_test_suite().argc)
+			{
+				cnote << "Missing filename\nUsage: testeth " << testTypeFlag << " <filename>\n";
+				return;
+			}
+			string filename = boost::unit_test::framework::master_test_suite().argv[i + 1];
+			int currentVerbosity = g_logVerbosity;
+			g_logVerbosity = 12;
+			try
+			{
+				cnote << "Testing user defined test: " << filename;
+				json_spirit::mValue v;
+				string s = asString(contents(filename));
+				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
+				json_spirit::read_string(s, v);
+				doTests(v, false);
+			}
+			catch (Exception const& _e)
+			{
+				BOOST_ERROR("Failed Test with Exception: " << diagnostic_information(_e));
+				g_logVerbosity = currentVerbosity;
+			}
+			catch (std::exception const& _e)
+			{
+				BOOST_ERROR("Failed Test with Exception: " << _e.what());
+				g_logVerbosity = currentVerbosity;
+			}
+			g_logVerbosity = currentVerbosity;
+		}
+		else
+			continue;
+	}
+}
+
 void executeTests(const string& _name, const string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	string testPath = getTestPath();
 	testPath += _testPathAppendix;
 
-#ifdef FILL_TESTS
-	try
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
-		cnote << "Populating tests...";
-		json_spirit::mValue v;
-		boost::filesystem::path p(__FILE__);
-		boost::filesystem::path dir = p.parent_path();
-		string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
-		json_spirit::read_string(s, v);
-		doTests(v, true);
-		writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--filltests")
+		{
+			try
+			{
+				cnote << "Populating tests...";
+				json_spirit::mValue v;
+				boost::filesystem::path p(__FILE__);
+				boost::filesystem::path dir = p.parent_path();
+				string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
+				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
+				json_spirit::read_string(s, v);
+				doTests(v, true);
+				writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+			}
+			catch (Exception const& _e)
+			{
+				BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+			}
+			catch (std::exception const& _e)
+			{
+				BOOST_ERROR("Failed test with Exception: " << _e.what());
+			}
+		}
 	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed test with Exception: " << _e.what());
-	}
-#endif
 
 	try
 	{

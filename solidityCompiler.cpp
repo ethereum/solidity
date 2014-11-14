@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned boilerplateSize = 51;
+	unsigned boilerplateSize = 42;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize local variable x
 					   byte(Instruction::PUSH1), 0x2,
@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 75;
-	unsigned boilerplateSize = 88;
+	unsigned shift = 70;
+	unsigned boilerplateSize = 83;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize return variable d
 					   byte(Instruction::DUP3),
@@ -119,10 +119,10 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 					   byte(Instruction::JUMPDEST), // beginning of g
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1), // initialized e and h
-					   byte(Instruction::PUSH1), byte(0x20 + shift), // ret address
-					   byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::PUSH1), 0x2,
-					   byte(Instruction::PUSH1), 0x3,
+					   byte(Instruction::PUSH1), byte(0x29 + shift), // ret address
+					   byte(Instruction::PUSH1), 0x1, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
+					   byte(Instruction::PUSH1), 0x2, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
+					   byte(Instruction::PUSH1), 0x3, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
 					   byte(Instruction::PUSH1), byte(0x1 + shift),
 					   // stack here: ret e h 0x20 1 2 3 0x1
 					   byte(Instruction::JUMP),
@@ -153,8 +153,8 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 38;
-	unsigned boilerplateSize = 51;
+	unsigned shift = 29;
+	unsigned boilerplateSize = 42;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1),
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(loops)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 38;
-	unsigned boilerplateSize = 51;
+	unsigned shift = 29;
+	unsigned boilerplateSize = 42;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x1,

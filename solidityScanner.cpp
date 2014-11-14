@@ -97,6 +97,27 @@ BOOST_AUTO_TEST_CASE(hex_numbers)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
 }
 
+BOOST_AUTO_TEST_CASE(negative_numbers)
+{
+	Scanner scanner(CharStream("var x = -.2 + -0x78 + -7.3 + 8.9;"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::VAR);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::IDENTIFIER);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::ASSIGN);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::NUMBER);
+	BOOST_CHECK_EQUAL(scanner.getCurrentLiteral(), "-.2");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::ADD);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::NUMBER);
+	BOOST_CHECK_EQUAL(scanner.getCurrentLiteral(), "-0x78");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::ADD);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::NUMBER);
+	BOOST_CHECK_EQUAL(scanner.getCurrentLiteral(), "-7.3");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::ADD);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::NUMBER);
+	BOOST_CHECK_EQUAL(scanner.getCurrentLiteral(), "8.9");
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SEMICOLON);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+}
+
 BOOST_AUTO_TEST_CASE(locations)
 {
 	Scanner scanner(CharStream("function_identifier has ; -0x743/*comment*/\n ident //comment"));
@@ -109,11 +130,8 @@ BOOST_AUTO_TEST_CASE(locations)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SEMICOLON);
 	BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 24);
 	BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 25);
-	BOOST_CHECK_EQUAL(scanner.next(), Token::SUB);
-	BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 26);
-	BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 27);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::NUMBER);
-	BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 27);
+	BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 26);
 	BOOST_CHECK_EQUAL(scanner.getCurrentLocation().end, 32);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::IDENTIFIER);
 	BOOST_CHECK_EQUAL(scanner.getCurrentLocation().start, 45);

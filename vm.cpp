@@ -21,6 +21,7 @@
  */
 
 #include <chrono>
+#include <boost/filesystem.hpp>
 #include "vm.h"
 using namespace std;
 using namespace json_spirit;
@@ -29,7 +30,7 @@ using namespace dev::eth;
 using namespace dev::test;
 
 FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytesConstRef(), _previousBlock, _currentBlock, _depth) {}
+	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, _depth) {}
 
 h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc const&)
 {
@@ -195,11 +196,11 @@ void FakeExtVM::importExec(mObject& _o)
 	gas = toInt(_o["gas"]);
 
 	thisTxCode.clear();
-	code = &thisTxCode;
+	code = thisTxCode;
 
 	thisTxCode = importCode(_o);
 	if (_o["code"].type() != str_type && _o["code"].type() != array_type)
-		code.reset();
+		code.clear();
 
 	thisTxData.clear();
 	thisTxData = importData(_o);
@@ -297,10 +298,10 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			o["pre"] = mValue(fev.exportState());
 
 		fev.importExec(o["exec"].get_obj());
-		if (!fev.code)
+		if (fev.code.empty())
 		{
 			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
-			fev.code = &fev.thisTxCode;
+			fev.code = fev.thisTxCode;
 		}
 
 		auto vm = VMFace::create(vmKind, fev.gas);
@@ -308,21 +309,31 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		auto outOfGas = false;
 
 		auto startTime = std::chrono::high_resolution_clock::now();
+		u256 gas;
 		try
 		{
 			output = vm->go(fev, fev.simpleTrace()).toVector();
+			gas = vm->gas();
 		}
 		catch (OutOfGas const&)
 		{
 			outOfGas = true;
+			gas = 0;
+		}
+		catch (VMException const& _e)
+		{
+			cnote << "VM did throw an exception: " << diagnostic_information(_e);
+			gas = 0;
 		}
 		catch (Exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << diagnostic_information(_e);
+			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 		}
 		catch (std::exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
+			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 		}
 
 		auto endTime = std::chrono::high_resolution_clock::now();
@@ -337,8 +348,6 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				break;
 			}
 		}
-
-		auto gas = vm->gas();
 
 		// delete null entries in storage for the sake of comparison
 
@@ -380,7 +389,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			checkOutput(output, o);
 
             BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
-		
+
 			if (outOfGas)
 				BOOST_CHECK_MESSAGE(gas == 0, "Remaining gas not 0 in out-of-gas state");
 
@@ -454,32 +463,42 @@ BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", dev::test::doVMTests);
 }
 
-BOOST_AUTO_TEST_CASE(userDefinedFile)
+BOOST_AUTO_TEST_CASE(vmRandom)
 {
-	if (boost::unit_test::framework::master_test_suite().argc >= 2)
+	string testPath = getTestPath();
+	testPath += "/VMTests/RandomTests";
+
+	vector<boost::filesystem::path> testFiles;
+	boost::filesystem::directory_iterator iterator(testPath);
+	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+			testFiles.push_back(iterator->path());
+
+	for (auto& path: testFiles)
 	{
-		string filename = boost::unit_test::framework::master_test_suite().argv[1];
-		int currentVerbosity = g_logVerbosity;
-		g_logVerbosity = 12;
 		try
 		{
-			cnote << "Testing VM..." << "user defined test";
+			cnote << "Testing ..." << path.filename();
 			json_spirit::mValue v;
-			string s = asString(contents(filename));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
+			string s = asString(dev::contents(path.string()));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
-			dev::test::doVMTests(v, false);
+			doVMTests(v, false);
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR("Failed VM Test with Exception: " << diagnostic_information(_e));
+			BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+			BOOST_ERROR("Failed test with Exception: " << _e.what());
 		}
-		g_logVerbosity = currentVerbosity;
 	}
+}
+
+BOOST_AUTO_TEST_CASE(userDefinedFileVM)
+{
+	dev::test::userDefinedTest("--vmtest", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
