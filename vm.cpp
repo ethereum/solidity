@@ -313,7 +313,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		try
 		{
 			output = vm->go(fev, fev.simpleTrace()).toVector();
-			gas = vm.gas();
+			gas = vm->gas();
 		}
 		catch (OutOfGas const&)
 		{
