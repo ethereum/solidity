@@ -192,11 +192,11 @@ BOOST_AUTO_TEST_CASE(multiple_functions)
 							 "  function f() returns(uint n) { return 3; }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callFunction(0, bytes()) == toBigEndian(u256(0)));
-	BOOST_CHECK(callFunction(1, bytes()) == toBigEndian(u256(1)));
-	BOOST_CHECK(callFunction(2, bytes()) == toBigEndian(u256(2)));
-	BOOST_CHECK(callFunction(3, bytes()) == toBigEndian(u256(3)));
-	BOOST_CHECK(callFunction(4, bytes()) == bytes());
+	BOOST_CHECK(callContractFunction(0, bytes()) == toBigEndian(u256(0)));
+	BOOST_CHECK(callContractFunction(1, bytes()) == toBigEndian(u256(1)));
+	BOOST_CHECK(callContractFunction(2, bytes()) == toBigEndian(u256(2)));
+	BOOST_CHECK(callContractFunction(3, bytes()) == toBigEndian(u256(3)));
+	BOOST_CHECK(callContractFunction(4, bytes()) == bytes());
 }
 
 BOOST_AUTO_TEST_CASE(while_loop)
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(break_outside_loop)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	testSolidityAgainstCpp(0, [](u256 const& _a) -> u256 { return 2; }, u256(0));
+	testSolidityAgainstCpp(0, [](u256 const&) -> u256 { return 2; }, u256(0));
 }
 
 BOOST_AUTO_TEST_CASE(nested_loops)
