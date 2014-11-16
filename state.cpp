@@ -122,6 +122,40 @@ BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 	dev::test::executeTests("stPreCompiledContracts", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stCreateTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--createtest")
+		{
+			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
+			{
+				cnote << "usage: ./testeth --createtest <PathToConstructor> <PathToDestiny>\n";
+				return;
+			}
+			try
+			{
+				cnote << "Populating tests...";
+				json_spirit::mValue v;
+				string s = asString(dev::contents(boost::unit_test::framework::master_test_suite().argv[i + 1]));
+				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + (string)boost::unit_test::framework::master_test_suite().argv[i + 1] + " is empty.");
+				json_spirit::read_string(s, v);
+				dev::test::doStateTests(v, true);
+				writeFile(boost::unit_test::framework::master_test_suite().argv[i + 2], asBytes(json_spirit::write_string(v, true)));
+			}
+			catch (Exception const& _e)
+			{
+				BOOST_ERROR("Failed state test with Exception: " << diagnostic_information(_e));
+			}
+			catch (std::exception const& _e)
+			{
+				BOOST_ERROR("Failed state test with Exception: " << _e.what());
+			}
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(userDefinedFileState)
 {
 	dev::test::userDefinedTest("--statetest", dev::test::doStateTests);
