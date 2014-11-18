@@ -228,12 +228,12 @@ p.append(param3);
 
         }
 
-        Json::Value eth_getMessages(const int& param1) throw (jsonrpc::JsonRpcException)
+		Json::Value eth_getLogs(const int& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
 
-            Json::Value result = this->client->CallMethod("eth_getMessages",p);
+			Json::Value result = this->client->CallMethod("eth_getLogs",p);
     if (result.isArray())
         return result;
      else 
