@@ -216,19 +216,6 @@ p.append(param3);
 
         }
 
-        Json::Value eth_filterLogs(const int& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-
-            Json::Value result = this->client->CallMethod("eth_filterLogs",p);
-    if (result.isArray())
-        return result;
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
         std::string eth_gasPrice() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -236,6 +223,19 @@ p.append(param3);
             Json::Value result = this->client->CallMethod("eth_gasPrice",p);
     if (result.isString())
         return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+		Json::Value eth_getLogs(const int& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+			Json::Value result = this->client->CallMethod("eth_getLogs",p);
+    if (result.isArray())
+        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -261,19 +261,6 @@ p.append(param3);
             Json::Value result = this->client->CallMethod("eth_lll",p);
     if (result.isString())
         return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        Json::Value eth_logs(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-
-            Json::Value result = this->client->CallMethod("eth_logs",p);
-    if (result.isArray())
-        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
