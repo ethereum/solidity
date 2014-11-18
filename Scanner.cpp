@@ -102,13 +102,13 @@ int HexValue(char c)
 }
 } // end anonymous namespace
 
-void Scanner::reset(CharStream const& _source)
+void Scanner::reset(CharStream const& _source, bool _skipDocumentationComments)
 {
 	m_source = _source;
 	m_char = m_source.get();
 	skipWhitespace();
-	scanToken();
-	next();
+	scanToken(_skipDocumentationComments);
+	next(_skipDocumentationComments);
 }
 
 
@@ -134,10 +134,10 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 // Ensure that tokens can be stored in a byte.
 BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 
-Token::Value Scanner::next()
+Token::Value Scanner::next(bool _skipDocumentationComments)
 {
 	m_current_token = m_next_token;
-	scanToken();
+	scanToken(_skipDocumentationComments);
 	return m_current_token.token;
 }
 
@@ -171,6 +171,21 @@ Token::Value Scanner::skipSingleLineComment()
 	return Token::WHITESPACE;
 }
 
+// For the moment this function simply consumes a single line triple slash doc comment
+Token::Value Scanner::scanDocumentationComment()
+{
+	LiteralScope literal(this);
+	advance(); //consume the last '/'
+	while (!isSourcePastEndOfInput() && !IsLineTerminator(m_char))
+	{
+		char c = m_char;
+		advance();
+		addLiteralChar(c);
+	}
+	literal.Complete();
+	return Token::COMMENT_LITERAL;
+}
+
 Token::Value Scanner::skipMultiLineComment()
 {
 	if (asserts(m_char == '*'))
@@ -194,7 +209,7 @@ Token::Value Scanner::skipMultiLineComment()
 	return Token::ILLEGAL;
 }
 
-void Scanner::scanToken()
+void Scanner::scanToken(bool _skipDocumentationComments)
 {
 	m_next_token.literal.clear();
 	Token::Value token;
@@ -297,7 +312,14 @@ void Scanner::scanToken()
 			// /  // /* /=
 			advance();
 			if (m_char == '/')
-				token = skipSingleLineComment();
+			{
+				if (!advance()) /* double slash comment directly before EOS */
+					token = Token::WHITESPACE;
+				else if (!_skipDocumentationComments)
+					token = scanDocumentationComment();
+				else
+					token = skipSingleLineComment();
+			}
 			else if (m_char == '*')
 				token = skipMultiLineComment();
 			else if (m_char == '=')

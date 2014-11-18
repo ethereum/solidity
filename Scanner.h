@@ -111,19 +111,27 @@ public:
 	};
 
 	Scanner() { reset(CharStream()); }
-	explicit Scanner(CharStream const& _source) { reset(_source); }
+	explicit Scanner(CharStream const& _source, bool _skipDocumentationComments = true)
+	{
+		reset(_source, _skipDocumentationComments);
+	}
 
 	/// Resets the scanner as if newly constructed with _input as input.
-	void reset(CharStream const& _source);
+	void reset(CharStream const& _source, bool _skipDocumentationComments = true);
 
 	/// Returns the next token and advances input.
-	Token::Value next();
+	Token::Value next(bool _skipDocumentationComments = true);
 
 	///@{
 	///@name Information about the current token
 
 	/// Returns the current token
-	Token::Value getCurrentToken() { return m_current_token.token; }
+	Token::Value getCurrentToken(bool _skipDocumentationComments = true)
+	{
+		if (!_skipDocumentationComments)
+			next(_skipDocumentationComments);
+		return m_current_token.token;
+	}
 	Location getCurrentLocation() const { return m_current_token.location; }
 	std::string const& getCurrentLiteral() const { return m_current_token.literal; }
 	///@}
@@ -172,7 +180,7 @@ private:
 	bool scanHexByte(char& o_scannedByte);
 
 	/// Scans a single JavaScript token.
-	void scanToken();
+	void scanToken(bool _skipDocumentationComments = true);
 
 	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();
@@ -184,6 +192,7 @@ private:
 	Token::Value scanIdentifierOrKeyword();
 
 	Token::Value scanString();
+	Token::Value scanDocumentationComment();
 
 	/// Scans an escape-sequence which is part of a string and adds the
 	/// decoded character to the current literal. Returns true if a pattern

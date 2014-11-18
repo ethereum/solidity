@@ -281,6 +281,7 @@ namespace solidity
 	K(FALSE_LITERAL, "false", 0)                                       \
 	T(NUMBER, NULL, 0)                                                 \
 	T(STRING_LITERAL, NULL, 0)                                         \
+	T(COMMENT_LITERAL, NULL, 0)                                         \
 	\
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(IDENTIFIER, NULL, 0)                                             \
