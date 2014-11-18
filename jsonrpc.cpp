@@ -61,11 +61,12 @@ struct Setup
 		
 		web3->setIdealPeerCount(5);
 		web3->ethereum()->setForceMining(true);
-		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(jsonrpc::CorsHttpServer(8080), *web3, {}));
+		auto server = new jsonrpc::CorsHttpServer(8080);
+		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(*server, *web3, {}));
 		jsonrpcServer->setIdentities({});
 		jsonrpcServer->StartListening();
-		
-		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(jsonrpc::HttpClient("http://localhost:8080")));
+		auto client = new jsonrpc::HttpClient("http://localhost:8080");
+		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(*client));
 	}
 };
 
