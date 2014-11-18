@@ -179,14 +179,13 @@ p.append(param3);
 
         }
 
-        std::string eth_compile(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_compilers() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
-            p.append(param1);
-
-            Json::Value result = this->client->CallMethod("eth_compile",p);
-    if (result.isString())
-        return result.asString();
+            p = Json::nullValue;
+            Json::Value result = this->client->CallMethod("eth_compilers",p);
+    if (result.isArray())
+        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -217,6 +216,19 @@ p.append(param3);
 
         }
 
+        Json::Value eth_filterLogs(const int& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("eth_filterLogs",p);
+    if (result.isArray())
+        return result;
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         std::string eth_gasPrice() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -224,19 +236,6 @@ p.append(param3);
             Json::Value result = this->client->CallMethod("eth_gasPrice",p);
     if (result.isString())
         return result.asString();
-     else 
-         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-
-        }
-
-        Json::Value eth_getMessages(const int& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-
-            Json::Value result = this->client->CallMethod("eth_getMessages",p);
-    if (result.isArray())
-        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -262,6 +261,19 @@ p.append(param3);
             Json::Value result = this->client->CallMethod("eth_lll",p);
     if (result.isString())
         return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        Json::Value eth_logs(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("eth_logs",p);
+    if (result.isArray())
+        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
@@ -329,6 +341,19 @@ p.append(param3);
 
         }
 
+        std::string eth_serpent(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("eth_serpent",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         bool eth_setCoinbase(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -381,6 +406,19 @@ p.append(param3);
 
         }
 
+        std::string eth_solidity(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("eth_solidity",p);
+    if (result.isString())
+        return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
         std::string eth_stateAt(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -390,6 +428,19 @@ p.append(param2);
             Json::Value result = this->client->CallMethod("eth_stateAt",p);
     if (result.isString())
         return result.asString();
+     else 
+         throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+
+        }
+
+        Json::Value eth_storageAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+
+            Json::Value result = this->client->CallMethod("eth_storageAt",p);
+    if (result.isObject())
+        return result;
      else 
          throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
 
