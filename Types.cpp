@@ -267,7 +267,7 @@ u256 StructType::getStorageOffsetOfMember(unsigned _index) const
 {
 	//@todo cache member offset?
 	u256 offset;
-	vector<ASTPointer<VariableDeclaration>> const& members = m_struct.getMembers();
+//	vector<ASTPointer<VariableDeclaration>> const& members = m_struct.getMembers();
 	for (unsigned index = 0; index < _index; ++index)
 		offset += getMemberByIndex(index).getType()->getStorageSize();
 	return offset;

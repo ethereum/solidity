@@ -211,6 +211,7 @@ bool ReferencesResolver::visit(Return& _return)
 
 bool ReferencesResolver::visit(Mapping& _mapping)
 {
+	(void)_mapping;
 	return true;
 }
 
