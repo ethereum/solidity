@@ -29,8 +29,8 @@
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/CorsHttpServer.h>
-#include <jsonrpc/connectors/httpserver.h>
-#include <jsonrpc/connectors/httpclient.h>
+#include <jsonrpccpp/server/connectors/httpserver.h>
+#include <jsonrpccpp/client/connectors/httpclient.h>
 #include <set>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
@@ -61,11 +61,11 @@ struct Setup
 		
 		web3->setIdealPeerCount(5);
 		web3->ethereum()->setForceMining(true);
-		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), *web3, {}));
+		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(jsonrpc::CorsHttpServer(8080), *web3, {}));
 		jsonrpcServer->setIdentities({});
 		jsonrpcServer->StartListening();
 		
-		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
+		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(jsonrpc::HttpClient("http://localhost:8080")));
 	}
 };
 
