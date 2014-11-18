@@ -21,6 +21,11 @@
 
 #pragma once
 
+#include <functional>
+#include <boost/test/unit_test.hpp>
+#include "JsonSpiritHeaders.h"
+#include <libethereum/State.h>
+
 namespace dev
 {
 namespace eth
@@ -30,6 +35,56 @@ class Client;
 
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
+
+}
+
+namespace test
+{
+
+class ImportTest
+{
+public:
+	ImportTest() = default;
+	ImportTest(json_spirit::mObject& _o, bool isFiller);
+
+	// imports
+	void importEnv(json_spirit::mObject& _o);
+	void importState(json_spirit::mObject& _o, eth::State& _state);
+	void importTransaction(json_spirit::mObject& _o);
+	void exportTest(bytes _output, eth::State& _statePost);
+
+	eth::State m_statePre;
+	eth::State m_statePost;
+	eth::ExtVMFace m_environment;
+	eth::Transaction m_transaction;
+
+private:
+	json_spirit::mObject& m_TestObject;
+};
+
+// helping functions
+u256 toInt(json_spirit::mValue const& _v);
+byte toByte(json_spirit::mValue const& _v);
+bytes importCode(json_spirit::mObject& _o);
+bytes importData(json_spirit::mObject& _o);
+void checkOutput(bytes const& _output, json_spirit::mObject& _o);
+void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
+void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
+std::string getTestPath();
+void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
+
+template<typename mapType>
+void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
+{
+	for (auto& resultPair : _resultAddrs)
+	{
+		auto& resultAddr = resultPair.first;
+		auto expectedAddrIt = _expectedAddrs.find(resultAddr);
+		if (expectedAddrIt == _expectedAddrs.end())
+			BOOST_ERROR("Missing result address " << resultAddr);
+	}
+	BOOST_CHECK(_expectedAddrs == _resultAddrs);
+}
 
 }
 }
