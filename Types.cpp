@@ -234,7 +234,7 @@ u256 StructType::getStorageSize() const
 bool StructType::canLiveOutsideStorage() const
 {
 	for (unsigned i = 0; i < getMemberCount(); ++i)
-		if (!getMemberByIndex(i).getType()->canLiveOutsideStorage())
+		if (!getMemberByIndex(i)->canLiveOutsideStorage())
 			return false;
 	return true;
 }
@@ -258,9 +258,9 @@ unsigned StructType::memberNameToIndex(string const& _name) const
 	return unsigned(-1);
 }
 
-VariableDeclaration const& StructType::getMemberByIndex(unsigned _index) const
+shared_ptr<Type const> const& StructType::getMemberByIndex(unsigned _index) const
 {
-	return *m_struct.getMembers()[_index];
+	return m_struct.getMembers()[_index].getType();
 }
 
 u256 StructType::getStorageOffsetOfMember(unsigned _index) const
@@ -269,7 +269,7 @@ u256 StructType::getStorageOffsetOfMember(unsigned _index) const
 	u256 offset;
 //	vector<ASTPointer<VariableDeclaration>> const& members = m_struct.getMembers();
 	for (unsigned index = 0; index < _index; ++index)
-		offset += getMemberByIndex(index).getType()->getStorageSize();
+		offset += getMemberByIndex(index)->getStorageSize();
 	return offset;
 }
 

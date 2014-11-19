@@ -190,7 +190,7 @@ public:
 	unsigned getMemberCount() const;
 	/// Returns the index of the member with name @a _name or unsigned(-1) if it does not exist.
 	unsigned memberNameToIndex(std::string const& _name) const;
-	VariableDeclaration const& getMemberByIndex(unsigned _index) const;
+	std::shared_ptr<Type const> const& getMemberByIndex(unsigned _index) const;
 	u256 getStorageOffsetOfMember(unsigned _index) const;
 
 private:

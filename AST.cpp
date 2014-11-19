@@ -469,7 +469,7 @@ void MemberAccess::checkTypeRequirements()
 	unsigned memberIndex = type.memberNameToIndex(*m_memberName);
 	if (memberIndex >= type.getMemberCount())
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found in " + type.toString()));
-	m_type = type.getMemberByIndex(memberIndex).getType();
+	m_type = type.getMemberByIndex(memberIndex);
 	m_isLvalue = true;
 }
 
