@@ -40,11 +40,16 @@ public:
 	static bytes compile(ContractDefinition& _contract, bool _optimize);
 
 private:
-	/// Creates a new compiler context / assembly and packs the current code into the data part.
-	void packIntoContractCreator();
-	void appendFunctionSelector(std::vector<ASTPointer<FunctionDefinition> > const& _functions);
-	void appendCalldataUnpacker(FunctionDefinition const& _function);
+	/// Creates a new compiler context / assembly, packs the current code into the data part and
+	/// adds the constructor code.
+	void packIntoContractCreator(ContractDefinition const& _contract);
+	void appendFunctionSelector(ContractDefinition const& _contract);
+	/// Creates code that unpacks the arguments for the given function, from memory if
+	/// @a _fromMemory is true, otherwise from call data. @returns the size of the data in bytes.
+	unsigned appendCalldataUnpacker(FunctionDefinition const& _function, bool _fromMemory = false);
 	void appendReturnValuePacker(FunctionDefinition const& _function);
+
+	void registerStateVariables(ContractDefinition const& _contract);
 
 	virtual bool visit(FunctionDefinition& _function) override;
 	virtual bool visit(IfStatement& _ifStatement) override;
