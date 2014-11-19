@@ -102,13 +102,14 @@ int HexValue(char c)
 }
 } // end anonymous namespace
 
-void Scanner::reset(CharStream const& _source, bool _skipDocumentationComments)
+void Scanner::reset(CharStream const& _source)
 {
+	bool found_doc_comment;
 	m_source = _source;
 	m_char = m_source.get();
 	skipWhitespace();
-	scanToken(_skipDocumentationComments);
-	next(_skipDocumentationComments);
+	found_doc_comment = scanToken();
+	next(found_doc_comment);
 }
 
 
@@ -134,10 +135,11 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 // Ensure that tokens can be stored in a byte.
 BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 
-Token::Value Scanner::next(bool _skipDocumentationComments)
+Token::Value Scanner::next(bool _change_skipped_comment)
 {
 	m_current_token = m_next_token;
-	scanToken(_skipDocumentationComments);
+	if (scanToken() || _change_skipped_comment)
+		m_skipped_comment = m_next_skipped_comment;
 	return m_current_token.token;
 }
 
@@ -180,7 +182,7 @@ Token::Value Scanner::scanDocumentationComment()
 	{
 		char c = m_char;
 		advance();
-		addLiteralChar(c);
+		addCommentLiteralChar(c);
 	}
 	literal.Complete();
 	return Token::COMMENT_LITERAL;
@@ -209,8 +211,9 @@ Token::Value Scanner::skipMultiLineComment()
 	return Token::ILLEGAL;
 }
 
-void Scanner::scanToken(bool _skipDocumentationComments)
+bool Scanner::scanToken()
 {
+	bool found_doc_comment = false;
 	m_next_token.literal.clear();
 	Token::Value token;
 	do
@@ -315,8 +318,16 @@ void Scanner::scanToken(bool _skipDocumentationComments)
 			{
 				if (!advance()) /* double slash comment directly before EOS */
 					token = Token::WHITESPACE;
-				else if (!_skipDocumentationComments)
-					token = scanDocumentationComment();
+				else if (m_char == '/')
+				{
+					Token::Value comment;
+					m_next_skipped_comment.location.start = getSourcePos();
+					comment = scanDocumentationComment();
+					m_next_skipped_comment.location.end = getSourcePos();
+					m_next_skipped_comment.token = comment;
+					token = Token::WHITESPACE;
+					found_doc_comment = true;
+				}
 				else
 					token = skipSingleLineComment();
 			}
@@ -411,6 +422,8 @@ void Scanner::scanToken(bool _skipDocumentationComments)
 	while (token == Token::WHITESPACE);
 	m_next_token.location.end = getSourcePos();
 	m_next_token.token = token;
+
+	return found_doc_comment;
 }
 
 bool Scanner::scanEscape()

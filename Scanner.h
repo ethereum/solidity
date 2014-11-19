@@ -111,29 +111,32 @@ public:
 	};
 
 	Scanner() { reset(CharStream()); }
-	explicit Scanner(CharStream const& _source, bool _skipDocumentationComments = true)
-	{
-		reset(_source, _skipDocumentationComments);
-	}
+	explicit Scanner(CharStream const& _source) { reset(_source); }
 
 	/// Resets the scanner as if newly constructed with _input as input.
-	void reset(CharStream const& _source, bool _skipDocumentationComments = true);
+	void reset(CharStream const& _source);
 
-	/// Returns the next token and advances input.
-	Token::Value next(bool _skipDocumentationComments = true);
+	/// Returns the next token and advances input. If called from reset()
+	/// and ScanToken() found a documentation token then next should be called
+	/// with _change_skipped_comment=true
+	Token::Value next(bool _change_skipped_comment = false);
 
 	///@{
 	///@name Information about the current token
 
 	/// Returns the current token
-	Token::Value getCurrentToken(bool _skipDocumentationComments = true)
+	Token::Value getCurrentToken()
 	{
-		if (!_skipDocumentationComments)
-			next(_skipDocumentationComments);
 		return m_current_token.token;
 	}
 	Location getCurrentLocation() const { return m_current_token.location; }
 	std::string const& getCurrentLiteral() const { return m_current_token.literal; }
+	///@}
+
+	///@{
+	///@name Information about the current comment token
+	Location getCurrentCommentLocation() const { return m_skipped_comment.location; }
+	std::string const& getCurrentCommentLiteral() const { return m_skipped_comment.literal; }
 	///@}
 
 	///@{
@@ -154,7 +157,7 @@ public:
 	///@}
 
 private:
-	// Used for the current and look-ahead token.
+	// Used for the current and look-ahead token and comments
 	struct TokenDesc
 	{
 		Token::Value token;
@@ -166,6 +169,7 @@ private:
 	///@name Literal buffer support
 	inline void startNewLiteral() { m_next_token.literal.clear(); }
 	inline void addLiteralChar(char c) { m_next_token.literal.push_back(c); }
+	inline void addCommentLiteralChar(char c) { m_next_skipped_comment.literal.push_back(c); }
 	inline void dropLiteral() { m_next_token.literal.clear(); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
 	///@}
@@ -179,8 +183,9 @@ private:
 
 	bool scanHexByte(char& o_scannedByte);
 
-	/// Scans a single Solidity token.
-	void scanToken(bool _skipDocumentationComments = true);
+	/// Scans a single Solidity token. Returns true if the scanned token was
+	/// a skipped documentation comment. False in all other cases.
+	bool scanToken();
 
 	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();
@@ -202,6 +207,9 @@ private:
 	/// Return the current source position.
 	int getSourcePos() { return m_source.getPos(); }
 	bool isSourcePastEndOfInput() { return m_source.isPastEndOfInput(); }
+
+	TokenDesc m_skipped_comment;  // desc for current skipped comment
+	TokenDesc m_next_skipped_comment; // desc for next skiped comment
 
 	TokenDesc m_current_token;  // desc for current token (as returned by Next())
 	TokenDesc m_next_token;     // desc for next token (one token look-ahead)
