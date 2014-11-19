@@ -179,7 +179,7 @@ private:
 
 	bool scanHexByte(char& o_scannedByte);
 
-	/// Scans a single JavaScript token.
+	/// Scans a single Solidity token.
 	void scanToken(bool _skipDocumentationComments = true);
 
 	/// Skips all whitespace and @returns true if something was skipped.
