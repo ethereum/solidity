@@ -287,6 +287,18 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 	}
 }
 
+void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
+{
+	BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
+
+	for (size_t i = 0; i < _resultLogs.size(); ++i)
+	{
+		BOOST_CHECK(_resultLogs[i].address == _expectedLogs[i].address);
+		BOOST_CHECK(_resultLogs[i].topics == _expectedLogs[i].topics);
+		BOOST_CHECK(_resultLogs[i].data == _expectedLogs[i].data);
+	}
+}
+
 std::string getTestPath()
 {
 	string testPath;
