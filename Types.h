@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <string>
+#include <map>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
 #include <libsolidity/Exceptions.h>
@@ -36,6 +37,33 @@ namespace solidity
 {
 
 // @todo realMxN, string<N>
+
+class Type; // forward
+
+/**
+ * List of members of a type.
+ */
+class MemberList
+{
+public:
+	using TypePointer = std::shared_ptr<Type const>;
+	using MemberMap = std::map<std::string, TypePointer>;
+
+	MemberList() {}
+	explicit MemberList(MemberMap const& _members): m_memberTypes(_members) {}
+	TypePointer getMemberType(std::string const& _name) const
+	{
+		auto it = m_memberTypes.find(_name);
+		return it != m_memberTypes.end() ? it->second : std::shared_ptr<Type const>();
+	}
+
+	MemberMap::const_iterator begin() const { return m_memberTypes.begin(); }
+	MemberMap::const_iterator end() const { return m_memberTypes.end(); }
+
+private:
+	MemberMap m_memberTypes;
+};
+
 
 /**
  * Abstract base class that forms the root of the type hierarchy.
@@ -81,12 +109,21 @@ public:
 	/// Returns false if the type cannot live outside the storage, i.e. if it includes some mapping.
 	virtual bool canLiveOutsideStorage() const { return true; }
 
+	/// Returns the list of all members of this type. Default implementation: no members.
+	virtual MemberList const& getMembers() const { return EmptyMemberList; }
+	/// Convenience method, returns the type of the given named member or an empty pointer if no such member exists.
+	std::shared_ptr<Type const> getMemberType(std::string const& _name) const { return getMembers().getMemberType(_name); }
+
 	virtual std::string toString() const = 0;
 	virtual u256 literalValue(Literal const&) const
 	{
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Literal value requested "
 																		  "for type without literals."));
 	}
+
+protected:
+	/// Convenience object used when returning an empty member list.
+	static const MemberList EmptyMemberList;
 };
 
 /**
@@ -187,14 +224,14 @@ public:
 	virtual bool canLiveOutsideStorage() const;
 	virtual std::string toString() const override;
 
-	unsigned getMemberCount() const;
-	/// Returns the index of the member with name @a _name or unsigned(-1) if it does not exist.
-	unsigned memberNameToIndex(std::string const& _name) const;
-	std::shared_ptr<Type const> const& getMemberByIndex(unsigned _index) const;
-	u256 getStorageOffsetOfMember(unsigned _index) const;
+	virtual MemberList const& getMembers() const override;
+
+	u256 getStorageOffsetOfMember(std::string const& _name) const;
 
 private:
 	StructDefinition const& m_struct;
+	/// List of member types, will be lazy-initialized because of recursive references.
+	mutable std::unique_ptr<MemberList> m_members;
 };
 
 /**

@@ -86,6 +86,8 @@ shared_ptr<Type> Type::forLiteral(Literal const& _literal)
 	}
 }
 
+const MemberList Type::EmptyMemberList = MemberList();
+
 shared_ptr<IntegerType> IntegerType::smallestTypeForLiteral(string const& _literal)
 {
 	bigint value(_literal);
@@ -226,15 +228,15 @@ bool StructType::operator==(Type const& _other) const
 u256 StructType::getStorageSize() const
 {
 	u256 size = 0;
-	for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
-		size += variable->getType()->getStorageSize();
+	for (pair<string, shared_ptr<Type const>> const& member: getMembers())
+		size += member.second->getStorageSize();
 	return max<u256>(1, size);
 }
 
 bool StructType::canLiveOutsideStorage() const
 {
-	for (unsigned i = 0; i < getMemberCount(); ++i)
-		if (!getMemberByIndex(i)->canLiveOutsideStorage())
+	for (pair<string, shared_ptr<Type const>> const& member: getMembers())
+		if (!member.second->canLiveOutsideStorage())
 			return false;
 	return true;
 }
@@ -244,33 +246,30 @@ string StructType::toString() const
 	return string("struct ") + m_struct.getName();
 }
 
-unsigned StructType::getMemberCount() const
+MemberList const& StructType::getMembers() const
 {
-	return m_struct.getMembers().size();
+	// We need to lazy-initialize it because of recursive references.
+	if (!m_members)
+	{
+		map<string, shared_ptr<Type const>> members;
+		for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
+			members[variable->getName()] = variable->getType();
+		m_members.reset(new MemberList(members));
+	}
+	return *m_members;
 }
 
-unsigned StructType::memberNameToIndex(string const& _name) const
-{
-	vector<ASTPointer<VariableDeclaration>> const& members = m_struct.getMembers();
-	for (unsigned index = 0; index < members.size(); ++index)
-		if (members[index]->getName() == _name)
-			return index;
-	return unsigned(-1);
-}
-
-shared_ptr<Type const> const& StructType::getMemberByIndex(unsigned _index) const
-{
-	return m_struct.getMembers()[_index].getType();
-}
-
-u256 StructType::getStorageOffsetOfMember(unsigned _index) const
+u256 StructType::getStorageOffsetOfMember(string const& _name) const
 {
 	//@todo cache member offset?
 	u256 offset;
-//	vector<ASTPointer<VariableDeclaration>> const& members = m_struct.getMembers();
-	for (unsigned index = 0; index < _index; ++index)
-		offset += getMemberByIndex(index)->getStorageSize();
-	return offset;
+	for (ASTPointer<VariableDeclaration> variable: m_struct.getMembers())
+	{
+		offset += variable->getType()->getStorageSize();
+		if (variable->getName() == _name)
+			return offset;
+	}
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage offset of non-existing member requested."));
 }
 
 bool FunctionType::operator==(Type const& _other) const

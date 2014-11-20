@@ -208,10 +208,7 @@ void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 	if (asserts(m_currentLValue.isInStorage()))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to a non-storage value."));
 	StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
-	unsigned memberIndex = type.memberNameToIndex(_memberAccess.getMemberName());
-	if (asserts(memberIndex <= type.getMemberCount()))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member not found in struct during compilation."));
-	m_context << type.getStorageOffsetOfMember(memberIndex) << eth::Instruction::ADD;
+	m_context << type.getStorageOffsetOfMember(_memberAccess.getMemberName()) << eth::Instruction::ADD;
 	m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 }
 
