@@ -109,7 +109,11 @@ void Scanner::reset(CharStream const& _source)
 	m_char = m_source.get();
 	skipWhitespace();
 	foundDocComment = scanToken();
-	next(foundDocComment);
+
+	// special version of Scanner:next() taking the previous scanToken() result into account
+	m_current_token = m_next_token;
+	if (scanToken() || foundDocComment)
+		m_skipped_comment = m_next_skipped_comment;
 }
 
 
@@ -135,10 +139,10 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 // Ensure that tokens can be stored in a byte.
 BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 
-Token::Value Scanner::next(bool _changeSkippedComment)
+Token::Value Scanner::next()
 {
 	m_current_token = m_next_token;
-	if (scanToken() || _changeSkippedComment)
+	if (scanToken())
 		m_skipped_comment = m_next_skipped_comment;
 	return m_current_token.token;
 }

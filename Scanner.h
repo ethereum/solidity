@@ -116,10 +116,8 @@ public:
 	/// Resets the scanner as if newly constructed with _input as input.
 	void reset(CharStream const& _source);
 
-	/// Returns the next token and advances input. If called from reset()
-	/// and ScanToken() found a documentation token then next should be called
-	/// with _changeSkippedComment=true
-	Token::Value next(bool _changeSkippedComment = false);
+	/// Returns the next token and advances input
+	Token::Value next();
 
 	///@{
 	///@name Information about the current token
