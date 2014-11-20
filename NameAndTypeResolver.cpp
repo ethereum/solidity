@@ -32,15 +32,20 @@ namespace solidity
 {
 
 
+NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration*> const& _globals)
+{
+	for (Declaration* declaration: _globals)
+		m_scopes[nullptr].registerDeclaration(*declaration);
+}
+
 void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
-	reset();
 	DeclarationRegistrationHelper registrar(m_scopes, _contract);
 	m_currentScope = &m_scopes[&_contract];
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
 		ReferencesResolver resolver(*structDef, *this, nullptr);
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
-		checkForRecursion(*structDef);
+		structDef->checkValidityOfMembers();
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		ReferencesResolver resolver(*variable, *this, nullptr);
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
@@ -71,30 +76,6 @@ Declaration* NameAndTypeResolver::resolveName(ASTString const& _name, Declaratio
 Declaration* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
 {
 	return m_currentScope->resolveName(_name, _recursive);
-}
-
-void NameAndTypeResolver::checkForRecursion(StructDefinition const& _struct)
-{
-	set<StructDefinition const*> definitionsSeen;
-	vector<StructDefinition const*> queue = {&_struct};
-	while (!queue.empty())
-	{
-		StructDefinition const* def = queue.back();
-		queue.pop_back();
-		if (definitionsSeen.count(def))
-			BOOST_THROW_EXCEPTION(ParserError() << errinfo_sourceLocation(def->getLocation())
-												<< errinfo_comment("Recursive struct definition."));
-		definitionsSeen.insert(def);
-		for (ASTPointer<VariableDeclaration> const& member: def->getMembers())
-			if (member->getType()->getCategory() == Type::Category::STRUCT)
-				queue.push_back(dynamic_cast<UserDefinedTypeName&>(*member->getTypeName()).getReferencedStruct());
-	}
-}
-
-void NameAndTypeResolver::reset()
-{
-	m_scopes.clear();
-	m_currentScope = nullptr;
 }
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode const*, Scope>& _scopes,
@@ -195,7 +176,11 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 	// endVisit because the internal type needs resolving if it is a user defined type
 	// or mapping
 	if (_variable.getTypeName())
+	{
 		_variable.setType(_variable.getTypeName()->toType());
+		if (!_variable.getType())
+			BOOST_THROW_EXCEPTION(_variable.getTypeName()->createTypeError("Invalid type name"));
+	}
 	else if (!m_allowLazyTypes)
 		BOOST_THROW_EXCEPTION(_variable.createTypeError("Explicit type needed."));
 	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
@@ -221,11 +206,7 @@ bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 	if (!declaration)
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
 												 << errinfo_comment("Undeclared identifier."));
-	StructDefinition* referencedStruct = dynamic_cast<StructDefinition*>(declaration);
-	//@todo later, contracts are also valid types
-	if (!referencedStruct)
-		BOOST_THROW_EXCEPTION(_typeName.createTypeError("Identifier does not name a type name."));
-	_typeName.setReferencedStruct(*referencedStruct);
+	_typeName.setReferencedDeclaration(*declaration);
 	return false;
 }
 

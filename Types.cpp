@@ -60,13 +60,24 @@ shared_ptr<Type> Type::fromElementaryTypeName(Token::Value _typeToken)
 
 shared_ptr<Type> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
 {
-	return make_shared<StructType>(*_typeName.getReferencedStruct());
+	Declaration const* declaration = _typeName.getReferencedDeclaration();
+	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
+		return make_shared<StructType>(*structDef);
+	else if (FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(declaration))
+		return make_shared<FunctionType>(*function);
+	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
+		return make_shared<ContractType>(*contract);
+	return shared_ptr<Type>();
 }
 
 shared_ptr<Type> Type::fromMapping(Mapping const& _typeName)
 {
 	shared_ptr<Type const> keyType = _typeName.getKeyType().toType();
+	if (!keyType)
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Error resolving type name."));
 	shared_ptr<Type const> valueType = _typeName.getValueType().toType();
+	if (!valueType)
+		BOOST_THROW_EXCEPTION(_typeName.getValueType().createTypeError("Invalid type name"));
 	return make_shared<MappingType>(keyType, valueType);
 }
 
@@ -201,6 +212,15 @@ u256 BoolType::literalValue(Literal const& _literal) const
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Bool type constructed from non-boolean literal."));
 }
 
+bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (isImplicitlyConvertibleTo(_convertTo))
+		return true;
+	if (_convertTo.getCategory() == Category::INTEGER)
+		return dynamic_cast<IntegerType const&>(_convertTo).isAddress();
+	return false;
+}
+
 bool ContractType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
@@ -215,6 +235,11 @@ u256 ContractType::getStorageSize() const
 	for (ASTPointer<VariableDeclaration> const& variable: m_contract.getStateVariables())
 		size += variable->getType()->getStorageSize();
 	return max<u256>(1, size);
+}
+
+string ContractType::toString() const
+{
+	return "contract " + m_contract.getName();
 }
 
 bool StructType::operator==(Type const& _other) const
@@ -282,8 +307,7 @@ bool FunctionType::operator==(Type const& _other) const
 
 string FunctionType::toString() const
 {
-	//@todo nice string for function types
-	return "function(...)returns(...)";
+	return "function " + m_function.getName();
 }
 
 bool MappingType::operator==(Type const& _other) const

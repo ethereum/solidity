@@ -167,7 +167,15 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		Expression& firstArgument = *_functionCall.getArguments().front();
 		firstArgument.accept(*this);
-		appendTypeConversion(*firstArgument.getType(), *_functionCall.getType());
+		if (firstArgument.getType()->getCategory() == Type::Category::CONTRACT &&
+				_functionCall.getType()->getCategory() == Type::Category::INTEGER)
+		{
+			// explicit type conversion contract -> address, nothing to do.
+		}
+		else
+		{
+			appendTypeConversion(*firstArgument.getType(), *_functionCall.getType());
+		}
 	}
 	else
 	{
@@ -466,7 +474,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 	}
 }
 
-void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(const Expression& _expression)
+void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(Expression const& _expression)
 {
 	if (!_expression.lvalueRequested())
 	{
@@ -475,7 +483,7 @@ void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(const Express
 	}
 }
 
-void ExpressionCompiler::LValue::fromDeclaration( Expression const& _expression, Declaration const& _declaration)
+void ExpressionCompiler::LValue::fromDeclaration(Expression const& _expression, Declaration const& _declaration)
 {
 	if (m_context->isLocalVariable(&_declaration))
 	{

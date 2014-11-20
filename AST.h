@@ -66,7 +66,7 @@ public:
 
 	/// Creates a @ref TypeError exception and decorates it with the location of the node and
 	/// the given description
-	TypeError createTypeError(std::string const& _description);
+	TypeError createTypeError(std::string const& _description) const;
 
 	///@{
 	///@name equality operators
@@ -139,7 +139,14 @@ public:
 
 	std::vector<ASTPointer<VariableDeclaration>> const& getMembers() const { return m_members; }
 
+	/// Checks that the members do not include any recursive structs and have valid types
+	/// (e.g. no functions).
+	void checkValidityOfMembers();
+
 private:
+	void checkMemberTypes();
+	void checkRecursion();
+
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
 };
 
@@ -210,7 +217,6 @@ public:
 		Declaration(_location, _name), m_typeName(_type) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
-	bool isTypeGivenExplicitly() const { return bool(m_typeName); }
 	TypeName* getTypeName() const { return m_typeName.get(); }
 
 	/// Returns the declared or inferred type. Can be an empty pointer if no type was explicitly
@@ -238,6 +244,7 @@ public:
 
 	/// Retrieve the element of the type hierarchy this node refers to. Can return an empty shared
 	/// pointer until the types have been resolved using the @ref NameAndTypeResolver.
+	/// If it returns an empty shared pointer after that, this indicates that the type was not found.
 	virtual std::shared_ptr<Type> toType() const = 0;
 };
 
@@ -263,8 +270,7 @@ private:
 };
 
 /**
- * Name referring to a user-defined type (i.e. a struct).
- * @todo some changes are necessary if this is also used to refer to contract types later
+ * Name referring to a user-defined type (i.e. a struct, contract, etc.).
  */
 class UserDefinedTypeName: public TypeName
 {
@@ -275,13 +281,13 @@ public:
 	virtual std::shared_ptr<Type> toType() const override { return Type::fromUserDefinedTypeName(*this); }
 
 	ASTString const& getName() const { return *m_name; }
-	void setReferencedStruct(StructDefinition& _referencedStruct) { m_referencedStruct = &_referencedStruct; }
-	StructDefinition const* getReferencedStruct() const { return m_referencedStruct; }
+	void setReferencedDeclaration(Declaration& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
+	Declaration const* getReferencedDeclaration() const { return m_referencedDeclaration; }
 
 private:
 	ASTPointer<ASTString> m_name;
 
-	StructDefinition* m_referencedStruct;
+	Declaration* m_referencedDeclaration;
 };
 
 /**

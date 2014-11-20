@@ -30,9 +30,11 @@
 namespace dev {
 namespace solidity {
 
-class Scanner; // forward
-class ContractDefinition; // forward
-class Compiler; // forward
+// forward declarations
+class Scanner;
+class ContractDefinition;
+class Compiler;
+class GlobalContext;
 
 /**
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
@@ -71,6 +73,7 @@ public:
 
 private:
 	std::shared_ptr<Scanner> m_scanner;
+	std::shared_ptr<GlobalContext> m_globalContext;
 	std::shared_ptr<ContractDefinition> m_contractASTNode;
 	bool m_parseSuccessful;
 	std::string m_interface;

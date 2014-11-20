@@ -160,7 +160,6 @@ namespace solidity
 	K(RETURNS, "returns", 0)                                           \
 	K(STRUCT, "struct", 0)                                             \
 	K(SWITCH, "switch", 0)                                             \
-	K(THIS, "this", 0)                                                 \
 	K(VAR, "var", 0)                                                   \
 	K(WHILE, "while", 0)                                               \
 	\

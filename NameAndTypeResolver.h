@@ -41,8 +41,7 @@ namespace solidity
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
-	NameAndTypeResolver() {}
-
+	explicit NameAndTypeResolver(std::vector<Declaration*> const& _globals);
 	void resolveNamesAndTypes(ContractDefinition& _contract);
 
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,

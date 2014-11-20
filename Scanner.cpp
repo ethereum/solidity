@@ -683,7 +683,6 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	KEYWORD("switch", Token::SWITCH)                                           \
 	KEYWORD_GROUP('t')                                                         \
 	KEYWORD("text", Token::TEXT)                                               \
-	KEYWORD("this", Token::THIS)                                               \
 	KEYWORD("true", Token::TRUE_LITERAL)                                       \
 	KEYWORD_GROUP('u')                                                         \
 	KEYWORD("uint", Token::UINT)                                               \
