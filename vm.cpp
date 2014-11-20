@@ -306,24 +306,19 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 		auto vm = VMFace::create(vmKind, fev.gas);
 		bytes output;
-		auto outOfGas = false;
 
 		auto startTime = std::chrono::high_resolution_clock::now();
 		u256 gas;
+		bool vmExceptionOccured = false;
 		try
 		{
 			output = vm->go(fev, fev.simpleTrace()).toVector();
 			gas = vm->gas();
 		}
-		catch (OutOfGas const&)
-		{
-			outOfGas = true;
-			gas = 0;
-		}
 		catch (VMException const& _e)
 		{
 			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			gas = 0;
+			vmExceptionOccured = true;
 		}
 		catch (Exception const& _e)
 		{
@@ -370,13 +365,20 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			o["env"] = mValue(fev.exportEnv());
 			o["exec"] = mValue(fev.exportExec());
-			o["post"] = mValue(fev.exportState());
-			o["callcreates"] = fev.exportCallCreates();
-			o["out"] = "0x" + toHex(output);
-			fev.push(o, "gas", gas);
+			if (!vmExceptionOccured)
+			{
+				o["post"] = mValue(fev.exportState());
+				o["callcreates"] = fev.exportCallCreates();
+				o["out"] = "0x" + toHex(output);
+				fev.push(o, "gas", gas);
+			}
 		}
 		else
 		{
+			if (o.count("post") > 0)	// No exceptions expected
+			{
+				BOOST_CHECK(!vmExceptionOccured);
+
 			BOOST_REQUIRE(o.count("post") > 0);
 			BOOST_REQUIRE(o.count("callcreates") > 0);
 			BOOST_REQUIRE(o.count("out") > 0);
@@ -388,11 +390,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 			checkOutput(output, o);
 
-            BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
-
-			if (outOfGas)
-				BOOST_CHECK_MESSAGE(gas == 0, "Remaining gas not 0 in out-of-gas state");
-
+			BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
+			
 			auto& expectedAddrs = test.addresses;
 			auto& resultAddrs = fev.addresses;
 			for (auto&& expectedPair : expectedAddrs)
@@ -415,6 +414,9 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 			checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
 			BOOST_CHECK(test.callcreates == fev.callcreates);
+		}
+			else	// Exception expected
+				BOOST_CHECK(vmExceptionOccured);
 		}
 	}
 }

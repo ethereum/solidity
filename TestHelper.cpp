@@ -380,6 +380,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 			{
 				BOOST_ERROR("Failed test with Exception: " << _e.what());
 			}
+			break;
 		}
 	}
 
