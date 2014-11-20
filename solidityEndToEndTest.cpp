@@ -700,6 +700,28 @@ BOOST_AUTO_TEST_CASE(structs)
 	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
 }
 
+BOOST_AUTO_TEST_CASE(constructor)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  mapping(uint => uint) data;\n"
+							 "  function test() {\n"
+							 "    data[7] = 8;\n"
+							 "  }\n"
+							 "  function get(uint key) returns (uint value) {\n"
+							 "    return data[key];"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	map<u256, byte> data;
+	data[7] = 8;
+	auto get = [&](u256 const& _x) -> u256
+	{
+		return data[_x];
+	};
+	testSolidityAgainstCpp(0, get, u256(6));
+	testSolidityAgainstCpp(0, get, u256(7));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
