@@ -128,8 +128,6 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 					   byte(Instruction::JUMP),
 					   byte(Instruction::JUMPDEST),
 					   // stack here: ret e h f(1,2,3)
-					   byte(Instruction::DUP2),
-					   byte(Instruction::POP),
 					   byte(Instruction::SWAP1),
 					   // stack here: ret e f(1,2,3) h
 					   byte(Instruction::POP),

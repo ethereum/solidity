@@ -29,8 +29,9 @@
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/CorsHttpServer.h>
-#include <jsonrpc/connectors/httpserver.h>
-#include <jsonrpc/connectors/httpclient.h>
+#include <json/json.h>
+#include <jsonrpccpp/server/connectors/httpserver.h>
+#include <jsonrpccpp/client/connectors/httpclient.h>
 #include <set>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
@@ -61,11 +62,12 @@ struct Setup
 		
 		web3->setIdealPeerCount(5);
 		web3->ethereum()->setForceMining(true);
-		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), *web3, {}));
+		auto server = new jsonrpc::CorsHttpServer(8080);
+		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(*server, *web3, {}));
 		jsonrpcServer->setIdentities({});
 		jsonrpcServer->StartListening();
-		
-		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
+		auto client = new jsonrpc::HttpClient("http://localhost:8080");
+		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(*client));
 	}
 };
 
@@ -237,7 +239,73 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	BOOST_CHECK_EQUAL(jsToDecimal(balanceString2), "750000000000000000");
 	BOOST_CHECK_EQUAL(txAmount, balance2);
 }
+
+
+BOOST_AUTO_TEST_CASE(simple_contract)
+{
+	cnote << "Testing jsonrpc contract...";
+	KeyPair kp = KeyPair::create();
+	web3->ethereum()->setAddress(kp.address());
+	jsonrpcServer->setAccounts({kp});
+
+	dev::eth::mine(*(web3->ethereum()), 1);
 	
+	char const* sourceCode = "contract test {\n"
+	"  function f(uint a) returns(uint d) { return a * 7; }\n"
+	"}\n";
+
+	string compiled = jsonrpcClient->eth_solidity(sourceCode);
+
+	Json::Value create;
+	create["code"] = compiled;
+	string contractAddress = jsonrpcClient->eth_transact(create);
+	dev::eth::mine(*(web3->ethereum()), 1);
+	
+	Json::Value call;
+	call["to"] = contractAddress;
+	call["data"] = "0x00000000000000000000000000000000000000000000000000000000000000001";
+	string result = jsonrpcClient->eth_call(call);
+	BOOST_CHECK_EQUAL(result, "0x0000000000000000000000000000000000000000000000000000000000000007");
+}
+
+BOOST_AUTO_TEST_CASE(contract_storage)
+{
+	cnote << "Testing jsonrpc contract storage...";
+	KeyPair kp = KeyPair::create();
+	web3->ethereum()->setAddress(kp.address());
+	jsonrpcServer->setAccounts({kp});
+
+	dev::eth::mine(*(web3->ethereum()), 1);
+	
+	char const* sourceCode = R"(
+		contract test {
+			uint hello;
+			function writeHello(uint value)  returns(bool d){
+				hello = value;
+				return true;
+			}
+		}
+	)";
+	
+	string compiled = jsonrpcClient->eth_solidity(sourceCode);
+	
+	Json::Value create;
+	create["code"] = compiled;
+	string contractAddress = jsonrpcClient->eth_transact(create);
+	dev::eth::mine(*(web3->ethereum()), 1);
+	
+	Json::Value transact;
+	transact["to"] = contractAddress;
+	transact["data"] = "0x00000000000000000000000000000000000000000000000000000000000000003";
+	jsonrpcClient->eth_transact(transact);
+	dev::eth::mine(*(web3->ethereum()), 1);
+	
+	Json::Value storage = jsonrpcClient->eth_storageAt(contractAddress);
+	BOOST_CHECK_EQUAL(storage.getMemberNames().size(), 1);
+	for (auto name: storage.getMemberNames())
+		BOOST_CHECK_EQUAL(storage[name].asString(), "0x03");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 

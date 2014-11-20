@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 	Secret secret(sha3(sbytes));
 	KeyPair key(secret);
 	
-	bytes m({0xFF});
+	bytes m(1, 0xff);
 	int tests = 2;
 	while (m[0]++, tests--)
 	{

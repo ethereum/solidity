@@ -32,6 +32,9 @@ using namespace std;
 
 namespace dev
 {
+/// Provider another overload for toBigEndian to encode arguments and return values.
+inline bytes toBigEndian(bool _value) { return bytes({byte(_value)}); }
+
 namespace solidity
 {
 namespace test
@@ -137,6 +140,7 @@ private:
 		m_output = executive.out().toVector();
 	}
 
+protected:
 	Address m_contractAddress;
 	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
@@ -494,6 +498,206 @@ BOOST_AUTO_TEST_CASE(state_smoke_test)
 	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == toBigEndian(u256(0x8765)));
 	BOOST_CHECK(callContractFunction(1, bytes(1, 0x00) + toBigEndian(u256(0x3))) == bytes());
 	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x3)));
+}
+
+BOOST_AUTO_TEST_CASE(simple_mapping)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  mapping(uint8 => uint8) table;\n"
+							 "  function get(uint8 k) returns (uint8 v) {\n"
+							 "    return table[k];\n"
+							 "  }\n"
+							 "  function set(uint8 k, uint8 v) {\n"
+							 "    table[k] = v;\n"
+							 "  }\n"
+							 "}";
+	compileAndRun(sourceCode);
+
+	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	callContractFunction(1, bytes({0x01, 0xa1}));
+	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0xa1}));
+	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	callContractFunction(1, bytes({0x00, 0xef}));
+	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0xef}));
+	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0xa1}));
+	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	callContractFunction(1, bytes({0x01, 0x05}));
+	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0xef}));
+	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0x05}));
+	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_state)
+{
+	char const* sourceCode = "contract Ballot {\n"
+							 "  mapping(address => bool) canVote;\n"
+							 "  mapping(address => uint) voteCount;\n"
+							 "  mapping(address => bool) voted;\n"
+							 "  function getVoteCount(address addr) returns (uint retVoteCount) {\n"
+							 "    return voteCount[addr];\n"
+							 "  }\n"
+							 "  function grantVoteRight(address addr) {\n"
+							 "    canVote[addr] = true;\n"
+							 "  }\n"
+							 "  function vote(address voter, address vote) returns (bool success) {\n"
+							 "    if (!canVote[voter] || voted[voter]) return false;\n"
+							 "    voted[voter] = true;\n"
+							 "    voteCount[vote] = voteCount[vote] + 1;\n"
+							 "    return true;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	class Ballot
+	{
+	public:
+		u256 getVoteCount(u160 _address) { return m_voteCount[_address]; }
+		void grantVoteRight(u160 _address) { m_canVote[_address] = true; }
+		bool vote(u160 _voter, u160 _vote)
+		{
+			if (!m_canVote[_voter] || m_voted[_voter]) return false;
+			m_voted[_voter] = true;
+			m_voteCount[_vote]++;
+			return true;
+		}
+	private:
+		map<u160, bool> m_canVote;
+		map<u160, u256> m_voteCount;
+		map<u160, bool> m_voted;
+	} ballot;
+
+	auto getVoteCount = bind(&Ballot::getVoteCount, &ballot, _1);
+	auto grantVoteRight = bind(&Ballot::grantVoteRight, &ballot, _1);
+	auto vote = bind(&Ballot::vote, &ballot, _1, _2);
+	testSolidityAgainstCpp(0, getVoteCount, u160(0));
+	testSolidityAgainstCpp(0, getVoteCount, u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(2));
+	// voting without vote right shourd be rejected
+	testSolidityAgainstCpp(2, vote, u160(0), u160(2));
+	testSolidityAgainstCpp(0, getVoteCount, u160(0));
+	testSolidityAgainstCpp(0, getVoteCount, u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(2));
+	// grant vote rights
+	testSolidityAgainstCpp(1, grantVoteRight, u160(0));
+	testSolidityAgainstCpp(1, grantVoteRight, u160(1));
+	// vote, should increase 2's vote count
+	testSolidityAgainstCpp(2, vote, u160(0), u160(2));
+	testSolidityAgainstCpp(0, getVoteCount, u160(0));
+	testSolidityAgainstCpp(0, getVoteCount, u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(2));
+	// vote again, should be rejected
+	testSolidityAgainstCpp(2, vote, u160(0), u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(0));
+	testSolidityAgainstCpp(0, getVoteCount, u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(2));
+	// vote without right to vote
+	testSolidityAgainstCpp(2, vote, u160(2), u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(0));
+	testSolidityAgainstCpp(0, getVoteCount, u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(2));
+	// grant vote right and now vote again
+	testSolidityAgainstCpp(1, grantVoteRight, u160(2));
+	testSolidityAgainstCpp(2, vote, u160(2), u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(0));
+	testSolidityAgainstCpp(0, getVoteCount, u160(1));
+	testSolidityAgainstCpp(0, getVoteCount, u160(2));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_state_inc_dec)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  uint value;\n"
+							 "  mapping(uint => uint) table;\n"
+							 "  function f(uint x) returns (uint y) {\n"
+							 "    value = x;\n"
+							 "    if (x > 0) table[++value] = 8;\n"
+							 "    if (x > 1) value--;\n"
+							 "    if (x > 2) table[value]++;\n"
+							 "    return --table[value++];\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	u256 value = 0;
+	map<u256, u256> table;
+	auto f = [&](u256 const& _x) -> u256
+	{
+		value = _x;
+		if (_x > 0)
+			table[++value] = 8;
+		if (_x > 1)
+			value --;
+		if (_x > 2)
+			table[value]++;
+		return --table[value++];
+	};
+	testSolidityAgainstCppOnRange(0, f, 0, 5);
+}
+
+BOOST_AUTO_TEST_CASE(multi_level_mapping)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  mapping(uint => mapping(uint => uint)) table;\n"
+							 "  function f(uint x, uint y, uint z) returns (uint w) {\n"
+							 "    if (z == 0) return table[x][y];\n"
+							 "    else return table[x][y] = z;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	map<u256, map<u256, u256>> table;
+	auto f = [&](u256 const& _x, u256 const& _y, u256 const& _z) -> u256
+	{
+		if (_z == 0) return table[_x][_y];
+		else return table[_x][_y] = _z;
+	};
+	testSolidityAgainstCpp(0, f, u256(4), u256(5), u256(0));
+	testSolidityAgainstCpp(0, f, u256(5), u256(4), u256(0));
+	testSolidityAgainstCpp(0, f, u256(4), u256(5), u256(9));
+	testSolidityAgainstCpp(0, f, u256(4), u256(5), u256(0));
+	testSolidityAgainstCpp(0, f, u256(5), u256(4), u256(0));
+	testSolidityAgainstCpp(0, f, u256(5), u256(4), u256(7));
+	testSolidityAgainstCpp(0, f, u256(4), u256(5), u256(0));
+	testSolidityAgainstCpp(0, f, u256(5), u256(4), u256(0));
+}
+
+BOOST_AUTO_TEST_CASE(structs)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  struct s1 {\n"
+							 "    uint8 x;\n"
+							 "    bool y;\n"
+							 "  }\n"
+							 "  struct s2 {\n"
+							 "    uint32 z;\n"
+							 "    s1 s1data;\n"
+							 "    mapping(uint8 => s2) recursive;\n"
+							 "  }\n"
+							 "  s2 data;\n"
+							 "  function check() returns (bool ok) {\n"
+							 "    return data.z == 1 && data.s1data.x == 2 && \n"
+							 "        data.s1data.y == true && \n"
+							 "        data.recursive[3].recursive[4].z == 5 && \n"
+							 "        data.recursive[4].recursive[3].z == 6 && \n"
+							 "        data.recursive[0].s1data.y == false && \n"
+							 "        data.recursive[4].z == 9;\n"
+							 "  }\n"
+							 "  function set() {\n"
+							 "    data.z = 1;\n"
+							 "    data.s1data.x = 2;\n"
+							 "    data.s1data.y = true;\n"
+							 "    data.recursive[3].recursive[4].z = 5;\n"
+							 "    data.recursive[4].recursive[3].z = 6;\n"
+							 "    data.recursive[0].s1data.y = false;\n"
+							 "    data.recursive[4].z = 9;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction(0) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(1) == bytes());
+	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

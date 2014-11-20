@@ -4,7 +4,8 @@ aux_source_directory(. SRC_LIST)
 list(REMOVE_ITEM SRC_LIST "./createRandomTest.cpp")
 
 include_directories(..)
-include_directories(${CRYPTOPP_INCLUDE_DIR})
+include_directories(${CRYPTOPP_INCLUDE_DIRS})
+include_directories(${JSONCPP_INCLUDE_DIRS})
 
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
@@ -22,6 +23,7 @@ target_link_libraries(testeth webthree)
 target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
 
 if(JSON_RPC_CPP_FOUND)
+    target_link_libraries(testeth ${JSONCPP_LIBRARIES})
 	target_link_libraries(testeth web3jsonrpc)
 endif()
 
