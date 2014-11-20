@@ -104,12 +104,12 @@ int HexValue(char c)
 
 void Scanner::reset(CharStream const& _source)
 {
-	bool found_doc_comment;
+	bool foundDocComment;
 	m_source = _source;
 	m_char = m_source.get();
 	skipWhitespace();
-	found_doc_comment = scanToken();
-	next(found_doc_comment);
+	foundDocComment = scanToken();
+	next(foundDocComment);
 }
 
 
@@ -135,10 +135,10 @@ bool Scanner::scanHexByte(char& o_scannedByte)
 // Ensure that tokens can be stored in a byte.
 BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 
-Token::Value Scanner::next(bool _change_skipped_comment)
+Token::Value Scanner::next(bool _changeSkippedComment)
 {
 	m_current_token = m_next_token;
-	if (scanToken() || _change_skipped_comment)
+	if (scanToken() || _changeSkippedComment)
 		m_skipped_comment = m_next_skipped_comment;
 	return m_current_token.token;
 }
@@ -173,7 +173,7 @@ Token::Value Scanner::skipSingleLineComment()
 	return Token::WHITESPACE;
 }
 
-// For the moment this function simply consumes a single line triple slash doc comment
+/// For the moment this function simply consumes a single line triple slash doc comment
 Token::Value Scanner::scanDocumentationComment()
 {
 	LiteralScope literal(this);
@@ -213,7 +213,7 @@ Token::Value Scanner::skipMultiLineComment()
 
 bool Scanner::scanToken()
 {
-	bool found_doc_comment = false;
+	bool foundDocComment = false;
 	m_next_token.literal.clear();
 	Token::Value token;
 	do
@@ -326,7 +326,7 @@ bool Scanner::scanToken()
 					m_next_skipped_comment.location.end = getSourcePos();
 					m_next_skipped_comment.token = comment;
 					token = Token::WHITESPACE;
-					found_doc_comment = true;
+					foundDocComment = true;
 				}
 				else
 					token = skipSingleLineComment();
@@ -423,7 +423,7 @@ bool Scanner::scanToken()
 	m_next_token.location.end = getSourcePos();
 	m_next_token.token = token;
 
-	return found_doc_comment;
+	return foundDocComment;
 }
 
 bool Scanner::scanEscape()
@@ -567,9 +567,9 @@ Token::Value Scanner::scanNumber(char _charSeen)
 // ----------------------------------------------------------------------------
 // Keyword Matcher
 
-#define KEYWORDS(KEYWORD_GROUP, KEYWORD)                                     \
+#define KEYWORDS(KEYWORD_GROUP, KEYWORD)                                       \
 	KEYWORD_GROUP('a')                                                         \
-	KEYWORD("address", Token::ADDRESS)                                           \
+	KEYWORD("address", Token::ADDRESS)                                         \
 	KEYWORD_GROUP('b')                                                         \
 	KEYWORD("break", Token::BREAK)                                             \
 	KEYWORD("bool", Token::BOOL)                                               \

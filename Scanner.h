@@ -119,7 +119,7 @@ public:
 	/// Returns the next token and advances input. If called from reset()
 	/// and ScanToken() found a documentation token then next should be called
 	/// with _change_skipped_comment=true
-	Token::Value next(bool _change_skipped_comment = false);
+	Token::Value next(bool _changeSkippedComment = false);
 
 	///@{
 	///@name Information about the current token
@@ -157,7 +157,7 @@ public:
 	///@}
 
 private:
-	// Used for the current and look-ahead token and comments
+	/// Used for the current and look-ahead token and comments
 	struct TokenDesc
 	{
 		Token::Value token;
