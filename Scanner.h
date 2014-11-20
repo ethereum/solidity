@@ -118,7 +118,7 @@ public:
 
 	/// Returns the next token and advances input. If called from reset()
 	/// and ScanToken() found a documentation token then next should be called
-	/// with _change_skipped_comment=true
+	/// with _changeSkippedComment=true
 	Token::Value next(bool _changeSkippedComment = false);
 
 	///@{
