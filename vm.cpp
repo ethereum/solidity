@@ -337,6 +337,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		VM vm(fev.gas);
 
 		u256 gas;
+		bool vmExceptionOccured = false;
 		try
 		{
 			output = vm.go(fev, fev.simpleTrace()).toBytes();
@@ -345,7 +346,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		catch (VMException const& _e)
 		{
 			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			gas = 0;
+			vmExceptionOccured = true;
 		}
 		catch (Exception const& _e)
 		{
@@ -379,53 +380,63 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			o["env"] = mValue(fev.exportEnv());
 			o["exec"] = mValue(fev.exportExec());
-			o["post"] = mValue(fev.exportState());
-			o["callcreates"] = fev.exportCallCreates();
-			o["out"] = "0x" + toHex(output);
-			fev.push(o, "gas", gas);
-			o["logs"] = mValue(fev.exportLog());
+			if (!vmExceptionOccured)
+			{
+				o["post"] = mValue(fev.exportState());
+				o["callcreates"] = fev.exportCallCreates();
+				o["out"] = "0x" + toHex(output);
+				fev.push(o, "gas", gas);
+				o["logs"] = mValue(fev.exportLog());
+			}
 		}
 		else
 		{
-			BOOST_REQUIRE(o.count("post") > 0);
-			BOOST_REQUIRE(o.count("callcreates") > 0);
-			BOOST_REQUIRE(o.count("out") > 0);
-			BOOST_REQUIRE(o.count("gas") > 0);
-			BOOST_REQUIRE(o.count("logs") > 0);
-
-			dev::test::FakeExtVM test;
-			test.importState(o["post"].get_obj());
-			test.importCallCreates(o["callcreates"].get_array());
-			test.importLog(o["logs"].get_obj());
-
-			checkOutput(output, o);
-
-			BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
-
-			auto& expectedAddrs = test.addresses;
-			auto& resultAddrs = fev.addresses;
-			for (auto&& expectedPair : expectedAddrs)
+			if (o.count("post") > 0)	// No exceptions expected
 			{
-				auto& expectedAddr = expectedPair.first;
-				auto resultAddrIt = resultAddrs.find(expectedAddr);
-				if (resultAddrIt == resultAddrs.end())
-					BOOST_ERROR("Missing expected address " << expectedAddr);
-				else
+				BOOST_CHECK(!vmExceptionOccured);
+
+				BOOST_REQUIRE(o.count("post") > 0);
+				BOOST_REQUIRE(o.count("callcreates") > 0);
+				BOOST_REQUIRE(o.count("out") > 0);
+				BOOST_REQUIRE(o.count("gas") > 0);
+				BOOST_REQUIRE(o.count("logs") > 0);
+
+				dev::test::FakeExtVM test;
+				test.importState(o["post"].get_obj());
+				test.importCallCreates(o["callcreates"].get_array());
+				test.importLog(o["logs"].get_obj());
+
+				checkOutput(output, o);
+
+				BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
+
+				auto& expectedAddrs = test.addresses;
+				auto& resultAddrs = fev.addresses;
+				for (auto&& expectedPair : expectedAddrs)
 				{
-					auto& expectedState = expectedPair.second;
-					auto& resultState = resultAddrIt->second;
-					BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
-					BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
-					BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
+					auto& expectedAddr = expectedPair.first;
+					auto resultAddrIt = resultAddrs.find(expectedAddr);
+					if (resultAddrIt == resultAddrs.end())
+						BOOST_ERROR("Missing expected address " << expectedAddr);
+					else
+					{
+						auto& expectedState = expectedPair.second;
+						auto& resultState = resultAddrIt->second;
+						BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
+						BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
+						BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
 
-					checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
+						checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
+					}
 				}
+
+				checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
+				BOOST_CHECK(test.callcreates == fev.callcreates);
+
+				checkLog(fev.sub.logs, test.sub.logs);
 			}
-
-			checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
-			BOOST_CHECK(test.callcreates == fev.callcreates);
-
-			checkLog(fev.sub.logs, test.sub.logs);
+			else	// Exception expected
+				BOOST_CHECK(vmExceptionOccured);
 		}
 	}
 }
