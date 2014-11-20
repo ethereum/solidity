@@ -310,7 +310,7 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
 		if (arg == testTypeFlag)
 		{
-			if (i + 2 >= boost::unit_test::framework::master_test_suite().argc)
+			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
 			{
 				cnote << "Missing filename\nUsage: testeth " << testTypeFlag << " <filename> <testname>\n";
 				return;
