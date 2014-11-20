@@ -43,7 +43,7 @@ void parseTextAndResolveNames(std::string const& _source)
 	Parser parser;
 	ASTPointer<ContractDefinition> contract = parser.parse(
 										   std::make_shared<Scanner>(CharStream(_source)));
-	NameAndTypeResolver resolver;
+	NameAndTypeResolver resolver({});
 	resolver.resolveNamesAndTypes(*contract);
 }
 }

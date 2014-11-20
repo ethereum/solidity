@@ -45,17 +45,17 @@ class ExecutionFramework
 public:
 	ExecutionFramework() { g_logVerbosity = 0; }
 
-	bytes const& compileAndRun(string const& _sourceCode)
+	bytes const& compileAndRun(string const& _sourceCode, u256 const& _value = 0)
 	{
 		bytes code = dev::solidity::CompilerStack::staticCompile(_sourceCode);
-		sendMessage(code, true);
+		sendMessage(code, true, _value);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
 
-	bytes const& callContractFunction(byte _index, bytes const& _data = bytes())
+	bytes const& callContractFunction(byte _index, bytes const& _data = bytes(), u256 const& _value = 0)
 	{
-		sendMessage(bytes(1, _index) + _data, false);
+		sendMessage(bytes(1, _index) + _data, false, _value);
 		return m_output;
 	}
 
@@ -111,11 +111,11 @@ private:
 		return toBigEndian(_cppFunction(_arguments...));
 	}
 
-	void sendMessage(bytes const& _data, bool _isCreation)
+	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		eth::Executive executive(m_state);
-		eth::Transaction t = _isCreation ? eth::Transaction(0, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec())
-										 : eth::Transaction(0, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
+		eth::Transaction t = _isCreation ? eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec())
+										 : eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
 		bytes transactionRLP = t.rlp();
 		try
 		{
@@ -125,7 +125,7 @@ private:
 		catch (...) {}
 		if (_isCreation)
 		{
-			BOOST_REQUIRE(!executive.create(Address(), 0, m_gasPrice, m_gas, &_data, Address()));
+			BOOST_REQUIRE(!executive.create(Address(), _value, m_gasPrice, m_gas, &_data, Address()));
 			m_contractAddress = executive.newAddress();
 			BOOST_REQUIRE(m_contractAddress);
 			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
@@ -133,7 +133,7 @@ private:
 		else
 		{
 			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-			BOOST_REQUIRE(!executive.call(m_contractAddress, Address(), 0, m_gasPrice, &_data, m_gas, Address()));
+			BOOST_REQUIRE(!executive.call(m_contractAddress, Address(), _value, m_gasPrice, &_data, m_gas, Address()));
 		}
 		BOOST_REQUIRE(executive.go());
 		executive.finalize();
@@ -720,6 +720,17 @@ BOOST_AUTO_TEST_CASE(constructor)
 	};
 	testSolidityAgainstCpp(0, get, u256(6));
 	testSolidityAgainstCpp(0, get, u256(7));
+}
+
+BOOST_AUTO_TEST_CASE(balance)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function getBalance() returns (u256 balance) {\n"
+							 "    return address(this).balance;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode, 23);
+	BOOST_CHECK(callContractFunction(0) == toBigEndian(u256(23)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
