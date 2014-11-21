@@ -221,26 +221,6 @@ BOOST_AUTO_TEST_CASE(statement_starting_with_type_conversion)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
-BOOST_AUTO_TEST_CASE(blockchain_access)
-{
-	char const* text = "contract test {\n"
-					   "  function fun() {\n"
-					   "    u256 x = address(0).balance;\n"
-					   "  }\n"
-					   "}\n";
-	BOOST_CHECK_NO_THROW(parseText(text));
-}
-
-BOOST_AUTO_TEST_CASE(blockchain_access_invalid)
-{
-	char const* text = "contract test {\n"
-					   "  function fun() {\n"
-					   "    address(0).balance = 7;\n"
-					   "  }\n"
-					   "}\n";
-	BOOST_CHECK_THROW(parseText(text), TypeError);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }

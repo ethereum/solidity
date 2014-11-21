@@ -725,7 +725,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function getBalance() returns (u256 balance) {\n"
+							 "  function getBalance() returns (uint256 balance) {\n"
 							 "    return address(this).balance;\n"
 							 "  }\n"
 							 "}\n";
