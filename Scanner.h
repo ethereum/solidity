@@ -96,18 +96,18 @@ private:
 class Scanner
 {
 public:
-	// Scoped helper for literal recording. Automatically drops the literal
-	// if aborting the scanning before it's complete.
+	/// Scoped helper for literal recording. Automatically drops the literal
+	/// if aborting the scanning before it's complete.
 	class LiteralScope
 	{
 	public:
-		explicit LiteralScope(Scanner* self): scanner_(self), complete_(false) { scanner_->startNewLiteral(); }
-		~LiteralScope() { if (!complete_) scanner_->dropLiteral(); }
-		void Complete() { complete_ = true; }
+		explicit LiteralScope(Scanner* self): m_scanner(self), m_complete(false) { m_scanner->startNewLiteral(); }
+		~LiteralScope() { if (!m_complete) m_scanner->dropLiteral(); }
+		void complete() { m_complete = true; }
 
 	private:
-		Scanner* scanner_;
-		bool complete_;
+		Scanner* m_scanner;
+		bool m_complete;
 	};
 
 	Scanner() { reset(CharStream()); }
@@ -125,25 +125,25 @@ public:
 	/// Returns the current token
 	Token::Value getCurrentToken()
 	{
-		return m_current_token.token;
+		return m_currentToken.token;
 	}
-	Location getCurrentLocation() const { return m_current_token.location; }
-	std::string const& getCurrentLiteral() const { return m_current_token.literal; }
+	Location getCurrentLocation() const { return m_currentToken.location; }
+	std::string const& getCurrentLiteral() const { return m_currentToken.literal; }
 	///@}
 
 	///@{
 	///@name Information about the current comment token
-	Location getCurrentCommentLocation() const { return m_skipped_comment.location; }
-	std::string const& getCurrentCommentLiteral() const { return m_skipped_comment.literal; }
+	Location getCurrentCommentLocation() const { return m_skippedComment.location; }
+	std::string const& getCurrentCommentLiteral() const { return m_skippedComment.literal; }
 	///@}
 
 	///@{
 	///@name Information about the next token
 
 	/// Returns the next token without advancing input.
-	Token::Value peekNextToken() const { return m_next_token.token; }
-	Location peekLocation() const { return m_next_token.location; }
-	std::string const& peekLiteral() const { return m_next_token.literal; }
+	Token::Value peekNextToken() const { return m_nextToken.token; }
+	Location peekLocation() const { return m_nextToken.location; }
+	std::string const& peekLiteral() const { return m_nextToken.literal; }
 	///@}
 
 	///@{
@@ -165,10 +165,10 @@ private:
 
 	///@{
 	///@name Literal buffer support
-	inline void startNewLiteral() { m_next_token.literal.clear(); }
-	inline void addLiteralChar(char c) { m_next_token.literal.push_back(c); }
-	inline void addCommentLiteralChar(char c) { m_next_skipped_comment.literal.push_back(c); }
-	inline void dropLiteral() { m_next_token.literal.clear(); }
+	inline void startNewLiteral() { m_nextToken.literal.clear(); }
+	inline void addLiteralChar(char c) { m_nextToken.literal.push_back(c); }
+	inline void addCommentLiteralChar(char c) { m_nextSkippedComment.literal.push_back(c); }
+	inline void dropLiteral() { m_nextToken.literal.clear(); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
 	///@}
 
@@ -206,11 +206,11 @@ private:
 	int getSourcePos() { return m_source.getPos(); }
 	bool isSourcePastEndOfInput() { return m_source.isPastEndOfInput(); }
 
-	TokenDesc m_skipped_comment;  // desc for current skipped comment
-	TokenDesc m_next_skipped_comment; // desc for next skiped comment
+	TokenDesc m_skippedComment;  // desc for current skipped comment
+	TokenDesc m_nextSkippedComment; // desc for next skiped comment
 
-	TokenDesc m_current_token;  // desc for current token (as returned by Next())
-	TokenDesc m_next_token;     // desc for next token (one token look-ahead)
+	TokenDesc m_currentToken;  // desc for current token (as returned by Next())
+	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)
 
 	CharStream m_source;
 
