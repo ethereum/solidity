@@ -104,11 +104,16 @@ int HexValue(char c)
 
 void Scanner::reset(CharStream const& _source)
 {
+	bool foundDocComment;
 	m_source = _source;
 	m_char = m_source.get();
 	skipWhitespace();
-	scanToken();
-	next();
+	foundDocComment = scanToken();
+
+	// special version of Scanner:next() taking the previous scanToken() result into account
+	m_current_token = m_next_token;
+	if (scanToken() || foundDocComment)
+		m_skipped_comment = m_next_skipped_comment;
 }
 
 
@@ -137,7 +142,8 @@ BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 Token::Value Scanner::next()
 {
 	m_current_token = m_next_token;
-	scanToken();
+	if (scanToken())
+		m_skipped_comment = m_next_skipped_comment;
 	return m_current_token.token;
 }
 
@@ -171,6 +177,20 @@ Token::Value Scanner::skipSingleLineComment()
 	return Token::WHITESPACE;
 }
 
+/// For the moment this function simply consumes a single line triple slash doc comment
+Token::Value Scanner::scanDocumentationComment()
+{
+	LiteralScope literal(this);
+	advance(); //consume the last '/'
+	while (!isSourcePastEndOfInput() && !IsLineTerminator(m_char))
+	{
+		addCommentLiteralChar(m_char);
+		advance();
+	}
+	literal.Complete();
+	return Token::COMMENT_LITERAL;
+}
+
 Token::Value Scanner::skipMultiLineComment()
 {
 	if (asserts(m_char == '*'))
@@ -194,8 +214,9 @@ Token::Value Scanner::skipMultiLineComment()
 	return Token::ILLEGAL;
 }
 
-void Scanner::scanToken()
+bool Scanner::scanToken()
 {
+	bool foundDocComment = false;
 	m_next_token.literal.clear();
 	Token::Value token;
 	do
@@ -297,7 +318,22 @@ void Scanner::scanToken()
 			// /  // /* /=
 			advance();
 			if (m_char == '/')
-				token = skipSingleLineComment();
+			{
+				if (!advance()) /* double slash comment directly before EOS */
+					token = Token::WHITESPACE;
+				else if (m_char == '/')
+				{
+					Token::Value comment;
+					m_next_skipped_comment.location.start = getSourcePos();
+					comment = scanDocumentationComment();
+					m_next_skipped_comment.location.end = getSourcePos();
+					m_next_skipped_comment.token = comment;
+					token = Token::WHITESPACE;
+					foundDocComment = true;
+				}
+				else
+					token = skipSingleLineComment();
+			}
 			else if (m_char == '*')
 				token = skipMultiLineComment();
 			else if (m_char == '=')
@@ -389,6 +425,8 @@ void Scanner::scanToken()
 	while (token == Token::WHITESPACE);
 	m_next_token.location.end = getSourcePos();
 	m_next_token.token = token;
+
+	return foundDocComment;
 }
 
 bool Scanner::scanEscape()
@@ -532,9 +570,9 @@ Token::Value Scanner::scanNumber(char _charSeen)
 // ----------------------------------------------------------------------------
 // Keyword Matcher
 
-#define KEYWORDS(KEYWORD_GROUP, KEYWORD)                                     \
+#define KEYWORDS(KEYWORD_GROUP, KEYWORD)                                       \
 	KEYWORD_GROUP('a')                                                         \
-	KEYWORD("address", Token::ADDRESS)                                           \
+	KEYWORD("address", Token::ADDRESS)                                         \
 	KEYWORD_GROUP('b')                                                         \
 	KEYWORD("break", Token::BREAK)                                             \
 	KEYWORD("bool", Token::BOOL)                                               \
