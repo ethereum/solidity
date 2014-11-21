@@ -726,15 +726,15 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	KEYWORD("while", Token::WHILE)                                             \
 
 
-static Token::Value KeywordOrIdentifierToken(string const& c_input)
+static Token::Value KeywordOrIdentifierToken(string const& _input)
 {
-	if (asserts(!c_input.empty()))
+	if (asserts(!_input.empty()))
 		BOOST_THROW_EXCEPTION(InternalCompilerError());
 	int const kMinLength = 2;
 	int const kMaxLength = 10;
-	if (c_input.size() < kMinLength || c_input.size() > kMaxLength)
+	if (_input.size() < kMinLength || _input.size() > kMaxLength)
 		return Token::IDENTIFIER;
-	switch (c_input[0])
+	switch (_input[0])
 	{
 	default:
 #define KEYWORD_GROUP_CASE(ch)					\
@@ -747,7 +747,7 @@ static Token::Value KeywordOrIdentifierToken(string const& c_input)
 			int const keywordLength = sizeof(keyword) - 1;              \
 			BOOST_STATIC_ASSERT(keywordLength >= kMinLength);           \
 			BOOST_STATIC_ASSERT(keywordLength <= kMaxLength);           \
-			if (c_input == keyword)                                     \
+			if (_input == keyword)                                     \
 				return token;                                           \
 	}
 		KEYWORDS(KEYWORD_GROUP_CASE, KEYWORD)
