@@ -73,7 +73,7 @@ class Type: private boost::noncopyable
 public:
 	enum class Category
 	{
-		INTEGER, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE
+		INTEGER, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE, MAGIC
 	};
 
 	///@{
@@ -110,6 +110,9 @@ public:
 	virtual bool canBeStored() const { return true; }
 	/// Returns false if the type cannot live outside the storage, i.e. if it includes some mapping.
 	virtual bool canLiveOutsideStorage() const { return true; }
+	/// Returns true if the type can be stored as a value (as opposed to a reference) on the stack,
+	/// i.e. it behaves differently in lvalue context and in value context.
+	virtual bool isValueType() const { return false; }
 
 	/// Returns the list of all members of this type. Default implementation: no members.
 	virtual MemberList const& getMembers() const { return EmptyMemberList; }
@@ -154,6 +157,9 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 
 	virtual unsigned getCalldataEncodedSize() const override { return m_bits / 8; }
+	virtual bool isValueType() const override { return true; }
+
+	virtual MemberList const& getMembers() const { return isAddress() ? AddressMemberList : EmptyMemberList; }
 
 	virtual std::string toString() const override;
 	virtual u256 literalValue(Literal const& _literal) const override;
@@ -166,6 +172,7 @@ public:
 private:
 	int m_bits;
 	Modifier m_modifier;
+	static const MemberList AddressMemberList;
 };
 
 /**
@@ -186,6 +193,7 @@ public:
 	}
 
 	virtual unsigned getCalldataEncodedSize() const { return 1; }
+	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString() const override { return "bool"; }
 	virtual u256 literalValue(Literal const& _literal) const override;

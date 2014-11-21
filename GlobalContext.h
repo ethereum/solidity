@@ -24,6 +24,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libsolidity/ASTForward.h>
@@ -47,14 +48,14 @@ public:
 	GlobalContext();
 	void setCurrentContract(ContractDefinition const& _contract);
 
+	std::vector<MagicVariableDeclaration const*> getMagicVariables() const;
 	std::vector<Declaration*> getDeclarations() const;
 
 private:
-	/// Creates a virtual variable declaration with the given name and type.
-	static ASTPointer<VariableDeclaration> createVariable(std::string const& _name, std::shared_ptr<Type const> const& _type);
-
-	std::vector<ASTPointer<Declaration>> m_objects;
-	ASTPointer<Declaration> m_this;
+	MagicVariableDeclaration* getCurrentThis() const;
+	std::vector<std::shared_ptr<MagicVariableDeclaration>> m_magicVariables;
+	ContractDefinition const* m_currentContract;
+	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration>> mutable m_thisPointer;
 };
 
 }

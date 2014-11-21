@@ -40,6 +40,7 @@ class CompilerContext
 public:
 	CompilerContext(): m_stateVariablesSize(0) {}
 
+	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration);
 	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
 	void initializeLocalVariables(unsigned _numVariables);
@@ -48,6 +49,7 @@ public:
 
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
 
+	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration); }
 	bool isFunctionDefinition(Declaration const* _declaration) const { return m_functionEntryLabels.count(_declaration); }
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration); }
@@ -90,6 +92,8 @@ public:
 private:
 	eth::Assembly m_asm;
 
+	/// Magic global variables like msg, tx or this, distinguished by type.
+	std::set<Declaration const*> m_magicGlobals;
 	/// Size of the state variables, offset of next variable to be added.
 	u256 m_stateVariablesSize;
 	/// Storage offsets of state variables

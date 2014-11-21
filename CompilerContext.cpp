@@ -30,6 +30,11 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
+void CompilerContext::addMagicGlobal(MagicVariableDeclaration const& _declaration)
+{
+	m_magicGlobals.insert(&_declaration);
+}
+
 void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
 {
 	m_stateVariables[&_declaration] = m_stateVariablesSize;

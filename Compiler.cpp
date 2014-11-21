@@ -32,16 +32,12 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
-bytes Compiler::compile(ContractDefinition& _contract, bool _optimize)
-{
-	Compiler compiler;
-	compiler.compileContract(_contract);
-	return compiler.m_context.getAssembledBytecode(_optimize);
-}
-
-void Compiler::compileContract(ContractDefinition& _contract)
+void Compiler::compileContract(ContractDefinition& _contract, vector<MagicVariableDeclaration const*> const& _magicGlobals)
 {
 	m_context = CompilerContext(); // clear it just in case
+
+	for (MagicVariableDeclaration const* variable: _magicGlobals)
+		m_context.addMagicGlobal(*variable);
 
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 		if (function->getName() != _contract.getName()) // don't add the constructor here
@@ -328,7 +324,8 @@ bool Compiler::visit(ExpressionStatement& _expressionStatement)
 {
 	Expression& expression = _expressionStatement.getExpression();
 	ExpressionCompiler::compileExpression(m_context, expression);
-	if (expression.getType()->getCategory() != Type::Category::VOID)
+	Type::Category category = expression.getType()->getCategory();
+	if (category != Type::Category::VOID && category != Type::Category::MAGIC)
 		m_context << eth::Instruction::POP;
 	return false;
 }

@@ -40,6 +40,7 @@ class StructDefinition;
 class ParameterList;
 class FunctionDefinition;
 class VariableDeclaration;
+class MagicVariableDeclaration;
 class TypeName;
 class ElementaryTypeName;
 class UserDefinedTypeName;

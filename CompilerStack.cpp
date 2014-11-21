@@ -64,7 +64,7 @@ bytes const& CompilerStack::compile(bool _optimize)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 	m_bytecode.clear();
 	m_compiler = make_shared<Compiler>();
-	m_compiler->compileContract(*m_contractASTNode);
+	m_compiler->compileContract(*m_contractASTNode, m_globalContext->getMagicVariables());
 	return m_bytecode = m_compiler->getAssembledBytecode(_optimize);
 }
 

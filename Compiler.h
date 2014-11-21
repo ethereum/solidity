@@ -32,12 +32,9 @@ class Compiler: private ASTVisitor
 public:
 	Compiler(): m_returnTag(m_context.newTag()) {}
 
-	void compileContract(ContractDefinition& _contract);
+	void compileContract(ContractDefinition& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals);
 	bytes getAssembledBytecode(bool _optimize = false) { return m_context.getAssembledBytecode(_optimize); }
 	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
-
-	/// Compile the given contract and return the EVM bytecode.
-	static bytes compile(ContractDefinition& _contract, bool _optimize);
 
 private:
 	/// Creates a new compiler context / assembly, packs the current code into the data part and

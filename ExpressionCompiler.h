@@ -83,31 +83,30 @@ private:
 
 	/**
 	 * Helper class to store and retrieve lvalues to and from various locations.
-	 * All types except STACK store a reference in a slot on the stack, STACK just stores the
-	 * base stack offset of the variable in @a m_baseStackOffset.
+	 * All types except STACK store a reference in a slot on the stack, STACK just
+	 * stores the base stack offset of the variable in @a m_baseStackOffset.
 	 */
 	class LValue
 	{
 	public:
-		enum LValueType { NONE, CODE, STACK, MEMORY, STORAGE };
+		enum LValueType { NONE, STACK, MEMORY, STORAGE };
 
 		explicit LValue(CompilerContext& _compilerContext): m_context(&_compilerContext) { reset(); }
 		LValue(CompilerContext& _compilerContext, LValueType _type, unsigned _baseStackOffset = 0):
 			m_context(&_compilerContext), m_type(_type), m_baseStackOffset(_baseStackOffset) {}
 
 		/// Set type according to the declaration and retrieve the reference.
-		/// @a _expression is the current expression, used for error reporting.
-		void fromDeclaration(Expression const& _expression, Declaration const& _declaration);
+		/// @a _expression is the current expression
+		void fromIdentifier(Identifier const& _identifier, Declaration const& _declaration);
 		void reset() { m_type = NONE; m_baseStackOffset = 0; }
 
 		bool isValid() const { return m_type != NONE; }
-		bool isInCode() const { return m_type == CODE; }
 		bool isInOnStack() const { return m_type == STACK; }
 		bool isInMemory() const { return m_type == MEMORY; }
 		bool isInStorage() const { return m_type == STORAGE; }
 
 		/// @returns true if this lvalue reference type occupies a slot on the stack.
-		bool storesReferenceOnStack() const { return m_type == STORAGE || m_type == MEMORY || m_type == CODE; }
+		bool storesReferenceOnStack() const { return m_type == STORAGE || m_type == MEMORY; }
 
 		/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
 		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).

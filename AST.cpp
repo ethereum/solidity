@@ -372,8 +372,6 @@ void VariableDefinition::checkTypeRequirements()
 			m_variable->setType(m_value->getType());
 		}
 	}
-	if (m_variable->getType() && !m_variable->getType()->canLiveOutsideStorage())
-		BOOST_THROW_EXCEPTION(m_variable->createTypeError("Type is required to live outside storage."));
 }
 
 void Assignment::checkTypeRequirements()
@@ -466,8 +464,6 @@ void FunctionCall::checkTypeRequirements()
 	}
 	else
 	{
-		m_expression->requireLValue();
-
 		//@todo would be nice to create a struct type from the arguments
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
@@ -495,25 +491,23 @@ bool FunctionCall::isTypeConversion() const
 void MemberAccess::checkTypeRequirements()
 {
 	m_expression->checkTypeRequirements();
-	m_expression->requireLValue();
 	Type const& type = *m_expression->getType();
 	m_type = type.getMemberType(*m_memberName);
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found in " + type.toString()));
-	m_isLvalue = true;
+	m_isLvalue = (type.getCategory() == Type::Category::STRUCT && m_type->getCategory() != Type::Category::MAPPING);
 }
 
 void IndexAccess::checkTypeRequirements()
 {
 	m_base->checkTypeRequirements();
-	m_base->requireLValue();
 	if (m_base->getType()->getCategory() != Type::Category::MAPPING)
 		BOOST_THROW_EXCEPTION(m_base->createTypeError("Indexed expression has to be a mapping (is " +
 													  m_base->getType()->toString() + ")"));
 	MappingType const& type = dynamic_cast<MappingType const&>(*m_base->getType());
 	m_index->expectType(*type.getKeyType());
 	m_type = type.getValueType();
-	m_isLvalue = true;
+	m_isLvalue = m_type->getCategory() != Type::Category::MAPPING;
 }
 
 void Identifier::checkTypeRequirements()
@@ -545,13 +539,18 @@ void Identifier::checkTypeRequirements()
 		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
 		// conversion.
 		m_type = make_shared<FunctionType>(*functionDef);
-		m_isLvalue = true;
 		return;
 	}
 	ContractDefinition* contractDef = dynamic_cast<ContractDefinition*>(m_referencedDeclaration);
 	if (contractDef)
 	{
 		m_type = make_shared<TypeType>(make_shared<ContractType>(*contractDef));
+		return;
+	}
+	MagicVariableDeclaration* magicVariable = dynamic_cast<MagicVariableDeclaration*>(m_referencedDeclaration);
+	if (magicVariable)
+	{
+		m_type = magicVariable->getType();
 		return;
 	}
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Declaration reference of unknown/forbidden type."));

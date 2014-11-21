@@ -189,6 +189,8 @@ u256 IntegerType::literalValue(Literal const& _literal) const
 	return u256(value);
 }
 
+const MemberList IntegerType::AddressMemberList = MemberList({{"balance", std::make_shared<IntegerType const>(256)}});
+
 bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	// conversion to integer is fine, but not to address

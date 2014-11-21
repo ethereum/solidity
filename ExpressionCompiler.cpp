@@ -162,7 +162,7 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 {
 	if (_functionCall.isTypeConversion())
 	{
-		//@todo we only have integers and bools for now which cannot be explicitly converted
+		//@todo struct construction
 		if (asserts(_functionCall.getArguments().size() == 1))
 			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		Expression& firstArgument = *_functionCall.getArguments().front();
@@ -179,6 +179,8 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 	}
 	else
 	{
+		//@todo: check for "external call" (to be stored in type)
+
 		// Calling convention: Caller pushes return address and arguments
 		// Callee removes them and pushes return values
 		FunctionDefinition const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType()).getFunction();
@@ -193,9 +195,6 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 			appendTypeConversion(*arguments[i]->getType(), *function.getParameters()[i]->getType());
 		}
 		_functionCall.getExpression().accept(*this);
-		if (asserts(m_currentLValue.isInCode()))
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Code reference expected."));
-		m_currentLValue.reset();
 
 		m_context.appendJump();
 		m_context << returnLabel;
@@ -213,19 +212,36 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 
 void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 {
-	if (asserts(m_currentLValue.isInStorage()))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to a non-storage value."));
-	StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
-	m_context << type.getStorageOffsetOfMember(_memberAccess.getMemberName()) << eth::Instruction::ADD;
-	m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
+	switch (_memberAccess.getExpression().getType()->getCategory())
+	{
+	case Type::Category::INTEGER:
+		if (asserts(_memberAccess.getMemberName() == "balance"))
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
+		m_context << eth::Instruction::BALANCE;
+		break;
+	case Type::Category::CONTRACT:
+		// call function
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Contract variables not yet implemented."));
+		break;
+	case Type::Category::MAGIC:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Magic variables not yet implemented."));
+		break;
+	case Type::Category::STRUCT:
+	{
+		StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
+		m_context << type.getStorageOffsetOfMember(_memberAccess.getMemberName()) << eth::Instruction::ADD;
+		m_currentLValue = LValue(m_context, LValue::STORAGE);
+		m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
+		break;
+	}
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to unknown type."));
+	}
 }
 
 bool ExpressionCompiler::visit(IndexAccess& _indexAccess)
 {
-	m_currentLValue.reset();
 	_indexAccess.getBaseExpression().accept(*this);
-	if (asserts(m_currentLValue.isInStorage()))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Index access to a non-storage value."));
 	_indexAccess.getIndexExpression().accept(*this);
 	appendTypeConversion(*_indexAccess.getIndexExpression().getType(),
 						 *dynamic_cast<MappingType const&>(*_indexAccess.getBaseExpression().getType()).getKeyType(),
@@ -242,8 +258,25 @@ bool ExpressionCompiler::visit(IndexAccess& _indexAccess)
 
 void ExpressionCompiler::endVisit(Identifier& _identifier)
 {
-	m_currentLValue.fromDeclaration(_identifier, *_identifier.getReferencedDeclaration());
-	m_currentLValue.retrieveValueIfLValueNotRequested(_identifier);
+	Declaration* declaration = _identifier.getReferencedDeclaration();
+	if (MagicVariableDeclaration* magicVar = dynamic_cast<MagicVariableDeclaration*>(declaration))
+	{
+		if (magicVar->getKind() == MagicVariableDeclaration::VariableKind::THIS)
+			m_context << eth::Instruction::ADDRESS;
+		return;
+	}
+	if (FunctionDefinition* functionDef = dynamic_cast<FunctionDefinition*>(declaration))
+	{
+		m_context << m_context.getFunctionEntryLabel(*functionDef).pushTag();
+		return;
+	}
+	if (VariableDeclaration* varDef = dynamic_cast<VariableDeclaration*>(declaration))
+	{
+		m_currentLValue.fromIdentifier(_identifier, *_identifier.getReferencedDeclaration());
+		m_currentLValue.retrieveValueIfLValueNotRequested(_identifier);
+		return;
+	}
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier type not expected in expression context."));
 }
 
 void ExpressionCompiler::endVisit(Literal& _literal)
@@ -410,9 +443,6 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 {
 	switch (m_type)
 	{
-	case CODE:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Tried to retrieve value of a function."));
-		break;
 	case STACK:
 	{
 		unsigned stackPos = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset));
@@ -423,11 +453,15 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 		break;
 	}
 	case STORAGE:
+		if (!_expression.getType()->isValueType())
+			break; // no distinction between value and reference for non-value types
 		if (!_remove)
 			*m_context << eth::Instruction::DUP1;
 		*m_context << eth::Instruction::SLOAD;
 		break;
 	case MEMORY:
+		if (!_expression.getType()->isValueType())
+			break; // no distinction between value and reference for non-value types
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
 													  << errinfo_comment("Location type not yet implemented."));
 		break;
@@ -455,15 +489,15 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 		break;
 	}
 	case LValue::STORAGE:
+		if (!_expression.getType()->isValueType())
+			break; // no distinction between value and reference for non-value types
 		if (!_move)
 			*m_context << eth::Instruction::DUP2 << eth::Instruction::SWAP1;
 		*m_context << eth::Instruction::SSTORE;
 		break;
-	case LValue::CODE:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
-													  << errinfo_comment("Location type does not support assignment."));
-		break;
 	case LValue::MEMORY:
+		if (!_expression.getType()->isValueType())
+			break; // no distinction between value and reference for non-value types
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
 													  << errinfo_comment("Location type not yet implemented."));
 		break;
@@ -483,7 +517,7 @@ void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(Expression co
 	}
 }
 
-void ExpressionCompiler::LValue::fromDeclaration(Expression const& _expression, Declaration const& _declaration)
+void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, Declaration const& _declaration)
 {
 	if (m_context->isLocalVariable(&_declaration))
 	{
@@ -495,13 +529,8 @@ void ExpressionCompiler::LValue::fromDeclaration(Expression const& _expression, 
 		m_type = STORAGE;
 		*m_context << m_context->getStorageLocationOfVariable(_declaration);
 	}
-	else if (m_context->isFunctionDefinition(&_declaration))
-	{
-		m_type = CODE;
-		*m_context << m_context->getFunctionEntryLabel(dynamic_cast<FunctionDefinition const&>(_declaration)).pushTag();
-	}
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_identifier.getLocation())
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
 }
 

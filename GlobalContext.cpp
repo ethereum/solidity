@@ -45,25 +45,37 @@ GlobalContext::GlobalContext()
 
 void GlobalContext::setCurrentContract(ContractDefinition const& _contract)
 {
-	m_this = createVariable("this", make_shared<ContractType>(_contract));
+	m_currentContract = &_contract;
 }
 
 vector<Declaration*> GlobalContext::getDeclarations() const
 {
 	vector<Declaration*> declarations;
-	declarations.reserve(m_objects.size() + 1);
-	for (ASTPointer<Declaration> const& declaration: m_objects)
-		declarations.push_back(declaration.get());
-	declarations.push_back(m_this.get());
+	declarations.reserve(m_magicVariables.size() + 1);
+	for (ASTPointer<Declaration> const& variable: m_magicVariables)
+		declarations.push_back(variable.get());
+	declarations.push_back(getCurrentThis());
 	return declarations;
 }
 
-ASTPointer<VariableDeclaration> GlobalContext::createVariable(const string& _name, shared_ptr<const Type> const& _type)
+MagicVariableDeclaration*GlobalContext::getCurrentThis() const
 {
-	ASTPointer<VariableDeclaration> variable = make_shared<VariableDeclaration>(Location(), ASTPointer<TypeName>(),
-																				make_shared<ASTString>(_name));
-	variable->setType(_type);
-	return variable;
+	if (!m_thisPointer[m_currentContract])
+		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>(
+													MagicVariableDeclaration::VariableKind::THIS,
+													"this", make_shared<ContractType>(*m_currentContract));
+	return m_thisPointer[m_currentContract].get();
+
+}
+
+vector<MagicVariableDeclaration const*> GlobalContext::getMagicVariables() const
+{
+	vector<MagicVariableDeclaration const*> declarations;
+	declarations.reserve(m_magicVariables.size() + 1);
+	for (ASTPointer<MagicVariableDeclaration const> const& variable: m_magicVariables)
+		declarations.push_back(variable.get());
+	declarations.push_back(getCurrentThis());
+	return declarations;
 }
 
 }

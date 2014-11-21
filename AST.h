@@ -230,6 +230,28 @@ private:
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
 
+/**
+ * Pseudo AST node that is used as declaration for "this", "msg", "tx" and "block" when the
+ * identifier is encountered. Will never have a valid location in the source code.
+ */
+class MagicVariableDeclaration: public Declaration
+{
+public:
+	enum class VariableKind { THIS, MSG, TX, BLOCK };
+	MagicVariableDeclaration(VariableKind _kind, ASTString const& _name,
+							 std::shared_ptr<Type const> const& _type):
+		Declaration(Location(), std::make_shared<ASTString>(_name)), m_kind(_kind), m_type(_type) {}
+	virtual void accept(ASTVisitor&) override { BOOST_THROW_EXCEPTION(InternalCompilerError()
+							<< errinfo_comment("MagicVariableDeclaration used inside real AST.")); }
+
+	std::shared_ptr<Type const> const& getType() const { return m_type; }
+	VariableKind getKind() const { return m_kind; }
+
+private:
+	VariableKind m_kind;
+	std::shared_ptr<Type const> m_type;
+};
+
 /// Types
 /// @{
 
