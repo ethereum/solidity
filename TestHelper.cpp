@@ -293,8 +293,8 @@ void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
 
 	for (size_t i = 0; i < _resultLogs.size(); ++i)
 	{
-		BOOST_CHECK(_resultLogs[i].address == _expectedLogs[i].address);
-		BOOST_CHECK(_resultLogs[i].topics == _expectedLogs[i].topics);
+		BOOST_CHECK_EQUAL(_resultLogs[i].address, _expectedLogs[i].address);
+		BOOST_CHECK_EQUAL(_resultLogs[i].topics, _expectedLogs[i].topics);
 		BOOST_CHECK(_resultLogs[i].data == _expectedLogs[i].data);
 	}
 }

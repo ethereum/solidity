@@ -149,9 +149,7 @@ void FakeExtVM::importLog(mObject& _o)
 		LogEntry log;
 		log.address = Address(o["address"].get_str());
 		for (auto const& t: o["topics"].get_array())
-		{
 			log.topics.insert(h256(t.get_str()));
-		}
 		log.data = importData(o);
 		sub.logs.push_back(log);
 	}
