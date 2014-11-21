@@ -184,9 +184,8 @@ Token::Value Scanner::scanDocumentationComment()
 	advance(); //consume the last '/'
 	while (!isSourcePastEndOfInput() && !IsLineTerminator(m_char))
 	{
-		char c = m_char;
+		addCommentLiteralChar(m_char);
 		advance();
-		addCommentLiteralChar(c);
 	}
 	literal.Complete();
 	return Token::COMMENT_LITERAL;
