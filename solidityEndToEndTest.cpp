@@ -700,6 +700,34 @@ BOOST_AUTO_TEST_CASE(structs)
 	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
 }
 
+BOOST_AUTO_TEST_CASE(struct_reference)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  struct s2 {\n"
+							 "    uint32 z;\n"
+							 "    mapping(uint8 => s2) recursive;\n"
+							 "  }\n"
+							 "  s2 data;\n"
+							 "  function check() returns (bool ok) {\n"
+							 "    return data.z == 2 && \n"
+							 "        data.recursive[0].z == 3 && \n"
+							 "        data.recursive[0].recursive[1].z == 0 && \n"
+							 "        data.recursive[0].recursive[0].z == 1;\n"
+							 "  }\n"
+							 "  function set() {\n"
+							 "    data.z = 2;\n"
+							 "    var map = data.recursive;\n"
+							 "    s2 inner = map[0];\n"
+							 "    inner.z = 3;\n"
+							 "    inner.recursive[0].z = inner.recursive[1].z + 1;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction(0) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(1) == bytes());
+	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
+}
+
 BOOST_AUTO_TEST_CASE(constructor)
 {
 	char const* sourceCode = "contract test {\n"
