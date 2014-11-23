@@ -122,6 +122,7 @@ public:
 
 	/// Returns the functions that make up the calling interface in the intended order.
 	std::vector<FunctionDefinition const*> getInterfaceFunctions() const;
+
 private:
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
@@ -195,6 +196,7 @@ public:
 
 	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
 	void checkTypeRequirements();
+
 private:
 	bool m_isPublic;
 	ASTPointer<ParameterList> m_parameters;
@@ -238,8 +240,7 @@ class MagicVariableDeclaration: public Declaration
 {
 public:
 	enum class VariableKind { THIS, MSG, TX, BLOCK };
-	MagicVariableDeclaration(VariableKind _kind, ASTString const& _name,
-							 std::shared_ptr<Type const> const& _type):
+	MagicVariableDeclaration(VariableKind _kind, ASTString const& _name, std::shared_ptr<Type const> const& _type):
 		Declaration(Location(), std::make_shared<ASTString>(_name)), m_kind(_kind), m_type(_type) {}
 	virtual void accept(ASTVisitor&) override { BOOST_THROW_EXCEPTION(InternalCompilerError()
 							<< errinfo_comment("MagicVariableDeclaration used inside real AST.")); }
