@@ -333,5 +333,55 @@ bool TypeType::operator==(Type const& _other) const
 	return *getActualType() == *other.getActualType();
 }
 
+MagicType::MagicType(MagicType::Kind _kind):
+	m_kind(_kind)
+{
+	switch (m_kind)
+	{
+	case Kind::BLOCK:
+		m_members = MemberList({{"coinbase", make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS)},
+								{"timestamp", make_shared<IntegerType const>(256)},
+								{"prevhash", make_shared<IntegerType const>(256, IntegerType::Modifier::HASH)},
+								{"difficulty", make_shared<IntegerType const>(256)},
+								{"number", make_shared<IntegerType const>(256)},
+								{"gaslimit", make_shared<IntegerType const>(256)}});
+		break;
+	case Kind::MSG:
+		m_members = MemberList({{"sender", make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS)},
+								{"value", make_shared<IntegerType const>(256)}});
+		break;
+	case Kind::TX:
+		m_members = MemberList({{"origin", make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS)},
+								{"gas", make_shared<IntegerType const>(256)},
+								{"gasprice", make_shared<IntegerType const>(256)}});
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
+	}
+}
+
+bool MagicType::operator==(Type const& _other) const
+{
+	if (_other.getCategory() != getCategory())
+		return false;
+	MagicType const& other = dynamic_cast<MagicType const&>(_other);
+	return other.m_kind == m_kind;
+}
+
+string MagicType::toString() const
+{
+	switch (m_kind)
+	{
+	case Kind::BLOCK:
+		return "block";
+	case Kind::MSG:
+		return "msg";
+	case Kind::TX:
+		return "tx";
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
+	}
+}
+
 }
 }

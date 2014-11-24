@@ -212,10 +212,11 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 
 void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 {
+	ASTString const& member = _memberAccess.getMemberName();
 	switch (_memberAccess.getExpression().getType()->getCategory())
 	{
 	case Type::Category::INTEGER:
-		if (asserts(_memberAccess.getMemberName() == "balance"))
+		if (asserts(member == "balance"))
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
 		m_context << eth::Instruction::BALANCE;
 		break;
@@ -224,12 +225,36 @@ void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Contract variables not yet implemented."));
 		break;
 	case Type::Category::MAGIC:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Magic variables not yet implemented."));
+		// we can ignore the kind of magic and only look at the name of the member
+		if (member == "coinbase")
+			m_context << eth::Instruction::COINBASE;
+		else if (member == "timestamp")
+			m_context << eth::Instruction::TIMESTAMP;
+		else if (member == "prevhash")
+			m_context << eth::Instruction::PREVHASH;
+		else if (member == "difficulty")
+			m_context << eth::Instruction::DIFFICULTY;
+		else if (member == "number")
+			m_context << eth::Instruction::NUMBER;
+		else if (member == "gaslimit")
+			m_context << eth::Instruction::GASLIMIT;
+		else if (member == "sender")
+			m_context << eth::Instruction::CALLER;
+		else if (member == "value")
+			m_context << eth::Instruction::CALLVALUE;
+		else if (member == "origin")
+			m_context << eth::Instruction::ORIGIN;
+		else if (member == "gas")
+			m_context << eth::Instruction::GAS;
+		else if (member == "gasprice")
+			m_context << eth::Instruction::GASPRICE;
+		else
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown magic member."));
 		break;
 	case Type::Category::STRUCT:
 	{
 		StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
-		m_context << type.getStorageOffsetOfMember(_memberAccess.getMemberName()) << eth::Instruction::ADD;
+		m_context << type.getStorageOffsetOfMember(member) << eth::Instruction::ADD;
 		m_currentLValue = LValue(m_context, LValue::STORAGE);
 		m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 		break;

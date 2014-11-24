@@ -327,5 +327,29 @@ private:
 };
 
 
+/**
+ * Special type for magic variables (block, msg, tx), similar to a struct but without any reference
+ * (it always references a global singleton by name).
+ */
+class MagicType: public Type
+{
+public:
+	enum class Kind { BLOCK, MSG, TX }; //@todo should be unified with MagicVariableDeclaration::VariableKind;
+	virtual Category getCategory() const override { return Category::MAGIC; }
+
+	MagicType(Kind _kind);
+	virtual bool operator==(Type const& _other) const;
+	virtual bool canBeStored() const override { return false; }
+	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual MemberList const& getMembers() const override { return m_members; }
+
+	virtual std::string toString() const override;
+
+private:
+	Kind m_kind;
+
+	MemberList m_members;
+};
+
 }
 }

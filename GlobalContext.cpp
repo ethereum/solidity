@@ -32,15 +32,17 @@ namespace dev
 namespace solidity
 {
 
-GlobalContext::GlobalContext()
+GlobalContext::GlobalContext():
+	m_magicVariables{make_shared<MagicVariableDeclaration>(MagicVariableDeclaration::VariableKind::BLOCK,
+														   "block",
+														   make_shared<MagicType>(MagicType::Kind::BLOCK)),
+					 make_shared<MagicVariableDeclaration>(MagicVariableDeclaration::VariableKind::MSG,
+														   "msg",
+														   make_shared<MagicType>(MagicType::Kind::MSG)),
+					 make_shared<MagicVariableDeclaration>(MagicVariableDeclaration::VariableKind::TX,
+														   "tx",
+														   make_shared<MagicType>(MagicType::Kind::TX))}
 {
-	// CurrentContract this; // @todo type depends on context -> switch prior to entering contract
-	// Message msg;
-	// Transaction tx;
-	// Block block;
-
-	//@todo type will be a custom complex type, maybe the same type class for msg tx and block.
-	//addVariable("msg", );
 }
 
 void GlobalContext::setCurrentContract(ContractDefinition const& _contract)
