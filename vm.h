@@ -66,6 +66,8 @@ public:
 	u256 doPosts();
 	json_spirit::mObject exportEnv();
 	void importEnv(json_spirit::mObject& _o);
+	json_spirit::mObject exportLog();
+	void importLog(json_spirit::mObject& _o);
 	json_spirit::mObject exportState();
 	void importState(json_spirit::mObject& _object);
 	json_spirit::mObject exportExec();

@@ -1,5 +1,5 @@
 {
-    "pop0": {
+    "log0_emptyMem": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -12,7 +12,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x6002600360045055",
+            "code" : "{ (LOG0 0 0) }",
             "storage": {}
         }
         },
@@ -27,7 +27,7 @@
         }
     },
 
-    "pop1": {
+    "log0_nonEmptyMem": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -40,7 +40,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x5060026003600455",
+            "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (LOG0 0 32) }",
             "storage": {}
         }
         },
@@ -55,7 +55,7 @@
         }
     },
 
-    "dupAt51becameMload": {
+    "log0_nonEmptyMem_logMemSize1": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -68,7 +68,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x600260035155",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG0 0 1) }",
             "storage": {}
         }
         },
@@ -83,7 +83,8 @@
         }
     },
 
-    "swapAt52becameMstore": {
+
+    "log0_nonEmptyMem_logMemSize1_logMemStart31": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -96,7 +97,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x600260035255",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG0 31 1) }",
             "storage": {}
         }
         },
@@ -111,7 +112,7 @@
         }
     },
 
-    "mstore_mload0": {
+    "log0_logMemStartTooHigh": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -124,7 +125,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{(MSTORE 0 23) [[ 1 ]] (MLOAD 0) } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 1) }",
             "storage": {}
         }
         },
@@ -139,7 +140,7 @@
         }
     },
 
-    "mloadError0": {
+    "log0_logMemsizeTooHigh": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -152,7 +153,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{[[ 0 ]] (MLOAD 0) } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG0 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
             "storage": {}
         }
         },
@@ -167,7 +168,7 @@
         }
     },
 
-    "mloadError1": {
+    "log0_logMemsizeZero": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -180,7 +181,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{(MSTORE 1 23) [[ 1 ]] (MLOAD 0) } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG0 1 0) }",
             "storage": {}
         }
         },
@@ -195,7 +196,7 @@
         }
     },
 
-    "mloadOutOfGasError2": {
+    "log1_emptyMem": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -208,7 +209,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ [[ 1 ]] (MLOAD 7489573) } ",
+            "code" : "{ (LOG1 0 0 0) }",
             "storage": {}
         }
         },
@@ -223,7 +224,7 @@
         }
     },
 
-    "mstore0": {
+    "log1_nonEmptyMem": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -236,7 +237,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (MSTORE 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) [[ 1 ]] (MLOAD 1) } ",
+            "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (LOG1 0 32 0) }",
             "storage": {}
         }
         },
@@ -251,7 +252,7 @@
         }
     },
 
-    "mstore1": {
+    "log1_nonEmptyMem_logMemSize1": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -264,7 +265,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (MSTORE 1 (+ 2 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) ) [[ 1 ]] (MLOAD 1) } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG1 0 1 0) }",
             "storage": {}
         }
         },
@@ -279,7 +280,8 @@
         }
     },
 
-    "mstoreWordToBigError": {
+
+    "log1_nonEmptyMem_logMemSize1_logMemStart31": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -292,7 +294,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (MSTORE 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff23 ) [[ 1 ]] (MLOAD 1) } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG1 31 1 0) }",
             "storage": {}
         }
         },
@@ -307,7 +309,7 @@
         }
     },
 
-    "mstore8WordToBigError": {
+    "log1_logMemStartTooHigh": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -320,7 +322,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (MSTORE8 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff23 ) [[ 1 ]] (MLOAD 1) } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 1 0) }",
             "storage": {}
         }
         },
@@ -335,7 +337,7 @@
         }
     },
 
-    "mstore8_0": {
+    "log1_logMemsizeTooHigh": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -348,7 +350,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (MSTORE8 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff ) [[ 1 ]] (MLOAD 1) } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG1 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0) }",
             "storage": {}
         }
         },
@@ -363,7 +365,7 @@
         }
     },
 
-    "mstore8_1": {
+    "log1_logMemsizeZero": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -376,7 +378,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (MSTORE8 1 0xff) (MSTORE8 2 0xee) [[ 1 ]] (MLOAD 0) } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG1 1 0 0) }",
             "storage": {}
         }
         },
@@ -391,7 +393,7 @@
         }
     },
 
-    "sstore_load_0": {
+    "log1_MaxTopic": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -404,7 +406,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (SSTORE 0 0xff) (SSTORE 10 0xee)  [[ 20 ]] (SLOAD 0)  } ",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG1 0 32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
             "storage": {}
         }
         },
@@ -419,7 +421,7 @@
         }
     },
 
-    "sstore_load_1": {
+    "log1_Caller": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -432,7 +434,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (SSTORE 0 0xff) (SSTORE 10 0xee)  [[ 20 ]] (SLOAD 100)  } ",
+            "code" : "{ (MSTORE8 0 0xff) (LOG1 0 32 (CALLER)) }",
             "storage": {}
         }
         },
@@ -447,7 +449,7 @@
         }
     },
 
-    "sstore_load_2": {
+    "log2_emptyMem": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -460,7 +462,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ (SSTORE 0 0xff) (SSTORE 1 0xee) (SSTORE 2 0xdd) [[ 10 ]] (SLOAD 1) [[ 20 ]] (SLOAD 2)  } ",
+            "code" : "{ (LOG2 0 0 0 0) }",
             "storage": {}
         }
         },
@@ -475,7 +477,7 @@
         }
     },
 
-    "jump0_foreverOutOfGas": {
+    "log2_nonEmptyMem": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -488,7 +490,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x600056",
+            "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (LOG2 0 32 0 0) }",
             "storage": {}
         }
         },
@@ -503,7 +505,7 @@
         }
     },
 
-    "jump0": {
+    "log2_nonEmptyMem_logMemSize1": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -516,34 +518,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x60236007566001600255",
-            "storage": {}
-        }
-        },
-        "exec" : {
-            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
-            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
-            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
-            "value" : "1000000000000000000",
-            "data" : "",
-            "gasPrice" : "100000000000000",
-            "gas" : "10000"
-        }
-    },
-    "jump0_jumpdest0": {
-        "env" : {
-        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-        "currentNumber" : "0",
-        "currentGasLimit" : "1000000",
-        "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
-        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
-        },
-        "pre" : {
-        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-            "balance" : "1000000000000000000",
-            "nonce" : 0,
-            "code" : "0x602360075660015b600255",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG2 0 1 0 0) }",
             "storage": {}
         }
         },
@@ -558,7 +533,8 @@
         }
     },
 
-    "jump0_jumpdest1": {
+
+    "log2_nonEmptyMem_logMemSize1_logMemStart31": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -571,7 +547,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x602360085660015b600255",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG2 31 1 0 0) }",
             "storage": {}
         }
         },
@@ -586,7 +562,7 @@
         }
     },
 
-    "jump0_jumpdest2": {
+    "log2_logMemStartTooHigh": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -599,7 +575,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x6023600a6008505660015b600255",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG2 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 1 0 0) }",
             "storage": {}
         }
         },
@@ -614,7 +590,7 @@
         }
     },
 
-    "jump0_jumpdest3": {
+    "log2_logMemsizeTooHigh": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -627,7 +603,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x6023600b6008505660015b600255",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG2 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0) }",
             "storage": {}
         }
         },
@@ -642,7 +618,7 @@
         }
     },
 
-    "jump1": {
+    "log2_logMemsizeZero": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -655,7 +631,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x620fffff620fffff0156",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG2 1 0 0 0) }",
             "storage": {}
         }
         },
@@ -670,7 +646,7 @@
         }
     },
 
-    "jumpi0": {
+    "log2_MaxTopic": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -683,7 +659,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x602360016009576001600255",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG2 0 32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
             "storage": {}
         }
         },
@@ -698,7 +674,7 @@
         }
     },
 
-    "jumpi1_jumpdest": {
+    "log2_Caller": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -711,7 +687,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x60236001600a5760015b600255",
+            "code" : "{ (MSTORE8 0 0xff) (LOG2 0 32 0 (CALLER) ) }",
             "storage": {}
         }
         },
@@ -726,7 +702,7 @@
         }
     },
 
-    "jumpi1": {
+    "log3_emptyMem": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -739,7 +715,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x602360006009576001600255",
+            "code" : "{ (LOG3 0 0 0 0 0) }",
             "storage": {}
         }
         },
@@ -754,7 +730,7 @@
         }
     },
 
-    "jumpi2": {
+    "log3_nonEmptyMem": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -767,7 +743,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "0x60017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff576002600355",
+            "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (LOG3 0 32 0 0 0) }",
             "storage": {}
         }
         },
@@ -782,7 +758,7 @@
         }
     },
 
-    "pc0": {
+    "log3_nonEmptyMem_logMemSize1": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -795,7 +771,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{ [[ 0 ]] (PC)}",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG3 0 1 0 0 0) }",
             "storage": {}
         }
         },
@@ -810,7 +786,8 @@
         }
     },
 
-    "pc1": {
+
+    "log3_nonEmptyMem_logMemSize1_logMemStart31": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -823,7 +800,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{(SSTORE 0 0xff) [[ 0 ]] (PC)}",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG3 31 1 0 0 0) }",
             "storage": {}
         }
         },
@@ -838,7 +815,7 @@
         }
     },
 
-    "msize0": {
+    "log3_logMemStartTooHigh": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -851,7 +828,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{(MSTORE 0 0xff) [[ 0 ]] (MSIZE)}",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG3 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 1 0 0 0) }",
             "storage": {}
         }
         },
@@ -866,7 +843,7 @@
         }
     },
 
-    "msize1": {
+    "log3_logMemsizeTooHigh": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -879,7 +856,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{(MSTORE 0 0xffffffffff) [[ 0 ]] (MSIZE)}",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG3 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0 0) }",
             "storage": {}
         }
         },
@@ -894,7 +871,7 @@
         }
     },
 
-    "msize2": {
+    "log3_logMemsizeZero": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -907,7 +884,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{(MSTORE 0 0xffffffffff)  (MSTORE 32 0xeeee) [[ 0 ]] (MSIZE)}",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG3 1 0 0 0 0) }",
             "storage": {}
         }
         },
@@ -922,7 +899,7 @@
         }
     },
 
-    "msize3": {
+    "log3_MaxTopic": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -935,7 +912,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{(MSTORE 0 0xffffffffff)  (MSTORE 90 0xeeee) [[ 0 ]] (MSIZE)}",
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG3 0 32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
             "storage": {}
         }
         },
@@ -950,7 +927,7 @@
         }
     },
 
-    "gas0": {
+    "log3_Caller": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -963,7 +940,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{(MSTORE 0 0xffffffffff)  (MSTORE 90 0xeeee) [[ 0 ]] (GAS)}",
+            "code" : "{ (MSTORE8 0 0xff) (LOG3 0 32 0 0 (CALLER) ) }",
             "storage": {}
         }
         },
@@ -978,7 +955,7 @@
         }
     },
 
-    "gas1": {
+    "log3_PC": {
         "env" : {
         "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
         "currentNumber" : "0",
@@ -991,7 +968,288 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : 0,
-            "code" : "{[[ 0 ]] (GAS)}",
+            "code" : "{ (MSTORE8 0 0xff) (LOG3 0 32 (PC) (PC) (PC) ) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_emptyMem": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (LOG4 0 0 0 0 0 0) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_nonEmptyMem": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (LOG4 0 32 0 0 0 0) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_nonEmptyMem_logMemSize1": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG4 0 1 0 0 0 0) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+
+    "log4_nonEmptyMem_logMemSize1_logMemStart31": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG4 31 1 0 0 0 0) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_logMemStartTooHigh": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG4 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 1 0 0 0 0) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_logMemsizeTooHigh": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG4 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0 0 0) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_logMemsizeZero": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG4 1 0 0 0 0 0) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_MaxTopic": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE 0 0xaabbffffffffffffffffffffffffffffffffffffffffffffffffffffffffccdd) (LOG4 0 32 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_Caller": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE8 0 0xff) (LOG3 0 32 0 0 0 (CALLER) ) }",
+            "storage": {}
+        }
+        },
+        "exec" : {
+            "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
+            "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
+            "value" : "1000000000000000000",
+            "data" : "",
+            "gasPrice" : "100000000000000",
+            "gas" : "10000"
+        }
+    },
+
+    "log4_PC": {
+        "env" : {
+        "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+        "currentNumber" : "0",
+        "currentGasLimit" : "1000000",
+        "currentDifficulty" : "256",
+        "currentTimestamp" : 1,
+        "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "pre" : {
+        "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+            "balance" : "1000000000000000000",
+            "nonce" : 0,
+            "code" : "{ (MSTORE8 0 0xff) (LOG3 0 32 (PC) (PC) (PC) (PC) ) }",
             "storage": {}
         }
         },

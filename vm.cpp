@@ -120,6 +120,41 @@ void FakeExtVM::importEnv(mObject& _o)
 	currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
 }
 
+mObject FakeExtVM::exportLog()
+{
+	mObject ret;
+	for (LogEntry const& l: sub.logs)
+	{
+		mObject o;
+		o["address"] = toString(l.address);
+		mArray topics;
+		for (auto const& t: l.topics)
+			topics.push_back(toString(t));
+		o["topics"] = topics;
+		o["data"] = "0x" + toHex(l.data);
+		ret[toString(l.bloom())] = o;
+	}
+	return ret;
+}
+
+void FakeExtVM::importLog(mObject& _o)
+{
+	for (auto const& l: _o)
+	{
+		mObject o = l.second.get_obj();
+		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+		assert(o.count("address") > 0);
+		assert(o.count("topics") > 0);
+		assert(o.count("data") > 0);
+		LogEntry log;
+		log.address = Address(o["address"].get_str());
+		for (auto const& t: o["topics"].get_array())
+			log.topics.insert(h256(t.get_str()));
+		log.data = importData(o);
+		sub.logs.push_back(log);
+	}
+}
+
 mObject FakeExtVM::exportState()
 {
 	mObject ret;
@@ -303,7 +338,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		bool vmExceptionOccured = false;
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace()).toVector();
+			output = vm.go(fev, fev.simpleTrace()).toBytes();
 			gas = vm.gas();
 		}
 		catch (VMException const& _e)
@@ -349,6 +384,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = "0x" + toHex(output);
 				fev.push(o, "gas", gas);
+				o["logs"] = mValue(fev.exportLog());
 			}
 		}
 		else
@@ -361,10 +397,12 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				BOOST_REQUIRE(o.count("callcreates") > 0);
 				BOOST_REQUIRE(o.count("out") > 0);
 				BOOST_REQUIRE(o.count("gas") > 0);
+				BOOST_REQUIRE(o.count("logs") > 0);
 
 				dev::test::FakeExtVM test;
 				test.importState(o["post"].get_obj());
 				test.importCallCreates(o["callcreates"].get_array());
+				test.importLog(o["logs"].get_obj());
 
 				checkOutput(output, o);
 
@@ -392,6 +430,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
 				BOOST_CHECK(test.callcreates == fev.callcreates);
+
+				checkLog(fev.sub.logs, test.sub.logs);
 			}
 			else	// Exception expected
 				BOOST_CHECK(vmExceptionOccured);
@@ -441,6 +481,11 @@ BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
 BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
 	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", dev::test::doVMTests);
+}
+
+BOOST_AUTO_TEST_CASE(vmLogTest)
+{
+	dev::test::executeTests("vmLogTest", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmRandom)
