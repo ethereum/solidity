@@ -761,6 +761,19 @@ BOOST_AUTO_TEST_CASE(balance)
 	BOOST_CHECK(callContractFunction(0) == toBigEndian(u256(23)));
 }
 
+BOOST_AUTO_TEST_CASE(blockchain)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function someInfo() returns (uint256 value, address coinbase, uint256 blockNumber) {\n"
+							 "    value = msg.value;\n"
+							 "    coinbase = block.coinbase;\n"
+							 "    blockNumber = block.number;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode, 27);
+	BOOST_CHECK(callContractFunction(0, bytes{0}, u256(28)) == toBigEndian(u256(28)) + bytes(20, 0) + toBigEndian(u256(1)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
