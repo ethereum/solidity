@@ -774,6 +774,26 @@ BOOST_AUTO_TEST_CASE(blockchain)
 	BOOST_CHECK(callContractFunction(0, bytes{0}, u256(28)) == toBigEndian(u256(28)) + bytes(20, 0) + toBigEndian(u256(1)));
 }
 
+BOOST_AUTO_TEST_CASE(function_types)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(bool selector) returns (uint b) {\n"
+							 "    var f = fun1;\n"
+							 "    if (selector) f = fun2;\n"
+							 "    return f(9);\n"
+							 "  }\n"
+							 "  function fun1(uint x) returns (uint b) {\n"
+							 "    return 11;\n"
+							 "  }\n"
+							 "  function fun2(uint x) returns (uint b) {\n"
+							 "    return 12;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction(0, bytes{0}) == toBigEndian(u256(11)));
+	BOOST_CHECK(callContractFunction(0, bytes{1}) == toBigEndian(u256(12)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
