@@ -115,6 +115,7 @@ public:
 	/// Returns true if the type can be stored as a value (as opposed to a reference) on the stack,
 	/// i.e. it behaves differently in lvalue context and in value context.
 	virtual bool isValueType() const { return false; }
+	virtual unsigned getSizeOnStack() const { return 1; }
 
 	/// Returns the list of all members of this type. Default implementation: no members.
 	virtual MemberList const& getMembers() const { return EmptyMemberList; }
@@ -235,6 +236,7 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override;
+	virtual unsigned getSizeOnStack() const override { return 1; /*@todo*/ }
 	virtual std::string toString() const override;
 
 	virtual MemberList const& getMembers() const override;
@@ -255,10 +257,17 @@ private:
 class FunctionType: public Type
 {
 public:
+	/// The meaning of the value(s) on the stack referencing the function:
+	/// INTERNAL: jump tag, EXTERNAL: contract address + function index,
+	/// OTHERS: special virtual function, nothing on the stack
+	enum class Location { INTERNAL, EXTERNAL, SEND, SHA3, SUICIDE, ECRECOVER, SHA256, RIPEMD160 };
+
 	virtual Category getCategory() const override { return Category::FUNCTION; }
 	explicit FunctionType(FunctionDefinition const& _function);
-	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes):
-		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes) {}
+	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
+				 Location _location = Location::INTERNAL):
+		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),
+		m_location(_location) {}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
 	TypePointers const& getReturnParameterTypes() const { return m_returnParameterTypes; }
@@ -268,10 +277,14 @@ public:
 	virtual bool canBeStored() const override { return false; }
 	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable function type requested.")); }
 	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned getSizeOnStack() const override;
+
+	Location getLocation() const { return m_location; }
 
 private:
 	TypePointers m_parameterTypes;
 	TypePointers m_returnParameterTypes;
+	Location m_location;
 };
 
 /**
@@ -310,6 +323,7 @@ public:
 	virtual bool canBeStored() const override { return false; }
 	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable void type requested.")); }
 	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned getSizeOnStack() const override { return 0; }
 };
 
 /**
@@ -349,6 +363,7 @@ public:
 	virtual bool operator==(Type const& _other) const;
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual unsigned getSizeOnStack() const override { return 0; }
 	virtual MemberList const& getMembers() const override { return m_members; }
 
 	virtual std::string toString() const override;

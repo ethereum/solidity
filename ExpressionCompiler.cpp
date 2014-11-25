@@ -179,33 +179,62 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 	}
 	else
 	{
-		//@todo: check for "external call" (to be stored in type)
-
-		// Calling convention: Caller pushes return address and arguments
-		// Callee removes them and pushes return values
 		FunctionType const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType());
-
-		eth::AssemblyItem returnLabel = m_context.pushNewTag();
 		std::vector<ASTPointer<Expression>> const& arguments = _functionCall.getArguments();
 		if (asserts(arguments.size() == function.getParameterTypes().size()))
 			BOOST_THROW_EXCEPTION(InternalCompilerError());
-		for (unsigned i = 0; i < arguments.size(); ++i)
+
+		if (function.getLocation() == FunctionType::Location::INTERNAL)
 		{
-			arguments[i]->accept(*this);
-			appendTypeConversion(*arguments[i]->getType(), *function.getParameterTypes()[i]);
+			// Calling convention: Caller pushes return address and arguments
+			// Callee removes them and pushes return values
+
+			eth::AssemblyItem returnLabel = m_context.pushNewTag();
+			for (unsigned i = 0; i < arguments.size(); ++i)
+			{
+				arguments[i]->accept(*this);
+				appendTypeConversion(*arguments[i]->getType(), *function.getParameterTypes()[i]);
+			}
+			_functionCall.getExpression().accept(*this);
+
+			m_context.appendJump();
+			m_context << returnLabel;
+
+			// callee adds return parameters, but removes arguments and return label
+			m_context.adjustStackOffset(function.getReturnParameterTypes().size() - arguments.size() - 1);
+
+			// @todo for now, the return value of a function is its first return value, so remove
+			// all others
+			for (unsigned i = 1; i < function.getReturnParameterTypes().size(); ++i)
+				m_context << eth::Instruction::POP;
 		}
-		_functionCall.getExpression().accept(*this);
-
-		m_context.appendJump();
-		m_context << returnLabel;
-
-		// callee adds return parameters, but removes arguments and return label
-		m_context.adjustStackOffset(function.getReturnParameterTypes().size() - arguments.size() - 1);
-
-		// @todo for now, the return value of a function is its first return value, so remove
-		// all others
-		for (unsigned i = 1; i < function.getReturnParameterTypes().size(); ++i)
-			m_context << eth::Instruction::POP;
+		else if (function.getLocation() == FunctionType::Location::EXTERNAL)
+		{
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("External function calls not implemented yet."));
+		}
+		else
+		{
+			switch (function.getLocation())
+			{
+			case FunctionType::Location::SEND:
+				m_context << u256(0) << u256(0) << u256(0) << u256(0);
+				arguments.front()->accept(*this);
+				//@todo might not be necessary
+				appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front());
+				_functionCall.getExpression().accept(*this);
+				m_context << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB
+						  << eth::Instruction::CALL
+						  << eth::Instruction::POP;
+				break;
+			case FunctionType::Location::SUICIDE:
+				arguments.front()->accept(*this);
+				//@todo might not be necessary
+				appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front());
+				m_context << eth::Instruction::SUICIDE;
+			default:
+				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Function not yet implemented."));
+			}
+		}
 	}
 	return false;
 }
@@ -216,9 +245,13 @@ void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 	switch (_memberAccess.getExpression().getType()->getCategory())
 	{
 	case Type::Category::INTEGER:
-		if (asserts(member == "balance"))
+		if (member == "balance")
+			m_context << eth::Instruction::BALANCE;
+		else if (member == "send")
+		{ // no modification
+		}
+		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
-		m_context << eth::Instruction::BALANCE;
 		break;
 	case Type::Category::CONTRACT:
 		// call function

@@ -132,6 +132,10 @@ private:
 
 	CompilerContext& m_context;
 	LValue m_currentLValue;
+	/// If a "virtual" function (i.e. a bulit-in function without jump tag) is encountered, the
+	/// actual function is stored here. @todo prevent assignment or store it with assignment
+	enum class SpecialFunction { NONE, SEND, SHA3, SUICIDE, ECRECOVER, SHA256, RIPEMD160 };
+	SpecialFunction m_currentSpecialFunction;
 };
 
 

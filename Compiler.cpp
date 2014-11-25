@@ -325,7 +325,7 @@ bool Compiler::visit(ExpressionStatement& _expressionStatement)
 	Expression& expression = _expressionStatement.getExpression();
 	ExpressionCompiler::compileExpression(m_context, expression);
 	Type::Category category = expression.getType()->getCategory();
-	if (category != Type::Category::VOID && category != Type::Category::MAGIC)
+	for (unsigned i = 0; i < expression.getType()->getSizeOnStack(); ++i)
 		m_context << eth::Instruction::POP;
 	return false;
 }

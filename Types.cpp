@@ -192,7 +192,7 @@ u256 IntegerType::literalValue(Literal const& _literal) const
 const MemberList IntegerType::AddressMemberList =
 		MemberList({{"balance", make_shared<IntegerType const>(256)},
 					{"send", make_shared<FunctionType const>(TypePointers({make_shared<IntegerType const>(256)}),
-															 TypePointers())}});
+															 TypePointers(), FunctionType::Location::SEND)}});
 
 bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
@@ -314,6 +314,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function)
 		retParams.push_back(var->getType());
 	swap(params, m_parameterTypes);
 	swap(retParams, m_returnParameterTypes);
+	m_location = Location::INTERNAL;
 }
 
 bool FunctionType::operator==(Type const& _other) const
@@ -345,6 +346,19 @@ string FunctionType::toString() const
 	for (auto it = m_returnParameterTypes.begin(); it != m_returnParameterTypes.end(); ++it)
 		name += (*it)->toString() + (it + 1 == m_returnParameterTypes.end() ? "" : ",");
 	return name + ")";
+}
+
+unsigned FunctionType::getSizeOnStack() const
+{
+	switch (m_location)
+	{
+	case Location::INTERNAL:
+		return 1;
+	case Location::EXTERNAL:
+		return 2;
+	default:
+		return 0;
+	}
 }
 
 bool MappingType::operator==(Type const& _other) const
