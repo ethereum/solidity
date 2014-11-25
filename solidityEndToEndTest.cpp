@@ -794,6 +794,21 @@ BOOST_AUTO_TEST_CASE(function_types)
 	BOOST_CHECK(callContractFunction(0, bytes{1}) == toBigEndian(u256(12)));
 }
 
+BOOST_AUTO_TEST_CASE(send_ether)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(address addr, uint amount) returns (uint ret) {\n"
+							 "    addr.send(amount);\n"
+							 "    return address(this).balance;\n"
+							 "  }\n"
+							 "}\n";
+	u256 amount(130);
+	compileAndRun(sourceCode, amount + 1);
+	u160 address(23);
+	BOOST_CHECK(callContractFunction(0, address, amount) == toBigEndian(u256(1)));
+	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
