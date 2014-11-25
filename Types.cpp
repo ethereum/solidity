@@ -189,7 +189,10 @@ u256 IntegerType::literalValue(Literal const& _literal) const
 	return u256(value);
 }
 
-const MemberList IntegerType::AddressMemberList = MemberList({{"balance", std::make_shared<IntegerType const>(256)}});
+const MemberList IntegerType::AddressMemberList =
+		MemberList({{"balance", make_shared<IntegerType const>(256)},
+					{"send", make_shared<FunctionType const>(TypePointers({make_shared<IntegerType const>(256)}),
+															 TypePointers())}});
 
 bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
@@ -299,17 +302,49 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage offset of non-existing member requested."));
 }
 
+FunctionType::FunctionType(FunctionDefinition const& _function)
+{
+	TypePointers params;
+	TypePointers retParams;
+	params.reserve(_function.getParameters().size());
+	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
+		params.push_back(var->getType());
+	retParams.reserve(_function.getReturnParameters().size());
+	for (ASTPointer<VariableDeclaration> const& var: _function.getReturnParameters())
+		retParams.push_back(var->getType());
+	swap(params, m_parameterTypes);
+	swap(retParams, m_returnParameterTypes);
+}
+
 bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
-	return other.m_function == m_function;
+
+	if (m_parameterTypes.size() != other.m_parameterTypes.size() ||
+			m_returnParameterTypes.size() != other.m_returnParameterTypes.size())
+		return false;
+	auto typeCompare = [](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; };
+
+	if (!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(),
+			   other.m_parameterTypes.cbegin(), typeCompare))
+		return false;
+	if (!equal(m_returnParameterTypes.cbegin(), m_returnParameterTypes.cend(),
+			   other.m_returnParameterTypes.cbegin(), typeCompare))
+		return false;
+	return true;
 }
 
 string FunctionType::toString() const
 {
-	return "function " + m_function.getName();
+	string name = "function (";
+	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
+		name += (*it)->toString() + (it + 1 == m_parameterTypes.end() ? "" : ",");
+	name += ") returns (";
+	for (auto it = m_returnParameterTypes.begin(); it != m_returnParameterTypes.end(); ++it)
+		name += (*it)->toString() + (it + 1 == m_returnParameterTypes.end() ? "" : ",");
+	return name + ")";
 }
 
 bool MappingType::operator==(Type const& _other) const

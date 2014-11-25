@@ -183,16 +183,16 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 
 		// Calling convention: Caller pushes return address and arguments
 		// Callee removes them and pushes return values
-		FunctionDefinition const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType()).getFunction();
+		FunctionType const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType());
 
 		eth::AssemblyItem returnLabel = m_context.pushNewTag();
 		std::vector<ASTPointer<Expression>> const& arguments = _functionCall.getArguments();
-		if (asserts(arguments.size() == function.getParameters().size()))
+		if (asserts(arguments.size() == function.getParameterTypes().size()))
 			BOOST_THROW_EXCEPTION(InternalCompilerError());
 		for (unsigned i = 0; i < arguments.size(); ++i)
 		{
 			arguments[i]->accept(*this);
-			appendTypeConversion(*arguments[i]->getType(), *function.getParameters()[i]->getType());
+			appendTypeConversion(*arguments[i]->getType(), *function.getParameterTypes()[i]);
 		}
 		_functionCall.getExpression().accept(*this);
 
@@ -200,11 +200,11 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 		m_context << returnLabel;
 
 		// callee adds return parameters, but removes arguments and return label
-		m_context.adjustStackOffset(function.getReturnParameters().size() - arguments.size() - 1);
+		m_context.adjustStackOffset(function.getReturnParameterTypes().size() - arguments.size() - 1);
 
 		// @todo for now, the return value of a function is its first return value, so remove
 		// all others
-		for (unsigned i = 1; i < function.getReturnParameters().size(); ++i)
+		for (unsigned i = 1; i < function.getReturnParameterTypes().size(); ++i)
 			m_context << eth::Instruction::POP;
 	}
 	return false;

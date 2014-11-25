@@ -467,19 +467,19 @@ void FunctionCall::checkTypeRequirements()
 		//@todo would be nice to create a struct type from the arguments
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
-		FunctionDefinition const& fun = dynamic_cast<FunctionType const&>(*expressionType).getFunction();
-		vector<ASTPointer<VariableDeclaration>> const& parameters = fun.getParameters();
-		if (parameters.size() != m_arguments.size())
+		FunctionType const& functionType = dynamic_cast<FunctionType const&>(*expressionType);
+		TypePointers const& parameterTypes = functionType.getParameterTypes();
+		if (parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 		for (size_t i = 0; i < m_arguments.size(); ++i)
-			if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
+			if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
-		if (fun.getReturnParameters().empty())
+		if (functionType.getReturnParameterTypes().empty())
 			m_type = make_shared<VoidType>();
 		else
-			m_type = fun.getReturnParameters().front()->getType();
+			m_type = functionType.getReturnParameterTypes().front();
 	}
 }
 
