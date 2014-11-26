@@ -27,12 +27,14 @@
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
+#include <libdevcrypto/SHA3.h>
 
 using namespace std;
 
 namespace dev
 {
-/// Provider another overload for toBigEndian to encode arguments and return values.
+/// Provides additional overloads for toBigEndian to encode arguments and return values.
+inline bytes toBigEndian(byte _value) { return bytes({_value}); }
 inline bytes toBigEndian(bool _value) { return bytes({byte(_value)}); }
 
 namespace solidity
@@ -807,6 +809,93 @@ BOOST_AUTO_TEST_CASE(send_ether)
 	u160 address(23);
 	BOOST_CHECK(callContractFunction(0, address, amount) == toBigEndian(u256(1)));
 	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
+}
+
+BOOST_AUTO_TEST_CASE(suicide)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(address receiver) returns (uint ret) {\n"
+							 "    suicide(receiver);\n"
+							 "    return 10;\n"
+							 "  }\n"
+							 "}\n";
+	u256 amount(130);
+	compileAndRun(sourceCode, amount);
+	u160 address(23);
+	BOOST_CHECK(callContractFunction(0, address) == bytes());
+	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
+	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
+}
+
+BOOST_AUTO_TEST_CASE(sha3)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(hash input) returns (hash sha3hash) {\n"
+							 "    return sha3(input);\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _x) -> u256
+	{
+		return dev::sha3(toBigEndian(_x));
+	};
+	testSolidityAgainstCpp(0, f, u256(4));
+	testSolidityAgainstCpp(0, f, u256(5));
+	testSolidityAgainstCpp(0, f, u256(-1));
+}
+
+BOOST_AUTO_TEST_CASE(sha256)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(hash input) returns (hash sha256hash) {\n"
+							 "    return sha256(input);\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _input) -> u256
+	{
+		h256 ret;
+		dev::sha256(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
+		return ret;
+	};
+	testSolidityAgainstCpp(0, f, u256(4));
+	testSolidityAgainstCpp(0, f, u256(5));
+	testSolidityAgainstCpp(0, f, u256(-1));
+}
+
+BOOST_AUTO_TEST_CASE(ripemd)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(hash input) returns (hash sha256hash) {\n"
+							 "    return ripemd160(input);\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	auto f = [&](u256 const& _input) -> u256
+	{
+		h256 ret;
+		dev::ripemd160(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
+		return u256(ret) >> (256 - 160);
+	};
+	testSolidityAgainstCpp(0, f, u256(4));
+	testSolidityAgainstCpp(0, f, u256(5));
+	testSolidityAgainstCpp(0, f, u256(-1));
+}
+
+BOOST_AUTO_TEST_CASE(ecrecover)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(hash h, uint8 v, hash r, hash s) returns (address addr) {\n"
+							 "    return ecrecover(h, v, r, s);\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	u256 h("0x18c547e4f7b0f325ad1e56f57e26c745b09a3e503d86e00e5255ff7f715d3d1c");
+	byte v = 28;
+	u256 r("0x73b1693892219d736caba55bdb67216e485557ea6b6af75f37096c9aa6a5a75f");
+	u256 s("0xeeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549");
+	u160 addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
+	BOOST_CHECK(callContractFunction(0, h, v, r, s) == toBigEndian(addr));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
