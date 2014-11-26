@@ -356,7 +356,7 @@ private:
 class MagicType: public Type
 {
 public:
-	enum class Kind { BLOCK, MSG, TX }; //@todo should be unified with MagicVariableDeclaration::VariableKind;
+	enum class Kind { BLOCK, MSG, TX };
 	virtual Category getCategory() const override { return Category::MAGIC; }
 
 	MagicType(Kind _kind);

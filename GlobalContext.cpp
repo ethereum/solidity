@@ -33,15 +33,33 @@ namespace solidity
 {
 
 GlobalContext::GlobalContext():
-	m_magicVariables{make_shared<MagicVariableDeclaration>(MagicVariableDeclaration::VariableKind::BLOCK,
-														   "block",
-														   make_shared<MagicType>(MagicType::Kind::BLOCK)),
-					 make_shared<MagicVariableDeclaration>(MagicVariableDeclaration::VariableKind::MSG,
-														   "msg",
-														   make_shared<MagicType>(MagicType::Kind::MSG)),
-					 make_shared<MagicVariableDeclaration>(MagicVariableDeclaration::VariableKind::TX,
-														   "tx",
-														   make_shared<MagicType>(MagicType::Kind::TX))}
+	m_magicVariables{make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::BLOCK)),
+					 make_shared<MagicVariableDeclaration>("msg", make_shared<MagicType>(MagicType::Kind::MSG)),
+					 make_shared<MagicVariableDeclaration>("tx", make_shared<MagicType>(MagicType::Kind::TX)),
+					 make_shared<MagicVariableDeclaration>("suicide",
+							make_shared<FunctionType>(TypePointers({std::make_shared<IntegerType>(0,
+																	IntegerType::Modifier::ADDRESS)}),
+													  TypePointers(),
+													  FunctionType::Location::SUICIDE)),
+					 make_shared<MagicVariableDeclaration>("sha3",
+							make_shared<FunctionType>(TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
+													  TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
+													  FunctionType::Location::SHA3)),
+					 make_shared<MagicVariableDeclaration>("sha256",
+							make_shared<FunctionType>(TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
+													  TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
+													  FunctionType::Location::SHA256)),
+					 make_shared<MagicVariableDeclaration>("ecrecover",
+							make_shared<FunctionType>(TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH),
+																	std::make_shared<IntegerType>(8, IntegerType::Modifier::HASH),
+																	std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH),
+																	std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
+													  TypePointers({std::make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS)}),
+													  FunctionType::Location::ECRECOVER)),
+					 make_shared<MagicVariableDeclaration>("ripemd160",
+							make_shared<FunctionType>(TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
+													  TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
+													  FunctionType::Location::RIPEMD160))}
 {
 }
 
@@ -64,7 +82,6 @@ MagicVariableDeclaration*GlobalContext::getCurrentThis() const
 {
 	if (!m_thisPointer[m_currentContract])
 		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>(
-													MagicVariableDeclaration::VariableKind::THIS,
 													"this", make_shared<ContractType>(*m_currentContract));
 	return m_thisPointer[m_currentContract].get();
 
