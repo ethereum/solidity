@@ -25,6 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include "JsonSpiritHeaders.h"
 #include <libethereum/State.h>
+#include <libevm/ExtVMFace.h>
 
 namespace dev
 {
@@ -69,6 +70,7 @@ bytes importCode(json_spirit::mObject& _o);
 bytes importData(json_spirit::mObject& _o);
 void checkOutput(bytes const& _output, json_spirit::mObject& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
+void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
 std::string getTestPath();
 void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);

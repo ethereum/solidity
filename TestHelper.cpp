@@ -293,6 +293,18 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
     }
 }
 
+void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
+{
+	BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
+
+	for (size_t i = 0; i < _resultLogs.size(); ++i)
+	{
+		BOOST_CHECK_EQUAL(_resultLogs[i].address, _expectedLogs[i].address);
+		BOOST_CHECK_EQUAL(_resultLogs[i].topics, _expectedLogs[i].topics);
+		BOOST_CHECK(_resultLogs[i].data == _expectedLogs[i].data);
+	}
+}
+
 std::string getTestPath()
 {
 	string testPath;
@@ -316,12 +328,13 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
 		if (arg == testTypeFlag)
 		{
-			if (i + 1 >= boost::unit_test::framework::master_test_suite().argc)
+			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
 			{
-				cnote << "Missing filename\nUsage: testeth " << testTypeFlag << " <filename>\n";
+				cnote << "Missing filename\nUsage: testeth " << testTypeFlag << " <filename> <testname>\n";
 				return;
 			}
 			string filename = boost::unit_test::framework::master_test_suite().argv[i + 1];
+			string testname = boost::unit_test::framework::master_test_suite().argv[i + 2];
 			int currentVerbosity = g_logVerbosity;
 			g_logVerbosity = 12;
 			try
@@ -331,7 +344,19 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 				string s = asString(contents(filename));
 				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
 				json_spirit::read_string(s, v);
-				doTests(v, false);
+				json_spirit::mObject oSingleTest;
+
+				json_spirit::mObject::const_iterator pos = v.get_obj().find(testname);
+				if (pos == v.get_obj().end())
+				{
+					cnote << "Could not find test: " << testname << " in " << filename << "\n";
+					return;
+				}
+				else
+					oSingleTest[pos->first] = pos->second;
+
+				json_spirit::mValue v_singleTest(oSingleTest);
+				doTests(v_singleTest, false);
 			}
 			catch (Exception const& _e)
 			{
