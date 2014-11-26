@@ -88,7 +88,7 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	Parser parser;
 	ASTPointer<ContractDefinition> contract;
 	BOOST_REQUIRE_NO_THROW(contract = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
-	NameAndTypeResolver resolver;
+	NameAndTypeResolver resolver({});
 	BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 	FirstExpressionExtractor extractor(*contract);
 	BOOST_REQUIRE(extractor.getExpression() != nullptr);

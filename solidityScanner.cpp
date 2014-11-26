@@ -153,6 +153,46 @@ BOOST_AUTO_TEST_CASE(ambiguities)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SHL);
 }
 
+BOOST_AUTO_TEST_CASE(documentation_comments_parsed_begin)
+{
+	Scanner scanner(CharStream("/// Send $(value / 1000) chocolates to the user"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::EOS);
+	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), " Send $(value / 1000) chocolates to the user");
+}
+
+BOOST_AUTO_TEST_CASE(documentation_comments_parsed)
+{
+	Scanner scanner(CharStream("some other tokens /// Send $(value / 1000) chocolates to the user"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::IDENTIFIER);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::IDENTIFIER);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::IDENTIFIER);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::EOS);
+	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), " Send $(value / 1000) chocolates to the user");
+}
+
+BOOST_AUTO_TEST_CASE(comment_before_eos)
+{
+	Scanner scanner(CharStream("//"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::EOS);
+	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), "");
+}
+
+BOOST_AUTO_TEST_CASE(documentation_comment_before_eos)
+{
+	Scanner scanner(CharStream("///"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::EOS);
+	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), "");
+}
+
+BOOST_AUTO_TEST_CASE(comments_mixed_in_sequence)
+{
+	Scanner scanner(CharStream("hello_world ///documentation comment \n"
+							   "//simple comment \n"
+							   "<<"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::IDENTIFIER);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SHL);
+	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), "documentation comment ");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -122,6 +122,11 @@ BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 	dev::test::executeTests("stPreCompiledContracts", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stSpecialTest)
+{
+	dev::test::executeTests("stSpecialTest", "/StateTests", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stCreateTest)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
