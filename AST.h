@@ -174,13 +174,17 @@ class FunctionDefinition: public Declaration
 {
 public:
 	FunctionDefinition(Location const& _location, ASTPointer<ASTString> const& _name, bool _isPublic,
-					   ASTPointer<ParameterList> const& _parameters,
-					   bool _isDeclaredConst,
-					   ASTPointer<ParameterList> const& _returnParameters,
-					   ASTPointer<Block> const& _body):
-		Declaration(_location, _name), m_isPublic(_isPublic), m_parameters(_parameters),
-		m_isDeclaredConst(_isDeclaredConst), m_returnParameters(_returnParameters),
-		m_body(_body) {}
+					std::string const& _documentation,
+					ASTPointer<ParameterList> const& _parameters,
+					bool _isDeclaredConst,
+					ASTPointer<ParameterList> const& _returnParameters,
+					ASTPointer<Block> const& _body):
+	Declaration(_location, _name), m_isPublic(_isPublic),
+	m_parameters(_parameters),
+	m_isDeclaredConst(_isDeclaredConst),
+	m_returnParameters(_returnParameters),
+	m_body(_body),
+	m_documentation(_documentation) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 
 	bool isPublic() const { return m_isPublic; }
@@ -190,6 +194,7 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& getReturnParameters() const { return m_returnParameters->getParameters(); }
 	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
 	Block& getBody() { return *m_body; }
+	std::string& getDocumentation() { return m_documentation; }
 
 	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
 	std::vector<VariableDeclaration const*> const& getLocalVariables() const { return m_localVariables; }
@@ -203,6 +208,7 @@ private:
 	bool m_isDeclaredConst;
 	ASTPointer<ParameterList> m_returnParameters;
 	ASTPointer<Block> m_body;
+	std::string m_documentation;
 
 	std::vector<VariableDeclaration const*> m_localVariables;
 };

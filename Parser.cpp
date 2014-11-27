@@ -142,8 +142,9 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 	}
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
-	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, parameters,
-			isDeclaredConst, returnParameters, block);
+	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, m_scanner->getCurrentCommentLiteral(), 
+													  parameters,
+													  isDeclaredConst, returnParameters, block);
 }
 
 ASTPointer<StructDefinition> Parser::parseStructDefinition()
