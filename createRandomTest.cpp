@@ -31,6 +31,7 @@
 #include <json_spirit/json_spirit_writer_template.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
+#include <libethereum/VMFactory.h>
 #include <libevmcore/Instruction.h>
 #include <libevm/VM.h>
 #include "vm.h"
@@ -128,7 +129,7 @@ void doMyTests(json_spirit::mValue& v)
 		assert(o.count("exec") > 0);
 
 
-		auto vmObj = eth::VMFace::create(eth::VMFace::Interpreter);
+		auto vmObj = eth::VMFactory::create(eth::VMFactory::Interpreter);
 		auto& vm = *vmObj;
 		test::FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());

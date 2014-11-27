@@ -22,6 +22,7 @@
 
 #include <chrono>
 #include <boost/filesystem.hpp>
+#include <libethereum/VMFactory.h>
 #include "vm.h"
 using namespace std;
 using namespace json_spirit;
@@ -322,8 +323,11 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		auto useJit = false;
 		for (auto i =  0; i < argc && !useJit; ++i)
 			useJit |= std::string(argv[i]) == "--jit";
-		auto vmKind = useJit ? VMFace::JIT : VMFace::Interpreter;
-
+#if ETH_EVMJIT
+		auto vmKind = useJit ? VMFactory::JIT : VMFactory::Interpreter;
+#else
+		auto vmKind == VMFactory::Interpreter;
+#endif
 		dev::test::FakeExtVM fev;
 
 		fev.importEnv(o["env"].get_obj());
@@ -339,7 +343,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			fev.code = fev.thisTxCode;
 		}
 
-		auto vm = VMFace::create(vmKind, fev.gas);
+		auto vm = VMFactory::create(vmKind, fev.gas);
 		bytes output;
 
 		auto startTime = std::chrono::high_resolution_clock::now();
