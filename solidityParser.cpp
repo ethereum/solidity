@@ -37,12 +37,13 @@ namespace test
 
 namespace
 {
-ASTPointer<ASTNode> parseText(std::string const& _source)
+ASTPointer<ContractDefinition> parseText(std::string const& _source)
 {
 	Parser parser;
 	return parser.parse(std::make_shared<Scanner>(CharStream(_source)));
 }
 }
+
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
@@ -89,6 +90,36 @@ BOOST_AUTO_TEST_CASE(single_function_param)
 					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_natspec_documentation)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  /// This is a test function\n"
+					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+	BOOST_CHECK_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is a test function");
+}
+
+BOOST_AUTO_TEST_CASE(function_normal_comments)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  // We won't see this comment\n"
+					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+	BOOST_CHECK_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(function->getDocumentation(), "");
 }
 
 BOOST_AUTO_TEST_CASE(struct_definition)
