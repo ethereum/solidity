@@ -153,7 +153,6 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is test function 4");
 }
 
-#if 0 /* Work in progress - currently fails*/
 BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 {
 	ASTPointer<ContractDefinition> contract;
@@ -172,7 +171,6 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 					  " This is a test function\n"
 					  " and it has 2 lines");
 }
-#endif
 
 BOOST_AUTO_TEST_CASE(struct_definition)
 {
