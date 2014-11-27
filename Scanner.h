@@ -74,9 +74,10 @@ public:
 	CharStream(): m_pos(0) {}
 	explicit CharStream(std::string const& _source): m_source(_source), m_pos(0) {}
 	int getPos() const { return m_pos; }
-	bool isPastEndOfInput() const { return m_pos >= m_source.size(); }
-	char get() const { return m_source[m_pos]; }
+	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_pos + _charsForward) >= m_source.size(); }
+	char get(size_t _charsForward = 0) const { return m_source[m_pos + _charsForward]; }
 	char advanceAndGet();
+	void advanceBy(size_t _chars);
 	char rollback(size_t _amount);
 
 	///@{
@@ -93,19 +94,45 @@ private:
 };
 
 
+
 class Scanner
 {
 public:
+
+	enum LiteralType {
+		LITERAL_TYPE_STRING,
+		LITERAL_TYPE_NUMBER, // not really different from string type in behaviour
+		LITERAL_TYPE_COMMENT
+	};
 	/// Scoped helper for literal recording. Automatically drops the literal
 	/// if aborting the scanning before it's complete.
 	class LiteralScope
 	{
 	public:
-		explicit LiteralScope(Scanner* self): m_scanner(self), m_complete(false) { m_scanner->startNewLiteral(); }
-		~LiteralScope() { if (!m_complete) m_scanner->dropLiteral(); }
+		explicit LiteralScope(Scanner* _self, enum LiteralType _type)
+		: m_type(_type)
+		, m_scanner(_self)
+		, m_complete(false)
+		{
+			if (_type == LITERAL_TYPE_COMMENT)
+				m_scanner->startNewCommentLiteral();
+			else
+				m_scanner->startNewLiteral();
+		}
+		~LiteralScope()
+		{
+			if (!m_complete)
+			{
+				if (m_type == LITERAL_TYPE_COMMENT)
+					m_scanner->dropCommentLiteral();
+				else
+					m_scanner->dropLiteral();
+			}
+		}
 		void complete() { m_complete = true; }
 
 	private:
+		enum LiteralType m_type;
 		Scanner* m_scanner;
 		bool m_complete;
 	};
@@ -133,8 +160,12 @@ public:
 
 	///@{
 	///@name Information about the current comment token
+
 	Location getCurrentCommentLocation() const { return m_skippedComment.location; }
 	std::string const& getCurrentCommentLiteral() const { return m_skippedComment.literal; }
+	/// Called by the parser during FunctionDefinition parsing to clear the current comment
+	void clearCurrentCommentLiteral() { m_skippedComment.literal.clear(); }
+
 	///@}
 
 	///@{
@@ -166,9 +197,11 @@ private:
 	///@{
 	///@name Literal buffer support
 	inline void startNewLiteral() { m_nextToken.literal.clear(); }
+	inline void startNewCommentLiteral() { m_nextSkippedComment.literal.clear(); }
 	inline void addLiteralChar(char c) { m_nextToken.literal.push_back(c); }
 	inline void addCommentLiteralChar(char c) { m_nextSkippedComment.literal.push_back(c); }
 	inline void dropLiteral() { m_nextToken.literal.clear(); }
+	inline void dropCommentLiteral() { m_nextSkippedComment.literal.clear(); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
 	///@}
 

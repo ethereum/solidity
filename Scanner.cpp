@@ -180,10 +180,26 @@ Token::Value Scanner::skipSingleLineComment()
 /// For the moment this function simply consumes a single line triple slash doc comment
 Token::Value Scanner::scanDocumentationComment()
 {
-	LiteralScope literal(this);
+	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
 	advance(); //consume the last '/'
-	while (!isSourcePastEndOfInput() && !isLineTerminator(m_char))
+	while (!isSourcePastEndOfInput())
 	{
+		if (isLineTerminator(m_char))
+		{
+			// check if next line is also a documentation comment
+			skipWhitespace();
+			if (m_source.get(0) == '/' &&
+				m_source.get(1) == '/' &&
+				m_source.get(2) == '/' &&
+				!m_source.isPastEndOfInput(3))
+			{
+				m_source.advanceBy(3);
+				addCommentLiteralChar('\n');
+			}
+			else
+				break; // next line is not a documentation comment, we are done
+
+		}
 		addCommentLiteralChar(m_char);
 		advance();
 	}
@@ -474,7 +490,7 @@ Token::Value Scanner::scanString()
 {
 	char const quote = m_char;
 	advance();  // consume quote
-	LiteralScope literal(this);
+	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	while (m_char != quote && !isSourcePastEndOfInput() && !isLineTerminator(m_char))
 	{
 		char c = m_char;
@@ -505,7 +521,7 @@ void Scanner::scanDecimalDigits()
 Token::Value Scanner::scanNumber(char _charSeen)
 {
 	enum { DECIMAL, HEX, BINARY } kind = DECIMAL;
-	LiteralScope literal(this);
+	LiteralScope literal(this, LITERAL_TYPE_NUMBER);
 	if (_charSeen == '.')
 	{
 		// we have already seen a decimal point of the float
@@ -758,7 +774,7 @@ Token::Value Scanner::scanIdentifierOrKeyword()
 {
 	if (asserts(isIdentifierStart(m_char)))
 		BOOST_THROW_EXCEPTION(InternalCompilerError());
-	LiteralScope literal(this);
+	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
 	while (isIdentifierPart(m_char))
@@ -775,6 +791,14 @@ char CharStream::advanceAndGet()
 	if (isPastEndOfInput())
 		return 0;
 	return get();
+}
+
+void CharStream::advanceBy(size_t _chars)
+{
+	if (asserts(!isPastEndOfInput(_chars)))
+		BOOST_THROW_EXCEPTION(InternalCompilerError());
+
+	m_pos += _chars;
 }
 
 char CharStream::rollback(size_t _amount)

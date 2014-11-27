@@ -118,6 +118,8 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 {
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::FUNCTION);
+	std::string docstring = m_scanner->getCurrentCommentLiteral();
+	m_scanner->clearCurrentCommentLiteral();
 	ASTPointer<ASTString> name(expectIdentifierToken());
 	ASTPointer<ParameterList> parameters(parseParameterList());
 	bool isDeclaredConst = false;
@@ -142,7 +144,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 	}
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
-	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, m_scanner->getCurrentCommentLiteral(), 
+	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, docstring,
 													  parameters,
 													  isDeclaredConst, returnParameters, block);
 }
