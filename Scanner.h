@@ -77,7 +77,7 @@ public:
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_pos + _charsForward) >= m_source.size(); }
 	char get(size_t _charsForward = 0) const { return m_source[m_pos + _charsForward]; }
 	char advanceAndGet();
-	void advanceBy(size_t _chars);
+	char advanceBy(size_t _chars);
 	char rollback(size_t _amount);
 
 	///@{

@@ -193,8 +193,8 @@ Token::Value Scanner::scanDocumentationComment()
 				m_source.get(2) == '/' &&
 				!m_source.isPastEndOfInput(3))
 			{
-				m_source.advanceBy(3);
 				addCommentLiteralChar('\n');
+				m_char = m_source.advanceBy(3);
 			}
 			else
 				break; // next line is not a documentation comment, we are done
@@ -793,12 +793,14 @@ char CharStream::advanceAndGet()
 	return get();
 }
 
-void CharStream::advanceBy(size_t _chars)
+char CharStream::advanceBy(size_t _chars)
 {
 	if (asserts(!isPastEndOfInput(_chars)))
 		BOOST_THROW_EXCEPTION(InternalCompilerError());
 
 	m_pos += _chars;
+
+	return m_source[m_pos];
 }
 
 char CharStream::rollback(size_t _amount)
