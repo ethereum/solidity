@@ -58,7 +58,7 @@ GlobalContext::GlobalContext():
 													  FunctionType::Location::ECRECOVER)),
 					 make_shared<MagicVariableDeclaration>("ripemd160",
 							make_shared<FunctionType>(TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
-													  TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
+													  TypePointers({std::make_shared<IntegerType>(160, IntegerType::Modifier::HASH)}),
 													  FunctionType::Location::RIPEMD160))}
 {
 }
