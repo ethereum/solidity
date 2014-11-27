@@ -122,6 +122,58 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 	BOOST_CHECK_EQUAL(function->getDocumentation(), "");
 }
 
+BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  /// This is test function 1\n"
+					   "  function functionName1(hash hashin) returns (hash hashout) {}\n"
+					   "  /// This is test function 2\n"
+					   "  function functionName2(hash hashin) returns (hash hashout) {}\n"
+					   "  // nothing to see here\n"
+					   "  function functionName3(hash hashin) returns (hash hashout) {}\n"
+					   "  /// This is test function 4\n"
+					   "  function functionName4(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_CHECK_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is test function 1");
+
+	BOOST_CHECK_NO_THROW(function = functions.at(1));
+	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is test function 2");
+
+	BOOST_CHECK_NO_THROW(function = functions.at(2));
+	BOOST_CHECK_EQUAL(function->getDocumentation(), "");
+
+	BOOST_CHECK_NO_THROW(function = functions.at(3));
+	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is test function 4");
+}
+
+#if 0 /* Work in progress - currently fails*/
+BOOST_AUTO_TEST_CASE(multiline_function_documentation)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  /// This is a test function\n"
+					   "  /// and it has 2 lines\n"
+					   "  function functionName1(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_CHECK_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(function->getDocumentation(),
+					  " This is a test function\n"
+					  " and it has 2 lines");
+}
+#endif
+
 BOOST_AUTO_TEST_CASE(struct_definition)
 {
 	char const* text = "contract test {\n"
