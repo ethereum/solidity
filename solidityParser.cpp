@@ -172,6 +172,36 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 					  " and it has 2 lines");
 }
 
+BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  /// fun1 description\n"
+					   "  function fun1(uint256 a) {\n"
+					   "    var b;\n"
+					   "    /// I should not interfere with actual natspec comments\n"
+					   "    uint256 c;\n"
+					   "    mapping(address=>hash) d;\n"
+					   "    string name = \"Solidity\";"
+					   "  }\n"
+					   "  uint256 stateVar;\n"
+					   "  /// This is a test function\n"
+					   "  /// and it has 2 lines\n"
+					   "  function fun(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_CHECK_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(function->getDocumentation(), " fun1 description");
+
+	BOOST_CHECK_NO_THROW(function = functions.at(1));
+	BOOST_CHECK_EQUAL(function->getDocumentation(),
+					  " This is a test function\n"
+					  " and it has 2 lines");
+}
+
 BOOST_AUTO_TEST_CASE(struct_definition)
 {
 	char const* text = "contract test {\n"
