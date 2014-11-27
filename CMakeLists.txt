@@ -19,7 +19,6 @@ target_link_libraries(testeth gmp)
 target_link_libraries(testeth solidity)
 target_link_libraries(testeth webthree)
 
-#TODO this on should not be necessary, it should have been brought in from ethcore dependency...
 target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
 
 if(JSON_RPC_CPP_FOUND)
