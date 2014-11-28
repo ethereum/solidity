@@ -363,7 +363,7 @@ void ExpressionCompiler::endVisit(Identifier& _identifier)
 		m_context << m_context.getFunctionEntryLabel(*functionDef).pushTag();
 		return;
 	}
-	if (VariableDeclaration* varDef = dynamic_cast<VariableDeclaration*>(declaration))
+	if (/*VariableDeclaration* varDef = */dynamic_cast<VariableDeclaration*>(declaration))
 	{
 		m_currentLValue.fromIdentifier(_identifier, *_identifier.getReferencedDeclaration());
 		m_currentLValue.retrieveValueIfLValueNotRequested(_identifier);
