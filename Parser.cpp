@@ -117,9 +117,13 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 {
 	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<ASTString> docstring;
 	expectToken(Token::FUNCTION);
-	std::string docstring = m_scanner->getCurrentCommentLiteral();
-	m_scanner->clearCurrentCommentLiteral();
+	if (m_scanner->getCurrentCommentLiteral() != "")
+	{
+		docstring = std::make_shared<ASTString>(m_scanner->getCurrentCommentLiteral());
+		m_scanner->clearCurrentCommentLiteral();
+	}
 	ASTPointer<ASTString> name(expectIdentifierToken());
 	ASTPointer<ParameterList> parameters(parseParameterList());
 	bool isDeclaredConst = false;
