@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 	BOOST_CHECK_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
 	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is a test function");
+	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " This is a test function");
 }
 
 BOOST_AUTO_TEST_CASE(function_normal_comments)
@@ -119,7 +119,8 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 	BOOST_CHECK_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
 	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(function->getDocumentation(), "");
+	BOOST_CHECK_MESSAGE(function->getDocumentation().get() == nullptr,
+						"Should not have gotten a Natspect comment for this function");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
@@ -141,16 +142,17 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	auto functions = contract->getDefinedFunctions();
 
 	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is test function 1");
+	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " This is test function 1");
 
 	BOOST_CHECK_NO_THROW(function = functions.at(1));
-	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is test function 2");
+	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " This is test function 2");
 
 	BOOST_CHECK_NO_THROW(function = functions.at(2));
-	BOOST_CHECK_EQUAL(function->getDocumentation(), "");
+	BOOST_CHECK_MESSAGE(function->getDocumentation().get() == nullptr,
+						"Should not have gotten natspec comment for functionName3()");
 
 	BOOST_CHECK_NO_THROW(function = functions.at(3));
-	BOOST_CHECK_EQUAL(function->getDocumentation(), " This is test function 4");
+	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " This is test function 4");
 }
 
 BOOST_AUTO_TEST_CASE(multiline_function_documentation)
@@ -167,7 +169,7 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 	auto functions = contract->getDefinedFunctions();
 
 	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(function->getDocumentation(),
+	BOOST_CHECK_EQUAL(*function->getDocumentation().get(),
 					  " This is a test function\n"
 					  " and it has 2 lines");
 }
@@ -194,10 +196,10 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 	auto functions = contract->getDefinedFunctions();
 
 	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(function->getDocumentation(), " fun1 description");
+	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " fun1 description");
 
 	BOOST_CHECK_NO_THROW(function = functions.at(1));
-	BOOST_CHECK_EQUAL(function->getDocumentation(),
+	BOOST_CHECK_EQUAL(*function->getDocumentation().get(),
 					  " This is a test function\n"
 					  " and it has 2 lines");
 }
