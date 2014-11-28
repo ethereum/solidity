@@ -101,10 +101,10 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 					   "  /// This is a test function\n"
 					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
-	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " This is a test function");
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is a test function");
 }
 
 BOOST_AUTO_TEST_CASE(function_normal_comments)
@@ -116,10 +116,10 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 					   "  // We won't see this comment\n"
 					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
-	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_MESSAGE(function->getDocumentation().get() == nullptr,
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
 						"Should not have gotten a Natspect comment for this function");
 }
 
@@ -138,21 +138,21 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 					   "  /// This is test function 4\n"
 					   "  function functionName4(hash hashin) returns (hash hashout) {}\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
 
-	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " This is test function 1");
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 1");
 
-	BOOST_CHECK_NO_THROW(function = functions.at(1));
-	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " This is test function 2");
+	BOOST_REQUIRE_NO_THROW(function = functions.at(1));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 2");
 
-	BOOST_CHECK_NO_THROW(function = functions.at(2));
-	BOOST_CHECK_MESSAGE(function->getDocumentation().get() == nullptr,
+	BOOST_REQUIRE_NO_THROW(function = functions.at(2));
+	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
 						"Should not have gotten natspec comment for functionName3()");
 
-	BOOST_CHECK_NO_THROW(function = functions.at(3));
-	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " This is test function 4");
+	BOOST_REQUIRE_NO_THROW(function = functions.at(3));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 4");
 }
 
 BOOST_AUTO_TEST_CASE(multiline_function_documentation)
@@ -165,11 +165,11 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 					   "  /// and it has 2 lines\n"
 					   "  function functionName1(hash hashin) returns (hash hashout) {}\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
 
-	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation().get(),
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(),
 					  " This is a test function\n"
 					  " and it has 2 lines");
 }
@@ -192,16 +192,40 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 					   "  /// and it has 2 lines\n"
 					   "  function fun(hash hashin) returns (hash hashout) {}\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(contract = parseText(text));
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
 
-	BOOST_CHECK_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation().get(), " fun1 description");
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " fun1 description");
 
-	BOOST_CHECK_NO_THROW(function = functions.at(1));
-	BOOST_CHECK_EQUAL(*function->getDocumentation().get(),
+	BOOST_REQUIRE_NO_THROW(function = functions.at(1));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(),
 					  " This is a test function\n"
 					  " and it has 2 lines");
+}
+
+BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  function fun1(uint256 a) {\n"
+					   "  /// I should have been above the function signature"
+					   "  {\n"
+					   "    var b;\n"
+					   "    /// I should not interfere with actual natspec comments\n"
+					   "    uint256 c;\n"
+					   "    mapping(address=>hash) d;\n"
+					   "    string name = \"Solidity\";"
+					   "  }\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_MESSAGE(!function->getDocumentation(),
+						"Shouldn't get natspec docstring for this function");
 }
 
 BOOST_AUTO_TEST_CASE(struct_definition)
