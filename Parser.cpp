@@ -118,12 +118,12 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docstring;
-	expectToken(Token::FUNCTION);
 	if (m_scanner->getCurrentCommentLiteral() != "")
 	{
 		docstring = std::make_shared<ASTString>(m_scanner->getCurrentCommentLiteral());
 		m_scanner->clearCurrentCommentLiteral();
 	}
+	expectToken(Token::FUNCTION);
 	ASTPointer<ASTString> name(expectIdentifierToken());
 	ASTPointer<ParameterList> parameters(parseParameterList());
 	bool isDeclaredConst = false;

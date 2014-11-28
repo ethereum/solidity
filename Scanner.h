@@ -109,8 +109,7 @@ public:
 	class LiteralScope
 	{
 	public:
-		explicit LiteralScope(Scanner* _self, enum LiteralType _type)
-		: m_type(_type)
+		explicit LiteralScope(Scanner* _self, enum LiteralType _type): m_type(_type)
 		, m_scanner(_self)
 		, m_complete(false)
 		{
