@@ -204,6 +204,29 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 					  " and it has 2 lines");
 }
 
+BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  function ///I am in the wrong place \n"
+					   "  fun1(uint256 a) {\n"
+					   "    var b;\n"
+					   "    /// I should not interfere with actual natspec comments\n"
+					   "    uint256 c;\n"
+					   "    mapping(address=>hash) d;\n"
+					   "    string name = \"Solidity\";"
+					   "  }\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_MESSAGE(!function->getDocumentation(),
+						"Shouldn't get natspec docstring for this function");
+}
+
 BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 {
 	ASTPointer<ContractDefinition> contract;
@@ -211,8 +234,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  function fun1(uint256 a) {\n"
-					   "  /// I should have been above the function signature"
-					   "  {\n"
+					   "  /// I should have been above the function signature\n"
 					   "    var b;\n"
 					   "    /// I should not interfere with actual natspec comments\n"
 					   "    uint256 c;\n"
