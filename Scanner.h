@@ -96,44 +96,8 @@ private:
 
 class Scanner
 {
+	friend class LiteralScope;
 public:
-
-	enum LiteralType {
-		LITERAL_TYPE_STRING,
-		LITERAL_TYPE_NUMBER, // not really different from string type in behaviour
-		LITERAL_TYPE_COMMENT
-	};
-	/// Scoped helper for literal recording. Automatically drops the literal
-	/// if aborting the scanning before it's complete.
-	class LiteralScope
-	{
-	public:
-		explicit LiteralScope(Scanner* _self, enum LiteralType _type): m_type(_type)
-		, m_scanner(_self)
-		, m_complete(false)
-		{
-			if (_type == LITERAL_TYPE_COMMENT)
-				m_scanner->startNewCommentLiteral();
-			else
-				m_scanner->startNewLiteral();
-		}
-		~LiteralScope()
-		{
-			if (!m_complete)
-			{
-				if (m_type == LITERAL_TYPE_COMMENT)
-					m_scanner->dropCommentLiteral();
-				else
-					m_scanner->dropLiteral();
-			}
-		}
-		void complete() { m_complete = true; }
-
-	private:
-		enum LiteralType m_type;
-		Scanner* m_scanner;
-		bool m_complete;
-	};
 
 	Scanner() { reset(CharStream()); }
 	explicit Scanner(CharStream const& _source) { reset(_source); }
@@ -194,12 +158,8 @@ private:
 
 	///@{
 	///@name Literal buffer support
-	inline void startNewLiteral() { m_nextToken.literal.clear(); }
-	inline void startNewCommentLiteral() { m_nextSkippedComment.literal.clear(); }
 	inline void addLiteralChar(char c) { m_nextToken.literal.push_back(c); }
 	inline void addCommentLiteralChar(char c) { m_nextSkippedComment.literal.push_back(c); }
-	inline void dropLiteral() { m_nextToken.literal.clear(); }
-	inline void dropCommentLiteral() { m_nextSkippedComment.literal.clear(); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
 	///@}
 

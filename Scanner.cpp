@@ -102,6 +102,47 @@ int hexValue(char c)
 }
 } // end anonymous namespace
 
+
+
+/// Scoped helper for literal recording. Automatically drops the literal
+/// if aborting the scanning before it's complete.
+enum LiteralType {
+	LITERAL_TYPE_STRING,
+	LITERAL_TYPE_NUMBER, // not really different from string type in behaviour
+	LITERAL_TYPE_COMMENT
+};
+
+class LiteralScope
+{
+public:
+	explicit LiteralScope(Scanner* _self, enum LiteralType _type): m_type(_type)
+	, m_scanner(_self)
+	, m_complete(false)
+	{
+		if (_type == LITERAL_TYPE_COMMENT)
+			m_scanner->m_nextSkippedComment.literal.clear();
+		else
+			m_scanner->m_nextToken.literal.clear();
+	}
+	~LiteralScope()
+	{
+		if (!m_complete)
+		{
+			if (m_type == LITERAL_TYPE_COMMENT)
+				m_scanner->m_nextSkippedComment.literal.clear();
+			else
+				m_scanner->m_nextToken.literal.clear();
+		}
+	}
+	void complete() { m_complete = true; }
+
+private:
+	enum LiteralType m_type;
+	Scanner* m_scanner;
+	bool m_complete;
+}; // end of LiteralScope class
+
+
 void Scanner::reset(CharStream const& _source)
 {
 	m_source = _source;
