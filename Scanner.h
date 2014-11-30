@@ -76,8 +76,7 @@ public:
 	int getPos() const { return m_pos; }
 	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_pos + _charsForward) >= m_source.size(); }
 	char get(size_t _charsForward = 0) const { return m_source[m_pos + _charsForward]; }
-	char advanceAndGet();
-	char advanceBy(size_t _chars);
+	char advanceAndGet(size_t _chars=1);
 	char rollback(size_t _amount);
 
 	///@{
@@ -213,9 +212,8 @@ private:
 
 	bool scanHexByte(char& o_scannedByte);
 
-	/// Scans a single Solidity token. Returns true if the scanned token was
-	/// a skipped documentation comment. False in all other cases.
-	bool scanToken();
+	/// Scans a single Solidity token.
+	void scanToken();
 
 	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();

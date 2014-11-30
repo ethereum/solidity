@@ -104,16 +104,14 @@ int hexValue(char c)
 
 void Scanner::reset(CharStream const& _source)
 {
-	bool foundDocComment;
 	m_source = _source;
 	m_char = m_source.get();
 	skipWhitespace();
-	foundDocComment = scanToken();
+	scanToken();
 
-	// special version of Scanner:next() taking the previous scanToken() result into account
 	m_currentToken = m_nextToken;
-	if (scanToken() || foundDocComment)
-		m_skippedComment = m_nextSkippedComment;
+	m_skippedComment = m_nextSkippedComment;
+	scanToken();
 }
 
 
@@ -142,8 +140,9 @@ BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 Token::Value Scanner::next()
 {
 	m_currentToken = m_nextToken;
-	if (scanToken())
-		m_skippedComment = m_nextSkippedComment;
+	m_skippedComment = m_nextSkippedComment;
+	scanToken();
+
 	return m_currentToken.token;
 }
 
@@ -188,13 +187,13 @@ Token::Value Scanner::scanDocumentationComment()
 		{
 			// check if next line is also a documentation comment
 			skipWhitespace();
-			if (m_source.get(0) == '/' &&
+			if (!m_source.isPastEndOfInput(3) &&
+				m_source.get(0) == '/' &&
 				m_source.get(1) == '/' &&
-				m_source.get(2) == '/' &&
-				!m_source.isPastEndOfInput(3))
+				m_source.get(2) == '/')
 			{
 				addCommentLiteralChar('\n');
-				m_char = m_source.advanceBy(3);
+				m_char = m_source.advanceAndGet(3);
 			}
 			else
 				break; // next line is not a documentation comment, we are done
@@ -230,10 +229,10 @@ Token::Value Scanner::skipMultiLineComment()
 	return Token::ILLEGAL;
 }
 
-bool Scanner::scanToken()
+void Scanner::scanToken()
 {
-	bool foundDocComment = false;
 	m_nextToken.literal.clear();
+	m_nextSkippedComment.literal.clear();
 	Token::Value token;
 	do
 	{
@@ -345,7 +344,6 @@ bool Scanner::scanToken()
 					m_nextSkippedComment.location.end = getSourcePos();
 					m_nextSkippedComment.token = comment;
 					token = Token::WHITESPACE;
-					foundDocComment = true;
 				}
 				else
 					token = skipSingleLineComment();
@@ -441,8 +439,6 @@ bool Scanner::scanToken()
 	while (token == Token::WHITESPACE);
 	m_nextToken.location.end = getSourcePos();
 	m_nextToken.token = token;
-
-	return foundDocComment;
 }
 
 bool Scanner::scanEscape()
@@ -783,23 +779,13 @@ Token::Value Scanner::scanIdentifierOrKeyword()
 	return KeywordOrIdentifierToken(m_nextToken.literal);
 }
 
-char CharStream::advanceAndGet()
+char CharStream::advanceAndGet(size_t _chars)
 {
 	if (isPastEndOfInput())
 		return 0;
-	++m_pos;
-	if (isPastEndOfInput())
-		return 0;
-	return get();
-}
-
-char CharStream::advanceBy(size_t _chars)
-{
-	if (asserts(!isPastEndOfInput(_chars)))
-		BOOST_THROW_EXCEPTION(InternalCompilerError());
-
 	m_pos += _chars;
-
+	if (isPastEndOfInput())
+		return 0;
 	return m_source[m_pos];
 }
 
