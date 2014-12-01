@@ -244,6 +244,36 @@ BOOST_AUTO_TEST_CASE(balance_invalid)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(assignment_to_mapping)
+{
+	char const* text = "contract test {\n"
+					   "  struct str {\n"
+					   "    mapping(uint=>uint) map;\n"
+					   "  }\n"
+					   "  str data;"
+					   "  function fun() {\n"
+					   "    var a = data.map;\n"
+					   "    data.map = a;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_struct)
+{
+	char const* text = "contract test {\n"
+					   "  struct str {\n"
+					   "    mapping(uint=>uint) map;\n"
+					   "  }\n"
+					   "  str data;"
+					   "  function fun() {\n"
+					   "    var a = data;\n"
+					   "    data = a;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
