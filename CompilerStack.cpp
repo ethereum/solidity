@@ -85,54 +85,52 @@ void CompilerStack::streamAssembly(ostream& _outStream)
 
 string const& CompilerStack::getInterface()
 {
+	Json::StyledWriter writer;
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
 	if (m_interface.empty())
 	{
-		stringstream interface;
-		interface << '[';
+		Json::Value methods(Json::arrayValue);
+
 		vector<FunctionDefinition const*> exportedFunctions = m_contractASTNode->getInterfaceFunctions();
-		unsigned functionsCount = exportedFunctions.size();
 		for (FunctionDefinition const* f: exportedFunctions)
 		{
-			auto streamVariables = [&](vector<ASTPointer<VariableDeclaration>> const& _vars)
+			Json::Value method;
+			Json::Value inputs(Json::arrayValue);
+			Json::Value outputs(Json::arrayValue);
+
+			auto streamVariables = [&](vector<ASTPointer<VariableDeclaration>> const& _vars,
+									   Json::Value &json)
 			{
-				unsigned varCount = _vars.size();
 				for (ASTPointer<VariableDeclaration> const& var: _vars)
 				{
-					interface << "{"
-							  << "\"name\":" << escaped(var->getName(), false) << ","
-							  << "\"type\":" << escaped(var->getType()->toString(), false)
-							  << "}";
-					if (--varCount > 0)
-						interface << ",";
+					Json::Value input;
+					input["name"] = var->getName();
+					input["type"] = var->getType()->toString();
+					json.append(input);
 				}
 			};
 
-			interface << '{'
-					  << "\"name\":" << escaped(f->getName(), false) << ","
-					  << "\"inputs\":[";
-			streamVariables(f->getParameters());
-			interface << "],"
-					  << "\"outputs\":[";
-			streamVariables(f->getReturnParameters());
-			interface << "]"
-					  << "}";
-			if (--functionsCount > 0)
-				interface << ",";
+			method["name"] = f->getName();
+			streamVariables(f->getParameters(), inputs);
+			method["inputs"] = inputs;
+			streamVariables(f->getReturnParameters(), outputs);
+			method["outputs"] = outputs;
+
+			methods.append(method);
 		}
-		interface << ']';
-		m_interface = interface.str();
+		m_interface = writer.write(methods);
 	}
 	return m_interface;
 }
 
 string const& CompilerStack::getDocumentation()
 {
-
 	Json::StyledWriter writer;
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
 	if (m_documentation.empty())
 	{
 		Json::Value doc;
