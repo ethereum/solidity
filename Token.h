@@ -314,25 +314,11 @@ public:
 	}
 
 	// Predicates
-	static bool isKeyword(Value tok) { return m_tokenType[tok] == 'K'; }
-	static bool isIdentifier(Value tok) { return tok == IDENTIFIER; }
 	static bool isElementaryTypeName(Value tok) { return INT <= tok && tok < TYPES_END; }
 	static bool isAssignmentOp(Value tok) { return ASSIGN <= tok && tok <= ASSIGN_MOD; }
 	static bool isBinaryOp(Value op) { return COMMA <= op && op <= MOD; }
-	static bool isTruncatingBinaryOp(Value op) { return BIT_OR <= op && op <= SHR; }
 	static bool isArithmeticOp(Value op) { return ADD <= op && op <= MOD; }
 	static bool isCompareOp(Value op) { return EQ <= op && op <= IN; }
-	static bool isOrderedRelationalCompareOp(Value op)
-	{
-		return op == LT || op == LTE || op == GT || op == GTE;
-	}
-	static bool isEqualityOp(Value op) { return op == EQ; }
-	static bool isInequalityOp(Value op) { return op == NE; }
-	static bool isArithmeticCompareOp(Value op)
-	{
-		return isOrderedRelationalCompareOp(op) ||
-			   isEqualityOp(op) || isInequalityOp(op);
-	}
 
 	static Value AssignmentToBinaryOp(Value op)
 	{
