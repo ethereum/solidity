@@ -81,6 +81,9 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 			// check output
 			checkOutput(output, o);
 
+            // check logs
+            checkLog(theState.pending().size() ? theState.log(0) : LogEntries(), importer.m_environment.sub.logs);
+
 			// check addresses
 			auto expectedAddrs = importer.m_statePost.addresses();
 			auto resultAddrs = theState.addresses();

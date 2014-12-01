@@ -120,41 +120,6 @@ void FakeExtVM::importEnv(mObject& _o)
 	currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
 }
 
-mObject FakeExtVM::exportLog()
-{
-	mObject ret;
-	for (LogEntry const& l: sub.logs)
-	{
-		mObject o;
-		o["address"] = toString(l.address);
-		mArray topics;
-		for (auto const& t: l.topics)
-			topics.push_back(toString(t));
-		o["topics"] = topics;
-		o["data"] = "0x" + toHex(l.data);
-		ret[toString(l.bloom())] = o;
-	}
-	return ret;
-}
-
-void FakeExtVM::importLog(mObject& _o)
-{
-	for (auto const& l: _o)
-	{
-		mObject o = l.second.get_obj();
-		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
-		assert(o.count("address") > 0);
-		assert(o.count("topics") > 0);
-		assert(o.count("data") > 0);
-		LogEntry log;
-		log.address = Address(o["address"].get_str());
-		for (auto const& t: o["topics"].get_array())
-			log.topics.insert(h256(t.get_str()));
-		log.data = importData(o);
-		sub.logs.push_back(log);
-	}
-}
-
 mObject FakeExtVM::exportState()
 {
 	mObject ret;
@@ -384,7 +349,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = "0x" + toHex(output);
 				fev.push(o, "gas", gas);
-				o["logs"] = mValue(fev.exportLog());
+                o["logs"] = mValue(exportLog(fev.sub.logs));
 			}
 		}
 		else
@@ -402,7 +367,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				dev::test::FakeExtVM test;
 				test.importState(o["post"].get_obj());
 				test.importCallCreates(o["callcreates"].get_array());
-				test.importLog(o["logs"].get_obj());
+                test.sub.logs = importLog(o["logs"].get_obj());
 
 				checkOutput(output, o);
 
