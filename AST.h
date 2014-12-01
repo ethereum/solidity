@@ -242,6 +242,8 @@ public:
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
 
+	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition*>(getScope()); }
+
 private:
 	ASTPointer<TypeName> m_typeName; ///< can be empty ("var")
 
@@ -526,12 +528,16 @@ private:
  */
 class Expression: public ASTNode
 {
+protected:
+	enum class LValueType { NONE, LOCAL, STORAGE };
+
 public:
-	Expression(Location const& _location): ASTNode(_location), m_isLvalue(false), m_lvalueRequested(false) {}
+	Expression(Location const& _location): ASTNode(_location), m_lvalue(LValueType::NONE), m_lvalueRequested(false) {}
 	virtual void checkTypeRequirements() = 0;
 
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
-	bool isLvalue() const { return m_isLvalue; }
+	bool isLValue() const { return m_lvalue != LValueType::NONE; }
+	bool isLocalLValue() const { return m_lvalue == LValueType::LOCAL; }
 
 	/// Helper function, infer the type via @ref checkTypeRequirements and then check that it
 	/// is implicitly convertible to @a _expectedType. If not, throw exception.
@@ -546,9 +552,9 @@ public:
 protected:
 	//! Inferred type of the expression, only filled after a call to checkTypeRequirements().
 	std::shared_ptr<Type const> m_type;
-	//! Whether or not this expression is an lvalue, i.e. something that can be assigned to.
-	//! This is set during calls to @a checkTypeRequirements()
-	bool m_isLvalue;
+	//! If this expression is an lvalue (i.e. something that can be assigned to) and is stored
+	//! locally or in storage. This is set during calls to @a checkTypeRequirements()
+	LValueType m_lvalue;
 	//! Whether the outer expression requested the address (true) or the value (false) of this expression.
 	bool m_lvalueRequested;
 };
