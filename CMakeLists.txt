@@ -24,6 +24,7 @@ target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
 if(JSON_RPC_CPP_FOUND)
     target_link_libraries(testeth ${JSONCPP_LIBRARIES})
 	target_link_libraries(testeth web3jsonrpc)
+	target_link_libraries(testeth ${JSON_RPC_CPP_CLIENT_LIBRARY})
 endif()
 
 target_link_libraries(createRandomTest ethereum)
