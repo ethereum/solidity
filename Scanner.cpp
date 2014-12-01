@@ -150,9 +150,7 @@ void Scanner::reset(CharStream const& _source)
 	skipWhitespace();
 	scanToken();
 
-	m_currentToken = m_nextToken;
-	m_skippedComment = m_nextSkippedComment;
-	scanToken();
+	next();
 }
 
 
