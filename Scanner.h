@@ -74,9 +74,9 @@ public:
 	CharStream(): m_pos(0) {}
 	explicit CharStream(std::string const& _source): m_source(_source), m_pos(0) {}
 	int getPos() const { return m_pos; }
-	bool isPastEndOfInput() const { return m_pos >= m_source.size(); }
-	char get() const { return m_source[m_pos]; }
-	char advanceAndGet();
+	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_pos + _charsForward) >= m_source.size(); }
+	char get(size_t _charsForward = 0) const { return m_source[m_pos + _charsForward]; }
+	char advanceAndGet(size_t _chars=1);
 	char rollback(size_t _amount);
 
 	///@{
@@ -93,22 +93,11 @@ private:
 };
 
 
+
 class Scanner
 {
+	friend class LiteralScope;
 public:
-	/// Scoped helper for literal recording. Automatically drops the literal
-	/// if aborting the scanning before it's complete.
-	class LiteralScope
-	{
-	public:
-		explicit LiteralScope(Scanner* self): m_scanner(self), m_complete(false) { m_scanner->startNewLiteral(); }
-		~LiteralScope() { if (!m_complete) m_scanner->dropLiteral(); }
-		void complete() { m_complete = true; }
-
-	private:
-		Scanner* m_scanner;
-		bool m_complete;
-	};
 
 	Scanner() { reset(CharStream()); }
 	explicit Scanner(CharStream const& _source) { reset(_source); }
@@ -133,8 +122,12 @@ public:
 
 	///@{
 	///@name Information about the current comment token
+
 	Location getCurrentCommentLocation() const { return m_skippedComment.location; }
 	std::string const& getCurrentCommentLiteral() const { return m_skippedComment.literal; }
+	/// Called by the parser during FunctionDefinition parsing to clear the current comment
+	void clearCurrentCommentLiteral() { m_skippedComment.literal.clear(); }
+
 	///@}
 
 	///@{
@@ -165,10 +158,8 @@ private:
 
 	///@{
 	///@name Literal buffer support
-	inline void startNewLiteral() { m_nextToken.literal.clear(); }
 	inline void addLiteralChar(char c) { m_nextToken.literal.push_back(c); }
 	inline void addCommentLiteralChar(char c) { m_nextSkippedComment.literal.push_back(c); }
-	inline void dropLiteral() { m_nextToken.literal.clear(); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
 	///@}
 
@@ -181,9 +172,8 @@ private:
 
 	bool scanHexByte(char& o_scannedByte);
 
-	/// Scans a single Solidity token. Returns true if the scanned token was
-	/// a skipped documentation comment. False in all other cases.
-	bool scanToken();
+	/// Scans a single Solidity token.
+	void scanToken();
 
 	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();

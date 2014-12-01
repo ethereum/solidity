@@ -102,18 +102,55 @@ int hexValue(char c)
 }
 } // end anonymous namespace
 
+
+
+/// Scoped helper for literal recording. Automatically drops the literal
+/// if aborting the scanning before it's complete.
+enum LiteralType {
+	LITERAL_TYPE_STRING,
+	LITERAL_TYPE_NUMBER, // not really different from string type in behaviour
+	LITERAL_TYPE_COMMENT
+};
+
+class LiteralScope
+{
+public:
+	explicit LiteralScope(Scanner* _self, enum LiteralType _type): m_type(_type)
+	, m_scanner(_self)
+	, m_complete(false)
+	{
+		if (_type == LITERAL_TYPE_COMMENT)
+			m_scanner->m_nextSkippedComment.literal.clear();
+		else
+			m_scanner->m_nextToken.literal.clear();
+	}
+	~LiteralScope()
+	{
+		if (!m_complete)
+		{
+			if (m_type == LITERAL_TYPE_COMMENT)
+				m_scanner->m_nextSkippedComment.literal.clear();
+			else
+				m_scanner->m_nextToken.literal.clear();
+		}
+	}
+	void complete() { m_complete = true; }
+
+private:
+	enum LiteralType m_type;
+	Scanner* m_scanner;
+	bool m_complete;
+}; // end of LiteralScope class
+
+
 void Scanner::reset(CharStream const& _source)
 {
-	bool foundDocComment;
 	m_source = _source;
 	m_char = m_source.get();
 	skipWhitespace();
-	foundDocComment = scanToken();
+	scanToken();
 
-	// special version of Scanner:next() taking the previous scanToken() result into account
-	m_currentToken = m_nextToken;
-	if (scanToken() || foundDocComment)
-		m_skippedComment = m_nextSkippedComment;
+	next();
 }
 
 
@@ -142,8 +179,9 @@ BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 Token::Value Scanner::next()
 {
 	m_currentToken = m_nextToken;
-	if (scanToken())
-		m_skippedComment = m_nextSkippedComment;
+	m_skippedComment = m_nextSkippedComment;
+	scanToken();
+
 	return m_currentToken.token;
 }
 
@@ -180,10 +218,26 @@ Token::Value Scanner::skipSingleLineComment()
 /// For the moment this function simply consumes a single line triple slash doc comment
 Token::Value Scanner::scanDocumentationComment()
 {
-	LiteralScope literal(this);
+	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
 	advance(); //consume the last '/'
-	while (!isSourcePastEndOfInput() && !isLineTerminator(m_char))
+	while (!isSourcePastEndOfInput())
 	{
+		if (isLineTerminator(m_char))
+		{
+			// check if next line is also a documentation comment
+			skipWhitespace();
+			if (!m_source.isPastEndOfInput(3) &&
+				m_source.get(0) == '/' &&
+				m_source.get(1) == '/' &&
+				m_source.get(2) == '/')
+			{
+				addCommentLiteralChar('\n');
+				m_char = m_source.advanceAndGet(3);
+			}
+			else
+				break; // next line is not a documentation comment, we are done
+
+		}
 		addCommentLiteralChar(m_char);
 		advance();
 	}
@@ -214,10 +268,10 @@ Token::Value Scanner::skipMultiLineComment()
 	return Token::ILLEGAL;
 }
 
-bool Scanner::scanToken()
+void Scanner::scanToken()
 {
-	bool foundDocComment = false;
 	m_nextToken.literal.clear();
+	m_nextSkippedComment.literal.clear();
 	Token::Value token;
 	do
 	{
@@ -329,7 +383,6 @@ bool Scanner::scanToken()
 					m_nextSkippedComment.location.end = getSourcePos();
 					m_nextSkippedComment.token = comment;
 					token = Token::WHITESPACE;
-					foundDocComment = true;
 				}
 				else
 					token = skipSingleLineComment();
@@ -425,8 +478,6 @@ bool Scanner::scanToken()
 	while (token == Token::WHITESPACE);
 	m_nextToken.location.end = getSourcePos();
 	m_nextToken.token = token;
-
-	return foundDocComment;
 }
 
 bool Scanner::scanEscape()
@@ -474,7 +525,7 @@ Token::Value Scanner::scanString()
 {
 	char const quote = m_char;
 	advance();  // consume quote
-	LiteralScope literal(this);
+	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	while (m_char != quote && !isSourcePastEndOfInput() && !isLineTerminator(m_char))
 	{
 		char c = m_char;
@@ -505,7 +556,7 @@ void Scanner::scanDecimalDigits()
 Token::Value Scanner::scanNumber(char _charSeen)
 {
 	enum { DECIMAL, HEX, BINARY } kind = DECIMAL;
-	LiteralScope literal(this);
+	LiteralScope literal(this, LITERAL_TYPE_NUMBER);
 	if (_charSeen == '.')
 	{
 		// we have already seen a decimal point of the float
@@ -758,7 +809,7 @@ Token::Value Scanner::scanIdentifierOrKeyword()
 {
 	if (asserts(isIdentifierStart(m_char)))
 		BOOST_THROW_EXCEPTION(InternalCompilerError());
-	LiteralScope literal(this);
+	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
 	while (isIdentifierPart(m_char))
@@ -767,14 +818,14 @@ Token::Value Scanner::scanIdentifierOrKeyword()
 	return KeywordOrIdentifierToken(m_nextToken.literal);
 }
 
-char CharStream::advanceAndGet()
+char CharStream::advanceAndGet(size_t _chars)
 {
 	if (isPastEndOfInput())
 		return 0;
-	++m_pos;
+	m_pos += _chars;
 	if (isPastEndOfInput())
 		return 0;
-	return get();
+	return m_source[m_pos];
 }
 
 char CharStream::rollback(size_t _amount)
