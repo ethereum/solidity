@@ -121,14 +121,14 @@ void doMyTests(json_spirit::mValue& v)
 {
 	for (auto& i: v.get_obj())
 	{
+		cnote << i.first;
 		mObject& o = i.second.get_obj();
 
 		assert(o.count("env") > 0);
 		assert(o.count("pre") > 0);
 		assert(o.count("exec") > 0);
 
-		eth::VM vm;
-		test::FakeExtVM fev;
+		dev::test::FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 
@@ -141,17 +141,20 @@ void doMyTests(json_spirit::mValue& v)
 			fev.code = fev.thisTxCode;
 		}
 
-		vm.reset(fev.gas);
 		bytes output;
+		eth::VM vm(fev.gas);
+
 		u256 gas;
+		bool vmExceptionOccured = false;
 		try
 		{
-			output = vm.go(fev).toBytes();
+			output = vm.go(fev, fev.simpleTrace()).toBytes();
+			gas = vm.gas();
 		}
 		catch (eth::VMException const& _e)
 		{
 			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			gas = 0;
+			vmExceptionOccured = true;
 		}
 		catch (Exception const& _e)
 		{
@@ -180,9 +183,13 @@ void doMyTests(json_spirit::mValue& v)
 
 		o["env"] = mValue(fev.exportEnv());
 		o["exec"] = mValue(fev.exportExec());
-		o["post"] = mValue(fev.exportState());
-		o["callcreates"] = fev.exportCallCreates();
-		o["out"] = "0x" + toHex(output);
-		fev.push(o, "gas", gas);
+		if (!vmExceptionOccured)
+		{
+			o["post"] = mValue(fev.exportState());
+			o["callcreates"] = fev.exportCallCreates();
+			o["out"] = "0x" + toHex(output);
+			fev.push(o, "gas", gas);
+			o["logs"] = mValue(test::exportLog(fev.sub.logs));
+		}
 	}
 }
