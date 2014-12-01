@@ -88,11 +88,16 @@ public:
 	Declaration(Location const& _location, ASTPointer<ASTString> const& _name):
 		ASTNode(_location), m_name(_name) {}
 
-	/// Returns the declared name.
+	/// @returns the declared name.
 	ASTString const& getName() const { return *m_name; }
+	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
+	/// Available only after name and type resolution step.
+	Declaration* getScope() const { return m_scope; }
+	void setScope(Declaration* const& _scope) { m_scope = _scope; }
 
 private:
 	ASTPointer<ASTString> m_name;
+	Declaration* m_scope;
 };
 
 /**
