@@ -34,7 +34,7 @@ namespace test
 class InterfaceChecker
 {
 public:
-	bool checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
+	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
 		m_compilerStack.parse(_code);
 		std::string generatedInterfaceString = m_compilerStack.getInterface();
@@ -42,15 +42,17 @@ public:
 		m_reader.parse(generatedInterfaceString, generatedInterface);
 		Json::Value expectedInterface;
 		m_reader.parse(_expectedInterfaceString, expectedInterface);
-		return expectedInterface == generatedInterface;
+		BOOST_CHECK_MESSAGE(expectedInterface == generatedInterface,
+							"Expected " << _expectedInterfaceString <<
+							"\n but got:\n" << generatedInterfaceString);
 	}
-	
+
 private:
 	CompilerStack m_compilerStack;
 	Json::Reader m_reader;
 };
 
-BOOST_FIXTURE_TEST_SUITE(SolidityCompilerJSONInterfaceOutput, InterfaceChecker)
+BOOST_FIXTURE_TEST_SUITE(solidityABIJSON, InterfaceChecker)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {
@@ -76,7 +78,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	}
 	])";
 
-	BOOST_CHECK(checkInterface(sourceCode, interface));
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(empty_contract)
@@ -86,7 +88,7 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 
 	char const* interface = "[]";
 
-	BOOST_CHECK(checkInterface(sourceCode, interface));
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_methods)
@@ -95,7 +97,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	"  function f(uint a) returns(uint d) { return a * 7; }\n"
 	"  function g(uint b) returns(uint e) { return b * 8; }\n"
 	"}\n";
-	
+
 	char const* interface = R"([
 	{
 		"name": "f",
@@ -129,7 +131,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	}
 	])";
 
-	BOOST_CHECK(checkInterface(sourceCode, interface));
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_params)
@@ -160,7 +162,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 	}
 	])";
 
-	BOOST_CHECK(checkInterface(sourceCode, interface));
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_methods_order)
@@ -170,7 +172,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	"  function f(uint a) returns(uint d) { return a * 7; }\n"
 	"  function c(uint b) returns(uint e) { return b * 8; }\n"
 	"}\n";
-		
+
 	char const* interface = R"([
 	{
 		"name": "c",
@@ -203,8 +205,8 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 		]
 	}
 	])";
-	
-	BOOST_CHECK(checkInterface(sourceCode, interface));
+
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
