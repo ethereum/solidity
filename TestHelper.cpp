@@ -72,7 +72,7 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller): m_TestObject(_o
 	if (!isFiller)
 	{
 		importState(_o["post"].get_obj(), m_statePost);
-        m_environment.sub.logs = importLog(_o["logs"].get_obj());
+		m_environment.sub.logs = importLog(_o["logs"].get_obj());
 	}
 }
 
@@ -95,7 +95,6 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	m_statePre.m_previousBlock = m_environment.previousBlock;
 	m_statePre.m_currentBlock = m_environment.currentBlock;
 }
-
 
 void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 {
@@ -150,8 +149,8 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 	// export output
 	m_TestObject["out"] = "0x" + toHex(_output);
 
-    // export logs
-    m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
+	// export logs
+	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
 
 	// export post state
 	json_spirit::mObject postState;
@@ -262,40 +261,40 @@ bytes importCode(json_spirit::mObject& _o)
 
 LogEntries importLog(json_spirit::mObject& _o)
 {
-    LogEntries logEntries;
-    for (auto const& l: _o)
-    {
-        json_spirit::mObject o = l.second.get_obj();
-        // cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
-        assert(o.count("address") > 0);
-        assert(o.count("topics") > 0);
-        assert(o.count("data") > 0);
-        LogEntry log;
-        log.address = Address(o["address"].get_str());
-        for (auto const& t: o["topics"].get_array())
-            log.topics.insert(h256(t.get_str()));
-        log.data = importData(o);
-        logEntries.push_back(log);
-    }
-    return logEntries;
+	LogEntries logEntries;
+	for (auto const& l: _o)
+	{
+		json_spirit::mObject o = l.second.get_obj();
+		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+		assert(o.count("address") > 0);
+		assert(o.count("topics") > 0);
+		assert(o.count("data") > 0);
+		LogEntry log;
+		log.address = Address(o["address"].get_str());
+		for (auto const& t: o["topics"].get_array())
+			log.topics.insert(h256(t.get_str()));
+		log.data = importData(o);
+		logEntries.push_back(log);
+	}
+	return logEntries;
 }
 
 json_spirit::mObject exportLog(eth::LogEntries _logs)
 {
-    json_spirit::mObject ret;
-    if (_logs.size() == 0) return ret;
-    for (LogEntry const& l: _logs)
-    {
-        json_spirit::mObject o;
-        o["address"] = toString(l.address);
-        json_spirit::mArray topics;
-        for (auto const& t: l.topics)
-            topics.push_back(toString(t));
-        o["topics"] = topics;
-        o["data"] = "0x" + toHex(l.data);
-        ret[toString(l.bloom())] = o;
-    }
-    return ret;
+	json_spirit::mObject ret;
+	if (_logs.size() == 0) return ret;
+	for (LogEntry const& l: _logs)
+	{
+		json_spirit::mObject o;
+		o["address"] = toString(l.address);
+		json_spirit::mArray topics;
+		for (auto const& t: l.topics)
+			topics.push_back(toString(t));
+		o["topics"] = topics;
+		o["data"] = "0x" + toHex(l.data);
+		ret[toString(l.bloom())] = o;
+	}
+	return ret;
 }
 
 void checkOutput(bytes const& _output, json_spirit::mObject& _o)

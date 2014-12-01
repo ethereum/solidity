@@ -349,7 +349,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = "0x" + toHex(output);
 				fev.push(o, "gas", gas);
-                o["logs"] = mValue(exportLog(fev.sub.logs));
+				o["logs"] = mValue(exportLog(fev.sub.logs));
 			}
 		}
 		else
@@ -367,7 +367,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				dev::test::FakeExtVM test;
 				test.importState(o["post"].get_obj());
 				test.importCallCreates(o["callcreates"].get_array());
-                test.sub.logs = importLog(o["logs"].get_obj());
+				test.sub.logs = importLog(o["logs"].get_obj());
 
 				checkOutput(output, o);
 
