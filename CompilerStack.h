@@ -62,6 +62,9 @@ public:
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& getInterface();
+	/// Returns a string representing the contract documentation in JSON.
+	/// Prerequisite: Successful call to parse or compile.
+	std::string const& getDocumentation();
 
 	/// Returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner() const { return *m_scanner; }
@@ -77,6 +80,7 @@ private:
 	std::shared_ptr<ContractDefinition> m_contractASTNode;
 	bool m_parseSuccessful;
 	std::string m_interface;
+	std::string m_documentation;
 	std::shared_ptr<Compiler> m_compiler;
 	bytes m_bytecode;
 };

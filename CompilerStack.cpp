@@ -28,6 +28,8 @@
 #include <libsolidity/Compiler.h>
 #include <libsolidity/CompilerStack.h>
 
+#include <jsonrpc/json/json.h>
+
 using namespace std;
 
 namespace dev
@@ -123,6 +125,30 @@ string const& CompilerStack::getInterface()
 		m_interface = interface.str();
 	}
 	return m_interface;
+}
+
+string const& CompilerStack::getDocumentation()
+{
+
+	Json::StyledWriter writer;
+	if (!m_parseSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+	if (m_documentation.empty())
+	{
+		Json::Value doc;
+		Json::Value methods;
+
+		vector<FunctionDefinition const*> exportedFunctions = m_contractASTNode->getInterfaceFunctions();
+		for (FunctionDefinition const* f: exportedFunctions)
+		{
+			Json::Value user;
+			user["user"] = Json::Value(*f->getDocumentation());
+			methods[f->getName()] = user;
+		}
+		doc["methods"] = methods;
+		m_documentation = writer.write(doc);
+	}
+	return m_documentation;
 }
 
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
