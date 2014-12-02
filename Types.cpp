@@ -295,9 +295,9 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 	u256 offset;
 	for (ASTPointer<VariableDeclaration> variable: m_struct.getMembers())
 	{
-		offset += variable->getType()->getStorageSize();
 		if (variable->getName() == _name)
 			return offset;
+		offset += variable->getType()->getStorageSize();
 	}
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage offset of non-existing member requested."));
 }
