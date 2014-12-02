@@ -27,6 +27,32 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
+{
+	switch (m_type)
+	{
+	case Operation:
+	case Tag: // 1 byte for the JUMPDEST
+		return 1;
+	case PushString:
+		return 33;
+	case Push:
+		return 1 + max<unsigned>(1, dev::bytesRequired(m_data));
+	case PushSubSize:
+		return 4;		// worst case: a 16MB program
+	case PushTag:
+	case PushData:
+	case PushSub:
+		return 1 + _addressLength;
+	case NoOptimizeBegin:
+	case NoOptimizeEnd:
+		return 0;
+	default:
+		break;
+	}
+	BOOST_THROW_EXCEPTION(InvalidOpcode());
+}
+
 int AssemblyItem::deposit() const
 {
 	switch (m_type)
@@ -51,32 +77,7 @@ unsigned Assembly::bytesRequired() const
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
-			switch (i.m_type)
-			{
-			case Operation:
-			case Tag: // 1 byte for the JUMPDEST
-				ret++;
-				break;
-			case PushString:
-				ret += 33;
-				break;
-			case Push:
-				ret += 1 + max<unsigned>(1, dev::bytesRequired(i.m_data));
-				break;
-			case PushSubSize:
-				ret += 4;		// worst case: a 16MB program
-				break;
-			case PushTag:
-			case PushData:
-			case PushSub:
-				ret += 1 + br;
-				break;
-			case NoOptimizeBegin:
-			case NoOptimizeEnd:
-				break;
-			default:
-				BOOST_THROW_EXCEPTION(InvalidOpcode());
-			}
+			ret += i.bytesRequired(br);
 		if (dev::bytesRequired(ret) <= br)
 			return ret;
 	}
@@ -243,6 +244,18 @@ inline bool popCountIncreased(AssemblyItemsConstRef _pre, AssemblyItems const& _
 	return count_if(begin(_post), end(_post), isPop) > count_if(begin(_pre), end(_pre), isPop);
 }
 
+//@todo this has to move to a special optimizer class soon
+template<class Iterator>
+unsigned bytesRequiredBySlice(Iterator _begin, Iterator _end)
+{
+	// this is only used in the optimizer, so we can provide a guess for the address length
+	unsigned addressLength = 4;
+	unsigned size = 0;
+	for (; _begin != _end; ++_begin)
+		size += _begin->bytesRequired(addressLength);
+	return size;
+}
+
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
 #define copt dev::LogOutputStream<OptimiserChannel, true>()
 
@@ -258,7 +271,7 @@ Assembly& Assembly::optimise(bool _enable)
 		u256 mask = (u256(1) << testBit) - 1;
 		return boost::multiprecision::bit_test(b, testBit) ? b | ~mask : b & mask;
 	};
-	map<Instruction, function<u256(u256, u256)>> c_simple =
+	map<Instruction, function<u256(u256, u256)>> const c_simple =
 	{
 		{ Instruction::SUB, [](u256 a, u256 b)->u256{return a - b;} },
 		{ Instruction::DIV, [](u256 a, u256 b)->u256{return a / b;} },
@@ -273,7 +286,7 @@ Assembly& Assembly::optimise(bool _enable)
 		{ Instruction::SGT, [](u256 a, u256 b)->u256{return u2s(a) > u2s(b) ? 1 : 0;} },
 		{ Instruction::EQ, [](u256 a, u256 b)->u256{return a == b ? 1 : 0;} },
 	};
-	map<Instruction, function<u256(u256, u256)>> c_associative =
+	map<Instruction, function<u256(u256, u256)>> const c_associative =
 	{
 		{ Instruction::ADD, [](u256 a, u256 b)->u256{return a + b;} },
 		{ Instruction::MUL, [](u256 a, u256 b)->u256{return a * b;} },
@@ -281,6 +294,8 @@ Assembly& Assembly::optimise(bool _enable)
 		{ Instruction::OR, [](u256 a, u256 b)->u256{return a | b;} },
 		{ Instruction::XOR, [](u256 a, u256 b)->u256{return a ^ b;} },
 	};
+	std::vector<pair<AssemblyItem, u256>> const c_identities =
+	{ { Instruction::ADD, 0}, { Instruction::MUL, 1}, { Instruction::MOD, 0}, { Instruction::OR, 0}, { Instruction::XOR, 0} };
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules =
 	{
 		{ { Push, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
@@ -299,8 +314,11 @@ Assembly& Assembly::optimise(bool _enable)
 		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
 		rules.push_back({ { Push, i.first, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[2].data(), m[0].data()), i.first }; } });
 	}
+	for (auto const& i: c_identities)
+		rules.push_back({{Push, i.first}, [&](AssemblyItemsConstRef m) -> AssemblyItems
+							{ return m[0].data() == i.second ? AssemblyItems() : m.toVector(); }});
 	// jump to next instruction
-	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [&](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
+	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
 
 	// pop optimization, do not compute values that are popped again anyway
 	rules.push_back({ { AssemblyItem(UndefinedItem), Instruction::POP }, [](AssemblyItemsConstRef m) -> AssemblyItems
@@ -315,6 +333,29 @@ Assembly& Assembly::optimise(bool _enable)
 							  return m.toVector();
 						  return AssemblyItems(info.args, Instruction::POP);
 					  } });
+	// compute constants close to powers of two by expressions
+	auto computeConstants = [](AssemblyItemsConstRef m) -> AssemblyItems
+	{
+		u256 const& c = m[0].data();
+		unsigned const minBits = 4 * 8;
+		if (c < (bigint(1) << minBits))
+			return m.toVector(); // we need at least "PUSH1 <bits> PUSH1 <2> EXP"
+		if (c == u256(-1))
+			return {u256(0), Instruction::NOT};
+		for (unsigned bits = minBits; bits < 256; ++bits)
+		{
+			bigint const diff = c - (bigint(1) << bits);
+			if (abs(diff) > 0xff)
+				continue;
+			AssemblyItems powerOfTwo{u256(bits), u256(2), Instruction::EXP};
+			if (diff == 0)
+				return powerOfTwo;
+			return AssemblyItems{u256(abs(diff))} + powerOfTwo +
+				   AssemblyItems{diff > 0 ? Instruction::ADD : Instruction::SUB};
+		}
+		return m.toVector();
+	};
+	rules.push_back({{Push}, computeConstants});
 
 	copt << *this;
 
@@ -336,15 +377,27 @@ Assembly& Assembly::optimise(bool _enable)
 				if (matches(vr, &r.first))
 				{
 					auto rw = r.second(vr);
-					if (rw.size() < vr.size() || (rw.size() == vr.size() && popCountIncreased(vr, rw)))
+					unsigned const vrSize = bytesRequiredBySlice(vr.begin(), vr.end());
+					unsigned const rwSize = bytesRequiredBySlice(rw.begin(), rw.end());
+					//@todo check the actual size (including constant sizes)
+					if (rwSize < vrSize || (rwSize == vrSize && popCountIncreased(vr, rw)))
 					{
 						copt << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
-						for (unsigned j = 0; j < vr.size(); ++j)
+						copt << AssemblyItemsConstRef(&rw);
+						if (rw.size() > vr.size())
+						{
+							// create hole in the vector
+							unsigned sizeIncrease = rw.size() - vr.size();
+							m_items.resize(m_items.size() + sizeIncrease, AssemblyItem(UndefinedItem));
+							move_backward(m_items.begin() + i, m_items.end() - sizeIncrease, m_items.end());
+						}
+
+						for (unsigned j = 0; j < max(rw.size(), vr.size()); ++j)
 							if (j < rw.size())
 								m_items[i + j] = rw[j];
 							else
 								m_items.erase(m_items.begin() + i + rw.size());
-						copt << AssemblyItemsConstRef(&rw);
+
 						count++;
 						copt << "Now:\n" << m_items;
 					}
