@@ -140,8 +140,12 @@ string const& CompilerStack::getDocumentation()
 		for (FunctionDefinition const* f: exportedFunctions)
 		{
 			Json::Value user;
-			user["user"] = Json::Value(*f->getDocumentation());
-			methods[f->getName()] = user;
+			auto strPtr = f->getDocumentation();
+			if (strPtr)
+			{
+				user["user"] = Json::Value(*strPtr);
+				methods[f->getName()] = user;
+			}
 		}
 		doc["methods"] = methods;
 		m_documentation = writer.write(doc);
