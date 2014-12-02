@@ -134,7 +134,7 @@ string const& CompilerStack::getDocumentation()
 	if (m_documentation.empty())
 	{
 		Json::Value doc;
-		Json::Value methods;
+		Json::Value methods(Json::objectValue);
 
 		vector<FunctionDefinition const*> exportedFunctions = m_contractASTNode->getInterfaceFunctions();
 		for (FunctionDefinition const* f: exportedFunctions)
