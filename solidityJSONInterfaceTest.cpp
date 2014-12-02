@@ -23,6 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/CompilerStack.h>
 #include <jsonrpc/json/json.h>
+#include <libdevcore/Exceptions.h>
 
 namespace dev
 {
@@ -36,7 +37,19 @@ class InterfaceChecker
 public:
 	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
-		m_compilerStack.parse(_code);
+		try
+		{
+			m_compilerStack.parse(_code);
+		}
+		catch (const std::exception& e)
+		{
+			std::string const* extra = boost::get_error_info<errinfo_comment>(e);
+			std::string msg = std::string("Parsing contract failed with: ") +
+				e.what() + std::string("\n");
+			if (extra)
+				msg += *extra;
+			BOOST_FAIL(msg);
+		}
 		std::string generatedInterfaceString = m_compilerStack.getInterface();
 		Json::Value generatedInterface;
 		m_reader.parse(generatedInterfaceString, generatedInterface);
@@ -52,7 +65,7 @@ private:
 	Json::Reader m_reader;
 };
 
-BOOST_FIXTURE_TEST_SUITE(solidityABIJSON, InterfaceChecker)
+BOOST_FIXTURE_TEST_SUITE(SolidityABIJSON, InterfaceChecker)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {

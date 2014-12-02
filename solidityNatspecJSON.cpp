@@ -23,6 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/CompilerStack.h>
 #include <jsonrpc/json/json.h>
+#include <libdevcore/Exceptions.h>
 
 namespace dev
 {
@@ -36,7 +37,19 @@ class DocumentationChecker
 public:
 	void checkNatspec(std::string const& _code, std::string const& _expectedDocumentationString)
 	{
-		m_compilerStack.parse(_code);
+		try
+		{
+			m_compilerStack.parse(_code);
+		}
+		catch (const std::exception& e)
+		{
+			std::string const* extra = boost::get_error_info<errinfo_comment>(e);
+			std::string msg = std::string("Parsing contract failed with: ") +
+				e.what() + std::string("\n");
+			if (extra)
+				msg += *extra;
+			BOOST_FAIL(msg);
+		}
 		auto generatedDocumentationString = m_compilerStack.getDocumentation();
 		Json::Value generatedDocumentation;
 		m_reader.parse(generatedDocumentationString, generatedDocumentation);
@@ -65,6 +78,67 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	"\"methods\":{"
 	"    \"mul\":{ \"user\": \" Multiplies `a` by 7\"}"
 	"}}";
+
+	checkNatspec(sourceCode, natspec);
+}
+
+BOOST_AUTO_TEST_CASE(multiline_comment)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// Multiplies `a` by 7\n"
+	"  /// and then adds `b`\n"
+	"  function mul_and_add(uint a, uint256 b) returns(uint256 d)\n"
+	"  {\n"
+	"      return (a * 7) + b;\n"
+	"  }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul_and_add\":{ \"user\": \" Multiplies `a` by 7\n and then adds `b`\"}"
+	"}}";
+
+	checkNatspec(sourceCode, natspec);
+}
+
+BOOST_AUTO_TEST_CASE(multiple_functions)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// Multiplies `a` by 7\n"
+	"  /// and then adds `b`\n"
+	"  function mul_and_add(uint a, uint256 b) returns(uint256 d)\n"
+	"  {\n"
+	"      return (a * 7) + b;\n"
+	"  }\n"
+	"\n"
+	"  /// Divides `input` by `div`\n"
+	"  function divide(uint input, uint div) returns(uint d)\n"
+	"  {\n"
+	"      return input / div;\n"
+	"  }\n"
+	"  /// Subtracts 3 from `input`\n"
+	"  function sub(int input) returns(int d)\n"
+	"  {\n"
+	"      return input - 3;\n"
+	"  }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul_and_add\":{ \"user\": \" Multiplies `a` by 7\n and then adds `b`\"},"
+	"    \"divide\":{ \"user\": \" Divides `input` by `div`\"},"
+	"    \"sub\":{ \"user\": \" Subtracts 3 from `input`\"}"
+	"}}";
+
+	checkNatspec(sourceCode, natspec);
+}
+
+BOOST_AUTO_TEST_CASE(empty_contract)
+{
+	char const* sourceCode = "contract test {\n"
+	"}\n";
+
+	char const* natspec = "{\"methods\":{} }";
 
 	checkNatspec(sourceCode, natspec);
 }
