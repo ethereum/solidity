@@ -100,24 +100,22 @@ string const& CompilerStack::getInterface()
 			Json::Value inputs(Json::arrayValue);
 			Json::Value outputs(Json::arrayValue);
 
-			auto streamVariables = [&](vector<ASTPointer<VariableDeclaration>> const& _vars,
-									   Json::Value &json)
+			auto streamVariables = [](vector<ASTPointer<VariableDeclaration>> const& _vars)
 			{
+				Json::Value params(Json::arrayValue);
 				for (ASTPointer<VariableDeclaration> const& var: _vars)
 				{
 					Json::Value input;
 					input["name"] = var->getName();
 					input["type"] = var->getType()->toString();
-					json.append(input);
+					params.append(input);
 				}
+				return params;
 			};
 
 			method["name"] = f->getName();
-			streamVariables(f->getParameters(), inputs);
-			method["inputs"] = inputs;
-			streamVariables(f->getReturnParameters(), outputs);
-			method["outputs"] = outputs;
-
+			method["inputs"] = streamVariables(f->getParameters());
+			method["outputs"] = streamVariables(f->getReturnParameters());
 			methods.append(method);
 		}
 		m_interface = writer.write(methods);
