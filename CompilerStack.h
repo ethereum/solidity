@@ -32,6 +32,7 @@ namespace solidity {
 
 // forward declarations
 class Scanner;
+class SourceUnit;
 class ContractDefinition;
 class Compiler;
 class GlobalContext;
@@ -65,7 +66,7 @@ public:
 
 	/// Returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner() const { return *m_scanner; }
-	ContractDefinition& getAST() const { return *m_contractASTNode; }
+	SourceUnit& getAST() const { return *m_sourceUnitASTNode; }
 
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.
@@ -74,7 +75,7 @@ public:
 private:
 	std::shared_ptr<Scanner> m_scanner;
 	std::shared_ptr<GlobalContext> m_globalContext;
-	std::shared_ptr<ContractDefinition> m_contractASTNode;
+	std::shared_ptr<SourceUnit> m_sourceUnitASTNode;
 	bool m_parseSuccessful;
 	std::string m_interface;
 	std::shared_ptr<Compiler> m_compiler;

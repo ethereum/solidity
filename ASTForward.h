@@ -34,6 +34,8 @@ namespace solidity
 {
 
 class ASTNode;
+class SourceUnit;
+class ImportDirective;
 class Declaration;
 class ContractDefinition;
 class StructDefinition;

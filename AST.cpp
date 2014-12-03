@@ -33,6 +33,19 @@ namespace dev
 namespace solidity
 {
 
+void SourceUnit::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+		listAccept(m_nodes, _visitor);
+	_visitor.endVisit(*this);
+}
+
+void ImportDirective::accept(ASTVisitor& _visitor)
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
 void ContractDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
@@ -55,34 +68,6 @@ void StructDefinition::checkValidityOfMembers()
 {
 	checkMemberTypes();
 	checkRecursion();
-}
-
-void StructDefinition::checkMemberTypes()
-{
-	for (ASTPointer<VariableDeclaration> const& member: getMembers())
-		if (!member->getType()->canBeStored())
-			BOOST_THROW_EXCEPTION(member->createTypeError("Type cannot be used in struct."));
-}
-
-void StructDefinition::checkRecursion()
-{
-	set<StructDefinition const*> definitionsSeen;
-	vector<StructDefinition const*> queue = {this};
-	while (!queue.empty())
-	{
-		StructDefinition const* def = queue.back();
-		queue.pop_back();
-		if (definitionsSeen.count(def))
-			BOOST_THROW_EXCEPTION(ParserError() << errinfo_sourceLocation(def->getLocation())
-												<< errinfo_comment("Recursive struct definition."));
-		definitionsSeen.insert(def);
-		for (ASTPointer<VariableDeclaration> const& member: def->getMembers())
-			if (member->getType()->getCategory() == Type::Category::STRUCT)
-			{
-				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName&>(*member->getTypeName());
-				queue.push_back(&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()));
-			}
-	}
 }
 
 void ParameterList::accept(ASTVisitor& _visitor)
@@ -310,6 +295,34 @@ vector<FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() co
 
 	sort(exportedFunctions.begin(), exportedFunctions.end(), compareNames);
 	return exportedFunctions;
+}
+
+void StructDefinition::checkMemberTypes()
+{
+	for (ASTPointer<VariableDeclaration> const& member: getMembers())
+		if (!member->getType()->canBeStored())
+			BOOST_THROW_EXCEPTION(member->createTypeError("Type cannot be used in struct."));
+}
+
+void StructDefinition::checkRecursion()
+{
+	set<StructDefinition const*> definitionsSeen;
+	vector<StructDefinition const*> queue = {this};
+	while (!queue.empty())
+	{
+		StructDefinition const* def = queue.back();
+		queue.pop_back();
+		if (definitionsSeen.count(def))
+			BOOST_THROW_EXCEPTION(ParserError() << errinfo_sourceLocation(def->getLocation())
+												<< errinfo_comment("Recursive struct definition."));
+		definitionsSeen.insert(def);
+		for (ASTPointer<VariableDeclaration> const& member: def->getMembers())
+			if (member->getType()->getCategory() == Type::Category::STRUCT)
+			{
+				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName&>(*member->getTypeName());
+				queue.push_back(&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()));
+			}
+	}
 }
 
 void FunctionDefinition::checkTypeRequirements()

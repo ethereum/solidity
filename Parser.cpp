@@ -20,6 +20,7 @@
  * Solidity parser.
  */
 
+#include <vector>
 #include <libdevcore/Log.h>
 #include <libsolidity/BaseTypes.h>
 #include <libsolidity/Parser.h>
@@ -32,13 +33,6 @@ namespace dev
 {
 namespace solidity
 {
-
-ASTPointer<ContractDefinition> Parser::parse(shared_ptr<Scanner> const& _scanner)
-{
-	m_scanner = _scanner;
-	return parseContractDefinition();
-}
-
 
 /// AST node factory that also tracks the begin and end position of an AST node
 /// while it is being parsed
@@ -65,6 +59,28 @@ private:
 	Location m_location;
 };
 
+ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
+{
+	m_scanner = _scanner;
+	ASTNodeFactory nodeFactory(*this);
+	vector<ASTPointer<ASTNode>> nodes;
+	while (_scanner->getCurrentToken() != Token::EOS)
+	{
+		switch (m_scanner->getCurrentToken())
+		{
+		case Token::IMPORT:
+			nodes.push_back(parseImportDirective());
+			break;
+		case Token::CONTRACT:
+			nodes.push_back(parseContractDefinition());
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(createParserError(std::string("Expected import directive or contract definition.")));
+		}
+	}
+	return nodeFactory.createNode<SourceUnit>(nodes);
+}
+
 int Parser::getPosition() const
 {
 	return m_scanner->getCurrentLocation().start;
@@ -73,6 +89,18 @@ int Parser::getPosition() const
 int Parser::getEndPosition() const
 {
 	return m_scanner->getCurrentLocation().end;
+}
+
+ASTPointer<ImportDirective> Parser::parseImportDirective()
+{
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::IMPORT);
+	if (m_scanner->getCurrentToken() != Token::STRING_LITERAL)
+		BOOST_THROW_EXCEPTION(createParserError("Expected string literal (URL)."));
+	ASTPointer<ASTString> url = getLiteralAndAdvance();
+	nodeFactory.markEndPosition();
+	expectToken(Token::SEMICOLON);
+	return nodeFactory.createNode<ImportDirective>(url);
 }
 
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
@@ -112,7 +140,6 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBRACE);
-	expectToken(Token::EOS);
 	return nodeFactory.createNode<ContractDefinition>(name, structs, stateVariables, functions);
 }
 
