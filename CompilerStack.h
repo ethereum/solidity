@@ -54,6 +54,9 @@ public:
 	void parse();
 	/// Sets the given source code as the only source unit and parses it.
 	void parse(std::string const& _sourceCode);
+	/// Returns a list of the contract names in the sources.
+	std::vector<std::string> getContractNames();
+
 	/// Compiles the source units that were prevously added and parsed.
 	void compile(bool _optimize = false);
 	/// Parses and compiles the given source code.

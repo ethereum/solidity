@@ -81,10 +81,20 @@ void CompilerStack::parse(string const& _sourceCode)
 	parse();
 }
 
-void CompilerStack::compile(bool _optimize)
+vector<string> CompilerStack::getContractNames()
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+	vector<string> contractNames;
+	for (auto const& contract: m_contracts)
+		contractNames.push_back(contract.first);
+	return contractNames;
+}
+
+void CompilerStack::compile(bool _optimize)
+{
+	if (!m_parseSuccessful)
+		parse();
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->getNodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))

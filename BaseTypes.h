@@ -37,14 +37,13 @@ namespace solidity
  */
 struct Location
 {
-	Location(int _start, int _end): start(_start), end(_end) { }
+	Location(int _start, int _end, std::shared_ptr<std::string const> _sourceName):
+		start(_start), end(_end), sourceName(_sourceName) { }
 	Location(): start(-1), end(-1) { }
 
-	bool IsValid() const { return !!sourceName && start >= 0 && end >= start; }
-
-	std::shared_ptr<std::string> sourceName;
 	int start;
 	int end;
+	std::shared_ptr<std::string const> sourceName;
 };
 
 /// Stream output for Location (used e.g. in boost exceptions).

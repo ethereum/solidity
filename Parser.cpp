@@ -39,7 +39,8 @@ namespace solidity
 class Parser::ASTNodeFactory
 {
 public:
-	ASTNodeFactory(Parser const& _parser): m_parser(_parser), m_location(_parser.getPosition(), -1) {}
+	ASTNodeFactory(Parser const& _parser):
+		m_parser(_parser), m_location(_parser.getPosition(), -1, _parser.getSourceName()) {}
 
 	void markEndPosition() { m_location.end = m_parser.getEndPosition(); }
 	void setLocationEmpty() { m_location.end = m_location.start; }
@@ -79,6 +80,11 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		}
 	}
 	return nodeFactory.createNode<SourceUnit>(nodes);
+}
+
+std::shared_ptr<const string> const& Parser::getSourceName() const
+{
+	return m_scanner->getSourceName();
 }
 
 int Parser::getPosition() const
@@ -579,7 +585,8 @@ ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 
 ParserError Parser::createParserError(string const& _description) const
 {
-	return ParserError() << errinfo_sourcePosition(getPosition()) << errinfo_comment(_description);
+	return ParserError() << errinfo_sourceLocation(Location(getPosition(), getPosition(), getSourceName()))
+						 << errinfo_comment(_description);
 }
 
 

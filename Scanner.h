@@ -142,6 +142,8 @@ public:
 	std::string const& peekLiteral() const { return m_nextToken.literal; }
 	///@}
 
+	std::shared_ptr<std::string const> const& getSourceName() const { return m_sourceName; }
+
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
@@ -206,6 +208,7 @@ private:
 	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)
 
 	CharStream m_source;
+	std::shared_ptr<std::string const> m_sourceName;
 
 	/// one character look-ahead, equals 0 at end of input
 	char m_char;
