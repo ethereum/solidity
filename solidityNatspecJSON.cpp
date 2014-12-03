@@ -35,8 +35,11 @@ namespace test
 class DocumentationChecker
 {
 public:
-	void checkNatspec(std::string const& _code, std::string const& _expectedDocumentationString)
+	void checkNatspec(std::string const& _code,
+					  std::string const& _expectedDocumentationString,
+					  bool _userDocumentation)
 	{
+		std::string generatedDocumentationString;
 		try
 		{
 			m_compilerStack.parse(_code);
@@ -50,7 +53,11 @@ public:
 				msg += *extra;
 			BOOST_FAIL(msg);
 		}
-		auto generatedDocumentationString = m_compilerStack.getDocumentation();
+
+		if (_userDocumentation)
+			generatedDocumentationString = m_compilerStack.getUserDocumentation();
+		else
+			generatedDocumentationString = m_compilerStack.getDevDocumentation();
 		Json::Value generatedDocumentation;
 		m_reader.parse(generatedDocumentationString, generatedDocumentation);
 		Json::Value expectedDocumentation;
@@ -67,7 +74,7 @@ private:
 
 BOOST_FIXTURE_TEST_SUITE(SolidityNatspecJSON, DocumentationChecker)
 
-BOOST_AUTO_TEST_CASE(basic_test)
+BOOST_AUTO_TEST_CASE(user_basic_test)
 {
 	char const* sourceCode = "contract test {\n"
 	"  /// Multiplies `a` by 7\n"
@@ -76,13 +83,13 @@ BOOST_AUTO_TEST_CASE(basic_test)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \"user\": \" Multiplies `a` by 7\"}"
+	"    \"mul\":{ \"notice\": \" Multiplies `a` by 7\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec);
+	checkNatspec(sourceCode, natspec, true);
 }
 
-BOOST_AUTO_TEST_CASE(multiline_comment)
+BOOST_AUTO_TEST_CASE(user_multiline_comment)
 {
 	char const* sourceCode = "contract test {\n"
 	"  /// Multiplies `a` by 7\n"
@@ -95,13 +102,13 @@ BOOST_AUTO_TEST_CASE(multiline_comment)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul_and_add\":{ \"user\": \" Multiplies `a` by 7\n and then adds `b`\"}"
+	"    \"mul_and_add\":{ \"notice\": \" Multiplies `a` by 7\n and then adds `b`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec);
+	checkNatspec(sourceCode, natspec, true);
 }
 
-BOOST_AUTO_TEST_CASE(multiple_functions)
+BOOST_AUTO_TEST_CASE(user_multiple_functions)
 {
 	char const* sourceCode = "contract test {\n"
 	"  /// Multiplies `a` by 7\n"
@@ -125,22 +132,22 @@ BOOST_AUTO_TEST_CASE(multiple_functions)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul_and_add\":{ \"user\": \" Multiplies `a` by 7\n and then adds `b`\"},"
-	"    \"divide\":{ \"user\": \" Divides `input` by `div`\"},"
-	"    \"sub\":{ \"user\": \" Subtracts 3 from `input`\"}"
+	"    \"mul_and_add\":{ \"notice\": \" Multiplies `a` by 7\n and then adds `b`\"},"
+	"    \"divide\":{ \"notice\": \" Divides `input` by `div`\"},"
+	"    \"sub\":{ \"notice\": \" Subtracts 3 from `input`\"}"
 	"}}";
 
-	checkNatspec(sourceCode, natspec);
+	checkNatspec(sourceCode, natspec, true);
 }
 
-BOOST_AUTO_TEST_CASE(empty_contract)
+BOOST_AUTO_TEST_CASE(user_empty_contract)
 {
 	char const* sourceCode = "contract test {\n"
 	"}\n";
 
 	char const* natspec = "{\"methods\":{} }";
 
-	checkNatspec(sourceCode, natspec);
+	checkNatspec(sourceCode, natspec, true);
 }
 
 
