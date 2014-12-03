@@ -621,11 +621,11 @@ Token::Value Scanner::scanNumber(char _charSeen)
 
 static Token::Value keywordOrIdentifierToken(string const& _input)
 {
+	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
+	// and keywords to be put inside the keywords variable.
 #define KEYWORD(name, string, precedence) {string, Token::name},
 #define TOKEN(name, string, precedence)
-	static const map<string, Token::Value> keywords{
-		TOKEN_LIST(TOKEN, KEYWORD)
-	};
+	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
 #undef KEYWORD
 #undef TOKEN
 	auto it = keywords.find(_input);
