@@ -127,7 +127,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	cout << "Syntax tree for the contract:" << endl;
+	cout << "Syntax tree for the source unit:" << endl;
 	ASTPrinter printer(compiler.getAST(), sourceCode);
 	printer.print(cout);
 	cout << "EVM assembly:" << endl;
