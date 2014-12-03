@@ -51,6 +51,9 @@ public:
 	AssemblyItemType type() const { return m_type; }
 	u256 data() const { return m_data; }
 
+	/// @returns an upper bound for the number of bytes required by this item, assuming that
+	/// the value of a jump tag takes @a _addressLength bytes.
+	unsigned bytesRequired(unsigned _addressLength) const;
 	int deposit() const;
 
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
