@@ -35,6 +35,14 @@ class Scanner;
 class ContractDefinition;
 class Compiler;
 class GlobalContext;
+class InterfaceHandler;
+
+enum documentation_type : unsigned short
+{
+	NATSPEC_USER = 1,
+	NATSPEC_DEV,
+	ABI_INTERFACE
+};
 
 /**
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
@@ -44,7 +52,7 @@ class GlobalContext;
 class CompilerStack
 {
 public:
-	CompilerStack() {}
+	CompilerStack();
 	void reset() {  *this = CompilerStack(); }
 	void setSource(std::string const& _sourceCode);
 	void parse();
@@ -62,12 +70,11 @@ public:
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& getInterface();
-	/// Returns a string representing the contract's user documentation in JSON.
+	/// Returns a string representing the contract's documentation in JSON.
 	/// Prerequisite: Successful call to parse or compile.
-	std::string const& getUserDocumentation();
-	/// Returns a string representing the contract's developer documentation in JSON.
-	/// Prerequisite: Successful call to parse or compile.
-	std::string const& getDevDocumentation();
+	/// @param type The type of the documentation to get.
+	/// Can be one of 3 types defined at @c documentation_type
+	std::string const* getJsonDocumentation(enum documentation_type type);
 
 	/// Returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner() const { return *m_scanner; }
@@ -82,10 +89,11 @@ private:
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::shared_ptr<ContractDefinition> m_contractASTNode;
 	bool m_parseSuccessful;
-	std::string m_interface;
-	std::string m_userDocumentation;
-	std::string m_devDocumentation;
+	std::unique_ptr<std::string> m_interface;
+	std::unique_ptr<std::string> m_userDocumentation;
+	std::unique_ptr<std::string> m_devDocumentation;
 	std::shared_ptr<Compiler> m_compiler;
+	std::shared_ptr<InterfaceHandler> m_interfaceHandler;
 	bytes m_bytecode;
 };
 

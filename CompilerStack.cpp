@@ -27,8 +27,7 @@
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/CompilerStack.h>
-
-#include <jsonrpc/json/json.h>
+#include <libsolidity/InterfaceHandler.h>
 
 using namespace std;
 
@@ -36,6 +35,8 @@ namespace dev
 {
 namespace solidity
 {
+
+CompilerStack::CompilerStack():m_interfaceHandler(make_shared<InterfaceHandler>()){}
 
 void CompilerStack::setSource(string const& _sourceCode)
 {
@@ -83,84 +84,33 @@ void CompilerStack::streamAssembly(ostream& _outStream)
 	m_compiler->streamAssembly(_outStream);
 }
 
-string const& CompilerStack::getInterface()
+std::string const* CompilerStack::getJsonDocumentation(enum documentation_type _type)
 {
-	Json::StyledWriter writer;
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	if (m_interface.empty())
+	auto createOrReturnDoc = [&, this](std::unique_ptr<string>& _doc)
 	{
-		Json::Value methods(Json::arrayValue);
-
-		vector<FunctionDefinition const*> exportedFunctions = m_contractASTNode->getInterfaceFunctions();
-		for (FunctionDefinition const* f: exportedFunctions)
+		if(!_doc)
 		{
-			Json::Value method;
-			Json::Value inputs(Json::arrayValue);
-			Json::Value outputs(Json::arrayValue);
-
-			auto streamVariables = [](vector<ASTPointer<VariableDeclaration>> const& _vars)
-			{
-				Json::Value params(Json::arrayValue);
-				for (ASTPointer<VariableDeclaration> const& var: _vars)
-				{
-					Json::Value input;
-					input["name"] = var->getName();
-					input["type"] = var->getType()->toString();
-					params.append(input);
-				}
-				return params;
-			};
-
-			method["name"] = f->getName();
-			method["inputs"] = streamVariables(f->getParameters());
-			method["outputs"] = streamVariables(f->getReturnParameters());
-			methods.append(method);
+			_doc = m_interfaceHandler->getDocumentation(m_contractASTNode, _type);
 		}
-		m_interface = writer.write(methods);
-	}
-	return m_interface;
-}
+	};
 
-string const& CompilerStack::getUserDocumentation()
-{
-	Json::StyledWriter writer;
-	if (!m_parseSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
-
-	if (m_userDocumentation.empty())
+	switch (_type)
 	{
-		Json::Value doc;
-		Json::Value methods(Json::objectValue);
-
-		for (FunctionDefinition const* f: m_contractASTNode->getInterfaceFunctions())
-		{
-			Json::Value user;
-			auto strPtr = f->getDocumentation();
-			if (strPtr)
-			{
-				user["notice"] = Json::Value(*strPtr);
-				methods[f->getName()] = user;
-			}
-		}
-		doc["methods"] = methods;
-		m_userDocumentation = writer.write(doc);
+	case NATSPEC_USER:
+		createOrReturnDoc(m_userDocumentation);
+		return m_userDocumentation.get();
+	case NATSPEC_DEV:
+		createOrReturnDoc(m_devDocumentation);
+		return m_devDocumentation.get();
+	case ABI_INTERFACE:
+		createOrReturnDoc(m_interface);
+		return m_interface.get();
 	}
-	return m_userDocumentation;
-}
-
-string const& CompilerStack::getDevDocumentation()
-{
-	Json::StyledWriter writer;
-	if (!m_parseSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
-
-	if (m_devDocumentation.empty())
-	{
-		// TODO
-	}
-	return m_devDocumentation;
+	BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Internal error"));
+	return nullptr;
 }
 
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
