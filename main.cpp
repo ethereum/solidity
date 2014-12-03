@@ -59,7 +59,7 @@ void version()
 
 int main(int argc, char** argv)
 {
-	string infile;
+	vector<string> infiles;
 	bool optimize = false;
 	for (int i = 1; i < argc; ++i)
 	{
@@ -71,49 +71,52 @@ int main(int argc, char** argv)
 		else if (arg == "-V" || arg == "--version")
 			version();
 		else
-			infile = argv[i];
+			infiles.push_back(argv[i]);
 	}
-	string sourceCode;
-	if (infile.empty())
+	map<string, string> sourceCodes;
+	if (infiles.empty())
 	{
 		string s;
 		while (!cin.eof())
 		{
 			getline(cin, s);
-			sourceCode.append(s);
+			sourceCodes["<stdin>"].append(s);
 		}
 	}
 	else
-		sourceCode = asString(dev::contents(infile));
+		for (string const& infile: infiles)
+			sourceCodes[infile] = asString(dev::contents(infile));
 
 	CompilerStack compiler;
 	try
 	{
-		compiler.compile(sourceCode, optimize);
+		for (auto const& sourceCode: sourceCodes)
+			compiler.addSource(sourceCode.first, sourceCode.second);
+		compiler.compile(optimize);
 	}
 	catch (ParserError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Parser error", compiler.getScanner());
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Parser error", compiler);
 		return -1;
 	}
 	catch (DeclarationError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Declaration error", compiler.getScanner());
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Declaration error", compiler);
 		return -1;
 	}
 	catch (TypeError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Type error", compiler.getScanner());
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Type error", compiler);
 		return -1;
 	}
 	catch (CompilerError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Compiler error", compiler.getScanner());
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Compiler error", compiler);
 		return -1;
 	}
 	catch (InternalCompilerError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Internal compiler error", compiler.getScanner());
+		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Internal compiler error", compiler);
 		return -1;
 	}
 	catch (Exception const& exception)
@@ -127,15 +130,25 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	cout << "Syntax tree for the source unit:" << endl;
-	ASTPrinter printer(compiler.getAST(), sourceCode);
-	printer.print(cout);
-	cout << "EVM assembly:" << endl;
-	compiler.streamAssembly(cout);
-	cout << "Opcodes:" << endl;
-	cout << eth::disassemble(compiler.getBytecode()) << endl;
-	cout << "Binary: " << toHex(compiler.getBytecode()) << endl;
-	cout << "Interface specification: " << compiler.getInterface() << endl;
+	cout << "Syntax trees:" << endl << endl;
+	for (auto const& sourceCode: sourceCodes)
+	{
+		cout << endl << "======= " << sourceCode.first << " =======" << endl;
+		ASTPrinter printer(compiler.getAST(sourceCode.first), sourceCode.second);
+		printer.print(cout);
+	}
+	vector<string> contracts = compiler.getContractNames();
+	cout << endl << "Contracts:" << endl;
+	for (string const& contract: contracts)
+	{
+		cout << endl << "======= " << contract << " =======" << endl
+			 << "EVM assembly:" << endl;
+		compiler.streamAssembly(cout, contract);
+		cout << "Opcodes:" << endl
+			 << eth::disassemble(compiler.getBytecode(contract)) << endl
+			 << "Binary: " << toHex(compiler.getBytecode(contract)) << endl
+			 << "Interface specification: " << compiler.getInterface(contract) << endl;
+	}
 
 	return 0;
 }
