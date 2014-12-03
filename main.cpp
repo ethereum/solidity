@@ -136,7 +136,7 @@ int main(int argc, char** argv)
 	cout << eth::disassemble(compiler.getBytecode()) << endl;
 	cout << "Binary: " << toHex(compiler.getBytecode()) << endl;
 	cout << "Interface specification: " << compiler.getInterface() << endl;
-	cout << "Natspec documentation: " << compiler.getDocumentation() << endl;
+	cout << "Natspec user documentation: " << compiler.getUserDocumentation() << endl;
 
 	return 0;
 }
