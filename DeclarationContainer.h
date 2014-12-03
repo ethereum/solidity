@@ -36,18 +36,20 @@ namespace solidity
  * Container that stores mappings betwee names and declarations. It also contains a link to the
  * enclosing scope.
  */
-class Scope
+class DeclarationContainer
 {
 public:
-	explicit Scope(Scope* _enclosingScope = nullptr): m_enclosingScope(_enclosingScope) {}
+	explicit DeclarationContainer(Declaration* _enclosingDeclaration = nullptr, DeclarationContainer* _enclosingContainer = nullptr):
+		m_enclosingDeclaration(_enclosingDeclaration), m_enclosingContainer(_enclosingContainer) {}
 	/// Registers the declaration in the scope unless its name is already declared. Returns true iff
 	/// it was not yet declared.
 	bool registerDeclaration(Declaration& _declaration);
 	Declaration* resolveName(ASTString const& _name, bool _recursive = false) const;
-	Scope* getEnclosingScope() const { return m_enclosingScope; }
+	Declaration* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
 
 private:
-	Scope* m_enclosingScope;
+	Declaration* m_enclosingDeclaration;
+	DeclarationContainer* m_enclosingContainer;
 	std::map<ASTString, Declaration*> m_declarations;
 };
 

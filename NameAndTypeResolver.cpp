@@ -78,9 +78,9 @@ Declaration* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name
 	return m_currentScope->resolveName(_name, _recursive);
 }
 
-DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode const*, Scope>& _scopes,
+DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode const*, DeclarationContainer>& _scopes,
 															 ASTNode& _astRoot):
-	m_scopes(_scopes), m_currentScope(&m_scopes[nullptr])
+	m_scopes(_scopes), m_currentScope(nullptr)
 {
 	_astRoot.accept(*this);
 }
@@ -135,31 +135,30 @@ bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)
 	return true;
 }
 
-void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _node)
+void DeclarationRegistrationHelper::enterNewSubScope(Declaration& _declaration)
 {
-	map<ASTNode const*, Scope>::iterator iter;
+	map<ASTNode const*, DeclarationContainer>::iterator iter;
 	bool newlyAdded;
-	tie(iter, newlyAdded) = m_scopes.emplace(&_node, Scope(m_currentScope));
+	tie(iter, newlyAdded) = m_scopes.emplace(&_declaration, DeclarationContainer(m_currentScope, &m_scopes[m_currentScope]));
 	if (asserts(newlyAdded))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to add new scope."));
-	m_currentScope = &iter->second;
+	m_currentScope = &_declaration;
 }
 
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
 	if (asserts(m_currentScope))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Closed non-existing scope."));
-	m_currentScope = m_currentScope->getEnclosingScope();
+	m_currentScope = m_scopes[m_currentScope].getEnclosingDeclaration();
 }
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
-	if (asserts(m_currentScope))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Declaration registered without scope."));
-	if (!m_currentScope->registerDeclaration(_declaration))
+	if (!m_scopes[m_currentScope].registerDeclaration(_declaration))
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_declaration.getLocation())
 												 << errinfo_comment("Identifier already declared."));
 	//@todo the exception should also contain the location of the first declaration
+	_declaration.setScope(m_currentScope);
 	if (_opensScope)
 		enterNewSubScope(_declaration);
 }
