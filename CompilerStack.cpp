@@ -123,13 +123,13 @@ string const& CompilerStack::getInterface()
 	return m_interface;
 }
 
-string const& CompilerStack::getDocumentation()
+string const& CompilerStack::getUserDocumentation()
 {
 	Json::StyledWriter writer;
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	if (m_documentation.empty())
+	if (m_userDocumentation.empty())
 	{
 		Json::Value doc;
 		Json::Value methods(Json::objectValue);
@@ -140,14 +140,27 @@ string const& CompilerStack::getDocumentation()
 			auto strPtr = f->getDocumentation();
 			if (strPtr)
 			{
-				user["user"] = Json::Value(*strPtr);
+				user["notice"] = Json::Value(*strPtr);
 				methods[f->getName()] = user;
 			}
 		}
 		doc["methods"] = methods;
-		m_documentation = writer.write(doc);
+		m_userDocumentation = writer.write(doc);
 	}
-	return m_documentation;
+	return m_userDocumentation;
+}
+
+string const& CompilerStack::getDevDocumentation()
+{
+	Json::StyledWriter writer;
+	if (!m_parseSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
+	if (m_devDocumentation.empty())
+	{
+		// TODO
+	}
+	return m_devDocumentation;
 }
 
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
