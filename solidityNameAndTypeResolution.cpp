@@ -41,10 +41,13 @@ namespace
 void parseTextAndResolveNames(std::string const& _source)
 {
 	Parser parser;
-	ASTPointer<ContractDefinition> contract = parser.parse(
-										   std::make_shared<Scanner>(CharStream(_source)));
-	NameAndTypeResolver resolver({});
-	resolver.resolveNamesAndTypes(*contract);
+	ASTPointer<SourceUnit> sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			NameAndTypeResolver resolver({});
+			resolver.resolveNamesAndTypes(*contract);
+		}
 }
 }
 
