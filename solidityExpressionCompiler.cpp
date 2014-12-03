@@ -88,10 +88,11 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
+	NameAndTypeResolver resolver({});
+	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			NameAndTypeResolver resolver({});
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 			FirstExpressionExtractor extractor(*contract);
 			BOOST_REQUIRE(extractor.getExpression() != nullptr);

@@ -48,10 +48,11 @@ bytes compileContract(const string& _sourceCode)
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
+	NameAndTypeResolver resolver({});
+	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			NameAndTypeResolver resolver({});
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 
 			Compiler compiler;
