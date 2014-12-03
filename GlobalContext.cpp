@@ -74,11 +74,10 @@ vector<Declaration*> GlobalContext::getDeclarations() const
 	declarations.reserve(m_magicVariables.size() + 1);
 	for (ASTPointer<Declaration> const& variable: m_magicVariables)
 		declarations.push_back(variable.get());
-	declarations.push_back(getCurrentThis());
 	return declarations;
 }
 
-MagicVariableDeclaration*GlobalContext::getCurrentThis() const
+MagicVariableDeclaration* GlobalContext::getCurrentThis() const
 {
 	if (!m_thisPointer[m_currentContract])
 		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>(

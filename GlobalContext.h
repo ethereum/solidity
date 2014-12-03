@@ -47,12 +47,13 @@ class GlobalContext: private boost::noncopyable
 public:
 	GlobalContext();
 	void setCurrentContract(ContractDefinition const& _contract);
+	MagicVariableDeclaration* getCurrentThis() const;
 
 	std::vector<MagicVariableDeclaration const*> getMagicVariables() const;
+	/// Returns a vector of all magic variables, excluding "this".
 	std::vector<Declaration*> getDeclarations() const;
 
 private:
-	MagicVariableDeclaration* getCurrentThis() const;
 	std::vector<std::shared_ptr<MagicVariableDeclaration>> m_magicVariables;
 	ContractDefinition const* m_currentContract;
 	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration>> mutable m_thisPointer;

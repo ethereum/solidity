@@ -143,16 +143,27 @@ private:
 }; // end of LiteralScope class
 
 
-void Scanner::reset(CharStream const& _source)
+void Scanner::reset(CharStream const& _source, std::string const& _sourceName)
 {
 	m_source = _source;
+
+	shared_ptr<string> sourceName = make_shared<string>(_sourceName);
+	m_currentToken.location.sourceName = sourceName;
+	m_nextToken.location.sourceName = sourceName;
+	m_skippedComment.location.sourceName = sourceName;
+	m_nextSkippedComment.location.sourceName = sourceName;
+
+	reset();
+}
+
+void Scanner::reset()
+{
+	m_source.reset();
 	m_char = m_source.get();
 	skipWhitespace();
 	scanToken();
-
 	next();
 }
-
 
 bool Scanner::scanHexByte(char& o_scannedByte)
 {

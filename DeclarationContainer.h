@@ -43,7 +43,7 @@ public:
 		m_enclosingDeclaration(_enclosingDeclaration), m_enclosingContainer(_enclosingContainer) {}
 	/// Registers the declaration in the scope unless its name is already declared. Returns true iff
 	/// it was not yet declared.
-	bool registerDeclaration(Declaration& _declaration);
+	bool registerDeclaration(Declaration& _declaration, bool _update = false);
 	Declaration* resolveName(ASTString const& _name, bool _recursive = false) const;
 	Declaration* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
 
