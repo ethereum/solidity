@@ -20,7 +20,7 @@
  * Takes the parsed AST and produces the Natspec
  * documentation and the ABI interface
  * https://github.com/ethereum/wiki/wiki/Ethereum-Natural-Specification-Format
- * 
+ *
  * Can generally deal with JSON files
  */
 
@@ -44,7 +44,7 @@ public:
 
 	/// Get the given type of documentation
 	/// @param _contractDef The contract definition
-	/// @param _type        The type of the documentation. Can be one of the 
+	/// @param _type        The type of the documentation. Can be one of the
 	///                     types provided by @c documentation_type
 	/// @return             A unique pointer contained string with the json
 	///                     representation of provided type
@@ -67,7 +67,14 @@ public:
 	std::unique_ptr<std::string> getDevDocumentation(std::shared_ptr<ContractDefinition> _contractDef);
 
 private:
+	void parseDocString(std::string const& _string, size_t _startPos = 0);
+	size_t parseDocTag(std::string const& _string, std::string const& _tag, size_t _pos);
+
 	Json::StyledWriter m_writer;
+
+	// internal state
+	std::string m_notice;
+	std::string m_dev;
 };
 
 } //solidity NS

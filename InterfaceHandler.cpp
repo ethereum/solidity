@@ -5,12 +5,14 @@
 namespace dev {
 namespace solidity {
 
+/* -- public -- */
+
 InterfaceHandler::InterfaceHandler()
 {
 }
 
 std::unique_ptr<std::string> InterfaceHandler::getDocumentation(std::shared_ptr<ContractDefinition> _contractDef,
-												 enum documentation_type _type)
+																enum documentation_type _type)
 {
 	switch(_type)
 	{
@@ -80,8 +82,69 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(std::shared_
 
 std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(std::shared_ptr<ContractDefinition> _contractDef)
 {
-	//TODO
-	return nullptr;
+	Json::Value doc;
+	Json::Value methods(Json::objectValue);
+
+	for (FunctionDefinition const* f: _contractDef->getInterfaceFunctions())
+	{
+		Json::Value method;
+		auto strPtr = f->getDocumentation();
+		if (strPtr)
+		{
+			m_dev.clear();
+			parseDocString(*strPtr);
+
+			method["dev"] = Json::Value(m_dev);
+			methods[f->getName()] = method;
+		}
+	}
+	doc["methods"] = methods;
+
+	return std::unique_ptr<std::string>(new std::string(m_writer.write(doc)));
+}
+
+/* -- private -- */
+size_t InterfaceHandler::parseDocTag(std::string const& _string, std::string const& _tag, size_t _pos)
+{
+	size_t nlPos = _pos;
+	if (_tag == "dev")
+	{
+		nlPos = _string.find("\n", _pos);
+		m_dev += _string.substr(_pos,
+								nlPos == std::string::npos ?
+								_string.length() :
+								nlPos - _pos);
+	}
+	else if (_tag == "notice")
+	{
+		nlPos = _string.find("\n", _pos);
+		m_notice += _string.substr(_pos,
+								nlPos == std::string::npos ?
+								_string.length() :
+								nlPos - _pos);
+	}
+	else
+	{
+		//TODO: Some form of warning
+	}
+
+	return nlPos;
+}
+
+void InterfaceHandler::parseDocString(std::string const& _string, size_t _startPos)
+{
+	size_t pos2;
+	size_t pos1 = _string.find("@", _startPos);
+
+	if (pos1 == std::string::npos)
+		return; // no doxytags found
+
+	pos2 = _string.find(" ", pos1);
+	if (pos2 == std::string::npos)
+		return; //no end of tag found
+
+	size_t newPos = parseDocTag(_string, _string.substr(pos1 + 1, pos2 - pos1), pos2);
+	parseDocString(_string, newPos);
 }
 
 } //solidity NS
