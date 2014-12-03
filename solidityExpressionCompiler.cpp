@@ -113,6 +113,7 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 			return instructions;
 		}
 	BOOST_FAIL("No contract found in source.");
+	return bytes();
 }
 
 } // end anonymous namespace
