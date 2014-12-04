@@ -42,6 +42,7 @@ enum docTagType
 	DOCTAG_NONE = 0,
 	DOCTAG_DEV,
 	DOCTAG_NOTICE,
+	DOCTAG_PARAM
 };
 
 class InterfaceHandler
@@ -74,7 +75,14 @@ public:
 	std::unique_ptr<std::string> getDevDocumentation(std::shared_ptr<ContractDefinition> _contractDef);
 
 private:
+	void resetUser();
+	void resetDev();
+
+	size_t parseDocTagLine(std::string const& _string, std::string& _tagString, size_t _pos, enum docTagType _tagType);
+	size_t parseDocTagParam(std::string const& _string, size_t _startPos);
+	size_t appendDocTagParam(std::string const& _string, size_t _startPos);
 	void parseDocString(std::string const& _string, size_t _startPos = 0);
+	size_t appendDocTag(std::string const& _string, size_t _startPos);
 	size_t parseDocTag(std::string const& _string, std::string const& _tag, size_t _pos);
 
 	Json::StyledWriter m_writer;
@@ -83,6 +91,7 @@ private:
 	enum docTagType m_lastTag;
 	std::string m_notice;
 	std::string m_dev;
+	std::vector<std::pair<std::string, std::string>> m_params;
 };
 
 } //solidity NS
