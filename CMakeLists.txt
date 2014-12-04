@@ -1,4 +1,5 @@
 cmake_policy(SET CMP0015 NEW)
+set(CMAKE_AUTOMOC OFF)
 
 aux_source_directory(. SRC_LIST)
 
