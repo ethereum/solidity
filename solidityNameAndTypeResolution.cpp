@@ -43,7 +43,7 @@ void parseTextAndResolveNames(std::string const& _source)
 	Parser parser;
 	ASTPointer<ContractDefinition> contract = parser.parse(
 										   std::make_shared<Scanner>(CharStream(_source)));
-	NameAndTypeResolver resolver;
+	NameAndTypeResolver resolver({});
 	resolver.resolveNamesAndTypes(*contract);
 }
 }
@@ -222,6 +222,56 @@ BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 					   "  function f() returns (int256 r) { var x = int256(uint32(2)); return x; }"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(balance)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint256 x = address(0).balance;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(balance_invalid)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    address(0).balance = 7;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_mapping)
+{
+	char const* text = "contract test {\n"
+					   "  struct str {\n"
+					   "    mapping(uint=>uint) map;\n"
+					   "  }\n"
+					   "  str data;"
+					   "  function fun() {\n"
+					   "    var a = data.map;\n"
+					   "    data.map = a;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_struct)
+{
+	char const* text = "contract test {\n"
+					   "  struct str {\n"
+					   "    mapping(uint=>uint) map;\n"
+					   "  }\n"
+					   "  str data;"
+					   "  function fun() {\n"
+					   "    var a = data;\n"
+					   "    data = a;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
