@@ -100,8 +100,7 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 	char const* devNatspec = "{"
 	"\"methods\":{"
 	"    \"mul\":{ \n"
-	"        \"details\": \"Multiplies a number by 7\",\n"
-	"        \"params\": {}\n"
+	"        \"details\": \"Multiplies a number by 7\"\n"
 	"        }\n"
 	"    }\n"
 	"}}";
@@ -173,6 +172,24 @@ BOOST_AUTO_TEST_CASE(user_empty_contract)
 	char const* natspec = "{\"methods\":{} }";
 
 	checkNatspec(sourceCode, natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
+{
+	char const* sourceCode = "contract test {\n"
+	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
+	"  function sub(int input) returns(int d)\n"
+	"  {\n"
+	"      return input - 3;\n"
+	"  }\n"
+	"}\n";
+
+	char const* devNatspec = "{\"methods\":{}}";
+
+	char const* userNatspec = "{\"methods\":{}}";
+
+	checkNatspec(sourceCode, devNatspec, false);
+	checkNatspec(sourceCode, userNatspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(dev_multiple_params)
@@ -266,6 +283,59 @@ BOOST_AUTO_TEST_CASE(dev_multiple_functions)
 	"        \"params\": {\n"
 	"            \"input\": \"Documentation for the input parameter\"\n"
 	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_return)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter starts here.\n"
+	"  /// Since it's a really complicated parameter we need 2 lines\n"
+	"  /// @param second Documentation for the second parameter\n"
+	"  /// @return The result of the multiplication\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here.Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"return\": \"The result of the multiplication\"\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_multiline_return)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter starts here.\n"
+	"  /// Since it's a really complicated parameter we need 2 lines\n"
+	"  /// @param second Documentation for the second parameter\n"
+	"  /// @return The result of the multiplication\n"
+	"  /// and cookies with nutella\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here.Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"return\": \"The result of the multiplication and cookies with nutella\"\n"
 	"    }\n"
 	"}}";
 
