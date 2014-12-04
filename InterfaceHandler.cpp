@@ -3,8 +3,10 @@
 #include <libsolidity/AST.h>
 #include <libsolidity/CompilerStack.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 /* -- public -- */
 
@@ -14,7 +16,7 @@ InterfaceHandler::InterfaceHandler()
 }
 
 std::unique_ptr<std::string> InterfaceHandler::getDocumentation(std::shared_ptr<ContractDefinition> _contractDef,
-																enum documentationType _type)
+																enum DocumentationType _type)
 {
 	switch(_type)
 	{
@@ -34,8 +36,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(std::shared_ptr<C
 {
 	Json::Value methods(Json::arrayValue);
 
-	std::vector<FunctionDefinition const*> exportedFunctions = _contractDef->getInterfaceFunctions();
-	for (FunctionDefinition const* f: exportedFunctions)
+	for (FunctionDefinition const* f: _contractDef->getInterfaceFunctions())
 	{
 		Json::Value method;
 		Json::Value inputs(Json::arrayValue);
@@ -107,9 +108,8 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(std::shared_p
 				method["details"] = Json::Value(m_dev);
 			Json::Value params(Json::objectValue);
 			for (auto const& pair: m_params)
-			{
 				params[pair.first] = pair.second;
-			}
+
 			if (!m_params.empty())
 				method["params"] = params;
 			if (!m_return.empty())
@@ -145,12 +145,12 @@ size_t skipLineOrEOS(std::string const& _string, size_t _nlPos)
 size_t InterfaceHandler::parseDocTagLine(std::string const& _string,
 										 std::string& _tagString,
 										 size_t _pos,
-										 enum docTagType _tagType)
+										 enum DocTagType _tagType)
 {
-	size_t nlPos = _string.find("\n", _pos);
+	size_t nlPos = _string.find('\n', _pos);
 	_tagString += _string.substr(_pos,
 								 nlPos == std::string::npos ?
-								 _string.length() :
+								 _string.length() - _pos:
 								 nlPos - _pos);
 	m_lastTag = _tagType;
 	return skipLineOrEOS(_string, nlPos);
@@ -159,20 +159,18 @@ size_t InterfaceHandler::parseDocTagLine(std::string const& _string,
 size_t InterfaceHandler::parseDocTagParam(std::string const& _string, size_t _startPos)
 {
 	// find param name
-	size_t currPos = _string.find(" ", _startPos);
+	size_t currPos = _string.find(' ', _startPos);
 	if (currPos == std::string::npos)
-	{
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("End of param name not found"));
-		return currPos; //no end of tag found
-	}
+
 
 	auto paramName = _string.substr(_startPos, currPos - _startPos);
 
 	currPos += 1;
-	size_t nlPos = _string.find("\n", currPos);
+	size_t nlPos = _string.find('\n', currPos);
 	auto paramDesc = _string.substr(currPos,
 									nlPos == std::string::npos ?
-									_string.length() :
+									_string.length() - currPos :
 									nlPos - currPos);
 
 	m_params.push_back(std::make_pair(paramName, paramDesc));
@@ -184,13 +182,13 @@ size_t InterfaceHandler::parseDocTagParam(std::string const& _string, size_t _st
 size_t InterfaceHandler::appendDocTagParam(std::string const& _string, size_t _startPos)
 {
 	// Should never be called with an empty vector
-	assert(!m_params.empty());
-
+	if (asserts(!m_params.empty()))
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Internal: Tried to append to empty parameter"));
 	auto pair = m_params.back();
-	size_t nlPos = _string.find("\n", _startPos);
+	size_t nlPos = _string.find('\n', _startPos);
 	pair.second += _string.substr(_startPos,
 								 nlPos == std::string::npos ?
-								 _string.length() :
+								 _string.length() - _startPos :
 								 nlPos - _startPos);
 
 	m_params.at(m_params.size() - 1) = pair;
@@ -227,7 +225,7 @@ size_t InterfaceHandler::parseDocTag(std::string const& _string, std::string con
 size_t InterfaceHandler::appendDocTag(std::string const& _string, size_t _startPos)
 {
 	size_t newPos = _startPos;
-	switch(m_lastTag)
+	switch (m_lastTag)
 	{
 		case DOCTAG_DEV:
 			m_dev += " ";
@@ -254,18 +252,15 @@ void InterfaceHandler::parseDocString(std::string const& _string, size_t _startP
 {
 	size_t pos2;
 	size_t newPos = _startPos;
-	size_t tagPos = _string.find("@", _startPos);
-	size_t nlPos = _string.find("\n", _startPos);
+	size_t tagPos = _string.find('@', _startPos);
+	size_t nlPos = _string.find('\n', _startPos);
 
 	if (tagPos != std::string::npos && tagPos < nlPos)
 	{
 		// we found a tag
-		pos2 = _string.find(" ", tagPos);
+		pos2 = _string.find(' ', tagPos);
 		if (pos2 == std::string::npos)
-		{
 			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("End of tag not found"));
-			return; //no end of tag found
-		}
 
 		newPos = parseDocTag(_string, _string.substr(tagPos + 1, pos2 - tagPos - 1), pos2 + 1);
 	}

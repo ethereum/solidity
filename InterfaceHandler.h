@@ -30,14 +30,16 @@
 #include <memory>
 #include <jsonrpc/json/json.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 // Forward declarations
 class ContractDefinition;
-enum documentationType: unsigned short;
+enum DocumentationType: unsigned short;
 
-enum docTagType
+enum DocTagType
 {
 	DOCTAG_NONE = 0,
 	DOCTAG_DEV,
@@ -54,11 +56,11 @@ public:
 	/// Get the given type of documentation
 	/// @param _contractDef The contract definition
 	/// @param _type        The type of the documentation. Can be one of the
-	///                     types provided by @c documentation_type
+	///                     types provided by @c DocumentationType
 	/// @return             A unique pointer contained string with the json
 	///                     representation of provided type
 	std::unique_ptr<std::string> getDocumentation(std::shared_ptr<ContractDefinition> _contractDef,
-												  enum documentationType _type);
+												  enum DocumentationType _type);
 	/// Get the ABI Interface of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json
@@ -79,7 +81,7 @@ private:
 	void resetUser();
 	void resetDev();
 
-	size_t parseDocTagLine(std::string const& _string, std::string& _tagString, size_t _pos, enum docTagType _tagType);
+	size_t parseDocTagLine(std::string const& _string, std::string& _tagString, size_t _pos, enum DocTagType _tagType);
 	size_t parseDocTagParam(std::string const& _string, size_t _startPos);
 	size_t appendDocTagParam(std::string const& _string, size_t _startPos);
 	void parseDocString(std::string const& _string, size_t _startPos = 0);
@@ -89,7 +91,7 @@ private:
 	Json::StyledWriter m_writer;
 
 	// internal state
-	enum docTagType m_lastTag;
+	enum DocTagType m_lastTag;
 	std::string m_notice;
 	std::string m_dev;
 	std::string m_return;

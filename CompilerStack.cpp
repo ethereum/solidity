@@ -36,7 +36,7 @@ namespace dev
 namespace solidity
 {
 
-CompilerStack::CompilerStack():m_interfaceHandler(make_shared<InterfaceHandler>()){}
+CompilerStack::CompilerStack(): m_interfaceHandler(make_shared<InterfaceHandler>()) {}
 
 void CompilerStack::setSource(string const& _sourceCode)
 {
@@ -84,33 +84,31 @@ void CompilerStack::streamAssembly(ostream& _outStream)
 	m_compiler->streamAssembly(_outStream);
 }
 
-std::string const* CompilerStack::getJsonDocumentation(enum documentationType _type)
+std::string const* CompilerStack::getJsonDocumentation(enum DocumentationType _type)
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	auto createOrReturnDoc = [this, _type](std::unique_ptr<string>& _doc)
+	auto createDocIfNotThere = [this, _type](std::unique_ptr<string>& _doc)
 	{
-		if(!_doc)
-		{
+		if (!_doc)
 			_doc = m_interfaceHandler->getDocumentation(m_contractASTNode, _type);
-		}
 	};
 
 	switch (_type)
 	{
 	case NATSPEC_USER:
-		createOrReturnDoc(m_userDocumentation);
+		createDocIfNotThere(m_userDocumentation);
 		return m_userDocumentation.get();
 	case NATSPEC_DEV:
-		createOrReturnDoc(m_devDocumentation);
+		createDocIfNotThere(m_devDocumentation);
 		return m_devDocumentation.get();
 	case ABI_INTERFACE:
-		createOrReturnDoc(m_interface);
+		createDocIfNotThere(m_interface);
 		return m_interface.get();
 	}
-	BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Internal error"));
-	return nullptr;
+
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 }
 
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
