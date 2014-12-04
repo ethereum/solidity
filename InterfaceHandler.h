@@ -42,7 +42,8 @@ enum docTagType
 	DOCTAG_NONE = 0,
 	DOCTAG_DEV,
 	DOCTAG_NOTICE,
-	DOCTAG_PARAM
+	DOCTAG_PARAM,
+	DOCTAG_RETURN
 };
 
 class InterfaceHandler
@@ -91,6 +92,7 @@ private:
 	enum docTagType m_lastTag;
 	std::string m_notice;
 	std::string m_dev;
+	std::string m_return;
 	std::vector<std::pair<std::string, std::string>> m_params;
 };
 

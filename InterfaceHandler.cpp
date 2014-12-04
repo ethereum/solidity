@@ -75,8 +75,11 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(std::shared_
 		{
 			resetUser();
 			parseDocString(*strPtr);
-			user["notice"] = Json::Value(m_notice);
-			methods[f->getName()] = user;
+			if (!m_notice.empty())
+			{// since @notice is the only user tag if missing function should not appear
+				user["notice"] = Json::Value(m_notice);
+				methods[f->getName()] = user;
+			}
 		}
 	}
 	doc["methods"] = methods;
@@ -86,6 +89,8 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(std::shared_
 
 std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(std::shared_ptr<ContractDefinition> _contractDef)
 {
+	// LTODO: Somewhere in this function warnings for mismatch of param names
+	// should be thrown
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
@@ -98,14 +103,20 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(std::shared_p
 			resetDev();
 			parseDocString(*strPtr);
 
-			method["details"] = Json::Value(m_dev);
+			if (!m_dev.empty())
+				method["details"] = Json::Value(m_dev);
 			Json::Value params(Json::objectValue);
 			for (auto const& pair: m_params)
 			{
 				params[pair.first] = pair.second;
 			}
-			method["params"] = params;
-			methods[f->getName()] = method;
+			if (!m_params.empty())
+				method["params"] = params;
+			if (!m_return.empty())
+				method["return"] = m_return;
+
+			if (!method.empty()) // add the function, only if we have any documentation to add
+				methods[f->getName()] = method;
 		}
 	}
 	doc["methods"] = methods;
@@ -122,6 +133,7 @@ void InterfaceHandler::resetUser()
 void InterfaceHandler::resetDev()
 {
 	m_dev.clear();
+	m_return.clear();
 	m_params.clear();
 }
 
@@ -188,7 +200,7 @@ size_t InterfaceHandler::appendDocTagParam(std::string const& _string, size_t _s
 
 size_t InterfaceHandler::parseDocTag(std::string const& _string, std::string const& _tag, size_t _pos)
 {
-	//TODO: need to check for @(start of a tag) between here and the end of line
+	// LTODO: need to check for @(start of a tag) between here and the end of line
 	//      for all cases
 	size_t nlPos = _pos;
 	if (m_lastTag == DOCTAG_NONE || _tag != "")
@@ -197,11 +209,13 @@ size_t InterfaceHandler::parseDocTag(std::string const& _string, std::string con
 			nlPos = parseDocTagLine(_string, m_dev, _pos, DOCTAG_DEV);
 		else if (_tag == "notice")
 			nlPos = parseDocTagLine(_string, m_notice, _pos, DOCTAG_NOTICE);
+		else if (_tag == "return")
+			nlPos = parseDocTagLine(_string, m_return, _pos, DOCTAG_RETURN);
 		else if (_tag == "param")
 			nlPos = parseDocTagParam(_string, _pos);
 		else
 		{
-			//TODO: Some form of warning
+			// LTODO: Unknown tas, throw some form of warning
 		}
 	}
 	else
@@ -222,6 +236,10 @@ size_t InterfaceHandler::appendDocTag(std::string const& _string, size_t _startP
 		case DOCTAG_NOTICE:
 			m_notice += " ";
 			newPos = parseDocTagLine(_string, m_notice, _startPos, DOCTAG_NOTICE);
+			break;
+		case DOCTAG_RETURN:
+			m_return += " ";
+			newPos = parseDocTagLine(_string, m_return, _startPos, DOCTAG_RETURN);
 			break;
 		case DOCTAG_PARAM:
 			newPos = appendDocTagParam(_string, _startPos);
