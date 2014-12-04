@@ -89,21 +89,6 @@ BOOST_AUTO_TEST_CASE(user_basic_test)
 	checkNatspec(sourceCode, natspec, true);
 }
 
-BOOST_AUTO_TEST_CASE(dev_basic_test)
-{
-	char const* sourceCode = "contract test {\n"
-	"  /// @dev Multiplies a number by 7\n"
-	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
-	"}\n";
-
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"mul\":{ \"details\": \"Multiplies a number by 7\"}"
-	"}}";
-
-	checkNatspec(sourceCode, natspec, false);
-}
-
 BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 {
 	char const* sourceCode = "contract test {\n"
@@ -114,7 +99,11 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 
 	char const* devNatspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \"details\": \"Multiplies a number by 7\"}"
+	"    \"mul\":{ \n"
+	"        \"details\": \"Multiplies a number by 7\",\n"
+	"        \"params\": {}\n"
+	"        }\n"
+	"    }\n"
 	"}}";
 
 	char const* userNatspec = "{"
@@ -186,6 +175,102 @@ BOOST_AUTO_TEST_CASE(user_empty_contract)
 	checkNatspec(sourceCode, natspec, true);
 }
 
+BOOST_AUTO_TEST_CASE(dev_multiple_params)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter\n"
+	"  /// @param second Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter starts here.\n"
+	"  /// Since it's a really complicated parameter we need 2 lines\n"
+	"  /// @param second Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here.Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_multiple_functions)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter\n"
+	"  /// @param second Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"  \n"
+	"  /// @dev Divides 2 numbers\n"
+	"  /// @param input Documentation for the input parameter\n"
+	"  /// @param div Documentation for the div parameter\n"
+	"  function divide(uint input, uint div) returns(uint d)\n"
+	"  {\n"
+	"      return input / div;\n"
+	"  }\n"
+	"  /// @dev Subtracts 3 from `input`\n"
+	"  /// @param input Documentation for the input parameter\n"
+	"  function sub(int input) returns(int d)\n"
+	"  {\n"
+	"      return input - 3;\n"
+	"  }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        }\n"
+	"    },\n"
+	"    \"divide\":{ \n"
+	"        \"details\": \"Divides 2 numbers\",\n"
+	"        \"params\": {\n"
+	"            \"input\": \"Documentation for the input parameter\",\n"
+	"            \"div\": \"Documentation for the div parameter\"\n"
+	"        }\n"
+	"    },\n"
+	"    \"sub\":{ \n"
+	"        \"details\": \"Subtracts 3 from `input`\",\n"
+	"        \"params\": {\n"
+	"            \"input\": \"Documentation for the input parameter\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
