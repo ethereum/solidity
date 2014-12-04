@@ -25,7 +25,7 @@
 #include <map>
 #include <boost/noncopyable.hpp>
 
-#include <libsolidity/Scope.h>
+#include <libsolidity/DeclarationContainer.h>
 #include <libsolidity/ASTVisitor.h>
 
 namespace dev
@@ -61,9 +61,9 @@ private:
 	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
 	/// where nullptr denotes the global scope. Note that structs are not scope since they do
 	/// not contain code.
-	std::map<ASTNode const*, Scope> m_scopes;
+	std::map<ASTNode const*, DeclarationContainer> m_scopes;
 
-	Scope* m_currentScope;
+	DeclarationContainer* m_currentScope;
 };
 
 /**
@@ -73,7 +73,7 @@ private:
 class DeclarationRegistrationHelper: private ASTVisitor
 {
 public:
-	DeclarationRegistrationHelper(std::map<ASTNode const*, Scope>& _scopes, ASTNode& _astRoot);
+	DeclarationRegistrationHelper(std::map<ASTNode const*, DeclarationContainer>& _scopes, ASTNode& _astRoot);
 
 private:
 	bool visit(ContractDefinition& _contract);
@@ -85,12 +85,12 @@ private:
 	void endVisit(VariableDefinition& _variableDefinition);
 	bool visit(VariableDeclaration& _declaration);
 
-	void enterNewSubScope(ASTNode& _node);
+	void enterNewSubScope(Declaration& _declaration);
 	void closeCurrentScope();
 	void registerDeclaration(Declaration& _declaration, bool _opensScope);
 
-	std::map<ASTNode const*, Scope>& m_scopes;
-	Scope* m_currentScope;
+	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
+	Declaration* m_currentScope;
 	FunctionDefinition* m_currentFunction;
 };
 

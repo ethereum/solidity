@@ -20,7 +20,7 @@
  * Scope - object that holds declaration of names.
  */
 
-#include <libsolidity/Scope.h>
+#include <libsolidity/DeclarationContainer.h>
 #include <libsolidity/AST.h>
 
 namespace dev
@@ -28,7 +28,7 @@ namespace dev
 namespace solidity
 {
 
-bool Scope::registerDeclaration(Declaration& _declaration)
+bool DeclarationContainer::registerDeclaration(Declaration& _declaration)
 {
 	if (m_declarations.find(_declaration.getName()) != m_declarations.end())
 		return false;
@@ -36,13 +36,13 @@ bool Scope::registerDeclaration(Declaration& _declaration)
 	return true;
 }
 
-Declaration* Scope::resolveName(ASTString const& _name, bool _recursive) const
+Declaration* DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
 {
 	auto result = m_declarations.find(_name);
 	if (result != m_declarations.end())
 		return result->second;
-	if (_recursive && m_enclosingScope)
-		return m_enclosingScope->resolveName(_name, true);
+	if (_recursive && m_enclosingContainer)
+		return m_enclosingContainer->resolveName(_name, true);
 	return nullptr;
 }
 

@@ -378,6 +378,9 @@ void Assignment::checkTypeRequirements()
 {
 	m_leftHandSide->checkTypeRequirements();
 	m_leftHandSide->requireLValue();
+	//@todo later, assignments to structs might be possible, but not to mappings
+	if (!m_leftHandSide->getType()->isValueType() && !m_leftHandSide->isLocalLValue())
+		BOOST_THROW_EXCEPTION(createTypeError("Assignment to non-local non-value lvalue."));
 	m_rightHandSide->expectType(*m_leftHandSide->getType());
 	m_type = m_leftHandSide->getType();
 	if (m_assigmentOperator != Token::ASSIGN)
@@ -403,7 +406,7 @@ void Expression::expectType(Type const& _expectedType)
 
 void Expression::requireLValue()
 {
-	if (!isLvalue())
+	if (!isLValue())
 		BOOST_THROW_EXCEPTION(createTypeError("Expression has to be an lvalue."));
 	m_lvalueRequested = true;
 }
@@ -495,7 +498,8 @@ void MemberAccess::checkTypeRequirements()
 	m_type = type.getMemberType(*m_memberName);
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found in " + type.toString()));
-	m_isLvalue = (type.getCategory() == Type::Category::STRUCT && m_type->getCategory() != Type::Category::MAPPING);
+	//@todo later, this will not always be STORAGE
+	m_lvalue = type.getCategory() == Type::Category::STRUCT ? LValueType::STORAGE : LValueType::NONE;
 }
 
 void IndexAccess::checkTypeRequirements()
@@ -507,7 +511,7 @@ void IndexAccess::checkTypeRequirements()
 	MappingType const& type = dynamic_cast<MappingType const&>(*m_base->getType());
 	m_index->expectType(*type.getKeyType());
 	m_type = type.getValueType();
-	m_isLvalue = m_type->getCategory() != Type::Category::MAPPING;
+	m_lvalue = LValueType::STORAGE;
 }
 
 void Identifier::checkTypeRequirements()
@@ -521,7 +525,7 @@ void Identifier::checkTypeRequirements()
 		if (!variable->getType())
 			BOOST_THROW_EXCEPTION(createTypeError("Variable referenced before type could be determined."));
 		m_type = variable->getType();
-		m_isLvalue = true;
+		m_lvalue = variable->isLocalVariable() ? LValueType::LOCAL : LValueType::STORAGE;
 		return;
 	}
 	//@todo can we unify these with TypeName::toType()?
