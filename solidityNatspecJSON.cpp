@@ -77,22 +77,59 @@ BOOST_FIXTURE_TEST_SUITE(SolidityNatspecJSON, DocumentationChecker)
 BOOST_AUTO_TEST_CASE(user_basic_test)
 {
 	char const* sourceCode = "contract test {\n"
-	"  /// Multiplies `a` by 7\n"
+	"  /// @notice Multiplies `a` by 7\n"
 	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
 	"}\n";
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \"notice\": \" Multiplies `a` by 7\"}"
+	"    \"mul\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
 	checkNatspec(sourceCode, natspec, true);
 }
 
+BOOST_AUTO_TEST_CASE(dev_basic_test)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7\n"
+	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \"details\": \"Multiplies a number by 7\"}"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @notice Multiplies `a` by 7\n"
+	"  /// @dev Multiplies a number by 7\n"
+	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
+	"}\n";
+
+	char const* devNatspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \"details\": \"Multiplies a number by 7\"}"
+	"}}";
+
+	char const* userNatspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \"notice\": \"Multiplies `a` by 7\"}"
+	"}}";
+
+	checkNatspec(sourceCode, devNatspec, false);
+	checkNatspec(sourceCode, userNatspec, true);
+}
+
 BOOST_AUTO_TEST_CASE(user_multiline_comment)
 {
 	char const* sourceCode = "contract test {\n"
-	"  /// Multiplies `a` by 7\n"
+	"  /// @notice Multiplies `a` by 7\n"
 	"  /// and then adds `b`\n"
 	"  function mul_and_add(uint a, uint256 b) returns(uint256 d)\n"
 	"  {\n"
@@ -102,7 +139,7 @@ BOOST_AUTO_TEST_CASE(user_multiline_comment)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul_and_add\":{ \"notice\": \" Multiplies `a` by 7\n and then adds `b`\"}"
+	"    \"mul_and_add\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"}"
 	"}}";
 
 	checkNatspec(sourceCode, natspec, true);
@@ -111,19 +148,18 @@ BOOST_AUTO_TEST_CASE(user_multiline_comment)
 BOOST_AUTO_TEST_CASE(user_multiple_functions)
 {
 	char const* sourceCode = "contract test {\n"
-	"  /// Multiplies `a` by 7\n"
-	"  /// and then adds `b`\n"
+	"  /// @notice Multiplies `a` by 7 and then adds `b`\n"
 	"  function mul_and_add(uint a, uint256 b) returns(uint256 d)\n"
 	"  {\n"
 	"      return (a * 7) + b;\n"
 	"  }\n"
 	"\n"
-	"  /// Divides `input` by `div`\n"
+	"  /// @notice Divides `input` by `div`\n"
 	"  function divide(uint input, uint div) returns(uint d)\n"
 	"  {\n"
 	"      return input / div;\n"
 	"  }\n"
-	"  /// Subtracts 3 from `input`\n"
+	"  /// @notice Subtracts 3 from `input`\n"
 	"  function sub(int input) returns(int d)\n"
 	"  {\n"
 	"      return input - 3;\n"
@@ -132,9 +168,9 @@ BOOST_AUTO_TEST_CASE(user_multiple_functions)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul_and_add\":{ \"notice\": \" Multiplies `a` by 7\n and then adds `b`\"},"
-	"    \"divide\":{ \"notice\": \" Divides `input` by `div`\"},"
-	"    \"sub\":{ \"notice\": \" Subtracts 3 from `input`\"}"
+	"    \"mul_and_add\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"},"
+	"    \"divide\":{ \"notice\": \"Divides `input` by `div`\"},"
+	"    \"sub\":{ \"notice\": \"Subtracts 3 from `input`\"}"
 	"}}";
 
 	checkNatspec(sourceCode, natspec, true);
