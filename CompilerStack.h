@@ -37,7 +37,7 @@ class Compiler;
 class GlobalContext;
 class InterfaceHandler;
 
-enum documentation_type : unsigned short
+enum documentationType: unsigned short
 {
 	NATSPEC_USER = 1,
 	NATSPEC_DEV,
@@ -74,7 +74,7 @@ public:
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
 	/// Can be one of 3 types defined at @c documentation_type
-	std::string const* getJsonDocumentation(enum documentation_type type);
+	std::string const* getJsonDocumentation(enum documentationType type);
 
 	/// Returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner() const { return *m_scanner; }

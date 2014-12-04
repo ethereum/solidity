@@ -35,7 +35,7 @@ namespace solidity {
 
 // Forward declarations
 class ContractDefinition;
-enum documentation_type: unsigned short;
+enum documentationType: unsigned short;
 
 class InterfaceHandler
 {
@@ -49,7 +49,7 @@ public:
 	/// @return             A unique pointer contained string with the json
 	///                     representation of provided type
 	std::unique_ptr<std::string> getDocumentation(std::shared_ptr<ContractDefinition> _contractDef,
-												  enum documentation_type _type);
+												  enum documentationType _type);
 	/// Get the ABI Interface of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json

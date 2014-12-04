@@ -84,12 +84,12 @@ void CompilerStack::streamAssembly(ostream& _outStream)
 	m_compiler->streamAssembly(_outStream);
 }
 
-std::string const* CompilerStack::getJsonDocumentation(enum documentation_type _type)
+std::string const* CompilerStack::getJsonDocumentation(enum documentationType _type)
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	auto createOrReturnDoc = [&, this](std::unique_ptr<string>& _doc)
+	auto createOrReturnDoc = [this, _type](std::unique_ptr<string>& _doc)
 	{
 		if(!_doc)
 		{

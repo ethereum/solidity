@@ -12,7 +12,7 @@ InterfaceHandler::InterfaceHandler()
 }
 
 std::unique_ptr<std::string> InterfaceHandler::getDocumentation(std::shared_ptr<ContractDefinition> _contractDef,
-																enum documentation_type _type)
+																enum documentationType _type)
 {
 	switch(_type)
 	{
@@ -39,7 +39,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(std::shared_ptr<C
 		Json::Value inputs(Json::arrayValue);
 		Json::Value outputs(Json::arrayValue);
 
-		auto streamVariables = [](std::vector<ASTPointer<VariableDeclaration>> const& _vars)
+		auto populateParameters = [](std::vector<ASTPointer<VariableDeclaration>> const& _vars)
 		{
 			Json::Value params(Json::arrayValue);
 			for (ASTPointer<VariableDeclaration> const& var: _vars)
@@ -53,8 +53,8 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(std::shared_ptr<C
 		};
 
 		method["name"] = f->getName();
-		method["inputs"] = streamVariables(f->getParameters());
-		method["outputs"] = streamVariables(f->getReturnParameters());
+		method["inputs"] = populateParameters(f->getParameters());
+		method["outputs"] = populateParameters(f->getReturnParameters());
 		methods.append(method);
 	}
 	return std::unique_ptr<std::string>(new std::string(m_writer.write(methods)));
