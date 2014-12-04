@@ -37,6 +37,13 @@ namespace solidity {
 class ContractDefinition;
 enum documentationType: unsigned short;
 
+enum docTagType
+{
+	DOCTAG_NONE = 0,
+	DOCTAG_DEV,
+	DOCTAG_NOTICE,
+};
+
 class InterfaceHandler
 {
 public:
@@ -73,6 +80,7 @@ private:
 	Json::StyledWriter m_writer;
 
 	// internal state
+	enum docTagType m_lastTag;
 	std::string m_notice;
 	std::string m_dev;
 };

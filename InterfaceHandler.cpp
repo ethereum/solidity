@@ -9,6 +9,7 @@ namespace solidity {
 
 InterfaceHandler::InterfaceHandler()
 {
+	m_lastTag = DOCTAG_NONE;
 }
 
 std::unique_ptr<std::string> InterfaceHandler::getDocumentation(std::shared_ptr<ContractDefinition> _contractDef,
@@ -71,7 +72,9 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(std::shared_
 		auto strPtr = f->getDocumentation();
 		if (strPtr)
 		{
-			user["notice"] = Json::Value(*strPtr);
+			m_notice.clear();
+			parseDocString(*strPtr);
+			user["notice"] = Json::Value(m_notice);
 			methods[f->getName()] = user;
 		}
 	}
@@ -94,7 +97,7 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(std::shared_p
 			m_dev.clear();
 			parseDocString(*strPtr);
 
-			method["dev"] = Json::Value(m_dev);
+			method["details"] = Json::Value(m_dev);
 			methods[f->getName()] = method;
 		}
 	}
@@ -106,26 +109,55 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(std::shared_p
 /* -- private -- */
 size_t InterfaceHandler::parseDocTag(std::string const& _string, std::string const& _tag, size_t _pos)
 {
+	//TODO: This is pretty naive at the moment. e.g. need to check for
+	// '@' between _pos and \n, remove redundancy e.t.c.
 	size_t nlPos = _pos;
-	if (_tag == "dev")
+	if (m_lastTag == DOCTAG_NONE || _tag != "")
 	{
-		nlPos = _string.find("\n", _pos);
-		m_dev += _string.substr(_pos,
-								nlPos == std::string::npos ?
-								_string.length() :
-								nlPos - _pos);
-	}
-	else if (_tag == "notice")
-	{
-		nlPos = _string.find("\n", _pos);
-		m_notice += _string.substr(_pos,
-								nlPos == std::string::npos ?
-								_string.length() :
-								nlPos - _pos);
+		if (_tag == "dev")
+		{
+			nlPos = _string.find("\n", _pos);
+			m_dev += _string.substr(_pos,
+									nlPos == std::string::npos ?
+									_string.length() :
+									nlPos - _pos);
+			m_lastTag = DOCTAG_DEV;
+		}
+		else if (_tag == "notice")
+		{
+			nlPos = _string.find("\n", _pos);
+			m_notice += _string.substr(_pos,
+									   nlPos == std::string::npos ?
+									   _string.length() :
+									   nlPos - _pos);
+			m_lastTag = DOCTAG_NOTICE;
+		}
+		else
+		{
+			//TODO: Some form of warning
+		}
 	}
 	else
 	{
-		//TODO: Some form of warning
+		switch(m_lastTag)
+		{
+		case DOCTAG_DEV:
+			nlPos = _string.find("\n", _pos);
+			m_dev += _string.substr(_pos,
+									nlPos == std::string::npos ?
+									_string.length() :
+									nlPos - _pos);
+			break;
+		case DOCTAG_NOTICE:
+			nlPos = _string.find("\n", _pos);
+			m_notice += _string.substr(_pos,
+									   nlPos == std::string::npos ?
+									   _string.length() :
+									   nlPos - _pos);
+			break;
+		default:
+			break;
+		}
 	}
 
 	return nlPos;
@@ -134,16 +166,28 @@ size_t InterfaceHandler::parseDocTag(std::string const& _string, std::string con
 void InterfaceHandler::parseDocString(std::string const& _string, size_t _startPos)
 {
 	size_t pos2;
+	size_t newPos = _startPos;
 	size_t pos1 = _string.find("@", _startPos);
 
-	if (pos1 == std::string::npos)
-		return; // no doxytags found
+	if (pos1 != std::string::npos)
+	{
+		// we found a tag
+		pos2 = _string.find(" ", pos1);
+		if (pos2 == std::string::npos)
+		{
+			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("End of tag not found"));
+			return; //no end of tag found
+		}
 
-	pos2 = _string.find(" ", pos1);
-	if (pos2 == std::string::npos)
-		return; //no end of tag found
+		newPos = parseDocTag(_string, _string.substr(pos1 + 1, pos2 - pos1 - 1), pos2 + 1);
+	}
+	else
+	{
+		newPos = parseDocTag(_string, "", _startPos + 1);
+	}
 
-	size_t newPos = parseDocTag(_string, _string.substr(pos1 + 1, pos2 - pos1), pos2);
+	if (newPos == std::string::npos)
+		return; // EOS
 	parseDocString(_string, newPos);
 }
 
