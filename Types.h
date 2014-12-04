@@ -214,10 +214,17 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual u256 getStorageSize() const override;
+	virtual bool isValueType() const override { return true; }
 	virtual std::string toString() const override;
+
+	virtual MemberList const& getMembers() const override;
+
+	unsigned getFunctionIndex(std::string const& _functionName) const;
 
 private:
 	ContractDefinition const& m_contract;
+	/// List of member types, will be lazy-initialized because of recursive references.
+	mutable std::unique_ptr<MemberList> m_members;
 };
 
 /**
@@ -263,7 +270,7 @@ public:
 	enum class Location { INTERNAL, EXTERNAL, SEND, SHA3, SUICIDE, ECRECOVER, SHA256, RIPEMD160 };
 
 	virtual Category getCategory() const override { return Category::FUNCTION; }
-	explicit FunctionType(FunctionDefinition const& _function);
+	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
 				 Location _location = Location::INTERNAL):
 		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),

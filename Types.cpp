@@ -140,7 +140,7 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return _convertTo.getCategory() == getCategory();
+	return _convertTo.getCategory() == getCategory() || _convertTo.getCategory() == Category::CONTRACT;
 }
 
 bool IntegerType::acceptsBinaryOperator(Token::Value _operator) const
@@ -247,6 +247,31 @@ string ContractType::toString() const
 	return "contract " + m_contract.getName();
 }
 
+MemberList const& ContractType::getMembers() const
+{
+	// We need to lazy-initialize it because of recursive references.
+	if (!m_members)
+	{
+		map<string, shared_ptr<Type const>> members;
+		for (FunctionDefinition const* function: m_contract.getInterfaceFunctions())
+			members[function->getName()] = make_shared<FunctionType>(*function, false);
+		m_members.reset(new MemberList(members));
+	}
+	return *m_members;
+}
+
+unsigned ContractType::getFunctionIndex(string const& _functionName) const
+{
+	unsigned index = 0;
+	for (FunctionDefinition const* function: m_contract.getInterfaceFunctions())
+	{
+		if (function->getName() == _functionName)
+			return index;
+		++index;
+	}
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Index of non-existing contract function requested."));
+}
+
 bool StructType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
@@ -302,7 +327,7 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage offset of non-existing member requested."));
 }
 
-FunctionType::FunctionType(FunctionDefinition const& _function)
+FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal)
 {
 	TypePointers params;
 	TypePointers retParams;
@@ -314,7 +339,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function)
 		retParams.push_back(var->getType());
 	swap(params, m_parameterTypes);
 	swap(retParams, m_returnParameterTypes);
-	m_location = Location::INTERNAL;
+	m_location = _isInternal ? Location::INTERNAL : Location::EXTERNAL;
 }
 
 bool FunctionType::operator==(Type const& _other) const
@@ -323,6 +348,8 @@ bool FunctionType::operator==(Type const& _other) const
 		return false;
 	FunctionType const& other = dynamic_cast<FunctionType const&>(_other);
 
+	if (m_location != other.m_location)
+		return false;
 	if (m_parameterTypes.size() != other.m_parameterTypes.size() ||
 			m_returnParameterTypes.size() != other.m_returnParameterTypes.size())
 		return false;

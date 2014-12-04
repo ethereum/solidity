@@ -31,9 +31,10 @@ class AssemblyItem; // forward
 }
 namespace solidity {
 
-class CompilerContext; // forward
-class Type; // forward
-class IntegerType; // forward
+// forward declarations
+class CompilerContext;
+class Type;
+class IntegerType;
 
 /**
  * Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream

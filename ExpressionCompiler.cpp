@@ -185,7 +185,9 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 		if (asserts(arguments.size() == function.getParameterTypes().size()))
 			BOOST_THROW_EXCEPTION(InternalCompilerError());
 
-		if (function.getLocation() == Location::INTERNAL)
+		switch (function.getLocation())
+		{
+		case Location::INTERNAL:
 		{
 			// Calling convention: Caller pushes return address and arguments
 			// Callee removes them and pushes return values
@@ -208,61 +210,90 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 			// all others
 			for (unsigned i = 1; i < function.getReturnParameterTypes().size(); ++i)
 				m_context << eth::Instruction::POP;
+			break;
 		}
-		else if (function.getLocation() == Location::EXTERNAL)
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("External function calls not implemented yet."));
-		else
+		case Location::EXTERNAL:
 		{
-			switch (function.getLocation())
+			unsigned dataOffset = 1; // reserve one byte for the function index
+			for (unsigned i = 0; i < arguments.size(); ++i)
 			{
-			case Location::SEND:
-				m_context << u256(0) << u256(0) << u256(0) << u256(0);
-				arguments.front()->accept(*this);
-				//@todo might not be necessary
-				appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
-				_functionCall.getExpression().accept(*this);
-				m_context << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB
-						  << eth::Instruction::CALL
-						  << eth::Instruction::POP;
-				break;
-			case Location::SUICIDE:
-				arguments.front()->accept(*this);
-				//@todo might not be necessary
-				appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
-				m_context << eth::Instruction::SUICIDE;
-				break;
-			case Location::SHA3:
-				arguments.front()->accept(*this);
-				appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
+				arguments[i]->accept(*this);
+				Type const& type = *function.getParameterTypes()[i];
+				appendTypeConversion(*arguments[i]->getType(), type);
+				unsigned const numBytes = type.getCalldataEncodedSize();
+				if (numBytes == 0 || numBytes > 32)
+					BOOST_THROW_EXCEPTION(CompilerError()
+										  << errinfo_sourceLocation(arguments[i]->getLocation())
+										  << errinfo_comment("Type " + type.toString() + " not yet supported."));
+				if (numBytes != 32)
+					m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
+				m_context << u256(dataOffset) << eth::Instruction::MSTORE;
+				dataOffset += numBytes;
+			}
+			//@todo only return the first return value for now
+			unsigned retSize = function.getReturnParameterTypes().empty() ? 0
+									: function.getReturnParameterTypes().front()->getCalldataEncodedSize();
+			// CALL arguments: outSize, outOff, inSize, inOff, value, addr, gas (stack top)
+			m_context << u256(retSize) << u256(0) << u256(dataOffset) << u256(0) << u256(0);
+			_functionCall.getExpression().accept(*this); // pushes addr and function index
+			m_context << u256(0) << eth::Instruction::MSTORE8
+					  << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB
+					  << eth::Instruction::CALL
+					  << eth::Instruction::POP; // @todo do not ignore failure indicator
+			if (retSize == 32)
+				m_context << u256(0) << eth::Instruction::MLOAD;
+			else if (retSize > 0)
+				m_context << (u256(1) << ((32 - retSize) * 8))
+						  << u256(0) << eth::Instruction::MLOAD << eth::Instruction::DIV;
+			break;
+		}
+		case Location::SEND:
+			m_context << u256(0) << u256(0) << u256(0) << u256(0);
+			arguments.front()->accept(*this);
+			//@todo might not be necessary
+			appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
+			_functionCall.getExpression().accept(*this);
+			m_context << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB
+					  << eth::Instruction::CALL
+					  << eth::Instruction::POP;
+			break;
+		case Location::SUICIDE:
+			arguments.front()->accept(*this);
+			//@todo might not be necessary
+			appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
+			m_context << eth::Instruction::SUICIDE;
+			break;
+		case Location::SHA3:
+			arguments.front()->accept(*this);
+			appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
+			// @todo move this once we actually use memory
+			m_context << u256(0) << eth::Instruction::MSTORE << u256(32) << u256(0) << eth::Instruction::SHA3;
+			break;
+		case Location::ECRECOVER:
+		case Location::SHA256:
+		case Location::RIPEMD160:
+		{
+			static const map<Location, u256> contractAddresses{{Location::ECRECOVER, 1},
+															   {Location::SHA256, 2},
+															   {Location::RIPEMD160, 3}};
+			u256 contractAddress = contractAddresses.find(function.getLocation())->second;
+			// @todo later, combine this code with external function call
+			for (unsigned i = 0; i < arguments.size(); ++i)
+			{
+				arguments[i]->accept(*this);
+				appendTypeConversion(*arguments[i]->getType(), *function.getParameterTypes()[i], true);
 				// @todo move this once we actually use memory
-				m_context << u256(0) << eth::Instruction::MSTORE << u256(32) << u256(0) << eth::Instruction::SHA3;
-				break;
-			case Location::ECRECOVER:
-			case Location::SHA256:
-			case Location::RIPEMD160:
-			{
-				static const map<Location, u256> contractAddresses{{Location::ECRECOVER, 1},
-																   {Location::SHA256, 2},
-																   {Location::RIPEMD160, 3}};
-				u256 contractAddress = contractAddresses.find(function.getLocation())->second;
-				// @todo later, combine this code with external function call
-				for (unsigned i = 0; i < arguments.size(); ++i)
-				{
-					arguments[i]->accept(*this);
-					appendTypeConversion(*arguments[i]->getType(), *function.getParameterTypes()[i], true);
-					// @todo move this once we actually use memory
-					m_context << u256(i * 32) << eth::Instruction::MSTORE;
-				}
-				m_context << u256(32) << u256(0) << u256(arguments.size() * 32) << u256(0) << u256(0)
-						  << contractAddress << u256(500) //@todo determine actual gas requirement
-						  << eth::Instruction::CALL
-						  << eth::Instruction::POP
-						  << u256(0) << eth::Instruction::MLOAD;
-				break;
+				m_context << u256(i * 32) << eth::Instruction::MSTORE;
 			}
-			default:
-				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Function not yet implemented."));
-			}
+			m_context << u256(32) << u256(0) << u256(arguments.size() * 32) << u256(0) << u256(0)
+					  << contractAddress << u256(500) //@todo determine actual gas requirement
+					  << eth::Instruction::CALL
+					  << eth::Instruction::POP
+					  << u256(0) << eth::Instruction::MLOAD;
+			break;
+		}
+		default:
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid function type."));
 		}
 	}
 	return false;
@@ -289,9 +320,11 @@ void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
 		break;
 	case Type::Category::CONTRACT:
-		// call function
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Contract variables not yet implemented."));
+	{
+		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.getExpression().getType());
+		m_context << type.getFunctionIndex(member);
 		break;
+	}
 	case Type::Category::MAGIC:
 		// we can ignore the kind of magic and only look at the name of the member
 		if (member == "coinbase")
