@@ -201,12 +201,12 @@ void CompilerStack::resolveImports()
 		for (ASTPointer<ASTNode> const& node: _source->ast->getNodes())
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
-				string const& url = import->getURL();
-				if (!m_sources.count(url))
+				string const& id = import->getIdentifier();
+				if (!m_sources.count(id))
 					BOOST_THROW_EXCEPTION(ParserError()
 										  << errinfo_sourceLocation(import->getLocation())
 										  << errinfo_comment("Source not found."));
-				toposort(&m_sources[url]);
+				toposort(&m_sources[id]);
 			}
 		sourceOrder.push_back(_source);
 	};

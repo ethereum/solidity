@@ -98,19 +98,21 @@ private:
 
 /**
  * Import directive for referencing other files / source objects.
+ * Example: import "abc.sol"
+ * Source objects are identified by a string which can be a file name but does not have to be.
  */
 class ImportDirective: public ASTNode
 {
 public:
-	ImportDirective(Location const& _location, ASTPointer<ASTString> const& _url):
-		ASTNode(_location), m_url(_url) {}
+	ImportDirective(Location const& _location, ASTPointer<ASTString> const& _identifier):
+		ASTNode(_location), m_identifier(_identifier) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 
-	ASTString const& getURL() const { return *m_url; }
+	ASTString const& getIdentifier() const { return *m_identifier; }
 
 private:
-	ASTPointer<ASTString> m_url;
+	ASTPointer<ASTString> m_identifier;
 };
 
 /**

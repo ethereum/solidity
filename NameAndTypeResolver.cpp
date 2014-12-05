@@ -40,6 +40,7 @@ NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration*> const& _globa
 
 void NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
 {
+	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit);
 }
 

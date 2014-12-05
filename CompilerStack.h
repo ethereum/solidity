@@ -66,7 +66,7 @@ public:
 	/// Returns a list of the contract names in the sources.
 	std::vector<std::string> getContractNames();
 
-	/// Compiles the source units that were prevously added and parsed.
+	/// Compiles the source units that were previously added and parsed.
 	void compile(bool _optimize = false);
 	/// Parses and compiles the given source code.
 	/// @returns the compiled bytecode
