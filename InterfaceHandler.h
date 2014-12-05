@@ -81,12 +81,20 @@ private:
 	void resetUser();
 	void resetDev();
 
-	size_t parseDocTagLine(std::string const& _string, std::string& _tagString, size_t _pos, enum DocTagType _tagType);
-	size_t parseDocTagParam(std::string const& _string, size_t _startPos);
-	size_t appendDocTagParam(std::string const& _string, size_t _startPos);
-	void parseDocString(std::string const& _string, size_t _startPos = 0);
-	size_t appendDocTag(std::string const& _string, size_t _startPos);
-	size_t parseDocTag(std::string const& _string, std::string const& _tag, size_t _pos);
+	std::string::const_iterator parseDocTagLine(std::string::const_iterator _pos,
+												std::string::const_iterator _end,
+												std::string& _tagString,
+												enum DocTagType _tagType);
+	std::string::const_iterator parseDocTagParam(std::string::const_iterator _pos,
+												 std::string::const_iterator _end);
+	std::string::const_iterator appendDocTagParam(std::string::const_iterator _pos,
+												  std::string::const_iterator _end);
+	void parseDocString(std::string const& _string);
+	std::string::const_iterator appendDocTag(std::string::const_iterator _pos,
+											 std::string::const_iterator _end);
+	std::string::const_iterator parseDocTag(std::string::const_iterator _pos,
+											std::string::const_iterator _end,
+											std::string const& _tag);
 
 	Json::StyledWriter m_writer;
 

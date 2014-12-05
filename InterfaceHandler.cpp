@@ -137,143 +137,135 @@ void InterfaceHandler::resetDev()
 	m_params.clear();
 }
 
-size_t skipLineOrEOS(std::string const& _string, size_t _nlPos)
+std::string::const_iterator skipLineOrEOS(std::string::const_iterator _nlPos,
+										  std::string::const_iterator _end)
 {
-	return (_nlPos == std::string::npos) ? _string.length() : _nlPos + 1;
+	return (_nlPos == _end) ? _end : ++_nlPos;
 }
 
-size_t InterfaceHandler::parseDocTagLine(std::string const& _string,
-										 std::string& _tagString,
-										 size_t _pos,
-										 enum DocTagType _tagType)
+std::string::const_iterator InterfaceHandler::parseDocTagLine(std::string::const_iterator _pos,
+															  std::string::const_iterator _end,
+															  std::string& _tagString,
+															  enum DocTagType _tagType)
 {
-	size_t nlPos = _string.find('\n', _pos);
-	_tagString += _string.substr(_pos,
-								 nlPos == std::string::npos ?
-								 _string.length() - _pos:
-								 nlPos - _pos);
+	auto nlPos = std::find(_pos, _end, '\n');
+	std::copy(_pos, nlPos, back_inserter(_tagString));
 	m_lastTag = _tagType;
-	return skipLineOrEOS(_string, nlPos);
+	return skipLineOrEOS(nlPos, _end);
 }
 
-size_t InterfaceHandler::parseDocTagParam(std::string const& _string, size_t _startPos)
+std::string::const_iterator InterfaceHandler::parseDocTagParam(std::string::const_iterator _pos,
+															   std::string::const_iterator _end)
 {
 	// find param name
-	size_t currPos = _string.find(' ', _startPos);
-	if (currPos == std::string::npos)
+	auto currPos = std::find(_pos, _end, ' ');
+	if (currPos == _end)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("End of param name not found"));
 
 
-	auto paramName = _string.substr(_startPos, currPos - _startPos);
+	auto paramName = std::string(_pos, currPos);
 
 	currPos += 1;
-	size_t nlPos = _string.find('\n', currPos);
-	auto paramDesc = _string.substr(currPos,
-									nlPos == std::string::npos ?
-									_string.length() - currPos :
-									nlPos - currPos);
-
+	auto nlPos = std::find(currPos, _end, '\n');
+	auto paramDesc = std::string(currPos, nlPos);
 	m_params.push_back(std::make_pair(paramName, paramDesc));
 
 	m_lastTag = DOCTAG_PARAM;
-	return skipLineOrEOS(_string, nlPos);
+	return skipLineOrEOS(nlPos, _end);
 }
 
-size_t InterfaceHandler::appendDocTagParam(std::string const& _string, size_t _startPos)
+std::string::const_iterator InterfaceHandler::appendDocTagParam(std::string::const_iterator _pos,
+																std::string::const_iterator _end)
 {
 	// Should never be called with an empty vector
 	if (asserts(!m_params.empty()))
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Internal: Tried to append to empty parameter"));
+
 	auto pair = m_params.back();
-	size_t nlPos = _string.find('\n', _startPos);
-	pair.second += _string.substr(_startPos,
-								 nlPos == std::string::npos ?
-								 _string.length() - _startPos :
-								 nlPos - _startPos);
+	pair.second += " ";
+	auto nlPos = std::find(_pos, _end, '\n');
+	std::copy(_pos, nlPos, back_inserter(pair.second));
 
 	m_params.at(m_params.size() - 1) = pair;
 
-	return skipLineOrEOS(_string, nlPos);
+	return skipLineOrEOS(nlPos, _end);
 }
 
-size_t InterfaceHandler::parseDocTag(std::string const& _string, std::string const& _tag, size_t _pos)
+std::string::const_iterator InterfaceHandler::parseDocTag(std::string::const_iterator _pos,
+														  std::string::const_iterator _end,
+														  std::string const& _tag)
 {
 	// LTODO: need to check for @(start of a tag) between here and the end of line
 	//      for all cases
-	size_t nlPos = _pos;
 	if (m_lastTag == DOCTAG_NONE || _tag != "")
 	{
 		if (_tag == "dev")
-			nlPos = parseDocTagLine(_string, m_dev, _pos, DOCTAG_DEV);
+			return parseDocTagLine(_pos, _end, m_dev, DOCTAG_DEV);
 		else if (_tag == "notice")
-			nlPos = parseDocTagLine(_string, m_notice, _pos, DOCTAG_NOTICE);
+			return parseDocTagLine(_pos, _end, m_notice, DOCTAG_NOTICE);
 		else if (_tag == "return")
-			nlPos = parseDocTagLine(_string, m_return, _pos, DOCTAG_RETURN);
+			return parseDocTagLine(_pos, _end, m_return, DOCTAG_RETURN);
 		else if (_tag == "param")
-			nlPos = parseDocTagParam(_string, _pos);
+			return parseDocTagParam(_pos, _end);
 		else
 		{
-			// LTODO: Unknown tas, throw some form of warning
+			// LTODO: Unknown tag, throw some form of warning and not just an exception
+			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Unknown tag encountered"));
 		}
 	}
 	else
-		appendDocTag(_string, _pos);
-
-	return nlPos;
+		return appendDocTag(_pos, _end);
 }
 
-size_t InterfaceHandler::appendDocTag(std::string const& _string, size_t _startPos)
+std::string::const_iterator InterfaceHandler::appendDocTag(std::string::const_iterator _pos,
+														   std::string::const_iterator _end)
 {
-	size_t newPos = _startPos;
 	switch (m_lastTag)
 	{
 		case DOCTAG_DEV:
 			m_dev += " ";
-			newPos = parseDocTagLine(_string, m_dev, _startPos, DOCTAG_DEV);
-			break;
+			return parseDocTagLine(_pos, _end, m_dev, DOCTAG_DEV);
 		case DOCTAG_NOTICE:
 			m_notice += " ";
-			newPos = parseDocTagLine(_string, m_notice, _startPos, DOCTAG_NOTICE);
-			break;
+			return parseDocTagLine(_pos, _end, m_notice, DOCTAG_NOTICE);
 		case DOCTAG_RETURN:
 			m_return += " ";
-			newPos = parseDocTagLine(_string, m_return, _startPos, DOCTAG_RETURN);
-			break;
+			return parseDocTagLine(_pos, _end, m_return, DOCTAG_RETURN);
 		case DOCTAG_PARAM:
-			newPos = appendDocTagParam(_string, _startPos);
-			break;
+			return appendDocTagParam(_pos, _end);
 		default:
+			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Internal: Illegal documentation tag"));
 			break;
-		}
-	return newPos;
+	}
 }
 
-void InterfaceHandler::parseDocString(std::string const& _string, size_t _startPos)
+void InterfaceHandler::parseDocString(std::string const& _string)
 {
-	size_t pos2;
-	size_t newPos = _startPos;
-	size_t tagPos = _string.find('@', _startPos);
-	size_t nlPos = _string.find('\n', _startPos);
+	auto currPos = _string.begin();
+	auto end = _string.end();
 
-	if (tagPos != std::string::npos && tagPos < nlPos)
+	while (currPos != end)
 	{
-		// we found a tag
-		pos2 = _string.find(' ', tagPos);
-		if (pos2 == std::string::npos)
-			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("End of tag not found"));
+		auto tagPos = std::find(currPos, end, '@');
+		auto nlPos = std::find(currPos, end, '\n');
 
-		newPos = parseDocTag(_string, _string.substr(tagPos + 1, pos2 - tagPos - 1), pos2 + 1);
+		if (tagPos != end && tagPos < nlPos)
+		{
+			// we found a tag
+			auto tagNameEndPos = std::find(tagPos, end, ' ');
+			if (tagNameEndPos == end)
+				BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("End of tag not found"));
+
+			currPos = parseDocTag(tagNameEndPos + 1, end, std::string(tagPos +1, tagNameEndPos));
+		}
+		else if (m_lastTag != DOCTAG_NONE) // continuation of the previous tag
+			currPos = appendDocTag(currPos + 1, end);
+		else // skip the line if a newline was found
+		{
+			if (currPos != end)
+				currPos = nlPos + 1;
+		}
 	}
-	else if (m_lastTag != DOCTAG_NONE) // continuation of the previous tag
-		newPos = appendDocTag(_string, _startPos + 1);
-	else // skip the line if a newline was found
-	{
-		if (newPos != std::string::npos)
-			newPos = nlPos + 1;
-	}
-	if (newPos == std::string::npos || newPos == _string.length())
-		return; // EOS
-	parseDocString(_string, newPos);
 }
 
 } //solidity NS
