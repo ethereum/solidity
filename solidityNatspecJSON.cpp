@@ -192,6 +192,30 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	checkNatspec(sourceCode, userNatspec, true);
 }
 
+BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev\n"
+	"  /// Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter\n"
+	"  /// @param second Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \n"
+	"        \"details\": \" Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        }\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
 BOOST_AUTO_TEST_CASE(dev_multiple_params)
 {
 	char const* sourceCode = "contract test {\n"
@@ -314,6 +338,33 @@ BOOST_AUTO_TEST_CASE(dev_return)
 
 	checkNatspec(sourceCode, natspec, false);
 }
+BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter starts here.\n"
+	"  /// Since it's a really complicated parameter we need 2 lines\n"
+	"  /// @param second Documentation for the second parameter\n"
+	"  /// @return\n"
+	"  /// The result of the multiplication\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"return\": \" The result of the multiplication\"\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
 
 BOOST_AUTO_TEST_CASE(dev_multiline_return)
 {
