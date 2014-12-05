@@ -137,8 +137,8 @@ void InterfaceHandler::resetDev()
 	m_params.clear();
 }
 
-std::string::const_iterator skipLineOrEOS(std::string::const_iterator _nlPos,
-										  std::string::const_iterator _end)
+static inline std::string::const_iterator skipLineOrEOS(std::string::const_iterator _nlPos,
+														std::string::const_iterator _end)
 {
 	return (_nlPos == _end) ? _end : ++_nlPos;
 }
@@ -239,6 +239,14 @@ std::string::const_iterator InterfaceHandler::appendDocTag(std::string::const_it
 	}
 }
 
+static inline std::string::const_iterator getFirstSpaceOrNl(std::string::const_iterator _pos,
+															std::string::const_iterator _end)
+{
+	auto spacePos = std::find(_pos, _end, ' ');
+	auto nlPos = std::find(_pos, _end, '\n');
+	return (spacePos < nlPos) ? spacePos : nlPos;
+}
+
 void InterfaceHandler::parseDocString(std::string const& _string)
 {
 	auto currPos = _string.begin();
@@ -252,7 +260,7 @@ void InterfaceHandler::parseDocString(std::string const& _string)
 		if (tagPos != end && tagPos < nlPos)
 		{
 			// we found a tag
-			auto tagNameEndPos = std::find(tagPos, end, ' ');
+			auto tagNameEndPos = getFirstSpaceOrNl(tagPos, end);
 			if (tagNameEndPos == end)
 				BOOST_THROW_EXCEPTION(DocstringParsingError() <<
 									  errinfo_comment("End of tag " + std::string(tagPos, tagNameEndPos) + "not found"));
