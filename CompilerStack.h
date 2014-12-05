@@ -33,10 +33,18 @@ namespace solidity {
 
 // forward declarations
 class Scanner;
+class ContractDefinition;
 class SourceUnit;
 class Compiler;
 class GlobalContext;
-class ContractDefinition;
+class InterfaceHandler;
+
+enum DocumentationType: unsigned short
+{
+	NATSPEC_USER = 1,
+	NATSPEC_DEV,
+	ABI_INTERFACE
+};
 
 /**
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
@@ -47,6 +55,7 @@ class CompilerStack: boost::noncopyable
 {
 public:
 	CompilerStack(): m_parseSuccessful(false) {}
+
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	void addSource(std::string const& _name, std::string const& _content);
 	void setSource(std::string const& _sourceCode);
@@ -71,6 +80,11 @@ public:
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& getInterface(std::string const& _contractName = "");
+	/// Returns a string representing the contract's documentation in JSON.
+	/// Prerequisite: Successful call to parse or compile.
+	/// @param type The type of the documentation to get.
+	/// Can be one of 3 types defined at @c DocumentationType
+	std::string const& getJsonDocumentation(std::string const& _contractName, enum DocumentationType _type);
 
 	/// Returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner(std::string const& _sourceName = "");
@@ -94,10 +108,15 @@ private:
 
 	struct Contract
 	{
-		ContractDefinition const* contract;
-		std::string interface;
+		ContractDefinition* contract;
 		std::shared_ptr<Compiler> compiler;
 		bytes bytecode;
+		std::shared_ptr<InterfaceHandler> interfaceHandler;
+		std::unique_ptr<std::string> interface;
+		std::unique_ptr<std::string> userDocumentation;
+		std::unique_ptr<std::string> devDocumentation;
+
+		Contract();
 	};
 
 	void reset(bool _keepSources = false);
@@ -109,7 +128,6 @@ private:
 	bool m_parseSuccessful;
 	std::map<std::string, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
-	std::shared_ptr<Compiler> m_compiler;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string, Contract> m_contracts;
 };

@@ -16,6 +16,10 @@ endif()
 include_directories(..)
 
 target_link_libraries(${EXECUTABLE} evmcore devcore)
+# TODO: Temporary until PR 532 https://github.com/ethereum/cpp-ethereum/pull/532
+# gets accepted. Then we can simply add jsoncpp as a dependency and not the
+# whole of JSONRPC as we are doing right here
+target_link_libraries(${EXECUTABLE} ${JSONRPC_LS})
 
 install( TARGETS ${EXECUTABLE} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )

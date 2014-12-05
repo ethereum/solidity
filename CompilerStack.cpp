@@ -27,6 +27,7 @@
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/CompilerStack.h>
+#include <libsolidity/InterfaceHandler.h>
 
 using namespace std;
 
@@ -127,45 +128,34 @@ void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractN
 
 string const& CompilerStack::getInterface(std::string const& _contractName)
 {
-	Contract& contract = getContract(_contractName);
-	if (contract.interface.empty())
-	{
-		stringstream interface;
-		interface << '[';
-		vector<FunctionDefinition const*> exportedFunctions = contract.contract->getInterfaceFunctions();
-		unsigned functionsCount = exportedFunctions.size();
-		for (FunctionDefinition const* f: exportedFunctions)
-		{
-			auto streamVariables = [&](vector<ASTPointer<VariableDeclaration>> const& _vars)
-			{
-				unsigned varCount = _vars.size();
-				for (ASTPointer<VariableDeclaration> const& var: _vars)
-				{
-					interface << "{"
-							  << "\"name\":" << escaped(var->getName(), false) << ","
-							  << "\"type\":" << escaped(var->getType()->toString(), false)
-							  << "}";
-					if (--varCount > 0)
-						interface << ",";
-				}
-			};
+	return getJsonDocumentation(_contractName, ABI_INTERFACE);
+}
 
-			interface << '{'
-					  << "\"name\":" << escaped(f->getName(), false) << ","
-					  << "\"inputs\":[";
-			streamVariables(f->getParameters());
-			interface << "],"
-					  << "\"outputs\":[";
-			streamVariables(f->getReturnParameters());
-			interface << "]"
-					  << "}";
-			if (--functionsCount > 0)
-				interface << ",";
-		}
-		interface << ']';
-		contract.interface = interface.str();
+std::string const& CompilerStack::getJsonDocumentation(std::string const& _contractName, enum DocumentationType _type)
+{
+	if (!m_parseSuccessful)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
+
+	Contract& contract = getContract(_contractName);
+
+	std::unique_ptr<string>* doc;
+	switch (_type)
+	{
+	case NATSPEC_USER:
+		doc = &contract.userDocumentation;
+		break;
+	case NATSPEC_DEV:
+		doc = &contract.devDocumentation;
+		break;
+	case ABI_INTERFACE:
+		doc = &contract.interface;
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 	}
-	return contract.interface;
+	if (!*doc)
+		*doc = contract.interfaceHandler->getDocumentation(*contract.contract, _type);
+	return *(*doc);
 }
 
 Scanner const& CompilerStack::getScanner(string const& _sourceName)
@@ -193,7 +183,6 @@ void CompilerStack::reset(bool _keepSources)
 	else
 		m_sources.clear();
 	m_globalContext.reset();
-	m_compiler.reset();
 	m_sourceOrder.clear();
 	m_contracts.clear();
 }
@@ -247,5 +236,8 @@ CompilerStack::Source& CompilerStack::getSource(string const& _sourceName)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Given source file not found."));
 	return it->second;
 }
+
+CompilerStack::Contract::Contract(): interfaceHandler(make_shared<InterfaceHandler>()) {}
+
 }
 }
