@@ -21,6 +21,7 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <libethereum/Executive.h>
 #include "vm.h"
 
 using namespace std;
