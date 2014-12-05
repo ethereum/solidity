@@ -84,7 +84,7 @@ void CompilerStack::streamAssembly(ostream& _outStream)
 	m_compiler->streamAssembly(_outStream);
 }
 
-std::string const* CompilerStack::getJsonDocumentation(enum DocumentationType _type)
+std::string const& CompilerStack::getJsonDocumentation(enum DocumentationType _type)
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
@@ -99,13 +99,13 @@ std::string const* CompilerStack::getJsonDocumentation(enum DocumentationType _t
 	{
 	case NATSPEC_USER:
 		createDocIfNotThere(m_userDocumentation);
-		return m_userDocumentation.get();
+		return *m_userDocumentation;
 	case NATSPEC_DEV:
 		createDocIfNotThere(m_devDocumentation);
-		return m_devDocumentation.get();
+		return *m_devDocumentation;
 	case ABI_INTERFACE:
 		createDocIfNotThere(m_interface);
-		return m_interface.get();
+		return *m_interface;
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
