@@ -72,8 +72,6 @@ public:
 	void importExec(json_spirit::mObject& _o);
 	json_spirit::mArray exportCallCreates();
 	void importCallCreates(json_spirit::mArray& _callcreates);
-	json_spirit::mObject exportLog();
-	void importLog(json_spirit::mObject& _o);
 
 	eth::OnOpFunc simpleTrace();
 
