@@ -326,7 +326,11 @@ InstructionInfo dev::eth::instructionInfo(Instruction _inst)
 	}
 	catch (...)
 	{
+#ifndef BOOST_NO_EXCEPTIONS
 		cwarn << "<INVALID_INSTRUCTION: " << toString((unsigned)_inst) << ">\n" << boost::current_exception_diagnostic_information();
+#else
+		cwarn << "<INVALID_INSTRUCTION: " << toString((unsigned)_inst) << ">\n";
+#endif
 		return InstructionInfo({"<INVALID_INSTRUCTION: " + toString((unsigned)_inst) + ">", 0, 0, 0, false});
 	}
 }

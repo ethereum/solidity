@@ -5,6 +5,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
 aux_source_directory(. SRC_LIST)
 
+include_directories(..)
+include_directories(${Boost_INCLUDE_DIRS})
+
 set(EXECUTABLE evmcore)
 
 file(GLOB HEADERS "*.h")
@@ -13,8 +16,6 @@ if(ETH_STATIC)
 else()
 	add_library(${EXECUTABLE} SHARED ${SRC_LIST} ${HEADERS})
 endif()
-
-include_directories(..)
 
 target_link_libraries(${EXECUTABLE} devcore)
 
