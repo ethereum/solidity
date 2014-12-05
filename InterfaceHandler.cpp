@@ -28,7 +28,7 @@ std::unique_ptr<std::string> InterfaceHandler::getDocumentation(std::shared_ptr<
 		return getABIInterface(_contractDef);
 	}
 
-	BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Internal error"));
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
 	return nullptr;
 }
 
@@ -160,7 +160,7 @@ std::string::const_iterator InterfaceHandler::parseDocTagParam(std::string::cons
 	// find param name
 	auto currPos = std::find(_pos, _end, ' ');
 	if (currPos == _end)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("End of param name not found"));
+		BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("End of param name not found" + std::string(_pos, _end)));
 
 
 	auto paramName = std::string(_pos, currPos);
@@ -179,7 +179,7 @@ std::string::const_iterator InterfaceHandler::appendDocTagParam(std::string::con
 {
 	// Should never be called with an empty vector
 	if (asserts(!m_params.empty()))
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Internal: Tried to append to empty parameter"));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal: Tried to append to empty parameter"));
 
 	auto pair = m_params.back();
 	pair.second += " ";
@@ -210,7 +210,7 @@ std::string::const_iterator InterfaceHandler::parseDocTag(std::string::const_ite
 		else
 		{
 			// LTODO: Unknown tag, throw some form of warning and not just an exception
-			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Unknown tag encountered"));
+			BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("Unknown tag " + _tag + " encountered"));
 		}
 	}
 	else
@@ -234,7 +234,7 @@ std::string::const_iterator InterfaceHandler::appendDocTag(std::string::const_it
 		case DOCTAG_PARAM:
 			return appendDocTagParam(_pos, _end);
 		default:
-			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Internal: Illegal documentation tag"));
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal: Illegal documentation tag type"));
 			break;
 	}
 }
@@ -254,17 +254,15 @@ void InterfaceHandler::parseDocString(std::string const& _string)
 			// we found a tag
 			auto tagNameEndPos = std::find(tagPos, end, ' ');
 			if (tagNameEndPos == end)
-				BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("End of tag not found"));
+				BOOST_THROW_EXCEPTION(DocstringParsingError() <<
+									  errinfo_comment("End of tag " + std::string(tagPos, tagNameEndPos) + "not found"));
 
-			currPos = parseDocTag(tagNameEndPos + 1, end, std::string(tagPos +1, tagNameEndPos));
+			currPos = parseDocTag(tagNameEndPos + 1, end, std::string(tagPos + 1, tagNameEndPos));
 		}
 		else if (m_lastTag != DOCTAG_NONE) // continuation of the previous tag
 			currPos = appendDocTag(currPos + 1, end);
-		else // skip the line if a newline was found
-		{
-			if (currPos != end)
-				currPos = nlPos + 1;
-		}
+		else if (currPos != end) // skip the line if a newline was found
+			currPos = nlPos + 1;
 	}
 }
 
