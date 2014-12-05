@@ -12,19 +12,19 @@ namespace solidity
 
 InterfaceHandler::InterfaceHandler()
 {
-	m_lastTag = DOCTAG_NONE;
+	m_lastTag = DocTagType::NONE;
 }
 
 std::unique_ptr<std::string> InterfaceHandler::getDocumentation(std::shared_ptr<ContractDefinition> _contractDef,
-																enum DocumentationType _type)
+																DocumentationType _type)
 {
 	switch(_type)
 	{
-	case NATSPEC_USER:
+	case DocumentationType::NATSPEC_USER:
 		return getUserDocumentation(_contractDef);
-	case NATSPEC_DEV:
+	case DocumentationType::NATSPEC_DEV:
 		return getDevDocumentation(_contractDef);
-	case ABI_INTERFACE:
+	case DocumentationType::ABI_INTERFACE:
 		return getABIInterface(_contractDef);
 	}
 
@@ -146,7 +146,7 @@ static inline std::string::const_iterator skipLineOrEOS(std::string::const_itera
 std::string::const_iterator InterfaceHandler::parseDocTagLine(std::string::const_iterator _pos,
 															  std::string::const_iterator _end,
 															  std::string& _tagString,
-															  enum DocTagType _tagType)
+															  DocTagType _tagType)
 {
 	auto nlPos = std::find(_pos, _end, '\n');
 	std::copy(_pos, nlPos, back_inserter(_tagString));
@@ -170,7 +170,7 @@ std::string::const_iterator InterfaceHandler::parseDocTagParam(std::string::cons
 	auto paramDesc = std::string(currPos, nlPos);
 	m_params.push_back(std::make_pair(paramName, paramDesc));
 
-	m_lastTag = DOCTAG_PARAM;
+	m_lastTag = DocTagType::PARAM;
 	return skipLineOrEOS(nlPos, _end);
 }
 
@@ -197,14 +197,14 @@ std::string::const_iterator InterfaceHandler::parseDocTag(std::string::const_ite
 {
 	// LTODO: need to check for @(start of a tag) between here and the end of line
 	//      for all cases
-	if (m_lastTag == DOCTAG_NONE || _tag != "")
+	if (m_lastTag == DocTagType::NONE || _tag != "")
 	{
 		if (_tag == "dev")
-			return parseDocTagLine(_pos, _end, m_dev, DOCTAG_DEV);
+			return parseDocTagLine(_pos, _end, m_dev, DocTagType::DEV);
 		else if (_tag == "notice")
-			return parseDocTagLine(_pos, _end, m_notice, DOCTAG_NOTICE);
+			return parseDocTagLine(_pos, _end, m_notice, DocTagType::NOTICE);
 		else if (_tag == "return")
-			return parseDocTagLine(_pos, _end, m_return, DOCTAG_RETURN);
+			return parseDocTagLine(_pos, _end, m_return, DocTagType::RETURN);
 		else if (_tag == "param")
 			return parseDocTagParam(_pos, _end);
 		else
@@ -222,16 +222,16 @@ std::string::const_iterator InterfaceHandler::appendDocTag(std::string::const_it
 {
 	switch (m_lastTag)
 	{
-		case DOCTAG_DEV:
+		case DocTagType::DEV:
 			m_dev += " ";
-			return parseDocTagLine(_pos, _end, m_dev, DOCTAG_DEV);
-		case DOCTAG_NOTICE:
+			return parseDocTagLine(_pos, _end, m_dev, DocTagType::DEV);
+		case DocTagType::NOTICE:
 			m_notice += " ";
-			return parseDocTagLine(_pos, _end, m_notice, DOCTAG_NOTICE);
-		case DOCTAG_RETURN:
+			return parseDocTagLine(_pos, _end, m_notice, DocTagType::NOTICE);
+		case DocTagType::RETURN:
 			m_return += " ";
-			return parseDocTagLine(_pos, _end, m_return, DOCTAG_RETURN);
-		case DOCTAG_PARAM:
+			return parseDocTagLine(_pos, _end, m_return, DocTagType::RETURN);
+		case DocTagType::PARAM:
 			return appendDocTagParam(_pos, _end);
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal: Illegal documentation tag type"));
@@ -267,7 +267,7 @@ void InterfaceHandler::parseDocString(std::string const& _string)
 
 			currPos = parseDocTag(tagNameEndPos + 1, end, std::string(tagPos + 1, tagNameEndPos));
 		}
-		else if (m_lastTag != DOCTAG_NONE) // continuation of the previous tag
+		else if (m_lastTag != DocTagType::NONE) // continuation of the previous tag
 			currPos = appendDocTag(currPos + 1, end);
 		else if (currPos != end) // skip the line if a newline was found
 			currPos = nlPos + 1;
