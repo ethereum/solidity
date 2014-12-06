@@ -204,7 +204,7 @@ public:
 	Block& getBody() { return *m_body; }
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
-	ASTPointer<ASTString> const& getDocumentation() { return m_documentation; }
+	ASTPointer<ASTString> const& getDocumentation() const { return m_documentation; }
 
 	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
 	std::vector<VariableDeclaration const*> const& getLocalVariables() const { return m_localVariables; }

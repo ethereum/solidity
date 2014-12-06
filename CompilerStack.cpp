@@ -27,6 +27,7 @@
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/CompilerStack.h>
+#include <libsolidity/InterfaceHandler.h>
 
 using namespace std;
 
@@ -34,6 +35,8 @@ namespace dev
 {
 namespace solidity
 {
+
+CompilerStack::CompilerStack(): m_interfaceHandler(make_shared<InterfaceHandler>()) {}
 
 void CompilerStack::setSource(string const& _sourceCode)
 {
@@ -81,48 +84,31 @@ void CompilerStack::streamAssembly(ostream& _outStream)
 	m_compiler->streamAssembly(_outStream);
 }
 
-string const& CompilerStack::getInterface()
+std::string const& CompilerStack::getJsonDocumentation(DocumentationType _type)
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
-	if (m_interface.empty())
-	{
-		stringstream interface;
-		interface << '[';
-		vector<FunctionDefinition const*> exportedFunctions = m_contractASTNode->getInterfaceFunctions();
-		unsigned functionsCount = exportedFunctions.size();
-		for (FunctionDefinition const* f: exportedFunctions)
-		{
-			auto streamVariables = [&](vector<ASTPointer<VariableDeclaration>> const& _vars)
-			{
-				unsigned varCount = _vars.size();
-				for (ASTPointer<VariableDeclaration> const& var: _vars)
-				{
-					interface << "{"
-							  << "\"name\":" << escaped(var->getName(), false) << ","
-							  << "\"type\":" << escaped(var->getType()->toString(), false)
-							  << "}";
-					if (--varCount > 0)
-						interface << ",";
-				}
-			};
 
-			interface << '{'
-					  << "\"name\":" << escaped(f->getName(), false) << ","
-					  << "\"inputs\":[";
-			streamVariables(f->getParameters());
-			interface << "],"
-					  << "\"outputs\":[";
-			streamVariables(f->getReturnParameters());
-			interface << "]"
-					  << "}";
-			if (--functionsCount > 0)
-				interface << ",";
-		}
-		interface << ']';
-		m_interface = interface.str();
+	auto createDocIfNotThere = [this, _type](std::unique_ptr<string>& _doc)
+	{
+		if (!_doc)
+			_doc = m_interfaceHandler->getDocumentation(m_contractASTNode, _type);
+	};
+
+	switch (_type)
+	{
+	case DocumentationType::NATSPEC_USER:
+		createDocIfNotThere(m_userDocumentation);
+		return *m_userDocumentation;
+	case DocumentationType::NATSPEC_DEV:
+		createDocIfNotThere(m_devDocumentation);
+		return *m_devDocumentation;
+	case DocumentationType::ABI_INTERFACE:
+		createDocIfNotThere(m_interface);
+		return *m_interface;
 	}
-	return m_interface;
+
+	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 }
 
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
