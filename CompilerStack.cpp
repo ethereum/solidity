@@ -82,7 +82,7 @@ void CompilerStack::parse(string const& _sourceCode)
 	parse();
 }
 
-vector<string> CompilerStack::getContractNames()
+vector<string> CompilerStack::getContractNames() const
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
@@ -116,29 +116,29 @@ bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 	return getBytecode();
 }
 
-bytes const& CompilerStack::getBytecode(string const& _contractName)
+bytes const& CompilerStack::getBytecode(string const& _contractName) const
 {
 	return getContract(_contractName).bytecode;
 }
 
-void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName)
+void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName) const
 {
 	getContract(_contractName).compiler->streamAssembly(_outStream);
 }
 
-string const& CompilerStack::getInterface(std::string const& _contractName)
+string const& CompilerStack::getInterface(string const& _contractName) const
 {
 	return getJsonDocumentation(_contractName, DocumentationType::ABI_INTERFACE);
 }
 
-std::string const& CompilerStack::getJsonDocumentation(std::string const& _contractName, DocumentationType _type)
+string const& CompilerStack::getJsonDocumentation(string const& _contractName, DocumentationType _type) const
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	Contract& contract = getContract(_contractName);
+	Contract const& contract = getContract(_contractName);
 
-	std::unique_ptr<string>* doc;
+	std::unique_ptr<string const>* doc;
 	switch (_type)
 	{
 	case DocumentationType::NATSPEC_USER:
@@ -158,12 +158,12 @@ std::string const& CompilerStack::getJsonDocumentation(std::string const& _contr
 	return *(*doc);
 }
 
-Scanner const& CompilerStack::getScanner(string const& _sourceName)
+Scanner const& CompilerStack::getScanner(string const& _sourceName) const
 {
 	return *getSource(_sourceName).scanner;
 }
 
-SourceUnit& CompilerStack::getAST(string const& _sourceName)
+SourceUnit const& CompilerStack::getAST(string const& _sourceName) const
 {
 	return *getSource(_sourceName).ast;
 }
@@ -217,7 +217,7 @@ void CompilerStack::resolveImports()
 	swap(m_sourceOrder, sourceOrder);
 }
 
-CompilerStack::Contract& CompilerStack::getContract(string const& _contractName)
+CompilerStack::Contract const& CompilerStack::getContract(string const& _contractName) const
 {
 	if (m_contracts.empty())
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
@@ -229,7 +229,7 @@ CompilerStack::Contract& CompilerStack::getContract(string const& _contractName)
 	return it->second;
 }
 
-CompilerStack::Source& CompilerStack::getSource(string const& _sourceName)
+CompilerStack::Source const& CompilerStack::getSource(string const& _sourceName) const
 {
 	auto it = m_sources.find(_sourceName);
 	if (it == m_sources.end())

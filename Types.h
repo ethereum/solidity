@@ -279,7 +279,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override;
 
-	Location getLocation() const { return m_location; }
+	Location const& getLocation() const { return m_location; }
 
 private:
 	TypePointers m_parameterTypes;
