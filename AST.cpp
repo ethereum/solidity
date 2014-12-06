@@ -746,7 +746,7 @@ void Identifier::checkTypeRequirements()
 	if (asserts(m_referencedDeclaration))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier not resolved."));
 
-	VariableDeclaration* variable = dynamic_cast<VariableDeclaration*>(m_referencedDeclaration);
+	VariableDeclaration const* variable = dynamic_cast<VariableDeclaration const*>(m_referencedDeclaration);
 	if (variable)
 	{
 		if (!variable->getType())
@@ -756,29 +756,29 @@ void Identifier::checkTypeRequirements()
 		return;
 	}
 	//@todo can we unify these with TypeName::toType()?
-	StructDefinition* structDef = dynamic_cast<StructDefinition*>(m_referencedDeclaration);
+	StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(m_referencedDeclaration);
 	if (structDef)
 	{
 		// note that we do not have a struct type here
-		m_type = make_shared<TypeType>(make_shared<StructType>(*structDef));
+		m_type = make_shared<TypeType const>(make_shared<StructType const>(*structDef));
 		return;
 	}
-	FunctionDefinition* functionDef = dynamic_cast<FunctionDefinition*>(m_referencedDeclaration);
+	FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(m_referencedDeclaration);
 	if (functionDef)
 	{
 		// a function reference is not a TypeType, because calling a TypeType converts to the type.
 		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
 		// conversion.
-		m_type = make_shared<FunctionType>(*functionDef);
+		m_type = make_shared<FunctionType const>(*functionDef);
 		return;
 	}
-	ContractDefinition* contractDef = dynamic_cast<ContractDefinition*>(m_referencedDeclaration);
+	ContractDefinition const* contractDef = dynamic_cast<ContractDefinition const*>(m_referencedDeclaration);
 	if (contractDef)
 	{
-		m_type = make_shared<TypeType>(make_shared<ContractType>(*contractDef));
+		m_type = make_shared<TypeType const>(make_shared<ContractType>(*contractDef));
 		return;
 	}
-	MagicVariableDeclaration* magicVariable = dynamic_cast<MagicVariableDeclaration*>(m_referencedDeclaration);
+	MagicVariableDeclaration const* magicVariable = dynamic_cast<MagicVariableDeclaration const*>(m_referencedDeclaration);
 	if (magicVariable)
 	{
 		m_type = magicVariable->getType();
@@ -789,7 +789,7 @@ void Identifier::checkTypeRequirements()
 
 void ElementaryTypeNameExpression::checkTypeRequirements()
 {
-	m_type = make_shared<TypeType>(Type::fromElementaryTypeName(m_typeToken));
+	m_type = make_shared<TypeType const>(Type::fromElementaryTypeName(m_typeToken));
 }
 
 void Literal::checkTypeRequirements()

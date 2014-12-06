@@ -132,18 +132,18 @@ class Declaration: public ASTNode
 {
 public:
 	Declaration(Location const& _location, ASTPointer<ASTString> const& _name):
-		ASTNode(_location), m_name(_name) {}
+		ASTNode(_location), m_name(_name), m_scope(nullptr) {}
 
 	/// @returns the declared name.
 	ASTString const& getName() const { return *m_name; }
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
 	Declaration const* getScope() const { return m_scope; }
-	void setScope(Declaration* const& _scope) { m_scope = _scope; }
+	void setScope(Declaration const* _scope) { m_scope = _scope; }
 
 private:
 	ASTPointer<ASTString> m_name;
-	Declaration* m_scope;
+	Declaration const* m_scope;
 };
 
 /**
@@ -369,19 +369,19 @@ class UserDefinedTypeName: public TypeName
 {
 public:
 	UserDefinedTypeName(Location const& _location, ASTPointer<ASTString> const& _name):
-		TypeName(_location), m_name(_name) {}
+		TypeName(_location), m_name(_name), m_referencedDeclaration(nullptr) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual std::shared_ptr<Type const> toType() const override { return Type::fromUserDefinedTypeName(*this); }
 
 	ASTString const& getName() const { return *m_name; }
-	void setReferencedDeclaration(Declaration& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
+	void setReferencedDeclaration(Declaration const& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
 	Declaration const* getReferencedDeclaration() const { return m_referencedDeclaration; }
 
 private:
 	ASTPointer<ASTString> m_name;
 
-	Declaration* m_referencedDeclaration;
+	Declaration const* m_referencedDeclaration;
 };
 
 /**
@@ -517,7 +517,7 @@ class Return: public Statement
 {
 public:
 	Return(Location const& _location, ASTPointer<Expression> _expression):
-		Statement(_location), m_expression(_expression) {}
+		Statement(_location), m_expression(_expression), m_returnParameters(nullptr) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
@@ -791,21 +791,21 @@ class Identifier: public PrimaryExpression
 {
 public:
 	Identifier(Location const& _location, ASTPointer<ASTString> const& _name):
-		PrimaryExpression(_location), m_name(_name) {}
+		PrimaryExpression(_location), m_name(_name), m_referencedDeclaration(nullptr) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
 
 	ASTString const& getName() const { return *m_name; }
 
-	void setReferencedDeclaration(Declaration& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
+	void setReferencedDeclaration(Declaration const& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
 	Declaration const* getReferencedDeclaration() const { return m_referencedDeclaration; }
 
 private:
 	ASTPointer<ASTString> m_name;
 
 	/// Declaration the name refers to.
-	Declaration* m_referencedDeclaration;
+	Declaration const* m_referencedDeclaration;
 };
 
 /**

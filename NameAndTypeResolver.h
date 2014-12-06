@@ -41,23 +41,23 @@ namespace solidity
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
-	explicit NameAndTypeResolver(std::vector<Declaration*> const& _globals);
+	explicit NameAndTypeResolver(std::vector<Declaration const*> const& _globals);
 	/// Registers all declarations found in the source unit.
 	void registerDeclarations(SourceUnit& _sourceUnit);
 	/// Resolves all names and types referenced from the given contract.
 	void resolveNamesAndTypes(ContractDefinition& _contract);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations
 	/// that create their own scope.
-	void updateDeclaration(Declaration& _declaration);
+	void updateDeclaration(Declaration const& _declaration);
 
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
 	/// the global scope is used (i.e. the one containing only the contract).
 	/// @returns a pointer to the declaration on success or nullptr on failure.
-	Declaration* resolveName(ASTString const& _name, Declaration const* _scope = nullptr) const;
+	Declaration const* resolveName(ASTString const& _name, Declaration const* _scope = nullptr) const;
 
 	/// Resolves a name in the "current" scope. Should only be called during the initial
 	/// resolving phase.
-	Declaration* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
+	Declaration const* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
 private:
 	/// Throws if @a _struct contains a recursive loop. Note that recursion via mappings is fine.
@@ -91,12 +91,12 @@ private:
 	void endVisit(VariableDefinition& _variableDefinition);
 	bool visit(VariableDeclaration& _declaration);
 
-	void enterNewSubScope(Declaration& _declaration);
+	void enterNewSubScope(Declaration const& _declaration);
 	void closeCurrentScope();
 	void registerDeclaration(Declaration& _declaration, bool _opensScope);
 
 	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
-	Declaration* m_currentScope;
+	Declaration const* m_currentScope;
 	FunctionDefinition* m_currentFunction;
 };
 
