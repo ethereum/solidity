@@ -32,7 +32,7 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
-void ExpressionCompiler::compileExpression(CompilerContext& _context, Expression& _expression)
+void ExpressionCompiler::compileExpression(CompilerContext& _context, Expression const& _expression)
 {
 	ExpressionCompiler compiler(_context);
 	_expression.accept(compiler);
@@ -45,7 +45,7 @@ void ExpressionCompiler::appendTypeConversion(CompilerContext& _context,
 	compiler.appendTypeConversion(_typeOnStack, _targetType);
 }
 
-bool ExpressionCompiler::visit(Assignment& _assignment)
+bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	_assignment.getRightHandSide().accept(*this);
 	appendTypeConversion(*_assignment.getRightHandSide().getType(), *_assignment.getType());
@@ -67,7 +67,7 @@ bool ExpressionCompiler::visit(Assignment& _assignment)
 	return false;
 }
 
-void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
+void ExpressionCompiler::endVisit(UnaryOperation const& _unaryOperation)
 {
 	//@todo type checking and creating code for an operator should be in the same place:
 	// the operator should know how to convert itself and to which types it applies, so
@@ -128,10 +128,10 @@ void ExpressionCompiler::endVisit(UnaryOperation& _unaryOperation)
 	}
 }
 
-bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
+bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 {
-	Expression& leftExpression = _binaryOperation.getLeftExpression();
-	Expression& rightExpression = _binaryOperation.getRightExpression();
+	Expression const& leftExpression = _binaryOperation.getLeftExpression();
+	Expression const& rightExpression = _binaryOperation.getRightExpression();
 	Type const& commonType = _binaryOperation.getCommonType();
 	Token::Value const op = _binaryOperation.getOperator();
 
@@ -158,7 +158,7 @@ bool ExpressionCompiler::visit(BinaryOperation& _binaryOperation)
 	return false;
 }
 
-bool ExpressionCompiler::visit(FunctionCall& _functionCall)
+bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 {
 	using Location = FunctionType::Location;
 	if (_functionCall.isTypeConversion())
@@ -166,7 +166,7 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 		//@todo struct construction
 		if (asserts(_functionCall.getArguments().size() == 1))
 			BOOST_THROW_EXCEPTION(InternalCompilerError());
-		Expression& firstArgument = *_functionCall.getArguments().front();
+		Expression const& firstArgument = *_functionCall.getArguments().front();
 		firstArgument.accept(*this);
 		if (firstArgument.getType()->getCategory() == Type::Category::CONTRACT &&
 				_functionCall.getType()->getCategory() == Type::Category::INTEGER)
@@ -268,7 +268,7 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 	return false;
 }
 
-void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
+void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 {
 	ASTString const& member = _memberAccess.getMemberName();
 	switch (_memberAccess.getExpression().getType()->getCategory())
@@ -332,7 +332,7 @@ void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 	}
 }
 
-bool ExpressionCompiler::visit(IndexAccess& _indexAccess)
+bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 {
 	_indexAccess.getBaseExpression().accept(*this);
 	_indexAccess.getIndexExpression().accept(*this);
@@ -349,30 +349,30 @@ bool ExpressionCompiler::visit(IndexAccess& _indexAccess)
 	return false;
 }
 
-void ExpressionCompiler::endVisit(Identifier& _identifier)
+void ExpressionCompiler::endVisit(Identifier const& _identifier)
 {
-	Declaration* declaration = _identifier.getReferencedDeclaration();
-	if (MagicVariableDeclaration* magicVar = dynamic_cast<MagicVariableDeclaration*>(declaration))
+	Declaration const* declaration = _identifier.getReferencedDeclaration();
+	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
 		if (magicVar->getType()->getCategory() == Type::Category::CONTRACT) // must be "this"
 			m_context << eth::Instruction::ADDRESS;
 		return;
 	}
-	if (FunctionDefinition* functionDef = dynamic_cast<FunctionDefinition*>(declaration))
+	if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 	{
 		m_context << m_context.getFunctionEntryLabel(*functionDef).pushTag();
 		return;
 	}
-	if (/*VariableDeclaration* varDef = */dynamic_cast<VariableDeclaration*>(declaration))
+	if (dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		m_currentLValue.fromIdentifier(_identifier, *_identifier.getReferencedDeclaration());
+		m_currentLValue.fromIdentifier(_identifier, *declaration);
 		m_currentLValue.retrieveValueIfLValueNotRequested(_identifier);
 		return;
 	}
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier type not expected in expression context."));
 }
 
-void ExpressionCompiler::endVisit(Literal& _literal)
+void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	switch (_literal.getType()->getCategory())
 	{
@@ -385,7 +385,7 @@ void ExpressionCompiler::endVisit(Literal& _literal)
 	}
 }
 
-void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation& _binaryOperation)
+void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryOperation)
 {
 	Token::Value const op = _binaryOperation.getOperator();
 	if (asserts(op == Token::OR || op == Token::AND))

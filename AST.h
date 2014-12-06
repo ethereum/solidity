@@ -245,10 +245,10 @@ public:
 	bool isPublic() const { return m_isPublic; }
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
-	ParameterList& getParameterList() { return *m_parameters; }
+	ParameterList const& getParameterList() const { return *m_parameters; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getReturnParameters() const { return m_returnParameters->getParameters(); }
 	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
-	Block& getBody() { return *m_body; }
+	Block const& getBody() const { return *m_body; }
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
 	ASTPointer<ASTString> const& getDocumentation() const { return m_documentation; }
@@ -796,7 +796,7 @@ public:
 	ASTString const& getName() const { return *m_name; }
 
 	void setReferencedDeclaration(Declaration& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
-	Declaration* getReferencedDeclaration() { return m_referencedDeclaration; }
+	Declaration const* getReferencedDeclaration() const { return m_referencedDeclaration; }
 
 private:
 	ASTPointer<ASTString> m_name;
