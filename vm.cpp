@@ -488,6 +488,26 @@ BOOST_AUTO_TEST_CASE(vmLogTest)
 	dev::test::executeTests("vmLogTest", "/VMTests", dev::test::doVMTests);
 }
 
+BOOST_AUTO_TEST_CASE(vmPerformanceTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--performance")
+			dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(vmArithPerformanceTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--performance")
+			dev::test::executeTests("vmArithPerformanceTest", "/VMTests", dev::test::doVMTests);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(vmRandom)
 {
 	string testPath = getTestPath();
