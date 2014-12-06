@@ -60,8 +60,6 @@ public:
 	Declaration const* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
 private:
-	/// Throws if @a _struct contains a recursive loop. Note that recursion via mappings is fine.
-	void checkForRecursion(StructDefinition const& _struct);
 	void reset();
 
 	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
