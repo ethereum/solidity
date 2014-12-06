@@ -40,7 +40,20 @@ void SourceUnit::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
+void SourceUnit::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+		listAccept(m_nodes, _visitor);
+	_visitor.endVisit(*this);
+}
+
 void ImportDirective::accept(ASTVisitor& _visitor)
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
+void ImportDirective::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -57,7 +70,7 @@ void ContractDefinition::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void ContractDefinition::accept(ASTVisitor& _visitor) const
+void ContractDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -75,14 +88,14 @@ void StructDefinition::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void StructDefinition::accept(ASTVisitor& _visitor) const
+void StructDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 		listAccept(m_members, _visitor);
 	_visitor.endVisit(*this);
 }
 
-void StructDefinition::checkValidityOfMembers()
+void StructDefinition::checkValidityOfMembers() const
 {
 	checkMemberTypes();
 	checkRecursion();
@@ -95,7 +108,7 @@ void ParameterList::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void ParameterList::accept(ASTVisitor& _visitor) const
+void ParameterList::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 		listAccept(m_parameters, _visitor);
@@ -114,7 +127,7 @@ void FunctionDefinition::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void FunctionDefinition::accept(ASTVisitor& _visitor) const
+void FunctionDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -134,7 +147,7 @@ void VariableDeclaration::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void VariableDeclaration::accept(ASTVisitor& _visitor) const
+void VariableDeclaration::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 		if (m_typeName)
@@ -148,7 +161,7 @@ void TypeName::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void TypeName::accept(ASTVisitor& _visitor) const
+void TypeName::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -160,7 +173,7 @@ void ElementaryTypeName::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void ElementaryTypeName::accept(ASTVisitor& _visitor) const
+void ElementaryTypeName::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -172,7 +185,7 @@ void UserDefinedTypeName::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void UserDefinedTypeName::accept(ASTVisitor& _visitor) const
+void UserDefinedTypeName::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -188,7 +201,7 @@ void Mapping::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void Mapping::accept(ASTVisitor& _visitor) const
+void Mapping::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -205,7 +218,7 @@ void Block::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void Block::accept(ASTVisitor& _visitor) const
+void Block::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 		listAccept(m_statements, _visitor);
@@ -224,7 +237,7 @@ void IfStatement::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void IfStatement::accept(ASTVisitor& _visitor) const
+void IfStatement::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -246,7 +259,7 @@ void WhileStatement::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void WhileStatement::accept(ASTVisitor& _visitor) const
+void WhileStatement::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -262,7 +275,7 @@ void Continue::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void Continue::accept(ASTVisitor& _visitor) const
+void Continue::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -274,7 +287,7 @@ void Break::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void Break::accept(ASTVisitor& _visitor) const
+void Break::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -288,7 +301,7 @@ void Return::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void Return::accept(ASTVisitor& _visitor) const
+void Return::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 		if (m_expression)
@@ -304,7 +317,7 @@ void ExpressionStatement::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void ExpressionStatement::accept(ASTVisitor& _visitor) const
+void ExpressionStatement::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 		if (m_expression)
@@ -323,7 +336,7 @@ void VariableDefinition::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void VariableDefinition::accept(ASTVisitor& _visitor) const
+void VariableDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -344,7 +357,7 @@ void Assignment::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void Assignment::accept(ASTVisitor& _visitor) const
+void Assignment::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -361,7 +374,7 @@ void UnaryOperation::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void UnaryOperation::accept(ASTVisitor& _visitor) const
+void UnaryOperation::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 		m_subExpression->accept(_visitor);
@@ -378,7 +391,7 @@ void BinaryOperation::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void BinaryOperation::accept(ASTVisitor& _visitor) const
+void BinaryOperation::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -398,7 +411,7 @@ void FunctionCall::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void FunctionCall::accept(ASTVisitor& _visitor) const
+void FunctionCall::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -415,7 +428,7 @@ void MemberAccess::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void MemberAccess::accept(ASTVisitor& _visitor) const
+void MemberAccess::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 		m_expression->accept(_visitor);
@@ -432,7 +445,7 @@ void IndexAccess::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void IndexAccess::accept(ASTVisitor& _visitor) const
+void IndexAccess::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
@@ -448,7 +461,7 @@ void Identifier::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void Identifier::accept(ASTVisitor& _visitor) const
+void Identifier::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -460,7 +473,7 @@ void ElementaryTypeNameExpression::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void ElementaryTypeNameExpression::accept(ASTVisitor& _visitor) const
+void ElementaryTypeNameExpression::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -472,7 +485,7 @@ void Literal::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
-void Literal::accept(ASTVisitor& _visitor) const
+void Literal::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
@@ -498,14 +511,14 @@ vector<FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() co
 	return exportedFunctions;
 }
 
-void StructDefinition::checkMemberTypes()
+void StructDefinition::checkMemberTypes() const
 {
 	for (ASTPointer<VariableDeclaration> const& member: getMembers())
 		if (!member->getType()->canBeStored())
 			BOOST_THROW_EXCEPTION(member->createTypeError("Type cannot be used in struct."));
 }
 
-void StructDefinition::checkRecursion()
+void StructDefinition::checkRecursion() const
 {
 	set<StructDefinition const*> definitionsSeen;
 	vector<StructDefinition const*> queue = {this};
@@ -520,7 +533,7 @@ void StructDefinition::checkRecursion()
 		for (ASTPointer<VariableDeclaration> const& member: def->getMembers())
 			if (member->getType()->getCategory() == Type::Category::STRUCT)
 			{
-				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName&>(*member->getTypeName());
+				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->getTypeName());
 				queue.push_back(&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()));
 			}
 	}

@@ -292,7 +292,7 @@ bool Compiler::visit(Break const&)
 bool Compiler::visit(Return const& _return)
 {
 	//@todo modifications are needed to make this work with functions returning multiple values
-	if (Expression* expression = _return.getExpression())
+	if (Expression const* expression = _return.getExpression())
 	{
 		ExpressionCompiler::compileExpression(m_context, *expression);
 		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters().getParameters().front();
@@ -307,7 +307,7 @@ bool Compiler::visit(Return const& _return)
 
 bool Compiler::visit(VariableDefinition const& _variableDefinition)
 {
-	if (Expression* expression = _variableDefinition.getExpression())
+	if (Expression const* expression = _variableDefinition.getExpression())
 	{
 		ExpressionCompiler::compileExpression(m_context, *expression);
 		ExpressionCompiler::appendTypeConversion(m_context,
@@ -322,7 +322,7 @@ bool Compiler::visit(VariableDefinition const& _variableDefinition)
 
 bool Compiler::visit(ExpressionStatement const& _expressionStatement)
 {
-	Expression& expression = _expressionStatement.getExpression();
+	Expression const& expression = _expressionStatement.getExpression();
 	ExpressionCompiler::compileExpression(m_context, expression);
 //	Type::Category category = expression.getType()->getCategory();
 	for (unsigned i = 0; i < expression.getType()->getSizeOnStack(); ++i)

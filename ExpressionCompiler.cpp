@@ -181,7 +181,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	else
 	{
 		FunctionType const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType());
-		std::vector<ASTPointer<Expression>> const& arguments = _functionCall.getArguments();
+		std::vector<ASTPointer<Expression const>> arguments = _functionCall.getArguments();
 		if (asserts(arguments.size() == function.getParameterTypes().size()))
 			BOOST_THROW_EXCEPTION(InternalCompilerError());
 

@@ -40,7 +40,7 @@ class IntegerType; // forward
  * of EVM instructions. It needs a compiler context that is the same for the whole compilation
  * unit.
  */
-class ExpressionCompiler: private ASTVisitor
+class ExpressionCompiler: private ASTConstVisitor
 {
 public:
 	/// Compile the given @a _expression into the @a _context.

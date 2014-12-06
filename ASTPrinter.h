@@ -33,7 +33,7 @@ namespace solidity
 /**
  * Pretty-printer for the abstract syntax tree (the "pretty" is arguable) for debugging purposes.
  */
-class ASTPrinter: public ASTVisitor
+class ASTPrinter: public ASTConstVisitor
 {
 public:
 	/// Create a printer for the given abstract syntax tree. If the source is specified,

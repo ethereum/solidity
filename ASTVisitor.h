@@ -75,40 +75,6 @@ public:
 	virtual bool visit(ElementaryTypeNameExpression&) { return true; }
 	virtual bool visit(Literal&) { return true; }
 
-	virtual bool visit(ASTNode const&) { return true; }
-	virtual bool visit(SourceUnit const&) { return true; }
-	virtual bool visit(ImportDirective const&) { return true; }
-	virtual bool visit(ContractDefinition const&) { return true; }
-	virtual bool visit(StructDefinition const&) { return true; }
-	virtual bool visit(ParameterList const&) { return true; }
-	virtual bool visit(FunctionDefinition const&) { return true; }
-	virtual bool visit(VariableDeclaration const&) { return true; }
-	virtual bool visit(TypeName const&) { return true; }
-	virtual bool visit(ElementaryTypeName const&) { return true; }
-	virtual bool visit(UserDefinedTypeName const&) { return true; }
-	virtual bool visit(Mapping const&) { return true; }
-	virtual bool visit(Statement const&) { return true; }
-	virtual bool visit(Block const&) { return true; }
-	virtual bool visit(IfStatement const&) { return true; }
-	virtual bool visit(BreakableStatement const&) { return true; }
-	virtual bool visit(WhileStatement const&) { return true; }
-	virtual bool visit(Continue const&) { return true; }
-	virtual bool visit(Break const&) { return true; }
-	virtual bool visit(Return const&) { return true; }
-	virtual bool visit(VariableDefinition const&) { return true; }
-	virtual bool visit(ExpressionStatement const&) { return true; }
-	virtual bool visit(Expression const&) { return true; }
-	virtual bool visit(Assignment const&) { return true; }
-	virtual bool visit(UnaryOperation const&) { return true; }
-	virtual bool visit(BinaryOperation const&) { return true; }
-	virtual bool visit(FunctionCall const&) { return true; }
-	virtual bool visit(MemberAccess const&) { return true; }
-	virtual bool visit(IndexAccess const&) { return true; }
-	virtual bool visit(PrimaryExpression const&) { return true; }
-	virtual bool visit(Identifier const&) { return true; }
-	virtual bool visit(ElementaryTypeNameExpression const&) { return true; }
-	virtual bool visit(Literal const&) { return true; }
-
 	virtual void endVisit(ASTNode&) { }
 	virtual void endVisit(SourceUnit&) { }
 	virtual void endVisit(ImportDirective&) { }
@@ -142,6 +108,44 @@ public:
 	virtual void endVisit(Identifier&) { }
 	virtual void endVisit(ElementaryTypeNameExpression&) { }
 	virtual void endVisit(Literal&) { }
+};
+
+class ASTConstVisitor
+{
+public:
+	virtual bool visit(ASTNode const&) { return true; }
+	virtual bool visit(SourceUnit const&) { return true; }
+	virtual bool visit(ImportDirective const&) { return true; }
+	virtual bool visit(ContractDefinition const&) { return true; }
+	virtual bool visit(StructDefinition const&) { return true; }
+	virtual bool visit(ParameterList const&) { return true; }
+	virtual bool visit(FunctionDefinition const&) { return true; }
+	virtual bool visit(VariableDeclaration const&) { return true; }
+	virtual bool visit(TypeName const&) { return true; }
+	virtual bool visit(ElementaryTypeName const&) { return true; }
+	virtual bool visit(UserDefinedTypeName const&) { return true; }
+	virtual bool visit(Mapping const&) { return true; }
+	virtual bool visit(Statement const&) { return true; }
+	virtual bool visit(Block const&) { return true; }
+	virtual bool visit(IfStatement const&) { return true; }
+	virtual bool visit(BreakableStatement const&) { return true; }
+	virtual bool visit(WhileStatement const&) { return true; }
+	virtual bool visit(Continue const&) { return true; }
+	virtual bool visit(Break const&) { return true; }
+	virtual bool visit(Return const&) { return true; }
+	virtual bool visit(VariableDefinition const&) { return true; }
+	virtual bool visit(ExpressionStatement const&) { return true; }
+	virtual bool visit(Expression const&) { return true; }
+	virtual bool visit(Assignment const&) { return true; }
+	virtual bool visit(UnaryOperation const&) { return true; }
+	virtual bool visit(BinaryOperation const&) { return true; }
+	virtual bool visit(FunctionCall const&) { return true; }
+	virtual bool visit(MemberAccess const&) { return true; }
+	virtual bool visit(IndexAccess const&) { return true; }
+	virtual bool visit(PrimaryExpression const&) { return true; }
+	virtual bool visit(Identifier const&) { return true; }
+	virtual bool visit(ElementaryTypeNameExpression const&) { return true; }
+	virtual bool visit(Literal const&) { return true; }
 
 	virtual void endVisit(ASTNode const&) { }
 	virtual void endVisit(SourceUnit const&) { }

@@ -27,7 +27,7 @@
 namespace dev {
 namespace solidity {
 
-class Compiler: private ASTVisitor
+class Compiler: private ASTConstVisitor
 {
 public:
 	Compiler(): m_returnTag(m_context.newTag()) {}
