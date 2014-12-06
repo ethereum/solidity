@@ -135,7 +135,9 @@ int main(int argc, char** argv)
 	cout << "Opcodes:" << endl;
 	cout << eth::disassemble(compiler.getBytecode()) << endl;
 	cout << "Binary: " << toHex(compiler.getBytecode()) << endl;
-	cout << "Interface specification: " << compiler.getInterface() << endl;
+	cout << "Interface specification: " << compiler.getJsonDocumentation(DocumentationType::ABI_INTERFACE) << endl;
+	cout << "Natspec user documentation: " << compiler.getJsonDocumentation(DocumentationType::NATSPEC_USER) << endl;
+	cout << "Natspec developer documentation: " << compiler.getJsonDocumentation(DocumentationType::NATSPEC_DEV) << endl;
 
 	return 0;
 }
