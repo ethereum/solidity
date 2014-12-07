@@ -6,6 +6,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 aux_source_directory(. SRC_LIST)
 
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${JSONCPP_INCLUDE_DIRS})
 include_directories(..)
 
 set(EXECUTABLE solidity)
@@ -17,11 +18,9 @@ else()
 	add_library(${EXECUTABLE} SHARED ${SRC_LIST} ${HEADERS})
 endif()
 
-target_link_libraries(${EXECUTABLE} evmcore devcore)
-# TODO: Temporary until PR 532 https://github.com/ethereum/cpp-ethereum/pull/532
-# gets accepted. Then we can simply add jsoncpp as a dependency and not the
-# whole of JSONRPC as we are doing right here
-target_link_libraries(${EXECUTABLE} ${JSONRPC_LS})
+target_link_libraries(${EXECUTABLE} evmcore)
+target_link_libraries(${EXECUTABLE} devcore)
+target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
 
 install( TARGETS ${EXECUTABLE} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
