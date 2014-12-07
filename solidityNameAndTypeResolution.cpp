@@ -46,9 +46,7 @@ void parseTextAndResolveNames(std::string const& _source)
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
 			resolver.resolveNamesAndTypes(*contract);
-		}
 }
 }
 
