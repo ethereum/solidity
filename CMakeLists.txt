@@ -3,16 +3,12 @@ set(CMAKE_AUTOMOC OFF)
 
 aux_source_directory(. SRC_LIST)
 
-include_directories(${Boost_INCLUDE_DIRS})
 include_directories(..)
 
 set(EXECUTABLE lllc)
 
-if(ETH_STATIC)
-	add_library(${EXECUTABLE} STATIC ${SRC_LIST} ${HEADERS})
-else()
-	add_library(${EXECUTABLE} SHARED ${SRC_LIST} ${HEADERS})
-endif()
+file(GLOB HEADERS "*.h")
+add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 add_dependencies(${EXECUTABLE} BuildInfo.h)
 
