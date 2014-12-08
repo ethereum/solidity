@@ -195,13 +195,9 @@ bool Compiler::visit(FunctionDefinition& _function)
 	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
 	// reserve additional slots: [retarg0] ... [retargm] [localvar0] ... [localvarp]
 
-	unsigned const numArguments = _function.getParameters().size();
-	unsigned const numReturnValues = _function.getReturnParameters().size();
-	unsigned const numLocalVariables = _function.getLocalVariables().size();
-
-	for (ASTPointer<VariableDeclaration> const& variable: _function.getParameters())
+	for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
 		m_context.addVariable(*variable);
-	for (ASTPointer<VariableDeclaration> const& variable: _function.getReturnParameters())
+	for (ASTPointer<VariableDeclaration const> const& variable: _function.getReturnParameters())
 		m_context.addAndInitializeVariable(*variable);
 	for (VariableDeclaration const* localVariable: _function.getLocalVariables())
 		m_context.addAndInitializeVariable(*localVariable);
@@ -216,12 +212,22 @@ bool Compiler::visit(FunctionDefinition& _function)
 	// Note that the fact that the return arguments are of increasing index is vital for this
 	// algorithm to work.
 
+	unsigned argumentsSize = 0;
+	for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
+		argumentsSize += variable->getType()->getSizeOnStack();
+	unsigned returnValuesSize = 0;
+	for (ASTPointer<VariableDeclaration const> const& variable: _function.getReturnParameters())
+		returnValuesSize += variable->getType()->getSizeOnStack();
+	unsigned localVariablesSize = 0;
+	for (VariableDeclaration const* localVariable: _function.getLocalVariables())
+		localVariablesSize += localVariable->getType()->getSizeOnStack();
+
 	vector<int> stackLayout;
-	stackLayout.push_back(numReturnValues); // target of return address
-	stackLayout += vector<int>(numArguments, -1); // discard all arguments
-	for (unsigned i = 0; i < numReturnValues; ++i)
+	stackLayout.push_back(returnValuesSize); // target of return address
+	stackLayout += vector<int>(argumentsSize, -1); // discard all arguments
+	for (unsigned i = 0; i < returnValuesSize; ++i)
 		stackLayout.push_back(i);
-	stackLayout += vector<int>(numLocalVariables, -1);
+	stackLayout += vector<int>(localVariablesSize, -1);
 
 	while (stackLayout.back() != int(stackLayout.size() - 1))
 		if (stackLayout.back() < 0)
