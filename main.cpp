@@ -53,23 +53,28 @@ void version()
 	exit(0);
 }
 
-enum class AstOutput
+enum class OutputType
 {
 	STDOUT,
 	FILE,
 	BOTH
 };
 
-std::istream& operator>>(std::istream& _in, AstOutput& io_output)
+#define outputTypeStr "Legal values:\n"\
+	 "\tstdout: Print it to standard output\n"\
+	 "\tfile: Print it to a file with same name\n"\
+	"\tboth: Print both to a file and the stdout\n"
+
+std::istream& operator>>(std::istream& _in, OutputType& io_output)
 {
 	std::string token;
 	_in >> token;
 	if (token == "stdout")
-		io_output = AstOutput::STDOUT;
+		io_output = OutputType::STDOUT;
 	else if (token == "file")
-		io_output = AstOutput::FILE;
+		io_output = OutputType::FILE;
 	else if (token == "both")
-		io_output = AstOutput::BOTH;
+		io_output = OutputType::BOTH;
 	else
 		throw boost::program_options::invalid_option_value(token);
 	return _in;
@@ -84,10 +89,10 @@ int main(int argc, char** argv)
 	("version", "Show version and exit")
 	("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
 	("input-file", po::value<vector<string>>(), "input file")
-	("ast", po::value<AstOutput>(),
-	 "Request to output the AST of the contract. Legal values:\n"
-	 "\tstdout: Print it to standar output\n"
-	 "\tfile: Print it to a file with same name\n");
+	("ast", po::value<OutputType>(),
+	 "Request to output the AST of the contract. " outputTypeStr)
+	("asm", po::value<OutputType>(),
+	 "Request to output the EVM assembly of the contract. "  outputTypeStr);
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description p;
@@ -176,8 +181,8 @@ int main(int argc, char** argv)
 	// do we need AST output?
 	if (vm.count("ast"))
 	{
-		auto choice = vm["ast"].as<AstOutput>();
-		if (choice != AstOutput::FILE)
+		auto choice = vm["ast"].as<OutputType>();
+		if (choice != OutputType::FILE)
 		{
 			cout << "Syntax trees:" << endl << endl;
 			for (auto const& sourceCode: sourceCodes)
@@ -188,7 +193,7 @@ int main(int argc, char** argv)
 			}
 		}
 
-		if (choice != AstOutput::STDOUT)
+		if (choice != OutputType::STDOUT)
 		{
 			for (auto const& sourceCode: sourceCodes)
 			{
@@ -201,14 +206,33 @@ int main(int argc, char** argv)
 		}
 	}
 
-
 	vector<string> contracts = compiler.getContractNames();
+	// do we need EVM assembly?
+	if (vm.count("asm"))
+	{
+		auto choice = vm["asm"].as<OutputType>();
+		for (string const& contract: contracts)
+		{
+			if (choice != OutputType::FILE)
+			{
+				cout << endl << "======= " << contract << " =======" << endl
+					 << "EVM assembly:" << endl;
+				compiler.streamAssembly(cout, contract);
+			}
+
+			if (choice != OutputType::STDOUT)
+			{
+				ofstream outFile(contract + ".evm");
+				compiler.streamAssembly(outFile, contract);
+				outFile.close();
+			}
+		}
+	}
+
+
 	cout << endl << "Contracts:" << endl;
 	for (string const& contract: contracts)
 	{
-		cout << endl << "======= " << contract << " =======" << endl
-			 << "EVM assembly:" << endl;
-		compiler.streamAssembly(cout, contract);
 		cout << "Opcodes:" << endl
 			 << eth::disassemble(compiler.getBytecode(contract)) << endl
 			 << "Binary: " << toHex(compiler.getBytecode(contract)) << endl
