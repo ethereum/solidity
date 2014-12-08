@@ -23,6 +23,9 @@
 #include <string>
 #include <iostream>
 
+#include <boost/program_options.hpp>
+
+#include "BuildInfo.h"
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
@@ -38,43 +41,45 @@
 using namespace std;
 using namespace dev;
 using namespace solidity;
-
-void help()
-{
-	cout << "Usage solc [OPTIONS] <file>" << endl
-		 << "Options:" << endl
-		 << "    -o,--optimize Optimize the bytecode for size." << endl
-		 << "    -h,--help     Show this help message and exit." << endl
-		 << "    -V,--version  Show the version and exit." << endl;
-	exit(0);
-}
+namespace po = boost::program_options;
 
 void version()
 {
 	cout << "solc, the solidity complier commandline interface " << dev::Version << endl
-		 << "  by Christian <c@ethdev.com>, (c) 2014." << endl
+		 << "  by Christian <c@ethdev.com> and Lefteris <lefteris@ethdev.com>, (c) 2014." << endl
 		 << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
 }
 
 int main(int argc, char** argv)
 {
-	vector<string> infiles;
-	bool optimize = false;
-	for (int i = 1; i < argc; ++i)
-	{
-		string arg = argv[i];
-		if (arg == "-o" || arg == "--optimize")
-			optimize = true;
-		else if (arg == "-h" || arg == "--help")
-			help();
-		else if (arg == "-V" || arg == "--version")
-			version();
-		else
-			infiles.push_back(argv[i]);
+	// Declare the supported options.
+	po::options_description desc("Allowed options");
+	desc.add_options()
+	("help", "Show help message and exit")
+	("version", "Show version and exit")
+	("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
+	("input-file", po::value<vector<string>>(), "input file");
+
+	// All positional options should be interpreted as input files
+	po::positional_options_description p;
+	p.add("input-file", -1);
+
+	po::variables_map vm;
+	po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+	po::notify(vm);
+
+	if (vm.count("help")) {
+		cout << desc;
+		return 0;
+	}
+
+	if (vm.count("version")) {
+		version();
+		return 0;
 	}
 	map<string, string> sourceCodes;
-	if (infiles.empty())
+	if (!vm.count("input-file"))
 	{
 		string s;
 		while (!cin.eof())
@@ -84,7 +89,7 @@ int main(int argc, char** argv)
 		}
 	}
 	else
-		for (string const& infile: infiles)
+		for (string const& infile: vm["input-file"].as<vector<string>>())
 			sourceCodes[infile] = asString(dev::contents(infile));
 
 	CompilerStack compiler;
@@ -92,7 +97,7 @@ int main(int argc, char** argv)
 	{
 		for (auto const& sourceCode: sourceCodes)
 			compiler.addSource(sourceCode.first, sourceCode.second);
-		compiler.compile(optimize);
+		compiler.compile( vm["optimize"].as<bool>());
 	}
 	catch (ParserError const& exception)
 	{
