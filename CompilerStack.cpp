@@ -131,7 +131,7 @@ string const& CompilerStack::getInterface(std::string const& _contractName)
 	return getJsonDocumentation(_contractName, ABI_INTERFACE);
 }
 
-std::string const& CompilerStack::getJsonDocumentation(std::string const& _contractName, enum DocumentationType _type)
+std::string const& CompilerStack::getJsonDocumentation(std::string const& _contractName, DocumentationType _type)
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
@@ -141,13 +141,13 @@ std::string const& CompilerStack::getJsonDocumentation(std::string const& _contr
 	std::unique_ptr<string>* doc;
 	switch (_type)
 	{
-	case NATSPEC_USER:
+	case DocumentationType::NATSPEC_USER:
 		doc = &contract.userDocumentation;
 		break;
-	case NATSPEC_DEV:
+	case DocumentationType::NATSPEC_DEV:
 		doc = &contract.devDocumentation;
 		break;
-	case ABI_INTERFACE:
+	case DocumentationType::ABI_INTERFACE:
 		doc = &contract.interface;
 		break;
 	default:
