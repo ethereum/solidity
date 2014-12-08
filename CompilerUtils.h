@@ -39,9 +39,23 @@ public:
 	void moveToStackVariable(VariableDeclaration const& _variable);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);
+
+	template <class T>
+	static unsigned getSizeOnStack(std::vector<T> const& _variables);
+	static unsigned getSizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
+
 private:
 	CompilerContext& m_context;
 };
+
+template <class T>
+unsigned CompilerUtils::getSizeOnStack(std::vector<T> const& _variables)
+{
+	unsigned size = 0;
+	for (T const& variable: _variables)
+		size += variable->getType()->getSizeOnStack();
+	return size;
+}
 
 }
 }

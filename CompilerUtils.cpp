@@ -35,6 +35,9 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 {
 	unsigned const stackPosition = m_context.baseToCurrentStackOffset(m_context.getBaseStackOffsetOfVariable(_variable));
 	unsigned const size = _variable.getType()->getSizeOnStack();
+	if (stackPosition - size + 1 > 16)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_variable.getLocation())
+											  << errinfo_comment("Stack too deep."));
 	for (unsigned i = 0; i < size; ++i)
 		m_context << eth::swapInstruction(stackPosition - size + 1) << eth::Instruction::POP;
 }
@@ -44,6 +47,14 @@ void CompilerUtils::popStackElement(Type const& _type)
 	unsigned const size = _type.getSizeOnStack();
 	for (unsigned i = 0; i < size; ++i)
 		m_context << eth::Instruction::POP;
+}
+
+unsigned CompilerUtils::getSizeOnStack(vector<shared_ptr<Type const>> const& _variableTypes)
+{
+	unsigned size = 0;
+	for (shared_ptr<Type const> const& type: _variableTypes)
+		size += type->getSizeOnStack();
+	return size;
 }
 
 }

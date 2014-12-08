@@ -213,15 +213,9 @@ bool Compiler::visit(FunctionDefinition& _function)
 	// Note that the fact that the return arguments are of increasing index is vital for this
 	// algorithm to work.
 
-	unsigned argumentsSize = 0;
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
-		argumentsSize += variable->getType()->getSizeOnStack();
-	unsigned returnValuesSize = 0;
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.getReturnParameters())
-		returnValuesSize += variable->getType()->getSizeOnStack();
-	unsigned localVariablesSize = 0;
-	for (VariableDeclaration const* localVariable: _function.getLocalVariables())
-		localVariablesSize += localVariable->getType()->getSizeOnStack();
+	unsigned const argumentsSize = CompilerUtils::getSizeOnStack(_function.getParameters());
+	unsigned const returnValuesSize = CompilerUtils::getSizeOnStack(_function.getReturnParameters());
+	unsigned const localVariablesSize = CompilerUtils::getSizeOnStack(_function.getLocalVariables());
 
 	vector<int> stackLayout;
 	stackLayout.push_back(returnValuesSize); // target of return address

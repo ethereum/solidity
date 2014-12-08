@@ -93,8 +93,7 @@ private:
 		enum LValueType { NONE, STACK, MEMORY, STORAGE };
 
 		explicit LValue(CompilerContext& _compilerContext): m_context(&_compilerContext) { reset(); }
-		LValue(CompilerContext& _compilerContext, LValueType _type, unsigned _baseStackOffset = 0):
-			m_context(&_compilerContext), m_type(_type), m_baseStackOffset(_baseStackOffset) {}
+		LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType, unsigned _baseStackOffset = 0);
 
 		/// Set type according to the declaration and retrieve the reference.
 		/// @a _expression is the current expression
@@ -129,6 +128,8 @@ private:
 		/// If m_type is STACK, this is base stack offset (@see
 		/// CompilerContext::getBaseStackOffsetOfVariable) of a local variable.
 		unsigned m_baseStackOffset;
+		/// Size of the value of this lvalue on the stack.
+		unsigned m_stackSize;
 	};
 
 	CompilerContext& m_context;
