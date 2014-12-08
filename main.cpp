@@ -92,7 +92,11 @@ int main(int argc, char** argv)
 	("ast", po::value<OutputType>(),
 	 "Request to output the AST of the contract. " outputTypeStr)
 	("asm", po::value<OutputType>(),
-	 "Request to output the EVM assembly of the contract. "  outputTypeStr);
+	 "Request to output the EVM assembly of the contract. "  outputTypeStr)
+	("opcodes", po::value<OutputType>(),
+	 "Request to output the Opcodes of the contract. "  outputTypeStr)
+	("binary", po::value<OutputType>(),
+	 "Request to output the contract in binary (hexadecimal). "  outputTypeStr);
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description p;
@@ -207,16 +211,17 @@ int main(int argc, char** argv)
 	}
 
 	vector<string> contracts = compiler.getContractNames();
-	// do we need EVM assembly?
-	if (vm.count("asm"))
+	for (string const& contract: contracts)
 	{
-		auto choice = vm["asm"].as<OutputType>();
-		for (string const& contract: contracts)
+		cout << endl << "======= " << contract << " =======" << endl;
+
+		// do we need EVM assembly?
+		if (vm.count("asm"))
 		{
+			auto choice = vm["asm"].as<OutputType>();
 			if (choice != OutputType::FILE)
 			{
-				cout << endl << "======= " << contract << " =======" << endl
-					 << "EVM assembly:" << endl;
+				cout << "EVM assembly:" << endl;
 				compiler.streamAssembly(cout, contract);
 			}
 
@@ -227,16 +232,49 @@ int main(int argc, char** argv)
 				outFile.close();
 			}
 		}
-	}
 
+		// do we need opcodes?
+		if (vm.count("opcodes"))
+		{
+			auto choice = vm["opcodes"].as<OutputType>();
+			if (choice != OutputType::FILE)
+			{
+				cout << "Opcodes:" << endl;
+				cout << eth::disassemble(compiler.getBytecode(contract)) << endl;
+			}
+
+			if (choice != OutputType::STDOUT)
+			{
+				ofstream outFile(contract + ".opcodes");
+				outFile << eth::disassemble(compiler.getBytecode(contract));
+				outFile.close();
+			}
+		}
+
+		// do we need binary?
+		if (vm.count("binary"))
+		{
+			auto choice = vm["binary"].as<OutputType>();
+			if (choice != OutputType::FILE)
+			{
+				cout << "Binary:" << endl;
+				cout << toHex(compiler.getBytecode(contract)) << endl;
+			}
+
+			if (choice != OutputType::STDOUT)
+			{   // TODO: Think, if we really want that? Could simply output to normal binary
+				ofstream outFile(contract + ".bin");
+				outFile << toHex(compiler.getBytecode(contract));
+				outFile.close();
+			}
+		}
+
+	} // end of contracts iteration
 
 	cout << endl << "Contracts:" << endl;
 	for (string const& contract: contracts)
 	{
-		cout << "Opcodes:" << endl
-			 << eth::disassemble(compiler.getBytecode(contract)) << endl
-			 << "Binary: " << toHex(compiler.getBytecode(contract)) << endl
-			 << "Interface specification: " << compiler.getJsonDocumentation(contract, DocumentationType::ABI_INTERFACE) << endl
+			 cout << "Interface specification: " << compiler.getJsonDocumentation(contract, DocumentationType::ABI_INTERFACE) << endl
 			 << "Natspec user documentation: " << compiler.getJsonDocumentation(contract, DocumentationType::NATSPEC_USER) << endl
 			 << "Natspec developer documentation: " << compiler.getJsonDocumentation(contract, DocumentationType::NATSPEC_DEV) << endl;
 	}
