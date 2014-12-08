@@ -519,22 +519,23 @@ BOOST_AUTO_TEST_CASE(simple_mapping)
 							 "  }\n"
 							 "}";
 	compileAndRun(sourceCode);
-
-	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0x00}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0x00}));
-	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	
+	// msvc seems to have problems with initializer-list, when there is only 1 param in the list
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == bytes(1, 0x00));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == bytes(1, 0x00));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0xa7)) == bytes(1, 0x00));
 	callContractFunction(1, bytes({0x01, 0xa1}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0x00}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0xa1}));
-	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == bytes(1, 0x00));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == bytes(1, 0xa1));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0xa7)) == bytes(1, 0x00));
 	callContractFunction(1, bytes({0x00, 0xef}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0xef}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0xa1}));
-	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == bytes(1, 0xef));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == bytes(1, 0xa1));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0xa7)) == bytes(1, 0x00));
 	callContractFunction(1, bytes({0x01, 0x05}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0xef}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0x05}));
-	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == bytes(1, 0xef));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == bytes(1, 0x05));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0xa7)) == bytes(1, 0x00));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_state)
@@ -702,9 +703,9 @@ BOOST_AUTO_TEST_CASE(structs)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction(0) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0) == bytes(1, 0x00));
 	BOOST_CHECK(callContractFunction(1) == bytes());
-	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
+	BOOST_CHECK(callContractFunction(0) == bytes(1, 0x01));
 }
 
 BOOST_AUTO_TEST_CASE(struct_reference)
@@ -730,9 +731,9 @@ BOOST_AUTO_TEST_CASE(struct_reference)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction(0) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0) == bytes(1, 0x00));
 	BOOST_CHECK(callContractFunction(1) == bytes());
-	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
+	BOOST_CHECK(callContractFunction(0) == bytes(1, 0x01));
 }
 
 BOOST_AUTO_TEST_CASE(constructor)

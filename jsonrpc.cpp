@@ -62,7 +62,7 @@ struct Setup
 		
 		web3->setIdealPeerCount(5);
 		web3->ethereum()->setForceMining(true);
-		auto server = new jsonrpc::CorsHttpServer(8080);
+		auto server = new jsonrpc::HttpServer(8080);
 		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(*server, *web3, {}));
 		jsonrpcServer->setIdentities({});
 		jsonrpcServer->StartListening();
@@ -302,8 +302,11 @@ BOOST_AUTO_TEST_CASE(contract_storage)
 	
 	Json::Value storage = jsonrpcClient->eth_storageAt(contractAddress);
 	BOOST_CHECK_EQUAL(storage.getMemberNames().size(), 1);
+	// bracers are required, cause msvc couldnt handle this macro in for statement
 	for (auto name: storage.getMemberNames())
+	{
 		BOOST_CHECK_EQUAL(storage[name].asString(), "0x03");
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -76,8 +76,11 @@ Declaration const& resolveDeclaration(vector<string> const& _namespacedName,
 											  NameAndTypeResolver const& _resolver)
 {
 	Declaration const* declaration = nullptr;
+	// bracers are required, cause msvc couldnt handle this macro in for statement
 	for (string const& namePart: _namespacedName)
+	{
 		BOOST_REQUIRE(declaration = _resolver.resolveName(namePart, declaration));
+	}
 	BOOST_REQUIRE(declaration);
 	return *declaration;
 }
