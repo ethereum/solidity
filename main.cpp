@@ -147,9 +147,9 @@ int main(int argc, char** argv)
 		cout << "Opcodes:" << endl
 			 << eth::disassemble(compiler.getBytecode(contract)) << endl
 			 << "Binary: " << toHex(compiler.getBytecode(contract)) << endl
-			 << "Interface specification: " << compiler.getJsonDocumentation(contract, ABI_INTERFACE) << endl
-			 << "Natspec user documentation: " << compiler.getJsonDocumentation(contract, NATSPEC_USER) << endl
-			 << "Natspec developer documentation: " << compiler.getJsonDocumentation(contract, NATSPEC_DEV) << endl;
+			 << "Interface specification: " << compiler.getJsonDocumentation(contract, DocumentationType::ABI_INTERFACE) << endl
+			 << "Natspec user documentation: " << compiler.getJsonDocumentation(contract, DocumentationType::NATSPEC_USER) << endl
+			 << "Natspec developer documentation: " << compiler.getJsonDocumentation(contract, DocumentationType::NATSPEC_DEV) << endl;
 	}
 
 	return 0;
