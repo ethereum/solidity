@@ -296,6 +296,9 @@ class Token
 {
 public:
 	// All token values.
+	// attention! msvc issue:
+	// http://stackoverflow.com/questions/9567868/compile-errors-after-adding-v8-to-my-project-c2143-c2059
+	// @todo: avoid TOKEN_LIST macro
 #define T(name, string, precedence) name,
 	enum Value
 	{
