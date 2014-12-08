@@ -38,9 +38,14 @@ NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration*> const& _globa
 		m_scopes[nullptr].registerDeclaration(*declaration);
 }
 
+void NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
+{
+	// The helper registers all declarations in m_scopes as a side-effect of its construction.
+	DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit);
+}
+
 void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
-	DeclarationRegistrationHelper registrar(m_scopes, _contract);
 	m_currentScope = &m_scopes[&_contract];
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
 		ReferencesResolver resolver(*structDef, *this, nullptr);
@@ -63,6 +68,12 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		function->checkTypeRequirements();
 	}
 	m_currentScope = &m_scopes[nullptr];
+}
+
+void NameAndTypeResolver::updateDeclaration(Declaration& _declaration)
+{
+	m_scopes[nullptr].registerDeclaration(_declaration, true);
+	_declaration.setScope(nullptr);
 }
 
 Declaration* NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const

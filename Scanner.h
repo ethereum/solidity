@@ -79,6 +79,8 @@ public:
 	char advanceAndGet(size_t _chars=1);
 	char rollback(size_t _amount);
 
+	void reset() { m_pos = 0; }
+
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
@@ -99,11 +101,12 @@ class Scanner
 	friend class LiteralScope;
 public:
 
-	Scanner() { reset(CharStream()); }
-	explicit Scanner(CharStream const& _source) { reset(_source); }
+	explicit Scanner(CharStream const& _source = CharStream(), std::string const& _sourceName = "") { reset(_source, _sourceName); }
 
-	/// Resets the scanner as if newly constructed with _input as input.
-	void reset(CharStream const& _source);
+	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
+	void reset(CharStream const& _source, std::string const& _sourceName);
+	/// Resets scanner to the start of input.
+	void reset();
 
 	/// Returns the next token and advances input
 	Token::Value next();
@@ -138,6 +141,8 @@ public:
 	Location peekLocation() const { return m_nextToken.location; }
 	std::string const& peekLiteral() const { return m_nextToken.literal; }
 	///@}
+
+	std::shared_ptr<std::string const> const& getSourceName() const { return m_sourceName; }
 
 	///@{
 	///@name Error printing helper functions
@@ -203,6 +208,7 @@ private:
 	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)
 
 	CharStream m_source;
+	std::shared_ptr<std::string const> m_sourceName;
 
 	/// one character look-ahead, equals 0 at end of input
 	char m_char;

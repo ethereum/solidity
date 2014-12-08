@@ -42,7 +42,13 @@ class NameAndTypeResolver: private boost::noncopyable
 {
 public:
 	explicit NameAndTypeResolver(std::vector<Declaration*> const& _globals);
+	/// Registers all declarations found in the source unit.
+	void registerDeclarations(SourceUnit& _sourceUnit);
+	/// Resolves all names and types referenced from the given contract.
 	void resolveNamesAndTypes(ContractDefinition& _contract);
+	/// Updates the given global declaration (used for "this"). Not to be used with declarations
+	/// that create their own scope.
+	void updateDeclaration(Declaration& _declaration);
 
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
 	/// the global scope is used (i.e. the one containing only the contract).

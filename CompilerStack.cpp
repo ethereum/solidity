@@ -36,22 +36,43 @@ namespace dev
 namespace solidity
 {
 
-CompilerStack::CompilerStack(): m_interfaceHandler(make_shared<InterfaceHandler>()) {}
+void CompilerStack::addSource(string const& _name, string const& _content)
+{
+	if (m_sources.count(_name))
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Source by given name already exists."));
+
+	reset(true);
+	m_sources[_name].scanner = make_shared<Scanner>(CharStream(_content), _name);
+}
 
 void CompilerStack::setSource(string const& _sourceCode)
 {
 	reset();
-	m_scanner = make_shared<Scanner>(CharStream(_sourceCode));
+	addSource("", _sourceCode);
 }
 
 void CompilerStack::parse()
 {
-	if (!m_scanner)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Source not available."));
-	m_contractASTNode = Parser().parse(m_scanner);
+	for (auto& sourcePair: m_sources)
+	{
+		sourcePair.second.scanner->reset();
+		sourcePair.second.ast = Parser().parse(sourcePair.second.scanner);
+	}
+	resolveImports();
+
 	m_globalContext = make_shared<GlobalContext>();
-	m_globalContext->setCurrentContract(*m_contractASTNode);
-	NameAndTypeResolver(m_globalContext->getDeclarations()).resolveNamesAndTypes(*m_contractASTNode);
+	NameAndTypeResolver resolver(m_globalContext->getDeclarations());
+	for (Source const* source: m_sourceOrder)
+		resolver.registerDeclarations(*source->ast);
+	for (Source const* source: m_sourceOrder)
+		for (ASTPointer<ASTNode> const& node: source->ast->getNodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			{
+				m_globalContext->setCurrentContract(*contract);
+				resolver.updateDeclaration(*m_globalContext->getCurrentThis());
+				resolver.resolveNamesAndTypes(*contract);
+				m_contracts[contract->getName()].contract = contract;
+			}
 	m_parseSuccessful = true;
 }
 
@@ -61,54 +82,90 @@ void CompilerStack::parse(string const& _sourceCode)
 	parse();
 }
 
-bytes const& CompilerStack::compile(bool _optimize)
+vector<string> CompilerStack::getContractNames()
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
-	m_bytecode.clear();
-	m_compiler = make_shared<Compiler>();
-	m_compiler->compileContract(*m_contractASTNode, m_globalContext->getMagicVariables());
-	return m_bytecode = m_compiler->getAssembledBytecode(_optimize);
+	vector<string> contractNames;
+	for (auto const& contract: m_contracts)
+		contractNames.push_back(contract.first);
+	return contractNames;
+}
+
+void CompilerStack::compile(bool _optimize)
+{
+	if (!m_parseSuccessful)
+		parse();
+	for (Source const* source: m_sourceOrder)
+		for (ASTPointer<ASTNode> const& node: source->ast->getNodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			{
+				m_globalContext->setCurrentContract(*contract);
+				shared_ptr<Compiler> compiler = make_shared<Compiler>();
+				compiler->compileContract(*contract, m_globalContext->getMagicVariables());
+				Contract& compiledContract = m_contracts[contract->getName()];
+				compiledContract.bytecode = compiler->getAssembledBytecode(_optimize);
+				compiledContract.compiler = move(compiler);
+			}
 }
 
 bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 {
 	parse(_sourceCode);
-	return compile(_optimize);
+	compile(_optimize);
+	return getBytecode();
 }
 
-void CompilerStack::streamAssembly(ostream& _outStream)
+bytes const& CompilerStack::getBytecode(string const& _contractName)
 {
-	if (!m_compiler || m_bytecode.empty())
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Compilation was not successful."));
-	m_compiler->streamAssembly(_outStream);
+	return getContract(_contractName).bytecode;
 }
 
-std::string const& CompilerStack::getJsonDocumentation(DocumentationType _type)
+void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName)
+{
+	getContract(_contractName).compiler->streamAssembly(_outStream);
+}
+
+string const& CompilerStack::getInterface(std::string const& _contractName)
+{
+	return getJsonDocumentation(_contractName, DocumentationType::ABI_INTERFACE);
+}
+
+std::string const& CompilerStack::getJsonDocumentation(std::string const& _contractName, DocumentationType _type)
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
 
-	auto createDocIfNotThere = [this, _type](std::unique_ptr<string>& _doc)
-	{
-		if (!_doc)
-			_doc = m_interfaceHandler->getDocumentation(m_contractASTNode, _type);
-	};
+	Contract& contract = getContract(_contractName);
 
+	std::unique_ptr<string>* doc;
 	switch (_type)
 	{
 	case DocumentationType::NATSPEC_USER:
-		createDocIfNotThere(m_userDocumentation);
-		return *m_userDocumentation;
+		doc = &contract.userDocumentation;
+		break;
 	case DocumentationType::NATSPEC_DEV:
-		createDocIfNotThere(m_devDocumentation);
-		return *m_devDocumentation;
+		doc = &contract.devDocumentation;
+		break;
 	case DocumentationType::ABI_INTERFACE:
-		createDocIfNotThere(m_interface);
-		return *m_interface;
+		doc = &contract.interface;
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 	}
+	if (!*doc)
+		*doc = contract.interfaceHandler->getDocumentation(*contract.contract, _type);
+	return *(*doc);
+}
 
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
+Scanner const& CompilerStack::getScanner(string const& _sourceName)
+{
+	return *getSource(_sourceName).scanner;
+}
+
+SourceUnit& CompilerStack::getAST(string const& _sourceName)
+{
+	return *getSource(_sourceName).ast;
 }
 
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
@@ -117,7 +174,70 @@ bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimiz
 	return stack.compile(_sourceCode, _optimize);
 }
 
+void CompilerStack::reset(bool _keepSources)
+{
+	m_parseSuccessful = false;
+	if (_keepSources)
+		for (auto sourcePair: m_sources)
+			sourcePair.second.reset();
+	else
+		m_sources.clear();
+	m_globalContext.reset();
+	m_sourceOrder.clear();
+	m_contracts.clear();
+}
 
+void CompilerStack::resolveImports()
+{
+	// topological sorting (depth first search) of the import graph, cutting potential cycles
+	vector<Source const*> sourceOrder;
+	set<Source const*> sourcesSeen;
+
+	function<void(Source const*)> toposort = [&](Source const* _source)
+	{
+		if (sourcesSeen.count(_source))
+			return;
+		sourcesSeen.insert(_source);
+		for (ASTPointer<ASTNode> const& node: _source->ast->getNodes())
+			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
+			{
+				string const& id = import->getIdentifier();
+				if (!m_sources.count(id))
+					BOOST_THROW_EXCEPTION(ParserError()
+										  << errinfo_sourceLocation(import->getLocation())
+										  << errinfo_comment("Source not found."));
+				toposort(&m_sources[id]);
+			}
+		sourceOrder.push_back(_source);
+	};
+
+	for (auto const& sourcePair: m_sources)
+		toposort(&sourcePair.second);
+
+	swap(m_sourceOrder, sourceOrder);
+}
+
+CompilerStack::Contract& CompilerStack::getContract(string const& _contractName)
+{
+	if (m_contracts.empty())
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+	if (_contractName.empty())
+		return m_contracts.begin()->second;
+	auto it = m_contracts.find(_contractName);
+	if (it == m_contracts.end())
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract " + _contractName + " not found."));
+	return it->second;
+}
+
+CompilerStack::Source& CompilerStack::getSource(string const& _sourceName)
+{
+	auto it = m_sources.find(_sourceName);
+	if (it == m_sources.end())
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Given source file not found."));
+	return it->second;
+}
+
+CompilerStack::Contract::Contract(): interfaceHandler(make_shared<InterfaceHandler>()) {}
 
 }
 }

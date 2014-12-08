@@ -34,7 +34,8 @@ class Scanner;
 class Parser
 {
 public:
-	ASTPointer<ContractDefinition> parse(std::shared_ptr<Scanner> const& _scanner);
+	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
+	std::shared_ptr<std::string const> const& getSourceName() const;
 
 private:
 	class ASTNodeFactory;
@@ -46,6 +47,7 @@ private:
 
 	///@{
 	///@name Parsing functions for the AST nodes
+	ASTPointer<ImportDirective> parseImportDirective();
 	ASTPointer<ContractDefinition> parseContractDefinition();
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
 	ASTPointer<StructDefinition> parseStructDefinition();

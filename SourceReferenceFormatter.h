@@ -34,14 +34,14 @@ namespace solidity
 {
 
 class Scanner; // forward
+class CompilerStack; // forward
 
 struct SourceReferenceFormatter
 {
 public:
 	static void printSourceLocation(std::ostream& _stream, Location const& _location, Scanner const& _scanner);
-	static void printSourcePosition(std::ostream& _stream, int _position, Scanner const& _scanner);
 	static void printExceptionInformation(std::ostream& _stream, Exception const& _exception,
-										  std::string const& _name, Scanner const& _scanner);
+										  std::string const& _name, CompilerStack& _compiler);
 };
 
 }

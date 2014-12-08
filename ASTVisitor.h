@@ -42,6 +42,8 @@ class ASTVisitor
 {
 public:
 	virtual bool visit(ASTNode&) { return true; }
+	virtual bool visit(SourceUnit&) { return true; }
+	virtual bool visit(ImportDirective&) { return true; }
 	virtual bool visit(ContractDefinition&) { return true; }
 	virtual bool visit(StructDefinition&) { return true; }
 	virtual bool visit(ParameterList&) { return true; }
@@ -74,6 +76,8 @@ public:
 	virtual bool visit(Literal&) { return true; }
 
 	virtual void endVisit(ASTNode&) { }
+	virtual void endVisit(SourceUnit&) { }
+	virtual void endVisit(ImportDirective&) { }
 	virtual void endVisit(ContractDefinition&) { }
 	virtual void endVisit(StructDefinition&) { }
 	virtual void endVisit(ParameterList&) { }

@@ -80,6 +80,42 @@ private:
 };
 
 /**
+ * Source unit containing import directives and contract definitions.
+ */
+class SourceUnit: public ASTNode
+{
+public:
+	SourceUnit(Location const& _location, std::vector<ASTPointer<ASTNode>> const& _nodes):
+		ASTNode(_location), m_nodes(_nodes) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+
+	std::vector<ASTPointer<ASTNode>> getNodes() const { return m_nodes; }
+
+private:
+	std::vector<ASTPointer<ASTNode>> m_nodes;
+};
+
+/**
+ * Import directive for referencing other files / source objects.
+ * Example: import "abc.sol"
+ * Source objects are identified by a string which can be a file name but does not have to be.
+ */
+class ImportDirective: public ASTNode
+{
+public:
+	ImportDirective(Location const& _location, ASTPointer<ASTString> const& _identifier):
+		ASTNode(_location), m_identifier(_identifier) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+
+	ASTString const& getIdentifier() const { return *m_identifier; }
+
+private:
+	ASTPointer<ASTString> m_identifier;
+};
+
+/**
  * Abstract AST class for a declaration (contract, function, struct, variable).
  */
 class Declaration: public ASTNode

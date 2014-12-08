@@ -15,7 +15,7 @@ InterfaceHandler::InterfaceHandler()
 	m_lastTag = DocTagType::NONE;
 }
 
-std::unique_ptr<std::string> InterfaceHandler::getDocumentation(std::shared_ptr<ContractDefinition> _contractDef,
+std::unique_ptr<std::string> InterfaceHandler::getDocumentation(ContractDefinition& _contractDef,
 																DocumentationType _type)
 {
 	switch(_type)
@@ -32,11 +32,11 @@ std::unique_ptr<std::string> InterfaceHandler::getDocumentation(std::shared_ptr<
 	return nullptr;
 }
 
-std::unique_ptr<std::string> InterfaceHandler::getABIInterface(std::shared_ptr<ContractDefinition> _contractDef)
+std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinition& _contractDef)
 {
 	Json::Value methods(Json::arrayValue);
 
-	for (FunctionDefinition const* f: _contractDef->getInterfaceFunctions())
+	for (FunctionDefinition const* f: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value method;
 		Json::Value inputs(Json::arrayValue);
@@ -63,12 +63,12 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(std::shared_ptr<C
 	return std::unique_ptr<std::string>(new std::string(m_writer.write(methods)));
 }
 
-std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(std::shared_ptr<ContractDefinition> _contractDef)
+std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefinition& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
-	for (FunctionDefinition const* f: _contractDef->getInterfaceFunctions())
+	for (FunctionDefinition const* f: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value user;
 		auto strPtr = f->getDocumentation();
@@ -88,14 +88,14 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(std::shared_
 	return std::unique_ptr<std::string>(new std::string(m_writer.write(doc)));
 }
 
-std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(std::shared_ptr<ContractDefinition> _contractDef)
+std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefinition& _contractDef)
 {
 	// LTODO: Somewhere in this function warnings for mismatch of param names
 	// should be thrown
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
-	for (FunctionDefinition const* f: _contractDef->getInterfaceFunctions())
+	for (FunctionDefinition const* f: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value method;
 		auto strPtr = f->getDocumentation();

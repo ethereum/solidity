@@ -143,16 +143,21 @@ private:
 }; // end of LiteralScope class
 
 
-void Scanner::reset(CharStream const& _source)
+void Scanner::reset(CharStream const& _source, string const& _sourceName)
 {
 	m_source = _source;
+	m_sourceName = make_shared<string const>(_sourceName);
+	reset();
+}
+
+void Scanner::reset()
+{
+	m_source.reset();
 	m_char = m_source.get();
 	skipWhitespace();
 	scanToken();
-
 	next();
 }
-
 
 bool Scanner::scanHexByte(char& o_scannedByte)
 {
