@@ -22,8 +22,10 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 #include "BuildInfo.h"
 #include <libdevcore/Common.h>
@@ -51,6 +53,28 @@ void version()
 	exit(0);
 }
 
+enum class AstOutput
+{
+	STDOUT,
+	FILE,
+	BOTH
+};
+
+std::istream& operator>>(std::istream& _in, AstOutput& io_output)
+{
+	std::string token;
+	_in >> token;
+	if (token == "stdout")
+		io_output = AstOutput::STDOUT;
+	else if (token == "file")
+		io_output = AstOutput::FILE;
+	else if (token == "both")
+		io_output = AstOutput::BOTH;
+	else
+		throw boost::program_options::invalid_option_value(token);
+	return _in;
+}
+
 int main(int argc, char** argv)
 {
 	// Declare the supported options.
@@ -59,14 +83,27 @@ int main(int argc, char** argv)
 	("help", "Show help message and exit")
 	("version", "Show version and exit")
 	("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
-	("input-file", po::value<vector<string>>(), "input file");
+	("input-file", po::value<vector<string>>(), "input file")
+	("ast", po::value<AstOutput>(),
+	 "Request to output the AST of the contract. Legal values:\n"
+	 "\tstdout: Print it to standar output\n"
+	 "\tfile: Print it to a file with same name\n");
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description p;
 	p.add("input-file", -1);
 
+	// parse the compiler arguments
 	po::variables_map vm;
-	po::store(po::command_line_parser(argc, argv).options(desc).positional(p).allow_unregistered().run(), vm);
+	try
+	{
+		po::store(po::command_line_parser(argc, argv).options(desc).positional(p).allow_unregistered().run(), vm);
+	}
+	catch (po::error const& exception)
+	{
+		cout << exception.what() << endl;
+		return -1;
+	}
 	po::notify(vm);
 
 	if (vm.count("help")) {
@@ -135,13 +172,36 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	cout << "Syntax trees:" << endl << endl;
-	for (auto const& sourceCode: sourceCodes)
+
+	// do we need AST output?
+	if (vm.count("ast"))
 	{
-		cout << endl << "======= " << sourceCode.first << " =======" << endl;
-		ASTPrinter printer(compiler.getAST(sourceCode.first), sourceCode.second);
-		printer.print(cout);
+		auto choice = vm["ast"].as<AstOutput>();
+		if (choice != AstOutput::FILE)
+		{
+			cout << "Syntax trees:" << endl << endl;
+			for (auto const& sourceCode: sourceCodes)
+			{
+				cout << endl << "======= " << sourceCode.first << " =======" << endl;
+				ASTPrinter printer(compiler.getAST(sourceCode.first), sourceCode.second);
+				printer.print(cout);
+			}
+		}
+
+		if (choice != AstOutput::STDOUT)
+		{
+			for (auto const& sourceCode: sourceCodes)
+			{
+				boost::filesystem::path p(sourceCode.first);
+				ofstream outFile(p.stem().string() + ".ast");
+				ASTPrinter printer(compiler.getAST(sourceCode.first), sourceCode.second);
+				printer.print(outFile);
+				outFile.close();
+			}
+		}
 	}
+
+
 	vector<string> contracts = compiler.getContractNames();
 	cout << endl << "Contracts:" << endl;
 	for (string const& contract: contracts)
