@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 	p.add("input-file", -1);
 
 	po::variables_map vm;
-	po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
+	po::store(po::command_line_parser(argc, argv).options(desc).positional(p).allow_unregistered().run(), vm);
 	po::notify(vm);
 
 	if (vm.count("help")) {
