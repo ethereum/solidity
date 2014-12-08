@@ -189,7 +189,7 @@ void doMyTests(json_spirit::mValue& v)
 			o["callcreates"] = fev.exportCallCreates();
 			o["out"] = "0x" + toHex(output);
 			fev.push(o, "gas", gas);
-			o["logs"] = mValue(test::exportLog(fev.sub.logs));
+			o["logs"] = test::exportLog(fev.sub.logs);
 		}
 	}
 }
