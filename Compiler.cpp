@@ -199,11 +199,12 @@ bool Compiler::visit(FunctionDefinition& _function)
 	unsigned const numReturnValues = _function.getReturnParameters().size();
 	unsigned const numLocalVariables = _function.getLocalVariables().size();
 
-	for (ASTPointer<VariableDeclaration> const& variable: _function.getParameters() + _function.getReturnParameters())
+	for (ASTPointer<VariableDeclaration> const& variable: _function.getParameters())
 		m_context.addVariable(*variable);
+	for (ASTPointer<VariableDeclaration> const& variable: _function.getReturnParameters())
+		m_context.addAndInitializeVariable(*variable);
 	for (VariableDeclaration const* localVariable: _function.getLocalVariables())
-		m_context.addVariable(*localVariable);
-	m_context.initializeLocalVariables(numReturnValues + numLocalVariables);
+		m_context.addAndInitializeVariable(*localVariable);
 
 	_function.getBody().accept(*this);
 

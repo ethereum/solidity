@@ -41,20 +41,25 @@ void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
 	m_stateVariablesSize += _declaration.getType()->getStorageSize();
 }
 
-void CompilerContext::initializeLocalVariables(unsigned _numVariables)
+void CompilerContext::addVariable(VariableDeclaration const& _declaration)
 {
-	if (_numVariables > 0)
-	{
+	m_localVariables[&_declaration] = m_localVariablesSize;
+	m_localVariablesSize += _declaration.getType()->getSizeOnStack();
+}
+
+void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
+{
+	addVariable(_declaration);
+
+	unsigned const size = _declaration.getType()->getSizeOnStack();
+	for (unsigned i = 0; i < size; ++i)
 		*this << u256(0);
-		for (unsigned i = 1; i < _numVariables; ++i)
-			*this << eth::Instruction::DUP1;
-		m_asm.adjustDeposit(-_numVariables);
-	}
+	m_asm.adjustDeposit(-size);
 }
 
 bool CompilerContext::isLocalVariable(Declaration const* _declaration) const
 {
-	return std::find(m_localVariables.begin(), m_localVariables.end(), _declaration) != m_localVariables.end();
+	return m_localVariables.count(_declaration) > 0;
 }
 
 eth::AssemblyItem CompilerContext::getFunctionEntryLabel(FunctionDefinition const& _function) const
@@ -67,10 +72,10 @@ eth::AssemblyItem CompilerContext::getFunctionEntryLabel(FunctionDefinition cons
 
 unsigned CompilerContext::getBaseStackOffsetOfVariable(Declaration const& _declaration) const
 {
-	auto res = find(begin(m_localVariables), end(m_localVariables), &_declaration);
+	auto res = m_localVariables.find(&_declaration);
 	if (asserts(res != m_localVariables.end()))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Variable not found on stack."));
-	return unsigned(end(m_localVariables) - res - 1);
+	return m_localVariablesSize - res->second - 1;
 }
 
 unsigned CompilerContext::baseToCurrentStackOffset(unsigned _baseOffset) const
