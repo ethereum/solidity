@@ -128,7 +128,7 @@ void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractN
 
 string const& CompilerStack::getInterface(std::string const& _contractName)
 {
-	return getJsonDocumentation(_contractName, ABI_INTERFACE);
+	return getJsonDocumentation(_contractName, DocumentationType::ABI_INTERFACE);
 }
 
 std::string const& CompilerStack::getJsonDocumentation(std::string const& _contractName, DocumentationType _type)
