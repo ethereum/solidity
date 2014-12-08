@@ -94,22 +94,6 @@ public:
 	/// scanning the source code - this is useful for printing exception information.
 	static bytes staticCompile(std::string const& _sourceCode, bool _optimize = false);
 
-	/// Compile under msvc results in error CC2280
-	CompilerStack& operator=(const CompilerStack& _other)
-	{
-		m_scanner = _other.m_scanner;
-		m_globalContext = _other.m_globalContext;
-		m_contractASTNode = _other.m_contractASTNode;
-		m_parseSuccessful = _other.m_parseSuccessful;
-		m_interface.reset(_other.m_interface.get());
-		m_userDocumentation.reset(_other.m_userDocumentation.get());
-		m_devDocumentation.reset(_other.m_devDocumentation.get());
-		m_compiler = _other.m_compiler;
-		m_interfaceHandler = _other.m_interfaceHandler;
-		m_bytecode = m_bytecode;
-		return *this;
-	}
-
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
