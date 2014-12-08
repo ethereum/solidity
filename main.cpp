@@ -80,6 +80,96 @@ std::istream& operator>>(std::istream& _in, OutputType& io_output)
 	return _in;
 }
 
+static void handleBytecode(po::variables_map const& vm,
+						   char const* _argName,
+						   string const& _title,
+						   string const& _contract,
+						   CompilerStack&_compiler,
+						   string const& _suffix)
+{
+	if (vm.count(_argName))
+	{
+		auto choice = vm[_argName].as<OutputType>();
+		if (choice != OutputType::FILE)
+		{
+			cout << _title << endl;
+			if (_suffix == "opcodes")
+				cout << _compiler.getBytecode(_contract) << endl;
+			else
+				cout << toHex(_compiler.getBytecode(_contract)) << endl;
+		}
+
+		if (choice != OutputType::STDOUT)
+		{
+			ofstream outFile(_contract + _suffix);
+			if (_suffix == "opcodes")
+				outFile << _compiler.getBytecode(_contract);
+			else
+				outFile << toHex(_compiler.getBytecode(_contract));
+			outFile.close();
+		}
+	}
+}
+
+static void handleJson(po::variables_map const& _vm,
+					   DocumentationType _type,
+					   string const& _contract,
+					   CompilerStack&_compiler)
+{
+	std::string argName;
+	std::string suffix;
+	std::string title;
+	switch(_type)
+	{
+	case DocumentationType::ABI_INTERFACE:
+		argName = "abi";
+		suffix = ".abi";
+		title = "Contract ABI";
+		break;
+	case DocumentationType::NATSPEC_USER:
+		argName = "natspec-user";
+		suffix = ".docuser";
+		title = "User Documentation";
+		break;
+	case DocumentationType::NATSPEC_DEV:
+		argName = "natspec-dev";
+		suffix = ".docdev";
+		title = "Developer Documentation";
+		break;
+	default:
+		// should never happen
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation _type"));
+	}
+
+	if (_vm.count(argName.c_str()))
+	{
+		auto choice = _vm[argName.c_str()].as<OutputType>();
+		if (choice != OutputType::FILE)
+		{
+			cout << title << endl;
+			cout << _compiler.getJsonDocumentation(_contract, _type);
+		}
+
+		if (choice != OutputType::STDOUT)
+		{
+			ofstream outFile(_contract + suffix);
+			outFile << _compiler.getJsonDocumentation(_contract, _type);
+			outFile.close();
+		}
+	}
+}
+
+static inline bool argToStdout(po::variables_map const& _vm, const char* _name)
+{
+	return _vm.count(_name) && _vm[_name].as<OutputType>() != OutputType::FILE;
+}
+
+static bool needStdout(po::variables_map const& _vm)
+{
+	return argToStdout(_vm, "abi") || argToStdout(_vm, "natspec-user") || argToStdout(_vm, "natspec-dev") ||
+		   argToStdout(_vm, "asm") || argToStdout(_vm, "opcodes") || argToStdout(_vm, "binary");
+}
+
 int main(int argc, char** argv)
 {
 	// Declare the supported options.
@@ -96,7 +186,13 @@ int main(int argc, char** argv)
 	("opcodes", po::value<OutputType>(),
 	 "Request to output the Opcodes of the contract. "  outputTypeStr)
 	("binary", po::value<OutputType>(),
-	 "Request to output the contract in binary (hexadecimal). "  outputTypeStr);
+	 "Request to output the contract in binary (hexadecimal). "  outputTypeStr)
+	("abi", po::value<OutputType>(),
+	 "Request to output the contract's ABI interface. "  outputTypeStr)
+	("natspec-user", po::value<OutputType>(),
+	 "Request to output the contract's Natspec user documentation. "  outputTypeStr)
+	("natspec-dev", po::value<OutputType>(),
+	 "Request to output the contract's Natspec developer documentation. "  outputTypeStr);
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description p;
@@ -124,6 +220,8 @@ int main(int argc, char** argv)
 		version();
 		return 0;
 	}
+
+	// create a map of input files to source code strings
 	map<string, string> sourceCodes;
 	if (!vm.count("input-file"))
 	{
@@ -138,6 +236,7 @@ int main(int argc, char** argv)
 		for (string const& infile: vm["input-file"].as<vector<string>>())
 			sourceCodes[infile] = asString(dev::contents(infile));
 
+	// parse the files
 	CompilerStack compiler;
 	try
 	{
@@ -182,6 +281,8 @@ int main(int argc, char** argv)
 	}
 
 
+	/* -- act depending on the provided arguments -- */
+
 	// do we need AST output?
 	if (vm.count("ast"))
 	{
@@ -213,7 +314,8 @@ int main(int argc, char** argv)
 	vector<string> contracts = compiler.getContractNames();
 	for (string const& contract: contracts)
 	{
-		cout << endl << "======= " << contract << " =======" << endl;
+		if (needStdout(vm))
+			cout << endl << "======= " << contract << " =======" << endl;
 
 		// do we need EVM assembly?
 		if (vm.count("asm"))
@@ -233,51 +335,12 @@ int main(int argc, char** argv)
 			}
 		}
 
-		// do we need opcodes?
-		if (vm.count("opcodes"))
-		{
-			auto choice = vm["opcodes"].as<OutputType>();
-			if (choice != OutputType::FILE)
-			{
-				cout << "Opcodes:" << endl;
-				cout << eth::disassemble(compiler.getBytecode(contract)) << endl;
-			}
-
-			if (choice != OutputType::STDOUT)
-			{
-				ofstream outFile(contract + ".opcodes");
-				outFile << eth::disassemble(compiler.getBytecode(contract));
-				outFile.close();
-			}
-		}
-
-		// do we need binary?
-		if (vm.count("binary"))
-		{
-			auto choice = vm["binary"].as<OutputType>();
-			if (choice != OutputType::FILE)
-			{
-				cout << "Binary:" << endl;
-				cout << toHex(compiler.getBytecode(contract)) << endl;
-			}
-
-			if (choice != OutputType::STDOUT)
-			{   // TODO: Think, if we really want that? Could simply output to normal binary
-				ofstream outFile(contract + ".bin");
-				outFile << toHex(compiler.getBytecode(contract));
-				outFile.close();
-			}
-		}
-
+		handleBytecode(vm, "opcodes", "Opcodes:", contract, compiler, ".opcodes");
+		handleBytecode(vm, "binary", "Binary:", contract, compiler, ".binary");
+		handleJson(vm, DocumentationType::ABI_INTERFACE, contract, compiler);
+		handleJson(vm, DocumentationType::NATSPEC_DEV, contract, compiler);
+		handleJson(vm, DocumentationType::NATSPEC_USER, contract, compiler);
 	} // end of contracts iteration
-
-	cout << endl << "Contracts:" << endl;
-	for (string const& contract: contracts)
-	{
-			 cout << "Interface specification: " << compiler.getJsonDocumentation(contract, DocumentationType::ABI_INTERFACE) << endl
-			 << "Natspec user documentation: " << compiler.getJsonDocumentation(contract, DocumentationType::NATSPEC_USER) << endl
-			 << "Natspec developer documentation: " << compiler.getJsonDocumentation(contract, DocumentationType::NATSPEC_DEV) << endl;
-	}
 
 	return 0;
 }
