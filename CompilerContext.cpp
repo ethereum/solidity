@@ -57,6 +57,11 @@ void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _decla
 	m_asm.adjustDeposit(-size);
 }
 
+void CompilerContext::addFunction(FunctionDefinition const& _function)
+{
+	m_functionEntryLabels.insert(std::make_pair(&_function, m_asm.newTag()));
+}
+
 bool CompilerContext::isLocalVariable(Declaration const* _declaration) const
 {
 	return m_localVariables.count(_declaration) > 0;

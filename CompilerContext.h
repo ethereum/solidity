@@ -25,6 +25,7 @@
 #include <ostream>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Assembly.h>
+#include <libsolidity/ASTForward.h>
 #include <libsolidity/Types.h>
 
 namespace dev {
@@ -45,7 +46,7 @@ public:
 	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
 	void addVariable(VariableDeclaration const& _declaration);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
-	void addFunction(FunctionDefinition const& _function) { m_functionEntryLabels.insert(std::make_pair(&_function, m_asm.newTag())); }
+	void addFunction(FunctionDefinition const& _function);
 
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
 

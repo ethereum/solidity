@@ -26,6 +26,7 @@
 #include <libsolidity/AST.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/ExpressionCompiler.h>
+#include <libsolidity/CompilerUtils.h>
 
 using namespace std;
 
@@ -135,7 +136,7 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{
 		unsigned const numBytes = var->getType()->getCalldataEncodedSize();
-		if (numBytes == 0)
+		if (numBytes == 0 || numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(var->getLocation())
 								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
@@ -158,7 +159,7 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 	{
 		Type const& paramType = *parameters[i]->getType();
 		unsigned numBytes = paramType.getCalldataEncodedSize();
-		if (numBytes == 0)
+		if (numBytes == 0 || numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
 								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
@@ -305,8 +306,7 @@ bool Compiler::visit(Return& _return)
 		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters().getParameters().front();
 		ExpressionCompiler::appendTypeConversion(m_context, *expression->getType(), *firstVariable.getType());
 
-		unsigned stackPosition = m_context.baseToCurrentStackOffset(m_context.getBaseStackOffsetOfVariable(firstVariable));
-		m_context << eth::swapInstruction(stackPosition) << eth::Instruction::POP;
+		CompilerUtils(m_context).moveToStackVariable(firstVariable);
 	}
 	m_context.appendJumpTo(m_returnTag);
 	return false;
@@ -320,9 +320,7 @@ bool Compiler::visit(VariableDefinition& _variableDefinition)
 		ExpressionCompiler::appendTypeConversion(m_context,
 												 *expression->getType(),
 												 *_variableDefinition.getDeclaration().getType());
-		unsigned baseStackOffset = m_context.getBaseStackOffsetOfVariable(_variableDefinition.getDeclaration());
-		unsigned stackPosition = m_context.baseToCurrentStackOffset(baseStackOffset);
-		m_context << eth::swapInstruction(stackPosition) << eth::Instruction::POP;
+		CompilerUtils(m_context).moveToStackVariable(_variableDefinition.getDeclaration());
 	}
 	return false;
 }
@@ -331,9 +329,7 @@ bool Compiler::visit(ExpressionStatement& _expressionStatement)
 {
 	Expression& expression = _expressionStatement.getExpression();
 	ExpressionCompiler::compileExpression(m_context, expression);
-//	Type::Category category = expression.getType()->getCategory();
-	for (unsigned i = 0; i < expression.getType()->getSizeOnStack(); ++i)
-		m_context << eth::Instruction::POP;
+	CompilerUtils(m_context).popStackElement(*expression.getType());
 	return false;
 }
 
