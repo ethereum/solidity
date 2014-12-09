@@ -92,39 +92,48 @@ static std::istream& operator>>(std::istream& _in, OutputType& io_output)
 	return _in;
 }
 
-void CommandLineInterface::handleBytecode(string const& _argName,
-										  string const& _title,
-										  string const& _contract,
-										  string const& _suffix)
+void CommandLineInterface::handleBinary(string const& _contract)
 {
-	if (m_args.count(_argName))
+	auto choice = m_args["binary"].as<OutputType>();
+	if (outputToStdout(choice))
 	{
-		auto choice = m_args[_argName].as<OutputType>();
-		if (outputToStdout(choice))
-		{
-			cout << _title << endl;
-			if (_suffix == "opcodes")
-			{
-				// TODO: Figure out why the wrong operator << (from boost) is used here
-				dev::operator<<(cout, m_compiler.getBytecode(_contract));
-				cout << endl;
-			}
-			else
-				cout << toHex(m_compiler.getBytecode(_contract)) << endl;
-		}
-
-		if (outputToFile(choice))
-		{
-			ofstream outFile(_contract + _suffix);
-			if (_suffix == "opcodes")
-				// TODO: Figure out why the wrong operator << (from boost) is used here
-				dev::operator<<(outFile, m_compiler.getBytecode(_contract));
-
-			else
-				outFile << toHex(m_compiler.getBytecode(_contract));
-			outFile.close();
-		}
+		cout << "Binary: " << endl;
+		cout << toHex(m_compiler.getBytecode(_contract)) << endl;
 	}
+
+	if (outputToFile(choice))
+	{
+		ofstream outFile(_contract + ".binary");
+		outFile << toHex(m_compiler.getBytecode(_contract));
+		outFile.close();
+	}
+}
+
+void CommandLineInterface::handleOpcode(string const& _contract)
+{
+	// TODO: Figure out why the wrong operator << (from boost) is used here
+	auto choice = m_args["opcode"].as<OutputType>();
+	if (outputToStdout(choice))
+	{
+		cout << "Opcodes: " << endl;
+		dev::operator<<(cout, m_compiler.getBytecode(_contract));
+		cout << endl;
+	}
+
+	if (outputToFile(choice))
+	{
+		ofstream outFile(_contract + ".opcode");
+		dev::operator<<(outFile, m_compiler.getBytecode(_contract));
+		outFile.close();
+	}
+}
+
+void CommandLineInterface::handleBytecode(string const& _contract)
+{
+	if (m_args.count("opcodes"))
+		handleOpcode(_contract);
+	if (m_args.count("binary"))
+		handleBinary(_contract);
 }
 
 void CommandLineInterface::handleJson(DocumentationType _type,
@@ -348,8 +357,7 @@ void CommandLineInterface::actOnInput()
 			}
 		}
 
-		handleBytecode("opcodes", "Opcodes:", contract, ".opcodes");
-		handleBytecode("binary", "Binary:", contract, ".binary");
+		handleBytecode(contract);
 		handleJson(DocumentationType::ABI_INTERFACE, contract);
 		handleJson(DocumentationType::NATSPEC_DEV, contract);
 		handleJson(DocumentationType::NATSPEC_USER, contract);

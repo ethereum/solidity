@@ -53,10 +53,9 @@ public:
 	void actOnInput();
 
 private:
-	void handleBytecode(std::string const& _argName,
-						std::string const& _title,
-						std::string const& _contract,
-						std::string const& _suffix);
+	void handleBinary(std::string const& _contract);
+	void handleOpcode(std::string const& _contract);
+	void handleBytecode(std::string const& _contract);
 	void handleJson(DocumentationType _type,
 					std::string const& _contract);
 
