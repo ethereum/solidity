@@ -17,9 +17,9 @@
 /**
  * @author Lefteris <lefteris@ethdev.com>
  * @date 2014
- * Solidity compiler context class.
+ * Solidity command line interface.
  */
-#include "SolContext.h"
+#include "CommandLineInterface.h"
 
 #include <string>
 #include <iostream>
@@ -69,14 +69,13 @@ static bool needStdout(po::variables_map const& _args)
 
 static inline bool outputToFile(OutputType type)
 {
-    return type == OutputType::FILE || type == OutputType::BOTH;
+	return type == OutputType::FILE || type == OutputType::BOTH;
 }
 
 static inline bool outputToStdout(OutputType type)
 {
-    return type == OutputType::STDOUT || type == OutputType::BOTH;
+	return type == OutputType::STDOUT || type == OutputType::BOTH;
 }
-
 
 static std::istream& operator>>(std::istream& _in, OutputType& io_output)
 {
@@ -93,10 +92,10 @@ static std::istream& operator>>(std::istream& _in, OutputType& io_output)
 	return _in;
 }
 
-void SolContext::handleBytecode(string const& _argName,
-                                string const& _title,
-                                string const& _contract,
-                                string const& _suffix)
+void CommandLineInterface::handleBytecode(string const& _argName,
+										  string const& _title,
+										  string const& _contract,
+										  string const& _suffix)
 {
 	if (m_args.count(_argName))
 	{
@@ -105,8 +104,8 @@ void SolContext::handleBytecode(string const& _argName,
 		{
 			cout << _title << endl;
 			if (_suffix == "opcodes")
-                ;
-                // TODO: Figure out why after moving to own class ostream operator does not work for vector of bytes
+				;
+				// TODO: Figure out why after moving to own class ostream operator does not work for vector of bytes
 				// cout << m_compiler.getBytecode(_contract) << endl;
 			else
 				cout << toHex(m_compiler.getBytecode(_contract)) << endl;
@@ -116,8 +115,8 @@ void SolContext::handleBytecode(string const& _argName,
 		{
 			ofstream outFile(_contract + _suffix);
 			if (_suffix == "opcodes")
-                ;
-                // TODO: Figure out why after moving to own class ostream operator does not work for vector of bytes
+				;
+				// TODO: Figure out why after moving to own class ostream operator does not work for vector of bytes
 				// outFile << m_compiler.getBytecode(_contract);
 			else
 				outFile << toHex(m_compiler.getBytecode(_contract));
@@ -126,8 +125,8 @@ void SolContext::handleBytecode(string const& _argName,
 	}
 }
 
-void SolContext::handleJson(DocumentationType _type,
-                                   string const& _contract)
+void CommandLineInterface::handleJson(DocumentationType _type,
+									  string const& _contract)
 {
 	std::string argName;
 	std::string suffix;
@@ -172,76 +171,67 @@ void SolContext::handleJson(DocumentationType _type,
 	}
 }
 
-
-
-
-
-
-
-
-
-
-bool SolContext::parseArguments(int argc, char** argv)
+bool CommandLineInterface::parseArguments(int argc, char** argv)
 {
-#define OUTPUT_TYPE_STR "Legal values:\n"               \
-        "\tstdout: Print it to standard output\n"       \
-        "\tfile: Print it to a file with same name\n"   \
-        "\tboth: Print both to a file and the stdout\n"
-    // Declare the supported options.
-    po::options_description desc("Allowed options");
-    desc.add_options()
-        ("help", "Show help message and exit")
-        ("version", "Show version and exit")
-        ("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
-        ("input-file", po::value<vector<string>>(), "input file")
-        ("ast", po::value<OutputType>(),
-         "Request to output the AST of the contract. " OUTPUT_TYPE_STR)
-        ("asm", po::value<OutputType>(),
-         "Request to output the EVM assembly of the contract. "  OUTPUT_TYPE_STR)
-        ("opcodes", po::value<OutputType>(),
-         "Request to output the Opcodes of the contract. "  OUTPUT_TYPE_STR)
-        ("binary", po::value<OutputType>(),
-         "Request to output the contract in binary (hexadecimal). "  OUTPUT_TYPE_STR)
-        ("abi", po::value<OutputType>(),
-         "Request to output the contract's ABI interface. "  OUTPUT_TYPE_STR)
-        ("natspec-user", po::value<OutputType>(),
-         "Request to output the contract's Natspec user documentation. "  OUTPUT_TYPE_STR)
-        ("natspec-dev", po::value<OutputType>(),
-         "Request to output the contract's Natspec developer documentation. "  OUTPUT_TYPE_STR);
+#define OUTPUT_TYPE_STR "Legal values:\n"				\
+		"\tstdout: Print it to standard output\n"		\
+		"\tfile: Print it to a file with same name\n"	\
+		"\tboth: Print both to a file and the stdout\n"
+	// Declare the supported options.
+	po::options_description desc("Allowed options");
+	desc.add_options()
+		("help", "Show help message and exit")
+		("version", "Show version and exit")
+		("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
+		("input-file", po::value<vector<string>>(), "input file")
+		("ast", po::value<OutputType>(),
+		 "Request to output the AST of the contract. " OUTPUT_TYPE_STR)
+		("asm", po::value<OutputType>(),
+		 "Request to output the EVM assembly of the contract. "	 OUTPUT_TYPE_STR)
+		("opcodes", po::value<OutputType>(),
+		 "Request to output the Opcodes of the contract. "	OUTPUT_TYPE_STR)
+		("binary", po::value<OutputType>(),
+		 "Request to output the contract in binary (hexadecimal). "	 OUTPUT_TYPE_STR)
+		("abi", po::value<OutputType>(),
+		 "Request to output the contract's ABI interface. "	 OUTPUT_TYPE_STR)
+		("natspec-user", po::value<OutputType>(),
+		 "Request to output the contract's Natspec user documentation. "  OUTPUT_TYPE_STR)
+		("natspec-dev", po::value<OutputType>(),
+		 "Request to output the contract's Natspec developer documentation. "  OUTPUT_TYPE_STR);
 #undef OUTPUT_TYPE_STR
 
-    // All positional options should be interpreted as input files
-    po::positional_options_description p;
-    p.add("input-file", -1);
+	// All positional options should be interpreted as input files
+	po::positional_options_description p;
+	p.add("input-file", -1);
 
-    // parse the compiler arguments
-    try
-    {
-        po::store(po::command_line_parser(argc, argv).options(desc).positional(p).allow_unregistered().run(), m_args);
-    }
-    catch (po::error const& exception)
-    {
-        cout << exception.what() << endl;
-        return false;
-    }
-    po::notify(m_args);
+	// parse the compiler arguments
+	try
+	{
+		po::store(po::command_line_parser(argc, argv).options(desc).positional(p).allow_unregistered().run(), m_args);
+	}
+	catch (po::error const& exception)
+	{
+		cout << exception.what() << endl;
+		return false;
+	}
+	po::notify(m_args);
 
-    if (m_args.count("help"))
-    {
-        cout << desc;
-        return false;
-    }
+	if (m_args.count("help"))
+	{
+		cout << desc;
+		return false;
+	}
 
-    if (m_args.count("version"))
-    {
-        version();
-        return false;
-    }
+	if (m_args.count("version"))
+	{
+		version();
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
-bool SolContext::processInput()
+bool CommandLineInterface::processInput()
 {
 	if (!m_args.count("input-file"))
 	{
@@ -260,7 +250,7 @@ bool SolContext::processInput()
 	{
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler.addSource(sourceCode.first, sourceCode.second);
-        // TODO: Perhaps we should not compile unless requested
+		// TODO: Perhaps we should not compile unless requested
 		m_compiler.compile(m_args["optimize"].as<bool>());
 	}
 	catch (ParserError const& exception)
@@ -299,10 +289,10 @@ bool SolContext::processInput()
 		return false;
 	}
 
-    return true;
+	return true;
 }
 
-void SolContext::actOnInput()
+void CommandLineInterface::actOnInput()
 {
 	// do we need AST output?
 	if (m_args.count("ast"))
@@ -342,13 +332,13 @@ void SolContext::actOnInput()
 		if (m_args.count("asm"))
 		{
 			auto choice = m_args["asm"].as<OutputType>();
-            if (outputToStdout(choice))
+			if (outputToStdout(choice))
 			{
 				cout << "EVM assembly:" << endl;
 				m_compiler.streamAssembly(cout, contract);
 			}
 
-            if (outputToFile(choice))
+			if (outputToFile(choice))
 			{
 				ofstream outFile(contract + ".evm");
 				m_compiler.streamAssembly(outFile, contract);

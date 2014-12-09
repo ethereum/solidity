@@ -20,19 +20,16 @@
  * Solidity commandline compiler.
  */
 
-
-#include "SolContext.h"
-
-
+#include "CommandLineInterface.h"
 
 int main(int argc, char** argv)
 {
-    dev::solidity::SolContext ctx;
-    if (!ctx.parseArguments(argc, argv))
-        return 1;
-    if (!ctx.processInput())
-        return 1;
-    ctx.actOnInput();
+	dev::solidity::CommandLineInterface cli;
+	if (!cli.parseArguments(argc, argv))
+		return 1;
+	if (!cli.processInput())
+		return 1;
+	cli.actOnInput();
 
 	return 0;
 }

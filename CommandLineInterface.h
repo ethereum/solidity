@@ -17,7 +17,7 @@
 /**
  * @author Lefteris <lefteris@ethdev.com>
  * @date 2014
- * Solidity compiler context class.
+ * Solidity command line interface.
  */
 #pragma once
 
@@ -40,32 +40,32 @@ enum class OutputType: uint8_t
 	BOTH
 };
 
-class SolContext
+class CommandLineInterface
 {
 public:
-    SolContext() {}
+	CommandLineInterface() {}
 
-    /// Parse command line arguments and return false if we should not continue
-    bool parseArguments(int argc, char** argv);
-    /// Parse the files and create source code objects
-    bool processInput();
-    /// Perform actions on the input depending on provided compiler arguments
-    void actOnInput();
+	/// Parse command line arguments and return false if we should not continue
+	bool parseArguments(int argc, char** argv);
+	/// Parse the files and create source code objects
+	bool processInput();
+	/// Perform actions on the input depending on provided compiler arguments
+	void actOnInput();
 
 private:
-    void handleBytecode(std::string const& _argName,
-                        std::string const& _title,
-                        std::string const& _contract,
-                        std::string const& _suffix);
-    void handleJson(DocumentationType _type,
-                    std::string const& _contract);
+	void handleBytecode(std::string const& _argName,
+						std::string const& _title,
+						std::string const& _contract,
+						std::string const& _suffix);
+	void handleJson(DocumentationType _type,
+					std::string const& _contract);
 
-    /// Compiler arguments variable map
-    boost::program_options::variables_map m_args;
+	/// Compiler arguments variable map
+	boost::program_options::variables_map m_args;
 	/// map of input files to source code strings
-    std::map<std::string, std::string> m_sourceCodes;
-    /// Solidity compiler stack
-    dev::solidity::CompilerStack m_compiler;
+	std::map<std::string, std::string> m_sourceCodes;
+	/// Solidity compiler stack
+	dev::solidity::CompilerStack m_compiler;
 };
 
 }
