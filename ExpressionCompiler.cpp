@@ -226,7 +226,8 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 										  << errinfo_sourceLocation(arguments[i]->getLocation())
 										  << errinfo_comment("Type " + type.toString() + " not yet supported."));
 				if (numBytes != 32)
-					m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
+					if (type.getCategory() != Type::Category::STRING)
+						m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
 				m_context << u256(dataOffset) << eth::Instruction::MSTORE;
 				dataOffset += numBytes;
 			}
@@ -243,8 +244,15 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 			if (retSize == 32)
 				m_context << u256(0) << eth::Instruction::MLOAD;
 			else if (retSize > 0)
-				m_context << (u256(1) << ((32 - retSize) * 8))
-						  << u256(0) << eth::Instruction::MLOAD << eth::Instruction::DIV;
+			{
+				if (function.getReturnParameterTypes().front()->getCategory() == Type::Category::STRING)
+					m_context << (u256(1) << ((32 - retSize) * 8)) << eth::Instruction::DUP1
+							  << u256(0) << eth::Instruction::MLOAD
+							  << eth::Instruction::DIV << eth::Instruction::MUL;
+				else
+					m_context << (u256(1) << ((32 - retSize) * 8))
+							  << u256(0) << eth::Instruction::MLOAD << eth::Instruction::DIV;
+			}
 			break;
 		}
 		case Location::SEND:
@@ -411,10 +419,11 @@ void ExpressionCompiler::endVisit(Literal& _literal)
 	{
 	case Type::Category::INTEGER:
 	case Type::Category::BOOL:
+	case Type::Category::STRING:
 		m_context << _literal.getType()->literalValue(_literal);
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer and boolean literals implemented for now."));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
 	}
 }
 
@@ -550,6 +559,11 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 		return;
 	if (_typeOnStack.getCategory() == Type::Category::INTEGER)
 		appendHighBitsCleanup(dynamic_cast<IntegerType const&>(_typeOnStack));
+	else if (_typeOnStack.getCategory() == Type::Category::STRING)
+	{
+		// nothing to do, strings are high-order-bit-aligned
+		//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
+	}
 	else if (_typeOnStack != _targetType)
 		// All other types should not be convertible to non-equal types.
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));

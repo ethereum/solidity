@@ -142,6 +142,9 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
 		if (numBytes == 32)
 			m_context << u256(dataOffset) << load;
+		else if (var->getType()->getCategory() == Type::Category::STRING)
+			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::DUP1
+					  << u256(dataOffset) << load << eth::Instruction::DIV << eth::Instruction::MUL;
 		else
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << u256(dataOffset)
 					  << load << eth::Instruction::DIV;
@@ -166,7 +169,8 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
 		CompilerUtils(m_context).copyToStackTop(stackDepth, paramType);
 		if (numBytes != 32)
-			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
+			if (paramType.getCategory() != Type::Category::STRING)
+				m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
 		m_context << u256(dataOffset) << eth::Instruction::MSTORE;
 		stackDepth -= paramType.getSizeOnStack();
 		dataOffset += numBytes;

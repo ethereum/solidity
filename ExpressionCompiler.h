@@ -35,6 +35,7 @@ namespace solidity {
 class CompilerContext;
 class Type;
 class IntegerType;
+class StaticStringType;
 
 /**
  * Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
@@ -75,7 +76,7 @@ private:
 	/// @}
 
 	/// Appends an implicit or explicit type conversion. For now this comprises only erasing
-	/// higher-order bits (@see appendHighBitCleanup) when widening integer types.
+	/// higher-order bits (@see appendHighBitCleanup) when widening integer.
 	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
 	/// necessary.
 	void appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
