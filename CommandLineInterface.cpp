@@ -104,9 +104,11 @@ void CommandLineInterface::handleBytecode(string const& _argName,
 		{
 			cout << _title << endl;
 			if (_suffix == "opcodes")
-				;
-				// TODO: Figure out why after moving to own class ostream operator does not work for vector of bytes
-				// cout << m_compiler.getBytecode(_contract) << endl;
+			{
+				// TODO: Figure out why the wrong operator << (from boost) is used here
+				dev::operator<<(cout, m_compiler.getBytecode(_contract));
+				cout << endl;
+			}
 			else
 				cout << toHex(m_compiler.getBytecode(_contract)) << endl;
 		}
@@ -115,9 +117,9 @@ void CommandLineInterface::handleBytecode(string const& _argName,
 		{
 			ofstream outFile(_contract + _suffix);
 			if (_suffix == "opcodes")
-				;
-				// TODO: Figure out why after moving to own class ostream operator does not work for vector of bytes
-				// outFile << m_compiler.getBytecode(_contract);
+				// TODO: Figure out why the wrong operator << (from boost) is used here
+				dev::operator<<(outFile, m_compiler.getBytecode(_contract));
+
 			else
 				outFile << toHex(m_compiler.getBytecode(_contract));
 			outFile.close();
