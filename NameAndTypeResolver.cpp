@@ -32,9 +32,9 @@ namespace solidity
 {
 
 
-NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration*> const& _globals)
+NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration const*> const& _globals)
 {
-	for (Declaration* declaration: _globals)
+	for (Declaration const* declaration: _globals)
 		m_scopes[nullptr].registerDeclaration(*declaration);
 }
 
@@ -70,13 +70,14 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	m_currentScope = &m_scopes[nullptr];
 }
 
-void NameAndTypeResolver::updateDeclaration(Declaration& _declaration)
+void NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 {
 	m_scopes[nullptr].registerDeclaration(_declaration, true);
-	_declaration.setScope(nullptr);
+	if (asserts(_declaration.getScope() == nullptr))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Updated declaration outside global scope."));
 }
 
-Declaration* NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
+Declaration const* NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
 {
 	auto iterator = m_scopes.find(_scope);
 	if (iterator == end(m_scopes))
@@ -84,7 +85,7 @@ Declaration* NameAndTypeResolver::resolveName(ASTString const& _name, Declaratio
 	return iterator->second.resolveName(_name, false);
 }
 
-Declaration* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
+Declaration const* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
 {
 	return m_currentScope->resolveName(_name, _recursive);
 }
@@ -146,7 +147,7 @@ bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)
 	return true;
 }
 
-void DeclarationRegistrationHelper::enterNewSubScope(Declaration& _declaration)
+void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declaration)
 {
 	map<ASTNode const*, DeclarationContainer>::iterator iter;
 	bool newlyAdded;
@@ -204,15 +205,14 @@ bool ReferencesResolver::visit(Return& _return)
 	return true;
 }
 
-bool ReferencesResolver::visit(Mapping& _mapping)
+bool ReferencesResolver::visit(Mapping&)
 {
-	(void)_mapping;
 	return true;
 }
 
 bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 {
-	Declaration* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
+	Declaration const* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
 	if (!declaration)
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
 												 << errinfo_comment("Undeclared identifier."));
@@ -222,7 +222,7 @@ bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 
 bool ReferencesResolver::visit(Identifier& _identifier)
 {
-	Declaration* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
+	Declaration const* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
 	if (!declaration)
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_identifier.getLocation())
 												 << errinfo_comment("Undeclared identifier."));
