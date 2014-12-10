@@ -20,6 +20,7 @@
  * Solidity AST to EVM bytecode compiler for expressions.
  */
 
+#include <functional>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
 #include <libsolidity/ASTVisitor.h>
@@ -82,6 +83,25 @@ private:
 	void appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
 	//// Appends code that cleans higher-order bits for integer types.
 	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
+
+	/// Additional options used in appendExternalFunctionCall.
+	struct FunctionCallOptions
+	{
+		FunctionCallOptions() {}
+		/// Invoked to copy the address to the stack
+		std::function<void()> obtainAddress;
+		/// Invoked to copy the ethe value to the stack (if not specified, value is 0).
+		std::function<void()> obtainValue;
+		/// If true, do not prepend function index to call data
+		bool bare = false;
+		/// If false, use calling convention that all arguments and return values are packed as
+		/// 32 byte values with padding.
+		bool packDensely = true;
+	};
+
+	/// Appends code to call a function of the given type with the given arguments.
+	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
+									FunctionCallOptions const& _options = FunctionCallOptions());
 
 	/**
 	 * Helper class to store and retrieve lvalues to and from various locations.
