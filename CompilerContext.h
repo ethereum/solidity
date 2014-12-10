@@ -25,6 +25,7 @@
 #include <ostream>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Assembly.h>
+#include <libsolidity/ASTForward.h>
 #include <libsolidity/Types.h>
 
 namespace dev {
@@ -43,9 +44,9 @@ public:
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration);
 	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
-	void initializeLocalVariables(unsigned _numVariables);
-	void addVariable(VariableDeclaration const& _declaration) { m_localVariables.push_back(&_declaration); }
-	void addFunction(FunctionDefinition const& _function) { m_functionEntryLabels.insert(std::make_pair(&_function, m_asm.newTag())); }
+	void addVariable(VariableDeclaration const& _declaration);
+	void addAndInitializeVariable(VariableDeclaration const& _declaration);
+	void addFunction(FunctionDefinition const& _function);
 
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
 
@@ -98,8 +99,10 @@ private:
 	u256 m_stateVariablesSize;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, u256> m_stateVariables;
-	/// Offsets of local variables on the stack.
-	std::vector<Declaration const*> m_localVariables;
+	/// Offsets of local variables on the stack (relative to stack base).
+	std::map<Declaration const*, unsigned> m_localVariables;
+	/// Sum of stack sizes of local variables
+	unsigned m_localVariablesSize;
 	/// Labels pointing to the entry points of funcitons.
 	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
 };

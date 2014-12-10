@@ -26,6 +26,7 @@
 #include <libsolidity/AST.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/ExpressionCompiler.h>
+#include <libsolidity/CompilerUtils.h>
 
 using namespace std;
 
@@ -135,7 +136,7 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{
 		unsigned const numBytes = var->getType()->getCalldataEncodedSize();
-		if (numBytes == 0)
+		if (numBytes == 0 || numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(var->getLocation())
 								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
@@ -154,18 +155,20 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 	//@todo this can be also done more efficiently
 	unsigned dataOffset = 0;
 	vector<ASTPointer<VariableDeclaration>> const& parameters = _function.getReturnParameters();
+	unsigned stackDepth = CompilerUtils(m_context).getSizeOnStack(parameters);
 	for (unsigned i = 0; i < parameters.size(); ++i)
 	{
 		Type const& paramType = *parameters[i]->getType();
 		unsigned numBytes = paramType.getCalldataEncodedSize();
-		if (numBytes == 0)
+		if (numBytes == 0 || numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
 								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
-		m_context << eth::dupInstruction(parameters.size() - i);
+		CompilerUtils(m_context).copyToStackTop(stackDepth, paramType);
 		if (numBytes != 32)
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
 		m_context << u256(dataOffset) << eth::Instruction::MSTORE;
+		stackDepth -= paramType.getSizeOnStack();
 		dataOffset += numBytes;
 	}
 	// note that the stack is not cleaned up here
@@ -195,15 +198,12 @@ bool Compiler::visit(FunctionDefinition& _function)
 	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
 	// reserve additional slots: [retarg0] ... [retargm] [localvar0] ... [localvarp]
 
-	unsigned const numArguments = _function.getParameters().size();
-	unsigned const numReturnValues = _function.getReturnParameters().size();
-	unsigned const numLocalVariables = _function.getLocalVariables().size();
-
-	for (ASTPointer<VariableDeclaration> const& variable: _function.getParameters() + _function.getReturnParameters())
+	for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
 		m_context.addVariable(*variable);
+	for (ASTPointer<VariableDeclaration const> const& variable: _function.getReturnParameters())
+		m_context.addAndInitializeVariable(*variable);
 	for (VariableDeclaration const* localVariable: _function.getLocalVariables())
-		m_context.addVariable(*localVariable);
-	m_context.initializeLocalVariables(numReturnValues + numLocalVariables);
+		m_context.addAndInitializeVariable(*localVariable);
 
 	_function.getBody().accept(*this);
 
@@ -215,12 +215,16 @@ bool Compiler::visit(FunctionDefinition& _function)
 	// Note that the fact that the return arguments are of increasing index is vital for this
 	// algorithm to work.
 
+	unsigned const argumentsSize = CompilerUtils::getSizeOnStack(_function.getParameters());
+	unsigned const returnValuesSize = CompilerUtils::getSizeOnStack(_function.getReturnParameters());
+	unsigned const localVariablesSize = CompilerUtils::getSizeOnStack(_function.getLocalVariables());
+
 	vector<int> stackLayout;
-	stackLayout.push_back(numReturnValues); // target of return address
-	stackLayout += vector<int>(numArguments, -1); // discard all arguments
-	for (unsigned i = 0; i < numReturnValues; ++i)
+	stackLayout.push_back(returnValuesSize); // target of return address
+	stackLayout += vector<int>(argumentsSize, -1); // discard all arguments
+	for (unsigned i = 0; i < returnValuesSize; ++i)
 		stackLayout.push_back(i);
-	stackLayout += vector<int>(numLocalVariables, -1);
+	stackLayout += vector<int>(localVariablesSize, -1);
 
 	while (stackLayout.back() != int(stackLayout.size() - 1))
 		if (stackLayout.back() < 0)
@@ -298,8 +302,7 @@ bool Compiler::visit(Return& _return)
 		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters().getParameters().front();
 		ExpressionCompiler::appendTypeConversion(m_context, *expression->getType(), *firstVariable.getType());
 
-		unsigned stackPosition = m_context.baseToCurrentStackOffset(m_context.getBaseStackOffsetOfVariable(firstVariable));
-		m_context << eth::swapInstruction(stackPosition) << eth::Instruction::POP;
+		CompilerUtils(m_context).moveToStackVariable(firstVariable);
 	}
 	m_context.appendJumpTo(m_returnTag);
 	return false;
@@ -313,9 +316,7 @@ bool Compiler::visit(VariableDefinition& _variableDefinition)
 		ExpressionCompiler::appendTypeConversion(m_context,
 												 *expression->getType(),
 												 *_variableDefinition.getDeclaration().getType());
-		unsigned baseStackOffset = m_context.getBaseStackOffsetOfVariable(_variableDefinition.getDeclaration());
-		unsigned stackPosition = m_context.baseToCurrentStackOffset(baseStackOffset);
-		m_context << eth::swapInstruction(stackPosition) << eth::Instruction::POP;
+		CompilerUtils(m_context).moveToStackVariable(_variableDefinition.getDeclaration());
 	}
 	return false;
 }
@@ -324,9 +325,7 @@ bool Compiler::visit(ExpressionStatement& _expressionStatement)
 {
 	Expression& expression = _expressionStatement.getExpression();
 	ExpressionCompiler::compileExpression(m_context, expression);
-//	Type::Category category = expression.getType()->getCategory();
-	for (unsigned i = 0; i < expression.getType()->getSizeOnStack(); ++i)
-		m_context << eth::Instruction::POP;
+	CompilerUtils(m_context).popStackElement(*expression.getType());
 	return false;
 }
 

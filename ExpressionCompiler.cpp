@@ -26,6 +26,7 @@
 #include <libsolidity/AST.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/CompilerContext.h>
+#include <libsolidity/CompilerUtils.h>
 
 using namespace std;
 
@@ -174,9 +175,7 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 			// explicit type conversion contract -> address, nothing to do.
 		}
 		else
-		{
 			appendTypeConversion(*firstArgument.getType(), *_functionCall.getType());
-		}
 	}
 	else
 	{
@@ -203,13 +202,14 @@ bool ExpressionCompiler::visit(FunctionCall& _functionCall)
 			m_context.appendJump();
 			m_context << returnLabel;
 
+			unsigned returnParametersSize = CompilerUtils::getSizeOnStack(function.getReturnParameterTypes());
 			// callee adds return parameters, but removes arguments and return label
-			m_context.adjustStackOffset(function.getReturnParameterTypes().size() - arguments.size() - 1);
+			m_context.adjustStackOffset(returnParametersSize - CompilerUtils::getSizeOnStack(arguments) - 1);
 
 			// @todo for now, the return value of a function is its first return value, so remove
 			// all others
 			for (unsigned i = 1; i < function.getReturnParameterTypes().size(); ++i)
-				m_context << eth::Instruction::POP;
+				CompilerUtils(m_context).popStackElement(*function.getReturnParameterTypes()[i]);
 			break;
 		}
 		case Location::EXTERNAL:
@@ -356,7 +356,7 @@ void ExpressionCompiler::endVisit(MemberAccess& _memberAccess)
 	{
 		StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
 		m_context << type.getStorageOffsetOfMember(member) << eth::Instruction::ADD;
-		m_currentLValue = LValue(m_context, LValue::STORAGE);
+		m_currentLValue = LValue(m_context, LValue::STORAGE, *_memberAccess.getType());
 		m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 		break;
 	}
@@ -376,7 +376,7 @@ bool ExpressionCompiler::visit(IndexAccess& _indexAccess)
 	m_context << u256(32) << eth::Instruction::MSTORE << u256(0) << eth::Instruction::MSTORE;
 	m_context << u256(64) << u256(0) << eth::Instruction::SHA3;
 
-	m_currentLValue = LValue(m_context, LValue::STORAGE);
+	m_currentLValue = LValue(m_context, LValue::STORAGE, *_indexAccess.getType());
 	m_currentLValue.retrieveValueIfLValueNotRequested(_indexAccess);
 
 	return false;
@@ -565,6 +565,13 @@ void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.getNumBits()) - 1) << eth::Instruction::AND;
 }
 
+ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,
+								   unsigned _baseStackOffset):
+	m_context(&_compilerContext), m_type(_type), m_baseStackOffset(_baseStackOffset),
+	m_stackSize(_dataType.getSizeOnStack())
+{
+}
+
 void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bool _remove) const
 {
 	switch (m_type)
@@ -575,7 +582,8 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 		if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
 			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
 												  << errinfo_comment("Stack too deep."));
-		*m_context << eth::dupInstruction(stackPos + 1);
+		for (unsigned i = 0; i < m_stackSize; ++i)
+			*m_context << eth::dupInstruction(stackPos + 1);
 		break;
 	}
 	case STORAGE:
@@ -583,7 +591,17 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 			break; // no distinction between value and reference for non-value types
 		if (!_remove)
 			*m_context << eth::Instruction::DUP1;
-		*m_context << eth::Instruction::SLOAD;
+		if (m_stackSize == 1)
+			*m_context << eth::Instruction::SLOAD;
+		else
+			for (unsigned i = 0; i < m_stackSize; ++i)
+			{
+				*m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP1;
+				if (i + 1 < m_stackSize)
+					 *m_context << u256(1) << eth::Instruction::ADD;
+				else
+					*m_context << eth::Instruction::POP;
+			}
 		break;
 	case MEMORY:
 		if (!_expression.getType()->isValueType())
@@ -604,12 +622,13 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 	{
 	case STACK:
 	{
-		unsigned stackPos = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset));
-		if (stackPos > 16)
+		unsigned stackDiff = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset)) - m_stackSize + 1;
+		if (stackDiff > 16)
 			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
 												  << errinfo_comment("Stack too deep."));
-		else if (stackPos > 0)
-			*m_context << eth::swapInstruction(stackPos) << eth::Instruction::POP;
+		else if (stackDiff > 0)
+			for (unsigned i = 0; i < m_stackSize; ++i)
+				*m_context << eth::swapInstruction(stackDiff) << eth::Instruction::POP;
 		if (!_move)
 			retrieveValue(_expression);
 		break;
@@ -617,9 +636,27 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 	case LValue::STORAGE:
 		if (!_expression.getType()->isValueType())
 			break; // no distinction between value and reference for non-value types
-		if (!_move)
-			*m_context << eth::Instruction::DUP2 << eth::Instruction::SWAP1;
-		*m_context << eth::Instruction::SSTORE;
+		// stack layout: value value ... value ref
+		if (!_move) // copy values
+		{
+			if (m_stackSize + 1 > 16)
+				BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
+													  << errinfo_comment("Stack too deep."));
+			for (unsigned i = 0; i < m_stackSize; ++i)
+				*m_context << eth::dupInstruction(m_stackSize + 1) << eth::Instruction::SWAP1;
+		}
+		if (m_stackSize > 0) // store high index value first
+			*m_context << u256(m_stackSize - 1) << eth::Instruction::ADD;
+		for (unsigned i = 0; i < m_stackSize; ++i)
+		{
+			if (i + 1 >= m_stackSize)
+				*m_context << eth::Instruction::SSTORE;
+			else
+				// v v ... v v r+x
+				*m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2
+						   << eth::Instruction::SSTORE
+						   << u256(1) << eth::Instruction::SWAP1 << eth::Instruction::SUB;
+		}
 		break;
 	case LValue::MEMORY:
 		if (!_expression.getType()->isValueType())
@@ -645,6 +682,7 @@ void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(Expression co
 
 void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, Declaration const& _declaration)
 {
+	m_stackSize = _identifier.getType()->getSizeOnStack();
 	if (m_context->isLocalVariable(&_declaration))
 	{
 		m_type = STACK;
