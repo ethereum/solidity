@@ -64,7 +64,7 @@ public:
 	/// Sets the given source code as the only source unit and parses it.
 	void parse(std::string const& _sourceCode);
 	/// Returns a list of the contract names in the sources.
-	std::vector<std::string> getContractNames();
+	std::vector<std::string> getContractNames() const;
 
 	/// Compiles the source units that were previously added and parsed.
 	void compile(bool _optimize = false);
@@ -72,23 +72,23 @@ public:
 	/// @returns the compiled bytecode
 	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);
 
-	bytes const& getBytecode(std::string const& _contractName = "");
+	bytes const& getBytecode(std::string const& _contractName = "") const;
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// Prerequisite: Successful compilation.
-	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "");
+	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "") const;
 
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
-	std::string const& getInterface(std::string const& _contractName = "");
+	std::string const& getInterface(std::string const& _contractName = "") const;
 	/// Returns a string representing the contract's documentation in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
 	/// Can be one of 3 types defined at @c DocumentationType
-	std::string const& getJsonDocumentation(std::string const& _contractName, DocumentationType _type);
+	std::string const& getJsonDocumentation(std::string const& _contractName, DocumentationType _type) const;
 
 	/// Returns the previously used scanner, useful for counting lines during error reporting.
-	Scanner const& getScanner(std::string const& _sourceName = "");
-	SourceUnit& getAST(std::string const& _sourceName = "");
+	Scanner const& getScanner(std::string const& _sourceName = "") const;
+	SourceUnit const& getAST(std::string const& _sourceName = "") const;
 
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.
@@ -112,9 +112,9 @@ private:
 		std::shared_ptr<Compiler> compiler;
 		bytes bytecode;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;
-		std::unique_ptr<std::string> interface;
-		std::unique_ptr<std::string> userDocumentation;
-		std::unique_ptr<std::string> devDocumentation;
+		mutable std::unique_ptr<std::string const> interface;
+		mutable std::unique_ptr<std::string const> userDocumentation;
+		mutable std::unique_ptr<std::string const> devDocumentation;
 
 		Contract();
 	};
@@ -122,14 +122,14 @@ private:
 	void reset(bool _keepSources = false);
 	void resolveImports();
 
-	Contract& getContract(std::string const& _contractName = "");
-	Source& getSource(std::string const& _sourceName = "");
+	Contract const& getContract(std::string const& _contractName = "") const;
+	Source const& getSource(std::string const& _sourceName = "") const;
 
 	bool m_parseSuccessful;
-	std::map<std::string, Source> m_sources;
+	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::vector<Source const*> m_sourceOrder;
-	std::map<std::string, Contract> m_contracts;
+	std::map<std::string const, Contract> m_contracts;
 };
 
 }
