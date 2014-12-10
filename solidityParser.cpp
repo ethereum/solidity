@@ -21,12 +21,14 @@
  */
 
 #include <string>
-
+#include <memory>
 #include <libdevcore/Log.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/Exceptions.h>
 #include <boost/test/unit_test.hpp>
+
+using namespace std;
 
 namespace dev
 {
@@ -40,7 +42,12 @@ namespace
 ASTPointer<ContractDefinition> parseText(std::string const& _source)
 {
 	Parser parser;
-	return parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+	ASTPointer<SourceUnit> sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ASTPointer<ContractDefinition> contract = dynamic_pointer_cast<ContractDefinition>(node))
+			return contract;
+	BOOST_FAIL("No contract found in source.");
+	return ASTPointer<ContractDefinition>();
 }
 }
 
@@ -377,6 +384,50 @@ BOOST_AUTO_TEST_CASE(statement_starting_with_type_conversion)
 					   "    uint64(2);\n"
 					   "  }\n"
 					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(import_directive)
+{
+	char const* text = "import \"abc\";\n"
+					   "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_contracts)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "contract test2 {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_contracts_and_imports)
+{
+	char const* text = "import \"abc\";\n"
+					   "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "import \"def\";\n"
+					   "contract test2 {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "import \"ghi\";\n";
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
