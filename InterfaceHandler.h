@@ -45,7 +45,15 @@ enum class DocTagType: uint8_t
 	DEV,
 	NOTICE,
 	PARAM,
-	RETURN
+	RETURN,
+	AUTHOR,
+	TITLE
+};
+
+enum class CommentOwner
+{
+	CONTRACT,
+	FUNCTION
 };
 
 class InterfaceHandler
@@ -89,12 +97,14 @@ private:
 												 std::string::const_iterator _end);
 	std::string::const_iterator appendDocTagParam(std::string::const_iterator _pos,
 												  std::string::const_iterator _end);
-	void parseDocString(std::string const& _string);
+	void parseDocString(std::string const& _string, CommentOwner _owner);
 	std::string::const_iterator appendDocTag(std::string::const_iterator _pos,
-											 std::string::const_iterator _end);
+											 std::string::const_iterator _end,
+											 CommentOwner _owner);
 	std::string::const_iterator parseDocTag(std::string::const_iterator _pos,
 											std::string::const_iterator _end,
-											std::string const& _tag);
+											std::string const& _tag,
+											CommentOwner _owner);
 
 	Json::StyledWriter m_writer;
 
@@ -103,6 +113,9 @@ private:
 	std::string m_notice;
 	std::string m_dev;
 	std::string m_return;
+	std::string m_contractAuthor;
+	std::string m_author;
+	std::string m_title;
 	std::vector<std::pair<std::string, std::string>> m_params;
 };
 

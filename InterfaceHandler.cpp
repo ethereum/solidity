@@ -75,7 +75,7 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefi
 		if (strPtr)
 		{
 			resetUser();
-			parseDocString(*strPtr);
+			parseDocString(*strPtr, CommentOwner::FUNCTION);
 			if (!m_notice.empty())
 			{// since @notice is the only user tag if missing function should not appear
 				user["notice"] = Json::Value(m_notice);
@@ -95,6 +95,20 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
+	auto contractDoc = _contractDef.getDocumentation();
+	if (contractDoc)
+	{
+		m_contractAuthor.clear();
+		m_title.clear();
+		parseDocString(*contractDoc, CommentOwner::CONTRACT);
+
+		if (!m_contractAuthor.empty())
+			doc["author"] = m_contractAuthor;
+
+		if (!m_title.empty())
+			doc["title"] = m_title;
+	}
+
 	for (FunctionDefinition const* f: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value method;
@@ -102,16 +116,21 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 		if (strPtr)
 		{
 			resetDev();
-			parseDocString(*strPtr);
+			parseDocString(*strPtr, CommentOwner::FUNCTION);
 
 			if (!m_dev.empty())
 				method["details"] = Json::Value(m_dev);
+
+			if (!m_author.empty())
+				method["author"] = m_author;
+
 			Json::Value params(Json::objectValue);
 			for (auto const& pair: m_params)
 				params[pair.first] = pair.second;
 
 			if (!m_params.empty())
 				method["params"] = params;
+
 			if (!m_return.empty())
 				method["return"] = m_return;
 
@@ -133,6 +152,7 @@ void InterfaceHandler::resetUser()
 void InterfaceHandler::resetDev()
 {
 	m_dev.clear();
+	m_author.clear();
 	m_return.clear();
 	m_params.clear();
 }
@@ -193,7 +213,8 @@ std::string::const_iterator InterfaceHandler::appendDocTagParam(std::string::con
 
 std::string::const_iterator InterfaceHandler::parseDocTag(std::string::const_iterator _pos,
 														  std::string::const_iterator _end,
-														  std::string const& _tag)
+														  std::string const& _tag,
+														  CommentOwner _owner)
 {
 	// LTODO: need to check for @(start of a tag) between here and the end of line
 	//      for all cases
@@ -205,37 +226,77 @@ std::string::const_iterator InterfaceHandler::parseDocTag(std::string::const_ite
 			return parseDocTagLine(_pos, _end, m_notice, DocTagType::NOTICE);
 		else if (_tag == "return")
 			return parseDocTagLine(_pos, _end, m_return, DocTagType::RETURN);
+		else if (_tag == "author")
+		{
+			if (_owner == CommentOwner::CONTRACT)
+				return parseDocTagLine(_pos, _end, m_contractAuthor, DocTagType::AUTHOR);
+			else if(_owner == CommentOwner::FUNCTION)
+				return parseDocTagLine(_pos, _end, m_author, DocTagType::AUTHOR);
+			else
+				// LTODO: for now this else makes no sense but later comments will go to more language constructs
+				BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("@author tag is legal only for contracts"));
+		}
+		else if (_tag == "title")
+		{
+			if (_owner == CommentOwner::CONTRACT)
+				return parseDocTagLine(_pos, _end, m_title, DocTagType::TITLE);
+			else
+				// LTODO: Unknown tag, throw some form of warning and not just an exception
+				BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("@title tag is legal only for contracts"));
+		}
 		else if (_tag == "param")
 			return parseDocTagParam(_pos, _end);
 		else
-		{
 			// LTODO: Unknown tag, throw some form of warning and not just an exception
 			BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("Unknown tag " + _tag + " encountered"));
-		}
 	}
 	else
-		return appendDocTag(_pos, _end);
+		return appendDocTag(_pos, _end, _owner);
 }
 
 std::string::const_iterator InterfaceHandler::appendDocTag(std::string::const_iterator _pos,
-														   std::string::const_iterator _end)
+														   std::string::const_iterator _end,
+														   CommentOwner _owner)
 {
 	switch (m_lastTag)
 	{
-		case DocTagType::DEV:
-			m_dev += " ";
-			return parseDocTagLine(_pos, _end, m_dev, DocTagType::DEV);
-		case DocTagType::NOTICE:
-			m_notice += " ";
-			return parseDocTagLine(_pos, _end, m_notice, DocTagType::NOTICE);
-		case DocTagType::RETURN:
-			m_return += " ";
-			return parseDocTagLine(_pos, _end, m_return, DocTagType::RETURN);
-		case DocTagType::PARAM:
-			return appendDocTagParam(_pos, _end);
-		default:
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal: Illegal documentation tag type"));
-			break;
+	case DocTagType::DEV:
+		m_dev += " ";
+		return parseDocTagLine(_pos, _end, m_dev, DocTagType::DEV);
+	case DocTagType::NOTICE:
+		m_notice += " ";
+		return parseDocTagLine(_pos, _end, m_notice, DocTagType::NOTICE);
+	case DocTagType::RETURN:
+		m_return += " ";
+		return parseDocTagLine(_pos, _end, m_return, DocTagType::RETURN);
+	case DocTagType::AUTHOR:
+		if (_owner == CommentOwner::CONTRACT)
+		{
+			m_contractAuthor += " ";
+			return parseDocTagLine(_pos, _end, m_contractAuthor, DocTagType::AUTHOR);
+		}
+		else if(_owner == CommentOwner::FUNCTION)
+		{
+			m_author += " ";
+			return parseDocTagLine(_pos, _end, m_author, DocTagType::AUTHOR);
+		}
+		else
+			// LTODO: Unknown tag, throw some form of warning and not just an exception
+			BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("@author tag in illegal comment"));
+	case DocTagType::TITLE:
+		if (_owner == CommentOwner::CONTRACT)
+		{
+			m_title += " ";
+			return parseDocTagLine(_pos, _end, m_title, DocTagType::TITLE);
+		}
+		else
+			// LTODO: Unknown tag, throw some form of warning and not just an exception
+			BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("@title tag in illegal comment"));
+	case DocTagType::PARAM:
+		return appendDocTagParam(_pos, _end);
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal: Illegal documentation tag type"));
+		break;
 	}
 }
 
@@ -247,7 +308,7 @@ static inline std::string::const_iterator getFirstSpaceOrNl(std::string::const_i
 	return (spacePos < nlPos) ? spacePos : nlPos;
 }
 
-void InterfaceHandler::parseDocString(std::string const& _string)
+void InterfaceHandler::parseDocString(std::string const& _string, CommentOwner _owner)
 {
 	auto currPos = _string.begin();
 	auto end = _string.end();
@@ -265,10 +326,10 @@ void InterfaceHandler::parseDocString(std::string const& _string)
 				BOOST_THROW_EXCEPTION(DocstringParsingError() <<
 									  errinfo_comment("End of tag " + std::string(tagPos, tagNameEndPos) + "not found"));
 
-			currPos = parseDocTag(tagNameEndPos + 1, end, std::string(tagPos + 1, tagNameEndPos));
+			currPos = parseDocTag(tagNameEndPos + 1, end, std::string(tagPos + 1, tagNameEndPos), _owner);
 		}
 		else if (m_lastTag != DocTagType::NONE) // continuation of the previous tag
-			currPos = appendDocTag(currPos + 1, end);
+			currPos = appendDocTag(currPos + 1, end, _owner);
 		else if (currPos != end) // skip the line if a newline was found
 			currPos = nlPos + 1;
 	}
