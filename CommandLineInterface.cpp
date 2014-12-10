@@ -255,7 +255,22 @@ bool CommandLineInterface::processInput()
 	}
 	else
 		for (string const& infile: m_args["input-file"].as<vector<string>>())
+		{
+			auto path = boost::filesystem::path(infile);
+			if (!boost::filesystem::exists(path))
+			{
+				cout << "Skipping non existant input file \"" << infile << "\"" << endl;
+				continue;
+			}
+
+			if (!boost::filesystem::is_regular_file(path))
+			{
+				cout << "\"" << infile << "\" is not a valid file. Skipping" << endl;
+				continue;
+			}
+
 			m_sourceCodes[infile] = asString(dev::contents(infile));
+		}
 
 	try
 	{
