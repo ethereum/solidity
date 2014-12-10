@@ -217,7 +217,8 @@ std::string::const_iterator InterfaceHandler::parseDocTag(std::string::const_ite
 														  CommentOwner _owner)
 {
 	// LTODO: need to check for @(start of a tag) between here and the end of line
-	//      for all cases
+	// for all cases. Also somehow automate list of acceptable tags for each
+	// language construct since current way does not scale well.
 	if (m_lastTag == DocTagType::NONE || _tag != "")
 	{
 		if (_tag == "dev")
@@ -230,7 +231,7 @@ std::string::const_iterator InterfaceHandler::parseDocTag(std::string::const_ite
 		{
 			if (_owner == CommentOwner::CONTRACT)
 				return parseDocTagLine(_pos, _end, m_contractAuthor, DocTagType::AUTHOR);
-			else if(_owner == CommentOwner::FUNCTION)
+			else if (_owner == CommentOwner::FUNCTION)
 				return parseDocTagLine(_pos, _end, m_author, DocTagType::AUTHOR);
 			else
 				// LTODO: for now this else makes no sense but later comments will go to more language constructs
@@ -275,7 +276,7 @@ std::string::const_iterator InterfaceHandler::appendDocTag(std::string::const_it
 			m_contractAuthor += " ";
 			return parseDocTagLine(_pos, _end, m_contractAuthor, DocTagType::AUTHOR);
 		}
-		else if(_owner == CommentOwner::FUNCTION)
+		else if (_owner == CommentOwner::FUNCTION)
 		{
 			m_author += " ";
 			return parseDocTagLine(_pos, _end, m_author, DocTagType::AUTHOR);
