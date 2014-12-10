@@ -11,6 +11,8 @@ set(EXECUTABLE solc)
 file(GLOB HEADERS "*.h")
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
+target_link_libraries(${EXECUTABLE} boost_filesystem)
+target_link_libraries(${EXECUTABLE} boost_program_options)
 target_link_libraries(${EXECUTABLE} solidity)
 
 install( TARGETS ${EXECUTABLE} DESTINATION bin )
