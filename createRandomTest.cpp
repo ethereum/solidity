@@ -31,9 +31,8 @@
 #include <json_spirit/json_spirit_writer_template.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
-#include <libethereum/VMFactory.h>
 #include <libevmcore/Instruction.h>
-#include <libevm/VM.h>
+#include <libevm/VMFactory.h>
 #include "vm.h"
 
 using namespace std;
@@ -129,9 +128,6 @@ void doMyTests(json_spirit::mValue& v)
 		assert(o.count("pre") > 0);
 		assert(o.count("exec") > 0);
 
-
-		auto vmObj = eth::VMFactory::create(eth::VMFactory::Interpreter);
-		auto& vm = *vmObj;
 		dev::test::FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
@@ -145,14 +141,15 @@ void doMyTests(json_spirit::mValue& v)
 			fev.code = fev.thisTxCode;
 		}
 
-		vm.reset(fev.gas);
 		bytes output;
+		auto vm = eth::VMFactory::create(fev.gas);
+
 		u256 gas;
 		bool vmExceptionOccured = false;
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace()).toBytes();
-			gas = vm.gas();
+			output = vm->go(fev, fev.simpleTrace()).toBytes();
+			gas = vm->gas();
 		}
 		catch (eth::VMException const& _e)
 		{
@@ -192,7 +189,7 @@ void doMyTests(json_spirit::mValue& v)
 			o["callcreates"] = fev.exportCallCreates();
 			o["out"] = "0x" + toHex(output);
 			fev.push(o, "gas", gas);
-			o["logs"] = mValue(test::exportLog(fev.sub.logs));
+			o["logs"] = test::exportLog(fev.sub.logs);
 		}
 	}
 }

@@ -22,8 +22,10 @@
 
 #include <chrono>
 #include <boost/filesystem.hpp>
-#include <libethereum/VMFactory.h>
+#include <libethereum/Executive.h>
+#include <libevm/VMFactory.h>
 #include "vm.h"
+
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -119,41 +121,6 @@ void FakeExtVM::importEnv(mObject& _o)
 	currentBlock.difficulty = toInt(_o["currentDifficulty"]);
 	currentBlock.timestamp = toInt(_o["currentTimestamp"]);
 	currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
-}
-
-mObject FakeExtVM::exportLog()
-{
-	mObject ret;
-	for (LogEntry const& l: sub.logs)
-	{
-		mObject o;
-		o["address"] = toString(l.address);
-		mArray topics;
-		for (auto const& t: l.topics)
-			topics.push_back(toString(t));
-		o["topics"] = topics;
-		o["data"] = "0x" + toHex(l.data);
-		ret[toString(l.bloom())] = o;
-	}
-	return ret;
-}
-
-void FakeExtVM::importLog(mObject& _o)
-{
-	for (auto const& l: _o)
-	{
-		mObject o = l.second.get_obj();
-		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
-		assert(o.count("address") > 0);
-		assert(o.count("topics") > 0);
-		assert(o.count("data") > 0);
-		LogEntry log;
-		log.address = Address(o["address"].get_str());
-		for (auto const& t: o["topics"].get_array())
-			log.topics.push_back(h256(t.get_str()));
-		log.data = importData(o);
-		sub.logs.push_back(log);
-	}
 }
 
 mObject FakeExtVM::exportState()
@@ -320,14 +287,16 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 		auto argc = boost::unit_test::framework::master_test_suite().argc;
 		auto argv = boost::unit_test::framework::master_test_suite().argv;
-		auto useJit = false;
-		for (auto i =  0; i < argc && !useJit; ++i)
-			useJit |= std::string(argv[i]) == "--jit";
-#if ETH_EVMJIT
-		auto vmKind = useJit ? VMFactory::JIT : VMFactory::Interpreter;
-#else
-		auto vmKind == VMFactory::Interpreter;
-#endif
+
+		for (auto i =  0; i < argc; ++i)
+		{
+			if (std::string(argv[i]) == "--jit")
+			{
+				VMFactory::setKind(VMKind::JIT);
+				break;
+			}
+		}
+
 		dev::test::FakeExtVM fev;
 
 		fev.importEnv(o["env"].get_obj());
@@ -343,14 +312,13 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			fev.code = fev.thisTxCode;
 		}
 
-		auto vm = VMFactory::create(vmKind, fev.gas);
 		bytes output;
-
-		auto startTime = std::chrono::high_resolution_clock::now();
 		u256 gas;
 		bool vmExceptionOccured = false;
+		auto startTime = std::chrono::high_resolution_clock::now();
 		try
 		{
+			auto vm = eth::VMFactory::create(fev.gas);
 			output = vm->go(fev, fev.simpleTrace()).toBytes();
 			gas = vm->gas();
 		}
@@ -410,7 +378,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = "0x" + toHex(output);
 				fev.push(o, "gas", gas);
-				o["logs"] = mValue(exportLog(fev.sub.logs));
+				o["logs"] = exportLog(fev.sub.logs);
 			}
 		}
 		else
@@ -428,7 +396,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				dev::test::FakeExtVM test;
 				test.importState(o["post"].get_obj());
 				test.importCallCreates(o["callcreates"].get_array());
-				test.sub.logs = importLog(o["logs"].get_obj());
+				test.sub.logs = importLog(o["logs"].get_array());
 
 			checkOutput(output, o);
 
@@ -512,6 +480,26 @@ BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 BOOST_AUTO_TEST_CASE(vmLogTest)
 {
 	dev::test::executeTests("vmLogTest", "/VMTests", dev::test::doVMTests);
+}
+
+BOOST_AUTO_TEST_CASE(vmPerformanceTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--performance")
+			dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(vmArithPerformanceTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--performance")
+			dev::test::executeTests("vmArithPerformanceTest", "/VMTests", dev::test::doVMTests);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(vmRandom)
