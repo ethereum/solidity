@@ -130,7 +130,6 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 {
 	// We do not check the calldata size, everything is zero-padded.
 	unsigned dataOffset = 1;
-	eth::Instruction load = _fromMemory ? eth::Instruction::MLOAD : eth::Instruction::CALLDATALOAD;
 
 	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
@@ -140,14 +139,8 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(var->getLocation())
 								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
-		if (numBytes == 32)
-			m_context << u256(dataOffset) << load;
-		else if (var->getType()->getCategory() == Type::Category::STRING)
-			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::DUP1
-					  << u256(dataOffset) << load << eth::Instruction::DIV << eth::Instruction::MUL;
-		else
-			m_context << (u256(1) << ((32 - numBytes) * 8)) << u256(dataOffset)
-					  << load << eth::Instruction::DIV;
+		bool leftAligned = var->getType()->getCategory() == Type::Category::STRING;
+		CompilerUtils(m_context).loadFromMemory(dataOffset, numBytes, leftAligned, !_fromMemory);
 		dataOffset += numBytes;
 	}
 	return dataOffset;
@@ -168,10 +161,8 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
 								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
 		CompilerUtils(m_context).copyToStackTop(stackDepth, paramType);
-		if (numBytes != 32)
-			if (paramType.getCategory() != Type::Category::STRING)
-				m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
-		m_context << u256(dataOffset) << eth::Instruction::MSTORE;
+		bool const leftAligned = paramType.getCategory() == Type::Category::STRING;
+		CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned);
 		stackDepth -= paramType.getSizeOnStack();
 		dataOffset += numBytes;
 	}
