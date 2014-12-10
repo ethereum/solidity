@@ -32,7 +32,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libevmcore/Instruction.h>
-#include <libevm/VM.h>
+#include <libevm/VMFactory.h>
 #include "vm.h"
 
 using namespace std;
@@ -142,14 +142,14 @@ void doMyTests(json_spirit::mValue& v)
 		}
 
 		bytes output;
-		eth::VM vm(fev.gas);
+		auto vm = eth::VMFactory::create(fev.gas);
 
 		u256 gas;
 		bool vmExceptionOccured = false;
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace()).toBytes();
-			gas = vm.gas();
+			output = vm->go(fev, fev.simpleTrace()).toBytes();
+			gas = vm->gas();
 		}
 		catch (eth::VMException const& _e)
 		{
