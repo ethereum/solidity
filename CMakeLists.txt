@@ -1,7 +1,7 @@
 cmake_policy(SET CMP0015 NEW)
 # this policy was introduced in cmake 3.0
 # remove if, once 3.0 will be used on unix
-if (APPLE)
+if (${CMAKE_MAJOR_VERSION} GREATER 2)
 	# old policy do not use MACOSX_RPATH
 	cmake_policy(SET CMP0042 OLD)
 endif()
