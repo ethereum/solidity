@@ -156,13 +156,15 @@ class ContractDefinition: public Declaration
 public:
 	ContractDefinition(Location const& _location,
 					   ASTPointer<ASTString> const& _name,
+					   ASTPointer<ASTString> const& _documentation,
 					   std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
 					   std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
 					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions):
 		Declaration(_location, _name),
 		m_definedStructs(_definedStructs),
 		m_stateVariables(_stateVariables),
-		m_definedFunctions(_definedFunctions)
+		m_definedFunctions(_definedFunctions),
+		m_documentation(_documentation)
 	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
@@ -172,6 +174,10 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() const { return m_stateVariables; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
 
+	/// @return A shared pointer of an ASTString.
+	/// Can contain a nullptr in which case indicates absence of documentation
+	ASTPointer<ASTString> const& getDocumentation() const { return m_documentation; }
+
 	/// Returns the functions that make up the calling interface in the intended order.
 	std::vector<FunctionDefinition const*> getInterfaceFunctions() const;
 
@@ -179,6 +185,7 @@ private:
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
+	ASTPointer<ASTString> m_documentation;
 };
 
 class StructDefinition: public Declaration

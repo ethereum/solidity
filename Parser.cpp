@@ -112,6 +112,9 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<ASTString> docstring;
+	if (m_scanner->getCurrentCommentLiteral() != "")
+		docstring = make_shared<ASTString>(m_scanner->getCurrentCommentLiteral());
 	expectToken(Token::CONTRACT);
 	ASTPointer<ASTString> name = expectIdentifierToken();
 	expectToken(Token::LBRACE);
@@ -146,7 +149,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBRACE);
-	return nodeFactory.createNode<ContractDefinition>(name, structs, stateVariables, functions);
+	return nodeFactory.createNode<ContractDefinition>(name, docstring, structs, stateVariables, functions);
 }
 
 ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
