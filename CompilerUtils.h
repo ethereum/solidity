@@ -37,6 +37,8 @@ public:
 
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);
+	/// Copies a variable of type @a _type from a stack depth of @a _stackDepth to the top of the stack.
+	void copyToStackTop(unsigned _stackDepth, Type const& _type);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);
 

@@ -42,6 +42,15 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 		m_context << eth::swapInstruction(stackPosition - size + 1) << eth::Instruction::POP;
 }
 
+void CompilerUtils::copyToStackTop(unsigned _stackDepth, const Type& _type)
+{
+	if (_stackDepth > 16)
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Stack too deep."));
+	unsigned const size = _type.getSizeOnStack();
+	for (unsigned i = 0; i < size; ++i)
+		m_context << eth::dupInstruction(_stackDepth);
+}
+
 void CompilerUtils::popStackElement(Type const& _type)
 {
 	unsigned const size = _type.getSizeOnStack();

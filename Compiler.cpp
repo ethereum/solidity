@@ -155,6 +155,7 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 	//@todo this can be also done more efficiently
 	unsigned dataOffset = 0;
 	vector<ASTPointer<VariableDeclaration>> const& parameters = _function.getReturnParameters();
+	unsigned stackDepth = CompilerUtils(m_context).getSizeOnStack(parameters);
 	for (unsigned i = 0; i < parameters.size(); ++i)
 	{
 		Type const& paramType = *parameters[i]->getType();
@@ -163,10 +164,11 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
 								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
-		m_context << eth::dupInstruction(parameters.size() - i);
+		CompilerUtils(m_context).copyToStackTop(stackDepth, paramType);
 		if (numBytes != 32)
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
 		m_context << u256(dataOffset) << eth::Instruction::MSTORE;
+		stackDepth -= paramType.getSizeOnStack();
 		dataOffset += numBytes;
 	}
 	// note that the stack is not cleaned up here
