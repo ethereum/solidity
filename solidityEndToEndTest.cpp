@@ -1025,6 +1025,41 @@ BOOST_AUTO_TEST_CASE(calls_to_this)
 	BOOST_REQUIRE(callContractFunction(0, a, b) == toBigEndian(a * b + 10));
 }
 
+BOOST_AUTO_TEST_CASE(inter_contract_calls_with_local_vars)
+{
+	// note that a reference to another contract's function occupies two stack slots,
+	// so this tests correct stack slot allocation
+	char const* sourceCode = R"(
+		contract Helper {
+			function multiply(uint a, uint b) returns (uint c) {
+				return a * b;
+			}
+		}
+		contract Main {
+			Helper h;
+			function callHelper(uint a, uint b) returns (uint c) {
+				var fu = h.multiply;
+				var y = 9;
+				var ret = fu(a, b);
+				return ret + y;
+			}
+			function getHelper() returns (address haddress) {
+				return address(h);
+			}
+			function setHelper(address haddress) {
+				h = Helper(haddress);
+			}
+		})";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
+	u256 a(3456789);
+	u256 b("0x282837623374623234aa74");
+	BOOST_REQUIRE(callContractFunction(0, a, b) == toBigEndian(a * b + 9));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
