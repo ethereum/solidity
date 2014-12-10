@@ -565,7 +565,7 @@ void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.getNumBits()) - 1) << eth::Instruction::AND;
 }
 
-ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, const Type& _dataType,
+ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,
 								   unsigned _baseStackOffset):
 	m_context(&_compilerContext), m_type(_type), m_baseStackOffset(_baseStackOffset),
 	m_stackSize(_dataType.getSizeOnStack())
