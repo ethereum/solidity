@@ -30,10 +30,10 @@ namespace solidity {
 class Compiler: private ASTConstVisitor
 {
 public:
-	Compiler(): m_returnTag(m_context.newTag()) {}
+	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_returnTag(m_context.newTag()) {}
 
 	void compileContract(ContractDefinition const& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals);
-	bytes getAssembledBytecode(bool _optimize = false) { return m_context.getAssembledBytecode(_optimize); }
+	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(m_optimize); }
 	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
 
 private:
@@ -57,7 +57,9 @@ private:
 	virtual bool visit(VariableDefinition const& _variableDefinition) override;
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
 
+	void compileExpression(Expression const& _expression);
 
+	bool const m_optimize;
 	CompilerContext m_context;
 	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
 	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement

@@ -317,6 +317,8 @@ public:
 	static bool isElementaryTypeName(Value tok) { return INT <= tok && tok < TYPES_END; }
 	static bool isAssignmentOp(Value tok) { return ASSIGN <= tok && tok <= ASSIGN_MOD; }
 	static bool isBinaryOp(Value op) { return COMMA <= op && op <= MOD; }
+	static bool isCommutativeOp(Value op) { return op == BIT_OR || op == BIT_XOR || op == BIT_AND ||
+				op == ADD || op == MUL || op == EQ || op == NE; }
 	static bool isArithmeticOp(Value op) { return ADD <= op && op <= MOD; }
 	static bool isCompareOp(Value op) { return EQ <= op && op <= IN; }
 

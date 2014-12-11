@@ -33,9 +33,9 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
-void ExpressionCompiler::compileExpression(CompilerContext& _context, Expression const& _expression)
+void ExpressionCompiler::compileExpression(CompilerContext& _context, Expression const& _expression, bool _optimize)
 {
-	ExpressionCompiler compiler(_context);
+	ExpressionCompiler compiler(_context, _optimize);
 	_expression.accept(compiler);
 }
 
@@ -145,10 +145,24 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			if (Token::isCompareOp(op) || op == Token::DIV || op == Token::MOD)
 				cleanupNeeded = true;
 
-		rightExpression.accept(*this);
-		appendTypeConversion(*rightExpression.getType(), commonType, cleanupNeeded);
-		leftExpression.accept(*this);
-		appendTypeConversion(*leftExpression.getType(), commonType, cleanupNeeded);
+		// for commutative operators, push the literal as late as possible to allow improved optimization
+		//@todo this has to be extended for literal expressions
+		bool swap = (m_optimize && Token::isCommutativeOp(op) && dynamic_cast<Literal const*>(&rightExpression)
+					 && !dynamic_cast<Literal const*>(&leftExpression));
+		if (swap)
+		{
+			leftExpression.accept(*this);
+			appendTypeConversion(*leftExpression.getType(), commonType, cleanupNeeded);
+			rightExpression.accept(*this);
+			appendTypeConversion(*rightExpression.getType(), commonType, cleanupNeeded);
+		}
+		else
+		{
+			rightExpression.accept(*this);
+			appendTypeConversion(*rightExpression.getType(), commonType, cleanupNeeded);
+			leftExpression.accept(*this);
+			appendTypeConversion(*leftExpression.getType(), commonType, cleanupNeeded);
+		}
 		if (Token::isCompareOp(op))
 			appendCompareOperatorCode(op, commonType);
 		else

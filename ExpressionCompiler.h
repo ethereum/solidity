@@ -45,14 +45,14 @@ class ExpressionCompiler: private ASTConstVisitor
 {
 public:
 	/// Compile the given @a _expression into the @a _context.
-	static void compileExpression(CompilerContext& _context, Expression const& _expression);
+	static void compileExpression(CompilerContext& _context, Expression const& _expression, bool _optimize = false);
 
 	/// Appends code to remove dirty higher order bits in case of an implicit promotion to a wider type.
 	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack, Type const& _targetType);
 
 private:
-	ExpressionCompiler(CompilerContext& _compilerContext):
-		m_context(_compilerContext), m_currentLValue(m_context) {}
+	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimize = false):
+		m_optimize(_optimize), m_context(_compilerContext), m_currentLValue(m_context) {}
 
 	virtual bool visit(Assignment const& _assignment) override;
 	virtual void endVisit(UnaryOperation const& _unaryOperation) override;
@@ -132,6 +132,7 @@ private:
 		unsigned m_stackSize;
 	};
 
+	bool m_optimize;
 	CompilerContext& m_context;
 	LValue m_currentLValue;
 };

@@ -246,7 +246,7 @@ bool Compiler::visit(FunctionDefinition const& _function)
 
 bool Compiler::visit(IfStatement const& _ifStatement)
 {
-	ExpressionCompiler::compileExpression(m_context, _ifStatement.getCondition());
+	compileExpression(_ifStatement.getCondition());
 	eth::AssemblyItem trueTag = m_context.appendConditionalJump();
 	if (_ifStatement.getFalseStatement())
 		_ifStatement.getFalseStatement()->accept(*this);
@@ -265,7 +265,7 @@ bool Compiler::visit(WhileStatement const& _whileStatement)
 	m_breakTags.push_back(loopEnd);
 
 	m_context << loopStart;
-	ExpressionCompiler::compileExpression(m_context, _whileStatement.getCondition());
+	compileExpression(_whileStatement.getCondition());
 	m_context << eth::Instruction::ISZERO;
 	m_context.appendConditionalJumpTo(loopEnd);
 
@@ -298,7 +298,7 @@ bool Compiler::visit(Return const& _return)
 	//@todo modifications are needed to make this work with functions returning multiple values
 	if (Expression const* expression = _return.getExpression())
 	{
-		ExpressionCompiler::compileExpression(m_context, *expression);
+		compileExpression(*expression);
 		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters().getParameters().front();
 		ExpressionCompiler::appendTypeConversion(m_context, *expression->getType(), *firstVariable.getType());
 
@@ -312,7 +312,7 @@ bool Compiler::visit(VariableDefinition const& _variableDefinition)
 {
 	if (Expression const* expression = _variableDefinition.getExpression())
 	{
-		ExpressionCompiler::compileExpression(m_context, *expression);
+		compileExpression(*expression);
 		ExpressionCompiler::appendTypeConversion(m_context,
 												 *expression->getType(),
 												 *_variableDefinition.getDeclaration().getType());
@@ -324,9 +324,14 @@ bool Compiler::visit(VariableDefinition const& _variableDefinition)
 bool Compiler::visit(ExpressionStatement const& _expressionStatement)
 {
 	Expression const& expression = _expressionStatement.getExpression();
-	ExpressionCompiler::compileExpression(m_context, expression);
+	compileExpression(expression);
 	CompilerUtils(m_context).popStackElement(*expression.getType());
 	return false;
+}
+
+void Compiler::compileExpression(Expression const& _expression)
+{
+	ExpressionCompiler::compileExpression(m_context, _expression, m_optimize);
 }
 
 }
