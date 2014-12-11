@@ -39,18 +39,19 @@ namespace solidity
 class DeclarationContainer
 {
 public:
-	explicit DeclarationContainer(Declaration* _enclosingDeclaration = nullptr, DeclarationContainer* _enclosingContainer = nullptr):
+	explicit DeclarationContainer(Declaration const* _enclosingDeclaration = nullptr,
+								  DeclarationContainer const* _enclosingContainer = nullptr):
 		m_enclosingDeclaration(_enclosingDeclaration), m_enclosingContainer(_enclosingContainer) {}
 	/// Registers the declaration in the scope unless its name is already declared. Returns true iff
 	/// it was not yet declared.
-	bool registerDeclaration(Declaration& _declaration, bool _update = false);
-	Declaration* resolveName(ASTString const& _name, bool _recursive = false) const;
-	Declaration* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
+	bool registerDeclaration(Declaration const& _declaration, bool _update = false);
+	Declaration const* resolveName(ASTString const& _name, bool _recursive = false) const;
+	Declaration const* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
 
 private:
-	Declaration* m_enclosingDeclaration;
-	DeclarationContainer* m_enclosingContainer;
-	std::map<ASTString, Declaration*> m_declarations;
+	Declaration const* m_enclosingDeclaration;
+	DeclarationContainer const* m_enclosingContainer;
+	std::map<ASTString, Declaration const*> m_declarations;
 };
 
 }

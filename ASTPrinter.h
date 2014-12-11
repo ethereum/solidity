@@ -33,78 +33,78 @@ namespace solidity
 /**
  * Pretty-printer for the abstract syntax tree (the "pretty" is arguable) for debugging purposes.
  */
-class ASTPrinter: public ASTVisitor
+class ASTPrinter: public ASTConstVisitor
 {
 public:
 	/// Create a printer for the given abstract syntax tree. If the source is specified,
 	/// the corresponding parts of the source are printed with each node.
-	ASTPrinter(ASTNode& _ast, std::string const& _source = std::string());
+	ASTPrinter(ASTNode const& _ast, std::string const& _source = std::string());
 	/// Output the string representation of the AST to _stream.
 	void print(std::ostream& _stream);
 
-	bool visit(ImportDirective& _node) override;
-	bool visit(ContractDefinition& _node) override;
-	bool visit(StructDefinition& _node) override;
-	bool visit(ParameterList& _node) override;
-	bool visit(FunctionDefinition& _node) override;
-	bool visit(VariableDeclaration& _node) override;
-	bool visit(TypeName& _node) override;
-	bool visit(ElementaryTypeName& _node) override;
-	bool visit(UserDefinedTypeName& _node) override;
-	bool visit(Mapping& _node) override;
-	bool visit(Statement& _node) override;
-	bool visit(Block& _node) override;
-	bool visit(IfStatement& _node) override;
-	bool visit(BreakableStatement& _node) override;
-	bool visit(WhileStatement& _node) override;
-	bool visit(Continue& _node) override;
-	bool visit(Break& _node) override;
-	bool visit(Return& _node) override;
-	bool visit(VariableDefinition& _node) override;
-	bool visit(ExpressionStatement& _node) override;
-	bool visit(Expression& _node) override;
-	bool visit(Assignment& _node) override;
-	bool visit(UnaryOperation& _node) override;
-	bool visit(BinaryOperation& _node) override;
-	bool visit(FunctionCall& _node) override;
-	bool visit(MemberAccess& _node) override;
-	bool visit(IndexAccess& _node) override;
-	bool visit(PrimaryExpression& _node) override;
-	bool visit(Identifier& _node) override;
-	bool visit(ElementaryTypeNameExpression& _node) override;
-	bool visit(Literal& _node) override;
+	bool visit(ImportDirective const& _node) override;
+	bool visit(ContractDefinition const& _node) override;
+	bool visit(StructDefinition const& _node) override;
+	bool visit(ParameterList const& _node) override;
+	bool visit(FunctionDefinition const& _node) override;
+	bool visit(VariableDeclaration const& _node) override;
+	bool visit(TypeName const& _node) override;
+	bool visit(ElementaryTypeName const& _node) override;
+	bool visit(UserDefinedTypeName const& _node) override;
+	bool visit(Mapping const& _node) override;
+	bool visit(Statement const& _node) override;
+	bool visit(Block const& _node) override;
+	bool visit(IfStatement const& _node) override;
+	bool visit(BreakableStatement const& _node) override;
+	bool visit(WhileStatement const& _node) override;
+	bool visit(Continue const& _node) override;
+	bool visit(Break const& _node) override;
+	bool visit(Return const& _node) override;
+	bool visit(VariableDefinition const& _node) override;
+	bool visit(ExpressionStatement const& _node) override;
+	bool visit(Expression const& _node) override;
+	bool visit(Assignment const& _node) override;
+	bool visit(UnaryOperation const& _node) override;
+	bool visit(BinaryOperation const& _node) override;
+	bool visit(FunctionCall const& _node) override;
+	bool visit(MemberAccess const& _node) override;
+	bool visit(IndexAccess const& _node) override;
+	bool visit(PrimaryExpression const& _node) override;
+	bool visit(Identifier const& _node) override;
+	bool visit(ElementaryTypeNameExpression const& _node) override;
+	bool visit(Literal const& _node) override;
 
-	void endVisit(ImportDirective&) override;
-	void endVisit(ContractDefinition&) override;
-	void endVisit(StructDefinition&) override;
-	void endVisit(ParameterList&) override;
-	void endVisit(FunctionDefinition&) override;
-	void endVisit(VariableDeclaration&) override;
-	void endVisit(TypeName&) override;
-	void endVisit(ElementaryTypeName&) override;
-	void endVisit(UserDefinedTypeName&) override;
-	void endVisit(Mapping&) override;
-	void endVisit(Statement&) override;
-	void endVisit(Block&) override;
-	void endVisit(IfStatement&) override;
-	void endVisit(BreakableStatement&) override;
-	void endVisit(WhileStatement&) override;
-	void endVisit(Continue&) override;
-	void endVisit(Break&) override;
-	void endVisit(Return&) override;
-	void endVisit(VariableDefinition&) override;
-	void endVisit(ExpressionStatement&) override;
-	void endVisit(Expression&) override;
-	void endVisit(Assignment&) override;
-	void endVisit(UnaryOperation&) override;
-	void endVisit(BinaryOperation&) override;
-	void endVisit(FunctionCall&) override;
-	void endVisit(MemberAccess&) override;
-	void endVisit(IndexAccess&) override;
-	void endVisit(PrimaryExpression&) override;
-	void endVisit(Identifier&) override;
-	void endVisit(ElementaryTypeNameExpression&) override;
-	void endVisit(Literal&) override;
+	void endVisit(ImportDirective const&) override;
+	void endVisit(ContractDefinition const&) override;
+	void endVisit(StructDefinition const&) override;
+	void endVisit(ParameterList const&) override;
+	void endVisit(FunctionDefinition const&) override;
+	void endVisit(VariableDeclaration const&) override;
+	void endVisit(TypeName const&) override;
+	void endVisit(ElementaryTypeName const&) override;
+	void endVisit(UserDefinedTypeName const&) override;
+	void endVisit(Mapping const&) override;
+	void endVisit(Statement const&) override;
+	void endVisit(Block const&) override;
+	void endVisit(IfStatement const&) override;
+	void endVisit(BreakableStatement const&) override;
+	void endVisit(WhileStatement const&) override;
+	void endVisit(Continue const&) override;
+	void endVisit(Break const&) override;
+	void endVisit(Return const&) override;
+	void endVisit(VariableDefinition const&) override;
+	void endVisit(ExpressionStatement const&) override;
+	void endVisit(Expression const&) override;
+	void endVisit(Assignment const&) override;
+	void endVisit(UnaryOperation const&) override;
+	void endVisit(BinaryOperation const&) override;
+	void endVisit(FunctionCall const&) override;
+	void endVisit(MemberAccess const&) override;
+	void endVisit(IndexAccess const&) override;
+	void endVisit(PrimaryExpression const&) override;
+	void endVisit(Identifier const&) override;
+	void endVisit(ElementaryTypeNameExpression const&) override;
+	void endVisit(Literal const&) override;
 
 private:
 	void printSourcePart(ASTNode const& _node);
@@ -115,7 +115,7 @@ private:
 
 	int m_indentation;
 	std::string m_source;
-	ASTNode* m_ast;
+	ASTNode const* m_ast;
 	std::ostream* m_ostream;
 };
 

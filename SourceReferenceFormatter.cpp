@@ -61,7 +61,7 @@ void SourceReferenceFormatter::printSourceLocation(ostream& _stream,
 void SourceReferenceFormatter::printExceptionInformation(ostream& _stream,
 														 Exception const& _exception,
 														 string const& _name,
-														 CompilerStack& _compiler)
+														 CompilerStack const& _compiler)
 {
 	Location const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
 	Scanner const* scanner;

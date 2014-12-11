@@ -25,6 +25,7 @@
 #include <libsolidity/AST.h>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/Exceptions.h>
+#include <libsolidity/AST_accept.h>
 
 using namespace std;
 
@@ -32,250 +33,6 @@ namespace dev
 {
 namespace solidity
 {
-
-void SourceUnit::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		listAccept(m_nodes, _visitor);
-	_visitor.endVisit(*this);
-}
-
-void ImportDirective::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void ContractDefinition::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		listAccept(m_definedStructs, _visitor);
-		listAccept(m_stateVariables, _visitor);
-		listAccept(m_definedFunctions, _visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void StructDefinition::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		listAccept(m_members, _visitor);
-	_visitor.endVisit(*this);
-}
-
-void StructDefinition::checkValidityOfMembers()
-{
-	checkMemberTypes();
-	checkRecursion();
-}
-
-void ParameterList::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		listAccept(m_parameters, _visitor);
-	_visitor.endVisit(*this);
-}
-
-void FunctionDefinition::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_parameters->accept(_visitor);
-		if (m_returnParameters)
-			m_returnParameters->accept(_visitor);
-		m_body->accept(_visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void VariableDeclaration::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		if (m_typeName)
-			m_typeName->accept(_visitor);
-	_visitor.endVisit(*this);
-}
-
-void TypeName::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void ElementaryTypeName::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void UserDefinedTypeName::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void Mapping::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_keyType->accept(_visitor);
-		m_valueType->accept(_visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void Statement::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void Block::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		listAccept(m_statements, _visitor);
-	_visitor.endVisit(*this);
-}
-
-void IfStatement::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_condition->accept(_visitor);
-		m_trueBody->accept(_visitor);
-		if (m_falseBody)
-			m_falseBody->accept(_visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void BreakableStatement::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void WhileStatement::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_condition->accept(_visitor);
-		m_body->accept(_visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void Continue::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void Break::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void Return::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		if (m_expression)
-			m_expression->accept(_visitor);
-	_visitor.endVisit(*this);
-}
-
-void ExpressionStatement::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		if (m_expression)
-			m_expression->accept(_visitor);
-	_visitor.endVisit(*this);
-}
-
-void VariableDefinition::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_variable->accept(_visitor);
-		if (m_value)
-			m_value->accept(_visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void Assignment::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_leftHandSide->accept(_visitor);
-		m_rightHandSide->accept(_visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void UnaryOperation::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		m_subExpression->accept(_visitor);
-	_visitor.endVisit(*this);
-}
-
-void BinaryOperation::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_left->accept(_visitor);
-		m_right->accept(_visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void FunctionCall::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_expression->accept(_visitor);
-		listAccept(m_arguments, _visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void MemberAccess::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-		m_expression->accept(_visitor);
-	_visitor.endVisit(*this);
-}
-
-void IndexAccess::accept(ASTVisitor& _visitor)
-{
-	if (_visitor.visit(*this))
-	{
-		m_base->accept(_visitor);
-		m_index->accept(_visitor);
-	}
-	_visitor.endVisit(*this);
-}
-
-void Identifier::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void ElementaryTypeNameExpression::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
-
-void Literal::accept(ASTVisitor& _visitor)
-{
-	_visitor.visit(*this);
-	_visitor.endVisit(*this);
-}
 
 TypeError ASTNode::createTypeError(string const& _description) const
 {
@@ -297,14 +54,14 @@ vector<FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() co
 	return exportedFunctions;
 }
 
-void StructDefinition::checkMemberTypes()
+void StructDefinition::checkMemberTypes() const
 {
 	for (ASTPointer<VariableDeclaration> const& member: getMembers())
 		if (!member->getType()->canBeStored())
 			BOOST_THROW_EXCEPTION(member->createTypeError("Type cannot be used in struct."));
 }
 
-void StructDefinition::checkRecursion()
+void StructDefinition::checkRecursion() const
 {
 	set<StructDefinition const*> definitionsSeen;
 	vector<StructDefinition const*> queue = {this};
@@ -319,7 +76,7 @@ void StructDefinition::checkRecursion()
 		for (ASTPointer<VariableDeclaration> const& member: def->getMembers())
 			if (member->getType()->getCategory() == Type::Category::STRUCT)
 			{
-				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName&>(*member->getTypeName());
+				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->getTypeName());
 				queue.push_back(&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()));
 			}
 	}
@@ -532,7 +289,7 @@ void Identifier::checkTypeRequirements()
 	if (asserts(m_referencedDeclaration))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier not resolved."));
 
-	VariableDeclaration* variable = dynamic_cast<VariableDeclaration*>(m_referencedDeclaration);
+	VariableDeclaration const* variable = dynamic_cast<VariableDeclaration const*>(m_referencedDeclaration);
 	if (variable)
 	{
 		if (!variable->getType())
@@ -542,29 +299,29 @@ void Identifier::checkTypeRequirements()
 		return;
 	}
 	//@todo can we unify these with TypeName::toType()?
-	StructDefinition* structDef = dynamic_cast<StructDefinition*>(m_referencedDeclaration);
+	StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(m_referencedDeclaration);
 	if (structDef)
 	{
 		// note that we do not have a struct type here
-		m_type = make_shared<TypeType>(make_shared<StructType>(*structDef));
+		m_type = make_shared<TypeType const>(make_shared<StructType const>(*structDef));
 		return;
 	}
-	FunctionDefinition* functionDef = dynamic_cast<FunctionDefinition*>(m_referencedDeclaration);
+	FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(m_referencedDeclaration);
 	if (functionDef)
 	{
 		// a function reference is not a TypeType, because calling a TypeType converts to the type.
 		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
 		// conversion.
-		m_type = make_shared<FunctionType>(*functionDef);
+		m_type = make_shared<FunctionType const>(*functionDef);
 		return;
 	}
-	ContractDefinition* contractDef = dynamic_cast<ContractDefinition*>(m_referencedDeclaration);
+	ContractDefinition const* contractDef = dynamic_cast<ContractDefinition const*>(m_referencedDeclaration);
 	if (contractDef)
 	{
-		m_type = make_shared<TypeType>(make_shared<ContractType>(*contractDef));
+		m_type = make_shared<TypeType const>(make_shared<ContractType>(*contractDef));
 		return;
 	}
-	MagicVariableDeclaration* magicVariable = dynamic_cast<MagicVariableDeclaration*>(m_referencedDeclaration);
+	MagicVariableDeclaration const* magicVariable = dynamic_cast<MagicVariableDeclaration const*>(m_referencedDeclaration);
 	if (magicVariable)
 	{
 		m_type = magicVariable->getType();
@@ -575,7 +332,7 @@ void Identifier::checkTypeRequirements()
 
 void ElementaryTypeNameExpression::checkTypeRequirements()
 {
-	m_type = make_shared<TypeType>(Type::fromElementaryTypeName(m_typeToken));
+	m_type = make_shared<TypeType const>(Type::fromElementaryTypeName(m_typeToken));
 }
 
 void Literal::checkTypeRequirements()

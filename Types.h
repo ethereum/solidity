@@ -80,15 +80,15 @@ public:
 	///@{
 	///@name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
-	static std::shared_ptr<Type> fromElementaryTypeName(Token::Value _typeToken);
-	static std::shared_ptr<Type> fromUserDefinedTypeName(UserDefinedTypeName const& _typeName);
-	static std::shared_ptr<Type> fromMapping(Mapping const& _typeName);
-	static std::shared_ptr<Type> fromFunction(FunctionDefinition const& _function);
+	static std::shared_ptr<Type const> fromElementaryTypeName(Token::Value _typeToken);
+	static std::shared_ptr<Type const> fromUserDefinedTypeName(UserDefinedTypeName const& _typeName);
+	static std::shared_ptr<Type const> fromMapping(Mapping const& _typeName);
+	static std::shared_ptr<Type const> fromFunction(FunctionDefinition const& _function);
 	/// @}
 
 	/// Auto-detect the proper type for a literal. @returns an empty pointer if the literal does
 	/// not fit any type.
-	static std::shared_ptr<Type> forLiteral(Literal const& _literal);
+	static std::shared_ptr<Type const> forLiteral(Literal const& _literal);
 
 	virtual Category getCategory() const = 0;
 	virtual bool isImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
@@ -148,7 +148,7 @@ public:
 
 	/// @returns the smallest integer type for the given literal or an empty pointer
 	/// if no type fits.
-	static std::shared_ptr<IntegerType> smallestTypeForLiteral(std::string const& _literal);
+	static std::shared_ptr<IntegerType const> smallestTypeForLiteral(std::string const& _literal);
 
 	explicit IntegerType(int _bits, Modifier _modifier = Modifier::UNSIGNED);
 
@@ -286,7 +286,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override;
 
-	Location getLocation() const { return m_location; }
+	Location const& getLocation() const { return m_location; }
 
 private:
 	TypePointers m_parameterTypes;

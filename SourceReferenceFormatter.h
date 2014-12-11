@@ -41,7 +41,7 @@ struct SourceReferenceFormatter
 public:
 	static void printSourceLocation(std::ostream& _stream, Location const& _location, Scanner const& _scanner);
 	static void printExceptionInformation(std::ostream& _stream, Exception const& _exception,
-										  std::string const& _name, CompilerStack& _compiler);
+										  std::string const& _name, CompilerStack const& _compiler);
 };
 
 }
