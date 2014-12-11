@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 		contract test {
 			uint data;
 			function f() returns (uint a, uint b) {
-				10+20;
+				10 + 20;
 				data;
 			}
 		})";
