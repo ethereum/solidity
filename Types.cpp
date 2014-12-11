@@ -52,7 +52,7 @@ shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
 	else if (_typeToken == Token::ADDRESS)
 		return make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS);
 	else if (_typeToken == Token::BOOL)
-		return make_shared<BoolType const>();
+		return shared_ptr<BoolType const>();
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -87,7 +87,7 @@ shared_ptr<Type const> Type::forLiteral(Literal const& _literal)
 	{
 	case Token::TRUE_LITERAL:
 	case Token::FALSE_LITERAL:
-		return make_shared<BoolType const>();
+		return shared_ptr<BoolType const>();
 	case Token::NUMBER:
 		return IntegerType::smallestTypeForLiteral(_literal.getValue());
 	case Token::STRING_LITERAL:
