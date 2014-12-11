@@ -226,14 +226,6 @@ BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
-BOOST_AUTO_TEST_CASE(empty_string_literal)
-{
-	char const* text = "contract test {\n"
-					   "  function f() { var x = \"\"; }"
-					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
-}
-
 BOOST_AUTO_TEST_CASE(large_string_literal)
 {
 	char const* text = "contract test {\n"

@@ -510,6 +510,20 @@ BOOST_AUTO_TEST_CASE(strings)
 	BOOST_CHECK(callContractFunction(1, bytes({0x00, 0x02, 0x01})) == expectation);
 }
 
+BOOST_AUTO_TEST_CASE(empty_string_on_stack)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function run(string0 empty, uint8 inp) returns(uint16 a, string0 b, string4 c) {\n"
+							 "    var x = \"abc\";\n"
+							 "    var y = \"\";\n"
+							 "    var z = inp;\n"
+							 "    a = z; b = y; c = x;"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction(0, bytes({0x02})) == bytes({0x00, 0x02, 'a', 'b', 'c', 0x00}));
+}
+
 BOOST_AUTO_TEST_CASE(state_smoke_test)
 {
 	char const* sourceCode = "contract test {\n"
