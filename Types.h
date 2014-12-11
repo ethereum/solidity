@@ -184,6 +184,7 @@ private:
 class BoolType: public Type
 {
 public:
+	explicit BoolType() {}
 	virtual Category getCategory() const { return Category::BOOL; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool acceptsBinaryOperator(Token::Value _operator) const override
