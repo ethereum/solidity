@@ -72,6 +72,11 @@ void CompilerState::populateStandard()
 	"(def 'regname (name) { [32]'register [64]name (call allgas namereg 0 32 64 0 0) })"
 	"(def 'regcoin (name) { [32]name (call allgas coinreg 0 32 32 0 0) })"
 	"(def 'regcoin (name denom) { [32]name [64]denom (call allgas coinreg 0 32 64 0 0) })"
+	"(def 'ecrecover (r s v hash) { [0] r [32] s [64] v [96] hash (msg allgas 1 0 0 128) })"
+	"(def 'sha256 (data datasize) (msg allgas 2 0 data datasize))"
+	"(def 'ripemd160 (data datasize) (msg allgas 3 0 data datasize))"
+	"(def 'sha256 (val) { [0]:val (sha256 0 32) })"
+	"(def 'ripemd160 (val) { [0]:val (ripemd160 0 32) })"
 	"}";
 	CodeFragment::compile(s, *this);
 }
