@@ -53,8 +53,8 @@ shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
 		return make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS);
 	else if (_typeToken == Token::BOOL)
 		return make_shared<BoolType const>();
-	else if (Token::STRING1 <= _typeToken && _typeToken <= Token::STRING32)
-		return make_shared<StaticStringType const>(int(_typeToken) - int(Token::STRING1) + 1);
+	else if (Token::STRING0 <= _typeToken && _typeToken <= Token::STRING32)
+		return make_shared<StaticStringType const>(int(_typeToken) - int(Token::STRING0));
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -199,14 +199,14 @@ const MemberList IntegerType::AddressMemberList =
 
 shared_ptr<StaticStringType> StaticStringType::smallestTypeForLiteral(string const& _literal)
 {
-	if (0 < _literal.length() && _literal.length() <= 32)
+	if (_literal.length() <= 32)
 		return make_shared<StaticStringType>(_literal.length());
 	return shared_ptr<StaticStringType>();
 }
 
 StaticStringType::StaticStringType(int _bytes): m_bytes(_bytes)
 {
-	if (asserts(m_bytes > 0 && m_bytes <= 32))
+	if (asserts(m_bytes >= 0 && m_bytes <= 32))
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid byte number for static string type: " +
 																		 dev::toString(m_bytes)));
 }

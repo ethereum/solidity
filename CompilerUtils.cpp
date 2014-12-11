@@ -33,9 +33,14 @@ namespace solidity
 
 void CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _leftAligned, bool _fromCalldata)
 {
+	if (_bytes == 0)
+	{
+		m_context << u256(0);
+		return;
+	}
 	eth::Instruction load = _fromCalldata ? eth::Instruction::CALLDATALOAD : eth::Instruction::MLOAD;
-	if (asserts(0 < _bytes && _bytes <= 32))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Memory load of 0 or more than 32 bytes requested."));
+	if (asserts(_bytes <= 32))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Memory load of more than 32 bytes requested."));
 	if (_bytes == 32)
 		m_context << u256(_offset) << load;
 	else
@@ -53,8 +58,13 @@ void CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _left
 
 void CompilerUtils::storeInMemory(unsigned _offset, unsigned _bytes, bool _leftAligned)
 {
-	if (asserts(0 < _bytes && _bytes <= 32))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Memory store of 0 or more than 32 bytes requested."));
+	if (_bytes == 0)
+	{
+		m_context << eth::Instruction::POP;
+		return;
+	}
+	if (asserts(_bytes <= 32))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Memory store of more than 32 bytes requested."));
 	if (_bytes != 32 && !_leftAligned)
 		// shift the value accordingly before storing
 		m_context << (u256(1) << ((32 - _bytes) * 8)) << eth::Instruction::MUL;

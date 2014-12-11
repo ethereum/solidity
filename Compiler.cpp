@@ -135,7 +135,7 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{
 		unsigned const numBytes = var->getType()->getCalldataEncodedSize();
-		if (numBytes == 0 || numBytes > 32)
+		if (numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(var->getLocation())
 								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
@@ -156,7 +156,7 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 	{
 		Type const& paramType = *parameters[i]->getType();
 		unsigned numBytes = paramType.getCalldataEncodedSize();
-		if (numBytes == 0 || numBytes > 32)
+		if (numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
 								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));

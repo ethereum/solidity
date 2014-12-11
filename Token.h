@@ -269,6 +269,7 @@ namespace solidity
 	K(ADDRESS, "address", 0)                                           \
 	K(BOOL, "bool", 0)                                                 \
 	K(STRING_TYPE, "string", 0)                                        \
+	K(STRING0, "string0", 0)                                           \
 	K(STRING1, "string1", 0)                                           \
 	K(STRING2, "string2", 0)                                           \
 	K(STRING3, "string3", 0)                                           \
