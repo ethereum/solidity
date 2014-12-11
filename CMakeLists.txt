@@ -20,7 +20,7 @@ target_link_libraries(testeth webthree)
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE})
 target_link_libraries(testeth ${CURL_LIBRARY})
 
-if (JSON_RPC_CPP_FOUND)
+if (JSONRPC)
 	target_link_libraries(testeth web3jsonrpc)
 	target_link_libraries(testeth ${JSON_RPC_CPP_CLIENT_LIBRARY})
 endif()
