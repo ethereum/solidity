@@ -21,8 +21,9 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <libsolidity/CompilerStack.h>
 #include <jsoncpp/json/json.h>
+#include <libsolidity/CompilerStack.h>
+#include <libsolidity/Exceptions.h>
 #include <libdevcore/Exceptions.h>
 
 namespace dev
@@ -391,6 +392,93 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 	"}}";
 
 	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Mul function\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"    \"methods\":{"
+	"        \"mul\":{ \n"
+	"            \"details\": \"Mul function\"\n"
+	"        }\n"
+	"    }\n"
+	"}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_contract_doc)
+{
+	char const* sourceCode = " /// @author Lefteris\n"
+	" /// @title Just a test contract\n"
+	"contract test {\n"
+	"  /// @dev Mul function\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"    \"author\": \"Lefteris\","
+	"    \"title\": \"Just a test contract\","
+	"    \"methods\":{"
+	"        \"mul\":{ \n"
+	"            \"details\": \"Mul function\"\n"
+	"        }\n"
+	"    }\n"
+	"}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_author_at_function)
+{
+	char const* sourceCode = " /// @author Lefteris\n"
+	" /// @title Just a test contract\n"
+	"contract test {\n"
+	"  /// @dev Mul function\n"
+	"  /// @author John Doe\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"    \"author\": \"Lefteris\","
+	"    \"title\": \"Just a test contract\","
+	"    \"methods\":{"
+	"        \"mul\":{ \n"
+	"            \"details\": \"Mul function\",\n"
+	"            \"author\": \"John Doe\",\n"
+	"        }\n"
+	"    }\n"
+	"}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
+{
+	char const* sourceCode = " /// @author Lefteris\n"
+	" /// @title Just a test contract\n"
+	"contract test {\n"
+	"  /// @dev Mul function\n"
+	"  /// @title I really should not be here\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"    \"author\": \"Lefteris\","
+	"    \"title\": \"Just a test contract\","
+	"    \"methods\":{"
+	"        \"mul\":{ \n"
+	"            \"details\": \"Mul function\"\n"
+	"        }\n"
+	"    }\n"
+	"}";
+
+	BOOST_CHECK_THROW(checkNatspec(sourceCode, natspec, false), DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
