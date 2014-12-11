@@ -17,6 +17,7 @@ include_directories(..)
 set(EXECUTABLE lll)
 
 file(GLOB HEADERS "*.h")
+
 if(ETH_STATIC)
 	add_library(${EXECUTABLE} STATIC ${SRC_LIST} ${HEADERS})
 else()
