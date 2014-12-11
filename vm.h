@@ -80,9 +80,6 @@ public:
 	bytes thisTxData;
 	bytes thisTxCode;
 	u256 gas;
-
-private:
-	eth::Manifest m_ms;
 };
 
 
