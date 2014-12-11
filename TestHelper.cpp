@@ -333,7 +333,7 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
     for (auto&& resultStorePair : _resultStore)
     {
         if (!_expectedStore.count(resultStorePair.first))
-            BOOST_ERROR("unexpected result store key " << resultStorePair.first);
+        	BOOST_ERROR(_expectedAddr << ": unexpected store key " << resultStorePair.first);
     }
 }
 
