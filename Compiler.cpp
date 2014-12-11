@@ -109,8 +109,8 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		callDataUnpackerEntryPoints.push_back(m_context.newTag());
 		m_context << eth::dupInstruction(2) << eth::dupInstruction(2) << eth::Instruction::EQ;
 		m_context.appendConditionalJumpTo(callDataUnpackerEntryPoints.back());
-		m_context << eth::dupInstruction(4) << eth::Instruction::ADD;
-		//@todo avoid the last ADD (or remove it in the optimizer)
+		if (funid < interfaceFunctions.size() - 1)
+			m_context << eth::dupInstruction(4) << eth::Instruction::ADD;
 	}
 	m_context << eth::Instruction::STOP; // function not found
 
