@@ -48,7 +48,7 @@ public:
 		m_optimize = true;
 		bytes optimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
 		int sizeDiff = nonOptimizedBytecode.size() - optimizedBytecode.size();
-		BOOST_CHECK_MESSAGE(sizeDiff >= _expectedSizeDecrease, "Bytecode did only shrink by "
+		BOOST_CHECK_MESSAGE(sizeDiff >= (int)_expectedSizeDecrease, "Bytecode did only shrink by "
 							+ boost::lexical_cast<string>(sizeDiff) + " bytes, expected: "
 							+ boost::lexical_cast<string>(_expectedSizeDecrease));
 		m_optimizedContract = m_contractAddress;
