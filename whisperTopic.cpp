@@ -32,7 +32,8 @@ BOOST_AUTO_TEST_SUITE(whisper)
 
 BOOST_AUTO_TEST_CASE(topic)
 {
-	g_logVerbosity = 20;
+	cnote << "Testing Whisper...";
+//	g_logVerbosity = 0;
 
 	bool started = false;
 	unsigned result = 0;
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(topic)
 	}
 
 	listener.join();
-	g_logVerbosity = 0;
+//	g_logVerbosity = 0;
 
 	BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
 }
