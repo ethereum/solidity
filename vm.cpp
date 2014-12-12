@@ -244,10 +244,11 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 
 eth::OnOpFunc FakeExtVM::simpleTrace()
 {
-	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, void* voidVM, void const* voidExt)
+
+	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
 	{
-		FakeExtVM const& ext = *(FakeExtVM const*)voidExt;
-		eth::VM& vm = *(eth::VM*)voidVM;
+		FakeExtVM const& ext = *static_cast<FakeExtVM const*>(voidExt);
+		eth::VM& vm = *voidVM;
 
 		std::ostringstream o;
 		o << std::endl << "    STACK" << std::endl;
