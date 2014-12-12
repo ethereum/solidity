@@ -48,7 +48,7 @@ public:
 		m_optimize = true;
 		bytes optimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
 		int sizeDiff = nonOptimizedBytecode.size() - optimizedBytecode.size();
-		BOOST_CHECK_MESSAGE(sizeDiff >= _expectedSizeDecrease, "Bytecode did only shrink by "
+		BOOST_CHECK_MESSAGE(sizeDiff == int(_expectedSizeDecrease), "Bytecode did only shrink by "
 							+ boost::lexical_cast<string>(sizeDiff) + " bytes, expected: "
 							+ boost::lexical_cast<string>(_expectedSizeDecrease));
 		m_optimizedContract = m_contractAddress;
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(invariants)
 				return (((a + (1 - 1)) ^ 0) | 0) & (uint(0) - 1);
 			}
 		})";
-	compileBothVersions(19, sourceCode);
+	compileBothVersions(28, sourceCode);
 	compareVersions(0, u256(0x12334664));
 }
 
@@ -121,6 +121,21 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 			}
 		})";
 	compileBothVersions(11, sourceCode);
+	compareVersions(0);
+}
+
+BOOST_AUTO_TEST_CASE(constant_folding_both_sides)
+{
+	// if constants involving the same associative and commutative operator are applied from both
+	// sides, the operator should be applied only once, because the expression compiler
+	// (even in non-optimized mode) pushes literals as late as possible
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) returns (uint y) {
+				return 98 ^ (7 * ((1 | (x | 1000)) * 40) ^ 102);
+			}
+		})";
+	compileBothVersions(31, sourceCode);
 	compareVersions(0);
 }
 

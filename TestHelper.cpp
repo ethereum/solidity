@@ -109,9 +109,6 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 
 		Address address = Address(i.first);
 
-		for (auto const& j: o["storage"].get_obj())
-			_state.setStorage(address, toInt(j.first), toInt(j.second));
-
 		bytes code = importCode(o);
 
 		if (code.size())
@@ -121,6 +118,9 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		}
 		else
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::NormalCreation);
+
+		for (auto const& j: o["storage"].get_obj())
+			_state.setStorage(address, toInt(j.first), toInt(j.second));
 
 		for(int i=0; i<toInt(o["nonce"]); ++i)
 			_state.noteSending(address);
@@ -329,6 +329,10 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 			BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
 		}
 	}
+	BOOST_CHECK_EQUAL(_resultStore.size(), _expectedStore.size());
+	for (auto&& resultStorePair : _resultStore)
+		if (!_expectedStore.count(resultStorePair.first))
+			BOOST_ERROR(_expectedAddr << ": unexpected store key " << resultStorePair.first);
 }
 
 void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
