@@ -46,16 +46,23 @@ namespace
 bytes compileContract(const string& _sourceCode)
 {
 	Parser parser;
-	ASTPointer<ContractDefinition> contract;
-	BOOST_REQUIRE_NO_THROW(contract = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
+	ASTPointer<SourceUnit> sourceUnit;
+	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
 	NameAndTypeResolver resolver({});
-	BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
+	resolver.registerDeclarations(*sourceUnit);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 
-	Compiler compiler;
-	compiler.compileContract(*contract, {});
-	// debug
-	//compiler.streamAssembly(cout);
-	return compiler.getAssembledBytecode();
+			Compiler compiler;
+			compiler.compileContract(*contract, {});
+			// debug
+			//compiler.streamAssembly(cout);
+			return compiler.getAssembledBytecode();
+		}
+	BOOST_FAIL("No contract found in source.");
+	return bytes();
 }
 
 /// Checks that @a _compiledCode is present starting from offset @a _offset in @a _expectation.
@@ -80,7 +87,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned boilerplateSize = 42;
+	unsigned boilerplateSize = 40;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize local variable x
 					   byte(Instruction::PUSH1), 0x2,
@@ -100,8 +107,8 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 70;
-	unsigned boilerplateSize = 83;
+	unsigned shift = 68;
+	unsigned boilerplateSize = 81;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize return variable d
 					   byte(Instruction::DUP3),
@@ -118,8 +125,8 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 					   byte(Instruction::JUMP), // end of f
 					   byte(Instruction::JUMPDEST), // beginning of g
 					   byte(Instruction::PUSH1), 0x0,
-					   byte(Instruction::DUP1), // initialized e and h
-					   byte(Instruction::PUSH1), byte(0x29 + shift), // ret address
+					   byte(Instruction::PUSH1), 0x0, // initialized e and h
+					   byte(Instruction::PUSH1), byte(0x2a + shift), // ret address
 					   byte(Instruction::PUSH1), 0x1, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
 					   byte(Instruction::PUSH1), 0x2, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
 					   byte(Instruction::PUSH1), 0x3, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
@@ -151,8 +158,8 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 29;
-	unsigned boilerplateSize = 42;
+	unsigned shift = 27;
+	unsigned boilerplateSize = 40;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1),
@@ -193,8 +200,8 @@ BOOST_AUTO_TEST_CASE(loops)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned shift = 29;
-	unsigned boilerplateSize = 42;
+	unsigned shift = 27;
+	unsigned boilerplateSize = 40;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x1,

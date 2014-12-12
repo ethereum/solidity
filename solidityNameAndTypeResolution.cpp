@@ -41,10 +41,12 @@ namespace
 void parseTextAndResolveNames(std::string const& _source)
 {
 	Parser parser;
-	ASTPointer<ContractDefinition> contract = parser.parse(
-										   std::make_shared<Scanner>(CharStream(_source)));
+	ASTPointer<SourceUnit> sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
 	NameAndTypeResolver resolver({});
-	resolver.resolveNamesAndTypes(*contract);
+	resolver.registerDeclarations(*sourceUnit);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			resolver.resolveNamesAndTypes(*contract);
 }
 }
 
@@ -222,6 +224,14 @@ BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 					   "  function f() returns (int256 r) { var x = int256(uint32(2)); return x; }"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(large_string_literal)
+{
+	char const* text = "contract test {\n"
+					   "  function f() { var x = \"123456789012345678901234567890123\"; }"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(balance)

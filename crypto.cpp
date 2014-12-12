@@ -44,6 +44,14 @@ static CryptoPP::OID s_curveOID(CryptoPP::ASN1::secp256k1());
 static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> s_params(s_curveOID);
 static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP>::EllipticCurve s_curve(s_params.GetCurve());
 
+BOOST_AUTO_TEST_CASE(cryptopp_patch)
+{
+	KeyPair k = KeyPair::create();
+	bytes io_text;
+	s_secp256k1.decrypt(k.sec(), io_text);
+	BOOST_REQUIRE_EQUAL(io_text.size(), 0);
+}
+
 BOOST_AUTO_TEST_CASE(verify_secert)
 {
 	h256 empty;

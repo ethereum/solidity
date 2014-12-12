@@ -24,131 +24,17 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libethereum/State.h>
-#include <libethereum/Executive.h>
-#include <libsolidity/CompilerStack.h>
 #include <libdevcrypto/SHA3.h>
+#include <test/solidityExecutionFramework.h>
 
 using namespace std;
 
 namespace dev
 {
-/// Provides additional overloads for toBigEndian to encode arguments and return values.
-inline bytes toBigEndian(byte _value) { return bytes({_value}); }
-inline bytes toBigEndian(bool _value) { return bytes({byte(_value)}); }
-
 namespace solidity
 {
 namespace test
 {
-
-class ExecutionFramework
-{
-public:
-	ExecutionFramework() { g_logVerbosity = 0; }
-
-	bytes const& compileAndRun(string const& _sourceCode, u256 const& _value = 0)
-	{
-		bytes code = dev::solidity::CompilerStack::staticCompile(_sourceCode);
-		sendMessage(code, true, _value);
-		BOOST_REQUIRE(!m_output.empty());
-		return m_output;
-	}
-
-	bytes const& callContractFunction(byte _index, bytes const& _data = bytes(), u256 const& _value = 0)
-	{
-		sendMessage(bytes(1, _index) + _data, false, _value);
-		return m_output;
-	}
-
-	template <class... Args>
-	bytes const& callContractFunction(byte _index, Args const&... _arguments)
-	{
-		return callContractFunction(_index, argsToBigEndian(_arguments...));
-	}
-
-	template <class CppFunction, class... Args>
-	void testSolidityAgainstCpp(byte _index, CppFunction const& _cppFunction, Args const&... _arguments)
-	{
-		bytes solidityResult = callContractFunction(_index, _arguments...);
-		bytes cppResult = callCppAndEncodeResult(_cppFunction, _arguments...);
-		BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
-							"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult));
-	}
-
-	template <class CppFunction, class... Args>
-	void testSolidityAgainstCppOnRange(byte _index, CppFunction const& _cppFunction,
-									   u256 const& _rangeStart, u256 const& _rangeEnd)
-	{
-		for (u256 argument = _rangeStart; argument < _rangeEnd; ++argument)
-		{
-			bytes solidityResult = callContractFunction(_index, argument);
-			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
-			BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
-								"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult) +
-								"\nArgument: " + toHex(toBigEndian(argument)));
-		}
-	}
-
-private:
-	template <class FirstArg, class... Args>
-	bytes argsToBigEndian(FirstArg const& _firstArg, Args const&... _followingArgs) const
-	{
-		return toBigEndian(_firstArg) + argsToBigEndian(_followingArgs...);
-	}
-
-	bytes argsToBigEndian() const { return bytes(); }
-
-	template <class CppFunction, class... Args>
-	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
-	-> typename enable_if<is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
-	{
-		_cppFunction(_arguments...);
-		return bytes();
-	}
-	template <class CppFunction, class... Args>
-	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
-	-> typename enable_if<!is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
-	{
-		return toBigEndian(_cppFunction(_arguments...));
-	}
-
-	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
-	{
-		eth::Executive executive(m_state);
-		eth::Transaction t = _isCreation ? eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec())
-										 : eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
-		bytes transactionRLP = t.rlp();
-		try
-		{
-			// this will throw since the transaction is invalid, but it should nevertheless store the transaction
-			executive.setup(&transactionRLP);
-		}
-		catch (...) {}
-		if (_isCreation)
-		{
-			BOOST_REQUIRE(!executive.create(Address(), _value, m_gasPrice, m_gas, &_data, Address()));
-			m_contractAddress = executive.newAddress();
-			BOOST_REQUIRE(m_contractAddress);
-			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-		}
-		else
-		{
-			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-			BOOST_REQUIRE(!executive.call(m_contractAddress, Address(), _value, m_gasPrice, &_data, m_gas, Address()));
-		}
-		BOOST_REQUIRE(executive.go());
-		executive.finalize();
-		m_output = executive.out().toVector();
-	}
-
-protected:
-	Address m_contractAddress;
-	eth::State m_state;
-	u256 const m_gasPrice = 100 * eth::szabo;
-	u256 const m_gas = 1000000;
-	bytes m_output;
-};
 
 BOOST_FIXTURE_TEST_SUITE(SolidityCompilerEndToEndTest, ExecutionFramework)
 
@@ -475,6 +361,48 @@ BOOST_AUTO_TEST_CASE(small_signed_types)
 		return -int32_t(10) * -int64_t(20);
 	};
 	testSolidityAgainstCpp(0, small_signed_types_cpp);
+}
+
+BOOST_AUTO_TEST_CASE(strings)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function fixed() returns(string32 ret) {\n"
+							 "    return \"abc\\x00\\xff__\";\n"
+							 "  }\n"
+							 "  function pipeThrough(string2 small, bool one) returns(string16 large, bool oneRet) {\n"
+							 "    oneRet = one;\n"
+							 "    large = small;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	bytes expectation(32, 0);
+	expectation[0] = byte('a');
+	expectation[1] = byte('b');
+	expectation[2] = byte('c');
+	expectation[3] = byte(0);
+	expectation[4] = byte(0xff);
+	expectation[5] = byte('_');
+	expectation[6] = byte('_');
+	BOOST_CHECK(callContractFunction(0, bytes()) == expectation);
+	expectation = bytes(17, 0);
+	expectation[0] = 0;
+	expectation[1] = 2;
+	expectation[16] = 1;
+	BOOST_CHECK(callContractFunction(1, bytes({0x00, 0x02, 0x01})) == expectation);
+}
+
+BOOST_AUTO_TEST_CASE(empty_string_on_stack)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function run(string0 empty, uint8 inp) returns(uint16 a, string0 b, string4 c) {\n"
+							 "    var x = \"abc\";\n"
+							 "    var y = \"\";\n"
+							 "    var z = inp;\n"
+							 "    a = z; b = y; c = x;"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction(0, bytes({0x02})) == bytes({0x00, 0x02, 'a', 'b', 'c', 0x00}));
 }
 
 BOOST_AUTO_TEST_CASE(state_smoke_test)
@@ -896,6 +824,191 @@ BOOST_AUTO_TEST_CASE(ecrecover)
 	u256 s("0xeeb940b1d03b21e36b0e47e79769f095fe2ab855bd91e3a38756b7d75a9c4549");
 	u160 addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	BOOST_CHECK(callContractFunction(0, h, v, r, s) == toBigEndian(addr));
+}
+
+BOOST_AUTO_TEST_CASE(inter_contract_calls)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			function multiply(uint a, uint b) returns (uint c) {
+				return a * b;
+			}
+		}
+		contract Main {
+			Helper h;
+			function callHelper(uint a, uint b) returns (uint c) {
+				return h.multiply(a, b);
+			}
+			function getHelper() returns (address haddress) {
+				return address(h);
+			}
+			function setHelper(address haddress) {
+				h = Helper(haddress);
+			}
+		})";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
+	u256 a(3456789);
+	u256 b("0x282837623374623234aa74");
+	BOOST_REQUIRE(callContractFunction(0, a, b) == toBigEndian(a * b));
+}
+
+BOOST_AUTO_TEST_CASE(inter_contract_calls_with_complex_parameters)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			function sel(uint a, bool select, uint b) returns (uint c) {
+				if (select) return a; else return b;
+			}
+		}
+		contract Main {
+			Helper h;
+			function callHelper(uint a, bool select, uint b) returns (uint c) {
+				return h.sel(a, select, b) * 3;
+			}
+			function getHelper() returns (address haddress) {
+				return address(h);
+			}
+			function setHelper(address haddress) {
+				h = Helper(haddress);
+			}
+		})";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
+	u256 a(3456789);
+	u256 b("0x282837623374623234aa74");
+	BOOST_REQUIRE(callContractFunction(0, a, true, b) == toBigEndian(a * 3));
+	BOOST_REQUIRE(callContractFunction(0, a, false, b) == toBigEndian(b * 3));
+}
+
+BOOST_AUTO_TEST_CASE(inter_contract_calls_accessing_this)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			function getAddress() returns (address addr) {
+				return address(this);
+			}
+		}
+		contract Main {
+			Helper h;
+			function callHelper() returns (address addr) {
+				return h.getAddress();
+			}
+			function getHelper() returns (address addr) {
+				return address(h);
+			}
+			function setHelper(address addr) {
+				h = Helper(addr);
+			}
+		})";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
+	BOOST_REQUIRE(callContractFunction(0) == toBigEndian(helperAddress));
+}
+
+BOOST_AUTO_TEST_CASE(calls_to_this)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			function invoke(uint a, uint b) returns (uint c) {
+				return this.multiply(a, b, 10);
+			}
+			function multiply(uint a, uint b, uint8 c) returns (uint ret) {
+				return a * b + c;
+			}
+		}
+		contract Main {
+			Helper h;
+			function callHelper(uint a, uint b) returns (uint ret) {
+				return h.invoke(a, b);
+			}
+			function getHelper() returns (address addr) {
+				return address(h);
+			}
+			function setHelper(address addr) {
+				h = Helper(addr);
+			}
+		})";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
+	u256 a(3456789);
+	u256 b("0x282837623374623234aa74");
+	BOOST_REQUIRE(callContractFunction(0, a, b) == toBigEndian(a * b + 10));
+}
+
+BOOST_AUTO_TEST_CASE(inter_contract_calls_with_local_vars)
+{
+	// note that a reference to another contract's function occupies two stack slots,
+	// so this tests correct stack slot allocation
+	char const* sourceCode = R"(
+		contract Helper {
+			function multiply(uint a, uint b) returns (uint c) {
+				return a * b;
+			}
+		}
+		contract Main {
+			Helper h;
+			function callHelper(uint a, uint b) returns (uint c) {
+				var fu = h.multiply;
+				var y = 9;
+				var ret = fu(a, b);
+				return ret + y;
+			}
+			function getHelper() returns (address haddress) {
+				return address(h);
+			}
+			function setHelper(address haddress) {
+				h = Helper(haddress);
+			}
+		})";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
+	u256 a(3456789);
+	u256 b("0x282837623374623234aa74");
+	BOOST_REQUIRE(callContractFunction(0, a, b) == toBigEndian(a * b + 9));
+}
+
+BOOST_AUTO_TEST_CASE(strings_in_calls)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			function invoke(string3 x, bool stop) returns (string4 ret) {
+				return x;
+			}
+		}
+		contract Main {
+			Helper h;
+			function callHelper(string2 x, bool stop) returns (string5 ret) {
+				return h.invoke(x, stop);
+			}
+			function getHelper() returns (address addr) {
+				return address(h);
+			}
+			function setHelper(address addr) {
+				h = Helper(addr);
+			}
+		})";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
+	BOOST_CHECK(callContractFunction(0, bytes({0, 'a', 1})) == bytes({0, 'a', 0, 0, 0}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

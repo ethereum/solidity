@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#if ETH_JSONRPC
+#if ETH_JSONRPC && 0
 
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
@@ -43,7 +43,7 @@ using namespace dev;
 using namespace dev::eth;
 namespace js = json_spirit;
 
-WebThreeDirect *web3;
+WebThreeDirect* web3;
 unique_ptr<WebThreeStubServer> jsonrpcServer;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
 

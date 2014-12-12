@@ -21,6 +21,8 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <libethereum/Executive.h>
+#include <libevm/VMFactory.h>
 #include "vm.h"
 
 using namespace std;
@@ -32,18 +34,18 @@ using namespace dev::test;
 FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
 	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, _depth) {}
 
-h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc const&)
+h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
 {
 	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
 
-	Transaction t(_endowment, gasPrice, *_gas, _init.toBytes());
+	Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());
 	callcreates.push_back(t);
 	return na;
 }
 
-bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc const&, Address _myAddressOverride, Address _codeAddressOverride)
+bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256& io_gas, bytesRef _out, OnOpFunc const&, Address _myAddressOverride, Address _codeAddressOverride)
 {
-	Transaction t(_value, gasPrice, *_gas, _receiveAddress, _data.toVector());
+	Transaction t(_value, gasPrice, io_gas, _receiveAddress, _data.toVector());
 	callcreates.push_back(t);
 	(void)_out;
 	(void)_myAddressOverride;
@@ -118,41 +120,6 @@ void FakeExtVM::importEnv(mObject& _o)
 	currentBlock.difficulty = toInt(_o["currentDifficulty"]);
 	currentBlock.timestamp = toInt(_o["currentTimestamp"]);
 	currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
-}
-
-mObject FakeExtVM::exportLog()
-{
-	mObject ret;
-	for (LogEntry const& l: sub.logs)
-	{
-		mObject o;
-		o["address"] = toString(l.address);
-		mArray topics;
-		for (auto const& t: l.topics)
-			topics.push_back(toString(t));
-		o["topics"] = topics;
-		o["data"] = "0x" + toHex(l.data);
-		ret[toString(l.bloom())] = o;
-	}
-	return ret;
-}
-
-void FakeExtVM::importLog(mObject& _o)
-{
-	for (auto const& l: _o)
-	{
-		mObject o = l.second.get_obj();
-		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
-		assert(o.count("address") > 0);
-		assert(o.count("topics") > 0);
-		assert(o.count("data") > 0);
-		LogEntry log;
-		log.address = Address(o["address"].get_str());
-		for (auto const& t: o["topics"].get_array())
-			log.topics.push_back(h256(t.get_str()));
-		log.data = importData(o);
-		sub.logs.push_back(log);
-	}
 }
 
 mObject FakeExtVM::exportState()
@@ -276,10 +243,11 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 
 eth::OnOpFunc FakeExtVM::simpleTrace()
 {
-	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, void* voidVM, void const* voidExt)
+
+	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
 	{
-		FakeExtVM const& ext = *(FakeExtVM const*)voidExt;
-		eth::VM& vm = *(eth::VM*)voidVM;
+		FakeExtVM const& ext = *static_cast<FakeExtVM const*>(voidExt);
+		eth::VM& vm = *voidVM;
 
 		std::ostringstream o;
 		o << std::endl << "    STACK" << std::endl;
@@ -332,14 +300,14 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		bytes output;
-		VM vm(fev.gas);
+		auto vm = eth::VMFactory::create(fev.gas);
 
 		u256 gas;
 		bool vmExceptionOccured = false;
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace()).toBytes();
-			gas = vm.gas();
+			output = vm->go(fev, fev.simpleTrace()).toBytes();
+			gas = vm->gas();
 		}
 		catch (VMException const& _e)
 		{
@@ -384,7 +352,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = "0x" + toHex(output);
 				fev.push(o, "gas", gas);
-				o["logs"] = mValue(exportLog(fev.sub.logs));
+				o["logs"] = exportLog(fev.sub.logs);
 			}
 		}
 		else
@@ -402,7 +370,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				dev::test::FakeExtVM test;
 				test.importState(o["post"].get_obj());
 				test.importCallCreates(o["callcreates"].get_array());
-				test.sub.logs = importLog(o["logs"].get_obj());
+				test.sub.logs = importLog(o["logs"].get_array());
 
 				checkOutput(output, o);
 
