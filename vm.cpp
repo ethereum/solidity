@@ -21,6 +21,8 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <libethereum/Executive.h>
+#include <libevm/VMFactory.h>
 #include "vm.h"
 
 using namespace std;
@@ -298,14 +300,14 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		bytes output;
-		VM vm(fev.gas);
+		auto vm = eth::VMFactory::create(fev.gas);
 
 		u256 gas;
 		bool vmExceptionOccured = false;
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace()).toBytes();
-			gas = vm.gas();
+			output = vm->go(fev, fev.simpleTrace()).toBytes();
+			gas = vm->gas();
 		}
 		catch (VMException const& _e)
 		{
