@@ -18,7 +18,7 @@ target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth solidity)
 target_link_libraries(testeth webthree)
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE})
-target_link_libraries(testeth ${CURL_LIBRARY})
+target_link_libraries(testeth ${CURL_LIBRARIES})
 
 if (JSONRPC)
 	target_link_libraries(testeth web3jsonrpc)
