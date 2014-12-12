@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(genesis_tests)
 
 	BOOST_CHECK_EQUAL(BlockChain::genesis().stateRoot, h256(o["genesis_state_root"].get_str()));
 	BOOST_CHECK_EQUAL(toHex(BlockChain::createGenesisBlock()), toHex(fromHex(o["genesis_rlp_hex"].get_str())));
-	BOOST_CHECK_EQUAL(sha3(BlockChain::createGenesisBlock()), h256(o["genesis_hash"].get_str()));
+	BOOST_CHECK_EQUAL(BlockInfo::headerHash(BlockChain::createGenesisBlock()), h256(o["genesis_hash"].get_str()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
