@@ -67,10 +67,10 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 		cnote << i.first;
 		js::mObject& o = i.second.get_obj();
 		vector<pair<string, string>> ss;
-		for (auto i: o["in"].get_array())
+		for (auto& i: o["in"].get_array())
 		{
 			vector<string> values;
-			for (auto s: i.get_array())
+			for (auto& s: i.get_array())
 				values.push_back(s.get_str());
 
 			assert(values.size() == 2);
