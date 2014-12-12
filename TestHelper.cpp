@@ -26,6 +26,7 @@
 #include <boost/filesystem/path.hpp>
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
+#include <libevm/VMFactory.h>
 
 using namespace std;
 using namespace dev::eth;
@@ -469,6 +470,22 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	catch (std::exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << _e.what());
+	}
+}
+
+
+void processCommandLineOptions()
+{
+	auto argc = boost::unit_test::framework::master_test_suite().argc;
+	auto argv = boost::unit_test::framework::master_test_suite().argv;
+
+	for (auto i =  0; i < argc; ++i)
+	{
+		if (std::string(argv[i]) == "--jit")
+		{
+			eth::VMFactory::setKind(eth::VMKind::JIT);
+			break;
+		}
 	}
 }
 

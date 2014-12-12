@@ -76,6 +76,7 @@ void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
 std::string getTestPath();
 void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
+void processCommandLineOptions();
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)

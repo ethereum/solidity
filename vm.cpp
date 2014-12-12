@@ -277,6 +277,8 @@ namespace dev { namespace test {
 
 void doVMTests(json_spirit::mValue& v, bool _fillin)
 {
+	processCommandLineOptions();
+
 	for (auto& i: v.get_obj())
 	{
 		cnote << i.first;
@@ -286,20 +288,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre") > 0);
 		BOOST_REQUIRE(o.count("exec") > 0);
 
-		auto argc = boost::unit_test::framework::master_test_suite().argc;
-		auto argv = boost::unit_test::framework::master_test_suite().argv;
-
-		for (auto i =  0; i < argc; ++i)
-		{
-			if (std::string(argv[i]) == "--jit")
-			{
-				VMFactory::setKind(VMKind::JIT);
-				break;
-			}
-		}
-
-		dev::test::FakeExtVM fev;
-
+		FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 
@@ -340,6 +329,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		auto endTime = std::chrono::high_resolution_clock::now();
+		auto argc = boost::unit_test::framework::master_test_suite().argc;
+		auto argv = boost::unit_test::framework::master_test_suite().argv;
 		for (auto i = 0; i < argc; ++i)
 		{	       
 			if (std::string(argv[i]) == "--show-times")

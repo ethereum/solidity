@@ -43,6 +43,8 @@ namespace dev {  namespace test {
 
 void doStateTests(json_spirit::mValue& v, bool _fillin)
 {
+	processCommandLineOptions();
+
 	for (auto& i: v.get_obj())
 	{
 		cnote << i.first;
