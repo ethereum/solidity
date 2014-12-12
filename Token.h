@@ -269,6 +269,39 @@ namespace solidity
 	K(ADDRESS, "address", 0)                                           \
 	K(BOOL, "bool", 0)                                                 \
 	K(STRING_TYPE, "string", 0)                                        \
+	K(STRING0, "string0", 0)                                           \
+	K(STRING1, "string1", 0)                                           \
+	K(STRING2, "string2", 0)                                           \
+	K(STRING3, "string3", 0)                                           \
+	K(STRING4, "string4", 0)                                           \
+	K(STRING5, "string5", 0)                                           \
+	K(STRING6, "string6", 0)                                           \
+	K(STRING7, "string7", 0)                                           \
+	K(STRING8, "string8", 0)                                           \
+	K(STRING9, "string9", 0)                                           \
+	K(STRING10, "string10", 0)                                         \
+	K(STRING11, "string11", 0)                                         \
+	K(STRING12, "string12", 0)                                         \
+	K(STRING13, "string13", 0)                                         \
+	K(STRING14, "string14", 0)                                         \
+	K(STRING15, "string15", 0)                                         \
+	K(STRING16, "string16", 0)                                         \
+	K(STRING17, "string17", 0)                                         \
+	K(STRING18, "string18", 0)                                         \
+	K(STRING19, "string19", 0)                                         \
+	K(STRING20, "string20", 0)                                         \
+	K(STRING21, "string21", 0)                                         \
+	K(STRING22, "string22", 0)                                         \
+	K(STRING23, "string23", 0)                                         \
+	K(STRING24, "string24", 0)                                         \
+	K(STRING25, "string25", 0)                                         \
+	K(STRING26, "string26", 0)                                         \
+	K(STRING27, "string27", 0)                                         \
+	K(STRING28, "string28", 0)                                         \
+	K(STRING29, "string29", 0)                                         \
+	K(STRING30, "string30", 0)                                         \
+	K(STRING31, "string31", 0)                                         \
+	K(STRING32, "string32", 0)                                         \
 	K(TEXT, "text", 0)                                                 \
 	K(REAL, "real", 0)                                                 \
 	K(UREAL, "ureal", 0)                                               \
