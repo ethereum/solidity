@@ -43,6 +43,8 @@ namespace dev {  namespace test {
 
 void doStateTests(json_spirit::mValue& v, bool _fillin)
 {
+	processCommandLineOptions();
+
 	for (auto& i: v.get_obj())
 	{
 		cnote << i.first;
@@ -123,6 +125,11 @@ BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
 BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 {
 	dev::test::executeTests("stPreCompiledContracts", "/StateTests", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stLogTests)
+{
+	dev::test::executeTests("stLogTests", "/StateTests", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stSpecialTest)
