@@ -181,6 +181,9 @@ public:
 	/// Returns the functions that make up the calling interface in the intended order.
 	std::vector<FunctionDefinition const*> getInterfaceFunctions() const;
 
+	/// Returns the constructor or nullptr if no constructor was specified
+	FunctionDefinition const* getConstructor() const;
+
 private:
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
@@ -738,6 +741,31 @@ public:
 private:
 	ASTPointer<Expression> m_expression;
 	std::vector<ASTPointer<Expression>> m_arguments;
+};
+
+/**
+ * Expression that creates a new contract, e.g. "new SomeContract(1, 2)".
+ */
+class NewExpression: public Expression
+{
+public:
+	NewExpression(Location const& _location, ASTPointer<Identifier> const& _contractName,
+				  std::vector<ASTPointer<Expression>> const& _arguments):
+		Expression(_location), m_contractName(_contractName), m_arguments(_arguments) {}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+	virtual void checkTypeRequirements() override;
+
+	std::vector<ASTPointer<Expression const>> getArguments() const { return {m_arguments.begin(), m_arguments.end()}; }
+
+	/// Returns the referenced contract. Can only be called after type checking.
+	ContractDefinition const* getContract() const { return m_contract; }
+
+private:
+	ASTPointer<Identifier> m_contractName;
+	std::vector<ASTPointer<Expression>> m_arguments;
+
+	ContractDefinition const* m_contract = nullptr;
 };
 
 /**

@@ -108,7 +108,7 @@ private:
 
 	struct Contract
 	{
-		ContractDefinition* contract;
+		ContractDefinition const* contract;
 		std::shared_ptr<Compiler> compiler;
 		bytes bytecode;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;

@@ -68,6 +68,7 @@ public:
 	virtual bool visit(UnaryOperation&) { return true; }
 	virtual bool visit(BinaryOperation&) { return true; }
 	virtual bool visit(FunctionCall&) { return true; }
+	virtual bool visit(NewExpression&) { return true; }
 	virtual bool visit(MemberAccess&) { return true; }
 	virtual bool visit(IndexAccess&) { return true; }
 	virtual bool visit(PrimaryExpression&) { return true; }
@@ -102,6 +103,7 @@ public:
 	virtual void endVisit(UnaryOperation&) { }
 	virtual void endVisit(BinaryOperation&) { }
 	virtual void endVisit(FunctionCall&) { }
+	virtual void endVisit(NewExpression&) { }
 	virtual void endVisit(MemberAccess&) { }
 	virtual void endVisit(IndexAccess&) { }
 	virtual void endVisit(PrimaryExpression&) { }
@@ -140,6 +142,7 @@ public:
 	virtual bool visit(UnaryOperation const&) { return true; }
 	virtual bool visit(BinaryOperation const&) { return true; }
 	virtual bool visit(FunctionCall const&) { return true; }
+	virtual bool visit(NewExpression const&) { return true; }
 	virtual bool visit(MemberAccess const&) { return true; }
 	virtual bool visit(IndexAccess const&) { return true; }
 	virtual bool visit(PrimaryExpression const&) { return true; }
@@ -174,6 +177,7 @@ public:
 	virtual void endVisit(UnaryOperation const&) { }
 	virtual void endVisit(BinaryOperation const&) { }
 	virtual void endVisit(FunctionCall const&) { }
+	virtual void endVisit(NewExpression const&) { }
 	virtual void endVisit(MemberAccess const&) { }
 	virtual void endVisit(IndexAccess const&) { }
 	virtual void endVisit(PrimaryExpression const&) { }

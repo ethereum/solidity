@@ -419,6 +419,26 @@ void FunctionCall::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void NewExpression::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_contractName->accept(_visitor);
+		listAccept(m_arguments, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void NewExpression::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_contractName->accept(_visitor);
+		listAccept(m_arguments, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void MemberAccess::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

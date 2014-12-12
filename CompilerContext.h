@@ -39,14 +39,15 @@ namespace solidity {
 class CompilerContext
 {
 public:
-	CompilerContext(): m_stateVariablesSize(0) {}
-
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration);
 	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
 	void addVariable(VariableDeclaration const& _declaration);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
 	void addFunction(FunctionDefinition const& _function);
+
+	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
+	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
 
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
 
@@ -80,6 +81,8 @@ public:
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the assembly item corresponding to the pushed subroutine, i.e. its offset.
 	eth::AssemblyItem addSubroutine(eth::Assembly const& _assembly) { return m_asm.appendSubSize(_assembly); }
+	/// Adds data to the data section, pushes a reference to the stack
+	eth::AssemblyItem appendData(bytes const& _data) { return m_asm.append(_data); }
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
 	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
@@ -90,13 +93,16 @@ public:
 	eth::Assembly const& getAssembly() const { return m_asm; }
 	void streamAssembly(std::ostream& _stream) const { _stream << m_asm; }
 	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
+
 private:
 	eth::Assembly m_asm;
 
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
+	/// Other already compiled contracts to be used in contract creation calls.
+	std::map<ContractDefinition const*, bytes const*> m_compiledContracts;
 	/// Size of the state variables, offset of next variable to be added.
-	u256 m_stateVariablesSize;
+	u256 m_stateVariablesSize = 0;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, u256> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).

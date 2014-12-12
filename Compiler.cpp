@@ -33,9 +33,11 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
-void Compiler::compileContract(ContractDefinition const& _contract, vector<MagicVariableDeclaration const*> const& _magicGlobals)
+void Compiler::compileContract(ContractDefinition const& _contract, vector<MagicVariableDeclaration const*> const& _magicGlobals,
+							   map<ContractDefinition const*, bytes const*> const& _contracts)
 {
 	m_context = CompilerContext(); // clear it just in case
+	m_context.setCompiledContracts(_contracts);
 
 	for (MagicVariableDeclaration const* variable: _magicGlobals)
 		m_context.addMagicGlobal(*variable);
@@ -50,12 +52,14 @@ void Compiler::compileContract(ContractDefinition const& _contract, vector<Magic
 		if (function->getName() != _contract.getName()) // don't add the constructor here
 			function->accept(*this);
 
-	packIntoContractCreator(_contract);
+	packIntoContractCreator(_contract, _contracts);
 }
 
-void Compiler::packIntoContractCreator(ContractDefinition const& _contract)
+void Compiler::packIntoContractCreator(ContractDefinition const& _contract,
+									   map<ContractDefinition const*, bytes const*> const& _contracts)
 {
 	CompilerContext runtimeContext;
+	runtimeContext.setCompiledContracts(_contracts);
 	swap(m_context, runtimeContext);
 
 	registerStateVariables(_contract);
@@ -67,11 +71,14 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract)
 			constructor = function.get();
 			break;
 		}
+	eth::AssemblyItem sub = m_context.addSubroutine(runtimeContext.getAssembly());
+	// stack contains sub size
 	if (constructor)
 	{
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		m_context.addFunction(*constructor); // note that it cannot be called due to syntactic reasons
-		//@todo copy constructor arguments from calldata to memory prior to this
+		// copy constructor arguments
+		//@todo ask assembly for the size of the current program
 		//@todo calling other functions inside the constructor should either trigger a parse error
 		//or we should copy them here (register them above and call "accept") - detecting which
 		// functions are referenced / called needs to be done in a recursive way.
@@ -81,8 +88,6 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract)
 		m_context << returnTag;
 	}
 
-	eth::AssemblyItem sub = m_context.addSubroutine(runtimeContext.getAssembly());
-	// stack contains sub size
 	m_context << eth::Instruction::DUP1 << sub << u256(0) << eth::Instruction::CODECOPY;
 	m_context << u256(0) << eth::Instruction::RETURN;
 }

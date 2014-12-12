@@ -310,6 +310,19 @@ MemberList const& ContractType::getMembers() const
 	return *m_members;
 }
 
+shared_ptr<FunctionType const> const& ContractType::getConstructorType() const
+{
+	if (!m_constructorType)
+	{
+		FunctionDefinition const* constr = m_contract.getConstructor();
+		if (constr)
+			m_constructorType = make_shared<FunctionType const>(*constr);
+		else
+			m_constructorType = make_shared<FunctionType const>(TypePointers(), TypePointers());
+	}
+	return m_constructorType;
+}
+
 unsigned ContractType::getFunctionIndex(string const& _functionName) const
 {
 	unsigned index = 0;

@@ -67,23 +67,23 @@ public:
 	///                     types provided by @c DocumentationType
 	/// @return             A unique pointer contained string with the json
 	///                     representation of provided type
-	std::unique_ptr<std::string> getDocumentation(ContractDefinition& _contractDef,
+	std::unique_ptr<std::string> getDocumentation(ContractDefinition const& _contractDef,
 												  DocumentationType _type);
 	/// Get the ABI Interface of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json
 	///                     representation of the contract's ABI Interface
-	std::unique_ptr<std::string> getABIInterface(ContractDefinition& _contractDef);
+	std::unique_ptr<std::string> getABIInterface(ContractDefinition const& _contractDef);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json
 	///                     representation of the contract's user documentation
-	std::unique_ptr<std::string> getUserDocumentation(ContractDefinition& _contractDef);
+	std::unique_ptr<std::string> getUserDocumentation(ContractDefinition const& _contractDef);
 	/// Get the Developer's documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json
 	///                     representation of the contract's developer documentation
-	std::unique_ptr<std::string> getDevDocumentation(ContractDefinition& _contractDef);
+	std::unique_ptr<std::string> getDevDocumentation(ContractDefinition const& _contractDef);
 
 private:
 	void resetUser();

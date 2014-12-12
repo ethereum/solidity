@@ -62,6 +62,7 @@ class Assignment;
 class UnaryOperation;
 class BinaryOperation;
 class FunctionCall;
+class NewExpression;
 class MemberAccess;
 class IndexAccess;
 class PrimaryExpression;

@@ -67,6 +67,7 @@ public:
 	bool visit(UnaryOperation const& _node) override;
 	bool visit(BinaryOperation const& _node) override;
 	bool visit(FunctionCall const& _node) override;
+	bool visit(NewExpression const& _node) override;
 	bool visit(MemberAccess const& _node) override;
 	bool visit(IndexAccess const& _node) override;
 	bool visit(PrimaryExpression const& _node) override;
@@ -99,6 +100,7 @@ public:
 	void endVisit(UnaryOperation const&) override;
 	void endVisit(BinaryOperation const&) override;
 	void endVisit(FunctionCall const&) override;
+	void endVisit(NewExpression const&) override;
 	void endVisit(MemberAccess const&) override;
 	void endVisit(IndexAccess const&) override;
 	void endVisit(PrimaryExpression const&) override;

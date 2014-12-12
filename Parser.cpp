@@ -437,7 +437,17 @@ ASTPointer<Expression> Parser::parseUnaryExpression()
 {
 	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->getCurrentToken();
-	if (Token::isUnaryOp(token) || Token::isCountOp(token))
+	if (token == Token::NEW)
+	{
+		expectToken(Token::NEW);
+		ASTPointer<Identifier> contractName = ASTNodeFactory(*this).createNode<Identifier>(expectIdentifierToken());
+		expectToken(Token::LPAREN);
+		vector<ASTPointer<Expression>> arguments(parseFunctionCallArguments());
+		expectToken(Token::RPAREN);
+		nodeFactory.markEndPosition();
+		return nodeFactory.createNode<NewExpression>(contractName, arguments);
+	}
+	else if (Token::isUnaryOp(token) || Token::isCountOp(token))
 	{
 		// prefix expression
 		m_scanner->next();

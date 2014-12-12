@@ -25,11 +25,12 @@ Break = 'break' ';'
 Return = 'return' Expression? ';'
 VariableDefinition = VariableDeclaration ( = Expression )? ';'
 
-Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | IndexAccess |
+Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |
 			 MemberAccess | PrimaryExpression
 // The expression syntax is actually much more complicated
 Assignment = Expression (AssignmentOp Expression)
 FunctionCall = Expression '(' ( Expression ( ',' Expression )* ) ')'
+NewExpression = 'new' Identifier '(' ( Expression ( ',' Expression )* ) ')'
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expresison ']'
 PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'

@@ -226,6 +226,14 @@ bool ASTPrinter::visit(FunctionCall const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(NewExpression const& _node)
+{
+	writeLine("NewExpression");
+	printType(_node);
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(MemberAccess const& _node)
 {
 	writeLine("MemberAccess to member " + _node.getMemberName());
@@ -398,6 +406,11 @@ void ASTPrinter::endVisit(BinaryOperation const&)
 }
 
 void ASTPrinter::endVisit(FunctionCall const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(NewExpression const&)
 {
 	m_indentation--;
 }

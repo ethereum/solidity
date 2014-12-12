@@ -54,6 +54,14 @@ vector<FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() co
 	return exportedFunctions;
 }
 
+FunctionDefinition const* ContractDefinition::getConstructor() const
+{
+	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
+		if (f->getName() == getName())
+			return f.get();
+	return nullptr;
+}
+
 void StructDefinition::checkMemberTypes() const
 {
 	for (ASTPointer<VariableDeclaration> const& member: getMembers())
@@ -235,13 +243,12 @@ void FunctionCall::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
 		m_type = type.getActualType();
 	}
-	else
+	else if (FunctionType const* functionType = dynamic_cast<FunctionType const*>(expressionType))
 	{
 		//@todo would be nice to create a struct type from the arguments
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
-		FunctionType const& functionType = dynamic_cast<FunctionType const&>(*expressionType);
-		TypePointers const& parameterTypes = functionType.getParameterTypes();
+		TypePointers const& parameterTypes = functionType->getParameterTypes();
 		if (parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 		for (size_t i = 0; i < m_arguments.size(); ++i)
@@ -249,16 +256,37 @@ void FunctionCall::checkTypeRequirements()
 				BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
-		if (functionType.getReturnParameterTypes().empty())
+		if (functionType->getReturnParameterTypes().empty())
 			m_type = make_shared<VoidType>();
 		else
-			m_type = functionType.getReturnParameterTypes().front();
+			m_type = functionType->getReturnParameterTypes().front();
 	}
+	else
+		BOOST_THROW_EXCEPTION(createTypeError("Type is not callable."));
 }
 
 bool FunctionCall::isTypeConversion() const
 {
 	return m_expression->getType()->getCategory() == Type::Category::TYPE;
+}
+
+void NewExpression::checkTypeRequirements()
+{
+	m_contractName->checkTypeRequirements();
+	for (ASTPointer<Expression> const& argument: m_arguments)
+		argument->checkTypeRequirements();
+
+	m_contract = dynamic_cast<ContractDefinition const*>(m_contractName->getReferencedDeclaration());
+	if (!m_contract)
+		BOOST_THROW_EXCEPTION(createTypeError("Identifier is not a contract."));
+	shared_ptr<ContractType const> type = make_shared<ContractType const>(*m_contract);
+	m_type = type;
+	TypePointers const& parameterTypes = type->getConstructorType()->getParameterTypes();
+	if (parameterTypes.size() != m_arguments.size())
+		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
+	for (size_t i = 0; i < m_arguments.size(); ++i)
+		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
+			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in constructor call."));
 }
 
 void MemberAccess::checkTypeRequirements()

@@ -60,6 +60,7 @@ private:
 	virtual void endVisit(UnaryOperation const& _unaryOperation) override;
 	virtual bool visit(BinaryOperation const& _binaryOperation) override;
 	virtual bool visit(FunctionCall const& _functionCall) override;
+	virtual bool visit(NewExpression const& _newExpression) override;
 	virtual void endVisit(MemberAccess const& _memberAccess) override;
 	virtual bool visit(IndexAccess const& _indexAccess) override;
 	virtual void endVisit(Identifier const& _identifier) override;

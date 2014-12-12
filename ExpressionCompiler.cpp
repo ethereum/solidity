@@ -279,6 +279,44 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	return false;
 }
 
+bool ExpressionCompiler::visit(NewExpression const& _newExpression)
+{
+	ContractType const* type = dynamic_cast<ContractType const*>(_newExpression.getType().get());
+	if (asserts(type))
+		BOOST_THROW_EXCEPTION(InternalCompilerError());
+	TypePointers const& types = type->getConstructorType()->getParameterTypes();
+	vector<ASTPointer<Expression const>> arguments = _newExpression.getArguments();
+	if (asserts(arguments.size() == types.size()))
+		BOOST_THROW_EXCEPTION(InternalCompilerError());
+
+	// copy the contracts code into memory
+	bytes const& bytecode = m_context.getCompiledContract(*_newExpression.getContract());
+	m_context << u256(bytecode.size());
+	//@todo could be done by actually appending the Assembly, but then we probably need to compile
+	// multiple times. Will revisit once external fuctions are inlined.
+	m_context.appendData(bytecode);
+	//@todo copy to memory position 0, shift as soon as we use memory
+	m_context << u256(0) << eth::Instruction::CODECOPY;
+
+	unsigned dataOffset = bytecode.size();
+	for (unsigned i = 0; i < arguments.size(); ++i)
+	{
+		arguments[i]->accept(*this);
+		appendTypeConversion(*arguments[i]->getType(), *types[i]);
+		unsigned const numBytes = types[i]->getCalldataEncodedSize();
+		if (numBytes > 32)
+			BOOST_THROW_EXCEPTION(CompilerError()
+								  << errinfo_sourceLocation(arguments[i]->getLocation())
+								  << errinfo_comment("Type " + types[i]->toString() + " not yet supported."));
+		bool const leftAligned = types[i]->getCategory() == Type::Category::STRING;
+		CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned);
+		dataOffset += numBytes;
+	}
+	// size, offset, endowment
+	m_context << u256(dataOffset) << u256(0) << u256(0) << eth::Instruction::CREATE;
+	return false;
+}
+
 void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 {
 	ASTString const& member = _memberAccess.getMemberName();

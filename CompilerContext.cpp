@@ -62,6 +62,14 @@ void CompilerContext::addFunction(FunctionDefinition const& _function)
 	m_functionEntryLabels.insert(std::make_pair(&_function, m_asm.newTag()));
 }
 
+bytes const& CompilerContext::getCompiledContract(const ContractDefinition& _contract) const
+{
+	auto ret = m_compiledContracts.find(&_contract);
+	if (asserts(ret != m_compiledContracts.end()))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Compiled contract not found."));
+	return *ret->second;
+}
+
 bool CompilerContext::isLocalVariable(Declaration const* _declaration) const
 {
 	return m_localVariables.count(_declaration) > 0;

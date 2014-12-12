@@ -32,14 +32,16 @@ class Compiler: private ASTConstVisitor
 public:
 	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_returnTag(m_context.newTag()) {}
 
-	void compileContract(ContractDefinition const& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals);
+	void compileContract(ContractDefinition const& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals,
+						 std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(m_optimize); }
 	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
 
 private:
 	/// Creates a new compiler context / assembly, packs the current code into the data part and
 	/// adds the constructor code.
-	void packIntoContractCreator(ContractDefinition const& _contract);
+	void packIntoContractCreator(ContractDefinition const& _contract,
+								 std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	void appendFunctionSelector(ContractDefinition const& _contract);
 	/// Creates code that unpacks the arguments for the given function, from memory if
 	/// @a _fromMemory is true, otherwise from call data. @returns the size of the data in bytes.
