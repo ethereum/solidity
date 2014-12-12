@@ -21,6 +21,8 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <libethereum/Executive.h>
+#include <libevm/VMFactory.h>
 #include "vm.h"
 
 using namespace std;
@@ -241,10 +243,11 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 
 eth::OnOpFunc FakeExtVM::simpleTrace()
 {
-	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, void* voidVM, void const* voidExt)
+
+	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
 	{
-		FakeExtVM const& ext = *(FakeExtVM const*)voidExt;
-		eth::VM& vm = *(eth::VM*)voidVM;
+		FakeExtVM const& ext = *static_cast<FakeExtVM const*>(voidExt);
+		eth::VM& vm = *voidVM;
 
 		std::ostringstream o;
 		o << std::endl << "    STACK" << std::endl;
@@ -297,14 +300,14 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		bytes output;
-		VM vm(fev.gas);
+		auto vm = eth::VMFactory::create(fev.gas);
 
 		u256 gas;
 		bool vmExceptionOccured = false;
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace()).toBytes();
-			gas = vm.gas();
+			output = vm->go(fev, fev.simpleTrace()).toBytes();
+			gas = vm->gas();
 		}
 		catch (VMException const& _e)
 		{
