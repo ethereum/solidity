@@ -262,12 +262,45 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 		dev::LogOutputStream<eth::VMTraceChannel, false>(true) << o.str();
 		dev::LogOutputStream<eth::VMTraceChannel, false>(false) << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
 
+		/*creates json stack trace*/
 		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
 		{
+			std::ostringstream ofile;
+
+			u256s stack = vm.stack();
+			ofile << endl << "{" << endl << "  \"stack\":[" << endl;
+			for (vector<u256>::iterator i = stack.begin(); i != stack.end(); ++i){
+				ofile << "    \"" << (h256)*i << "\"";
+				if(next(i) != stack.end()){
+					ofile << ",";
+				}
+
+				ofile << endl;
+			}
+
+			ofile << "  ]," << endl;
+			ofile << "  \"memory\": \"";
+			for(auto i: vm.memory())
+				ofile << setfill('0') << setw(2) << hex << (unsigned)i;
+			ofile << "\"," << endl;
+
+			ofile << "  \"storage\": [" << endl;
+			for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second)){
+				ofile << "  [" << endl;
+				ofile << "   \"" << std::showbase << std::hex << i.first << "\": \"" << i.second << "\"" << std::endl;
+			}
+
+			ofile << "  ]," << endl;
+			ofile << "  \"depth\": " << dec << ext.depth << "," << endl;
+			ofile << "  \"gas\":" << dec <<vm.gas() << "," << endl;
+			ofile << "  \"address\": \"" << ext.myAddress << "\"," << endl;
+			ofile << "  \"step\":" << steps << "," << endl;
+			ofile << "  \"pc\": " << vm.curPC() << "," << endl;
+			ofile << "  \"opcode\": \"" << instructionInfo(inst).name << "\""<< endl;
+			ofile << "},";
 			std::ofstream f;
-			f.open("./vmtrace.log", std::ofstream::app);
-			f << o.str();
-			f << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32";
+			f.open("./vmtrace.json", std::ofstream::app);
+			f << ofile.str();
 		}
 	};
 }
