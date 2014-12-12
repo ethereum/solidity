@@ -225,14 +225,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					BOOST_THROW_EXCEPTION(CompilerError()
 										  << errinfo_sourceLocation(arguments[i]->getLocation())
 										  << errinfo_comment("Type " + type.toString() + " not yet supported."));
-				if (numBytes != 32)
-					m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
-				m_context << u256(dataOffset) << eth::Instruction::MSTORE;
+				bool const leftAligned = type.getCategory() == Type::Category::STRING;
+				CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned);
 				dataOffset += numBytes;
 			}
 			//@todo only return the first return value for now
-			unsigned retSize = function.getReturnParameterTypes().empty() ? 0
-									: function.getReturnParameterTypes().front()->getCalldataEncodedSize();
+			Type const* firstType = function.getReturnParameterTypes().empty() ? nullptr :
+									function.getReturnParameterTypes().front().get();
+			unsigned retSize = firstType ? firstType->getCalldataEncodedSize() : 0;
 			// CALL arguments: outSize, outOff, inSize, inOff, value, addr, gas (stack top)
 			m_context << u256(retSize) << u256(0) << u256(dataOffset) << u256(0) << u256(0);
 			_functionCall.getExpression().accept(*this); // pushes addr and function index
@@ -240,11 +240,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					  << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB
 					  << eth::Instruction::CALL
 					  << eth::Instruction::POP; // @todo do not ignore failure indicator
-			if (retSize == 32)
-				m_context << u256(0) << eth::Instruction::MLOAD;
-			else if (retSize > 0)
-				m_context << (u256(1) << ((32 - retSize) * 8))
-						  << u256(0) << eth::Instruction::MLOAD << eth::Instruction::DIV;
+			if (retSize > 0)
+			{
+				bool const leftAligned = firstType->getCategory() == Type::Category::STRING;
+				CompilerUtils(m_context).loadFromMemory(0, retSize, leftAligned);
+			}
 			break;
 		}
 		case Location::SEND:
@@ -267,7 +267,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
 			// @todo move this once we actually use memory
-			m_context << u256(0) << eth::Instruction::MSTORE << u256(32) << u256(0) << eth::Instruction::SHA3;
+			CompilerUtils(m_context).storeInMemory(0);
+			m_context << u256(32) << u256(0) << eth::Instruction::SHA3;
 			break;
 		case Location::ECRECOVER:
 		case Location::SHA256:
@@ -283,13 +284,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				arguments[i]->accept(*this);
 				appendTypeConversion(*arguments[i]->getType(), *function.getParameterTypes()[i], true);
 				// @todo move this once we actually use memory
-				m_context << u256(i * 32) << eth::Instruction::MSTORE;
+				CompilerUtils(m_context).storeInMemory(i * 32);
 			}
 			m_context << u256(32) << u256(0) << u256(arguments.size() * 32) << u256(0) << u256(0)
 					  << contractAddress << u256(500) //@todo determine actual gas requirement
 					  << eth::Instruction::CALL
-					  << eth::Instruction::POP
-					  << u256(0) << eth::Instruction::MLOAD;
+					  << eth::Instruction::POP;
+			CompilerUtils(m_context).loadFromMemory(0);
 			break;
 		}
 		default:
@@ -373,7 +374,8 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 						 *dynamic_cast<MappingType const&>(*_indexAccess.getBaseExpression().getType()).getKeyType(),
 						 true);
 	// @todo move this once we actually use memory
-	m_context << u256(32) << eth::Instruction::MSTORE << u256(0) << eth::Instruction::MSTORE;
+	CompilerUtils(m_context).storeInMemory(0);
+	CompilerUtils(m_context).storeInMemory(32);
 	m_context << u256(64) << u256(0) << eth::Instruction::SHA3;
 
 	m_currentLValue = LValue(m_context, LValue::STORAGE, *_indexAccess.getType());
@@ -411,10 +413,11 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	{
 	case Type::Category::INTEGER:
 	case Type::Category::BOOL:
+	case Type::Category::STRING:
 		m_context << _literal.getType()->literalValue(_literal);
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer and boolean literals implemented for now."));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
 	}
 }
 
@@ -550,6 +553,11 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 		return;
 	if (_typeOnStack.getCategory() == Type::Category::INTEGER)
 		appendHighBitsCleanup(dynamic_cast<IntegerType const&>(_typeOnStack));
+	else if (_typeOnStack.getCategory() == Type::Category::STRING)
+	{
+		// nothing to do, strings are high-order-bit-aligned
+		//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
+	}
 	else if (_typeOnStack != _targetType)
 		// All other types should not be convertible to non-equal types.
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));

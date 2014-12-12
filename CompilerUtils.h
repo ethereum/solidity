@@ -35,6 +35,18 @@ class CompilerUtils
 public:
 	CompilerUtils(CompilerContext& _context): m_context(_context) {}
 
+	/// Loads data from memory to the stack.
+	/// @param _offset offset in memory (or calldata)
+	/// @param _bytes number of bytes to load
+	/// @param _leftAligned if true, store left aligned on stack (otherwise right aligned)
+	/// @param _fromCalldata if true, load from calldata, not from memory
+	void loadFromMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false, bool _fromCalldata = false);
+	/// Stores data from stack in memory.
+	/// @param _offset offset in memory
+	/// @param _bytes number of bytes to store
+	/// @param _leftAligned if true, data is left aligned on stack (otherwise right aligned)
+	void storeInMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false);
+
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);
 	/// Copies a variable of type @a _type from a stack depth of @a _stackDepth to the top of the stack.

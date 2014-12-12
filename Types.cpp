@@ -53,6 +53,8 @@ shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
 		return make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS);
 	else if (_typeToken == Token::BOOL)
 		return make_shared<BoolType const>();
+	else if (Token::STRING0 <= _typeToken && _typeToken <= Token::STRING32)
+		return make_shared<StaticStringType const>(int(_typeToken) - int(Token::STRING0));
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -91,7 +93,8 @@ shared_ptr<Type const> Type::forLiteral(Literal const& _literal)
 	case Token::NUMBER:
 		return IntegerType::smallestTypeForLiteral(_literal.getValue());
 	case Token::STRING_LITERAL:
-		return shared_ptr<Type const>(); // @todo add string literals
+		//@todo put larger strings into dynamic strings
+		return StaticStringType::smallestTypeForLiteral(_literal.getValue());
 	default:
 		return shared_ptr<Type const>();
 	}
@@ -193,6 +196,44 @@ const MemberList IntegerType::AddressMemberList =
 		MemberList({{"balance", make_shared<IntegerType const>(256)},
 					{"send", make_shared<FunctionType const>(TypePointers({make_shared<IntegerType const>(256)}),
 															 TypePointers(), FunctionType::Location::SEND)}});
+
+shared_ptr<StaticStringType> StaticStringType::smallestTypeForLiteral(string const& _literal)
+{
+	if (_literal.length() <= 32)
+		return make_shared<StaticStringType>(_literal.length());
+	return shared_ptr<StaticStringType>();
+}
+
+StaticStringType::StaticStringType(int _bytes): m_bytes(_bytes)
+{
+	if (asserts(m_bytes >= 0 && m_bytes <= 32))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid byte number for static string type: " +
+																		 dev::toString(m_bytes)));
+}
+
+bool StaticStringType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (_convertTo.getCategory() != getCategory())
+		return false;
+	StaticStringType const& convertTo = dynamic_cast<StaticStringType const&>(_convertTo);
+	return convertTo.m_bytes >= m_bytes;
+}
+
+bool StaticStringType::operator==(Type const& _other) const
+{
+	if (_other.getCategory() != getCategory())
+		return false;
+	StaticStringType const& other = dynamic_cast<StaticStringType const&>(_other);
+	return other.m_bytes == m_bytes;
+}
+
+u256 StaticStringType::literalValue(const Literal& _literal) const
+{
+	u256 value = 0;
+	for (char c: _literal.getValue())
+		value = (value << 8) | byte(c);
+	return value << ((32 - _literal.getValue().length()) * 8);
+}
 
 bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
