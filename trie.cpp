@@ -82,7 +82,6 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 		}
 		for (unsigned j = 0; j < min(1000u, dev::test::fac((unsigned)ss.size())); ++j)
 		{
-			next_permutation(ss.begin(), ss.end());
 			MemoryDB m;
 			GenericTrieDB<MemoryDB> t(&m);
 			t.init();
