@@ -117,7 +117,7 @@ private:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state);
+		eth::Executive executive(m_state, 0);
 		eth::Transaction t = _isCreation ? eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec())
 										 : eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
 		bytes transactionRLP = t.rlp();
@@ -137,7 +137,7 @@ private:
 		else
 		{
 			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-			BOOST_REQUIRE(!executive.call(m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas, m_sender));
+			BOOST_REQUIRE(!executive.call(m_contractAddress, m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas, m_sender));
 		}
 		BOOST_REQUIRE(executive.go());
 		m_state.noteSending(m_sender);
