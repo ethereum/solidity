@@ -363,6 +363,48 @@ BOOST_AUTO_TEST_CASE(small_signed_types)
 	testSolidityAgainstCpp(0, small_signed_types_cpp);
 }
 
+BOOST_AUTO_TEST_CASE(strings)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function fixed() returns(string32 ret) {\n"
+							 "    return \"abc\\x00\\xff__\";\n"
+							 "  }\n"
+							 "  function pipeThrough(string2 small, bool one) returns(string16 large, bool oneRet) {\n"
+							 "    oneRet = one;\n"
+							 "    large = small;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	bytes expectation(32, 0);
+	expectation[0] = byte('a');
+	expectation[1] = byte('b');
+	expectation[2] = byte('c');
+	expectation[3] = byte(0);
+	expectation[4] = byte(0xff);
+	expectation[5] = byte('_');
+	expectation[6] = byte('_');
+	BOOST_CHECK(callContractFunction(0, bytes()) == expectation);
+	expectation = bytes(17, 0);
+	expectation[0] = 0;
+	expectation[1] = 2;
+	expectation[16] = 1;
+	BOOST_CHECK(callContractFunction(1, bytes({0x00, 0x02, 0x01})) == expectation);
+}
+
+BOOST_AUTO_TEST_CASE(empty_string_on_stack)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function run(string0 empty, uint8 inp) returns(uint16 a, string0 b, string4 c) {\n"
+							 "    var x = \"abc\";\n"
+							 "    var y = \"\";\n"
+							 "    var z = inp;\n"
+							 "    a = z; b = y; c = x;"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction(0, bytes({0x02})) == bytes({0x00, 0x02, 'a', 'b', 'c', 0x00}));
+}
+
 BOOST_AUTO_TEST_CASE(state_smoke_test)
 {
 	char const* sourceCode = "contract test {\n"
@@ -939,6 +981,34 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls_with_local_vars)
 	u256 a(3456789);
 	u256 b("0x282837623374623234aa74");
 	BOOST_REQUIRE(callContractFunction(0, a, b) == toBigEndian(a * b + 9));
+}
+
+BOOST_AUTO_TEST_CASE(strings_in_calls)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			function invoke(string3 x, bool stop) returns (string4 ret) {
+				return x;
+			}
+		}
+		contract Main {
+			Helper h;
+			function callHelper(string2 x, bool stop) returns (string5 ret) {
+				return h.invoke(x, stop);
+			}
+			function getHelper() returns (address addr) {
+				return address(h);
+			}
+			function setHelper(address addr) {
+				h = Helper(addr);
+			}
+		})";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
+	BOOST_CHECK(callContractFunction(0, bytes({0, 'a', 1})) == bytes({0, 'a', 0, 0, 0}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
