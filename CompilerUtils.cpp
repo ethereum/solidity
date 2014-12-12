@@ -31,6 +31,46 @@ namespace dev
 namespace solidity
 {
 
+void CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _leftAligned, bool _fromCalldata)
+{
+	if (_bytes == 0)
+	{
+		m_context << u256(0);
+		return;
+	}
+	eth::Instruction load = _fromCalldata ? eth::Instruction::CALLDATALOAD : eth::Instruction::MLOAD;
+	if (asserts(_bytes <= 32))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Memory load of more than 32 bytes requested."));
+	if (_bytes == 32)
+		m_context << u256(_offset) << load;
+	else
+	{
+		// load data and add leading or trailing zeros by dividing/multiplying depending on alignment
+		u256 shiftFactor = u256(1) << ((32 - _bytes) * 8);
+		m_context << shiftFactor;
+		if (_leftAligned)
+			m_context << eth::Instruction::DUP1;
+		m_context << u256(_offset) << load << eth::Instruction::DIV;
+		if (_leftAligned)
+			m_context << eth::Instruction::MUL;
+	}
+}
+
+void CompilerUtils::storeInMemory(unsigned _offset, unsigned _bytes, bool _leftAligned)
+{
+	if (_bytes == 0)
+	{
+		m_context << eth::Instruction::POP;
+		return;
+	}
+	if (asserts(_bytes <= 32))
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Memory store of more than 32 bytes requested."));
+	if (_bytes != 32 && !_leftAligned)
+		// shift the value accordingly before storing
+		m_context << (u256(1) << ((32 - _bytes) * 8)) << eth::Instruction::MUL;
+	m_context << u256(_offset) << eth::Instruction::MSTORE;
+}
+
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 {
 	unsigned const stackPosition = m_context.baseToCurrentStackOffset(m_context.getBaseStackOffsetOfVariable(_variable));

@@ -109,8 +109,8 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		callDataUnpackerEntryPoints.push_back(m_context.newTag());
 		m_context << eth::dupInstruction(2) << eth::dupInstruction(2) << eth::Instruction::EQ;
 		m_context.appendConditionalJumpTo(callDataUnpackerEntryPoints.back());
-		m_context << eth::dupInstruction(4) << eth::Instruction::ADD;
-		//@todo avoid the last ADD (or remove it in the optimizer)
+		if (funid < interfaceFunctions.size() - 1)
+			m_context << eth::dupInstruction(4) << eth::Instruction::ADD;
 	}
 	m_context << eth::Instruction::STOP; // function not found
 
@@ -130,21 +130,17 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 {
 	// We do not check the calldata size, everything is zero-padded.
 	unsigned dataOffset = 1;
-	eth::Instruction load = _fromMemory ? eth::Instruction::MLOAD : eth::Instruction::CALLDATALOAD;
 
 	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{
 		unsigned const numBytes = var->getType()->getCalldataEncodedSize();
-		if (numBytes == 0 || numBytes > 32)
+		if (numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(var->getLocation())
 								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
-		if (numBytes == 32)
-			m_context << u256(dataOffset) << load;
-		else
-			m_context << (u256(1) << ((32 - numBytes) * 8)) << u256(dataOffset)
-					  << load << eth::Instruction::DIV;
+		bool leftAligned = var->getType()->getCategory() == Type::Category::STRING;
+		CompilerUtils(m_context).loadFromMemory(dataOffset, numBytes, leftAligned, !_fromMemory);
 		dataOffset += numBytes;
 	}
 	return dataOffset;
@@ -160,14 +156,13 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 	{
 		Type const& paramType = *parameters[i]->getType();
 		unsigned numBytes = paramType.getCalldataEncodedSize();
-		if (numBytes == 0 || numBytes > 32)
+		if (numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
 								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
 		CompilerUtils(m_context).copyToStackTop(stackDepth, paramType);
-		if (numBytes != 32)
-			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
-		m_context << u256(dataOffset) << eth::Instruction::MSTORE;
+		bool const leftAligned = paramType.getCategory() == Type::Category::STRING;
+		CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned);
 		stackDepth -= paramType.getSizeOnStack();
 		dataOffset += numBytes;
 	}
@@ -246,7 +241,7 @@ bool Compiler::visit(FunctionDefinition const& _function)
 
 bool Compiler::visit(IfStatement const& _ifStatement)
 {
-	ExpressionCompiler::compileExpression(m_context, _ifStatement.getCondition());
+	compileExpression(_ifStatement.getCondition());
 	eth::AssemblyItem trueTag = m_context.appendConditionalJump();
 	if (_ifStatement.getFalseStatement())
 		_ifStatement.getFalseStatement()->accept(*this);
@@ -265,7 +260,7 @@ bool Compiler::visit(WhileStatement const& _whileStatement)
 	m_breakTags.push_back(loopEnd);
 
 	m_context << loopStart;
-	ExpressionCompiler::compileExpression(m_context, _whileStatement.getCondition());
+	compileExpression(_whileStatement.getCondition());
 	m_context << eth::Instruction::ISZERO;
 	m_context.appendConditionalJumpTo(loopEnd);
 
@@ -298,7 +293,7 @@ bool Compiler::visit(Return const& _return)
 	//@todo modifications are needed to make this work with functions returning multiple values
 	if (Expression const* expression = _return.getExpression())
 	{
-		ExpressionCompiler::compileExpression(m_context, *expression);
+		compileExpression(*expression);
 		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters().getParameters().front();
 		ExpressionCompiler::appendTypeConversion(m_context, *expression->getType(), *firstVariable.getType());
 
@@ -312,7 +307,7 @@ bool Compiler::visit(VariableDefinition const& _variableDefinition)
 {
 	if (Expression const* expression = _variableDefinition.getExpression())
 	{
-		ExpressionCompiler::compileExpression(m_context, *expression);
+		compileExpression(*expression);
 		ExpressionCompiler::appendTypeConversion(m_context,
 												 *expression->getType(),
 												 *_variableDefinition.getDeclaration().getType());
@@ -324,9 +319,14 @@ bool Compiler::visit(VariableDefinition const& _variableDefinition)
 bool Compiler::visit(ExpressionStatement const& _expressionStatement)
 {
 	Expression const& expression = _expressionStatement.getExpression();
-	ExpressionCompiler::compileExpression(m_context, expression);
+	compileExpression(expression);
 	CompilerUtils(m_context).popStackElement(*expression.getType());
 	return false;
+}
+
+void Compiler::compileExpression(Expression const& _expression)
+{
+	ExpressionCompiler::compileExpression(m_context, _expression, m_optimize);
 }
 
 }

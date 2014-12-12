@@ -36,7 +36,7 @@ namespace dev
 namespace solidity
 {
 
-// @todo realMxN, string<N>
+// @todo realMxN, dynamic strings, text, arrays
 
 class Type; // forward
 using TypePointer = std::shared_ptr<Type const>;
@@ -176,6 +176,35 @@ private:
 	int m_bits;
 	Modifier m_modifier;
 	static const MemberList AddressMemberList;
+};
+
+/**
+ * String type with fixed length, up to 32 bytes.
+ */
+class StaticStringType: public Type
+{
+public:
+	virtual Category getCategory() const override { return Category::STRING; }
+
+	/// @returns the smallest string type for the given literal or an empty pointer
+	/// if no type fits.
+	static std::shared_ptr<StaticStringType> smallestTypeForLiteral(std::string const& _literal);
+
+	StaticStringType(int _bytes);
+
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual bool operator==(Type const& _other) const override;
+
+	virtual unsigned getCalldataEncodedSize() const override { return m_bytes; }
+	virtual bool isValueType() const override { return true; }
+
+	virtual std::string toString() const override { return "string" + dev::toString(m_bytes); }
+	virtual u256 literalValue(Literal const& _literal) const override;
+
+	int getNumBytes() const { return m_bytes; }
+
+private:
+	int m_bytes;
 };
 
 /**

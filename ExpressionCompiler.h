@@ -35,6 +35,7 @@ namespace solidity {
 class CompilerContext;
 class Type;
 class IntegerType;
+class StaticStringType;
 
 /**
  * Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
@@ -45,14 +46,14 @@ class ExpressionCompiler: private ASTConstVisitor
 {
 public:
 	/// Compile the given @a _expression into the @a _context.
-	static void compileExpression(CompilerContext& _context, Expression const& _expression);
+	static void compileExpression(CompilerContext& _context, Expression const& _expression, bool _optimize = false);
 
 	/// Appends code to remove dirty higher order bits in case of an implicit promotion to a wider type.
 	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack, Type const& _targetType);
 
 private:
-	ExpressionCompiler(CompilerContext& _compilerContext):
-		m_context(_compilerContext), m_currentLValue(m_context) {}
+	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimize = false):
+		m_optimize(_optimize), m_context(_compilerContext), m_currentLValue(m_context) {}
 
 	virtual bool visit(Assignment const& _assignment) override;
 	virtual void endVisit(UnaryOperation const& _unaryOperation) override;
@@ -75,7 +76,7 @@ private:
 	/// @}
 
 	/// Appends an implicit or explicit type conversion. For now this comprises only erasing
-	/// higher-order bits (@see appendHighBitCleanup) when widening integer types.
+	/// higher-order bits (@see appendHighBitCleanup) when widening integer.
 	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
 	/// necessary.
 	void appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
@@ -132,6 +133,7 @@ private:
 		unsigned m_stackSize;
 	};
 
+	bool m_optimize;
 	CompilerContext& m_context;
 	LValue m_currentLValue;
 };
