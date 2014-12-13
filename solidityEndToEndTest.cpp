@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(empty_string_on_stack)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction(0, bytes({0x02})) == bytes({0x00, 0x02, 'a', 'b', 'c', 0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes({0x02})) == bytes({0x00, 0x02, (byte)'a', (byte)'b', (byte)'c', 0x00}));
 }
 
 BOOST_AUTO_TEST_CASE(state_smoke_test)
