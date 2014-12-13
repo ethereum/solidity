@@ -311,7 +311,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 		catch (VMException const& _e)
 		{
-			cnote << "VM did throw an exception: " << diagnostic_information(_e);
+			cnote << "Safe VM Exception";
 			vmExceptionOccured = true;
 		}
 		catch (Exception const& _e)

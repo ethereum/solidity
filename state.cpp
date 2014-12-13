@@ -130,6 +130,11 @@ BOOST_AUTO_TEST_CASE(stLogTests)
 	dev::test::executeTests("stLogTests", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stRecursiveCreate)
+{
+	dev::test::executeTests("stRecursiveCreate", "/StateTests", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stSpecialTest)
 {
 	dev::test::executeTests("stSpecialTest", "/StateTests", dev::test::doStateTests);
