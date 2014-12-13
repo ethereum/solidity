@@ -41,10 +41,12 @@ namespace
 void parseTextAndResolveNames(std::string const& _source)
 {
 	Parser parser;
-	ASTPointer<ContractDefinition> contract = parser.parse(
-										   std::make_shared<Scanner>(CharStream(_source)));
-	NameAndTypeResolver resolver;
-	resolver.resolveNamesAndTypes(*contract);
+	ASTPointer<SourceUnit> sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+	NameAndTypeResolver resolver({});
+	resolver.registerDeclarations(*sourceUnit);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			resolver.resolveNamesAndTypes(*contract);
 }
 }
 
@@ -121,6 +123,44 @@ BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(struct_definition_directly_recursive)
+{
+	char const* text = "contract test {\n"
+					   "  struct MyStructName {\n"
+					   "    address addr;\n"
+					   "    MyStructName x;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(struct_definition_indirectly_recursive)
+{
+	char const* text = "contract test {\n"
+					   "  struct MyStructName1 {\n"
+					   "    address addr;\n"
+					   "    uint256 count;\n"
+					   "    MyStructName2 x;\n"
+					   "  }\n"
+					   "  struct MyStructName2 {\n"
+					   "    MyStructName1 x;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(struct_definition_recursion_via_mapping)
+{
+	char const* text = "contract test {\n"
+					   "  struct MyStructName1 {\n"
+					   "    address addr;\n"
+					   "    uint256 count;\n"
+					   "    mapping(uint => MyStructName1) x;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
 BOOST_AUTO_TEST_CASE(type_inference_smoke_test)
 {
 	char const* text = "contract test {\n"
@@ -184,6 +224,64 @@ BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 					   "  function f() returns (int256 r) { var x = int256(uint32(2)); return x; }"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(large_string_literal)
+{
+	char const* text = "contract test {\n"
+					   "  function f() { var x = \"123456789012345678901234567890123\"; }"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(balance)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint256 x = address(0).balance;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(balance_invalid)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    address(0).balance = 7;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_mapping)
+{
+	char const* text = "contract test {\n"
+					   "  struct str {\n"
+					   "    mapping(uint=>uint) map;\n"
+					   "  }\n"
+					   "  str data;"
+					   "  function fun() {\n"
+					   "    var a = data.map;\n"
+					   "    data.map = a;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_to_struct)
+{
+	char const* text = "contract test {\n"
+					   "  struct str {\n"
+					   "    mapping(uint=>uint) map;\n"
+					   "  }\n"
+					   "  str data;"
+					   "  function fun() {\n"
+					   "    var a = data;\n"
+					   "    data = a;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -32,6 +32,8 @@ BOOST_AUTO_TEST_SUITE(whisper)
 
 BOOST_AUTO_TEST_CASE(topic)
 {
+	cnote << "Testing Whisper...";
+	auto oldLogVerbosity = g_logVerbosity;
 	g_logVerbosity = 0;
 
 	bool started = false;
@@ -40,16 +42,16 @@ BOOST_AUTO_TEST_CASE(topic)
 	{
 		setThreadName("other");
 
-		Host ph("Test", NetworkPreferences(30303, "", false, true));
+		Host ph("Test", NetworkPreferences(50303, "", false, true));
 		auto wh = ph.registerCapability(new WhisperHost());
 		ph.start();
 
 		started = true;
 
 		/// Only interested in odd packets
-		auto w = wh->installWatch(BuildTopicMask()("odd"));
+		auto w = wh->installWatch(BuildTopicMask("odd"));
 
-		for (int i = 0, last = 0; i < 100 && last < 81; ++i)
+		for (int i = 0, last = 0; i < 200 && last < 81; ++i)
 		{
 			for (auto i: wh->checkWatch(w))
 			{
@@ -65,10 +67,12 @@ BOOST_AUTO_TEST_CASE(topic)
 	while (!started)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
-	Host ph("Test", NetworkPreferences(30300, "", false, true));
+	Host ph("Test", NetworkPreferences(50300, "", false, true));
 	auto wh = ph.registerCapability(new WhisperHost());
+	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
-	ph.connect("127.0.0.1", 30303);
+	this_thread::sleep_for(chrono::milliseconds(500));
+	ph.connect("127.0.0.1", 50303);
 
 	KeyPair us = KeyPair::create();
 	for (int i = 0; i < 10; ++i)
@@ -78,6 +82,8 @@ BOOST_AUTO_TEST_CASE(topic)
 	}
 
 	listener.join();
+	g_logVerbosity = oldLogVerbosity;
+
 	BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
 }
 

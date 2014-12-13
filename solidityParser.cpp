@@ -21,12 +21,14 @@
  */
 
 #include <string>
-
+#include <memory>
 #include <libdevcore/Log.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/Exceptions.h>
 #include <boost/test/unit_test.hpp>
+
+using namespace std;
 
 namespace dev
 {
@@ -37,12 +39,18 @@ namespace test
 
 namespace
 {
-ASTPointer<ASTNode> parseText(std::string const& _source)
+ASTPointer<ContractDefinition> parseText(std::string const& _source)
 {
 	Parser parser;
-	return parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+	ASTPointer<SourceUnit> sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ASTPointer<ContractDefinition> contract = dynamic_pointer_cast<ContractDefinition>(node))
+			return contract;
+	BOOST_FAIL("No contract found in source.");
+	return ASTPointer<ContractDefinition>();
 }
 }
+
 
 BOOST_AUTO_TEST_SUITE(SolidityParser)
 
@@ -89,6 +97,164 @@ BOOST_AUTO_TEST_CASE(single_function_param)
 					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_natspec_documentation)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  /// This is a test function\n"
+					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is a test function");
+}
+
+BOOST_AUTO_TEST_CASE(function_normal_comments)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  // We won't see this comment\n"
+					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
+						"Should not have gotten a Natspect comment for this function");
+}
+
+BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  /// This is test function 1\n"
+					   "  function functionName1(hash hashin) returns (hash hashout) {}\n"
+					   "  /// This is test function 2\n"
+					   "  function functionName2(hash hashin) returns (hash hashout) {}\n"
+					   "  // nothing to see here\n"
+					   "  function functionName3(hash hashin) returns (hash hashout) {}\n"
+					   "  /// This is test function 4\n"
+					   "  function functionName4(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 1");
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(1));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 2");
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(2));
+	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
+						"Should not have gotten natspec comment for functionName3()");
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(3));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 4");
+}
+
+BOOST_AUTO_TEST_CASE(multiline_function_documentation)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  /// This is a test function\n"
+					   "  /// and it has 2 lines\n"
+					   "  function functionName1(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(),
+					  " This is a test function\n"
+					  " and it has 2 lines");
+}
+
+BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  /// fun1 description\n"
+					   "  function fun1(uint256 a) {\n"
+					   "    var b;\n"
+					   "    /// I should not interfere with actual natspec comments\n"
+					   "    uint256 c;\n"
+					   "    mapping(address=>hash) d;\n"
+					   "    string name = \"Solidity\";"
+					   "  }\n"
+					   "  uint256 stateVar;\n"
+					   "  /// This is a test function\n"
+					   "  /// and it has 2 lines\n"
+					   "  function fun(hash hashin) returns (hash hashout) {}\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), " fun1 description");
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(1));
+	BOOST_CHECK_EQUAL(*function->getDocumentation(),
+					  " This is a test function\n"
+					  " and it has 2 lines");
+}
+
+BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  function ///I am in the wrong place \n"
+					   "  fun1(uint256 a) {\n"
+					   "    var b;\n"
+					   "    /// I should not interfere with actual natspec comments\n"
+					   "    uint256 c;\n"
+					   "    mapping(address=>hash) d;\n"
+					   "    string name = \"Solidity\";"
+					   "  }\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_MESSAGE(!function->getDocumentation(),
+						"Shouldn't get natspec docstring for this function");
+}
+
+BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
+{
+	ASTPointer<ContractDefinition> contract;
+	ASTPointer<FunctionDefinition> function;
+	char const* text = "contract test {\n"
+					   "  uint256 stateVar;\n"
+					   "  function fun1(uint256 a) {\n"
+					   "  /// I should have been above the function signature\n"
+					   "    var b;\n"
+					   "    /// I should not interfere with actual natspec comments\n"
+					   "    uint256 c;\n"
+					   "    mapping(address=>hash) d;\n"
+					   "    string name = \"Solidity\";"
+					   "  }\n"
+					   "}\n";
+	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
+	auto functions = contract->getDefinedFunctions();
+
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
+	BOOST_CHECK_MESSAGE(!function->getDocumentation(),
+						"Shouldn't get natspec docstring for this function");
 }
 
 BOOST_AUTO_TEST_CASE(struct_definition)
@@ -218,6 +384,50 @@ BOOST_AUTO_TEST_CASE(statement_starting_with_type_conversion)
 					   "    uint64(2);\n"
 					   "  }\n"
 					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(import_directive)
+{
+	char const* text = "import \"abc\";\n"
+					   "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_contracts)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "contract test2 {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_contracts_and_imports)
+{
+	char const* text = "import \"abc\";\n"
+					   "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "import \"def\";\n"
+					   "contract test2 {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "import \"ghi\";\n";
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 

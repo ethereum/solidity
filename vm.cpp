@@ -21,6 +21,8 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <libethereum/Executive.h>
+#include <libevm/VMFactory.h>
 #include "vm.h"
 
 using namespace std;
@@ -32,18 +34,18 @@ using namespace dev::test;
 FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
 	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, _depth) {}
 
-h160 FakeExtVM::create(u256 _endowment, u256* _gas, bytesConstRef _init, OnOpFunc const&)
+h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
 {
 	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
 
-	Transaction t(_endowment, gasPrice, *_gas, _init.toBytes());
+	Transaction t(_endowment, gasPrice, io_gas, _init.toBytes());
 	callcreates.push_back(t);
 	return na;
 }
 
-bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, OnOpFunc const&, Address _myAddressOverride, Address _codeAddressOverride)
+bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256& io_gas, bytesRef _out, OnOpFunc const&, Address _myAddressOverride, Address _codeAddressOverride)
 {
-	Transaction t(_value, gasPrice, *_gas, _receiveAddress, _data.toVector());
+	Transaction t(_value, gasPrice, io_gas, _receiveAddress, _data.toVector());
 	callcreates.push_back(t);
 	(void)_out;
 	(void)_myAddressOverride;
@@ -241,10 +243,11 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 
 eth::OnOpFunc FakeExtVM::simpleTrace()
 {
-	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, void* voidVM, void const* voidExt)
+
+	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
 	{
-		FakeExtVM const& ext = *(FakeExtVM const*)voidExt;
-		eth::VM& vm = *(eth::VM*)voidVM;
+		FakeExtVM const& ext = *static_cast<FakeExtVM const*>(voidExt);
+		eth::VM& vm = *voidVM;
 
 		std::ostringstream o;
 		o << std::endl << "    STACK" << std::endl;
@@ -297,18 +300,19 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		bytes output;
-		VM vm(fev.gas);
+		auto vm = eth::VMFactory::create(fev.gas);
 
 		u256 gas;
+		bool vmExceptionOccured = false;
 		try
 		{
-			output = vm.go(fev, fev.simpleTrace()).toVector();
-			gas = vm.gas();
+			output = vm->go(fev, fev.simpleTrace()).toBytes();
+			gas = vm->gas();
 		}
 		catch (VMException const& _e)
 		{
-			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			gas = 0;
+			cnote << "Safe VM Exception";
+			vmExceptionOccured = true;
 		}
 		catch (Exception const& _e)
 		{
@@ -342,48 +346,63 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			o["env"] = mValue(fev.exportEnv());
 			o["exec"] = mValue(fev.exportExec());
-			o["post"] = mValue(fev.exportState());
-			o["callcreates"] = fev.exportCallCreates();
-			o["out"] = "0x" + toHex(output);
-			fev.push(o, "gas", gas);
+			if (!vmExceptionOccured)
+			{
+				o["post"] = mValue(fev.exportState());
+				o["callcreates"] = fev.exportCallCreates();
+				o["out"] = "0x" + toHex(output);
+				fev.push(o, "gas", gas);
+				o["logs"] = exportLog(fev.sub.logs);
+			}
 		}
 		else
 		{
-			BOOST_REQUIRE(o.count("post") > 0);
-			BOOST_REQUIRE(o.count("callcreates") > 0);
-			BOOST_REQUIRE(o.count("out") > 0);
-			BOOST_REQUIRE(o.count("gas") > 0);
-
-			dev::test::FakeExtVM test;
-			test.importState(o["post"].get_obj());
-			test.importCallCreates(o["callcreates"].get_array());
-
-			checkOutput(output, o);
-
-			BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
-
-			auto& expectedAddrs = test.addresses;
-			auto& resultAddrs = fev.addresses;
-			for (auto&& expectedPair : expectedAddrs)
+			if (o.count("post") > 0)	// No exceptions expected
 			{
-				auto& expectedAddr = expectedPair.first;
-				auto resultAddrIt = resultAddrs.find(expectedAddr);
-				if (resultAddrIt == resultAddrs.end())
-					BOOST_ERROR("Missing expected address " << expectedAddr);
-				else
+				BOOST_CHECK(!vmExceptionOccured);
+
+				BOOST_REQUIRE(o.count("post") > 0);
+				BOOST_REQUIRE(o.count("callcreates") > 0);
+				BOOST_REQUIRE(o.count("out") > 0);
+				BOOST_REQUIRE(o.count("gas") > 0);
+				BOOST_REQUIRE(o.count("logs") > 0);
+
+				dev::test::FakeExtVM test;
+				test.importState(o["post"].get_obj());
+				test.importCallCreates(o["callcreates"].get_array());
+				test.sub.logs = importLog(o["logs"].get_array());
+
+				checkOutput(output, o);
+
+				BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
+
+				auto& expectedAddrs = test.addresses;
+				auto& resultAddrs = fev.addresses;
+				for (auto&& expectedPair : expectedAddrs)
 				{
-					auto& expectedState = expectedPair.second;
-					auto& resultState = resultAddrIt->second;
-					BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
-					BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
-					BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
+					auto& expectedAddr = expectedPair.first;
+					auto resultAddrIt = resultAddrs.find(expectedAddr);
+					if (resultAddrIt == resultAddrs.end())
+						BOOST_ERROR("Missing expected address " << expectedAddr);
+					else
+					{
+						auto& expectedState = expectedPair.second;
+						auto& resultState = resultAddrIt->second;
+						BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
+						BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
+						BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
 
-					checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
+						checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
+					}
 				}
-			}
 
-			checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
-			BOOST_CHECK(test.callcreates == fev.callcreates);
+				checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
+				BOOST_CHECK(test.callcreates == fev.callcreates);
+
+				checkLog(fev.sub.logs, test.sub.logs);
+			}
+			else	// Exception expected
+				BOOST_CHECK(vmExceptionOccured);
 		}
 	}
 }
@@ -430,6 +449,31 @@ BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
 BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
 	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", dev::test::doVMTests);
+}
+
+BOOST_AUTO_TEST_CASE(vmLogTest)
+{
+	dev::test::executeTests("vmLogTest", "/VMTests", dev::test::doVMTests);
+}
+
+BOOST_AUTO_TEST_CASE(vmPerformanceTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--performance")
+			dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(vmArithPerformanceTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--performance")
+			dev::test::executeTests("vmArithPerformanceTest", "/VMTests", dev::test::doVMTests);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(vmRandom)

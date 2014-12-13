@@ -72,6 +72,7 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller): m_TestObject(_o
 	if (!isFiller)
 	{
 		importState(_o["post"].get_obj(), m_statePost);
+		m_environment.sub.logs = importLog(_o["logs"].get_array());
 	}
 }
 
@@ -108,9 +109,6 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 
 		Address address = Address(i.first);
 
-		for (auto const& j: o["storage"].get_obj())
-			_state.setStorage(address, toInt(j.first), toInt(j.second));
-
 		bytes code = importCode(o);
 
 		if (code.size())
@@ -120,6 +118,9 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		}
 		else
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::NormalCreation);
+
+		for (auto const& j: o["storage"].get_obj())
+			_state.setStorage(address, toInt(j.first), toInt(j.second));
 
 		for(int i=0; i<toInt(o["nonce"]); ++i)
 			_state.noteSending(address);
@@ -147,6 +148,9 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 {
 	// export output
 	m_TestObject["out"] = "0x" + toHex(_output);
+
+	// export logs
+	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
 
 	// export post state
 	json_spirit::mObject postState;
@@ -255,6 +259,46 @@ bytes importCode(json_spirit::mObject& _o)
 	return code;
 }
 
+LogEntries importLog(json_spirit::mArray& _a)
+{
+	LogEntries logEntries;
+	for (auto const& l: _a)
+	{
+		json_spirit::mObject o = l.get_obj();
+		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
+		assert(o.count("address") > 0);
+		assert(o.count("topics") > 0);
+		assert(o.count("data") > 0);
+		assert(o.count("bloom") > 0);
+		LogEntry log;
+		log.address = Address(o["address"].get_str());
+		for (auto const& t: o["topics"].get_array())
+			log.topics.push_back(h256(t.get_str()));
+		log.data = importData(o);
+		logEntries.push_back(log);
+	}
+	return logEntries;
+}
+
+json_spirit::mArray exportLog(eth::LogEntries _logs)
+{
+	json_spirit::mArray ret;
+	if (_logs.size() == 0) return ret;
+	for (LogEntry const& l: _logs)
+	{
+		json_spirit::mObject o;
+		o["address"] = toString(l.address);
+		json_spirit::mArray topics;
+		for (auto const& t: l.topics)
+			topics.push_back(toString(t));
+		o["topics"] = topics;
+		o["data"] = "0x" + toHex(l.data);
+		o["bloom"] = toString(l.bloom());
+		ret.push_back(o);
+	}
+	return ret;
+}
+
 void checkOutput(bytes const& _output, json_spirit::mObject& _o)
 {
 	int j = 0;
@@ -285,6 +329,24 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 			BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
 		}
 	}
+	BOOST_CHECK_EQUAL(_resultStore.size(), _expectedStore.size());
+#ifndef __WIN32__
+	for (auto&& resultStorePair : _resultStore)
+		if (!_expectedStore.count(resultStorePair.first))
+			BOOST_ERROR(_expectedAddr << ": unexpected store key " << resultStorePair.first);
+#endif
+}
+
+void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
+{
+	BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
+
+	for (size_t i = 0; i < _resultLogs.size(); ++i)
+	{
+		BOOST_CHECK_EQUAL(_resultLogs[i].address, _expectedLogs[i].address);
+		BOOST_CHECK_EQUAL(_resultLogs[i].topics, _expectedLogs[i].topics);
+		BOOST_CHECK(_resultLogs[i].data == _expectedLogs[i].data);
+	}
 }
 
 std::string getTestPath()
@@ -310,12 +372,13 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
 		if (arg == testTypeFlag)
 		{
-			if (i + 1 >= boost::unit_test::framework::master_test_suite().argc)
+			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
 			{
-				cnote << "Missing filename\nUsage: testeth " << testTypeFlag << " <filename>\n";
+				cnote << "Missing filename\nUsage: testeth " << testTypeFlag << " <filename> <testname>\n";
 				return;
 			}
 			string filename = boost::unit_test::framework::master_test_suite().argv[i + 1];
+			string testname = boost::unit_test::framework::master_test_suite().argv[i + 2];
 			int currentVerbosity = g_logVerbosity;
 			g_logVerbosity = 12;
 			try
@@ -325,7 +388,19 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 				string s = asString(contents(filename));
 				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
 				json_spirit::read_string(s, v);
-				doTests(v, false);
+				json_spirit::mObject oSingleTest;
+
+				json_spirit::mObject::const_iterator pos = v.get_obj().find(testname);
+				if (pos == v.get_obj().end())
+				{
+					cnote << "Could not find test: " << testname << " in " << filename << "\n";
+					return;
+				}
+				else
+					oSingleTest[pos->first] = pos->second;
+
+				json_spirit::mValue v_singleTest(oSingleTest);
+				doTests(v_singleTest, false);
 			}
 			catch (Exception const& _e)
 			{
@@ -374,6 +449,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 			{
 				BOOST_ERROR("Failed test with Exception: " << _e.what());
 			}
+			break;
 		}
 	}
 
