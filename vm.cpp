@@ -265,42 +265,57 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 		/*creates json stack trace*/
 		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
 		{
-			std::ostringstream ofile;
+			Object o_step;
 
-			u256s stack = vm.stack();
-			ofile << endl << "{" << endl << "  \"stack\":[" << endl;
-			for (vector<u256>::iterator i = stack.begin(); i != stack.end(); ++i){
-				ofile << "    \"" << (h256)*i << "\"";
-				if(next(i) != stack.end()){
-					ofile << ",";
-				}
+			/*add the stack*/
+			Array a_stack;
+			for (auto i: vm.stack())
+				a_stack.push_back((string)i);
 
-				ofile << endl;
-			}
+			o_step.push_back(Pair( "stack", a_stack ));
 
-			ofile << "  ]," << endl;
-			ofile << "  \"memory\": \"";
+			/*add the memory*/
+			Array a_mem;
 			for(auto i: vm.memory())
-				ofile << setfill('0') << setw(2) << hex << (unsigned)i;
-			ofile << "\"," << endl;
+				a_mem.push_back(i);
 
-			ofile << "  \"storage\": [" << endl;
-			for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second)){
-				ofile << "  [" << endl;
-				ofile << "   \"" << std::showbase << std::hex << i.first << "\": \"" << i.second << "\"" << std::endl;
+			o_step.push_back(Pair("memory", a_mem));
+
+			/*add the storage*/
+			Object storage;
+			for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
+				storage.push_back(Pair( (string)i.first , (string)i.second));			
+
+			/*add all the other details*/
+			o_step.push_back(Pair("storage", storage));
+			o_step.push_back(Pair("depth", to_string(ext.depth)));
+			o_step.push_back(Pair("gas", (string)vm.gas()));
+			o_step.push_back(Pair("address", "0x" + toString(ext.myAddress )));
+			o_step.push_back(Pair("step", steps ));
+			o_step.push_back(Pair("pc", (int)vm.curPC()));
+			o_step.push_back(Pair("opcode", instructionInfo(inst).name ));
+
+			ifstream is( "./stackTrace.json");
+			string istr((std::istreambuf_iterator<char>(is) ), (std::istreambuf_iterator<char>()));
+			is.close();
+			Value iv;
+			Array a_trace;
+
+			/*try to parse the current trace file*/
+			try{
+				read_string(istr, iv);
+				a_trace = iv.get_array(); 
 			}
+			catch(...){}
 
-			ofile << "  ]," << endl;
-			ofile << "  \"depth\": " << dec << ext.depth << "," << endl;
-			ofile << "  \"gas\":" << dec <<vm.gas() << "," << endl;
-			ofile << "  \"address\": \"" << ext.myAddress << "\"," << endl;
-			ofile << "  \"step\":" << steps << "," << endl;
-			ofile << "  \"pc\": " << vm.curPC() << "," << endl;
-			ofile << "  \"opcode\": \"" << instructionInfo(inst).name << "\""<< endl;
-			ofile << "},";
-			std::ofstream f;
-			f.open("./vmtrace.json", std::ofstream::app);
-			f << ofile.str();
+			/*add this step to the array of steps*/
+			a_trace.push_back(o_step);
+
+			ofstream os( "./stackTrace.json");
+
+			Value v(a_trace);
+			os << write_string(v, true);
+			os.close();
 		}
 	};
 }
