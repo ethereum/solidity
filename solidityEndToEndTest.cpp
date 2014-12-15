@@ -1038,6 +1038,23 @@ BOOST_AUTO_TEST_CASE(constructor_arguments)
 	BOOST_REQUIRE(callContractFunction(1) == bytes({'a', 'b', 'c'}));
 }
 
+BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			string3 name;
+			bool flag;
+			function Test() {
+				setName("abc");
+			}
+			function getName() returns (string3 ret) { return name; }
+		private:
+			function setName(string3 _name) { name = _name; }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_REQUIRE(callContractFunction(0) == bytes({'a', 'b', 'c'}));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
