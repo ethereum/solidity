@@ -130,6 +130,13 @@ void WhileStatement::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
+void ForStatement::checkTypeRequirements()
+{
+	// LTODO
+	m_condExpression->expectType(BoolType());
+	m_body->checkTypeRequirements();
+}
+
 void Return::checkTypeRequirements()
 {
 	if (!m_expression)

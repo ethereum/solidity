@@ -304,6 +304,8 @@ ASTPointer<Statement> Parser::parseStatement()
 		return parseIfStatement();
 	case Token::WHILE:
 		return parseWhileStatement();
+	case Token::FOR:
+		return parseForStatement();
 	case Token::LBRACE:
 		return parseBlock();
 		// starting from here, all statements must be terminated by a semicolon
@@ -328,15 +330,7 @@ ASTPointer<Statement> Parser::parseStatement()
 	}
 	break;
 	default:
-		// distinguish between variable definition (and potentially assignment) and expression statement
-		// (which include assignments to other expressions and pre-declared variables)
-		// We have a variable definition if we get a keyword that specifies a type name, or
-		// in the case of a user-defined type, we have two identifiers following each other.
-		if (m_scanner->getCurrentToken() == Token::MAPPING ||
-				m_scanner->getCurrentToken() == Token::VAR ||
-				((Token::isElementaryTypeName(m_scanner->getCurrentToken()) ||
-				m_scanner->getCurrentToken() == Token::IDENTIFIER) &&
-				m_scanner->peekNextToken() == Token::IDENTIFIER))
+		if (peekVariableDefinition())
 			statement = parseVariableDefinition();
 		else // "ordinary" expression statement
 			statement = parseExpressionStatement();
@@ -375,6 +369,34 @@ ASTPointer<WhileStatement> Parser::parseWhileStatement()
 	ASTPointer<Statement> body = parseStatement();
 	nodeFactory.setEndPositionFromNode(body);
 	return nodeFactory.createNode<WhileStatement>(condition, body);
+}
+
+ASTPointer<ForStatement> Parser::parseForStatement()
+{
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::FOR);
+	expectToken(Token::LPAREN);
+	ASTPointer<ASTNode> initExpression = parseVardefOrExprstatement();
+	expectToken(Token::SEMICOLON);
+	ASTPointer<Expression> conditionExpression = parseExpression();
+	expectToken(Token::SEMICOLON);
+	ASTPointer<ExpressionStatement> loopExpression = parseExpressionStatement();
+	expectToken(Token::SEMICOLON);
+	expectToken(Token::RPAREN);
+	ASTPointer<Statement> body = parseStatement();
+	nodeFactory.setEndPositionFromNode(body);
+	return nodeFactory.createNode<ForStatement>(initExpression,
+												conditionExpression,
+												loopExpression,
+												body);
+}
+
+ASTPointer<ASTNode> Parser::parseVardefOrExprstatement()
+{
+	if (peekVariableDefinition())
+		return parseVariableDefinition();
+	else
+		return parseExpressionStatement();
 }
 
 ASTPointer<VariableDefinition> Parser::parseVariableDefinition()
@@ -564,6 +586,20 @@ vector<ASTPointer<Expression>> Parser::parseFunctionCallArguments()
 		}
 	}
 	return arguments;
+}
+
+
+// distinguish between variable definition (and potentially assignment) and expression statement
+// (which include assignments to other expressions and pre-declared variables)
+// We have a variable definition if we get a keyword that specifies a type name, or
+// in the case of a user-defined type, we have two identifiers following each other.
+bool Parser::peekVariableDefinition()
+{
+	return (m_scanner->getCurrentToken() == Token::MAPPING ||
+			m_scanner->getCurrentToken() == Token::VAR ||
+			((Token::isElementaryTypeName(m_scanner->getCurrentToken()) ||
+			  m_scanner->getCurrentToken() == Token::IDENTIFIER) &&
+			 m_scanner->peekNextToken() == Token::IDENTIFIER));
 }
 
 void Parser::expectToken(Token::Value _value)

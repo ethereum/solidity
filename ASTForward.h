@@ -52,6 +52,7 @@ class Block;
 class IfStatement;
 class BreakableStatement;
 class WhileStatement;
+class ForStatement;
 class Continue;
 class Break;
 class Return;

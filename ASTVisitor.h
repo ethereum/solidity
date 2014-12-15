@@ -58,6 +58,7 @@ public:
 	virtual bool visit(IfStatement&) { return true; }
 	virtual bool visit(BreakableStatement&) { return true; }
 	virtual bool visit(WhileStatement&) { return true; }
+	virtual bool visit(ForStatement&) { return true; }
 	virtual bool visit(Continue&) { return true; }
 	virtual bool visit(Break&) { return true; }
 	virtual bool visit(Return&) { return true; }
@@ -93,6 +94,7 @@ public:
 	virtual void endVisit(IfStatement&) { }
 	virtual void endVisit(BreakableStatement&) { }
 	virtual void endVisit(WhileStatement&) { }
+	virtual void endVisit(ForStatement&) { }
 	virtual void endVisit(Continue&) { }
 	virtual void endVisit(Break&) { }
 	virtual void endVisit(Return&) { }
@@ -132,6 +134,7 @@ public:
 	virtual bool visit(IfStatement const&) { return true; }
 	virtual bool visit(BreakableStatement const&) { return true; }
 	virtual bool visit(WhileStatement const&) { return true; }
+	virtual bool visit(ForStatement const&) { return true; }
 	virtual bool visit(Continue const&) { return true; }
 	virtual bool visit(Break const&) { return true; }
 	virtual bool visit(Return const&) { return true; }
@@ -167,6 +170,7 @@ public:
 	virtual void endVisit(IfStatement const&) { }
 	virtual void endVisit(BreakableStatement const&) { }
 	virtual void endVisit(WhileStatement const&) { }
+	virtual void endVisit(ForStatement const&) { }
 	virtual void endVisit(Continue const&) { }
 	virtual void endVisit(Break const&) { }
 	virtual void endVisit(Return const&) { }

@@ -267,6 +267,30 @@ void WhileStatement::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void ForStatement::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_initExpression->accept(_visitor);
+		m_condExpression->accept(_visitor);
+		m_loopExpression->accept(_visitor);
+		m_body->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void ForStatement::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_initExpression->accept(_visitor);
+		m_condExpression->accept(_visitor);
+		m_loopExpression->accept(_visitor);
+		m_body->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void Continue::accept(ASTVisitor& _visitor)
 {
 	_visitor.visit(*this);

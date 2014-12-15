@@ -509,6 +509,30 @@ private:
 	ASTPointer<Statement> m_body;
 };
 
+class ForStatement: public BreakableStatement
+{
+public:
+	ForStatement(Location const& _location,
+				 ASTPointer<ASTNode> const& _initExpression,
+				 ASTPointer<Expression> const& _conditionExpression,
+				 ASTPointer<ExpressionStatement> const& _loopExpression,
+				 ASTPointer<Statement> const& _body):
+		BreakableStatement(_location),
+		m_initExpression(_initExpression),
+		m_condExpression(_conditionExpression),
+		m_loopExpression(_loopExpression),
+		m_body(_body) {}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+	virtual void checkTypeRequirements() override;
+
+private:
+	ASTPointer<ASTNode> m_initExpression;
+	ASTPointer<Expression> m_condExpression;
+	ASTPointer<ExpressionStatement> m_loopExpression;
+	ASTPointer<Statement> m_body;
+};
+
 class Continue: public Statement
 {
 public:

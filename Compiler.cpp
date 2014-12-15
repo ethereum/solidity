@@ -287,6 +287,13 @@ bool Compiler::visit(WhileStatement const& _whileStatement)
 	return false;
 }
 
+bool Compiler::visit(ForStatement const& _forStatement)
+{
+	// LTODO
+	(void) _forStatement;
+	return false;
+}
+
 bool Compiler::visit(Continue const&)
 {
 	if (!m_continueTags.empty())
