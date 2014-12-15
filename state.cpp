@@ -47,7 +47,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 	for (auto& i: v.get_obj())
 	{
-		cnote << i.first;
+		cerr << i.first << endl;
 		mObject& o = i.second.get_obj();
 
 		BOOST_REQUIRE(o.count("env") > 0);

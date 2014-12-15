@@ -43,7 +43,7 @@ using namespace dev;
 using namespace dev::eth;
 namespace js = json_spirit;
 
-WebThreeDirect *web3;
+WebThreeDirect* web3;
 unique_ptr<WebThreeStubServer> jsonrpcServer;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
 
