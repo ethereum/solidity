@@ -33,7 +33,7 @@ namespace solidity
 {
 
 GlobalContext::GlobalContext():
-	m_magicVariables{make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::BLOCK)),
+m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::BLOCK)),
 					 make_shared<MagicVariableDeclaration>("msg", make_shared<MagicType>(MagicType::Kind::MSG)),
 					 make_shared<MagicVariableDeclaration>("tx", make_shared<MagicType>(MagicType::Kind::TX)),
 					 make_shared<MagicVariableDeclaration>("suicide",
@@ -59,7 +59,7 @@ GlobalContext::GlobalContext():
 					 make_shared<MagicVariableDeclaration>("ripemd160",
 							make_shared<FunctionType>(TypePointers({std::make_shared<IntegerType>(256, IntegerType::Modifier::HASH)}),
 													  TypePointers({std::make_shared<IntegerType>(160, IntegerType::Modifier::HASH)}),
-													  FunctionType::Location::RIPEMD160))}
+													  FunctionType::Location::RIPEMD160))})
 {
 }
 
