@@ -291,7 +291,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 								 IntegerType(0, IntegerType::Modifier::ADDRESS), true);
 			m_context << eth::Instruction::BALANCE;
 		}
-		else if (member == "send" || member.substr(0, 4) == "call")
+		else if (member == "send" || member.substr(0, min<size_t>(member.size(), 4)) == "call")
 			appendTypeConversion(*_memberAccess.getExpression().getType(),
 								 IntegerType(0, IntegerType::Modifier::ADDRESS), true);
 		else

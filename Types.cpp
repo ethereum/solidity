@@ -193,14 +193,18 @@ u256 IntegerType::literalValue(Literal const& _literal) const
 }
 
 const MemberList IntegerType::AddressMemberList =
-		MemberList({{"balance", make_shared<IntegerType const>(256)},
-					{"callstring32", make_shared<FunctionType const>(TypePointers({make_shared<StaticStringType const>(32)}),
-															 TypePointers(), FunctionType::Location::BARE)},
-					{"callstring32string32", make_shared<FunctionType const>(TypePointers({make_shared<StaticStringType const>(32),
-																						   make_shared<StaticStringType const>(32)}),
-															 TypePointers(), FunctionType::Location::BARE)},
-					{"send", make_shared<FunctionType const>(TypePointers({make_shared<IntegerType const>(256)}),
-															 TypePointers(), FunctionType::Location::SEND)}});
+	MemberList({{"balance",
+					make_shared<IntegerType const>(256)},
+				{"callstring32",
+					make_shared<FunctionType const>(TypePointers({make_shared<StaticStringType const>(32)}),
+													TypePointers(), FunctionType::Location::BARE)},
+				{"callstring32string32",
+					make_shared<FunctionType const>(TypePointers({make_shared<StaticStringType const>(32),
+																  make_shared<StaticStringType const>(32)}),
+													TypePointers(), FunctionType::Location::BARE)},
+				{"send",
+					make_shared<FunctionType const>(TypePointers({make_shared<IntegerType const>(256)}),
+													TypePointers(), FunctionType::Location::SEND)}});
 
 shared_ptr<StaticStringType> StaticStringType::smallestTypeForLiteral(string const& _literal)
 {
