@@ -374,11 +374,23 @@ BOOST_AUTO_TEST_CASE(while_loop)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
-BOOST_AUTO_TEST_CASE(for_loop)
+BOOST_AUTO_TEST_CASE(for_loop_vardef_initexpr)
 {
 	char const* text = "contract test {\n"
 					   "  function fun(uint256 a) {\n"
-					   "    for (uint256 i = 0; i < 10; i++;)\n"
+					   "    for (uint256 i = 0; i < 10; i++)\n"
+					   "    { uint256 x = i; break; continue; }\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_simple_initexpr)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    uint256 i =0;\n"
+					   "    for (i = 0; i < 10; i++)\n"
 					   "    { uint256 x = i; break; continue; }\n"
 					   "  }\n"
 					   "}\n";
