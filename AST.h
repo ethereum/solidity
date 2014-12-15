@@ -174,6 +174,10 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() const { return m_stateVariables; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
 
+	/// Checks that the constructor does not have a "returns" statement and calls
+	/// checkTypeRequirements on all its functions.
+	void checkTypeRequirements();
+
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
 	ASTPointer<ASTString> const& getDocumentation() const { return m_documentation; }

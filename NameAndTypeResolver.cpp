@@ -62,11 +62,7 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	// First, the parameter types of all functions need to be resolved before we can check
 	// the types, since it is possible to call functions that are only defined later
 	// in the source.
-	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
-	{
-		m_currentScope = &m_scopes[function.get()];
-		function->checkTypeRequirements();
-	}
+	_contract.checkTypeRequirements();
 	m_currentScope = &m_scopes[nullptr];
 }
 

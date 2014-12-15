@@ -39,6 +39,17 @@ TypeError ASTNode::createTypeError(string const& _description) const
 	return TypeError() << errinfo_sourceLocation(getLocation()) << errinfo_comment(_description);
 }
 
+void ContractDefinition::checkTypeRequirements()
+{
+	FunctionDefinition const* constructor = getConstructor();
+	if (constructor && !constructor->getReturnParameters().empty())
+		BOOST_THROW_EXCEPTION(constructor->getReturnParameterList()->createTypeError(
+								  "Non-empty \"returns\" directive for constructor."));
+
+	for (ASTPointer<FunctionDefinition> const& function: getDefinedFunctions())
+		function->checkTypeRequirements();
+}
+
 vector<FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() const
 {
 	vector<FunctionDefinition const*> exportedFunctions;
