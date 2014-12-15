@@ -381,7 +381,6 @@ ASTPointer<ForStatement> Parser::parseForStatement()
 	ASTPointer<Expression> conditionExpression = parseExpression();
 	expectToken(Token::SEMICOLON);
 	ASTPointer<ExpressionStatement> loopExpression = parseExpressionStatement();
-	expectToken(Token::SEMICOLON);
 	expectToken(Token::RPAREN);
 	ASTPointer<Statement> body = parseStatement();
 	nodeFactory.setEndPositionFromNode(body);
