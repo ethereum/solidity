@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file trie.cpp
+/** @file genesis.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  * Trie test functions.
