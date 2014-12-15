@@ -1012,6 +1012,32 @@ BOOST_AUTO_TEST_CASE(strings_in_calls)
 	BOOST_CHECK(callContractFunction(0, bytes({0, 'a', 1})) == bytes({0, 'a', 0, 0, 0}));
 }
 
+BOOST_AUTO_TEST_CASE(constructor_arguments)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			string3 name;
+			bool flag;
+			function Helper(string3 x, bool f) {
+				name = x;
+				flag = f;
+			}
+			function getName() returns (string3 ret) { return name; }
+			function getFlag() returns (bool ret) { return flag; }
+		}
+		contract Main {
+			Helper h;
+			function Main() {
+				h = new Helper("abc", true);
+			}
+			function getFlag() returns (bool ret) { return h.getFlag(); }
+			function getName() returns (string3 ret) { return h.getName(); }
+		})";
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(0) == bytes({0x01}));
+	BOOST_REQUIRE(callContractFunction(1) == bytes({'a', 'b', 'c'}));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
