@@ -77,12 +77,21 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract,
 	{
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		m_context.addFunction(*constructor); // note that it cannot be called due to syntactic reasons
-		// copy constructor arguments
-		//@todo ask assembly for the size of the current program
+		// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
+		unsigned argumentSize = 0;
+		for (ASTPointer<VariableDeclaration> const& var: constructor->getParameters())
+			argumentSize += var->getType()->getCalldataEncodedSize();
+		if (argumentSize > 0)
+		{
+			m_context << u256(argumentSize);
+			m_context.appendProgramSize();
+			m_context << u256(1); // copy it to byte one as expected for ABI calls
+			m_context << eth::Instruction::CODECOPY;
+			appendCalldataUnpacker(*constructor, true);
+		}
 		//@todo calling other functions inside the constructor should either trigger a parse error
 		//or we should copy them here (register them above and call "accept") - detecting which
 		// functions are referenced / called needs to be done in a recursive way.
-		appendCalldataUnpacker(*constructor, true);
 		m_context.appendJumpTo(m_context.getFunctionEntryLabel(*constructor));
 		constructor->accept(*this);
 		m_context << returnTag;
@@ -135,7 +144,6 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 {
 	// We do not check the calldata size, everything is zero-padded.
 	unsigned dataOffset = 1;
-
 	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{
