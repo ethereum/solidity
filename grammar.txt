@@ -29,7 +29,7 @@ Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewE
 			 MemberAccess | PrimaryExpression
 // The expression syntax is actually much more complicated
 Assignment = Expression (AssignmentOp Expression)
-FunctionCall = Expression '(' ( Expression ( ',' Expression )* ) ')'
+FunctionCall = Expression '(' Expression ( ',' Expression )* ')'
 NewExpression = 'new' Identifier '(' ( Expression ( ',' Expression )* ) ')'
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expresison ']'

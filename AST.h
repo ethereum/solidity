@@ -763,7 +763,7 @@ public:
 	std::vector<ASTPointer<Expression const>> getArguments() const { return {m_arguments.begin(), m_arguments.end()}; }
 
 	/// Returns the referenced contract. Can only be called after type checking.
-	ContractDefinition const* getContract() const { return m_contract; }
+	ContractDefinition const* getContract() const { if (asserts(m_contract)) BOOST_THROW_EXCEPTION(InternalCompilerError()); else return m_contract; }
 
 private:
 	ASTPointer<Identifier> m_contractName;

@@ -314,9 +314,9 @@ shared_ptr<FunctionType const> const& ContractType::getConstructorType() const
 {
 	if (!m_constructorType)
 	{
-		FunctionDefinition const* constr = m_contract.getConstructor();
-		if (constr)
-			m_constructorType = make_shared<FunctionType const>(*constr);
+		FunctionDefinition const* constructor = m_contract.getConstructor();
+		if (constructor)
+			m_constructorType = make_shared<FunctionType const>(*constructor);
 		else
 			m_constructorType = make_shared<FunctionType const>(TypePointers(), TypePointers());
 	}
