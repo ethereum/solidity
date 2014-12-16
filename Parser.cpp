@@ -374,7 +374,7 @@ ASTPointer<WhileStatement> Parser::parseWhileStatement()
 ASTPointer<ForStatement> Parser::parseForStatement()
 {
 	ASTNodeFactory nodeFactory(*this);
-	ASTPointer<ASTNode> initExpression;
+	ASTPointer<Statement> initExpression;
 	ASTPointer<Expression> conditionExpression;
 	ASTPointer<ExpressionStatement> loopExpression;
 	expectToken(Token::FOR);
@@ -401,7 +401,7 @@ ASTPointer<ForStatement> Parser::parseForStatement()
 												body);
 }
 
-ASTPointer<ASTNode> Parser::parseVardefOrExprstatement()
+ASTPointer<Statement> Parser::parseVardefOrExprstatement()
 {
 	if (peekVariableDefinition())
 		return parseVariableDefinition();

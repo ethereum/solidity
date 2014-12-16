@@ -60,7 +60,7 @@ private:
 	ASTPointer<IfStatement> parseIfStatement();
 	ASTPointer<WhileStatement> parseWhileStatement();
 	ASTPointer<ForStatement> parseForStatement();
-	ASTPointer<ASTNode> parseVardefOrExprstatement();
+	ASTPointer<Statement> parseVardefOrExprstatement();
 	ASTPointer<VariableDefinition> parseVariableDefinition();
 	ASTPointer<ExpressionStatement> parseExpressionStatement();
 	ASTPointer<Expression> parseExpression();

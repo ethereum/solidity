@@ -513,7 +513,7 @@ class ForStatement: public BreakableStatement
 {
 public:
 	ForStatement(Location const& _location,
-				 ASTPointer<ASTNode> const& _initExpression,
+				 ASTPointer<Statement> const& _initExpression,
 				 ASTPointer<Expression> const& _conditionExpression,
 				 ASTPointer<ExpressionStatement> const& _loopExpression,
 				 ASTPointer<Statement> const& _body):
@@ -527,7 +527,7 @@ public:
 	virtual void checkTypeRequirements() override;
 
 private:
-	ASTPointer<ASTNode> m_initExpression;
+	ASTPointer<Statement> m_initExpression;
 	ASTPointer<Expression> m_condExpression;
 	ASTPointer<ExpressionStatement> m_loopExpression;
 	ASTPointer<Statement> m_body;
