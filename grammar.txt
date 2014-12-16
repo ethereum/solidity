@@ -20,7 +20,7 @@ Statement = IfStatement | WhileStatement | Block |
 
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
-ForStatement = 'for' '(' VardefOrExpressionstatement ';' Expression ';' Expressionstatement ')' Statement
+ForStatement = 'for' '(' (VardefOrExpressionstatement)? ';' (Expression)? ';' (Expressionstatement)? ')' Statement
 Continue = 'continue' ';'
 Break = 'break' ';'
 Return = 'return' Expression? ';'

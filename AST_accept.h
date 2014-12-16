@@ -271,9 +271,12 @@ void ForStatement::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
 	{
-		m_initExpression->accept(_visitor);
-		m_condExpression->accept(_visitor);
-		m_loopExpression->accept(_visitor);
+		if (m_initExpression)
+			m_initExpression->accept(_visitor);
+		if (m_condExpression)
+			m_condExpression->accept(_visitor);
+		if (m_loopExpression)
+			m_loopExpression->accept(_visitor);
 		m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
@@ -283,9 +286,12 @@ void ForStatement::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
-		m_initExpression->accept(_visitor);
-		m_condExpression->accept(_visitor);
-		m_loopExpression->accept(_visitor);
+		if (m_initExpression)
+			m_initExpression->accept(_visitor);
+		if (m_condExpression)
+			m_condExpression->accept(_visitor);
+		if (m_loopExpression)
+			m_loopExpression->accept(_visitor);
 		m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);

@@ -374,14 +374,25 @@ ASTPointer<WhileStatement> Parser::parseWhileStatement()
 ASTPointer<ForStatement> Parser::parseForStatement()
 {
 	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<ASTNode> initExpression;
+	ASTPointer<Expression> conditionExpression;
+	ASTPointer<ExpressionStatement> loopExpression;
 	expectToken(Token::FOR);
 	expectToken(Token::LPAREN);
-	ASTPointer<ASTNode> initExpression = parseVardefOrExprstatement();
+
+	// LTODO: Maybe here have some predicate like peekExpression() instead of checking for semicolon and RPAREN?
+	if (m_scanner->getCurrentToken() != Token::SEMICOLON)
+		initExpression = parseVardefOrExprstatement();
 	expectToken(Token::SEMICOLON);
-	ASTPointer<Expression> conditionExpression = parseExpression();
+
+	if (m_scanner->getCurrentToken() != Token::SEMICOLON)
+		conditionExpression = parseExpression();
 	expectToken(Token::SEMICOLON);
-	ASTPointer<ExpressionStatement> loopExpression = parseExpressionStatement();
+
+	if (m_scanner->getCurrentToken() != Token::RPAREN)
+		loopExpression = parseExpressionStatement();
 	expectToken(Token::RPAREN);
+
 	ASTPointer<Statement> body = parseStatement();
 	nodeFactory.setEndPositionFromNode(body);
 	return nodeFactory.createNode<ForStatement>(initExpression,
