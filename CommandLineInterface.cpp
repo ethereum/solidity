@@ -122,19 +122,18 @@ void CommandLineInterface::handleBinary(string const& _contract)
 
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
-	// TODO: Figure out why the wrong operator << (from boost) is used here
 	auto choice = m_args[ARG_OPCODES_STR].as<OutputType>();
 	if (outputToStdout(choice))
 	{
 		cout << "Opcodes: " << endl;
-		dev::operator<<(cout, m_compiler.getBytecode(_contract));
+		cout << eth::disassemble(m_compiler.getBytecode(_contract));
 		cout << endl;
 	}
 
 	if (outputToFile(choice))
 	{
 		ofstream outFile(_contract + ".opcode");
-		dev::operator<<(outFile, m_compiler.getBytecode(_contract));
+		outFile << eth::disassemble(m_compiler.getBytecode(_contract));
 		outFile.close();
 	}
 }
