@@ -529,6 +529,11 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
 
+	Statement const* getInitializationExpression() const { return m_initExpression.get(); }
+	Expression const* getCondition() const { return m_condExpression.get(); }
+	ExpressionStatement const* getLoopExpression() const { return m_loopExpression.get(); }
+	Statement const& getBody() const { return *m_body; }
+
 private:
 	/// For statement's initialization expresion. for(XXX; ; ). Can be empty
 	ASTPointer<Statement> m_initExpression;

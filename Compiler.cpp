@@ -289,8 +289,35 @@ bool Compiler::visit(WhileStatement const& _whileStatement)
 
 bool Compiler::visit(ForStatement const& _forStatement)
 {
-	// LTODO
-	(void) _forStatement;
+	eth::AssemblyItem loopStart = m_context.newTag();
+	eth::AssemblyItem loopEnd = m_context.newTag();
+	m_continueTags.push_back(loopStart);
+	m_breakTags.push_back(loopEnd);
+
+	if (_forStatement.getInitializationExpression())
+		_forStatement.getInitializationExpression()->accept(*this);
+
+	m_context << loopStart;
+
+	// if there is no terminating condition in for, default is to always be true
+	if (_forStatement.getCondition())
+	{
+		compileExpression(*_forStatement.getCondition());
+		m_context << eth::Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(loopEnd);
+	}
+
+	_forStatement.getBody().accept(*this);
+
+	// for's loop expression if existing
+	if (_forStatement.getLoopExpression())
+		_forStatement.getLoopExpression()->accept(*this);
+
+	m_context.appendJumpTo(loopStart);
+	m_context << loopEnd;
+
+	m_continueTags.pop_back();
+	m_breakTags.pop_back();
 	return false;
 }
 
