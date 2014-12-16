@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(for_loop)
 							 "  function f(uint n) returns(uint nfac) {\n"
 							 "    nfac = 1;\n"
 							 "    for (var i = 2; i <= n; i++)\n"
-							 "        nfac *= 1;\n"
+							 "        nfac *= i;\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
@@ -196,6 +196,58 @@ BOOST_AUTO_TEST_CASE(for_loop)
 	};
 
 	testSolidityAgainstCppOnRange(0, for_loop_cpp, 0, 5);
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_empty)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f() returns(uint ret) {\n"
+							 "    ret = 1;\n"
+							 "    for (;;)\n"
+							 "    {\n"
+							 "        ret += 1;\n"
+							 "        if (ret >= 10) break;\n"
+							 "    }\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	auto for_loop_empty_cpp = []() -> u256
+	{
+		u256 ret = 1;
+		for (;;)
+		{
+			ret += 1;
+			if (ret >= 10) break;
+		}
+		return ret;
+	};
+
+	testSolidityAgainstCpp(0, for_loop_empty_cpp);
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_simple_init_expr)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint n) returns(uint nfac) {\n"
+							 "    nfac = 1;\n"
+							 "    uint256 i;\n"
+							 "    for (i = 2; i <= n; i++)\n"
+							 "        nfac *= i;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	auto for_loop_simple_init_expr_cpp = [](u256 const& n) -> u256
+	{
+		u256 nfac = 1;
+		u256 i;
+		for (i = 2; i <= n; i++)
+			nfac *= i;
+		return nfac;
+	};
+
+	testSolidityAgainstCppOnRange(0, for_loop_simple_init_expr_cpp, 0, 5);
 }
 
 BOOST_AUTO_TEST_CASE(calling_other_functions)
