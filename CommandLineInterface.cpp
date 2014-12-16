@@ -43,20 +43,20 @@
 using namespace std;
 namespace po = boost::program_options;
 
-// LTODO: Maybe some argument class pairing names with
-// extensions and other attributes would be a better choice here?
-#define ARG_ABI_STR            "abi"
-#define ARG_ASM_STR            "asm"
-#define ARG_AST_STR            "ast"
-#define ARG_BINARY_STR         "binary"
-#define ARG_OPCODES_STR        "opcodes"
-#define ARG_NATSPECDEV_STR     "natspec-dev"
-#define ARG_NATSPECUSER_STR    "natspec-user"
-
 namespace dev
 {
 namespace solidity
 {
+
+// LTODO: Maybe some argument class pairing names with
+// extensions and other attributes would be a better choice here?
+static string const g_argAbiStr =           "abi";
+static string const g_argAsmStr =           "asm";
+static string const g_argAstStr =           "ast";
+static string const g_argBinaryStr =       "binary";
+static string const g_argOpcodesStr =       "opcodes";
+static string const g_argNatspecDevStr =    "natspec-dev";
+static string const g_argNatspecUserStr =   "natspec-user";
 
 static void version()
 {
@@ -66,16 +66,16 @@ static void version()
 	exit(0);
 }
 
-static inline bool argToStdout(po::variables_map const& _args, const char* _name)
+static inline bool argToStdout(po::variables_map const& _args, string const& _name)
 {
 	return _args.count(_name) && _args[_name].as<OutputType>() != OutputType::FILE;
 }
 
 static bool needStdout(po::variables_map const& _args)
 {
-	return argToStdout(_args, ARG_ABI_STR) || argToStdout(_args, ARG_NATSPECUSER_STR) ||
-		   argToStdout(_args, ARG_NATSPECDEV_STR) || argToStdout(_args, ARG_ASM_STR) ||
-		   argToStdout(_args, ARG_OPCODES_STR) || argToStdout(_args, ARG_BINARY_STR);
+	return argToStdout(_args, g_argAbiStr) || argToStdout(_args, g_argNatspecUserStr) ||
+		   argToStdout(_args, g_argNatspecDevStr) || argToStdout(_args, g_argAsmStr) ||
+		   argToStdout(_args, g_argOpcodesStr) || argToStdout(_args, g_argBinaryStr);
 }
 
 static inline bool outputToFile(OutputType type)
@@ -105,7 +105,7 @@ static std::istream& operator>>(std::istream& _in, OutputType& io_output)
 
 void CommandLineInterface::handleBinary(string const& _contract)
 {
-	auto choice = m_args[ARG_BINARY_STR].as<OutputType>();
+	auto choice = m_args[g_argBinaryStr].as<OutputType>();
 	if (outputToStdout(choice))
 	{
 		cout << "Binary: " << endl;
@@ -122,7 +122,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
-	auto choice = m_args[ARG_OPCODES_STR].as<OutputType>();
+	auto choice = m_args[g_argOpcodesStr].as<OutputType>();
 	if (outputToStdout(choice))
 	{
 		cout << "Opcodes: " << endl;
@@ -140,9 +140,9 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 
 void CommandLineInterface::handleBytecode(string const& _contract)
 {
-	if (m_args.count(ARG_OPCODES_STR))
+	if (m_args.count(g_argOpcodesStr))
 		handleOpcode(_contract);
-	if (m_args.count(ARG_BINARY_STR))
+	if (m_args.count(g_argBinaryStr))
 		handleBinary(_contract);
 }
 
@@ -155,17 +155,17 @@ void CommandLineInterface::handleJson(DocumentationType _type,
 	switch(_type)
 	{
 	case DocumentationType::ABI_INTERFACE:
-		argName = ARG_ABI_STR;
+		argName = g_argAbiStr;
 		suffix = ".abi";
 		title = "Contract ABI";
 		break;
 	case DocumentationType::NATSPEC_USER:
-		argName = "ARG_NATSPECUSER_STR";
+		argName = "g_argNatspecUserStr";
 		suffix = ".docuser";
 		title = "User Documentation";
 		break;
 	case DocumentationType::NATSPEC_DEV:
-		argName = ARG_NATSPECDEV_STR;
+		argName = g_argNatspecDevStr;
 		suffix = ".docdev";
 		title = "Developer Documentation";
 		break;
@@ -205,20 +205,20 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 		("version", "Show version and exit")
 		("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
 		("input-file", po::value<vector<string>>(), "input file")
-		(ARG_AST_STR, po::value<OutputType>(),
+		(g_argAstStr.c_str(), po::value<OutputType>(),
 		 "Request to output the AST of the contract. " OUTPUT_TYPE_STR)
-		(ARG_ASM_STR, po::value<OutputType>(),
-		 "Request to output the EVM assembly of the contract. "	 OUTPUT_TYPE_STR)
-		(ARG_OPCODES_STR, po::value<OutputType>(),
-		 "Request to output the Opcodes of the contract. "	OUTPUT_TYPE_STR)
-		(ARG_BINARY_STR, po::value<OutputType>(),
-		 "Request to output the contract in binary (hexadecimal). "	 OUTPUT_TYPE_STR)
-		(ARG_ABI_STR, po::value<OutputType>(),
-		 "Request to output the contract's ABI interface. "	 OUTPUT_TYPE_STR)
-		(ARG_NATSPECUSER_STR, po::value<OutputType>(),
-		 "Request to output the contract's Natspec user documentation. "  OUTPUT_TYPE_STR)
-		(ARG_NATSPECDEV_STR, po::value<OutputType>(),
-		 "Request to output the contract's Natspec developer documentation. "  OUTPUT_TYPE_STR);
+		(g_argAsmStr.c_str(), po::value<OutputType>(),
+		 "Request to output the EVM assembly of the contract. " OUTPUT_TYPE_STR)
+		(g_argOpcodesStr.c_str(), po::value<OutputType>(),
+		 "Request to output the Opcodes of the contract. " OUTPUT_TYPE_STR)
+		(g_argBinaryStr.c_str(), po::value<OutputType>(),
+		 "Request to output the contract in binary (hexadecimal). " OUTPUT_TYPE_STR)
+		(g_argAbiStr.c_str(), po::value<OutputType>(),
+		 "Request to output the contract's ABI interface. "  OUTPUT_TYPE_STR)
+		(g_argNatspecUserStr.c_str(), po::value<OutputType>(),
+		 "Request to output the contract's Natspec user documentation. " OUTPUT_TYPE_STR)
+		(g_argNatspecDevStr.c_str(), po::value<OutputType>(),
+		 "Request to output the contract's Natspec developer documentation. " OUTPUT_TYPE_STR);
 #undef OUTPUT_TYPE_STR
 
 	// All positional options should be interpreted as input files
@@ -331,9 +331,9 @@ bool CommandLineInterface::processInput()
 void CommandLineInterface::actOnInput()
 {
 	// do we need AST output?
-	if (m_args.count(ARG_AST_STR))
+	if (m_args.count(g_argAstStr))
 	{
-		auto choice = m_args[ARG_AST_STR].as<OutputType>();
+		auto choice = m_args[g_argAstStr].as<OutputType>();
 		if (outputToStdout(choice))
 		{
 			cout << "Syntax trees:" << endl << endl;
@@ -365,9 +365,9 @@ void CommandLineInterface::actOnInput()
 			cout << endl << "======= " << contract << " =======" << endl;
 
 		// do we need EVM assembly?
-		if (m_args.count(ARG_ASM_STR))
+		if (m_args.count(g_argAsmStr))
 		{
-			auto choice = m_args[ARG_ASM_STR].as<OutputType>();
+			auto choice = m_args[g_argAsmStr].as<OutputType>();
 			if (outputToStdout(choice))
 			{
 				cout << "EVM assembly:" << endl;
