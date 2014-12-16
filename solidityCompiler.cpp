@@ -56,7 +56,7 @@ bytes compileContract(const string& _sourceCode)
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 
 			Compiler compiler;
-			compiler.compileContract(*contract, {});
+			compiler.compileContract(*contract, {}, {});
 			// debug
 			//compiler.streamAssembly(cout);
 			return compiler.getAssembledBytecode();

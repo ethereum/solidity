@@ -284,6 +284,15 @@ BOOST_AUTO_TEST_CASE(assignment_to_struct)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(returns_in_constructor)
+{
+	char const* text = "contract test {\n"
+					   "  function test() returns (uint a) {\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
