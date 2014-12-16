@@ -52,9 +52,13 @@ bytes compileContract(const string& _sourceCode)
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
-
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
 			Compiler compiler;
 			compiler.compileContract(*contract, {}, {});
 			// debug
