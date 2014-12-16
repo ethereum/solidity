@@ -295,26 +295,10 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 			o_step.push_back(Pair("pc", (int)vm.curPC()));
 			o_step.push_back(Pair("opcode", instructionInfo(inst).name ));
 
-			ifstream is( "./stackTrace.json");
-			string istr((std::istreambuf_iterator<char>(is) ), (std::istreambuf_iterator<char>()));
-			is.close();
-			Value iv;
-			Array a_trace;
-
-			/*try to parse the current trace file*/
-			try{
-				read_string(istr, iv);
-				a_trace = iv.get_array(); 
-			}
-			catch(...){}
-
-			/*add this step to the array of steps*/
-			a_trace.push_back(o_step);
-
-			ofstream os( "./stackTrace.json");
-
-			Value v(a_trace);
-			os << write_string(v, true);
+			/*append the JSON object to the log file*/
+			Value v(o_step);
+			ofstream os( "./stackTrace.json", ofstream::app);
+			os << write_string(v, true) << ",";
 			os.close();
 		}
 	};
