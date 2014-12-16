@@ -330,10 +330,7 @@ ASTPointer<Statement> Parser::parseStatement()
 	}
 	break;
 	default:
-		if (peekVariableDefinition())
-			statement = parseVariableDefinition();
-		else // "ordinary" expression statement
-			statement = parseExpressionStatement();
+		statement = parseVarDefOrExprStmt();
 	}
 	expectToken(Token::SEMICOLON);
 	return statement;
@@ -382,7 +379,7 @@ ASTPointer<ForStatement> Parser::parseForStatement()
 
 	// LTODO: Maybe here have some predicate like peekExpression() instead of checking for semicolon and RPAREN?
 	if (m_scanner->getCurrentToken() != Token::SEMICOLON)
-		initExpression = parseVardefOrExprstatement();
+		initExpression = parseVarDefOrExprStmt();
 	expectToken(Token::SEMICOLON);
 
 	if (m_scanner->getCurrentToken() != Token::SEMICOLON)
@@ -401,7 +398,7 @@ ASTPointer<ForStatement> Parser::parseForStatement()
 												body);
 }
 
-ASTPointer<Statement> Parser::parseVardefOrExprstatement()
+ASTPointer<Statement> Parser::parseVarDefOrExprStmt()
 {
 	if (peekVariableDefinition())
 		return parseVariableDefinition();

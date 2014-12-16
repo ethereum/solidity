@@ -16,11 +16,13 @@ Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | Block |
-			( Continue | Break | Return | VariableDefinition | Expression ) ';'
+			( Continue | Break | Return | VariableDefinition | ExpressionStatement ) ';'
 
+ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
-ForStatement = 'for' '(' (VardefOrExpressionstatement)? ';' (Expression)? ';' (Expressionstatement)? ')' Statement
+VardefOrExprStmt = Variabledefinition | ExpressionStatement
+ForStatement = 'for' '(' (VardefOrExprStmt)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
 Continue = 'continue' ';'
 Break = 'break' ';'
 Return = 'return' Expression? ';'

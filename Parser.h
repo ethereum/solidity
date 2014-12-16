@@ -60,7 +60,7 @@ private:
 	ASTPointer<IfStatement> parseIfStatement();
 	ASTPointer<WhileStatement> parseWhileStatement();
 	ASTPointer<ForStatement> parseForStatement();
-	ASTPointer<Statement> parseVardefOrExprstatement();
+	ASTPointer<Statement> parseVarDefOrExprStmt();
 	ASTPointer<VariableDefinition> parseVariableDefinition();
 	ASTPointer<ExpressionStatement> parseExpressionStatement();
 	ASTPointer<Expression> parseExpression();
@@ -74,8 +74,7 @@ private:
 	///@{
 	///@name Helper functions
 
-	/// Peeks ahead in the scanner to determine if an expression statement
-	/// could be a variable definition
+	/// Peeks ahead in the scanner to determine if a variable definition is going to follow
 	bool peekVariableDefinition();
 
 	/// If current token value is not _value, throw exception otherwise advance token.

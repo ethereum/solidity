@@ -509,6 +509,9 @@ private:
 	ASTPointer<Statement> m_body;
 };
 
+/**
+ * For loop statement
+ */
 class ForStatement: public BreakableStatement
 {
 public:
@@ -527,9 +530,13 @@ public:
 	virtual void checkTypeRequirements() override;
 
 private:
+	/// For statement's initialization expresion. for(XXX; ; ). Can be empty
 	ASTPointer<Statement> m_initExpression;
+	/// For statement's condition expresion. for(; XXX ; ). Can be empty
 	ASTPointer<Expression> m_condExpression;
+	/// For statement's loop expresion. for(;;XXX). Can be empty
 	ASTPointer<ExpressionStatement> m_loopExpression;
+	/// The body of the loop
 	ASTPointer<Statement> m_body;
 };
 
