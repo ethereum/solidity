@@ -60,7 +60,13 @@ int AssemblyItem::deposit() const
 	{
 	case Operation:
 		return instructionInfo((Instruction)(byte)m_data).ret - instructionInfo((Instruction)(byte)m_data).args;
-	case Push: case PushString: case PushTag: case PushData: case PushSub: case PushSubSize: case PushProgramSize:
+	case Push:
+	case PushString:
+	case PushTag:
+	case PushData:
+	case PushSub:
+	case PushSubSize:
+	case PushProgramSize:
 		return 1;
 	case Tag:
 		return 0;
