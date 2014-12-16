@@ -397,6 +397,18 @@ BOOST_AUTO_TEST_CASE(for_loop_simple_initexpr)
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
 
+BOOST_AUTO_TEST_CASE(for_loop_simple_noexpr)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    uint256 i =0;\n"
+					   "    for (;;)\n"
+					   "    { uint256 x = i; break; continue; }\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
 BOOST_AUTO_TEST_CASE(if_statement)
 {
 	char const* text = "contract test {\n"
