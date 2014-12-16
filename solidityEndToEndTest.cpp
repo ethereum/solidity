@@ -176,6 +176,28 @@ BOOST_AUTO_TEST_CASE(nested_loops)
 	testSolidityAgainstCppOnRange(0, nested_loops_cpp, 0, 12);
 }
 
+BOOST_AUTO_TEST_CASE(for_loop)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint n) returns(uint nfac) {\n"
+							 "    nfac = 1;\n"
+							 "    for (var i = 2; i <= n; i++)\n"
+							 "        nfac *= 1;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	auto for_loop_cpp = [](u256 const& n) -> u256
+	{
+		u256 nfac = 1;
+		for (auto i = 2; i <= n; i++)
+			nfac *= i;
+		return nfac;
+	};
+
+	testSolidityAgainstCppOnRange(0, for_loop_cpp, 0, 5);
+}
+
 BOOST_AUTO_TEST_CASE(calling_other_functions)
 {
 	// note that the index of a function is its index in the sorted sequence of functions
