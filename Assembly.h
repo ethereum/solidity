@@ -32,7 +32,7 @@ namespace dev
 namespace eth
 {
 
-enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, Tag, PushData, NoOptimizeBegin, NoOptimizeEnd };
+enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, PushProgramSize, Tag, PushData, NoOptimizeBegin, NoOptimizeEnd };
 
 class Assembly;
 
@@ -86,6 +86,9 @@ public:
 	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 	AssemblyItem appendSubSize(Assembly const& _a) { auto ret = newSub(_a); append(newPushSubSize(ret.data())); return ret; }
+	/// Pushes the final size of the current assembly itself. Use this when the code is modified
+	/// after compilation and CODESIZE is not an option.
+	void appendProgramSize() { append(AssemblyItem(PushProgramSize)); }
 
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }

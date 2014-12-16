@@ -39,6 +39,7 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case Push:
 		return 1 + max<unsigned>(1, dev::bytesRequired(m_data));
 	case PushSubSize:
+	case PushProgramSize:
 		return 4;		// worst case: a 16MB program
 	case PushTag:
 	case PushData:
@@ -59,7 +60,13 @@ int AssemblyItem::deposit() const
 	{
 	case Operation:
 		return instructionInfo((Instruction)(byte)m_data).ret - instructionInfo((Instruction)(byte)m_data).args;
-	case Push: case PushString: case PushTag: case PushData: case PushSub: case PushSubSize:
+	case Push:
+	case PushString:
+	case PushTag:
+	case PushData:
+	case PushSub:
+	case PushSubSize:
+	case PushProgramSize:
 		return 1;
 	case Tag:
 		return 0;
@@ -146,6 +153,9 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 		case PushSubSize:
 			_out << " PUSHss[" << hex << h256(i.data()).abridged() << "]";
 			break;
+		case PushProgramSize:
+			_out << " PUSHSIZE";
+			break;
 		case NoOptimizeBegin:
 			_out << " DoNotOptimze{{";
 			break;
@@ -184,6 +194,9 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
 			break;
 		case PushSubSize:
 			_out << _prefix << "  PUSH #[$" << h256(i.m_data).abridged() << "]" << endl;
+			break;
+		case PushProgramSize:
+			_out << _prefix << "  PUSHSIZE" << endl;
 			break;
 		case Tag:
 			_out << _prefix << "tag" << i.m_data << ": " << endl << _prefix << "  JUMPDEST" << endl;
@@ -303,6 +316,7 @@ Assembly& Assembly::optimise(bool _enable)
 		{ { PushString, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 		{ { PushSub, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 		{ { PushSubSize, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
+		{ { PushProgramSize, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 		{ { Push, PushTag, Instruction::JUMPI }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].data()) return { m[1], Instruction::JUMP }; else return {}; } },
 		{ { Instruction::ISZERO, Instruction::ISZERO }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 	};
@@ -468,6 +482,7 @@ bytes Assembly::assemble() const
 	vector<unsigned> tagPos(m_usedTags);
 	map<unsigned, unsigned> tagRef;
 	multimap<h256, unsigned> dataRef;
+	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = dev::bytesRequired(totalBytes);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
 
@@ -526,6 +541,11 @@ bytes Assembly::assemble() const
 			toBigEndian(s, byr);
 			break;
 		}
+		case PushProgramSize:
+			ret.push_back(tagPush);
+			sizeRef.push_back(ret.size());
+			ret.resize(ret.size() + bytesPerTag);
+			break;
 		case Tag:
 			tagPos[(unsigned)i.m_data] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
@@ -560,6 +580,11 @@ bytes Assembly::assemble() const
 					ret.push_back(b);
 			}
 		}
+	}
+	for (unsigned pos: sizeRef)
+	{
+		bytesRef r(ret.data() + pos, bytesPerTag);
+		toBigEndian(ret.size(), r);
 	}
 	return ret;
 }
