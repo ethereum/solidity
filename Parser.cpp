@@ -596,12 +596,12 @@ vector<ASTPointer<Expression>> Parser::parseFunctionCallArguments()
 }
 
 
-// distinguish between variable definition (and potentially assignment) and expression statement
-// (which include assignments to other expressions and pre-declared variables)
-// We have a variable definition if we get a keyword that specifies a type name, or
-// in the case of a user-defined type, we have two identifiers following each other.
 bool Parser::peekVariableDefinition()
 {
+	// distinguish between variable definition (and potentially assignment) and expression statement
+	// (which include assignments to other expressions and pre-declared variables)
+	// We have a variable definition if we get a keyword that specifies a type name, or
+	// in the case of a user-defined type, we have two identifiers following each other.
 	return (m_scanner->getCurrentToken() == Token::MAPPING ||
 			m_scanner->getCurrentToken() == Token::VAR ||
 			((Token::isElementaryTypeName(m_scanner->getCurrentToken()) ||
