@@ -43,6 +43,16 @@
 using namespace std;
 namespace po = boost::program_options;
 
+// LTODO: Maybe some argument class pairing names with
+// extensions and other attributes would be a better choice here?
+#define ARG_ABI_STR            "abi"
+#define ARG_ASM_STR            "asm"
+#define ARG_AST_STR            "ast"
+#define ARG_BINARY_STR         "binary"
+#define ARG_OPCODES_STR        "opcodes"
+#define ARG_NATSPECDEV_STR     "natspec-dev"
+#define ARG_NATSPECUSER_STR    "natspec-user"
+
 namespace dev
 {
 namespace solidity
@@ -63,8 +73,9 @@ static inline bool argToStdout(po::variables_map const& _args, const char* _name
 
 static bool needStdout(po::variables_map const& _args)
 {
-	return argToStdout(_args, "abi") || argToStdout(_args, "natspec-user") || argToStdout(_args, "natspec-dev") ||
-		   argToStdout(_args, "asm") || argToStdout(_args, "opcodes") || argToStdout(_args, "binary");
+	return argToStdout(_args, ARG_ABI_STR) || argToStdout(_args, ARG_NATSPECUSER_STR) ||
+		   argToStdout(_args, ARG_NATSPECDEV_STR) || argToStdout(_args, ARG_ASM_STR) ||
+		   argToStdout(_args, ARG_OPCODES_STR) || argToStdout(_args, ARG_BINARY_STR);
 }
 
 static inline bool outputToFile(OutputType type)
@@ -94,7 +105,7 @@ static std::istream& operator>>(std::istream& _in, OutputType& io_output)
 
 void CommandLineInterface::handleBinary(string const& _contract)
 {
-	auto choice = m_args["binary"].as<OutputType>();
+	auto choice = m_args[ARG_BINARY_STR].as<OutputType>();
 	if (outputToStdout(choice))
 	{
 		cout << "Binary: " << endl;
@@ -112,7 +123,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	// TODO: Figure out why the wrong operator << (from boost) is used here
-	auto choice = m_args["opcode"].as<OutputType>();
+	auto choice = m_args[ARG_OPCODES_STR].as<OutputType>();
 	if (outputToStdout(choice))
 	{
 		cout << "Opcodes: " << endl;
@@ -130,9 +141,9 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 
 void CommandLineInterface::handleBytecode(string const& _contract)
 {
-	if (m_args.count("opcodes"))
+	if (m_args.count(ARG_OPCODES_STR))
 		handleOpcode(_contract);
-	if (m_args.count("binary"))
+	if (m_args.count(ARG_BINARY_STR))
 		handleBinary(_contract);
 }
 
@@ -145,17 +156,17 @@ void CommandLineInterface::handleJson(DocumentationType _type,
 	switch(_type)
 	{
 	case DocumentationType::ABI_INTERFACE:
-		argName = "abi";
+		argName = ARG_ABI_STR;
 		suffix = ".abi";
 		title = "Contract ABI";
 		break;
 	case DocumentationType::NATSPEC_USER:
-		argName = "natspec-user";
+		argName = "ARG_NATSPECUSER_STR";
 		suffix = ".docuser";
 		title = "User Documentation";
 		break;
 	case DocumentationType::NATSPEC_DEV:
-		argName = "natspec-dev";
+		argName = ARG_NATSPECDEV_STR;
 		suffix = ".docdev";
 		title = "Developer Documentation";
 		break;
@@ -195,19 +206,19 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 		("version", "Show version and exit")
 		("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
 		("input-file", po::value<vector<string>>(), "input file")
-		("ast", po::value<OutputType>(),
+		(ARG_AST_STR, po::value<OutputType>(),
 		 "Request to output the AST of the contract. " OUTPUT_TYPE_STR)
-		("asm", po::value<OutputType>(),
+		(ARG_ASM_STR, po::value<OutputType>(),
 		 "Request to output the EVM assembly of the contract. "	 OUTPUT_TYPE_STR)
-		("opcodes", po::value<OutputType>(),
+		(ARG_OPCODES_STR, po::value<OutputType>(),
 		 "Request to output the Opcodes of the contract. "	OUTPUT_TYPE_STR)
-		("binary", po::value<OutputType>(),
+		(ARG_BINARY_STR, po::value<OutputType>(),
 		 "Request to output the contract in binary (hexadecimal). "	 OUTPUT_TYPE_STR)
-		("abi", po::value<OutputType>(),
+		(ARG_ABI_STR, po::value<OutputType>(),
 		 "Request to output the contract's ABI interface. "	 OUTPUT_TYPE_STR)
-		("natspec-user", po::value<OutputType>(),
+		(ARG_NATSPECUSER_STR, po::value<OutputType>(),
 		 "Request to output the contract's Natspec user documentation. "  OUTPUT_TYPE_STR)
-		("natspec-dev", po::value<OutputType>(),
+		(ARG_NATSPECDEV_STR, po::value<OutputType>(),
 		 "Request to output the contract's Natspec developer documentation. "  OUTPUT_TYPE_STR);
 #undef OUTPUT_TYPE_STR
 
@@ -321,9 +332,9 @@ bool CommandLineInterface::processInput()
 void CommandLineInterface::actOnInput()
 {
 	// do we need AST output?
-	if (m_args.count("ast"))
+	if (m_args.count(ARG_AST_STR))
 	{
-		auto choice = m_args["ast"].as<OutputType>();
+		auto choice = m_args[ARG_AST_STR].as<OutputType>();
 		if (outputToStdout(choice))
 		{
 			cout << "Syntax trees:" << endl << endl;
@@ -355,9 +366,9 @@ void CommandLineInterface::actOnInput()
 			cout << endl << "======= " << contract << " =======" << endl;
 
 		// do we need EVM assembly?
-		if (m_args.count("asm"))
+		if (m_args.count(ARG_ASM_STR))
 		{
-			auto choice = m_args["asm"].as<OutputType>();
+			auto choice = m_args[ARG_ASM_STR].as<OutputType>();
 			if (outputToStdout(choice))
 			{
 				cout << "EVM assembly:" << endl;
