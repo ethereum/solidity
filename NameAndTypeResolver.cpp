@@ -49,8 +49,6 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	m_currentScope = &m_scopes[&_contract];
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
 		ReferencesResolver resolver(*structDef, *this, nullptr);
-	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
-		structDef->checkValidityOfMembers();
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		ReferencesResolver resolver(*variable, *this, nullptr);
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
@@ -59,11 +57,14 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		ReferencesResolver referencesResolver(*function, *this,
 											  function->getReturnParameterList().get());
 	}
-	// First, the parameter types of all functions need to be resolved before we can check
-	// the types, since it is possible to call functions that are only defined later
-	// in the source.
-	_contract.checkTypeRequirements();
 	m_currentScope = &m_scopes[nullptr];
+}
+
+void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
+{
+	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
+		structDef->checkValidityOfMembers();
+	_contract.checkTypeRequirements();
 }
 
 void NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
