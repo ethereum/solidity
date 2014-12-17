@@ -26,8 +26,10 @@
 
 using namespace std;
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 void CallGraph::addFunction(FunctionDefinition const& _function)
 {

@@ -25,8 +25,10 @@
 #include <boost/range/iterator_range.hpp>
 #include <libsolidity/ASTVisitor.h>
 
-namespace dev {
-namespace solidity {
+namespace dev
+{
+namespace solidity
+{
 
 /**
  * Can be used to compute the graph of calls (or rather references) between functions of the same
