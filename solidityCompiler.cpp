@@ -56,7 +56,11 @@ bytes compileContract(const string& _sourceCode)
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 
 			Compiler compiler;
-			compiler.compileContract(*contract, {}, {});
+
+			// clang requires explicit initialization of map
+			// http://stackoverflow.com/questions/17264067/chosen-constructor-is-explicit-in-copy-initialization-error-with-clang-4-2
+			compiler.compileContract(*contract, {}, map<ContractDefinition const*, bytes const*>{});
+
 			// debug
 			//compiler.streamAssembly(cout);
 			return compiler.getAssembledBytecode();
