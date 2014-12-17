@@ -234,9 +234,13 @@ CompilerStack::Contract const& CompilerStack::getContract(string const& _contrac
 {
 	if (m_contracts.empty())
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("No compiled contracts found."));
+	string contractName = _contractName;
 	if (_contractName.empty())
-		return m_contracts.begin()->second;
-	auto it = m_contracts.find(_contractName);
+		// try to find the "last contract"
+		for (ASTPointer<ASTNode> const& node: m_sourceOrder.back()->ast->getNodes())
+			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+				contractName = contract->getName();
+	auto it = m_contracts.find(contractName);
 	if (it == m_contracts.end())
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Contract " + _contractName + " not found."));
 	return it->second;
