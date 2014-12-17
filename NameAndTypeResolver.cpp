@@ -70,8 +70,7 @@ void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
 void NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 {
 	m_scopes[nullptr].registerDeclaration(_declaration, true);
-	if (asserts(_declaration.getScope() == nullptr))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Updated declaration outside global scope."));
+	solAssert(_declaration.getScope() == nullptr, "Updated declaration outside global scope.");
 }
 
 Declaration const* NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
@@ -133,8 +132,7 @@ void DeclarationRegistrationHelper::endVisit(VariableDefinition& _variableDefini
 {
 	// Register the local variables with the function
 	// This does not fit here perfectly, but it saves us another AST visit.
-	if (asserts(m_currentFunction))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Variable definition without function."));
+	solAssert(m_currentFunction, "Variable definition without function.");
 	m_currentFunction->addLocalVariable(_variableDefinition.getDeclaration());
 }
 
@@ -149,15 +147,13 @@ void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declara
 	map<ASTNode const*, DeclarationContainer>::iterator iter;
 	bool newlyAdded;
 	tie(iter, newlyAdded) = m_scopes.emplace(&_declaration, DeclarationContainer(m_currentScope, &m_scopes[m_currentScope]));
-	if (asserts(newlyAdded))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to add new scope."));
+	solAssert(newlyAdded, "Unable to add new scope.");
 	m_currentScope = &_declaration;
 }
 
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
-	if (asserts(m_currentScope))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Closed non-existing scope."));
+	solAssert(m_currentScope, "Closed non-existing scope.");
 	m_currentScope = m_scopes[m_currentScope].getEnclosingDeclaration();
 }
 
@@ -196,8 +192,7 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 
 bool ReferencesResolver::visit(Return& _return)
 {
-	if (asserts(m_returnParameters))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Return parameters not set."));
+	solAssert(m_returnParameters, "Return parameters not set.");
 	_return.setFunctionReturnParameters(*m_returnParameters);
 	return true;
 }

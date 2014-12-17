@@ -52,6 +52,7 @@
 
 #include <algorithm>
 #include <tuple>
+#include <libsolidity/Utils.h>
 #include <libsolidity/Scanner.h>
 
 using namespace std;
@@ -249,8 +250,7 @@ Token::Value Scanner::scanDocumentationComment()
 
 Token::Value Scanner::skipMultiLineComment()
 {
-	if (asserts(m_char == '*'))
-		BOOST_THROW_EXCEPTION(InternalCompilerError());
+	solAssert(m_char == '*', "");
 	advance();
 	while (!isSourcePastEndOfInput())
 	{
@@ -597,8 +597,7 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	// scan exponent, if any
 	if (m_char == 'e' || m_char == 'E')
 	{
-		if (asserts(kind != HEX)) // 'e'/'E' must be scanned as part of the hex number
-			BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(kind != HEX, "'e'/'E' must be scanned as part of the hex number");
 		if (kind != DECIMAL)
 			return Token::ILLEGAL;
 		// scan exponent
@@ -639,8 +638,7 @@ static Token::Value keywordOrIdentifierToken(string const& _input)
 
 Token::Value Scanner::scanIdentifierOrKeyword()
 {
-	if (asserts(isIdentifierStart(m_char)))
-		BOOST_THROW_EXCEPTION(InternalCompilerError());
+	solAssert(isIdentifierStart(m_char), "");
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
@@ -662,8 +660,7 @@ char CharStream::advanceAndGet(size_t _chars)
 
 char CharStream::rollback(size_t _amount)
 {
-	if (asserts(m_pos >= _amount))
-		BOOST_THROW_EXCEPTION(InternalCompilerError());
+	solAssert(m_pos >= _amount, "");
 	m_pos -= _amount;
 	return get();
 }

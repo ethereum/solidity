@@ -21,7 +21,7 @@
  */
 
 #include <algorithm>
-
+#include <libsolidity/Utils.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/Exceptions.h>
@@ -145,8 +145,7 @@ void Return::checkTypeRequirements()
 {
 	if (!m_expression)
 		return;
-	if (asserts(m_returnParameters))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Return parameters not assigned."));
+	solAssert(m_returnParameters, "Return parameters not assigned.");
 	if (m_returnParameters->getParameters().size() != 1)
 		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
 											  "than in returns declaration."));
@@ -336,8 +335,7 @@ void IndexAccess::checkTypeRequirements()
 
 void Identifier::checkTypeRequirements()
 {
-	if (asserts(m_referencedDeclaration))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier not resolved."));
+	solAssert(m_referencedDeclaration, "Identifier not resolved.");
 
 	VariableDeclaration const* variable = dynamic_cast<VariableDeclaration const*>(m_referencedDeclaration);
 	if (variable)

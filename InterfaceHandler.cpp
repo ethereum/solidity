@@ -198,8 +198,7 @@ std::string::const_iterator InterfaceHandler::appendDocTagParam(std::string::con
 																std::string::const_iterator _end)
 {
 	// Should never be called with an empty vector
-	if (asserts(!m_params.empty()))
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal: Tried to append to empty parameter"));
+	solAssert(!m_params.empty(), "Internal: Tried to append to empty parameter");
 
 	auto pair = m_params.back();
 	pair.second += " ";

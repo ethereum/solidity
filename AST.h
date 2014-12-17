@@ -27,6 +27,7 @@
 #include <vector>
 #include <memory>
 #include <boost/noncopyable.hpp>
+#include <libsolidity/Utils.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/BaseTypes.h>
 #include <libsolidity/Token.h>
@@ -364,7 +365,7 @@ public:
 	explicit ElementaryTypeName(Location const& _location, Token::Value _type):
 		TypeName(_location), m_type(_type)
 	{
-		if (asserts(Token::isElementaryTypeName(_type))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(Token::isElementaryTypeName(_type), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -575,8 +576,7 @@ public:
 	void setFunctionReturnParameters(ParameterList& _parameters) { m_returnParameters = &_parameters; }
 	ParameterList const& getFunctionReturnParameters() const
 	{
-		if (asserts(m_returnParameters))
-			BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(m_returnParameters, "");
 		return *m_returnParameters;
 	}
 	Expression const* getExpression() const { return m_expression.get(); }
@@ -682,7 +682,7 @@ public:
 		Expression(_location), m_leftHandSide(_leftHandSide),
 		m_assigmentOperator(_assignmentOperator), m_rightHandSide(_rightHandSide)
 	{
-		if (asserts(Token::isAssignmentOp(_assignmentOperator))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(Token::isAssignmentOp(_assignmentOperator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -710,7 +710,7 @@ public:
 		Expression(_location), m_operator(_operator),
 		m_subExpression(_subExpression), m_isPrefix(_isPrefix)
 	{
-		if (asserts(Token::isUnaryOp(_operator))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(Token::isUnaryOp(_operator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -737,7 +737,7 @@ public:
 					Token::Value _operator, ASTPointer<Expression> const& _right):
 		Expression(_location), m_left(_left), m_operator(_operator), m_right(_right)
 	{
-		if (asserts(Token::isBinaryOp(_operator) || Token::isCompareOp(_operator))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(Token::isBinaryOp(_operator) || Token::isCompareOp(_operator), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -799,7 +799,7 @@ public:
 	std::vector<ASTPointer<Expression const>> getArguments() const { return {m_arguments.begin(), m_arguments.end()}; }
 
 	/// Returns the referenced contract. Can only be called after type checking.
-	ContractDefinition const* getContract() const { if (asserts(m_contract)) BOOST_THROW_EXCEPTION(InternalCompilerError()); else return m_contract; }
+	ContractDefinition const* getContract() const { solAssert(m_contract, ""); return m_contract; }
 
 private:
 	ASTPointer<Identifier> m_contractName;
@@ -894,7 +894,7 @@ public:
 	ElementaryTypeNameExpression(Location const& _location, Token::Value _typeToken):
 		PrimaryExpression(_location), m_typeToken(_typeToken)
 	{
-		if (asserts(Token::isElementaryTypeName(_typeToken))) BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(Token::isElementaryTypeName(_typeToken), "");
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;

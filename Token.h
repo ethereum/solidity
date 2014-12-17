@@ -44,6 +44,7 @@
 
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
+#include <libsolidity/Utils.h>
 #include <libsolidity/Exceptions.h>
 
 namespace dev
@@ -344,8 +345,7 @@ public:
 	// (e.g. "LT" for the token LT).
 	static char const* getName(Value tok)
 	{
-		if (asserts(tok < NUM_TOKENS))
-			BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(tok < NUM_TOKENS, "");
 		return m_name[tok];
 	}
 
@@ -360,8 +360,7 @@ public:
 
 	static Value AssignmentToBinaryOp(Value op)
 	{
-		if (asserts(isAssignmentOp(op) && op != ASSIGN))
-			BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(isAssignmentOp(op) && op != ASSIGN, "");
 		return Token::Value(op + (BIT_OR - ASSIGN_BIT_OR));
 	}
 
@@ -375,8 +374,7 @@ public:
 	// have a (unique) string (e.g. an IDENTIFIER).
 	static char const* toString(Value tok)
 	{
-		if (asserts(tok < NUM_TOKENS))
-			BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(tok < NUM_TOKENS, "");
 		return m_string[tok];
 	}
 
@@ -384,8 +382,7 @@ public:
 	// operators; returns 0 otherwise.
 	static int precedence(Value tok)
 	{
-		if (asserts(tok < NUM_TOKENS))
-			BOOST_THROW_EXCEPTION(InternalCompilerError());
+		solAssert(tok < NUM_TOKENS, "");
 		return m_precedence[tok];
 	}
 
