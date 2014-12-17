@@ -52,17 +52,18 @@ bytes compileContract(const string& _sourceCode)
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
+		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
 			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
+		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			Compiler compiler;
-
-			// clang requires explicit initialization of map
-			// http://stackoverflow.com/questions/17264067/chosen-constructor-is-explicit-in-copy-initialization-error-with-clang-4-2
 			compiler.compileContract(*contract, {}, map<ContractDefinition const*, bytes const*>{});
 
 			// debug
