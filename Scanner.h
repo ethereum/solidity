@@ -190,7 +190,8 @@ private:
 	Token::Value scanIdentifierOrKeyword();
 
 	Token::Value scanString();
-	Token::Value scanDocumentationComment();
+	Token::Value scanSingleLineDocComment();
+	Token::Value scanMultiLineDocComment();
 
 	/// Scans an escape-sequence which is part of a string and adds the
 	/// decoded character to the current literal. Returns true if a pattern

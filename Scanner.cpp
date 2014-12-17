@@ -219,7 +219,7 @@ Token::Value Scanner::skipSingleLineComment()
 	return Token::WHITESPACE;
 }
 
-Token::Value Scanner::scanDocumentationComment()
+Token::Value Scanner::scanSingleLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
 	advance(); //consume the last '/'
@@ -250,7 +250,6 @@ Token::Value Scanner::scanDocumentationComment()
 
 Token::Value Scanner::skipMultiLineComment()
 {
-	solAssert(m_char == '*', "");
 	advance();
 	while (!isSourcePastEndOfInput())
 	{
@@ -268,6 +267,43 @@ Token::Value Scanner::skipMultiLineComment()
 	}
 	// Unterminated multi-line comment.
 	return Token::ILLEGAL;
+}
+
+Token::Value Scanner::scanMultiLineDocComment()
+{
+	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
+	bool endFound = false;
+
+	advance(); //consume the last '*'
+	while (!isSourcePastEndOfInput())
+	{
+		// skip starting '*' in multiine comments
+		if (isLineTerminator(m_char))
+		{
+			skipWhitespace();
+			if (!m_source.isPastEndOfInput(2) && m_source.get(1) == '*' && m_source.get(2) != '/')
+			{
+				addCommentLiteralChar('\n');
+				m_char = m_source.advanceAndGet(3);
+			}
+			else
+				addCommentLiteralChar('\n');
+		}
+
+		if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '/')
+		{
+			m_source.advanceAndGet(2);
+			endFound = true;
+			break;
+		}
+		addCommentLiteralChar(m_char);
+		advance();
+	}
+	literal.complete();
+	if (!endFound)
+		return Token::ILLEGAL;
+	else
+		return Token::COMMENT_LITERAL;
 }
 
 void Scanner::scanToken()
@@ -381,7 +417,7 @@ void Scanner::scanToken()
 				{
 					Token::Value comment;
 					m_nextSkippedComment.location.start = getSourcePos();
-					comment = scanDocumentationComment();
+					comment = scanSingleLineDocComment();
 					m_nextSkippedComment.location.end = getSourcePos();
 					m_nextSkippedComment.token = comment;
 					token = Token::WHITESPACE;
@@ -390,7 +426,21 @@ void Scanner::scanToken()
 					token = skipSingleLineComment();
 			}
 			else if (m_char == '*')
-				token = skipMultiLineComment();
+			{
+				if (!advance()) /* slash star comment before EOS */
+					token = Token::WHITESPACE;
+				else if (m_char == '*')
+				{
+					Token::Value comment;
+					m_nextSkippedComment.location.start = getSourcePos();
+					comment = scanMultiLineDocComment();
+					m_nextSkippedComment.location.end = getSourcePos();
+					m_nextSkippedComment.token = comment;
+					token = Token::WHITESPACE;
+				}
+				else
+					token = skipMultiLineComment();
+			}
 			else if (m_char == '=')
 				token = selectToken(Token::ASSIGN_DIV);
 			else
