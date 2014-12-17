@@ -230,9 +230,9 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 	{
 		po::store(po::command_line_parser(argc, argv).options(desc).positional(p).allow_unregistered().run(), m_args);
 	}
-	catch (po::error const& exception)
+	catch (po::error const& _exception)
 	{
-		cout << exception.what() << endl;
+		cout << _exception.what() << endl;
 		return false;
 	}
 	po::notify(m_args);
@@ -289,35 +289,35 @@ bool CommandLineInterface::processInput()
 		// TODO: Perhaps we should not compile unless requested
 		m_compiler.compile(m_args["optimize"].as<bool>());
 	}
-	catch (ParserError const& exception)
+	catch (ParserError const& _exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Parser error", m_compiler);
+		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Parser error", m_compiler);
 		return false;
 	}
-	catch (DeclarationError const& exception)
+	catch (DeclarationError const& _exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Declaration error", m_compiler);
+		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Declaration error", m_compiler);
 		return false;
 	}
-	catch (TypeError const& exception)
+	catch (TypeError const& _exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Type error", m_compiler);
+		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Type error", m_compiler);
 		return false;
 	}
-	catch (CompilerError const& exception)
+	catch (CompilerError const& _exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Compiler error", m_compiler);
+		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Compiler error", m_compiler);
 		return false;
 	}
-	catch (InternalCompilerError const& exception)
+	catch (InternalCompilerError const& _exception)
 	{
 		cerr << "Internal compiler error during compilation:" << endl
-			 << boost::diagnostic_information(exception);
+			 << boost::diagnostic_information(_exception);
 		return false;
 	}
-	catch (Exception const& exception)
+	catch (Exception const& _exception)
 	{
-		cerr << "Exception during compilation: " << boost::diagnostic_information(exception) << endl;
+		cerr << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;
 		return false;
 	}
 	catch (...)
