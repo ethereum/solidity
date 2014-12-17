@@ -47,6 +47,9 @@ void parseTextAndResolveNames(std::string const& _source)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			resolver.resolveNamesAndTypes(*contract);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			resolver.checkTypeRequirements(*contract);
 }
 }
 
@@ -291,6 +294,21 @@ BOOST_AUTO_TEST_CASE(returns_in_constructor)
 					   "  }\n"
 					   "}\n";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(forward_function_reference)
+{
+	char const* text = "contract First {\n"
+					   "  function fun() returns (bool ret) {\n"
+					   "    return Second(1).fun(1, true, 3) > 0;\n"
+					   "  }\n"
+					   "}\n"
+					   "contract Second {\n"
+					   "  function fun(uint a, bool b, uint c) returns (uint ret) {\n"
+					   "    if (First(2).fun() == true) return 1;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
