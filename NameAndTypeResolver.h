@@ -46,6 +46,8 @@ public:
 	void registerDeclarations(SourceUnit& _sourceUnit);
 	/// Resolves all names and types referenced from the given contract.
 	void resolveNamesAndTypes(ContractDefinition& _contract);
+	/// Check all type requirements in the given contract.
+	void checkTypeRequirements(ContractDefinition& _contract);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations
 	/// that create their own scope.
 	void updateDeclaration(Declaration const& _declaration);

@@ -73,6 +73,15 @@ void CompilerStack::parse()
 				resolver.resolveNamesAndTypes(*contract);
 				m_contracts[contract->getName()].contract = contract;
 			}
+	for (Source const* source: m_sourceOrder)
+		for (ASTPointer<ASTNode> const& node: source->ast->getNodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			{
+				m_globalContext->setCurrentContract(*contract);
+				resolver.updateDeclaration(*m_globalContext->getCurrentThis());
+				resolver.checkTypeRequirements(*contract);
+				m_contracts[contract->getName()].contract = contract;
+			}
 	m_parseSuccessful = true;
 }
 
