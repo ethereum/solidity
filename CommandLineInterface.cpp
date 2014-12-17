@@ -311,7 +311,8 @@ bool CommandLineInterface::processInput()
 	}
 	catch (InternalCompilerError const& exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, exception, "Internal compiler error", m_compiler);
+		cerr << "Internal compiler error during compilation:" << endl
+			 << boost::diagnostic_information(exception);
 		return false;
 	}
 	catch (Exception const& exception)
