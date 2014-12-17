@@ -478,7 +478,6 @@ bytes Assembly::assemble() const
 	bytes ret;
 
 	unsigned totalBytes = bytesRequired();
-	ret.reserve(totalBytes);
 	vector<unsigned> tagPos(m_usedTags);
 	map<unsigned, unsigned> tagRef;
 	multimap<h256, unsigned> dataRef;
@@ -488,6 +487,12 @@ bytes Assembly::assemble() const
 
 	for (auto const& i: m_subs)
 		m_data[i.first] = i.second.assemble();
+
+	unsigned bytesRequiredIncludingData = bytesRequired();
+	unsigned bytesPerDataRef = dev::bytesRequired(bytesRequiredIncludingData);
+	byte dataRefPush = (byte)Instruction::PUSH1 - 1 + bytesPerDataRef;
+	ret.reserve(bytesRequiredIncludingData);
+	// m_data must not change from here on
 
 	for (AssemblyItem const& i: m_items)
 		switch (i.m_type)
@@ -526,9 +531,9 @@ bytes Assembly::assemble() const
 		}
 		case PushData: case PushSub:
 		{
-			ret.push_back(tagPush);
+			ret.push_back(dataRefPush);
 			dataRef.insert(make_pair((h256)i.m_data, ret.size()));
-			ret.resize(ret.size() + bytesPerTag);
+			ret.resize(ret.size() + bytesPerDataRef);
 			break;
 		}
 		case PushSubSize:
@@ -542,10 +547,12 @@ bytes Assembly::assemble() const
 			break;
 		}
 		case PushProgramSize:
-			ret.push_back(tagPush);
+		{
+			ret.push_back(dataRefPush);
 			sizeRef.push_back(ret.size());
-			ret.resize(ret.size() + bytesPerTag);
+			ret.resize(ret.size() + bytesPerDataRef);
 			break;
+		}
 		case Tag:
 			tagPos[(unsigned)i.m_data] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
@@ -573,7 +580,7 @@ bytes Assembly::assemble() const
 			{
 				for (auto it = its.first; it != its.second; ++it)
 				{
-					bytesRef r(ret.data() + it->second, bytesPerTag);
+					bytesRef r(ret.data() + it->second, bytesPerDataRef);
 					toBigEndian(ret.size(), r);
 				}
 				for (auto b: i.second)
@@ -583,7 +590,7 @@ bytes Assembly::assemble() const
 	}
 	for (unsigned pos: sizeRef)
 	{
-		bytesRef r(ret.data() + pos, bytesPerTag);
+		bytesRef r(ret.data() + pos, bytesPerDataRef);
 		toBigEndian(ret.size(), r);
 	}
 	return ret;
