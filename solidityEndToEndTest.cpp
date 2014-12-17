@@ -1108,7 +1108,7 @@ BOOST_AUTO_TEST_CASE(constructor_arguments)
 			function getName() returns (string3 ret) { return h.getName(); }
 		})";
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction(0) == bytes({0x01}));
+	BOOST_REQUIRE(callContractFunction(0) == bytes{0x01});
 	BOOST_REQUIRE(callContractFunction(1) == bytes({'a', 'b', 'c'}));
 }
 
