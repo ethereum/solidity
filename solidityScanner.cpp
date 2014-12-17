@@ -160,6 +160,13 @@ BOOST_AUTO_TEST_CASE(documentation_comments_parsed_begin)
 	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), " Send $(value / 1000) chocolates to the user");
 }
 
+BOOST_AUTO_TEST_CASE(multiline_documentation_comments_parsed_begin)
+{
+	Scanner scanner(CharStream("/** Send $(value / 1000) chocolates to the user*/"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::EOS);
+	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), " Send $(value / 1000) chocolates to the user");
+}
+
 BOOST_AUTO_TEST_CASE(documentation_comments_parsed)
 {
 	Scanner scanner(CharStream("some other tokens /// Send $(value / 1000) chocolates to the user"));
