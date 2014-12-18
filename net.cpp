@@ -38,7 +38,7 @@ public:
 	void doWork() { m_io.run(); }
 	
 	void onDisconnected(UDPSocketFace*) {};
-	void onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet) { if(_packet.toString() == "AAAA") success = true; };
+	void onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet) { if (_packet.toString() == "AAAA") success = true; }
 
 	ba::io_service m_io;
 	shared_ptr<UDPSocket<TestA, 1024>> m_socket;
@@ -73,7 +73,7 @@ public:
 
 BOOST_AUTO_TEST_SUITE(p2p)
 
-BOOST_AUTO_TEST_CASE(test)
+BOOST_AUTO_TEST_CASE(test_txrx_one)
 {
 	UDPDatagram d;
 	d.to = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300);
