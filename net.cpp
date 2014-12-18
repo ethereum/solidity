@@ -28,6 +28,21 @@ using namespace dev::p2p;
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
+class Kademlia: UDPSocketEvents
+{
+public:
+	Kademlia(): Worker("test",0), m_io(), m_socket(new UDPSocket<Kademlia, 1024>(m_io, *this, 30300)) {}
+	~Kademlia() { m_io.stop(); stopWorking(); }
+
+	void onDisconnected(UDPSocketFace*) {};
+	void onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet) { if (_packet.toString() == "AAAA") success = true; }
+
+	ba::io_service m_io;
+	shared_ptr<UDPSocket<Kademlia, 1024>> m_socket;
+	
+	bool success = false;
+};
+
 class TestA: UDPSocketEvents, public Worker
 {
 public:
