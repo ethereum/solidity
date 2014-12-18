@@ -140,9 +140,19 @@ BOOST_AUTO_TEST_CASE(stInitCodeTest)
 	dev::test::executeTests("stInitCodeTest", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stTransactionTest)
+{
+	dev::test::executeTests("stTransactionTest", "/StateTests", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stSpecialTest)
 {
 	dev::test::executeTests("stSpecialTest", "/StateTests", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stRefundTest)
+{
+	dev::test::executeTests("stRefundTest", "/StateTests", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCreateTest)
