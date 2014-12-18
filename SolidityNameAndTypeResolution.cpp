@@ -311,6 +311,16 @@ BOOST_AUTO_TEST_CASE(forward_function_reference)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
+{
+	char const* text = "contract First {\n"
+					   "  function fun() returns (bool ret) {\n"
+					   "    return 1 & 2 == 8 & 9;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
