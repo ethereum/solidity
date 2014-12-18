@@ -80,7 +80,7 @@ bool isLineTerminator(char c)
 }
 bool isWhiteSpace(char c)
 {
-	return c == ' ' || c == '\n' || c == '\t';
+	return c == ' ' || c == '\n' || c == '\t' || c == '\r';
 }
 bool isIdentifierStart(char c)
 {

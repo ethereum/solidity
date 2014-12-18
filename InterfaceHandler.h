@@ -92,7 +92,8 @@ private:
 	std::string::const_iterator parseDocTagLine(std::string::const_iterator _pos,
 												std::string::const_iterator _end,
 												std::string& _tagString,
-												DocTagType _tagType);
+												DocTagType _tagType,
+												bool _appending);
 	std::string::const_iterator parseDocTagParam(std::string::const_iterator _pos,
 												 std::string::const_iterator _end);
 	std::string::const_iterator appendDocTagParam(std::string::const_iterator _pos,
