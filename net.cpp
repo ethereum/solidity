@@ -14,42 +14,76 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file network.cpp
- * @author Marko Simovic <markobarko@gmail.com>
+/** @file net.cpp
+ * @author Alex Leverington <nessence@gmail.com>
  * @date 2014
- * Basic networking tests
  */
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <libethereum/Client.h>
-#include <libethereum/BlockChain.h>
-#include <libethereum/EthereumHost.h>
-#include "TestHelper.h"
+#include <libdevcore/Worker.h>
+#include <libp2p/UDP.h>
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
+using namespace dev::p2p;
+namespace ba = boost::asio;
+namespace bi = ba::ip;
 
-// Disabled since tests shouldn't block (not the worst offender, but timeout should be reduced anyway).
-/*
-BOOST_AUTO_TEST_CASE(listen_port_busy)
+class TestA: UDPSocketEvents, public Worker
 {
-	short port = 20000;
+public:
+	TestA(): Worker("test",0), m_io(), m_socket(new UDPSocket<TestA, 1024>(m_io, *this, 30300)) {}
+	~TestA() { m_io.stop(); stopWorking(); }
+	
+	void start() { startWorking(); }
+	void doWork() { m_io.run(); }
+	
+	void onDisconnected(UDPSocketFace*) {};
+	void onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet) { if(_packet.toString() == "AAAA") success = true; };
 
-	//make use of the port ahead of our client
-	ba::io_service ioService;
-	bi::tcp::endpoint endPoint(bi::tcp::v4(), port);
-	bi::tcp::acceptor acceptor(ioService, endPoint);
-	acceptor.listen(10);
+	ba::io_service m_io;
+	shared_ptr<UDPSocket<TestA, 1024>> m_socket;
+	
+	bool success = false;
+};
 
-	//prepare client and try to listen on same, used, port
-	Client c1("TestClient1", KeyPair::create().address(),
-			(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path()).string());
+//struct TestBProtocol: UDPSocketEvents
+//{
+//	void onDisconnected(UDPSocketFace*) {};
+//	void onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet) { cout << "received TestBProtocol" << endl; };
+//};
+//
+//class TestB: TestBProtocol
+//{
+//public:
+//	TestB(): m_io(), m_socket(m_io, *this, 30300) {}
+////private:
+//	ba::io_service m_io;
+//	UDPSocket<TestBProtocol, 1024> m_socket;
+//};
+//
+//class TestC
+//{
+//public:
+//	TestC(): m_io(), m_socket(m_io, m_rpc, 30300) {}
+////private:
+//	ba::io_service m_io;
+//	TestBProtocol m_rpc;
+//	UDPSocket<TestBProtocol, 1024> m_socket;
+//};
 
-	c1.startNetwork(port);
+BOOST_AUTO_TEST_SUITE(p2p)
 
-	BOOST_REQUIRE(c1.haveNetwork());
-	BOOST_REQUIRE(c1.peerServer()->listenPort() != 0);
-	BOOST_REQUIRE(c1.peerServer()->listenPort() != port);
+BOOST_AUTO_TEST_CASE(test)
+{
+	UDPDatagram d;
+	d.to = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300);
+	d.data = bytes({65,65,65,65});
+	
+	TestA a; a.start(); a.m_socket->connect();
+	a.m_socket->send(d);
+	sleep(1);
+	BOOST_REQUIRE_EQUAL(true, a.success);
 }
-*/
+
+BOOST_AUTO_TEST_SUITE_END()
+

@@ -17,17 +17,5 @@
 /** @file kademlia.cpp
  * @author Alex Leverington <nessence@gmail.com>
  * @date 2014
- * Basic networking tests
  */
-
-#include <boost/test/unit_test.hpp>
-#include <libp2p/Common.h>
-using namespace std;
-using namespace dev;
-using namespace dev::p2p;
-
-BOOST_AUTO_TEST_CASE(host_listen_udp4)
-{
-	
-}
 
