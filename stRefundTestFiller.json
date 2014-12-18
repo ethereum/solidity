@@ -1,5 +1,5 @@
 {
-   "refund0" : {
+   "refund_getEtherBack" : {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
             "currentNumber" : "0",
@@ -33,5 +33,113 @@
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
             "data" : ""
         }
-    }
+    },
+
+    "refund_changeNonZeroStorage" : {
+         "env" : {
+             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+             "currentNumber" : "0",
+             "currentGasLimit" : "1000000",
+             "currentDifficulty" : "256",
+             "currentTimestamp" : 1,
+             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+         },
+         "pre" : {
+             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                 "balance" : "1000000000000000000",
+                 "nonce" : 0,
+                 "code" : "{ [[ 1 ]] 23 }",
+                 "storage" : {
+                     "0x01" : "0x01"
+                 }
+             },
+             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                 "balance" : "1000",
+                 "nonce" : 0,
+                 "code" : "",
+                 "storage": {}
+             }
+         },
+         "transaction" : {
+             "nonce" : "0",
+             "gasPrice" : "1",
+             "gasLimit" : "850",
+             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+             "value" : "10",
+             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+             "data" : ""
+         }
+     },
+
+    "refund_OOG" : {
+         "env" : {
+             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+             "currentNumber" : "0",
+             "currentGasLimit" : "1000000",
+             "currentDifficulty" : "256",
+             "currentTimestamp" : 1,
+             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+         },
+         "pre" : {
+             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                 "balance" : "1000000000000000000",
+                 "nonce" : 0,
+                 "code" : "{ [[ 1 ]] 0 }",
+                 "storage" : {
+                     "0x01" : "0x01"
+                 }
+             },
+             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                 "balance" : "500",
+                 "nonce" : 0,
+                 "code" : "",
+                 "storage": {}
+             }
+         },
+         "transaction" : {
+             "nonce" : "0",
+             "gasPrice" : "1",
+             "gasLimit" : "500",
+             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+             "value" : "0",
+             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+             "data" : ""
+         }
+     },
+
+    "refund_NoOOG_1" : {
+         "env" : {
+             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
+             "currentNumber" : "0",
+             "currentGasLimit" : "1000000",
+             "currentDifficulty" : "256",
+             "currentTimestamp" : 1,
+             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+         },
+         "pre" : {
+             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                 "balance" : "1000000000000000000",
+                 "nonce" : 0,
+                 "code" : "{ [[ 1 ]] 0 }",
+                 "storage" : {
+                     "0x01" : "0x01"
+                 }
+             },
+             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                 "balance" : "502",
+                 "nonce" : 0,
+                 "code" : "",
+                 "storage": {}
+             }
+         },
+         "transaction" : {
+             "nonce" : "0",
+             "gasPrice" : "1",
+             "gasLimit" : "502",
+             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+             "value" : "0",
+             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+             "data" : ""
+         }
+     }
 }
