@@ -276,20 +276,19 @@
 	    "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
 		"balance": "10000",
 		"nonce": 0,
-		"code": "{[[ 2 ]](ADDRESS)(CODECOPY 0 0 32)(CREATE 0 0 32)}",
+	 	"code": "{(MSTORE 0 0x601080600c6000396000f20060003554156009570060203560003555) [[ 0 ]] (CREATE 23 4 28)}",
 		"storage": {}
-	     },
+	    },
 
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "100000",
-                "code" : "",
-                "nonce" : "0",
-                "storage" : {
-                }
-            }
+	    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b": {
+	 	"balance" : "100000",
+	 	"code" : "",
+	 	"nonce" : "0",
+	  	"storage" : {}
+	    }
         },
         "transaction" :
-	{ 
+        {
             "data" : "0x00",
             "gasLimit" : "10000",
             "gasPrice" : "1",
