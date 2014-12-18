@@ -71,7 +71,7 @@ protected:
 	Address m_nonOptimizedContract;
 };
 
-BOOST_FIXTURE_TEST_SUITE(SolidityOptimizerTest, OptimizerTestFramework)
+BOOST_FIXTURE_TEST_SUITE(SolidityOptimizer, OptimizerTestFramework)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
