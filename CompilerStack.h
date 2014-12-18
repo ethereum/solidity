@@ -57,7 +57,8 @@ public:
 	CompilerStack(): m_parseSuccessful(false) {}
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
-	void addSource(std::string const& _name, std::string const& _content);
+	/// @returns true if a source object by the name already existed and was replaced.
+	bool addSource(std::string const& _name, std::string const& _content);
 	void setSource(std::string const& _sourceCode);
 	/// Parses all source units that were added
 	void parse();
@@ -86,9 +87,13 @@ public:
 	/// Can be one of 3 types defined at @c DocumentationType
 	std::string const& getJsonDocumentation(std::string const& _contractName, DocumentationType _type) const;
 
-	/// Returns the previously used scanner, useful for counting lines during error reporting.
+	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner(std::string const& _sourceName = "") const;
+	/// @returns the parsed source unit with the supplied name.
 	SourceUnit const& getAST(std::string const& _sourceName = "") const;
+	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
+	/// does not exist.
+	ContractDefinition const& getContractDefinition(std::string const& _contractName) const;
 
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.

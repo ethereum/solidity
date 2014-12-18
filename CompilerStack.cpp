@@ -36,13 +36,12 @@ namespace dev
 namespace solidity
 {
 
-void CompilerStack::addSource(string const& _name, string const& _content)
+bool CompilerStack::addSource(string const& _name, string const& _content)
 {
-	if (m_sources.count(_name))
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Source by given name already exists."));
-
+	bool existed = m_sources.count(_name);
 	reset(true);
 	m_sources[_name].scanner = make_shared<Scanner>(CharStream(_content), _name);
+	return existed;
 }
 
 void CompilerStack::setSource(string const& _sourceCode)
@@ -179,6 +178,11 @@ Scanner const& CompilerStack::getScanner(string const& _sourceName) const
 SourceUnit const& CompilerStack::getAST(string const& _sourceName) const
 {
 	return *getSource(_sourceName).ast;
+}
+
+ContractDefinition const& CompilerStack::getContractDefinition(string const& _contractName) const
+{
+	return *getContract(_contractName).contract;
 }
 
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
