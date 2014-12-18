@@ -36,7 +36,7 @@ namespace solidity
 namespace test
 {
 
-BOOST_FIXTURE_TEST_SUITE(SolidityCompilerEndToEndTest, ExecutionFramework)
+BOOST_FIXTURE_TEST_SUITE(SolidityEndToEndTest, ExecutionFramework)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
 {
