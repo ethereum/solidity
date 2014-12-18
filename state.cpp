@@ -155,7 +155,6 @@ BOOST_AUTO_TEST_CASE(stRefundTest)
 	dev::test::executeTests("stRefundTest", "/StateTests", dev::test::doStateTests);
 }
 
-
 BOOST_AUTO_TEST_CASE(stCreateTest)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
