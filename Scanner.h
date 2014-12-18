@@ -182,6 +182,8 @@ private:
 
 	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();
+	/// Skips all whitespace except Line feeds and returns true if something was skipped
+	bool skipWhitespaceExceptLF();
 	Token::Value skipSingleLineComment();
 	Token::Value skipMultiLineComment();
 

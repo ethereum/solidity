@@ -209,6 +209,15 @@ bool Scanner::skipWhitespace()
 	return getSourcePos() != startPosition;
 }
 
+bool Scanner::skipWhitespaceExceptLF()
+{
+	int const startPosition = getSourcePos();
+	while (m_char == ' ' || m_char == '\t')
+		advance();
+	// Return whether or not we skipped any characters.
+	return getSourcePos() != startPosition;
+}
+
 Token::Value Scanner::skipSingleLineComment()
 {
 	// The line terminator at the end of the line is not considered
@@ -222,7 +231,8 @@ Token::Value Scanner::skipSingleLineComment()
 Token::Value Scanner::scanSingleLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
-	advance(); //consume the last '/'
+	advance(); //consume the last '/' at ///
+	skipWhitespaceExceptLF();
 	while (!isSourcePastEndOfInput())
 	{
 		if (isLineTerminator(m_char))
@@ -273,18 +283,27 @@ Token::Value Scanner::scanMultiLineDocComment()
 {
 	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
 	bool endFound = false;
+	bool charsAdded = false;
 
-	advance(); //consume the last '*'
+	advance(); //consume the last '*' at /**
+	skipWhitespaceExceptLF();
 	while (!isSourcePastEndOfInput())
 	{
-		// skip starting '*' in multiine comments
+		//handle newlines in multline comments
 		if (isLineTerminator(m_char))
 		{
 			skipWhitespace();
-			if (!m_source.isPastEndOfInput(2) && m_source.get(1) == '*' && m_source.get(2) != '/')
-			{
-				addCommentLiteralChar('\n');
-				m_char = m_source.advanceAndGet(3);
+			if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) != '/')
+			{ // skip first '*' in subsequent lines
+				if (charsAdded)
+					addCommentLiteralChar('\n');
+				m_char = m_source.advanceAndGet(2);
+			}
+			else if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '/')
+			{ // if after newline the comment ends, don't insert the newline
+				m_char = m_source.advanceAndGet(2);
+				endFound = true;
+				break;
 			}
 			else
 				addCommentLiteralChar('\n');
@@ -292,11 +311,12 @@ Token::Value Scanner::scanMultiLineDocComment()
 
 		if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '/')
 		{
-			m_source.advanceAndGet(2);
+			m_char = m_source.advanceAndGet(2);
 			endFound = true;
 			break;
 		}
 		addCommentLiteralChar(m_char);
+		charsAdded = true;
 		advance();
 	}
 	literal.complete();
