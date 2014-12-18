@@ -326,9 +326,52 @@ Token::Value Scanner::scanMultiLineDocComment()
 		return Token::COMMENT_LITERAL;
 }
 
+Token::Value Scanner::scanSlash()
+{
+	int firstSlashPosition = getSourcePos();
+	advance();
+	if (m_char == '/')
+	{
+		if (!advance()) /* double slash comment directly before EOS */
+			return  Token::WHITESPACE;
+		else if (m_char == '/')
+		{
+			// doxygen style /// comment
+			Token::Value comment;
+			m_nextSkippedComment.location.start = firstSlashPosition;
+			comment = scanSingleLineDocComment();
+			m_nextSkippedComment.location.end = getSourcePos();
+			m_nextSkippedComment.token = comment;
+			return Token::WHITESPACE;
+		}
+		else
+			return skipSingleLineComment();
+	}
+	else if (m_char == '*')
+	{
+		// doxygen style /** natspec comment
+		if (!advance()) /* slash star comment before EOS */
+			return Token::WHITESPACE;
+		else if (m_char == '*')
+		{
+			Token::Value comment;
+			m_nextSkippedComment.location.start = firstSlashPosition;
+			comment = scanMultiLineDocComment();
+			m_nextSkippedComment.location.end = getSourcePos();
+			m_nextSkippedComment.token = comment;
+			return Token::WHITESPACE;
+		}
+		else
+			return skipMultiLineComment();
+	}
+	else if (m_char == '=')
+		return selectToken(Token::ASSIGN_DIV);
+	else
+		return Token::DIV;
+}
+
 void Scanner::scanToken()
 {
-	int savedPosition;
 	m_nextToken.literal.clear();
 	m_nextSkippedComment.literal.clear();
 	Token::Value token;
@@ -429,45 +472,7 @@ void Scanner::scanToken()
 			break;
 		case '/':
 			// /  // /* /=
-			savedPosition = getSourcePos();
-			advance();
-			if (m_char == '/')
-			{
-				if (!advance()) /* double slash comment directly before EOS */
-					token = Token::WHITESPACE;
-				else if (m_char == '/')
-				{
-					Token::Value comment;
-					m_nextSkippedComment.location.start = savedPosition;
-					comment = scanSingleLineDocComment();
-					m_nextSkippedComment.location.end = getSourcePos();
-					m_nextSkippedComment.token = comment;
-					token = Token::WHITESPACE;
-				}
-				else
-					token = skipSingleLineComment();
-			}
-			else if (m_char == '*')
-			{
-				// /** doxygent style natspec comment
-				if (!advance()) /* slash star comment before EOS */
-					token = Token::WHITESPACE;
-				else if (m_char == '*')
-				{
-					Token::Value comment;
-					m_nextSkippedComment.location.start = savedPosition;
-					comment = scanMultiLineDocComment();
-					m_nextSkippedComment.location.end = getSourcePos();
-					m_nextSkippedComment.token = comment;
-					token = Token::WHITESPACE;
-				}
-				else
-					token = skipMultiLineComment();
-			}
-			else if (m_char == '=')
-				token = selectToken(Token::ASSIGN_DIV);
-			else
-				token = Token::DIV;
+			token = scanSlash();
 			break;
 		case '&':
 			// & && &=

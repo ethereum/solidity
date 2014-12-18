@@ -194,6 +194,8 @@ private:
 	Token::Value scanString();
 	Token::Value scanSingleLineDocComment();
 	Token::Value scanMultiLineDocComment();
+	/// Scans a slash '/' and depending on the characters returns the appropriate token
+	Token::Value scanSlash();
 
 	/// Scans an escape-sequence which is part of a string and adds the
 	/// decoded character to the current literal. Returns true if a pattern
