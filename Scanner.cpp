@@ -328,6 +328,7 @@ Token::Value Scanner::scanMultiLineDocComment()
 
 void Scanner::scanToken()
 {
+	int savedPosition;
 	m_nextToken.literal.clear();
 	m_nextSkippedComment.literal.clear();
 	Token::Value token;
@@ -428,6 +429,7 @@ void Scanner::scanToken()
 			break;
 		case '/':
 			// /  // /* /=
+			savedPosition = getSourcePos();
 			advance();
 			if (m_char == '/')
 			{
@@ -436,7 +438,7 @@ void Scanner::scanToken()
 				else if (m_char == '/')
 				{
 					Token::Value comment;
-					m_nextSkippedComment.location.start = getSourcePos();
+					m_nextSkippedComment.location.start = savedPosition;
 					comment = scanSingleLineDocComment();
 					m_nextSkippedComment.location.end = getSourcePos();
 					m_nextSkippedComment.token = comment;
@@ -447,12 +449,13 @@ void Scanner::scanToken()
 			}
 			else if (m_char == '*')
 			{
+				// /** doxygent style natspec comment
 				if (!advance()) /* slash star comment before EOS */
 					token = Token::WHITESPACE;
 				else if (m_char == '*')
 				{
 					Token::Value comment;
-					m_nextSkippedComment.location.start = getSourcePos();
+					m_nextSkippedComment.location.start = savedPosition;
 					comment = scanMultiLineDocComment();
 					m_nextSkippedComment.location.end = getSourcePos();
 					m_nextSkippedComment.token = comment;

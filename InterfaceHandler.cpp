@@ -170,7 +170,7 @@ std::string::const_iterator InterfaceHandler::parseDocTagLine(std::string::const
 															  bool _appending)
 {
 	auto nlPos = std::find(_pos, _end, '\n');
-	if (_appending && *_pos != ' ')
+	if (_appending && _pos < _end && *_pos != ' ')
 		_tagString += " ";
 	std::copy(_pos, nlPos, back_inserter(_tagString));
 	m_lastTag = _tagType;
@@ -204,7 +204,7 @@ std::string::const_iterator InterfaceHandler::appendDocTagParam(std::string::con
 	solAssert(!m_params.empty(), "Internal: Tried to append to empty parameter");
 
 	auto pair = m_params.back();
-	if (*_pos != ' ')
+	if (_pos < _end && *_pos != ' ')
 		pair.second += " ";
 	auto nlPos = std::find(_pos, _end, '\n');
 	std::copy(_pos, nlPos, back_inserter(pair.second));
