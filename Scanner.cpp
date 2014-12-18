@@ -212,7 +212,7 @@ bool Scanner::skipWhitespace()
 bool Scanner::skipWhitespaceExceptLF()
 {
 	int const startPosition = getSourcePos();
-	while (m_char == ' ' || m_char == '\t')
+	while (isWhiteSpace(m_char) && !isLineTerminator(m_char))
 		advance();
 	// Return whether or not we skipped any characters.
 	return getSourcePos() != startPosition;
@@ -305,7 +305,7 @@ Token::Value Scanner::scanMultiLineDocComment()
 				endFound = true;
 				break;
 			}
-			else
+			else if (charsAdded)
 				addCommentLiteralChar('\n');
 		}
 
