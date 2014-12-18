@@ -107,9 +107,9 @@ namespace solidity
 	T(COMMA, ",", 1)                                                   \
 	T(OR, "||", 4)                                                     \
 	T(AND, "&&", 5)                                                    \
-	T(BIT_OR, "|", 6)                                                  \
-	T(BIT_XOR, "^", 7)                                                 \
-	T(BIT_AND, "&", 8)                                                 \
+	T(BIT_OR, "|", 8)                                                  \
+	T(BIT_XOR, "^", 9)                                                 \
+	T(BIT_AND, "&", 10)                                                \
 	T(SHL, "<<", 11)                                                   \
 	T(SAR, ">>", 11)                                                   \
 	T(SHR, ">>>", 11)                                                  \
@@ -122,13 +122,13 @@ namespace solidity
 	/* Compare operators sorted by precedence. */                      \
 	/* IsCompareOp() relies on this block of enum values */            \
 	/* being contiguous and sorted in the same order! */               \
-	T(EQ, "==", 9)                                                     \
-	T(NE, "!=", 9)                                                     \
-	T(LT, "<", 10)                                                     \
-	T(GT, ">", 10)                                                     \
-	T(LTE, "<=", 10)                                                   \
-	T(GTE, ">=", 10)                                                   \
-	K(IN, "in", 10)                                                    \
+	T(EQ, "==", 6)                                                     \
+	T(NE, "!=", 6)                                                     \
+	T(LT, "<", 7)                                                      \
+	T(GT, ">", 7)                                                      \
+	T(LTE, "<=", 7)                                                    \
+	T(GTE, ">=", 7)                                                    \
+	K(IN, "in", 7)                                                     \
 	\
 	/* Unary operators. */                                             \
 	/* IsUnaryOp() relies on this block of enum values */              \
