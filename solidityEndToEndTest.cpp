@@ -176,6 +176,80 @@ BOOST_AUTO_TEST_CASE(nested_loops)
 	testSolidityAgainstCppOnRange(0, nested_loops_cpp, 0, 12);
 }
 
+BOOST_AUTO_TEST_CASE(for_loop)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint n) returns(uint nfac) {\n"
+							 "    nfac = 1;\n"
+							 "    for (var i = 2; i <= n; i++)\n"
+							 "        nfac *= i;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	auto for_loop_cpp = [](u256 const& n) -> u256
+	{
+		u256 nfac = 1;
+		for (auto i = 2; i <= n; i++)
+			nfac *= i;
+		return nfac;
+	};
+
+	testSolidityAgainstCppOnRange(0, for_loop_cpp, 0, 5);
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_empty)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f() returns(uint ret) {\n"
+							 "    ret = 1;\n"
+							 "    for (;;)\n"
+							 "    {\n"
+							 "        ret += 1;\n"
+							 "        if (ret >= 10) break;\n"
+							 "    }\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	auto for_loop_empty_cpp = []() -> u256
+	{
+		u256 ret = 1;
+		for (;;)
+		{
+			ret += 1;
+			if (ret >= 10) break;
+		}
+		return ret;
+	};
+
+	testSolidityAgainstCpp(0, for_loop_empty_cpp);
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_simple_init_expr)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f(uint n) returns(uint nfac) {\n"
+							 "    nfac = 1;\n"
+							 "    uint256 i;\n"
+							 "    for (i = 2; i <= n; i++)\n"
+							 "        nfac *= i;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	auto for_loop_simple_init_expr_cpp = [](u256 const& n) -> u256
+	{
+		u256 nfac = 1;
+		u256 i;
+		for (i = 2; i <= n; i++)
+			nfac *= i;
+		return nfac;
+	};
+
+	testSolidityAgainstCppOnRange(0, for_loop_simple_init_expr_cpp, 0, 5);
+}
+
 BOOST_AUTO_TEST_CASE(calling_other_functions)
 {
 	// note that the index of a function is its index in the sorted sequence of functions
@@ -402,7 +476,7 @@ BOOST_AUTO_TEST_CASE(empty_string_on_stack)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction(0, bytes({0x02})) == bytes({0x00, 0x02, 'a', 'b', 'c', 0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x02)) == bytes({0x00, 0x02, 0x61/*'a'*/, 0x62/*'b'*/, 0x63/*'c'*/, 0x00}));
 }
 
 BOOST_AUTO_TEST_CASE(state_smoke_test)
@@ -442,22 +516,23 @@ BOOST_AUTO_TEST_CASE(simple_mapping)
 							 "  }\n"
 							 "}";
 	compileAndRun(sourceCode);
-
-	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0x00}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0x00}));
-	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	
+	// msvc seems to have problems with initializer-list, when there is only 1 param in the list
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == bytes(1, 0x00));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == bytes(1, 0x00));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0xa7)) == bytes(1, 0x00));
 	callContractFunction(1, bytes({0x01, 0xa1}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0x00}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0xa1}));
-	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == bytes(1, 0x00));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == bytes(1, 0xa1));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0xa7)) == bytes(1, 0x00));
 	callContractFunction(1, bytes({0x00, 0xef}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0xef}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0xa1}));
-	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == bytes(1, 0xef));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == bytes(1, 0xa1));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0xa7)) == bytes(1, 0x00));
 	callContractFunction(1, bytes({0x01, 0x05}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x00})) == bytes({0xef}));
-	BOOST_CHECK(callContractFunction(0, bytes({0x01})) == bytes({0x05}));
-	BOOST_CHECK(callContractFunction(0, bytes({0xa7})) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == bytes(1, 0xef));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0x01)) == bytes(1, 0x05));
+	BOOST_CHECK(callContractFunction(0, bytes(1, 0xa7)) == bytes(1, 0x00));
 }
 
 BOOST_AUTO_TEST_CASE(mapping_state)
@@ -625,9 +700,9 @@ BOOST_AUTO_TEST_CASE(structs)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction(0) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0) == bytes(1, 0x00));
 	BOOST_CHECK(callContractFunction(1) == bytes());
-	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
+	BOOST_CHECK(callContractFunction(0) == bytes(1, 0x01));
 }
 
 BOOST_AUTO_TEST_CASE(struct_reference)
@@ -653,9 +728,9 @@ BOOST_AUTO_TEST_CASE(struct_reference)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction(0) == bytes({0x00}));
+	BOOST_CHECK(callContractFunction(0) == bytes(1, 0x00));
 	BOOST_CHECK(callContractFunction(1) == bytes());
-	BOOST_CHECK(callContractFunction(0) == bytes({0x01}));
+	BOOST_CHECK(callContractFunction(0) == bytes(1, 0x01));
 }
 
 BOOST_AUTO_TEST_CASE(constructor)
@@ -1009,6 +1084,49 @@ BOOST_AUTO_TEST_CASE(strings_in_calls)
 	BOOST_REQUIRE(callContractFunction(2, helperAddress) == bytes());
 	BOOST_REQUIRE(callContractFunction(1, helperAddress) == toBigEndian(helperAddress));
 	BOOST_CHECK(callContractFunction(0, bytes({0, 'a', 1})) == bytes({0, 'a', 0, 0, 0}));
+}
+
+BOOST_AUTO_TEST_CASE(constructor_arguments)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			string3 name;
+			bool flag;
+			function Helper(string3 x, bool f) {
+				name = x;
+				flag = f;
+			}
+			function getName() returns (string3 ret) { return name; }
+			function getFlag() returns (bool ret) { return flag; }
+		}
+		contract Main {
+			Helper h;
+			function Main() {
+				h = new Helper("abc", true);
+			}
+			function getFlag() returns (bool ret) { return h.getFlag(); }
+			function getName() returns (string3 ret) { return h.getName(); }
+		})";
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction(0) == bytes({byte(0x01)}));
+	BOOST_REQUIRE(callContractFunction(1) == bytes({'a', 'b', 'c'}));
+}
+
+BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			string3 name;
+			bool flag;
+			function Test() {
+				setName("abc");
+			}
+			function getName() returns (string3 ret) { return name; }
+		private:
+			function setName(string3 _name) { name = _name; }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_REQUIRE(callContractFunction(0) == bytes({'a', 'b', 'c'}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

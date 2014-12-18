@@ -263,12 +263,44 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 		dev::LogOutputStream<eth::VMTraceChannel, false>(true) << o.str();
 		dev::LogOutputStream<eth::VMTraceChannel, false>(false) << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
 
+		/*creates json stack trace*/
 		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
 		{
-			std::ofstream f;
-			f.open("./vmtrace.log", std::ofstream::app);
-			f << o.str();
-			f << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32";
+			Object o_step;
+
+			/*add the stack*/
+			Array a_stack;
+			for (auto i: vm.stack())
+				a_stack.push_back((string)i);
+
+			o_step.push_back(Pair( "stack", a_stack ));
+
+			/*add the memory*/
+			Array a_mem;
+			for(auto i: vm.memory())
+				a_mem.push_back(i);
+
+			o_step.push_back(Pair("memory", a_mem));
+
+			/*add the storage*/
+			Object storage;
+			for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
+				storage.push_back(Pair( (string)i.first , (string)i.second));			
+
+			/*add all the other details*/
+			o_step.push_back(Pair("storage", storage));
+			o_step.push_back(Pair("depth", to_string(ext.depth)));
+			o_step.push_back(Pair("gas", (string)vm.gas()));
+			o_step.push_back(Pair("address", "0x" + toString(ext.myAddress )));
+			o_step.push_back(Pair("step", steps ));
+			o_step.push_back(Pair("pc", (int)vm.curPC()));
+			o_step.push_back(Pair("opcode", instructionInfo(inst).name ));
+
+			/*append the JSON object to the log file*/
+			Value v(o_step);
+			ofstream os( "./stackTrace.json", ofstream::app);
+			os << write_string(v, true) << ",";
+			os.close();
 		}
 	};
 }
@@ -314,7 +346,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 		catch (VMException const& _e)
 		{
-			cnote << "VM did throw an exception: " << diagnostic_information(_e);
+			cnote << "Safe VM Exception";
 			vmExceptionOccured = true;
 		}
 		catch (Exception const& _e)

@@ -54,9 +54,18 @@ bytes compileContract(const string& _sourceCode)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
-
+		}
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
+		}
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
 			Compiler compiler;
-			compiler.compileContract(*contract, {});
+			compiler.compileContract(*contract, {}, map<ContractDefinition const*, bytes const*>{});
+
 			// debug
 			//compiler.streamAssembly(cout);
 			return compiler.getAssembledBytecode();
