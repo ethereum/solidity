@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(large_integers)
 				b = 0x10000000000000000000000002;
 			}
 		})";
-	compileBothVersions(33, sourceCode);
+	compileBothVersions(11, sourceCode);
 	compareVersions(0);
 }
 
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(invariants)
 				return int(0) | (int(1) * (int(0) ^ (0 + a)));
 			}
 		})";
-	compileBothVersions(28, sourceCode);
+	compileBothVersions(16, sourceCode);
 	compareVersions(0, u256(0x12334664));
 }
 
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 				data;
 			}
 		})";
-	compileBothVersions(11, sourceCode);
+	compileBothVersions(8, sourceCode);
 	compareVersions(0);
 }
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(constant_folding_both_sides)
 				return 98 ^ (7 * ((1 | (x | 1000)) * 40) ^ 102);
 			}
 		})";
-	compileBothVersions(31, sourceCode);
+	compileBothVersions(12, sourceCode);
 	compareVersions(0);
 }
 
