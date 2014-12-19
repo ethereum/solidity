@@ -62,6 +62,8 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
 		m_currentLValue.retrieveValue(_assignment, true);
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
+		if (m_currentLValue.storesReferenceOnStack())
+			m_context << eth::Instruction::SWAP1;
 	}
 	m_currentLValue.storeValue(_assignment);
 	m_currentLValue.reset();
