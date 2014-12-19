@@ -54,7 +54,6 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 {
 	string testPath = test::getTestPath();
 
-
 	testPath += "/TrieTests";
 
 	cnote << "Testing Trie...";
@@ -245,6 +244,7 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 BOOST_AUTO_TEST_CASE(trieLowerBound)
 {
 	cnote << "Stress-testing Trie.lower_bound...";
+	if (0)
 	{
 		MemoryDB dm;
 		EnforceRefs e(dm, true);
@@ -290,6 +290,7 @@ BOOST_AUTO_TEST_CASE(trieLowerBound)
 BOOST_AUTO_TEST_CASE(trieStess)
 {
 	cnote << "Stress-testing Trie...";
+	if (0)
 	{
 		MemoryDB m;
 		MemoryDB dm;

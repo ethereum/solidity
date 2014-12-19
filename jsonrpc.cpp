@@ -29,8 +29,9 @@
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/CorsHttpServer.h>
-#include <jsonrpc/connectors/httpserver.h>
-#include <jsonrpc/connectors/httpclient.h>
+#include <json/json.h>
+#include <jsonrpccpp/server/connectors/httpserver.h>
+#include <jsonrpccpp/client/connectors/httpclient.h>
 #include <set>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
@@ -43,7 +44,7 @@ using namespace dev;
 using namespace dev::eth;
 namespace js = json_spirit;
 
-WebThreeDirect *web3;
+WebThreeDirect* web3;
 unique_ptr<WebThreeStubServer> jsonrpcServer;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
 
@@ -61,11 +62,12 @@ struct Setup
 		
 		web3->setIdealPeerCount(5);
 		web3->ethereum()->setForceMining(true);
-		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), *web3, {}));
+		auto server = new jsonrpc::HttpServer(8080);
+		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(*server, *web3, {}));
 		jsonrpcServer->setIdentities({});
 		jsonrpcServer->StartListening();
-		
-		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
+		auto client = new jsonrpc::HttpClient("http://localhost:8080");
+		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(*client));
 	}
 };
 
@@ -300,8 +302,11 @@ BOOST_AUTO_TEST_CASE(contract_storage)
 	
 	Json::Value storage = jsonrpcClient->eth_storageAt(contractAddress);
 	BOOST_CHECK_EQUAL(storage.getMemberNames().size(), 1);
+	// bracers are required, cause msvc couldnt handle this macro in for statement
 	for (auto name: storage.getMemberNames())
+	{
 		BOOST_CHECK_EQUAL(storage[name].asString(), "0x03");
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

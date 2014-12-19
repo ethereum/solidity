@@ -47,6 +47,9 @@ void parseTextAndResolveNames(std::string const& _source)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			resolver.resolveNamesAndTypes(*contract);
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+			resolver.checkTypeRequirements(*contract);
 }
 }
 
@@ -226,6 +229,14 @@ BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(large_string_literal)
+{
+	char const* text = "contract test {\n"
+					   "  function f() { var x = \"123456789012345678901234567890123\"; }"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* text = "contract test {\n"
@@ -274,6 +285,40 @@ BOOST_AUTO_TEST_CASE(assignment_to_struct)
 					   "  }\n"
 					   "}\n";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(returns_in_constructor)
+{
+	char const* text = "contract test {\n"
+					   "  function test() returns (uint a) {\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(forward_function_reference)
+{
+	char const* text = "contract First {\n"
+					   "  function fun() returns (bool ret) {\n"
+					   "    return Second(1).fun(1, true, 3) > 0;\n"
+					   "  }\n"
+					   "}\n"
+					   "contract Second {\n"
+					   "  function fun(uint a, bool b, uint c) returns (uint ret) {\n"
+					   "    if (First(2).fun() == true) return 1;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
+{
+	char const* text = "contract First {\n"
+					   "  function fun() returns (bool ret) {\n"
+					   "    return 1 & 2 == 8 & 9 && 1 ^ 2 < 4 | 6;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

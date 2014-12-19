@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file trie.cpp
+/** @file genesis.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  * Trie test functions.
@@ -35,6 +35,15 @@ using namespace dev::eth;
 namespace js = json_spirit;
 
 BOOST_AUTO_TEST_SUITE(BasicTests)
+
+BOOST_AUTO_TEST_CASE(emptySHA3Types)
+{
+	h256 emptyListSHA3(fromHex("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
+	BOOST_REQUIRE_EQUAL(emptyListSHA3, EmptyListSHA3);
+	
+	h256 emptySHA3(fromHex("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
+	BOOST_REQUIRE_EQUAL(emptySHA3, EmptySHA3);
+}
 
 BOOST_AUTO_TEST_CASE(genesis_tests)
 {

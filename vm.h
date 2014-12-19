@@ -26,7 +26,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <cstdint>
 #include <boost/test/unit_test.hpp>
-#include "JsonSpiritHeaders.h"
+#include <json_spirit/json_spirit.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
 #include <libevmcore/Instruction.h>
@@ -55,8 +55,8 @@ public:
 	virtual u256 txCount(Address _a) override { return std::get<1>(addresses[_a]); }
 	virtual void suicide(Address _a) override { std::get<0>(addresses[_a]) += std::get<0>(addresses[myAddress]); addresses.erase(myAddress); }
 	virtual bytes const& codeAt(Address _a) override { return std::get<3>(addresses[_a]); }
-	virtual h160 create(u256 _endowment, u256* _gas, bytesConstRef _init, eth::OnOpFunc const&) override;
-	virtual bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256* _gas, bytesRef _out, eth::OnOpFunc const&, Address, Address) override;
+	virtual h160 create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::OnOpFunc const&) override;
+	virtual bool call(Address _receiveAddress, u256 _value, bytesConstRef _data, u256& io_gas, bytesRef _out, eth::OnOpFunc const&, Address, Address) override;
 	void setTransaction(Address _caller, u256 _value, u256 _gasPrice, bytes const& _data);
 	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage, bytes const& _code);
 	void set(Address _a, u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage, bytes const& _code);

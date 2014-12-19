@@ -21,9 +21,9 @@
  */
 
 #include <boost/test/unit_test.hpp>
+#include <jsoncpp/json/json.h>
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/Exceptions.h>
-#include <jsonrpc/json/json.h>
 #include <libdevcore/Exceptions.h>
 
 namespace dev
@@ -376,6 +376,35 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 	"  /// @param second Documentation for the second parameter\n"
 	"  /// @return The result of the multiplication\n"
 	"  /// and cookies with nutella\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul\":{ \n"
+	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
+	"        \"params\": {\n"
+	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
+	"            \"second\": \"Documentation for the second parameter\"\n"
+	"        },\n"
+	"        \"return\": \"The result of the multiplication and cookies with nutella\"\n"
+	"    }\n"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_multiline_comment)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /**\n"
+	"   * @dev Multiplies a number by 7 and adds second parameter\n"
+	"   * @param a Documentation for the first parameter starts here.\n"
+	"   * Since it's a really complicated parameter we need 2 lines\n"
+	"   * @param second Documentation for the second parameter\n"
+	"   * @return The result of the multiplication\n"
+	"   * and cookies with nutella\n"
+	"   */"
 	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
 	"}\n";
 

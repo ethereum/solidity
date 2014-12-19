@@ -49,6 +49,23 @@ ASTPointer<ContractDefinition> parseText(std::string const& _source)
 	BOOST_FAIL("No contract found in source.");
 	return ASTPointer<ContractDefinition>();
 }
+
+ASTPointer<ContractDefinition> parseTextExplainError(std::string const& _source)
+{
+	try
+	{
+		return parseText(_source);
+	}
+	catch (Exception const& exception)
+	{
+		// LTODO: Print the error in a kind of a better way?
+		// In absence of CompilerStack we can't use SourceReferenceFormatter
+		cout << "Exception while parsing: " << diagnostic_information(exception);
+		// rethrow to signal test failure
+		throw exception;
+	}
+}
+
 }
 
 
@@ -111,7 +128,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is a test function");
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), "This is a test function");
 }
 
 BOOST_AUTO_TEST_CASE(function_normal_comments)
@@ -149,17 +166,17 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	auto functions = contract->getDefinedFunctions();
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 1");
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), "This is test function 1");
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(1));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 2");
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), "This is test function 2");
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(2));
 	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
 						"Should not have gotten natspec comment for functionName3()");
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(3));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), " This is test function 4");
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), "This is test function 4");
 }
 
 BOOST_AUTO_TEST_CASE(multiline_function_documentation)
@@ -177,7 +194,7 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
 	BOOST_CHECK_EQUAL(*function->getDocumentation(),
-					  " This is a test function\n"
+					  "This is a test function\n"
 					  " and it has 2 lines");
 }
 
@@ -203,11 +220,11 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 	auto functions = contract->getDefinedFunctions();
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), " fun1 description");
+	BOOST_CHECK_EQUAL(*function->getDocumentation(), "fun1 description");
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(1));
 	BOOST_CHECK_EQUAL(*function->getDocumentation(),
-					  " This is a test function\n"
+					  "This is a test function\n"
 					  " and it has 2 lines");
 }
 
@@ -355,6 +372,53 @@ BOOST_AUTO_TEST_CASE(while_loop)
 					   "  }\n"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_vardef_initexpr)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    for (uint256 i = 0; i < 10; i++)\n"
+					   "    { uint256 x = i; break; continue; }\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_simple_initexpr)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    uint256 i =0;\n"
+					   "    for (i = 0; i < 10; i++)\n"
+					   "    { uint256 x = i; break; continue; }\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_simple_noexpr)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    uint256 i =0;\n"
+					   "    for (;;)\n"
+					   "    { uint256 x = i; break; continue; }\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(for_loop_single_stmt_body)
+{
+	char const* text = "contract test {\n"
+					   "  function fun(uint256 a) {\n"
+					   "    uint256 i =0;\n"
+					   "    for (i = 0; i < 10; i++)\n"
+					   "        continue;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
 
 BOOST_AUTO_TEST_CASE(if_statement)

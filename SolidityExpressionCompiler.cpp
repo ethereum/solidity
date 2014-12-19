@@ -76,8 +76,11 @@ Declaration const& resolveDeclaration(vector<string> const& _namespacedName,
 											  NameAndTypeResolver const& _resolver)
 {
 	Declaration const* declaration = nullptr;
+	// bracers are required, cause msvc couldnt handle this macro in for statement
 	for (string const& namePart: _namespacedName)
+	{
 		BOOST_REQUIRE(declaration = _resolver.resolveName(namePart, declaration));
+	}
 	BOOST_REQUIRE(declaration);
 	return *declaration;
 }
@@ -94,6 +97,15 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
+		}
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
+		}
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
 			FirstExpressionExtractor extractor(*contract);
 			BOOST_REQUIRE(extractor.getExpression() != nullptr);
 
