@@ -422,29 +422,29 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				test.importCallCreates(o["callcreates"].get_array());
 				test.sub.logs = importLog(o["logs"].get_array());
 
-			checkOutput(output, o);
+				checkOutput(output, o);
 
-			BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
-			
-			auto& expectedAddrs = test.addresses;
-			auto& resultAddrs = fev.addresses;
-			for (auto&& expectedPair : expectedAddrs)
-			{
-				auto& expectedAddr = expectedPair.first;
-				auto resultAddrIt = resultAddrs.find(expectedAddr);
-				if (resultAddrIt == resultAddrs.end())
-					BOOST_ERROR("Missing expected address " << expectedAddr);
-				else
+				BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
+
+				auto& expectedAddrs = test.addresses;
+				auto& resultAddrs = fev.addresses;
+				for (auto&& expectedPair : expectedAddrs)
 				{
-					auto& expectedState = expectedPair.second;
-					auto& resultState = resultAddrIt->second;
-					BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
-					BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
-					BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
+					auto& expectedAddr = expectedPair.first;
+					auto resultAddrIt = resultAddrs.find(expectedAddr);
+					if (resultAddrIt == resultAddrs.end())
+						BOOST_ERROR("Missing expected address " << expectedAddr);
+					else
+					{
+						auto& expectedState = expectedPair.second;
+						auto& resultState = resultAddrIt->second;
+						BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
+						BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
+						BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
 
-					checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
+						checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
+					}
 				}
-			}
 
 				checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
 				BOOST_CHECK(test.callcreates == fev.callcreates);
