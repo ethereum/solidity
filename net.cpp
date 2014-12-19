@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(test_txrx_one)
 	d.to = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300);
 	d.data = bytes({65,65,65,65});
 	
-	TestA a; a.start(); a.m_socket->connect();
+	TestA a; a.m_socket->connect(); a.start();
 	a.m_socket->send(d);
 	sleep(1);
 	BOOST_REQUIRE_EQUAL(true, a.success);
