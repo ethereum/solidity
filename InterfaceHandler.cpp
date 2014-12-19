@@ -56,6 +56,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		};
 
 		method["name"] = f->getName();
+		method["const"] = f->isDeclaredConst();
 		method["inputs"] = populateParameters(f->getParameters());
 		method["outputs"] = populateParameters(f->getReturnParameters());
 		methods.append(method);
