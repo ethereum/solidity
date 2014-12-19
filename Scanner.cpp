@@ -455,7 +455,7 @@ void Scanner::scanToken()
 				token = Token::ADD;
 			break;
 		case '-':
-			// - -- -= Number
+			// - -- -=
 			advance();
 			if (m_char == '-')
 			{
@@ -464,8 +464,6 @@ void Scanner::scanToken()
 			}
 			else if (m_char == '=')
 				token = selectToken(Token::ASSIGN_SUB);
-			else if (m_char == '.' || isDecimalDigit(m_char))
-				token = scanNumber('-');
 			else
 				token = Token::SUB;
 			break;
@@ -650,8 +648,7 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	}
 	else
 	{
-		if (_charSeen == '-')
-			addLiteralChar('-');
+		solAssert(_charSeen == 0, "");
 		// if the first character is '0' we must check for octals and hex
 		if (m_char == '0')
 		{

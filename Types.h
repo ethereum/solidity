@@ -75,7 +75,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		INTEGER, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE, MAGIC
+		INTEGER, INTEGER_CONSTANT, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE, MAGIC
 	};
 
 	///@{
@@ -135,7 +135,7 @@ public:
 	TypePointer getMemberType(std::string const& _name) const { return getMembers().getMemberType(_name); }
 
 	virtual std::string toString() const = 0;
-	virtual u256 literalValue(Literal const&) const
+	virtual u256 literalValue(Literal const*) const
 	{
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Literal value requested "
 																		  "for type without literals."));
@@ -158,10 +158,6 @@ public:
 	};
 	virtual Category getCategory() const override { return Category::INTEGER; }
 
-	/// @returns the smallest integer type for the given literal or an empty pointer
-	/// if no type fits.
-	static std::shared_ptr<IntegerType const> smallestTypeForLiteral(std::string const& _literal);
-
 	explicit IntegerType(int _bits, Modifier _modifier = Modifier::UNSIGNED);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -177,7 +173,6 @@ public:
 	virtual MemberList const& getMembers() const { return isAddress() ? AddressMemberList : EmptyMemberList; }
 
 	virtual std::string toString() const override;
-	virtual u256 literalValue(Literal const& _literal) const override;
 
 	int getNumBits() const { return m_bits; }
 	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
@@ -188,6 +183,40 @@ private:
 	int m_bits;
 	Modifier m_modifier;
 	static const MemberList AddressMemberList;
+};
+
+/**
+ * Integer constants either literals or computed. Example expressions: 2, 2+10, ~10.
+ * There is one distinct type per value.
+ */
+class IntegerConstantType: public Type
+{
+public:
+	virtual Category getCategory() const override { return Category::INTEGER_CONSTANT; }
+
+	static std::shared_ptr<IntegerConstantType const> fromLiteral(std::string const& _literal);
+
+	explicit IntegerConstantType(bigint _value): m_value(_value) {}
+
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
+
+	virtual bool operator==(Type const& _other) const override;
+
+	virtual bool canBeStored() const override { return false; }
+	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned getSizeOnStack() const override { return 1; }
+
+	virtual std::string toString() const override;
+	virtual u256 literalValue(Literal const* _literal) const override;
+
+	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
+	std::shared_ptr<IntegerType const> getIntegerType() const;
+
+private:
+	bigint m_value;
 };
 
 /**
@@ -211,7 +240,7 @@ public:
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString() const override { return "string" + dev::toString(m_bytes); }
-	virtual u256 literalValue(Literal const& _literal) const override;
+	virtual u256 literalValue(Literal const* _literal) const override;
 
 	int getNumBytes() const { return m_bytes; }
 
@@ -238,7 +267,7 @@ public:
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString() const override { return "bool"; }
-	virtual u256 literalValue(Literal const& _literal) const override;
+	virtual u256 literalValue(Literal const* _literal) const override;
 };
 
 /**
