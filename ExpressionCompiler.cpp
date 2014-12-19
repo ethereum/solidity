@@ -71,12 +71,20 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	return false;
 }
 
-void ExpressionCompiler::endVisit(UnaryOperation const& _unaryOperation)
+bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	//@todo type checking and creating code for an operator should be in the same place:
 	// the operator should know how to convert itself and to which types it applies, so
 	// put this code together with "Type::acceptsBinary/UnaryOperator" into a class that
 	// represents the operator
+	if (_unaryOperation.getType()->getCategory() == Type::Category::INTEGER_CONSTANT)
+	{
+		m_context << _unaryOperation.getType()->literalValue(nullptr);
+		return false;
+	}
+
+	_unaryOperation.getSubExpression().accept(*this);
+
 	switch (_unaryOperation.getOperator())
 	{
 	case Token::NOT: // !
@@ -128,6 +136,7 @@ void ExpressionCompiler::endVisit(UnaryOperation const& _unaryOperation)
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid unary operator: " +
 																		 string(Token::toString(_unaryOperation.getOperator()))));
 	}
+	return false;
 }
 
 bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
@@ -139,17 +148,19 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 	if (op == Token::AND || op == Token::OR) // special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
+	else if (commonType.getCategory() == Type::Category::INTEGER_CONSTANT)
+		m_context << commonType.literalValue(nullptr);
 	else
 	{
-		bool cleanupNeeded = false;
-		if (commonType.getCategory() == Type::Category::INTEGER)
-			if (Token::isCompareOp(op) || op == Token::DIV || op == Token::MOD)
-				cleanupNeeded = true;
+		bool cleanupNeeded = commonType.getCategory() == Type::Category::INTEGER &&
+								(Token::isCompareOp(op) || op == Token::DIV || op == Token::MOD);
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
-		//@todo this has to be extended for literal expressions
-		bool swap = (m_optimize && Token::isCommutativeOp(op) && dynamic_cast<Literal const*>(&rightExpression)
-					 && !dynamic_cast<Literal const*>(&leftExpression));
+		auto isLiteral = [](Expression const& _e)
+		{
+			return dynamic_cast<Literal const*>(&_e) || _e.getType()->getCategory() == Type::Category::INTEGER_CONSTANT;
+		};
+		bool swap = m_optimize && Token::isCommutativeOp(op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
 		if (swap)
 		{
 			leftExpression.accept(*this);
@@ -478,10 +489,10 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	switch (_literal.getType()->getCategory())
 	{
-	case Type::Category::INTEGER:
+	case Type::Category::INTEGER_CONSTANT:
 	case Type::Category::BOOL:
 	case Type::Category::STRING:
-		m_context << _literal.getType()->literalValue(_literal);
+		m_context << _literal.getType()->literalValue(&_literal);
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
@@ -617,9 +628,16 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 
 	if (_typeOnStack == _targetType && !_cleanupNeeded)
 		return;
-	if (_typeOnStack.getCategory() == Type::Category::INTEGER)
+	Type::Category stackTypeCategory = _typeOnStack.getCategory();
+	Type::Category targetTypeCategory = _targetType.getCategory();
+	if (stackTypeCategory == Type::Category::INTEGER)
+	{
+		solAssert(targetTypeCategory == Type::Category::INTEGER || targetTypeCategory == Type::Category::CONTRACT, "");
 		appendHighBitsCleanup(dynamic_cast<IntegerType const&>(_typeOnStack));
-	else if (_typeOnStack.getCategory() == Type::Category::STRING)
+	}
+	else if (stackTypeCategory == Type::Category::INTEGER_CONSTANT)
+		solAssert(targetTypeCategory == Type::Category::INTEGER || targetTypeCategory == Type::Category::CONTRACT, "");
+	else if (stackTypeCategory == Type::Category::STRING)
 	{
 		// nothing to do, strings are high-order-bit-aligned
 		//@todo clear lower-order bytes if we allow explicit conversion to shorter strings

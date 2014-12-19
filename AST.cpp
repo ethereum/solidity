@@ -174,7 +174,15 @@ void VariableDefinition::checkTypeRequirements()
 		{
 			// no type declared and no previous assignment, infer the type
 			m_value->checkTypeRequirements();
-			m_variable->setType(m_value->getType());
+			TypePointer type = m_value->getType();
+			if (type->getCategory() == Type::Category::INTEGER_CONSTANT)
+			{
+				auto intType = dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType();
+				if (!intType)
+					BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString()));
+				type = intType;
+			}
+			m_variable->setType(type);
 		}
 	}
 }
@@ -196,13 +204,19 @@ void Assignment::checkTypeRequirements()
 		TypePointer resultType = m_type->binaryOperatorResult(Token::AssignmentToBinaryOp(m_assigmentOperator),
 															  m_rightHandSide->getType());
 		if (!resultType || *resultType != *m_type)
-			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
+			BOOST_THROW_EXCEPTION(createTypeError("Operator " + string(Token::toString(m_assigmentOperator)) +
+												  " not compatible with types " +
+												  m_type->toString() + " and " +
+												  m_rightHandSide->getType()->toString()));
 	}
 }
 
 void ExpressionStatement::checkTypeRequirements()
 {
 	m_expression->checkTypeRequirements();
+	if (m_expression->getType()->getCategory() == Type::Category::INTEGER_CONSTANT)
+		if (!dynamic_pointer_cast<IntegerConstantType const>(m_expression->getType())->getIntegerType())
+			BOOST_THROW_EXCEPTION(m_expression->createTypeError("Invalid integer constant."));
 }
 
 void Expression::expectType(Type const& _expectedType)
@@ -388,7 +402,7 @@ void Literal::checkTypeRequirements()
 {
 	m_type = Type::forLiteral(*this);
 	if (!m_type)
-		BOOST_THROW_EXCEPTION(createTypeError("Literal value too large."));
+		BOOST_THROW_EXCEPTION(createTypeError("Invalid literal value."));
 }
 
 }
