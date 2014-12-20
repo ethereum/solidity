@@ -504,6 +504,41 @@ BOOST_AUTO_TEST_CASE(state_smoke_test)
 	BOOST_CHECK(callContractFunction(0, bytes(1, 0x00)) == toBigEndian(u256(0x3)));
 }
 
+BOOST_AUTO_TEST_CASE(compound_assign)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  uint value1;\n"
+							 "  uint value2;\n"
+							 "  function f(uint x, uint y) returns (uint w) {\n"
+							 "    uint value3 = y;"
+							 "    value1 += x;\n"
+							 "    value3 *= x;"
+							 "    value2 *= value3 + value1;\n"
+							 "    return value2 += 7;"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+
+	u256 value1;
+	u256 value2;
+	auto f = [&](u256 const& _x, u256 const& _y) -> u256
+	{
+		u256 value3 = _y;
+		value1 += _x;
+		value3 *= _x;
+		value2 *= value3 + value1;
+		return value2 += 7;
+	};
+	testSolidityAgainstCpp(0, f, u256(0), u256(6));
+	testSolidityAgainstCpp(0, f, u256(1), u256(3));
+	testSolidityAgainstCpp(0, f, u256(2), u256(25));
+	testSolidityAgainstCpp(0, f, u256(3), u256(69));
+	testSolidityAgainstCpp(0, f, u256(4), u256(84));
+	testSolidityAgainstCpp(0, f, u256(5), u256(2));
+	testSolidityAgainstCpp(0, f, u256(6), u256(51));
+	testSolidityAgainstCpp(0, f, u256(7), u256(48));
+}
+
 BOOST_AUTO_TEST_CASE(simple_mapping)
 {
 	char const* sourceCode = "contract test {\n"
