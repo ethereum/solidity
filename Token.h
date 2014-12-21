@@ -142,7 +142,7 @@ namespace solidity
 	/* Keywords */                                                     \
 	K(BREAK, "break", 0)                                               \
 	K(CASE, "case", 0)                                                 \
-	K(CONST, "const", 0)                                               \
+	K(CONST, "constant", 0)                                            \
 	K(CONTINUE, "continue", 0)                                         \
 	K(CONTRACT, "contract", 0)                                         \
 	K(DEFAULT, "default", 0)                                           \
