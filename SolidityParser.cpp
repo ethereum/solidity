@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(empty_function)
 {
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
-					   "  function functionName(hash160 arg1, address addr) const\n"
+					   "  function functionName(hash160 arg1, address addr) constant\n"
 					   "    returns (int id)\n"
 					   "  { }\n"
 					   "}\n";

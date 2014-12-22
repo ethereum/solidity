@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 {
 	char const* sourceCode = "contract test {\n"
 	"  function foo(uint a, uint b) returns(uint d) { return a + b; }\n"
-	"  function boo(uint32 a) const returns(uint b) { return a * 4; }\n"
+	"  function boo(uint32 a) constant returns(uint b) { return a * 4; }\n"
 	"}\n";
 
 	char const* interface = R"([
