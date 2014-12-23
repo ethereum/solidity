@@ -30,6 +30,8 @@ using namespace dev::p2p;
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
+BOOST_AUTO_TEST_SUITE(p2p)
+
 /**
  * Only used for testing. Not useful beyond tests.
  */
@@ -37,7 +39,7 @@ class TestHost: public Worker
 {
 public:
 	TestHost(): Worker("test",0), m_io() {};
-	~TestHost() { m_io.stop(); stopWorking(); }
+	virtual ~TestHost() { m_io.stop(); stopWorking(); }
 	void start() { startWorking(); }
 	void doWork() { m_io.run(); }
 	
@@ -45,28 +47,62 @@ protected:
 	ba::io_service m_io;
 };
 
+struct TestNodeTable: public NodeTable
+{
+	void generateTestNodes(int _count = 10)
+	{
+		asserts(_count < 1000);
+		static uint16_t s_basePort = 30500;
+		
+		m_testNodes.clear();
+		for (auto i = 0; i < _count; i++)
+			m_testNodes.push_back(make_pair(KeyPair::create(),s_basePort++));
+	}
+	std::vector<std::pair<KeyPair,unsigned>> m_testNodes; // keypair and port
+
+	/// Constructor
+	using NodeTable::NodeTable;
+	
+	void setup()
+	{
+		/// Phase 1 test: populate with pings
+		/// Phase 2 test: pre-populate *expected* ping-responses, send pings
+
+		bi::address ourIp = bi::address::from_string("127.0.0.1");
+		uint16_t ourPort = 30300;
+		bi::udp::endpoint ourEndpoint(ourIp, ourPort);
+		
+		generateTestNodes();
+		for (auto& n: m_testNodes)
+			ping(bi::udp::endpoint(ourIp, n.second));
+		
+		// wait 1ms between each send
+		// send PingNode for each s_bootstrapNodes
+		// wait until nodecount is s_testNodes.count()
+		
+	}
+	
+	void reset()
+	{
+		Guard l(x_state);
+		for (auto& n: m_state) n.nodes.clear();
+	}
+};
+
 /**
  * Only used for testing. Not useful beyond tests.
  */
-class TestNodeHost: public TestHost
+struct TestNodeTableHost: public TestHost
 {
-public:
-	TestNodeHost(): m_nodes(m_io) {};
-	~TestNodeHost() { m_io.stop(); stopWorking(); }
-	void start() { startWorking(); }
-	void doWork() { m_io.run(); }
-
-	NodeTable m_nodes;
+	TestNodeTableHost(): nodeTable(new TestNodeTable(m_io)) {};
+	shared_ptr<TestNodeTable> nodeTable;
 };
 
 class TestUDPSocket: UDPSocketEvents, public TestHost
 {
 public:
 	TestUDPSocket(): m_socket(new UDPSocket<TestUDPSocket, 1024>(m_io, *this, 30300)) {}
-	~TestUDPSocket() { m_io.stop(); stopWorking(); }
-	void start() { startWorking(); }
-	void doWork() { m_io.run(); }
-	
+
 	void onDisconnected(UDPSocketFace*) {};
 	void onReceived(UDPSocketFace*, bi::udp::endpoint const&, bytesConstRef _packet) { if (_packet.toString() == "AAAA") success = true; }
 
@@ -75,12 +111,13 @@ public:
 	bool success = false;
 };
 
-BOOST_AUTO_TEST_SUITE(p2p)
-
 BOOST_AUTO_TEST_CASE(kademlia)
 {
-	TestNodeHost nodeHost;
-	
+//	TestNodeTableHost node;
+//	node.start();
+//	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
+//	node.nodeTable->setup();
+//	sleep(1);
 }
 
 BOOST_AUTO_TEST_CASE(test_txrx_one)
