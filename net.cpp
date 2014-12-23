@@ -49,21 +49,10 @@ protected:
 
 struct TestNodeTable: public NodeTable
 {
-	void generateTestNodes(int _count = 10)
-	{
-		asserts(_count < 1000);
-		static uint16_t s_basePort = 30500;
-		
-		m_testNodes.clear();
-		for (auto i = 0; i < _count; i++)
-			m_testNodes.push_back(make_pair(KeyPair::create(),s_basePort++));
-	}
-	std::vector<std::pair<KeyPair,unsigned>> m_testNodes; // keypair and port
-
 	/// Constructor
 	using NodeTable::NodeTable;
 	
-	void setup()
+	void setup(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
 	{
 		/// Phase 1 test: populate with pings
 		/// Phase 2 test: pre-populate *expected* ping-responses, send pings
@@ -72,8 +61,7 @@ struct TestNodeTable: public NodeTable
 		uint16_t ourPort = 30300;
 		bi::udp::endpoint ourEndpoint(ourIp, ourPort);
 		
-		generateTestNodes();
-		for (auto& n: m_testNodes)
+		for (auto& n: _testNodes)
 			ping(bi::udp::endpoint(ourIp, n.second));
 		
 		// wait 1ms between each send
@@ -94,8 +82,32 @@ struct TestNodeTable: public NodeTable
  */
 struct TestNodeTableHost: public TestHost
 {
-	TestNodeTableHost(): nodeTable(new TestNodeTable(m_io)) {};
+	TestNodeTableHost(): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias)) {};
+	
+	void generateTestNodes(int _count = 10)
+	{
+		asserts(_count < 1000);
+		static uint16_t s_basePort = 30500;
+		
+		m_testNodes.clear();
+		for (auto i = 0; i < _count; i++)
+		{
+			KeyPair k = KeyPair::create();
+			m_testNodes.push_back(make_pair(k,s_basePort+i));
+			testNodes.push_back(make_shared<TestNodeTable>(m_io,k,s_basePort+i));
+		}
+	}
+	std::vector<std::pair<KeyPair,unsigned>> m_testNodes; // keypair and port
+
+	void setup()
+	{
+		generateTestNodes();
+		nodeTable->setup(m_testNodes);
+	}
+	
+	KeyPair m_alias;
 	shared_ptr<TestNodeTable> nodeTable;
+	std::vector<shared_ptr<TestNodeTable>> testNodes;
 };
 
 class TestUDPSocket: UDPSocketEvents, public TestHost
@@ -113,11 +125,11 @@ public:
 
 BOOST_AUTO_TEST_CASE(kademlia)
 {
-//	TestNodeTableHost node;
-//	node.start();
-//	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
-//	node.nodeTable->setup();
-//	sleep(1);
+	TestNodeTableHost node;
+	node.start();
+	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
+	node.setup();
+	sleep(1);
 }
 
 BOOST_AUTO_TEST_CASE(test_txrx_one)
