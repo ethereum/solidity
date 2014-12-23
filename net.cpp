@@ -54,7 +54,6 @@ struct TestNodeTable: public NodeTable
 	
 	void setup(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
 	{
-		/// Phase 1 test: populate with pings
 		/// Phase 2 test: pre-populate *expected* ping-responses, send pings
 
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
@@ -63,11 +62,6 @@ struct TestNodeTable: public NodeTable
 		
 		for (auto& n: _testNodes)
 			ping(bi::udp::endpoint(ourIp, n.second));
-		
-		// wait 1ms between each send
-		// send PingNode for each s_bootstrapNodes
-		// wait until nodecount is s_testNodes.count()
-		
 	}
 	
 	void reset()
