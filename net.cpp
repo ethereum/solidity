@@ -42,6 +42,7 @@ public:
 	virtual ~TestHost() { m_io.stop(); stopWorking(); }
 	void start() { startWorking(); }
 	void doWork() { m_io.run(); }
+	void doneWorking() { m_io.reset(); m_io.poll(); m_io.reset(); }
 	
 protected:
 	ba::io_service m_io;
@@ -52,16 +53,18 @@ struct TestNodeTable: public NodeTable
 	/// Constructor
 	using NodeTable::NodeTable;
 	
-	void setup(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
+	void pingAll(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
 	{
-		/// Phase 2 test: pre-populate *expected* ping-responses, send pings
-
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
-		uint16_t ourPort = 30300;
-		bi::udp::endpoint ourEndpoint(ourIp, ourPort);
-		
 		for (auto& n: _testNodes)
 			ping(bi::udp::endpoint(ourIp, n.second));
+	}
+	
+	void populate(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
+	{
+		bi::address ourIp = bi::address::from_string("127.0.0.1");
+		for (auto& n: _testNodes)
+			noteNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
 	}
 	
 	void reset()
@@ -77,8 +80,9 @@ struct TestNodeTable: public NodeTable
 struct TestNodeTableHost: public TestHost
 {
 	TestNodeTableHost(): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias)) {};
+	~TestNodeTableHost() { m_io.stop(); stopWorking(); }
 	
-	void generateTestNodes(int _count = 10)
+	void generateTestNodes(int _count = 30)
 	{
 		asserts(_count < 1000);
 		static uint16_t s_basePort = 30500;
@@ -96,7 +100,16 @@ struct TestNodeTableHost: public TestHost
 	void setup()
 	{
 		generateTestNodes();
-		nodeTable->setup(m_testNodes);
+	}
+	
+	void pingAll()
+	{
+		nodeTable->pingAll(m_testNodes);
+	}
+	
+	void populate()
+	{
+		nodeTable->populate(m_testNodes);
 	}
 	
 	KeyPair m_alias;
@@ -123,7 +136,10 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.start();
 	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
 	node.setup();
-	sleep(1);
+	node.pingAll();
+	this_thread::sleep_for(chrono::milliseconds(500));
+	
+	cout << "NodeTable:\n" << *node.nodeTable.get() << endl;
 }
 
 BOOST_AUTO_TEST_CASE(test_txrx_one)
