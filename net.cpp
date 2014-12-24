@@ -57,14 +57,23 @@ struct TestNodeTable: public NodeTable
 	{
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
 		for (auto& n: _testNodes)
+		{
 			ping(bi::udp::endpoint(ourIp, n.second));
+			this_thread::sleep_for(chrono::milliseconds(5));
+		}
 	}
 	
-	void populate(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
+	void populate(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes, size_t _count = 0)
 	{
+		if (!_count)
+			_count = _testNodes.size();
+
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
 		for (auto& n: _testNodes)
-			noteNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
+			if (_count--)
+				noteNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
+			else
+				break;
 	}
 	
 	void reset()
@@ -82,7 +91,7 @@ struct TestNodeTableHost: public TestHost
 	TestNodeTableHost(): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias)) {};
 	~TestNodeTableHost() { m_io.stop(); stopWorking(); }
 	
-	void generateTestNodes(int _count = 30)
+	void generateTestNodes(int _count = 16)
 	{
 		asserts(_count < 1000);
 		static uint16_t s_basePort = 30500;
@@ -105,11 +114,13 @@ struct TestNodeTableHost: public TestHost
 	void pingAll()
 	{
 		nodeTable->pingAll(m_testNodes);
+//		for (auto& n: testNodes)
+//			n->pingAll(m_testNodes);
 	}
 	
-	void populate()
+	void populate(size_t _count = 0)
 	{
-		nodeTable->populate(m_testNodes);
+		nodeTable->populate(m_testNodes, _count);
 	}
 	
 	KeyPair m_alias;
@@ -130,6 +141,13 @@ public:
 	bool success = false;
 };
 
+BOOST_AUTO_TEST_CASE(test_findnode_neighbors)
+{
+	// Executing findNode should result in a list which is serialized
+	// into Neighbors packet. Neighbors packet should then be deserialized
+	// into the same list of nearest nodes.
+}
+
 BOOST_AUTO_TEST_CASE(kademlia)
 {
 	TestNodeTableHost node;
@@ -137,12 +155,23 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
 	node.setup();
 	node.pingAll();
+	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
+	this_thread::sleep_for(chrono::milliseconds(10000));
+	
+	node.nodeTable->reset();
+	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
+
+	node.populate(2);
+	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	this_thread::sleep_for(chrono::milliseconds(500));
 	
-	cout << "NodeTable:\n" << *node.nodeTable.get() << endl;
+//	node.nodeTable->join();
+//	this_thread::sleep_for(chrono::milliseconds(2000));
+//	
+//	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 }
 
-BOOST_AUTO_TEST_CASE(test_txrx_one)
+BOOST_AUTO_TEST_CASE(test_udp_once)
 {
 	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300), bytes({65,65,65,65}));
 	TestUDPSocket a; a.m_socket->connect(); a.start();
