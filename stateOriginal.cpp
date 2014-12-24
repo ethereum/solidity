@@ -69,7 +69,7 @@ int stateTest()
 		assert(t.sender() == myMiner.address());
 		tx = t.rlp();
 	}
-	s.execute(tx);
+	s.execute(bc, tx);
 
 	cout << s;
 
