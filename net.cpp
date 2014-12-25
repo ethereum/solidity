@@ -53,7 +53,23 @@ struct TestNodeTable: public NodeTable
 	/// Constructor
 	using NodeTable::NodeTable;
 	
-	void pingAll(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
+	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(int _count = 16)
+	{
+		std::vector<std::pair<KeyPair,unsigned>> ret;
+		asserts(_count < 1000);
+		static uint16_t s_basePort = 30500;
+		
+		ret.clear();
+		for (auto i = 0; i < _count; i++)
+		{
+			KeyPair k = KeyPair::create();
+			ret.push_back(make_pair(k,s_basePort+i));
+		}
+		
+		return std::move(ret);
+	}
+	
+	void pingTestNodes(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
 	{
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
 		for (auto& n: _testNodes)
@@ -63,7 +79,7 @@ struct TestNodeTable: public NodeTable
 		}
 	}
 	
-	void populate(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes, size_t _count = 0)
+	void populateTestNodes(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes, size_t _count = 0)
 	{
 		if (!_count)
 			_count = _testNodes.size();
@@ -88,44 +104,19 @@ struct TestNodeTable: public NodeTable
  */
 struct TestNodeTableHost: public TestHost
 {
-	TestNodeTableHost(): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias)) {};
+	TestNodeTableHost(): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias)), testNodes(TestNodeTable::createTestNodes()) {};
 	~TestNodeTableHost() { m_io.stop(); stopWorking(); }
-	
-	void generateTestNodes(int _count = 16)
-	{
-		asserts(_count < 1000);
-		static uint16_t s_basePort = 30500;
-		
-		m_testNodes.clear();
-		for (auto i = 0; i < _count; i++)
-		{
-			KeyPair k = KeyPair::create();
-			m_testNodes.push_back(make_pair(k,s_basePort+i));
-			testNodes.push_back(make_shared<TestNodeTable>(m_io,k,s_basePort+i));
-		}
-	}
-	std::vector<std::pair<KeyPair,unsigned>> m_testNodes; // keypair and port
 
-	void setup()
-	{
-		generateTestNodes();
-	}
+	void setup() { for (auto n: testNodes) nodeTables.push_back(make_shared<TestNodeTable>(m_io,n.first,n.second)); }
 	
-	void pingAll()
-	{
-		nodeTable->pingAll(m_testNodes);
-//		for (auto& n: testNodes)
-//			n->pingAll(m_testNodes);
-	}
+	void pingAll() { for (auto& t: nodeTables) t->pingTestNodes(testNodes); }
 	
-	void populate(size_t _count = 0)
-	{
-		nodeTable->populate(m_testNodes, _count);
-	}
+	void populate(size_t _count = 0) { nodeTable->populateTestNodes(testNodes, _count); }
 	
 	KeyPair m_alias;
 	shared_ptr<TestNodeTable> nodeTable;
-	std::vector<shared_ptr<TestNodeTable>> testNodes;
+	std::vector<std::pair<KeyPair,unsigned>> testNodes; // keypair and port
+	std::vector<shared_ptr<TestNodeTable>> nodeTables;
 };
 
 class TestUDPSocket: UDPSocketEvents, public TestHost
@@ -141,6 +132,36 @@ public:
 	bool success = false;
 };
 
+BOOST_AUTO_TEST_CASE(test_neighbors_packet)
+{
+	KeyPair k = KeyPair::create();
+	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes());
+	bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
+	
+	Neighbors out(to);
+	for (auto n: testNodes)
+	{
+		Neighbors::Node node;
+		node.ipAddress = boost::asio::ip::address::from_string("127.0.0.1").to_string();
+		node.port = n.second;
+		node.node = n.first.pub();
+		out.nodes.push_back(node);
+	}
+	out.sign(k.sec());
+
+	bytesConstRef packet(out.data.data(), out.data.size());
+	bytesConstRef rlpBytes(packet.cropped(97, packet.size() - 97));
+	Neighbors in = Neighbors::fromBytesConstRef(to, rlpBytes);
+	int count = 0;
+	for (auto n: in.nodes)
+	{
+		BOOST_REQUIRE_EQUAL(testNodes[count].second, n.port);
+		BOOST_REQUIRE_EQUAL(testNodes[count].first.pub(), n.node);
+		BOOST_REQUIRE_EQUAL(sha3(testNodes[count].first.pub()), sha3(n.node));
+		count++;
+	}
+}
+
 BOOST_AUTO_TEST_CASE(test_findnode_neighbors)
 {
 	// Executing findNode should result in a list which is serialized
@@ -154,21 +175,23 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.start();
 	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
 	node.setup();
-	node.pingAll();
+	node.populate();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-	this_thread::sleep_for(chrono::milliseconds(10000));
+	
+	node.pingAll();
+	this_thread::sleep_for(chrono::milliseconds(4000));
+	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
 	node.nodeTable->reset();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 
 	node.populate(2);
-	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	this_thread::sleep_for(chrono::milliseconds(500));
+	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
-//	node.nodeTable->join();
-//	this_thread::sleep_for(chrono::milliseconds(2000));
-//	
-//	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
+	node.nodeTable->join();
+	this_thread::sleep_for(chrono::milliseconds(2000));
+	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 }
 
 BOOST_AUTO_TEST_CASE(test_udp_once)
