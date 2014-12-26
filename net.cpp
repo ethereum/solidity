@@ -53,14 +53,14 @@ struct TestNodeTable: public NodeTable
 	/// Constructor
 	using NodeTable::NodeTable;
 	
-	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(int _count = 16)
+	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(unsigned _count)
 	{
 		std::vector<std::pair<KeyPair,unsigned>> ret;
 		asserts(_count < 1000);
 		static uint16_t s_basePort = 30500;
 		
 		ret.clear();
-		for (auto i = 0; i < _count; i++)
+		for (unsigned i = 0; i < _count; i++)
 		{
 			KeyPair k = KeyPair::create();
 			ret.push_back(make_pair(k,s_basePort+i));
@@ -75,7 +75,7 @@ struct TestNodeTable: public NodeTable
 		for (auto& n: _testNodes)
 		{
 			ping(bi::udp::endpoint(ourIp, n.second));
-			this_thread::sleep_for(chrono::milliseconds(5));
+			this_thread::sleep_for(chrono::milliseconds(2));
 		}
 	}
 	
@@ -104,7 +104,7 @@ struct TestNodeTable: public NodeTable
  */
 struct TestNodeTableHost: public TestHost
 {
-	TestNodeTableHost(): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias)), testNodes(TestNodeTable::createTestNodes()) {};
+	TestNodeTableHost(unsigned _count = 8): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias)), testNodes(TestNodeTable::createTestNodes(_count)) {};
 	~TestNodeTableHost() { m_io.stop(); stopWorking(); }
 
 	void setup() { for (auto n: testNodes) nodeTables.push_back(make_shared<TestNodeTable>(m_io,n.first,n.second)); }
@@ -135,7 +135,7 @@ public:
 BOOST_AUTO_TEST_CASE(test_neighbors_packet)
 {
 	KeyPair k = KeyPair::create();
-	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes());
+	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
 	bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
 	
 	Neighbors out(to);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(test_findnode_neighbors)
 
 BOOST_AUTO_TEST_CASE(kademlia)
 {
-	TestNodeTableHost node;
+	TestNodeTableHost node(12);
 	node.start();
 	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
 	node.setup();
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
 	node.pingAll();
-	this_thread::sleep_for(chrono::milliseconds(4000));
+	this_thread::sleep_for(chrono::milliseconds(1000));
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
 	node.nodeTable->reset();
