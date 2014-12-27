@@ -19,6 +19,9 @@
  * @date 2014
  */
 
+// @debris disabled as tests fail with:
+// unknown location(0): fatal error in "jsonrpc_setMining": std::exception: Exception -32003 : Client connector error: : libcurl error: 28
+// /home/gav/Eth/cpp-ethereum/test/jsonrpc.cpp(169): last checkpoint
 #if ETH_JSONRPC && 0
 
 #include <boost/test/unit_test.hpp>
@@ -29,7 +32,7 @@
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/CorsHttpServer.h>
-#include <json/json.h>
+//#include <json/json.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <set>

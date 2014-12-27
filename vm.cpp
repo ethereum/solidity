@@ -20,6 +20,7 @@
  * vm test functions.
  */
 
+#include <chrono>
 #include <boost/filesystem.hpp>
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
@@ -308,6 +309,8 @@ namespace dev { namespace test {
 
 void doVMTests(json_spirit::mValue& v, bool _fillin)
 {
+	processCommandLineOptions();
+
 	for (auto& i: v.get_obj())
 	{
 		cnote << i.first;
@@ -317,7 +320,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre") > 0);
 		BOOST_REQUIRE(o.count("exec") > 0);
 
-		dev::test::FakeExtVM fev;
+		FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 
@@ -332,12 +335,12 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		bytes output;
-		auto vm = eth::VMFactory::create(fev.gas);
-
 		u256 gas;
 		bool vmExceptionOccured = false;
+		auto startTime = std::chrono::high_resolution_clock::now();
 		try
 		{
+			auto vm = eth::VMFactory::create(fev.gas);
 			output = vm->go(fev, fev.simpleTrace()).toBytes();
 			gas = vm->gas();
 		}
@@ -355,6 +358,21 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
 			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+		}
+
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto argc = boost::unit_test::framework::master_test_suite().argc;
+		auto argv = boost::unit_test::framework::master_test_suite().argv;
+		for (auto i = 0; i < argc; ++i)
+		{	       
+			if (std::string(argv[i]) == "--show-times")
+			{
+				auto testDuration = endTime - startTime;
+				cnote << "Execution time: "
+				      << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+				      << " ms";
+				break;
+			}
 		}
 
 		// delete null entries in storage for the sake of comparison

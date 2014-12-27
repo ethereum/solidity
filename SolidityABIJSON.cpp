@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	char const* interface = R"([
 	{
 		"name": "f",
-		"const": false,
+		"constant": false,
 		"inputs": [
 		{
 			"name": "a",
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	char const* interface = R"([
 	{
 		"name": "f",
-		"const": false,
+		"constant": false,
 		"inputs": [
 		{
 			"name": "a",
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	},
 	{
 		"name": "g",
-		"const": false,
+		"constant": false,
 		"inputs": [
 		{
 			"name": "b",
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 	char const* interface = R"([
 	{
 		"name": "f",
-		"const": false,
+		"constant": false,
 		"inputs": [
 		{
 			"name": "a",
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	char const* interface = R"([
 	{
 		"name": "c",
-		"const": false,
+		"constant": false,
 		"inputs": [
 		{
 			"name": "b",
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	},
 	{
 		"name": "f",
-		"const": false,
+		"constant": false,
 		"inputs": [
 		{
 			"name": "a",
@@ -232,13 +232,13 @@ BOOST_AUTO_TEST_CASE(const_function)
 {
 	char const* sourceCode = "contract test {\n"
 	"  function foo(uint a, uint b) returns(uint d) { return a + b; }\n"
-	"  function boo(uint32 a) const returns(uint b) { return a * 4; }\n"
+	"  function boo(uint32 a) constant returns(uint b) { return a * 4; }\n"
 	"}\n";
 
 	char const* interface = R"([
 	{
 		"name": "boo",
-		"const": true,
+		"constant": true,
 		"inputs": [{
 			"name": "a",
 			"type": "uint32"
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 	},
 	{
 		"name": "foo",
-		"const": false,
+		"constant": false,
 		"inputs": [
 		{
 			"name": "a",
