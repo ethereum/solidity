@@ -201,17 +201,17 @@ TypePointer IntegerType::binaryOperatorResultImpl(Token::Value _operator, TypePo
 	if (!commonType)
 		return TypePointer();
 
+	// All integer types can be compared
+	if (Token::isCompareOp(_operator))
+		return commonType;
+
+	// Nothing else can be done with addresses, but hashes can receive bit operators
 	if (commonType->isAddress())
-	{
-		if (!Token::isCompareOp(_operator))
-			return TypePointer();
-	}
-	else if (commonType->isHash())
-	{
-		if (!(Token::isCompareOp(_operator) || Token::isBitOp(_operator)))
-			return TypePointer();
-	}
-	return commonType;
+		return TypePointer();
+	else if (commonType->isHash() && !Token::isBitOp(_operator))
+		return TypePointer();
+	else
+		return commonType;
 }
 
 const MemberList IntegerType::AddressMemberList =
