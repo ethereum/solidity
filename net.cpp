@@ -111,6 +111,8 @@ struct TestNodeTableHost: public TestHost
 	
 	void pingAll() { for (auto& t: nodeTables) t->pingTestNodes(testNodes); }
 	
+	void populateAll(size_t _count = 0) { for (auto& t: nodeTables) t->populateTestNodes(testNodes, _count); }
+	
 	void populate(size_t _count = 0) { nodeTable->populateTestNodes(testNodes, _count); }
 	
 	KeyPair m_alias;
@@ -171,22 +173,21 @@ BOOST_AUTO_TEST_CASE(test_findnode_neighbors)
 
 BOOST_AUTO_TEST_CASE(kademlia)
 {
-	TestNodeTableHost node(12);
+	// Not yet a 'real' test.
+	TestNodeTableHost node(8);
 	node.start();
 	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
 	node.setup();
 	node.populate();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
-	node.pingAll();
-	this_thread::sleep_for(chrono::milliseconds(1000));
+	node.populateAll();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
 	node.nodeTable->reset();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 
-	node.populate(2);
-	this_thread::sleep_for(chrono::milliseconds(500));
+	node.populate(1);
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
 	node.nodeTable->join();
