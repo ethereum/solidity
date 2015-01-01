@@ -20,6 +20,7 @@
  * vm test functions.
  */
 
+#include <chrono>
 #include <boost/filesystem.hpp>
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
@@ -32,7 +33,7 @@ using namespace dev::eth;
 using namespace dev::test;
 
 FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, _depth) {}
+	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, LastHashes(), _depth) {}
 
 h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
 {
@@ -262,12 +263,44 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 		dev::LogOutputStream<eth::VMTraceChannel, false>(true) << o.str();
 		dev::LogOutputStream<eth::VMTraceChannel, false>(false) << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
 
+		/*creates json stack trace*/
 		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
 		{
-			std::ofstream f;
-			f.open("./vmtrace.log", std::ofstream::app);
-			f << o.str();
-			f << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32";
+			Object o_step;
+
+			/*add the stack*/
+			Array a_stack;
+			for (auto i: vm.stack())
+				a_stack.push_back((string)i);
+
+			o_step.push_back(Pair( "stack", a_stack ));
+
+			/*add the memory*/
+			Array a_mem;
+			for(auto i: vm.memory())
+				a_mem.push_back(i);
+
+			o_step.push_back(Pair("memory", a_mem));
+
+			/*add the storage*/
+			Object storage;
+			for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
+				storage.push_back(Pair( (string)i.first , (string)i.second));			
+
+			/*add all the other details*/
+			o_step.push_back(Pair("storage", storage));
+			o_step.push_back(Pair("depth", to_string(ext.depth)));
+			o_step.push_back(Pair("gas", (string)vm.gas()));
+			o_step.push_back(Pair("address", "0x" + toString(ext.myAddress )));
+			o_step.push_back(Pair("step", steps ));
+			o_step.push_back(Pair("pc", (int)vm.curPC()));
+			o_step.push_back(Pair("opcode", instructionInfo(inst).name ));
+
+			/*append the JSON object to the log file*/
+			Value v(o_step);
+			ofstream os( "./stackTrace.json", ofstream::app);
+			os << write_string(v, true) << ",";
+			os.close();
 		}
 	};
 }
@@ -276,6 +309,8 @@ namespace dev { namespace test {
 
 void doVMTests(json_spirit::mValue& v, bool _fillin)
 {
+	processCommandLineOptions();
+
 	for (auto& i: v.get_obj())
 	{
 		cnote << i.first;
@@ -285,7 +320,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre") > 0);
 		BOOST_REQUIRE(o.count("exec") > 0);
 
-		dev::test::FakeExtVM fev;
+		FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 
@@ -300,18 +335,18 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		bytes output;
-		auto vm = eth::VMFactory::create(fev.gas);
-
 		u256 gas;
 		bool vmExceptionOccured = false;
+		auto startTime = std::chrono::high_resolution_clock::now();
 		try
 		{
+			auto vm = eth::VMFactory::create(fev.gas);
 			output = vm->go(fev, fev.simpleTrace()).toBytes();
 			gas = vm->gas();
 		}
 		catch (VMException const& _e)
 		{
-			cnote << "VM did throw an exception: " << diagnostic_information(_e);
+			cnote << "Safe VM Exception";
 			vmExceptionOccured = true;
 		}
 		catch (Exception const& _e)
@@ -323,6 +358,21 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
 			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+		}
+
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto argc = boost::unit_test::framework::master_test_suite().argc;
+		auto argv = boost::unit_test::framework::master_test_suite().argv;
+		for (auto i = 0; i < argc; ++i)
+		{	       
+			if (std::string(argv[i]) == "--show-times")
+			{
+				auto testDuration = endTime - startTime;
+				cnote << "Execution time: "
+				      << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+				      << " ms";
+				break;
+			}
 		}
 
 		// delete null entries in storage for the sake of comparison

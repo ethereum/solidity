@@ -26,6 +26,7 @@
 #include <boost/filesystem/path.hpp>
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
+#include <libevm/VMFactory.h>
 
 using namespace std;
 using namespace dev::eth;
@@ -109,9 +110,6 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 
 		Address address = Address(i.first);
 
-		for (auto const& j: o["storage"].get_obj())
-			_state.setStorage(address, toInt(j.first), toInt(j.second));
-
 		bytes code = importCode(o);
 
 		if (code.size())
@@ -121,6 +119,9 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		}
 		else
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::NormalCreation);
+
+		for (auto const& j: o["storage"].get_obj())
+			_state.setStorage(address, toInt(j.first), toInt(j.second));
 
 		for(int i=0; i<toInt(o["nonce"]); ++i)
 			_state.noteSending(address);
@@ -329,10 +330,12 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 			BOOST_CHECK_MESSAGE(expectedStoreValue == resultStoreValue, _expectedAddr << ": store[" << expectedStoreKey << "] = " << resultStoreValue << ", expected " << expectedStoreValue);
 		}
 	}
-
-	for (auto&& resultStorePair : _resultStore)
+	BOOST_CHECK_EQUAL(_resultStore.size(), _expectedStore.size());
+	for (auto&& resultStorePair: _resultStore)
+	{
 		if (!_expectedStore.count(resultStorePair.first))
 			BOOST_ERROR(_expectedAddr << ": unexpected store key " << resultStorePair.first);
+	}
 }
 
 void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
@@ -467,6 +470,22 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	catch (std::exception const& _e)
 	{
 		BOOST_ERROR("Failed test with Exception: " << _e.what());
+	}
+}
+
+
+void processCommandLineOptions()
+{
+	auto argc = boost::unit_test::framework::master_test_suite().argc;
+	auto argv = boost::unit_test::framework::master_test_suite().argv;
+
+	for (auto i =  0; i < argc; ++i)
+	{
+		if (std::string(argv[i]) == "--jit")
+		{
+			eth::VMFactory::setKind(eth::VMKind::JIT);
+			break;
+		}
 	}
 }
 

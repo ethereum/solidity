@@ -19,6 +19,9 @@
  * @date 2014
  */
 
+// @debris disabled as tests fail with:
+// unknown location(0): fatal error in "jsonrpc_setMining": std::exception: Exception -32003 : Client connector error: : libcurl error: 28
+// /home/gav/Eth/cpp-ethereum/test/jsonrpc.cpp(169): last checkpoint
 #if ETH_JSONRPC && 0
 
 #include <boost/test/unit_test.hpp>
@@ -29,8 +32,9 @@
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/CorsHttpServer.h>
-#include <jsonrpc/connectors/httpserver.h>
-#include <jsonrpc/connectors/httpclient.h>
+//#include <json/json.h>
+#include <jsonrpccpp/server/connectors/httpserver.h>
+#include <jsonrpccpp/client/connectors/httpclient.h>
 #include <set>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
@@ -61,11 +65,12 @@ struct Setup
 		
 		web3->setIdealPeerCount(5);
 		web3->ethereum()->setForceMining(true);
-		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::CorsHttpServer(8080), *web3, {}));
+		auto server = new jsonrpc::HttpServer(8080);
+		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(*server, *web3, {}));
 		jsonrpcServer->setIdentities({});
 		jsonrpcServer->StartListening();
-		
-		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(new jsonrpc::HttpClient("http://localhost:8080")));
+		auto client = new jsonrpc::HttpClient("http://localhost:8080");
+		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(*client));
 	}
 };
 
@@ -300,8 +305,11 @@ BOOST_AUTO_TEST_CASE(contract_storage)
 	
 	Json::Value storage = jsonrpcClient->eth_storageAt(contractAddress);
 	BOOST_CHECK_EQUAL(storage.getMemberNames().size(), 1);
+	// bracers are required, cause msvc couldnt handle this macro in for statement
 	for (auto name: storage.getMemberNames())
+	{
 		BOOST_CHECK_EQUAL(storage[name].asString(), "0x03");
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

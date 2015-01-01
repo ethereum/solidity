@@ -43,6 +43,8 @@ namespace dev {  namespace test {
 
 void doStateTests(json_spirit::mValue& v, bool _fillin)
 {
+	processCommandLineOptions();
+
 	for (auto& i: v.get_obj())
 	{
 		cerr << i.first << endl;
@@ -60,7 +62,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 		try
 		{
-			theState.execute(tx, &output);
+			theState.execute(LastHashes(), tx, &output);
 		}
 		catch (Exception const& _e)
 		{
@@ -130,9 +132,29 @@ BOOST_AUTO_TEST_CASE(stLogTests)
 	dev::test::executeTests("stLogTests", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stRecursiveCreate)
+{
+	dev::test::executeTests("stRecursiveCreate", "/StateTests", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stInitCodeTest)
+{
+	dev::test::executeTests("stInitCodeTest", "/StateTests", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stTransactionTest)
+{
+	dev::test::executeTests("stTransactionTest", "/StateTests", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stSpecialTest)
 {
 	dev::test::executeTests("stSpecialTest", "/StateTests", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stRefundTest)
+{
+	dev::test::executeTests("stRefundTest", "/StateTests", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCreateTest)
