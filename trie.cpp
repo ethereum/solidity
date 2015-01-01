@@ -126,10 +126,10 @@ BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 					keysToBeDeleted.push_back(values[0]);
 				}
 				else
-					cwarn << "Bad type (expected string): " << s.type();
+					BOOST_FAIL("Bad type (expected string)");
 			}
 
-			assert(values.size() == 2);
+			BOOST_REQUIRE(values.size() == 2);
 			ss.push_back(make_pair(values[0], values[1]));
 			if (!ss.back().first.find("0x"))
 				ss.back().first = asString(fromHex(ss.back().first.substr(2)));
