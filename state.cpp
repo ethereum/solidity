@@ -62,7 +62,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 		try
 		{
-			theState.execute(tx, &output);
+			theState.execute(LastHashes(), tx, &output);
 		}
 		catch (Exception const& _e)
 		{
