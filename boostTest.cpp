@@ -21,4 +21,8 @@
  */
 
 #define BOOST_TEST_MODULE EthereumTests
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <boost/test/included/unit_test.hpp>
+#pragma warning(pop)
+#pragma GCC diagnostic pop

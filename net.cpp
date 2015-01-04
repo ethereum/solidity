@@ -171,6 +171,12 @@ BOOST_AUTO_TEST_CASE(test_findnode_neighbors)
 	// into the same list of nearest nodes.
 }
 
+BOOST_AUTO_TEST_CASE(test_windows_template)
+{
+	bi::udp::endpoint ep;
+	PingNode p(ep);
+}
+
 BOOST_AUTO_TEST_CASE(kademlia)
 {
 	// Not yet a 'real' test.
