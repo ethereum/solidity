@@ -50,7 +50,7 @@ static unsigned fac(unsigned _i)
 
 BOOST_AUTO_TEST_SUITE(TrieTests)
 
-BOOST_AUTO_TEST_CASE(trie_tests)
+BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 {
 	string testPath = test::getTestPath();
 
@@ -89,6 +89,69 @@ BOOST_AUTO_TEST_CASE(trie_tests)
 			BOOST_REQUIRE(!o["root"].is_null());
 			BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(t.root().asArray()));
 		}
+	}
+}
+
+BOOST_AUTO_TEST_CASE(trie_tests_ordered)
+{
+	string testPath = test::getTestPath();
+
+	testPath += "/TrieTests";
+
+	cnote << "Testing Trie...";
+	js::mValue v;
+	string s = asString(contents(testPath + "/trietest.json"));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	js::read_string(s, v);
+
+	for (auto& i: v.get_obj())
+	{
+		cnote << i.first;
+		js::mObject& o = i.second.get_obj();
+		vector<pair<string, string>> ss;
+		vector<string> keysToBeDeleted;
+		for (auto& i: o["in"].get_array())
+		{
+			vector<string> values;
+			for (auto& s: i.get_array())
+			{
+				if (s.type() == json_spirit::str_type)
+					values.push_back(s.get_str());
+				else if (s.type() == json_spirit::null_type)
+				{
+					// mark entry for deletion
+					values.push_back("");
+					if (!values[0].find("0x"))
+						values[0] = asString(fromHex(values[0].substr(2)));
+					keysToBeDeleted.push_back(values[0]);
+				}
+				else
+					BOOST_FAIL("Bad type (expected string)");
+			}
+
+			BOOST_REQUIRE(values.size() == 2);
+			ss.push_back(make_pair(values[0], values[1]));
+			if (!ss.back().first.find("0x"))
+				ss.back().first = asString(fromHex(ss.back().first.substr(2)));
+			if (!ss.back().second.find("0x"))
+				ss.back().second = asString(fromHex(ss.back().second.substr(2)));
+		}
+
+		MemoryDB m;
+		GenericTrieDB<MemoryDB> t(&m);
+		t.init();
+		BOOST_REQUIRE(t.check(true));
+		for (auto const& k: ss)
+		{
+			if (find(keysToBeDeleted.begin(), keysToBeDeleted.end(), k.first) != keysToBeDeleted.end() && k.second.empty())
+				t.remove(k.first);
+			else
+				t.insert(k.first, k.second);
+			BOOST_REQUIRE(t.check(true));
+		}
+
+		BOOST_REQUIRE(!o["root"].is_null());
+		BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(t.root().asArray()));
 	}
 }
 
