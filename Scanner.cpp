@@ -357,9 +357,7 @@ Token::Value Scanner::scanSlash()
 
 			// special case of a closed normal multiline comment
 			if (!m_source.isPastEndOfInput() && m_source.get(0) == '/')
-			{
 				advance(); //skip the closing slash
-			}
 			else // we actually have a multiline documentation comment
 			{
 				Token::Value comment;
