@@ -228,14 +228,21 @@ byte toByte(json_spirit::mValue const& _v)
 	return 0;
 }
 
+bytes importByteArray(const std::string& str)
+{
+    bytes data;
+    if (str.find_first_of("0x") == 0)
+            data = fromHex(str.substr(2));
+        else
+            data = fromHex(str);
+    return data;
+}
+
 bytes importData(json_spirit::mObject& _o)
 {
 	bytes data;
 	if (_o["data"].type() == json_spirit::str_type)
-		if (_o["data"].get_str().find_first_of("0x") == 0)
-			data = fromHex(_o["data"].get_str().substr(2));
-		else
-			data = fromHex(_o["data"].get_str());
+        data = importByteArray(_o["data"].get_str());
 	else
 		for (auto const& j: _o["data"].get_array())
 			data.push_back(toByte(j));
