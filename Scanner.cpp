@@ -285,8 +285,6 @@ Token::Value Scanner::scanMultiLineDocComment()
 	bool endFound = false;
 	bool charsAdded = false;
 
-	advance(); //consume the last '*' at /**
-	skipWhitespaceExceptLF();
 	while (!isSourcePastEndOfInput())
 	{
 		//handle newlines in multline comments
@@ -354,11 +352,22 @@ Token::Value Scanner::scanSlash()
 			return Token::WHITESPACE;
 		else if (m_char == '*')
 		{
-			Token::Value comment;
-			m_nextSkippedComment.location.start = firstSlashPosition;
-			comment = scanMultiLineDocComment();
-			m_nextSkippedComment.location.end = getSourcePos();
-			m_nextSkippedComment.token = comment;
+			advance(); //consume the last '*' at /**
+			skipWhitespaceExceptLF();
+
+			// special case of a closed normal multiline comment
+			if (!m_source.isPastEndOfInput() && m_source.get(0) == '/')
+			{
+				advance(); //skip the closing slash
+			}
+			else // we actually have a multiline documentation comment
+			{
+				Token::Value comment;
+				m_nextSkippedComment.location.start = firstSlashPosition;
+				comment = scanMultiLineDocComment();
+				m_nextSkippedComment.location.end = getSourcePos();
+				m_nextSkippedComment.token = comment;
+			}
 			return Token::WHITESPACE;
 		}
 		else

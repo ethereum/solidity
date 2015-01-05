@@ -119,6 +119,7 @@ public:
 	{
 		return m_currentToken.token;
 	}
+
 	Location getCurrentLocation() const { return m_currentToken.location; }
 	std::string const& getCurrentLiteral() const { return m_currentToken.literal; }
 	///@}
