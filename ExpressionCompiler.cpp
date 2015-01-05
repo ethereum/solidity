@@ -344,9 +344,9 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			m_context << eth::Instruction::COINBASE;
 		else if (member == "timestamp")
 			m_context << eth::Instruction::TIMESTAMP;
-		else if (member == "prevhash")
-			m_context << eth::Instruction::PREVHASH;
-		else if (member == "difficulty")
+/*		else if (member == "blockhash")
+			m_context << eth::Instruction::BLOCKHASH;
+*/		else if (member == "difficulty")
 			m_context << eth::Instruction::DIFFICULTY;
 		else if (member == "number")
 			m_context << eth::Instruction::NUMBER;
