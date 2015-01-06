@@ -51,7 +51,7 @@ protected:
 struct TestNodeTable: public NodeTable
 {
 	/// Constructor
-	using NodeTable::NodeTable;
+	TestNodeTable(ba::io_service& _io, KeyPair _alias, uint16_t _port = 30300): NodeTable(_io, _alias, _port) {}
 	
 	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(unsigned _count)
 	{
