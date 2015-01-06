@@ -156,18 +156,26 @@ bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.getCategory() == getCategory() || _convertTo.getCategory() == Category::CONTRACT;
 }
 
-bool IntegerType::acceptsUnaryOperator(Token::Value _operator) const
+TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 {
+	// "delete" is ok for all integer types
 	if (_operator == Token::DELETE)
-		return true;
-	if (isAddress())
-		return false;
-	if (_operator == Token::BIT_NOT)
-		return true;
-	if (isHash())
-		return false;
-	return _operator == Token::ADD || _operator == Token::SUB ||
-		   _operator == Token::INC || _operator == Token::DEC;
+		return shared_from_this();
+	// no further unary operators for addresses
+	else if (isAddress())
+		return TypePointer();
+	// "~" is ok for all other types
+	else if (_operator == Token::BIT_NOT)
+		return shared_from_this();
+	// nothing else for hashes
+	else if (isHash())
+		return TypePointer();
+	// for non-hash integers, we allow +, -, ++ and --
+	else if (_operator == Token::ADD || _operator == Token::SUB ||
+			_operator == Token::INC || _operator == Token::DEC)
+		return shared_from_this();
+	else
+		return TypePointer();
 }
 
 bool IntegerType::operator==(Type const& _other) const

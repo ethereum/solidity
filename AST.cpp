@@ -227,8 +227,8 @@ void UnaryOperation::checkTypeRequirements()
 	m_subExpression->checkTypeRequirements();
 	if (m_operator == Token::Value::INC || m_operator == Token::Value::DEC || m_operator == Token::Value::DELETE)
 		m_subExpression->requireLValue();
-	m_type = m_subExpression->getType();
-	if (!m_type->acceptsUnaryOperator(m_operator))
+	m_type = m_subExpression->getType()->unaryOperatorResult(m_operator);
+	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Unary operator not compatible with type."));
 }
 
