@@ -192,8 +192,8 @@ void Assignment::checkTypeRequirements()
 	{
 		// compound assignment
 		m_rightHandSide->checkTypeRequirements();
-		TypePointer resultType = Type::binaryOperatorResult(Token::AssignmentToBinaryOp(m_assigmentOperator),
-															m_type, m_rightHandSide->getType());
+		TypePointer resultType = m_type->binaryOperatorResult(Token::AssignmentToBinaryOp(m_assigmentOperator),
+															  m_rightHandSide->getType());
 		if (!resultType || *resultType != *m_type)
 			BOOST_THROW_EXCEPTION(createTypeError("Operator not compatible with type."));
 	}
@@ -236,7 +236,7 @@ void BinaryOperation::checkTypeRequirements()
 {
 	m_left->checkTypeRequirements();
 	m_right->checkTypeRequirements();
-	m_commonType = Type::binaryOperatorResult(m_operator, m_left->getType(), m_right->getType());
+	m_commonType = m_left->getType()->binaryOperatorResult(m_operator, m_right->getType());
 	if (!m_commonType)
 		BOOST_THROW_EXCEPTION(createTypeError("Operator " + string(Token::toString(m_operator)) +
 											  " not compatible with types " +

@@ -192,11 +192,11 @@ u256 IntegerType::literalValue(Literal const& _literal) const
 	return u256(value);
 }
 
-TypePointer IntegerType::binaryOperatorResultImpl(Token::Value _operator, TypePointer const& _this, TypePointer const& _other) const
+TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	if (getCategory() != _other->getCategory())
 		return TypePointer();
-	auto commonType = dynamic_pointer_cast<IntegerType const>(Type::commonType(_this, _other));
+	auto commonType = dynamic_pointer_cast<IntegerType const>(Type::commonType(shared_from_this(), _other));
 
 	if (!commonType)
 		return TypePointer();
@@ -288,12 +288,12 @@ u256 BoolType::literalValue(Literal const& _literal) const
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Bool type constructed from non-boolean literal."));
 }
 
-TypePointer BoolType::binaryOperatorResultImpl(Token::Value _operator, TypePointer const& _this, TypePointer const& _other) const
+TypePointer BoolType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	if (getCategory() != _other->getCategory())
 		return TypePointer();
 	if (Token::isCompareOp(_operator) || _operator == Token::AND || _operator == Token::OR)
-		return _this;
+		return _other;
 	else
 		return TypePointer();
 }
