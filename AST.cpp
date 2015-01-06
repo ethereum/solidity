@@ -110,6 +110,23 @@ void FunctionDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
+std::string FunctionDefinition::getCanonicalSignature()
+{
+	auto parameters = getParameters();
+	std::string ret = getName() + "(";
+	unsigned int i = 1;
+
+	for (ASTPointer<VariableDeclaration> const& member: parameters)
+	{
+		ret += member->getType()->toString();
+		if (i != parameters.size()) {
+			ret += ",";
+		}
+	}
+	ret += ")";
+	return ret;
+}
+
 void Block::checkTypeRequirements()
 {
 	for (shared_ptr<Statement> const& statement: m_statements)

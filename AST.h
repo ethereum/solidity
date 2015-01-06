@@ -277,6 +277,12 @@ public:
 	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
 	void checkTypeRequirements();
 
+	/// Returns the canonical signature of the function
+	/// That consists of the name of the function followed by the
+	/// types of the arguments separated by commas all enclosed in parentheses
+	/// without any spaces
+	std::string getCanonicalSignature();
+
 private:
 	bool m_isPublic;
 	ASTPointer<ParameterList> m_parameters;
