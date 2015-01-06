@@ -99,7 +99,10 @@ public:
 	{
 		return isImplicitlyConvertibleTo(_convertTo);
 	}
-	virtual bool acceptsUnaryOperator(Token::Value) const { return false; }
+	/// @returns the resulting type of applying the given unary operator or an empty pointer if
+	/// this is not possible.
+	/// The default implementation does not allow any unary operator.
+	virtual TypePointer unaryOperatorResult(Token::Value) const { return TypePointer(); }
 	/// @returns the resulting type of applying the given binary operator or an empty pointer if
 	/// this is not possible.
 	/// The default implementation allows comparison operators if a common type exists
@@ -163,7 +166,7 @@ public:
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
-	virtual bool acceptsUnaryOperator(Token::Value _operator) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
 	virtual bool operator==(Type const& _other) const override;
@@ -225,9 +228,9 @@ public:
 	BoolType() {}
 	virtual Category getCategory() const { return Category::BOOL; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
-	virtual bool acceptsUnaryOperator(Token::Value _operator) const override
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override
 	{
-		return _operator == Token::NOT || _operator == Token::DELETE;
+		return (_operator == Token::NOT || _operator == Token::DELETE) ? shared_from_this() : TypePointer();
 	}
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
@@ -277,7 +280,10 @@ class StructType: public Type
 public:
 	virtual Category getCategory() const override { return Category::STRUCT; }
 	StructType(StructDefinition const& _struct): m_struct(_struct) {}
-	virtual bool acceptsUnaryOperator(Token::Value _operator) const override { return _operator == Token::DELETE; }
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override
+	{
+		return _operator == Token::DELETE ? shared_from_this() : TypePointer();
+	}
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual u256 getStorageSize() const override;
