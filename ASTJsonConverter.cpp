@@ -31,7 +31,8 @@ namespace solidity
 {
 
 void ASTJsonConverter::addJsonNode(string const& _typeName,
-								   initializer_list<pair<string const, string const>> _list)
+								   initializer_list<pair<string const, string const>> _list,
+								   bool _hasChildren = false)
 {
 	Json::Value node;
 	Json::Value attrs;
@@ -41,19 +42,29 @@ void ASTJsonConverter::addJsonNode(string const& _typeName,
 		attrs[e.first] = e.second;
 	node["attributes"] = attrs;
 
-	m_childrenPtr->append(node);
+	m_jsonNodePtrs.top()->append(node);
+
+	if (_hasChildren) {
+		Json::Value children(Json::arrayValue);
+		node["children"] = children;
+		m_jsonNodePtrs.push(&node["children"]);
+		m_depth ++;
+		cout << "goDown" << endl;
+	}
 }
 
-ASTJsonConverter::ASTJsonConverter(ASTNode const& _ast): m_ast(&_ast)
+ASTJsonConverter::ASTJsonConverter(ASTNode const& _ast): m_ast(&_ast), m_depth(0)
 {
 	Json::Value attrs;
-	Json::Value children;
+	Json::Value children(Json::arrayValue);
 
 	m_astJson["type"] = "root";
-	attrs["name"] = "nameoffile"; //TODO
 	m_astJson["attributes"] = attrs;
+	attrs["name"] = "nameoffile"; //TODO
 	m_astJson["children"] = children;
-	m_childrenPtr = &m_astJson["children"];
+	// m_jsonNodePtrs.push(&m_astJson["children"]);
+	m_jsonNodePtrs.push(&m_astJson["children"]);
+	// m_jsonNodePtrs.push(&children);
 }
 
 void ASTJsonConverter::print(ostream& _stream)
@@ -66,215 +77,225 @@ void ASTJsonConverter::print(ostream& _stream)
 bool ASTJsonConverter::visit(ImportDirective const& _node)
 {
 	addJsonNode("import", { make_pair("file", _node.getIdentifier())});
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(ContractDefinition const& _node)
 {
-	// writeLine("ContractDefinition \"" + _node.getName() + "\"");
-	// printSourcePart(_node);
-	addJsonNode("contract", { make_pair("name", _node.getName())});
-	return goDeeper();
+	addJsonNode("contract", { make_pair("name", _node.getName())}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(StructDefinition const& _node)
 {
-	// writeLine("StructDefinition \"" + _node.getName() + "\"");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("struct", { make_pair("name", _node.getName())}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(ParameterList const& _node)
 {
-	// writeLine("ParameterList");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("parameter_list", {}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
-	// writeLine("FunctionDefinition \"" + _node.getName() + "\"" +
-	// 		  (_node.isPublic() ? " - public" : "") +
-	// 		  (_node.isDeclaredConst() ? " - const" : ""));
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("function",
+				{ make_pair("name", _node.getName()),
+					make_pair("public", boost::lexical_cast<std::string>(_node.isPublic())),
+					make_pair("const", boost::lexical_cast<std::string>(_node.isDeclaredConst()))},
+				true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 {
-	// writeLine("VariableDeclaration \"" + _node.getName() + "\"");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("variable_declaration",
+				{ //make_pair("type", _node.getTypeName()->getName()),
+					make_pair("name", _node.getName()),
+					make_pair("local", boost::lexical_cast<std::string>(_node.isLocalVariable()))});
+	return true;
 }
 
 bool ASTJsonConverter::visit(TypeName const& _node)
 {
 	// writeLine("TypeName");
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
 {
 	// writeLine(string("ElementaryTypeName ") + Token::toString(_node.getTypeName()));
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 {
 	// writeLine("UserDefinedTypeName \"" + _node.getName() + "\"");
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(Mapping const& _node)
 {
 	// writeLine("Mapping");
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(Statement const& _node)
 {
-	// writeLine("Statement");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("statement", {}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(Block const& _node)
 {
-	// writeLine("Block");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("block", {}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(IfStatement const& _node)
 {
-	// writeLine("IfStatement");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("if_statement", {}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(BreakableStatement const& _node)
 {
 	// writeLine("BreakableStatement");
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(WhileStatement const& _node)
 {
-	// writeLine("WhileStatement");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("while_statement", {}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(ForStatement const& _node)
 {
-	// writeLine("ForStatement");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("for_statement", {}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(Continue const& _node)
 {
-	// writeLine("Continue");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("continue", {});
+	return true;
 }
 
 bool ASTJsonConverter::visit(Break const& _node)
 {
-	// writeLine("Break");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("break", {});
+	return true;
 }
 
 bool ASTJsonConverter::visit(Return const& _node)
 {
-	// writeLine("Return");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("return", {});;
+	return true;
 }
 
 bool ASTJsonConverter::visit(VariableDefinition const& _node)
 {
-	// writeLine("VariableDefinition");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("variable_definition", {}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(ExpressionStatement const& _node)
 {
-	// writeLine("ExpressionStatement");
-	// printSourcePart(_node);
-	return goDeeper();
+	addJsonNode("expression_statement", {}, true);
+	return true;
 }
 
 bool ASTJsonConverter::visit(Expression const& _node)
 {
+	addJsonNode("expression",
+				{
+					make_pair("type", _node.getType()->toString()),
+					make_pair("lvalue", boost::lexical_cast<std::string>(_node.isLValue())),
+					make_pair("local_lvalue", boost::lexical_cast<std::string>(_node.isLocalLValue())),
+				},
+				true);
 	// writeLine("Expression");
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(Assignment const& _node)
 {
+	addJsonNode("assignment", {make_pair("operator", Token::toString(_node.getAssignmentOperator()))}, true);
 	// writeLine(string("Assignment using operator ") + Token::toString(_node.getAssignmentOperator()));
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(UnaryOperation const& _node)
 {
+	addJsonNode("unary_op",
+				{make_pair("prefix", boost::lexical_cast<std::string>(_node.isPrefixOperation())),
+					make_pair("operator", Token::toString(_node.getOperator()))},
+				true);
+
 	// writeLine(string("UnaryOperation (") + (_node.isPrefixOperation() ? "prefix" : "postfix") +
 	// 		  ") " + Token::toString(_node.getOperator()));
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(BinaryOperation const& _node)
 {
+	addJsonNode("binary_op",
+				{make_pair("operator", Token::toString(_node.getOperator()))},
+				true);
 	// writeLine(string("BinaryOperation using operator ") + Token::toString(_node.getOperator()));
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(FunctionCall const& _node)
 {
+	addJsonNode("function_call",
+				{make_pair("type_conversion", boost::lexical_cast<std::string>(_node.isTypeConversion()))},
+				true);
 	// writeLine("FunctionCall");
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(NewExpression const& _node)
 {
+	addJsonNode("new_expression", {}, true);
 	// writeLine("NewExpression");
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(MemberAccess const& _node)
 {
+	addJsonNode("member_access", {make_pair("member_name", _node.getMemberName())}, true);
 	// writeLine("MemberAccess to member " + _node.getMemberName());
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(IndexAccess const& _node)
 {
-	// writeLine("IndexAccess");
+	addJsonNode("index_access", {}, true);
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(PrimaryExpression const& _node)
@@ -282,34 +303,43 @@ bool ASTJsonConverter::visit(PrimaryExpression const& _node)
 	// writeLine("PrimaryExpression");
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(Identifier const& _node)
 {
+	addJsonNode("identifier", {make_pair("value", _node.getName())});
 	// writeLine(string("Identifier ") + _node.getName());
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
+	addJsonNode("elementary_typename_expression",
+				{make_pair("value", Token::toString(_node.getTypeToken()))});
 	// writeLine(string("ElementaryTypeNameExpression ") + Token::toString(_node.getTypeToken()));
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 bool ASTJsonConverter::visit(Literal const& _node)
 {
+	char const* tokenString = Token::toString(_node.getToken());
+	addJsonNode("literal",
+				{
+					make_pair("string", (tokenString) ? tokenString : "null"),
+					make_pair("value", _node.getValue())});
+
 	// char const* tokenString = Token::toString(_node.getToken());
 	// if (!tokenString)
 	// 	tokenString = "[no token]";
 	// writeLine(string("Literal, token: ") + tokenString + " value: " + _node.getValue());
 	// printType(_node);
 	// printSourcePart(_node);
-	return goDeeper();
+	return true;
 }
 
 void ASTJsonConverter::endVisit(ImportDirective const&)
@@ -319,27 +349,26 @@ void ASTJsonConverter::endVisit(ImportDirective const&)
 
 void ASTJsonConverter::endVisit(ContractDefinition const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(StructDefinition const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(ParameterList const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(FunctionDefinition const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(VariableDeclaration const&)
 {
-
 }
 
 void ASTJsonConverter::endVisit(TypeName const&)
@@ -364,17 +393,17 @@ void ASTJsonConverter::endVisit(Mapping const&)
 
 void ASTJsonConverter::endVisit(Statement const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(Block const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(IfStatement const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(BreakableStatement const&)
@@ -384,12 +413,12 @@ void ASTJsonConverter::endVisit(BreakableStatement const&)
 
 void ASTJsonConverter::endVisit(WhileStatement const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(ForStatement const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(Continue const&)
@@ -409,52 +438,52 @@ void ASTJsonConverter::endVisit(Return const&)
 
 void ASTJsonConverter::endVisit(VariableDefinition const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(ExpressionStatement const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(Expression const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(Assignment const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(UnaryOperation const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(BinaryOperation const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(FunctionCall const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(NewExpression const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(MemberAccess const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(IndexAccess const&)
 {
-
+	goUp();
 }
 
 void ASTJsonConverter::endVisit(PrimaryExpression const&)

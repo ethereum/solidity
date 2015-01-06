@@ -23,7 +23,9 @@
 #pragma once
 
 #include <ostream>
+#include <stack>
 #include <libsolidity/ASTVisitor.h>
+#include <libsolidity/Exceptions.h>
 #include <jsoncpp/json/json.h>
 
 namespace dev
@@ -113,14 +115,23 @@ public:
 
 private:
 	void addJsonNode(std::string const& _typeName,
-					 std::initializer_list<std::pair<std::string const, std::string const>> _list);
+					 std::initializer_list<std::pair<std::string const, std::string const>> _list,
+					 bool _hasChildren);
 	void printType(Expression const& _expression);
-	bool goDeeper() { return true; }
+	inline void goUp()
+	{
+		std::cout << "goUp" << std::endl;
+		m_jsonNodePtrs.pop();
+		m_depth--;
+		if (m_depth < 0)
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal error"));
+	};
 
 	Json::Value m_astJson;
-	Json::Value *m_childrenPtr;
+	std::stack<Json::Value *> m_jsonNodePtrs;
 	std::string m_source;
 	ASTNode const* m_ast;
+	int m_depth;
 };
 
 }
