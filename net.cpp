@@ -51,7 +51,7 @@ protected:
 struct TestNodeTable: public NodeTable
 {
 	/// Constructor
-	using NodeTable::NodeTable;
+	TestNodeTable(ba::io_service& _io, KeyPair _alias, uint16_t _port = 30300): NodeTable(_io, _alias, _port) {}
 	
 	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(unsigned _count)
 	{
@@ -134,16 +134,16 @@ public:
 	bool success = false;
 };
 
-BOOST_AUTO_TEST_CASE(test_neighbors_packet)
+BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 {
 	KeyPair k = KeyPair::create();
 	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
 	bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
 	
-	Neighbors out(to);
+	Neighbours out(to);
 	for (auto n: testNodes)
 	{
-		Neighbors::Node node;
+		Neighbours::Node node;
 		node.ipAddress = boost::asio::ip::address::from_string("127.0.0.1").to_string();
 		node.port = n.second;
 		node.node = n.first.pub();
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(test_neighbors_packet)
 
 	bytesConstRef packet(out.data.data(), out.data.size());
 	bytesConstRef rlpBytes(packet.cropped(97, packet.size() - 97));
-	Neighbors in = Neighbors::fromBytesConstRef(to, rlpBytes);
+	Neighbours in = Neighbours::fromBytesConstRef(to, rlpBytes);
 	int count = 0;
 	for (auto n: in.nodes)
 	{
@@ -164,10 +164,10 @@ BOOST_AUTO_TEST_CASE(test_neighbors_packet)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(test_findnode_neighbors)
+BOOST_AUTO_TEST_CASE(test_findnode_neighbours)
 {
 	// Executing findNode should result in a list which is serialized
-	// into Neighbors packet. Neighbors packet should then be deserialized
+	// into Neighbours packet. Neighbours packet should then be deserialized
 	// into the same list of nearest nodes.
 }
 

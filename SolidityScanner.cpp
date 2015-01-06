@@ -227,6 +227,13 @@ BOOST_AUTO_TEST_CASE(documentation_comment_before_eos)
 	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), "");
 }
 
+BOOST_AUTO_TEST_CASE(empty_multiline_comment)
+{
+	Scanner scanner(CharStream("/**/"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::EOS);
+	BOOST_CHECK_EQUAL(scanner.getCurrentCommentLiteral(), "");
+}
+
 BOOST_AUTO_TEST_CASE(empty_multiline_documentation_comment_before_eos)
 {
 	Scanner scanner(CharStream("/***/"));
