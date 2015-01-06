@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(test_udp_once)
 	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300), bytes({65,65,65,65}));
 	TestUDPSocket a; a.m_socket->connect(); a.start();
 	a.m_socket->send(d);
-	sleep(1);
+	this_thread::sleep_for(chrono::seconds(1));
 	BOOST_REQUIRE_EQUAL(true, a.success);
 }
 
