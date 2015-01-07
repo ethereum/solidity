@@ -391,9 +391,9 @@ Assembly& Assembly::optimise(bool _enable)
 				if (matches(vr, &r.first))
 				{
 					auto rw = r.second(vr);
-					unsigned const vrSize = bytesRequiredBySlice(vr.begin(), vr.end());
-					unsigned const rwSize = bytesRequiredBySlice(rw.begin(), rw.end());
-					if (rwSize < vrSize || (rwSize == vrSize && popCountIncreased(vr, rw)))
+					unsigned const vrSizeInBytes = bytesRequiredBySlice(vr.begin(), vr.end());
+					unsigned const rwSizeInBytes = bytesRequiredBySlice(rw.begin(), rw.end());
+					if (rwSizeInBytes < vrSizeInBytes || (rwSizeInBytes == vrSizeInBytes && popCountIncreased(vr, rw)))
 					{
 						copt << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
 						copt << AssemblyItemsConstRef(&rw);
