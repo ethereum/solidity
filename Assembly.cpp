@@ -393,7 +393,6 @@ Assembly& Assembly::optimise(bool _enable)
 					auto rw = r.second(vr);
 					unsigned const vrSize = bytesRequiredBySlice(vr.begin(), vr.end());
 					unsigned const rwSize = bytesRequiredBySlice(rw.begin(), rw.end());
-					//@todo check the actual size (including constant sizes)
 					if (rwSize < vrSize || (rwSize == vrSize && popCountIncreased(vr, rw)))
 					{
 						copt << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
@@ -405,12 +404,10 @@ Assembly& Assembly::optimise(bool _enable)
 							m_items.resize(m_items.size() + sizeIncrease, AssemblyItem(UndefinedItem));
 							move_backward(m_items.begin() + i, m_items.end() - sizeIncrease, m_items.end());
 						}
+						else
+							m_items.erase(m_items.begin() + i + rw.size(), m_items.begin() + i + vr.size());
 
-						for (unsigned j = 0; j < max(rw.size(), vr.size()); ++j)
-							if (j < rw.size())
-								m_items[i + j] = rw[j];
-							else
-								m_items.erase(m_items.begin() + i + rw.size());
+						copy(rw.begin(), rw.end(), m_items.begin() + i);
 
 						count++;
 						copt << "Now:\n" << m_items;
