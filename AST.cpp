@@ -122,6 +122,7 @@ std::string FunctionDefinition::getCanonicalSignature()
 		if (i != parameters.size()) {
 			ret += ",";
 		}
+		i++;
 	}
 	ret += ")";
 	return ret;
