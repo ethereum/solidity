@@ -336,7 +336,24 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			auto functions = contract->getDefinedFunctions();
-			BOOST_ASSERT("foo(uint256,uint64,bool)" == functions[0]->getCanonicalSignature());
+			BOOST_CHECK_EQUAL("foo(uint256,uint64,bool)", functions[0]->getCanonicalSignature());
+		}
+}
+
+BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = "contract Test {\n"
+					   "  function boo(uint arg1, hash arg2, address arg3) returns (uint ret) {\n"
+					   "    ret = 5;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(sourceUnit = parseTextAndResolveNames(text));
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->getDefinedFunctions();
+			BOOST_CHECK_EQUAL("boo(uint256,hash256,address)", functions[0]->getCanonicalSignature());
 		}
 }
 
