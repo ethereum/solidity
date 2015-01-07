@@ -835,6 +835,21 @@ BOOST_AUTO_TEST_CASE(function_types)
 	BOOST_CHECK(callContractFunction("a(bool)", bytes{1}) == toBigEndian(u256(12)));
 }
 
+BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
+{
+	// 22-byte integer converted to a contract (i.e. address, 20 bytes), converted to a 32 byte
+	// integer should drop the first two bytes
+	char const* sourceCode = R"(
+		contract Test {
+			function test() returns (uint ret) { return uint(address(Test(address(0x11223344556677889900112233445566778899001122)))); }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_REQUIRE(callContractFunction(0) == bytes({0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+													0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22,
+													0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22}));
+}
+
+
 BOOST_AUTO_TEST_CASE(send_ether)
 {
 	char const* sourceCode = "contract test {\n"
