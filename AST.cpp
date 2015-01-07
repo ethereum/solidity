@@ -110,14 +110,9 @@ void FunctionDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-std::string FunctionDefinition::getCanonicalSignature()
+string FunctionDefinition::getCanonicalSignature() const
 {
-	auto parameters = getParameters();
-	std::string ret = getName() + "(";
-
-	for (auto it = parameters.cbegin(); it != parameters.cend(); ++it)
-		ret += (*it)->getType()->toString() + (it + 1 == parameters.end() ? "" : ",");
-	return ret + ")";
+	return getName() + FunctionType(*this).getCanonicalSignature();
 }
 
 void Block::checkTypeRequirements()
