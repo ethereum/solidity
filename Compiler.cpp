@@ -124,12 +124,12 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	if (interfaceFunctions.size() > 4294967295) // 2 ** 32
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("More than 4294967295 public functions for contract."));
 
-	// retrieve the first function signature hash from the calldata
-	m_context << u256(1) << u256(0) << u256(2.6959947e+67) // some constants
+	// retrieve the function signature hash from the calldata
+	m_context << u256(1) << u256(0) << u256(4294967296) * u256(4294967296) * u256(4294967296) * u256(4294967296) * u256(4294967296) * u256(4294967296) * u256(4294967296)// some constants
 			  << eth::dupInstruction(2) << eth::Instruction::CALLDATALOAD
 			  << eth::Instruction::DIV;
 
-	// stack now is: 1 0 2.6959947e+67 <funhash>
+	// stack now is: 1 0 <funhash>
 	for (auto it = interfaceFunctions.begin(); it != interfaceFunctions.end(); ++it)
 	{
 		callDataUnpackerEntryPoints.push_back(m_context.newTag());
