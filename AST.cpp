@@ -314,7 +314,7 @@ void NewExpression::checkTypeRequirements()
 	m_contract = dynamic_cast<ContractDefinition const*>(m_contractName->getReferencedDeclaration());
 	if (!m_contract)
 		BOOST_THROW_EXCEPTION(createTypeError("Identifier is not a contract."));
-	shared_ptr<ContractType const> type = make_shared<ContractType const>(*m_contract);
+	shared_ptr<ContractType const> type = make_shared<ContractType>(*m_contract);
 	m_type = type;
 	TypePointers const& parameterTypes = type->getConstructorType()->getParameterTypes();
 	if (parameterTypes.size() != m_arguments.size())
@@ -365,7 +365,7 @@ void Identifier::checkTypeRequirements()
 	if (structDef)
 	{
 		// note that we do not have a struct type here
-		m_type = make_shared<TypeType const>(make_shared<StructType const>(*structDef));
+		m_type = make_shared<TypeType>(make_shared<StructType>(*structDef));
 		return;
 	}
 	FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(m_referencedDeclaration);
@@ -374,13 +374,13 @@ void Identifier::checkTypeRequirements()
 		// a function reference is not a TypeType, because calling a TypeType converts to the type.
 		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
 		// conversion.
-		m_type = make_shared<FunctionType const>(*functionDef);
+		m_type = make_shared<FunctionType>(*functionDef);
 		return;
 	}
 	ContractDefinition const* contractDef = dynamic_cast<ContractDefinition const*>(m_referencedDeclaration);
 	if (contractDef)
 	{
-		m_type = make_shared<TypeType const>(make_shared<ContractType>(*contractDef));
+		m_type = make_shared<TypeType>(make_shared<ContractType>(*contractDef));
 		return;
 	}
 	MagicVariableDeclaration const* magicVariable = dynamic_cast<MagicVariableDeclaration const*>(m_referencedDeclaration);
@@ -394,7 +394,7 @@ void Identifier::checkTypeRequirements()
 
 void ElementaryTypeNameExpression::checkTypeRequirements()
 {
-	m_type = make_shared<TypeType const>(Type::fromElementaryTypeName(m_typeToken));
+	m_type = make_shared<TypeType>(Type::fromElementaryTypeName(m_typeToken));
 }
 
 void Literal::checkTypeRequirements()
