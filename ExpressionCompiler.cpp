@@ -345,6 +345,18 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	ASTString const& member = _memberAccess.getMemberName();
 	switch (_memberAccess.getExpression().getType()->getCategory())
 	{
+	case Type::Category::CONTRACT:
+	{
+		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.getExpression().getType());
+		u256 identifier = type.getFunctionIdentifier(member);
+		if (identifier != Invalid256)
+		{
+			appendTypeConversion(type, IntegerType(0, IntegerType::Modifier::ADDRESS), true);
+			m_context << identifier;
+			break;
+		}
+		// fall-through to "integer" otherwise (address)
+	}
 	case Type::Category::INTEGER:
 		if (member == "balance")
 		{
@@ -358,14 +370,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
 		break;
-	case Type::Category::CONTRACT:
-	{
-		appendTypeConversion(*_memberAccess.getExpression().getType(),
-							 IntegerType(0, IntegerType::Modifier::ADDRESS), true);
-		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.getExpression().getType());
-		m_context << type.getFunctionIdentifier(member);
-		break;
-	}
 	case Type::Category::MAGIC:
 		// we can ignore the kind of magic and only look at the name of the member
 		if (member == "coinbase")

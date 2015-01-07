@@ -179,10 +179,11 @@ public:
 	bool isAddress() const { return m_modifier == Modifier::ADDRESS; }
 	int isSigned() const { return m_modifier == Modifier::SIGNED; }
 
+	static const MemberList AddressMemberList;
+
 private:
 	int m_bits;
 	Modifier m_modifier;
-	static const MemberList AddressMemberList;
 };
 
 /**
@@ -278,7 +279,9 @@ class ContractType: public Type
 public:
 	virtual Category getCategory() const override { return Category::CONTRACT; }
 	ContractType(ContractDefinition const& _contract): m_contract(_contract) {}
-	/// Contracts can be converted to themselves and to addresses.
+	/// Contracts can be implicitly converted to super classes and to addresses.
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	/// Contracts can be converted to themselves and to integers.
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual u256 getStorageSize() const override;
@@ -291,6 +294,8 @@ public:
 	/// is not used, as this type cannot be the type of a variable or expression.
 	std::shared_ptr<FunctionType const> const& getConstructorType() const;
 
+	/// @returns the identifier of the function with the given name or Invalid256 if such a name does
+	/// not exist.
 	u256 getFunctionIdentifier(std::string const& _functionName) const;
 
 private:
