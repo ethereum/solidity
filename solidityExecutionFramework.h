@@ -29,6 +29,7 @@
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
+#include <libsolidity/AST.h>
 
 namespace dev
 {
@@ -48,17 +49,32 @@ public:
 
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
-		dev::solidity::CompilerStack compiler;
-		compiler.compile(_sourceCode, m_optimize);
-		bytes code = compiler.getBytecode(_contractName);
+		/* dev::solidity::CompilerStack compiler; */
+		m_compiler.compile(_sourceCode, m_optimize);
+		bytes code = m_compiler.getBytecode(_contractName);
+		/* m_contractDefinition = compiler.getContractDefinition(_contractName); */
 		sendMessage(code, true, _value);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
 
-	bytes const& callContractFunction(byte _index, bytes const& _data = bytes(), u256 const& _value = 0)
+	bytes const& callContractFunction(byte _index, bytes const& _data = bytes(),
+									  u256 const& _value = 0)
 	{
-		sendMessage(bytes(1, _index) + _data, false, _value);
+		/* if (!_contractDef) */
+		/* 	_contractDef = m_contractDefinition; */
+
+		unsigned index = 0;
+		auto interfaceFunctions = m_compiler.getContractDefinition("").getInterfaceFunctions();
+		for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it, ++index)
+			if (index == _index)
+			{
+				sendMessage(it->first.asBytes() + _data, false, _value);
+				/* sendMessage(bytes(1, _index) + _data, false, _value); */
+				return m_output;
+			}
+
+		BOOST_FAIL("Function with index " << _index << "not found");
 		return m_output;
 	}
 
@@ -149,6 +165,9 @@ protected:
 	bool m_optimize = false;
 	Address m_sender;
 	Address m_contractAddress;
+	/* ContractDefinition  m_contractDefinition; */
+	dev::solidity::CompilerStack m_compiler;
+
 	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 1000000;
