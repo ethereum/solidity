@@ -30,7 +30,7 @@ namespace solidity {
 class Compiler: private ASTConstVisitor
 {
 public:
-	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_returnTag(m_context.newTag()) {}
+	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_context(), m_returnTag(m_context.newTag()) {}
 
 	void compileContract(ContractDefinition const& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals,
 						 std::map<ContractDefinition const*, bytes const*> const& _contracts);

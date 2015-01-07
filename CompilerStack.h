@@ -113,7 +113,7 @@ private:
 
 	struct Contract
 	{
-		ContractDefinition const* contract;
+		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
 		bytes bytecode;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;
