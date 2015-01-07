@@ -110,6 +110,11 @@ void FunctionDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
+string FunctionDefinition::getCanonicalSignature() const
+{
+	return getName() + FunctionType(*this).getCanonicalSignature();
+}
+
 void Block::checkTypeRequirements()
 {
 	for (shared_ptr<Statement> const& statement: m_statements)

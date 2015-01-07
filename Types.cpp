@@ -484,6 +484,16 @@ unsigned FunctionType::getSizeOnStack() const
 	}
 }
 
+string FunctionType::getCanonicalSignature() const
+{
+	string ret = "(";
+
+	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
+		ret += (*it)->toString() + (it + 1 == m_parameterTypes.cend() ? "" : ",");
+
+	return ret + ")";
+}
+
 bool MappingType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())

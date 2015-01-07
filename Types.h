@@ -338,6 +338,7 @@ public:
 	virtual unsigned getSizeOnStack() const override;
 
 	Location const& getLocation() const { return m_location; }
+	std::string getCanonicalSignature() const;
 
 private:
 	TypePointers m_parameterTypes;
