@@ -114,18 +114,10 @@ std::string FunctionDefinition::getCanonicalSignature()
 {
 	auto parameters = getParameters();
 	std::string ret = getName() + "(";
-	unsigned int i = 1;
 
-	for (ASTPointer<VariableDeclaration> const& member: parameters)
-	{
-		ret += member->getType()->toString();
-		if (i != parameters.size()) {
-			ret += ",";
-		}
-		i++;
-	}
-	ret += ")";
-	return ret;
+	for (auto it = parameters.cbegin(); it != parameters.cend(); ++it)
+		ret += (*it)->getType()->toString() + (it + 1 == parameters.end() ? "" : ",");
+	return ret + ")";
 }
 
 void Block::checkTypeRequirements()

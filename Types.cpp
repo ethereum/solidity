@@ -452,6 +452,17 @@ unsigned FunctionType::getSizeOnStack() const
 	}
 }
 
+std::string FunctionType::getCanonicalSignature() const
+{
+	auto parameters = getParameterTypes();
+	std::string ret = "NAME("; //TODO: how to get function name from FunctionType
+
+	for (auto it = parameters.cbegin(); it != parameters.cend(); ++it)
+		ret += (*it)->toString() + (it + 1 == m_parameterTypes.end() ? "" : ",");
+
+	return ret + ")";
+}
+
 bool MappingType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
