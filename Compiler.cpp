@@ -118,34 +118,30 @@ set<FunctionDefinition const*> Compiler::getFunctionsNeededByConstructor(Functio
 
 void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
-	vector<FunctionDefinition const*> interfaceFunctions = _contract.getInterfaceFunctions();
+	map<FixedHash<4>, FunctionDefinition const*> interfaceFunctions = _contract.getInterfaceFunctions();
 	vector<eth::AssemblyItem> callDataUnpackerEntryPoints;
 
-	if (interfaceFunctions.size() > 255)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("More than 255 public functions for contract."));
+	if (interfaceFunctions.size() > 4294967295) // 2 ** 32
+		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("More than 4294967295 public functions for contract."));
 
-	// retrieve the first byte of the call data, which determines the called function
-	// @todo This code had a jump table in a previous version which was more efficient but also
-	// error prone (due to the optimizer and variable length tag addresses)
-	m_context << u256(1) << u256(0) // some constants
-			  << eth::dupInstruction(1) << eth::Instruction::CALLDATALOAD
-			  << eth::dupInstruction(2) << eth::Instruction::BYTE
-			  << eth::dupInstruction(2);
+	// retrieve the first function signature hash from the calldata
+	m_context << u256(1) << u256(0) << u256(2.6959947e+67) // some constants
+			  << eth::dupInstruction(2) << eth::Instruction::CALLDATALOAD
+			  << eth::Instruction::DIV;
 
-	// stack here: 1 0 <funid> 0, stack top will be counted up until it matches funid
-	for (unsigned funid = 0; funid < interfaceFunctions.size(); ++funid)
+	// stack now is: 1 0 2.6959947e+67 <funhash>
+	for (auto it = interfaceFunctions.begin(); it != interfaceFunctions.end(); ++it)
 	{
 		callDataUnpackerEntryPoints.push_back(m_context.newTag());
-		m_context << eth::dupInstruction(2) << eth::dupInstruction(2) << eth::Instruction::EQ;
+		m_context << eth::dupInstruction(1) << u256(FixedHash<4>::Arith(it->first)) << eth::Instruction::EQ;
 		m_context.appendConditionalJumpTo(callDataUnpackerEntryPoints.back());
-		if (funid < interfaceFunctions.size() - 1)
-			m_context << eth::dupInstruction(4) << eth::Instruction::ADD;
 	}
 	m_context << eth::Instruction::STOP; // function not found
 
-	for (unsigned funid = 0; funid < interfaceFunctions.size(); ++funid)
+	unsigned funid = 0;
+	for (auto it = interfaceFunctions.begin(); it != interfaceFunctions.end(); ++it, ++funid)
 	{
-		FunctionDefinition const& function = *interfaceFunctions[funid];
+		FunctionDefinition const& function = *it->second;
 		m_context << callDataUnpackerEntryPoints[funid];
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		appendCalldataUnpacker(function);

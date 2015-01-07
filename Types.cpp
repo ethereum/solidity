@@ -301,9 +301,10 @@ MemberList const& ContractType::getMembers() const
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
 	{
+		auto interfaceFunctions = m_contract.getInterfaceFunctions();
 		map<string, shared_ptr<Type const>> members;
-		for (FunctionDefinition const* function: m_contract.getInterfaceFunctions())
-			members[function->getName()] = make_shared<FunctionType>(*function, false);
+		for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
+			members[it->second->getName()] = make_shared<FunctionType>(*it->second, false);
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
@@ -325,9 +326,10 @@ shared_ptr<FunctionType const> const& ContractType::getConstructorType() const
 unsigned ContractType::getFunctionIndex(string const& _functionName) const
 {
 	unsigned index = 0;
-	for (FunctionDefinition const* function: m_contract.getInterfaceFunctions())
+	auto interfaceFunctions = m_contract.getInterfaceFunctions();
+	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
 	{
-		if (function->getName() == _functionName)
+		if (it->second->getName() == _functionName)
 			return index;
 		++index;
 	}
