@@ -69,7 +69,7 @@ private:
 	/// not contain code.
 	std::map<ASTNode const*, DeclarationContainer> m_scopes;
 
-	DeclarationContainer* m_currentScope;
+	DeclarationContainer* m_currentScope = nullptr;
 };
 
 /**
