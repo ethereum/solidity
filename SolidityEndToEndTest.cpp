@@ -844,9 +844,9 @@ BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
 			function test() returns (uint ret) { return uint(address(Test(address(0x11223344556677889900112233445566778899001122)))); }
 		})";
 	compileAndRun(sourceCode);
-	BOOST_REQUIRE(callContractFunction(0) == bytes({0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-													0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22,
-													0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22}));
+	BOOST_REQUIRE(callContractFunction("test()") == bytes({0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+														   0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22,
+														   0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22}));
 }
 
 
@@ -1275,6 +1275,24 @@ BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
 		})";
 	compileAndRun(sourceCode);
 	BOOST_REQUIRE(callContractFunction("getName()") == bytes({'a', 'b', 'c'}));
+}
+
+BOOST_AUTO_TEST_CASE(contracts_as_addresses)
+{
+	char const* sourceCode = R"(
+		contract helper {
+		}
+		contract test {
+			helper h;
+			function test() { h = new helper(); h.send(5); }
+			function getBalance() returns (uint256 myBalance, uint256 helperBalance) {
+				myBalance = this.balance;
+				helperBalance = h.balance;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 20);
+	BOOST_REQUIRE(callContractFunction("getBalance()") == toBigEndian(u256(20 - 5)) + toBigEndian(u256(5)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
