@@ -29,7 +29,6 @@
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
-#include <libsolidity/AST.h>
 
 namespace dev
 {
@@ -49,57 +48,44 @@ public:
 
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
-		/* dev::solidity::CompilerStack compiler; */
-		m_compiler.compile(_sourceCode, m_optimize);
-		bytes code = m_compiler.getBytecode(_contractName);
-		/* m_contractDefinition = compiler.getContractDefinition(_contractName); */
+		dev::solidity::CompilerStack compiler;
+		compiler.compile(_sourceCode, m_optimize);
+		bytes code = compiler.getBytecode(_contractName);
 		sendMessage(code, true, _value);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
 
-	bytes const& callContractFunction(byte _index, bytes const& _data = bytes(),
+	bytes const& callContractFunction(std::string _sig, bytes const& _data = bytes(),
 									  u256 const& _value = 0)
 	{
-		/* if (!_contractDef) */
-		/* 	_contractDef = m_contractDefinition; */
-
-		unsigned index = 0;
-		auto interfaceFunctions = m_compiler.getContractDefinition("").getInterfaceFunctions();
-		for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it, ++index)
-			if (index == _index)
-			{
-				sendMessage(it->first.asBytes() + _data, false, _value);
-				/* sendMessage(bytes(1, _index) + _data, false, _value); */
-				return m_output;
-			}
-
-		BOOST_FAIL("Function with index " << _index << "not found");
+		FixedHash<4> hash(dev::sha3(_sig));
+		sendMessage(hash.asBytes() + _data, false, _value);
 		return m_output;
 	}
 
 	template <class... Args>
-	bytes const& callContractFunction(byte _index, Args const&... _arguments)
+	bytes const& callContractFunction(std::string _sig, Args const&... _arguments)
 	{
-		return callContractFunction(_index, argsToBigEndian(_arguments...));
+		return callContractFunction(_sig, argsToBigEndian(_arguments...));
 	}
 
 	template <class CppFunction, class... Args>
-	void testSolidityAgainstCpp(byte _index, CppFunction const& _cppFunction, Args const&... _arguments)
+	void testSolidityAgainstCpp(std::string _sig, CppFunction const& _cppFunction, Args const&... _arguments)
 	{
-		bytes solidityResult = callContractFunction(_index, _arguments...);
+		bytes solidityResult = callContractFunction(_sig, _arguments...);
 		bytes cppResult = callCppAndEncodeResult(_cppFunction, _arguments...);
 		BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
 							"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult));
 	}
 
 	template <class CppFunction, class... Args>
-	void testSolidityAgainstCppOnRange(byte _index, CppFunction const& _cppFunction,
+	void testSolidityAgainstCppOnRange(std::string _sig, CppFunction const& _cppFunction,
 									   u256 const& _rangeStart, u256 const& _rangeEnd)
 	{
 		for (u256 argument = _rangeStart; argument < _rangeEnd; ++argument)
 		{
-			bytes solidityResult = callContractFunction(_index, argument);
+			bytes solidityResult = callContractFunction(_sig, argument);
 			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
 			BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
 								"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult) +
@@ -165,9 +151,6 @@ protected:
 	bool m_optimize = false;
 	Address m_sender;
 	Address m_contractAddress;
-	/* ContractDefinition  m_contractDefinition; */
-	dev::solidity::CompilerStack m_compiler;
-
 	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 1000000;
