@@ -35,9 +35,8 @@ std::unique_ptr<std::string> InterfaceHandler::getDocumentation(ContractDefiniti
 std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 {
 	Json::Value methods(Json::arrayValue);
-	auto interfaceFunctions = _contractDef.getInterfaceFunctions();
 
-	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
+	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value method;
 		Json::Value inputs(Json::arrayValue);
@@ -56,10 +55,10 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 			return params;
 		};
 
-		method["name"] = it->second->getName();
-		method["constant"] = it->second->isDeclaredConst();
-		method["inputs"] = populateParameters(it->second->getParameters());
-		method["outputs"] = populateParameters(it->second->getReturnParameters());
+		method["name"] = it.second->getName();
+		method["constant"] = it.second->isDeclaredConst();
+		method["inputs"] = populateParameters(it.second->getParameters());
+		method["outputs"] = populateParameters(it.second->getReturnParameters());
 		methods.append(method);
 	}
 	return std::unique_ptr<std::string>(new std::string(m_writer.write(methods)));
@@ -69,12 +68,11 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefi
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
-	auto interfaceFunctions = _contractDef.getInterfaceFunctions();
 
-	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
+	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value user;
-		auto strPtr = it->second->getDocumentation();
+		auto strPtr = it.second->getDocumentation();
 		if (strPtr)
 		{
 			resetUser();
@@ -82,7 +80,7 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefi
 			if (!m_notice.empty())
 			{// since @notice is the only user tag if missing function should not appear
 				user["notice"] = Json::Value(m_notice);
-				methods[it->second->getName()] = user;
+				methods[it.second->getName()] = user;
 			}
 		}
 	}
@@ -112,11 +110,10 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 			doc["title"] = m_title;
 	}
 
-	auto interfaceFunctions = _contractDef.getInterfaceFunctions();
-	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
+	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value method;
-		auto strPtr = it->second->getDocumentation();
+		auto strPtr = it.second->getDocumentation();
 		if (strPtr)
 		{
 			resetDev();
@@ -139,7 +136,7 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 				method["return"] = m_return;
 
 			if (!method.empty()) // add the function, only if we have any documentation to add
-				methods[it->second->getName()] = method;
+				methods[it.second->getName()] = method;
 		}
 	}
 	doc["methods"] = methods;

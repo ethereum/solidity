@@ -30,9 +30,6 @@ namespace solidity {
 
 class Type; // forward
 
-/// The size in bytes of the function (hash) identifier
-static const unsigned int g_functionIdentifierOffset = 4;
-
 class CompilerUtils
 {
 public:
@@ -61,9 +58,13 @@ public:
 	static unsigned getSizeOnStack(std::vector<T> const& _variables);
 	static unsigned getSizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
 
+	/// Bytes we need to the start of call data.
+	///  - The size in bytes of the function (hash) identifier.
+	static const unsigned int dataStartOffset;
 private:
 	CompilerContext& m_context;
 };
+
 
 template <class T>
 unsigned CompilerUtils::getSizeOnStack(std::vector<T> const& _variables)

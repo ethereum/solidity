@@ -333,10 +333,9 @@ MemberList const& ContractType::getMembers() const
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
 	{
-		auto interfaceFunctions = m_contract.getInterfaceFunctions();
 		map<string, shared_ptr<Type const>> members;
-		for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
-			members[it->second->getName()] = make_shared<FunctionType>(*it->second, false);
+		for (auto const& it: m_contract.getInterfaceFunctions())
+			members[it.second->getName()] = make_shared<FunctionType>(*it.second, false);
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;

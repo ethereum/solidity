@@ -100,7 +100,7 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 	{
 		m_context << u256(argumentSize);
 		m_context.appendProgramSize();
-		m_context << u256(g_functionIdentifierOffset); // copy it to byte four as expected for ABI calls
+		m_context << u256(CompilerUtils::dataStartOffset); // copy it to byte four as expected for ABI calls
 		m_context << eth::Instruction::CODECOPY;
 		appendCalldataUnpacker(_constructor, true);
 	}
@@ -119,30 +119,26 @@ set<FunctionDefinition const*> Compiler::getFunctionsNeededByConstructor(Functio
 void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
 	map<FixedHash<4>, FunctionDefinition const*> interfaceFunctions = _contract.getInterfaceFunctions();
-	vector<eth::AssemblyItem> callDataUnpackerEntryPoints;
-
-	if (interfaceFunctions.size() > 4294967295) // 2 ** 32
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("More than 4294967295 public functions for contract."));
+	map<FixedHash<4>, const eth::AssemblyItem> callDataUnpackerEntryPoints;
 
 	// retrieve the function signature hash from the calldata
-	m_context << u256(1) << u256(0) << (u256(1) << 224) // some constants
-			  << eth::dupInstruction(2) << eth::Instruction::CALLDATALOAD
-			  << eth::Instruction::DIV;
+	m_context << u256(1) << u256(0);
+	CompilerUtils(m_context).loadFromMemory(0, 4, false, true);
 
 	// stack now is: 1 0 <funhash>
-	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
+	// for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
+	for (auto const& it: interfaceFunctions)
 	{
-		callDataUnpackerEntryPoints.push_back(m_context.newTag());
-		m_context << eth::dupInstruction(1) << u256(FixedHash<4>::Arith(it->first)) << eth::Instruction::EQ;
-		m_context.appendConditionalJumpTo(callDataUnpackerEntryPoints.back());
+		callDataUnpackerEntryPoints.insert(std::make_pair(it.first, m_context.newTag()));
+		m_context << eth::dupInstruction(1) << u256(FixedHash<4>::Arith(it.first)) << eth::Instruction::EQ;
+		m_context.appendConditionalJumpTo(callDataUnpackerEntryPoints.at(it.first));
 	}
 	m_context << eth::Instruction::STOP; // function not found
 
-	unsigned funid = 0;
-	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it, ++funid)
+	for (auto const& it: interfaceFunctions)
 	{
-		FunctionDefinition const& function = *it->second;
-		m_context << callDataUnpackerEntryPoints[funid];
+		FunctionDefinition const& function = *it.second;
+		m_context << callDataUnpackerEntryPoints.at(it.first);
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		appendCalldataUnpacker(function);
 		m_context.appendJumpTo(m_context.getFunctionEntryLabel(function));
@@ -154,7 +150,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, bool _fromMemory)
 {
 	// We do not check the calldata size, everything is zero-padded.
-	unsigned dataOffset = g_functionIdentifierOffset; // the 4 bytes of the function hash signature
+	unsigned dataOffset = CompilerUtils::dataStartOffset; // the 4 bytes of the function hash signature
 	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{

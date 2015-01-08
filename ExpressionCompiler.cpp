@@ -592,9 +592,9 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 
 	_options.obtainAddress();
 	if (!_options.bare)
-		CompilerUtils(m_context).storeInMemory(0, g_functionIdentifierOffset);
+		CompilerUtils(m_context).storeInMemory(0, CompilerUtils::dataStartOffset);
 
-	unsigned dataOffset = _options.bare ? 0 : g_functionIdentifierOffset; // reserve 4 bytes for the function's hash identifier
+	unsigned dataOffset = _options.bare ? 0 : CompilerUtils::dataStartOffset; // reserve 4 bytes for the function's hash identifier
 	for (unsigned i = 0; i < _arguments.size(); ++i)
 	{
 		_arguments[i]->accept(*this);
