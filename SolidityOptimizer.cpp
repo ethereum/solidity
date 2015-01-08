@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(large_integers)
 				b = 0x10000000000000000000000002;
 			}
 		})";
-	compileBothVersions(53, sourceCode);
+	compileBothVersions(58, sourceCode);
 	compareVersions("f()");
 }
 
