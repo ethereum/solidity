@@ -60,8 +60,7 @@ map<FixedHash<4>, FunctionDefinition const*> ContractDefinition::getInterfaceFun
 		{
 			FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
 			auto res = exportedFunctions.insert(std::make_pair(hash,f.get()));
-			if (!res.second)
-				solAssert(false, "Hash collision at Function Definition Hash calculation");
+			solAssert(res.second, "Hash collision at Function Definition Hash calculation");
 		}
 
 	return exportedFunctions;
