@@ -2,6 +2,7 @@
 #include <libsolidity/InterfaceHandler.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/CompilerStack.h>
+using namespace std;
 
 namespace dev
 {
@@ -26,6 +27,8 @@ std::unique_ptr<std::string> InterfaceHandler::getDocumentation(ContractDefiniti
 		return getDevDocumentation(_contractDef);
 	case DocumentationType::ABI_INTERFACE:
 		return getABIInterface(_contractDef);
+	case DocumentationType::ABI_SOLIDITY_INTERFACE:
+		return getABISolidityInterface(_contractDef);
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
@@ -62,6 +65,28 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		methods.append(method);
 	}
 	return std::unique_ptr<std::string>(new std::string(m_writer.write(methods)));
+}
+
+unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
+{
+	string ret = "contract " + _contractDef.getName() + "{";
+	for (FunctionDefinition const* f: _contractDef.getInterfaceFunctions())
+	{
+		auto populateParameters = [](vector<ASTPointer<VariableDeclaration>> const& _vars)
+		{
+			string r = "";
+			for (ASTPointer<VariableDeclaration> const& var: _vars)
+				r += (r.size() ? "," : "(") + var->getType()->toString() + " " + var->getName();
+			return r.size() ? r + ")" : "()";
+		};
+		ret += "function " + f->getName() + populateParameters(f->getParameters()) + (f->isDeclaredConst() ? "constant " : "");
+		if (f->getReturnParameters().size())
+			ret += "returns" + populateParameters(f->getReturnParameters());
+		else if (ret.back() == ' ')
+			ret.pop_back();
+		ret += "{}";
+	}
+	return unique_ptr<string>(new string(ret + "}"));
 }
 
 std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefinition const& _contractDef)

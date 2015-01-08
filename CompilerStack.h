@@ -43,7 +43,8 @@ enum class DocumentationType: uint8_t
 {
 	NATSPEC_USER = 1,
 	NATSPEC_DEV,
-	ABI_INTERFACE
+	ABI_INTERFACE,
+	ABI_SOLIDITY_INTERFACE
 };
 
 /**
@@ -81,6 +82,9 @@ public:
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& getInterface(std::string const& _contractName = "") const;
+	/// Returns a string representing the contract interface in JSON.
+	/// Prerequisite: Successful call to parse or compile.
+	std::string const& getSolidityInterface(std::string const& _contractName = "") const;
 	/// Returns a string representing the contract's documentation in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
@@ -118,6 +122,7 @@ private:
 		bytes bytecode;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;
 		mutable std::unique_ptr<std::string const> interface;
+		mutable std::unique_ptr<std::string const> solidityInterface;
 		mutable std::unique_ptr<std::string const> userDocumentation;
 		mutable std::unique_ptr<std::string const> devDocumentation;
 

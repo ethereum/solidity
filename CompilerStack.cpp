@@ -143,6 +143,11 @@ string const& CompilerStack::getInterface(string const& _contractName) const
 	return getJsonDocumentation(_contractName, DocumentationType::ABI_INTERFACE);
 }
 
+string const& CompilerStack::getSolidityInterface(string const& _contractName) const
+{
+	return getJsonDocumentation(_contractName, DocumentationType::ABI_SOLIDITY_INTERFACE);
+}
+
 string const& CompilerStack::getJsonDocumentation(string const& _contractName, DocumentationType _type) const
 {
 	if (!m_parseSuccessful)
@@ -161,6 +166,9 @@ string const& CompilerStack::getJsonDocumentation(string const& _contractName, D
 		break;
 	case DocumentationType::ABI_INTERFACE:
 		doc = &contract.interface;
+		break;
+	case DocumentationType::ABI_SOLIDITY_INTERFACE:
+		doc = &contract.solidityInterface;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
