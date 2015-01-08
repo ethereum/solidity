@@ -115,7 +115,8 @@ public:
 	virtual bool operator!=(Type const& _other) const { return !this->operator ==(_other); }
 
 	/// @returns number of bytes used by this type when encoded for CALL, or 0 if the encoding
-	/// is not a simple big-endian encoding or the type cannot be stored on the stack.
+	/// is not a simple big-endian encoding or the type cannot be stored in calldata.
+	/// Note that irrespective of this size, each calldata element is padded to a multiple of 32 bytes.
 	virtual unsigned getCalldataEncodedSize() const { return 0; }
 	/// @returns number of bytes required to hold this value in storage.
 	/// For dynamically "allocated" types, it returns the size of the statically allocated head,

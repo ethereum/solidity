@@ -40,12 +40,23 @@ public:
 	/// @param _bytes number of bytes to load
 	/// @param _leftAligned if true, store left aligned on stack (otherwise right aligned)
 	/// @param _fromCalldata if true, load from calldata, not from memory
-	void loadFromMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false, bool _fromCalldata = false);
+	/// @param _padToWordBoundaries if true, assume the data is padded to word (32 byte) boundaries
+	/// @returns the number of bytes consumed in memory (can be different from _bytes if
+	///          _padToWordBoundaries is true)
+	unsigned loadFromMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false,
+							bool _fromCalldata = false, bool _padToWordBoundaries = false);
 	/// Stores data from stack in memory.
 	/// @param _offset offset in memory
 	/// @param _bytes number of bytes to store
 	/// @param _leftAligned if true, data is left aligned on stack (otherwise right aligned)
-	void storeInMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false);
+	/// @param _padToWordBoundaries if true, pad the data to word (32 byte) boundaries
+	/// @returns the number of bytes written to memory (can be different from _bytes if
+	///          _padToWordBoundaries is true)
+	unsigned storeInMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false,
+						   bool _padToWordBoundaries = false);
+	/// @returns _size rounded up to the next multiple of 32 (the number of bytes occupied in the
+	///          padded calldata)
+	static unsigned getPaddedSize(unsigned _size) { return ((_size + 31) / 32) * 32; }
 
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);

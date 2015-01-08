@@ -41,11 +41,11 @@ void ExpressionCompiler::compileExpression(CompilerContext& _context, Expression
 	_expression.accept(compiler);
 }
 
-void ExpressionCompiler::appendTypeConversion(CompilerContext& _context,
-											  Type const& _typeOnStack, Type const& _targetType)
+void ExpressionCompiler::appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack,
+											  Type const& _targetType, bool _cleanupNeeded)
 {
 	ExpressionCompiler compiler(_context);
-	compiler.appendTypeConversion(_typeOnStack, _targetType);
+	compiler.appendTypeConversion(_typeOnStack, _targetType, _cleanupNeeded);
 }
 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
@@ -295,7 +295,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			FunctionCallOptions options;
 			options.bare = true;
 			options.obtainAddress = [&]() { m_context << contractAddress; };
-			options.packDensely = false;
 			appendExternalFunctionCall(function, arguments, options);
 			break;
 		}
@@ -327,15 +326,15 @@ bool ExpressionCompiler::visit(NewExpression const& _newExpression)
 	for (unsigned i = 0; i < arguments.size(); ++i)
 	{
 		arguments[i]->accept(*this);
-		appendTypeConversion(*arguments[i]->getType(), *types[i]);
+		appendTypeConversion(*arguments[i]->getType(), *types[i], true);
 		unsigned const numBytes = types[i]->getCalldataEncodedSize();
 		if (numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(arguments[i]->getLocation())
 								  << errinfo_comment("Type " + types[i]->toString() + " not yet supported."));
 		bool const leftAligned = types[i]->getCategory() == Type::Category::STRING;
-		CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned);
-		dataOffset += numBytes;
+		bool const padToWords = true;
+		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned, padToWords);
 	}
 	// size, offset, endowment
 	m_context << u256(dataOffset) << u256(0) << u256(0) << eth::Instruction::CREATE;
@@ -634,22 +633,20 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	{
 		_arguments[i]->accept(*this);
 		Type const& type = *_functionType.getParameterTypes()[i];
-		appendTypeConversion(*_arguments[i]->getType(), type);
-		unsigned const numBytes = _options.packDensely ? type.getCalldataEncodedSize() : 32;
+		appendTypeConversion(*_arguments[i]->getType(), type, true);
+		unsigned const numBytes = type.getCalldataEncodedSize();
 		if (numBytes == 0 || numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(_arguments[i]->getLocation())
 								  << errinfo_comment("Type " + type.toString() + " not yet supported."));
 		bool const leftAligned = type.getCategory() == Type::Category::STRING;
-		CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned);
-		dataOffset += numBytes;
+		bool const padToWords = true;
+		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned, padToWords);
 	}
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
 							_functionType.getReturnParameterTypes().front().get();
-	unsigned retSize = firstType ? firstType->getCalldataEncodedSize() : 0;
-	if (!_options.packDensely && retSize > 0)
-		retSize = 32;
+	unsigned retSize = firstType ? CompilerUtils::getPaddedSize(firstType->getCalldataEncodedSize()) : 0;
 	// CALL arguments: outSize, outOff, inSize, inOff, value, addr, gas (stack top)
 	m_context << u256(retSize) << u256(0) << u256(dataOffset) << u256(0);
 	if (_options.obtainValue)
@@ -666,7 +663,7 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	if (retSize > 0)
 	{
 		bool const leftAligned = firstType->getCategory() == Type::Category::STRING;
-		CompilerUtils(m_context).loadFromMemory(0, retSize, leftAligned);
+		CompilerUtils(m_context).loadFromMemory(0, retSize, leftAligned, false, true);
 	}
 }
 

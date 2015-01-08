@@ -51,7 +51,8 @@ public:
 	static void compileExpression(CompilerContext& _context, Expression const& _expression, bool _optimize = false);
 
 	/// Appends code to remove dirty higher order bits in case of an implicit promotion to a wider type.
-	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack, Type const& _targetType);
+	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack,
+									 Type const& _targetType, bool _cleanupNeeded = false);
 
 private:
 	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimize = false):
@@ -96,9 +97,6 @@ private:
 		std::function<void()> obtainValue;
 		/// If true, do not prepend function index to call data
 		bool bare = false;
-		/// If false, use calling convention that all arguments and return values are packed as
-		/// 32 byte values with padding.
-		bool packDensely = true;
 	};
 
 	/// Appends code to call a function of the given type with the given arguments.

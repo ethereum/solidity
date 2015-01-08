@@ -33,17 +33,21 @@ namespace solidity
 
 const unsigned int CompilerUtils::dataStartOffset = 4;
 
-void CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _leftAligned, bool _fromCalldata)
+unsigned CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _leftAligned,
+									   bool _fromCalldata, bool _padToWordBoundaries)
 {
 	if (_bytes == 0)
 	{
 		m_context << u256(0);
-		return;
+		return 0;
 	}
 	eth::Instruction load = _fromCalldata ? eth::Instruction::CALLDATALOAD : eth::Instruction::MLOAD;
 	solAssert(_bytes <= 32, "Memory load of more than 32 bytes requested.");
-	if (_bytes == 32)
+	if (_bytes == 32 || _padToWordBoundaries)
+	{
 		m_context << u256(_offset) << load;
+		return 32;
+	}
 	else
 	{
 		// load data and add leading or trailing zeros by dividing/multiplying depending on alignment
@@ -54,21 +58,24 @@ void CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _left
 		m_context << u256(_offset) << load << eth::Instruction::DIV;
 		if (_leftAligned)
 			m_context << eth::Instruction::MUL;
+		return _bytes;
 	}
 }
 
-void CompilerUtils::storeInMemory(unsigned _offset, unsigned _bytes, bool _leftAligned)
+unsigned CompilerUtils::storeInMemory(unsigned _offset, unsigned _bytes, bool _leftAligned,
+									  bool _padToWordBoundaries)
 {
 	if (_bytes == 0)
 	{
 		m_context << eth::Instruction::POP;
-		return;
+		return 0;
 	}
 	solAssert(_bytes <= 32, "Memory store of more than 32 bytes requested.");
-	if (_bytes != 32 && !_leftAligned)
+	if (_bytes != 32 && !_leftAligned && !_padToWordBoundaries)
 		// shift the value accordingly before storing
 		m_context << (u256(1) << ((32 - _bytes) * 8)) << eth::Instruction::MUL;
 	m_context << u256(_offset) << eth::Instruction::MSTORE;
+	return _padToWordBoundaries ? 32 : _bytes;
 }
 
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)

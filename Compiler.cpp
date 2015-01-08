@@ -95,7 +95,7 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
 	unsigned argumentSize = 0;
 	for (ASTPointer<VariableDeclaration> const& var: _constructor.getParameters())
-		argumentSize += var->getType()->getCalldataEncodedSize();
+		argumentSize += CompilerUtils::getPaddedSize(var->getType()->getCalldataEncodedSize());
 	if (argumentSize > 0)
 	{
 		m_context << u256(argumentSize);
@@ -159,9 +159,9 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(var->getLocation())
 								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
-		bool leftAligned = var->getType()->getCategory() == Type::Category::STRING;
-		CompilerUtils(m_context).loadFromMemory(dataOffset, numBytes, leftAligned, !_fromMemory);
-		dataOffset += numBytes;
+		bool const leftAligned = var->getType()->getCategory() == Type::Category::STRING;
+		bool const padToWords = true;
+		dataOffset += CompilerUtils(m_context).loadFromMemory(dataOffset, numBytes, leftAligned, !_fromMemory, padToWords);
 	}
 	return dataOffset;
 }
@@ -181,10 +181,11 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 								  << errinfo_sourceLocation(parameters[i]->getLocation())
 								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
 		CompilerUtils(m_context).copyToStackTop(stackDepth, paramType);
+		ExpressionCompiler::appendTypeConversion(m_context, paramType, paramType, true);
 		bool const leftAligned = paramType.getCategory() == Type::Category::STRING;
-		CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned);
+		bool const padToWords = true;
+		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned, padToWords);
 		stackDepth -= paramType.getSizeOnStack();
-		dataOffset += numBytes;
 	}
 	// note that the stack is not cleaned up here
 	m_context << u256(dataOffset) << u256(0) << eth::Instruction::RETURN;
