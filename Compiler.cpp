@@ -100,7 +100,7 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 	{
 		m_context << u256(argumentSize);
 		m_context.appendProgramSize();
-		m_context << u256(1); // copy it to byte one as expected for ABI calls
+		m_context << u256(g_functionIdentifierOffset); // copy it to byte four as expected for ABI calls
 		m_context << eth::Instruction::CODECOPY;
 		appendCalldataUnpacker(_constructor, true);
 	}
@@ -125,12 +125,12 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("More than 4294967295 public functions for contract."));
 
 	// retrieve the function signature hash from the calldata
-	m_context << u256(1) << u256(0) << u256(4294967296) * u256(4294967296) * u256(4294967296) * u256(4294967296) * u256(4294967296) * u256(4294967296) * u256(4294967296)// some constants
+	m_context << u256(1) << u256(0) << (u256(1) << 224) // some constants
 			  << eth::dupInstruction(2) << eth::Instruction::CALLDATALOAD
 			  << eth::Instruction::DIV;
 
 	// stack now is: 1 0 <funhash>
-	for (auto it = interfaceFunctions.begin(); it != interfaceFunctions.end(); ++it)
+	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
 	{
 		callDataUnpackerEntryPoints.push_back(m_context.newTag());
 		m_context << eth::dupInstruction(1) << u256(FixedHash<4>::Arith(it->first)) << eth::Instruction::EQ;
@@ -139,7 +139,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	m_context << eth::Instruction::STOP; // function not found
 
 	unsigned funid = 0;
-	for (auto it = interfaceFunctions.begin(); it != interfaceFunctions.end(); ++it, ++funid)
+	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it, ++funid)
 	{
 		FunctionDefinition const& function = *it->second;
 		m_context << callDataUnpackerEntryPoints[funid];
@@ -154,7 +154,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, bool _fromMemory)
 {
 	// We do not check the calldata size, everything is zero-padded.
-	unsigned dataOffset = 1;
+	unsigned dataOffset = g_functionIdentifierOffset; // the 4 bytes of the function hash signature
 	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{

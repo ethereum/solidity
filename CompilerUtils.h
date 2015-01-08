@@ -30,6 +30,9 @@ namespace solidity {
 
 class Type; // forward
 
+/// The size in bytes of the function (hash) identifier
+static const unsigned int g_functionIdentifierOffset = 4;
+
 class CompilerUtils
 {
 public:

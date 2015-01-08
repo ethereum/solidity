@@ -323,16 +323,13 @@ shared_ptr<FunctionType const> const& ContractType::getConstructorType() const
 	return m_constructorType;
 }
 
-unsigned ContractType::getFunctionIndex(string const& _functionName) const
+u256 ContractType::getFunctionIdentifier(string const& _functionName) const
 {
-	unsigned index = 0;
 	auto interfaceFunctions = m_contract.getInterfaceFunctions();
 	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
-	{
 		if (it->second->getName() == _functionName)
-			return index;
-		++index;
-	}
+			return FixedHash<4>::Arith(it->first);
+
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Index of non-existing contract function requested."));
 }
 

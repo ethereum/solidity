@@ -254,7 +254,7 @@ public:
 	/// is not used, as this type cannot be the type of a variable or expression.
 	std::shared_ptr<FunctionType const> const& getConstructorType() const;
 
-	unsigned getFunctionIndex(std::string const& _functionName) const;
+	u256 getFunctionIdentifier(std::string const& _functionName) const;
 
 private:
 	ContractDefinition const& m_contract;
