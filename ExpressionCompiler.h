@@ -146,12 +146,12 @@ private:
 
 	private:
 		CompilerContext* m_context;
-		LValueType m_type;
+		LValueType m_type = NONE;
 		/// If m_type is STACK, this is base stack offset (@see
 		/// CompilerContext::getBaseStackOffsetOfVariable) of a local variable.
-		unsigned m_baseStackOffset;
+		unsigned m_baseStackOffset = 0;
 		/// Size of the value of this lvalue on the stack.
-		unsigned m_stackSize;
+		unsigned m_stackSize = 0;
 	};
 
 	bool m_optimize;
