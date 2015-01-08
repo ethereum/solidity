@@ -48,7 +48,7 @@ public:
 		m_optimize = true;
 		bytes optimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
 		int sizeDiff = nonOptimizedBytecode.size() - optimizedBytecode.size();
-		BOOST_CHECK_MESSAGE(sizeDiff == int(_expectedSizeDecrease), "Bytecode did only shrink by "
+		BOOST_CHECK_MESSAGE(sizeDiff == int(_expectedSizeDecrease), "Bytecode shrank by "
 							+ boost::lexical_cast<string>(sizeDiff) + " bytes, expected: "
 							+ boost::lexical_cast<string>(_expectedSizeDecrease));
 		m_optimizedContract = m_contractAddress;
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(large_integers)
 		contract test {
 			function f() returns (uint a, uint b) {
 				a = 0x234234872642837426347000000;
-				b = 0x110000000000000000000000002;
+				b = 0x10000000000000000000000002;
 			}
 		})";
 	compileBothVersions(53, sourceCode);
@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(invariants)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns (uint b) {
-				return (((a + (1 - 1)) ^ 0) | 0) & (uint(0) - 1);
+			function f(int a) returns (int b) {
+				return int(0) | (int(1) * (int(0) ^ (0 + a)));
 			}
 		})";
 	compileBothVersions(53, sourceCode);
@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 BOOST_AUTO_TEST_CASE(constant_folding_both_sides)
 {
 	// if constants involving the same associative and commutative operator are applied from both
-	// sides, the operator should be applied only once, because the expression compiler
-	// (even in non-optimized mode) pushes literals as late as possible
+	// sides, the operator should be applied only once, because the expression compiler pushes
+	// literals as late as possible
 	char const* sourceCode = R"(
 		contract test {
 			function f(uint x) returns (uint y) {

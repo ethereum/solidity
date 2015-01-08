@@ -39,6 +39,14 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
+LastHashes lastHashes(u256 _currentBlockNumber)
+{
+	LastHashes ret;
+	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
+		ret.push_back(sha3(toString(_currentBlockNumber - i)));
+	return ret;
+}
+
 
 
 void doStateTests(json_spirit::mValue& v, bool _fillin)
@@ -62,7 +70,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 		try
 		{
-			theState.execute(LastHashes(), tx, &output);
+			theState.execute(lastHashes(importer.m_environment.currentBlock.number), tx, &output);
 		}
 		catch (Exception const& _e)
 		{
@@ -155,6 +163,11 @@ BOOST_AUTO_TEST_CASE(stSpecialTest)
 BOOST_AUTO_TEST_CASE(stRefundTest)
 {
 	dev::test::executeTests("stRefundTest", "/StateTests", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stBlockHashTest)
+{
+	dev::test::executeTests("stBlockHashTest", "/StateTests", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCreateTest)
