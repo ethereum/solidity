@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 	char const* sourceCode = "contract test {\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("iam_not_there()", bytes()).empty());
+	BOOST_CHECK(callContractFunction("i_am_not_there()", bytes()).empty());
 }
 
 BOOST_AUTO_TEST_CASE(recursive_calls)
