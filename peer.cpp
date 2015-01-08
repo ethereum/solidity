@@ -55,7 +55,7 @@ int peerTest(int argc, char** argv)
 	{
 		this_thread::sleep_for(chrono::milliseconds(100));
 		if (!(i % 10))
-			ph.pingAll();
+			ph.keepAlivePeers();
 	}
 
 	return 0;
