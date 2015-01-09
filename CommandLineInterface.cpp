@@ -51,7 +51,7 @@ namespace solidity
 
 // LTODO: Maybe some argument class pairing names with
 // extensions and other attributes would be a better choice here?
-static string const g_argAbiStr         = "abi";
+static string const g_argAbiStr         = "json-abi";
 static string const g_argSolAbiStr      = "sol-abi";
 static string const g_argAsmStr         = "asm";
 static string const g_argAstStr         = "ast";
