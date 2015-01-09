@@ -144,23 +144,23 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	Expression const& leftExpression = _binaryOperation.getLeftExpression();
 	Expression const& rightExpression = _binaryOperation.getRightExpression();
 	Type const& commonType = _binaryOperation.getCommonType();
-	Token::Value const op = _binaryOperation.getOperator();
+	Token::Value const c_op = _binaryOperation.getOperator();
 
-	if (op == Token::AND || op == Token::OR) // special case: short-circuiting
+	if (c_op == Token::AND || c_op == Token::OR) // special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
 	else if (commonType.getCategory() == Type::Category::INTEGER_CONSTANT)
 		m_context << commonType.literalValue(nullptr);
 	else
 	{
 		bool cleanupNeeded = commonType.getCategory() == Type::Category::INTEGER &&
-								(Token::isCompareOp(op) || op == Token::DIV || op == Token::MOD);
+								(Token::isCompareOp(c_op) || c_op == Token::DIV || c_op == Token::MOD);
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
 		auto isLiteral = [](Expression const& _e)
 		{
 			return dynamic_cast<Literal const*>(&_e) || _e.getType()->getCategory() == Type::Category::INTEGER_CONSTANT;
 		};
-		bool swap = m_optimize && Token::isCommutativeOp(op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
+		bool swap = m_optimize && Token::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
 		if (swap)
 		{
 			leftExpression.accept(*this);
@@ -175,10 +175,10 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			leftExpression.accept(*this);
 			appendTypeConversion(*leftExpression.getType(), commonType, cleanupNeeded);
 		}
-		if (Token::isCompareOp(op))
-			appendCompareOperatorCode(op, commonType);
+		if (Token::isCompareOp(c_op))
+			appendCompareOperatorCode(c_op, commonType);
 		else
-			appendOrdinaryBinaryOperatorCode(op, commonType);
+			appendOrdinaryBinaryOperatorCode(c_op, commonType);
 	}
 
 	// do not visit the child nodes, we already did that explicitly
@@ -327,14 +327,15 @@ bool ExpressionCompiler::visit(NewExpression const& _newExpression)
 	{
 		arguments[i]->accept(*this);
 		appendTypeConversion(*arguments[i]->getType(), *types[i], true);
-		unsigned const numBytes = types[i]->getCalldataEncodedSize();
-		if (numBytes > 32)
+		unsigned const c_numBytes = types[i]->getCalldataEncodedSize();
+		if (c_numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(arguments[i]->getLocation())
 								  << errinfo_comment("Type " + types[i]->toString() + " not yet supported."));
-		bool const leftAligned = types[i]->getCategory() == Type::Category::STRING;
-		bool const padToWords = true;
-		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned, padToWords);
+		bool const c_leftAligned = types[i]->getCategory() == Type::Category::STRING;
+		bool const c_padToWords = true;
+		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, c_numBytes,
+															 c_leftAligned, c_padToWords);
 	}
 	// size, offset, endowment
 	m_context << u256(dataOffset) << u256(0) << u256(0) << eth::Instruction::CREATE;
@@ -462,12 +463,12 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 
 void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryOperation)
 {
-	Token::Value const op = _binaryOperation.getOperator();
-	solAssert(op == Token::OR || op == Token::AND, "");
+	Token::Value const c_op = _binaryOperation.getOperator();
+	solAssert(c_op == Token::OR || c_op == Token::AND, "");
 
 	_binaryOperation.getLeftExpression().accept(*this);
 	m_context << eth::Instruction::DUP1;
-	if (op == Token::AND)
+	if (c_op == Token::AND)
 		m_context << eth::Instruction::ISZERO;
 	eth::AssemblyItem endLabel = m_context.appendConditionalJump();
 	m_context << eth::Instruction::POP;
@@ -486,23 +487,23 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	else
 	{
 		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-		bool const isSigned = type.isSigned();
+		bool const c_isSigned = type.isSigned();
 
 		switch (_operator)
 		{
 		case Token::GTE:
-			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT)
+			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT)
 					  << eth::Instruction::ISZERO;
 			break;
 		case Token::LTE:
-			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
+			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
 					  << eth::Instruction::ISZERO;
 			break;
 		case Token::GT:
-			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
+			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
 			break;
 		case Token::LT:
-			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
+			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
@@ -525,7 +526,7 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-	bool const isSigned = type.isSigned();
+	bool const c_isSigned = type.isSigned();
 
 	switch (_operator)
 	{
@@ -539,10 +540,10 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << eth::Instruction::MUL;
 		break;
 	case Token::DIV:
-		m_context  << (isSigned ? eth::Instruction::SDIV : eth::Instruction::DIV);
+		m_context  << (c_isSigned ? eth::Instruction::SDIV : eth::Instruction::DIV);
 		break;
 	case Token::MOD:
-		m_context << (isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
+		m_context << (c_isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
@@ -634,14 +635,15 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		_arguments[i]->accept(*this);
 		Type const& type = *_functionType.getParameterTypes()[i];
 		appendTypeConversion(*_arguments[i]->getType(), type, true);
-		unsigned const numBytes = type.getCalldataEncodedSize();
-		if (numBytes == 0 || numBytes > 32)
+		unsigned const c_numBytes = type.getCalldataEncodedSize();
+		if (c_numBytes == 0 || c_numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_sourceLocation(_arguments[i]->getLocation())
 								  << errinfo_comment("Type " + type.toString() + " not yet supported."));
-		bool const leftAligned = type.getCategory() == Type::Category::STRING;
-		bool const padToWords = true;
-		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, leftAligned, padToWords);
+		bool const c_leftAligned = type.getCategory() == Type::Category::STRING;
+		bool const c_padToWords = true;
+		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, c_numBytes,
+															 c_leftAligned, c_padToWords);
 	}
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
@@ -662,8 +664,8 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 
 	if (retSize > 0)
 	{
-		bool const leftAligned = firstType->getCategory() == Type::Category::STRING;
-		CompilerUtils(m_context).loadFromMemory(0, retSize, leftAligned, false, true);
+		bool const c_leftAligned = firstType->getCategory() == Type::Category::STRING;
+		CompilerUtils(m_context).loadFromMemory(0, retSize, c_leftAligned, false, true);
 	}
 }
 
