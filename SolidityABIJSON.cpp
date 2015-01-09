@@ -50,7 +50,7 @@ public:
 				msg += *extra;
 			BOOST_FAIL(msg);
 		}
-		std::string generatedInterfaceString = m_compilerStack.getJsonDocumentation("", DocumentationType::ABI_INTERFACE);
+		std::string generatedInterfaceString = m_compilerStack.getMetadata("", DocumentationType::ABI_INTERFACE);
 		Json::Value generatedInterface;
 		m_reader.parse(generatedInterfaceString, generatedInterface);
 		Json::Value expectedInterface;
