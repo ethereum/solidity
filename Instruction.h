@@ -215,6 +215,14 @@ inline Instruction swapInstruction(unsigned _number)
 	return Instruction(unsigned(Instruction::SWAP1) + _number - 1);
 }
 
+/// @returns the LOG<_number> instruction
+inline Instruction logInstruction(unsigned _number)
+{
+	if (asserts(_number <= 4))
+		BOOST_THROW_EXCEPTION(InvalidOpcode() << errinfo_comment("Invalid LOG instruction requested."));
+	return Instruction(unsigned(Instruction::LOG0) + _number);
+}
+
 /// Information structure for a particular instruction.
 struct InstructionInfo
 {
