@@ -143,6 +143,7 @@ private:
 		m_state.noteSending(m_sender);
 		executive.finalize();
 		m_output = executive.out().toVector();
+		m_logs = executive.logs();
 	}
 
 protected:
@@ -153,6 +154,7 @@ protected:
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 1000000;
 	bytes m_output;
+	eth::LogEntries m_logs;
 };
 
 }

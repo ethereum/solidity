@@ -849,6 +849,98 @@ BOOST_AUTO_TEST_CASE(send_ether)
 	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
 }
 
+BOOST_AUTO_TEST_CASE(log0)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a() {\n"
+							 "    log0(1);\n"
+							 "  }\n"
+							 "}\n";
+	u256 amount(130);
+	compileAndRun(sourceCode, amount + 1);
+	u160 address(23);
+	callContractFunction(0, address, amount);
+	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
+	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(log1)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a() {\n"
+							 "    log1(1, 2);\n"
+							 "  }\n"
+							 "}\n";
+	u256 amount(130);
+	compileAndRun(sourceCode, amount + 1);
+	u160 address(23);
+	callContractFunction(0, address, amount);
+	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
+	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(log2)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a() {\n"
+							 "    log2(1, 2, 3);\n"
+							 "  }\n"
+							 "}\n";
+	u256 amount(130);
+	compileAndRun(sourceCode, amount + 1);
+	u160 address(23);
+	callContractFunction(0, address, amount);
+	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
+	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 2);
+	for (unsigned i = 0; i < 2; ++i)
+		BOOST_CHECK_EQUAL(m_logs[0].topics[i], h256(u256(i + 2)));
+}
+
+BOOST_AUTO_TEST_CASE(log3)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a() {\n"
+							 "    log3(1, 2, 3, 4);\n"
+							 "  }\n"
+							 "}\n";
+	u256 amount(130);
+	compileAndRun(sourceCode, amount + 1);
+	u160 address(23);
+	callContractFunction(0, address, amount);
+	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
+	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 3);
+	for (unsigned i = 0; i < 3; ++i)
+		BOOST_CHECK_EQUAL(m_logs[0].topics[i], h256(u256(i + 2)));
+}
+
+BOOST_AUTO_TEST_CASE(log4)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a() {\n"
+							 "    log4(1, 2, 3, 4, 5);\n"
+							 "  }\n"
+							 "}\n";
+	u256 amount(130);
+	compileAndRun(sourceCode, amount + 1);
+	u160 address(23);
+	callContractFunction(0, address, amount);
+	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
+	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 4);
+	for (unsigned i = 0; i < 4; ++i)
+		BOOST_CHECK_EQUAL(m_logs[0].topics[i], h256(u256(i + 2)));
+}
+
 BOOST_AUTO_TEST_CASE(suicide)
 {
 	char const* sourceCode = "contract test {\n"
