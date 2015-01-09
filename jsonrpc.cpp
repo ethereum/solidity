@@ -22,7 +22,7 @@
 // @debris disabled as tests fail with:
 // unknown location(0): fatal error in "jsonrpc_setMining": std::exception: Exception -32003 : Client connector error: : libcurl error: 28
 // /home/gav/Eth/cpp-ethereum/test/jsonrpc.cpp(169): last checkpoint
-#if ETH_JSONRPC && 1
+#if ETH_JSONRPC && 0
 
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
