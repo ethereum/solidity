@@ -77,6 +77,7 @@ void executeTests(const std::string& _name, const std::string& _testPathAppendix
 std::string getTestPath();
 void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
 void processCommandLineOptions();
+eth::LastHashes lastHashes(u256 _currentBlockNumber);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
