@@ -56,34 +56,36 @@ public:
 		return m_output;
 	}
 
-	bytes const& callContractFunction(byte _index, bytes const& _data = bytes(), u256 const& _value = 0)
+	bytes const& callContractFunction(std::string _sig, bytes const& _data = bytes(),
+									  u256 const& _value = 0)
 	{
-		sendMessage(bytes(1, _index) + _data, false, _value);
+		FixedHash<4> hash(dev::sha3(_sig));
+		sendMessage(hash.asBytes() + _data, false, _value);
 		return m_output;
 	}
 
 	template <class... Args>
-	bytes const& callContractFunction(byte _index, Args const&... _arguments)
+	bytes const& callContractFunction(std::string _sig, Args const&... _arguments)
 	{
-		return callContractFunction(_index, argsToBigEndian(_arguments...));
+		return callContractFunction(_sig, argsToBigEndian(_arguments...));
 	}
 
 	template <class CppFunction, class... Args>
-	void testSolidityAgainstCpp(byte _index, CppFunction const& _cppFunction, Args const&... _arguments)
+	void testSolidityAgainstCpp(std::string _sig, CppFunction const& _cppFunction, Args const&... _arguments)
 	{
-		bytes solidityResult = callContractFunction(_index, _arguments...);
+		bytes solidityResult = callContractFunction(_sig, _arguments...);
 		bytes cppResult = callCppAndEncodeResult(_cppFunction, _arguments...);
 		BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
 							"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult));
 	}
 
 	template <class CppFunction, class... Args>
-	void testSolidityAgainstCppOnRange(byte _index, CppFunction const& _cppFunction,
+	void testSolidityAgainstCppOnRange(std::string _sig, CppFunction const& _cppFunction,
 									   u256 const& _rangeStart, u256 const& _rangeEnd)
 	{
 		for (u256 argument = _rangeStart; argument < _rangeEnd; ++argument)
 		{
-			bytes solidityResult = callContractFunction(_index, argument);
+			bytes solidityResult = callContractFunction(_sig, argument);
 			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
 			BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
 								"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult) +
