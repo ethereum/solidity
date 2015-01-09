@@ -17,6 +17,7 @@
 */
 /**
  * @author Christian <c@ethdev.com>
+ * @author Gav Wood <g@ethdev.com>
  * @date 2014
  * Unit tests for the solidity expression compiler, testing the behaviour of the code.
  */
