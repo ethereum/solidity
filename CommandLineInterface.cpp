@@ -16,6 +16,7 @@
 */
 /**
  * @author Lefteris <lefteris@ethdev.com>
+ * @author Gav Wood <g@ethdev.com>
  * @date 2014
  * Solidity command line interface.
  */
@@ -51,6 +52,7 @@ namespace solidity
 // LTODO: Maybe some argument class pairing names with
 // extensions and other attributes would be a better choice here?
 static string const g_argAbiStr         = "abi";
+static string const g_argSolAbiStr      = "sol-abi";
 static string const g_argAsmStr         = "asm";
 static string const g_argAstStr         = "ast";
 static string const g_argBinaryStr      = "binary";
@@ -60,7 +62,7 @@ static string const g_argNatspecUserStr = "natspec-user";
 
 static void version()
 {
-	cout << "solc, the solidity complier commandline interface " << dev::Version << endl
+	cout << "solc, the solidity compiler commandline interface " << dev::Version << endl
 		 << "  by Christian <c@ethdev.com> and Lefteris <lefteris@ethdev.com>, (c) 2014." << endl
 		 << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
@@ -73,9 +75,11 @@ static inline bool argToStdout(po::variables_map const& _args, string const& _na
 
 static bool needStdout(po::variables_map const& _args)
 {
-	return argToStdout(_args, g_argAbiStr) || argToStdout(_args, g_argNatspecUserStr) ||
-		   argToStdout(_args, g_argNatspecDevStr) || argToStdout(_args, g_argAsmStr) ||
-		   argToStdout(_args, g_argOpcodesStr) || argToStdout(_args, g_argBinaryStr);
+	return
+		argToStdout(_args, g_argAbiStr) || argToStdout(_args, g_argSolAbiStr) ||
+		argToStdout(_args, g_argNatspecUserStr) ||
+		argToStdout(_args, g_argNatspecDevStr) || argToStdout(_args, g_argAsmStr) ||
+		argToStdout(_args, g_argOpcodesStr) || argToStdout(_args, g_argBinaryStr);
 }
 
 static inline bool outputToFile(OutputType type)
@@ -146,8 +150,7 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 		handleBinary(_contract);
 }
 
-void CommandLineInterface::handleJson(DocumentationType _type,
-									  string const& _contract)
+void CommandLineInterface::handleMeta(DocumentationType _type, string const& _contract)
 {
 	std::string argName;
 	std::string suffix;
@@ -159,8 +162,13 @@ void CommandLineInterface::handleJson(DocumentationType _type,
 		suffix = ".abi";
 		title = "Contract ABI";
 		break;
+	case DocumentationType::ABI_SOLIDITY_INTERFACE:
+		argName = g_argSolAbiStr;
+		suffix = ".sol";
+		title = "Contract Solidity ABI";
+		break;
 	case DocumentationType::NATSPEC_USER:
-		argName = "g_argNatspecUserStr";
+		argName = g_argNatspecUserStr;
 		suffix = ".docuser";
 		title = "User Documentation";
 		break;
@@ -180,13 +188,13 @@ void CommandLineInterface::handleJson(DocumentationType _type,
 		if (outputToStdout(choice))
 		{
 			cout << title << endl;
-			cout << m_compiler.getJsonDocumentation(_contract, _type);
+			cout << m_compiler.getMetadata(_contract, _type);
 		}
 
 		if (outputToFile(choice))
 		{
 			ofstream outFile(_contract + suffix);
-			outFile << m_compiler.getJsonDocumentation(_contract, _type);
+			outFile << m_compiler.getMetadata(_contract, _type);
 			outFile.close();
 		}
 	}
@@ -214,7 +222,9 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 		(g_argBinaryStr.c_str(), po::value<OutputType>(),
 		 "Request to output the contract in binary (hexadecimal). " OUTPUT_TYPE_STR)
 		(g_argAbiStr.c_str(), po::value<OutputType>(),
-		 "Request to output the contract's ABI interface. "  OUTPUT_TYPE_STR)
+		 "Request to output the contract's JSON ABI interface. "  OUTPUT_TYPE_STR)
+		(g_argSolAbiStr.c_str(), po::value<OutputType>(),
+		 "Request to output the contract's Solidity ABI interface. "  OUTPUT_TYPE_STR)
 		(g_argNatspecUserStr.c_str(), po::value<OutputType>(),
 		 "Request to output the contract's Natspec user documentation. " OUTPUT_TYPE_STR)
 		(g_argNatspecDevStr.c_str(), po::value<OutputType>(),
@@ -384,9 +394,10 @@ void CommandLineInterface::actOnInput()
 		}
 
 		handleBytecode(contract);
-		handleJson(DocumentationType::ABI_INTERFACE, contract);
-		handleJson(DocumentationType::NATSPEC_DEV, contract);
-		handleJson(DocumentationType::NATSPEC_USER, contract);
+		handleMeta(DocumentationType::ABI_INTERFACE, contract);
+		handleMeta(DocumentationType::ABI_SOLIDITY_INTERFACE, contract);
+		handleMeta(DocumentationType::NATSPEC_DEV, contract);
+		handleMeta(DocumentationType::NATSPEC_USER, contract);
 	} // end of contracts iteration
 }
 

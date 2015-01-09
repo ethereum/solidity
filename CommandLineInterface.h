@@ -56,7 +56,7 @@ private:
 	void handleBinary(std::string const& _contract);
 	void handleOpcode(std::string const& _contract);
 	void handleBytecode(std::string const& _contract);
-	void handleJson(DocumentationType _type,
+	void handleMeta(DocumentationType _type,
 					std::string const& _contract);
 
 	/// Compiler arguments variable map
