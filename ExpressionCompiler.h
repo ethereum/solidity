@@ -58,7 +58,7 @@ private:
 		m_optimize(_optimize), m_context(_compilerContext), m_currentLValue(m_context) {}
 
 	virtual bool visit(Assignment const& _assignment) override;
-	virtual void endVisit(UnaryOperation const& _unaryOperation) override;
+	virtual bool visit(UnaryOperation const& _unaryOperation) override;
 	virtual bool visit(BinaryOperation const& _binaryOperation) override;
 	virtual bool visit(FunctionCall const& _functionCall) override;
 	virtual bool visit(NewExpression const& _newExpression) override;

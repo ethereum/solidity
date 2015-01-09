@@ -44,17 +44,17 @@ shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
 		if (bytes == 0)
 			bytes = 32;
 		int modifier = offset / 33;
-		return make_shared<IntegerType const>(bytes * 8,
+		return make_shared<IntegerType>(bytes * 8,
 										modifier == 0 ? IntegerType::Modifier::SIGNED :
 										modifier == 1 ? IntegerType::Modifier::UNSIGNED :
 										IntegerType::Modifier::HASH);
 	}
 	else if (_typeToken == Token::ADDRESS)
-		return make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS);
+		return make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS);
 	else if (_typeToken == Token::BOOL)
-		return make_shared<BoolType const>();
+		return make_shared<BoolType>();
 	else if (Token::STRING0 <= _typeToken && _typeToken <= Token::STRING32)
-		return make_shared<StaticStringType const>(int(_typeToken) - int(Token::STRING0));
+		return make_shared<StaticStringType>(int(_typeToken) - int(Token::STRING0));
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -64,11 +64,11 @@ shared_ptr<Type const> Type::fromUserDefinedTypeName(UserDefinedTypeName const& 
 {
 	Declaration const* declaration = _typeName.getReferencedDeclaration();
 	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
-		return make_shared<StructType const>(*structDef);
+		return make_shared<StructType>(*structDef);
 	else if (FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(declaration))
-		return make_shared<FunctionType const>(*function);
+		return make_shared<FunctionType>(*function);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
-		return make_shared<ContractType const>(*contract);
+		return make_shared<ContractType>(*contract);
 	return shared_ptr<Type const>();
 }
 
@@ -80,7 +80,7 @@ shared_ptr<Type const> Type::fromMapping(Mapping const& _typeName)
 	shared_ptr<Type const> valueType = _typeName.getValueType().toType();
 	if (!valueType)
 		BOOST_THROW_EXCEPTION(_typeName.getValueType().createTypeError("Invalid type name"));
-	return make_shared<MappingType const>(keyType, valueType);
+	return make_shared<MappingType>(keyType, valueType);
 }
 
 shared_ptr<Type const> Type::forLiteral(Literal const& _literal)
@@ -89,14 +89,14 @@ shared_ptr<Type const> Type::forLiteral(Literal const& _literal)
 	{
 	case Token::TRUE_LITERAL:
 	case Token::FALSE_LITERAL:
-		return make_shared<BoolType const>();
+		return make_shared<BoolType>();
 	case Token::NUMBER:
-		return IntegerType::smallestTypeForLiteral(_literal.getValue());
+		return IntegerConstantType::fromLiteral(_literal.getValue());
 	case Token::STRING_LITERAL:
 		//@todo put larger strings into dynamic strings
 		return StaticStringType::smallestTypeForLiteral(_literal.getValue());
 	default:
-		return shared_ptr<Type const>();
+		return shared_ptr<Type>();
 	}
 }
 
@@ -111,19 +111,6 @@ TypePointer Type::commonType(TypePointer const& _a, TypePointer const& _b)
 }
 
 const MemberList Type::EmptyMemberList = MemberList();
-
-shared_ptr<IntegerType const> IntegerType::smallestTypeForLiteral(string const& _literal)
-{
-	bigint value(_literal);
-	bool isSigned = value < 0 || (!_literal.empty() && _literal.front() == '-');
-	if (isSigned)
-		// convert to positive number of same bit requirements
-		value = ((-value) - 1) << 1;
-	unsigned bytes = max(bytesRequired(value), 1u);
-	if (bytes > 32)
-		return shared_ptr<IntegerType const>();
-	return make_shared<IntegerType const>(bytes * 8, isSigned ? Modifier::SIGNED : Modifier::UNSIGNED);
-}
 
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
@@ -156,18 +143,26 @@ bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.getCategory() == getCategory() || _convertTo.getCategory() == Category::CONTRACT;
 }
 
-bool IntegerType::acceptsUnaryOperator(Token::Value _operator) const
+TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 {
+	// "delete" is ok for all integer types
 	if (_operator == Token::DELETE)
-		return true;
-	if (isAddress())
-		return false;
-	if (_operator == Token::BIT_NOT)
-		return true;
-	if (isHash())
-		return false;
-	return _operator == Token::ADD || _operator == Token::SUB ||
-		   _operator == Token::INC || _operator == Token::DEC;
+		return shared_from_this();
+	// no further unary operators for addresses
+	else if (isAddress())
+		return TypePointer();
+	// "~" is ok for all other types
+	else if (_operator == Token::BIT_NOT)
+		return shared_from_this();
+	// nothing else for hashes
+	else if (isHash())
+		return TypePointer();
+	// for non-hash integers, we allow +, -, ++ and --
+	else if (_operator == Token::ADD || _operator == Token::SUB ||
+			_operator == Token::INC || _operator == Token::DEC)
+		return shared_from_this();
+	else
+		return TypePointer();
 }
 
 bool IntegerType::operator==(Type const& _other) const
@@ -186,17 +181,11 @@ string IntegerType::toString() const
 	return prefix + dev::toString(m_bits);
 }
 
-u256 IntegerType::literalValue(Literal const& _literal) const
+TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	bigint value(_literal.getValue());
-	return u256(value);
-}
-
-TypePointer IntegerType::binaryOperatorResultImpl(Token::Value _operator, TypePointer const& _this, TypePointer const& _other) const
-{
-	if (getCategory() != _other->getCategory())
+	if (_other->getCategory() != Category::INTEGER_CONSTANT && _other->getCategory() != getCategory())
 		return TypePointer();
-	auto commonType = dynamic_pointer_cast<IntegerType const>(Type::commonType(_this, _other));
+	auto commonType = dynamic_pointer_cast<IntegerType const>(Type::commonType(shared_from_this(), _other));
 
 	if (!commonType)
 		return TypePointer();
@@ -216,17 +205,152 @@ TypePointer IntegerType::binaryOperatorResultImpl(Token::Value _operator, TypePo
 
 const MemberList IntegerType::AddressMemberList =
 	MemberList({{"balance",
-					make_shared<IntegerType const>(256)},
+					make_shared<IntegerType >(256)},
 				{"callstring32",
-					make_shared<FunctionType const>(TypePointers({make_shared<StaticStringType const>(32)}),
-													TypePointers(), FunctionType::Location::BARE)},
+					make_shared<FunctionType>(TypePointers({make_shared<StaticStringType>(32)}),
+											  TypePointers(), FunctionType::Location::BARE)},
 				{"callstring32string32",
-					make_shared<FunctionType const>(TypePointers({make_shared<StaticStringType const>(32),
-																  make_shared<StaticStringType const>(32)}),
-													TypePointers(), FunctionType::Location::BARE)},
+					make_shared<FunctionType>(TypePointers({make_shared<StaticStringType>(32),
+															make_shared<StaticStringType>(32)}),
+											  TypePointers(), FunctionType::Location::BARE)},
 				{"send",
-					make_shared<FunctionType const>(TypePointers({make_shared<IntegerType const>(256)}),
-													TypePointers(), FunctionType::Location::SEND)}});
+					make_shared<FunctionType>(TypePointers({make_shared<IntegerType>(256)}),
+											  TypePointers(), FunctionType::Location::SEND)}});
+
+shared_ptr<IntegerConstantType const> IntegerConstantType::fromLiteral(string const& _literal)
+{
+	return make_shared<IntegerConstantType>(bigint(_literal));
+}
+
+bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	TypePointer integerType = getIntegerType();
+	return integerType && integerType->isImplicitlyConvertibleTo(_convertTo);
+}
+
+bool IntegerConstantType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	TypePointer integerType = getIntegerType();
+	return integerType && integerType->isExplicitlyConvertibleTo(_convertTo);
+}
+
+TypePointer IntegerConstantType::unaryOperatorResult(Token::Value _operator) const
+{
+	bigint value;
+	switch (_operator)
+	{
+	case Token::BIT_NOT:
+		value = ~m_value;
+		break;
+	case Token::ADD:
+		value = m_value;
+		break;
+	case Token::SUB:
+		value = -m_value;
+		break;
+	default:
+		return TypePointer();
+	}
+	return make_shared<IntegerConstantType>(value);
+}
+
+TypePointer IntegerConstantType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+{
+	if (_other->getCategory() == Category::INTEGER)
+	{
+		shared_ptr<IntegerType const> integerType = getIntegerType();
+		if (!integerType)
+			return TypePointer();
+		return integerType->binaryOperatorResult(_operator, _other);
+	}
+	else if (_other->getCategory() != getCategory())
+		return TypePointer();
+
+	IntegerConstantType const& other = dynamic_cast<IntegerConstantType const&>(*_other);
+	if (Token::isCompareOp(_operator))
+	{
+		shared_ptr<IntegerType const> thisIntegerType = getIntegerType();
+		shared_ptr<IntegerType const> otherIntegerType = other.getIntegerType();
+		if (!thisIntegerType || !otherIntegerType)
+			return TypePointer();
+		return thisIntegerType->binaryOperatorResult(_operator, otherIntegerType);
+	}
+	else
+	{
+		bigint value;
+		switch (_operator)
+		{
+		case Token::BIT_OR:
+			value = m_value | other.m_value;
+			break;
+		case Token::BIT_XOR:
+			value = m_value ^ other.m_value;
+			break;
+		case Token::BIT_AND:
+			value = m_value & other.m_value;
+			break;
+		case Token::ADD:
+			value = m_value + other.m_value;
+			break;
+		case Token::SUB:
+			value = m_value - other.m_value;
+			break;
+		case Token::MUL:
+			value = m_value * other.m_value;
+			break;
+		case Token::DIV:
+			if (other.m_value == 0)
+				return TypePointer();
+			value = m_value / other.m_value;
+			break;
+		case Token::MOD:
+			if (other.m_value == 0)
+				return TypePointer();
+			value = m_value % other.m_value;
+			break;
+		default:
+			return TypePointer();
+		}
+		return make_shared<IntegerConstantType>(value);
+	}
+}
+
+bool IntegerConstantType::operator==(Type const& _other) const
+{
+	if (_other.getCategory() != getCategory())
+		return false;
+	return m_value == dynamic_cast<IntegerConstantType const&>(_other).m_value;
+}
+
+string IntegerConstantType::toString() const
+{
+	return "int_const " + m_value.str();
+}
+
+u256 IntegerConstantType::literalValue(Literal const*) const
+{
+	// we ignore the literal and hope that the type was correctly determined
+	solAssert(m_value <= u256(-1), "Integer constant too large.");
+	solAssert(m_value >= -(bigint(1) << 255), "Integer constant too small.");
+	if (m_value >= 0)
+		return u256(m_value);
+	else
+		return s2u(s256(m_value));
+}
+
+shared_ptr<IntegerType const> IntegerConstantType::getIntegerType() const
+{
+	bigint value = m_value;
+	bool negative = (value < 0);
+	if (negative) // convert to positive number of same bit requirements
+		value = ((-value) - 1) << 1;
+	if (value > u256(-1))
+		return shared_ptr<IntegerType const>();
+	else
+		return make_shared<IntegerType>(max(bytesRequired(value), 1u) * 8,
+										negative ? IntegerType::Modifier::SIGNED
+												 : IntegerType::Modifier::UNSIGNED);
+}
 
 shared_ptr<StaticStringType> StaticStringType::smallestTypeForLiteral(string const& _literal)
 {
@@ -257,12 +381,13 @@ bool StaticStringType::operator==(Type const& _other) const
 	return other.m_bytes == m_bytes;
 }
 
-u256 StaticStringType::literalValue(const Literal& _literal) const
+u256 StaticStringType::literalValue(const Literal* _literal) const
 {
+	solAssert(_literal, "");
 	u256 value = 0;
-	for (char c: _literal.getValue())
+	for (char c: _literal->getValue())
 		value = (value << 8) | byte(c);
-	return value << ((32 - _literal.getValue().length()) * 8);
+	return value << ((32 - _literal->getValue().length()) * 8);
 }
 
 bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -278,22 +403,23 @@ bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return isImplicitlyConvertibleTo(_convertTo);
 }
 
-u256 BoolType::literalValue(Literal const& _literal) const
+u256 BoolType::literalValue(Literal const* _literal) const
 {
-	if (_literal.getToken() == Token::TRUE_LITERAL)
+	solAssert(_literal, "");
+	if (_literal->getToken() == Token::TRUE_LITERAL)
 		return u256(1);
-	else if (_literal.getToken() == Token::FALSE_LITERAL)
+	else if (_literal->getToken() == Token::FALSE_LITERAL)
 		return u256(0);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Bool type constructed from non-boolean literal."));
 }
 
-TypePointer BoolType::binaryOperatorResultImpl(Token::Value _operator, TypePointer const& _this, TypePointer const& _other) const
+TypePointer BoolType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	if (getCategory() != _other->getCategory())
 		return TypePointer();
 	if (Token::isCompareOp(_operator) || _operator == Token::AND || _operator == Token::OR)
-		return _this;
+		return _other;
 	else
 		return TypePointer();
 }
@@ -347,9 +473,9 @@ shared_ptr<FunctionType const> const& ContractType::getConstructorType() const
 	{
 		FunctionDefinition const* constructor = m_contract.getConstructor();
 		if (constructor)
-			m_constructorType = make_shared<FunctionType const>(*constructor);
+			m_constructorType = make_shared<FunctionType>(*constructor);
 		else
-			m_constructorType = make_shared<FunctionType const>(TypePointers(), TypePointers());
+			m_constructorType = make_shared<FunctionType>(TypePointers(), TypePointers());
 	}
 	return m_constructorType;
 }
@@ -521,21 +647,21 @@ MagicType::MagicType(MagicType::Kind _kind):
 	switch (m_kind)
 	{
 	case Kind::BLOCK:
-		m_members = MemberList({{"coinbase", make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS)},
-								{"timestamp", make_shared<IntegerType const>(256)},
-								{"prevhash", make_shared<IntegerType const>(256, IntegerType::Modifier::HASH)},
-								{"difficulty", make_shared<IntegerType const>(256)},
-								{"number", make_shared<IntegerType const>(256)},
-								{"gaslimit", make_shared<IntegerType const>(256)}});
+		m_members = MemberList({{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS)},
+								{"timestamp", make_shared<IntegerType >(256)},
+								{"prevhash", make_shared<IntegerType>(256, IntegerType::Modifier::HASH)},
+								{"difficulty", make_shared<IntegerType>(256)},
+								{"number", make_shared<IntegerType>(256)},
+								{"gaslimit", make_shared<IntegerType>(256)}});
 		break;
 	case Kind::MSG:
-		m_members = MemberList({{"sender", make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS)},
-								{"gas", make_shared<IntegerType const>(256)},
-								{"value", make_shared<IntegerType const>(256)}});
+		m_members = MemberList({{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS)},
+								{"gas", make_shared<IntegerType>(256)},
+								{"value", make_shared<IntegerType>(256)}});
 		break;
 	case Kind::TX:
-		m_members = MemberList({{"origin", make_shared<IntegerType const>(0, IntegerType::Modifier::ADDRESS)},
-								{"gasprice", make_shared<IntegerType const>(256)}});
+		m_members = MemberList({{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS)},
+								{"gasprice", make_shared<IntegerType>(256)}});
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
