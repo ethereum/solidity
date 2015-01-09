@@ -200,6 +200,13 @@ bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimiz
 	return stack.compile(_sourceCode, _optimize);
 }
 
+dev::h256 CompilerStack::getContractCodeHash(std::string const& _contractName)
+{
+	//LTODO
+	(void) _contractName;
+	return dev::h256("");
+}
+
 void CompilerStack::reset(bool _keepSources)
 {
 	m_parseSuccessful = false;

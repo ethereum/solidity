@@ -28,6 +28,7 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev {
 namespace solidity {
@@ -103,6 +104,9 @@ public:
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.
 	static bytes staticCompile(std::string const& _sourceCode, bool _optimize = false);
+
+	/// Get the runtime context's code hash for a contract. LTODO
+	dev::h256 getContractCodeHash(std::string const& _contractName);
 
 private:
 	/**
