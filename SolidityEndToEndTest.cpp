@@ -1054,10 +1054,10 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls)
 			}
 		})";
 	compileAndRun(sourceCode, 0, "Helper");
-	u160 const helperAddress = m_contractAddress;
+	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("setHelper(address)", helperAddress) == bytes());
-	BOOST_REQUIRE(callContractFunction("getHelper()", helperAddress) == encodeArgs(helperAddress));
+	BOOST_REQUIRE(callContractFunction("setHelper(address)", c_helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction("getHelper()", c_helperAddress) == encodeArgs(c_helperAddress));
 	u256 a(3456789);
 	u256 b("0x282837623374623234aa74");
 	BOOST_REQUIRE(callContractFunction("callHelper(uint256,uint256)", a, b) == encodeArgs(a * b));
@@ -1084,10 +1084,10 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls_with_complex_parameters)
 			}
 		})";
 	compileAndRun(sourceCode, 0, "Helper");
-	u160 const helperAddress = m_contractAddress;
+	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("setHelper(address)", helperAddress) == bytes());
-	BOOST_REQUIRE(callContractFunction("getHelper()", helperAddress) == encodeArgs(helperAddress));
+	BOOST_REQUIRE(callContractFunction("setHelper(address)", c_helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction("getHelper()", c_helperAddress) == encodeArgs(c_helperAddress));
 	u256 a(3456789);
 	u256 b("0x282837623374623234aa74");
 	BOOST_REQUIRE(callContractFunction("callHelper(uint256,bool,uint256)", a, true, b) == encodeArgs(a * 3));
@@ -1115,11 +1115,11 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls_accessing_this)
 			}
 		})";
 	compileAndRun(sourceCode, 0, "Helper");
-	u160 const helperAddress = m_contractAddress;
+	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("setHelper(address)", helperAddress) == bytes());
-	BOOST_REQUIRE(callContractFunction("getHelper()", helperAddress) == encodeArgs(helperAddress));
-	BOOST_REQUIRE(callContractFunction("callHelper()") == encodeArgs(helperAddress));
+	BOOST_REQUIRE(callContractFunction("setHelper(address)", c_helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction("getHelper()", c_helperAddress) == encodeArgs(c_helperAddress));
+	BOOST_REQUIRE(callContractFunction("callHelper()") == encodeArgs(c_helperAddress));
 }
 
 BOOST_AUTO_TEST_CASE(calls_to_this)
@@ -1146,10 +1146,10 @@ BOOST_AUTO_TEST_CASE(calls_to_this)
 			}
 		})";
 	compileAndRun(sourceCode, 0, "Helper");
-	u160 const helperAddress = m_contractAddress;
+	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("setHelper(address)", helperAddress) == bytes());
-	BOOST_REQUIRE(callContractFunction("getHelper()", helperAddress) == encodeArgs(helperAddress));
+	BOOST_REQUIRE(callContractFunction("setHelper(address)", c_helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction("getHelper()", c_helperAddress) == encodeArgs(c_helperAddress));
 	u256 a(3456789);
 	u256 b("0x282837623374623234aa74");
 	BOOST_REQUIRE(callContractFunction("callHelper(uint256,uint256)", a, b) == encodeArgs(a * b + 10));
@@ -1181,10 +1181,10 @@ BOOST_AUTO_TEST_CASE(inter_contract_calls_with_local_vars)
 			}
 		})";
 	compileAndRun(sourceCode, 0, "Helper");
-	u160 const helperAddress = m_contractAddress;
+	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("setHelper(address)", helperAddress) == bytes());
-	BOOST_REQUIRE(callContractFunction("getHelper()", helperAddress) == encodeArgs(helperAddress));
+	BOOST_REQUIRE(callContractFunction("setHelper(address)", c_helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction("getHelper()", c_helperAddress) == encodeArgs(c_helperAddress));
 	u256 a(3456789);
 	u256 b("0x282837623374623234aa74");
 	BOOST_REQUIRE(callContractFunction("callHelper(uint256,uint256)", a, b) == encodeArgs(a * b + 9));
@@ -1211,10 +1211,10 @@ BOOST_AUTO_TEST_CASE(strings_in_calls)
 			}
 		})";
 	compileAndRun(sourceCode, 0, "Helper");
-	u160 const helperAddress = m_contractAddress;
+	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("setHelper(address)", helperAddress) == bytes());
-	BOOST_REQUIRE(callContractFunction("getHelper()", helperAddress) == encodeArgs(helperAddress));
+	BOOST_REQUIRE(callContractFunction("setHelper(address)", c_helperAddress) == bytes());
+	BOOST_REQUIRE(callContractFunction("getHelper()", c_helperAddress) == encodeArgs(c_helperAddress));
 	BOOST_CHECK(callContractFunction("callHelper(string2,bool)", string("\0a", 2), true) == encodeArgs(string("\0a\0\0\0", 5)));
 }
 
