@@ -141,15 +141,15 @@ void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractN
 
 string const& CompilerStack::getInterface(string const& _contractName) const
 {
-	return getJsonDocumentation(_contractName, DocumentationType::ABI_INTERFACE);
+	return getMetadata(_contractName, DocumentationType::ABI_INTERFACE);
 }
 
 string const& CompilerStack::getSolidityInterface(string const& _contractName) const
 {
-	return getJsonDocumentation(_contractName, DocumentationType::ABI_SOLIDITY_INTERFACE);
+	return getMetadata(_contractName, DocumentationType::ABI_SOLIDITY_INTERFACE);
 }
 
-string const& CompilerStack::getJsonDocumentation(string const& _contractName, DocumentationType _type) const
+string const& CompilerStack::getMetadata(string const& _contractName, DocumentationType _type) const
 {
 	if (!m_parseSuccessful)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
