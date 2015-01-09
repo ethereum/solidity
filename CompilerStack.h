@@ -16,6 +16,7 @@
 */
 /**
  * @author Christian <c@ethdev.com>
+ * @author Gav Wood <g@ethdev.com>
  * @date 2014
  * Full-stack compiler that converts a source code string to bytecode.
  */
@@ -82,13 +83,13 @@ public:
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& getInterface(std::string const& _contractName = "") const;
-	/// Returns a string representing the contract interface in JSON.
+	/// Returns a string representing the contract interface in Solidity.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& getSolidityInterface(std::string const& _contractName = "") const;
 	/// Returns a string representing the contract's documentation in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
-	/// Can be one of 3 types defined at @c DocumentationType
+	/// Can be one of 4 types defined at @c DocumentationType
 	std::string const& getJsonDocumentation(std::string const& _contractName, DocumentationType _type) const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
