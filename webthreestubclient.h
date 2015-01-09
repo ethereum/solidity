@@ -12,6 +12,16 @@ class WebThreeStubClient : public jsonrpc::Client
     public:
         WebThreeStubClient(jsonrpc::IClientConnector &conn) : jsonrpc::Client(conn) {}
 
+        std::string web3_sha3(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            Json::Value result = this->CallMethod("web3_sha3",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
         std::string eth_coinbase() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
