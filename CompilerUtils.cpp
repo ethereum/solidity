@@ -31,6 +31,8 @@ namespace dev
 namespace solidity
 {
 
+const unsigned int CompilerUtils::dataStartOffset = 4;
+
 void CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _leftAligned, bool _fromCalldata)
 {
 	if (_bytes == 0)

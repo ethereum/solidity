@@ -183,8 +183,9 @@ public:
 	/// Can contain a nullptr in which case indicates absence of documentation
 	ASTPointer<ASTString> const& getDocumentation() const { return m_documentation; }
 
-	/// Returns the functions that make up the calling interface in the intended order.
-	std::vector<FunctionDefinition const*> getInterfaceFunctions() const;
+	/// @returns a map of canonical function signatures to FunctionDefinitions
+	/// as intended for use by the ABI.
+	std::map<FixedHash<4>, FunctionDefinition const*> getInterfaceFunctions() const;
 
 	/// Returns the constructor or nullptr if no constructor was specified
 	FunctionDefinition const* getConstructor() const;
