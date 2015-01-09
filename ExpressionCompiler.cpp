@@ -268,60 +268,22 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << u256(32) << u256(0) << eth::Instruction::SHA3;
 			break;
 		case Location::LOG0:
-			arguments.front()->accept(*this);
-			appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
-			// @todo move this once we actually use memory
-			CompilerUtils(m_context).storeInMemory(0);
-			m_context << u256(32) << u256(0) << eth::Instruction::LOG0;
-			break;
 		case Location::LOG1:
-			arguments[1]->accept(*this);
-			arguments[0]->accept(*this);
-			appendTypeConversion(*arguments[1]->getType(), *function.getParameterTypes()[1], true);
-			appendTypeConversion(*arguments[0]->getType(), *function.getParameterTypes()[0], true);
-			// @todo move this once we actually use memory
-			CompilerUtils(m_context).storeInMemory(0);
-			m_context << u256(32) << u256(0) << eth::Instruction::LOG1;
-			break;
 		case Location::LOG2:
-			arguments[2]->accept(*this);
-			arguments[1]->accept(*this);
-			arguments[0]->accept(*this);
-			appendTypeConversion(*arguments[2]->getType(), *function.getParameterTypes()[2], true);
-			appendTypeConversion(*arguments[1]->getType(), *function.getParameterTypes()[1], true);
-			appendTypeConversion(*arguments[0]->getType(), *function.getParameterTypes()[0], true);
-			// @todo move this once we actually use memory
-			CompilerUtils(m_context).storeInMemory(0);
-			m_context << u256(32) << u256(0) << eth::Instruction::LOG2;
-			break;
 		case Location::LOG3:
-			arguments[3]->accept(*this);
-			arguments[2]->accept(*this);
-			arguments[1]->accept(*this);
-			arguments[0]->accept(*this);
-			appendTypeConversion(*arguments[3]->getType(), *function.getParameterTypes()[3], true);
-			appendTypeConversion(*arguments[2]->getType(), *function.getParameterTypes()[2], true);
-			appendTypeConversion(*arguments[1]->getType(), *function.getParameterTypes()[1], true);
-			appendTypeConversion(*arguments[0]->getType(), *function.getParameterTypes()[0], true);
-			// @todo move this once we actually use memory
-			CompilerUtils(m_context).storeInMemory(0);
-			m_context << u256(32) << u256(0) << eth::Instruction::LOG3;
-			break;
 		case Location::LOG4:
-			arguments[4]->accept(*this);
-			arguments[3]->accept(*this);
-			arguments[2]->accept(*this);
-			arguments[1]->accept(*this);
-			arguments[0]->accept(*this);
-			appendTypeConversion(*arguments[4]->getType(), *function.getParameterTypes()[4], true);
-			appendTypeConversion(*arguments[3]->getType(), *function.getParameterTypes()[3], true);
-			appendTypeConversion(*arguments[2]->getType(), *function.getParameterTypes()[2], true);
-			appendTypeConversion(*arguments[1]->getType(), *function.getParameterTypes()[1], true);
-			appendTypeConversion(*arguments[0]->getType(), *function.getParameterTypes()[0], true);
+		{
+			unsigned logNumber = int(function.getLocation()) - int(Location::LOG0);
+			for (int arg = logNumber; arg >= 0; --arg)
+			{
+				arguments[arg]->accept(*this);
+				appendTypeConversion(*arguments[arg]->getType(), *function.getParameterTypes()[arg], true);
+			}
 			// @todo move this once we actually use memory
 			CompilerUtils(m_context).storeInMemory(0);
-			m_context << u256(32) << u256(0) << eth::Instruction::LOG4;
+			m_context << u256(32) << u256(0) << eth::logInstruction(logNumber);
 			break;
+		}
 		case Location::ECRECOVER:
 		case Location::SHA256:
 		case Location::RIPEMD160:
