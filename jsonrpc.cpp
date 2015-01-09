@@ -77,7 +77,6 @@ struct Setup
 string fromAscii(string _s)
 {
 	bytes b = asBytes(_s);
-	b.resize(max<unsigned>(b.size(), 32));
 	return "0x" + toHex(b);
 }
 
