@@ -70,8 +70,9 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
 {
 	string ret = "contract " + _contractDef.getName() + "{";
-	for (FunctionDefinition const* f: _contractDef.getInterfaceFunctions())
+	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
+		FunctionDefinition const* f = it.second;
 		auto populateParameters = [](vector<ASTPointer<VariableDeclaration>> const& _vars)
 		{
 			string r = "";
