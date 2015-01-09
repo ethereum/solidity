@@ -160,7 +160,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 	case DocumentationType::ABI_INTERFACE:
 		argName = g_argAbiStr;
 		suffix = ".abi";
-		title = "Contract ABI";
+		title = "Contract JSON ABI";
 		break;
 	case DocumentationType::ABI_SOLIDITY_INTERFACE:
 		argName = g_argSolAbiStr;
@@ -188,7 +188,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 		if (outputToStdout(choice))
 		{
 			cout << title << endl;
-			cout << m_compiler.getMetadata(_contract, _type);
+			cout << m_compiler.getMetadata(_contract, _type) << endl;
 		}
 
 		if (outputToFile(choice))
