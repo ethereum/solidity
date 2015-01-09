@@ -390,7 +390,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::CONTRACT:
 	{
 		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.getExpression().getType());
-		m_context << type.getFunctionIndex(member);
+		m_context << type.getFunctionIdentifier(member);
 		break;
 	}
 	case Type::Category::MAGIC:
@@ -645,7 +645,11 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 {
 	solAssert(_arguments.size() == _functionType.getParameterTypes().size(), "");
 
-	unsigned dataOffset = _options.bare ? 0 : 1; // reserve one byte for the function index
+	_options.obtainAddress();
+	if (!_options.bare)
+		CompilerUtils(m_context).storeInMemory(0, CompilerUtils::dataStartOffset);
+
+	unsigned dataOffset = _options.bare ? 0 : CompilerUtils::dataStartOffset; // reserve 4 bytes for the function's hash identifier
 	for (unsigned i = 0; i < _arguments.size(); ++i)
 	{
 		_arguments[i]->accept(*this);
@@ -672,12 +676,13 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		_options.obtainValue();
 	else
 		m_context << u256(0);
-	_options.obtainAddress();
-	if (!_options.bare)
-		m_context << u256(0) << eth::Instruction::MSTORE8;
+	m_context << eth::dupInstruction(6); //copy contract address
+
 	m_context << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB
 			  << eth::Instruction::CALL
-			  << eth::Instruction::POP; // @todo do not ignore failure indicator
+			  << eth::Instruction::POP // @todo do not ignore failure indicator
+			  << eth::Instruction::POP; // pop contract address
+
 	if (retSize > 0)
 	{
 		bool const leftAligned = firstType->getCategory() == Type::Category::STRING;

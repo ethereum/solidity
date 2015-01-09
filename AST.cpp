@@ -27,6 +27,8 @@
 #include <libsolidity/Exceptions.h>
 #include <libsolidity/AST_accept.h>
 
+#include <libdevcrypto/SHA3.h>
+
 using namespace std;
 
 namespace dev
@@ -50,18 +52,17 @@ void ContractDefinition::checkTypeRequirements()
 		function->checkTypeRequirements();
 }
 
-vector<FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() const
+map<FixedHash<4>, FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() const
 {
-	vector<FunctionDefinition const*> exportedFunctions;
+	map<FixedHash<4>, FunctionDefinition const*> exportedFunctions;
 	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
 		if (f->isPublic() && f->getName() != getName())
-			exportedFunctions.push_back(f.get());
-	auto compareNames = [](FunctionDefinition const* _a, FunctionDefinition const* _b)
-	{
-		return _a->getName().compare(_b->getName()) < 0;
-	};
+		{
+			FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
+			auto res = exportedFunctions.insert(std::make_pair(hash,f.get()));
+			solAssert(res.second, "Hash collision at Function Definition Hash calculation");
+		}
 
-	sort(exportedFunctions.begin(), exportedFunctions.end(), compareNames);
 	return exportedFunctions;
 }
 

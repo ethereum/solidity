@@ -334,8 +334,8 @@ MemberList const& ContractType::getMembers() const
 	if (!m_members)
 	{
 		map<string, shared_ptr<Type const>> members;
-		for (FunctionDefinition const* function: m_contract.getInterfaceFunctions())
-			members[function->getName()] = make_shared<FunctionType>(*function, false);
+		for (auto const& it: m_contract.getInterfaceFunctions())
+			members[it.second->getName()] = make_shared<FunctionType>(*it.second, false);
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
@@ -354,15 +354,13 @@ shared_ptr<FunctionType const> const& ContractType::getConstructorType() const
 	return m_constructorType;
 }
 
-unsigned ContractType::getFunctionIndex(string const& _functionName) const
+u256 ContractType::getFunctionIdentifier(string const& _functionName) const
 {
-	unsigned index = 0;
-	for (FunctionDefinition const* function: m_contract.getInterfaceFunctions())
-	{
-		if (function->getName() == _functionName)
-			return index;
-		++index;
-	}
+	auto interfaceFunctions = m_contract.getInterfaceFunctions();
+	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
+		if (it->second->getName() == _functionName)
+			return FixedHash<4>::Arith(it->first);
+
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Index of non-existing contract function requested."));
 }
 
