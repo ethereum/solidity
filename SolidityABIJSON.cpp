@@ -50,7 +50,7 @@ public:
 				msg += *extra;
 			BOOST_FAIL(msg);
 		}
-		std::string generatedInterfaceString = m_compilerStack.getJsonDocumentation("", DocumentationType::ABI_INTERFACE);
+		std::string generatedInterfaceString = m_compilerStack.getMetadata("", DocumentationType::ABI_INTERFACE);
 		Json::Value generatedInterface;
 		m_reader.parse(generatedInterfaceString, generatedInterface);
 		Json::Value expectedInterface;
@@ -237,20 +237,6 @@ BOOST_AUTO_TEST_CASE(const_function)
 
 	char const* interface = R"([
 	{
-		"name": "boo",
-		"constant": true,
-		"inputs": [{
-			"name": "a",
-			"type": "uint32"
-		}],
-		"outputs": [
-		{
-			"name": "b",
-			"type": "uint256"
-		}
-		]
-	},
-	{
 		"name": "foo",
 		"constant": false,
 		"inputs": [
@@ -266,6 +252,20 @@ BOOST_AUTO_TEST_CASE(const_function)
 		"outputs": [
 		{
 			"name": "d",
+			"type": "uint256"
+		}
+		]
+	},
+	{
+		"name": "boo",
+		"constant": true,
+		"inputs": [{
+			"name": "a",
+			"type": "uint32"
+		}],
+		"outputs": [
+		{
+			"name": "b",
 			"type": "uint256"
 		}
 		]

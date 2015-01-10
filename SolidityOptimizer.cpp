@@ -48,19 +48,19 @@ public:
 		m_optimize = true;
 		bytes optimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
 		int sizeDiff = nonOptimizedBytecode.size() - optimizedBytecode.size();
-		BOOST_CHECK_MESSAGE(sizeDiff == int(_expectedSizeDecrease), "Bytecode did only shrink by "
+		BOOST_CHECK_MESSAGE(sizeDiff == int(_expectedSizeDecrease), "Bytecode shrank by "
 							+ boost::lexical_cast<string>(sizeDiff) + " bytes, expected: "
 							+ boost::lexical_cast<string>(_expectedSizeDecrease));
 		m_optimizedContract = m_contractAddress;
 	}
 
 	template <class... Args>
-	void compareVersions(byte _index, Args const&... _arguments)
+	void compareVersions(std::string _sig, Args const&... _arguments)
 	{
 		m_contractAddress = m_nonOptimizedContract;
-		bytes nonOptimizedOutput = callContractFunction(_index, _arguments...);
+		bytes nonOptimizedOutput = callContractFunction(_sig, _arguments...);
 		m_contractAddress = m_optimizedContract;
-		bytes optimizedOutput = callContractFunction(_index, _arguments...);
+		bytes optimizedOutput = callContractFunction(_sig, _arguments...);
 		BOOST_CHECK_MESSAGE(nonOptimizedOutput == optimizedOutput, "Computed values do not match."
 							"\nNon-Optimized: " + toHex(nonOptimizedOutput) +
 							"\nOptimized:     " + toHex(optimizedOutput));
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 				return a;
 			}
 		})";
-	compileBothVersions(4, sourceCode);
-	compareVersions(0, u256(7));
+	compileBothVersions(29, sourceCode);
+	compareVersions("f(uint256)", u256(7));
 }
 
 BOOST_AUTO_TEST_CASE(large_integers)
@@ -91,23 +91,23 @@ BOOST_AUTO_TEST_CASE(large_integers)
 		contract test {
 			function f() returns (uint a, uint b) {
 				a = 0x234234872642837426347000000;
-				b = 0x110000000000000000000000002;
+				b = 0x10000000000000000000000002;
 			}
 		})";
-	compileBothVersions(28, sourceCode);
-	compareVersions(0);
+	compileBothVersions(36, sourceCode);
+	compareVersions("f()");
 }
 
 BOOST_AUTO_TEST_CASE(invariants)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f(uint a) returns (uint b) {
-				return (((a + (1 - 1)) ^ 0) | 0) & (uint(0) - 1);
+			function f(int a) returns (int b) {
+				return int(0) | (int(1) * (int(0) ^ (0 + a)));
 			}
 		})";
-	compileBothVersions(28, sourceCode);
-	compareVersions(0, u256(0x12334664));
+	compileBothVersions(41, sourceCode);
+	compareVersions("f(uint256)", u256(0x12334664));
 }
 
 BOOST_AUTO_TEST_CASE(unused_expressions)
@@ -120,23 +120,23 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 				data;
 			}
 		})";
-	compileBothVersions(11, sourceCode);
-	compareVersions(0);
+	compileBothVersions(33, sourceCode);
+	compareVersions("f()");
 }
 
 BOOST_AUTO_TEST_CASE(constant_folding_both_sides)
 {
 	// if constants involving the same associative and commutative operator are applied from both
-	// sides, the operator should be applied only once, because the expression compiler
-	// (even in non-optimized mode) pushes literals as late as possible
+	// sides, the operator should be applied only once, because the expression compiler pushes
+	// literals as late as possible
 	char const* sourceCode = R"(
 		contract test {
 			function f(uint x) returns (uint y) {
 				return 98 ^ (7 * ((1 | (x | 1000)) * 40) ^ 102);
 			}
 		})";
-	compileBothVersions(31, sourceCode);
-	compareVersions(0);
+	compileBothVersions(37, sourceCode);
+	compareVersions("f(uint256)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

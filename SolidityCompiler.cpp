@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned boilerplateSize = 40;
+	unsigned boilerplateSize = 73;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize local variable x
 					   byte(Instruction::PUSH1), 0x2,
@@ -115,9 +115,8 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 							 "  function g() returns (uint e, uint h) { h = f(1, 2, 3); }\n"
 							 "}\n";
 	bytes code = compileContract(sourceCode);
-
-	unsigned shift = 68;
-	unsigned boilerplateSize = 81;
+	unsigned shift = 103;
+	unsigned boilerplateSize = 116;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize return variable d
 					   byte(Instruction::DUP3),
@@ -135,10 +134,10 @@ BOOST_AUTO_TEST_CASE(different_argument_numbers)
 					   byte(Instruction::JUMPDEST), // beginning of g
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::PUSH1), 0x0, // initialized e and h
-					   byte(Instruction::PUSH1), byte(0x2a + shift), // ret address
-					   byte(Instruction::PUSH1), 0x1, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
-					   byte(Instruction::PUSH1), 0x2, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
-					   byte(Instruction::PUSH1), 0x3, byte(Instruction::PUSH1), 0xff, byte(Instruction::AND),
+					   byte(Instruction::PUSH1), byte(0x21 + shift), // ret address
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::PUSH1), 0x3,
 					   byte(Instruction::PUSH1), byte(0x1 + shift),
 					   // stack here: ret e h 0x20 1 2 3 0x1
 					   byte(Instruction::JUMP),
@@ -166,9 +165,8 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 							 "  function f() { bool x; if (x) 77; else if (!x) 78; else 79; }"
 							 "}\n";
 	bytes code = compileContract(sourceCode);
-
-	unsigned shift = 27;
-	unsigned boilerplateSize = 40;
+	unsigned shift = 60;
+	unsigned boilerplateSize = 73;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1),
@@ -208,9 +206,8 @@ BOOST_AUTO_TEST_CASE(loops)
 							 "  function f() { while(true){1;break;2;continue;3;return;4;} }"
 							 "}\n";
 	bytes code = compileContract(sourceCode);
-
-	unsigned shift = 27;
-	unsigned boilerplateSize = 40;
+	unsigned shift = 60;
+	unsigned boilerplateSize = 73;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x1,
