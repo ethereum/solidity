@@ -49,14 +49,14 @@ int peerTest(int argc, char** argv)
 	Host ph("Test", NetworkPreferences(listenPort));
 
 	if (!remoteHost.empty())
-		ph.connect(NodeId(), remoteHost, remotePort);
+		ph.addNode(NodeId(), remoteHost, remotePort, remotePort);
 
-	for (int i = 0; ; ++i)
-	{
-		this_thread::sleep_for(chrono::milliseconds(100));
-		if (!(i % 10))
-			ph.keepAlivePeers();
-	}
+//	for (int i = 0; ; ++i)
+//	{
+//		this_thread::sleep_for(chrono::milliseconds(100));
+//		if (!(i % 10))
+//			ph.keepAlivePeers();
+//	}
 
 	return 0;
 }

@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(topic)
 	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
 	this_thread::sleep_for(chrono::milliseconds(500));
-	ph.connect(NodeId(), "127.0.0.1", 50303);
+	ph.addNode(NodeId(), "127.0.0.1", 50303, 50303);
 
 	KeyPair us = KeyPair::create();
 	for (int i = 0; i < 10; ++i)
