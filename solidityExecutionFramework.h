@@ -32,9 +32,6 @@
 
 namespace dev
 {
-/// Provides additional overloads for toBigEndian to encode arguments and return values.
-inline bytes toBigEndian(byte _value) { return bytes({_value}); }
-inline bytes toBigEndian(bool _value) { return bytes({byte(_value)}); }
 
 namespace solidity
 {
@@ -56,18 +53,20 @@ public:
 		return m_output;
 	}
 
-	bytes const& callContractFunction(std::string _sig, bytes const& _data = bytes(),
-									  u256 const& _value = 0)
+	template <class... Args>
+	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value,
+											   Args const&... _arguments)
 	{
+
 		FixedHash<4> hash(dev::sha3(_sig));
-		sendMessage(hash.asBytes() + _data, false, _value);
+		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
 		return m_output;
 	}
 
 	template <class... Args>
 	bytes const& callContractFunction(std::string _sig, Args const&... _arguments)
 	{
-		return callContractFunction(_sig, argsToBigEndian(_arguments...));
+		return callContractFunctionWithValue(_sig, 0, _arguments...);
 	}
 
 	template <class CppFunction, class... Args>
@@ -89,19 +88,33 @@ public:
 			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
 			BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
 								"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult) +
-								"\nArgument: " + toHex(toBigEndian(argument)));
+								"\nArgument: " + toHex(encode(argument)));
 		}
 	}
 
-private:
-	template <class FirstArg, class... Args>
-	bytes argsToBigEndian(FirstArg const& _firstArg, Args const&... _followingArgs) const
+	static bytes encode(bool _value) { return encode(byte(_value)); }
+	static bytes encode(int _value) { return encode(u256(_value)); }
+	static bytes encode(char const* _value) { return encode(std::string(_value)); }
+	static bytes encode(byte _value) { return bytes(31, 0) + bytes{_value}; }
+	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
+	static bytes encode(bytes const& _value, bool _padLeft = true)
 	{
-		return toBigEndian(_firstArg) + argsToBigEndian(_followingArgs...);
+		bytes padding = bytes((32 - _value.size() % 32) % 32, 0);
+		return _padLeft ? padding + _value : _value + padding;
+	}
+	static bytes encode(std::string const& _value) { return encode(asBytes(_value), false); }
+
+	template <class FirstArg, class... Args>
+	static bytes encodeArgs(FirstArg const& _firstArg, Args const&... _followingArgs)
+	{
+		return encode(_firstArg) + encodeArgs(_followingArgs...);
+	}
+	static bytes encodeArgs()
+	{
+		return bytes();
 	}
 
-	bytes argsToBigEndian() const { return bytes(); }
-
+private:
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
 	-> typename std::enable_if<std::is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
@@ -113,7 +126,7 @@ private:
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
 	-> typename std::enable_if<!std::is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
 	{
-		return toBigEndian(_cppFunction(_arguments...));
+		return encode(_cppFunction(_arguments...));
 	}
 
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
