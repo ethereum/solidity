@@ -424,13 +424,18 @@ TypePointer BoolType::binaryOperatorResult(Token::Value _operator, TypePointer c
 		return TypePointer();
 }
 
-bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (isImplicitlyConvertibleTo(_convertTo))
+	if (*this == _convertTo)
 		return true;
 	if (_convertTo.getCategory() == Category::INTEGER)
 		return dynamic_cast<IntegerType const&>(_convertTo).isAddress();
 	return false;
+}
+
+bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	return isImplicitlyConvertibleTo(_convertTo) || _convertTo.getCategory() == Category::INTEGER;
 }
 
 bool ContractType::operator==(Type const& _other) const
@@ -459,7 +464,9 @@ MemberList const& ContractType::getMembers() const
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
 	{
-		map<string, shared_ptr<Type const>> members;
+		// All address members and all interface functions
+		map<string, shared_ptr<Type const>> members(IntegerType::AddressMemberList.begin(),
+													IntegerType::AddressMemberList.end());
 		for (auto const& it: m_contract.getInterfaceFunctions())
 			members[it.second->getName()] = make_shared<FunctionType>(*it.second, false);
 		m_members.reset(new MemberList(members));
@@ -487,7 +494,7 @@ u256 ContractType::getFunctionIdentifier(string const& _functionName) const
 		if (it->second->getName() == _functionName)
 			return FixedHash<4>::Arith(it->first);
 
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Index of non-existing contract function requested."));
+	return Invalid256;
 }
 
 bool StructType::operator==(Type const& _other) const

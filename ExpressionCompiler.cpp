@@ -194,13 +194,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		solAssert(_functionCall.getArguments().size() == 1, "");
 		Expression const& firstArgument = *_functionCall.getArguments().front();
 		firstArgument.accept(*this);
-		if (firstArgument.getType()->getCategory() == Type::Category::CONTRACT &&
-				_functionCall.getType()->getCategory() == Type::Category::INTEGER)
-		{
-			// explicit type conversion contract -> address, nothing to do.
-		}
-		else
-			appendTypeConversion(*firstArgument.getType(), *_functionCall.getType());
+		appendTypeConversion(*firstArgument.getType(), *_functionCall.getType());
 	}
 	else
 	{
@@ -250,13 +244,17 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			FunctionCallOptions options;
 			options.bare = true;
 			options.obtainAddress = [&]() { _functionCall.getExpression().accept(*this); };
-			options.obtainValue = [&]() { arguments.front()->accept(*this); };
+			options.obtainValue = [&]()
+			{
+				arguments.front()->accept(*this);
+				appendTypeConversion(*arguments.front()->getType(),
+									 *function.getParameterTypes().front(), true);
+			};
 			appendExternalFunctionCall(FunctionType({}, {}, Location::EXTERNAL), {}, options);
 			break;
 		}
 		case Location::SUICIDE:
 			arguments.front()->accept(*this);
-			//@todo might not be necessary
 			appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
 			m_context << eth::Instruction::SUICIDE;
 			break;
@@ -347,6 +345,18 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	ASTString const& member = _memberAccess.getMemberName();
 	switch (_memberAccess.getExpression().getType()->getCategory())
 	{
+	case Type::Category::CONTRACT:
+	{
+		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.getExpression().getType());
+		u256 identifier = type.getFunctionIdentifier(member);
+		if (identifier != Invalid256)
+		{
+			appendTypeConversion(type, IntegerType(0, IntegerType::Modifier::ADDRESS), true);
+			m_context << identifier;
+			break;
+		}
+		// fall-through to "integer" otherwise (address)
+	}
 	case Type::Category::INTEGER:
 		if (member == "balance")
 		{
@@ -360,12 +370,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
 		break;
-	case Type::Category::CONTRACT:
-	{
-		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.getExpression().getType());
-		m_context << type.getFunctionIdentifier(member);
-		break;
-	}
 	case Type::Category::MAGIC:
 		// we can ignore the kind of magic and only look at the name of the member
 		if (member == "coinbase")
@@ -592,15 +596,36 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 		return;
 	Type::Category stackTypeCategory = _typeOnStack.getCategory();
 	Type::Category targetTypeCategory = _targetType.getCategory();
-	if (stackTypeCategory == Type::Category::INTEGER)
+	if (stackTypeCategory == Type::Category::INTEGER || stackTypeCategory == Type::Category::CONTRACT ||
+			 stackTypeCategory == Type::Category::INTEGER_CONSTANT)
 	{
 		solAssert(targetTypeCategory == Type::Category::INTEGER || targetTypeCategory == Type::Category::CONTRACT, "");
-		appendHighBitsCleanup(dynamic_cast<IntegerType const&>(_typeOnStack));
+		IntegerType addressType(0, IntegerType::Modifier::ADDRESS);
+		IntegerType const& targetType = targetTypeCategory == Type::Category::INTEGER
+			? dynamic_cast<IntegerType const&>(_targetType) : addressType;
+		if (stackTypeCategory == Type::Category::INTEGER_CONSTANT)
+		{
+			IntegerConstantType const& constType = dynamic_cast<IntegerConstantType const&>(_typeOnStack);
+			// We know that the stack is clean, we only have to clean for a narrowing conversion
+			// where cleanup is forced.
+			if (targetType.getNumBits() < constType.getIntegerType()->getNumBits() && _cleanupNeeded)
+				appendHighBitsCleanup(targetType);
+		}
+		else
+		{
+			IntegerType const& typeOnStack = stackTypeCategory == Type::Category::INTEGER
+				? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
+			// Widening: clean up according to source type width
+			// Non-widening and force: clean up according to target type bits
+			if (targetType.getNumBits() > typeOnStack.getNumBits())
+				appendHighBitsCleanup(typeOnStack);
+			else if (_cleanupNeeded)
+				appendHighBitsCleanup(targetType);
+		}
 	}
-	else if (stackTypeCategory == Type::Category::INTEGER_CONSTANT)
-		solAssert(targetTypeCategory == Type::Category::INTEGER || targetTypeCategory == Type::Category::CONTRACT, "");
 	else if (stackTypeCategory == Type::Category::STRING)
 	{
+		solAssert(targetTypeCategory == Type::Category::STRING, "");
 		// nothing to do, strings are high-order-bit-aligned
 		//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
 	}
