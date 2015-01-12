@@ -20,12 +20,35 @@
  * Peer Network test functions.
  */
 
+#include <boost/test/unit_test.hpp>
 #include <chrono>
 #include <thread>
 #include <libp2p/Host.h>
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
+
+BOOST_AUTO_TEST_SUITE(p2p)
+
+BOOST_AUTO_TEST_CASE(host)
+{
+	NetworkPreferences host1prefs(30301, "127.0.0.1", true, true);
+	NetworkPreferences host2prefs(30302, "127.0.0.1", true, true);
+	
+	Host host1("Test", host1prefs);
+	NodeId node1 = host1.id();
+	host1.start();
+		
+	Host host2("Test", host2prefs);
+	auto node2 = host2.id();
+	host2.start();
+	
+	host1.addNode(node2, "127.0.0.1", host2prefs.listenPort, host2prefs.listenPort);
+	
+	this_thread::sleep_for(chrono::seconds(2));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 int peerTest(int argc, char** argv)
 {
