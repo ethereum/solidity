@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
 		\"env\" : {\n\
 			\"previousHash\" : \"5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6\",\n\
 			\"currentNumber\" : \"0\",\n\
-			\"currentGasLimit\" : \"115792089237316195423570985008687907853269984665640564039457584007913129639935\",\n\
-			\"currentDifficulty\" : \"1\",\n\
+			\"currentGasLimit\" : \"1000000\",\n\
+			\"currentDifficulty\" : \"115792089237316195423570985008687907853269984665640564039457584007913129639935\",\n\
 			\"currentTimestamp\" : 2,\n\
 			\"currentCoinbase\" : \"2adc25665018aa1fe0e6bc666dac8fc2697ff9ba\"\n\
 		},\n\
