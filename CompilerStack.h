@@ -93,6 +93,9 @@ public:
 	/// Can be one of 4 types defined at @c DocumentationType
 	std::string const& getMetadata(std::string const& _contractName, DocumentationType _type) const;
 
+	/// Convenience function to return all contract method hashes in a string
+	std::string const getFunctionHashes(std::string const& _contractName = "");
+
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner(std::string const& _sourceName = "") const;
 	/// @returns the parsed source unit with the supplied name.
