@@ -349,8 +349,13 @@ void InterfaceHandler::parseDocString(std::string const& _string, CommentOwner _
 		}
 		else if (m_lastTag != DocTagType::NONE) // continuation of the previous tag
 			currPos = appendDocTag(currPos, end, _owner);
-		else if (currPos != end) // skip the line if a newline was found
+		else if (currPos != end)
+		{
+			if (nlPos == end) //end of text
+				return;
+			// else skip the line if a newline was found
 			currPos = nlPos + 1;
+		}
 	}
 }
 
