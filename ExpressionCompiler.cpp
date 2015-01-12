@@ -232,27 +232,41 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case Location::EXTERNAL:
 		case Location::BARE:
+			_functionCall.getExpression().accept(*this);
+			appendExternalFunctionCall(function, arguments, function.getLocation() == Location::BARE);
+			break;
+		case Location::SET_GAS:
 		{
-			FunctionCallOptions options;
-			options.bare = function.getLocation() == Location::BARE;
-			options.obtainAddress = [&]() { _functionCall.getExpression().accept(*this); };
-			appendExternalFunctionCall(function, arguments, options);
+			// stack layout: contract_address function_id [gas] [value]
+			_functionCall.getExpression().accept(*this);
+			arguments.front()->accept(*this);
+			appendTypeConversion(*arguments.front()->getType(), IntegerType(256), true);
+			// Note that function is not the original function, but the ".gas" function.
+			// Its values of gasSet and valueSet is equal to the original function's though.
+			unsigned stackDepth = (function.gasSet() ? 1 : 0) + (function.valueSet() ? 1 : 0);
+			if (stackDepth > 0)
+				m_context << eth::swapInstruction(stackDepth);
+			if (function.gasSet())
+				m_context << eth::Instruction::POP;
 			break;
 		}
+		case Location::SET_VALUE:
+			// stack layout: contract_address function_id [gas] [value]
+			_functionCall.getExpression().accept(*this);
+			// Note that function is not the original function, but the ".value" function.
+			// Its values of gasSet and valueSet is equal to the original function's though.
+			if (function.valueSet())
+				m_context << eth::Instruction::POP;
+			arguments.front()->accept(*this);
+			break;
 		case Location::SEND:
-		{
-			FunctionCallOptions options;
-			options.bare = true;
-			options.obtainAddress = [&]() { _functionCall.getExpression().accept(*this); };
-			options.obtainValue = [&]()
-			{
-				arguments.front()->accept(*this);
-				appendTypeConversion(*arguments.front()->getType(),
-									 *function.getParameterTypes().front(), true);
-			};
-			appendExternalFunctionCall(FunctionType(TypePointers{}, TypePointers{}, Location::EXTERNAL), {}, options);
+			// TODO set gas to min
+			_functionCall.getExpression().accept(*this);
+			arguments.front()->accept(*this);
+			appendTypeConversion(*arguments.front()->getType(),
+								 *function.getParameterTypes().front(), true);
+			appendExternalFunctionCall(FunctionType(TypePointers{}, TypePointers{}, Location::EXTERNAL, false, true), {}, true);
 			break;
-		}
 		case Location::SUICIDE:
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
@@ -289,11 +303,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			static const map<Location, u256> contractAddresses{{Location::ECRECOVER, 1},
 															   {Location::SHA256, 2},
 															   {Location::RIPEMD160, 3}};
-			u256 contractAddress = contractAddresses.find(function.getLocation())->second;
-			FunctionCallOptions options;
-			options.bare = true;
-			options.obtainAddress = [&]() { m_context << contractAddress; };
-			appendExternalFunctionCall(function, arguments, options);
+			m_context << contractAddresses.find(function.getLocation())->second;
+			appendExternalFunctionCall(function, arguments, true);
 			break;
 		}
 		default:
@@ -369,6 +380,10 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 								 IntegerType(0, IntegerType::Modifier::ADDRESS), true);
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
+		break;
+	case Type::Category::FUNCTION:
+		solAssert(!!_memberAccess.getExpression().getType()->getMemberType(member),
+				 "Invalid member access to function.");
 		break;
 	case Type::Category::MAGIC:
 		// we can ignore the kind of magic and only look at the name of the member
@@ -646,15 +661,25 @@ void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
 
 void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functionType,
 													vector<ASTPointer<Expression const>> const& _arguments,
-													FunctionCallOptions const& _options)
+													bool bare)
 {
 	solAssert(_arguments.size() == _functionType.getParameterTypes().size(), "");
 
-	_options.obtainAddress();
-	if (!_options.bare)
-		CompilerUtils(m_context).storeInMemory(0, CompilerUtils::dataStartOffset);
+	// Assumed stack content here:
+	// <stack top>
+	// value [if _functionType.valueSet()]
+	// gas [if _functionType.gasSet()]
+	// function identifier [unless options.bare]
+	// contract address
 
-	unsigned dataOffset = _options.bare ? 0 : CompilerUtils::dataStartOffset; // reserve 4 bytes for the function's hash identifier
+	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
+	if (!bare)
+	{
+		m_context << eth::dupInstruction(gasValueSize + 1);
+		CompilerUtils(m_context).storeInMemory(0, CompilerUtils::dataStartOffset);
+	}
+
+	unsigned dataOffset = bare ? 0 : CompilerUtils::dataStartOffset; // reserve 4 bytes for the function's hash identifier
 	for (unsigned i = 0; i < _arguments.size(); ++i)
 	{
 		_arguments[i]->accept(*this);
@@ -676,16 +701,25 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	unsigned retSize = firstType ? CompilerUtils::getPaddedSize(firstType->getCalldataEncodedSize()) : 0;
 	// CALL arguments: outSize, outOff, inSize, inOff, value, addr, gas (stack top)
 	m_context << u256(retSize) << u256(0) << u256(dataOffset) << u256(0);
-	if (_options.obtainValue)
-		_options.obtainValue();
+	if (_functionType.valueSet())
+		m_context << eth::dupInstruction(5);
 	else
 		m_context << u256(0);
-	m_context << eth::dupInstruction(6); //copy contract address
+	m_context << eth::dupInstruction(6 + gasValueSize + (bare ? 0 : 1)); //copy contract address
 
-	m_context << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB
-			  << eth::Instruction::CALL
-			  << eth::Instruction::POP // @todo do not ignore failure indicator
-			  << eth::Instruction::POP; // pop contract address
+	if (_functionType.gasSet())
+		m_context << eth::dupInstruction(7 + (_functionType.valueSet() ? 1 : 0));
+	else
+		m_context << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB;
+	m_context << eth::Instruction::CALL
+			  << eth::Instruction::POP; // @todo do not ignore failure indicator
+	if (_functionType.valueSet())
+		m_context << eth::Instruction::POP;
+	if (_functionType.gasSet())
+		m_context << eth::Instruction::POP;
+	if (!bare)
+		m_context << eth::Instruction::POP;
+	m_context << eth::Instruction::POP; // pop contract address
 
 	if (retSize > 0)
 	{

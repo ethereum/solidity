@@ -345,10 +345,15 @@ class FunctionType: public Type
 {
 public:
 	/// The meaning of the value(s) on the stack referencing the function:
-	/// INTERNAL: jump tag, EXTERNAL: contract address + function index,
+	/// INTERNAL: jump tag, EXTERNAL: contract address + function identifier,
 	/// BARE: contract address (non-abi contract call)
 	/// OTHERS: special virtual function, nothing on the stack
-	enum class Location { INTERNAL, EXTERNAL, SEND, SHA3, SUICIDE, ECRECOVER, SHA256, RIPEMD160, LOG0, LOG1, LOG2, LOG3, LOG4, BARE };
+	enum class Location { INTERNAL, EXTERNAL, SEND,
+						  SHA3, SUICIDE,
+						  ECRECOVER, SHA256, RIPEMD160,
+						  LOG0, LOG1, LOG2, LOG3, LOG4,
+						  SET_GAS, SET_VALUE,
+						  BARE };
 
 	virtual Category getCategory() const override { return Category::FUNCTION; }
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
@@ -357,9 +362,8 @@ public:
 		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),
 					 _location) {}
 	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
-				 Location _location = Location::INTERNAL):
-		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),
-		m_location(_location) {}
+				 Location _location = Location::INTERNAL,
+				 bool _gasSet = false, bool _valueSet = false);
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
 	TypePointers const& getReturnParameterTypes() const { return m_returnParameterTypes; }
@@ -370,9 +374,17 @@ public:
 	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable function type requested.")); }
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override;
+	virtual MemberList const& getMembers() const override;
 
 	Location const& getLocation() const { return m_location; }
 	std::string getCanonicalSignature() const;
+
+	bool gasSet() const { return m_gasSet; }
+	bool valueSet() const { return m_valueSet; }
+
+	/// @returns a copy of this type, where gas or value are set manually. This will never set one
+	/// of the parameters to fals.
+	TypePointer copyAndSetGasOrValue(bool _setGas, bool _setValue) const;
 
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
@@ -380,6 +392,10 @@ private:
 	TypePointers m_parameterTypes;
 	TypePointers m_returnParameterTypes;
 	Location m_location;
+	unsigned m_sizeOnStack = 0;
+	bool m_gasSet = false; ///< true iff the gas value to be used is on the stack
+	bool m_valueSet = false; ///< true iff the value to be sent is on the stack
+	mutable std::unique_ptr<MemberList> m_members;
 };
 
 /**
