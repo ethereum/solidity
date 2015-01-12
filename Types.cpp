@@ -205,11 +205,11 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 
 const MemberList IntegerType::AddressMemberList =
 	MemberList({{"balance", make_shared<IntegerType >(256)},
-				{"callstring32", make_shared<FunctionType>(vector<string>{"string32"},
-														   vector<string>{}, FunctionType::Location::BARE)},
-				{"callstring32string32", make_shared<FunctionType>(vector<string>{"string32", "string32"},
-																   vector<string>{}, FunctionType::Location::BARE)},
-				{"send", make_shared<FunctionType>(vector<string>{"uint"}, vector<string>{}, FunctionType::Location::SEND)}});
+				{"callstring32", make_shared<FunctionType>(strings{"string32"}, strings{},
+														   FunctionType::Location::BARE)},
+				{"callstring32string32", make_shared<FunctionType>(strings{"string32", "string32"},
+																   strings{}, FunctionType::Location::BARE)},
+				{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::SEND)}});
 
 shared_ptr<IntegerConstantType const> IntegerConstantType::fromLiteral(string const& _literal)
 {
@@ -619,7 +619,7 @@ string FunctionType::getCanonicalSignature() const
 	return ret + ")";
 }
 
-TypePointers FunctionType::parseElementaryTypeVector(vector<string> const& _types)
+TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 {
 	TypePointers pointers;
 	pointers.reserve(_types.size());
