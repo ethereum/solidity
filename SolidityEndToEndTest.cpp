@@ -1295,7 +1295,85 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 		}
 	)";
 	compileAndRun(sourceCode, 20);
-	BOOST_REQUIRE(callContractFunction("getBalance()") == toBigEndian(u256(20 - 5)) + toBigEndian(u256(5)));
+	BOOST_REQUIRE(callContractFunction("getBalance()") == encodeArgs(u256(20 - 5), u256(5)));
+}
+
+BOOST_AUTO_TEST_CASE(gas_and_value_basic)
+{
+	char const* sourceCode = R"(
+		contract helper {
+			bool flag;
+			function getBalance() returns (uint256 myBalance) {
+				return this.balance;
+			}
+			function setFlag() { flag = true; }
+			function getFlag() returns (bool fl) { return flag; }
+		}
+		contract test {
+			helper h;
+			function test() { h = new helper(); }
+			function sendAmount(uint amount) returns (uint256 bal) {
+				return h.getBalance.value(amount)();
+			}
+			function outOfGas() returns (bool flagBefore, bool flagAfter, uint myBal) {
+				flagBefore = h.getFlag();
+				h.setFlag.gas(2)(); // should fail due to OOG, return value can be garbage
+				flagAfter = h.getFlag();
+				myBal = this.balance;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 20);
+	BOOST_REQUIRE(callContractFunction("sendAmount(uint256)", 5) == encodeArgs(5));
+	// call to helper should not succeed but amount should be transferred anyway
+	BOOST_REQUIRE(callContractFunction("outOfGas()", 5) == encodeArgs(false, false, 20 - 5));
+}
+
+BOOST_AUTO_TEST_CASE(value_complex)
+{
+	char const* sourceCode = R"(
+		contract helper {
+			function getBalance() returns (uint256 myBalance) {
+				return this.balance;
+			}
+		}
+		contract test {
+			helper h;
+			function test() { h = new helper(); }
+			function sendAmount(uint amount) returns (uint256 bal) {
+				var x1 = h.getBalance.value(amount);
+				uint someStackElement = 20;
+				var x2 = x1.gas(1000);
+				return x2.value(amount + 3)();// overwrite value
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 20);
+	BOOST_REQUIRE(callContractFunction("sendAmount(uint256)", 5) == encodeArgs(8));
+}
+
+BOOST_AUTO_TEST_CASE(value_insane)
+{
+	char const* sourceCode = R"(
+		contract helper {
+			function getBalance() returns (uint256 myBalance) {
+				return this.balance;
+			}
+		}
+		contract test {
+			helper h;
+			function test() { h = new helper(); }
+			function sendAmount(uint amount) returns (uint256 bal) {
+				var x1 = h.getBalance.value;
+				uint someStackElement = 20;
+				var x2 = x1(amount).gas;
+				var x3 = x2(1000).value;
+				return x3(amount + 3)();// overwrite value
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 20);
+	BOOST_REQUIRE(callContractFunction("sendAmount(uint256)", 5) == encodeArgs(8));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
