@@ -560,6 +560,40 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(checkRandomTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--randomTest")
+		{
+			try
+			{
+				cout << "RANDOM::::::RANDOM" << endl;
+				json_spirit::mValue v;
+				string s;// = boost::unit_test::framework::master_test_suite().argv[i + 1];
+				string line;
+				while ( getline(cin, line) && !line.empty() )
+						s += line;
+				cout << "my test: AAAHHHAAA: \n" << s << endl;
+				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of argument is empty");
+				json_spirit::read_string(s, v);
+				doVMTests(v, false);
+				cout << "RANDOM::::::RANDOM--done" << endl;
+			}
+			catch (Exception const& _e)
+			{
+				BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+			}
+			catch (std::exception const& _e)
+			{
+				BOOST_ERROR("Failed test with Exception: " << _e.what());
+			}
+			break;
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(userDefinedFileVM)
 {
 	dev::test::userDefinedTest("--vmtest", dev::test::doVMTests);
