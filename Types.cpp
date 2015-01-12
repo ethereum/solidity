@@ -35,7 +35,7 @@ namespace solidity
 
 shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
 {
-	solAssert(Token::isElementaryTypeName(_typeToken), "");
+	solAssert(Token::isElementaryTypeName(_typeToken), "Elementary type name expected.");
 
 	if (Token::INT <= _typeToken && _typeToken <= Token::HASH256)
 	{
@@ -204,18 +204,12 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 }
 
 const MemberList IntegerType::AddressMemberList =
-	MemberList({{"balance",
-					make_shared<IntegerType >(256)},
-				{"callstring32",
-					make_shared<FunctionType>(TypePointers({make_shared<StaticStringType>(32)}),
-											  TypePointers(), FunctionType::Location::BARE)},
-				{"callstring32string32",
-					make_shared<FunctionType>(TypePointers({make_shared<StaticStringType>(32),
-															make_shared<StaticStringType>(32)}),
-											  TypePointers(), FunctionType::Location::BARE)},
-				{"send",
-					make_shared<FunctionType>(TypePointers({make_shared<IntegerType>(256)}),
-											  TypePointers(), FunctionType::Location::SEND)}});
+	MemberList({{"balance", make_shared<IntegerType >(256)},
+				{"callstring32", make_shared<FunctionType>(vector<string>{"string32"},
+														   vector<string>{}, FunctionType::Location::BARE)},
+				{"callstring32string32", make_shared<FunctionType>(vector<string>{"string32", "string32"},
+																   vector<string>{}, FunctionType::Location::BARE)},
+				{"send", make_shared<FunctionType>(vector<string>{"uint"}, vector<string>{}, FunctionType::Location::SEND)}});
 
 shared_ptr<IntegerConstantType const> IntegerConstantType::fromLiteral(string const& _literal)
 {
@@ -623,6 +617,15 @@ string FunctionType::getCanonicalSignature() const
 		ret += (*it)->toString() + (it + 1 == m_parameterTypes.cend() ? "" : ",");
 
 	return ret + ")";
+}
+
+TypePointers FunctionType::parseElementaryTypeVector(vector<string> const& _types)
+{
+	TypePointers pointers;
+	pointers.reserve(_types.size());
+	for (string const& type: _types)
+		pointers.push_back(Type::fromElementaryTypeName(Token::fromIdentifierOrKeyword(type)));
+	return pointers;
 }
 
 bool MappingType::operator==(Type const& _other) const

@@ -700,24 +700,6 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	return Token::NUMBER;
 }
 
-
-// ----------------------------------------------------------------------------
-// Keyword Matcher
-
-
-static Token::Value keywordOrIdentifierToken(string const& _input)
-{
-	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
-	// and keywords to be put inside the keywords variable.
-#define KEYWORD(name, string, precedence) {string, Token::name},
-#define TOKEN(name, string, precedence)
-	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
-#undef KEYWORD
-#undef TOKEN
-	auto it = keywords.find(_input);
-	return it == keywords.end() ? Token::IDENTIFIER : it->second;
-}
-
 Token::Value Scanner::scanIdentifierOrKeyword()
 {
 	solAssert(isIdentifierStart(m_char), "");
@@ -727,7 +709,7 @@ Token::Value Scanner::scanIdentifierOrKeyword()
 	while (isIdentifierPart(m_char))
 		addLiteralCharAndAdvance();
 	literal.complete();
-	return keywordOrIdentifierToken(m_nextToken.literal);
+	return Token::fromIdentifierOrKeyword(m_nextToken.literal);
 }
 
 char CharStream::advanceAndGet(size_t _chars)

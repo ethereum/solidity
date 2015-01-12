@@ -386,6 +386,8 @@ public:
 		return m_precedence[tok];
 	}
 
+	static Token::Value fromIdentifierOrKeyword(std::string const& _name);
+
 private:
 	static char const* const m_name[NUM_TOKENS];
 	static char const* const m_string[NUM_TOKENS];

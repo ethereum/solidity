@@ -250,7 +250,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				appendTypeConversion(*arguments.front()->getType(),
 									 *function.getParameterTypes().front(), true);
 			};
-			appendExternalFunctionCall(FunctionType({}, {}, Location::EXTERNAL), {}, options);
+			appendExternalFunctionCall(FunctionType(TypePointers{}, TypePointers{}, Location::EXTERNAL), {}, options);
 			break;
 		}
 		case Location::SUICIDE:
