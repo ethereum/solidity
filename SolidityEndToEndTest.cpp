@@ -1376,6 +1376,34 @@ BOOST_AUTO_TEST_CASE(value_insane)
 	BOOST_REQUIRE(callContractFunction("sendAmount(uint256)", 5) == encodeArgs(8));
 }
 
+BOOST_AUTO_TEST_CASE(value_for_constructor)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			string3 name;
+			bool flag;
+			function Helper(string3 x, bool f) {
+				name = x;
+				flag = f;
+			}
+			function getName() returns (string3 ret) { return name; }
+			function getFlag() returns (bool ret) { return flag; }
+		}
+		contract Main {
+			Helper h;
+			function Main() {
+				h = new Helper.value(10)("abc", true);
+			}
+			function getFlag() returns (bool ret) { return h.getFlag(); }
+			function getName() returns (string3 ret) { return h.getName(); }
+			function getBalances() returns (uint me, uint them) { me = this.balance; them = h.balance;}
+		})";
+	compileAndRun(sourceCode, 22, "Main");
+	BOOST_REQUIRE(callContractFunction("getFlag()") == encodeArgs(true));
+	BOOST_REQUIRE(callContractFunction("getName()") == encodeArgs("abc"));
+	BOOST_REQUIRE(callContractFunction("getBalances()") == encodeArgs(12, 10));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
