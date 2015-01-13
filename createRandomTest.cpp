@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 	gen.seed(static_cast<unsigned int>(timeSinceEpoch));
 	boost::random::uniform_int_distribution<> lengthOfCodeDist(2, 16);
 	boost::random::uniform_int_distribution<> opcodeDist(0, 255);
-	boost::random::uniform_int_distribution<> BlockInfoOpcodeDist(0x41, 0x45);
+	boost::random::uniform_int_distribution<> BlockInfoOpcodeDist(0x40, 0x45);
 	boost::random::variate_generator<boost::mt19937&,
 			boost::random::uniform_int_distribution<> > randGen(gen, opcodeDist);
 	boost::random::variate_generator<boost::mt19937&,
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
 		uint8_t opcode = randGen();
 		// disregard all invalid commands, except of one (0x0c)
-		if (dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || opcode == 0x0a)
+		if ((dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || (opcode == 0x0c)))
 			randomCode += toHex(toCompactBigEndian(opcode));
 		else
 			i--;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 			\"currentNumber\" : \"0\",\n\
 			\"currentGasLimit\" : \"1000000\",\n\
 			\"currentDifficulty\" : \"115792089237316195423570985008687907853269984665640564039457584007913129639935\",\n\
-			\"currentTimestamp\" : 2,\n\
+			\"currentTimestamp\" : 5,\n\
 			\"currentCoinbase\" : \"2adc25665018aa1fe0e6bc666dac8fc2697ff9ba\"\n\
 		},\n\
 		\"pre\" : {\n\
