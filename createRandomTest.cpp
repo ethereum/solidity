@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
 		uint8_t opcode = randGen();
 		// disregard all invalid commands, except of one (0x0c)
-		if ((dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || (opcode == 0x0c)))
+		if ((dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || (randGen() > 128)))
 			randomCode += toHex(toCompactBigEndian(opcode));
 		else
 			i--;
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	\"randomVMtest\": {\n\
 		\"env\" : {\n\
 			\"previousHash\" : \"5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6\",\n\
-			\"currentNumber\" : \"0\",\n\
+			\"currentNumber\" : \"300\",\n\
 			\"currentGasLimit\" : \"1000000\",\n\
 			\"currentDifficulty\" : \"115792089237316195423570985008687907853269984665640564039457584007913129639935\",\n\
 			\"currentTimestamp\" : 2,\n\
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 	read_string(s, v);
 
 	// insert new random code
-	v.get_obj().find("randomVMtest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode + "55";
+	v.get_obj().find("randomVMtest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode + (randGen() > 128 ? "55" : "");
 
 	// execute code in vm
 	doMyTests(v);
