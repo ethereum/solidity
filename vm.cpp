@@ -345,7 +345,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			output = vm->go(fev, fev.simpleTrace()).toBytes();
 			gas = vm->gas();
 		}
-		catch (VMException const& _e)
+		catch (VMException const&)
 		{
 			cnote << "Safe VM Exception";
 			vmExceptionOccured = true;
