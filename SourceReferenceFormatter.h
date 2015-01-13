@@ -28,7 +28,7 @@
 namespace dev
 {
 
-class Exception; // forward
+struct Exception; // forward
 
 namespace solidity
 {
