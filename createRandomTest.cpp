@@ -119,6 +119,8 @@ int main(int argc, char *argv[])
 
 void doMyTests(json_spirit::mValue& v)
 {
+	eth::VMFactory::setKind(eth::VMKind::Interpreter);
+
 	for (auto& i: v.get_obj())
 	{
 		cnote << i.first;
