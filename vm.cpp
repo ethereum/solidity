@@ -237,8 +237,8 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 		BOOST_REQUIRE(tx.count("destination") > 0);
 		BOOST_REQUIRE(tx.count("gasLimit") > 0);
 		Transaction t = tx["destination"].get_str().empty() ?
-			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), data.toBytes()) :
-			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), data.toBytes());
+			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), fromHex(tx["data"].get_str())) :
+			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), fromHex(tx["data"].get_str()));
 		callcreates.push_back(t);
 	}
 }
@@ -448,7 +448,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				}
 
 				checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
-				BOOST_CHECK(test.callcreates == fev.callcreates);
+
+				checkCallCreates(fev.callcreates, test.callcreates);
 
 				checkLog(fev.sub.logs, test.sub.logs);
 			}

@@ -350,6 +350,19 @@ void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
 	}
 }
 
+void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates)
+{
+	BOOST_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());
+
+	for (size_t i = 0; i < _resultCallCreates.size(); ++i)
+	{
+		BOOST_CHECK(_resultCallCreates[i].data() == _expectedCallCreates[i].data());
+		BOOST_CHECK(_resultCallCreates[i].receiveAddress() == _expectedCallCreates[i].receiveAddress());
+		BOOST_CHECK(_resultCallCreates[i].gas() == _expectedCallCreates[i].gas());
+		BOOST_CHECK(_resultCallCreates[i].value() == _expectedCallCreates[i].value());
+	}
+}
+
 std::string getTestPath()
 {
 	string testPath;
