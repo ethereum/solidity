@@ -28,6 +28,10 @@
 #include <libdevcrypto/SHA3.h>
 #include <test/solidityExecutionFramework.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4307) //integral constant overflow for high_bits_cleaning
+#endif
+
 using namespace std;
 
 namespace dev
