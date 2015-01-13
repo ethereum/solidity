@@ -232,10 +232,10 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 	for (mValue& v: _callcreates)
 	{
 		auto tx = v.get_obj();
-		BOOST_REQUIRE(tx.count("data") > 0);
-		BOOST_REQUIRE(tx.count("value") > 0);
-		BOOST_REQUIRE(tx.count("destination") > 0);
-		BOOST_REQUIRE(tx.count("gasLimit") > 0);
+		assert(tx.count("data") > 0);
+		assert(tx.count("value") > 0);
+		assert(tx.count("destination") > 0);
+		assert(tx.count("gasLimit") > 0);
 		Transaction t = tx["destination"].get_str().empty() ?
 			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), data.toBytes()) :
 			Transaction(toInt(tx["value"]), 0, toInt(tx["gasLimit"]), Address(tx["destination"].get_str()), data.toBytes());
