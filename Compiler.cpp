@@ -50,10 +50,9 @@ void Compiler::compileContract(ContractDefinition const& _contract, vector<Magic
 			function->accept(*this);
 
 	// Swap the runtime context with the creation-time context
-	CompilerContext runtimeContext;
-	swap(m_context, runtimeContext);
+	swap(m_context, m_runtimeContext);
 	initializeContext(_contract, _magicGlobals, _contracts);
-	packIntoContractCreator(_contract, runtimeContext);
+	packIntoContractCreator(_contract, m_runtimeContext);
 }
 
 void Compiler::initializeContext(ContractDefinition const& _contract, vector<MagicVariableDeclaration const*> const& _magicGlobals,

@@ -76,7 +76,13 @@ public:
 	/// @returns the compiled bytecode
 	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);
 
+	/// Gets the assembled bytecode for a contract
 	bytes const& getBytecode(std::string const& _contractName = "") const;
+	/// Get the runtime context's bytecode for a contract
+	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
+	/// Get the runtime context's code hash for a contract
+	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
+
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// Prerequisite: Successful compilation.
 	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "") const;
@@ -108,9 +114,6 @@ public:
 	/// scanning the source code - this is useful for printing exception information.
 	static bytes staticCompile(std::string const& _sourceCode, bool _optimize = false);
 
-	/// Get the runtime context's code hash for a contract. LTODO
-	dev::h256 getContractCodeHash(std::string const& _contractName);
-
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
@@ -128,6 +131,7 @@ private:
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
 		bytes bytecode;
+		bytes runtimeBytecode;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;
 		mutable std::unique_ptr<std::string const> interface;
 		mutable std::unique_ptr<std::string const> solidityInterface;
