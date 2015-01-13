@@ -51,10 +51,10 @@ public:
 
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
 
-	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration); }
-	bool isFunctionDefinition(Declaration const* _declaration) const { return m_functionEntryLabels.count(_declaration); }
+	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration) != 0; }
+	bool isFunctionDefinition(Declaration const* _declaration) const { return m_functionEntryLabels.count(_declaration) != 0; }
 	bool isLocalVariable(Declaration const* _declaration) const;
-	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration); }
+	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
 	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
 	/// Returns the distance of the given local variable from the top of the local variable stack.

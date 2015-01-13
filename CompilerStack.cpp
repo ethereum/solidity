@@ -39,7 +39,7 @@ namespace solidity
 
 bool CompilerStack::addSource(string const& _name, string const& _content)
 {
-	bool existed = m_sources.count(_name);
+	bool existed = m_sources.count(_name) != 0;
 	reset(true);
 	m_sources[_name].scanner = make_shared<Scanner>(CharStream(_content), _name);
 	return existed;

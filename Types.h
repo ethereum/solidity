@@ -178,7 +178,7 @@ public:
 	int getNumBits() const { return m_bits; }
 	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
 	bool isAddress() const { return m_modifier == Modifier::ADDRESS; }
-	int isSigned() const { return m_modifier == Modifier::SIGNED; }
+	bool isSigned() const { return m_modifier == Modifier::SIGNED; }
 
 	static const MemberList AddressMemberList;
 

@@ -45,5 +45,11 @@ inline void solAssertAux(bool _condition, std::string const& _errorDescription, 
 				<< ::boost::throw_line(_line));
 }
 
+inline void solAssertAux(void const* _pointer, std::string const& _errorDescription, unsigned _line,
+						 char const* _file, char const* _function)
+{
+	solAssertAux(_pointer != nullptr, _errorDescription, _line, _file, _function);
+}
+
 }
 }
