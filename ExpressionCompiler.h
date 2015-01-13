@@ -90,6 +90,10 @@ private:
 	/// Appends code to call a function of the given type with the given arguments.
 	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
 									bool bare = false);
+	/// Appends code that copies the given arguments to memory (with optional offset).
+	/// @returns the number of bytes copied to memory
+	unsigned appendArgumentCopyToMemory(TypePointers const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
+										unsigned _memoryOffset = 0);
 
 	/**
 	 * Helper class to store and retrieve lvalues to and from various locations.

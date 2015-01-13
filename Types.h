@@ -291,6 +291,8 @@ public:
 
 	virtual MemberList const& getMembers() const override;
 
+	ContractDefinition const& getContractDefinition() const { return m_contract; }
+
 	/// Returns the function type of the constructor. Note that the location part of the function type
 	/// is not used, as this type cannot be the type of a variable or expression.
 	std::shared_ptr<FunctionType const> const& getConstructorType() const;
@@ -348,7 +350,7 @@ public:
 	/// INTERNAL: jump tag, EXTERNAL: contract address + function identifier,
 	/// BARE: contract address (non-abi contract call)
 	/// OTHERS: special virtual function, nothing on the stack
-	enum class Location { INTERNAL, EXTERNAL, SEND,
+	enum class Location { INTERNAL, EXTERNAL, CREATION, SEND,
 						  SHA3, SUICIDE,
 						  ECRECOVER, SHA256, RIPEMD160,
 						  LOG0, LOG1, LOG2, LOG3, LOG4,

@@ -790,26 +790,22 @@ private:
 };
 
 /**
- * Expression that creates a new contract, e.g. "new SomeContract(1, 2)".
+ * Expression that creates a new contract, e.g. the "new SomeContract" part in "new SomeContract(1, 2)".
  */
 class NewExpression: public Expression
 {
 public:
-	NewExpression(Location const& _location, ASTPointer<Identifier> const& _contractName,
-				  std::vector<ASTPointer<Expression>> const& _arguments):
-		Expression(_location), m_contractName(_contractName), m_arguments(_arguments) {}
+	NewExpression(Location const& _location, ASTPointer<Identifier> const& _contractName):
+		Expression(_location), m_contractName(_contractName) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
-
-	std::vector<ASTPointer<Expression const>> getArguments() const { return {m_arguments.begin(), m_arguments.end()}; }
 
 	/// Returns the referenced contract. Can only be called after type checking.
 	ContractDefinition const* getContract() const { solAssert(m_contract, ""); return m_contract; }
 
 private:
 	ASTPointer<Identifier> m_contractName;
-	std::vector<ASTPointer<Expression>> m_arguments;
 
 	ContractDefinition const* m_contract = nullptr;
 };

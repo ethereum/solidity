@@ -631,6 +631,7 @@ MemberList const& FunctionType::getMembers() const
 	switch (m_location)
 	{
 	case Location::EXTERNAL:
+	case Location::CREATION:
 	case Location::ECRECOVER:
 	case Location::SHA256:
 	case Location::RIPEMD160:
@@ -644,6 +645,8 @@ MemberList const& FunctionType::getMembers() const
 				{"value", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
 													TypePointers{copyAndSetGasOrValue(false, true)},
 													Location::SET_VALUE, m_gasSet, m_valueSet)}};
+			if (m_location == Location::CREATION)
+				members.erase("gas");
 			m_members.reset(new MemberList(members));
 		}
 		return *m_members;

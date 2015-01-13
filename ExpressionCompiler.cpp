@@ -235,6 +235,36 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.getExpression().accept(*this);
 			appendExternalFunctionCall(function, arguments, function.getLocation() == Location::BARE);
 			break;
+		case Location::CREATION:
+		{
+			_functionCall.getExpression().accept(*this);
+			solAssert(!function.gasSet(), "Gas limit set for contract creation.");
+			solAssert(function.getReturnParameterTypes().size() == 1, "");
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(
+							*function.getReturnParameterTypes().front()).getContractDefinition();
+			// copy the contract's code into memory
+			bytes const& bytecode = m_context.getCompiledContract(contract);
+			m_context << u256(bytecode.size());
+			//@todo could be done by actually appending the Assembly, but then we probably need to compile
+			// multiple times. Will revisit once external fuctions are inlined.
+			m_context.appendData(bytecode);
+			//@todo copy to memory position 0, shift as soon as we use memory
+			m_context << u256(0) << eth::Instruction::CODECOPY;
+
+			unsigned length = bytecode.size();
+			length += appendArgumentCopyToMemory(function.getParameterTypes(), arguments, length);
+			// size, offset, endowment
+			m_context << u256(length) << u256(0);
+			if (function.valueSet())
+				m_context << eth::dupInstruction(3);
+			else
+				m_context << u256(0);
+			m_context << eth::Instruction::CREATE;
+			if (function.valueSet())
+				m_context << eth::swapInstruction(1) << eth::Instruction::POP;
+			return false;
+			break;
+		}
 		case Location::SET_GAS:
 		{
 			// stack layout: contract_address function_id [gas] [value]
@@ -316,38 +346,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 bool ExpressionCompiler::visit(NewExpression const& _newExpression)
 {
-	ContractType const* type = dynamic_cast<ContractType const*>(_newExpression.getType().get());
-	solAssert(type, "");
-	TypePointers const& types = type->getConstructorType()->getParameterTypes();
-	vector<ASTPointer<Expression const>> arguments = _newExpression.getArguments();
-	solAssert(arguments.size() == types.size(), "");
-
-	// copy the contracts code into memory
-	bytes const& bytecode = m_context.getCompiledContract(*_newExpression.getContract());
-	m_context << u256(bytecode.size());
-	//@todo could be done by actually appending the Assembly, but then we probably need to compile
-	// multiple times. Will revisit once external fuctions are inlined.
-	m_context.appendData(bytecode);
-	//@todo copy to memory position 0, shift as soon as we use memory
-	m_context << u256(0) << eth::Instruction::CODECOPY;
-
-	unsigned dataOffset = bytecode.size();
-	for (unsigned i = 0; i < arguments.size(); ++i)
-	{
-		arguments[i]->accept(*this);
-		appendTypeConversion(*arguments[i]->getType(), *types[i], true);
-		unsigned const c_numBytes = types[i]->getCalldataEncodedSize();
-		if (c_numBytes > 32)
-			BOOST_THROW_EXCEPTION(CompilerError()
-								  << errinfo_sourceLocation(arguments[i]->getLocation())
-								  << errinfo_comment("Type " + types[i]->toString() + " not yet supported."));
-		bool const c_leftAligned = types[i]->getCategory() == Type::Category::STRING;
-		bool const c_padToWords = true;
-		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, c_numBytes,
-															 c_leftAligned, c_padToWords);
-	}
-	// size, offset, endowment
-	m_context << u256(dataOffset) << u256(0) << u256(0) << eth::Instruction::CREATE;
+	// code is created for the function call (CREATION) only
 	return false;
 }
 
@@ -680,21 +679,8 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	}
 
 	unsigned dataOffset = bare ? 0 : CompilerUtils::dataStartOffset; // reserve 4 bytes for the function's hash identifier
-	for (unsigned i = 0; i < _arguments.size(); ++i)
-	{
-		_arguments[i]->accept(*this);
-		Type const& type = *_functionType.getParameterTypes()[i];
-		appendTypeConversion(*_arguments[i]->getType(), type, true);
-		unsigned const c_numBytes = type.getCalldataEncodedSize();
-		if (c_numBytes == 0 || c_numBytes > 32)
-			BOOST_THROW_EXCEPTION(CompilerError()
-								  << errinfo_sourceLocation(_arguments[i]->getLocation())
-								  << errinfo_comment("Type " + type.toString() + " not yet supported."));
-		bool const c_leftAligned = type.getCategory() == Type::Category::STRING;
-		bool const c_padToWords = true;
-		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, c_numBytes,
-															 c_leftAligned, c_padToWords);
-	}
+	dataOffset += appendArgumentCopyToMemory(_functionType.getParameterTypes(), _arguments, dataOffset);
+
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
 							_functionType.getReturnParameterTypes().front().get();
@@ -726,6 +712,28 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		bool const c_leftAligned = firstType->getCategory() == Type::Category::STRING;
 		CompilerUtils(m_context).loadFromMemory(0, retSize, c_leftAligned, false, true);
 	}
+}
+
+unsigned ExpressionCompiler::appendArgumentCopyToMemory(TypePointers const& _types,
+														vector<ASTPointer<Expression const>> const& _arguments,
+														unsigned _memoryOffset)
+{
+	unsigned length = 0;
+	for (unsigned i = 0; i < _arguments.size(); ++i)
+	{
+		_arguments[i]->accept(*this);
+		appendTypeConversion(*_arguments[i]->getType(), *_types[i], true);
+		unsigned const c_numBytes = _types[i]->getCalldataEncodedSize();
+		if (c_numBytes == 0 || c_numBytes > 32)
+			BOOST_THROW_EXCEPTION(CompilerError()
+								  << errinfo_sourceLocation(_arguments[i]->getLocation())
+								  << errinfo_comment("Type " + _types[i]->toString() + " not yet supported."));
+		bool const c_leftAligned = _types[i]->getCategory() == Type::Category::STRING;
+		bool const c_padToWords = true;
+		length += CompilerUtils(m_context).storeInMemory(_memoryOffset + length, c_numBytes,
+														 c_leftAligned, c_padToWords);
+	}
+	return length;
 }
 
 ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,
