@@ -78,9 +78,9 @@ public:
 
 	/// @returns the assembled bytecode for a contract.
 	bytes const& getBytecode(std::string const& _contractName = "") const;
-	/// @returns the runtime context's bytecode for a contract.
-	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
 	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
+	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
+	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
