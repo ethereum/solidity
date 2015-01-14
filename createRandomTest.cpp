@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
 		uint8_t opcode = randGen();
 		// disregard all invalid commands, except of one (0x0c)
-		if ((dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || (randGen() > 128)))
+		if ((dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || (randGen() > 250)))
 			randomCode += toHex(toCompactBigEndian(opcode));
 		else
 			i--;
