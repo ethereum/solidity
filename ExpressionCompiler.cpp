@@ -262,7 +262,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << eth::Instruction::CREATE;
 			if (function.valueSet())
 				m_context << eth::swapInstruction(1) << eth::Instruction::POP;
-			return false;
 			break;
 		}
 		case Location::SET_GAS:
