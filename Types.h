@@ -365,7 +365,9 @@ public:
 					 _location) {}
 	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
 				 Location _location = Location::INTERNAL,
-				 bool _gasSet = false, bool _valueSet = false);
+				 bool _gasSet = false, bool _valueSet = false):
+		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),
+		m_location(_location), m_gasSet(_gasSet), m_valueSet(_valueSet) {}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
 	TypePointers const& getReturnParameterTypes() const { return m_returnParameterTypes; }
@@ -393,10 +395,9 @@ private:
 
 	TypePointers m_parameterTypes;
 	TypePointers m_returnParameterTypes;
-	Location m_location;
-	unsigned m_sizeOnStack = 0;
-	bool m_gasSet = false; ///< true iff the gas value to be used is on the stack
-	bool m_valueSet = false; ///< true iff the value to be sent is on the stack
+	Location const m_location;
+	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
+	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
 	mutable std::unique_ptr<MemberList> m_members;
 };
 

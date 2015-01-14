@@ -546,7 +546,8 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage offset of non-existing member requested."));
 }
 
-FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal)
+FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
+	m_location(_isInternal ? Location::INTERNAL : Location::EXTERNAL)
 {
 	TypePointers params;
 	TypePointers retParams;
@@ -558,22 +559,6 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 		retParams.push_back(var->getType());
 	swap(params, m_parameterTypes);
 	swap(retParams, m_returnParameterTypes);
-	m_location = _isInternal ? Location::INTERNAL : Location::EXTERNAL;
-}
-
-FunctionType::FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
-						   FunctionType::Location _location, bool _gasSet, bool _valueSet):
-	m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),
-	m_location(_location), m_gasSet(_gasSet), m_valueSet(_valueSet)
-{
-	if (m_location == Location::EXTERNAL)
-		m_sizeOnStack = 2;
-	else if (m_location == Location::INTERNAL || m_location == Location::BARE)
-		m_sizeOnStack = 1;
-	if (m_gasSet)
-		m_sizeOnStack++;
-	if (m_valueSet)
-		m_sizeOnStack++;
 }
 
 bool FunctionType::operator==(Type const& _other) const
@@ -679,7 +664,6 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 	return make_shared<FunctionType>(m_parameterTypes, m_returnParameterTypes, m_location,
 									 m_gasSet || _setGas, m_valueSet || _setValue);
 }
-
 
 bool MappingType::operator==(Type const& _other) const
 {
