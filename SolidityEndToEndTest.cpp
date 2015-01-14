@@ -772,6 +772,67 @@ BOOST_AUTO_TEST_CASE(struct_reference)
 	BOOST_CHECK(callContractFunction("check()") == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(deleteStruct)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct topStruct {
+				nestedStruct nstr;
+				emptyStruct empty;
+				uint topValue;
+				mapping (uint => uint) topMapping;
+			}
+			uint toDelete;
+			topStruct str;
+			struct nestedStruct {
+				uint nestedValue;
+				mapping (uint => bool) nestedMapping;
+			}
+			struct emptyStruct{
+			}
+			function test(){
+				toDelete = 5;
+				str.topValue = 1;
+				str.topMapping[0] = 1;
+				str.topMapping[1] = 2;
+
+				str.nstr.nestedValue = 2;
+				str.nstr.nestedMapping[0] = true;
+				str.nstr.nestedMapping[1] = false;
+				uint v = 5;
+				delete v;
+				delete str;
+				delete toDelete;
+			}
+			function getToDelete() returns (uint res){
+				res = toDelete;
+			}
+			function getTopValue() returns(uint topValue){
+				topValue = str.topValue;
+			}
+			function getNestedValue() returns(uint nestedValue){
+				nestedValue = str.nstr.nestedValue;
+			}
+			function getTopMapping(uint index) returns(uint ret) {
+			   ret = str.topMapping[index];
+			}
+			function getNestedMapping(uint index) returns(bool ret) {
+				return str.nstr.nestedMapping[index];
+			}
+		})";
+
+	compileAndRun(sourceCode);
+
+	BOOST_CHECK(callContractFunction("getToDelete()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("getTopValue()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("getNestedValue()") == encodeArgs(0));
+	// mapping values should be the same
+	BOOST_CHECK(callContractFunction("getTopMapping(uint256)", 0) == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("getTopMapping(uint256)", 1) == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("getNestedMapping(uint256)", 0) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getNestedMapping(uint256)", 1) == encodeArgs(false));
+}
+
 BOOST_AUTO_TEST_CASE(constructor)
 {
 	char const* sourceCode = "contract test {\n"
@@ -1243,6 +1304,7 @@ BOOST_AUTO_TEST_CASE(constructor_arguments)
 		contract Helper {
 			string3 name;
 			bool flag;
+
 			function Helper(string3 x, bool f) {
 				name = x;
 				flag = f;
