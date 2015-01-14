@@ -357,6 +357,18 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 		}
 }
 
+
+BOOST_AUTO_TEST_CASE(hash_collision_in_interface)
+{
+	char const* text = "contract test {\n"
+					   "  function gsf() {\n"
+					   "  }\n"
+					   "  function tgeo() {\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
