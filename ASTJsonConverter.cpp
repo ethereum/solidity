@@ -42,12 +42,12 @@ void ASTJsonConverter::addJsonNode(string const& _typeName,
 		attrs[e.first] = e.second;
 	node["attributes"] = attrs;
 
-	m_jsonNodePtrs.top()->append(node);
+	m_jsonNodePtrs.top().append(node);
 
 	if (_hasChildren) {
 		Json::Value children(Json::arrayValue);
 		node["children"] = children;
-		m_jsonNodePtrs.push(&node["children"]);
+		m_jsonNodePtrs.push(node["children"]);
 		m_depth ++;
 		cout << "goDown" << endl;
 	}
@@ -62,9 +62,7 @@ ASTJsonConverter::ASTJsonConverter(ASTNode const& _ast): m_ast(&_ast), m_depth(0
 	m_astJson["attributes"] = attrs;
 	attrs["name"] = "nameoffile"; //TODO
 	m_astJson["children"] = children;
-	// m_jsonNodePtrs.push(&m_astJson["children"]);
-	m_jsonNodePtrs.push(&m_astJson["children"]);
-	// m_jsonNodePtrs.push(&children);
+	m_jsonNodePtrs.push(m_astJson["children"]);
 }
 
 void ASTJsonConverter::print(ostream& _stream)
