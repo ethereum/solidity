@@ -119,7 +119,7 @@ private:
 		/// Set type according to the declaration and retrieve the reference.
 		/// @a _expression is the current expression
 		void fromIdentifier(Identifier const& _identifier, Declaration const& _declaration);
-		void reset() { m_type = NONE; m_baseStackOffset = 0; }
+		void reset() { m_type = NONE; m_baseStackOffset = 0; m_size = 0; }
 
 		bool isValid() const { return m_type != NONE; }
 		bool isInOnStack() const { return m_type == STACK; }
@@ -138,7 +138,9 @@ private:
 		/// Also removes the stored value from the stack if @a _move is
 		/// true. @a _expression is the current expression, used for error reporting.
 		void storeValue(Expression const& _expression, bool _move = false) const;
-
+		/// Stores zero in the lvalue.
+		/// @a _expression is the current expression, used for error reporting.
+		void setToZero(Expression const& _expression) const;
 		/// Convenience function to convert the stored reference to a value and reset type to NONE if
 		/// the reference was not requested by @a _expression.
 		void retrieveValueIfLValueNotRequested(Expression const& _expression);
@@ -149,8 +151,8 @@ private:
 		/// If m_type is STACK, this is base stack offset (@see
 		/// CompilerContext::getBaseStackOffsetOfVariable) of a local variable.
 		unsigned m_baseStackOffset = 0;
-		/// Size of the value of this lvalue on the stack.
-		unsigned m_stackSize = 0;
+		/// Size of the value of this lvalue on the stack or the storage.
+		unsigned m_size = 0;
 	};
 
 	bool m_optimize;
