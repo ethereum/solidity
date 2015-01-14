@@ -669,17 +669,24 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	// <stack top>
 	// value [if _functionType.valueSet()]
 	// gas [if _functionType.gasSet()]
-	// function identifier [unless options.bare]
+	// function identifier [unless bare]
 	// contract address
 
 	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
+
+	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + (bare ? 0 : 1));
+	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
+	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
+
 	if (!bare)
 	{
+		// copy function identifier
 		m_context << eth::dupInstruction(gasValueSize + 1);
 		CompilerUtils(m_context).storeInMemory(0, CompilerUtils::dataStartOffset);
 	}
 
-	unsigned dataOffset = bare ? 0 : CompilerUtils::dataStartOffset; // reserve 4 bytes for the function's hash identifier
+	// reserve space for the function identifier
+	unsigned dataOffset = bare ? 0 : CompilerUtils::dataStartOffset;
 	dataOffset += appendArgumentCopyToMemory(_functionType.getParameterTypes(), _arguments, dataOffset);
 
 	//@todo only return the first return value for now
@@ -689,13 +696,13 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	// CALL arguments: outSize, outOff, inSize, inOff, value, addr, gas (stack top)
 	m_context << u256(retSize) << u256(0) << u256(dataOffset) << u256(0);
 	if (_functionType.valueSet())
-		m_context << eth::dupInstruction(5);
+		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
 	else
 		m_context << u256(0);
-	m_context << eth::dupInstruction(6 + gasValueSize + (bare ? 0 : 1)); //copy contract address
+	m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
 
 	if (_functionType.gasSet())
-		m_context << eth::dupInstruction(7 + (_functionType.valueSet() ? 1 : 0));
+		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
 		// send all gas except for the 21 needed to execute "SUB" and "CALL"
 		m_context << u256(21) << eth::Instruction::GAS << eth::Instruction::SUB;
