@@ -508,23 +508,28 @@ BOOST_AUTO_TEST_CASE(vmLogTest)
 	dev::test::executeTests("vmLogTest", "/VMTests", dev::test::doVMTests);
 }
 
-BOOST_AUTO_TEST_CASE(vmPerformanceTest)
+BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
+{
+	dev::test::executeTests("vmSystemOperationsTest", "/VMTests", dev::test::doVMTests);
+}
+
+BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--performance")
-			dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
+		if (arg == "--inputlimits")
+			dev::test::executeTests("vmInputLimitsTest1", "/VMTests", dev::test::doVMTests);
 	}
 }
 
-BOOST_AUTO_TEST_CASE(vmArithPerformanceTest)
+BOOST_AUTO_TEST_CASE(vmInputLimitsTest2)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--performance")
-			dev::test::executeTests("vmArithPerformanceTest", "/VMTests", dev::test::doVMTests);
+		if (arg == "--inputlimits")
+			dev::test::executeTests("vmInputLimitsTest2", "/VMTests", dev::test::doVMTests);
 	}
 }
 
