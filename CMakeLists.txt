@@ -2,6 +2,7 @@ cmake_policy(SET CMP0015 NEW)
 
 aux_source_directory(. SRC_LIST)
 list(REMOVE_ITEM SRC_LIST "./createRandomTest.cpp")
+list(REMOVE_ITEM SRC_LIST "./checkRandomTest.cpp")
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CRYPTOPP_INCLUDE_DIRS})
@@ -12,6 +13,7 @@ include_directories(..)
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 add_executable(createRandomTest createRandomTest.cpp vm.cpp TestHelper.cpp)
+add_executable(checkRandomTest checkRandomTest.cpp vm.cpp TestHelper.cpp)
 
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 target_link_libraries(testeth ${CURL_LIBRARIES})
@@ -29,3 +31,7 @@ endif()
 target_link_libraries(createRandomTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 target_link_libraries(createRandomTest ethereum)
 target_link_libraries(createRandomTest ethcore)
+target_link_libraries(checkRandomTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+target_link_libraries(checkRandomTest ethereum)
+target_link_libraries(checkRandomTest ethcore)
+

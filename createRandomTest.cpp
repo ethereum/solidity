@@ -54,18 +54,26 @@ int main(int argc, char *argv[])
 	gen.seed(static_cast<unsigned int>(timeSinceEpoch));
 	boost::random::uniform_int_distribution<> lengthOfCodeDist(2, 16);
 	boost::random::uniform_int_distribution<> opcodeDist(0, 255);
+	boost::random::uniform_int_distribution<> BlockInfoOpcodeDist(0x40, 0x45);
 	boost::random::variate_generator<boost::mt19937&,
 			boost::random::uniform_int_distribution<> > randGen(gen, opcodeDist);
+	boost::random::variate_generator<boost::mt19937&,
+			boost::random::uniform_int_distribution<> > randGenBlockInfoOpcode(gen, BlockInfoOpcodeDist);
 
 	int lengthOfCode  = lengthOfCodeDist(gen);
 	string randomCode;
 
 	for (int i = 0; i < lengthOfCode; ++i)
 	{
-		uint8_t opcode = randGen();
+		if (i < 8 && (randGen() < 192))
+		{
+			randomCode += toHex(toCompactBigEndian((uint8_t)randGenBlockInfoOpcode()));
+			continue;
+		}
 
-		// disregard all invalid commands, except of one (0x10)
-		if (dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || opcode == 0x10)
+		uint8_t opcode = randGen();
+		// disregard all invalid commands, except of one (0x0c)
+		if ((dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || (randGen() > 250)))
 			randomCode += toHex(toCompactBigEndian(opcode));
 		else
 			i--;
@@ -76,10 +84,10 @@ int main(int argc, char *argv[])
 	\"randomVMtest\": {\n\
 		\"env\" : {\n\
 			\"previousHash\" : \"5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6\",\n\
-			\"currentNumber\" : \"0\",\n\
+			\"currentNumber\" : \"300\",\n\
 			\"currentGasLimit\" : \"1000000\",\n\
-			\"currentDifficulty\" : \"256\",\n\
-			\"currentTimestamp\" : 1,\n\
+			\"currentDifficulty\" : \"115792089237316195423570985008687907853269984665640564039457584007913129639935\",\n\
+			\"currentTimestamp\" : 2,\n\
 			\"currentCoinbase\" : \"2adc25665018aa1fe0e6bc666dac8fc2697ff9ba\"\n\
 		},\n\
 		\"pre\" : {\n\
@@ -106,7 +114,7 @@ int main(int argc, char *argv[])
 	read_string(s, v);
 
 	// insert new random code
-	v.get_obj().find("randomVMtest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode;
+	v.get_obj().find("randomVMtest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode + (randGen() > 128 ? "55" : "");
 
 	// execute code in vm
 	doMyTests(v);
@@ -119,6 +127,8 @@ int main(int argc, char *argv[])
 
 void doMyTests(json_spirit::mValue& v)
 {
+	eth::VMFactory::setKind(eth::VMKind::Interpreter);
+
 	for (auto& i: v.get_obj())
 	{
 		cnote << i.first;

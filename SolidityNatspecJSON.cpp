@@ -510,6 +510,19 @@ BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
 	BOOST_CHECK_THROW(checkNatspec(sourceCode, natspec, false), DocstringParsingError);
 }
 
+// test for bug where having no tags in docstring would cause infinite loop
+BOOST_AUTO_TEST_CASE(natspec_no_tags)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// I do something awesome\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	char const* natspec = "{\"methods\": {}}";
+
+	checkNatspec(sourceCode, natspec, false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
