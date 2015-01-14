@@ -466,17 +466,7 @@ ASTPointer<Expression> Parser::parseUnaryExpression()
 {
 	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->getCurrentToken();
-	if (token == Token::NEW)
-	{
-		expectToken(Token::NEW);
-		ASTPointer<Identifier> contractName = ASTNodeFactory(*this).createNode<Identifier>(expectIdentifierToken());
-		expectToken(Token::LPAREN);
-		vector<ASTPointer<Expression>> arguments(parseFunctionCallArguments());
-		expectToken(Token::RPAREN);
-		nodeFactory.markEndPosition();
-		return nodeFactory.createNode<NewExpression>(contractName, arguments);
-	}
-	else if (Token::isUnaryOp(token) || Token::isCountOp(token))
+	if (Token::isUnaryOp(token) || Token::isCountOp(token))
 	{
 		// prefix expression
 		m_scanner->next();
@@ -500,7 +490,17 @@ ASTPointer<Expression> Parser::parseUnaryExpression()
 ASTPointer<Expression> Parser::parseLeftHandSideExpression()
 {
 	ASTNodeFactory nodeFactory(*this);
-	ASTPointer<Expression> expression = parsePrimaryExpression();
+	ASTPointer<Expression> expression;
+	if (m_scanner->getCurrentToken() == Token::NEW)
+	{
+		expectToken(Token::NEW);
+		ASTPointer<Identifier> contractName = ASTNodeFactory(*this).createNode<Identifier>(expectIdentifierToken());
+		nodeFactory.markEndPosition();
+		expression = nodeFactory.createNode<NewExpression>(contractName);
+	}
+	else
+		expression = parsePrimaryExpression();
+
 	while (true)
 	{
 		switch (m_scanner->getCurrentToken())

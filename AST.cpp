@@ -331,20 +331,13 @@ bool FunctionCall::isTypeConversion() const
 void NewExpression::checkTypeRequirements()
 {
 	m_contractName->checkTypeRequirements();
-	for (ASTPointer<Expression> const& argument: m_arguments)
-		argument->checkTypeRequirements();
-
 	m_contract = dynamic_cast<ContractDefinition const*>(m_contractName->getReferencedDeclaration());
 	if (!m_contract)
 		BOOST_THROW_EXCEPTION(createTypeError("Identifier is not a contract."));
-	shared_ptr<ContractType const> type = make_shared<ContractType>(*m_contract);
-	m_type = type;
-	TypePointers const& parameterTypes = type->getConstructorType()->getParameterTypes();
-	if (parameterTypes.size() != m_arguments.size())
-		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
-	for (size_t i = 0; i < m_arguments.size(); ++i)
-		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
-			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in constructor call."));
+	shared_ptr<ContractType const> contractType = make_shared<ContractType>(*m_contract);
+	TypePointers const& parameterTypes = contractType->getConstructorType()->getParameterTypes();
+	m_type = make_shared<FunctionType>(parameterTypes, TypePointers{contractType},
+									   FunctionType::Location::CREATION);
 }
 
 void MemberAccess::checkTypeRequirements()

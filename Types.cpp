@@ -546,7 +546,8 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage offset of non-existing member requested."));
 }
 
-FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal)
+FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
+	m_location(_isInternal ? Location::INTERNAL : Location::EXTERNAL)
 {
 	TypePointers params;
 	TypePointers retParams;
@@ -558,7 +559,6 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 		retParams.push_back(var->getType());
 	swap(params, m_parameterTypes);
 	swap(retParams, m_returnParameterTypes);
-	m_location = _isInternal ? Location::INTERNAL : Location::EXTERNAL;
 }
 
 bool FunctionType::operator==(Type const& _other) const
@@ -580,6 +580,9 @@ bool FunctionType::operator==(Type const& _other) const
 	if (!equal(m_returnParameterTypes.cbegin(), m_returnParameterTypes.cend(),
 			   other.m_returnParameterTypes.cbegin(), typeCompare))
 		return false;
+	//@todo this is ugly, but cannot be prevented right now
+	if (m_gasSet != other.m_gasSet || m_valueSet != other.m_valueSet)
+		return false;
 	return true;
 }
 
@@ -596,16 +599,44 @@ string FunctionType::toString() const
 
 unsigned FunctionType::getSizeOnStack() const
 {
+	unsigned size = 0;
+	if (m_location == Location::EXTERNAL)
+		size = 2;
+	else if (m_location == Location::INTERNAL || m_location == Location::BARE)
+		size = 1;
+	if (m_gasSet)
+		size++;
+	if (m_valueSet)
+		size++;
+	return size;
+}
+
+MemberList const& FunctionType::getMembers() const
+{
 	switch (m_location)
 	{
-	case Location::INTERNAL:
-		return 1;
 	case Location::EXTERNAL:
-		return 2;
+	case Location::CREATION:
+	case Location::ECRECOVER:
+	case Location::SHA256:
+	case Location::RIPEMD160:
 	case Location::BARE:
-		return 1;
+		if (!m_members)
+		{
+			map<string, TypePointer> members{
+				{"gas", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
+												  TypePointers{copyAndSetGasOrValue(true, false)},
+												  Location::SET_GAS, m_gasSet, m_valueSet)},
+				{"value", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
+													TypePointers{copyAndSetGasOrValue(false, true)},
+													Location::SET_VALUE, m_gasSet, m_valueSet)}};
+			if (m_location == Location::CREATION)
+				members.erase("gas");
+			m_members.reset(new MemberList(members));
+		}
+		return *m_members;
 	default:
-		return 0;
+		return EmptyMemberList;
 	}
 }
 
@@ -626,6 +657,12 @@ TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 	for (string const& type: _types)
 		pointers.push_back(Type::fromElementaryTypeName(Token::fromIdentifierOrKeyword(type)));
 	return pointers;
+}
+
+TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) const
+{
+	return make_shared<FunctionType>(m_parameterTypes, m_returnParameterTypes, m_location,
+									 m_gasSet || _setGas, m_valueSet || _setValue);
 }
 
 bool MappingType::operator==(Type const& _other) const
