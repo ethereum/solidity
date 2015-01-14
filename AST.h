@@ -191,6 +191,8 @@ public:
 	FunctionDefinition const* getConstructor() const;
 
 private:
+	std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>> getInterfaceFunctionList() const;
+
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
