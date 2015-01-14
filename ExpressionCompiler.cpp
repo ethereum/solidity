@@ -290,12 +290,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments.front()->accept(*this);
 			break;
 		case Location::SEND:
-			// TODO set gas to min
 			_functionCall.getExpression().accept(*this);
+			m_context << u256(0); // 0 gas, we do not want to execute code
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(),
 								 *function.getParameterTypes().front(), true);
-			appendExternalFunctionCall(FunctionType(TypePointers{}, TypePointers{}, Location::EXTERNAL, false, true), {}, true);
+			appendExternalFunctionCall(FunctionType(TypePointers{}, TypePointers{},
+													Location::EXTERNAL, true, true), {}, true);
 			break;
 		case Location::SUICIDE:
 			arguments.front()->accept(*this);
@@ -696,7 +697,8 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	if (_functionType.gasSet())
 		m_context << eth::dupInstruction(7 + (_functionType.valueSet() ? 1 : 0));
 	else
-		m_context << u256(25) << eth::Instruction::GAS << eth::Instruction::SUB;
+		// send all gas except for the 21 needed to execute "SUB" and "CALL"
+		m_context << u256(21) << eth::Instruction::GAS << eth::Instruction::SUB;
 	m_context << eth::Instruction::CALL
 			  << eth::Instruction::POP; // @todo do not ignore failure indicator
 	if (_functionType.valueSet())
