@@ -137,12 +137,12 @@ bytes const& CompilerStack::getBytecode(string const& _contractName) const
 	return getContract(_contractName).bytecode;
 }
 
-bytes const& CompilerStack::getRuntimeBytecode(std::string const& _contractName) const
+bytes const& CompilerStack::getRuntimeBytecode(string const& _contractName) const
 {
 	return getContract(_contractName).runtimeBytecode;
 }
 
-dev::h256 CompilerStack::getContractCodeHash(std::string const& _contractName) const
+dev::h256 CompilerStack::getContractCodeHash(string const& _contractName) const
 {
 	return dev::sha3(getRuntimeBytecode(_contractName));
 }
@@ -190,24 +190,6 @@ string const& CompilerStack::getMetadata(string const& _contractName, Documentat
 	if (!*doc)
 		*doc = contract.interfaceHandler->getDocumentation(*contract.contract, _type);
 	return *(*doc);
-}
-
-std::string const CompilerStack::getFunctionHashes(std::string const& _contractName)
-{
-	if (!m_parseSuccessful)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Parsing was not successful."));
-
-	std::string ret = "";
-	Contract const& contract = getContract(_contractName);
-	auto interfaceFunctions = contract.contract->getInterfaceFunctions();
-
-	for (auto const& it: interfaceFunctions)
-	{
-		ret += it.first.abridged();
-		ret += " :";
-		ret += it.second->getName() + "\n";
-	}
-	return ret;
 }
 
 Scanner const& CompilerStack::getScanner(string const& _sourceName) const

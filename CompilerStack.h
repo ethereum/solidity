@@ -76,11 +76,11 @@ public:
 	/// @returns the compiled bytecode
 	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);
 
-	/// Gets the assembled bytecode for a contract
+	/// @returns the assembled bytecode for a contract.
 	bytes const& getBytecode(std::string const& _contractName = "") const;
-	/// Get the runtime context's bytecode for a contract
+	/// @returns the runtime context's bytecode for a contract.
 	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
-	/// Get the runtime context's code hash for a contract
+	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
@@ -98,9 +98,6 @@ public:
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
 	std::string const& getMetadata(std::string const& _contractName, DocumentationType _type) const;
-
-	/// Convenience function to return all contract method hashes in a string
-	std::string const getFunctionHashes(std::string const& _contractName = "");
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner(std::string const& _sourceName = "") const;
