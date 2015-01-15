@@ -114,21 +114,20 @@ public:
 	void endVisit(Literal const&) override;
 
 private:
-	void addJsonNode(std::string const& _typeName,
+	void addKeyValue(Json::Value& _obj, std::string const& _key, std::string const& _val);
+	void addJsonNode(std::string const& _nodeName,
 					 std::initializer_list<std::pair<std::string const, std::string const>> _list,
 					 bool _hasChildren);
-	void printType(Expression const& _expression);
+	std::string const getType(Expression const& _expression);
 	inline void goUp()
 	{
-		std::cout << "goUp" << std::endl;
-		m_jsonNodePtrs.pop();
-		m_depth--;
-		if (m_depth < 0)
+		if (m_jsonNodePtrs.empty())
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal error"));
+		m_jsonNodePtrs.pop();
 	};
 
 	Json::Value m_astJson;
-	std::stack<Json::Value> m_jsonNodePtrs;
+	std::stack<Json::Value*> m_jsonNodePtrs;
 	std::string m_source;
 	ASTNode const* m_ast;
 	int m_depth;
