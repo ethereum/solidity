@@ -656,8 +656,8 @@ MagicType::MagicType(MagicType::Kind _kind):
 	{
 	case Kind::BLOCK:
 		m_members = MemberList({{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::ADDRESS)},
-								{"timestamp", make_shared<IntegerType >(256)},
-								{"prevhash", make_shared<IntegerType>(256, IntegerType::Modifier::HASH)},
+								{"timestamp", make_shared<IntegerType>(256)},
+								{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"hash"}, FunctionType::Location::BLOCKHASH)},
 								{"difficulty", make_shared<IntegerType>(256)},
 								{"number", make_shared<IntegerType>(256)},
 								{"gaslimit", make_shared<IntegerType>(256)}});
