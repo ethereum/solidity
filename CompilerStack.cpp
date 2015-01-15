@@ -30,6 +30,8 @@
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/InterfaceHandler.h>
 
+#include <libdevcrypto/SHA3.h>
+
 using namespace std;
 
 namespace dev
@@ -117,6 +119,7 @@ void CompilerStack::compile(bool _optimize)
 										  contractBytecode);
 				Contract& compiledContract = m_contracts[contract->getName()];
 				compiledContract.bytecode = compiler->getAssembledBytecode();
+				compiledContract.runtimeBytecode = compiler->getRuntimeBytecode();
 				compiledContract.compiler = move(compiler);
 				contractBytecode[compiledContract.contract] = &compiledContract.bytecode;
 			}
@@ -132,6 +135,16 @@ bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 bytes const& CompilerStack::getBytecode(string const& _contractName) const
 {
 	return getContract(_contractName).bytecode;
+}
+
+bytes const& CompilerStack::getRuntimeBytecode(string const& _contractName) const
+{
+	return getContract(_contractName).runtimeBytecode;
+}
+
+dev::h256 CompilerStack::getContractCodeHash(string const& _contractName) const
+{
+	return dev::sha3(getRuntimeBytecode(_contractName));
 }
 
 void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName) const

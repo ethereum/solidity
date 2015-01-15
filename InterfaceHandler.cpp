@@ -106,7 +106,7 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefi
 			if (!m_notice.empty())
 			{// since @notice is the only user tag if missing function should not appear
 				user["notice"] = Json::Value(m_notice);
-				methods[it.second->getName()] = user;
+				methods[it.second->getCanonicalSignature()] = user;
 			}
 		}
 	}
@@ -162,7 +162,7 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 				method["return"] = m_return;
 
 			if (!method.empty()) // add the function, only if we have any documentation to add
-				methods[it.second->getName()] = method;
+				methods[it.second->getCanonicalSignature()] = method;
 		}
 	}
 	doc["methods"] = methods;
