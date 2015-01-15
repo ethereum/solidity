@@ -354,7 +354,7 @@ public:
 						  SHA3, SUICIDE,
 						  ECRECOVER, SHA256, RIPEMD160,
 						  LOG0, LOG1, LOG2, LOG3, LOG4,
-						  SET_GAS, SET_VALUE, BLOCKHASH
+						  SET_GAS, SET_VALUE, BLOCKHASH,
 						  BARE };
 
 	virtual Category getCategory() const override { return Category::FUNCTION; }
