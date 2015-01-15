@@ -28,6 +28,7 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev {
 namespace solidity {
@@ -75,7 +76,13 @@ public:
 	/// @returns the compiled bytecode
 	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);
 
+	/// @returns the assembled bytecode for a contract.
 	bytes const& getBytecode(std::string const& _contractName = "") const;
+	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
+	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
+	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
+	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
+
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// Prerequisite: Successful compilation.
 	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "") const;
@@ -121,6 +128,7 @@ private:
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
 		bytes bytecode;
+		bytes runtimeBytecode;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;
 		mutable std::unique_ptr<std::string const> interface;
 		mutable std::unique_ptr<std::string const> solidityInterface;

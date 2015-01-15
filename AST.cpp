@@ -50,18 +50,27 @@ void ContractDefinition::checkTypeRequirements()
 
 	for (ASTPointer<FunctionDefinition> const& function: getDefinedFunctions())
 		function->checkTypeRequirements();
+
+	// check for hash collisions in function signatures
+	vector<pair<FixedHash<4>, FunctionDefinition const*>> exportedFunctionList = getInterfaceFunctionList();
+	set<FixedHash<4>> hashes;
+	for (auto const& hashAndFunction: getInterfaceFunctionList())
+	{
+		FixedHash<4> const& hash = hashAndFunction.first;
+		if (hashes.count(hash))
+			BOOST_THROW_EXCEPTION(createTypeError("Function signature hash collision for " +
+												  hashAndFunction.second->getCanonicalSignature()));
+		hashes.insert(hash);
+	}
 }
 
 map<FixedHash<4>, FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() const
 {
-	map<FixedHash<4>, FunctionDefinition const*> exportedFunctions;
-	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
-		if (f->isPublic() && f->getName() != getName())
-		{
-			FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
-			auto res = exportedFunctions.insert(std::make_pair(hash,f.get()));
-			solAssert(res.second, "Hash collision at Function Definition Hash calculation");
-		}
+	vector<pair<FixedHash<4>, FunctionDefinition const*>> exportedFunctionList = getInterfaceFunctionList();
+	map<FixedHash<4>, FunctionDefinition const*> exportedFunctions(exportedFunctionList.begin(),
+																   exportedFunctionList.end());
+	solAssert(exportedFunctionList.size() == exportedFunctions.size(),
+			  "Hash collision at Function Definition Hash calculation");
 
 	return exportedFunctions;
 }
@@ -72,6 +81,19 @@ FunctionDefinition const* ContractDefinition::getConstructor() const
 		if (f->getName() == getName())
 			return f.get();
 	return nullptr;
+}
+
+vector<pair<FixedHash<4>, FunctionDefinition const*>> ContractDefinition::getInterfaceFunctionList() const
+{
+	vector<pair<FixedHash<4>, FunctionDefinition const*>> exportedFunctions;
+	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
+		if (f->isPublic() && f->getName() != getName())
+		{
+			FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
+			exportedFunctions.push_back(make_pair(hash, f.get()));
+		}
+
+	return exportedFunctions;
 }
 
 void StructDefinition::checkMemberTypes() const
@@ -309,20 +331,13 @@ bool FunctionCall::isTypeConversion() const
 void NewExpression::checkTypeRequirements()
 {
 	m_contractName->checkTypeRequirements();
-	for (ASTPointer<Expression> const& argument: m_arguments)
-		argument->checkTypeRequirements();
-
 	m_contract = dynamic_cast<ContractDefinition const*>(m_contractName->getReferencedDeclaration());
 	if (!m_contract)
 		BOOST_THROW_EXCEPTION(createTypeError("Identifier is not a contract."));
-	shared_ptr<ContractType const> type = make_shared<ContractType>(*m_contract);
-	m_type = type;
-	TypePointers const& parameterTypes = type->getConstructorType()->getParameterTypes();
-	if (parameterTypes.size() != m_arguments.size())
-		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
-	for (size_t i = 0; i < m_arguments.size(); ++i)
-		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
-			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in constructor call."));
+	shared_ptr<ContractType const> contractType = make_shared<ContractType>(*m_contract);
+	TypePointers const& parameterTypes = contractType->getConstructorType()->getParameterTypes();
+	m_type = make_shared<FunctionType>(parameterTypes, TypePointers{contractType},
+									   FunctionType::Location::CREATION);
 }
 
 void MemberAccess::checkTypeRequirements()

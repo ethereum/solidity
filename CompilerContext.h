@@ -62,6 +62,9 @@ public:
 	/// If supplied by a value returned by @ref getBaseStackOffsetOfVariable(variable), returns
 	/// the distance of that variable from the current top of the stack.
 	unsigned baseToCurrentStackOffset(unsigned _baseOffset) const;
+	/// Converts an offset relative to the current stack height to a value that can be used later
+	/// with baseToCurrentStackOffset to point to the same stack element.
+	unsigned currentToBaseStackOffset(unsigned _offset) const;
 	u256 getStorageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag

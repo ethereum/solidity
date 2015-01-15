@@ -95,6 +95,11 @@ unsigned CompilerContext::baseToCurrentStackOffset(unsigned _baseOffset) const
 	return _baseOffset + m_asm.deposit();
 }
 
+unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
+{
+	return -baseToCurrentStackOffset(-_offset);
+}
+
 u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
 {
 	auto it = m_stateVariables.find(&_declaration);
