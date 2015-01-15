@@ -357,7 +357,6 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 		}
 }
 
-
 BOOST_AUTO_TEST_CASE(hash_collision_in_interface)
 {
 	char const* text = "contract test {\n"
@@ -366,6 +365,40 @@ BOOST_AUTO_TEST_CASE(hash_collision_in_interface)
 					   "  function tgeo() {\n"
 					   "  }\n"
 					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(inheritance_basic)
+{
+	char const* text = R"(
+		contract base { uint baseMember; struct BaseType { uint element; } }
+		contract derived is base {
+			BaseType data;
+			function f() { baseMember = 7; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
+{
+	char const* text = R"(
+		contract root { function rootFunction() {} }
+		contract inter1 is root { function f() {} }
+		contract inter2 is root { function f() {} }
+		contract derived is inter1, inter2, root {
+			function g() { f(); rootFunction(); }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(cyclic_inheritance)
+{
+	char const* text = R"(
+		contract A is B { }
+		contract B is A { }
+	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
