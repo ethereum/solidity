@@ -1493,6 +1493,66 @@ BOOST_AUTO_TEST_CASE(value_for_constructor)
 	BOOST_REQUIRE(callContractFunction("getBalances()") == encodeArgs(12, 10));
 }
 
+BOOST_AUTO_TEST_CASE(virtual_function_calls)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			function f() returns (uint i) { return g(); }
+			function g() returns (uint i) { return 1; }
+		}
+		contract Derived is Base {
+			function g() returns (uint i) { return 2; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(access_base_storage)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			uint dataBase;
+			function getViaBase() returns (uint i) { return dataBase; }
+		}
+		contract Derived is Base {
+			uint dataDerived;
+			function setData(uint base, uint derived) returns (bool r) {
+				dataBase = base;
+				dataDerived = derived;
+				return true;
+			}
+			function getViaDerived() returns (uint base, uint derived) {
+				base = dataBase;
+				derived = dataDerived;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("setData(uint256,uint256)", 1, 2) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getViaBase()") == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("getViaDerived()") == encodeArgs(1, 2));
+}
+
+BOOST_AUTO_TEST_CASE(single_copy_with_multiple_inheritance)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			uint data;
+			function setData(uint i) { data = i; }
+			function getViaBase() returns (uint i) { return data; }
+		}
+		contract A is Base { function setViaA(uint i) { setData(i); } }
+		contract B is Base { function getViaB() returns (uint i) { return getViaBase(); } }
+		contract Derived is A, B, Base { }
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getViaB()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("setViaA(uint256)", 23) == encodeArgs());
+	BOOST_CHECK(callContractFunction("getViaB()") == encodeArgs(23));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
