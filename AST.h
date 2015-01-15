@@ -158,10 +158,12 @@ public:
 	ContractDefinition(Location const& _location,
 					   ASTPointer<ASTString> const& _name,
 					   ASTPointer<ASTString> const& _documentation,
+					   std::vector<ASTPointer<Identifier>> const& _baseContracts,
 					   std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
 					   std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
 					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions):
 		Declaration(_location, _name),
+		m_baseContracts(_baseContracts),
 		m_definedStructs(_definedStructs),
 		m_stateVariables(_stateVariables),
 		m_definedFunctions(_definedFunctions),
@@ -193,6 +195,7 @@ public:
 private:
 	std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>> getInterfaceFunctionList() const;
 
+	std::vector<ASTPointer<Identifier>> m_baseContracts;
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;

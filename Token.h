@@ -153,7 +153,7 @@ namespace solidity
 	K(DEFAULT, "default", 0)                                           \
 	K(DO, "do", 0)                                                     \
 	K(ELSE, "else", 0)                                                 \
-	K(EXTENDS, "extends", 0)                                           \
+	K(IS, "is", 0)                                                     \
 	K(FOR, "for", 0)                                                   \
 	K(FUNCTION, "function", 0)                                         \
 	K(IF, "if", 0)                                                     \
