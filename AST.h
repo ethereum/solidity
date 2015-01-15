@@ -173,6 +173,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
+	std::vector<ASTPointer<Identifier>> const& getBaseContracts() const { return m_baseContracts; }
 	std::vector<ASTPointer<StructDefinition>> const& getDefinedStructs() const { return m_definedStructs; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() const { return m_stateVariables; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
@@ -189,6 +190,11 @@ public:
 	/// as intended for use by the ABI.
 	std::map<FixedHash<4>, FunctionDefinition const*> getInterfaceFunctions() const;
 
+	/// List of all (direct and indirect) base contracts in order from derived to base, including
+	/// the contract itself. Available after name resolution
+	std::vector<ContractDefinition const*> const& getLinearizedBaseContracts() const { return m_linearizedBaseContracts; }
+	void setLinearizedBaseContracts(std::vector<ContractDefinition const*> const& _bases) { m_linearizedBaseContracts = _bases; }
+
 	/// Returns the constructor or nullptr if no constructor was specified
 	FunctionDefinition const* getConstructor() const;
 
@@ -200,6 +206,8 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
 	ASTPointer<ASTString> m_documentation;
+
+	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 };
 
 class StructDefinition: public Declaration

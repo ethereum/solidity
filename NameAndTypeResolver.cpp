@@ -46,7 +46,17 @@ void NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
 
 void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
+	m_currentScope = &m_scopes[nullptr];
+
+	for (ASTPointer<Identifier> const& baseContract: _contract.getBaseContracts())
+		ReferencesResolver resolver(*baseContract, *this, nullptr);
+
 	m_currentScope = &m_scopes[&_contract];
+
+	linearizeBaseContracts(_contract);
+	for (ContractDefinition const* base: _contract.getLinearizedBaseContracts())
+		importInheritedScope(*base);
+
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
 		ReferencesResolver resolver(*structDef, *this, nullptr);
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
@@ -57,7 +67,6 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		ReferencesResolver referencesResolver(*function, *this,
 											  function->getReturnParameterList().get());
 	}
-	m_currentScope = &m_scopes[nullptr];
 }
 
 void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
@@ -84,6 +93,94 @@ Declaration const* NameAndTypeResolver::resolveName(ASTString const& _name, Decl
 Declaration const* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
 {
 	return m_currentScope->resolveName(_name, _recursive);
+}
+
+void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
+{
+	auto iterator = m_scopes.find(&_base);
+	solAssert(iterator != end(m_scopes), "");
+	for (auto const& nameAndDeclaration: iterator->second.getDeclarations())
+	{
+		Declaration const* declaration = nameAndDeclaration.second;
+		if (declaration->getScope() == &_base)
+			m_currentScope->registerDeclaration(*declaration);
+	}
+}
+
+void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract) const
+{
+	// order in the lists is from derived to base
+	// list of lists to linearize, the last element is the list of direct bases
+	list<list<ContractDefinition const*>> input(1, {&_contract});
+	for (ASTPointer<Identifier> const& baseIdentifier: _contract.getBaseContracts())
+	{
+		ContractDefinition const* base = dynamic_cast<ContractDefinition const*>(
+														baseIdentifier->getReferencedDeclaration());
+		if (!base)
+			BOOST_THROW_EXCEPTION(baseIdentifier->createTypeError("Contract expected."));
+		// "push_back" has the effect that bases mentioned earlier can overwrite members of bases
+		// mentioned later
+		input.back().push_back(base);
+		vector<ContractDefinition const*> const& basesBases = base->getLinearizedBaseContracts();
+		if (basesBases.empty())
+			BOOST_THROW_EXCEPTION(baseIdentifier->createTypeError("Definition of base has to precede definition of derived contract"));
+		input.push_front(list<ContractDefinition const*>(basesBases.begin(), basesBases.end()));
+	}
+	vector<ContractDefinition const*> result = cThreeMerge(input);
+	if (result.empty())
+		BOOST_THROW_EXCEPTION(_contract.createTypeError("Linearization of inheritance graph impossible"));
+	_contract.setLinearizedBaseContracts(result);
+}
+
+template <class _T>
+vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMerge)
+{
+	// returns true iff _candidate appears only as last element of the lists
+	auto appearsOnlyAtHead = [&](_T const* _candidate) -> bool
+	{
+		for (list<_T const*> const& bases: _toMerge)
+		{
+			solAssert(!bases.empty(), "");
+			if (find(++bases.begin(), bases.end(), _candidate) != bases.end())
+				return false;
+		}
+		return true;
+	};
+	// returns the next candidate to append to the linearized list or nullptr on failure
+	auto nextCandidate = [&]() -> _T const*
+	{
+		for (list<_T const*> const& bases: _toMerge)
+		{
+			solAssert(!bases.empty(), "");
+			if (appearsOnlyAtHead(bases.front()))
+				return bases.front();
+		}
+		return nullptr;
+	};
+	// removes the given contract from all lists
+	auto removeCandidate = [&](_T const* _candidate)
+	{
+		for (auto it = _toMerge.begin(); it != _toMerge.end();)
+		{
+			it->remove(_candidate);
+			if (it->empty())
+				it = _toMerge.erase(it);
+			else
+				++it;
+		}
+	};
+
+	_toMerge.remove_if([](list<_T const*> const& _bases) { return _bases.empty(); });
+	vector<_T const*> result;
+	while (!_toMerge.empty())
+	{
+		_T const* candidate = nextCandidate();
+		if (!candidate)
+			return vector<_T const*>();
+		result.push_back(candidate);
+		removeCandidate(candidate);
+	}
+	return result;
 }
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode const*, DeclarationContainer>& _scopes,

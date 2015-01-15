@@ -42,11 +42,12 @@ public:
 	explicit DeclarationContainer(Declaration const* _enclosingDeclaration = nullptr,
 								  DeclarationContainer const* _enclosingContainer = nullptr):
 		m_enclosingDeclaration(_enclosingDeclaration), m_enclosingContainer(_enclosingContainer) {}
-	/// Registers the declaration in the scope unless its name is already declared. Returns true iff
-	/// it was not yet declared.
+	/// Registers the declaration in the scope unless its name is already declared.
+	/// @returns true iff it was not yet declared.
 	bool registerDeclaration(Declaration const& _declaration, bool _update = false);
 	Declaration const* resolveName(ASTString const& _name, bool _recursive = false) const;
 	Declaration const* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
+	std::map<ASTString, Declaration const*> const& getDeclarations() const { return m_declarations; }
 
 private:
 	Declaration const* m_enclosingDeclaration;
