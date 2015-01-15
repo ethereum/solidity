@@ -57,6 +57,8 @@ public:
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
 	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
+	/// @returns the entry label of the given function and takes overrides into account.
+	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function) const;
 	/// Returns the distance of the given local variable from the top of the local variable stack.
 	unsigned getBaseStackOffsetOfVariable(Declaration const& _declaration) const;
 	/// If supplied by a value returned by @ref getBaseStackOffsetOfVariable(variable), returns
@@ -116,6 +118,8 @@ private:
 	unsigned m_localVariablesSize;
 	/// Labels pointing to the entry points of funcitons.
 	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
+	/// Labels pointing to the entry points of function overrides.
+	std::map<std::string, eth::AssemblyItem> m_virtualFunctionEntryLabels;
 };
 
 }

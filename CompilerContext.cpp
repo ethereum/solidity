@@ -61,7 +61,9 @@ void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _decla
 
 void CompilerContext::addFunction(FunctionDefinition const& _function)
 {
-	m_functionEntryLabels.insert(std::make_pair(&_function, m_asm.newTag()));
+	eth::AssemblyItem tag(m_asm.newTag());
+	m_functionEntryLabels.insert(make_pair(&_function, tag));
+	m_virtualFunctionEntryLabels.insert(make_pair(_function.getName(), tag));
 }
 
 bytes const& CompilerContext::getCompiledContract(const ContractDefinition& _contract) const
@@ -80,6 +82,13 @@ eth::AssemblyItem CompilerContext::getFunctionEntryLabel(FunctionDefinition cons
 {
 	auto res = m_functionEntryLabels.find(&_function);
 	solAssert(res != m_functionEntryLabels.end(), "Function entry label not found.");
+	return res->second.tag();
+}
+
+eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(FunctionDefinition const& _function) const
+{
+	auto res = m_virtualFunctionEntryLabels.find(_function.getName());
+	solAssert(res != m_virtualFunctionEntryLabels.end(), "Function entry label not found.");
 	return res->second.tag();
 }
 

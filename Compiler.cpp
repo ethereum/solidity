@@ -21,6 +21,7 @@
  */
 
 #include <algorithm>
+#include <boost/range/adaptor/reversed.hpp>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Assembly.h>
 #include <libsolidity/AST.h>
@@ -40,14 +41,16 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 	m_context = CompilerContext(); // clear it just in case
 	initializeContext(_contract, _contracts);
 
-	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
-		if (function->getName() != _contract.getName()) // don't add the constructor here
-			m_context.addFunction(*function);
+	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
+		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
+			if (function->getName() != contract->getName()) // don't add the constructor here
+				m_context.addFunction(*function);
 
 	appendFunctionSelector(_contract);
-	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
-		if (function->getName() != _contract.getName()) // don't add the constructor here
-			function->accept(*this);
+	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
+		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
+			if (function->getName() != contract->getName()) // don't add the constructor here
+				function->accept(*this);
 
 	// Swap the runtime context with the creation-time context
 	swap(m_context, m_runtimeContext);
@@ -65,13 +68,16 @@ void Compiler::initializeContext(ContractDefinition const& _contract,
 void Compiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
 {
 	set<FunctionDefinition const*> neededFunctions;
+	// TODO constructors of base classes
 	FunctionDefinition const* constructor = _contract.getConstructor();
 	if (constructor)
 		neededFunctions = getFunctionsNeededByConstructor(*constructor);
 
+	// TODO we should add the overridden functions
 	for (FunctionDefinition const* fun: neededFunctions)
 		m_context.addFunction(*fun);
 
+	// we have many of them now
 	if (constructor)
 		appendConstructorCall(*constructor);
 
@@ -191,9 +197,9 @@ void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
 
 void Compiler::registerStateVariables(ContractDefinition const& _contract)
 {
-	//@todo sort them?
-	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
-		m_context.addStateVariable(*variable);
+	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.getLinearizedBaseContracts()))
+		for (ASTPointer<VariableDeclaration> const& variable: contract->getStateVariables())
+			m_context.addStateVariable(*variable);
 }
 
 bool Compiler::visit(FunctionDefinition const& _function)

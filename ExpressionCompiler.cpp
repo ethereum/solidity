@@ -453,7 +453,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	}
 	if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 	{
-		m_context << m_context.getFunctionEntryLabel(*functionDef).pushTag();
+		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
 		return;
 	}
 	if (dynamic_cast<VariableDeclaration const*>(declaration))
