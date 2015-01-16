@@ -19,7 +19,7 @@
  * @date 2014
  * Tests for different forking behavior
  */
-
+#include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <libethereum/Client.h>

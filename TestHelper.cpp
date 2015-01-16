@@ -23,6 +23,7 @@
 
 #include <thread>
 #include <chrono>
+#include <boost/asio.hpp>
 #include <boost/filesystem/path.hpp>
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>

@@ -19,6 +19,7 @@
  * @date 2014
  */
 #include <functional>
+#include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 #include <libp2p/Host.h>
 #include <libwhisper/WhisperPeer.h>
