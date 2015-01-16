@@ -43,6 +43,8 @@ TypeError ASTNode::createTypeError(string const& _description) const
 
 void ContractDefinition::checkTypeRequirements()
 {
+	checkIllegalOverrides();
+
 	FunctionDefinition const* constructor = getConstructor();
 	if (constructor && !constructor->getReturnParameters().empty())
 		BOOST_THROW_EXCEPTION(constructor->getReturnParameterList()->createTypeError(
@@ -52,7 +54,6 @@ void ContractDefinition::checkTypeRequirements()
 		function->checkTypeRequirements();
 
 	// check for hash collisions in function signatures
-	vector<pair<FixedHash<4>, FunctionDefinition const*>> exportedFunctionList = getInterfaceFunctionList();
 	set<FixedHash<4>> hashes;
 	for (auto const& hashAndFunction: getInterfaceFunctionList())
 	{
@@ -83,17 +84,43 @@ FunctionDefinition const* ContractDefinition::getConstructor() const
 	return nullptr;
 }
 
-vector<pair<FixedHash<4>, FunctionDefinition const*>> ContractDefinition::getInterfaceFunctionList() const
+void ContractDefinition::checkIllegalOverrides() const
 {
-	vector<pair<FixedHash<4>, FunctionDefinition const*>> exportedFunctions;
-	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
-		if (f->isPublic() && f->getName() != getName())
-		{
-			FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
-			exportedFunctions.push_back(make_pair(hash, f.get()));
-		}
+	map<string, FunctionDefinition const*> functions;
 
-	return exportedFunctions;
+	// We search from derived to base, so the stored item causes the error.
+	for (ContractDefinition const* contract: getLinearizedBaseContracts())
+		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
+		{
+			if (function->getName() == contract->getName())
+				continue; // constructors can neither be overriden nor override anything
+			FunctionDefinition const*& override = functions[function->getName()];
+			if (!override)
+				override = function.get();
+			else if (override->isPublic() != function->isPublic() ||
+					 override->isDeclaredConst() != function->isDeclaredConst() ||
+					 FunctionType(*override) != FunctionType(*function))
+				BOOST_THROW_EXCEPTION(override->createTypeError("Override changes extended function signature."));
+		}
+}
+
+vector<pair<FixedHash<4>, FunctionDefinition const*>> const& ContractDefinition::getInterfaceFunctionList() const
+{
+	if (!m_interfaceFunctionList)
+	{
+		set<string> functionsSeen;
+		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionDefinition const*>>());
+		for (ContractDefinition const* contract: getLinearizedBaseContracts())
+			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
+				if (f->isPublic() && f->getName() != contract->getName() &&
+						functionsSeen.count(f->getName()) == 0)
+				{
+					functionsSeen.insert(f->getName());
+					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
+					m_interfaceFunctionList->push_back(make_pair(hash, f.get()));
+				}
+	}
+	return *m_interfaceFunctionList;
 }
 
 void StructDefinition::checkMemberTypes() const

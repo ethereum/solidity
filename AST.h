@@ -178,8 +178,8 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() const { return m_stateVariables; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
 
-	/// Checks that the constructor does not have a "returns" statement and calls
-	/// checkTypeRequirements on all its functions.
+	/// Checks that there are no illegal overrides, that the constructor does not have a "returns"
+	/// and calls checkTypeRequirements on all its functions.
 	void checkTypeRequirements();
 
 	/// @return A shared pointer of an ASTString.
@@ -199,7 +199,9 @@ public:
 	FunctionDefinition const* getConstructor() const;
 
 private:
-	std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>> getInterfaceFunctionList() const;
+	void checkIllegalOverrides() const;
+
+	std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>> const& getInterfaceFunctionList() const;
 
 	std::vector<ASTPointer<Identifier>> m_baseContracts;
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
@@ -208,6 +210,7 @@ private:
 	ASTPointer<ASTString> m_documentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
+	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>>> m_interfaceFunctionList;
 };
 
 class StructDefinition: public Declaration

@@ -102,7 +102,8 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 	for (auto const& nameAndDeclaration: iterator->second.getDeclarations())
 	{
 		Declaration const* declaration = nameAndDeclaration.second;
-		if (declaration->getScope() == &_base)
+		// Import if it was declared in the base and is not the constructor
+		if (declaration->getScope() == &_base && declaration->getName() != _base.getName())
 			m_currentScope->registerDeclaration(*declaration);
 	}
 }
