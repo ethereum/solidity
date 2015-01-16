@@ -26,6 +26,7 @@
 #include <stack>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/Exceptions.h>
+#include <libsolidity/Utils.h>
 #include <jsoncpp/json/json.h>
 
 namespace dev
@@ -39,8 +40,7 @@ namespace solidity
 class ASTJsonConverter: public ASTConstVisitor
 {
 public:
-	/// Create a converter for the given abstract syntax tree. If the source is specified,
-	/// the corresponding parts of the source are printed with each node.
+	/// Create a converter to JSON for the given abstract syntax tree.
 	ASTJsonConverter(ASTNode const& _ast);
 	/// Output the json representation of the AST to _stream.
 	void print(std::ostream& _stream);
@@ -118,11 +118,10 @@ private:
 	void addJsonNode(std::string const& _nodeName,
 					 std::initializer_list<std::pair<std::string const, std::string const>> _list,
 					 bool _hasChildren);
-	std::string const getType(Expression const& _expression);
+	std::string getType(Expression const& _expression);
 	inline void goUp()
 	{
-		if (m_jsonNodePtrs.empty())
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Internal error"));
+		solAssert(!m_jsonNodePtrs.empty(), "Uneven json nodes stack. Internal error.");
 		m_jsonNodePtrs.pop();
 	};
 
