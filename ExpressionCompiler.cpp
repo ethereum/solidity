@@ -810,9 +810,10 @@ void ExpressionCompiler::LValue::setToZero(Expression const& _expression) const
 		if (stackDiff > 16)
 			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
 												  << errinfo_comment("Stack too deep."));
-		else if (stackDiff > 0)
-			for (unsigned i = 0; i < m_size; ++i)
-				*m_context << u256(0) << eth::swapInstruction(m_size - i) << eth::Instruction::POP;
+		solAssert(stackDiff <= m_size, "");
+		for (unsigned i = 0; i < m_size; ++i)
+			*m_context << u256(0) << eth::swapInstruction(stackDiff + (m_size - i) ) << eth::Instruction::POP;
+
 		break;
 	}
 	case LValue::STORAGE:
