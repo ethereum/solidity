@@ -818,9 +818,7 @@ BOOST_AUTO_TEST_CASE(deleteStruct)
 				return str.nstr.nestedMapping[index];
 			}
 		})";
-
 	compileAndRun(sourceCode);
-
 	BOOST_CHECK(callContractFunction("getToDelete()") == encodeArgs(0));
 	BOOST_CHECK(callContractFunction("getTopValue()") == encodeArgs(0));
 	BOOST_CHECK(callContractFunction("getNestedValue()") == encodeArgs(0));
@@ -841,7 +839,6 @@ BOOST_AUTO_TEST_CASE(deleteLocal)
 				res = v;
 			}
 		})";
-
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("delLocal()") == encodeArgs(0));
 }
@@ -857,7 +854,6 @@ BOOST_AUTO_TEST_CASE(deleteLocals)
 				res = w;
 			}
 		})";
-
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("delLocal()") == encodeArgs(6));
 }
