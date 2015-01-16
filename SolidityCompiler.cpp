@@ -64,7 +64,7 @@ bytes compileContract(const string& _sourceCode)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			Compiler compiler;
-			compiler.compileContract(*contract, {}, map<ContractDefinition const*, bytes const*>{});
+			compiler.compileContract(*contract, map<ContractDefinition const*, bytes const*>{});
 
 			// debug
 			//compiler.streamAssembly(cout);
