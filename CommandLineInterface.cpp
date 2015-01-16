@@ -344,10 +344,10 @@ bool CommandLineInterface::processInput()
 	return true;
 }
 
-void CommandLineInterface::handleAst(std::string const& _argStr)
+void CommandLineInterface::handleAst(string const& _argStr)
 {
-	std::string title;
-	std::string suffix;
+	string title;
+	string suffix;
 
 	if (_argStr == g_argAstStr)
 	{
