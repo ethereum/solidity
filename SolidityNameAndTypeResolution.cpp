@@ -402,6 +402,55 @@ BOOST_AUTO_TEST_CASE(cyclic_inheritance)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(illegal_override_direct)
+{
+	char const* text = R"(
+		contract B { function f() {} }
+		contract C is B { function f(uint i) {} }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_indirect)
+{
+	char const* text = R"(
+		contract A { function f(uint a) {} }
+		contract B { function f() {} }
+		contract C is A, B { }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(complex_inheritance)
+{
+	char const* text = R"(
+		contract A { function f() { uint8 x = C(0).g(); } }
+		contract B { function f() {} function g() returns (uint8 r) {} }
+		contract C is A, B { }
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(constructor_visibility)
+{
+	// The constructor of a base class should not be visible in the derived class
+	char const* text = R"(
+		contract A { function A() { } }
+		contract B is A { function f() { A x = A(0); } }
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(overriding_constructor)
+{
+	// It is fine to "override" constructor of a base class since it is invisible
+	char const* text = R"(
+		contract A { function A() { } }
+		contract B is A { function A() returns (uint8 r) {} }
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
