@@ -65,6 +65,12 @@ namespace solidity
 // an argument (at any position) for a TOKEN_LIST call. It does
 // nothing with tokens belonging to the respective category.
 
+#if defined(__MINGW32__)
+#undef IN
+#undef DELETE
+#undef CONST
+#endif
+
 #define IGNORE_TOKEN(name, string, precedence)
 
 #define TOKEN_LIST(T, K)												\

@@ -67,6 +67,9 @@ private:
 	MemberMap m_memberTypes;
 };
 
+#if defined(__MINGW32__)
+#undef VOID
+#endif
 
 /**
  * Abstract base class that forms the root of the type hierarchy.
