@@ -812,8 +812,8 @@ void ExpressionCompiler::LValue::setToZero(Expression const& _expression) const
 												  << errinfo_comment("Stack too deep."));
 		solAssert(stackDiff <= m_size, "");
 		for (unsigned i = 0; i < m_size; ++i)
-			*m_context << u256(0) << eth::swapInstruction(stackDiff + (m_size - i) ) << eth::Instruction::POP;
-
+			*m_context << u256(0) << eth::swapInstruction(stackDiff + (m_size - i) )
+						<< eth::Instruction::POP;
 		break;
 	}
 	case LValue::STORAGE:
