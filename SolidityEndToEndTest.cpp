@@ -847,15 +847,17 @@ BOOST_AUTO_TEST_CASE(deleteLocals)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function delLocal() returns (uint res){
+			function delLocal() returns (uint res1, uint res2){
 				uint v = 5;
 				uint w = 6;
+				uint x = 7;
 				delete v;
-				res = w;
+				res1 = w;
+				res2 = x;
 			}
 		})";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("delLocal()") == encodeArgs(6));
+	BOOST_CHECK(callContractFunction("delLocal()") == encodeArgs(6, 7));
 }
 
 BOOST_AUTO_TEST_CASE(constructor)
