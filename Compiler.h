@@ -32,15 +32,15 @@ class Compiler: private ASTConstVisitor
 public:
 	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_context(), m_returnTag(m_context.newTag()) {}
 
-	void compileContract(ContractDefinition const& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals,
+	void compileContract(ContractDefinition const& _contract,
 						 std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(m_optimize); }
 	bytes getRuntimeBytecode() { return m_runtimeContext.getAssembledBytecode(m_optimize);}
 	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
 
 private:
-	/// Registers the global objects and the non-function objects inside the contract with the context.
-	void initializeContext(ContractDefinition const& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals,
+	/// Registers the non-function objects inside the contract with the context.
+	void initializeContext(ContractDefinition const& _contract,
 						   std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	/// Adds the code that is run at creation time. Should be run after exchanging the run-time context
 	/// with a new and initialized context.

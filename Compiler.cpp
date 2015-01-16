@@ -34,11 +34,11 @@ using namespace std;
 namespace dev {
 namespace solidity {
 
-void Compiler::compileContract(ContractDefinition const& _contract, vector<MagicVariableDeclaration const*> const& _magicGlobals,
+void Compiler::compileContract(ContractDefinition const& _contract,
 							   map<ContractDefinition const*, bytes const*> const& _contracts)
 {
 	m_context = CompilerContext(); // clear it just in case
-	initializeContext(_contract, _magicGlobals, _contracts);
+	initializeContext(_contract, _contracts);
 
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 		if (function->getName() != _contract.getName()) // don't add the constructor here
@@ -51,16 +51,14 @@ void Compiler::compileContract(ContractDefinition const& _contract, vector<Magic
 
 	// Swap the runtime context with the creation-time context
 	swap(m_context, m_runtimeContext);
-	initializeContext(_contract, _magicGlobals, _contracts);
+	initializeContext(_contract, _contracts);
 	packIntoContractCreator(_contract, m_runtimeContext);
 }
 
-void Compiler::initializeContext(ContractDefinition const& _contract, vector<MagicVariableDeclaration const*> const& _magicGlobals,
+void Compiler::initializeContext(ContractDefinition const& _contract,
 								 map<ContractDefinition const*, bytes const*> const& _contracts)
 {
 	m_context.setCompiledContracts(_contracts);
-	for (MagicVariableDeclaration const* variable: _magicGlobals)
-		m_context.addMagicGlobal(*variable);
 	registerStateVariables(_contract);
 }
 

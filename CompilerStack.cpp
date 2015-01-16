@@ -113,10 +113,8 @@ void CompilerStack::compile(bool _optimize)
 		for (ASTPointer<ASTNode> const& node: source->ast->getNodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			{
-				m_globalContext->setCurrentContract(*contract);
 				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize);
-				compiler->compileContract(*contract, m_globalContext->getMagicVariables(),
-										  contractBytecode);
+				compiler->compileContract(*contract, contractBytecode);
 				Contract& compiledContract = m_contracts[contract->getName()];
 				compiledContract.bytecode = compiler->getAssembledBytecode();
 				compiledContract.runtimeBytecode = compiler->getRuntimeBytecode();

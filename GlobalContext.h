@@ -49,8 +49,6 @@ public:
 	void setCurrentContract(ContractDefinition const& _contract);
 	MagicVariableDeclaration const* getCurrentThis() const;
 
-	/// @returns all magic variables.
-	std::vector<MagicVariableDeclaration const*> getMagicVariables() const;
 	/// @returns a vector of all implicit global declarations excluding "this".
 	std::vector<Declaration const*> getDeclarations() const;
 
