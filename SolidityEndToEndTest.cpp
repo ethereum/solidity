@@ -799,8 +799,6 @@ BOOST_AUTO_TEST_CASE(deleteStruct)
 				str.nstr.nestedValue = 2;
 				str.nstr.nestedMapping[0] = true;
 				str.nstr.nestedMapping[1] = false;
-				uint v = 5;
-				delete v;
 				delete str;
 				delete toDelete;
 			}
@@ -831,6 +829,37 @@ BOOST_AUTO_TEST_CASE(deleteStruct)
 	BOOST_CHECK(callContractFunction("getTopMapping(uint256)", 1) == encodeArgs(2));
 	BOOST_CHECK(callContractFunction("getNestedMapping(uint256)", 0) == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("getNestedMapping(uint256)", 1) == encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(deleteLocal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function delLocal() returns (uint res){
+				uint v = 5;
+				delete v;
+				res = v;
+			}
+		})";
+
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("delLocal()") == encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(deleteLocals)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function delLocal() returns (uint res){
+				uint v = 5;
+				uint w = 6;
+				delete v;
+				res = w;
+			}
+		})";
+
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("delLocal()") == encodeArgs(6));
 }
 
 BOOST_AUTO_TEST_CASE(constructor)
