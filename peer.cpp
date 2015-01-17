@@ -36,7 +36,6 @@ BOOST_AUTO_TEST_CASE(host)
 	NetworkPreferences host2prefs(30302, "127.0.0.1", true, true);
 	
 	Host host1("Test", host1prefs);
-	NodeId node1 = host1.id();
 	host1.start();
 		
 	Host host2("Test", host2prefs);
