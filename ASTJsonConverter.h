@@ -129,7 +129,6 @@ private:
 	std::stack<Json::Value*> m_jsonNodePtrs;
 	std::string m_source;
 	ASTNode const* m_ast;
-	int m_depth;
 };
 
 }
