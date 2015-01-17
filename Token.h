@@ -48,7 +48,8 @@
 #include <libsolidity/Exceptions.h>
 
 #if defined(DELETE)
-#error The macro "DELETE" from windows.h conflicts with this file. Please change the order of includes.
+#undef DELETE
+//#error The macro "DELETE" from windows.h conflicts with this file. Please change the order of includes.
 #endif
 
 namespace dev
