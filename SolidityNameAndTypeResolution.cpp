@@ -469,6 +469,27 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A {
+			function f() { A a = B(1); }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A {
+			function f() { B b = A(1); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
