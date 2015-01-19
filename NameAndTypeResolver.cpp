@@ -48,7 +48,7 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
 	m_currentScope = &m_scopes[nullptr];
 
-	for (ASTPointer<Identifier> const& baseContract: _contract.getBaseContracts())
+	for (ASTPointer<InheritanceSpecifier> const& baseContract: _contract.getBaseContracts())
 		ReferencesResolver resolver(*baseContract, *this, &_contract, nullptr);
 
 	m_currentScope = &m_scopes[&_contract];
@@ -113,18 +113,19 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract) 
 	// order in the lists is from derived to base
 	// list of lists to linearize, the last element is the list of direct bases
 	list<list<ContractDefinition const*>> input(1, {&_contract});
-	for (ASTPointer<Identifier> const& baseIdentifier: _contract.getBaseContracts())
+	for (ASTPointer<InheritanceSpecifier> const& baseSpecifier: _contract.getBaseContracts())
 	{
+		ASTPointer<Identifier> baseName = baseSpecifier->getName();
 		ContractDefinition const* base = dynamic_cast<ContractDefinition const*>(
-														baseIdentifier->getReferencedDeclaration());
+														baseName->getReferencedDeclaration());
 		if (!base)
-			BOOST_THROW_EXCEPTION(baseIdentifier->createTypeError("Contract expected."));
+			BOOST_THROW_EXCEPTION(baseName->createTypeError("Contract expected."));
 		// "push_back" has the effect that bases mentioned earlier can overwrite members of bases
 		// mentioned later
 		input.back().push_back(base);
 		vector<ContractDefinition const*> const& basesBases = base->getLinearizedBaseContracts();
 		if (basesBases.empty())
-			BOOST_THROW_EXCEPTION(baseIdentifier->createTypeError("Definition of base has to precede definition of derived contract"));
+			BOOST_THROW_EXCEPTION(baseName->createTypeError("Definition of base has to precede definition of derived contract"));
 		input.push_front(list<ContractDefinition const*>(basesBases.begin(), basesBases.end()));
 	}
 	vector<ContractDefinition const*> result = cThreeMerge(input);

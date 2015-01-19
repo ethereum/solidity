@@ -49,6 +49,7 @@ private:
 	///@name Parsing functions for the AST nodes
 	ASTPointer<ImportDirective> parseImportDirective();
 	ASTPointer<ContractDefinition> parseContractDefinition();
+	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar);

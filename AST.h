@@ -158,7 +158,7 @@ public:
 	ContractDefinition(Location const& _location,
 					   ASTPointer<ASTString> const& _name,
 					   ASTPointer<ASTString> const& _documentation,
-					   std::vector<ASTPointer<Identifier>> const& _baseContracts,
+					   std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
 					   std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
 					   std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
 					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions):
@@ -173,7 +173,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	std::vector<ASTPointer<Identifier>> const& getBaseContracts() const { return m_baseContracts; }
+	std::vector<ASTPointer<InheritanceSpecifier>> const& getBaseContracts() const { return m_baseContracts; }
 	std::vector<ASTPointer<StructDefinition>> const& getDefinedStructs() const { return m_definedStructs; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() const { return m_stateVariables; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
@@ -203,7 +203,7 @@ private:
 
 	std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>> const& getInterfaceFunctionList() const;
 
-	std::vector<ASTPointer<Identifier>> m_baseContracts;
+	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
@@ -211,6 +211,26 @@ private:
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>>> m_interfaceFunctionList;
+};
+
+class InheritanceSpecifier: public ASTNode
+{
+public:
+	InheritanceSpecifier(Location const& _location, ASTPointer<Identifier> const& _baseName,
+						 std::vector<ASTPointer<Expression>> _arguments):
+		ASTNode(_location), m_baseName(_baseName), m_arguments(_arguments) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	ASTPointer<Identifier> const& getName() const { return m_baseName; }
+	std::vector<ASTPointer<Expression>> const& getArguments() const { return m_arguments; }
+
+	void checkTypeRequirements();
+
+private:
+	ASTPointer<Identifier> m_baseName;
+	std::vector<ASTPointer<Expression>> m_arguments;
 };
 
 class StructDefinition: public Declaration

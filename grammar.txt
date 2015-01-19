@@ -1,7 +1,10 @@
-ContractDefinition = 'contract' Identifier '{' ContractPart* '}'
+ContractDefinition = 'contract' Identifier
+                     ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
+                     '{' ContractPart* '}'
 ContractPart = VariableDeclaration ';' | StructDefinition |
                FunctionDefinition | 'public:' | 'private:'
 
+InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration (';' VariableDeclaration)* )? '}
 

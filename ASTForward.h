@@ -38,6 +38,7 @@ class SourceUnit;
 class ImportDirective;
 class Declaration;
 class ContractDefinition;
+class InheritanceSpecifier;
 class StructDefinition;
 class ParameterList;
 class FunctionDefinition;

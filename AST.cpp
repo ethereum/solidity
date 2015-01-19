@@ -43,6 +43,9 @@ TypeError ASTNode::createTypeError(string const& _description) const
 
 void ContractDefinition::checkTypeRequirements()
 {
+	for (ASTPointer<InheritanceSpecifier> const& base: getBaseContracts())
+		base->checkTypeRequirements();
+
 	checkIllegalOverrides();
 
 	FunctionDefinition const* constructor = getConstructor();
@@ -121,6 +124,22 @@ vector<pair<FixedHash<4>, FunctionDefinition const*>> const& ContractDefinition:
 				}
 	}
 	return *m_interfaceFunctionList;
+}
+
+void InheritanceSpecifier::checkTypeRequirements()
+{
+	m_baseName->checkTypeRequirements();
+	for (ASTPointer<Expression> const& argument: m_arguments)
+		argument->checkTypeRequirements();
+
+	ContractDefinition const* base = dynamic_cast<ContractDefinition const*>(m_baseName->getReferencedDeclaration());
+	solAssert(base, "Base contract not available.");
+	TypePointers parameterTypes = ContractType(*base).getConstructorType()->getParameterTypes();
+	if (parameterTypes.size() != m_arguments.size())
+		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
+	for (size_t i = 0; i < m_arguments.size(); ++i)
+		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
+			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in constructer call."));
 }
 
 void StructDefinition::checkMemberTypes() const
