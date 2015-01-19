@@ -431,12 +431,19 @@ bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return true;
 	if (_convertTo.getCategory() == Category::INTEGER)
 		return dynamic_cast<IntegerType const&>(_convertTo).isAddress();
+	if (_convertTo.getCategory() == Category::CONTRACT)
+	{
+		auto const& bases = getContractDefinition().getLinearizedBaseContracts();
+		return find(bases.begin(), bases.end(),
+					&dynamic_cast<ContractType const&>(_convertTo).getContractDefinition()) != bases.end();
+	}
 	return false;
 }
 
 bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return isImplicitlyConvertibleTo(_convertTo) || _convertTo.getCategory() == Category::INTEGER;
+	return isImplicitlyConvertibleTo(_convertTo) || _convertTo.getCategory() == Category::INTEGER ||
+			_convertTo.getCategory() == Category::CONTRACT;
 }
 
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
