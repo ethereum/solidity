@@ -147,7 +147,7 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 {
 	// "delete" is ok for all integer types
 	if (_operator == Token::DELETE)
-		return shared_from_this();
+		return make_shared<VoidType>();
 	// no further unary operators for addresses
 	else if (isAddress())
 		return TypePointer();
@@ -408,6 +408,13 @@ u256 BoolType::literalValue(Literal const* _literal) const
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Bool type constructed from non-boolean literal."));
 }
 
+TypePointer BoolType::unaryOperatorResult(Token::Value _operator) const
+{
+	if (_operator == Token::DELETE)
+		return make_shared<VoidType>();
+	return (_operator == Token::NOT) ? shared_from_this() : TypePointer();
+}
+
 TypePointer BoolType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	if (getCategory() != _other->getCategory())
@@ -432,20 +439,17 @@ bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return isImplicitlyConvertibleTo(_convertTo) || _convertTo.getCategory() == Category::INTEGER;
 }
 
+TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
+{
+	return _operator == Token::DELETE ? make_shared<VoidType>() : TypePointer();
+}
+
 bool ContractType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
 	ContractType const& other = dynamic_cast<ContractType const&>(_other);
 	return other.m_contract == m_contract;
-}
-
-u256 ContractType::getStorageSize() const
-{
-	u256 size = 0;
-	for (ASTPointer<VariableDeclaration> const& variable: m_contract.getStateVariables())
-		size += variable->getType()->getStorageSize();
-	return max<u256>(1, size);
 }
 
 string ContractType::toString() const
@@ -489,6 +493,11 @@ u256 ContractType::getFunctionIdentifier(string const& _functionName) const
 			return FixedHash<4>::Arith(it->first);
 
 	return Invalid256;
+}
+
+TypePointer StructType::unaryOperatorResult(Token::Value _operator) const
+{
+	return _operator == Token::DELETE ? make_shared<VoidType>() : TypePointer();
 }
 
 bool StructType::operator==(Type const& _other) const

@@ -259,10 +259,7 @@ public:
 	BoolType() {}
 	virtual Category getCategory() const { return Category::BOOL; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
-	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override
-	{
-		return (_operator == Token::NOT || _operator == Token::DELETE) ? shared_from_this() : TypePointer();
-	}
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
 	virtual unsigned getCalldataEncodedSize() const { return 1; }
@@ -284,8 +281,8 @@ public:
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	/// Contracts can be converted to themselves and to integers.
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
-	virtual u256 getStorageSize() const override;
 	virtual bool isValueType() const override { return true; }
 	virtual std::string toString() const override;
 
@@ -317,11 +314,7 @@ class StructType: public Type
 public:
 	virtual Category getCategory() const override { return Category::STRUCT; }
 	StructType(StructDefinition const& _struct): m_struct(_struct) {}
-	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override
-	{
-		return _operator == Token::DELETE ? shared_from_this() : TypePointer();
-	}
-
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override;
