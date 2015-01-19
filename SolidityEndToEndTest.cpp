@@ -1568,6 +1568,66 @@ BOOST_AUTO_TEST_CASE(explicit_base_cass)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1));
 }
 
+BOOST_AUTO_TEST_CASE(base_constructor_arguments)
+{
+	char const* sourceCode = R"(
+		contract BaseBase {
+			uint m_a;
+			function BaseBase(uint a) {
+				m_a = a;
+			}
+		}
+		contract Base is BaseBase(7) {
+			function Base() {
+				m_a *= m_a;
+			}
+		}
+		contract Derived is Base() {
+			function getA() returns (uint r) { return m_a; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(7 * 7));
+}
+
+BOOST_AUTO_TEST_CASE(function_usage_in_constructor_arguments)
+{
+	char const* sourceCode = R"(
+		contract BaseBase {
+			uint m_a;
+			function BaseBase(uint a) {
+				m_a = a;
+			}
+			function g() returns (uint r) { return 2; }
+		}
+		contract Base is BaseBase(BaseBase.g()) {
+		}
+		contract Derived is Base() {
+			function getA() returns (uint r) { return m_a; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
+{
+	char const* sourceCode = R"(
+		contract BaseBase {
+			uint m_a;
+			function BaseBase(uint a) {
+				m_a = a;
+			}
+		}
+		contract Base is BaseBase(2) { }
+		contract Derived is Base, BaseBase(3) {
+			function getA() returns (uint r) { return m_a; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(3));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

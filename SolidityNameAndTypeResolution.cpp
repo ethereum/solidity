@@ -451,6 +451,24 @@ BOOST_AUTO_TEST_CASE(overriding_constructor)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(missing_base_constructor_arguments)
+{
+	char const* text = R"(
+		contract A { function A(uint a) { } }
+		contract B is A { }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
+{
+	char const* text = R"(
+		contract A { function A(uint a) { } }
+		contract B is A { }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
