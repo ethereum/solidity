@@ -419,6 +419,22 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 		break;
 	}
+	case Type::Category::TYPE:
+	{
+		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.getExpression().getType());
+		if (type.getMembers().getMemberType(member))
+		{
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*type.getActualType())
+													.getContractDefinition();
+			for (ASTPointer<FunctionDefinition> const& function: contract.getDefinedFunctions())
+				if (function->getName() == member)
+				{
+					m_context << m_context.getFunctionEntryLabel(*function).pushTag();
+					return;
+				}
+		}
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to " + type.toString()));
+	}
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to unknown type."));
 	}
@@ -449,20 +465,22 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	{
 		if (magicVar->getType()->getCategory() == Type::Category::CONTRACT) // must be "this"
 			m_context << eth::Instruction::ADDRESS;
-		return;
 	}
-	if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
-	{
+	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
-		return;
-	}
-	if (dynamic_cast<VariableDeclaration const*>(declaration))
+	else if (dynamic_cast<VariableDeclaration const*>(declaration))
 	{
 		m_currentLValue.fromIdentifier(_identifier, *declaration);
 		m_currentLValue.retrieveValueIfLValueNotRequested(_identifier);
-		return;
 	}
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier type not expected in expression context."));
+	else if (dynamic_cast<ContractDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else
+	{
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier type not expected in expression context."));
+	}
 }
 
 void ExpressionCompiler::endVisit(Literal const& _literal)

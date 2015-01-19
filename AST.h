@@ -595,7 +595,7 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
 
-	void setFunctionReturnParameters(ParameterList& _parameters) { m_returnParameters = &_parameters; }
+	void setFunctionReturnParameters(ParameterList const& _parameters) { m_returnParameters = &_parameters; }
 	ParameterList const& getFunctionReturnParameters() const
 	{
 		solAssert(m_returnParameters, "");
@@ -607,7 +607,7 @@ private:
 	ASTPointer<Expression> m_expression; ///< value to return, optional
 
 	/// Pointer to the parameter list of the function, filled by the @ref NameAndTypeResolver.
-	ParameterList* m_returnParameters;
+	ParameterList const* m_returnParameters;
 };
 
 /**
@@ -884,21 +884,30 @@ class Identifier: public PrimaryExpression
 {
 public:
 	Identifier(Location const& _location, ASTPointer<ASTString> const& _name):
-		PrimaryExpression(_location), m_name(_name), m_referencedDeclaration(nullptr) {}
+		PrimaryExpression(_location), m_name(_name) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
 
 	ASTString const& getName() const { return *m_name; }
 
-	void setReferencedDeclaration(Declaration const& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
+	void setReferencedDeclaration(Declaration const& _referencedDeclaration,
+								  ContractDefinition const* _currentContract = nullptr)
+	{
+		m_referencedDeclaration = &_referencedDeclaration;
+		m_currentContract = _currentContract;
+	}
 	Declaration const* getReferencedDeclaration() const { return m_referencedDeclaration; }
+	ContractDefinition const* getCurrentContract() const { return m_currentContract; }
 
 private:
 	ASTPointer<ASTString> m_name;
 
 	/// Declaration the name refers to.
-	Declaration const* m_referencedDeclaration;
+	Declaration const* m_referencedDeclaration = nullptr;
+	/// Stores a reference to the current contract. This is needed because types of base contracts
+	/// change depending on the context.
+	ContractDefinition const* m_currentContract = nullptr;
 };
 
 /**

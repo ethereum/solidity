@@ -442,7 +442,8 @@ class TypeType: public Type
 {
 public:
 	virtual Category getCategory() const override { return Category::TYPE; }
-	TypeType(TypePointer const& _actualType): m_actualType(_actualType) {}
+	TypeType(TypePointer const& _actualType, ContractDefinition const* _currentContract = nullptr):
+		m_actualType(_actualType), m_currentContract(_currentContract) {}
 	TypePointer const& getActualType() const { return m_actualType; }
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
@@ -451,9 +452,14 @@ public:
 	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); }
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual std::string toString() const override { return "type(" + m_actualType->toString() + ")"; }
+	virtual MemberList const& getMembers() const override;
 
 private:
 	TypePointer m_actualType;
+	/// Context in which this type is used (influences visibility etc.), can be nullptr.
+	ContractDefinition const* m_currentContract;
+	/// List of member types, will be lazy-initialized because of recursive references.
+	mutable std::unique_ptr<MemberList> m_members;
 };
 
 

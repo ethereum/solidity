@@ -49,7 +49,7 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	m_currentScope = &m_scopes[nullptr];
 
 	for (ASTPointer<Identifier> const& baseContract: _contract.getBaseContracts())
-		ReferencesResolver resolver(*baseContract, *this, nullptr);
+		ReferencesResolver resolver(*baseContract, *this, &_contract, nullptr);
 
 	m_currentScope = &m_scopes[&_contract];
 
@@ -58,13 +58,13 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		importInheritedScope(*base);
 
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
-		ReferencesResolver resolver(*structDef, *this, nullptr);
+		ReferencesResolver resolver(*structDef, *this, &_contract, nullptr);
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
-		ReferencesResolver resolver(*variable, *this, nullptr);
+		ReferencesResolver resolver(*variable, *this, &_contract, nullptr);
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 	{
 		m_currentScope = &m_scopes[function.get()];
-		ReferencesResolver referencesResolver(*function, *this,
+		ReferencesResolver referencesResolver(*function, *this, &_contract,
 											  function->getReturnParameterList().get());
 	}
 }
@@ -267,8 +267,10 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 }
 
 ReferencesResolver::ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver,
-									   ParameterList* _returnParameters, bool _allowLazyTypes):
-	m_resolver(_resolver), m_returnParameters(_returnParameters), m_allowLazyTypes(_allowLazyTypes)
+									   ContractDefinition const* _currentContract,
+									   ParameterList const* _returnParameters, bool _allowLazyTypes):
+	m_resolver(_resolver), m_currentContract(_currentContract),
+	m_returnParameters(_returnParameters), m_allowLazyTypes(_allowLazyTypes)
 {
 	_root.accept(*this);
 }
@@ -316,7 +318,7 @@ bool ReferencesResolver::visit(Identifier& _identifier)
 	if (!declaration)
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_identifier.getLocation())
 												 << errinfo_comment("Undeclared identifier."));
-	_identifier.setReferencedDeclaration(*declaration);
+	_identifier.setReferencedDeclaration(*declaration, m_currentContract);
 	return false;
 }
 

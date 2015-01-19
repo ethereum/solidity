@@ -120,7 +120,9 @@ class ReferencesResolver: private ASTVisitor
 {
 public:
 	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver,
-					   ParameterList* _returnParameters, bool _allowLazyTypes = true);
+					   ContractDefinition const* _currentContract,
+					   ParameterList const* _returnParameters,
+					   bool _allowLazyTypes = true);
 
 private:
 	virtual void endVisit(VariableDeclaration& _variable) override;
@@ -130,7 +132,8 @@ private:
 	virtual bool visit(Return& _return) override;
 
 	NameAndTypeResolver& m_resolver;
-	ParameterList* m_returnParameters;
+	ContractDefinition const* m_currentContract;
+	ParameterList const* m_returnParameters;
 	bool m_allowLazyTypes;
 };
 

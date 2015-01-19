@@ -373,7 +373,8 @@ void MemberAccess::checkTypeRequirements()
 	Type const& type = *m_expression->getType();
 	m_type = type.getMemberType(*m_memberName);
 	if (!m_type)
-		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found in " + type.toString()));
+		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
+											  "visible in " + type.toString()));
 	//@todo later, this will not always be STORAGE
 	m_lvalue = type.getCategory() == Type::Category::STRUCT ? LValueType::STORAGE : LValueType::NONE;
 }
@@ -423,7 +424,7 @@ void Identifier::checkTypeRequirements()
 	ContractDefinition const* contractDef = dynamic_cast<ContractDefinition const*>(m_referencedDeclaration);
 	if (contractDef)
 	{
-		m_type = make_shared<TypeType>(make_shared<ContractType>(*contractDef));
+		m_type = make_shared<TypeType>(make_shared<ContractType>(*contractDef), m_currentContract);
 		return;
 	}
 	MagicVariableDeclaration const* magicVariable = dynamic_cast<MagicVariableDeclaration const*>(m_referencedDeclaration);
