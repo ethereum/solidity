@@ -1553,6 +1553,21 @@ BOOST_AUTO_TEST_CASE(single_copy_with_multiple_inheritance)
 	BOOST_CHECK(callContractFunction("getViaB()") == encodeArgs(23));
 }
 
+BOOST_AUTO_TEST_CASE(explicit_base_cass)
+{
+	char const* sourceCode = R"(
+		contract BaseBase { function g() returns (uint r) { return 1; } }
+		contract Base is BaseBase { function g() returns (uint r) { return 2; } }
+		contract Derived is Base {
+			function f() returns (uint r) { return BaseBase.g(); }
+			function g() returns (uint r) { return 3; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(3));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
