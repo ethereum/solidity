@@ -29,7 +29,6 @@
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
-#include "TestHelper.h"
 
 namespace dev
 {
@@ -129,12 +128,6 @@ public:
 		return bytes();
 	}
 
-	eth::LastHashes setCurrentBlockNumber(u256 _currentBlockNumber)
-	{
-		m_lastHashes = dev::test::lastHashes(_currentBlockNumber);
-		return m_lastHashes;
-	}
-
 private:
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
@@ -153,7 +146,7 @@ private:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, m_lastHashes, 0);
+		eth::Executive executive(m_state, eth::LastHashes(), 0);
 		eth::Transaction t = _isCreation ? eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec())
 										 : eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
 		bytes transactionRLP = t.rlp();
@@ -191,7 +184,6 @@ protected:
 	u256 const m_gas = 1000000;
 	bytes m_output;
 	eth::LogEntries m_logs;
-	eth::LastHashes m_lastHashes;
 };
 
 }

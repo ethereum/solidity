@@ -86,13 +86,19 @@ Declaration const& resolveDeclaration(vector<string> const& _namespacedName,
 }
 
 bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _functions = {},
-							 vector<vector<string>> _localVariables = {})
+							 vector<vector<string>> _localVariables = {}, 	vector<shared_ptr<MagicVariableDeclaration const>> _globalDeclarations = {})
 {
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
-	NameAndTypeResolver resolver({});
+
+	vector<Declaration const*> declarations;
+	declarations.reserve(_globalDeclarations.size() + 1);
+	for (ASTPointer<Declaration const> const& variable: _globalDeclarations)
+		declarations.push_back(variable.get());
+	NameAndTypeResolver resolver(declarations);
 	resolver.registerDeclarations(*sourceUnit);
+
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -387,6 +393,21 @@ BOOST_AUTO_TEST_CASE(intermediately_overflowing_literals)
 	bytes code = compileFirstExpression(sourceCode);
 
 	bytes expectation(bytes({byte(eth::Instruction::PUSH1), 0xbf}));
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(blockhash)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function f() {\n"
+							 "    block.blockhash(3);\n"
+							 "  }\n"
+							 "}\n";
+	bytes code = compileFirstExpression(sourceCode, {}, {},
+										{make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::BLOCK))});
+
+	bytes expectation({byte(eth::Instruction::PUSH1), 0x03,
+					   byte(eth::Instruction::BLOCKHASH)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
