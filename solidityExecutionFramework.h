@@ -50,13 +50,9 @@ public:
 		{
 			compiler.compile(_sourceCode, m_optimize);
 		}
-		catch (const std::exception& e)
+		catch(boost::exception const& _e)
 		{
-			std::string const* extra = boost::get_error_info<errinfo_comment>(e);
-			std::string msg = std::string("Parsing contract failed with: ") +
-				e.what() + std::string("\n");
-			if (extra)
-				msg += *extra;
+			auto msg = std::string("Compiling contract failed with: ") + boost::diagnostic_information(_e);
 			BOOST_FAIL(msg);
 		}
 
