@@ -31,7 +31,6 @@ namespace dev
 namespace solidity
 {
 
-
 NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration const*> const& _globals)
 {
 	for (Declaration const* declaration: _globals)

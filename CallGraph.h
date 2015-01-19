@@ -38,14 +38,17 @@ namespace solidity
 class CallGraph: private ASTConstVisitor
 {
 public:
-	void addFunction(FunctionDefinition const& _function);
+	void addNode(ASTNode const& _node);
 	void computeCallGraph();
 
 	std::set<FunctionDefinition const*> const& getCalls();
 
 private:
-	void addFunctionToQueue(FunctionDefinition const& _function);
+	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(Identifier const& _identifier) override;
+	virtual bool visit(MemberAccess const& _memberAccess) override;
+
+	void addFunction(FunctionDefinition const& _function);
 
 	std::set<FunctionDefinition const*> m_functionsSeen;
 	std::queue<FunctionDefinition const*> m_workQueue;

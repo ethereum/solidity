@@ -67,19 +67,52 @@ void Compiler::initializeContext(ContractDefinition const& _contract,
 
 void Compiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
 {
+	// arguments for base constructors, filled in derived-to-base order
+	map<ContractDefinition const*, vector<ASTPointer<Expression>> const*> baseArguments;
 	set<FunctionDefinition const*> neededFunctions;
-	// TODO constructors of base classes
-	FunctionDefinition const* constructor = _contract.getConstructor();
-	if (constructor)
-		neededFunctions = getFunctionsNeededByConstructor(*constructor);
+	set<ASTNode const*> nodesUsedInConstructors;
 
-	// TODO we should add the overridden functions
+	// Determine the arguments that are used for the base constructors and also which functions
+	// are needed at compile time.
+	std::vector<ContractDefinition const*> const& bases = _contract.getLinearizedBaseContracts();
+	for (ContractDefinition const* contract: bases)
+	{
+		if (FunctionDefinition const* constructor = contract->getConstructor())
+			nodesUsedInConstructors.insert(constructor);
+		for (ASTPointer<InheritanceSpecifier> const& base: contract->getBaseContracts())
+		{
+			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
+													base->getName()->getReferencedDeclaration());
+			solAssert(baseContract, "");
+			if (baseArguments.count(baseContract) == 0)
+			{
+				baseArguments[baseContract] = &base->getArguments();
+				for (ASTPointer<Expression> const& arg: base->getArguments())
+					nodesUsedInConstructors.insert(arg.get());
+			}
+		}
+	}
+
+	//@TODO add virtual functions
+	neededFunctions = getFunctionsCalled(nodesUsedInConstructors);
+
 	for (FunctionDefinition const* fun: neededFunctions)
 		m_context.addFunction(*fun);
 
-	// we have many of them now
-	if (constructor)
-		appendConstructorCall(*constructor);
+	// Call constructors in base-to-derived order.
+	// The Constructor for the most derived contract is called later.
+	for (unsigned i = 1; i < bases.size(); i++)
+	{
+		ContractDefinition const* base = bases[bases.size() - i];
+		solAssert(base, "");
+		FunctionDefinition const* baseConstructor = base->getConstructor();
+		if (!baseConstructor)
+			continue;
+		solAssert(baseArguments[base], "");
+		appendBaseConstructorCall(*baseConstructor, *baseArguments[base]);
+	}
+	if (_contract.getConstructor())
+		appendConstructorCall(*_contract.getConstructor());
 
 	eth::AssemblyItem sub = m_context.addSubroutine(_runtimeContext.getAssembly());
 	// stack contains sub size
@@ -90,6 +123,21 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 	// labels
 	for (FunctionDefinition const* fun: neededFunctions)
 		fun->accept(*this);
+}
+
+void Compiler::appendBaseConstructorCall(FunctionDefinition const& _constructor,
+										 vector<ASTPointer<Expression>> const& _arguments)
+{
+	FunctionType constructorType(_constructor);
+	eth::AssemblyItem returnLabel = m_context.pushNewTag();
+	for (unsigned i = 0; i < _arguments.size(); ++i)
+	{
+		compileExpression(*_arguments[i]);
+		ExpressionCompiler::appendTypeConversion(m_context, *_arguments[i]->getType(),
+												 *constructorType.getParameterTypes()[i]);
+	}
+	m_context.appendJumpTo(m_context.getFunctionEntryLabel(_constructor));
+	m_context << returnLabel;
 }
 
 void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
@@ -111,11 +159,12 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 	m_context << returnTag;
 }
 
-set<FunctionDefinition const*> Compiler::getFunctionsNeededByConstructor(FunctionDefinition const& _constructor)
+set<FunctionDefinition const*> Compiler::getFunctionsCalled(set<ASTNode const*> const& _nodes)
 {
+	// TODO this does not add virtual functions
 	CallGraph callgraph;
-	callgraph.addFunction(_constructor);
-	callgraph.computeCallGraph();
+	for (ASTNode const* node: _nodes)
+		callgraph.addNode(*node);
 	return callgraph.getCalls();
 }
 

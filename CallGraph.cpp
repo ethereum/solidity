@@ -31,13 +31,9 @@ namespace dev
 namespace solidity
 {
 
-void CallGraph::addFunction(FunctionDefinition const& _function)
+void CallGraph::addNode(ASTNode const& _node)
 {
-	if (!m_functionsSeen.count(&_function))
-	{
-		m_functionsSeen.insert(&_function);
-		m_workQueue.push(&_function);
-	}
+	_node.accept(*this);
 }
 
 set<FunctionDefinition const*> const& CallGraph::getCalls()
@@ -61,6 +57,42 @@ bool CallGraph::visit(Identifier const& _identifier)
 	if (fun)
 		addFunction(*fun);
 	return true;
+}
+
+bool CallGraph::visit(FunctionDefinition const& _function)
+{
+	addFunction(_function);
+	return true;
+}
+
+bool CallGraph::visit(MemberAccess const& _memberAccess)
+{
+	// used for "BaseContract.baseContractFunction"
+	if (_memberAccess.getExpression().getType()->getCategory() == Type::Category::TYPE)
+	{
+		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.getExpression().getType());
+		if (type.getMembers().getMemberType(_memberAccess.getMemberName()))
+		{
+			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*type.getActualType())
+													.getContractDefinition();
+			for (ASTPointer<FunctionDefinition> const& function: contract.getDefinedFunctions())
+				if (function->getName() == _memberAccess.getMemberName())
+				{
+					addFunction(*function);
+					return true;
+				}
+		}
+	}
+	return true;
+}
+
+void CallGraph::addFunction(FunctionDefinition const& _function)
+{
+	if (!m_functionsSeen.count(&_function))
+	{
+		m_functionsSeen.insert(&_function);
+		m_workQueue.push(&_function);
+	}
 }
 
 }
