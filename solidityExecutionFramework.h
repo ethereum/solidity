@@ -29,6 +29,7 @@
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
+#include "TestHelper.h"
 
 namespace dev
 {
@@ -46,7 +47,20 @@ public:
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
 		dev::solidity::CompilerStack compiler;
-		compiler.compile(_sourceCode, m_optimize);
+		try
+		{
+			compiler.compile(_sourceCode, m_optimize);
+		}
+		catch (const std::exception& e)
+		{
+			std::string const* extra = boost::get_error_info<errinfo_comment>(e);
+			std::string msg = std::string("Parsing contract failed with: ") +
+				e.what() + std::string("\n");
+			if (extra)
+				msg += *extra;
+			BOOST_FAIL(msg);
+		}
+
 		bytes code = compiler.getBytecode(_contractName);
 		sendMessage(code, true, _value);
 		BOOST_REQUIRE(!m_output.empty());
@@ -97,6 +111,7 @@ public:
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
 	static bytes encode(byte _value) { return bytes(31, 0) + bytes{_value}; }
 	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
+	static bytes encode(h256 const& _value) { return _value.asBytes(); }
 	static bytes encode(bytes const& _value, bool _padLeft = true)
 	{
 		bytes padding = bytes((32 - _value.size() % 32) % 32, 0);
@@ -112,6 +127,12 @@ public:
 	static bytes encodeArgs()
 	{
 		return bytes();
+	}
+
+	eth::LastHashes setCurrentBlockNumber(u256 _currentBlockNumber)
+	{
+		m_lastHashes = dev::test::lastHashes(_currentBlockNumber);
+		return m_lastHashes;
 	}
 
 private:
@@ -132,7 +153,7 @@ private:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, eth::LastHashes(), 0);
+		eth::Executive executive(m_state, m_lastHashes, 0);
 		eth::Transaction t = _isCreation ? eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec())
 										 : eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
 		bytes transactionRLP = t.rlp();
@@ -170,6 +191,7 @@ protected:
 	u256 const m_gas = 1000000;
 	bytes m_output;
 	eth::LogEntries m_logs;
+	eth::LastHashes m_lastHashes;
 };
 
 }
