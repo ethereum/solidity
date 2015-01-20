@@ -281,12 +281,13 @@ class FunctionDefinition: public Declaration
 public:
 	FunctionDefinition(Location const& _location, ASTPointer<ASTString> const& _name,
 					bool _isPublic,
+					bool _isConstructor,
 					ASTPointer<ASTString> const& _documentation,
 					ASTPointer<ParameterList> const& _parameters,
 					bool _isDeclaredConst,
 					ASTPointer<ParameterList> const& _returnParameters,
 					ASTPointer<Block> const& _body):
-	Declaration(_location, _name), m_isPublic(_isPublic),
+	Declaration(_location, _name), m_isPublic(_isPublic), m_isConstructor(_isConstructor),
 	m_parameters(_parameters),
 	m_isDeclaredConst(_isDeclaredConst),
 	m_returnParameters(_returnParameters),
@@ -298,6 +299,7 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	bool isPublic() const { return m_isPublic; }
+	bool isConstructor() const { return m_isConstructor; }
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
 	ParameterList const& getParameterList() const { return *m_parameters; }
@@ -321,6 +323,7 @@ public:
 
 private:
 	bool m_isPublic;
+	bool m_isConstructor;
 	ASTPointer<ParameterList> m_parameters;
 	bool m_isDeclaredConst;
 	ASTPointer<ParameterList> m_returnParameters;

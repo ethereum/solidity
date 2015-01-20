@@ -21,6 +21,7 @@
  */
 
 #include <ostream>
+#include <functional>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/CompilerContext.h>
 
@@ -49,7 +50,9 @@ private:
 								   std::vector<ASTPointer<Expression>> const& _arguments);
 	void appendConstructorCall(FunctionDefinition const& _constructor);
 	/// Recursively searches the call graph and returns all functions referenced inside _nodes.
-	std::set<FunctionDefinition const*> getFunctionsCalled(std::set<ASTNode const*> const& _nodes);
+	/// _resolveOverride is called to resolve virtual function overrides.
+	std::set<FunctionDefinition const*> getFunctionsCalled(std::set<ASTNode const*> const& _nodes,
+					std::function<FunctionDefinition const*(std::string const&)> const& _resolveOverride);
 	void appendFunctionSelector(ContractDefinition const& _contract);
 	/// Creates code that unpacks the arguments for the given function, from memory if
 	/// @a _fromMemory is true, otherwise from call data. @returns the size of the data in bytes.

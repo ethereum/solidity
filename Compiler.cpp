@@ -43,13 +43,13 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 
 	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-			if (function->getName() != contract->getName()) // don't add the constructor here
+			if (!function->isConstructor())
 				m_context.addFunction(*function);
 
 	appendFunctionSelector(_contract);
 	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-			if (function->getName() != contract->getName()) // don't add the constructor here
+			if (!function->isConstructor())
 				function->accept(*this);
 
 	// Swap the runtime context with the creation-time context
@@ -93,11 +93,30 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 		}
 	}
 
-	//@TODO add virtual functions
-	neededFunctions = getFunctionsCalled(nodesUsedInConstructors);
+	auto overrideResolver = [&](string const& _name) -> FunctionDefinition const*
+	{
+		for (ContractDefinition const* contract: bases)
+			for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
+				if (!function->isConstructor() && function->getName() == _name)
+					return function.get();
+		return nullptr;
+	};
 
+	neededFunctions = getFunctionsCalled(nodesUsedInConstructors, overrideResolver);
+
+	// First add all overrides (or the functions themselves if there is no override)
 	for (FunctionDefinition const* fun: neededFunctions)
-		m_context.addFunction(*fun);
+	{
+		FunctionDefinition const* override = nullptr;
+		if (!fun->isConstructor())
+			override = overrideResolver(fun->getName());
+		if (!!override && neededFunctions.count(override))
+			m_context.addFunction(*override);
+	}
+	// now add the rest
+	for (FunctionDefinition const* fun: neededFunctions)
+		if (fun->isConstructor() || overrideResolver(fun->getName()) != fun)
+			m_context.addFunction(*fun);
 
 	// Call constructors in base-to-derived order.
 	// The Constructor for the most derived contract is called later.
@@ -159,10 +178,10 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 	m_context << returnTag;
 }
 
-set<FunctionDefinition const*> Compiler::getFunctionsCalled(set<ASTNode const*> const& _nodes)
+set<FunctionDefinition const*> Compiler::getFunctionsCalled(set<ASTNode const*> const& _nodes,
+						function<FunctionDefinition const*(string const&)> const& _resolveOverrides)
 {
-	// TODO this does not add virtual functions
-	CallGraph callgraph;
+	CallGraph callgraph(_resolveOverrides);
 	for (ASTNode const* node: _nodes)
 		callgraph.addNode(*node);
 	return callgraph.getCalls();

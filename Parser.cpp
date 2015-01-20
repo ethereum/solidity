@@ -112,9 +112,9 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	ASTNodeFactory nodeFactory(*this);
-	ASTPointer<ASTString> docstring;
+	ASTPointer<ASTString> docString;
 	if (m_scanner->getCurrentCommentLiteral() != "")
-		docstring = make_shared<ASTString>(m_scanner->getCurrentCommentLiteral());
+		docString = make_shared<ASTString>(m_scanner->getCurrentCommentLiteral());
 	expectToken(Token::CONTRACT);
 	ASTPointer<ASTString> name = expectIdentifierToken();
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
@@ -142,7 +142,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			expectToken(Token::COLON);
 		}
 		else if (currentToken == Token::FUNCTION)
-			functions.push_back(parseFunctionDefinition(visibilityIsPublic));
+			functions.push_back(parseFunctionDefinition(visibilityIsPublic, name.get()));
 		else if (currentToken == Token::STRUCT)
 			structs.push_back(parseStructDefinition());
 		else if (currentToken == Token::IDENTIFIER || currentToken == Token::MAPPING ||
@@ -157,7 +157,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBRACE);
-	return nodeFactory.createNode<ContractDefinition>(name, docstring, baseContracts, structs,
+	return nodeFactory.createNode<ContractDefinition>(name, docString, baseContracts, structs,
 													  stateVariables, functions);
 }
 
@@ -178,7 +178,7 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 	return nodeFactory.createNode<InheritanceSpecifier>(name, arguments);
 }
 
-ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
+ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic, ASTString const* _contractName)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docstring;
@@ -210,7 +210,8 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 	}
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
-	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, docstring,
+	bool const c_isConstructor = (_contractName && *name == *_contractName);
+	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, c_isConstructor, docstring,
 													  parameters,
 													  isDeclaredConst, returnParameters, block);
 }

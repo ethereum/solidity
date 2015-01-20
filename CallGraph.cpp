@@ -38,6 +38,7 @@ void CallGraph::addNode(ASTNode const& _node)
 
 set<FunctionDefinition const*> const& CallGraph::getCalls()
 {
+	computeCallGraph();
 	return m_functionsSeen;
 }
 
@@ -45,8 +46,7 @@ void CallGraph::computeCallGraph()
 {
 	while (!m_workQueue.empty())
 	{
-		FunctionDefinition const* fun = m_workQueue.front();
-		fun->accept(*this);
+		m_workQueue.front()->accept(*this);
 		m_workQueue.pop();
 	}
 }
@@ -55,7 +55,12 @@ bool CallGraph::visit(Identifier const& _identifier)
 {
 	FunctionDefinition const* fun = dynamic_cast<FunctionDefinition const*>(_identifier.getReferencedDeclaration());
 	if (fun)
+	{
+		if (m_overrideResolver)
+			fun = (*m_overrideResolver)(fun->getName());
+		solAssert(fun, "Error finding override for function " + fun->getName());
 		addFunction(*fun);
+	}
 	return true;
 }
 
