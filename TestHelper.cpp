@@ -115,7 +115,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		if (code.size())
 		{
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::ContractConception);
-			_state.m_cache[address].setCode(bytesConstRef(&code));
+			_state.m_cache[address].setCode(code);
 		}
 		else
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::NormalCreation);
