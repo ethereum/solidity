@@ -280,7 +280,8 @@ class FunctionDefinition: public Declaration
 {
 public:
 	FunctionDefinition(Location const& _location, ASTPointer<ASTString> const& _name,
-					bool _isPublic, bool _isConstructor,
+					bool _isPublic,
+					bool _isConstructor,
 					ASTPointer<ASTString> const& _documentation,
 					ASTPointer<ParameterList> const& _parameters,
 					bool _isDeclaredConst,

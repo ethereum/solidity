@@ -58,7 +58,7 @@ bool CallGraph::visit(Identifier const& _identifier)
 	{
 		if (m_overrideResolver)
 			fun = (*m_overrideResolver)(fun->getName());
-		solAssert(fun, "");
+		solAssert(fun, "Error finding override for function " + fun->getName());
 		addFunction(*fun);
 	}
 	return true;
