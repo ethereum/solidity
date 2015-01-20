@@ -506,17 +506,35 @@ BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
 	BOOST_CHECK_THROW(checkNatspec(sourceCode, natspec, false), DocstringParsingError);
 }
 
-// test for bug where having no tags in docstring would cause infinite loop
-BOOST_AUTO_TEST_CASE(natspec_no_tags)
+BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 {
 	char const* sourceCode = "contract test {\n"
 	"  /// I do something awesome\n"
-	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
 	"}\n";
 
-	char const* natspec = "{\"methods\": {}}";
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256)\":{ \"notice\": \"I do something awesome\"}"
+	"}}";
 
-	checkNatspec(sourceCode, natspec, false);
+	checkNatspec(sourceCode, natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// I do something awesome\n"
+	"  /// which requires two lines to explain\n"
+	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256)\":{ \"notice\": \"I do something awesome which requires two lines to explain\"}"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
