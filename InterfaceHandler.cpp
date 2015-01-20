@@ -351,9 +351,15 @@ void InterfaceHandler::parseDocString(std::string const& _string, CommentOwner _
 			currPos = appendDocTag(currPos, end, _owner);
 		else if (currPos != end)
 		{
-			if (nlPos == end) //end of text
+			// if it begins without a tag then consider it as @notice
+			if (currPos == _string.begin())
+			{
+				currPos = parseDocTag(currPos, end, "notice", CommentOwner::FUNCTION);
+				continue;
+			}
+			else if (nlPos == end) //end of text
 				return;
-			// else skip the line if a newline was found
+			// else skip the line if a newline was found and we get here
 			currPos = nlPos + 1;
 		}
 	}
