@@ -50,7 +50,7 @@ private:
 	ASTPointer<ImportDirective> parseImportDirective();
 	ASTPointer<ContractDefinition> parseContractDefinition();
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
-	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
+	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic, ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar);
 	ASTPointer<TypeName> parseTypeName(bool _allowVar);

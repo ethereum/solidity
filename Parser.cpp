@@ -142,7 +142,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			expectToken(Token::COLON);
 		}
 		else if (currentToken == Token::FUNCTION)
-			functions.push_back(parseFunctionDefinition(visibilityIsPublic));
+			functions.push_back(parseFunctionDefinition(visibilityIsPublic, name.get()));
 		else if (currentToken == Token::STRUCT)
 			structs.push_back(parseStructDefinition());
 		else if (currentToken == Token::IDENTIFIER || currentToken == Token::MAPPING ||
@@ -178,7 +178,7 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 	return nodeFactory.createNode<InheritanceSpecifier>(name, arguments);
 }
 
-ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
+ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic, ASTString const* _contractName)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docstring;
@@ -210,7 +210,8 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic)
 	}
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
-	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, docstring,
+	bool const c_isConstructor = (_contractName && *name == *_contractName);
+	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, c_isConstructor, docstring,
 													  parameters,
 													  isDeclaredConst, returnParameters, block);
 }

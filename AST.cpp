@@ -82,7 +82,7 @@ map<FixedHash<4>, FunctionDefinition const*> ContractDefinition::getInterfaceFun
 FunctionDefinition const* ContractDefinition::getConstructor() const
 {
 	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
-		if (f->getName() == getName())
+		if (f->isConstructor())
 			return f.get();
 	return nullptr;
 }
@@ -95,7 +95,7 @@ void ContractDefinition::checkIllegalOverrides() const
 	for (ContractDefinition const* contract: getLinearizedBaseContracts())
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
 		{
-			if (function->getName() == contract->getName())
+			if (function->isConstructor())
 				continue; // constructors can neither be overriden nor override anything
 			FunctionDefinition const*& override = functions[function->getName()];
 			if (!override)
@@ -115,8 +115,7 @@ vector<pair<FixedHash<4>, FunctionDefinition const*>> const& ContractDefinition:
 		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionDefinition const*>>());
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
-				if (f->isPublic() && f->getName() != contract->getName() &&
-						functionsSeen.count(f->getName()) == 0)
+				if (f->isPublic() && !f->isConstructor() && functionsSeen.count(f->getName()) == 0)
 				{
 					functionsSeen.insert(f->getName());
 					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));

@@ -716,7 +716,7 @@ MemberList const& TypeType::getMembers() const
 				// We are accessing the type of a base contract, so add all public and private
 				// functions. Note that this does not add inherited functions on purpose.
 				for (ASTPointer<FunctionDefinition> const& f: contract.getDefinedFunctions())
-					if (f->getName() != contract.getName())
+					if (!f->isConstructor())
 						members[f->getName()] = make_shared<FunctionType>(*f);
 		}
 		m_members.reset(new MemberList(members));
