@@ -113,9 +113,10 @@ void Parser::addStateVariableAccessor(ASTPointer<VariableDeclaration> const& _va
 									  vector<ASTPointer<FunctionDefinition>> & _functions)
 {
 	ASTNodeFactory nodeFactory(*this);
+	nodeFactory.setLocationEmpty();
 	ASTPointer<ASTString> emptyDoc;
-	ASTPointer<ParameterList> emptyParamList;
-	nodeFactory.markEndPosition();
+
+	vector<ASTPointer<VariableDeclaration>> parameters;
 	auto expression = nodeFactory.createNode<Identifier>(make_shared<ASTString>(_varDecl->getName()));
 	vector<ASTPointer<Statement>> block_statements = {nodeFactory.createNode<Return>(expression)};
 
@@ -124,9 +125,9 @@ void Parser::addStateVariableAccessor(ASTPointer<VariableDeclaration> const& _va
 							 true,               // isPublic
 							 false,              // not a Constructor
 							 emptyDoc,           // no documentation
-							 emptyParamList,     // no parameters (temporary, a mapping would need parameters for example)
+							 nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>()),
 							 true,               // is constant
-							 emptyParamList,     // no return parameters
+							 nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>()),
 							 nodeFactory.createNode<Block>(block_statements)
 						 )
 	);
