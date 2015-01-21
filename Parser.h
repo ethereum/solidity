@@ -78,6 +78,10 @@ private:
 	///@{
 	///@name Helper functions
 
+	/// Depending on whether a state Variable is Public, appends an accessor to the contract's functions
+	void addStateVariableAccessor(ASTPointer<VariableDeclaration> const& _varDecl,
+								  std::vector<ASTPointer<FunctionDefinition>> & _functions);
+
 	/// Peeks ahead in the scanner to determine if a variable definition is going to follow
 	bool peekVariableDefinition();
 

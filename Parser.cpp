@@ -109,6 +109,29 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	return nodeFactory.createNode<ImportDirective>(url);
 }
 
+void Parser::addStateVariableAccessor(ASTPointer<VariableDeclaration> const& _varDecl,
+									  vector<ASTPointer<FunctionDefinition>> & _functions)
+{
+	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<ASTString> emptyDoc;
+	ASTPointer<ParameterList> emptyParamList;
+	nodeFactory.markEndPosition();
+	auto expression = nodeFactory.createNode<Identifier>(make_shared<ASTString>(_varDecl->getName()));
+	vector<ASTPointer<Statement>> block_statements = {nodeFactory.createNode<Return>(expression)};
+
+	_functions.push_back(nodeFactory.createNode<FunctionDefinition>(
+							 make_shared<ASTString>(_varDecl->getName()),
+							 true,               // isPublic
+							 false,              // not a Constructor
+							 emptyDoc,           // no documentation
+							 emptyParamList,     // no parameters (temporary, a mapping would need parameters for example)
+							 true,               // is constant
+							 emptyParamList,     // no return parameters
+							 nodeFactory.createNode<Block>(block_statements)
+						 )
+	);
+}
+
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	ASTNodeFactory nodeFactory(*this);
@@ -151,6 +174,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		{
 			bool const allowVar = false;
 			stateVariables.push_back(parseVariableDeclaration(allowVar));
+			if (visibilityIsPublic)
+				addStateVariableAccessor(stateVariables.back(), functions);
 			expectToken(Token::SEMICOLON);
 		}
 		else if (currentToken == Token::MODIFIER)
