@@ -23,6 +23,7 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+#include <boost/asio.hpp>
 #include <boost/random.hpp>
 #include <boost/filesystem/path.hpp>
 #pragma GCC diagnostic ignored "-Wunused-parameter"

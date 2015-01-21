@@ -22,11 +22,12 @@
 
 #include <fstream>
 #include <sstream>
+#include <boost/asio.hpp>
+#include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
-#include <boost/test/unit_test.hpp>
 #include <algorithm>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"

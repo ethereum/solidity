@@ -19,6 +19,7 @@
  * @date 2014
  */
 
+#include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Worker.h>
 #include <libdevcrypto/Common.h>

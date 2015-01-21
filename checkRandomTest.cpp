@@ -20,6 +20,7 @@
  * Check a random test and return 0/1 for success or failure. To be used for efficiency in the random test simulation.
  */
 
+#include <boost/asio.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Log.h>

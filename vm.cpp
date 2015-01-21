@@ -21,6 +21,7 @@
  */
 
 #include <chrono>
+#include <boost/asio.hpp>
 #include <boost/filesystem.hpp>
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>

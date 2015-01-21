@@ -22,10 +22,14 @@
 
 #include <fstream>
 #include <random>
+
+// Make sure boost/asio.hpp is included before windows.h.
+#include <boost/asio.hpp>
+#include <boost/test/unit_test.hpp>
+
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/CommonIO.h>
 #include <libethereum/CanonBlockChain.h>
-#include <boost/test/unit_test.hpp>
 #include "TestHelper.h"
 
 using namespace std;

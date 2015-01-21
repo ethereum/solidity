@@ -20,6 +20,7 @@
  * State test functions.
  */
 
+#include <boost/asio.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include "JsonSpiritHeaders.h"

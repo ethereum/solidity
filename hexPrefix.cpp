@@ -21,11 +21,12 @@
  */
 
 #include <fstream>
+#include <boost/asio.hpp>
+#include <boost/test/unit_test.hpp>
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcrypto/TrieCommon.h>
-#include <boost/test/unit_test.hpp>
 #include "TestHelper.h"
 
 using namespace std;
