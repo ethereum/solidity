@@ -266,7 +266,6 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 				}
 				++ii;
 			}
-
 		}
 		else if (us == "LIT")
 		{
