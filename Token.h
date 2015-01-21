@@ -159,6 +159,7 @@ namespace solidity
 	K(IF, "if", 0)                                                     \
 	K(IMPORT, "import", 0)                                             \
 	K(MAPPING, "mapping", 0)                                           \
+	K(MODIFIER, "modifier", 0)                                         \
 	K(NEW, "new", 0)                                                   \
 	K(PUBLIC, "public", 0)                                             \
 	K(PRIVATE, "private", 0)                                           \

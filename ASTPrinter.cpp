@@ -87,6 +87,13 @@ bool ASTPrinter::visit(VariableDeclaration const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(ModifierDefinition const& _node)
+{
+	writeLine("ModifierDefinition \"" + _node.getName() + "\"");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(TypeName const& _node)
 {
 	writeLine("TypeName");
@@ -125,6 +132,13 @@ bool ASTPrinter::visit(Statement const& _node)
 bool ASTPrinter::visit(Block const& _node)
 {
 	writeLine("Block");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
+bool ASTPrinter::visit(PlaceholderStatement const& _node)
+{
+	writeLine("PlaceholderStatement");
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -322,6 +336,11 @@ void ASTPrinter::endVisit(VariableDeclaration const&)
 	m_indentation--;
 }
 
+void ASTPrinter::endVisit(ModifierDefinition const&)
+{
+	m_indentation--;
+}
+
 void ASTPrinter::endVisit(TypeName const&)
 {
 	m_indentation--;
@@ -348,6 +367,11 @@ void ASTPrinter::endVisit(Statement const&)
 }
 
 void ASTPrinter::endVisit(Block const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(PlaceholderStatement const&)
 {
 	m_indentation--;
 }

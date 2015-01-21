@@ -161,12 +161,14 @@ public:
 					   std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
 					   std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
 					   std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
-					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions):
+					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
+					   std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers):
 		Declaration(_location, _name),
 		m_baseContracts(_baseContracts),
 		m_definedStructs(_definedStructs),
 		m_stateVariables(_stateVariables),
 		m_definedFunctions(_definedFunctions),
+		m_functionModifiers(_functionModifiers),
 		m_documentation(_documentation)
 	{}
 
@@ -207,6 +209,7 @@ private:
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
+	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
 	ASTPointer<ASTString> m_documentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
@@ -362,6 +365,39 @@ private:
 };
 
 /**
+ * Definition of a function modifier.
+ */
+class ModifierDefinition: public Declaration
+{
+public:
+	ModifierDefinition(Location const& _location,
+					   ASTPointer<ASTString> const& _name,
+					   ASTPointer<ASTString> const& _documentation,
+					   ASTPointer<ParameterList> const& _parameters,
+					   ASTPointer<Block> const& _body):
+		Declaration(_location, _name), m_documentation(_documentation),
+		m_parameters(_parameters), m_body(_body) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
+	ParameterList const& getParameterList() const { return *m_parameters; }
+	Block const& getBody() const { return *m_body; }
+
+	/// @return A shared pointer of an ASTString.
+	/// Can contain a nullptr in which case indicates absence of documentation
+	ASTPointer<ASTString> const& getDocumentation() const { return m_documentation; }
+
+	void checkTypeRequirements();
+
+private:
+	ASTPointer<ASTString> m_documentation;
+	ASTPointer<ParameterList> m_parameters;
+	ASTPointer<Block> m_body;
+};
+
+/**
  * Pseudo AST node that is used as declaration for "this", "msg", "tx", "block" and the global
  * functions when such an identifier is encountered. Will never have a valid location in the source code.
  */
@@ -500,6 +536,21 @@ public:
 
 private:
 	std::vector<ASTPointer<Statement>> m_statements;
+};
+
+/**
+ * Special placeholder statement denoted by "_" used in function modifiers. This is replaced by
+ * the original function when the modifier is applied.
+ */
+class PlaceholderStatement: public Statement
+{
+public:
+	PlaceholderStatement(Location const& _location): Statement(_location) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	virtual void checkTypeRequirements() override { }
 };
 
 /**
