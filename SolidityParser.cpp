@@ -540,6 +540,33 @@ BOOST_AUTO_TEST_CASE(contract_multiple_inheritance_with_arguments)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(placeholder_in_function_context)
+{
+	char const* text = "contract c {\n"
+					   "  function fun() returns (uint r) {\n"
+					   "    var _ = 8;\n"
+					   "    return _ + 1;"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(modifier)
+{
+	char const* text = "contract c {\n"
+					   "  modifier mod { if (msg.sender == 0) _ }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(modifier_arguments)
+{
+	char const* text = "contract c {\n"
+					   "  modifier mod(uint a) { if (msg.sender == a) _ }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
