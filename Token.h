@@ -53,7 +53,7 @@
 
 // Updates for mingw support. #undef conflicting defines which have been
 // repurposed for TOKEN_LIST on windows.
-#if defined(__MINGW32__)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #undef IN
 #undef CONST
 #endif

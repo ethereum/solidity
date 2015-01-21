@@ -31,6 +31,12 @@
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Token.h>
 
+// Updates for mingw support. #undef conflicting defines which have been
+// repurposed for TOKEN_LIST on windows.
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#undef VOID
+#endif
+
 namespace dev
 {
 namespace solidity
@@ -66,12 +72,6 @@ public:
 private:
 	MemberMap m_memberTypes;
 };
-
-// Updates for mingw support. #undef conflicting defines which have been
-// repurposed for TOKEN_LIST on windows.
-#if defined(__MINGW32__)
-#undef VOID
-#endif
 
 /**
  * Abstract base class that forms the root of the type hierarchy.
