@@ -47,6 +47,17 @@
 #include <libsolidity/Utils.h>
 #include <libsolidity/Exceptions.h>
 
+#if defined(DELETE)
+#undef DELETE
+#endif
+
+// Updates for mingw support. #undef conflicting defines which have been
+// repurposed for TOKEN_LIST on windows.
+#if defined(__MINGW32__)
+#undef IN
+#undef CONST
+#endif
+
 namespace dev
 {
 namespace solidity
@@ -64,12 +75,6 @@ namespace solidity
 // IGNORE_TOKEN is a convenience macro that can be supplied as
 // an argument (at any position) for a TOKEN_LIST call. It does
 // nothing with tokens belonging to the respective category.
-
-#if defined(__MINGW32__)
-#undef IN
-#undef DELETE
-#undef CONST
-#endif
 
 #define IGNORE_TOKEN(name, string, precedence)
 

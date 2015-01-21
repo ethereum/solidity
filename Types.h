@@ -67,6 +67,8 @@ private:
 	MemberMap m_memberTypes;
 };
 
+// Updates for mingw support. #undef conflicting defines which have been
+// repurposed for TOKEN_LIST on windows.
 #if defined(__MINGW32__)
 #undef VOID
 #endif
