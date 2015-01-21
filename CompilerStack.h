@@ -138,6 +138,10 @@ private:
 		Contract();
 	};
 
+	/// Expand source code with preprocessor-like includes.
+	/// @todo Replace with better framework.
+	std::string expanded(std::string const& _sourceCode);
+
 	void reset(bool _keepSources = false);
 	void resolveImports();
 

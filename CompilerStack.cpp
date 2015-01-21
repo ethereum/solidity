@@ -21,6 +21,7 @@
  * Full-stack compiler that converts a source code string to bytecode.
  */
 
+#include <boost/algorithm/string.hpp>
 #include <libsolidity/AST.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
@@ -123,9 +124,49 @@ void CompilerStack::compile(bool _optimize)
 			}
 }
 
+string CompilerStack::expanded(string const& _sourceCode)
+{
+	// TODO: populate some nicer way.
+	static const map<string, string> c_requires = {
+		{ "Config", "contract Config{function lookup(uint256 service)constant returns(address a){}function kill(){}function unregister(uint256 id){}function register(uint256 id,address service){}}" },
+		{ "owned", "contract owned{function owned(){owner = msg.sender;}address owner;}" },
+		{ "mortal", "#require owned\ncontract mortal is owned {function kill() { if (msg.sender == owner) suicide(owner); }}" },
+		{ "NameReg", "contract NameReg{function register(string32 name){}function addressOf(string32 name)constant returns(address addr){}function unregister(){}function nameOf(address addr)constant returns(string32 name){}}" },
+		{ "named", "#require Config NameReg\ncontract named is mortal, owned {function named(string32 name) {NameReg(Config().lookup(1)).register(name);}" },
+		{ "std", "#require owned mortal Config NameReg named" },
+	};
+	string sub;
+	set<string> got;
+	function<string(string const&)> localExpanded;
+	localExpanded = [&](string const& s) -> string
+	{
+		string ret = s;
+		for (size_t p = 0; p != string::npos;)
+			if ((p = ret.find("#require ")) != string::npos)
+			{
+				string n = ret.substr(p + 9, ret.find_first_of('\n', p + 9) - p - 9);
+				ret.replace(p, n.size() + 9, "");
+				vector<string> rs;
+				boost::split(rs, n, boost::is_any_of(" \t,"), boost::token_compress_on);
+				for (auto const& r: rs)
+					if (!got.count(r))
+					{
+						if (c_requires.count(r))
+							sub.append("\n" + localExpanded(c_requires.at(r)) + "\n");
+						got.insert(r);
+					}
+			}
+			// TODO: remove once we have genesis contracts.
+			else if ((p = ret.find("Config()")) != string::npos)
+				ret.replace(p, 8, "Config(0x661005d2720d855f1d9976f88bb10c1a3398c77f)");
+		return ret;
+	};
+	return sub + localExpanded(_sourceCode);
+}
+
 bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 {
-	parse(_sourceCode);
+	parse(expanded(_sourceCode));
 	compile(_optimize);
 	return getBytecode();
 }
