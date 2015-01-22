@@ -144,6 +144,7 @@ void FunctionDefinition::accept(ASTVisitor& _visitor)
 		m_parameters->accept(_visitor);
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);
+		listAccept(m_functionModifiers, _visitor);
 		m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
@@ -156,6 +157,7 @@ void FunctionDefinition::accept(ASTConstVisitor& _visitor) const
 		m_parameters->accept(_visitor);
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);
+		listAccept(m_functionModifiers, _visitor);
 		m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
@@ -193,6 +195,26 @@ void ModifierDefinition::accept(ASTConstVisitor& _visitor) const
 	{
 		m_parameters->accept(_visitor);
 		m_body->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void ModifierInvocation::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_modifierName->accept(_visitor);
+		listAccept(m_arguments, _visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void ModifierInvocation::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_modifierName->accept(_visitor);
+		listAccept(m_arguments, _visitor);
 	}
 	_visitor.endVisit(*this);
 }

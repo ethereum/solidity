@@ -192,10 +192,18 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic, A
 	ASTPointer<ASTString> name(expectIdentifierToken());
 	ASTPointer<ParameterList> parameters(parseParameterList());
 	bool isDeclaredConst = false;
-	if (m_scanner->getCurrentToken() == Token::CONST)
+	vector<ASTPointer<ModifierInvocation>> modifiers;
+	while (true)
 	{
-		isDeclaredConst = true;
-		m_scanner->next();
+		if (m_scanner->getCurrentToken() == Token::CONST)
+		{
+			isDeclaredConst = true;
+			m_scanner->next();
+		}
+		else if (m_scanner->getCurrentToken() == Token::IDENTIFIER)
+			modifiers.push_back(parseModifierInvocation());
+		else
+			break;
 	}
 	ASTPointer<ParameterList> returnParameters;
 	if (m_scanner->getCurrentToken() == Token::RETURNS)
@@ -215,8 +223,8 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic, A
 	nodeFactory.setEndPositionFromNode(block);
 	bool const c_isConstructor = (_contractName && *name == *_contractName);
 	return nodeFactory.createNode<FunctionDefinition>(name, _isPublic, c_isConstructor, docstring,
-													  parameters,
-													  isDeclaredConst, returnParameters, block);
+													  parameters, isDeclaredConst, modifiers,
+													  returnParameters, block);
 }
 
 ASTPointer<StructDefinition> Parser::parseStructDefinition()
@@ -270,6 +278,23 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
 	return nodeFactory.createNode<ModifierDefinition>(name, docstring, parameters, block);
+}
+
+ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
+{
+	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<Identifier> name = ASTNodeFactory(*this).createNode<Identifier>(expectIdentifierToken());
+	vector<ASTPointer<Expression>> arguments;
+	if (m_scanner->getCurrentToken() == Token::LPAREN)
+	{
+		m_scanner->next();
+		arguments = parseFunctionCallArguments();
+		nodeFactory.markEndPosition();
+		expectToken(Token::RPAREN);
+	}
+	else
+		nodeFactory.setEndPositionFromNode(name);
+	return nodeFactory.createNode<ModifierInvocation>(name, arguments);
 }
 
 ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)

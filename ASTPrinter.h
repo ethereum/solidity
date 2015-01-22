@@ -49,6 +49,7 @@ public:
 	bool visit(FunctionDefinition const& _node) override;
 	bool visit(VariableDeclaration const& _node) override;
 	bool visit(ModifierDefinition const& _node) override;
+	bool visit(ModifierInvocation const& _node) override;
 	bool visit(TypeName const& _node) override;
 	bool visit(ElementaryTypeName const& _node) override;
 	bool visit(UserDefinedTypeName const& _node) override;
@@ -85,6 +86,7 @@ public:
 	void endVisit(FunctionDefinition const&) override;
 	void endVisit(VariableDeclaration const&) override;
 	void endVisit(ModifierDefinition const&) override;
+	void endVisit(ModifierInvocation const&) override;
 	void endVisit(TypeName const&) override;
 	void endVisit(ElementaryTypeName const&) override;
 	void endVisit(UserDefinedTypeName const&) override;

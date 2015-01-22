@@ -60,6 +60,11 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		ReferencesResolver resolver(*structDef, *this, &_contract, nullptr);
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		ReferencesResolver resolver(*variable, *this, &_contract, nullptr);
+	for (ASTPointer<ModifierDefinition> const& modifier: _contract.getFunctionModifiers())
+	{
+		m_currentScope = &m_scopes[modifier.get()];
+		ReferencesResolver resolver(*modifier, *this, &_contract, nullptr);
+	}
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 	{
 		m_currentScope = &m_scopes[function.get()];
@@ -221,6 +226,19 @@ bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)
 }
 
 void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
+{
+	m_currentFunction = nullptr;
+	closeCurrentScope();
+}
+
+bool DeclarationRegistrationHelper::visit(ModifierDefinition& _modifier)
+{
+	registerDeclaration(_modifier, true);
+	m_currentFunction = &_modifier;
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 {
 	m_currentFunction = nullptr;
 	closeCurrentScope();

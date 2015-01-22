@@ -100,6 +100,8 @@ private:
 	void endVisit(StructDefinition& _struct);
 	bool visit(FunctionDefinition& _function);
 	void endVisit(FunctionDefinition& _function);
+	bool visit(ModifierDefinition& _modifier);
+	void endVisit(ModifierDefinition& _modifier);
 	void endVisit(VariableDefinition& _variableDefinition);
 	bool visit(VariableDeclaration& _declaration);
 
@@ -109,7 +111,7 @@ private:
 
 	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
 	Declaration const* m_currentScope;
-	FunctionDefinition* m_currentFunction;
+	VariableScope* m_currentFunction;
 };
 
 /**

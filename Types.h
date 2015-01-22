@@ -75,7 +75,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		INTEGER, INTEGER_CONSTANT, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE, MAGIC
+		INTEGER, INTEGER_CONSTANT, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE, MODIFIER, MAGIC
 	};
 
 	///@{
@@ -460,6 +460,27 @@ private:
 	ContractDefinition const* m_currentContract;
 	/// List of member types, will be lazy-initialized because of recursive references.
 	mutable std::unique_ptr<MemberList> m_members;
+};
+
+
+/**
+ * The type of a function modifier. Not used for anything for now.
+ */
+class ModifierType: public Type
+{
+public:
+	virtual Category getCategory() const override { return Category::MODIFIER; }
+	explicit ModifierType(ModifierDefinition const& _modifier);
+
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
+	virtual bool canBeStored() const override { return false; }
+	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); }
+	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual bool operator==(Type const& _other) const override;
+	virtual std::string toString() const override;
+
+private:
+	TypePointers m_parameterTypes;
 };
 
 
