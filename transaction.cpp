@@ -16,19 +16,10 @@
 */
 /** @file transaction.cpp
  * @author Dmitrii Khokhlov <winsvega@mail.ru>
- * @date 2014
+ * @date 2015
  * Transaaction test functions.
  */
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/test/unit_test.hpp>
-#include "JsonSpiritHeaders.h"
-#include <libdevcore/CommonIO.h>
-#include <libethereum/BlockChain.h>
-#include <libethereum/State.h>
-#include <libethereum/ExtVM.h>
-#include <libethereum/Defaults.h>
-#include <libevm/VM.h>
 #include "TestHelper.h"
 
 using namespace std;
@@ -55,16 +46,15 @@ Transaction createTransactionFromFields(mObject& _tObj)
 	//Construct Rlp of the given transaction
 	RLPStream rlpStream;
 	rlpStream.appendList(9);
-	rlpStream << toInt(_tObj["nonce"]) << toInt(_tObj["gasPrice"]) << toInt(_tObj["gasLimit"]);
+	rlpStream <<  bigint(_tObj["nonce"].get_str()) << bigint(_tObj["gasPrice"].get_str()) << bigint(_tObj["gasLimit"].get_str());
 	if (_tObj["to"].get_str().empty())
 		rlpStream << "";
 	else
 		rlpStream << Address(_tObj["to"].get_str());
-	rlpStream << toInt(_tObj["value"]) << importData(_tObj);
-
+	rlpStream << bigint(_tObj["value"].get_str()) << importData(_tObj);
 	u256 r = h256(fromHex(_tObj["r"].get_str()));
 	u256 s = h256(fromHex(_tObj["s"].get_str()));
-	rlpStream << toInt(_tObj["v"]) << r << s;
+	rlpStream << bigint(_tObj["v"].get_str()) << r << s;
 
 	return Transaction(rlpStream.out(), true);
 }
@@ -124,13 +114,13 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			rlpStream.appendList(tObj.size());
 
 			if(tObj.count("nonce") > 0)
-				rlpStream << toInt(tObj["nonce"]);
+				rlpStream << bigint(tObj["nonce"].get_str());
 
 			if(tObj.count("gasPrice") > 0)
-				rlpStream << toInt(tObj["gasPrice"]);
+				rlpStream << bigint(tObj["gasPrice"].get_str());
 
 			if(tObj.count("gasLimit") > 0)
-				rlpStream << toInt(tObj["gasLimit"]);
+				rlpStream << bigint(tObj["gasLimit"].get_str());
 
 			if(tObj.count("to") > 0)
 			{
@@ -141,14 +131,14 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			}
 
 			if(tObj.count("value") > 0)
-				rlpStream << toInt(tObj["value"]);
+				rlpStream << bigint(tObj["value"].get_str());
 
 
 			if(tObj.count("data") > 0)
 				rlpStream << importData(tObj);
 
 			if(tObj.count("v") > 0)
-				rlpStream << toInt(tObj["v"]);
+				rlpStream << bigint(tObj["v"].get_str());
 
 			if(tObj.count("r") > 0)
 			{
@@ -163,7 +153,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			}
 
 			if(tObj.count("extrafield") > 0)
-				rlpStream << toInt(tObj["extrafield"]);
+				rlpStream << bigint(tObj["extrafield"].get_str());
 
 			o["rlp"] = "0x" + toHex(rlpStream.out());
 
@@ -174,7 +164,6 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 
 				o["sender"] = toString(txFromFields.sender());
-
 			}
 			catch(...)
 			{
@@ -192,6 +181,11 @@ BOOST_AUTO_TEST_SUITE(TransactionTests)
 BOOST_AUTO_TEST_CASE(ttFillerTest)
 {
 	dev::test::executeTests("ttTransactionTest", "/TransactionTests", dev::test::doTransactionTests);
+}
+
+BOOST_AUTO_TEST_CASE(ttDataStringTest)
+{
+	dev::test::executeTests("tt10mbDataField", "/TransactionTests", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(ttCreateTest)
