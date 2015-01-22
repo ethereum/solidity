@@ -772,6 +772,94 @@ BOOST_AUTO_TEST_CASE(struct_reference)
 	BOOST_CHECK(callContractFunction("check()") == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(deleteStruct)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct topStruct {
+				nestedStruct nstr;
+				emptyStruct empty;
+				uint topValue;
+				mapping (uint => uint) topMapping;
+			}
+			uint toDelete;
+			topStruct str;
+			struct nestedStruct {
+				uint nestedValue;
+				mapping (uint => bool) nestedMapping;
+			}
+			struct emptyStruct{
+			}
+			function test(){
+				toDelete = 5;
+				str.topValue = 1;
+				str.topMapping[0] = 1;
+				str.topMapping[1] = 2;
+
+				str.nstr.nestedValue = 2;
+				str.nstr.nestedMapping[0] = true;
+				str.nstr.nestedMapping[1] = false;
+				delete str;
+				delete toDelete;
+			}
+			function getToDelete() returns (uint res){
+				res = toDelete;
+			}
+			function getTopValue() returns(uint topValue){
+				topValue = str.topValue;
+			}
+			function getNestedValue() returns(uint nestedValue){
+				nestedValue = str.nstr.nestedValue;
+			}
+			function getTopMapping(uint index) returns(uint ret) {
+			   ret = str.topMapping[index];
+			}
+			function getNestedMapping(uint index) returns(bool ret) {
+				return str.nstr.nestedMapping[index];
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getToDelete()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("getTopValue()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("getNestedValue()") == encodeArgs(0));
+	// mapping values should be the same
+	BOOST_CHECK(callContractFunction("getTopMapping(uint256)", 0) == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("getTopMapping(uint256)", 1) == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("getNestedMapping(uint256)", 0) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getNestedMapping(uint256)", 1) == encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(deleteLocal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function delLocal() returns (uint res){
+				uint v = 5;
+				delete v;
+				res = v;
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("delLocal()") == encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(deleteLocals)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function delLocal() returns (uint res1, uint res2){
+				uint v = 5;
+				uint w = 6;
+				uint x = 7;
+				delete v;
+				res1 = w;
+				res2 = x;
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("delLocal()") == encodeArgs(6, 7));
+}
+
 BOOST_AUTO_TEST_CASE(constructor)
 {
 	char const* sourceCode = "contract test {\n"
@@ -1243,6 +1331,7 @@ BOOST_AUTO_TEST_CASE(constructor_arguments)
 		contract Helper {
 			string3 name;
 			bool flag;
+
 			function Helper(string3 x, bool f) {
 				name = x;
 				flag = f;
@@ -1402,6 +1491,163 @@ BOOST_AUTO_TEST_CASE(value_for_constructor)
 	BOOST_REQUIRE(callContractFunction("getFlag()") == encodeArgs(true));
 	BOOST_REQUIRE(callContractFunction("getName()") == encodeArgs("abc"));
 	BOOST_REQUIRE(callContractFunction("getBalances()") == encodeArgs(12, 10));
+}
+
+BOOST_AUTO_TEST_CASE(virtual_function_calls)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			function f() returns (uint i) { return g(); }
+			function g() returns (uint i) { return 1; }
+		}
+		contract Derived is Base {
+			function g() returns (uint i) { return 2; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(access_base_storage)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			uint dataBase;
+			function getViaBase() returns (uint i) { return dataBase; }
+		}
+		contract Derived is Base {
+			uint dataDerived;
+			function setData(uint base, uint derived) returns (bool r) {
+				dataBase = base;
+				dataDerived = derived;
+				return true;
+			}
+			function getViaDerived() returns (uint base, uint derived) {
+				base = dataBase;
+				derived = dataDerived;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("setData(uint256,uint256)", 1, 2) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getViaBase()") == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("getViaDerived()") == encodeArgs(1, 2));
+}
+
+BOOST_AUTO_TEST_CASE(single_copy_with_multiple_inheritance)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			uint data;
+			function setData(uint i) { data = i; }
+			function getViaBase() returns (uint i) { return data; }
+		}
+		contract A is Base { function setViaA(uint i) { setData(i); } }
+		contract B is Base { function getViaB() returns (uint i) { return getViaBase(); } }
+		contract Derived is A, B, Base { }
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getViaB()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("setViaA(uint256)", 23) == encodeArgs());
+	BOOST_CHECK(callContractFunction("getViaB()") == encodeArgs(23));
+}
+
+BOOST_AUTO_TEST_CASE(explicit_base_cass)
+{
+	char const* sourceCode = R"(
+		contract BaseBase { function g() returns (uint r) { return 1; } }
+		contract Base is BaseBase { function g() returns (uint r) { return 2; } }
+		contract Derived is Base {
+			function f() returns (uint r) { return BaseBase.g(); }
+			function g() returns (uint r) { return 3; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(3));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(base_constructor_arguments)
+{
+	char const* sourceCode = R"(
+		contract BaseBase {
+			uint m_a;
+			function BaseBase(uint a) {
+				m_a = a;
+			}
+		}
+		contract Base is BaseBase(7) {
+			function Base() {
+				m_a *= m_a;
+			}
+		}
+		contract Derived is Base() {
+			function getA() returns (uint r) { return m_a; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(7 * 7));
+}
+
+BOOST_AUTO_TEST_CASE(function_usage_in_constructor_arguments)
+{
+	char const* sourceCode = R"(
+		contract BaseBase {
+			uint m_a;
+			function BaseBase(uint a) {
+				m_a = a;
+			}
+			function g() returns (uint r) { return 2; }
+		}
+		contract Base is BaseBase(BaseBase.g()) {
+		}
+		contract Derived is Base() {
+			function getA() returns (uint r) { return m_a; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(virtual_function_usage_in_constructor_arguments)
+{
+	char const* sourceCode = R"(
+		contract BaseBase {
+			uint m_a;
+			function BaseBase(uint a) {
+				m_a = a;
+			}
+			function overridden() returns (uint r) { return 1; }
+			function g() returns (uint r) { return overridden(); }
+		}
+		contract Base is BaseBase(BaseBase.g()) {
+		}
+		contract Derived is Base() {
+			function getA() returns (uint r) { return m_a; }
+			function overridden() returns (uint r) { return 2; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
+{
+	char const* sourceCode = R"(
+		contract BaseBase {
+			uint m_a;
+			function BaseBase(uint a) {
+				m_a = a;
+			}
+		}
+		contract Base is BaseBase(2) { }
+		contract Derived is Base, BaseBase(3) {
+			function getA() returns (uint r) { return m_a; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(3));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
