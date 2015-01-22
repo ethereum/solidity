@@ -567,6 +567,16 @@ BOOST_AUTO_TEST_CASE(modifier_arguments)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(modifier_invocation)
+{
+	char const* text = "contract c {\n"
+					   "  modifier mod1(uint a) { if (msg.sender == a) _ }\n"
+					   "  modifier mod2 { if (msg.sender == 2) _ }\n"
+					   "  function f() mod1(7) mod2 { }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

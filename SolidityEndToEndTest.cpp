@@ -1650,6 +1650,26 @@ BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
 	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(3));
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier)
+{
+	char const* sourceCode = R"(
+		contract BaseBase {
+			uint m_a;
+			function BaseBase(uint a) {
+				m_a = a;
+			}
+		}
+		contract Base is BaseBase(2) { }
+		contract Derived is Base, BaseBase(3) {
+			function getA() returns (uint r) { return m_a; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Derived");
+	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(3));
+}
+
+// modifier overriding
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
