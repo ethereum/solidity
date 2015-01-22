@@ -23,6 +23,7 @@
 #include <string>
 
 #include <libdevcore/Log.h>
+#include <libdevcrypto/SHA3.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
@@ -53,6 +54,48 @@ ASTPointer<SourceUnit> parseTextAndResolveNames(std::string const& _source)
 
 	return sourceUnit;
 }
+
+ASTPointer<SourceUnit> parseTextAndResolveNamesWithChecks(std::string const& _source)
+{
+	Parser parser;
+	ASTPointer<SourceUnit> sourceUnit;
+	try
+	{
+		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+		NameAndTypeResolver resolver({});
+		resolver.registerDeclarations(*sourceUnit);
+		for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+				resolver.resolveNamesAndTypes(*contract);
+		for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+				resolver.checkTypeRequirements(*contract);
+	}
+	catch(boost::exception const& _e)
+	{
+		auto msg = std::string("Parsing text and resolving nanes failed with: \n") + boost::diagnostic_information(_e);
+		BOOST_FAIL(msg);
+	}
+	return sourceUnit;
+}
+
+static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source, unsigned index)
+{
+	ContractDefinition* contract;
+	unsigned counter = 0;
+	for (ASTPointer<ASTNode> const& node: _source->getNodes())
+		if ((contract = dynamic_cast<ContractDefinition*>(node.get())) && counter == index)
+			return contract;
+
+	return NULL;
+}
+
+static FunctionDefinition const* retrieveFunctionBySignature(ContractDefinition const* _contract,
+															 std::string const& _signature)
+{
+	FixedHash<4> hash(dev::sha3(_signature));
+	return _contract->getInterfaceFunctions()[hash];
+}
 }
 
 BOOST_AUTO_TEST_SUITE(SolidityNameAndTypeResolution)
@@ -63,7 +106,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 					   "  uint256 stateVariable1;\n"
 					   "  function fun(uint256 arg1) { var x; uint256 y; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
 }
 
 BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
@@ -582,6 +625,23 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(state_variable_accessors)
+{
+	char const* text = "contract base {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "uint256 foo;\n"
+					   "}\n";
+
+	ASTPointer<SourceUnit> source;
+	ContractDefinition const* contract;
+	FunctionDefinition const* function;
+	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
+	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
+	BOOST_CHECK((function = retrieveFunctionBySignature(contract, "foo()")) != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
