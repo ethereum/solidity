@@ -83,9 +83,9 @@ bool CompilerContext::isLocalVariable(Declaration const* _declaration) const
 	return m_localVariables.count(_declaration);
 }
 
-eth::AssemblyItem CompilerContext::getFunctionEntryLabel(FunctionDefinition const& _function) const
+eth::AssemblyItem CompilerContext::getFunctionEntryLabel(Declaration const& _declaration) const
 {
-	auto res = m_functionEntryLabels.find(&_function);
+	auto res = m_functionEntryLabels.find(&_declaration);
 	solAssert(res != m_functionEntryLabels.end(), "Function entry label not found.");
 	return res->second.tag();
 }

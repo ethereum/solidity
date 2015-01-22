@@ -353,6 +353,7 @@ public:
 
 	virtual Category getCategory() const override { return Category::FUNCTION; }
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
+	explicit FunctionType(VariableDeclaration const& _varDecl);
 	FunctionType(strings const& _parameterTypes, strings const& _returnParameterTypes,
 				 Location _location = Location::INTERNAL):
 		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),
@@ -375,7 +376,7 @@ public:
 	virtual MemberList const& getMembers() const override;
 
 	Location const& getLocation() const { return m_location; }
-	std::string getCanonicalSignature() const;
+	std::string getCanonicalSignature(std::string const &_name) const;
 
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }

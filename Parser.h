@@ -52,7 +52,7 @@ private:
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic, ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
-	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar);
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar, bool _isPublic = false);
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
@@ -77,10 +77,6 @@ private:
 
 	///@{
 	///@name Helper functions
-
-	/// Depending on whether a state Variable is Public, appends an accessor to the contract's functions
-	void addStateVariableAccessor(ASTPointer<VariableDeclaration> const& _varDecl,
-								  std::vector<ASTPointer<FunctionDefinition>> & _functions);
 
 	/// Peeks ahead in the scanner to determine if a variable definition is going to follow
 	bool peekVariableDefinition();

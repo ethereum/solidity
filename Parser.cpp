@@ -109,30 +109,6 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	return nodeFactory.createNode<ImportDirective>(url);
 }
 
-void Parser::addStateVariableAccessor(ASTPointer<VariableDeclaration> const& _varDecl,
-									  vector<ASTPointer<FunctionDefinition>> & _functions)
-{
-	ASTNodeFactory nodeFactory(*this);
-	nodeFactory.setLocationEmpty();
-	ASTPointer<ASTString> emptyDoc;
-
-	vector<ASTPointer<VariableDeclaration>> parameters;
-	auto expression = nodeFactory.createNode<Identifier>(make_shared<ASTString>(_varDecl->getName()));
-	vector<ASTPointer<Statement>> block_statements = {nodeFactory.createNode<Return>(expression)};
-
-	_functions.push_back(nodeFactory.createNode<FunctionDefinition>(
-							 make_shared<ASTString>(_varDecl->getName()),
-							 true,               // isPublic
-							 false,              // not a Constructor
-							 emptyDoc,           // no documentation
-							 nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>()),
-							 true,               // is constant
-							 nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>()),
-							 nodeFactory.createNode<Block>(block_statements)
-						 )
-	);
-}
-
 ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	ASTNodeFactory nodeFactory(*this);
@@ -174,9 +150,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 				 Token::isElementaryTypeName(currentToken))
 		{
 			bool const allowVar = false;
-			stateVariables.push_back(parseVariableDeclaration(allowVar));
-			if (visibilityIsPublic)
-				addStateVariableAccessor(stateVariables.back(), functions);
+			stateVariables.push_back(parseVariableDeclaration(allowVar, visibilityIsPublic));
 			expectToken(Token::SEMICOLON);
 		}
 		else if (currentToken == Token::MODIFIER)
@@ -271,12 +245,12 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 	return nodeFactory.createNode<StructDefinition>(name, members);
 }
 
-ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(bool _allowVar)
+ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(bool _allowVar, bool _isPublic)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type = parseTypeName(_allowVar);
 	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<VariableDeclaration>(type, expectIdentifierToken());
+	return nodeFactory.createNode<VariableDeclaration>(type, expectIdentifierToken(), _isPublic);
 }
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()

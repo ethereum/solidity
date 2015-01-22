@@ -156,6 +156,23 @@ private:
 	Declaration const* m_scope;
 };
 
+
+/**
+ * Generic function description able to describe both normal functions and
+ * functions that should be made as accessors to state variables
+ */
+struct FunctionDescription
+{
+	FunctionDescription(FunctionType const *_type, Declaration const* _decl):
+		m_description(_type, _decl){}
+
+	ASTPointer<ASTString> getDocumentation();
+	std::string getSignature();
+
+	std::pair<FunctionType const*, Declaration const*> m_description;
+};
+
+
 /**
  * Definition of a contract. This is the only AST nodes where child nodes are not visited in
  * document order. It first visits all struct declarations, then all variable declarations and
@@ -202,7 +219,7 @@ public:
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
 	/// as intended for use by the ABI.
-	std::map<FixedHash<4>, FunctionDefinition const*> getInterfaceFunctions() const;
+	std::map<FixedHash<4>, std::pair<FunctionType const*, Declaration const*>> getInterfaceFunctions() const;
 
 	/// List of all (direct and indirect) base contracts in order from derived to base, including
 	/// the contract itself. Available after name resolution
@@ -215,7 +232,7 @@ public:
 private:
 	void checkIllegalOverrides() const;
 
-	std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>> const& getInterfaceFunctionList() const;
+	std::vector<std::tuple<FixedHash<4>, FunctionType const*, Declaration const*>> const& getInterfaceFunctionList() const;
 
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
@@ -225,7 +242,7 @@ private:
 	ASTPointer<ASTString> m_documentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
-	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionDefinition const*>>> m_interfaceFunctionList;
+	mutable std::unique_ptr<std::vector<std::tuple<FixedHash<4>, FunctionType const*, Declaration const*>>> m_interfaceFunctionList;
 };
 
 class InheritanceSpecifier: public ASTNode
@@ -372,8 +389,8 @@ class VariableDeclaration: public Declaration
 {
 public:
 	VariableDeclaration(Location const& _location, ASTPointer<TypeName> const& _type,
-						ASTPointer<ASTString> const& _name):
-		Declaration(_location, _name), m_typeName(_type) {}
+						ASTPointer<ASTString> const& _name, bool _isPublic):
+		Declaration(_location, _name), m_typeName(_type), m_isPublic(_isPublic) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -385,10 +402,13 @@ public:
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
 
 	virtual LValueType getLValueType() const override;
+	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
+	bool isPublic() const { return m_isPublic; }
+
 
 private:
-	ASTPointer<TypeName> m_typeName; ///< can be empty ("var")
-
+	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
+	bool m_isPublic;                    ///< Whether there is an accessor for it or not
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
 
@@ -1075,6 +1095,7 @@ private:
 };
 
 /// @}
+
 
 }
 }

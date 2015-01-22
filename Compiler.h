@@ -56,10 +56,10 @@ private:
 					std::function<FunctionDefinition const*(std::string const&)> const& _resolveFunctionOverride,
 					std::function<ModifierDefinition const*(std::string const&)> const& _resolveModifierOverride);
 	void appendFunctionSelector(ContractDefinition const& _contract);
-	/// Creates code that unpacks the arguments for the given function, from memory if
-	/// @a _fromMemory is true, otherwise from call data. @returns the size of the data in bytes.
-	unsigned appendCalldataUnpacker(FunctionDefinition const& _function, bool _fromMemory = false);
-	void appendReturnValuePacker(FunctionDefinition const& _function);
+	/// Creates code that unpacks the arguments for the given function represented by a vector of TypePointers.
+	/// From memory if @a _fromMemory is true, otherwise from call data. @returns the size of the data in bytes.
+	unsigned appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory = false);
+	void appendReturnValuePacker(TypePointers const& _typeParameters);
 
 	void registerStateVariables(ContractDefinition const& _contract);
 

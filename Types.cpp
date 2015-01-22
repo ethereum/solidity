@@ -489,7 +489,7 @@ MemberList const& ContractType::getMembers() const
 		map<string, shared_ptr<Type const>> members(IntegerType::AddressMemberList.begin(),
 													IntegerType::AddressMemberList.end());
 		for (auto const& it: m_contract.getInterfaceFunctions())
-			members[it.second->getName()] = make_shared<FunctionType>(*it.second, false);
+			members[it.second.second->getName()] = make_shared<FunctionType>(*it.second.second, false);
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
@@ -512,7 +512,7 @@ u256 ContractType::getFunctionIdentifier(string const& _functionName) const
 {
 	auto interfaceFunctions = m_contract.getInterfaceFunctions();
 	for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
-		if (it->second->getName() == _functionName)
+		if (it->second.second->getName() == _functionName)
 			return FixedHash<4>::Arith(it->first);
 
 	return Invalid256;
@@ -589,6 +589,19 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 	retParams.reserve(_function.getReturnParameters().size());
 	for (ASTPointer<VariableDeclaration> const& var: _function.getReturnParameters())
 		retParams.push_back(var->getType());
+	swap(params, m_parameterTypes);
+	swap(retParams, m_returnParameterTypes);
+}
+
+FunctionType::FunctionType(VariableDeclaration const& _varDecl):
+	m_location(Location::INTERNAL)
+{
+	TypePointers params;
+	TypePointers retParams;
+	// for now, no input parameters LTODO: change for some things like mapping
+	params.reserve(0);
+	retParams.reserve(1);
+	retParams.push_back(_varDecl.getType());
 	swap(params, m_parameterTypes);
 	swap(retParams, m_returnParameterTypes);
 }
@@ -672,9 +685,9 @@ MemberList const& FunctionType::getMembers() const
 	}
 }
 
-string FunctionType::getCanonicalSignature() const
+string FunctionType::getCanonicalSignature(std::string const& _name) const
 {
-	string ret = "(";
+	string ret = _name + "(";
 
 	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
 		ret += (*it)->toString() + (it + 1 == m_parameterTypes.cend() ? "" : ",");

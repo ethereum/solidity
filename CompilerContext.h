@@ -58,7 +58,7 @@ public:
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
-	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
+	eth::AssemblyItem getFunctionEntryLabel(Declaration const& _declaration) const;
 	/// @returns the entry label of the given function and takes overrides into account.
 	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function) const;
 	ModifierDefinition const& getFunctionModifier(std::string const& _name) const;
@@ -115,9 +115,12 @@ private:
 	u256 m_stateVariablesSize = 0;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, u256> m_stateVariables;
-	/// Positions of local variables on the stack.
+	/// Offsets of local variables on the stack (relative to stack base).
 	std::map<Declaration const*, unsigned> m_localVariables;
-	/// Labels pointing to the entry points of funcitons.
+	/// Sum of stack sizes of local variables
+	unsigned m_localVariablesSize;
+	/// Labels pointing to the entry points of functions.
+
 	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
 	/// Labels pointing to the entry points of function overrides.
 	std::map<std::string, eth::AssemblyItem> m_virtualFunctionEntryLabels;

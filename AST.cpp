@@ -68,19 +68,21 @@ void ContractDefinition::checkTypeRequirements()
 	set<FixedHash<4>> hashes;
 	for (auto const& hashAndFunction: getInterfaceFunctionList())
 	{
-		FixedHash<4> const& hash = hashAndFunction.first;
+		FixedHash<4> const& hash = std::get<0>(hashAndFunction);
 		if (hashes.count(hash))
-			BOOST_THROW_EXCEPTION(createTypeError("Function signature hash collision for " +
-												  hashAndFunction.second->getCanonicalSignature()));
+			BOOST_THROW_EXCEPTION(createTypeError(
+									  "Function signature hash collision for " +
+									  std::get<1>(hashAndFunction)>->getCanonicalSignature(std::get<2>(hashAndFunction)->getName())));
 		hashes.insert(hash);
 	}
 }
 
-map<FixedHash<4>, FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() const
+map<FixedHash<4>, pair<FunctionType const*, FunctionDefinition const*>> ContractDefinition::getInterfaceFunctions() const
 {
-	vector<pair<FixedHash<4>, FunctionDefinition const*>> exportedFunctionList = getInterfaceFunctionList();
-	map<FixedHash<4>, FunctionDefinition const*> exportedFunctions(exportedFunctionList.begin(),
-																   exportedFunctionList.end());
+	vector<tuple<FixedHash<4>, FunctionType const*, Declaration const*>>> exportedFunctionList = getInterfaceFunctionList();
+	map<FixedHash<4>, pair<FunctionType *, Declaration const*>> exportedFunctions(exportedFunctionList.begin(),
+																				  exportedFunctionList.end());
+
 	solAssert(exportedFunctionList.size() == exportedFunctions.size(),
 			  "Hash collision at Function Definition Hash calculation");
 
@@ -134,20 +136,31 @@ void ContractDefinition::checkIllegalOverrides() const
 	}
 }
 
-vector<pair<FixedHash<4>, FunctionDefinition const*>> const& ContractDefinition::getInterfaceFunctionList() const
+vector<tuple<FixedHash<4>, FunctionType const*, Declaration const*>> const& ContractDefinition::getInterfaceFunctionList() const
 {
 	if (!m_interfaceFunctionList)
 	{
 		set<string> functionsSeen;
-		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionDefinition const*>>());
+		m_interfaceFunctionList.reset(new vector<tuple<FixedHash<4>, FunctionType const*, Declaration const*>>());
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
+		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
 				if (f->isPublic() && !f->isConstructor() && functionsSeen.count(f->getName()) == 0)
 				{
 					functionsSeen.insert(f->getName());
 					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
-					m_interfaceFunctionList->push_back(make_pair(hash, f.get()));
+					m_interfaceFunctionList->push_back(make_tuple(hash, FunctionType(*f), f.get()));
 				}
+
+			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
+				if (v->isPublic())
+				{
+					FunctionType ftype(*v);
+					functionsSeen.insert(v->getName());
+					FixedHash<4> hash(dev::sha3(ftype.getCanonicalSignature(v->getName()));
+					m_interfaceFunctionList->push_back(make_tuple(hash, ftype, v.get()));
+				}
+		}
 	}
 	return *m_interfaceFunctionList;
 }
@@ -219,7 +232,7 @@ void FunctionDefinition::checkTypeRequirements()
 
 string FunctionDefinition::getCanonicalSignature() const
 {
-	return getName() + FunctionType(*this).getCanonicalSignature();
+	return FunctionType(*this).getCanonicalSignature(getName());
 }
 
 Declaration::LValueType VariableDeclaration::getLValueType() const
@@ -502,6 +515,19 @@ void Literal::checkTypeRequirements()
 	m_type = Type::forLiteral(*this);
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Invalid literal value."));
+}
+
+
+ASTPointer<ASTString> FunctionDescription::getDocumentation()
+{
+	auto function = dynamic_cast<FunctionDefinition const*>(m_description.second);
+	if (function)
+		return function->getDocumentation();
+}
+
+string FunctionDescription::getSignature()
+{
+	return m_description.first->getCanonicalSignature(m_description.second->getName());
 }
 
 }
