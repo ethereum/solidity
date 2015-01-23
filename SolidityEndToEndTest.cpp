@@ -940,6 +940,72 @@ BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
 														   0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22}));
 }
 
+BOOST_AUTO_TEST_CASE(convert_string_to_string)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function pipeTrough(string3 input) returns (string3 ret) {
+				return string3(input);
+			}
+		})";
+	compileAndRun(sourceCode);
+	string s = "abc";
+	auto res = callContractFunction("pipeTrough(string3)", "abc");
+	auto goldenRes = encodeArgs(s);
+	BOOST_CHECK(callContractFunction("pipeTrough(string3)", "abc") == encodeArgs("abc"));
+}
+
+BOOST_AUTO_TEST_CASE(convert_hash_to_string_same_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function hashToString(hash h) returns (string32 s) {
+				return string32(h);
+			}
+		})";
+	compileAndRun(sourceCode);
+	u256 a("0x6162630000000000000000000000000000000000000000000000000000000000");
+	BOOST_CHECK(callContractFunction("hashToString(hash256)", a) == encodeArgs(a));
+}
+
+BOOST_AUTO_TEST_CASE(convert_hash_to_string_different_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function hashToString(hash160 h) returns (string20 s) {
+				return string20(h);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("hashToString(hash160)", u160("0x00000000000000616263")) ==
+						encodeArgs(u256("0x0000000000000000000000000000000000616263000000000000000000000000")));
+}
+
+BOOST_AUTO_TEST_CASE(convert_string_to_hash_same_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function stringToHash(string32 s) returns (hash h) {
+				return hash(s);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("stringToHash(string32)", string("abc2")) ==
+					encodeArgs(u256("0x6162633200000000000000000000000000000000000000000000000000000000")));
+}
+
+BOOST_AUTO_TEST_CASE(convert_string_to_hash_different_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function stringToHash(string20 s) returns (hash160 h) {
+				return hash160(s);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("stringToHash(string20)", u256("0x0000000000000000000000000000000000616263000000000000000000000000")) ==
+					encodeArgs(u160("0x00000000000000616263")));
+}
 
 BOOST_AUTO_TEST_CASE(send_ether)
 {
