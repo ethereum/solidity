@@ -30,6 +30,8 @@
 #include <libsolidity/Exceptions.h>
 #include <boost/test/unit_test.hpp>
 
+using namespace std;
+
 namespace dev
 {
 namespace solidity
@@ -39,6 +41,7 @@ namespace test
 
 namespace
 {
+
 ASTPointer<SourceUnit> parseTextAndResolveNames(std::string const& _source)
 {
 	Parser parser;
@@ -90,8 +93,8 @@ static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source
 	return NULL;
 }
 
-static FunctionDefinition const* retrieveFunctionBySignature(ContractDefinition const* _contract,
-															 std::string const& _signature)
+static FunctionDescription const& retrieveFunctionBySignature(ContractDefinition const* _contract,
+															  std::string const& _signature)
 {
 	FixedHash<4> hash(dev::sha3(_signature));
 	return _contract->getInterfaceFunctions()[hash];
@@ -629,7 +632,7 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 
 BOOST_AUTO_TEST_CASE(state_variable_accessors)
 {
-	char const* text = "contract base {\n"
+	char const* text = "contract test {\n"
 					   "  function fun() {\n"
 					   "    uint64(2);\n"
 					   "  }\n"
@@ -638,10 +641,31 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
-	FunctionDefinition const* function;
 	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
 	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
-	BOOST_CHECK((function = retrieveFunctionBySignature(contract, "foo()")) != nullptr);
+	FunctionDescription function = retrieveFunctionBySignature(contract, "foo()");
+	BOOST_CHECK_MESSAGE(function.getDeclaration() != nullptr, "Could not find the accessor function");
+	// vector<ParamDescription> const expected({ParamDescription("", "uint256")});
+	// BOOST_CHECK_EQUAL_COLLECTIONS(function.getReturnParameters().begin(), function.getReturnParameters().end(),
+	// 							  expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(private_state_variable)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "private:\n"
+					   "uint256 foo;\n"
+					   "}\n";
+
+	ASTPointer<SourceUnit> source;
+	ContractDefinition const* contract;
+	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
+	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
+	FunctionDescription function = retrieveFunctionBySignature(contract, "foo()");
+	BOOST_CHECK_MESSAGE(function.getDeclaration() == nullptr, "Accessor function of a private variable should not exist");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
