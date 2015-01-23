@@ -310,8 +310,7 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 
 bool ReferencesResolver::visit(Return& _return)
 {
-	solAssert(m_returnParameters, "Return parameters not set.");
-	_return.setFunctionReturnParameters(*m_returnParameters);
+	_return.setFunctionReturnParameters(m_returnParameters);
 	return true;
 }
 

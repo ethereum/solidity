@@ -31,7 +31,8 @@ namespace solidity {
 class Compiler: private ASTConstVisitor
 {
 public:
-	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_context(), m_returnTag(m_context.newTag()) {}
+	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_context(),
+		m_returnTag(m_context.newTag()) {}
 
 	void compileContract(ContractDefinition const& _contract,
 						 std::map<ContractDefinition const*, bytes const*> const& _contracts);
@@ -70,8 +71,13 @@ private:
 	virtual bool visit(Return const& _return) override;
 	virtual bool visit(VariableDefinition const& _variableDefinition) override;
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
+	virtual bool visit(PlaceholderStatement const&) override;
 
-	void compileExpression(Expression const& _expression);
+	/// Appends one layer of function modifier code of the current function, or the function
+	/// body itself if the last modifier was reached.
+	void appendModifierOrFunctionCode();
+
+	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
 
 	bool const m_optimize;
 	CompilerContext m_context;
@@ -79,6 +85,9 @@ private:
 	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
 	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement
 	eth::AssemblyItem m_returnTag; ///< tag to jump to for a "return" statement
+	unsigned m_modifierDepth = 0;
+	FunctionDefinition const* m_currentFunction;
+	unsigned m_stackCleanupForReturn; ///< this number of stack elements need to be removed before jump to m_returnTag
 };
 
 }

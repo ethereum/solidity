@@ -224,7 +224,7 @@ string FunctionDefinition::getCanonicalSignature() const
 
 Declaration::LValueType VariableDeclaration::getLValueType() const
 {
-	if (dynamic_cast<FunctionDefinition const*>(getScope()))
+	if (dynamic_cast<FunctionDefinition const*>(getScope()) || dynamic_cast<ModifierDefinition const*>(getScope()))
 		return Declaration::LValueType::LOCAL;
 	else
 		return Declaration::LValueType::STORAGE;
@@ -291,7 +291,8 @@ void Return::checkTypeRequirements()
 {
 	if (!m_expression)
 		return;
-	solAssert(m_returnParameters, "Return parameters not assigned.");
+	if (!m_returnParameters)
+		BOOST_THROW_EXCEPTION(createTypeError("Return arguments not allowed."));
 	if (m_returnParameters->getParameters().size() != 1)
 		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
 											  "than in returns declaration."));

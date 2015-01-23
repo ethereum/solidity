@@ -42,7 +42,7 @@ public:
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration);
 	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
-	void addVariable(VariableDeclaration const& _declaration);
+	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
 	void addFunction(FunctionDefinition const& _function);
 
@@ -59,7 +59,7 @@ public:
 	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
 	/// @returns the entry label of the given function and takes overrides into account.
 	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function) const;
-	/// Returns the distance of the given local variable from the top of the local variable stack.
+	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned getBaseStackOffsetOfVariable(Declaration const& _declaration) const;
 	/// If supplied by a value returned by @ref getBaseStackOffsetOfVariable(variable), returns
 	/// the distance of that variable from the current top of the stack.
@@ -112,10 +112,8 @@ private:
 	u256 m_stateVariablesSize = 0;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, u256> m_stateVariables;
-	/// Offsets of local variables on the stack (relative to stack base).
+	/// Positions of local variables on the stack.
 	std::map<Declaration const*, unsigned> m_localVariables;
-	/// Sum of stack sizes of local variables
-	unsigned m_localVariablesSize;
 	/// Labels pointing to the entry points of funcitons.
 	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
 	/// Labels pointing to the entry points of function overrides.

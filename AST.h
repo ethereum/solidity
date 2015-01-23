@@ -722,12 +722,8 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
 
-	void setFunctionReturnParameters(ParameterList const& _parameters) { m_returnParameters = &_parameters; }
-	ParameterList const& getFunctionReturnParameters() const
-	{
-		solAssert(m_returnParameters, "");
-		return *m_returnParameters;
-	}
+	void setFunctionReturnParameters(ParameterList const* _parameters) { m_returnParameters = _parameters; }
+	ParameterList const* getFunctionReturnParameters() const { return m_returnParameters; }
 	Expression const* getExpression() const { return m_expression.get(); }
 
 private:

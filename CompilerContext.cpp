@@ -43,10 +43,11 @@ void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
 	m_stateVariablesSize += _declaration.getType()->getStorageSize();
 }
 
-void CompilerContext::addVariable(VariableDeclaration const& _declaration)
+void CompilerContext::addVariable(VariableDeclaration const& _declaration,
+								  unsigned _offsetToCurrent)
 {
-	m_localVariables[&_declaration] = m_localVariablesSize;
-	m_localVariablesSize += _declaration.getType()->getSizeOnStack();
+	solAssert(m_asm.deposit() >= 0 && unsigned(m_asm.deposit()) >= _offsetToCurrent, "");
+	m_localVariables[&_declaration] = unsigned(m_asm.deposit()) - _offsetToCurrent;
 }
 
 void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
@@ -56,7 +57,6 @@ void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _decla
 	int const size = _declaration.getType()->getSizeOnStack();
 	for (int i = 0; i < size; ++i)
 		*this << u256(0);
-	m_asm.adjustDeposit(-size);
 }
 
 void CompilerContext::addFunction(FunctionDefinition const& _function)
@@ -75,7 +75,7 @@ bytes const& CompilerContext::getCompiledContract(const ContractDefinition& _con
 
 bool CompilerContext::isLocalVariable(Declaration const* _declaration) const
 {
-	return m_localVariables.count(_declaration) > 0;
+	return m_localVariables.count(_declaration);
 }
 
 eth::AssemblyItem CompilerContext::getFunctionEntryLabel(FunctionDefinition const& _function) const
@@ -96,17 +96,17 @@ unsigned CompilerContext::getBaseStackOffsetOfVariable(Declaration const& _decla
 {
 	auto res = m_localVariables.find(&_declaration);
 	solAssert(res != m_localVariables.end(), "Variable not found on stack.");
-	return m_localVariablesSize - res->second - 1;
+	return res->second;
 }
 
 unsigned CompilerContext::baseToCurrentStackOffset(unsigned _baseOffset) const
 {
-	return _baseOffset + m_asm.deposit();
+	return m_asm.deposit() - _baseOffset - 1;
 }
 
 unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 {
-	return -baseToCurrentStackOffset(-_offset);
+	return m_asm.deposit() - _offset - 1;
 }
 
 u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
