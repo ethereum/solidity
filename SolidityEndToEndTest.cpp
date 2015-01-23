@@ -1716,9 +1716,43 @@ BOOST_AUTO_TEST_CASE(function_modifier_multi_with_return)
 	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(1));
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier_overriding)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() mod returns (bool r) { return true; }
+			modifier mod { _ }
+		}
+		contract C is A {
+			modifier mod { }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(false));
+}
 
-// modifier overriding
-// functions called by modifiers used by constructor need to be pulled into the creation context
+BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint data;
+			function A() mod1 { f1(); }
+			function f1() mod2 { data |= 0x1; }
+			function f2() { data |= 0x20; }
+			function f3() { }
+			modifier mod1 { f2(); _ }
+			modifier mod2 { f3(); }
+			function getData() returns (uint r) { return data; }
+		}
+		contract C is A {
+			modifier mod1 { f4(); _ }
+			function f3() { data |= 0x300; }
+			function f4() { data |= 0x4000; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0x4300));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
