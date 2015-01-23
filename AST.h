@@ -200,8 +200,12 @@ struct FunctionDescription
 	std::vector<ParamDescription> const getParameters() const;
 	/// @returns the return parameters of the function
 	std::vector<ParamDescription> const getReturnParameters() const;
-	/// @returns the Declaration AST Node pointer
+	/// @returns a generic Declaration AST Node pointer which can be either a FunctionDefinition or a VariableDeclaration
 	Declaration const* getDeclaration() const;
+	/// @returns the VariableDeclaration AST Node pointer or nullptr if it's not a VariableDeclaration
+	VariableDeclaration const* getVariableDeclaration() const;
+	/// @returns the FunctionDefinition AST Node pointer or nullptr if it's not a FunctionDefinition
+	FunctionDefinition const* getFunctionDefinition() const;
 	/// @returns a created shared pointer with the type of the function
 	std::shared_ptr<FunctionType> makeFunctionType() const;
 	/// @returns a pointer to the function type

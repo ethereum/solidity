@@ -607,6 +607,16 @@ Declaration const* FunctionDescription::getDeclaration() const
 	return m_description.second;
 }
 
+VariableDeclaration const* FunctionDescription::getVariableDeclaration() const
+{
+	return dynamic_cast<VariableDeclaration const*>(m_description.second);
+}
+
+FunctionDefinition const* FunctionDescription::getFunctionDefinition() const
+{
+	return dynamic_cast<FunctionDefinition const*>(m_description.second);
+}
+
 shared_ptr<FunctionType const> FunctionDescription::getFunctionTypeShared() const
 {
 	return m_description.first;
