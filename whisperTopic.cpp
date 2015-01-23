@@ -36,15 +36,16 @@ BOOST_AUTO_TEST_CASE(topic)
 	auto oldLogVerbosity = g_logVerbosity;
 	g_logVerbosity = 0;
 
+	Host ph1("Test", NetworkPreferences(30303, "127.0.0.1", true, true));
+	
 	bool started = false;
 	unsigned result = 0;
 	std::thread listener([&]()
 	{
 		setThreadName("other");
 
-		Host ph("Test", NetworkPreferences(50303, "", false, true));
-		auto wh = ph.registerCapability(new WhisperHost());
-		ph.start();
+		auto wh = ph1.registerCapability(new WhisperHost());
+		ph1.start();
 
 		started = true;
 
@@ -67,12 +68,12 @@ BOOST_AUTO_TEST_CASE(topic)
 	while (!started)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
-	Host ph("Test", NetworkPreferences(50300, "", false, true));
+	Host ph("Test", NetworkPreferences(30300, "127.0.0.1", true, true));
 	auto wh = ph.registerCapability(new WhisperHost());
 	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
 	this_thread::sleep_for(chrono::milliseconds(500));
-	ph.addNode(NodeId(), "127.0.0.1", 50303, 50303);
+	ph.addNode(ph1.id(), "127.0.0.1", 30303, 30303);
 
 	KeyPair us = KeyPair::create();
 	for (int i = 0; i < 10; ++i)
