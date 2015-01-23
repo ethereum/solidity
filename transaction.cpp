@@ -66,7 +66,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		cerr << i.first << endl;
 		mObject& o = i.second.get_obj();
 
-		if(_fillin == false)
+		if (_fillin == false)
 		{
 			BOOST_REQUIRE(o.count("rlp") > 0);
 			bytes rlpReaded = importByteArray(o["rlp"].get_str());
@@ -101,10 +101,9 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_REQUIRE (o.count("sender") > 0);
 
 			Address addressReaded = Address(o["sender"].get_str());
-			BOOST_CHECK_MESSAGE(txFromFields.sender() ==  addressReaded || txFromRlp.sender() == addressReaded, "Signature address of sender does not match given sender address!");
+			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, "Signature address of sender does not match given sender address!");
 		}
-
-		if(_fillin == true)
+		else
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);
 			mObject tObj = o["transaction"].get_obj();
@@ -113,16 +112,16 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			RLPStream rlpStream;
 			rlpStream.appendList(tObj.size());
 
-			if(tObj.count("nonce") > 0)
+			if (tObj.count("nonce") > 0)
 				rlpStream << bigint(tObj["nonce"].get_str());
 
-			if(tObj.count("gasPrice") > 0)
+			if (tObj.count("gasPrice") > 0)
 				rlpStream << bigint(tObj["gasPrice"].get_str());
 
-			if(tObj.count("gasLimit") > 0)
+			if (tObj.count("gasLimit") > 0)
 				rlpStream << bigint(tObj["gasLimit"].get_str());
 
-			if(tObj.count("to") > 0)
+			if (tObj.count("to") > 0)
 			{
 				if (tObj["to"].get_str().empty())
 					rlpStream << "";
@@ -130,29 +129,29 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 					rlpStream << Address(tObj["to"].get_str());
 			}
 
-			if(tObj.count("value") > 0)
+			if (tObj.count("value") > 0)
 				rlpStream << bigint(tObj["value"].get_str());
 
 
-			if(tObj.count("data") > 0)
+			if (tObj.count("data") > 0)
 				rlpStream << importData(tObj);
 
-			if(tObj.count("v") > 0)
+			if (tObj.count("v") > 0)
 				rlpStream << bigint(tObj["v"].get_str());
 
-			if(tObj.count("r") > 0)
+			if (tObj.count("r") > 0)
 			{
 				u256 r = h256(fromHex(tObj["r"].get_str()));
 				rlpStream << r;
 			}
 
-			if(tObj.count("s") > 0)
+			if (tObj.count("s") > 0)
 			{
 				u256 s = h256(fromHex(tObj["s"].get_str()));
 				rlpStream << s;
 			}
 
-			if(tObj.count("extrafield") > 0)
+			if (tObj.count("extrafield") > 0)
 				rlpStream << bigint(tObj["extrafield"].get_str());
 
 			o["rlp"] = "0x" + toHex(rlpStream.out());
@@ -178,12 +177,12 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
 
-BOOST_AUTO_TEST_CASE(ttFillerTest)
+BOOST_AUTO_TEST_CASE(TransactionTest)
 {
 	dev::test::executeTests("ttTransactionTest", "/TransactionTests", dev::test::doTransactionTests);
 }
 
-BOOST_AUTO_TEST_CASE(ttDataStringTest)
+BOOST_AUTO_TEST_CASE(tt10mbDataField)
 {
 	dev::test::executeTests("tt10mbDataField", "/TransactionTests", dev::test::doTransactionTests);
 }
