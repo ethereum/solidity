@@ -39,9 +39,13 @@ namespace solidity
 class CallGraph: private ASTConstVisitor
 {
 public:
-	using OverrideResolver = std::function<FunctionDefinition const*(std::string const&)>;
+	using FunctionOverrideResolver = std::function<FunctionDefinition const*(std::string const&)>;
+	using ModifierOverrideResolver = std::function<ModifierDefinition const*(std::string const&)>;
 
-	CallGraph(OverrideResolver const& _overrideResolver): m_overrideResolver(&_overrideResolver) {}
+	CallGraph(FunctionOverrideResolver const& _functionOverrideResolver,
+			  ModifierOverrideResolver const& _modifierOverrideResolver):
+		m_functionOverrideResolver(&_functionOverrideResolver),
+		m_modifierOverrideResolver(&_modifierOverrideResolver) {}
 
 	void addNode(ASTNode const& _node);
 
@@ -53,11 +57,12 @@ private:
 	virtual bool visit(MemberAccess const& _memberAccess) override;
 
 	void computeCallGraph();
-	void addFunction(FunctionDefinition const& _function);
 
-	OverrideResolver const* m_overrideResolver;
+	FunctionOverrideResolver const* m_functionOverrideResolver;
+	ModifierOverrideResolver const* m_modifierOverrideResolver;
+	std::set<ASTNode const*> m_nodesSeen;
 	std::set<FunctionDefinition const*> m_functionsSeen;
-	std::queue<FunctionDefinition const*> m_workQueue;
+	std::queue<ASTNode const*> m_workQueue;
 };
 
 }

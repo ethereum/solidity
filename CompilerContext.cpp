@@ -66,6 +66,11 @@ void CompilerContext::addFunction(FunctionDefinition const& _function)
 	m_virtualFunctionEntryLabels.insert(make_pair(_function.getName(), tag));
 }
 
+void CompilerContext::addModifier(ModifierDefinition const& _modifier)
+{
+	m_functionModifiers.insert(make_pair(_modifier.getName(),  &_modifier));
+}
+
 bytes const& CompilerContext::getCompiledContract(const ContractDefinition& _contract) const
 {
 	auto ret = m_compiledContracts.find(&_contract);
@@ -90,6 +95,13 @@ eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(FunctionDefiniti
 	auto res = m_virtualFunctionEntryLabels.find(_function.getName());
 	solAssert(res != m_virtualFunctionEntryLabels.end(), "Function entry label not found.");
 	return res->second.tag();
+}
+
+ModifierDefinition const& CompilerContext::getFunctionModifier(string const& _name) const
+{
+	auto res = m_functionModifiers.find(_name);
+	solAssert(res != m_functionModifiers.end(), "Function modifier override not found.");
+	return *res->second;
 }
 
 unsigned CompilerContext::getBaseStackOffsetOfVariable(Declaration const& _declaration) const

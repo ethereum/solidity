@@ -45,6 +45,8 @@ public:
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
 	void addFunction(FunctionDefinition const& _function);
+	/// Adds the given modifier to the list by name if the name is not present already.
+	void addModifier(ModifierDefinition const& _modifier);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
 	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
@@ -59,6 +61,7 @@ public:
 	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
 	/// @returns the entry label of the given function and takes overrides into account.
 	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function) const;
+	ModifierDefinition const& getFunctionModifier(std::string const& _name) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned getBaseStackOffsetOfVariable(Declaration const& _declaration) const;
 	/// If supplied by a value returned by @ref getBaseStackOffsetOfVariable(variable), returns
@@ -118,6 +121,8 @@ private:
 	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
 	/// Labels pointing to the entry points of function overrides.
 	std::map<std::string, eth::AssemblyItem> m_virtualFunctionEntryLabels;
+	/// Mapping to obtain function modifiers by name. Should be filled from derived to base.
+	std::map<std::string, ModifierDefinition const*> m_functionModifiers;
 };
 
 }
