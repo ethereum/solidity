@@ -52,9 +52,7 @@ Transaction createTransactionFromFields(mObject& _tObj)
 	else
 		rlpStream << Address(_tObj["to"].get_str());
 	rlpStream << bigint(_tObj["value"].get_str()) << importData(_tObj);
-	u256 r = h256(fromHex(_tObj["r"].get_str()));
-	u256 s = h256(fromHex(_tObj["s"].get_str()));
-	rlpStream << bigint(_tObj["v"].get_str()) << r << s;
+	rlpStream << bigint(_tObj["v"].get_str()) << bigint(_tObj["r"].get_str()) << bigint(_tObj["s"].get_str());
 
 	return Transaction(rlpStream.out(), CheckSignature::Sender);
 }
@@ -132,7 +130,6 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			if (tObj.count("value") > 0)
 				rlpStream << bigint(tObj["value"].get_str());
 
-
 			if (tObj.count("data") > 0)
 				rlpStream << importData(tObj);
 
@@ -140,16 +137,10 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				rlpStream << bigint(tObj["v"].get_str());
 
 			if (tObj.count("r") > 0)
-			{
-				u256 r = h256(fromHex(tObj["r"].get_str()));
-				rlpStream << r;
-			}
+				rlpStream << bigint(tObj["r"].get_str());
 
 			if (tObj.count("s") > 0)
-			{
-				u256 s = h256(fromHex(tObj["s"].get_str()));
-				rlpStream << s;
-			}
+				rlpStream <<  bigint(tObj["s"].get_str());
 
 			if (tObj.count("extrafield") > 0)
 				rlpStream << bigint(tObj["extrafield"].get_str());
