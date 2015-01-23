@@ -30,12 +30,7 @@
 #include <libsolidity/Exceptions.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Token.h>
-
-// Updates for mingw support. #undef conflicting defines which have been
-// repurposed for TOKEN_LIST on windows.
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#undef VOID
-#endif
+#include <libdevcore/UndefMacros.h>
 
 namespace dev
 {

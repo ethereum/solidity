@@ -46,17 +46,7 @@
 #include <libdevcore/Log.h>
 #include <libsolidity/Utils.h>
 #include <libsolidity/Exceptions.h>
-
-#if defined(DELETE)
-#undef DELETE
-#endif
-
-// Updates for mingw support. #undef conflicting defines which have been
-// repurposed for TOKEN_LIST on windows.
-#if defined(_MSC_VER) || defined(__MINGW32__)
-#undef IN
-#undef CONST
-#endif
+#include <libdevcore/UndefMacros.h>
 
 namespace dev
 {
