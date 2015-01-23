@@ -14,15 +14,8 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file boostTest.cpp
- * @author Marko Simovic <markobarko@gmail.com>
+/** @file kademlia.cpp
+ * @author Alex Leverington <nessence@gmail.com>
  * @date 2014
- * Stub for generating main boost.test module.
  */
 
-#define BOOST_TEST_MODULE EthereumTests
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#define BOOST_DISABLE_WIN32 //disables SEH warning
-#include <boost/test/included/unit_test.hpp>
-#pragma GCC diagnostic pop

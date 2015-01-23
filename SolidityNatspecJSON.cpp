@@ -45,20 +45,16 @@ public:
 		{
 			m_compilerStack.parse(_code);
 		}
-		catch (const std::exception& e)
+		catch(boost::exception const& _e)
 		{
-			std::string const* extra = boost::get_error_info<errinfo_comment>(e);
-			std::string msg = std::string("Parsing contract failed with: ") +
-				e.what() + std::string("\n");
-			if (extra)
-				msg += *extra;
+			auto msg = std::string("Parsing contract failed with: ") + boost::diagnostic_information(_e);
 			BOOST_FAIL(msg);
 		}
 
 		if (_userDocumentation)
-			generatedDocumentationString = m_compilerStack.getJsonDocumentation("", DocumentationType::NATSPEC_USER);
+			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NATSPEC_USER);
 		else
-			generatedDocumentationString = m_compilerStack.getJsonDocumentation("", DocumentationType::NATSPEC_DEV);
+			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NATSPEC_DEV);
 		Json::Value generatedDocumentation;
 		m_reader.parse(generatedDocumentationString, generatedDocumentation);
 		Json::Value expectedDocumentation;
@@ -84,7 +80,7 @@ BOOST_AUTO_TEST_CASE(user_basic_test)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \"notice\": \"Multiplies `a` by 7\"}"
+	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
 	checkNatspec(sourceCode, natspec, true);
@@ -100,7 +96,7 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 
 	char const* devNatspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256)\":{ \n"
 	"        \"details\": \"Multiplies a number by 7\"\n"
 	"        }\n"
 	"    }\n"
@@ -108,7 +104,7 @@ BOOST_AUTO_TEST_CASE(dev_and_user_basic_test)
 
 	char const* userNatspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \"notice\": \"Multiplies `a` by 7\"}"
+	"    \"mul(uint256)\":{ \"notice\": \"Multiplies `a` by 7\"}"
 	"}}";
 
 	checkNatspec(sourceCode, devNatspec, false);
@@ -128,7 +124,7 @@ BOOST_AUTO_TEST_CASE(user_multiline_comment)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul_and_add\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"}"
+	"    \"mul_and_add(uint256,uint256)\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"}"
 	"}}";
 
 	checkNatspec(sourceCode, natspec, true);
@@ -157,9 +153,9 @@ BOOST_AUTO_TEST_CASE(user_multiple_functions)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul_and_add\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"},"
-	"    \"divide\":{ \"notice\": \"Divides `input` by `div`\"},"
-	"    \"sub\":{ \"notice\": \"Subtracts 3 from `input`\"}"
+	"    \"mul_and_add(uint256,uint256)\":{ \"notice\": \"Multiplies `a` by 7 and then adds `b`\"},"
+	"    \"divide(uint256,uint256)\":{ \"notice\": \"Divides `input` by `div`\"},"
+	"    \"sub(int256)\":{ \"notice\": \"Subtracts 3 from `input`\"}"
 	"}}";
 
 	checkNatspec(sourceCode, natspec, true);
@@ -205,7 +201,7 @@ BOOST_AUTO_TEST_CASE(dev_desc_after_nl)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256,uint256)\":{ \n"
 	"        \"details\": \" Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter\",\n"
@@ -228,7 +224,7 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256,uint256)\":{ \n"
 	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter\",\n"
@@ -252,7 +248,7 @@ BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256,uint256)\":{ \n"
 	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
@@ -289,21 +285,21 @@ BOOST_AUTO_TEST_CASE(dev_multiple_functions)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256,uint256)\":{ \n"
 	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter\",\n"
 	"            \"second\": \"Documentation for the second parameter\"\n"
 	"        }\n"
 	"    },\n"
-	"    \"divide\":{ \n"
+	"    \"divide(uint256,uint256)\":{ \n"
 	"        \"details\": \"Divides 2 numbers\",\n"
 	"        \"params\": {\n"
 	"            \"input\": \"Documentation for the input parameter\",\n"
 	"            \"div\": \"Documentation for the div parameter\"\n"
 	"        }\n"
 	"    },\n"
-	"    \"sub\":{ \n"
+	"    \"sub(int256)\":{ \n"
 	"        \"details\": \"Subtracts 3 from `input`\",\n"
 	"        \"params\": {\n"
 	"            \"input\": \"Documentation for the input parameter\"\n"
@@ -327,7 +323,7 @@ BOOST_AUTO_TEST_CASE(dev_return)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256,uint256)\":{ \n"
 	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
@@ -353,7 +349,7 @@ BOOST_AUTO_TEST_CASE(dev_return_desc_after_nl)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256,uint256)\":{ \n"
 	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
@@ -381,7 +377,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_return)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256,uint256)\":{ \n"
 	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
@@ -410,7 +406,7 @@ BOOST_AUTO_TEST_CASE(dev_multiline_comment)
 
 	char const* natspec = "{"
 	"\"methods\":{"
-	"    \"mul\":{ \n"
+	"    \"mul(uint256,uint256)\":{ \n"
 	"        \"details\": \"Multiplies a number by 7 and adds second parameter\",\n"
 	"        \"params\": {\n"
 	"            \"a\": \"Documentation for the first parameter starts here. Since it's a really complicated parameter we need 2 lines\",\n"
@@ -432,7 +428,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_no_doc)
 
 	char const* natspec = "{"
 	"    \"methods\":{"
-	"        \"mul\":{ \n"
+	"        \"mul(uint256,uint256)\":{ \n"
 	"            \"details\": \"Mul function\"\n"
 	"        }\n"
 	"    }\n"
@@ -454,7 +450,7 @@ BOOST_AUTO_TEST_CASE(dev_contract_doc)
 	"    \"author\": \"Lefteris\","
 	"    \"title\": \"Just a test contract\","
 	"    \"methods\":{"
-	"        \"mul\":{ \n"
+	"        \"mul(uint256,uint256)\":{ \n"
 	"            \"details\": \"Mul function\"\n"
 	"        }\n"
 	"    }\n"
@@ -477,7 +473,7 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 	"    \"author\": \"Lefteris\","
 	"    \"title\": \"Just a test contract\","
 	"    \"methods\":{"
-	"        \"mul\":{ \n"
+	"        \"mul(uint256,uint256)\":{ \n"
 	"            \"details\": \"Mul function\",\n"
 	"            \"author\": \"John Doe\",\n"
 	"        }\n"
@@ -501,13 +497,44 @@ BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
 	"    \"author\": \"Lefteris\","
 	"    \"title\": \"Just a test contract\","
 	"    \"methods\":{"
-	"        \"mul\":{ \n"
+	"        \"mul(uint256,uint256)\":{ \n"
 	"            \"details\": \"Mul function\"\n"
 	"        }\n"
 	"    }\n"
 	"}";
 
 	BOOST_CHECK_THROW(checkNatspec(sourceCode, natspec, false), DocstringParsingError);
+}
+
+BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// I do something awesome\n"
+	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256)\":{ \"notice\": \"I do something awesome\"}"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// I do something awesome\n"
+	"  /// which requires two lines to explain\n"
+	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
+	"}\n";
+
+	char const* natspec = "{"
+	"\"methods\":{"
+	"    \"mul(uint256)\":{ \"notice\": \"I do something awesome which requires two lines to explain\"}"
+	"}}";
+
+	checkNatspec(sourceCode, natspec, true);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

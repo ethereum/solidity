@@ -115,7 +115,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		if (code.size())
 		{
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::ContractConception);
-			_state.m_cache[address].setCode(bytesConstRef(&code));
+			_state.m_cache[address].setCode(code);
 		}
 		else
 			_state.m_cache[address] = Account(toInt(o["balance"]), Account::NormalCreation);
@@ -357,6 +357,19 @@ void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
 	}
 }
 
+void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates)
+{
+	BOOST_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());
+
+	for (size_t i = 0; i < _resultCallCreates.size(); ++i)
+	{
+		BOOST_CHECK(_resultCallCreates[i].data() == _expectedCallCreates[i].data());
+		BOOST_CHECK(_resultCallCreates[i].receiveAddress() == _expectedCallCreates[i].receiveAddress());
+		BOOST_CHECK(_resultCallCreates[i].gas() == _expectedCallCreates[i].gas());
+		BOOST_CHECK(_resultCallCreates[i].value() == _expectedCallCreates[i].value());
+	}
+}
+
 std::string getTestPath()
 {
 	string testPath;
@@ -494,6 +507,14 @@ void processCommandLineOptions()
 			break;
 		}
 	}
+}
+
+LastHashes lastHashes(u256 _currentBlockNumber)
+{
+	LastHashes ret;
+	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
+		ret.push_back(sha3(toString(_currentBlockNumber - i)));
+	return ret;
 }
 
 } } // namespaces

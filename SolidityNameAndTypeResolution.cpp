@@ -38,7 +38,7 @@ namespace test
 
 namespace
 {
-void parseTextAndResolveNames(std::string const& _source)
+ASTPointer<SourceUnit> parseTextAndResolveNames(std::string const& _source)
 {
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
@@ -50,6 +50,8 @@ void parseTextAndResolveNames(std::string const& _source)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			resolver.checkTypeRequirements(*contract);
+
+	return sourceUnit;
 }
 }
 
@@ -319,6 +321,173 @@ BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 					   "  }\n"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_canonical_signature)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = "contract Test {\n"
+					   "  function foo(uint256 arg1, uint64 arg2, bool arg3) returns (uint256 ret) {\n"
+					   "    ret = arg1 + arg2;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(sourceUnit = parseTextAndResolveNames(text));
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->getDefinedFunctions();
+			BOOST_CHECK_EQUAL("foo(uint256,uint64,bool)", functions[0]->getCanonicalSignature());
+		}
+}
+
+BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = "contract Test {\n"
+					   "  function boo(uint arg1, hash arg2, address arg3) returns (uint ret) {\n"
+					   "    ret = 5;\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(sourceUnit = parseTextAndResolveNames(text));
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->getDefinedFunctions();
+			BOOST_CHECK_EQUAL("boo(uint256,hash256,address)", functions[0]->getCanonicalSignature());
+		}
+}
+
+BOOST_AUTO_TEST_CASE(hash_collision_in_interface)
+{
+	char const* text = "contract test {\n"
+					   "  function gsf() {\n"
+					   "  }\n"
+					   "  function tgeo() {\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(inheritance_basic)
+{
+	char const* text = R"(
+		contract base { uint baseMember; struct BaseType { uint element; } }
+		contract derived is base {
+			BaseType data;
+			function f() { baseMember = 7; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
+{
+	char const* text = R"(
+		contract root { function rootFunction() {} }
+		contract inter1 is root { function f() {} }
+		contract inter2 is root { function f() {} }
+		contract derived is inter1, inter2, root {
+			function g() { f(); rootFunction(); }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(cyclic_inheritance)
+{
+	char const* text = R"(
+		contract A is B { }
+		contract B is A { }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_direct)
+{
+	char const* text = R"(
+		contract B { function f() {} }
+		contract C is B { function f(uint i) {} }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_indirect)
+{
+	char const* text = R"(
+		contract A { function f(uint a) {} }
+		contract B { function f() {} }
+		contract C is A, B { }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(complex_inheritance)
+{
+	char const* text = R"(
+		contract A { function f() { uint8 x = C(0).g(); } }
+		contract B { function f() {} function g() returns (uint8 r) {} }
+		contract C is A, B { }
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(constructor_visibility)
+{
+	// The constructor of a base class should not be visible in the derived class
+	char const* text = R"(
+		contract A { function A() { } }
+		contract B is A { function f() { A x = A(0); } }
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(overriding_constructor)
+{
+	// It is fine to "override" constructor of a base class since it is invisible
+	char const* text = R"(
+		contract A { function A() { } }
+		contract B is A { function A() returns (uint8 r) {} }
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(missing_base_constructor_arguments)
+{
+	char const* text = R"(
+		contract A { function A(uint a) { } }
+		contract B is A { }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
+{
+	char const* text = R"(
+		contract A { function A(uint a) { } }
+		contract B is A { }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A {
+			function f() { A a = B(1); }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
+{
+	char const* text = R"(
+		contract A { }
+		contract B is A {
+			function f() { B b = A(1); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
