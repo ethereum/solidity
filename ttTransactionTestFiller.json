@@ -212,7 +212,7 @@
         }
     },
 
-   "RLPHexElementsWithStartingZeros" : {
+   "RLPWrongHexElements" : {
         "transaction" :
 	{ 	    
             "data" : "0x0000000012",

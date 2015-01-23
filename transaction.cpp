@@ -56,7 +56,7 @@ Transaction createTransactionFromFields(mObject& _tObj)
 	u256 s = h256(fromHex(_tObj["s"].get_str()));
 	rlpStream << bigint(_tObj["v"].get_str()) << r << s;
 
-	return Transaction(rlpStream.out(), true);
+	return Transaction(rlpStream.out(), CheckSignature::Sender);
 }
 
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
@@ -74,7 +74,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 			try
 			{
-				txFromRlp = Transaction(rlpReaded, true);
+				txFromRlp = Transaction(rlpReaded, CheckSignature::Sender);
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 			}
@@ -159,7 +159,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 			try
 			{
-				Transaction txFromFields(rlpStream.out(), true);
+				Transaction txFromFields(rlpStream.out(), CheckSignature::Sender);
 				if (!txFromFields.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 
