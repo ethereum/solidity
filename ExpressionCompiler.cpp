@@ -683,7 +683,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	}
 	else if (stackTypeCategory == Type::Category::STRING)
 	{
-		solAssert(targetTypeCategory == Type::Category::STRING || targetTypeCategory == Type::Category::INTEGER, "Invalid type conversion requested.");
+		solAssert(targetTypeCategory == Type::Category::STRING, "Invalid type conversion requested.");
 		// nothing to do, strings are high-order-bit-aligned
 		//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
 	}
