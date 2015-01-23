@@ -628,7 +628,33 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 		return;
 	Type::Category stackTypeCategory = _typeOnStack.getCategory();
 	Type::Category targetTypeCategory = _targetType.getCategory();
-	if (stackTypeCategory == Type::Category::INTEGER || stackTypeCategory == Type::Category::CONTRACT ||
+
+	if (stackTypeCategory == Type::Category::STRING && targetTypeCategory == Type::Category::INTEGER)
+	{
+		// conversion from string to hash. no need to clean the high bit
+		// only to shift right because of opposite alignment
+		IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
+		StaticStringType const& sourceStringType = dynamic_cast<StaticStringType const&>(_typeOnStack);
+		if (targetIntegerType.isHash())
+		{
+			solAssert(targetIntegerType.getNumBits() == sourceStringType.getNumBytes() * 8, "The size should be the same.");
+			m_context << u256(std::pow(2, 256 - sourceStringType.getNumBytes() * 8)) <<
+					eth::Instruction::SWAP1 << eth::Instruction::DIV;
+		}
+	}
+	else if (targetTypeCategory == Type::Category::STRING && stackTypeCategory == Type::Category::INTEGER)
+	{
+		// conversion from hash to string. no need to clean the high bit
+		// only to shift left because of opposite alignment
+		StaticStringType const& targetStringType = dynamic_cast<StaticStringType const&>(_targetType);
+		IntegerType const& sourceIntegerType = dynamic_cast<IntegerType const&>(_typeOnStack);
+		if (sourceIntegerType.isHash())
+		{
+			solAssert(sourceIntegerType.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
+			m_context << u256(std::pow(2, 256 - sourceIntegerType.getNumBits())) << eth::Instruction::MUL;
+		}
+	}
+	else if (stackTypeCategory == Type::Category::INTEGER || stackTypeCategory == Type::Category::CONTRACT ||
 			 stackTypeCategory == Type::Category::INTEGER_CONSTANT)
 	{
 		solAssert(targetTypeCategory == Type::Category::INTEGER || targetTypeCategory == Type::Category::CONTRACT, "");
@@ -657,7 +683,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	}
 	else if (stackTypeCategory == Type::Category::STRING)
 	{
-		solAssert(targetTypeCategory == Type::Category::STRING, "");
+		solAssert(targetTypeCategory == Type::Category::STRING || targetTypeCategory == Type::Category::INTEGER, "Invalid type conversion requested.");
 		// nothing to do, strings are high-order-bit-aligned
 		//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
 	}

@@ -233,9 +233,10 @@ public:
 	/// if no type fits.
 	static std::shared_ptr<StaticStringType> smallestTypeForLiteral(std::string const& _literal);
 
-	StaticStringType(int _bytes);
+	explicit StaticStringType(int _bytes);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool operator==(Type const& _other) const override;
 
 	virtual unsigned getCalldataEncodedSize() const override { return m_bytes; }
