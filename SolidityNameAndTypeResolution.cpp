@@ -573,6 +573,17 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(modifier_returns_value)
+{
+	char const* text = R"(
+		contract A {
+			function f(uint a) mod(2) returns (uint r) {}
+			modifier mod(uint a) { return 7; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

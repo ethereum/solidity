@@ -1653,22 +1653,72 @@ BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
 BOOST_AUTO_TEST_CASE(function_modifier)
 {
 	char const* sourceCode = R"(
-		contract BaseBase {
-			uint m_a;
-			function BaseBase(uint a) {
-				m_a = a;
-			}
-		}
-		contract Base is BaseBase(2) { }
-		contract Derived is Base, BaseBase(3) {
-			function getA() returns (uint r) { return m_a; }
+		contract C {
+			function getOne() nonFree returns (uint r) { return 1; }
+			modifier nonFree { if (msg.value > 0) _ }
 		}
 	)";
-	compileAndRun(sourceCode, 0, "Derived");
-	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(3));
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getOne()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunctionWithValue("getOne()", 1) == encodeArgs(1));
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier_local_variables)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier mod1 { var a = 1; var b = 2; _ }
+			modifier mod2(bool a) { if (a) return; else _ }
+			function f(bool a) mod1 mod2(a) returns (uint r) { return 3; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_loop)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier repeat(uint count) { for (var i = 0; i < count; ++i) _ }
+			function f() repeat(10) returns (uint r) { r += 1; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_multi_invocation)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier repeat(bool twice) { if (twice) _ _ }
+			function f(bool twice) repeat(twice) returns (uint r) { r += 1; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_multi_with_return)
+{
+	// Here, the explicit return prevents the second execution
+	char const* sourceCode = R"(
+		contract C {
+			modifier repeat(bool twice) { if (twice) _ _ }
+			function f(bool twice) repeat(twice) returns (uint r) { r += 1; return r; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(1));
+}
+
+
 // modifier overriding
+// functions called by modifiers used by constructor need to be pulled into the creation context
 
 BOOST_AUTO_TEST_SUITE_END()
 
