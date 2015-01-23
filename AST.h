@@ -158,18 +158,58 @@ private:
 
 
 /**
+* Generic Parameter description used by @see FunctionDescription to return
+* a descripton of its parameters.
+*/
+struct ParamDescription
+{
+	ParamDescription(std::string const& _name, std::string const& _type):
+		m_description(_name, _type){}
+
+	bool operator!=(ParamDescription const& _other) const;
+	std::ostream& operator<<(std::ostream& os) const;
+
+	std::string getName() const;
+	std::string getType() const;
+
+	std::pair<std::string, std::string> m_description;
+};
+
+
+/**
  * Generic function description able to describe both normal functions and
  * functions that should be made as accessors to state variables
  */
 struct FunctionDescription
 {
-	FunctionDescription(FunctionType const *_type, Declaration const* _decl):
+	FunctionDescription(std::shared_ptr<FunctionType const> _type, Declaration const* _decl):
 		m_description(_type, _decl){}
 
-	ASTPointer<ASTString> getDocumentation();
-	std::string getSignature();
+	FunctionDescription():
+		m_description(nullptr, nullptr){}
 
-	std::pair<FunctionType const*, Declaration const*> m_description;
+	/// @returns the natspec documentation of the function if existing. Accessor (for now) don't have natspec doc
+	ASTPointer<ASTString> getDocumentation() const;
+	/// @returns the canonical signature of the function
+	std::string getSignature() const;
+	/// @returns the name of the function, basically that of the declaration
+	std::string getName() const;
+	/// @returns whether the function is constant. IF it's an accessor this is always true
+	bool isConstant() const;
+	/// @returns the argument parameters of the function
+	std::vector<ParamDescription> const getParameters() const;
+	/// @returns the return parameters of the function
+	std::vector<ParamDescription> const getReturnParameters() const;
+	/// @returns the Declaration AST Node pointer
+	Declaration const* getDeclaration() const;
+	/// @returns a created shared pointer with the type of the function
+	std::shared_ptr<FunctionType> makeFunctionType() const;
+	/// @returns a pointer to the function type
+	FunctionType const* getFunctionType() const;
+	/// @returns a shared pointer to the function type
+	std::shared_ptr<FunctionType const> getFunctionTypeShared() const;
+
+	std::pair<std::shared_ptr<FunctionType const>, Declaration const*> m_description;
 };
 
 
@@ -219,7 +259,7 @@ public:
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
 	/// as intended for use by the ABI.
-	std::map<FixedHash<4>, std::pair<FunctionType const*, Declaration const*>> getInterfaceFunctions() const;
+	std::map<FixedHash<4>, FunctionDescription> getInterfaceFunctions() const;
 
 	/// List of all (direct and indirect) base contracts in order from derived to base, including
 	/// the contract itself. Available after name resolution
@@ -232,7 +272,7 @@ public:
 private:
 	void checkIllegalOverrides() const;
 
-	std::vector<std::tuple<FixedHash<4>, FunctionType const*, Declaration const*>> const& getInterfaceFunctionList() const;
+	std::vector<std::tuple<FixedHash<4>, std::shared_ptr<FunctionType const>, Declaration const*>> const& getInterfaceFunctionList() const;
 
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
@@ -242,7 +282,7 @@ private:
 	ASTPointer<ASTString> m_documentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
-	mutable std::unique_ptr<std::vector<std::tuple<FixedHash<4>, FunctionType const*, Declaration const*>>> m_interfaceFunctionList;
+	mutable std::unique_ptr<std::vector<std::tuple<FixedHash<4>, std::shared_ptr<FunctionType const>, Declaration const*>>> m_interfaceFunctionList;
 };
 
 class InheritanceSpecifier: public ASTNode

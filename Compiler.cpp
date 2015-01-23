@@ -177,13 +177,14 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 	unsigned argumentSize = 0;
 	for (ASTPointer<VariableDeclaration> const& var: _constructor.getParameters())
 		argumentSize += CompilerUtils::getPaddedSize(var->getType()->getCalldataEncodedSize());
+
 	if (argumentSize > 0)
 	{
 		m_context << u256(argumentSize);
 		m_context.appendProgramSize();
 		m_context << u256(CompilerUtils::dataStartOffset); // copy it to byte four as expected for ABI calls
 		m_context << eth::Instruction::CODECOPY;
-		appendCalldataUnpacker(_constructor, true);
+		appendCalldataUnpacker(FunctionType(_constructor).getParameterTypes(), true);
 	}
 	m_context.appendJumpTo(m_context.getFunctionEntryLabel(_constructor));
 	m_context << returnTag;
@@ -201,7 +202,7 @@ set<FunctionDefinition const*> Compiler::getFunctionsCalled(set<ASTNode const*> 
 
 void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
-	map<FixedHash<4>, FunctionType const*, Declaration const*> interfaceFunctions = _contract.getInterfaceFunctions();
+	map<FixedHash<4>, FunctionDescription> interfaceFunctions = _contract.getInterfaceFunctions();
 	map<FixedHash<4>, const eth::AssemblyItem> callDataUnpackerEntryPoints;
 
 	// retrieve the function signature hash from the calldata
@@ -219,11 +220,11 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 
 	for (auto const& it: interfaceFunctions)
 	{
-		FunctionType const* functionType = *it.second.first;
+		FunctionType const* functionType = it.second.getFunctionType();
 		m_context << callDataUnpackerEntryPoints.at(it.first);
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		appendCalldataUnpacker(functionType->getParameterTypes());
-		m_context.appendJumpTo(m_context.getFunctionEntryLabel(it.second.second));
+		m_context.appendJumpTo(m_context.getFunctionEntryLabel(*it.second.getDeclaration()));
 		m_context << returnTag;
 		appendReturnValuePacker(functionType->getReturnParameterTypes());
 	}

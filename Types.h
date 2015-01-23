@@ -365,7 +365,9 @@ public:
 		m_location(_location), m_gasSet(_gasSet), m_valueSet(_valueSet) {}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
+	std::vector<std::string> const& getParameterNames() const { return m_parameterNames; }
 	TypePointers const& getReturnParameterTypes() const { return m_returnParameterTypes; }
+	std::vector<std::string> const& getReturnParameterNames() const { return m_returnParameterNames; }
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString() const override;
@@ -390,6 +392,8 @@ private:
 
 	TypePointers m_parameterTypes;
 	TypePointers m_returnParameterTypes;
+	std::vector<std::string> m_parameterNames;
+	std::vector<std::string> m_returnParameterNames;
 	Location const m_location;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
