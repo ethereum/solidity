@@ -51,10 +51,11 @@ BOOST_AUTO_TEST_SUITE_END()
 
 int peerTest(int argc, char** argv)
 {
+	Public remoteAlias;
 	short listenPort = 30303;
 	string remoteHost;
 	short remotePort = 30303;
-
+	
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
@@ -64,21 +65,18 @@ int peerTest(int argc, char** argv)
 			remoteHost = argv[++i];
 		else if (arg == "-p" && i + 1 < argc)
 			remotePort = (short)atoi(argv[++i]);
+		else if (arg == "-ra" && i + 1 < argc)
+			remoteAlias = Public(dev::fromHex(argv[++i]));
 		else
 			remoteHost = argv[i];
 	}
 
 	Host ph("Test", NetworkPreferences(listenPort));
 
-	if (!remoteHost.empty())
-		ph.addNode(NodeId(), remoteHost, remotePort, remotePort);
+	if (!remoteHost.empty() && !remoteAlias)
+		ph.addNode(remoteAlias, remoteHost, remotePort, remotePort);
 
-//	for (int i = 0; ; ++i)
-//	{
-//		this_thread::sleep_for(chrono::milliseconds(100));
-//		if (!(i % 10))
-//			ph.keepAlivePeers();
-//	}
+	this_thread::sleep_for(chrono::milliseconds(200));
 
 	return 0;
 }

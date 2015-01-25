@@ -34,29 +34,27 @@ BOOST_AUTO_TEST_CASE(topic)
 {
 	cnote << "Testing Whisper...";
 	auto oldLogVerbosity = g_logVerbosity;
-	g_logVerbosity = 0;
+	g_logVerbosity = 5;
 
-	Host ph1("Test", NetworkPreferences(30303, "127.0.0.1", true, true));
+	Host phOther("Test", NetworkPreferences(30303, "127.0.0.1", true, true));
+	auto whOther = phOther.registerCapability(new WhisperHost());
+	phOther.start();
 	
 	bool started = false;
 	unsigned result = 0;
 	std::thread listener([&]()
 	{
 		setThreadName("other");
-
-		auto wh = ph1.registerCapability(new WhisperHost());
-		ph1.start();
-
 		started = true;
 
 		/// Only interested in odd packets
-		auto w = wh->installWatch(BuildTopicMask("odd"));
+		auto w = whOther->installWatch(BuildTopicMask("odd"));
 
 		for (int i = 0, last = 0; i < 200 && last < 81; ++i)
 		{
-			for (auto i: wh->checkWatch(w))
+			for (auto i: whOther->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open();
+				Message msg = whOther->envelope(i).open();
 				last = RLP(msg.payload()).toInt<unsigned>();
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 				result += last;
@@ -65,16 +63,16 @@ BOOST_AUTO_TEST_CASE(topic)
 		}
 	});
 
-	while (!started)
-		this_thread::sleep_for(chrono::milliseconds(50));
-
 	Host ph("Test", NetworkPreferences(30300, "127.0.0.1", true, true));
 	auto wh = ph.registerCapability(new WhisperHost());
-	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
-	this_thread::sleep_for(chrono::milliseconds(500));
-	ph.addNode(ph1.id(), "127.0.0.1", 30303, 30303);
+	ph.addNode(phOther.id(), "127.0.0.1", 30303, 30303);
 
+	this_thread::sleep_for(chrono::milliseconds(300));
+	while (!started)
+		this_thread::sleep_for(chrono::milliseconds(25));
+
+	
 	KeyPair us = KeyPair::create();
 	for (int i = 0; i < 10; ++i)
 	{
