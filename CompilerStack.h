@@ -49,6 +49,8 @@ enum class DocumentationType: uint8_t
 	ABI_SOLIDITY_INTERFACE
 };
 
+extern const std::map<std::string, std::string> StandardSources;
+
 /**
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
  * It holds state and can be used to either step through the compilation stages (and abort e.g.
@@ -61,6 +63,7 @@ public:
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
+	void addSources(std::map<std::string, std::string> const& _nameContents) { for (auto const& i: _nameContents) addSource(i.first, i.second); }
 	bool addSource(std::string const& _name, std::string const& _content);
 	void setSource(std::string const& _sourceCode);
 	/// Parses all source units that were added

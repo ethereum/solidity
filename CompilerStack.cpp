@@ -44,14 +44,14 @@ bool CompilerStack::addSource(string const& _name, string const& _content)
 {
 	bool existed = m_sources.count(_name) != 0;
 	reset(true);
-	m_sources[_name].scanner = make_shared<Scanner>(CharStream(_content), _name);
+	m_sources[_name].scanner = make_shared<Scanner>(CharStream(expanded(_content)), _name);
 	return existed;
 }
 
 void CompilerStack::setSource(string const& _sourceCode)
 {
 	reset();
-	addSource("", _sourceCode);
+	addSource("", expanded(_sourceCode));
 }
 
 void CompilerStack::parse()
@@ -91,6 +91,7 @@ void CompilerStack::parse()
 void CompilerStack::parse(string const& _sourceCode)
 {
 	setSource(_sourceCode);
+	addSources(StandardSources);
 	parse();
 }
 
@@ -124,17 +125,26 @@ void CompilerStack::compile(bool _optimize)
 			}
 }
 
+const map<string, string> StandardSources = {
+/*	{ "Config", "contract Config{function lookup(uint256 service)constant returns(address a){}function kill(){}function unregister(uint256 id){}function register(uint256 id,address service){}}" },
+	{ "owned", "contract owned{function owned(){owner = msg.sender;}address owner;}" },
+	{ "mortal", "import \"owned\";\ncontract mortal is owned {function kill() { if (msg.sender == owner) suicide(owner); }}" },
+	{ "NameReg", "contract NameReg{function register(string32 name){}function addressOf(string32 name)constant returns(address addr){}function unregister(){}function nameOf(address addr)constant returns(string32 name){}}" },
+	{ "named", "import \"Config\";\nimport \"NameReg\";\ncontract named is mortal, owned {function named(string32 name) {NameReg(Config().lookup(1)).register(name);}}" },
+	{ "std", "import \"owned\";\nimport \"mortal\";\nimport \"Config\";\nimport \"NameReg\";\nimport \"named\";\n" },
+*/};
+
 string CompilerStack::expanded(string const& _sourceCode)
 {
-	// TODO: populate some nicer way.
-	static const map<string, string> c_requires = {
+	const map<string, string> c_standardSources = {
 		{ "Config", "contract Config{function lookup(uint256 service)constant returns(address a){}function kill(){}function unregister(uint256 id){}function register(uint256 id,address service){}}" },
 		{ "owned", "contract owned{function owned(){owner = msg.sender;}address owner;}" },
 		{ "mortal", "#require owned\ncontract mortal is owned {function kill() { if (msg.sender == owner) suicide(owner); }}" },
 		{ "NameReg", "contract NameReg{function register(string32 name){}function addressOf(string32 name)constant returns(address addr){}function unregister(){}function nameOf(address addr)constant returns(string32 name){}}" },
-		{ "named", "#require Config NameReg\ncontract named is mortal, owned {function named(string32 name) {NameReg(Config().lookup(1)).register(name);}" },
+		{ "named", "#require Config NameReg\ncontract named is mortal, owned {function named(string32 name) {NameReg(Config().lookup(1)).register(name);}}" },
 		{ "std", "#require owned mortal Config NameReg named" },
 	};
+
 	string sub;
 	set<string> got;
 	function<string(string const&)> localExpanded;
@@ -151,14 +161,14 @@ string CompilerStack::expanded(string const& _sourceCode)
 				for (auto const& r: rs)
 					if (!got.count(r))
 					{
-						if (c_requires.count(r))
-							sub.append("\n" + localExpanded(c_requires.at(r)) + "\n");
+						if (c_standardSources.count(r))
+							sub.append("\n" + localExpanded(c_standardSources.at(r)) + "\n");
 						got.insert(r);
 					}
 			}
 			// TODO: remove once we have genesis contracts.
 			else if ((p = ret.find("Config()")) != string::npos)
-				ret.replace(p, 8, "Config(0x661005d2720d855f1d9976f88bb10c1a3398c77f)");
+				ret.replace(p, 8, "Config(0xc6d9d2cd449a754c494264e1809c50e34d64562b)");
 		return ret;
 	};
 	return sub + localExpanded(_sourceCode);
@@ -166,7 +176,7 @@ string CompilerStack::expanded(string const& _sourceCode)
 
 bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 {
-	parse(expanded(_sourceCode));
+	parse(_sourceCode);
 	compile(_optimize);
 	return getBytecode();
 }
