@@ -125,7 +125,7 @@ void CompilerStack::compile(bool _optimize)
 			}
 }
 
-const map<string, string> StandardSources = {
+const map<string, string> StandardSources = map<string, string>{
 /*	{ "Config", "contract Config{function lookup(uint256 service)constant returns(address a){}function kill(){}function unregister(uint256 id){}function register(uint256 id,address service){}}" },
 	{ "owned", "contract owned{function owned(){owner = msg.sender;}address owner;}" },
 	{ "mortal", "import \"owned\";\ncontract mortal is owned {function kill() { if (msg.sender == owner) suicide(owner); }}" },
@@ -134,9 +134,12 @@ const map<string, string> StandardSources = {
 	{ "std", "import \"owned\";\nimport \"mortal\";\nimport \"Config\";\nimport \"NameReg\";\nimport \"named\";\n" },
 */};
 
+////// BEGIN: TEMPORARY ONLY
+/// remove once import works properly and we have genesis contracts
+
 string CompilerStack::expanded(string const& _sourceCode)
 {
-	const map<string, string> c_standardSources = {
+	const map<string, string> c_standardSources = map<string, string>{
 		{ "Config", "contract Config{function lookup(uint256 service)constant returns(address a){}function kill(){}function unregister(uint256 id){}function register(uint256 id,address service){}}" },
 		{ "owned", "contract owned{function owned(){owner = msg.sender;}address owner;}" },
 		{ "mortal", "#require owned\ncontract mortal is owned {function kill() { if (msg.sender == owner) suicide(owner); }}" },
@@ -173,6 +176,8 @@ string CompilerStack::expanded(string const& _sourceCode)
 	};
 	return sub + localExpanded(_sourceCode);
 }
+
+////// END: TEMPORARY ONLY
 
 bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 {
