@@ -42,9 +42,13 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 	initializeContext(_contract, _contracts);
 
 	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
+	{
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
 			if (!function->isConstructor())
 				m_context.addFunction(*function);
+		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
+			m_context.addModifier(*modifier);
+	}
 
 	appendFunctionSelector(_contract);
 	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
@@ -67,6 +71,13 @@ void Compiler::initializeContext(ContractDefinition const& _contract,
 
 void Compiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
 {
+	std::vector<ContractDefinition const*> const& bases = _contract.getLinearizedBaseContracts();
+
+	// Make all modifiers known to the context.
+	for (ContractDefinition const* contract: bases)
+		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
+			m_context.addModifier(*modifier);
+
 	// arguments for base constructors, filled in derived-to-base order
 	map<ContractDefinition const*, vector<ASTPointer<Expression>> const*> baseArguments;
 	set<FunctionDefinition const*> neededFunctions;
@@ -74,7 +85,6 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 
 	// Determine the arguments that are used for the base constructors and also which functions
 	// are needed at compile time.
-	std::vector<ContractDefinition const*> const& bases = _contract.getLinearizedBaseContracts();
 	for (ContractDefinition const* contract: bases)
 	{
 		if (FunctionDefinition const* constructor = contract->getConstructor())
@@ -93,7 +103,7 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 		}
 	}
 
-	auto overrideResolver = [&](string const& _name) -> FunctionDefinition const*
+	auto functionOverrideResolver = [&](string const& _name) -> FunctionDefinition const*
 	{
 		for (ContractDefinition const* contract: bases)
 			for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
@@ -101,21 +111,26 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 					return function.get();
 		return nullptr;
 	};
+	auto modifierOverrideResolver = [&](string const& _name) -> ModifierDefinition const*
+	{
+		return &m_context.getFunctionModifier(_name);
+	};
 
-	neededFunctions = getFunctionsCalled(nodesUsedInConstructors, overrideResolver);
+	neededFunctions = getFunctionsCalled(nodesUsedInConstructors, functionOverrideResolver,
+										 modifierOverrideResolver);
 
 	// First add all overrides (or the functions themselves if there is no override)
 	for (FunctionDefinition const* fun: neededFunctions)
 	{
 		FunctionDefinition const* override = nullptr;
 		if (!fun->isConstructor())
-			override = overrideResolver(fun->getName());
+			override = functionOverrideResolver(fun->getName());
 		if (!!override && neededFunctions.count(override))
 			m_context.addFunction(*override);
 	}
 	// now add the rest
 	for (FunctionDefinition const* fun: neededFunctions)
-		if (fun->isConstructor() || overrideResolver(fun->getName()) != fun)
+		if (fun->isConstructor() || functionOverrideResolver(fun->getName()) != fun)
 			m_context.addFunction(*fun);
 
 	// Call constructors in base-to-derived order.
@@ -150,11 +165,7 @@ void Compiler::appendBaseConstructorCall(FunctionDefinition const& _constructor,
 	FunctionType constructorType(_constructor);
 	eth::AssemblyItem returnLabel = m_context.pushNewTag();
 	for (unsigned i = 0; i < _arguments.size(); ++i)
-	{
-		compileExpression(*_arguments[i]);
-		ExpressionCompiler::appendTypeConversion(m_context, *_arguments[i]->getType(),
-												 *constructorType.getParameterTypes()[i]);
-	}
+		compileExpression(*_arguments[i], constructorType.getParameterTypes()[i]);
 	m_context.appendJumpTo(m_context.getFunctionEntryLabel(_constructor));
 	m_context << returnLabel;
 }
@@ -179,9 +190,10 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 }
 
 set<FunctionDefinition const*> Compiler::getFunctionsCalled(set<ASTNode const*> const& _nodes,
-						function<FunctionDefinition const*(string const&)> const& _resolveOverrides)
+						function<FunctionDefinition const*(string const&)> const& _resolveFunctionOverrides,
+						function<ModifierDefinition const*(string const&)> const& _resolveModifierOverrides)
 {
-	CallGraph callgraph(_resolveOverrides);
+	CallGraph callgraph(_resolveFunctionOverrides, _resolveModifierOverrides);
 	for (ASTNode const* node: _nodes)
 		callgraph.addNode(*node);
 	return callgraph.getCalls();
@@ -280,20 +292,28 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	m_returnTag = m_context.newTag();
 	m_breakTags.clear();
 	m_continueTags.clear();
+	m_stackCleanupForReturn = 0;
+	m_currentFunction = &_function;
+	m_modifierDepth = 0;
 
 	m_context << m_context.getFunctionEntryLabel(_function);
 
 	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
 	// reserve additional slots: [retarg0] ... [retargm] [localvar0] ... [localvarp]
 
+	unsigned parametersSize = CompilerUtils::getSizeOnStack(_function.getParameters());
+	m_context.adjustStackOffset(parametersSize);
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
-		m_context.addVariable(*variable);
+	{
+		m_context.addVariable(*variable, parametersSize);
+		parametersSize -= variable->getType()->getSizeOnStack();
+	}
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.getReturnParameters())
 		m_context.addAndInitializeVariable(*variable);
 	for (VariableDeclaration const* localVariable: _function.getLocalVariables())
 		m_context.addAndInitializeVariable(*localVariable);
 
-	_function.getBody().accept(*this);
+	appendModifierOrFunctionCode();
 
 	m_context << m_returnTag;
 
@@ -420,13 +440,15 @@ bool Compiler::visit(Return const& _return)
 	//@todo modifications are needed to make this work with functions returning multiple values
 	if (Expression const* expression = _return.getExpression())
 	{
-		compileExpression(*expression);
-		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters().getParameters().front();
-		ExpressionCompiler::appendTypeConversion(m_context, *expression->getType(), *firstVariable.getType());
-
+		solAssert(_return.getFunctionReturnParameters(), "Invalid return parameters pointer.");
+		VariableDeclaration const& firstVariable = *_return.getFunctionReturnParameters()->getParameters().front();
+		compileExpression(*expression, firstVariable.getType());
 		CompilerUtils(m_context).moveToStackVariable(firstVariable);
 	}
+	for (unsigned i = 0; i < m_stackCleanupForReturn; ++i)
+		m_context << eth::Instruction::POP;
 	m_context.appendJumpTo(m_returnTag);
+	m_context.adjustStackOffset(m_stackCleanupForReturn);
 	return false;
 }
 
@@ -434,10 +456,7 @@ bool Compiler::visit(VariableDefinition const& _variableDefinition)
 {
 	if (Expression const* expression = _variableDefinition.getExpression())
 	{
-		compileExpression(*expression);
-		ExpressionCompiler::appendTypeConversion(m_context,
-												 *expression->getType(),
-												 *_variableDefinition.getDeclaration().getType());
+		compileExpression(*expression, _variableDefinition.getDeclaration().getType());
 		CompilerUtils(m_context).moveToStackVariable(_variableDefinition.getDeclaration());
 	}
 	return false;
@@ -451,9 +470,51 @@ bool Compiler::visit(ExpressionStatement const& _expressionStatement)
 	return false;
 }
 
-void Compiler::compileExpression(Expression const& _expression)
+bool Compiler::visit(PlaceholderStatement const&)
+{
+	++m_modifierDepth;
+	appendModifierOrFunctionCode();
+	--m_modifierDepth;
+	return true;
+}
+
+void Compiler::appendModifierOrFunctionCode()
+{
+	solAssert(m_currentFunction, "");
+	if (m_modifierDepth >= m_currentFunction->getModifiers().size())
+		m_currentFunction->getBody().accept(*this);
+	else
+	{
+		ASTPointer<ModifierInvocation> const& modifierInvocation = m_currentFunction->getModifiers()[m_modifierDepth];
+
+		ModifierDefinition const& modifier = m_context.getFunctionModifier(modifierInvocation->getName()->getName());
+		solAssert(modifier.getParameters().size() == modifierInvocation->getArguments().size(), "");
+		for (unsigned i = 0; i < modifier.getParameters().size(); ++i)
+		{
+			m_context.addVariable(*modifier.getParameters()[i]);
+			compileExpression(*modifierInvocation->getArguments()[i],
+							  modifier.getParameters()[i]->getType());
+		}
+		for (VariableDeclaration const* localVariable: modifier.getLocalVariables())
+			m_context.addAndInitializeVariable(*localVariable);
+
+		unsigned const c_stackSurplus = CompilerUtils::getSizeOnStack(modifier.getParameters()) +
+										CompilerUtils::getSizeOnStack(modifier.getLocalVariables());
+		m_stackCleanupForReturn += c_stackSurplus;
+
+		modifier.getBody().accept(*this);
+
+		for (unsigned i = 0; i < c_stackSurplus; ++i)
+			m_context << eth::Instruction::POP;
+		m_stackCleanupForReturn -= c_stackSurplus;
+	}
+}
+
+void Compiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)
 {
 	ExpressionCompiler::compileExpression(m_context, _expression, m_optimize);
+	if (_targetType)
+		ExpressionCompiler::appendTypeConversion(m_context, *_expression.getType(), *_targetType);
 }
 
 }

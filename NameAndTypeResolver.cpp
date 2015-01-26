@@ -60,6 +60,11 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		ReferencesResolver resolver(*structDef, *this, &_contract, nullptr);
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		ReferencesResolver resolver(*variable, *this, &_contract, nullptr);
+	for (ASTPointer<ModifierDefinition> const& modifier: _contract.getFunctionModifiers())
+	{
+		m_currentScope = &m_scopes[modifier.get()];
+		ReferencesResolver resolver(*modifier, *this, &_contract, nullptr);
+	}
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 	{
 		m_currentScope = &m_scopes[function.get()];
@@ -227,6 +232,19 @@ void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
 	closeCurrentScope();
 }
 
+bool DeclarationRegistrationHelper::visit(ModifierDefinition& _modifier)
+{
+	registerDeclaration(_modifier, true);
+	m_currentFunction = &_modifier;
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
+{
+	m_currentFunction = nullptr;
+	closeCurrentScope();
+}
+
 void DeclarationRegistrationHelper::endVisit(VariableDefinition& _variableDefinition)
 {
 	// Register the local variables with the function
@@ -293,8 +311,7 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 
 bool ReferencesResolver::visit(Return& _return)
 {
-	solAssert(m_returnParameters, "Return parameters not set.");
-	_return.setFunctionReturnParameters(*m_returnParameters);
+	_return.setFunctionReturnParameters(m_returnParameters);
 	return true;
 }
 

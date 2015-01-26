@@ -1,14 +1,14 @@
 ContractDefinition = 'contract' Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
-ContractPart = VariableDeclaration ';' | StructDefinition |
+ContractPart = VariableDeclaration ';' | StructDefinition | ModifierDefinition |
                FunctionDefinition | 'public:' | 'private:'
 
 InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration (';' VariableDeclaration)* )? '}
-
-FunctionDefinition = 'function' Identifier ParameterList 'const'?
+ModifierDefinition = 'modifier' Identifier ParameterList? Block
+FunctionDefinition = 'function' Identifier ParameterList ( Identifier | 'constant' )*
                      ( 'returns' ParameterList )? Block
 ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
