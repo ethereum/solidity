@@ -724,6 +724,38 @@ MemberList const& TypeType::getMembers() const
 	return *m_members;
 }
 
+ModifierType::ModifierType(const ModifierDefinition& _modifier)
+{
+	TypePointers params;
+	params.reserve(_modifier.getParameters().size());
+	for (ASTPointer<VariableDeclaration> const& var: _modifier.getParameters())
+		params.push_back(var->getType());
+	swap(params, m_parameterTypes);
+}
+
+bool ModifierType::operator==(Type const& _other) const
+{
+	if (_other.getCategory() != getCategory())
+		return false;
+	ModifierType const& other = dynamic_cast<ModifierType const&>(_other);
+
+	if (m_parameterTypes.size() != other.m_parameterTypes.size())
+		return false;
+	auto typeCompare = [](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; };
+
+	if (!equal(m_parameterTypes.cbegin(), m_parameterTypes.cend(),
+			   other.m_parameterTypes.cbegin(), typeCompare))
+		return false;
+	return true;
+}
+
+string ModifierType::toString() const
+{
+	string name = "modifier (";
+	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
+		name += (*it)->toString() + (it + 1 == m_parameterTypes.end() ? "" : ",");
+	return name + ")";
+}
 
 MagicType::MagicType(MagicType::Kind _kind):
 	m_kind(_kind)

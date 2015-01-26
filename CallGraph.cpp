@@ -33,7 +33,11 @@ namespace solidity
 
 void CallGraph::addNode(ASTNode const& _node)
 {
-	_node.accept(*this);
+	if (!m_nodesSeen.count(&_node))
+	{
+		m_workQueue.push(&_node);
+		m_nodesSeen.insert(&_node);
+	}
 }
 
 set<FunctionDefinition const*> const& CallGraph::getCalls()
@@ -53,20 +57,26 @@ void CallGraph::computeCallGraph()
 
 bool CallGraph::visit(Identifier const& _identifier)
 {
-	FunctionDefinition const* fun = dynamic_cast<FunctionDefinition const*>(_identifier.getReferencedDeclaration());
-	if (fun)
+	if (auto fun = dynamic_cast<FunctionDefinition const*>(_identifier.getReferencedDeclaration()))
 	{
-		if (m_overrideResolver)
-			fun = (*m_overrideResolver)(fun->getName());
+		if (m_functionOverrideResolver)
+			fun = (*m_functionOverrideResolver)(fun->getName());
 		solAssert(fun, "Error finding override for function " + fun->getName());
-		addFunction(*fun);
+		addNode(*fun);
+	}
+	if (auto modifier = dynamic_cast<ModifierDefinition const*>(_identifier.getReferencedDeclaration()))
+	{
+		if (m_modifierOverrideResolver)
+			modifier = (*m_modifierOverrideResolver)(modifier->getName());
+		solAssert(modifier, "Error finding override for modifier " + modifier->getName());
+		addNode(*modifier);
 	}
 	return true;
 }
 
 bool CallGraph::visit(FunctionDefinition const& _function)
 {
-	addFunction(_function);
+	m_functionsSeen.insert(&_function);
 	return true;
 }
 
@@ -83,21 +93,12 @@ bool CallGraph::visit(MemberAccess const& _memberAccess)
 			for (ASTPointer<FunctionDefinition> const& function: contract.getDefinedFunctions())
 				if (function->getName() == _memberAccess.getMemberName())
 				{
-					addFunction(*function);
+					addNode(*function);
 					return true;
 				}
 		}
 	}
 	return true;
-}
-
-void CallGraph::addFunction(FunctionDefinition const& _function)
-{
-	if (!m_functionsSeen.count(&_function))
-	{
-		m_functionsSeen.insert(&_function);
-		m_workQueue.push(&_function);
-	}
 }
 
 }

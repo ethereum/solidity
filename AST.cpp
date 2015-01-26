@@ -41,10 +41,15 @@ TypeError ASTNode::createTypeError(string const& _description) const
 	return TypeError() << errinfo_sourceLocation(getLocation()) << errinfo_comment(_description);
 }
 
+TypePointer ContractDefinition::getType(ContractDefinition const* _currentContract) const
+{
+	return make_shared<TypeType>(make_shared<ContractType>(*this), _currentContract);
+}
+
 void ContractDefinition::checkTypeRequirements()
 {
-	for (ASTPointer<InheritanceSpecifier> const& base: getBaseContracts())
-		base->checkTypeRequirements();
+	for (ASTPointer<InheritanceSpecifier> const& baseSpecifier: getBaseContracts())
+		baseSpecifier->checkTypeRequirements();
 
 	checkIllegalOverrides();
 
@@ -52,6 +57,9 @@ void ContractDefinition::checkTypeRequirements()
 	if (constructor && !constructor->getReturnParameters().empty())
 		BOOST_THROW_EXCEPTION(constructor->getReturnParameterList()->createTypeError(
 								  "Non-empty \"returns\" directive for constructor."));
+
+	for (ASTPointer<ModifierDefinition> const& modifier: getFunctionModifiers())
+		modifier->checkTypeRequirements();
 
 	for (ASTPointer<FunctionDefinition> const& function: getDefinedFunctions())
 		function->checkTypeRequirements();
@@ -89,15 +97,22 @@ FunctionDefinition const* ContractDefinition::getConstructor() const
 
 void ContractDefinition::checkIllegalOverrides() const
 {
+	// TODO unify this at a later point. for this we need to put the constness and the access specifier
+	// into the types
 	map<string, FunctionDefinition const*> functions;
+	map<string, ModifierDefinition const*> modifiers;
 
 	// We search from derived to base, so the stored item causes the error.
 	for (ContractDefinition const* contract: getLinearizedBaseContracts())
+	{
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
 		{
 			if (function->isConstructor())
-				continue; // constructors can neither be overriden nor override anything
-			FunctionDefinition const*& override = functions[function->getName()];
+				continue; // constructors can neither be overridden nor override anything
+			string const& name = function->getName();
+			if (modifiers.count(name))
+				BOOST_THROW_EXCEPTION(modifiers[name]->createTypeError("Override changes function to modifier."));
+			FunctionDefinition const*& override = functions[name];
 			if (!override)
 				override = function.get();
 			else if (override->isPublic() != function->isPublic() ||
@@ -105,6 +120,18 @@ void ContractDefinition::checkIllegalOverrides() const
 					 FunctionType(*override) != FunctionType(*function))
 				BOOST_THROW_EXCEPTION(override->createTypeError("Override changes extended function signature."));
 		}
+		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
+		{
+			string const& name = modifier->getName();
+			if (functions.count(name))
+				BOOST_THROW_EXCEPTION(functions[name]->createTypeError("Override changes modifier to function."));
+			ModifierDefinition const*& override = modifiers[name];
+			if (!override)
+				override = modifier.get();
+			else if (ModifierType(*override) != ModifierType(*modifier))
+				BOOST_THROW_EXCEPTION(override->createTypeError("Override changes modifier signature."));
+		}
+	}
 }
 
 vector<pair<FixedHash<4>, FunctionDefinition const*>> const& ContractDefinition::getInterfaceFunctionList() const
@@ -141,6 +168,11 @@ void InheritanceSpecifier::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in constructer call."));
 }
 
+TypePointer StructDefinition::getType(ContractDefinition const*) const
+{
+	return make_shared<TypeType>(make_shared<StructType>(*this));
+}
+
 void StructDefinition::checkMemberTypes() const
 {
 	for (ASTPointer<VariableDeclaration> const& member: getMembers())
@@ -169,11 +201,18 @@ void StructDefinition::checkRecursion() const
 	}
 }
 
+TypePointer FunctionDefinition::getType(ContractDefinition const*) const
+{
+	return make_shared<FunctionType>(*this);
+}
+
 void FunctionDefinition::checkTypeRequirements()
 {
 	for (ASTPointer<VariableDeclaration> const& var: getParameters() + getReturnParameters())
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
+	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
+		modifier->checkTypeRequirements();
 
 	m_body->checkTypeRequirements();
 }
@@ -181,6 +220,40 @@ void FunctionDefinition::checkTypeRequirements()
 string FunctionDefinition::getCanonicalSignature() const
 {
 	return getName() + FunctionType(*this).getCanonicalSignature();
+}
+
+Declaration::LValueType VariableDeclaration::getLValueType() const
+{
+	if (dynamic_cast<FunctionDefinition const*>(getScope()) || dynamic_cast<ModifierDefinition const*>(getScope()))
+		return Declaration::LValueType::LOCAL;
+	else
+		return Declaration::LValueType::STORAGE;
+}
+
+TypePointer ModifierDefinition::getType(ContractDefinition const*) const
+{
+	return make_shared<ModifierType>(*this);
+}
+
+void ModifierDefinition::checkTypeRequirements()
+{
+	m_body->checkTypeRequirements();
+}
+
+void ModifierInvocation::checkTypeRequirements()
+{
+	m_modifierName->checkTypeRequirements();
+	for (ASTPointer<Expression> const& argument: m_arguments)
+		argument->checkTypeRequirements();
+
+	ModifierDefinition const* modifier = dynamic_cast<ModifierDefinition const*>(m_modifierName->getReferencedDeclaration());
+	solAssert(modifier, "Function modifier not found.");
+	vector<ASTPointer<VariableDeclaration>> const& parameters = modifier->getParameters();
+	if (parameters.size() != m_arguments.size())
+		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for modifier invocation."));
+	for (size_t i = 0; i < m_arguments.size(); ++i)
+		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
+			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in modifier invocation."));
 }
 
 void Block::checkTypeRequirements()
@@ -218,7 +291,8 @@ void Return::checkTypeRequirements()
 {
 	if (!m_expression)
 		return;
-	solAssert(m_returnParameters, "Return parameters not assigned.");
+	if (!m_returnParameters)
+		BOOST_THROW_EXCEPTION(createTypeError("Return arguments not allowed."));
 	if (m_returnParameters->getParameters().size() != 1)
 		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
 											  "than in returns declaration."));
@@ -394,7 +468,7 @@ void MemberAccess::checkTypeRequirements()
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
 											  "visible in " + type.toString()));
 	//@todo later, this will not always be STORAGE
-	m_lvalue = type.getCategory() == Type::Category::STRUCT ? LValueType::STORAGE : LValueType::NONE;
+	m_lvalue = type.getCategory() == Type::Category::STRUCT ? Declaration::LValueType::STORAGE : Declaration::LValueType::NONE;
 }
 
 void IndexAccess::checkTypeRequirements()
@@ -406,52 +480,17 @@ void IndexAccess::checkTypeRequirements()
 	MappingType const& type = dynamic_cast<MappingType const&>(*m_base->getType());
 	m_index->expectType(*type.getKeyType());
 	m_type = type.getValueType();
-	m_lvalue = LValueType::STORAGE;
+	m_lvalue = Declaration::LValueType::STORAGE;
 }
 
 void Identifier::checkTypeRequirements()
 {
 	solAssert(m_referencedDeclaration, "Identifier not resolved.");
 
-	VariableDeclaration const* variable = dynamic_cast<VariableDeclaration const*>(m_referencedDeclaration);
-	if (variable)
-	{
-		if (!variable->getType())
-			BOOST_THROW_EXCEPTION(createTypeError("Variable referenced before type could be determined."));
-		m_type = variable->getType();
-		m_lvalue = variable->isLocalVariable() ? LValueType::LOCAL : LValueType::STORAGE;
-		return;
-	}
-	//@todo can we unify these with TypeName::toType()?
-	StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(m_referencedDeclaration);
-	if (structDef)
-	{
-		// note that we do not have a struct type here
-		m_type = make_shared<TypeType>(make_shared<StructType>(*structDef));
-		return;
-	}
-	FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(m_referencedDeclaration);
-	if (functionDef)
-	{
-		// a function reference is not a TypeType, because calling a TypeType converts to the type.
-		// Calling a function (e.g. function(12), otherContract.function(34)) does not do a type
-		// conversion.
-		m_type = make_shared<FunctionType>(*functionDef);
-		return;
-	}
-	ContractDefinition const* contractDef = dynamic_cast<ContractDefinition const*>(m_referencedDeclaration);
-	if (contractDef)
-	{
-		m_type = make_shared<TypeType>(make_shared<ContractType>(*contractDef), m_currentContract);
-		return;
-	}
-	MagicVariableDeclaration const* magicVariable = dynamic_cast<MagicVariableDeclaration const*>(m_referencedDeclaration);
-	if (magicVariable)
-	{
-		m_type = magicVariable->getType();
-		return;
-	}
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Declaration reference of unknown/forbidden type."));
+	m_lvalue = m_referencedDeclaration->getLValueType();
+	m_type = m_referencedDeclaration->getType(m_currentContract);
+	if (!m_type)
+		BOOST_THROW_EXCEPTION(createTypeError("Declaration referenced before type could be determined."));
 }
 
 void ElementaryTypeNameExpression::checkTypeRequirements()
