@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
 
-	BOOST_REQUIRE_NO_THROW(function = functions.at(1)); // 1 since, 0 is the index of stateVar accessor
+	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
 	checkFunctionNatspec(function, "This is a test function\n"
 						 " and it has 2 lines");
 }

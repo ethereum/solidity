@@ -645,9 +645,9 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionDescription function = retrieveFunctionBySignature(contract, "foo()");
 	BOOST_CHECK_MESSAGE(function.getDeclaration() != nullptr, "Could not find the accessor function");
-	// vector<ParamDescription> const expected({ParamDescription("", "uint256")});
-	// BOOST_CHECK_EQUAL_COLLECTIONS(function.getReturnParameters().begin(), function.getReturnParameters().end(),
-	// 							  expected.begin(), expected.end());
+	auto returnParams = function.getReturnParameters();
+	BOOST_CHECK_EQUAL(returnParams.at(0).getType(), "uint256");
+	BOOST_CHECK(function.isConstant());
 }
 
 BOOST_AUTO_TEST_CASE(private_state_variable)
