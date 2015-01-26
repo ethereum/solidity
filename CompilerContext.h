@@ -44,7 +44,7 @@ public:
 	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
-	void addFunction(FunctionDefinition const& _function);
+	void addFunction(Declaration const& _decl);
 	/// Adds the given modifier to the list by name if the name is not present already.
 	void addModifier(ModifierDefinition const& _modifier);
 

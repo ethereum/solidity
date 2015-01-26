@@ -43,9 +43,13 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 
 	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
 	{
-		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-			if (!function->isConstructor())
-				m_context.addFunction(*function);
+		for (auto const& it: contract->getInterfaceFunctions())
+		{
+			auto funcDef = it.second.getFunctionDefinition();
+			if (funcDef && funcDef->isConstructor())
+				continue;
+			m_context.addFunction(*it.second.getDeclaration());
+		}
 		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
 			m_context.addModifier(*modifier);
 	}
