@@ -949,9 +949,6 @@ BOOST_AUTO_TEST_CASE(convert_string_to_string)
 			}
 		})";
 	compileAndRun(sourceCode);
-	string s = "abc";
-	auto res = callContractFunction("pipeTrough(string3)", "abc");
-	auto goldenRes = encodeArgs(s);
 	BOOST_CHECK(callContractFunction("pipeTrough(string3)", "abc") == encodeArgs("abc"));
 }
 
@@ -977,8 +974,8 @@ BOOST_AUTO_TEST_CASE(convert_hash_to_string_different_size)
 			}
 		})";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("hashToString(hash160)", u160("0x00000000000000616263")) ==
-						encodeArgs(u256("0x0000000000000000000000000000000000616263000000000000000000000000")));
+	BOOST_CHECK(callContractFunction("hashToString(hash160)", u160("0x6161626361626361626361616263616263616263")) ==
+						encodeArgs(string("aabcabcabcaabcabcabc")));
 }
 
 BOOST_AUTO_TEST_CASE(convert_string_to_hash_same_size)
@@ -1003,8 +1000,22 @@ BOOST_AUTO_TEST_CASE(convert_string_to_hash_different_size)
 			}
 		})";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("stringToHash(string20)", u256("0x0000000000000000000000000000000000616263000000000000000000000000")) ==
-					encodeArgs(u160("0x00000000000000616263")));
+	BOOST_CHECK(callContractFunction("stringToHash(string20)", string("aabcabcabcaabcabcabc")) ==
+					encodeArgs(u160("0x6161626361626361626361616263616263616263")));
+}
+
+
+BOOST_AUTO_TEST_CASE(convert_string_to_hash_different_min_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function stringToHash(string1 s) returns (hash8 h) {
+				return hash8(s);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("stringToHash(string1)", string("a")) ==
+					encodeArgs(u128("0x00000000000000000000000000000061")));
 }
 
 BOOST_AUTO_TEST_CASE(send_ether)
