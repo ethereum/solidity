@@ -118,8 +118,11 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 			CompilerContext context;
 			for (vector<string> const& function: _functions)
 				context.addFunction(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
+			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
+			context.adjustStackOffset(parametersSize);
 			for (vector<string> const& variable: _localVariables)
-				context.addVariable(dynamic_cast<VariableDeclaration const&>(resolveDeclaration(variable, resolver)));
+				context.addVariable(dynamic_cast<VariableDeclaration const&>(resolveDeclaration(variable, resolver)),
+									parametersSize--);
 
 			ExpressionCompiler::compileExpression(context, *extractor.getExpression());
 
