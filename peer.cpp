@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(host)
 	
 	host1.addNode(node2, "127.0.0.1", host2prefs.listenPort, host2prefs.listenPort);
 	
-	this_thread::sleep_for(chrono::seconds(1));
+	this_thread::sleep_for(chrono::seconds(3));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

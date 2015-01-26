@@ -34,11 +34,20 @@ BOOST_AUTO_TEST_CASE(topic)
 {
 	cnote << "Testing Whisper...";
 	auto oldLogVerbosity = g_logVerbosity;
-	g_logVerbosity = 5;
+	g_logVerbosity = 0;
 
-	Host phOther("Test", NetworkPreferences(30303, "127.0.0.1", true, true));
+	Host phOther("Test", NetworkPreferences(30303, "127.0.0.1", false, true));
 	auto whOther = phOther.registerCapability(new WhisperHost());
 	phOther.start();
+	
+	Host ph("Test", NetworkPreferences(30300, "127.0.0.1", false, true));
+	auto wh = ph.registerCapability(new WhisperHost());
+	ph.start();
+	
+	this_thread::sleep_for(chrono::milliseconds(100));
+	ph.addNode(phOther.id(), "127.0.0.1", 30303, 30303);
+	
+	this_thread::sleep_for(chrono::milliseconds(500));
 	
 	bool started = false;
 	unsigned result = 0;
@@ -61,16 +70,11 @@ BOOST_AUTO_TEST_CASE(topic)
 			}
 			this_thread::sleep_for(chrono::milliseconds(50));
 		}
+		
 	});
 
-	Host ph("Test", NetworkPreferences(30300, "127.0.0.1", true, true));
-	auto wh = ph.registerCapability(new WhisperHost());
-	ph.start();
-	ph.addNode(phOther.id(), "127.0.0.1", 30303, 30303);
-
-	this_thread::sleep_for(chrono::milliseconds(300));
 	while (!started)
-		this_thread::sleep_for(chrono::milliseconds(25));
+		this_thread::sleep_for(chrono::milliseconds(1));
 
 	
 	KeyPair us = KeyPair::create();
