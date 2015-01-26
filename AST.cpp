@@ -151,7 +151,7 @@ vector<tuple<FixedHash<4>, std::shared_ptr<FunctionType const>, Declaration cons
 				{
 					functionsSeen.insert(f->getName());
 					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
-					m_interfaceFunctionList->push_back(make_tuple(hash, make_shared<FunctionType>(*f), f.get()));
+					m_interfaceFunctionList->push_back(make_tuple(hash, make_shared<FunctionType>(*f, false), f.get()));
 				}
 
 			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())

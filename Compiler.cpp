@@ -43,22 +43,29 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 
 	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
 	{
-		for (auto const& it: contract->getInterfaceFunctions())
-		{
-			auto funcDef = it.second.getFunctionDefinition();
-			if (funcDef && funcDef->isConstructor())
-				continue;
-			m_context.addFunction(*it.second.getDeclaration());
-		}
-		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
+		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
+			if (!function->isConstructor())
+				m_context.addFunction(*function);
+
+		for (ASTPointer<VariableDeclaration> const& vardecl: contract->getStateVariables())
+			if (vardecl->isPublic())
+				m_context.addFunction(*vardecl);
+
+        for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
 			m_context.addModifier(*modifier);
 	}
 
 	appendFunctionSelector(_contract);
 	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
+	{
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
 			if (!function->isConstructor())
 				function->accept(*this);
+
+		for (ASTPointer<VariableDeclaration> const& vardecl: contract->getStateVariables())
+			if (vardecl->isPublic())
+				generateAccessorCode(*vardecl);
+	}
 
 	// Swap the runtime context with the creation-time context
 	swap(m_context, m_runtimeContext);
@@ -283,6 +290,23 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.getLinearizedBaseContracts()))
 		for (ASTPointer<VariableDeclaration> const& variable: contract->getStateVariables())
 			m_context.addStateVariable(*variable);
+}
+
+bool Compiler::generateAccessorCode(VariableDeclaration const& _varDecl)
+{
+	m_context.startNewFunction();
+	m_returnTag = m_context.newTag();
+	m_breakTags.clear();
+	m_continueTags.clear();
+
+	// TODO: Work in progress
+	m_context << m_context.getFunctionEntryLabel(_varDecl);
+	// CompilerUtils(m_context).moveToStackVariable(firstVariable);
+	m_context.appendJumpTo(m_returnTag);
+	m_context << m_returnTag;
+
+	// TODO: perhaps return void if there are no checks?
+	return true;
 }
 
 bool Compiler::visit(FunctionDefinition const& _function)

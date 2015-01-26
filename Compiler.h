@@ -63,6 +63,8 @@ private:
 
 	void registerStateVariables(ContractDefinition const& _contract);
 
+	bool generateAccessorCode(VariableDeclaration const& _varDecl);
+
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(IfStatement const& _ifStatement) override;
 	virtual bool visit(WhileStatement const& _whileStatement) override;
