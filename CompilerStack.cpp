@@ -141,6 +141,9 @@ string CompilerStack::expanded(string const& _sourceCode)
 {
 	const map<string, string> c_standardSources = map<string, string>{
 		{ "Config", "contract Config{function lookup(uint256 service)constant returns(address a){}function kill(){}function unregister(uint256 id){}function register(uint256 id,address service){}}" },
+		{ "Coin", "contract Coin{function isApprovedFor(address _target,address _proxy)constant returns(bool _r){}function isApproved(address _proxy)constant returns(bool _r){}function sendCoinFrom(address _from,uint256 _val,address _to){}function coinBalanceOf(address _a)constant returns(uint256 _r){}function sendCoin(uint256 _val,address _to){}function coinBalance()constant returns(uint256 _r){}function approve(address _a){}}"},
+		{ "CoinReg", "contract CoinReg{function count()constant returns(uint256 r){}function info(uint256 i)constant returns(address addr,string3 name,uint256 denom){}function register(string3 name,uint256 denom){}function unregister(){}}" },
+		{ "coin", "#require CoinReg\ncontract coin {function coin(string3 name, uint denom) {CoinReg(Config().lookup(3)).register(name, denom);}}" },
 		{ "service", "#require Config\ncontract service{function service(uint _n){Config().register(_n, this);}}" },
 		{ "owned", "contract owned{function owned(){owner = msg.sender;}address owner;}" },
 		{ "mortal", "#require owned\ncontract mortal is owned {function kill() { if (msg.sender == owner) suicide(owner); }}" },
