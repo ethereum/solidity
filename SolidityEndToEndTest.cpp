@@ -1754,6 +1754,23 @@ BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
 	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0x4300));
 }
 
+BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint data;
+			function A() mod1 { data |= 2; }
+			modifier mod1 { data |= 1; _ }
+			function getData() returns (uint r) { return data; }
+		}
+		contract C is A {
+			modifier mod1 { data |= 4; _ }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(4 | 2));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
