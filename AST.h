@@ -430,8 +430,8 @@ class VariableDeclaration: public Declaration
 {
 public:
 	VariableDeclaration(Location const& _location, ASTPointer<TypeName> const& _type,
-						ASTPointer<ASTString> const& _name, bool _isPublic):
-		Declaration(_location, _name), m_typeName(_type), m_isPublic(_isPublic) {}
+							ASTPointer<ASTString> const& _name, bool _isPublic, bool _isStateVar = false):
+	Declaration(_location, _name), m_typeName(_type), m_isPublic(_isPublic), m_isStateVariable(_isStateVar) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -445,11 +445,13 @@ public:
 	virtual LValueType getLValueType() const override;
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
 	bool isPublic() const { return m_isPublic; }
+	bool isStateVariable() const { return m_isStateVariable; }
 
 
 private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
 	bool m_isPublic;                    ///< Whether there is an accessor for it or not
+	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
 

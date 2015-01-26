@@ -150,7 +150,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 				 Token::isElementaryTypeName(currentToken))
 		{
 			bool const allowVar = false;
-			stateVariables.push_back(parseVariableDeclaration(allowVar, visibilityIsPublic));
+			stateVariables.push_back(parseVariableDeclaration(allowVar, visibilityIsPublic, true));
 			expectToken(Token::SEMICOLON);
 		}
 		else if (currentToken == Token::MODIFIER)
@@ -245,12 +245,12 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 	return nodeFactory.createNode<StructDefinition>(name, members);
 }
 
-ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(bool _allowVar, bool _isPublic)
+ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(bool _allowVar, bool _isPublic, bool _isStateVariable)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type = parseTypeName(_allowVar);
 	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<VariableDeclaration>(type, expectIdentifierToken(), _isPublic);
+	return nodeFactory.createNode<VariableDeclaration>(type, expectIdentifierToken(), _isPublic, _isStateVariable);
 }
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
