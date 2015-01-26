@@ -475,6 +475,7 @@ bool Compiler::visit(PlaceholderStatement const&)
 	++m_modifierDepth;
 	appendModifierOrFunctionCode();
 	--m_modifierDepth;
+	return true;
 }
 
 void Compiler::appendModifierOrFunctionCode()
