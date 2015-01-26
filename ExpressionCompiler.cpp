@@ -629,17 +629,25 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	Type::Category stackTypeCategory = _typeOnStack.getCategory();
 	Type::Category targetTypeCategory = _targetType.getCategory();
 
-	if (stackTypeCategory == Type::Category::STRING && targetTypeCategory == Type::Category::INTEGER)
+	if (stackTypeCategory == Type::Category::STRING)
 	{
-		// conversion from string to hash. no need to clean the high bit
-		// only to shift right because of opposite alignment
-		IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-		StaticStringType const& sourceStringType = dynamic_cast<StaticStringType const&>(_typeOnStack);
-		if (targetIntegerType.isHash())
+		if (targetTypeCategory == Type::Category::INTEGER)
 		{
-			solAssert(targetIntegerType.getNumBits() == sourceStringType.getNumBytes() * 8, "The size should be the same.");
-			m_context << u256(std::pow(2, 256 - sourceStringType.getNumBytes() * 8)) <<
-					eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			// conversion from string to hash. no need to clean the high bit
+			// only to shift right because of opposite alignment
+			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
+			StaticStringType const& sourceStringType = dynamic_cast<StaticStringType const&>(_typeOnStack);
+			if (targetIntegerType.isHash())
+			{
+				solAssert(targetIntegerType.getNumBits() == sourceStringType.getNumBytes() * 8, "The size should be the same.");
+				m_context << (u256(1) << 256 - sourceStringType.getNumBytes() * 8) <<
+						eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			}
+		}
+		else {
+			solAssert(targetTypeCategory == Type::Category::STRING, "Invalid type conversion requested.");
+			// nothing to do, strings are high-order-bit-aligned
+			//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
 		}
 	}
 	else if (targetTypeCategory == Type::Category::STRING && stackTypeCategory == Type::Category::INTEGER)
@@ -651,7 +659,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 		if (sourceIntegerType.isHash())
 		{
 			solAssert(sourceIntegerType.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
-			m_context << u256(std::pow(2, 256 - sourceIntegerType.getNumBits())) << eth::Instruction::MUL;
+			m_context << (u256(1) << 256 - sourceIntegerType.getNumBits()) << eth::Instruction::MUL;
 		}
 	}
 	else if (stackTypeCategory == Type::Category::INTEGER || stackTypeCategory == Type::Category::CONTRACT ||
@@ -680,12 +688,6 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			else if (_cleanupNeeded)
 				appendHighBitsCleanup(targetType);
 		}
-	}
-	else if (stackTypeCategory == Type::Category::STRING)
-	{
-		solAssert(targetTypeCategory == Type::Category::STRING, "Invalid type conversion requested.");
-		// nothing to do, strings are high-order-bit-aligned
-		//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
 	}
 	else if (_typeOnStack != _targetType)
 		// All other types should not be convertible to non-equal types.
