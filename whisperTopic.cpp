@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(topic)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
 	Host ph("Test", NetworkPreferences(50300, "", false, true));
-	auto wh = ph.registerCapability(new WhisperHost());
+	shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
 	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
 	this_thread::sleep_for(chrono::milliseconds(500));
