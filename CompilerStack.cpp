@@ -130,7 +130,7 @@ const map<string, string> StandardSources = map<string, string>{
 	{ "owned", "contract owned{function owned(){owner = msg.sender;}address owner;}" },
 	{ "mortal", "import \"owned\";\ncontract mortal is owned {function kill() { if (msg.sender == owner) suicide(owner); }}" },
 	{ "NameReg", "contract NameReg{function register(string32 name){}function addressOf(string32 name)constant returns(address addr){}function unregister(){}function nameOf(address addr)constant returns(string32 name){}}" },
-	{ "named", "import \"Config\";\nimport \"NameReg\";\ncontract named is mortal, owned {function named(string32 name) {NameReg(Config().lookup(1)).register(name);}}" },
+	{ "named", "import \"Config\";\nimport \"NameReg\";\ncontract named {function named(string32 name) {NameReg(Config().lookup(1)).register(name);}}" },
 	{ "std", "import \"owned\";\nimport \"mortal\";\nimport \"Config\";\nimport \"NameReg\";\nimport \"named\";\n" },
 */};
 
@@ -141,10 +141,11 @@ string CompilerStack::expanded(string const& _sourceCode)
 {
 	const map<string, string> c_standardSources = map<string, string>{
 		{ "Config", "contract Config{function lookup(uint256 service)constant returns(address a){}function kill(){}function unregister(uint256 id){}function register(uint256 id,address service){}}" },
+		{ "service", "#require Config\ncontract service{function service(uint _n){Config().register(_n, this);}}" },
 		{ "owned", "contract owned{function owned(){owner = msg.sender;}address owner;}" },
 		{ "mortal", "#require owned\ncontract mortal is owned {function kill() { if (msg.sender == owner) suicide(owner); }}" },
 		{ "NameReg", "contract NameReg{function register(string32 name){}function addressOf(string32 name)constant returns(address addr){}function unregister(){}function nameOf(address addr)constant returns(string32 name){}}" },
-		{ "named", "#require Config NameReg\ncontract named is mortal, owned {function named(string32 name) {NameReg(Config().lookup(1)).register(name);}}" },
+		{ "named", "#require Config NameReg\ncontract named {function named(string32 name) {NameReg(Config().lookup(1)).register(name);}}" },
 		{ "std", "#require owned mortal Config NameReg named" },
 	};
 
