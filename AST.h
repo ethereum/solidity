@@ -166,9 +166,6 @@ struct ParamDescription
 	ParamDescription(std::string const& _name, std::string const& _type):
 		m_description(_name, _type){}
 
-	bool operator!=(ParamDescription const& _other) const;
-	std::ostream& operator<<(std::ostream& os) const;
-
 	std::string getName() const;
 	std::string getType() const;
 

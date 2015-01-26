@@ -606,7 +606,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
-	m_location(Location::INTERNAL)
+	m_location(Location::EXTERNAL)
 {
 	TypePointers params;
 	vector<string> paramNames;

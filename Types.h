@@ -378,7 +378,7 @@ public:
 	virtual MemberList const& getMembers() const override;
 
 	Location const& getLocation() const { return m_location; }
-	std::string getCanonicalSignature(std::string const &_name) const;
+	std::string getCanonicalSignature(std::string const& _name) const;
 
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }

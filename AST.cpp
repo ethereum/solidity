@@ -519,17 +519,6 @@ void Literal::checkTypeRequirements()
 		BOOST_THROW_EXCEPTION(createTypeError("Invalid literal value."));
 }
 
-
-bool ParamDescription::operator!=(ParamDescription const& _other) const
-{
-	return m_description.first == _other.getName() && m_description.second == _other.getType();
-}
-
-std::ostream& ParamDescription::operator<<(std::ostream& os) const
-{
-	return os << m_description.first << ":" << m_description.second;
-}
-
 std::string ParamDescription::getName() const
 {
 	return m_description.first;
@@ -539,7 +528,6 @@ std::string ParamDescription::getType() const
 {
 	return m_description.second;
 }
-
 
 ASTPointer<ASTString> FunctionDescription::getDocumentation() const
 {
@@ -575,7 +563,7 @@ vector<ParamDescription> const FunctionDescription::getParameters() const
 	if (function)
 	{
 		vector<ParamDescription> paramsDescription;
-		for (auto const& param: function->getParameters())
+		for (auto const& param: function->getReturnParameters())
 			paramsDescription.push_back(ParamDescription(param->getName(), param->getType()->toString()));
 
 		return paramsDescription;
