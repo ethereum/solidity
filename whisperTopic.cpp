@@ -75,7 +75,6 @@ BOOST_AUTO_TEST_CASE(topic)
 
 	while (!started)
 		this_thread::sleep_for(chrono::milliseconds(1));
-
 	
 	KeyPair us = KeyPair::create();
 	for (int i = 0; i < 10; ++i)
