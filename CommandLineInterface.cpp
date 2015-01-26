@@ -205,10 +205,6 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 bool CommandLineInterface::parseArguments(int argc, char** argv)
 {
-#define OUTPUT_TYPE_STR "Legal values:\n"				\
-		"\tstdout: Print it to standard output\n"		\
-		"\tfile: Print it to a file with same name\n"	\
-		"\tboth: Print both to a file and the stdout\n"
 	// Declare the supported options.
 	po::options_description desc("Allowed options");
 	desc.add_options()
@@ -216,25 +212,24 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 		("version", "Show version and exit")
 		("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
 		("input-file", po::value<vector<string>>(), "input file")
-		(g_argAstStr.c_str(), po::value<OutputType>(),
-		 "Request to output the AST of the contract. " OUTPUT_TYPE_STR)
-		(g_argAstJson.c_str(), po::value<OutputType>(),
-		 "Request to output the AST of the contract in JSON format. " OUTPUT_TYPE_STR)
-		(g_argAsmStr.c_str(), po::value<OutputType>(),
-		 "Request to output the EVM assembly of the contract. " OUTPUT_TYPE_STR)
-		(g_argOpcodesStr.c_str(), po::value<OutputType>(),
-		 "Request to output the Opcodes of the contract. " OUTPUT_TYPE_STR)
-		(g_argBinaryStr.c_str(), po::value<OutputType>(),
-		 "Request to output the contract in binary (hexadecimal). " OUTPUT_TYPE_STR)
-		(g_argAbiStr.c_str(), po::value<OutputType>(),
-		 "Request to output the contract's JSON ABI interface. "  OUTPUT_TYPE_STR)
-		(g_argSolAbiStr.c_str(), po::value<OutputType>(),
-		 "Request to output the contract's Solidity ABI interface. "  OUTPUT_TYPE_STR)
-		(g_argNatspecUserStr.c_str(), po::value<OutputType>(),
-		 "Request to output the contract's Natspec user documentation. " OUTPUT_TYPE_STR)
-		(g_argNatspecDevStr.c_str(), po::value<OutputType>(),
-		 "Request to output the contract's Natspec developer documentation. " OUTPUT_TYPE_STR);
-#undef OUTPUT_TYPE_STR
+		(g_argAstStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the AST of the contract.")
+		(g_argAstJson.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the AST of the contract in JSON format.")
+		(g_argAsmStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the EVM assembly of the contract.")
+		(g_argOpcodesStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the Opcodes of the contract.")
+		(g_argBinaryStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the contract in binary (hexadecimal).")
+		(g_argAbiStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the contract's JSON ABI interface.")
+		(g_argSolAbiStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the contract's Solidity ABI interface.")
+		(g_argNatspecUserStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the contract's Natspec user documentation.")
+		(g_argNatspecDevStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+		 "Request to output the contract's Natspec developer documentation.");
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description p;
