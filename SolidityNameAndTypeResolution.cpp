@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
 		contract root { function rootFunction() {} }
 		contract inter1 is root { function f() {} }
 		contract inter2 is root { function f() {} }
-		contract derived is inter1, inter2, root {
+		contract derived is root, inter2, inter1 {
 			function g() { f(); rootFunction(); }
 		}
 	)";

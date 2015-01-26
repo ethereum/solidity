@@ -1545,7 +1545,7 @@ BOOST_AUTO_TEST_CASE(single_copy_with_multiple_inheritance)
 		}
 		contract A is Base { function setViaA(uint i) { setData(i); } }
 		contract B is Base { function getViaB() returns (uint i) { return getViaBase(); } }
-		contract Derived is A, B, Base { }
+		contract Derived is Base, B, A { }
 	)";
 	compileAndRun(sourceCode, 0, "Derived");
 	BOOST_CHECK(callContractFunction("getViaB()") == encodeArgs(0));
@@ -1642,7 +1642,7 @@ BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
 			}
 		}
 		contract Base is BaseBase(2) { }
-		contract Derived is Base, BaseBase(3) {
+		contract Derived is BaseBase(3), Base {
 			function getA() returns (uint r) { return m_a; }
 		}
 	)";
