@@ -95,6 +95,9 @@ private:
 	unsigned appendArgumentCopyToMemory(TypePointers const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
 										unsigned _memoryOffset = 0);
 
+	/// Appends code for a State Variable accessor function
+	void appendStateVariableAccessor(VariableDeclaration const* _varDecl);
+
 	/**
 	 * Helper class to store and retrieve lvalues to and from various locations.
 	 * All types except STACK store a reference in a slot on the stack, STACK just
@@ -111,6 +114,8 @@ private:
 		/// Set type according to the declaration and retrieve the reference.
 		/// @a _expression is the current expression
 		void fromIdentifier(Identifier const& _identifier, Declaration const& _declaration);
+		/// Convenience function to set type for a state variable and retrieve the reference
+		void fromStateVariable(Declaration const& _varDecl, std::shared_ptr<Type const> const& _type);
 		void reset() { m_type = NONE; m_baseStackOffset = 0; m_size = 0; }
 
 		bool isValid() const { return m_type != NONE; }
@@ -125,6 +130,9 @@ private:
 		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).
 		/// @a _expression is the current expression, used for error reporting.
 		void retrieveValue(Expression const& _expression, bool _remove = false) const;
+		/// Convenience function to retrive Value from Storage. Specific version of
+		/// @ref retrieveValue
+		void retrieveValueFromStorage(Expression const& _expression, bool _remove = false) const;
 		/// Stores a value (from the stack directly beneath the reference, which is assumed to
 		/// be on the top of the stack, if any) in the lvalue and removes the reference.
 		/// Also removes the stored value from the stack if @a _move is
