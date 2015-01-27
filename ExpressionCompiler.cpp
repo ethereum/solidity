@@ -636,11 +636,11 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			// conversion from string to hash. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			StaticStringType const& sourceStringType = dynamic_cast<StaticStringType const&>(_typeOnStack);
+			StaticStringType const& typeOnStack = dynamic_cast<StaticStringType const&>(_typeOnStack);
 			if (targetIntegerType.isHash())
 			{
-				solAssert(targetIntegerType.getNumBits() == sourceStringType.getNumBytes() * 8, "The size should be the same.");
-				m_context << (u256(1) << 256 - sourceStringType.getNumBytes() * 8) <<
+				solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
+				m_context << (u256(1) << 256 - typeOnStack.getNumBytes() * 8) <<
 						eth::Instruction::SWAP1 << eth::Instruction::DIV;
 			}
 		}
@@ -650,43 +650,45 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
 		}
 	}
-	else if (targetTypeCategory == Type::Category::STRING && stackTypeCategory == Type::Category::INTEGER)
-	{
-		// conversion from hash to string. no need to clean the high bit
-		// only to shift left because of opposite alignment
-		StaticStringType const& targetStringType = dynamic_cast<StaticStringType const&>(_targetType);
-		IntegerType const& sourceIntegerType = dynamic_cast<IntegerType const&>(_typeOnStack);
-		if (sourceIntegerType.isHash())
-		{
-			solAssert(sourceIntegerType.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
-			m_context << (u256(1) << 256 - sourceIntegerType.getNumBits()) << eth::Instruction::MUL;
-		}
-	}
 	else if (stackTypeCategory == Type::Category::INTEGER || stackTypeCategory == Type::Category::CONTRACT ||
 			 stackTypeCategory == Type::Category::INTEGER_CONSTANT)
 	{
-		solAssert(targetTypeCategory == Type::Category::INTEGER || targetTypeCategory == Type::Category::CONTRACT, "");
-		IntegerType addressType(0, IntegerType::Modifier::ADDRESS);
-		IntegerType const& targetType = targetTypeCategory == Type::Category::INTEGER
-			? dynamic_cast<IntegerType const&>(_targetType) : addressType;
-		if (stackTypeCategory == Type::Category::INTEGER_CONSTANT)
+		if (targetTypeCategory == Type::Category::STRING && stackTypeCategory == Type::Category::INTEGER)
 		{
-			IntegerConstantType const& constType = dynamic_cast<IntegerConstantType const&>(_typeOnStack);
-			// We know that the stack is clean, we only have to clean for a narrowing conversion
-			// where cleanup is forced.
-			if (targetType.getNumBits() < constType.getIntegerType()->getNumBits() && _cleanupNeeded)
-				appendHighBitsCleanup(targetType);
-		}
-		else
+			// conversion from hash to string. no need to clean the high bit
+			// only to shift left because of opposite alignment
+			StaticStringType const& targetStringType = dynamic_cast<StaticStringType const&>(_targetType);
+			IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
+			if (typeOnStack.isHash())
+			{
+				solAssert(typeOnStack.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
+				m_context << (u256(1) << 256 - typeOnStack.getNumBits()) << eth::Instruction::MUL;
+			}
+		} else
 		{
-			IntegerType const& typeOnStack = stackTypeCategory == Type::Category::INTEGER
-				? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
-			// Widening: clean up according to source type width
-			// Non-widening and force: clean up according to target type bits
-			if (targetType.getNumBits() > typeOnStack.getNumBits())
-				appendHighBitsCleanup(typeOnStack);
-			else if (_cleanupNeeded)
-				appendHighBitsCleanup(targetType);
+			solAssert(targetTypeCategory == Type::Category::INTEGER || targetTypeCategory == Type::Category::CONTRACT, "");
+			IntegerType addressType(0, IntegerType::Modifier::ADDRESS);
+			IntegerType const& targetType = targetTypeCategory == Type::Category::INTEGER
+				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
+			if (stackTypeCategory == Type::Category::INTEGER_CONSTANT)
+			{
+				IntegerConstantType const& constType = dynamic_cast<IntegerConstantType const&>(_typeOnStack);
+				// We know that the stack is clean, we only have to clean for a narrowing conversion
+				// where cleanup is forced.
+				if (targetType.getNumBits() < constType.getIntegerType()->getNumBits() && _cleanupNeeded)
+					appendHighBitsCleanup(targetType);
+			}
+			else
+			{
+				IntegerType const& typeOnStack = stackTypeCategory == Type::Category::INTEGER
+					? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
+				// Widening: clean up according to source type width
+				// Non-widening and force: clean up according to target type bits
+				if (targetType.getNumBits() > typeOnStack.getNumBits())
+					appendHighBitsCleanup(typeOnStack);
+				else if (_cleanupNeeded)
+					appendHighBitsCleanup(targetType);
+			}
 		}
 	}
 	else if (_typeOnStack != _targetType)
