@@ -140,6 +140,11 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
+	if (_convertTo.getCategory() == Category::STRING)
+	{
+		StaticStringType const& convertTo = dynamic_cast<StaticStringType const&>(_convertTo);
+		return isHash() && (m_bits == convertTo.getNumBytes() * 8);
+	}
 	return _convertTo.getCategory() == getCategory() || _convertTo.getCategory() == Category::CONTRACT;
 }
 
@@ -365,6 +370,17 @@ bool StaticStringType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return false;
 	StaticStringType const& convertTo = dynamic_cast<StaticStringType const&>(_convertTo);
 	return convertTo.m_bytes >= m_bytes;
+}
+
+bool StaticStringType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (_convertTo.getCategory() == Category::INTEGER)
+	{
+		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
+		if (convertTo.isHash() && (m_bytes * 8 == convertTo.getNumBits()))
+			return true;
+	}
+	return isImplicitlyConvertibleTo(_convertTo);
 }
 
 bool StaticStringType::operator==(Type const& _other) const
