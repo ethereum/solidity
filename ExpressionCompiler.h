@@ -130,8 +130,7 @@ private:
 		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).
 		/// @a _expression is the current expression, used for error reporting.
 		void retrieveValue(Expression const& _expression, bool _remove = false) const;
-		/// Convenience function to retrive Value from Storage. Specific version of
-		/// @ref retrieveValue
+		/// Convenience function to retrive Value from Storage. Specific version of @ref retrieveValue
 		void retrieveValueFromStorage(Expression const& _expression, bool _remove = false) const;
 		/// Stores a value (from the stack directly beneath the reference, which is assumed to
 		/// be on the top of the stack, if any) in the lvalue and removes the reference.

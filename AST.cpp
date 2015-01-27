@@ -563,7 +563,7 @@ vector<ParamDescription> const FunctionDescription::getParameters() const
 	if (function)
 	{
 		vector<ParamDescription> paramsDescription;
-		for (auto const& param: function->getReturnParameters())
+		for (auto const& param: function->getParameters())
 			paramsDescription.push_back(ParamDescription(param->getName(), param->getType()->toString()));
 
 		return paramsDescription;
@@ -580,7 +580,7 @@ vector<ParamDescription> const FunctionDescription::getReturnParameters() const
 	if (function)
 	{
 		vector<ParamDescription> paramsDescription;
-		for (auto const& param: function->getParameters())
+		for (auto const& param: function->getReturnParameters())
 			paramsDescription.push_back(ParamDescription(param->getName(), param->getType()->toString()));
 
 		return paramsDescription;

@@ -182,6 +182,10 @@ struct FunctionDescription
 	FunctionDescription(std::shared_ptr<FunctionType const> _type, Declaration const* _decl):
 		m_description(_type, _decl){}
 
+	/// constructor for a constructor's function definition. Used only inside mix.
+	FunctionDescription(Declaration const* _def):
+	m_description(nullptr, _def){}
+
 	FunctionDescription():
 		m_description(nullptr, nullptr){}
 
