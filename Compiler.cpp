@@ -292,21 +292,19 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 			m_context.addStateVariable(*variable);
 }
 
-bool Compiler::generateAccessorCode(VariableDeclaration const& _varDecl)
+void Compiler::generateAccessorCode(VariableDeclaration const& _varDecl)
 {
 	m_context.startNewFunction();
 	m_returnTag = m_context.newTag();
 	m_breakTags.clear();
 	m_continueTags.clear();
 
-	// TODO: Work in progress
 	m_context << m_context.getFunctionEntryLabel(_varDecl);
-	// CompilerUtils(m_context).moveToStackVariable(firstVariable);
-	m_context.appendJumpTo(m_returnTag);
-	m_context << m_returnTag;
+	ExpressionCompiler::appendStateVariableAccessor(m_context, &_varDecl);
 
-	// TODO: perhaps return void if there are no checks?
-	return true;
+	uint64_t foo = uint64_t(_varDecl.getType()->getStorageSize());
+	m_context << eth::dupInstruction(foo + 1);
+	m_context << eth::Instruction::JUMP;
 }
 
 bool Compiler::visit(FunctionDefinition const& _function)

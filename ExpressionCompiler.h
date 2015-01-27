@@ -53,6 +53,8 @@ public:
 	/// Appends code to remove dirty higher order bits in case of an implicit promotion to a wider type.
 	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack,
 									 Type const& _targetType, bool _cleanupNeeded = false);
+	/// Appends code for a State Variable accessor function
+	static void appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const* _varDecl, bool _optimize = false);
 
 private:
 	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimize = false):
@@ -130,8 +132,8 @@ private:
 		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).
 		/// @a _expression is the current expression, used for error reporting.
 		void retrieveValue(Expression const& _expression, bool _remove = false) const;
-		/// Convenience function to retrive Value from Storage. Specific version of @ref retrieveValue
-		void retrieveValueFromStorage(Expression const& _expression, bool _remove = false) const;
+		/// Convenience function to retrieve Value from Storage. Specific version of @ref retrieveValue
+		void retrieveValueFromStorage(std::shared_ptr<Type const> const& _type, bool _remove = false) const;
 		/// Stores a value (from the stack directly beneath the reference, which is assumed to
 		/// be on the top of the stack, if any) in the lvalue and removes the reference.
 		/// Also removes the stored value from the stack if @a _move is

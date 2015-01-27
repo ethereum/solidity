@@ -48,6 +48,12 @@ void ExpressionCompiler::appendTypeConversion(CompilerContext& _context, Type co
 	compiler.appendTypeConversion(_typeOnStack, _targetType, _cleanupNeeded);
 }
 
+void ExpressionCompiler::appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const* _varDecl, bool _optimize)
+{
+	ExpressionCompiler compiler(_context, _optimize);
+	compiler.appendStateVariableAccessor(_varDecl);
+}
+
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	_assignment.getRightHandSide().accept(*this);
@@ -792,8 +798,7 @@ unsigned ExpressionCompiler::appendArgumentCopyToMemory(TypePointers const& _typ
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const* _varDecl)
 {
 	m_currentLValue.fromStateVariable(*_varDecl, _varDecl->getType());
-	// TODO
-	// m_currentLValue.retrieveValueFromStorage();
+	m_currentLValue.retrieveValueFromStorage(_varDecl->getType(), true);
 }
 
 ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,
@@ -823,7 +828,7 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 		break;
 	}
 	case STORAGE:
-		retrieveValueFromStorage(_expression, _remove);
+		retrieveValueFromStorage(_expression.getType(), _remove);
 		break;
 	case MEMORY:
 		if (!_expression.getType()->isValueType())
@@ -838,9 +843,9 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 	}
 }
 
-void ExpressionCompiler::LValue::retrieveValueFromStorage(Expression const& _expression, bool _remove) const
+void ExpressionCompiler::LValue::retrieveValueFromStorage(std::shared_ptr<Type const> const& _type, bool _remove) const
 {
-	if (!_expression.getType()->isValueType())
+	if (!_type->isValueType())
 		return; // no distinction between value and reference for non-value types
 	if (!_remove)
 		*m_context << eth::Instruction::DUP1;
