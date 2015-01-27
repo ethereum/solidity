@@ -637,14 +637,12 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
 			StaticStringType const& typeOnStack = dynamic_cast<StaticStringType const&>(_typeOnStack);
-			if (targetIntegerType.isHash())
-			{
-				solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
-				m_context << (u256(1) << 256 - typeOnStack.getNumBytes() * 8) <<
-						eth::Instruction::SWAP1 << eth::Instruction::DIV;
-			}
+			solAssert(targetIntegerType.isHash(), "Only conversion between String and Hash is allowed.");
+			solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
+			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
 		}
-		else {
+		else
+		{
 			solAssert(targetTypeCategory == Type::Category::STRING, "Invalid type conversion requested.");
 			// nothing to do, strings are high-order-bit-aligned
 			//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
@@ -659,17 +657,16 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			// only to shift left because of opposite alignment
 			StaticStringType const& targetStringType = dynamic_cast<StaticStringType const&>(_targetType);
 			IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
-			if (typeOnStack.isHash())
-			{
-				solAssert(typeOnStack.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
-				m_context << (u256(1) << 256 - typeOnStack.getNumBits()) << eth::Instruction::MUL;
-			}
-		} else
+			solAssert(typeOnStack.isHash(), "Only conversion between String and Hash is allowed.");
+			solAssert(typeOnStack.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
+			m_context << (u256(1) << (256 - typeOnStack.getNumBits())) << eth::Instruction::MUL;
+		}
+		else
 		{
 			solAssert(targetTypeCategory == Type::Category::INTEGER || targetTypeCategory == Type::Category::CONTRACT, "");
 			IntegerType addressType(0, IntegerType::Modifier::ADDRESS);
 			IntegerType const& targetType = targetTypeCategory == Type::Category::INTEGER
-				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
+											? dynamic_cast<IntegerType const&>(_targetType) : addressType;
 			if (stackTypeCategory == Type::Category::INTEGER_CONSTANT)
 			{
 				IntegerConstantType const& constType = dynamic_cast<IntegerConstantType const&>(_typeOnStack);
@@ -681,7 +678,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			else
 			{
 				IntegerType const& typeOnStack = stackTypeCategory == Type::Category::INTEGER
-					? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
+												? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
 				// Widening: clean up according to source type width
 				// Non-widening and force: clean up according to target type bits
 				if (targetType.getNumBits() > typeOnStack.getNumBits())
