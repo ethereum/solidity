@@ -41,12 +41,8 @@ class CompilerContext
 public:
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration);
-	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
-	void addFunction(Declaration const& _decl);
-	/// Adds the given modifier to the list by name if the name is not present already.
-	void addModifier(ModifierDefinition const& _modifier);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
 	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
@@ -54,13 +50,22 @@ public:
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
 
 	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration) != 0; }
-	bool isFunctionDefinition(Declaration const* _declaration) const { return m_functionEntryLabels.count(_declaration) != 0; }
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
-	eth::AssemblyItem getFunctionEntryLabel(Declaration const& _declaration) const;
+	eth::AssemblyItem getFunctionEntryLabel(Declaration const& _declaration);
+	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
 	/// @returns the entry label of the given function and takes overrides into account.
-	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function) const;
+	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function);
+	/// @returns the entry label of function with the given name from the most derived class just
+	/// above _base in the current inheritance hierarchy.
+	eth::AssemblyItem getSuperFunctionEntryLabel(std::string const& _name, ContractDefinition const& _base);
+	/// @returns the set of functions for which we still need to generate code
+	std::set<Declaration const*> getFunctionsWithoutCode();
+	/// Resets function specific members, inserts the function entry label and marks the function
+	/// as "having code".
+	void startFunction(Declaration const& _function);
+
 	ModifierDefinition const& getFunctionModifier(std::string const& _name) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned getBaseStackOffsetOfVariable(Declaration const& _declaration) const;
@@ -119,10 +124,10 @@ private:
 	std::map<Declaration const*, unsigned> m_localVariables;
 	/// Labels pointing to the entry points of functions.
 	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
-	/// Labels pointing to the entry points of function overrides.
-	std::map<std::string, eth::AssemblyItem> m_virtualFunctionEntryLabels;
-	/// Mapping to obtain function modifiers by name. Should be filled from derived to base.
-	std::map<std::string, ModifierDefinition const*> m_functionModifiers;
+	/// Set of functions for which we did not yet generate code.
+	std::set<Declaration const*> m_functionsWithCode;
+	/// List of current inheritance hierarchy from derived to base.
+	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
 };
 
 }

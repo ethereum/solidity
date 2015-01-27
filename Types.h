@@ -277,7 +277,8 @@ class ContractType: public Type
 {
 public:
 	virtual Category getCategory() const override { return Category::CONTRACT; }
-	ContractType(ContractDefinition const& _contract): m_contract(_contract) {}
+	explicit ContractType(ContractDefinition const& _contract, bool _super = false):
+		m_contract(_contract), m_super(_super) {}
 	/// Contracts can be implicitly converted to super classes and to addresses.
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	/// Contracts can be converted to themselves and to integers.
@@ -289,6 +290,7 @@ public:
 
 	virtual MemberList const& getMembers() const override;
 
+	bool isSuper() const { return m_super; }
 	ContractDefinition const& getContractDefinition() const { return m_contract; }
 
 	/// Returns the function type of the constructor. Note that the location part of the function type
@@ -301,6 +303,9 @@ public:
 
 private:
 	ContractDefinition const& m_contract;
+	/// If true, it is the "super" type of the current contract, i.e. it contains only inherited
+	/// members.
+	bool m_super;
 	/// Type of the constructor, @see getConstructorType. Lazily initialized.
 	mutable std::shared_ptr<FunctionType const> m_constructorType;
 	/// List of member types, will be lazy-initialized because of recursive references.
@@ -314,7 +319,7 @@ class StructType: public Type
 {
 public:
 	virtual Category getCategory() const override { return Category::STRUCT; }
-	StructType(StructDefinition const& _struct): m_struct(_struct) {}
+	explicit StructType(StructDefinition const& _struct): m_struct(_struct) {}
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual u256 getStorageSize() const override;
@@ -448,7 +453,7 @@ class TypeType: public Type
 {
 public:
 	virtual Category getCategory() const override { return Category::TYPE; }
-	TypeType(TypePointer const& _actualType, ContractDefinition const* _currentContract = nullptr):
+	explicit TypeType(TypePointer const& _actualType, ContractDefinition const* _currentContract = nullptr):
 		m_actualType(_actualType), m_currentContract(_currentContract) {}
 	TypePointer const& getActualType() const { return m_actualType; }
 
@@ -502,7 +507,7 @@ public:
 	enum class Kind { BLOCK, MSG, TX };
 	virtual Category getCategory() const override { return Category::MAGIC; }
 
-	MagicType(Kind _kind);
+	explicit MagicType(Kind _kind);
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override
 	{

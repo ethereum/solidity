@@ -450,7 +450,9 @@ bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.getCategory() == Category::CONTRACT)
 	{
 		auto const& bases = getContractDefinition().getLinearizedBaseContracts();
-		return find(bases.begin(), bases.end(),
+		if (m_super && bases.size() <= 1)
+			return false;
+		return find(m_super ? ++bases.begin() : bases.begin(), bases.end(),
 					&dynamic_cast<ContractType const&>(_convertTo).getContractDefinition()) != bases.end();
 	}
 	return false;
@@ -472,12 +474,12 @@ bool ContractType::operator==(Type const& _other) const
 	if (_other.getCategory() != getCategory())
 		return false;
 	ContractType const& other = dynamic_cast<ContractType const&>(_other);
-	return other.m_contract == m_contract;
+	return other.m_contract == m_contract && other.m_super == m_super;
 }
 
 string ContractType::toString() const
 {
-	return "contract " + m_contract.getName();
+	return "contract " + string(m_super ? "super " : "") + m_contract.getName();
 }
 
 MemberList const& ContractType::getMembers() const
@@ -488,8 +490,16 @@ MemberList const& ContractType::getMembers() const
 		// All address members and all interface functions
 		map<string, shared_ptr<Type const>> members(IntegerType::AddressMemberList.begin(),
 													IntegerType::AddressMemberList.end());
-		for (auto const& it: m_contract.getInterfaceFunctions())
-			members[it.second.getName()] = it.second.getFunctionTypeShared();
+		if (m_super)
+		{
+			for (ContractDefinition const* base: m_contract.getLinearizedBaseContracts())
+				for (ASTPointer<FunctionDefinition> const& function: base->getDefinedFunctions())
+					if (!function->isConstructor())
+						members.insert(make_pair(function->getName(), make_shared<FunctionType>(*function, true)));
+		}
+		else
+			for (auto const& it: m_contract.getInterfaceFunctions())
+				members[it.second.getName()] = it.second.getFunctionTypeShared();
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;

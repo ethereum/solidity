@@ -94,6 +94,7 @@ void CompilerStack::parse()
 			{
 				m_globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*m_globalContext->getCurrentThis());
+				resolver.updateDeclaration(*m_globalContext->getCurrentSuper());
 				resolver.resolveNamesAndTypes(*contract);
 				m_contracts[contract->getName()].contract = contract;
 			}

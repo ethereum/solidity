@@ -50,11 +50,6 @@ private:
 	void appendBaseConstructorCall(FunctionDefinition const& _constructor,
 								   std::vector<ASTPointer<Expression>> const& _arguments);
 	void appendConstructorCall(FunctionDefinition const& _constructor);
-	/// Recursively searches the call graph and returns all functions referenced inside _nodes.
-	/// _resolveOverride is called to resolve virtual function overrides.
-	std::set<FunctionDefinition const*> getFunctionsCalled(std::set<ASTNode const*> const& _nodes,
-					std::function<FunctionDefinition const*(std::string const&)> const& _resolveFunctionOverride,
-					std::function<ModifierDefinition const*(std::string const&)> const& _resolveModifierOverride);
 	void appendFunctionSelector(ContractDefinition const& _contract);
 	/// Creates code that unpacks the arguments for the given function represented by a vector of TypePointers.
 	/// From memory if @a _fromMemory is true, otherwise from call data. @returns the size of the data in bytes.
@@ -63,8 +58,7 @@ private:
 
 	void registerStateVariables(ContractDefinition const& _contract);
 
-	void generateAccessorCode(VariableDeclaration const& _varDecl);
-
+	virtual bool visit(VariableDeclaration const& _variableDeclaration) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(IfStatement const& _ifStatement) override;
 	virtual bool visit(WhileStatement const& _whileStatement) override;

@@ -28,7 +28,6 @@
 #include <libsolidity/Compiler.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/CompilerUtils.h>
-#include <libsolidity/CallGraph.h>
 
 using namespace std;
 
@@ -40,31 +39,13 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 {
 	m_context = CompilerContext(); // clear it just in case
 	initializeContext(_contract, _contracts);
-
-	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
-	{
-		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-			if (!function->isConstructor())
-				m_context.addFunction(*function);
-
-		for (ASTPointer<VariableDeclaration> const& vardecl: contract->getStateVariables())
-			if (vardecl->isPublic())
-				m_context.addFunction(*vardecl);
-
-		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
-			m_context.addModifier(*modifier);
-	}
-
 	appendFunctionSelector(_contract);
-	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
+	set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
+	while (!functions.empty())
 	{
-		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-			if (!function->isConstructor())
-				function->accept(*this);
-
-		for (ASTPointer<VariableDeclaration> const& vardecl: contract->getStateVariables())
-			if (vardecl->isPublic())
-				generateAccessorCode(*vardecl);
+		for (Declaration const* function: functions)
+			function->accept(*this);
+		functions = m_context.getFunctionsWithoutCode();
 	}
 
 	// Swap the runtime context with the creation-time context
@@ -77,72 +58,26 @@ void Compiler::initializeContext(ContractDefinition const& _contract,
 								 map<ContractDefinition const*, bytes const*> const& _contracts)
 {
 	m_context.setCompiledContracts(_contracts);
+	m_context.setInheritanceHierarchy(_contract.getLinearizedBaseContracts());
 	registerStateVariables(_contract);
 }
 
 void Compiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
 {
-	std::vector<ContractDefinition const*> const& bases = _contract.getLinearizedBaseContracts();
-
-	// Make all modifiers known to the context.
-	for (ContractDefinition const* contract: bases)
-		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
-			m_context.addModifier(*modifier);
-
 	// arguments for base constructors, filled in derived-to-base order
 	map<ContractDefinition const*, vector<ASTPointer<Expression>> const*> baseArguments;
-	set<FunctionDefinition const*> neededFunctions;
-	set<ASTNode const*> nodesUsedInConstructors;
 
-	// Determine the arguments that are used for the base constructors and also which functions
-	// are needed at compile time.
+	// Determine the arguments that are used for the base constructors.
+	std::vector<ContractDefinition const*> const& bases = _contract.getLinearizedBaseContracts();
 	for (ContractDefinition const* contract: bases)
-	{
-		if (FunctionDefinition const* constructor = contract->getConstructor())
-			nodesUsedInConstructors.insert(constructor);
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->getBaseContracts())
 		{
 			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
 													base->getName()->getReferencedDeclaration());
 			solAssert(baseContract, "");
 			if (baseArguments.count(baseContract) == 0)
-			{
 				baseArguments[baseContract] = &base->getArguments();
-				for (ASTPointer<Expression> const& arg: base->getArguments())
-					nodesUsedInConstructors.insert(arg.get());
-			}
 		}
-	}
-
-	auto functionOverrideResolver = [&](string const& _name) -> FunctionDefinition const*
-	{
-		for (ContractDefinition const* contract: bases)
-			for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-				if (!function->isConstructor() && function->getName() == _name)
-					return function.get();
-		return nullptr;
-	};
-	auto modifierOverrideResolver = [&](string const& _name) -> ModifierDefinition const*
-	{
-		return &m_context.getFunctionModifier(_name);
-	};
-
-	neededFunctions = getFunctionsCalled(nodesUsedInConstructors, functionOverrideResolver,
-										 modifierOverrideResolver);
-
-	// First add all overrides (or the functions themselves if there is no override)
-	for (FunctionDefinition const* fun: neededFunctions)
-	{
-		FunctionDefinition const* override = nullptr;
-		if (!fun->isConstructor())
-			override = functionOverrideResolver(fun->getName());
-		if (!!override && neededFunctions.count(override))
-			m_context.addFunction(*override);
-	}
-	// now add the rest
-	for (FunctionDefinition const* fun: neededFunctions)
-		if (fun->isConstructor() || functionOverrideResolver(fun->getName()) != fun)
-			m_context.addFunction(*fun);
 
 	// Call constructors in base-to-derived order.
 	// The Constructor for the most derived contract is called later.
@@ -164,10 +99,14 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 	m_context << eth::Instruction::DUP1 << sub << u256(0) << eth::Instruction::CODECOPY;
 	m_context << u256(0) << eth::Instruction::RETURN;
 
-	// note that we have to explicitly include all used functions because of absolute jump
-	// labels
-	for (FunctionDefinition const* fun: neededFunctions)
-		fun->accept(*this);
+	// note that we have to include the functions again because of absolute jump labels
+	set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
+	while (!functions.empty())
+	{
+		for (Declaration const* function: functions)
+			function->accept(*this);
+		functions = m_context.getFunctionsWithoutCode();
+	}
 }
 
 void Compiler::appendBaseConstructorCall(FunctionDefinition const& _constructor,
@@ -199,16 +138,6 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 	}
 	m_context.appendJumpTo(m_context.getFunctionEntryLabel(_constructor));
 	m_context << returnTag;
-}
-
-set<FunctionDefinition const*> Compiler::getFunctionsCalled(set<ASTNode const*> const& _nodes,
-						function<FunctionDefinition const*(string const&)> const& _resolveFunctionOverrides,
-						function<ModifierDefinition const*(string const&)> const& _resolveModifierOverrides)
-{
-	CallGraph callgraph(_resolveFunctionOverrides, _resolveModifierOverrides);
-	for (ASTNode const* node: _nodes)
-		callgraph.addNode(*node);
-	return callgraph.getCalls();
 }
 
 void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
@@ -292,19 +221,22 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 			m_context.addStateVariable(*variable);
 }
 
-void Compiler::generateAccessorCode(VariableDeclaration const& _varDecl)
+bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
 {
-	m_context.startNewFunction();
+	solAssert(_variableDeclaration.isStateVariable(), "Compiler visit to non-state variable declaration.");
+
+	m_context.startFunction(_variableDeclaration);
 	m_breakTags.clear();
 	m_continueTags.clear();
 
-	m_context << m_context.getFunctionEntryLabel(_varDecl);
-	ExpressionCompiler::appendStateVariableAccessor(m_context, _varDecl);
+	m_context << m_context.getFunctionEntryLabel(_variableDeclaration);
+	ExpressionCompiler::appendStateVariableAccessor(m_context, _variableDeclaration);
 
-	unsigned sizeOnStack = _varDecl.getType()->getSizeOnStack();
-	solAssert(sizeOnStack <= 15, "Illegal variable stack size detected");
-	m_context << eth::dupInstruction(sizeOnStack + 1);
-	m_context << eth::Instruction::JUMP;
+	unsigned sizeOnStack = _variableDeclaration.getType()->getSizeOnStack();
+	solAssert(sizeOnStack <= 15, "Stack too deep.");
+	m_context << eth::dupInstruction(sizeOnStack + 1) << eth::Instruction::JUMP;
+
+	return false;
 }
 
 bool Compiler::visit(FunctionDefinition const& _function)
@@ -313,15 +245,13 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	// caller puts: [retarg0] ... [retargm] [return address] [arg0] ... [argn]
 	// although note that this reduces the size of the visible stack
 
-	m_context.startNewFunction();
+	m_context.startFunction(_function);
 	m_returnTag = m_context.newTag();
 	m_breakTags.clear();
 	m_continueTags.clear();
 	m_stackCleanupForReturn = 0;
 	m_currentFunction = &_function;
 	m_modifierDepth = 0;
-
-	m_context << m_context.getFunctionEntryLabel(_function);
 
 	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
 	// reserve additional slots: [retarg0] ... [retargm] [localvar0] ... [localvarp]
