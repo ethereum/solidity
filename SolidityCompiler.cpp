@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 BOOST_AUTO_TEST_CASE(different_argument_numbers)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function f(uint a, uint b, uint c) returns(uint d) { return b; }\n"
 							 "  function g() returns (uint e, uint h) { h = f(1, 2, 3); }\n"
+							 "  function f(uint a, uint b, uint c) returns(uint d) { return b; }\n"
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 	unsigned shift = 103;
