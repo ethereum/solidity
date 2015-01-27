@@ -882,6 +882,18 @@ BOOST_AUTO_TEST_CASE(constructor)
 	testSolidityAgainstCpp("get(uint256)", get, u256(7));
 }
 
+BOOST_AUTO_TEST_CASE(simple_accessor)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  uint256 data;\n"
+							 "  function test() {\n"
+							 "    data = 8;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
+}
+
 BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* sourceCode = "contract test {\n"
