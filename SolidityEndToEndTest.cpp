@@ -1015,7 +1015,21 @@ BOOST_AUTO_TEST_CASE(convert_string_to_hash_different_min_size)
 		})";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("stringToHash(string1)", string("a")) ==
-					encodeArgs(u128("0x00000000000000000000000000000061")));
+					encodeArgs(u256("0x61")));
+}
+
+
+BOOST_AUTO_TEST_CASE(convert_hash_to_string_different_min_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function HashToString(hash8 h) returns (string1 s) {
+				return string1(h);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("HashToString(hash8)", u256("0x61")) ==
+					encodeArgs(string("a")));
 }
 
 BOOST_AUTO_TEST_CASE(send_ether)
