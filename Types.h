@@ -452,6 +452,7 @@ public:
 	virtual bool canBeStored() const override { return false; }
 	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); }
 	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned getSizeOnStack() const override { return 0; }
 	virtual std::string toString() const override { return "type(" + m_actualType->toString() + ")"; }
 	virtual MemberList const& getMembers() const override;
 
@@ -477,6 +478,7 @@ public:
 	virtual bool canBeStored() const override { return false; }
 	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); }
 	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned getSizeOnStack() const override { return 0; }
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString() const override;
 
