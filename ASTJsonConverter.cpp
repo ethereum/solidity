@@ -78,8 +78,14 @@ ASTJsonConverter::ASTJsonConverter(ASTNode const& _ast): m_ast(&_ast)
 
 void ASTJsonConverter::print(ostream& _stream)
 {
-	m_ast->accept(*this);
+	process();
 	_stream << m_astJson;
+}
+
+Json::Value const& ASTJsonConverter::json()
+{
+	process();
+	return m_astJson;
 }
 
 bool ASTJsonConverter::visit(ImportDirective const& _node)
@@ -460,9 +466,16 @@ void ASTJsonConverter::endVisit(Literal const&)
 {
 }
 
+void ASTJsonConverter::process()
+{
+	if (!processed)
+		m_ast->accept(*this);
+	processed = true;
+}
+
 string ASTJsonConverter::getType(Expression const& _expression)
 {
-	return  (_expression.getType()) ? _expression.getType()->toString() : "Unknown";
+	return (_expression.getType()) ? _expression.getType()->toString() : "Unknown";
 }
 
 }

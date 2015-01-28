@@ -44,6 +44,7 @@ public:
 	ASTJsonConverter(ASTNode const& _ast);
 	/// Output the json representation of the AST to _stream.
 	void print(std::ostream& _stream);
+	Json::Value const& json();
 
 	bool visit(ImportDirective const& _node) override;
 	bool visit(ContractDefinition const& _node) override;
@@ -114,6 +115,7 @@ public:
 	void endVisit(Literal const&) override;
 
 private:
+	void process();
 	void addKeyValue(Json::Value& _obj, std::string const& _key, std::string const& _val);
 	void addJsonNode(std::string const& _nodeName,
 					 std::initializer_list<std::pair<std::string const, std::string const>> _list,
@@ -123,8 +125,9 @@ private:
 	{
 		solAssert(!m_jsonNodePtrs.empty(), "Uneven json nodes stack. Internal error.");
 		m_jsonNodePtrs.pop();
-	};
+	}
 
+	bool processed = false;
 	Json::Value m_astJson;
 	std::stack<Json::Value*> m_jsonNodePtrs;
 	std::string m_source;
