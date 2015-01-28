@@ -650,6 +650,18 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_CHECK(function.isConstant());
 }
 
+BOOST_AUTO_TEST_CASE(function_clash_with_state_variable_accessor)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "uint256 foo;\n"
+					   "   function foo() {}\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
+}
+
 BOOST_AUTO_TEST_CASE(private_state_variable)
 {
 	char const* text = "contract test {\n"
