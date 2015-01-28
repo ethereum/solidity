@@ -35,6 +35,8 @@ namespace test
 class InterfaceChecker
 {
 public:
+	InterfaceChecker(): m_compilerStack(false) {}
+
 	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
 		try

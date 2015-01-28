@@ -36,6 +36,8 @@ namespace test
 class DocumentationChecker
 {
 public:
+	DocumentationChecker(): m_compilerStack(false) {}
+
 	void checkNatspec(std::string const& _code,
 					  std::string const& _expectedDocumentationString,
 					  bool _userDocumentation)
