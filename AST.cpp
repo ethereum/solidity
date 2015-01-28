@@ -155,7 +155,7 @@ vector<tuple<FixedHash<4>, std::shared_ptr<FunctionType const>, Declaration cons
 				}
 
 			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
-				if (v->isPublic())
+				if (v->isPublic() && functionsSeen.count(v->getName()) == 0)
 				{
 					FunctionType ftype(*v);
 					functionsSeen.insert(v->getName());
@@ -519,12 +519,12 @@ void Literal::checkTypeRequirements()
 		BOOST_THROW_EXCEPTION(createTypeError("Invalid literal value."));
 }
 
-std::string ParamDescription::getName() const
+std::string const& ParamDescription::getName() const
 {
 	return m_description.first;
 }
 
-std::string ParamDescription::getType() const
+std::string const& ParamDescription::getType() const
 {
 	return m_description.second;
 }

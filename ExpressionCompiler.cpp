@@ -48,7 +48,7 @@ void ExpressionCompiler::appendTypeConversion(CompilerContext& _context, Type co
 	compiler.appendTypeConversion(_typeOnStack, _targetType, _cleanupNeeded);
 }
 
-void ExpressionCompiler::appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const* _varDecl, bool _optimize)
+void ExpressionCompiler::appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const& _varDecl, bool _optimize)
 {
 	ExpressionCompiler compiler(_context, _optimize);
 	compiler.appendStateVariableAccessor(_varDecl);
@@ -795,10 +795,11 @@ unsigned ExpressionCompiler::appendArgumentCopyToMemory(TypePointers const& _typ
 	return length;
 }
 
-void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const* _varDecl)
+void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	m_currentLValue.fromStateVariable(*_varDecl, _varDecl->getType());
-	m_currentLValue.retrieveValueFromStorage(_varDecl->getType(), true);
+	m_currentLValue.fromStateVariable(_varDecl, _varDecl.getType());
+	solAssert(m_currentLValue.isInStorage(), "");
+	m_currentLValue.retrieveValueFromStorage(_varDecl.getType(), true);
 }
 
 ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,
@@ -843,7 +844,7 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 	}
 }
 
-void ExpressionCompiler::LValue::retrieveValueFromStorage(std::shared_ptr<Type const> const& _type, bool _remove) const
+void ExpressionCompiler::LValue::retrieveValueFromStorage(TypePointer const& _type, bool _remove) const
 {
 	if (!_type->isValueType())
 		return; // no distinction between value and reference for non-value types
@@ -968,7 +969,7 @@ void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(Expression co
 	}
 }
 
-void ExpressionCompiler::LValue::fromStateVariable(Declaration const& _varDecl, std::shared_ptr<Type const> const& _type)
+void ExpressionCompiler::LValue::fromStateVariable(Declaration const& _varDecl, TypePointer const& _type)
 {
 	m_type = STORAGE;
 	solAssert(_type->getStorageSize() <= numeric_limits<unsigned>::max(), "The storage size of " + _type->toString() + " should fit in an unsigned");

@@ -51,7 +51,7 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 			if (vardecl->isPublic())
 				m_context.addFunction(*vardecl);
 
-        for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
+		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
 			m_context.addModifier(*modifier);
 	}
 
@@ -295,15 +295,15 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 void Compiler::generateAccessorCode(VariableDeclaration const& _varDecl)
 {
 	m_context.startNewFunction();
-	m_returnTag = m_context.newTag();
 	m_breakTags.clear();
 	m_continueTags.clear();
 
 	m_context << m_context.getFunctionEntryLabel(_varDecl);
-	ExpressionCompiler::appendStateVariableAccessor(m_context, &_varDecl);
+	ExpressionCompiler::appendStateVariableAccessor(m_context, _varDecl);
 
-	uint64_t foo = uint64_t(_varDecl.getType()->getStorageSize());
-	m_context << eth::dupInstruction(foo + 1);
+	unsigned sizeOnStack = _varDecl.getType()->getSizeOnStack();
+	solAssert(sizeOnStack <= 15, "Illegal variable stack size detected");
+	m_context << eth::dupInstruction(sizeOnStack + 1);
 	m_context << eth::Instruction::JUMP;
 }
 

@@ -54,7 +54,7 @@ public:
 	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack,
 									 Type const& _targetType, bool _cleanupNeeded = false);
 	/// Appends code for a State Variable accessor function
-	static void appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const* _varDecl, bool _optimize = false);
+	static void appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const& _varDecl, bool _optimize = false);
 
 private:
 	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimize = false):
@@ -98,7 +98,7 @@ private:
 										unsigned _memoryOffset = 0);
 
 	/// Appends code for a State Variable accessor function
-	void appendStateVariableAccessor(VariableDeclaration const* _varDecl);
+	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);
 
 	/**
 	 * Helper class to store and retrieve lvalues to and from various locations.
@@ -117,7 +117,7 @@ private:
 		/// @a _expression is the current expression
 		void fromIdentifier(Identifier const& _identifier, Declaration const& _declaration);
 		/// Convenience function to set type for a state variable and retrieve the reference
-		void fromStateVariable(Declaration const& _varDecl, std::shared_ptr<Type const> const& _type);
+		void fromStateVariable(Declaration const& _varDecl, TypePointer const& _type);
 		void reset() { m_type = NONE; m_baseStackOffset = 0; m_size = 0; }
 
 		bool isValid() const { return m_type != NONE; }
@@ -133,7 +133,7 @@ private:
 		/// @a _expression is the current expression, used for error reporting.
 		void retrieveValue(Expression const& _expression, bool _remove = false) const;
 		/// Convenience function to retrieve Value from Storage. Specific version of @ref retrieveValue
-		void retrieveValueFromStorage(std::shared_ptr<Type const> const& _type, bool _remove = false) const;
+		void retrieveValueFromStorage(TypePointer const& _type, bool _remove = false) const;
 		/// Stores a value (from the stack directly beneath the reference, which is assumed to
 		/// be on the top of the stack, if any) in the lvalue and removes the reference.
 		/// Also removes the stored value from the stack if @a _move is

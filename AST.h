@@ -158,16 +158,16 @@ private:
 
 
 /**
-* Generic Parameter description used by @see FunctionDescription to return
-* a descripton of its parameters.
-*/
+ * Generic Parameter description used by @see FunctionDescription to return
+ * a descripton of its parameters.
+ */
 struct ParamDescription
 {
 	ParamDescription(std::string const& _name, std::string const& _type):
 		m_description(_name, _type){}
 
-	std::string getName() const;
-	std::string getType() const;
+	std::string const& getName() const;
+	std::string const& getType() const;
 
 	std::pair<std::string, std::string> m_description;
 };
@@ -456,6 +456,7 @@ private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
 	bool m_isPublic;                    ///< Whether there is an accessor for it or not
 	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
+
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
 

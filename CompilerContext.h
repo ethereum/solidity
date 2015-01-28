@@ -117,10 +117,7 @@ private:
 	std::map<Declaration const*, u256> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).
 	std::map<Declaration const*, unsigned> m_localVariables;
-	/// Sum of stack sizes of local variables
-	unsigned m_localVariablesSize;
 	/// Labels pointing to the entry points of functions.
-
 	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
 	/// Labels pointing to the entry points of function overrides.
 	std::map<std::string, eth::AssemblyItem> m_virtualFunctionEntryLabels;
