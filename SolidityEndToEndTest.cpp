@@ -894,6 +894,31 @@ BOOST_AUTO_TEST_CASE(simple_accessor)
 	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
 }
 
+BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  uint256 data;\n"
+							 "  string6 name;\n"
+							 "  hash a_hash;\n"
+							 "  address an_address;\n"
+							 "  function test() {\n"
+							 "    data = 8;\n"
+							 "    name = \"Celina\";\n"
+							 "    a_hash = sha3(123);\n"
+							 "    an_address = address(0x1337);\n"
+							 "    super_secret_data = 42;\n"
+							 "  }\n"
+							 "  private:"
+							 "  uint256 super_secret_data;"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("name()") == encodeArgs("Celina"));
+	BOOST_CHECK(callContractFunction("a_hash()") == encodeArgs(dev::sha3(toBigEndian(u256(123)))));
+	BOOST_CHECK(callContractFunction("an_address()") == encodeArgs(toBigEndian(u160(0x1337))));
+	BOOST_CHECK(!(callContractFunction("super_secret_data()") == encodeArgs(42)));
+}
+
 BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* sourceCode = "contract test {\n"
