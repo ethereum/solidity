@@ -1877,6 +1877,22 @@ BOOST_AUTO_TEST_CASE(use_std_lib)
 	BOOST_CHECK(m_state.balance(m_sender) > balanceBefore);
 }
 
+BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint r) {
+				uint; uint; uint; uint;
+				int x = -7;
+				var a = uint;
+				return a(x);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(-7)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
