@@ -83,7 +83,7 @@ map<FixedHash<4>, FunctionDescription> ContractDefinition::getInterfaceFunctions
 
 	map<FixedHash<4>, FunctionDescription> exportedFunctions;
 	for (auto const& it: exportedFunctionList)
-		exportedFunctions[std::get<0>(it)] = std::move(FunctionDescription(std::get<1>(it), std::get<2>(it)));
+		exportedFunctions.insert(make_pair(std::get<0>(it), FunctionDescription(std::get<1>(it), std::get<2>(it))));
 
 	solAssert(exportedFunctionList.size() == exportedFunctions.size(),
 			  "Hash collision at Function Definition Hash calculation");
