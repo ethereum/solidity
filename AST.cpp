@@ -414,8 +414,7 @@ void FunctionCall::checkTypeRequirements()
 		//@todo for structs, we have to check the number of arguments to be equal to the
 		// number of non-mapping members
 		if (m_arguments.size() != 1)
-			BOOST_THROW_EXCEPTION(createTypeError("More than one argument for "
-														   "explicit type conersion."));
+			BOOST_THROW_EXCEPTION(createTypeError("More than one argument for explicit type conversion."));
 		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type.getActualType()))
 			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
 		m_type = type.getActualType();
