@@ -608,17 +608,12 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	m_location(Location::EXTERNAL)
 {
-	TypePointers params;
-	vector<string> paramNames;
-	TypePointers retParams;
-	vector<string> retParamNames;
+	TypePointers params({});
+	vector<string> paramNames({});
+	TypePointers retParams({_varDecl.getType()});
+	vector<string> retParamNames({ _varDecl.getName()});
 	// for now, no input parameters LTODO: change for some things like mapping
-	params.reserve(0);
-	paramNames.reserve(0);
-	retParams.reserve(1);
-	retParamNames.reserve(1);
-	retParams.push_back(_varDecl.getType());
-	retParamNames.push_back(_varDecl.getName());
+
 	swap(params, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
 	swap(retParams, m_returnParameterTypes);
