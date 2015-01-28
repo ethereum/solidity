@@ -57,6 +57,13 @@ bool ASTPrinter::visit(ContractDefinition const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(InheritanceSpecifier const& _node)
+{
+	writeLine("InheritanceSpecifier \"" + _node.getName()->getName() + "\"");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(StructDefinition const& _node)
 {
 	writeLine("StructDefinition \"" + _node.getName() + "\"");
@@ -319,6 +326,11 @@ void ASTPrinter::endVisit(ImportDirective const&)
 }
 
 void ASTPrinter::endVisit(ContractDefinition const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(InheritanceSpecifier const&)
 {
 	m_indentation--;
 }

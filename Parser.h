@@ -55,6 +55,7 @@ private:
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar);
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
+	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<TypeName> parseTypeName(bool _allowVar);
 	ASTPointer<Mapping> parseMapping();
 	ASTPointer<ParameterList> parseParameterList(bool _allowEmpty = true);

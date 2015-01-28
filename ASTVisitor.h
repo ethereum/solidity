@@ -45,6 +45,7 @@ public:
 	virtual bool visit(SourceUnit&) { return true; }
 	virtual bool visit(ImportDirective&) { return true; }
 	virtual bool visit(ContractDefinition&) { return true; }
+	virtual bool visit(InheritanceSpecifier&) { return true; }
 	virtual bool visit(StructDefinition&) { return true; }
 	virtual bool visit(ParameterList&) { return true; }
 	virtual bool visit(FunctionDefinition&) { return true; }
@@ -84,6 +85,7 @@ public:
 	virtual void endVisit(SourceUnit&) { }
 	virtual void endVisit(ImportDirective&) { }
 	virtual void endVisit(ContractDefinition&) { }
+	virtual void endVisit(InheritanceSpecifier&) { }
 	virtual void endVisit(StructDefinition&) { }
 	virtual void endVisit(ParameterList&) { }
 	virtual void endVisit(FunctionDefinition&) { }
@@ -127,6 +129,7 @@ public:
 	virtual bool visit(SourceUnit const&) { return true; }
 	virtual bool visit(ImportDirective const&) { return true; }
 	virtual bool visit(ContractDefinition const&) { return true; }
+	virtual bool visit(InheritanceSpecifier const&) { return true; }
 	virtual bool visit(StructDefinition const&) { return true; }
 	virtual bool visit(ParameterList const&) { return true; }
 	virtual bool visit(FunctionDefinition const&) { return true; }
@@ -166,6 +169,7 @@ public:
 	virtual void endVisit(SourceUnit const&) { }
 	virtual void endVisit(ImportDirective const&) { }
 	virtual void endVisit(ContractDefinition const&) { }
+	virtual void endVisit(InheritanceSpecifier const&) { }
 	virtual void endVisit(StructDefinition const&) { }
 	virtual void endVisit(ParameterList const&) { }
 	virtual void endVisit(FunctionDefinition const&) { }
