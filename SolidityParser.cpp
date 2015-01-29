@@ -586,6 +586,33 @@ BOOST_AUTO_TEST_CASE(modifier_invocation)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(event)
+{
+	char const* text = R"(
+		contract c {
+			event e();
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(event_arguments)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint a, string32 s);
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(event_arguments_indexed)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint a, string32 indexed s, bool indexed b);
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
