@@ -108,57 +108,6 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 
-BOOST_AUTO_TEST_CASE(different_argument_numbers)
-{
-	char const* sourceCode = "contract test {\n"
-							 "  function g() returns (uint e, uint h) { h = f(1, 2, 3); }\n"
-							 "  function f(uint a, uint b, uint c) returns(uint d) { return b; }\n"
-							 "}\n";
-	bytes code = compileContract(sourceCode);
-	unsigned shift = 103;
-	unsigned boilerplateSize = 116;
-	bytes expectation({byte(Instruction::JUMPDEST),
-					   byte(Instruction::PUSH1), 0x0, // initialize return variable d
-					   byte(Instruction::DUP3),
-					   byte(Instruction::SWAP1), // assign b to d
-					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), byte(0xa + shift), // jump to return
-					   byte(Instruction::JUMP),
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::SWAP4), // store d and fetch return address
-					   byte(Instruction::SWAP3), // store return address
-					   byte(Instruction::POP),
-					   byte(Instruction::POP),
-					   byte(Instruction::POP),
-					   byte(Instruction::JUMP), // end of f
-					   byte(Instruction::JUMPDEST), // beginning of g
-					   byte(Instruction::PUSH1), 0x0,
-					   byte(Instruction::PUSH1), 0x0, // initialized e and h
-					   byte(Instruction::PUSH1), byte(0x21 + shift), // ret address
-					   byte(Instruction::PUSH1), 0x1,
-					   byte(Instruction::PUSH1), 0x2,
-					   byte(Instruction::PUSH1), 0x3,
-					   byte(Instruction::PUSH1), byte(0x1 + shift),
-					   // stack here: ret e h 0x20 1 2 3 0x1
-					   byte(Instruction::JUMP),
-					   byte(Instruction::JUMPDEST),
-					   // stack here: ret e h f(1,2,3)
-					   byte(Instruction::SWAP1),
-					   // stack here: ret e f(1,2,3) h
-					   byte(Instruction::POP),
-					   byte(Instruction::DUP1), // retrieve it again as "value of expression"
-					   byte(Instruction::POP), // end of assignment
-					   // stack here: ret e f(1,2,3)
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::SWAP1),
-					   // ret e f(1,2,3)
-					   byte(Instruction::SWAP2),
-					   // f(1,2,3) e ret
-					   byte(Instruction::JUMP) // end of g
-					   });
-	checkCodePresentAt(code, expectation, boilerplateSize);
-}
-
 BOOST_AUTO_TEST_CASE(ifStatement)
 {
 	char const* sourceCode = "contract test {\n"
