@@ -296,7 +296,7 @@ public:
 
 	/// Returns the function type of the constructor. Note that the location part of the function type
 	/// is not used, as this type cannot be the type of a variable or expression.
-	std::shared_ptr<FunctionType const> const& getConstructorType() const;
+	FunctionTypePointer const& getConstructorType() const;
 
 	/// @returns the identifier of the function with the given name or Invalid256 if such a name does
 	/// not exist.
@@ -308,7 +308,7 @@ private:
 	/// members.
 	bool m_super;
 	/// Type of the constructor, @see getConstructorType. Lazily initialized.
-	mutable std::shared_ptr<FunctionType const> m_constructorType;
+	mutable FunctionTypePointer m_constructorType;
 	/// List of member types, will be lazy-initialized because of recursive references.
 	mutable std::unique_ptr<MemberList> m_members;
 };

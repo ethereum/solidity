@@ -77,11 +77,11 @@ void ContractDefinition::checkTypeRequirements()
 	}
 }
 
-map<FixedHash<4>, std::shared_ptr<FunctionType const>> ContractDefinition::getInterfaceFunctions() const
+map<FixedHash<4>, FunctionTypePointer> ContractDefinition::getInterfaceFunctions() const
 {
 	auto exportedFunctionList = getInterfaceFunctionList();
 
-	map<FixedHash<4>, std::shared_ptr<FunctionType const>> exportedFunctions;
+	map<FixedHash<4>, FunctionTypePointer> exportedFunctions;
 	for (auto const& it: exportedFunctionList)
 		// exportedFunctions.insert(make_pair(std::get<0>(it), FunctionDescription(std::get<1>(it), std::get<2>(it))));
 		exportedFunctions.insert(it);
@@ -519,104 +519,6 @@ void Literal::checkTypeRequirements()
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Invalid literal value."));
 }
-
-std::string const& ParamDescription::getName() const
-{
-	return m_description.first;
-}
-
-std::string const& ParamDescription::getType() const
-{
-	return m_description.second;
-}
-
-ASTPointer<ASTString> FunctionDescription::getDocumentation() const
-{
-	auto function = dynamic_cast<FunctionDefinition const*>(m_description.second);
-	if (function)
-		return function->getDocumentation();
-
-	return ASTPointer<ASTString>();
-}
-
-string FunctionDescription::getSignature() const
-{
-	return m_description.first->getCanonicalSignature(m_description.second->getName());
-}
-
-string FunctionDescription::getName() const
-{
-	return m_description.second->getName();
-}
-
-bool FunctionDescription::isConstant() const
-{
-	auto function = dynamic_cast<FunctionDefinition const*>(m_description.second);
-	if (function)
-		return function->isDeclaredConst();
-
-	return true;
-}
-
-vector<ParamDescription> const FunctionDescription::getParameters() const
-{
-	auto function = dynamic_cast<FunctionDefinition const*>(m_description.second);
-	if (function)
-	{
-		vector<ParamDescription> paramsDescription;
-		for (auto const& param: function->getParameters())
-			paramsDescription.push_back(ParamDescription(param->getName(), param->getType()->toString()));
-
-		return paramsDescription;
-	}
-
-	// else for now let's assume no parameters to accessors
-	// LTODO: fix this for mapping types
-	return {};
-}
-
-vector<ParamDescription> const FunctionDescription::getReturnParameters() const
-{
-	auto function = dynamic_cast<FunctionDefinition const*>(m_description.second);
-	if (function)
-	{
-		vector<ParamDescription> paramsDescription;
-		for (auto const& param: function->getReturnParameters())
-			paramsDescription.push_back(ParamDescription(param->getName(), param->getType()->toString()));
-
-		return paramsDescription;
-	}
-
-	auto vardecl = dynamic_cast<VariableDeclaration const*>(m_description.second);
-	return {ParamDescription(vardecl->getName(), vardecl->getType()->toString())};
-}
-
-Declaration const* FunctionDescription::getDeclaration() const
-{
-	return m_description.second;
-}
-
-VariableDeclaration const* FunctionDescription::getVariableDeclaration() const
-{
-	return dynamic_cast<VariableDeclaration const*>(m_description.second);
-}
-
-FunctionDefinition const* FunctionDescription::getFunctionDefinition() const
-{
-	return dynamic_cast<FunctionDefinition const*>(m_description.second);
-}
-
-shared_ptr<FunctionType const> FunctionDescription::getFunctionTypeShared() const
-{
-	return m_description.first;
-}
-
-
-FunctionType const* FunctionDescription::getFunctionType() const
-{
-	return m_description.first.get();
-}
-
 
 }
 }

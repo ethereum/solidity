@@ -156,103 +156,6 @@ private:
 	Declaration const* m_scope;
 };
 
-
-
-/// Traits and Helpers (@todo: move to their own header)
-/// @{
-
-/**
- * Generic Parameter description used by @see FunctionDescription to return
- * a descripton of its parameters.
- */
-struct ParamDescription
-{
-	ParamDescription(std::string const& _name, std::string const& _type):
-		m_description(_name, _type){}
-
-	std::string const& getName() const;
-	std::string const& getType() const;
-
-	std::pair<std::string, std::string> m_description;
-};
-
-
-/**
- * Generic function description able to describe both normal functions and
- * functions that should be made as accessors to state variables
- */
-struct FunctionDescription
-{
-	FunctionDescription(std::shared_ptr<FunctionType const> _type, Declaration const* _decl):
-		m_description(_type, _decl){}
-
-	/// constructor for a constructor's function definition. Used only inside mix.
-	FunctionDescription(Declaration const* _def):
-	m_description(nullptr, _def){}
-
-	FunctionDescription():
-		m_description(nullptr, nullptr){}
-
-	/// @returns the natspec documentation of the function if existing. Accessor (for now) don't have natspec doc
-	ASTPointer<ASTString> getDocumentation() const;
-	/// @returns the canonical signature of the function
-	std::string getSignature() const;
-	/// @returns the name of the function, basically that of the declaration
-	std::string getName() const;
-	/// @returns whether the function is constant. IF it's an accessor this is always true
-	bool isConstant() const;
-	/// @returns the argument parameters of the function
-	std::vector<ParamDescription> const getParameters() const;
-	/// @returns the return parameters of the function
-	std::vector<ParamDescription> const getReturnParameters() const;
-	/// @returns a generic Declaration AST Node pointer which can be either a FunctionDefinition or a VariableDeclaration
-	Declaration const* getDeclaration() const;
-	/// @returns the VariableDeclaration AST Node pointer or nullptr if it's not a VariableDeclaration
-	VariableDeclaration const* getVariableDeclaration() const;
-	/// @returns the FunctionDefinition AST Node pointer or nullptr if it's not a FunctionDefinition
-	FunctionDefinition const* getFunctionDefinition() const;
-	/// @returns a created shared pointer with the type of the function
-	std::shared_ptr<FunctionType> makeFunctionType() const;
-	/// @returns a pointer to the function type
-	FunctionType const* getFunctionType() const;
-	/// @returns a shared pointer to the function type
-	std::shared_ptr<FunctionType const> getFunctionTypeShared() const;
-
-	std::pair<std::shared_ptr<FunctionType const>, Declaration const*> m_description;
-};
-
-/**
- * Abstract class that is added to each AST node that can store local variables.
- */
-class VariableScope
-{
-public:
-	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
-	std::vector<VariableDeclaration const*> const& getLocalVariables() const { return m_localVariables; }
-
-private:
-	std::vector<VariableDeclaration const*> m_localVariables;
-};
-
-/**
- * Abstract class that is added to each AST node that can receive documentation.
- */
-class Documented
-{
-public:
-	explicit Documented(ASTPointer<ASTString> const& _documentation): m_documentation(_documentation) {}
-
-	/// @return A shared pointer of an ASTString.
-	/// Can contain a nullptr in which case indicates absence of documentation
-	ASTPointer<ASTString> const& getDocumentation() const { return m_documentation; }
-
-protected:
-	ASTPointer<ASTString> m_documentation;
-};
-
-/// @}
-
-
 /**
  * Definition of a contract. This is the only AST nodes where child nodes are not visited in
  * document order. It first visits all struct declarations, then all variable declarations and
@@ -294,7 +197,7 @@ public:
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
 	/// as intended for use by the ABI.
-	std::map<FixedHash<4>, std::shared_ptr<FunctionType const>> getInterfaceFunctions() const;
+	std::map<FixedHash<4>, FunctionTypePointer> getInterfaceFunctions() const;
 
 	/// List of all (direct and indirect) base contracts in order from derived to base, including
 	/// the contract itself. Available after name resolution
@@ -307,7 +210,7 @@ public:
 private:
 	void checkIllegalOverrides() const;
 
-	std::vector<std::pair<FixedHash<4>, std::shared_ptr<FunctionType const>>> const& getInterfaceFunctionList() const;
+	std::vector<std::pair<FixedHash<4>, FunctionTypePointer>> const& getInterfaceFunctionList() const;
 
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
@@ -316,7 +219,7 @@ private:
 	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
-	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, std::shared_ptr<FunctionType const>>>> m_interfaceFunctionList;
+	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
 };
 
 class InheritanceSpecifier: public ASTNode
