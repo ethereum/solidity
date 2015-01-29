@@ -499,7 +499,7 @@ MemberList const& ContractType::getMembers() const
 		}
 		else
 			for (auto const& it: m_contract.getInterfaceFunctions())
-				members[it.second->getDeclaration()->getName()] = it.second;
+				members[it.second->getDeclaration().getName()] = it.second;
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
@@ -522,7 +522,7 @@ u256 ContractType::getFunctionIdentifier(string const& _functionName) const
 {
 	auto interfaceFunctions = m_contract.getInterfaceFunctions();
 	for (auto const& it: m_contract.getInterfaceFunctions())
-		if (it.second->getDeclaration()->getName() == _functionName)
+		if (it.second->getDeclaration().getName() == _functionName)
 			return FixedHash<4>::Arith(it.first);
 
 	return Invalid256;

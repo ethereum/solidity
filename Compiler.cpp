@@ -164,7 +164,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		m_context << callDataUnpackerEntryPoints.at(it.first);
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		appendCalldataUnpacker(functionType->getParameterTypes());
-		m_context.appendJumpTo(m_context.getFunctionEntryLabel(*it.second->getDeclaration()));
+		m_context.appendJumpTo(m_context.getFunctionEntryLabel(it.second->getDeclaration()));
 		m_context << returnTag;
 		appendReturnValuePacker(functionType->getReturnParameterTypes());
 	}

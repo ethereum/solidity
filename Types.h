@@ -390,7 +390,12 @@ public:
 	/// If @a _name is not provided (empty string) then the @c m_declaration member of the
 	/// function type is used
 	std::string getCanonicalSignature(std::string const& _name = "") const;
-	Declaration const* getDeclaration() const { return m_declaration; }
+	Declaration const& getDeclaration() const
+	{
+		solAssert(m_declaration, "Requested declaration from a FunctionType that has none");
+		return *m_declaration;
+	}
+	bool hasDeclaration() const { return !!m_declaration; }
 	bool isConstant() const { return m_isConstant; }
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation

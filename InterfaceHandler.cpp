@@ -59,9 +59,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 			}
 			return params;
 		};
-
-		solAssert(it.second->getDeclaration(), "All function interface types should contain a declaration");
-		method["name"] = it.second->getDeclaration()->getName();
+		method["name"] = it.second->getDeclaration().getName();
 		method["constant"] = it.second->isConstant();
 		method["inputs"] = populateParameters(it.second->getParameterNames(),
 											  it.second->getParameterTypeNames());
@@ -86,7 +84,7 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 				r += (r.size() ? "," : "(") + _paramTypes[i] + " " + _paramNames[i];
 			return r.size() ? r + ")" : "()";
 		};
-		ret += "function " + it.second->getDeclaration()->getName() +
+		ret += "function " + it.second->getDeclaration().getName() +
 			populateParameters(it.second->getParameterNames(), it.second->getParameterTypeNames()) +
 			(it.second->isConstant() ? "constant " : "");
 		if (it.second->getReturnParameterTypes().size())
