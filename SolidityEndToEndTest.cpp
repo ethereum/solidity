@@ -1963,9 +1963,9 @@ BOOST_AUTO_TEST_CASE(event)
 			function deposit(hash _id, bool _manually) {
 				if (_manually) {
 					hash s = 0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20;
-					log3(msg.value, s, hash(msg.sender), _id);
+					log3(msg.value, s, hash32(msg.sender), _id);
 				} else
-					Deposit(msg.sender, _id, msg.value);
+					Deposit(hash32(msg.sender), _id, msg.value);
 			}
 		}
 	)";
@@ -1991,7 +1991,7 @@ BOOST_AUTO_TEST_CASE(event_lots_of_data)
 		contract ClientReceipt {
 			event Deposit(address _from, hash _id, uint _value, bool _flag);
 			function deposit(hash _id) {
-				Deposit(msg.sender, _id, msg.value, true);
+				Deposit(msg.sender, hash32(_id), msg.value, true);
 			}
 		}
 	)";
