@@ -52,6 +52,7 @@ public:
 	virtual bool visit(VariableDeclaration&) { return true; }
 	virtual bool visit(ModifierDefinition&) { return true; }
 	virtual bool visit(ModifierInvocation&) { return true; }
+	virtual bool visit(EventDefinition&) { return true; }
 	virtual bool visit(TypeName&) { return true; }
 	virtual bool visit(ElementaryTypeName&) { return true; }
 	virtual bool visit(UserDefinedTypeName&) { return true; }
@@ -92,6 +93,7 @@ public:
 	virtual void endVisit(VariableDeclaration&) { }
 	virtual void endVisit(ModifierDefinition&) { }
 	virtual void endVisit(ModifierInvocation&) { }
+	virtual void endVisit(EventDefinition&) { }
 	virtual void endVisit(TypeName&) { }
 	virtual void endVisit(ElementaryTypeName&) { }
 	virtual void endVisit(UserDefinedTypeName&) { }
@@ -136,6 +138,7 @@ public:
 	virtual bool visit(VariableDeclaration const&) { return true; }
 	virtual bool visit(ModifierDefinition const&) { return true; }
 	virtual bool visit(ModifierInvocation const&) { return true; }
+	virtual bool visit(EventDefinition const&) { return true; }
 	virtual bool visit(TypeName const&) { return true; }
 	virtual bool visit(ElementaryTypeName const&) { return true; }
 	virtual bool visit(UserDefinedTypeName const&) { return true; }
@@ -176,6 +179,7 @@ public:
 	virtual void endVisit(VariableDeclaration const&) { }
 	virtual void endVisit(ModifierDefinition const&) { }
 	virtual void endVisit(ModifierInvocation const&) { }
+	virtual void endVisit(EventDefinition const&) { }
 	virtual void endVisit(TypeName const&) { }
 	virtual void endVisit(ElementaryTypeName const&) { }
 	virtual void endVisit(UserDefinedTypeName const&) { }
