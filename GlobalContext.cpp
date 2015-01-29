@@ -83,5 +83,13 @@ MagicVariableDeclaration const* GlobalContext::getCurrentThis() const
 
 }
 
+MagicVariableDeclaration const* GlobalContext::getCurrentSuper() const
+{
+	if (!m_superPointer[m_currentContract])
+		m_superPointer[m_currentContract] = make_shared<MagicVariableDeclaration>(
+													"super", make_shared<ContractType>(*m_currentContract, true));
+	return m_superPointer[m_currentContract].get();
+}
+
 }
 }

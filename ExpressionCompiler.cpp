@@ -48,6 +48,12 @@ void ExpressionCompiler::appendTypeConversion(CompilerContext& _context, Type co
 	compiler.appendTypeConversion(_typeOnStack, _targetType, _cleanupNeeded);
 }
 
+void ExpressionCompiler::appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const& _varDecl, bool _optimize)
+{
+	ExpressionCompiler compiler(_context, _optimize);
+	compiler.appendStateVariableAccessor(_varDecl);
+}
+
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	_assignment.getRightHandSide().accept(*this);
@@ -60,7 +66,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	{
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
-		m_currentLValue.retrieveValue(_assignment, true);
+		m_currentLValue.retrieveValue(_assignment.getType(), _assignment.getLocation(), true);
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1;
@@ -101,7 +107,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	case Token::INC: // ++ (pre- or postfix)
 	case Token::DEC: // -- (pre- or postfix)
 		solAssert(m_currentLValue.isValid(), "LValue not retrieved.");
-		m_currentLValue.retrieveValue(_unaryOperation);
+		m_currentLValue.retrieveValue(_unaryOperation.getType(), _unaryOperation.getLocation());
 		if (!_unaryOperation.isPrefixOperation())
 		{
 			if (m_currentLValue.storesReferenceOnStack())
@@ -359,15 +365,25 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	{
 	case Type::Category::CONTRACT:
 	{
+		bool alsoSearchInteger = false;
 		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.getExpression().getType());
-		u256 identifier = type.getFunctionIdentifier(member);
-		if (identifier != Invalid256)
+		if (type.isSuper())
+			m_context << m_context.getSuperFunctionEntryLabel(member, type.getContractDefinition()).pushTag();
+		else
 		{
-			appendTypeConversion(type, IntegerType(0, IntegerType::Modifier::ADDRESS), true);
-			m_context << identifier;
-			break;
+			// ordinary contract type
+			u256 identifier = type.getFunctionIdentifier(member);
+			if (identifier != Invalid256)
+			{
+				appendTypeConversion(type, IntegerType(0, IntegerType::Modifier::ADDRESS), true);
+				m_context << identifier;
+			}
+			else
+				// not found in contract, search in members inherited from address
+				alsoSearchInteger = true;
 		}
-		// fall-through to "integer" otherwise (address)
+		if (!alsoSearchInteger)
+			break;
 	}
 	case Type::Category::INTEGER:
 		if (member == "balance")
@@ -463,8 +479,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	Declaration const* declaration = _identifier.getReferencedDeclaration();
 	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
-		if (magicVar->getType()->getCategory() == Type::Category::CONTRACT) // must be "this"
-			m_context << eth::Instruction::ADDRESS;
+		if (magicVar->getType()->getCategory() == Type::Category::CONTRACT)
+			// "this" or "super"
+			if (!dynamic_cast<ContractType const&>(*magicVar->getType()).isSuper())
+				m_context << eth::Instruction::ADDRESS;
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
@@ -789,6 +807,13 @@ unsigned ExpressionCompiler::appendArgumentCopyToMemory(TypePointers const& _typ
 	return length;
 }
 
+void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
+{
+	m_currentLValue.fromStateVariable(_varDecl, _varDecl.getType());
+	solAssert(m_currentLValue.isInStorage(), "");
+	m_currentLValue.retrieveValue(_varDecl.getType(), Location(), true);
+}
+
 ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,
 								   unsigned _baseStackOffset):
 	m_context(&_compilerContext), m_type(_type), m_baseStackOffset(_baseStackOffset)
@@ -801,7 +826,7 @@ ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType
 		m_size = unsigned(_dataType.getSizeOnStack());
 }
 
-void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bool _remove) const
+void ExpressionCompiler::LValue::retrieveValue(TypePointer const& _type, Location const& _location, bool _remove) const
 {
 	switch (m_type)
 	{
@@ -809,40 +834,45 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 	{
 		unsigned stackPos = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset));
 		if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
-			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
+			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_location)
 												  << errinfo_comment("Stack too deep."));
 		for (unsigned i = 0; i < m_size; ++i)
 			*m_context << eth::dupInstruction(stackPos + 1);
 		break;
 	}
 	case STORAGE:
-		if (!_expression.getType()->isValueType())
-			break; // no distinction between value and reference for non-value types
-		if (!_remove)
-			*m_context << eth::Instruction::DUP1;
-		if (m_size == 1)
-			*m_context << eth::Instruction::SLOAD;
-		else
-			for (unsigned i = 0; i < m_size; ++i)
-			{
-				*m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP1;
-				if (i + 1 < m_size)
-					*m_context << u256(1) << eth::Instruction::ADD;
-				else
-					*m_context << eth::Instruction::POP;
-			}
+		retrieveValueFromStorage(_type, _remove);
 		break;
 	case MEMORY:
-		if (!_expression.getType()->isValueType())
+		if (!_type->isValueType())
 			break; // no distinction between value and reference for non-value types
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_location)
 													  << errinfo_comment("Location type not yet implemented."));
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_location)
 													  << errinfo_comment("Unsupported location type."));
 		break;
 	}
+}
+
+void ExpressionCompiler::LValue::retrieveValueFromStorage(TypePointer const& _type, bool _remove) const
+{
+	if (!_type->isValueType())
+		return; // no distinction between value and reference for non-value types
+	if (!_remove)
+		*m_context << eth::Instruction::DUP1;
+	if (m_size == 1)
+		*m_context << eth::Instruction::SLOAD;
+	else
+		for (unsigned i = 0; i < m_size; ++i)
+		{
+			*m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP1;
+			if (i + 1 < m_size)
+				*m_context << u256(1) << eth::Instruction::ADD;
+			else
+				*m_context << eth::Instruction::POP;
+		}
 }
 
 void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool _move) const
@@ -859,7 +889,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 			for (unsigned i = 0; i < m_size; ++i)
 				*m_context << eth::swapInstruction(stackDiff) << eth::Instruction::POP;
 		if (!_move)
-			retrieveValue(_expression);
+			retrieveValue(_expression.getType(), _expression.getLocation());
 		break;
 	}
 	case LValue::STORAGE:
@@ -946,9 +976,17 @@ void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(Expression co
 {
 	if (!_expression.lvalueRequested())
 	{
-		retrieveValue(_expression, true);
+		retrieveValue(_expression.getType(), _expression.getLocation(), true);
 		reset();
 	}
+}
+
+void ExpressionCompiler::LValue::fromStateVariable(Declaration const& _varDecl, TypePointer const& _type)
+{
+	m_type = STORAGE;
+	solAssert(_type->getStorageSize() <= numeric_limits<unsigned>::max(), "The storage size of " + _type->toString() + " should fit in an unsigned");
+	*m_context << m_context->getStorageLocationOfVariable(_varDecl);
+	m_size = unsigned(_type->getStorageSize());
 }
 
 void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, Declaration const& _declaration)
@@ -961,10 +999,7 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 	}
 	else if (m_context->isStateVariable(&_declaration))
 	{
-		m_type = STORAGE;
-		solAssert(_identifier.getType()->getStorageSize() <= numeric_limits<unsigned>::max(), "The storage size of " + _identifier.getType()->toString() + " should fit in unsigned");
-		m_size = unsigned(_identifier.getType()->getStorageSize());
-		*m_context << m_context->getStorageLocationOfVariable(_declaration);
+		fromStateVariable(_declaration, _identifier.getType());
 	}
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_identifier.getLocation())

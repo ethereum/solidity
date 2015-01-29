@@ -52,7 +52,7 @@ private:
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic, ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
-	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar);
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar, bool _isPublic = false, bool _isStateVar = false);
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();

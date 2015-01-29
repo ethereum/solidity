@@ -41,6 +41,8 @@ struct Location
 		start(_start), end(_end), sourceName(_sourceName) { }
 	Location(): start(-1), end(-1) { }
 
+	bool isEmpty() const { return start == -1 && end == -1; }
+
 	int start;
 	int end;
 	std::shared_ptr<std::string const> sourceName;
@@ -49,6 +51,8 @@ struct Location
 /// Stream output for Location (used e.g. in boost exceptions).
 inline std::ostream& operator<<(std::ostream& _out, Location const& _location)
 {
+	if (_location.isEmpty())
+		return _out << "NO_LOCATION_SPECIFIED";
 	return _out << *_location.sourceName << "[" << _location.start << "," << _location.end << ")";
 }
 

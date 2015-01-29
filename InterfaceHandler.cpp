@@ -45,23 +45,26 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		Json::Value inputs(Json::arrayValue);
 		Json::Value outputs(Json::arrayValue);
 
-		auto populateParameters = [](std::vector<ASTPointer<VariableDeclaration>> const& _vars)
+		auto populateParameters = [](vector<string> const& _paramNames,
+									 vector<string> const& _paramTypes)
 		{
 			Json::Value params(Json::arrayValue);
-			for (ASTPointer<VariableDeclaration> const& var: _vars)
+			solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
+			for (unsigned i = 0; i < _paramNames.size(); ++i)
 			{
 				Json::Value input;
-				input["name"] = var->getName();
-				input["type"] = var->getType()->toString();
+				input["name"] = _paramNames[i];
+				input["type"] = _paramTypes[i];
 				params.append(input);
 			}
 			return params;
 		};
-
-		method["name"] = it.second->getName();
-		method["constant"] = it.second->isDeclaredConst();
-		method["inputs"] = populateParameters(it.second->getParameters());
-		method["outputs"] = populateParameters(it.second->getReturnParameters());
+		method["name"] = it.second->getDeclaration().getName();
+		method["constant"] = it.second->isConstant();
+		method["inputs"] = populateParameters(it.second->getParameterNames(),
+											  it.second->getParameterTypeNames());
+		method["outputs"] = populateParameters(it.second->getReturnParameterNames(),
+											   it.second->getReturnParameterTypeNames());
 		methods.append(method);
 	}
 	return std::unique_ptr<std::string>(new std::string(m_writer.write(methods)));
@@ -72,17 +75,20 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 	string ret = "contract " + _contractDef.getName() + "{";
 	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
-		FunctionDefinition const* f = it.second;
-		auto populateParameters = [](vector<ASTPointer<VariableDeclaration>> const& _vars)
+		auto populateParameters = [](vector<string> const& _paramNames,
+									 vector<string> const& _paramTypes)
 		{
 			string r = "";
-			for (ASTPointer<VariableDeclaration> const& var: _vars)
-				r += (r.size() ? "," : "(") + var->getType()->toString() + " " + var->getName();
+			solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
+			for (unsigned i = 0; i < _paramNames.size(); ++i)
+				r += (r.size() ? "," : "(") + _paramTypes[i] + " " + _paramNames[i];
 			return r.size() ? r + ")" : "()";
 		};
-		ret += "function " + f->getName() + populateParameters(f->getParameters()) + (f->isDeclaredConst() ? "constant " : "");
-		if (f->getReturnParameters().size())
-			ret += "returns" + populateParameters(f->getReturnParameters());
+		ret += "function " + it.second->getDeclaration().getName() +
+			populateParameters(it.second->getParameterNames(), it.second->getParameterTypeNames()) +
+			(it.second->isConstant() ? "constant " : "");
+		if (it.second->getReturnParameterTypes().size())
+			ret += "returns" + populateParameters(it.second->getReturnParameterNames(), it.second->getReturnParameterTypeNames());
 		else if (ret.back() == ' ')
 			ret.pop_back();
 		ret += "{}";

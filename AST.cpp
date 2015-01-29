@@ -66,21 +66,25 @@ void ContractDefinition::checkTypeRequirements()
 
 	// check for hash collisions in function signatures
 	set<FixedHash<4>> hashes;
-	for (auto const& hashAndFunction: getInterfaceFunctionList())
+	for (auto const& it: getInterfaceFunctionList())
 	{
-		FixedHash<4> const& hash = hashAndFunction.first;
+		FixedHash<4> const& hash = it.first;
 		if (hashes.count(hash))
-			BOOST_THROW_EXCEPTION(createTypeError("Function signature hash collision for " +
-												  hashAndFunction.second->getCanonicalSignature()));
+			BOOST_THROW_EXCEPTION(createTypeError(
+									  std::string("Function signature hash collision for ") +
+									  it.second->getCanonicalSignature()));
 		hashes.insert(hash);
 	}
 }
 
-map<FixedHash<4>, FunctionDefinition const*> ContractDefinition::getInterfaceFunctions() const
+map<FixedHash<4>, FunctionTypePointer> ContractDefinition::getInterfaceFunctions() const
 {
-	vector<pair<FixedHash<4>, FunctionDefinition const*>> exportedFunctionList = getInterfaceFunctionList();
-	map<FixedHash<4>, FunctionDefinition const*> exportedFunctions(exportedFunctionList.begin(),
-																   exportedFunctionList.end());
+	auto exportedFunctionList = getInterfaceFunctionList();
+
+	map<FixedHash<4>, FunctionTypePointer> exportedFunctions;
+	for (auto const& it: exportedFunctionList)
+		exportedFunctions.insert(it);
+
 	solAssert(exportedFunctionList.size() == exportedFunctions.size(),
 			  "Hash collision at Function Definition Hash calculation");
 
@@ -134,20 +138,31 @@ void ContractDefinition::checkIllegalOverrides() const
 	}
 }
 
-vector<pair<FixedHash<4>, FunctionDefinition const*>> const& ContractDefinition::getInterfaceFunctionList() const
+vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getInterfaceFunctionList() const
 {
 	if (!m_interfaceFunctionList)
 	{
 		set<string> functionsSeen;
-		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionDefinition const*>>());
+		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionTypePointer>>());
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
+		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
 				if (f->isPublic() && !f->isConstructor() && functionsSeen.count(f->getName()) == 0)
 				{
 					functionsSeen.insert(f->getName());
 					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
-					m_interfaceFunctionList->push_back(make_pair(hash, f.get()));
+					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*f, false)));
 				}
+
+			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
+				if (v->isPublic() && functionsSeen.count(v->getName()) == 0)
+				{
+					FunctionType ftype(*v);
+					functionsSeen.insert(v->getName());
+					FixedHash<4> hash(dev::sha3(ftype.getCanonicalSignature(v->getName())));
+					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*v)));
+				}
+		}
 	}
 	return *m_interfaceFunctionList;
 }
@@ -219,7 +234,7 @@ void FunctionDefinition::checkTypeRequirements()
 
 string FunctionDefinition::getCanonicalSignature() const
 {
-	return getName() + FunctionType(*this).getCanonicalSignature();
+	return FunctionType(*this).getCanonicalSignature(getName());
 }
 
 Declaration::LValueType VariableDeclaration::getLValueType() const

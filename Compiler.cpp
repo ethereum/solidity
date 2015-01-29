@@ -28,7 +28,6 @@
 #include <libsolidity/Compiler.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/CompilerUtils.h>
-#include <libsolidity/CallGraph.h>
 
 using namespace std;
 
@@ -40,21 +39,14 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 {
 	m_context = CompilerContext(); // clear it just in case
 	initializeContext(_contract, _contracts);
-
-	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
-	{
-		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-			if (!function->isConstructor())
-				m_context.addFunction(*function);
-		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
-			m_context.addModifier(*modifier);
-	}
-
 	appendFunctionSelector(_contract);
-	for (ContractDefinition const* contract: _contract.getLinearizedBaseContracts())
-		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-			if (!function->isConstructor())
-				function->accept(*this);
+	set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
+	while (!functions.empty())
+	{
+		for (Declaration const* function: functions)
+			function->accept(*this);
+		functions = m_context.getFunctionsWithoutCode();
+	}
 
 	// Swap the runtime context with the creation-time context
 	swap(m_context, m_runtimeContext);
@@ -66,72 +58,26 @@ void Compiler::initializeContext(ContractDefinition const& _contract,
 								 map<ContractDefinition const*, bytes const*> const& _contracts)
 {
 	m_context.setCompiledContracts(_contracts);
+	m_context.setInheritanceHierarchy(_contract.getLinearizedBaseContracts());
 	registerStateVariables(_contract);
 }
 
 void Compiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
 {
-	std::vector<ContractDefinition const*> const& bases = _contract.getLinearizedBaseContracts();
-
-	// Make all modifiers known to the context.
-	for (ContractDefinition const* contract: bases)
-		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
-			m_context.addModifier(*modifier);
-
 	// arguments for base constructors, filled in derived-to-base order
 	map<ContractDefinition const*, vector<ASTPointer<Expression>> const*> baseArguments;
-	set<FunctionDefinition const*> neededFunctions;
-	set<ASTNode const*> nodesUsedInConstructors;
 
-	// Determine the arguments that are used for the base constructors and also which functions
-	// are needed at compile time.
+	// Determine the arguments that are used for the base constructors.
+	std::vector<ContractDefinition const*> const& bases = _contract.getLinearizedBaseContracts();
 	for (ContractDefinition const* contract: bases)
-	{
-		if (FunctionDefinition const* constructor = contract->getConstructor())
-			nodesUsedInConstructors.insert(constructor);
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->getBaseContracts())
 		{
 			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
 													base->getName()->getReferencedDeclaration());
 			solAssert(baseContract, "");
 			if (baseArguments.count(baseContract) == 0)
-			{
 				baseArguments[baseContract] = &base->getArguments();
-				for (ASTPointer<Expression> const& arg: base->getArguments())
-					nodesUsedInConstructors.insert(arg.get());
-			}
 		}
-	}
-
-	auto functionOverrideResolver = [&](string const& _name) -> FunctionDefinition const*
-	{
-		for (ContractDefinition const* contract: bases)
-			for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-				if (!function->isConstructor() && function->getName() == _name)
-					return function.get();
-		return nullptr;
-	};
-	auto modifierOverrideResolver = [&](string const& _name) -> ModifierDefinition const*
-	{
-		return &m_context.getFunctionModifier(_name);
-	};
-
-	neededFunctions = getFunctionsCalled(nodesUsedInConstructors, functionOverrideResolver,
-										 modifierOverrideResolver);
-
-	// First add all overrides (or the functions themselves if there is no override)
-	for (FunctionDefinition const* fun: neededFunctions)
-	{
-		FunctionDefinition const* override = nullptr;
-		if (!fun->isConstructor())
-			override = functionOverrideResolver(fun->getName());
-		if (!!override && neededFunctions.count(override))
-			m_context.addFunction(*override);
-	}
-	// now add the rest
-	for (FunctionDefinition const* fun: neededFunctions)
-		if (fun->isConstructor() || functionOverrideResolver(fun->getName()) != fun)
-			m_context.addFunction(*fun);
 
 	// Call constructors in base-to-derived order.
 	// The Constructor for the most derived contract is called later.
@@ -153,10 +99,14 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 	m_context << eth::Instruction::DUP1 << sub << u256(0) << eth::Instruction::CODECOPY;
 	m_context << u256(0) << eth::Instruction::RETURN;
 
-	// note that we have to explicitly include all used functions because of absolute jump
-	// labels
-	for (FunctionDefinition const* fun: neededFunctions)
-		fun->accept(*this);
+	// note that we have to include the functions again because of absolute jump labels
+	set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
+	while (!functions.empty())
+	{
+		for (Declaration const* function: functions)
+			function->accept(*this);
+		functions = m_context.getFunctionsWithoutCode();
+	}
 }
 
 void Compiler::appendBaseConstructorCall(FunctionDefinition const& _constructor,
@@ -177,31 +127,22 @@ void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 	unsigned argumentSize = 0;
 	for (ASTPointer<VariableDeclaration> const& var: _constructor.getParameters())
 		argumentSize += CompilerUtils::getPaddedSize(var->getType()->getCalldataEncodedSize());
+
 	if (argumentSize > 0)
 	{
 		m_context << u256(argumentSize);
 		m_context.appendProgramSize();
 		m_context << u256(CompilerUtils::dataStartOffset); // copy it to byte four as expected for ABI calls
 		m_context << eth::Instruction::CODECOPY;
-		appendCalldataUnpacker(_constructor, true);
+		appendCalldataUnpacker(FunctionType(_constructor).getParameterTypes(), true);
 	}
 	m_context.appendJumpTo(m_context.getFunctionEntryLabel(_constructor));
 	m_context << returnTag;
 }
 
-set<FunctionDefinition const*> Compiler::getFunctionsCalled(set<ASTNode const*> const& _nodes,
-						function<FunctionDefinition const*(string const&)> const& _resolveFunctionOverrides,
-						function<ModifierDefinition const*(string const&)> const& _resolveModifierOverrides)
-{
-	CallGraph callgraph(_resolveFunctionOverrides, _resolveModifierOverrides);
-	for (ASTNode const* node: _nodes)
-		callgraph.addNode(*node);
-	return callgraph.getCalls();
-}
-
 void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 {
-	map<FixedHash<4>, FunctionDefinition const*> interfaceFunctions = _contract.getInterfaceFunctions();
+	map<FixedHash<4>, FunctionTypePointer> interfaceFunctions = _contract.getInterfaceFunctions();
 	map<FixedHash<4>, const eth::AssemblyItem> callDataUnpackerEntryPoints;
 
 	// retrieve the function signature hash from the calldata
@@ -209,7 +150,6 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	CompilerUtils(m_context).loadFromMemory(0, 4, false, true);
 
 	// stack now is: 1 0 <funhash>
-	// for (auto it = interfaceFunctions.cbegin(); it != interfaceFunctions.cend(); ++it)
 	for (auto const& it: interfaceFunctions)
 	{
 		callDataUnpackerEntryPoints.insert(std::make_pair(it.first, m_context.newTag()));
@@ -220,29 +160,28 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 
 	for (auto const& it: interfaceFunctions)
 	{
-		FunctionDefinition const& function = *it.second;
+		FunctionTypePointer const& functionType = it.second;
 		m_context << callDataUnpackerEntryPoints.at(it.first);
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
-		appendCalldataUnpacker(function);
-		m_context.appendJumpTo(m_context.getFunctionEntryLabel(function));
+		appendCalldataUnpacker(functionType->getParameterTypes());
+		m_context.appendJumpTo(m_context.getFunctionEntryLabel(it.second->getDeclaration()));
 		m_context << returnTag;
-		appendReturnValuePacker(function);
+		appendReturnValuePacker(functionType->getReturnParameterTypes());
 	}
 }
 
-unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, bool _fromMemory)
+unsigned Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory)
 {
 	// We do not check the calldata size, everything is zero-padded.
 	unsigned dataOffset = CompilerUtils::dataStartOffset; // the 4 bytes of the function hash signature
 	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
-	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
+	for (TypePointer const& type: _typeParameters)
 	{
-		unsigned const c_numBytes = var->getType()->getCalldataEncodedSize();
+		unsigned const c_numBytes = type->getCalldataEncodedSize();
 		if (c_numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
-								  << errinfo_sourceLocation(var->getLocation())
-								  << errinfo_comment("Type " + var->getType()->toString() + " not yet supported."));
-		bool const c_leftAligned = var->getType()->getCategory() == Type::Category::STRING;
+								  << errinfo_comment("Type " + type->toString() + " not yet supported."));
+		bool const c_leftAligned = type->getCategory() == Type::Category::STRING;
 		bool const c_padToWords = true;
 		dataOffset += CompilerUtils(m_context).loadFromMemory(dataOffset, c_numBytes, c_leftAligned,
 															  !_fromMemory, c_padToWords);
@@ -250,26 +189,26 @@ unsigned Compiler::appendCalldataUnpacker(FunctionDefinition const& _function, b
 	return dataOffset;
 }
 
-void Compiler::appendReturnValuePacker(FunctionDefinition const& _function)
+void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 {
 	//@todo this can be also done more efficiently
 	unsigned dataOffset = 0;
-	vector<ASTPointer<VariableDeclaration>> const& parameters = _function.getReturnParameters();
-	unsigned stackDepth = CompilerUtils(m_context).getSizeOnStack(parameters);
-	for (unsigned i = 0; i < parameters.size(); ++i)
+	unsigned stackDepth = 0;
+	for (TypePointer const& type: _typeParameters)
+		stackDepth += type->getSizeOnStack();
+
+	for (TypePointer const& type: _typeParameters)
 	{
-		Type const& paramType = *parameters[i]->getType();
-		unsigned numBytes = paramType.getCalldataEncodedSize();
+		unsigned numBytes = type->getCalldataEncodedSize();
 		if (numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
-								  << errinfo_sourceLocation(parameters[i]->getLocation())
-								  << errinfo_comment("Type " + paramType.toString() + " not yet supported."));
-		CompilerUtils(m_context).copyToStackTop(stackDepth, paramType);
-		ExpressionCompiler::appendTypeConversion(m_context, paramType, paramType, true);
-		bool const c_leftAligned = paramType.getCategory() == Type::Category::STRING;
+								  << errinfo_comment("Type " + type->toString() + " not yet supported."));
+		CompilerUtils(m_context).copyToStackTop(stackDepth, *type);
+		ExpressionCompiler::appendTypeConversion(m_context, *type, *type, true);
+		bool const c_leftAligned = type->getCategory() == Type::Category::STRING;
 		bool const c_padToWords = true;
 		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, c_leftAligned, c_padToWords);
-		stackDepth -= paramType.getSizeOnStack();
+		stackDepth -= type->getSizeOnStack();
 	}
 	// note that the stack is not cleaned up here
 	m_context << u256(dataOffset) << u256(0) << eth::Instruction::RETURN;
@@ -282,21 +221,37 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 			m_context.addStateVariable(*variable);
 }
 
+bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
+{
+	solAssert(_variableDeclaration.isStateVariable(), "Compiler visit to non-state variable declaration.");
+
+	m_context.startFunction(_variableDeclaration);
+	m_breakTags.clear();
+	m_continueTags.clear();
+
+	m_context << m_context.getFunctionEntryLabel(_variableDeclaration);
+	ExpressionCompiler::appendStateVariableAccessor(m_context, _variableDeclaration);
+
+	unsigned sizeOnStack = _variableDeclaration.getType()->getSizeOnStack();
+	solAssert(sizeOnStack <= 15, "Stack too deep.");
+	m_context << eth::dupInstruction(sizeOnStack + 1) << eth::Instruction::JUMP;
+
+	return false;
+}
+
 bool Compiler::visit(FunctionDefinition const& _function)
 {
 	//@todo to simplify this, the calling convention could by changed such that
 	// caller puts: [retarg0] ... [retargm] [return address] [arg0] ... [argn]
 	// although note that this reduces the size of the visible stack
 
-	m_context.startNewFunction();
+	m_context.startFunction(_function);
 	m_returnTag = m_context.newTag();
 	m_breakTags.clear();
 	m_continueTags.clear();
 	m_stackCleanupForReturn = 0;
 	m_currentFunction = &_function;
 	m_modifierDepth = 0;
-
-	m_context << m_context.getFunctionEntryLabel(_function);
 
 	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
 	// reserve additional slots: [retarg0] ... [retargm] [localvar0] ... [localvarp]
