@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionDescription function = retrieveFunctionBySignature(contract, "foo()");
-	BOOST_CHECK_MESSAGE(function.getDeclaration() != nullptr, "Could not find the accessor function");
+	BOOST_REQUIRE(function.getDeclaration() != nullptr);
 	auto returnParams = function.getReturnParameters();
 	BOOST_CHECK_EQUAL(returnParams.at(0).getType(), "uint256");
 	BOOST_CHECK(function.isConstant());
