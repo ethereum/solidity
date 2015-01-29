@@ -66,7 +66,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	{
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
-		m_currentLValue.retrieveValue(_assignment, true);
+		m_currentLValue.retrieveValue(_assignment.getType(), _assignment.getLocation(), true);
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1;
@@ -107,7 +107,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	case Token::INC: // ++ (pre- or postfix)
 	case Token::DEC: // -- (pre- or postfix)
 		solAssert(m_currentLValue.isValid(), "LValue not retrieved.");
-		m_currentLValue.retrieveValue(_unaryOperation);
+		m_currentLValue.retrieveValue(_unaryOperation.getType(), _unaryOperation.getLocation());
 		if (!_unaryOperation.isPrefixOperation())
 		{
 			if (m_currentLValue.storesReferenceOnStack())
@@ -811,7 +811,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 {
 	m_currentLValue.fromStateVariable(_varDecl, _varDecl.getType());
 	solAssert(m_currentLValue.isInStorage(), "");
-	m_currentLValue.retrieveValueFromStorage(_varDecl.getType(), true);
+	m_currentLValue.retrieveValue(_varDecl.getType(), Location(), true);
 }
 
 ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,
@@ -826,7 +826,7 @@ ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType
 		m_size = unsigned(_dataType.getSizeOnStack());
 }
 
-void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bool _remove) const
+void ExpressionCompiler::LValue::retrieveValue(TypePointer const& _type, Location const& _location, bool _remove) const
 {
 	switch (m_type)
 	{
@@ -834,23 +834,23 @@ void ExpressionCompiler::LValue::retrieveValue(Expression const& _expression, bo
 	{
 		unsigned stackPos = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset));
 		if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
-			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
+			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_location)
 												  << errinfo_comment("Stack too deep."));
 		for (unsigned i = 0; i < m_size; ++i)
 			*m_context << eth::dupInstruction(stackPos + 1);
 		break;
 	}
 	case STORAGE:
-		retrieveValueFromStorage(_expression.getType(), _remove);
+		retrieveValueFromStorage(_type, _remove);
 		break;
 	case MEMORY:
-		if (!_expression.getType()->isValueType())
+		if (!_type->isValueType())
 			break; // no distinction between value and reference for non-value types
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_location)
 													  << errinfo_comment("Location type not yet implemented."));
 		break;
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_location)
 													  << errinfo_comment("Unsupported location type."));
 		break;
 	}
@@ -889,7 +889,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 			for (unsigned i = 0; i < m_size; ++i)
 				*m_context << eth::swapInstruction(stackDiff) << eth::Instruction::POP;
 		if (!_move)
-			retrieveValue(_expression);
+			retrieveValue(_expression.getType(), _expression.getLocation());
 		break;
 	}
 	case LValue::STORAGE:
@@ -976,7 +976,7 @@ void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(Expression co
 {
 	if (!_expression.lvalueRequested())
 	{
-		retrieveValue(_expression, true);
+		retrieveValue(_expression.getType(), _expression.getLocation(), true);
 		reset();
 	}
 }
