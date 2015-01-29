@@ -1905,6 +1905,7 @@ BOOST_AUTO_TEST_CASE(use_std_lib)
 		import "mortal";
 		contract Icarus is mortal { }
 	)";
+	m_addStandardSources = true;
 	u256 amount(130);
 	u160 address(23);
 	compileAndRun(sourceCode, amount, "Icarus");
