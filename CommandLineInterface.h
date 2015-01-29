@@ -21,9 +21,9 @@
  */
 #pragma once
 
-#include <boost/program_options.hpp>
-
 #include <libsolidity/CompilerStack.h>
+#include <memory>
+#include <boost/program_options.hpp>
 
 namespace dev
 {
@@ -65,7 +65,7 @@ private:
 	/// map of input files to source code strings
 	std::map<std::string, std::string> m_sourceCodes;
 	/// Solidity compiler stack
-	dev::solidity::CompilerStack m_compiler;
+	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
 };
 
 }
