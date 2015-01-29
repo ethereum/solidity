@@ -193,6 +193,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	{
 		//@todo struct construction
 		solAssert(_functionCall.getArguments().size() == 1, "");
+		solAssert(_functionCall.getNames().empty(), "");
 		Expression const& firstArgument = *_functionCall.getArguments().front();
 		firstArgument.accept(*this);
 		appendTypeConversion(*firstArgument.getType(), *_functionCall.getType());
@@ -200,8 +201,35 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	else
 	{
 		FunctionType const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType());
-		vector<ASTPointer<Expression const>> arguments = _functionCall.getArguments();
-		solAssert(arguments.size() == function.getParameterTypes().size(), "");
+		TypePointers const& parameterTypes = function.getParameterTypes();
+		vector<string> const& parameterNames = function.getParameterNames();
+		vector<ASTPointer<Expression const>> const& callArguments = _functionCall.getArguments();
+		vector<string> const& callArgumentNames = _functionCall.getNames();
+		solAssert(callArguments.size() == parameterTypes.size(), "");
+
+		vector<ASTPointer<Expression const>> arguments;
+		if (callArgumentNames.empty())
+		{
+			// normal arguments
+			arguments = {callArguments.begin(), callArguments.end()};
+		}
+		else
+		{
+			// named arguments
+			for (size_t i = 0; i < parameterNames.size(); i++) {
+				bool found = false;
+				for (size_t j = 0; j < callArgumentNames.size(); j++) {
+					if (parameterNames[i] == callArgumentNames[j]) {
+						// we found the actual parameter position
+						arguments.push_back(callArguments[j]);
+
+						found = true;
+						break;
+					}
+				}
+				solAssert(found, "");
+			}
+		}
 
 		switch (function.getLocation())
 		{
