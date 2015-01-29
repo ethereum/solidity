@@ -294,7 +294,7 @@ public:
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
 	/// as intended for use by the ABI.
-	std::map<FixedHash<4>, FunctionDescription> getInterfaceFunctions() const;
+	std::map<FixedHash<4>, std::shared_ptr<FunctionType const>> getInterfaceFunctions() const;
 
 	/// List of all (direct and indirect) base contracts in order from derived to base, including
 	/// the contract itself. Available after name resolution
@@ -307,7 +307,7 @@ public:
 private:
 	void checkIllegalOverrides() const;
 
-	std::vector<std::tuple<FixedHash<4>, std::shared_ptr<FunctionType const>, Declaration const*>> const& getInterfaceFunctionList() const;
+	std::vector<std::pair<FixedHash<4>, std::shared_ptr<FunctionType const>>> const& getInterfaceFunctionList() const;
 
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
@@ -316,7 +316,7 @@ private:
 	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
-	mutable std::unique_ptr<std::vector<std::tuple<FixedHash<4>, std::shared_ptr<FunctionType const>, Declaration const*>>> m_interfaceFunctionList;
+	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, std::shared_ptr<FunctionType const>>>> m_interfaceFunctionList;
 };
 
 class InheritanceSpecifier: public ASTNode

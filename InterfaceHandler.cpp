@@ -45,23 +45,27 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		Json::Value inputs(Json::arrayValue);
 		Json::Value outputs(Json::arrayValue);
 
-		auto populateParameters = [](vector<ParamDescription> const& _params)
+		auto populateParameters = [](vector<string> const& _paramNames,
+									 vector<string> const& _paramTypes)
 		{
 			Json::Value params(Json::arrayValue);
-			for (auto const& param: _params)
+			solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
+			for (unsigned i = 0; i < _paramNames.size(); ++i)
 			{
 				Json::Value input;
-				input["name"] = param.getName();
-				input["type"] = param.getType();
+				input["name"] = _paramNames[i];
+				input["type"] = _paramTypes[i];
 				params.append(input);
 			}
 			return params;
 		};
 
-		method["name"] = it.second.getName();
-		method["constant"] = it.second.isConstant();
-		method["inputs"] = populateParameters(it.second.getParameters());
-		method["outputs"] = populateParameters(it.second.getReturnParameters());
+		method["name"] = it.second->getDeclaration()->getName();
+		method["constant"] = it.second->isConstant();
+		method["inputs"] = populateParameters(it.second->getParameterNames(),
+											  it.second->getParameterTypeNames());
+		method["outputs"] = populateParameters(it.second->getReturnParameterNames(),
+											   it.second->getReturnParameterTypeNames());
 		methods.append(method);
 	}
 	return std::unique_ptr<std::string>(new std::string(m_writer.write(methods)));
@@ -72,16 +76,20 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 	string ret = "contract " + _contractDef.getName() + "{";
 	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
-		auto populateParameters = [](vector<ParamDescription> const& _params)
+		auto populateParameters = [](vector<string> const& _paramNames,
+									 vector<string> const& _paramTypes)
 		{
 			string r = "";
-			for (auto const& param: _params)
-				r += (r.size() ? "," : "(") + param.getType() + " " + param.getName();
+			solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
+			for (unsigned i = 0; i < _paramNames.size(); ++i)
+				r += (r.size() ? "," : "(") + _paramTypes[i] + " " + _paramNames[i];
 			return r.size() ? r + ")" : "()";
 		};
-		ret += "function " + it.second.getName() + populateParameters(it.second.getParameters()) + (it.second.isConstant() ? "constant " : "");
-		if (it.second.getReturnParameters().size())
-			ret += "returns" + populateParameters(it.second.getReturnParameters());
+		ret += "function " + it.second->getDeclaration()->getName() +
+			populateParameters(it.second->getParameterNames(), it.second->getParameterTypeNames()) +
+			(it.second->isConstant() ? "constant " : "");
+		if (it.second->getReturnParameterTypes().size())
+			ret += "returns" + populateParameters(it.second->getReturnParameterNames(), it.second->getReturnParameterTypeNames());
 		else if (ret.back() == ' ')
 			ret.pop_back();
 		ret += "{}";
@@ -97,7 +105,7 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefi
 	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value user;
-		auto strPtr = it.second.getDocumentation();
+		auto strPtr = it.second->getDocumentation();
 		if (strPtr)
 		{
 			resetUser();
@@ -105,7 +113,7 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefi
 			if (!m_notice.empty())
 			{// since @notice is the only user tag if missing function should not appear
 				user["notice"] = Json::Value(m_notice);
-				methods[it.second.getSignature()] = user;
+				methods[it.second->getCanonicalSignature()] = user;
 			}
 		}
 	}
@@ -138,7 +146,7 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value method;
-		auto strPtr = it.second.getDocumentation();
+		auto strPtr = it.second->getDocumentation();
 		if (strPtr)
 		{
 			resetDev();
@@ -161,7 +169,7 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 				method["return"] = m_return;
 
 			if (!method.empty()) // add the function, only if we have any documentation to add
-				methods[it.second.getSignature()] = method;
+				methods[it.second->getCanonicalSignature()] = method;
 		}
 	}
 	doc["methods"] = methods;
