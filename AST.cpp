@@ -56,7 +56,12 @@ void ContractDefinition::checkTypeRequirements()
 	FunctionDefinition const* constructor = getConstructor();
 	if (constructor && !constructor->getReturnParameters().empty())
 		BOOST_THROW_EXCEPTION(constructor->getReturnParameterList()->createTypeError(
-								  "Non-empty \"returns\" directive for constructor."));
+									"Non-empty \"returns\" directive for constructor."));
+
+	FunctionDefinition const* fallbackFunction = getFallbackFunction();
+	if (fallbackFunction && fallbackFunction->getScope() == this && !fallbackFunction->getParameters().empty())
+		BOOST_THROW_EXCEPTION(fallbackFunction->getParameterList().createTypeError(
+									"Fallback function cannot take parameters."));
 
 	for (ASTPointer<ModifierDefinition> const& modifier: getFunctionModifiers())
 		modifier->checkTypeRequirements();
@@ -96,6 +101,15 @@ FunctionDefinition const* ContractDefinition::getConstructor() const
 	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
 		if (f->isConstructor())
 			return f.get();
+	return nullptr;
+}
+
+FunctionDefinition const* ContractDefinition::getFallbackFunction() const
+{
+	for (ContractDefinition const* contract: getLinearizedBaseContracts())
+		for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
+			if (f->getName().empty())
+				return f.get();
 	return nullptr;
 }
 
@@ -147,7 +161,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
 		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
-				if (f->isPublic() && !f->isConstructor() && functionsSeen.count(f->getName()) == 0)
+				if (f->isPublic() && !f->isConstructor() && !f->getName().empty() && functionsSeen.count(f->getName()) == 0)
 				{
 					functionsSeen.insert(f->getName());
 					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));

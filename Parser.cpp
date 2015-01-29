@@ -189,7 +189,11 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic, A
 		docstring = make_shared<ASTString>(m_scanner->getCurrentCommentLiteral());
 
 	expectToken(Token::FUNCTION);
-	ASTPointer<ASTString> name(expectIdentifierToken());
+	ASTPointer<ASTString> name;
+	if (m_scanner->getCurrentToken() == Token::LPAREN)
+		name = make_shared<ASTString>(); // anonymous function
+	else
+		name = expectIdentifierToken();
 	ASTPointer<ParameterList> parameters(parseParameterList());
 	bool isDeclaredConst = false;
 	vector<ASTPointer<ModifierInvocation>> modifiers;
