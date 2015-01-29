@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 	BOOST_CHECK(callContractFunction("name()") == encodeArgs("Celina"));
 	BOOST_CHECK(callContractFunction("a_hash()") == encodeArgs(dev::sha3(toBigEndian(u256(123)))));
 	BOOST_CHECK(callContractFunction("an_address()") == encodeArgs(toBigEndian(u160(0x1337))));
-	BOOST_CHECK(!(callContractFunction("super_secret_data()") == encodeArgs(42)));
+	BOOST_CHECK(callContractFunction("super_secret_data()") == bytes());
 }
 
 BOOST_AUTO_TEST_CASE(balance)
