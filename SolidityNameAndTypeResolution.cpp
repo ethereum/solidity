@@ -680,6 +680,49 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
 }
 
+BOOST_AUTO_TEST_CASE(event)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint indexed a, string3 indexed s, bool indexed b);
+			function f() { e(2, "abc", true); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(event_too_many_indexed)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint indexed a, string3 indexed b, bool indexed c, uint indexed d);
+			function f() { e(2, "abc", true); }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(event_call)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint a, string3 indexed s, bool indexed b);
+			function f() { e(2, "abc", true); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(event_inheritance)
+{
+	char const* text = R"(
+		contract base {
+			event e(uint a, string3 indexed s, bool indexed b);
+		}
+		contract c is base {
+			function f() { e(2, "abc", true); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
