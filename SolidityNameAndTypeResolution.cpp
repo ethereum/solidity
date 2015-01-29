@@ -680,6 +680,54 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
 }
 
+BOOST_AUTO_TEST_CASE(fallback_function)
+{
+	char const* text = R"(
+		contract C {
+			uint x;
+			function() { x = 2; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function_with_arguments)
+{
+	char const* text = R"(
+		contract C {
+			uint x;
+			function(uint a) { x = 2; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function_twice)
+{
+	char const* text = R"(
+		contract C {
+			uint x;
+			function() { x = 2; }
+			function() { x = 3; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function_inheritance)
+{
+	char const* text = R"(
+		contract A {
+			uint x;
+			function() { x = 1; }
+		}
+		contract C is A {
+			function() { x = 2; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

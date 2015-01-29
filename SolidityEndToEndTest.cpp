@@ -1955,6 +1955,37 @@ BOOST_AUTO_TEST_CASE(super_in_constructor)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1 | 2 | 4 | 8));
 }
 
+BOOST_AUTO_TEST_CASE(fallback_function)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint data;
+			function() returns (uint r) { data = 1; return 2; }
+			function getData() returns (uint r) { return data; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("") == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_fallback_function)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint data;
+			function() returns (uint r) { data = 1; return 2; }
+			function getData() returns (uint r) { return data; }
+		}
+		contract B is A {}
+	)";
+	compileAndRun(sourceCode, 0, "B");
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("") == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

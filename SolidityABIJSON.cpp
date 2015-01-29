@@ -273,6 +273,15 @@ BOOST_AUTO_TEST_CASE(const_function)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(exclude_fallback_function)
+{
+	char const* sourceCode = "contract test { function() {} }";
+
+	char const* interface = "[]";
+
+	checkInterface(sourceCode, interface);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 							 "}\n";
 	bytes code = compileContract(sourceCode);
 
-	unsigned boilerplateSize = 73;
+	unsigned boilerplateSize = 69;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0, // initialize local variable x
 					   byte(Instruction::PUSH1), 0x2,
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 							 "  function f() { bool x; if (x) 77; else if (!x) 78; else 79; }"
 							 "}\n";
 	bytes code = compileContract(sourceCode);
-	unsigned shift = 60;
-	unsigned boilerplateSize = 73;
+	unsigned shift = 56;
+	unsigned boilerplateSize = 69;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x0,
 					   byte(Instruction::DUP1),
@@ -155,8 +155,8 @@ BOOST_AUTO_TEST_CASE(loops)
 							 "  function f() { while(true){1;break;2;continue;3;return;4;} }"
 							 "}\n";
 	bytes code = compileContract(sourceCode);
-	unsigned shift = 60;
-	unsigned boilerplateSize = 73;
+	unsigned shift = 56;
+	unsigned boilerplateSize = 69;
 	bytes expectation({byte(Instruction::JUMPDEST),
 					   byte(Instruction::JUMPDEST),
 					   byte(Instruction::PUSH1), 0x1,

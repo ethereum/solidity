@@ -586,6 +586,14 @@ BOOST_AUTO_TEST_CASE(modifier_invocation)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(fallback_function)
+{
+	char const* text = "contract c {\n"
+					   "  function() { }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
