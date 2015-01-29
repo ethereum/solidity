@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(topic)
 {
 	cnote << "Testing Whisper...";
 	auto oldLogVerbosity = g_logVerbosity;
-	g_logVerbosity = 0;
+	g_logVerbosity = 4;
 
 	bool started = false;
 	unsigned result = 0;
@@ -46,16 +46,16 @@ BOOST_AUTO_TEST_CASE(topic)
 		auto wh = ph.registerCapability(new WhisperHost());
 		ph.start();
 
-		started = true;
-
 		/// Only interested in odd packets
 		auto w = wh->installWatch(BuildTopicMask("odd"));
 
-		for (int i = 0, last = 0; i < 200 && last < 81; ++i)
+		started = true;
+
+		for (int iterout = 0, last = 0; iterout < 200 && last < 81; ++iterout)
 		{
 			for (auto i: wh->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open(wh->filterKey());
+				Message msg = wh->envelope(i).open(wh->filterKey(w));
 				last = RLP(msg.payload()).toInt<unsigned>();
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 				result += last;
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		{
 			for (auto i: wh->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open();
+				Message msg = wh->envelope(i).open(wh->filterKey(w));
 				unsigned last = RLP(msg.payload()).toInt<unsigned>();
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 				result = last;
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		{
 			for (auto i: wh->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open();
+				Message msg = wh->envelope(i).open(wh->filterKey(w));
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 			}
 			this_thread::sleep_for(chrono::milliseconds(50));
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		{
 			for (auto i: wh->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open();
+				Message msg = wh->envelope(i).open(wh->filterKey(w));
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 			}
 			this_thread::sleep_for(chrono::milliseconds(50));
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		{
 			for (auto i: wh->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open();
+				Message msg = wh->envelope(i).open(wh->filterKey(w));
 				unsigned last = RLP(msg.payload()).toInt<unsigned>();
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 				result = last;
