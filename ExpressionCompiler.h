@@ -94,8 +94,13 @@ private:
 									bool bare = false);
 	/// Appends code that copies the given arguments to memory (with optional offset).
 	/// @returns the number of bytes copied to memory
-	unsigned appendArgumentCopyToMemory(TypePointers const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
-										unsigned _memoryOffset = 0);
+	unsigned appendArgumentCopyToMemory(TypePointers const& _types,
+										 std::vector<ASTPointer<Expression const>> const& _arguments,
+										 unsigned _memoryOffset = 0);
+	/// Appends code that evaluates a single expression and copies it to memory (with optional offset).
+	/// @returns the number of bytes copied to memory
+	unsigned appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression,
+										  unsigned _memoryOffset = 0);
 
 	/// Appends code for a State Variable accessor function
 	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);

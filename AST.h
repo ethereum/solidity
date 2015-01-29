@@ -404,7 +404,6 @@ public:
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 
-
 private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
 	bool m_isPublic;                    ///< Whether there is an accessor for it or not
