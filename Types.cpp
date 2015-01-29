@@ -494,7 +494,7 @@ MemberList const& ContractType::getMembers() const
 		{
 			for (ContractDefinition const* base: m_contract.getLinearizedBaseContracts())
 				for (ASTPointer<FunctionDefinition> const& function: base->getDefinedFunctions())
-					if (!function->isConstructor())
+					if (!function->isConstructor() && !function->getName().empty())
 						members.insert(make_pair(function->getName(), make_shared<FunctionType>(*function, true)));
 		}
 		else
@@ -808,7 +808,7 @@ MemberList const& TypeType::getMembers() const
 				// We are accessing the type of a base contract, so add all public and private
 				// functions. Note that this does not add inherited functions on purpose.
 				for (ASTPointer<FunctionDefinition> const& f: contract.getDefinedFunctions())
-					if (!f->isConstructor())
+					if (!f->isConstructor() && !f->getName().empty())
 						members[f->getName()] = make_shared<FunctionType>(*f);
 		}
 		m_members.reset(new MemberList(members));

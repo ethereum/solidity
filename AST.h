@@ -235,8 +235,10 @@ public:
 	std::vector<ContractDefinition const*> const& getLinearizedBaseContracts() const { return m_linearizedBaseContracts; }
 	void setLinearizedBaseContracts(std::vector<ContractDefinition const*> const& _bases) { m_linearizedBaseContracts = _bases; }
 
-	/// Returns the constructor or nullptr if no constructor was specified
+	/// Returns the constructor or nullptr if no constructor was specified.
 	FunctionDefinition const* getConstructor() const;
+	/// Returns the fallback function or nullptr if no constructor was specified.
+	FunctionDefinition const* getFallbackFunction() const;
 
 private:
 	void checkIllegalOverrides() const;
