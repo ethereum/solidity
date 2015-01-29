@@ -1930,6 +1930,30 @@ BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(-7)));
 }
 
+BOOST_AUTO_TEST_CASE(super)
+{
+	char const* sourceCode = R"(
+		contract A { function f() returns (uint r) { return 1; } }
+		contract B is A { function f() returns (uint r) { return super.f() | 2; } }
+		contract C is A { function f() returns (uint r) { return super.f() | 4; } }
+		contract D is B, C { function f() returns (uint r) { return super.f() | 8; } }
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1 | 2 | 4 | 8));
+}
+
+BOOST_AUTO_TEST_CASE(super_in_constructor)
+{
+	char const* sourceCode = R"(
+		contract A { function f() returns (uint r) { return 1; } }
+		contract B is A { function f() returns (uint r) { return super.f() | 2; } }
+		contract C is A { function f() returns (uint r) { return super.f() | 4; } }
+		contract D is B, C { uint data; function D() { data = super.f() | 8; } function f() returns (uint r) { return data; } }
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1 | 2 | 4 | 8));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

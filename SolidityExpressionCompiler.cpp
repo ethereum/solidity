@@ -86,7 +86,8 @@ Declaration const& resolveDeclaration(vector<string> const& _namespacedName,
 }
 
 bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _functions = {},
-							 vector<vector<string>> _localVariables = {}, 	vector<shared_ptr<MagicVariableDeclaration const>> _globalDeclarations = {})
+							 vector<vector<string>> _localVariables = {},
+							 vector<shared_ptr<MagicVariableDeclaration const>> _globalDeclarations = {})
 {
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
@@ -99,10 +100,12 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	NameAndTypeResolver resolver(declarations);
 	resolver.registerDeclarations(*sourceUnit);
 
+	vector<ContractDefinition const*> inheritanceHierarchy;
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
+			inheritanceHierarchy = vector<ContractDefinition const*>(1, contract);
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -116,8 +119,7 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 			BOOST_REQUIRE(extractor.getExpression() != nullptr);
 
 			CompilerContext context;
-			for (vector<string> const& function: _functions)
-				context.addFunction(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
+			context.setInheritanceHierarchy(inheritanceHierarchy);
 			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(parametersSize);
 			for (vector<string> const& variable: _localVariables)
