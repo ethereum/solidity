@@ -322,7 +322,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			unsigned length = appendExpressionCopyToMemory(*function.getParameterTypes().front(),
 														   *arguments.front());
-			solAssert(length == 32, "Log data should have length 32.");
+			solAssert(length == 32, "Log data should be 32 bytes long (for now).");
 			m_context << u256(length) << u256(0) << eth::logInstruction(logNumber);
 			break;
 		}
@@ -487,7 +487,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 
 	TypePointer const& keyType = dynamic_cast<MappingType const&>(*_indexAccess.getBaseExpression().getType()).getKeyType();
 	unsigned length = appendExpressionCopyToMemory(*keyType, _indexAccess.getIndexExpression());
-	solAssert(length == 32, "Mapping key length in memory has to be 32.");
+	solAssert(length == 32, "Mapping key has to take 32 bytes in memory (for now).");
 	// @todo move this once we actually use memory
 	length += CompilerUtils(m_context).storeInMemory(length);
 	m_context << u256(length) << u256(0) << eth::Instruction::SHA3;

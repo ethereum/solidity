@@ -473,9 +473,9 @@ class EventDefinition: public Declaration, public Documented
 {
 public:
 	EventDefinition(Location const& _location,
-					   ASTPointer<ASTString> const& _name,
-					   ASTPointer<ASTString> const& _documentation,
-					   ASTPointer<ParameterList> const& _parameters):
+					ASTPointer<ASTString> const& _name,
+					ASTPointer<ASTString> const& _documentation,
+					ASTPointer<ParameterList> const& _parameters):
 		Declaration(_location, _name), Documented(_documentation), m_parameters(_parameters) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
