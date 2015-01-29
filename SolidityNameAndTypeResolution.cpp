@@ -93,8 +93,8 @@ static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source
 	return NULL;
 }
 
-static std::shared_ptr<FunctionType const> const& retrieveFunctionBySignature(ContractDefinition const* _contract,
-																			  std::string const& _signature)
+static FunctionTypePointer const& retrieveFunctionBySignature(ContractDefinition const* _contract,
+															  std::string const& _signature)
 {
 	FixedHash<4> hash(dev::sha3(_signature));
 	return _contract->getInterfaceFunctions()[hash];
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	ContractDefinition const* contract;
 	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
-	std::shared_ptr<FunctionType const> function = retrieveFunctionBySignature(contract, "foo()");
+	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
 	BOOST_CHECK_MESSAGE(function->getDeclaration() != nullptr, "Could not find the accessor function");
 	auto returnParams = function->getReturnParameterTypeNames();
 	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
