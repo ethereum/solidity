@@ -591,7 +591,7 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::INTERNAL : Location::EXTERNAL),
 	m_isConstant(_function.isDeclaredConst()),
-    m_declaration(&_function)
+	m_declaration(&_function)
 {
 	TypePointers params;
 	vector<string> paramNames;
@@ -641,6 +641,9 @@ bool FunctionType::operator==(Type const& _other) const
 
 	if (m_location != other.m_location)
 		return false;
+	if (m_isConstant != other.isConstant())
+		return false;
+
 	if (m_parameterTypes.size() != other.m_parameterTypes.size() ||
 			m_returnParameterTypes.size() != other.m_returnParameterTypes.size())
 		return false;
@@ -763,7 +766,7 @@ vector<string> const FunctionType::getReturnParameterTypeNames() const
 
 ASTPointer<ASTString> FunctionType::getDocumentation() const
 {
-	auto function = dynamic_cast<FunctionDefinition const*>(m_declaration);
+	auto function = dynamic_cast<Documented const*>(m_declaration);
 	if (function)
 		return function->getDocumentation();
 

@@ -157,6 +157,37 @@ private:
 };
 
 /**
+ * Abstract class that is added to each AST node that can store local variables.
+ */
+class VariableScope
+{
+public:
+	void addLocalVariable(VariableDeclaration const& _localVariable) { m_localVariables.push_back(&_localVariable); }
+	std::vector<VariableDeclaration const*> const& getLocalVariables() const { return m_localVariables; }
+
+private:
+	std::vector<VariableDeclaration const*> m_localVariables;
+};
+
+/**
+ * Abstract class that is added to each AST node that can receive documentation.
+ */
+class Documented
+{
+public:
+	explicit Documented(ASTPointer<ASTString> const& _documentation): m_documentation(_documentation) {}
+
+	/// @return A shared pointer of an ASTString.
+	/// Can contain a nullptr in which case indicates absence of documentation
+	ASTPointer<ASTString> const& getDocumentation() const { return m_documentation; }
+
+protected:
+	ASTPointer<ASTString> m_documentation;
+};
+
+/// @}
+
+/**
  * Definition of a contract. This is the only AST nodes where child nodes are not visited in
  * document order. It first visits all struct declarations, then all variable declarations and
  * finally all function declarations.

@@ -83,7 +83,6 @@ map<FixedHash<4>, FunctionTypePointer> ContractDefinition::getInterfaceFunctions
 
 	map<FixedHash<4>, FunctionTypePointer> exportedFunctions;
 	for (auto const& it: exportedFunctionList)
-		// exportedFunctions.insert(make_pair(std::get<0>(it), FunctionDescription(std::get<1>(it), std::get<2>(it))));
 		exportedFunctions.insert(it);
 
 	solAssert(exportedFunctionList.size() == exportedFunctions.size(),
@@ -139,12 +138,12 @@ void ContractDefinition::checkIllegalOverrides() const
 	}
 }
 
-vector<pair<FixedHash<4>, shared_ptr<FunctionType const>>> const& ContractDefinition::getInterfaceFunctionList() const
+vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getInterfaceFunctionList() const
 {
 	if (!m_interfaceFunctionList)
 	{
 		set<string> functionsSeen;
-		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, shared_ptr<FunctionType const>>>());
+		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionTypePointer>>());
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
 		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())

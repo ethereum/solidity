@@ -160,7 +160,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 
 	for (auto const& it: interfaceFunctions)
 	{
-		FunctionTypePointer functionType = it.second;
+		FunctionTypePointer const& functionType = it.second;
 		m_context << callDataUnpackerEntryPoints.at(it.first);
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		appendCalldataUnpacker(functionType->getParameterTypes());
