@@ -93,8 +93,8 @@ static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source
 	return NULL;
 }
 
-static FunctionDescription const& retrieveFunctionBySignature(ContractDefinition const* _contract,
-															  std::string const& _signature)
+static std::shared_ptr<FunctionType const> const& retrieveFunctionBySignature(ContractDefinition const* _contract,
+																			  std::string const& _signature)
 {
 	FixedHash<4> hash(dev::sha3(_signature));
 	return _contract->getInterfaceFunctions()[hash];
@@ -643,11 +643,11 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	ContractDefinition const* contract;
 	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
-	FunctionDescription function = retrieveFunctionBySignature(contract, "foo()");
-	BOOST_REQUIRE(function.getDeclaration() != nullptr);
-	auto returnParams = function.getReturnParameters();
-	BOOST_CHECK_EQUAL(returnParams.at(0).getType(), "uint256");
-	BOOST_CHECK(function.isConstant());
+	std::shared_ptr<FunctionType const> function = retrieveFunctionBySignature(contract, "foo()");
+	BOOST_CHECK_MESSAGE(function->getDeclaration() != nullptr, "Could not find the accessor function");
+	auto returnParams = function->getReturnParameterTypeNames();
+	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
+	BOOST_CHECK(function->isConstant());
 }
 
 BOOST_AUTO_TEST_CASE(function_clash_with_state_variable_accessor)
@@ -676,8 +676,8 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	ContractDefinition const* contract;
 	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
 	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
-	FunctionDescription function = retrieveFunctionBySignature(contract, "foo()");
-	BOOST_CHECK_MESSAGE(function.getDeclaration() == nullptr, "Accessor function of a private variable should not exist");
+	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
+	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
