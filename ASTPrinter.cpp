@@ -108,6 +108,13 @@ bool ASTPrinter::visit(ModifierInvocation const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(EventDefinition const& _node)
+{
+	writeLine("EventDefinition \"" + _node.getName() + "\"");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(TypeName const& _node)
 {
 	writeLine("TypeName");
@@ -361,6 +368,11 @@ void ASTPrinter::endVisit(ModifierDefinition const&)
 }
 
 void ASTPrinter::endVisit(ModifierInvocation const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(EventDefinition const&)
 {
 	m_indentation--;
 }

@@ -104,6 +104,7 @@ private:
 	void endVisit(ModifierDefinition& _modifier);
 	void endVisit(VariableDefinition& _variableDefinition);
 	bool visit(VariableDeclaration& _declaration);
+	bool visit(EventDefinition& _event);
 
 	void enterNewSubScope(Declaration const& _declaration);
 	void closeCurrentScope();
