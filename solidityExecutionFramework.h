@@ -67,7 +67,6 @@ public:
 	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value,
 											   Args const&... _arguments)
 	{
-
 		FixedHash<4> hash(dev::sha3(_sig));
 		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
 		return m_output;
