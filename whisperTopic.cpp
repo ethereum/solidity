@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(topic)
 		{
 			for (auto i: wh->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open();
+				Message msg = wh->envelope(i).open(wh->filterKey());
 				last = RLP(msg.payload()).toInt<unsigned>();
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 				result += last;
