@@ -45,8 +45,7 @@ public:
 
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
-		// add standard sources only if contract name is given
-		dev::solidity::CompilerStack compiler(!_contractName.empty());
+		dev::solidity::CompilerStack compiler(m_addStandardSources);
 		try
 		{
 			compiler.addSource("", _sourceCode);
@@ -175,6 +174,7 @@ private:
 
 protected:
 	bool m_optimize = false;
+	bool m_addStandardSources = false;
 	Address m_sender;
 	Address m_contractAddress;
 	eth::State m_state;
