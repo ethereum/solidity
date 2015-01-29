@@ -828,7 +828,7 @@ unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedT
 {
 	_expression.accept(*this);
 	appendTypeConversion(*_expression.getType(), _expectedType, true);
-	unsigned const c_numBytes = _expectedType.getCalldataEncodedSize();
+	unsigned const c_numBytes = CompilerUtils::getPaddedSize(_expectedType.getCalldataEncodedSize());
 	if (c_numBytes == 0 || c_numBytes > 32)
 		BOOST_THROW_EXCEPTION(CompilerError()
 							  << errinfo_sourceLocation(_expression.getLocation())
