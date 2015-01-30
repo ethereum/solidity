@@ -350,16 +350,18 @@ public:
 	/// INTERNAL: jump tag, EXTERNAL: contract address + function identifier,
 	/// BARE: contract address (non-abi contract call)
 	/// OTHERS: special virtual function, nothing on the stack
+	/// @todo This documentation is outdated, and Location should rather be named "Type"
 	enum class Location { INTERNAL, EXTERNAL, CREATION, SEND,
 						  SHA3, SUICIDE,
 						  ECRECOVER, SHA256, RIPEMD160,
-						  LOG0, LOG1, LOG2, LOG3, LOG4,
+						  LOG0, LOG1, LOG2, LOG3, LOG4, EVENT,
 						  SET_GAS, SET_VALUE, BLOCKHASH,
 						  BARE };
 
 	virtual Category getCategory() const override { return Category::FUNCTION; }
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	explicit FunctionType(VariableDeclaration const& _varDecl);
+	explicit FunctionType(EventDefinition const& _event);
 	FunctionType(strings const& _parameterTypes, strings const& _returnParameterTypes,
 				 Location _location = Location::INTERNAL):
 		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),

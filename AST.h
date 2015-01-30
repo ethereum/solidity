@@ -202,13 +202,15 @@ public:
 					   std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
 					   std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
 					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
-					   std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers):
+					   std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
+					   std::vector<ASTPointer<EventDefinition>> const& _events):
 		Declaration(_location, _name), Documented(_documentation),
 		m_baseContracts(_baseContracts),
 		m_definedStructs(_definedStructs),
 		m_stateVariables(_stateVariables),
 		m_definedFunctions(_definedFunctions),
-		m_functionModifiers(_functionModifiers)
+		m_functionModifiers(_functionModifiers),
+		m_events(_events)
 	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
@@ -219,6 +221,7 @@ public:
 	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() const { return m_stateVariables; }
 	std::vector<ASTPointer<ModifierDefinition>> const& getFunctionModifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
+	std::vector<ASTPointer<EventDefinition>> const& getEvents() const { return m_events; }
 
 	virtual TypePointer getType(ContractDefinition const* m_currentContract) const override;
 
@@ -250,6 +253,7 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
 	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
+	std::vector<ASTPointer<EventDefinition>> m_events;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
@@ -382,8 +386,10 @@ class VariableDeclaration: public Declaration
 {
 public:
 	VariableDeclaration(Location const& _location, ASTPointer<TypeName> const& _type,
-							ASTPointer<ASTString> const& _name, bool _isPublic, bool _isStateVar = false):
-	Declaration(_location, _name), m_typeName(_type), m_isPublic(_isPublic), m_isStateVariable(_isStateVar) {}
+						ASTPointer<ASTString> const& _name, bool _isPublic, bool _isStateVar = false,
+						bool _isIndexed = false):
+		Declaration(_location, _name), m_typeName(_type),
+		m_isPublic(_isPublic), m_isStateVariable(_isStateVar), m_isIndexed(_isIndexed) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -398,12 +404,13 @@ public:
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
 	bool isPublic() const { return m_isPublic; }
 	bool isStateVariable() const { return m_isStateVariable; }
-
+	bool isIndexed() const { return m_isIndexed; }
 
 private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
 	bool m_isPublic;                    ///< Whether there is an accessor for it or not
 	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
+	bool m_isIndexed;                   ///< Whether this is an indexed variable (used by events).
 
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
@@ -430,7 +437,6 @@ public:
 	Block const& getBody() const { return *m_body; }
 
 	virtual TypePointer getType(ContractDefinition const* = nullptr) const override;
-
 
 	void checkTypeRequirements();
 
@@ -460,6 +466,37 @@ public:
 private:
 	ASTPointer<Identifier> m_modifierName;
 	std::vector<ASTPointer<Expression>> m_arguments;
+};
+
+/**
+ * Definition of a (loggable) event.
+ */
+class EventDefinition: public Declaration, public Documented
+{
+public:
+	EventDefinition(Location const& _location,
+					ASTPointer<ASTString> const& _name,
+					ASTPointer<ASTString> const& _documentation,
+					ASTPointer<ParameterList> const& _parameters):
+		Declaration(_location, _name), Documented(_documentation), m_parameters(_parameters) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
+	ParameterList const& getParameterList() const { return *m_parameters; }
+	Block const& getBody() const { return *m_body; }
+
+	virtual TypePointer getType(ContractDefinition const* = nullptr) const override
+	{
+		return std::make_shared<FunctionType>(*this);
+	}
+
+	void checkTypeRequirements();
+
+private:
+	ASTPointer<ParameterList> m_parameters;
+	ASTPointer<Block> m_body;
 };
 
 /**

@@ -45,6 +45,14 @@ private:
 	/// End position of the current token
 	int getEndPosition() const;
 
+	struct VarDeclParserOptions {
+		VarDeclParserOptions() {}
+		bool allowVar = false;
+		bool isPublic = false;
+		bool isStateVariable = false;
+		bool allowIndexed = false;
+	};
+
 	///@{
 	///@name Parsing functions for the AST nodes
 	ASTPointer<ImportDirective> parseImportDirective();
@@ -52,13 +60,14 @@ private:
 	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic, ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
-	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar, bool _isPublic = false, bool _isStateVar = false);
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(VarDeclParserOptions const& _options = VarDeclParserOptions());
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
+	ASTPointer<EventDefinition> parseEventDefinition();
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<TypeName> parseTypeName(bool _allowVar);
 	ASTPointer<Mapping> parseMapping();
-	ASTPointer<ParameterList> parseParameterList(bool _allowEmpty = true);
+	ASTPointer<ParameterList> parseParameterList(bool _allowEmpty = true, bool _allowIndexed = false);
 	ASTPointer<Block> parseBlock();
 	ASTPointer<Statement> parseStatement();
 	ASTPointer<IfStatement> parseIfStatement();

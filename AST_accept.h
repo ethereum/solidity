@@ -64,8 +64,9 @@ void ContractDefinition::accept(ASTVisitor& _visitor)
 		listAccept(m_baseContracts, _visitor);
 		listAccept(m_definedStructs, _visitor);
 		listAccept(m_stateVariables, _visitor);
-		listAccept(m_definedFunctions, _visitor);
+		listAccept(m_events, _visitor);
 		listAccept(m_functionModifiers, _visitor);
+		listAccept(m_definedFunctions, _visitor);
 	}
 	_visitor.endVisit(*this);
 }
@@ -77,8 +78,9 @@ void ContractDefinition::accept(ASTConstVisitor& _visitor) const
 		listAccept(m_baseContracts, _visitor);
 		listAccept(m_definedStructs, _visitor);
 		listAccept(m_stateVariables, _visitor);
-		listAccept(m_definedFunctions, _visitor);
+		listAccept(m_events, _visitor);
 		listAccept(m_functionModifiers, _visitor);
+		listAccept(m_definedFunctions, _visitor);
 	}
 	_visitor.endVisit(*this);
 }
@@ -216,6 +218,20 @@ void ModifierInvocation::accept(ASTConstVisitor& _visitor) const
 		m_modifierName->accept(_visitor);
 		listAccept(m_arguments, _visitor);
 	}
+	_visitor.endVisit(*this);
+}
+
+void EventDefinition::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+		m_parameters->accept(_visitor);
+	_visitor.endVisit(*this);
+}
+
+void EventDefinition::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+		m_parameters->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 

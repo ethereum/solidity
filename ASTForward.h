@@ -45,6 +45,7 @@ class FunctionDefinition;
 class VariableDeclaration;
 class ModifierDefinition;
 class ModifierInvocation;
+class EventDefinition;
 class MagicVariableDeclaration;
 class TypeName;
 class ElementaryTypeName;

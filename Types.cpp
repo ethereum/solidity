@@ -633,6 +633,22 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	swap(retParamNames, m_returnParameterNames);
 }
 
+FunctionType::FunctionType(const EventDefinition& _event):
+	m_location(Location::EVENT), m_declaration(&_event)
+{
+	TypePointers params;
+	vector<string> paramNames;
+	params.reserve(_event.getParameters().size());
+	paramNames.reserve(_event.getParameters().size());
+	for (ASTPointer<VariableDeclaration> const& var: _event.getParameters())
+	{
+		paramNames.push_back(var->getName());
+		params.push_back(var->getType());
+	}
+	swap(params, m_parameterTypes);
+	swap(paramNames, m_parameterNames);
+}
+
 bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())

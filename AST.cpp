@@ -285,6 +285,20 @@ void ModifierInvocation::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in modifier invocation."));
 }
 
+void EventDefinition::checkTypeRequirements()
+{
+	int numIndexed = 0;
+	for (ASTPointer<VariableDeclaration> const& var: getParameters())
+	{
+		if (var->isIndexed())
+			numIndexed++;
+		if (!var->getType()->canLiveOutsideStorage())
+			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
+	}
+	if (numIndexed > 3)
+		BOOST_THROW_EXCEPTION(createTypeError("More than 3 indexed arguments for event."));
+}
+
 void Block::checkTypeRequirements()
 {
 	for (shared_ptr<Statement> const& statement: m_statements)
