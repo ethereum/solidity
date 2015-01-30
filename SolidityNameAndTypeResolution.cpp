@@ -637,6 +637,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 					   "    uint64(2);\n"
 					   "  }\n"
 					   "uint256 foo;\n"
+					   "mapping(uint=>string4) map;\n"
 					   "}\n";
 
 	ASTPointer<SourceUnit> source;
@@ -644,9 +645,16 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
-	BOOST_REQUIRE(function->hasDeclaration());
+	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto returnParams = function->getReturnParameterTypeNames();
 	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
+	BOOST_CHECK(function->isConstant());
+	function = retrieveFunctionBySignature(contract, "map(uint256)");
+	BOOST_REQUIRE(function && function->hasDeclaration());
+	auto Params = function->getParameterTypeNames();
+	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
+	returnParams = function->getReturnParameterTypeNames();
+	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
 	BOOST_CHECK(function->isConstant());
 }
 
