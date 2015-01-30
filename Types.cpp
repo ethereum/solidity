@@ -621,12 +621,25 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	m_location(Location::EXTERNAL), m_isConstant(true), m_declaration(&_varDecl)
 {
-	TypePointers params({});
-	vector<string> paramNames({});
-	TypePointers retParams({_varDecl.getType()});
-	vector<string> retParamNames({ _varDecl.getName()});
-	// for now, no input parameters LTODO: change for some things like mapping
+	TypePointers params;
+	vector<string> paramNames;
+	TypePointers retParams;
+	vector<string> retParamNames;
+	TypePointer varDeclType = _varDecl.getType();
+	auto mappingType = dynamic_cast<const MappingType*>(varDeclType.get());
+	if (mappingType!= nullptr)
+	{
+		params.push_back(mappingType->getKeyType());
+		paramNames.push_back(mappingType->getKeyType()->toString());
 
+		retParams.push_back(mappingType->getValueType());
+		retParamNames.push_back(mappingType->getValueType()->toString());
+	}
+	else // elelemntary type
+	{
+		retParams.push_back(varDeclType);
+		retParamNames.push_back(_varDecl.getName());
+	}
 	swap(params, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
 	swap(retParams, m_returnParameterTypes);
