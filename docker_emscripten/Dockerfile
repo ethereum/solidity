@@ -42,16 +42,20 @@ RUN sed -i 's/$(archiver\[1\])/\/home\/user\/emsdk_portable\/emscripten\/master\
 RUN sed -i 's/$(ranlib\[1\])/\/home\/user\/emsdk_portable\/emscripten\/master\/emranlib/g' ./tools/build/src/tools/gcc.jam
 RUN ./b2 link=static variant=release threading=single runtime-link=static thread system regex
 
-
 # Build soljs
 WORKDIR /home/user
 ADD https://api.github.com/repos/ethereum/cpp-ethereum/git/refs/heads/develop unused.txt
 RUN git clone --depth=1 https://github.com/ethereum/cpp-ethereum
 WORKDIR /home/user/cpp-ethereum
+RUN git config --global user.email "me@example.com"
+RUN git config --global user.name "Jane Doe"
 ADD https://api.github.com/repos/chriseth/cpp-ethereum/git/refs/heads/solidity-js unused2.txt
 RUN git remote add -f solidityjs https://github.com/chriseth/cpp-ethereum
-RUN git merge solidityjs/solidity-js
+# TODO this should be a proper merge but somehow causes problems
+# NOTE that we only get the latest commit of that branch
+RUN git cherry-pick solidityjs/solidity-js
 RUN emcmake cmake -DETH_STATIC=1 -DONLY_SOLIDITY=1 -DHEADLESS=1 -DCMAKE_CXX_COMPILER=/home/user/emsdk_portable/emscripten/master/em++ -DCMAKE_C_COMPILER=/home/user/emsdk_portable/emscripten/master/emcc
 RUN emmake make -j 6 soljs
 
 ENTRYPOINT cat soljs/soljs.js
+
