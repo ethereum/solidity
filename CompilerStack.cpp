@@ -41,7 +41,7 @@ namespace solidity
 {
 
 const map<string, string> StandardSources = map<string, string>{
-/*	{"coin", R"(import "CoinReg";import "Config";import "configUser";contract coin is configUser{function coin(string3 name, uint denom) {CoinReg(Config(configAddr()).lookup(3)).register(name, denom);}})"},
+	{"coin", R"(import "CoinReg";import "Config";import "configUser";contract coin is configUser{function coin(string3 name, uint denom) {CoinReg(Config(configAddr()).lookup(3)).register(name, denom);}})"},
 	{"Coin", R"(contract Coin{function isApprovedFor(address _target,address _proxy)constant returns(bool _r){}function isApproved(address _proxy)constant returns(bool _r){}function sendCoinFrom(address _from,uint256 _val,address _to){}function coinBalanceOf(address _a)constant returns(uint256 _r){}function sendCoin(uint256 _val,address _to){}function coinBalance()constant returns(uint256 _r){}function approve(address _a){}})"},
 	{"CoinReg", R"(contract CoinReg{function count()constant returns(uint256 r){}function info(uint256 i)constant returns(address addr,string3 name,uint256 denom){}function register(string3 name,uint256 denom){}function unregister(){}})"},
 	{"configUser", R"(contract configUser{function configAddr()constant returns(address a){ return 0xc6d9d2cd449a754c494264e1809c50e34d64562b;}})"},
@@ -51,7 +51,7 @@ const map<string, string> StandardSources = map<string, string>{
 	{"NameReg", R"(contract NameReg{function register(string32 name){}function addressOf(string32 name)constant returns(address addr){}function unregister(){}function nameOf(address addr)constant returns(string32 name){}})"},
 	{"owned", R"(contract owned{function owned(){owner = msg.sender;}modifier onlyowner(){if(msg.sender==owner)_}address owner;})"},
 	{"service", R"(import "Config";import "configUser";contract service is configUser{function service(uint _n){Config(configAddr()).register(_n, this);}})"},
-	{"std", R"(import "owned";import "mortal";import "Config";import "configUser";import "NameReg";import "named";)"}*/
+	{"std", R"(import "owned";import "mortal";import "Config";import "configUser";import "NameReg";import "named";)"}
 };
 
 CompilerStack::CompilerStack(bool _addStandardSources):
@@ -127,6 +127,9 @@ vector<string> CompilerStack::getContractNames() const
 }
 
 ////// BEGIN: TEMPORARY ONLY
+///
+/// NOTE: THIS INVALIDATES SOURCE POINTERS AND CAN CRASH THE COMPILER
+///
 /// remove once import works properly and we have genesis contracts
 
 string CompilerStack::expanded(string const& _sourceCode)
