@@ -32,12 +32,12 @@ namespace solidity
 namespace test
 {
 
-class InterfaceChecker
+class JSONInterfaceChecker
 {
 public:
-	InterfaceChecker(): m_compilerStack(false) {}
+	JSONInterfaceChecker(): m_compilerStack(false) {}
 
-	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString, std::string const& expectedSolidityInterface)
+	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
 		try
 		{
@@ -49,7 +49,6 @@ public:
 			BOOST_FAIL(msg);
 		}
 		std::string generatedInterfaceString = m_compilerStack.getMetadata("", DocumentationType::ABI_INTERFACE);
-		std::string generatedSolidityInterfaceString = m_compilerStack.getMetadata("", DocumentationType::ABI_SOLIDITY_INTERFACE);
 		Json::Value generatedInterface;
 		m_reader.parse(generatedInterfaceString, generatedInterface);
 		Json::Value expectedInterface;
@@ -57,9 +56,6 @@ public:
 		BOOST_CHECK_MESSAGE(expectedInterface == generatedInterface,
 							"Expected:\n" << expectedInterface.toStyledString() <<
 							"\n but got:\n" << generatedInterface.toStyledString());
-		BOOST_CHECK_MESSAGE(expectedSolidityInterface == generatedSolidityInterfaceString,
-							"Expected:\n" << expectedSolidityInterface <<
-							"\n but got:\n" << generatedSolidityInterfaceString);
 	}
 
 private:
@@ -67,15 +63,13 @@ private:
 	Json::Reader m_reader;
 };
 
-BOOST_FIXTURE_TEST_SUITE(SolidityABIJSON, InterfaceChecker)
+BOOST_FIXTURE_TEST_SUITE(SolidityABIJSON, JSONInterfaceChecker)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {
 	char const* sourceCode = "contract test {\n"
 	"  function f(uint a) returns(uint d) { return a * 7; }\n"
 	"}\n";
-
-	char const* sourceInterface = "contract test{function f(uint256 a)returns(uint256 d){}}";
 
 	char const* interface = R"([
 	{
@@ -97,18 +91,16 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	}
 	])";
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(empty_contract)
 {
 	char const* sourceCode = "contract test {\n"
 	"}\n";
-	char const* sourceInterface = "contract test{}";
-
 	char const* interface = "[]";
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_methods)
@@ -117,7 +109,6 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	"  function f(uint a) returns(uint d) { return a * 7; }\n"
 	"  function g(uint b) returns(uint e) { return b * 8; }\n"
 	"}\n";
-	char const* sourceInterface = "contract test{function f(uint256 a)returns(uint256 d){}function g(uint256 b)returns(uint256 e){}}";
 
 	char const* interface = R"([
 	{
@@ -156,7 +147,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	}
 	])";
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_params)
@@ -164,7 +155,6 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 	char const* sourceCode = "contract test {\n"
 	"  function f(uint a, uint b) returns(uint d) { return a + b; }\n"
 	"}\n";
-	char const* sourceInterface = "contract test{function f(uint256 a,uint256 b)returns(uint256 d){}}";
 
 	char const* interface = R"([
 	{
@@ -190,7 +180,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 	}
 	])";
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_methods_order)
@@ -200,7 +190,6 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	"  function f(uint a) returns(uint d) { return a * 7; }\n"
 	"  function c(uint b) returns(uint e) { return b * 8; }\n"
 	"}\n";
-	char const* sourceInterface = "contract test{function c(uint256 b)returns(uint256 e){}function f(uint256 a)returns(uint256 d){}}";
 
 	char const* interface = R"([
 	{
@@ -239,7 +228,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	}
 	])";
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(const_function)
@@ -248,7 +237,6 @@ BOOST_AUTO_TEST_CASE(const_function)
 	"  function foo(uint a, uint b) returns(uint d) { return a + b; }\n"
 	"  function boo(uint32 a) constant returns(uint b) { return a * 4; }\n"
 	"}\n";
-	char const* sourceInterface = "contract test{function foo(uint256 a,uint256 b)returns(uint256 d){}function boo(uint32 a)constant returns(uint256 b){}}";
 
 	char const* interface = R"([
 	{
@@ -289,17 +277,16 @@ BOOST_AUTO_TEST_CASE(const_function)
 	}
 	])";
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(exclude_fallback_function)
 {
 	char const* sourceCode = "contract test { function() {} }";
-	char const* sourceInterface = "contract test{}";
 
 	char const* interface = "[]";
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 BOOST_AUTO_TEST_CASE(events)
@@ -309,8 +296,6 @@ BOOST_AUTO_TEST_CASE(events)
 	"  event e1(uint b, address indexed c); \n"
 	"  event e2(); \n"
 	"}\n";
-	char const* sourceInterface = "contract test{function f(uint256 a)returns(uint256 d){}event e1(uint256 b,address indexed c);event e2;}";
-
 	char const* interface = R"([
 	{
 		"name": "f",
@@ -353,7 +338,7 @@ BOOST_AUTO_TEST_CASE(events)
 
 	])";
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 
@@ -368,7 +353,6 @@ BOOST_AUTO_TEST_CASE(inherited)
 	"		function derivedFunction(string32 p) returns (string32 i) { return p; } \n"
 	"		event derivedEvent(uint indexed evtArgDerived); \n"
 	"	}";
-	char const* sourceInterface = "contract Derived{function baseFunction(uint256 p)returns(uint256 i){}function derivedFunction(string32 p)returns(string32 i){}event derivedEvent(uint256 indexed evtArgDerived);event baseEvent(string32 indexed evtArgBase);}";
 
 	char const* interface = R"([
 	{
@@ -423,7 +407,7 @@ BOOST_AUTO_TEST_CASE(inherited)
 	}])";
 
 
-	checkInterface(sourceCode, interface, sourceInterface);
+	checkInterface(sourceCode, interface);
 }
 
 
