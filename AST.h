@@ -487,7 +487,6 @@ public:
 
 	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
 	ParameterList const& getParameterList() const { return *m_parameters; }
-	Block const& getBody() const { return *m_body; }
 
 	virtual TypePointer getType(ContractDefinition const* = nullptr) const override
 	{
@@ -498,7 +497,6 @@ public:
 
 private:
 	ASTPointer<ParameterList> m_parameters;
-	ASTPointer<Block> m_body;
 };
 
 /**
