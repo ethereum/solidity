@@ -37,16 +37,11 @@ std::unique_ptr<std::string> InterfaceHandler::getDocumentation(ContractDefiniti
 
 std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 {
-	Json::Value methods(Json::arrayValue);
-
+	Json::Value abi(Json::arrayValue);
 	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
 		Json::Value method;
-		Json::Value inputs(Json::arrayValue);
-		Json::Value outputs(Json::arrayValue);
-
-		auto populateParameters = [](vector<string> const& _paramNames,
-									 vector<string> const& _paramTypes)
+		auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
 		{
 			Json::Value params(Json::arrayValue);
 			solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
@@ -66,9 +61,28 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 											  it.second->getParameterTypeNames());
 		method["outputs"] = populateParameters(it.second->getReturnParameterNames(),
 											   it.second->getReturnParameterTypeNames());
-		methods.append(method);
+		abi.append(method);
 	}
-	return std::unique_ptr<std::string>(new std::string(m_writer.write(methods)));
+
+	for (auto const& it: _contractDef.getInterfaceEvents())
+	{
+		Json::Value event;
+		event["type"] = "event";
+		event["name"] = it->getName();
+		Json::Value params(Json::arrayValue);
+		for (auto const& p: it->getParameters())
+		{
+			Json::Value input;
+			input["name"] = p->getName();
+			input["type"] = p->getType()->toString();
+			input["indexed"] = p->isIndexed();
+			params.append(input);
+		}
+		event["inputs"] = params;
+		abi.append(event);
+	}
+
+	return std::unique_ptr<std::string>(new std::string(m_writer.write(abi)));
 }
 
 unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
@@ -94,6 +108,17 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 			ret.pop_back();
 		ret += "{}";
 	}
+	for (auto const& it: _contractDef.getInterfaceEvents())
+	{
+		std::string params;
+		for (auto const& p: it->getParameters())
+			params += (params.empty() ? "(" : ",") + p->getType()->toString() + (p->isIndexed() ? " indexed " : " ") + p->getName();
+		if (!params.empty())
+			params += ")";
+
+		ret += "event " + it->getName() + params + ";";
+	}
+
 	return unique_ptr<string>(new string(ret + "}"));
 }
 
