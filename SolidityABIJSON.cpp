@@ -75,6 +75,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	{
 		"name": "f",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -114,6 +115,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	{
 		"name": "f",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -130,6 +132,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	{
 		"name": "g",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "b",
@@ -158,6 +161,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 	{
 		"name": "f",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -192,6 +196,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	{
 		"name": "c",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "b",
@@ -208,6 +213,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	{
 		"name": "f",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -237,6 +243,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 	{
 		"name": "foo",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -257,6 +264,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 	{
 		"name": "boo",
 		"constant": true,
+		"type": "function",
 		"inputs": [{
 			"name": "a",
 			"type": "uint32"
