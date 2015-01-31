@@ -46,16 +46,16 @@ BOOST_AUTO_TEST_CASE(topic)
 		auto wh = ph.registerCapability(new WhisperHost());
 		ph.start();
 
-		started = true;
-
 		/// Only interested in odd packets
 		auto w = wh->installWatch(BuildTopicMask("odd"));
 
-		for (int i = 0, last = 0; i < 200 && last < 81; ++i)
+		started = true;
+
+		for (int iterout = 0, last = 0; iterout < 200 && last < 81; ++iterout)
 		{
 			for (auto i: wh->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open();
+				Message msg = wh->envelope(i).open(wh->fullTopic(w));
 				last = RLP(msg.payload()).toInt<unsigned>();
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 				result += last;
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(topic)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
 	Host ph("Test", NetworkPreferences(50300, "", false, true));
-	auto wh = ph.registerCapability(new WhisperHost());
+	shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
 	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
 	this_thread::sleep_for(chrono::milliseconds(500));
@@ -85,6 +85,190 @@ BOOST_AUTO_TEST_CASE(topic)
 	g_logVerbosity = oldLogVerbosity;
 
 	BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
+}
+
+BOOST_AUTO_TEST_CASE(forwarding)
+{
+	cnote << "Testing Whisper forwarding...";
+	auto oldLogVerbosity = g_logVerbosity;
+	g_logVerbosity = 0;
+
+	unsigned result = 0;
+	bool done = false;
+
+	bool startedListener = false;
+	std::thread listener([&]()
+	{
+		setThreadName("listener");
+
+		// Host must be configured not to share peers.
+		Host ph("Listner", NetworkPreferences(50303, "", false, true));
+		ph.setIdealPeerCount(0);
+		auto wh = ph.registerCapability(new WhisperHost());
+		ph.start();
+
+		startedListener = true;
+
+		/// Only interested in odd packets
+		auto w = wh->installWatch(BuildTopicMask("test"));
+
+		for (int i = 0; i < 200 && !result; ++i)
+		{
+			for (auto i: wh->checkWatch(w))
+			{
+				Message msg = wh->envelope(i).open(wh->fullTopic(w));
+				unsigned last = RLP(msg.payload()).toInt<unsigned>();
+				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
+				result = last;
+			}
+			this_thread::sleep_for(chrono::milliseconds(50));
+		}
+	});
+
+	bool startedForwarder = false;
+	std::thread forwarder([&]()
+	{
+		setThreadName("forwarder");
+
+		while (!startedListener)
+			this_thread::sleep_for(chrono::milliseconds(50));
+
+		// Host must be configured not to share peers.
+		Host ph("Forwarder", NetworkPreferences(50305, "", false, true));
+		ph.setIdealPeerCount(0);
+		auto wh = ph.registerCapability(new WhisperHost());
+		this_thread::sleep_for(chrono::milliseconds(500));
+		ph.start();
+
+		this_thread::sleep_for(chrono::milliseconds(500));
+		ph.connect("127.0.0.1", 50303);
+
+		startedForwarder = true;
+
+		/// Only interested in odd packets
+		auto w = wh->installWatch(BuildTopicMask("test"));
+
+		while (!done)
+		{
+			for (auto i: wh->checkWatch(w))
+			{
+				Message msg = wh->envelope(i).open(wh->fullTopic(w));
+				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
+			}
+			this_thread::sleep_for(chrono::milliseconds(50));
+		}
+	});
+
+	while (!startedForwarder)
+		this_thread::sleep_for(chrono::milliseconds(50));
+
+	Host ph("Sender", NetworkPreferences(50300, "", false, true));
+	ph.setIdealPeerCount(0);
+	shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
+	this_thread::sleep_for(chrono::milliseconds(500));
+	ph.start();
+	this_thread::sleep_for(chrono::milliseconds(500));
+	ph.connect("127.0.0.1", 50305);
+
+	KeyPair us = KeyPair::create();
+	wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
+	this_thread::sleep_for(chrono::milliseconds(250));
+
+	listener.join();
+	done = true;
+	forwarder.join();
+	g_logVerbosity = oldLogVerbosity;
+
+	BOOST_REQUIRE_EQUAL(result, 1);
+}
+
+BOOST_AUTO_TEST_CASE(asyncforwarding)
+{
+	cnote << "Testing Whisper async forwarding...";
+	auto oldLogVerbosity = g_logVerbosity;
+	g_logVerbosity = 2;
+
+	unsigned result = 0;
+	bool done = false;
+
+	bool startedForwarder = false;
+	std::thread forwarder([&]()
+	{
+		setThreadName("forwarder");
+
+		// Host must be configured not to share peers.
+		Host ph("Forwarder", NetworkPreferences(50305, "", false, true));
+		ph.setIdealPeerCount(0);
+		auto wh = ph.registerCapability(new WhisperHost());
+		this_thread::sleep_for(chrono::milliseconds(500));
+		ph.start();
+
+		this_thread::sleep_for(chrono::milliseconds(500));
+		ph.connect("127.0.0.1", 50303);
+
+		startedForwarder = true;
+
+		/// Only interested in odd packets
+		auto w = wh->installWatch(BuildTopicMask("test"));
+
+		while (!done)
+		{
+			for (auto i: wh->checkWatch(w))
+			{
+				Message msg = wh->envelope(i).open(wh->fullTopic(w));
+				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
+			}
+			this_thread::sleep_for(chrono::milliseconds(50));
+		}
+	});
+
+	while (!startedForwarder)
+		this_thread::sleep_for(chrono::milliseconds(50));
+
+	{
+		Host ph("Sender", NetworkPreferences(50300, "", false, true));
+		ph.setIdealPeerCount(0);
+		shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
+		this_thread::sleep_for(chrono::milliseconds(500));
+		ph.start();
+		this_thread::sleep_for(chrono::milliseconds(500));
+		ph.connect("127.0.0.1", 50305);
+
+		KeyPair us = KeyPair::create();
+		wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
+		this_thread::sleep_for(chrono::milliseconds(250));
+	}
+
+	{
+		Host ph("Listener", NetworkPreferences(50300, "", false, true));
+		ph.setIdealPeerCount(0);
+		shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
+		this_thread::sleep_for(chrono::milliseconds(500));
+		ph.start();
+		this_thread::sleep_for(chrono::milliseconds(500));
+		ph.connect("127.0.0.1", 50305);
+
+		/// Only interested in odd packets
+		auto w = wh->installWatch(BuildTopicMask("test"));
+
+		for (int i = 0; i < 200 && !result; ++i)
+		{
+			for (auto i: wh->checkWatch(w))
+			{
+				Message msg = wh->envelope(i).open(wh->fullTopic(w));
+				unsigned last = RLP(msg.payload()).toInt<unsigned>();
+				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
+				result = last;
+			}
+			this_thread::sleep_for(chrono::milliseconds(50));
+		}
+	}
+
+	done = true;
+	forwarder.join();
+	g_logVerbosity = oldLogVerbosity;
+
+	BOOST_REQUIRE_EQUAL(result, 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

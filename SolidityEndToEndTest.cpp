@@ -882,6 +882,43 @@ BOOST_AUTO_TEST_CASE(constructor)
 	testSolidityAgainstCpp("get(uint256)", get, u256(7));
 }
 
+BOOST_AUTO_TEST_CASE(simple_accessor)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  uint256 data;\n"
+							 "  function test() {\n"
+							 "    data = 8;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  uint256 data;\n"
+							 "  string6 name;\n"
+							 "  hash a_hash;\n"
+							 "  address an_address;\n"
+							 "  function test() {\n"
+							 "    data = 8;\n"
+							 "    name = \"Celina\";\n"
+							 "    a_hash = sha3(123);\n"
+							 "    an_address = address(0x1337);\n"
+							 "    super_secret_data = 42;\n"
+							 "  }\n"
+							 "  private:"
+							 "  uint256 super_secret_data;"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("name()") == encodeArgs("Celina"));
+	BOOST_CHECK(callContractFunction("a_hash()") == encodeArgs(dev::sha3(toBigEndian(u256(123)))));
+	BOOST_CHECK(callContractFunction("an_address()") == encodeArgs(toBigEndian(u160(0x1337))));
+	BOOST_CHECK(callContractFunction("super_secret_data()") == bytes());
+}
+
 BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* sourceCode = "contract test {\n"
@@ -940,6 +977,97 @@ BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
 														   0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22}));
 }
 
+BOOST_AUTO_TEST_CASE(convert_string_to_string)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function pipeTrough(string3 input) returns (string3 ret) {
+				return string3(input);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("pipeTrough(string3)", "abc") == encodeArgs("abc"));
+}
+
+BOOST_AUTO_TEST_CASE(convert_hash_to_string_same_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function hashToString(hash h) returns (string32 s) {
+				return string32(h);
+			}
+		})";
+	compileAndRun(sourceCode);
+	u256 a("0x6162630000000000000000000000000000000000000000000000000000000000");
+	BOOST_CHECK(callContractFunction("hashToString(hash256)", a) == encodeArgs(a));
+}
+
+BOOST_AUTO_TEST_CASE(convert_hash_to_string_different_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function hashToString(hash160 h) returns (string20 s) {
+				return string20(h);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("hashToString(hash160)", u160("0x6161626361626361626361616263616263616263")) ==
+						encodeArgs(string("aabcabcabcaabcabcabc")));
+}
+
+BOOST_AUTO_TEST_CASE(convert_string_to_hash_same_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function stringToHash(string32 s) returns (hash h) {
+				return hash(s);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("stringToHash(string32)", string("abc2")) ==
+					encodeArgs(u256("0x6162633200000000000000000000000000000000000000000000000000000000")));
+}
+
+BOOST_AUTO_TEST_CASE(convert_string_to_hash_different_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function stringToHash(string20 s) returns (hash160 h) {
+				return hash160(s);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("stringToHash(string20)", string("aabcabcabcaabcabcabc")) ==
+					encodeArgs(u160("0x6161626361626361626361616263616263616263")));
+}
+
+
+BOOST_AUTO_TEST_CASE(convert_string_to_hash_different_min_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function stringToHash(string1 s) returns (hash8 h) {
+				return hash8(s);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("stringToHash(string1)", string("a")) ==
+					encodeArgs(u256("0x61")));
+}
+
+
+BOOST_AUTO_TEST_CASE(convert_hash_to_string_different_min_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function HashToString(hash8 h) returns (string1 s) {
+				return string1(h);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("HashToString(hash8)", u256("0x61")) ==
+					encodeArgs(string("a")));
+}
 
 BOOST_AUTO_TEST_CASE(send_ether)
 {
@@ -1545,7 +1673,7 @@ BOOST_AUTO_TEST_CASE(single_copy_with_multiple_inheritance)
 		}
 		contract A is Base { function setViaA(uint i) { setData(i); } }
 		contract B is Base { function getViaB() returns (uint i) { return getViaBase(); } }
-		contract Derived is A, B, Base { }
+		contract Derived is Base, B, A { }
 	)";
 	compileAndRun(sourceCode, 0, "Derived");
 	BOOST_CHECK(callContractFunction("getViaB()") == encodeArgs(0));
@@ -1642,12 +1770,290 @@ BOOST_AUTO_TEST_CASE(constructor_argument_overriding)
 			}
 		}
 		contract Base is BaseBase(2) { }
-		contract Derived is Base, BaseBase(3) {
+		contract Derived is BaseBase(3), Base {
 			function getA() returns (uint r) { return m_a; }
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Derived");
 	BOOST_CHECK(callContractFunction("getA()") == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function getOne() nonFree returns (uint r) { return 1; }
+			modifier nonFree { if (msg.value > 0) _ }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getOne()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunctionWithValue("getOne()", 1) == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_local_variables)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier mod1 { var a = 1; var b = 2; _ }
+			modifier mod2(bool a) { if (a) return; else _ }
+			function f(bool a) mod1 mod2(a) returns (uint r) { return 3; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_loop)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier repeat(uint count) { for (var i = 0; i < count; ++i) _ }
+			function f() repeat(10) returns (uint r) { r += 1; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_multi_invocation)
+{
+	char const* sourceCode = R"(
+		contract C {
+			modifier repeat(bool twice) { if (twice) _ _ }
+			function f(bool twice) repeat(twice) returns (uint r) { r += 1; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_multi_with_return)
+{
+	// Here, the explicit return prevents the second execution
+	char const* sourceCode = R"(
+		contract C {
+			modifier repeat(bool twice) { if (twice) _ _ }
+			function f(bool twice) repeat(twice) returns (uint r) { r += 1; return r; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(1));
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_overriding)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() mod returns (bool r) { return true; }
+			modifier mod { _ }
+		}
+		contract C is A {
+			modifier mod { }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_calling_functions_in_creation_context)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint data;
+			function A() mod1 { f1(); }
+			function f1() mod2 { data |= 0x1; }
+			function f2() { data |= 0x20; }
+			function f3() { }
+			modifier mod1 { f2(); _ }
+			modifier mod2 { f3(); }
+			function getData() returns (uint r) { return data; }
+		}
+		contract C is A {
+			modifier mod1 { f4(); _ }
+			function f3() { data |= 0x300; }
+			function f4() { data |= 0x4000; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0x4300));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_for_constructor)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint data;
+			function A() mod1 { data |= 2; }
+			modifier mod1 { data |= 1; _ }
+			function getData() returns (uint r) { return data; }
+		}
+		contract C is A {
+			modifier mod1 { data |= 4; _ }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(4 | 2));
+}
+
+BOOST_AUTO_TEST_CASE(use_std_lib)
+{
+	char const* sourceCode = R"(
+		import "mortal";
+		contract Icarus is mortal { }
+	)";
+	m_addStandardSources = true;
+	u256 amount(130);
+	u160 address(23);
+	compileAndRun(sourceCode, amount, "Icarus");
+	u256 balanceBefore = m_state.balance(m_sender);
+	BOOST_CHECK(callContractFunction("kill()") == bytes());
+	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
+	BOOST_CHECK(m_state.balance(m_sender) > balanceBefore);
+}
+
+BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint r) {
+				uint; uint; uint; uint;
+				int x = -7;
+				var a = uint;
+				return a(x);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(-7)));
+}
+
+BOOST_AUTO_TEST_CASE(super)
+{
+	char const* sourceCode = R"(
+		contract A { function f() returns (uint r) { return 1; } }
+		contract B is A { function f() returns (uint r) { return super.f() | 2; } }
+		contract C is A { function f() returns (uint r) { return super.f() | 4; } }
+		contract D is B, C { function f() returns (uint r) { return super.f() | 8; } }
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1 | 2 | 4 | 8));
+}
+
+BOOST_AUTO_TEST_CASE(super_in_constructor)
+{
+	char const* sourceCode = R"(
+		contract A { function f() returns (uint r) { return 1; } }
+		contract B is A { function f() returns (uint r) { return super.f() | 2; } }
+		contract C is A { function f() returns (uint r) { return super.f() | 4; } }
+		contract D is B, C { uint data; function D() { data = super.f() | 8; } function f() returns (uint r) { return data; } }
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1 | 2 | 4 | 8));
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint data;
+			function() returns (uint r) { data = 1; return 2; }
+			function getData() returns (uint r) { return data; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("") == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(inherited_fallback_function)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint data;
+			function() returns (uint r) { data = 1; return 2; }
+			function getData() returns (uint r) { return data; }
+		}
+		contract B is A {}
+	)";
+	compileAndRun(sourceCode, 0, "B");
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("") == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("getData()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(event)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit(address indexed _from, hash indexed _id, uint _value);
+			function deposit(hash _id, bool _manually) {
+				if (_manually) {
+					hash s = 0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20;
+					log3(msg.value, s, hash32(msg.sender), _id);
+				} else
+					Deposit(hash32(msg.sender), _id, msg.value);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	u256 value(18);
+	u256 id(0x1234);
+	for (bool manually: {true, false})
+	{
+		callContractFunctionWithValue("deposit(hash256,bool)", value, id, manually);
+		BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+		BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+		BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(value)));
+		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 3);
+		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(address,hash256,uint256)")));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(m_sender));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(id));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(event_no_arguments)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit;
+			function deposit() {
+				Deposit();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("deposit()");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data.empty());
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit()")));
+}
+
+BOOST_AUTO_TEST_CASE(event_lots_of_data)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit(address _from, hash _id, uint _value, bool _flag);
+			function deposit(hash _id) {
+				Deposit(msg.sender, hash32(_id), msg.value, true);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	u256 value(18);
+	u256 id(0x1234);
+	callContractFunctionWithValue("deposit(hash256)", value, id);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(m_sender, id, value, true));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(address,hash256,uint256,bool)")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
