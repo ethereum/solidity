@@ -50,6 +50,43 @@ BOOST_AUTO_TEST_CASE(host)
 	BOOST_REQUIRE_EQUAL(host2.peerCount(), host1.peerCount());
 }
 
+BOOST_AUTO_TEST_CASE(save_nodes)
+{
+	std::list<Host*> hosts;
+	for (auto i:{0,1,2,3,4,5})
+	{
+		Host* h = new Host("Test", NetworkPreferences(30300 + i, "127.0.0.1", true, true));
+		// starting host is required so listenport is available
+		h->start();
+		while (!h->isStarted())
+			this_thread::sleep_for(chrono::milliseconds(2));
+		hosts.push_back(h);
+	}
+	
+	Host& host = *hosts.front();
+	for (auto const& h: hosts)
+		host.addNode(h->id(), "127.0.0.1", h->listenPort(), h->listenPort());
+	
+	Host& host2 = *hosts.back();
+	for (auto const& h: hosts)
+		host2.addNode(h->id(), "127.0.0.1", h->listenPort(), h->listenPort());
+
+	this_thread::sleep_for(chrono::milliseconds(1000));
+	bytes firstHostNetwork(host.saveNetwork());
+	bytes secondHostNetwork(host.saveNetwork());
+	
+	BOOST_REQUIRE_EQUAL(sha3(firstHostNetwork), sha3(secondHostNetwork));
+	
+	BOOST_CHECK_EQUAL(host.peerCount(), 5);
+	BOOST_CHECK_EQUAL(host2.peerCount(), 5);
+	
+	RLP r(firstHostNetwork);
+	BOOST_REQUIRE(r.itemCount() == 3);
+	BOOST_REQUIRE(r[0].toInt<int>() == 1);
+	BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
+	BOOST_REQUIRE_EQUAL(r[2].itemCount(), 5);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 int peerTest(int argc, char** argv)

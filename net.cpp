@@ -30,7 +30,7 @@ using namespace dev::p2p;
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
-BOOST_AUTO_TEST_SUITE(p2p)
+BOOST_AUTO_TEST_SUITE(net)
 
 /**
  * Only used for testing. Not useful beyond tests.
@@ -190,6 +190,9 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.populateAll();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
+	auto nodes = node.nodeTable->nodes();
+	nodes.sort();
+	
 	node.nodeTable->reset();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 
@@ -199,6 +202,12 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.nodeTable->join();
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
+
+	BOOST_REQUIRE_EQUAL(node.nodeTable->size(), 8);
+	
+	auto netNodes = node.nodeTable->nodes();
+	netNodes.sort();
+
 }
 
 BOOST_AUTO_TEST_CASE(test_udp_once)
