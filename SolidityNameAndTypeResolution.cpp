@@ -770,6 +770,15 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
+{
+	char const* text = R"(
+		contract c {
+			event e1(uint a, uint e1, uint e2);
+			event e2(uint a, uint e1, uint e2);
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
