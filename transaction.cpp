@@ -21,7 +21,6 @@
  */
 
 #include "TestHelper.h"
-
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -151,6 +150,9 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				Transaction txFromFields(rlpStream.out(), CheckSignature::Sender);
 				if (!txFromFields.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
+
+				//cause Address is length20 array, when trying to create address from sting of another length, field "to" would be diffrent from RLP encoded Address
+				BOOST_CHECK_MESSAGE(Address(tObj["to"].get_str()) == txFromFields.receiveAddress(), "seems that transaction 'to' address has wrong format");
 
 				o["sender"] = toString(txFromFields.sender());
 			}
