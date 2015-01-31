@@ -263,8 +263,13 @@ bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)
 
 bool DeclarationRegistrationHelper::visit(EventDefinition& _event)
 {
-	registerDeclaration(_event, false);
+	registerDeclaration(_event, true);
 	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(EventDefinition&)
+{
+	closeCurrentScope();
 }
 
 void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declaration)

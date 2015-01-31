@@ -152,6 +152,23 @@ void ContractDefinition::checkIllegalOverrides() const
 	}
 }
 
+std::vector<ASTPointer<EventDefinition>> const& ContractDefinition::getInterfaceEvents() const
+{
+	if (!m_interfaceEvents)
+	{
+		set<string> eventsSeen;
+		m_interfaceEvents.reset(new std::vector<ASTPointer<EventDefinition>>());
+		for (ContractDefinition const* contract: getLinearizedBaseContracts())
+			for (ASTPointer<EventDefinition> const& e: contract->getEvents())
+				if (eventsSeen.count(e->getName()) == 0)
+				{
+					eventsSeen.insert(e->getName());
+					m_interfaceEvents->push_back(e);
+				}
+	}
+	return *m_interfaceEvents;
+}
+
 vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getInterfaceFunctionList() const
 {
 	if (!m_interfaceFunctionList)
