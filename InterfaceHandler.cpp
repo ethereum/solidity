@@ -37,14 +37,28 @@ std::unique_ptr<std::string> InterfaceHandler::getDocumentation(ContractDefiniti
 
 std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 {
-	Json::Value methods(Json::arrayValue);
+	Json::Value members(Json::arrayValue);
+/*
+	for (ASTPointer<EventDefinition> const& it: _contractDef.getEvents())
+	{
+		Json::Value event;5
+		Json::Value inputs(Json::arrayValue);
 
+		event["type"] = "event";
+		Json::Value params(Json::arrayValue);
+		for (ASTPointer<VariableDeclaration> const& p: it->getParameters())
+		{
+			Json::Value param;
+			param["name"] = p->getName();
+			param["type"] = p->getType()->toString();
+			param["indexed"] = p->isIndexed();
+			params.append(param);
+		}
+		event["inputs"] = params;
+		members.append(event);
+	}*/
 	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
-		Json::Value method;
-		Json::Value inputs(Json::arrayValue);
-		Json::Value outputs(Json::arrayValue);
-
 		auto populateParameters = [](vector<string> const& _paramNames,
 									 vector<string> const& _paramTypes)
 		{
@@ -59,6 +73,11 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 			}
 			return params;
 		};
+
+		Json::Value method;
+		Json::Value inputs(Json::arrayValue);
+		Json::Value outputs(Json::arrayValue);
+
 		method["type"] = "function";
 		method["name"] = it.second->getDeclaration().getName();
 		method["constant"] = it.second->isConstant();
@@ -66,9 +85,9 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 											  it.second->getParameterTypeNames());
 		method["outputs"] = populateParameters(it.second->getReturnParameterNames(),
 											   it.second->getReturnParameterTypeNames());
-		methods.append(method);
+		members.append(method);
 	}
-	return std::unique_ptr<std::string>(new std::string(m_writer.write(methods)));
+	return std::unique_ptr<std::string>(new std::string(m_writer.write(members)));
 }
 
 unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
