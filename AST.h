@@ -471,7 +471,7 @@ private:
 /**
  * Definition of a (loggable) event.
  */
-class EventDefinition: public Declaration, public Documented
+class EventDefinition: public Declaration, public VariableScope, public Documented
 {
 public:
 	EventDefinition(Location const& _location,
