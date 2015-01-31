@@ -2016,6 +2016,25 @@ BOOST_AUTO_TEST_CASE(event)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(event_no_arguments)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit;
+			function deposit() {
+				Deposit();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("deposit()");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data.empty());
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit()")));
+}
+
 BOOST_AUTO_TEST_CASE(event_lots_of_data)
 {
 	char const* sourceCode = R"(
