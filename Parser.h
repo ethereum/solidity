@@ -97,6 +97,9 @@ private:
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
+	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
+	ASTPointer<ParameterList> createEmptyParameterList();
+
 	/// Creates a @ref ParserError exception and annotates it with the current position and the
 	/// given @a _description.
 	ParserError createParserError(std::string const& _description) const;

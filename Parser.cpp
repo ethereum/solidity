@@ -222,12 +222,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(bool _isPublic, A
 		returnParameters = parseParameterList(permitEmptyParameterList);
 	}
 	else
-	{
-		// create an empty parameter list at a zero-length location
-		ASTNodeFactory nodeFactory(*this);
-		nodeFactory.setLocationEmpty();
-		returnParameters = nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
-	}
+		returnParameters = createEmptyParameterList();
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
 	bool const c_isConstructor = (_contractName && *name == *_contractName);
@@ -285,12 +280,7 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 	if (m_scanner->getCurrentToken() == Token::LPAREN)
 		parameters = parseParameterList();
 	else
-	{
-		// create an empty parameter list at a zero-length location
-		ASTNodeFactory nodeFactory(*this);
-		nodeFactory.setLocationEmpty();
-		parameters = nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
-	}
+		parameters = createEmptyParameterList();
 	ASTPointer<Block> block = parseBlock();
 	nodeFactory.setEndPositionFromNode(block);
 	return nodeFactory.createNode<ModifierDefinition>(name, docstring, parameters, block);
@@ -308,6 +298,8 @@ ASTPointer<EventDefinition> Parser::parseEventDefinition()
 	ASTPointer<ParameterList> parameters;
 	if (m_scanner->getCurrentToken() == Token::LPAREN)
 		parameters = parseParameterList(true, true);
+	else
+		parameters = createEmptyParameterList();
 	nodeFactory.markEndPosition();
 	expectToken(Token::SEMICOLON);
 	return nodeFactory.createNode<EventDefinition>(name, docstring, parameters);
@@ -769,6 +761,13 @@ ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 	ASTPointer<ASTString> identifier = make_shared<ASTString>(m_scanner->getCurrentLiteral());
 	m_scanner->next();
 	return identifier;
+}
+
+ASTPointer<ParameterList> Parser::createEmptyParameterList()
+{
+	ASTNodeFactory nodeFactory(*this);
+	nodeFactory.setLocationEmpty();
+	return nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
 }
 
 ParserError Parser::createParserError(string const& _description) const
