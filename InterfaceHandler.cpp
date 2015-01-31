@@ -81,7 +81,6 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		event["inputs"] = params;
 		abi.append(event);
 	}
-
 	return std::unique_ptr<std::string>(new std::string(m_writer.write(abi)));
 }
 
@@ -118,7 +117,6 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 
 		ret += "event " + it->getName() + params + ";";
 	}
-
 	return unique_ptr<string>(new string(ret + "}"));
 }
 
