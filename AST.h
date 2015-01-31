@@ -222,6 +222,7 @@ public:
 	std::vector<ASTPointer<ModifierDefinition>> const& getFunctionModifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
 	std::vector<ASTPointer<EventDefinition>> const& getEvents() const { return m_events; }
+	std::vector<ASTPointer<EventDefinition>> const& getInterfaceEvents() const;
 
 	virtual TypePointer getType(ContractDefinition const* m_currentContract) const override;
 
@@ -257,6 +258,7 @@ private:
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
+	mutable std::unique_ptr<std::vector<ASTPointer<EventDefinition>>> m_interfaceEvents;
 };
 
 class InheritanceSpecifier: public ASTNode
