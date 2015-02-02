@@ -22,6 +22,7 @@
 
 #include <utility>
 #include <numeric>
+#include <boost/range/adaptor/reversed.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcrypto/SHA3.h>
 #include <libsolidity/AST.h>
@@ -847,36 +848,34 @@ unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedT
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	TypePointer resultType = _varDecl.getType();
-	auto mappingType = dynamic_cast<const MappingType*>(resultType.get());
+	FunctionType thisType(_varDecl);
+	solAssert(thisType.getReturnParameterTypes().size() == 1, "");
+	TypePointer const& resultType = thisType.getReturnParameterTypes().front();
 	unsigned sizeOnStack;
 
-	if (mappingType != nullptr)
-	{
-		// this copies from ExpressionCompiler::visit(IndexAccess .. ) for mapping access
-		TypePointer const& keyType = mappingType->getKeyType();
-		unsigned length = appendTypeConversionAndMoveToMemory(*keyType, *keyType, Location());
-		solAssert(length == 32, "Mapping key has to take 32 bytes in memory (for now).");
-		// @todo move this once we actually use memory
-		m_context << m_context.getStorageLocationOfVariable(_varDecl);
-		length += CompilerUtils(m_context).storeInMemory(length);
-		m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
-		m_currentLValue = LValue(m_context, LValue::STORAGE, *mappingType->getValueType());
-		m_currentLValue.retrieveValue(mappingType->getValueType(), Location(), true);
-		m_currentLValue.reset();
+	unsigned length = 0;
+	TypePointers const& params = thisType.getParameterTypes();
+	// move arguments to memory
+	for (TypePointer const& param: boost::adaptors::reverse(params))
+		length += appendTypeConversionAndMoveToMemory(*param, *param, Location(), length);
 
-		resultType = mappingType->getValueType();
-	}
-	else
+	// retrieve the position of the mapping
+	m_context << m_context.getStorageLocationOfVariable(_varDecl);
+
+	for (TypePointer const& param: params)
 	{
-		m_currentLValue.fromStateVariable(_varDecl, _varDecl.getType());
-		solAssert(m_currentLValue.isInStorage(), "");
-		m_currentLValue.retrieveValue(_varDecl.getType(), Location(), true);
+		// move offset to memory
+		CompilerUtils(m_context).storeInMemory(length);
+		unsigned argLen = CompilerUtils::getPaddedSize(param->getCalldataEncodedSize());
+		length -= argLen;
+		m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
 	}
-	sizeOnStack = _varDecl.getType()->getSizeOnStack();
+
+	m_currentLValue = LValue(m_context, LValue::STORAGE, *resultType);
+	m_currentLValue.retrieveValue(resultType, Location(), true);
+	sizeOnStack = resultType->getSizeOnStack();
 	solAssert(sizeOnStack <= 15, "Stack too deep.");
 	m_context << eth::dupInstruction(sizeOnStack + 1) << eth::Instruction::JUMP;
-
 }
 
 ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,

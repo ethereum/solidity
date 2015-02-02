@@ -626,20 +626,20 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	TypePointers retParams;
 	vector<string> retParamNames;
 	TypePointer varDeclType = _varDecl.getType();
-	auto mappingType = dynamic_cast<const MappingType*>(varDeclType.get());
-	if (mappingType!= nullptr)
+	auto mappingType = dynamic_cast<MappingType const*>(varDeclType.get());
+	auto returnType = varDeclType;
+
+	while (mappingType!= nullptr)
 	{
 		params.push_back(mappingType->getKeyType());
-		paramNames.push_back(mappingType->getKeyType()->toString());
+		paramNames.push_back("");
+		returnType = mappingType->getValueType();
+		mappingType = dynamic_cast<MappingType const*>(mappingType->getValueType().get());
+	}
 
-		retParams.push_back(mappingType->getValueType());
-		retParamNames.push_back(mappingType->getValueType()->toString());
-	}
-	else // elelemntary type
-	{
-		retParams.push_back(varDeclType);
-		retParamNames.push_back(_varDecl.getName());
-	}
+	retParams.push_back(returnType);
+	retParamNames.push_back("");
+
 	swap(params, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
 	swap(retParams, m_returnParameterTypes);
