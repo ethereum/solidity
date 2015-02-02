@@ -133,7 +133,7 @@ void ContractDefinition::checkIllegalOverrides() const
 			FunctionDefinition const*& override = functions[name];
 			if (!override)
 				override = function.get();
-			else if (override->isPublic() != function->isPublic() ||
+			else if (override->getVisibility() != function->getVisibility() ||
 					 override->isDeclaredConst() != function->isDeclaredConst() ||
 					 FunctionType(*override) != FunctionType(*function))
 				BOOST_THROW_EXCEPTION(override->createTypeError("Override changes extended function signature."));

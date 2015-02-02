@@ -165,6 +165,7 @@ namespace solidity
 	K(NEW, "new", 0)                                                   \
 	K(PUBLIC, "public", 0)                                             \
 	K(PRIVATE, "private", 0)                                           \
+	K(PROTECTED, "protected", 0)                                       \
 	K(RETURN, "return", 0)                                             \
 	K(RETURNS, "returns", 0)                                           \
 	K(STRUCT, "struct", 0)                                             \
@@ -376,6 +377,7 @@ public:
 	static bool isUnaryOp(Value op) { return (NOT <= op && op <= DELETE) || op == ADD || op == SUB; }
 	static bool isCountOp(Value op) { return op == INC || op == DEC; }
 	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
+	static bool isVisibilitySpecifier(Value op) { return op == PUBLIC || op == PRIVATE || op == PROTECTED; }
 
 	// Returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
