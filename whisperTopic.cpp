@@ -101,6 +101,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	bool done = false;
 
 	bool startedListener = false;
+	Public phid;
 	std::thread listener([&]()
 	{
 		setThreadName("listener");
@@ -110,6 +111,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		ph.setIdealPeerCount(0);
 		auto wh = ph.registerCapability(new WhisperHost());
 		ph.start();
+		phid = ph.id();
 
 		startedListener = true;
 
@@ -130,6 +132,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	});
 
 	bool startedForwarder = false;
+	Public fwderid;
 	std::thread forwarder([&]()
 	{
 		setThreadName("forwarder");
@@ -143,9 +146,10 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		auto wh = ph.registerCapability(new WhisperHost());
 		this_thread::sleep_for(chrono::milliseconds(500));
 		ph.start();
+		fwderid = ph.id();
 
 		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.connect("127.0.0.1", 50303);
+		ph.addNode(phid, "127.0.0.1", 50303, 50303);
 
 		startedForwarder = true;
 
@@ -172,7 +176,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
 	this_thread::sleep_for(chrono::milliseconds(500));
-	ph.connect("127.0.0.1", 50305);
+	ph.addNode(fwderid, "127.0.0.1", 50305, 50305);
 
 	KeyPair us = KeyPair::create();
 	wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
@@ -195,6 +199,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 	unsigned result = 0;
 	bool done = false;
 
+	Public listenerid;
 	bool startedForwarder = false;
 	std::thread forwarder([&]()
 	{
@@ -206,9 +211,9 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		auto wh = ph.registerCapability(new WhisperHost());
 		this_thread::sleep_for(chrono::milliseconds(500));
 		ph.start();
-
+		
 		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.connect("127.0.0.1", 50303);
+//		ph.addNode("127.0.0.1", 50303, 50303);
 
 		startedForwarder = true;
 
@@ -236,7 +241,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		this_thread::sleep_for(chrono::milliseconds(500));
 		ph.start();
 		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.connect("127.0.0.1", 50305);
+//		ph.addNode("127.0.0.1", 50305, 50305);
 
 		KeyPair us = KeyPair::create();
 		wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
@@ -250,7 +255,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		this_thread::sleep_for(chrono::milliseconds(500));
 		ph.start();
 		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.connect("127.0.0.1", 50305);
+//		ph.addNode("127.0.0.1", 50305, 50305);
 
 		/// Only interested in odd packets
 		auto w = wh->installWatch(BuildTopicMask("test"));
