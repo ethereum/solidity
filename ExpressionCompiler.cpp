@@ -823,10 +823,10 @@ unsigned ExpressionCompiler::appendArgumentCopyToMemory(TypePointers const& _typ
 	return length;
 }
 
-unsigned ExpressionCompiler::appendTypeCopyToMemory(Type const& _expectedType, TypePointer const& _type,
-													Location const& _location, unsigned _memoryOffset)
+unsigned ExpressionCompiler::appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,
+																 Location const& _location, unsigned _memoryOffset)
 {
-	appendTypeConversion(*_type, _expectedType, true);
+	appendTypeConversion(_type, _expectedType, true);
 	unsigned const c_numBytes = CompilerUtils::getPaddedSize(_expectedType.getCalldataEncodedSize());
 	if (c_numBytes == 0 || c_numBytes > 32)
 		BOOST_THROW_EXCEPTION(CompilerError()
@@ -842,65 +842,40 @@ unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedT
 														  unsigned _memoryOffset)
 {
 	_expression.accept(*this);
-	return appendTypeCopyToMemory(_expectedType, _expression.getType(), _expression.getLocation(), _memoryOffset);
+	return appendTypeConversionAndMoveToMemory(_expectedType, *_expression.getType(), _expression.getLocation(), _memoryOffset);
 }
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	auto mappingType = dynamic_cast<const MappingType*>(_varDecl.getType().get());
+	TypePointer resultType = _varDecl.getType();
+	auto mappingType = dynamic_cast<const MappingType*>(resultType.get());
 	unsigned sizeOnStack;
+
 	if (mappingType != nullptr)
 	{
-		// this copies from Compiler::visit(FunctionDefinition..) for argument reading
-		unsigned parameterSize = mappingType->getKeyType()->getSizeOnStack();
-		m_context.adjustStackOffset(parameterSize);
-		m_context.addVariable(_varDecl, parameterSize);
 		// this copies from ExpressionCompiler::visit(IndexAccess .. ) for mapping access
 		TypePointer const& keyType = mappingType->getKeyType();
-		unsigned length = appendTypeCopyToMemory(*keyType, mappingType->getValueType(), Location());
+		unsigned length = appendTypeConversionAndMoveToMemory(*keyType, *keyType, Location());
 		solAssert(length == 32, "Mapping key has to take 32 bytes in memory (for now).");
 		// @todo move this once we actually use memory
+		m_context << m_context.getStorageLocationOfVariable(_varDecl);
 		length += CompilerUtils(m_context).storeInMemory(length);
 		m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
-
 		m_currentLValue = LValue(m_context, LValue::STORAGE, *mappingType->getValueType());
 		m_currentLValue.retrieveValue(mappingType->getValueType(), Location(), true);
+		m_currentLValue.reset();
 
-		unsigned const c_argumentsSize = keyType->getSizeOnStack();
-		unsigned const c_returnValuesSize = mappingType->getValueType()->getSizeOnStack();
-		unsigned const c_localVariablesSize = 0;
-
-		vector<int> stackLayout;
-		stackLayout.push_back(c_returnValuesSize); // target of return address
-		stackLayout += vector<int>(c_argumentsSize, -1); // discard all arguments
-		for (unsigned i = 0; i < c_returnValuesSize; ++i)
-			stackLayout.push_back(i);
-		stackLayout += vector<int>(c_localVariablesSize, -1);
-
-		while (stackLayout.back() != int(stackLayout.size() - 1))
-			if (stackLayout.back() < 0)
-			{
-				m_context << eth::Instruction::POP;
-				stackLayout.pop_back();
-			}
-			else
-			{
-				m_context << eth::swapInstruction(stackLayout.size() - stackLayout.back() - 1);
-				swap(stackLayout[stackLayout.back()], stackLayout.back());
-			}
-		//@todo assert that everything is in place now
-
-		m_context << eth::Instruction::JUMP;
+		resultType = mappingType->getValueType();
 	}
 	else
 	{
 		m_currentLValue.fromStateVariable(_varDecl, _varDecl.getType());
 		solAssert(m_currentLValue.isInStorage(), "");
 		m_currentLValue.retrieveValue(_varDecl.getType(), Location(), true);
-		sizeOnStack = _varDecl.getType()->getSizeOnStack();
-		solAssert(sizeOnStack <= 15, "Stack too deep.");
-		m_context << eth::dupInstruction(sizeOnStack + 1) << eth::Instruction::JUMP;
 	}
+	sizeOnStack = _varDecl.getType()->getSizeOnStack();
+	solAssert(sizeOnStack <= 15, "Stack too deep.");
+	m_context << eth::dupInstruction(sizeOnStack + 1) << eth::Instruction::JUMP;
 
 }
 
