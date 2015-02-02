@@ -45,10 +45,11 @@ public:
 
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
-		dev::solidity::CompilerStack compiler;
+		dev::solidity::CompilerStack compiler(m_addStandardSources);
 		try
 		{
-			compiler.compile(_sourceCode, m_optimize);
+			compiler.addSource("", _sourceCode);
+			compiler.compile(m_optimize);
 		}
 		catch(boost::exception const& _e)
 		{
@@ -66,7 +67,6 @@ public:
 	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value,
 											   Args const&... _arguments)
 	{
-
 		FixedHash<4> hash(dev::sha3(_sig));
 		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
 		return m_output;
@@ -173,6 +173,7 @@ private:
 
 protected:
 	bool m_optimize = false;
+	bool m_addStandardSources = false;
 	Address m_sender;
 	Address m_contractAddress;
 	eth::State m_state;

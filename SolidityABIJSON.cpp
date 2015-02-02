@@ -32,9 +32,11 @@ namespace solidity
 namespace test
 {
 
-class InterfaceChecker
+class JSONInterfaceChecker
 {
 public:
+	JSONInterfaceChecker(): m_compilerStack(false) {}
+
 	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
 		try
@@ -52,8 +54,8 @@ public:
 		Json::Value expectedInterface;
 		m_reader.parse(_expectedInterfaceString, expectedInterface);
 		BOOST_CHECK_MESSAGE(expectedInterface == generatedInterface,
-							"Expected " << _expectedInterfaceString <<
-							"\n but got:\n" << generatedInterfaceString);
+							"Expected:\n" << expectedInterface.toStyledString() <<
+							"\n but got:\n" << generatedInterface.toStyledString());
 	}
 
 private:
@@ -61,7 +63,7 @@ private:
 	Json::Reader m_reader;
 };
 
-BOOST_FIXTURE_TEST_SUITE(SolidityABIJSON, InterfaceChecker)
+BOOST_FIXTURE_TEST_SUITE(SolidityABIJSON, JSONInterfaceChecker)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {
@@ -73,6 +75,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 	{
 		"name": "f",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -95,7 +98,6 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 {
 	char const* sourceCode = "contract test {\n"
 	"}\n";
-
 	char const* interface = "[]";
 
 	checkInterface(sourceCode, interface);
@@ -112,6 +114,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	{
 		"name": "f",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -128,6 +131,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods)
 	{
 		"name": "g",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "b",
@@ -156,6 +160,7 @@ BOOST_AUTO_TEST_CASE(multiple_params)
 	{
 		"name": "f",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -190,6 +195,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	{
 		"name": "c",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "b",
@@ -206,6 +212,7 @@ BOOST_AUTO_TEST_CASE(multiple_methods_order)
 	{
 		"name": "f",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -235,6 +242,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 	{
 		"name": "foo",
 		"constant": false,
+		"type": "function",
 		"inputs": [
 		{
 			"name": "a",
@@ -255,6 +263,7 @@ BOOST_AUTO_TEST_CASE(const_function)
 	{
 		"name": "boo",
 		"constant": true,
+		"type": "function",
 		"inputs": [{
 			"name": "a",
 			"type": "uint32"
@@ -270,6 +279,137 @@ BOOST_AUTO_TEST_CASE(const_function)
 
 	checkInterface(sourceCode, interface);
 }
+
+BOOST_AUTO_TEST_CASE(exclude_fallback_function)
+{
+	char const* sourceCode = "contract test { function() {} }";
+
+	char const* interface = "[]";
+
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(events)
+{
+	char const* sourceCode = "contract test {\n"
+	"  function f(uint a) returns(uint d) { return a * 7; }\n"
+	"  event e1(uint b, address indexed c); \n"
+	"  event e2(); \n"
+	"}\n";
+	char const* interface = R"([
+	{
+		"name": "f",
+		"constant": false,
+		"type": "function",
+		"inputs": [
+		{
+			"name": "a",
+			"type": "uint256"
+		}
+		],
+		"outputs": [
+		{
+			"name": "d",
+			"type": "uint256"
+		}
+		]
+	},
+	{
+		"name": "e1",
+		"type": "event",
+		"inputs": [
+		{
+			"indexed": false,
+			"name": "b",
+			"type": "uint256"
+		},
+		{
+			"indexed": true,
+			"name": "c",
+			"type": "address"
+		}
+		]
+	},
+	{
+		"name": "e2",
+		"type": "event",
+		"inputs": []
+	}
+
+	])";
+
+	checkInterface(sourceCode, interface);
+}
+
+
+BOOST_AUTO_TEST_CASE(inherited)
+{
+	char const* sourceCode =
+	"	contract Base { \n"
+	"		function baseFunction(uint p) returns (uint i) { return p; } \n"
+	"		event baseEvent(string32 indexed evtArgBase); \n"
+	"	} \n"
+	"	contract Derived is Base { \n"
+	"		function derivedFunction(string32 p) returns (string32 i) { return p; } \n"
+	"		event derivedEvent(uint indexed evtArgDerived); \n"
+	"	}";
+
+	char const* interface = R"([
+	{
+		"name": "baseFunction",
+		"constant": false,
+		"type": "function",
+		"inputs":
+		[{
+			"name": "p",
+			"type": "uint256"
+		}],
+		"outputs":
+		[{
+			"name": "i",
+			"type": "uint256"
+		}]
+	},
+	{
+		"name": "derivedFunction",
+		"constant": false,
+		"type": "function",
+		"inputs":
+		[{
+			"name": "p",
+			"type": "string32"
+		}],
+		"outputs":
+		[{
+			"name": "i",
+			"type": "string32"
+		}]
+	},
+	{
+		"name": "derivedEvent",
+		"type": "event",
+		"inputs":
+		[{
+			"indexed": true,
+			"name": "evtArgDerived",
+			"type": "uint256"
+		}]
+	},
+	{
+		"name": "baseEvent",
+		"type": "event",
+		"inputs":
+		[{
+			"indexed": true,
+			"name": "evtArgBase",
+			"type": "string32"
+		}]
+	}])";
+
+
+	checkInterface(sourceCode, interface);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
