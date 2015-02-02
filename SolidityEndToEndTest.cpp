@@ -885,7 +885,7 @@ BOOST_AUTO_TEST_CASE(constructor)
 BOOST_AUTO_TEST_CASE(simple_accessor)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  uint256 data;\n"
+							 "  uint256 public data;\n"
 							 "  function test() {\n"
 							 "    data = 8;\n"
 							 "  }\n"
@@ -897,10 +897,10 @@ BOOST_AUTO_TEST_CASE(simple_accessor)
 BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  uint256 data;\n"
-							 "  string6 name;\n"
-							 "  hash a_hash;\n"
-							 "  address an_address;\n"
+							 "  uint256 public data;\n"
+							 "  string6 public name;\n"
+							 "  hash public a_hash;\n"
+							 "  address public an_address;\n"
 							 "  function test() {\n"
 							 "    data = 8;\n"
 							 "    name = \"Celina\";\n"
@@ -908,7 +908,6 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 							 "    an_address = address(0x1337);\n"
 							 "    super_secret_data = 42;\n"
 							 "  }\n"
-							 "  private:"
 							 "  uint256 super_secret_data;"
 							 "}\n";
 	compileAndRun(sourceCode);
@@ -1490,8 +1489,7 @@ BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
 				setName("abc");
 			}
 			function getName() returns (string3 ret) { return name; }
-		private:
-			function setName(string3 _name) { name = _name; }
+			function setName(string3 _name) private { name = _name; }
 		})";
 	compileAndRun(sourceCode);
 	BOOST_REQUIRE(callContractFunction("getName()") == encodeArgs("abc"));
