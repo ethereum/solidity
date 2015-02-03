@@ -629,7 +629,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	auto mappingType = dynamic_cast<MappingType const*>(varDeclType.get());
 	auto returnType = varDeclType;
 
-	while (mappingType!= nullptr)
+	while (mappingType != nullptr)
 	{
 		params.push_back(mappingType->getKeyType());
 		paramNames.push_back("");
