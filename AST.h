@@ -133,12 +133,17 @@ class Declaration: public ASTNode
 {
 public:
 	enum class LValueType { NONE, LOCAL, STORAGE };
+	enum class Visibility { DEFAULT, PUBLIC, PROTECTED, PRIVATE };
 
-	Declaration(Location const& _location, ASTPointer<ASTString> const& _name):
-		ASTNode(_location), m_name(_name), m_scope(nullptr) {}
+	Declaration(Location const& _location, ASTPointer<ASTString> const& _name,
+				Visibility _visibility = Visibility::DEFAULT):
+		ASTNode(_location), m_name(_name), m_visibility(_visibility), m_scope(nullptr) {}
 
 	/// @returns the declared name.
 	ASTString const& getName() const { return *m_name; }
+	Visibility getVisibility() const { return m_visibility == Visibility::DEFAULT ? getDefaultVisibility() : m_visibility; }
+	bool isPublic() const { return getVisibility() == Visibility::PUBLIC; }
+
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
 	Declaration const* getScope() const { return m_scope; }
@@ -151,8 +156,12 @@ public:
 	/// @returns the lvalue type of expressions referencing this declaration
 	virtual LValueType getLValueType() const { return LValueType::NONE; }
 
+protected:
+	virtual Visibility getDefaultVisibility() const { return Visibility::PUBLIC; }
+
 private:
 	ASTPointer<ASTString> m_name;
+	Visibility m_visibility;
 	Declaration const* m_scope;
 };
 
@@ -330,16 +339,15 @@ class FunctionDefinition: public Declaration, public VariableScope, public Docum
 {
 public:
 	FunctionDefinition(Location const& _location, ASTPointer<ASTString> const& _name,
-					bool _isPublic,
-					bool _isConstructor,
+					Declaration::Visibility _visibility, bool _isConstructor,
 					ASTPointer<ASTString> const& _documentation,
 					ASTPointer<ParameterList> const& _parameters,
 					bool _isDeclaredConst,
 					std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
 					ASTPointer<ParameterList> const& _returnParameters,
 					ASTPointer<Block> const& _body):
-	Declaration(_location, _name), Documented(_documentation),
-	m_isPublic(_isPublic), m_isConstructor(_isConstructor),
+	Declaration(_location, _name, _visibility), Documented(_documentation),
+	m_isConstructor(_isConstructor),
 	m_parameters(_parameters),
 	m_isDeclaredConst(_isDeclaredConst),
 	m_functionModifiers(_modifiers),
@@ -350,7 +358,6 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	bool isPublic() const { return m_isPublic; }
 	bool isConstructor() const { return m_isConstructor; }
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	std::vector<ASTPointer<ModifierInvocation>> const& getModifiers() const { return m_functionModifiers; }
@@ -371,7 +378,6 @@ public:
 	std::string getCanonicalSignature() const;
 
 private:
-	bool m_isPublic;
 	bool m_isConstructor;
 	ASTPointer<ParameterList> m_parameters;
 	bool m_isDeclaredConst;
@@ -388,10 +394,10 @@ class VariableDeclaration: public Declaration
 {
 public:
 	VariableDeclaration(Location const& _location, ASTPointer<TypeName> const& _type,
-						ASTPointer<ASTString> const& _name, bool _isPublic, bool _isStateVar = false,
-						bool _isIndexed = false):
-		Declaration(_location, _name), m_typeName(_type),
-		m_isPublic(_isPublic), m_isStateVariable(_isStateVar), m_isIndexed(_isIndexed) {}
+						ASTPointer<ASTString> const& _name, Visibility _visibility,
+						bool _isStateVar = false, bool _isIndexed = false):
+		Declaration(_location, _name, _visibility), m_typeName(_type),
+		m_isStateVariable(_isStateVar), m_isIndexed(_isIndexed) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -404,13 +410,14 @@ public:
 
 	virtual LValueType getLValueType() const override;
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
-	bool isPublic() const { return m_isPublic; }
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 
+protected:
+	Visibility getDefaultVisibility() const override { return Visibility::PROTECTED; }
+
 private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
-	bool m_isPublic;                    ///< Whether there is an accessor for it or not
 	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
 	bool m_isIndexed;                   ///< Whether this is an indexed variable (used by events).
 
