@@ -51,7 +51,7 @@ int stateTest()
 	cout << s;
 
 	// Mine to get some ether!
-	s.commitToMine();
+	s.commitToMine(bc);
 	while (!s.mine(100).completed) {}
 	s.completeMine();
 	bc.attemptImport(s.blockData(), stateDB);
@@ -74,8 +74,9 @@ int stateTest()
 	cout << s;
 
 	// Mine to get some ether and set in stone.
-	s.commitToMine();
-	while (!s.mine(100).completed) {}
+	s.commitToMine(bc);
+	s.commitToMine(bc);
+	while (!s.mine(50).completed) { s.commitToMine(bc); }
 	s.completeMine();
 	bc.attemptImport(s.blockData(), stateDB);
 
