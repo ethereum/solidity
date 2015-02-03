@@ -513,7 +513,7 @@ void FunctionCall::checkTypeRequirements()
 			for (size_t i = 0; i < m_names.size(); i++) {
 				bool found = false;
 				for (size_t j = 0; j < parameterNames.size(); j++) {
-					if (parameterNames[j] == m_names[i]) {
+					if (parameterNames[j] == *m_names[i]) {
 						// check type convertible
 						if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[j]))
 							BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));

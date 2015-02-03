@@ -82,7 +82,7 @@ private:
 	ASTPointer<Expression> parseLeftHandSideExpression();
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
-	void parseFunctionCallArguments(std::vector<ASTPointer<Expression>> & _arguments, std::vector<std::string> & _names);
+	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
 	///@}
 
 	///@{

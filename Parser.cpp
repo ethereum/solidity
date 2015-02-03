@@ -592,7 +592,6 @@ ASTPointer<Expression> Parser::parseBinaryExpression(int _minPrecedence)
 	ASTPointer<Expression> expression = parseUnaryExpression();
 	int precedence = Token::precedence(m_scanner->getCurrentToken());
 	for (; precedence >= _minPrecedence; --precedence)
-	{
 		while (Token::precedence(m_scanner->getCurrentToken()) == precedence)
 		{
 			Token::Value op = m_scanner->getCurrentToken();
@@ -601,7 +600,6 @@ ASTPointer<Expression> Parser::parseBinaryExpression(int _minPrecedence)
 			nodeFactory.setEndPositionFromNode(right);
 			expression = nodeFactory.createNode<BinaryOperation>(expression, op, right);
 		}
-	}
 	return expression;
 }
 
@@ -668,8 +666,8 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression()
 		{
 			m_scanner->next();
 			vector<ASTPointer<Expression>> arguments;
-			vector<string> names;
-			parseFunctionCallArguments(arguments, names);
+			vector<ASTPointer<ASTString>> names;
+			std::tie(arguments, names) = parseFunctionCallArguments();
 			nodeFactory.markEndPosition();
 			expectToken(Token::RPAREN);
 			expression = nodeFactory.createNode<FunctionCall>(expression, arguments, names);
@@ -740,8 +738,9 @@ vector<ASTPointer<Expression>> Parser::parseFunctionCallListArguments()
 	return arguments;
 }
 
-void Parser::parseFunctionCallArguments(vector<ASTPointer<Expression>>& _arguments, vector<string>& _names)
+pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::parseFunctionCallArguments()
 {
+	pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> ret;
 	Token::Value token = m_scanner->getCurrentToken();
 	if (token == Token::LBRACE)
 	{
@@ -749,28 +748,21 @@ void Parser::parseFunctionCallArguments(vector<ASTPointer<Expression>>& _argumen
 		expectToken(Token::LBRACE);
 		while (m_scanner->getCurrentToken() != Token::RBRACE)
 		{
-			string identifier = *expectIdentifierToken();
 			expectToken(Token::COLON);
-			ASTPointer<Expression> expression = parseExpression();
 
-			_arguments.push_back(expression);
-			_names.push_back(identifier);
+			ret.first.push_back(parseExpression());
+			ret.second.push_back(expectIdentifierToken());
 
 			if (m_scanner->getCurrentToken() == Token::COMMA)
-			{
 				expectToken(Token::COMMA);
-			}
 			else
-			{
 				break;
-			}
 		}
 		expectToken(Token::RBRACE);
 	}
 	else
-	{
-		_arguments = parseFunctionCallListArguments();
-	}
+		ret.first = parseFunctionCallListArguments();
+	return ret;
 }
 
 

@@ -204,34 +204,25 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	{
 		FunctionType const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType());
 		TypePointers const& parameterTypes = function.getParameterTypes();
-		vector<string> const& parameterNames = function.getParameterNames();
 		vector<ASTPointer<Expression const>> const& callArguments = _functionCall.getArguments();
-		vector<string> const& callArgumentNames = _functionCall.getNames();
+		vector<ASTPointer<ASTString>> const& callArgumentNames = _functionCall.getNames();
 		solAssert(callArguments.size() == parameterTypes.size(), "");
 
 		vector<ASTPointer<Expression const>> arguments;
 		if (callArgumentNames.empty())
-		{
 			// normal arguments
-			arguments = {callArguments.begin(), callArguments.end()};
-		}
+			arguments = callArguments;
 		else
-		{
 			// named arguments
-			for (size_t i = 0; i < parameterNames.size(); i++) {
+			for (auto const& parameterName: function.getParameterNames())
+			{
 				bool found = false;
-				for (size_t j = 0; j < callArgumentNames.size(); j++) {
-					if (parameterNames[i] == callArgumentNames[j]) {
+				for (size_t j = 0; j < callArgumentNames.size() && !found; j++)
+					if ((found = (parameterName == *callArgumentNames[j])))
 						// we found the actual parameter position
 						arguments.push_back(callArguments[j]);
-
-						found = true;
-						break;
-					}
-				}
 				solAssert(found, "");
 			}
-		}
 
 		switch (function.getLocation())
 		{
