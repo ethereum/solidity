@@ -502,7 +502,7 @@ void FunctionCall::checkTypeRequirements()
 #endif
 					if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[0]))
 						BOOST_THROW_EXCEPTION(createTypeError(std::string("SHA3 argument ") +
-															  boost::lexical_cast<std::string>(i) +
+															  boost::lexical_cast<std::string>(i + 1) +
 															  std::string("can't be converted to hash")));
 
 				} else if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))

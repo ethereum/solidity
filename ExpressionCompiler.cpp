@@ -275,7 +275,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << u256(0) << eth::Instruction::CODECOPY;
 
 			unsigned length = bytecode.size();
-			length += appendArgumentCopyToMemory(function.getParameterTypes(), arguments, length);
+			length += appendArgumentsCopyToMemory(function.getParameterTypes(), arguments, length);
 			// size, offset, endowment
 			m_context << u256(length) << u256(0);
 			if (function.valueSet())
@@ -800,7 +800,7 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 
 	// reserve space for the function identifier
 	unsigned dataOffset = bare ? 0 : CompilerUtils::dataStartOffset;
-	dataOffset += appendArgumentCopyToMemory(_functionType.getParameterTypes(), _arguments, dataOffset);
+	dataOffset += appendArgumentsCopyToMemory(_functionType.getParameterTypes(), _arguments, dataOffset);
 
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
@@ -836,9 +836,9 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	}
 }
 
-unsigned ExpressionCompiler::appendArgumentCopyToMemory(TypePointers const& _types,
-														vector<ASTPointer<Expression const>> const& _arguments,
-														unsigned _memoryOffset)
+unsigned ExpressionCompiler::appendArgumentsCopyToMemory(TypePointers const& _types,
+														 vector<ASTPointer<Expression const>> const& _arguments,
+														 unsigned _memoryOffset)
 {
 	unsigned length = 0;
 	for (unsigned i = 0; i < _arguments.size(); ++i)

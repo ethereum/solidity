@@ -94,9 +94,9 @@ private:
 									bool bare = false);
 	/// Appends code that copies the given arguments to memory (with optional offset).
 	/// @returns the number of bytes copied to memory
-	unsigned appendArgumentCopyToMemory(TypePointers const& _types,
-										std::vector<ASTPointer<Expression const>> const& _arguments,
-										unsigned _memoryOffset = 0);
+	unsigned appendArgumentsCopyToMemory(TypePointers const& _types,
+										 std::vector<ASTPointer<Expression const>> const& _arguments,
+										 unsigned _memoryOffset = 0);
 	/// Appends code that copies the given arguments that should all have the
 	/// same @a _type to memory (with optional offset).
 	/// @returns the number of bytes copied to memory
