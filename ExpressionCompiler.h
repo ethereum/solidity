@@ -97,10 +97,12 @@ private:
 	unsigned appendArgumentCopyToMemory(TypePointers const& _types,
 										std::vector<ASTPointer<Expression const>> const& _arguments,
 										unsigned _memoryOffset = 0);
-	/// Appends code that copies a type to memory.
+	/// Appends code that copies the given arguments that should all have the
+	/// same @a _type to memory (with optional offset).
 	/// @returns the number of bytes copied to memory
-	unsigned appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,
-												 Location const& _location, unsigned _memoryOffset = 0);
+	unsigned appendSameTypeArgumentsCopyToMemory(TypePointer const& _type,
+												 std::vector<ASTPointer<Expression const>> const& _arguments,
+												 unsigned _memoryOffset = 0);
 	/// Appends code that evaluates a single expression and copies it to memory (with optional offset).
 	/// @returns the number of bytes copied to memory
 	unsigned appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression,

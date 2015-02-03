@@ -206,7 +206,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		TypePointers const& parameterTypes = function.getParameterTypes();
 		vector<ASTPointer<Expression const>> const& callArguments = _functionCall.getArguments();
 		vector<ASTPointer<ASTString>> const& callArgumentNames = _functionCall.getNames();
-		solAssert(callArguments.size() == parameterTypes.size(), "");
+		if (function.getLocation() != Location::SHA3)
+			solAssert(callArguments.size() == parameterTypes.size(), "");
 
 		vector<ASTPointer<Expression const>> arguments;
 		if (callArgumentNames.empty())
@@ -325,9 +326,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << eth::Instruction::SUICIDE;
 			break;
 		case Location::SHA3:
-			appendExpressionCopyToMemory(*function.getParameterTypes().front(), *arguments.front());
-			m_context << u256(32) << u256(0) << eth::Instruction::SHA3;
+		{
+			unsigned length = appendSameTypeArgumentsCopyToMemory(function.getParameterTypes().front(), arguments, 0);
+			m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
 			break;
+		}
 		case Location::LOG0:
 		case Location::LOG1:
 		case Location::LOG2:
@@ -843,8 +846,18 @@ unsigned ExpressionCompiler::appendArgumentCopyToMemory(TypePointers const& _typ
 	return length;
 }
 
-unsigned ExpressionCompiler::appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,
-																 Location const& _location, unsigned _memoryOffset)
+unsigned ExpressionCompiler::appendSameTypeArgumentsCopyToMemory(TypePointer const& _type,
+																 vector<ASTPointer<Expression const>> const& _arguments,
+																 unsigned _memoryOffset)
+{
+	unsigned length = 0;
+	for (unsigned i = 0; i < _arguments.size(); ++i)
+		length += appendExpressionCopyToMemory(*_type, *_arguments[i], _memoryOffset + length);
+	return length;
+}
+
+unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
+														  Expression const& _expression, unsigned _memoryOffset)
 {
 	appendTypeConversion(_type, _expectedType, true);
 	unsigned const c_numBytes = CompilerUtils::getPaddedSize(_expectedType.getCalldataEncodedSize());

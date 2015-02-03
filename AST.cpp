@@ -487,14 +487,27 @@ void FunctionCall::checkTypeRequirements()
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
 		TypePointers const& parameterTypes = functionType->getParameterTypes();
-		if (parameterTypes.size() != m_arguments.size())
+		if (functionType->getLocation() !=FunctionType::Location::SHA3 && parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 
-		if (m_names.empty())
+		if (m_names.empty())  // LTODO: Totally ignoring sha3 case for named arguments for now just for the rebase to work
 		{
 			for (size_t i = 0; i < m_arguments.size(); ++i)
-				if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
+			{
+				if (functionType->getLocation() == FunctionType::Location::SHA3)
+				{
+#if 0 // are we sure we want that? Literal constant nums can't live outside storage and so sha3(42) will fail
+					if (!m_arguments[i]->getType()->canLiveOutsideStorage())
+						BOOST_THROW_EXCEPTION(createTypeError("SHA3 called with argument that can't live outside storage"));
+#endif
+					if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[0]))
+						BOOST_THROW_EXCEPTION(createTypeError(std::string("SHA3 argument ") +
+															  boost::lexical_cast<std::string>(i) +
+															  std::string("can't be converted to hash")));
+
+				} else if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
 					BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
+			}
 		}
 		else
 		{
