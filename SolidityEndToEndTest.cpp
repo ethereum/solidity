@@ -919,6 +919,27 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 	BOOST_CHECK(callContractFunction("super_secret_data()") == bytes());
 }
 
+BOOST_AUTO_TEST_CASE(complex_accessors)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  mapping(uint256 => string4) to_string_map;\n"
+							 "  mapping(uint256 => bool) to_bool_map;\n"
+							 "  mapping(uint256 => uint256) to_uint_map;\n"
+							 "  mapping(uint256 => mapping(uint256 => uint256)) to_multiple_map;\n"
+							 "  function test() {\n"
+							 "    to_string_map[42] = \"24\";\n"
+							 "    to_bool_map[42] = false;\n"
+							 "    to_uint_map[42] = 12;\n"
+							 "    to_multiple_map[42][23] = 31;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("to_string_map(uint256)", 42) == encodeArgs("24"));
+	BOOST_CHECK(callContractFunction("to_bool_map(uint256)", 42) == encodeArgs(false));
+	BOOST_CHECK(callContractFunction("to_uint_map(uint256)", 42) == encodeArgs(12));
+	BOOST_CHECK(callContractFunction("to_multiple_map(uint256,uint256)", 42, 23) == encodeArgs(31));
+}
+
 BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* sourceCode = "contract test {\n"
