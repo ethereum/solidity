@@ -748,10 +748,9 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 		expectToken(Token::LBRACE);
 		while (m_scanner->getCurrentToken() != Token::RBRACE)
 		{
-			expectToken(Token::COLON);
-
-			ret.first.push_back(parseExpression());
 			ret.second.push_back(expectIdentifierToken());
+			expectToken(Token::COLON);
+			ret.first.push_back(parseExpression());
 
 			if (m_scanner->getCurrentToken() == Token::COMMA)
 				expectToken(Token::COMMA);
