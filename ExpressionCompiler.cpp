@@ -22,6 +22,7 @@
 
 #include <utility>
 #include <numeric>
+#include <boost/range/adaptor/reversed.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcrypto/SHA3.h>
 #include <libsolidity/AST.h>
@@ -823,26 +824,58 @@ unsigned ExpressionCompiler::appendArgumentCopyToMemory(TypePointers const& _typ
 	return length;
 }
 
-unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
-														  Expression const& _expression, unsigned _memoryOffset)
+unsigned ExpressionCompiler::appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,
+																 Location const& _location, unsigned _memoryOffset)
 {
-	_expression.accept(*this);
-	appendTypeConversion(*_expression.getType(), _expectedType, true);
+	appendTypeConversion(_type, _expectedType, true);
 	unsigned const c_numBytes = CompilerUtils::getPaddedSize(_expectedType.getCalldataEncodedSize());
 	if (c_numBytes == 0 || c_numBytes > 32)
 		BOOST_THROW_EXCEPTION(CompilerError()
-							  << errinfo_sourceLocation(_expression.getLocation())
+							  << errinfo_sourceLocation(_location)
 							  << errinfo_comment("Type " + _expectedType.toString() + " not yet supported."));
 	bool const c_leftAligned = _expectedType.getCategory() == Type::Category::STRING;
 	bool const c_padToWords = true;
 	return CompilerUtils(m_context).storeInMemory(_memoryOffset, c_numBytes, c_leftAligned, c_padToWords);
 }
 
+unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
+														  Expression const& _expression,
+														  unsigned _memoryOffset)
+{
+	_expression.accept(*this);
+	return appendTypeConversionAndMoveToMemory(_expectedType, *_expression.getType(), _expression.getLocation(), _memoryOffset);
+}
+
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	m_currentLValue.fromStateVariable(_varDecl, _varDecl.getType());
-	solAssert(m_currentLValue.isInStorage(), "");
-	m_currentLValue.retrieveValue(_varDecl.getType(), Location(), true);
+	FunctionType thisType(_varDecl);
+	solAssert(thisType.getReturnParameterTypes().size() == 1, "");
+	TypePointer const& resultType = thisType.getReturnParameterTypes().front();
+	unsigned sizeOnStack;
+
+	unsigned length = 0;
+	TypePointers const& params = thisType.getParameterTypes();
+	// move arguments to memory
+	for (TypePointer const& param: boost::adaptors::reverse(params))
+		length += appendTypeConversionAndMoveToMemory(*param, *param, Location(), length);
+
+	// retrieve the position of the mapping
+	m_context << m_context.getStorageLocationOfVariable(_varDecl);
+
+	for (TypePointer const& param: params)
+	{
+		// move offset to memory
+		CompilerUtils(m_context).storeInMemory(length);
+		unsigned argLen = CompilerUtils::getPaddedSize(param->getCalldataEncodedSize());
+		length -= argLen;
+		m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
+	}
+
+	m_currentLValue = LValue(m_context, LValue::STORAGE, *resultType);
+	m_currentLValue.retrieveValue(resultType, Location(), true);
+	sizeOnStack = resultType->getSizeOnStack();
+	solAssert(sizeOnStack <= 15, "Stack too deep.");
+	m_context << eth::dupInstruction(sizeOnStack + 1) << eth::Instruction::JUMP;
 }
 
 ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,

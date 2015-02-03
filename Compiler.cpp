@@ -240,10 +240,6 @@ bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
 	m_context << m_context.getFunctionEntryLabel(_variableDeclaration);
 	ExpressionCompiler::appendStateVariableAccessor(m_context, _variableDeclaration);
 
-	unsigned sizeOnStack = _variableDeclaration.getType()->getSizeOnStack();
-	solAssert(sizeOnStack <= 15, "Stack too deep.");
-	m_context << eth::dupInstruction(sizeOnStack + 1) << eth::Instruction::JUMP;
-
 	return false;
 }
 
