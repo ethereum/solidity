@@ -475,6 +475,8 @@ void FunctionCall::checkTypeRequirements()
 		// number of non-mapping members
 		if (m_arguments.size() != 1)
 			BOOST_THROW_EXCEPTION(createTypeError("More than one argument for explicit type conversion."));
+		if (!m_names.empty())
+			BOOST_THROW_EXCEPTION(createTypeError("Type conversion can't allow named arguments."));
 		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type.getActualType()))
 			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
 		m_type = type.getActualType();
@@ -487,9 +489,44 @@ void FunctionCall::checkTypeRequirements()
 		TypePointers const& parameterTypes = functionType->getParameterTypes();
 		if (parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
-		for (size_t i = 0; i < m_arguments.size(); ++i)
-			if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
-				BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
+
+		if (m_names.empty())
+		{
+			for (size_t i = 0; i < m_arguments.size(); ++i)
+				if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
+					BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
+		}
+		else
+		{
+			auto const& parameterNames = functionType->getParameterNames();
+			if (parameterNames.size() != m_names.size())
+				BOOST_THROW_EXCEPTION(createTypeError("Some argument names are missing."));
+
+			// check duplicate names
+			for (size_t i = 0; i < m_names.size(); i++) {
+				for (size_t j = i + 1; j < m_names.size(); j++) {
+					if (m_names[i] == m_names[j])
+						BOOST_THROW_EXCEPTION(createTypeError("Duplicate named argument."));
+				}
+			}
+
+			for (size_t i = 0; i < m_names.size(); i++) {
+				bool found = false;
+				for (size_t j = 0; j < parameterNames.size(); j++) {
+					if (parameterNames[j] == m_names[i]) {
+						// check type convertible
+						if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[j]))
+							BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
+
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+					BOOST_THROW_EXCEPTION(createTypeError("Named argument doesn't match function declaration."));
+			}
+		}
+
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
 		if (functionType->getReturnParameterTypes().empty())

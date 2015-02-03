@@ -169,7 +169,7 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 	if (m_scanner->getCurrentToken() == Token::LPAREN)
 	{
 		m_scanner->next();
-		arguments = parseFunctionCallArguments();
+		arguments = parseFunctionCallListArguments();
 		nodeFactory.markEndPosition();
 		expectToken(Token::RPAREN);
 	}
@@ -332,7 +332,7 @@ ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()
 	if (m_scanner->getCurrentToken() == Token::LPAREN)
 	{
 		m_scanner->next();
-		arguments = parseFunctionCallArguments();
+		arguments = parseFunctionCallListArguments();
 		nodeFactory.markEndPosition();
 		expectToken(Token::RPAREN);
 	}
@@ -667,10 +667,12 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression()
 		case Token::LPAREN:
 		{
 			m_scanner->next();
-			vector<ASTPointer<Expression>> arguments = parseFunctionCallArguments();
+			vector<ASTPointer<Expression>> arguments;
+			vector<string> names;
+			parseFunctionCallArguments(arguments, names);
 			nodeFactory.markEndPosition();
 			expectToken(Token::RPAREN);
-			expression = nodeFactory.createNode<FunctionCall>(expression, arguments);
+			expression = nodeFactory.createNode<FunctionCall>(expression, arguments, names);
 		}
 		break;
 		default:
@@ -723,7 +725,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	return expression;
 }
 
-vector<ASTPointer<Expression>> Parser::parseFunctionCallArguments()
+vector<ASTPointer<Expression>> Parser::parseFunctionCallListArguments()
 {
 	vector<ASTPointer<Expression>> arguments;
 	if (m_scanner->getCurrentToken() != Token::RPAREN)
@@ -736,6 +738,39 @@ vector<ASTPointer<Expression>> Parser::parseFunctionCallArguments()
 		}
 	}
 	return arguments;
+}
+
+void Parser::parseFunctionCallArguments(vector<ASTPointer<Expression>>& _arguments, vector<string>& _names)
+{
+	Token::Value token = m_scanner->getCurrentToken();
+	if (token == Token::LBRACE)
+	{
+		// call({arg1 : 1, arg2 : 2 })
+		expectToken(Token::LBRACE);
+		while (m_scanner->getCurrentToken() != Token::RBRACE)
+		{
+			string identifier = *expectIdentifierToken();
+			expectToken(Token::COLON);
+			ASTPointer<Expression> expression = parseExpression();
+
+			_arguments.push_back(expression);
+			_names.push_back(identifier);
+
+			if (m_scanner->getCurrentToken() == Token::COMMA)
+			{
+				expectToken(Token::COMMA);
+			}
+			else
+			{
+				break;
+			}
+		}
+		expectToken(Token::RBRACE);
+	}
+	else
+	{
+		_arguments = parseFunctionCallListArguments();
+	}
 }
 
 

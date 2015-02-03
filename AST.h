@@ -963,14 +963,15 @@ class FunctionCall: public Expression
 {
 public:
 	FunctionCall(Location const& _location, ASTPointer<Expression> const& _expression,
-				 std::vector<ASTPointer<Expression>> const& _arguments):
-		Expression(_location), m_expression(_expression), m_arguments(_arguments) {}
+				 std::vector<ASTPointer<Expression>> const& _arguments, std::vector<std::string> const& _names):
+		Expression(_location), m_expression(_expression), m_arguments(_arguments), m_names(_names) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
 
 	Expression const& getExpression() const { return *m_expression; }
 	std::vector<ASTPointer<Expression const>> getArguments() const { return {m_arguments.begin(), m_arguments.end()}; }
+	std::vector<std::string> const& getNames() const { return m_names; }
 
 	/// Returns true if this is not an actual function call, but an explicit type conversion
 	/// or constructor call.
@@ -979,6 +980,7 @@ public:
 private:
 	ASTPointer<Expression> m_expression;
 	std::vector<ASTPointer<Expression>> m_arguments;
+	std::vector<std::string> m_names;
 };
 
 /**
