@@ -174,6 +174,11 @@ namespace solidity
 	K(WHILE, "while", 0)                                               \
 	\
 	\
+	/* Ether subdenominations */                                       \
+	K(ETH_SUB_WEI, "wei", 0)                                           \
+	K(ETH_SUB_SZABO, "szabo", 0)                                       \
+	K(ETH_SUB_FINNEY, "finney", 0)                                     \
+	K(ETH_SUB_ETHER, "ether", 0)                                       \
 	/* type keywords, keep them in this order, keep int as first keyword
 	 * the implementation in Types.cpp has to be synced to this here
 	 *  TODO more to be added */                                       \

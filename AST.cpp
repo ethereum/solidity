@@ -594,6 +594,17 @@ void ElementaryTypeNameExpression::checkTypeRequirements()
 	m_type = make_shared<TypeType>(Type::fromElementaryTypeName(m_typeToken));
 }
 
+Literal::Literal(Location const& _location, Token::Value _token,
+				 ASTPointer<ASTString> const& _value,
+				 Token::Value _sub):
+	PrimaryExpression(_location), m_token(_token), m_value(_value)
+{
+	solAssert(_sub == Token::ILLEGAL || _sub == Token::ETH_SUB_WEI ||
+			  _sub == Token::ETH_SUB_SZABO || _sub == Token::ETH_SUB_FINNEY ||
+			  _sub == Token::ETH_SUB_ETHER, "Illegal Token::Value given to Literal ctor");
+	m_subDenomination =static_cast<Literal::ethSubDenomination>(_sub);
+}
+
 void Literal::checkTypeRequirements()
 {
 	m_type = Type::forLiteral(*this);
