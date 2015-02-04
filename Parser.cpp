@@ -694,6 +694,8 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	case Token::NUMBER:
 		nextToken = m_scanner->peekNextToken();
 	case Token::STRING_LITERAL:
+		if (Token::isEtherSubdenomination(nextToken))
+			m_scanner->next();
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance(), nextToken);
 		break;

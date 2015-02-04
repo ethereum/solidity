@@ -383,6 +383,7 @@ public:
 	static bool isCountOp(Value op) { return op == INC || op == DEC; }
 	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
 	static bool isVisibilitySpecifier(Value op) { return op == PUBLIC || op == PRIVATE || op == PROTECTED; }
+	static bool isEtherSubdenomination(Value op) { return op == ETH_SUB_WEI || op == ETH_SUB_SZABO || op == ETH_SUB_FINNEY || op == Token::ETH_SUB_ETHER; }
 
 	// Returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
