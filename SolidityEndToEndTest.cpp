@@ -92,6 +92,16 @@ BOOST_AUTO_TEST_CASE(multiple_functions)
 	BOOST_CHECK(callContractFunction("i_am_not_there()", bytes()) == bytes());
 }
 
+BOOST_AUTO_TEST_CASE(named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
+							 "  function b() returns (uint r) { r = a({a: 1, b: 2, c: 3}); }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("b()", bytes()) == toBigEndian(u256(123)));
+}
+
 BOOST_AUTO_TEST_CASE(while_loop)
 {
 	char const* sourceCode = "contract test {\n"
