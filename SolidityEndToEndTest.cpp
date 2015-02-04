@@ -931,10 +931,10 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 BOOST_AUTO_TEST_CASE(complex_accessors)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  mapping(uint256 => string4) to_string_map;\n"
-							 "  mapping(uint256 => bool) to_bool_map;\n"
-							 "  mapping(uint256 => uint256) to_uint_map;\n"
-							 "  mapping(uint256 => mapping(uint256 => uint256)) to_multiple_map;\n"
+							 "  mapping(uint256 => string4) public to_string_map;\n"
+							 "  mapping(uint256 => bool) public to_bool_map;\n"
+							 "  mapping(uint256 => uint256) public to_uint_map;\n"
+							 "  mapping(uint256 => mapping(uint256 => uint256)) public to_multiple_map;\n"
 							 "  function test() {\n"
 							 "    to_string_map[42] = \"24\";\n"
 							 "    to_bool_map[42] = false;\n"
