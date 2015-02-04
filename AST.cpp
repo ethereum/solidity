@@ -505,7 +505,7 @@ void FunctionCall::checkTypeRequirements()
 			// check duplicate names
 			for (size_t i = 0; i < m_names.size(); i++) {
 				for (size_t j = i + 1; j < m_names.size(); j++) {
-					if (m_names[i] == m_names[j])
+					if (*m_names[i] == *m_names[j])
 						BOOST_THROW_EXCEPTION(createTypeError("Duplicate named argument."));
 				}
 			}
