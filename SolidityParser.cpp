@@ -124,14 +124,30 @@ BOOST_AUTO_TEST_CASE(single_function_param)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(missing_parameter_name_in_named_args)
+{
+	char const* text = "contract test {\n"
+					   "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
+					   "  function b() returns (uint r) { r = a({: 1, : 2, : 3}); }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
+{
+	char const* text = "contract test {\n"
+					   "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
+					   "  function b() returns (uint r) { r = a({a: , b: , c: }); }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 {
 	ASTPointer<ContractDefinition> contract;
 	ASTPointer<FunctionDefinition> function;
 	char const* text = "contract test {\n"
-					   "  private:\n"
-	                   "  uint256 stateVar;\n"
-	                   "  public:\n"
+					   "  uint256 stateVar;\n"
 					   "  /// This is a test function\n"
 					   "  function functionName(hash hashin) returns (hash hashout) {}\n"
 					   "}\n";
@@ -162,9 +178,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	ASTPointer<ContractDefinition> contract;
 	ASTPointer<FunctionDefinition> function;
 	char const* text = "contract test {\n"
-					   "  private:\n"
 					   "  uint256 stateVar;\n"
-					   "  public:\n"
 					   "  /// This is test function 1\n"
 					   "  function functionName1(hash hashin) returns (hash hashout) {}\n"
 					   "  /// This is test function 2\n"
@@ -619,6 +633,31 @@ BOOST_AUTO_TEST_CASE(event_arguments_indexed)
 			event e(uint a, string32 indexed s, bool indexed b);
 		})";
 	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(visibility_specifiers)
+{
+	char const* text = R"(
+		contract c {
+			uint private a;
+			uint protected b;
+			uint public c;
+			uint d;
+			function f() {}
+			function f_priv() private {}
+			function f_public() public {}
+			function f_protected() protected {}
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
+{
+	char const* text = R"(
+		contract c {
+			uint private protected a;
+		})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
