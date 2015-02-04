@@ -102,6 +102,16 @@ BOOST_AUTO_TEST_CASE(named_args)
 	BOOST_CHECK(callContractFunction("b()", bytes()) == toBigEndian(u256(123)));
 }
 
+BOOST_AUTO_TEST_CASE(disorder_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
+							 "  function b() returns (uint r) { r = a({c: 3, a: 1, b: 2}); }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("b()", bytes()) == toBigEndian(u256(123)));
+}
+
 BOOST_AUTO_TEST_CASE(while_loop)
 {
 	char const* sourceCode = "contract test {\n"
