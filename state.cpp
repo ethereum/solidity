@@ -35,7 +35,6 @@ using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
-using namespace dev::eth;
 
 namespace dev {  namespace test {
 

@@ -23,11 +23,14 @@
 #include <string>
 
 #include <libdevcore/Log.h>
+#include <libdevcrypto/SHA3.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Exceptions.h>
 #include <boost/test/unit_test.hpp>
+
+using namespace std;
 
 namespace dev
 {
@@ -38,6 +41,7 @@ namespace test
 
 namespace
 {
+
 ASTPointer<SourceUnit> parseTextAndResolveNames(std::string const& _source)
 {
 	Parser parser;
@@ -53,6 +57,48 @@ ASTPointer<SourceUnit> parseTextAndResolveNames(std::string const& _source)
 
 	return sourceUnit;
 }
+
+ASTPointer<SourceUnit> parseTextAndResolveNamesWithChecks(std::string const& _source)
+{
+	Parser parser;
+	ASTPointer<SourceUnit> sourceUnit;
+	try
+	{
+		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+		NameAndTypeResolver resolver({});
+		resolver.registerDeclarations(*sourceUnit);
+		for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+				resolver.resolveNamesAndTypes(*contract);
+		for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+				resolver.checkTypeRequirements(*contract);
+	}
+	catch(boost::exception const& _e)
+	{
+		auto msg = std::string("Parsing text and resolving names failed with: \n") + boost::diagnostic_information(_e);
+		BOOST_FAIL(msg);
+	}
+	return sourceUnit;
+}
+
+static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source, unsigned index)
+{
+	ContractDefinition* contract;
+	unsigned counter = 0;
+	for (ASTPointer<ASTNode> const& node: _source->getNodes())
+		if ((contract = dynamic_cast<ContractDefinition*>(node.get())) && counter == index)
+			return contract;
+
+	return NULL;
+}
+
+static FunctionTypePointer const& retrieveFunctionBySignature(ContractDefinition const* _contract,
+															  std::string const& _signature)
+{
+	FixedHash<4> hash(dev::sha3(_signature));
+	return _contract->getInterfaceFunctions()[hash];
+}
 }
 
 BOOST_AUTO_TEST_SUITE(SolidityNameAndTypeResolution)
@@ -63,7 +109,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 					   "  uint256 stateVariable1;\n"
 					   "  function fun(uint256 arg1) { var x; uint256 y; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
 }
 
 BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
@@ -386,7 +432,7 @@ BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
 		contract root { function rootFunction() {} }
 		contract inter1 is root { function f() {} }
 		contract inter2 is root { function f() {} }
-		contract derived is inter1, inter2, root {
+		contract derived is root, inter2, inter1 {
 			function g() { f(); rootFunction(); }
 		}
 	)";
@@ -417,6 +463,24 @@ BOOST_AUTO_TEST_CASE(illegal_override_indirect)
 		contract A { function f(uint a) {} }
 		contract B { function f() {} }
 		contract C is A, B { }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_visibility)
+{
+	char const* text = R"(
+		contract B { function f() protected {} }
+		contract C is B { function f() public {} }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_constness)
+{
+	char const* text = R"(
+		contract B { function f() constant {} }
+		contract C is B { function f() {} }
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
@@ -479,6 +543,7 @@ BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
 	)";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
+
 BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
 {
 	char const* text = R"(
@@ -488,6 +553,319 @@ BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_invocation)
+{
+	char const* text = R"(
+		contract B {
+			function f() mod1(2, true) mod2("0123456") { }
+			modifier mod1(uint a, bool b) { if (b) _ }
+			modifier mod2(string7 a) { while (a == "1234567") _ }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_function_modifier_type)
+{
+	char const* text = R"(
+		contract B {
+			function f() mod1(true) { }
+			modifier mod1(uint a) { if (a > 0) _ }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
+{
+	char const* text = R"(
+		contract B {
+			function f(uint8 a) mod1(a, true) mod2(r) returns (string7 r) { }
+			modifier mod1(uint a, bool b) { if (b) _ }
+			modifier mod2(string7 a) { while (a == "1234567") _ }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
+{
+	char const* text = R"(
+		contract B {
+			function f() mod(x) { uint x = 7; }
+			modifier mod(uint a) { if (a > 0) _ }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(legal_modifier_override)
+{
+	char const* text = R"(
+		contract A { modifier mod(uint a) {} }
+		contract B is A { modifier mod(uint a) {} }
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(illegal_modifier_override)
+{
+	char const* text = R"(
+		contract A { modifier mod(uint a) {} }
+		contract B is A { modifier mod(uint8 a) {} }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(modifier_overrides_function)
+{
+	char const* text = R"(
+		contract A { modifier mod(uint a) {} }
+		contract B is A { function mod(uint a) {} }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(function_overrides_modifier)
+{
+	char const* text = R"(
+		contract A { function mod(uint a) {} }
+		contract B is A { modifier mod(uint a) {} }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(modifier_returns_value)
+{
+	char const* text = R"(
+		contract A {
+			function f(uint a) mod(2) returns (uint r) {}
+			modifier mod(uint a) { return 7; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(state_variable_accessors)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "uint256 public foo;\n"
+					   "mapping(uint=>string4) public map;\n"
+					   "mapping(uint=>mapping(uint=>string4)) public multiple_map;\n"
+					   "}\n";
+
+	ASTPointer<SourceUnit> source;
+	ContractDefinition const* contract;
+	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
+	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
+	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
+	BOOST_REQUIRE(function && function->hasDeclaration());
+	auto returnParams = function->getReturnParameterTypeNames();
+	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
+	BOOST_CHECK(function->isConstant());
+
+	function = retrieveFunctionBySignature(contract, "map(uint256)");
+	BOOST_REQUIRE(function && function->hasDeclaration());
+	auto params = function->getParameterTypeNames();
+	BOOST_CHECK_EQUAL(params.at(0), "uint256");
+	returnParams = function->getReturnParameterTypeNames();
+	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
+	BOOST_CHECK(function->isConstant());
+
+	function = retrieveFunctionBySignature(contract, "multiple_map(uint256,uint256)");
+	BOOST_REQUIRE(function && function->hasDeclaration());
+	params = function->getParameterTypeNames();
+	BOOST_CHECK_EQUAL(params.at(0), "uint256");
+	BOOST_CHECK_EQUAL(params.at(1), "uint256");
+	returnParams = function->getReturnParameterTypeNames();
+	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
+	BOOST_CHECK(function->isConstant());
+}
+
+BOOST_AUTO_TEST_CASE(function_clash_with_state_variable_accessor)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "uint256 foo;\n"
+					   "   function foo() {}\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(private_state_variable)
+{
+	char const* text = "contract test {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "uint256 private foo;\n"
+					   "uint256 protected bar;\n"
+					   "}\n";
+
+	ASTPointer<SourceUnit> source;
+	ContractDefinition const* contract;
+	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
+	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
+	FunctionTypePointer function;
+	function = retrieveFunctionBySignature(contract, "foo()");
+	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
+	function = retrieveFunctionBySignature(contract, "bar()");
+	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a protected variable should not exist");
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function)
+{
+	char const* text = R"(
+		contract C {
+			uint x;
+			function() { x = 2; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function_with_arguments)
+{
+	char const* text = R"(
+		contract C {
+			uint x;
+			function(uint a) { x = 2; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function_twice)
+{
+	char const* text = R"(
+		contract C {
+			uint x;
+			function() { x = 2; }
+			function() { x = 3; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function_inheritance)
+{
+	char const* text = R"(
+		contract A {
+			uint x;
+			function() { x = 1; }
+		}
+		contract C is A {
+			function() { x = 2; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(event)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint indexed a, string3 indexed s, bool indexed b);
+			function f() { e(2, "abc", true); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(event_too_many_indexed)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint indexed a, string3 indexed b, bool indexed c, uint indexed d);
+			function f() { e(2, "abc", true); }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(event_call)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint a, string3 indexed s, bool indexed b);
+			function f() { e(2, "abc", true); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(event_inheritance)
+{
+	char const* text = R"(
+		contract base {
+			event e(uint a, string3 indexed s, bool indexed b);
+		}
+		contract c is base {
+			function f() { e(2, "abc", true); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
+{
+	char const* text = R"(
+		contract c {
+			event e1(uint a, uint e1, uint e2);
+			event e2(uint a, uint e1, uint e2);
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
+{
+	char const* text = R"(
+		contract c {
+			function f() {}
+		}
+		contract d {
+			function g() { c(0).f(); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(access_to_protected_function)
+{
+	char const* text = R"(
+		contract c {
+			function f() protected {}
+		}
+		contract d {
+			function g() { c(0).f(); }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(access_to_default_state_variable_visibility)
+{
+	char const* text = R"(
+		contract c {
+			uint a;
+		}
+		contract d {
+			function g() { c(0).a(); }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(access_to_protected_state_variable)
+{
+	char const* text = R"(
+		contract c {
+			uint public a;
+		}
+		contract d {
+			function g() { c(0).a(); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
