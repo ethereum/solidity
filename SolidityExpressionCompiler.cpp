@@ -91,7 +91,16 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 {
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
-	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
+	try
+	{
+		sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode)));
+	}
+	catch(boost::exception const& _e)
+	{
+		auto msg = std::string("Parsing source code failed with: \n") + boost::diagnostic_information(_e);
+		BOOST_FAIL(msg);
+	}
+	// BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
 
 	vector<Declaration const*> declarations;
 	declarations.reserve(_globalDeclarations.size() + 1);
@@ -174,6 +183,28 @@ BOOST_AUTO_TEST_CASE(int_literal)
 
 	bytes expectation({byte(eth::Instruction::PUSH10), 0x12, 0x34, 0x56, 0x78, 0x90,
 													   0x12, 0x34, 0x56, 0x78, 0x90});
+	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
+}
+
+BOOST_AUTO_TEST_CASE(int_literals_with_ether_subdenominations)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function c ()
+			{
+				 a = 1 wei;
+		//		 b = 2 szabo;
+	//			 c = 3 finney;
+//				 b = 4 ether;
+			}
+			uint256 a;
+			uint256 b;
+			uint256 c;
+			uint256 d;
+		})";
+	bytes code = compileFirstExpression(sourceCode);
+
+	bytes expectation({byte(eth::Instruction::PUSH5), 0x38, 0xd4, 0xa5, 0x10, 0x00});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
