@@ -45,8 +45,18 @@ public:
 
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
-		dev::solidity::CompilerStack compiler;
-		compiler.compile(_sourceCode, m_optimize);
+		dev::solidity::CompilerStack compiler(m_addStandardSources);
+		try
+		{
+			compiler.addSource("", _sourceCode);
+			compiler.compile(m_optimize);
+		}
+		catch(boost::exception const& _e)
+		{
+			auto msg = std::string("Compiling contract failed with: ") + boost::diagnostic_information(_e);
+			BOOST_FAIL(msg);
+		}
+
 		bytes code = compiler.getBytecode(_contractName);
 		sendMessage(code, true, _value);
 		BOOST_REQUIRE(!m_output.empty());
@@ -57,7 +67,6 @@ public:
 	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value,
 											   Args const&... _arguments)
 	{
-
 		FixedHash<4> hash(dev::sha3(_sig));
 		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
 		return m_output;
@@ -97,6 +106,7 @@ public:
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
 	static bytes encode(byte _value) { return bytes(31, 0) + bytes{_value}; }
 	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
+	static bytes encode(h256 const& _value) { return _value.asBytes(); }
 	static bytes encode(bytes const& _value, bool _padLeft = true)
 	{
 		bytes padding = bytes((32 - _value.size() % 32) % 32, 0);
@@ -163,6 +173,7 @@ private:
 
 protected:
 	bool m_optimize = false;
+	bool m_addStandardSources = false;
 	Address m_sender;
 	Address m_contractAddress;
 	eth::State m_state;

@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <libethereum/Client.h>
-#include <libethereum/BlockChain.h>
+#include <libethereum/CanonBlockChain.h>
 #include <libethereum/EthereumHost.h>
 #include "TestHelper.h"
 using namespace std;

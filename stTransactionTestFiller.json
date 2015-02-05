@@ -289,11 +289,167 @@
         }
     },
 
-    "TransactionTooManyRlpElements" : {
+    "InternlCallStoreClearsOOG" : {
         "env" : {
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000",
+            "currentNumber" : "0",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+        "pre" :
+        {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "7000",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "c94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10",
+		"//" : "gas = 19 going OOG, gas = 20 fine",
+                "code" : "{ (CALL 19 0 1 0 0 0 0) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "0000000000000000000000000000000000000000" : {
+                "balance" : "0",
+                "code" : "{(SSTORE 0 0)(SSTORE 1 0)(SSTORE 2 0)(SSTORE 3 0)(SSTORE 4 0)(SSTORE 5 0)(SSTORE 6 0)(SSTORE 7 0)(SSTORE 8 0)(SSTORE 9 0)}",
+                "nonce" : "0",
+                "storage" : {
+		    "0x" : "0x0c",
+                    "0x01" : "0x0c",
+		    "0x02" : "0x0c",
+		    "0x03" : "0x0c",
+		    "0x04" : "0x0c",
+		    "0x05" : "0x0c",
+		    "0x06" : "0x0c",
+		    "0x07" : "0x0c",
+		    "0x08" : "0x0c",
+		    "0x09" : "0x0c"
+		}
+            }
+
+        },
+
+        "transaction" :
+	{ 
+            "data" : "",
+            "gasLimit" : "700",
+            "gasPrice" : "1",
+            "nonce" : "",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "c94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "10"
+        }
+    },
+
+    "StoreClearsAndInternlCallStoreClearsOOG" : {
+        "env" : {
+            "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "currentDifficulty" : "45678256",
+            "currentGasLimit" : "10000",
+            "currentNumber" : "0",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+        "pre" :
+        {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "7000",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "c94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10",
+                "//" : "gas = 19 going OOG, gas = 20 fine",
+                "code" : "{(SSTORE 0 0)(SSTORE 1 0)(SSTORE 2 0)(SSTORE 3 0) (CALL 19 0 1 0 0 0 0) }",
+                "nonce" : "0",
+                "storage" : {
+                    "0x" : "0x0c",
+                    "0x01" : "0x0c",
+                    "0x02" : "0x0c",
+                    "0x03" : "0x0c",
+                    "0x04" : "0x0c"
+		}
+            },
+
+            "0000000000000000000000000000000000000000" : {
+                "balance" : "0",
+                "code" : "{(SSTORE 0 0)(SSTORE 1 0)(SSTORE 2 0)(SSTORE 3 0)(SSTORE 4 0)(SSTORE 5 0)(SSTORE 6 0)(SSTORE 7 0)(SSTORE 8 0)(SSTORE 9 0)}",
+                "nonce" : "0",
+                "storage" : {
+		    "0x" : "0x0c",
+                    "0x01" : "0x0c",
+		    "0x02" : "0x0c",
+		    "0x03" : "0x0c",
+		    "0x04" : "0x0c",
+		    "0x05" : "0x0c",
+		    "0x06" : "0x0c",
+		    "0x07" : "0x0c",
+		    "0x08" : "0x0c",
+		    "0x09" : "0x0c"
+		}
+            }
+
+        },
+
+        "transaction" :
+	{ 
+            "data" : "",
+            "gasLimit" : "700",
+            "gasPrice" : "1",
+            "nonce" : "",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "c94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "10"
+        }
+    },
+
+   "TransactionNonceCheck" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+            "currentGasLimit" : "1000000",
+            "currentNumber" : "0",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+        "pre" :
+        {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "100000",
+                "code" : "",
+                "nonce" : "10",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+	{ 
+            "data" : "",
+            "gasLimit" : "1000",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "10"
+        }
+    },
+
+    "TransactionNonceCheck2" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+            "currentGasLimit" : "1000000",
             "currentNumber" : "0",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -311,15 +467,43 @@
         "transaction" :
 	{ 
             "data" : "",
-            "gasLimit" : "600",
-	    "gasLimit" : "1600",
+            "gasLimit" : "1000",
             "gasPrice" : "1",
-	    "gasPrice" : "12",
-            "nonce" : "",
-	    "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d9",
+            "nonce" : "10",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "d2571607e241ecf590ed94b12d87c94babe36db6",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "value" : "10"
+        }
+    },
+
+    "TransactionCosts555" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+            "currentGasLimit" : "1000000",
+            "currentNumber" : "0",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+        "pre" :
+        {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "100000",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+	{ 
+            "data" : "0x00000000000000000000112233445566778f32",
+            "gasLimit" : "1000",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "0"
         }
     },
 

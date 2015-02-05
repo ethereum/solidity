@@ -66,6 +66,14 @@ ASTPointer<ContractDefinition> parseTextExplainError(std::string const& _source)
 	}
 }
 
+static void checkFunctionNatspec(ASTPointer<FunctionDefinition> _function,
+								 std::string const& _expectedDoc)
+{
+	auto doc = _function->getDocumentation();
+	BOOST_CHECK_MESSAGE(doc != nullptr, "Function does not have Natspec Doc as expected");
+	BOOST_CHECK_EQUAL(*doc, _expectedDoc);
+}
+
 }
 
 
@@ -116,6 +124,24 @@ BOOST_AUTO_TEST_CASE(single_function_param)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(missing_parameter_name_in_named_args)
+{
+	char const* text = "contract test {\n"
+					   "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
+					   "  function b() returns (uint r) { r = a({: 1, : 2, : 3}); }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
+{
+	char const* text = "contract test {\n"
+					   "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
+					   "  function b() returns (uint r) { r = a({a: , b: , c: }); }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 {
 	ASTPointer<ContractDefinition> contract;
@@ -128,7 +154,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 	BOOST_REQUIRE_NO_THROW(contract = parseText(text));
 	auto functions = contract->getDefinedFunctions();
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), "This is a test function");
+	checkFunctionNatspec(function, "This is a test function");
 }
 
 BOOST_AUTO_TEST_CASE(function_normal_comments)
@@ -144,7 +170,7 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 	auto functions = contract->getDefinedFunctions();
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
 	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
-						"Should not have gotten a Natspect comment for this function");
+						"Should not have gotten a Natspecc comment for this function");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
@@ -166,17 +192,17 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	auto functions = contract->getDefinedFunctions();
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), "This is test function 1");
+	checkFunctionNatspec(function, "This is test function 1");
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(1));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), "This is test function 2");
+	checkFunctionNatspec(function, "This is test function 2");
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(2));
 	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
 						"Should not have gotten natspec comment for functionName3()");
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(3));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), "This is test function 4");
+	checkFunctionNatspec(function, "This is test function 4");
 }
 
 BOOST_AUTO_TEST_CASE(multiline_function_documentation)
@@ -193,9 +219,8 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 	auto functions = contract->getDefinedFunctions();
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(),
-					  "This is a test function\n"
-					  " and it has 2 lines");
+	checkFunctionNatspec(function, "This is a test function\n"
+						 " and it has 2 lines");
 }
 
 BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
@@ -211,7 +236,6 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 					   "    mapping(address=>hash) d;\n"
 					   "    string name = \"Solidity\";"
 					   "  }\n"
-					   "  uint256 stateVar;\n"
 					   "  /// This is a test function\n"
 					   "  /// and it has 2 lines\n"
 					   "  function fun(hash hashin) returns (hash hashout) {}\n"
@@ -220,12 +244,11 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 	auto functions = contract->getDefinedFunctions();
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(0));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(), "fun1 description");
+	checkFunctionNatspec(function, "fun1 description");
 
 	BOOST_REQUIRE_NO_THROW(function = functions.at(1));
-	BOOST_CHECK_EQUAL(*function->getDocumentation(),
-					  "This is a test function\n"
-					  " and it has 2 lines");
+	checkFunctionNatspec(function, "This is a test function\n"
+						 " and it has 2 lines");
 }
 
 BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
@@ -493,6 +516,148 @@ BOOST_AUTO_TEST_CASE(multiple_contracts_and_imports)
 					   "}\n"
 					   "import \"ghi\";\n";
 	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(contract_inheritance)
+{
+	char const* text = "contract base {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "contract derived is base {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(contract_multiple_inheritance)
+{
+	char const* text = "contract base {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "contract derived is base, nonExisting {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(contract_multiple_inheritance_with_arguments)
+{
+	char const* text = "contract base {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n"
+					   "contract derived is base(2), nonExisting(\"abc\", \"def\", base.fun()) {\n"
+					   "  function fun() {\n"
+					   "    uint64(2);\n"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(placeholder_in_function_context)
+{
+	char const* text = "contract c {\n"
+					   "  function fun() returns (uint r) {\n"
+					   "    var _ = 8;\n"
+					   "    return _ + 1;"
+					   "  }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(modifier)
+{
+	char const* text = "contract c {\n"
+					   "  modifier mod { if (msg.sender == 0) _ }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(modifier_arguments)
+{
+	char const* text = "contract c {\n"
+					   "  modifier mod(uint a) { if (msg.sender == a) _ }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(modifier_invocation)
+{
+	char const* text = "contract c {\n"
+					   "  modifier mod1(uint a) { if (msg.sender == a) _ }\n"
+					   "  modifier mod2 { if (msg.sender == 2) _ }\n"
+					   "  function f() mod1(7) mod2 { }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(fallback_function)
+{
+	char const* text = "contract c {\n"
+					   "  function() { }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(event)
+{
+	char const* text = R"(
+		contract c {
+			event e();
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(event_arguments)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint a, string32 s);
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(event_arguments_indexed)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint a, string32 indexed s, bool indexed b);
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(visibility_specifiers)
+{
+	char const* text = R"(
+		contract c {
+			uint private a;
+			uint protected b;
+			uint public c;
+			uint d;
+			function f() {}
+			function f_priv() private {}
+			function f_public() public {}
+			function f_protected() protected {}
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
+{
+	char const* text = R"(
+		contract c {
+			uint private protected a;
+		})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
