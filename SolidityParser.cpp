@@ -124,6 +124,24 @@ BOOST_AUTO_TEST_CASE(single_function_param)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(missing_parameter_name_in_named_args)
+{
+	char const* text = "contract test {\n"
+					   "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
+					   "  function b() returns (uint r) { r = a({: 1, : 2, : 3}); }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
+{
+	char const* text = "contract test {\n"
+					   "  function a(uint a, uint b, uint c) returns (uint r) { r = a * 100 + b * 10 + c * 1; }\n"
+					   "  function b() returns (uint r) { r = a({a: , b: , c: }); }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 {
 	ASTPointer<ContractDefinition> contract;

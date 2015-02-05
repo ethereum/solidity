@@ -28,7 +28,7 @@
 #include <boost/lexical_cast.hpp>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/CommonJS.h>
+#include <libethcore/CommonJS.h>
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>

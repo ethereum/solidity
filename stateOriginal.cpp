@@ -22,7 +22,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <secp256k1/secp256k1.h>
-#include <libethereum/BlockChain.h>
+#include <libethereum/CanonBlockChain.h>
 #include <libethereum/State.h>
 #include <libethereum/Defaults.h>
 using namespace std;
@@ -40,7 +40,7 @@ int stateTest()
 	Defaults::setDBPath(boost::filesystem::temp_directory_path().string());
 
 	OverlayDB stateDB = State::openDB();
-	BlockChain bc;
+	CanonBlockChain bc;
 	State s(myMiner.address(), stateDB);
 
 	cout << bc;
