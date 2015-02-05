@@ -868,6 +868,42 @@ BOOST_AUTO_TEST_CASE(access_to_protected_state_variable)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(error_count_in_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
+							 "  function b() returns (uint r) { r = a({a: 1}); }\n"
+							 "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(empty_in_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
+							 "  function b() returns (uint r) { r = a({}); }\n"
+							 "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(duplicate_parameter_names_in_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
+							 "  function b() returns (uint r) { r = a({a: 1, a: 2}); }\n"
+							 "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_parameter_names_in_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
+							 "  function b() returns (uint r) { r = a({a: 1, c: 2}); }\n"
+							 "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
