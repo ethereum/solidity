@@ -20,7 +20,8 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <libdevcore/CommonJS.h>
+#include <libdevcore/Log.h>
+#include <libethcore/CommonJS.h>
 
 BOOST_AUTO_TEST_SUITE(commonjs)
 using namespace std;
@@ -41,7 +42,7 @@ BOOST_AUTO_TEST_CASE(jsToAddress)
 	cnote << "Testing jsToPublic...";
 	KeyPair kp = KeyPair::create();
 	string string = toJS(kp.address());
-	Address address = dev::jsToAddress(string);
+	Address address = dev::eth::jsToAddress(string);
 	BOOST_CHECK_EQUAL(kp.address(), address);
 }
 
