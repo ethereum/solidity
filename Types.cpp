@@ -328,31 +328,32 @@ string IntegerConstantType::toString() const
 
 u256 IntegerConstantType::literalValue(Literal const* _literal) const
 {
-	Literal::ethSubDenomination sub =_literal->getSubDenomination();
 	u256 value;
 	// we ignore the literal and hope that the type was correctly determined
 	solAssert(m_value <= u256(-1), "Integer constant too large.");
 	solAssert(m_value >= -(bigint(1) << 255), "Integer constant too small.");
-
 
 	if (m_value >= 0)
 		value = u256(m_value);
 	else
 		value = s2u(s256(m_value));
 
-	switch(sub) {
-	case Literal::ethSubDenomination::WEI:
-	case Literal::ethSubDenomination::NONE:
-		break;
-	case Literal::ethSubDenomination::SZABO:
-		value *= u256(1000000000000);
-		break;
-	case Literal::ethSubDenomination::FINNEY:
-		value *= u256(1000000000000000);
-		break;
-	case Literal::ethSubDenomination::ETHER:
-		value *= u256(1000000000000000000);
-		break;
+	if (_literal) {
+		Literal::ethSubDenomination sub =_literal->getSubDenomination();
+		switch(sub) {
+		case Literal::ethSubDenomination::WEI:
+		case Literal::ethSubDenomination::NONE:
+			break;
+		case Literal::ethSubDenomination::SZABO:
+			value *= u256(1000000000000);
+			break;
+		case Literal::ethSubDenomination::FINNEY:
+			value *= u256(1000000000000000);
+			break;
+		case Literal::ethSubDenomination::ETHER:
+			value *= u256(1000000000000000000);
+			break;
+		}
 	}
 
 	return value;
