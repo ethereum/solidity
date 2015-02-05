@@ -602,7 +602,7 @@ Literal::Literal(Location const& _location, Token::Value _token,
 	if (Token::isEtherSubdenomination(_sub))
 		m_subDenomination = static_cast<Literal::SubDenomination>(_sub);
 	else
-		m_subDenomination = Literal::SubDenomination::NONE;
+		m_subDenomination = Literal::SubDenomination::None;
 }
 
 void Literal::checkTypeRequirements()

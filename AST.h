@@ -1119,11 +1119,11 @@ class Literal: public PrimaryExpression
 public:
 	enum class SubDenomination
 	{
-		NONE = Token::ILLEGAL,
-		WEI = Token::SubWei,
-		SZABO = Token::SubSzabo,
-		FINNEY = Token::SubFinney,
-		ETHER = Token::SubEther
+		None = Token::ILLEGAL,
+		Wei = Token::SubWei,
+		Szabo = Token::SubSzabo,
+		Finney = Token::SubFinney,
+		Ether = Token::SubEther
 	};
 	Literal(Location const& _location, Token::Value _token,
 			ASTPointer<ASTString> const& _value,
