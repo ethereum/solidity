@@ -856,8 +856,8 @@ unsigned ExpressionCompiler::appendSameTypeArgumentsCopyToMemory(TypePointer con
 	return length;
 }
 
-unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
-														  Expression const& _expression, unsigned _memoryOffset)
+unsigned ExpressionCompiler::appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,
+																 Location const& _location, unsigned _memoryOffset)
 {
 	appendTypeConversion(_type, _expectedType, true);
 	unsigned const c_numBytes = CompilerUtils::getPaddedSize(_expectedType.getCalldataEncodedSize());

@@ -487,7 +487,7 @@ void FunctionCall::checkTypeRequirements()
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
 		TypePointers const& parameterTypes = functionType->getParameterTypes();
-		if (functionType->getLocation() !=FunctionType::Location::SHA3 && parameterTypes.size() != m_arguments.size())
+		if (functionType->getLocation() != FunctionType::Location::SHA3 && parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 
 		if (m_names.empty())  // LTODO: Totally ignoring sha3 case for named arguments for now just for the rebase to work
