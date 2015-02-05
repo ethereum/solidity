@@ -40,15 +40,6 @@ BOOST_AUTO_TEST_CASE(topic)
 	auto whOther = phOther.registerCapability(new WhisperHost());
 	phOther.start();
 	
-	Host ph("Test", NetworkPreferences(30300, "127.0.0.1", false, true));
-	auto wh = ph.registerCapability(new WhisperHost());
-	ph.start();
-	
-	this_thread::sleep_for(chrono::milliseconds(100));
-	ph.addNode(phOther.id(), "127.0.0.1", 30303, 30303);
-	
-	this_thread::sleep_for(chrono::milliseconds(500));
-	
 	bool started = false;
 	unsigned result = 0;
 	std::thread listener([&]()
@@ -66,7 +57,7 @@ BOOST_AUTO_TEST_CASE(topic)
 		{
 			for (auto i: whOther->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open(wh->fullTopic(w));
+				Message msg = whOther->envelope(i).open(whOther->fullTopic(w));
 				last = RLP(msg.payload()).toInt<unsigned>();
 				if (received.count(last))
 					continue;
@@ -78,6 +69,15 @@ BOOST_AUTO_TEST_CASE(topic)
 		}
 		
 	});
+	
+	Host ph("Test", NetworkPreferences(30300, "127.0.0.1", false, true));
+	auto wh = ph.registerCapability(new WhisperHost());
+	ph.start();
+	
+	this_thread::sleep_for(chrono::milliseconds(100));
+	ph.addNode(phOther.id(), "127.0.0.1", 30303, 30303);
+	
+	this_thread::sleep_for(chrono::milliseconds(500));
 
 	while (!started)
 		this_thread::sleep_for(chrono::milliseconds(2));
