@@ -383,6 +383,8 @@ void VariableDefinition::checkTypeRequirements()
 					BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString()));
 				type = intType;
 			}
+			else if (type->getCategory() == Type::Category::VOID)
+				BOOST_THROW_EXCEPTION(m_variable->createTypeError("var cannot be void type"));
 			m_variable->setType(type);
 		}
 	}
