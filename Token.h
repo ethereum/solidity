@@ -174,11 +174,11 @@ namespace solidity
 	K(WHILE, "while", 0)                                               \
 	\
 	\
-	/* Ether subdenominations */                                       \
-	K(ETH_SUB_WEI, "wei", 0)                                           \
-	K(ETH_SUB_SZABO, "szabo", 0)                                       \
-	K(ETH_SUB_FINNEY, "finney", 0)                                     \
-	K(ETH_SUB_ETHER, "ether", 0)                                       \
+	/* Ether subdenominations */                                        \
+	K(SubWei, "wei", 0)                                                 \
+	K(SubSzabo, "szabo", 0)                                             \
+	K(SubFinney, "finney", 0)                                           \
+	K(SubEther, "ether", 0)                                             \
 	/* type keywords, keep them in this order, keep int as first keyword
 	 * the implementation in Types.cpp has to be synced to this here
 	 *  TODO more to be added */                                       \
@@ -383,7 +383,7 @@ public:
 	static bool isCountOp(Value op) { return op == INC || op == DEC; }
 	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
 	static bool isVisibilitySpecifier(Value op) { return op == PUBLIC || op == PRIVATE || op == PROTECTED; }
-	static bool isEtherSubdenomination(Value op) { return op == ETH_SUB_WEI || op == ETH_SUB_SZABO || op == ETH_SUB_FINNEY || op == Token::ETH_SUB_ETHER; }
+	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == Token::SubEther; }
 
 	// Returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't

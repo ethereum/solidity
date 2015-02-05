@@ -1117,12 +1117,14 @@ private:
 class Literal: public PrimaryExpression
 {
 public:
-	enum class ethSubDenomination {
+	enum class SubDenomination
+	{
 		NONE = Token::ILLEGAL,
-		WEI = Token::ETH_SUB_WEI,
-		SZABO = Token::ETH_SUB_SZABO,
-		FINNEY = Token::ETH_SUB_FINNEY,
-		ETHER = Token::ETH_SUB_ETHER};
+		WEI = Token::SubWei,
+		SZABO = Token::SubSzabo,
+		FINNEY = Token::SubFinney,
+		ETHER = Token::SubEther
+	};
 	Literal(Location const& _location, Token::Value _token,
 			ASTPointer<ASTString> const& _value,
 			Token::Value _sub = Token::ILLEGAL);
@@ -1134,12 +1136,12 @@ public:
 	/// @returns the non-parsed value of the literal
 	ASTString const& getValue() const { return *m_value; }
 
-	ethSubDenomination getSubDenomination() const { return m_subDenomination; }
+	SubDenomination getSubDenomination() const { return m_subDenomination; }
 
 private:
 	Token::Value m_token;
 	ASTPointer<ASTString> m_value;
-	ethSubDenomination m_subDenomination;
+	SubDenomination m_subDenomination;
 };
 
 /// @}

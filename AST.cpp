@@ -599,10 +599,10 @@ Literal::Literal(Location const& _location, Token::Value _token,
 				 Token::Value _sub):
 	PrimaryExpression(_location), m_token(_token), m_value(_value)
 {
-	if(Token::isEtherSubdenomination(_sub))
-		m_subDenomination = static_cast<Literal::ethSubDenomination>(_sub);
+	if (Token::isEtherSubdenomination(_sub))
+		m_subDenomination = static_cast<Literal::SubDenomination>(_sub);
 	else
-		m_subDenomination = Literal::ethSubDenomination::NONE;
+		m_subDenomination = Literal::SubDenomination::NONE;
 }
 
 void Literal::checkTypeRequirements()

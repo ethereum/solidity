@@ -338,19 +338,21 @@ u256 IntegerConstantType::literalValue(Literal const* _literal) const
 	else
 		value = s2u(s256(m_value));
 
-	if (_literal) {
-		Literal::ethSubDenomination sub =_literal->getSubDenomination();
-		switch(sub) {
-		case Literal::ethSubDenomination::WEI:
-		case Literal::ethSubDenomination::NONE:
+	if (_literal)
+	{
+		Literal::SubDenomination sub =_literal->getSubDenomination();
+		switch(sub)
+		{
+		case Literal::SubDenomination::WEI:
+		case Literal::SubDenomination::NONE:
 			break;
-		case Literal::ethSubDenomination::SZABO:
+		case Literal::SubDenomination::SZABO:
 			value *= u256(1000000000000);
 			break;
-		case Literal::ethSubDenomination::FINNEY:
+		case Literal::SubDenomination::FINNEY:
 			value *= u256(1000000000000000);
 			break;
-		case Literal::ethSubDenomination::ETHER:
+		case Literal::SubDenomination::ETHER:
 			value *= u256(1000000000000000000);
 			break;
 		}
