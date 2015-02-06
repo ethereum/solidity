@@ -860,8 +860,8 @@ unsigned ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expre
 
 unsigned ExpressionCompiler::moveTypeToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset, bool _padToWordBoundaries)
 {
-	unsigned const encodedSize = _type.getCalldataEncodedSize();
-	unsigned const c_numBytes = _padToWordBoundaries ? CompilerUtils::getPaddedSize(encodedSize) : encodedSize;
+	unsigned const c_encodedSize = _type.getCalldataEncodedSize();
+	unsigned const c_numBytes = _padToWordBoundaries ? CompilerUtils::getPaddedSize(c_encodedSize) : c_encodedSize;
 	if (c_numBytes == 0 || c_numBytes > 32)
 		BOOST_THROW_EXCEPTION(CompilerError()
 							  << errinfo_sourceLocation(_location)

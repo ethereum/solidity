@@ -131,7 +131,7 @@ public:
 	virtual bool isValueType() const { return false; }
 	virtual unsigned getSizeOnStack() const { return 1; }
 	/// @returns the real type of some types, like e.g: IntegerConstant
-	virtual TypePointer getRealType() const { return TypePointer(); }
+	virtual TypePointer getRealType() const { return shared_from_this(); }
 
 	/// Returns the list of all members of this type. Default implementation: no members.
 	virtual MemberList const& getMembers() const { return EmptyMemberList; }

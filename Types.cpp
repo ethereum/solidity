@@ -364,8 +364,7 @@ u256 IntegerConstantType::literalValue(Literal const* _literal) const
 TypePointer IntegerConstantType::getRealType() const
 {
 	auto intType = getIntegerType();
-	if (!intType)
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("getRealType called with invalid integer constant" + toString()));
+	solAssert(!!intType, std::string("getRealType called with invalid integer constant") + toString());
 	return intType;
 }
 
