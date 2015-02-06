@@ -852,7 +852,7 @@ unsigned ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expre
 	for (unsigned i = 0; i < _arguments.size(); ++i)
 	{
 		_arguments[i]->accept(*this);
-		length += moveTypeToMemory(*_arguments[i]->getType(), _arguments[i]->getLocation(), _memoryOffset + length);
+		length += moveTypeToMemory(*_arguments[i]->getType()->getRealType(), _arguments[i]->getLocation(), _memoryOffset + length);
 	}
 	return length;
 }

@@ -361,6 +361,14 @@ u256 IntegerConstantType::literalValue(Literal const* _literal) const
 	return value;
 }
 
+TypePointer IntegerConstantType::getRealType() const
+{
+	auto intType = getIntegerType();
+	if (!intType)
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("getRealType called with invalid integer constant" + toString()));
+	return intType;
+}
+
 shared_ptr<IntegerType const> IntegerConstantType::getIntegerType() const
 {
 	bigint value = m_value;

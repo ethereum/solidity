@@ -130,6 +130,8 @@ public:
 	/// i.e. it behaves differently in lvalue context and in value context.
 	virtual bool isValueType() const { return false; }
 	virtual unsigned getSizeOnStack() const { return 1; }
+	/// @returns the real type of some types, like e.g: IntegerConstant
+	virtual TypePointer getRealType() const { return TypePointer(); }
 
 	/// Returns the list of all members of this type. Default implementation: no members.
 	virtual MemberList const& getMembers() const { return EmptyMemberList; }
@@ -140,7 +142,7 @@ public:
 	virtual u256 literalValue(Literal const*) const
 	{
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Literal value requested "
-																		  "for type without literals."));
+																		 "for type without literals."));
 	}
 
 protected:
@@ -175,6 +177,7 @@ public:
 	virtual MemberList const& getMembers() const { return isAddress() ? AddressMemberList : EmptyMemberList; }
 
 	virtual std::string toString() const override;
+	virtual TypePointer getRealType() const { return std::make_shared<IntegerType>(m_bits, m_modifier); }
 
 	int getNumBits() const { return m_bits; }
 	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
@@ -214,6 +217,7 @@ public:
 
 	virtual std::string toString() const override;
 	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual TypePointer getRealType() const override;
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> getIntegerType() const;
