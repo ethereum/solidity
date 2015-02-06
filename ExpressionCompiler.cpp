@@ -851,7 +851,7 @@ unsigned ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expre
 	// without type conversion
 	for (unsigned i = 0; i < _arguments.size(); ++i)
 	{
-		bool wantPadding = (_arguments[i]->getType()->getCategory() == Type::Category::STRING) ? false : true;
+		const bool wantPadding = false;
 		_arguments[i]->accept(*this);
 		length += moveTypeToMemory(*_arguments[i]->getType()->getRealType(), _arguments[i]->getLocation(), _memoryOffset + length, wantPadding);
 	}
