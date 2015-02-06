@@ -1127,7 +1127,8 @@ public:
 	};
 	Literal(Location const& _location, Token::Value _token,
 			ASTPointer<ASTString> const& _value,
-			Token::Value _sub = Token::ILLEGAL);
+			SubDenomination _sub = SubDenomination::None):
+		PrimaryExpression(_location), m_token(_token), m_value(_value), m_subDenomination(_sub) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;

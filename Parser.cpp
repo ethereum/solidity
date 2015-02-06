@@ -684,7 +684,6 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->getCurrentToken();
 	ASTPointer<Expression> expression;
-	Token::Value nextToken = Token::ILLEGAL;
 	switch (token)
 	{
 	case Token::TRUE_LITERAL:
@@ -692,12 +691,19 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::NUMBER:
-		nextToken = m_scanner->peekNextToken();
+		if (Token::isEtherSubdenomination(m_scanner->peekNextToken()))
+		{
+			ASTPointer<ASTString> literal = getLiteralAndAdvance();
+			nodeFactory.markEndPosition();
+			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(m_scanner->getCurrentToken());
+			m_scanner->next();
+			expression = nodeFactory.createNode<Literal>(token, literal, subdenomination);
+			break;
+		}
+		// fall-through
 	case Token::STRING_LITERAL:
 		nodeFactory.markEndPosition();
-		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance(), nextToken);
-		if (Token::isEtherSubdenomination(nextToken))
-			m_scanner->next();
+		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::IDENTIFIER:
 		nodeFactory.markEndPosition();

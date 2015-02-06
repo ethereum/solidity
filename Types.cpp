@@ -91,7 +91,7 @@ shared_ptr<Type const> Type::forLiteral(Literal const& _literal)
 	case Token::FALSE_LITERAL:
 		return make_shared<BoolType>();
 	case Token::NUMBER:
-		return IntegerConstantType::fromLiteral(_literal.getValue());
+		return make_shared<IntegerConstantType>(_literal);
 	case Token::STRING_LITERAL:
 		//@todo put larger strings into dynamic strings
 		return StaticStringType::smallestTypeForLiteral(_literal.getValue());
@@ -216,9 +216,25 @@ const MemberList IntegerType::AddressMemberList =
 																   strings{}, FunctionType::Location::BARE)},
 				{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::SEND)}});
 
-shared_ptr<IntegerConstantType const> IntegerConstantType::fromLiteral(string const& _literal)
+IntegerConstantType::IntegerConstantType(Literal const& _literal)
 {
-	return make_shared<IntegerConstantType>(bigint(_literal));
+	m_value = bigint(_literal.getValue());
+
+	switch (_literal.getSubDenomination())
+	{
+	case Literal::SubDenomination::Wei:
+	case Literal::SubDenomination::None:
+		break;
+	case Literal::SubDenomination::Szabo:
+		m_value *= bigint("1000000000000");
+		break;
+	case Literal::SubDenomination::Finney:
+		m_value *= bigint("1000000000000000");
+		break;
+	case Literal::SubDenomination::Ether:
+		m_value *= bigint("1000000000000000000");
+		break;
+	}
 }
 
 bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -326,7 +342,7 @@ string IntegerConstantType::toString() const
 	return "int_const " + m_value.str();
 }
 
-u256 IntegerConstantType::literalValue(Literal const* _literal) const
+u256 IntegerConstantType::literalValue(Literal const*) const
 {
 	u256 value;
 	// we ignore the literal and hope that the type was correctly determined
@@ -337,26 +353,6 @@ u256 IntegerConstantType::literalValue(Literal const* _literal) const
 		value = u256(m_value);
 	else
 		value = s2u(s256(m_value));
-
-	if (_literal)
-	{
-		Literal::SubDenomination sub =_literal->getSubDenomination();
-		switch(sub)
-		{
-		case Literal::SubDenomination::Wei:
-		case Literal::SubDenomination::None:
-			break;
-		case Literal::SubDenomination::Szabo:
-			value *= u256(1000000000000);
-			break;
-		case Literal::SubDenomination::Finney:
-			value *= u256(1000000000000000);
-			break;
-		case Literal::SubDenomination::Ether:
-			value *= u256(1000000000000000000);
-			break;
-		}
-	}
 
 	return value;
 }

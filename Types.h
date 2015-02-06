@@ -197,8 +197,7 @@ class IntegerConstantType: public Type
 public:
 	virtual Category getCategory() const override { return Category::INTEGER_CONSTANT; }
 
-	static std::shared_ptr<IntegerConstantType const> fromLiteral(std::string const& _literal);
-
+	explicit IntegerConstantType(Literal const& _literal);
 	explicit IntegerConstantType(bigint _value): m_value(_value) {}
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
