@@ -267,6 +267,8 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(VarDeclParserOp
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type = parseTypeName(_options.allowVar);
+	if (type != nullptr)
+		nodeFactory.setEndPositionFromNode(type);
 	bool isIndexed = false;
 	ASTPointer<ASTString> identifier;
 	Token::Value token = m_scanner->getCurrentToken();
