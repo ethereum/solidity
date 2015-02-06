@@ -851,22 +851,23 @@ unsigned ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expre
 	// without type conversion
 	for (unsigned i = 0; i < _arguments.size(); ++i)
 	{
+		bool wantPadding = (_arguments[i]->getType()->getCategory() == Type::Category::STRING) ? false : true;
 		_arguments[i]->accept(*this);
-		length += moveTypeToMemory(*_arguments[i]->getType()->getRealType(), _arguments[i]->getLocation(), _memoryOffset + length);
+		length += moveTypeToMemory(*_arguments[i]->getType()->getRealType(), _arguments[i]->getLocation(), _memoryOffset + length, wantPadding);
 	}
 	return length;
 }
 
-unsigned ExpressionCompiler::moveTypeToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset)
+unsigned ExpressionCompiler::moveTypeToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset, bool _padToWordBoundaries)
 {
-	unsigned const c_numBytes = CompilerUtils::getPaddedSize(_type.getCalldataEncodedSize());
+	unsigned const encodedSize = _type.getCalldataEncodedSize();
+	unsigned const c_numBytes = _padToWordBoundaries ? CompilerUtils::getPaddedSize(encodedSize) : encodedSize;
 	if (c_numBytes == 0 || c_numBytes > 32)
 		BOOST_THROW_EXCEPTION(CompilerError()
 							  << errinfo_sourceLocation(_location)
 							  << errinfo_comment("Type " + _type.toString() + " not yet supported."));
 	bool const c_leftAligned = _type.getCategory() == Type::Category::STRING;
-	bool const c_padToWords = true;
-	return CompilerUtils(m_context).storeInMemory(_memoryOffset, c_numBytes, c_leftAligned, c_padToWords);
+	return CompilerUtils(m_context).storeInMemory(_memoryOffset, c_numBytes, c_leftAligned, _padToWordBoundaries);
 }
 
 unsigned ExpressionCompiler::appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,

@@ -249,6 +249,7 @@ public:
 
 	virtual std::string toString() const override { return "string" + dev::toString(m_bytes); }
 	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual TypePointer getRealType() const override { return std::make_shared<StaticStringType>(m_bytes); }
 
 	int getNumBytes() const { return m_bytes; }
 

@@ -493,19 +493,9 @@ void FunctionCall::checkTypeRequirements()
 		if (m_names.empty())
 		{
 			for (size_t i = 0; i < m_arguments.size(); ++i)
-			{
-				if (functionType->getLocation() == FunctionType::Location::SHA3)
-				{
-#if 0 // are we sure we want that? Literal constant nums can't live outside storage and so sha3(42) will fail
-					if (!m_arguments[i]->getType()->canLiveOutsideStorage())
-						BOOST_THROW_EXCEPTION(createTypeError("SHA3 called with argument that can't live outside storage"));
-#endif
-					if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[0]))
-						BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError("SHA3 argument can't be converted to hash"));
-
-				} else if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
+				if (functionType->getLocation() != FunctionType::Location::SHA3 &&
+					!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
 					BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
-			}
 		}
 		else if (functionType->getLocation() == FunctionType::Location::SHA3)
 			BOOST_THROW_EXCEPTION(createTypeError("Named arguments can't be used for SHA3."));
