@@ -63,8 +63,8 @@ private:
 	u256 m_data;
 };
 
-typedef std::vector<AssemblyItem> AssemblyItems;
-typedef vector_ref<AssemblyItem const> AssemblyItemsConstRef;
+using AssemblyItems = std::vector<AssemblyItem>;
+using AssemblyItemsConstRef = vector_ref<AssemblyItem const>;
 
 std::ostream& operator<<(std::ostream& _out, AssemblyItemsConstRef _i);
 inline std::ostream& operator<<(std::ostream& _out, AssemblyItems const& _i) { return operator<<(_out, AssemblyItemsConstRef(&_i)); }
