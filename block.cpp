@@ -20,6 +20,7 @@
  * block test functions.
  */
 
+#include <libethereum/CanonBlockChain.h>
 #include "TestHelper.h"
 
 using namespace std;
@@ -116,39 +117,41 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 		}
 		else
 		{
-			BOOST_REQUIRE(o.count("block") > 0);
+//			BOOST_REQUIRE(o.count("block") > 0);
 
-			// construct Rlp of the given block
-			bytes blockRLP = createBlockRLPFromFields(o["block"].get_obj());
-			RLP myRLP(blockRLP);
-			o["rlp"] = toHex(blockRLP);
+//			// construct Rlp of the given block
+//			bytes blockRLP = createBlockRLPFromFields(o["block"].get_obj());
+//			RLP myRLP(blockRLP);
+//			o["rlp"] = toHex(blockRLP);
 
-			try
-			{
-				BlockInfo blockFromFields;
-				blockFromFields.populateFromHeader(myRLP, false);
-				(void)blockFromFields;
-				//blockFromFields.verifyInternals(blockRLP);
-			}
-			catch (Exception const& _e)
-			{
-				cnote << "block construction did throw an exception: " << diagnostic_information(_e);
-				BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
-				o.erase(o.find("block"));
-			}
-			catch (std::exception const& _e)
-			{
-				cnote << "block construction did throw an exception: " << _e.what();
-				BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
-				o.erase(o.find("block"));
-			}
-			catch(...)
-			{
-				cnote << "block construction did throw an unknow exception\n";
-				o.erase(o.find("block"));
-			}
+//			try
+//			{
+//				BlockInfo blockFromFields;
+//				blockFromFields.populateFromHeader(myRLP, false);
+//				(void)blockFromFields;
+//				//blockFromFields.verifyInternals(blockRLP);
+//			}
+//			catch (Exception const& _e)
+//			{
+//				cnote << "block construction did throw an exception: " << diagnostic_information(_e);
+//				BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
+//				o.erase(o.find("block"));
+//			}
+//			catch (std::exception const& _e)
+//			{
+//				cnote << "block construction did throw an exception: " << _e.what();
+//				BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
+//				o.erase(o.find("block"));
+//			}
+//			catch(...)
+//			{
+//				cnote << "block construction did throw an unknow exception\n";
+//				o.erase(o.find("block"));
+//			}
 
 			BOOST_REQUIRE(o.count("transactions") > 0);
+
+            TransactionQueue txs;
 
 			for (auto const& txObj: o["transactions"].get_array())
 			{
@@ -162,12 +165,60 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_REQUIRE(tx.count("r") > 0);
 				BOOST_REQUIRE(tx.count("s") > 0);
 				BOOST_REQUIRE(tx.count("data") > 0);
-
-				Transaction txFromFields = createTransactionFromFields(tx);
-
-
-
+                cout << "attempt to import transaction\n";
+                txs.attemptImport(createTransactionFromFields(tx));
 			}
+            cout << "done importing txs\n";
+
+
+
+            //BOOST_REQUIRE(o.count("env") > 0);
+            //BOOST_REQUIRE(o.count("pre") > 0);
+
+//            ImportTest importer;
+//            importer.importEnv(o["env"].get_obj());
+//            importer.importState(o["pre"].get_obj(), m_statePre);
+
+//            State theState = importer.m_statePre;
+//            bytes output;
+
+            cout << "construct bc\n";
+            CanonBlockChain bc(true);
+            cout << "construct state\n";
+            State theState;
+
+            try
+            {
+                cout << "sync bc and txs in state\n";
+                theState.sync(bc,txs);
+                // lock
+                cout << "commit to mine\n";
+                theState.commitToMine(bc);  // will call uncommitToMine if a repeat.
+                // unlock
+                MineInfo info;
+                cout << "mine...\n";
+                for (info.completed = false; !info.completed; info = theState.mine()) {}
+                cout << "done mining, completeMine\n";
+                // lock
+                theState.completeMine();
+                // unlock
+
+                cout << "new block: " << theState.blockData() << endl << theState.info() << endl;
+            }
+            catch (Exception const& _e)
+            {
+                cnote << "state sync did throw an exception: " << diagnostic_information(_e);
+            }
+            catch (std::exception const& _e)
+            {
+                cnote << "state sync did throw an exception: " << _e.what();
+            }
+
+            // write block and rlp to json
+
+            //TODO if block rlp is invalid, delete transactions, and block
+
+
 		}
 	}
 }
@@ -177,48 +228,48 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(BlockTests)
 
-BOOST_AUTO_TEST_CASE(blValidBlocksTest)
+BOOST_AUTO_TEST_CASE(blFirstTest)
 {
-	dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
+    dev::test::executeTests("blFirstTest", "/BlockTests", dev::test::doBlockTests);
 }
 
-BOOST_AUTO_TEST_CASE(ttCreateTest)
-{
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--createtest")
-		{
-			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
-			{
-				cnote << "usage: ./testeth --createtest <PathToConstructor> <PathToDestiny>\n";
-				return;
-			}
-			try
-			{
-				cnote << "Populating tests...";
-				json_spirit::mValue v;
-				string s = asString(dev::contents(boost::unit_test::framework::master_test_suite().argv[i + 1]));
-				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + (string)boost::unit_test::framework::master_test_suite().argv[i + 1] + " is empty.");
-				json_spirit::read_string(s, v);
-				dev::test::doBlockTests(v, true);
-				writeFile(boost::unit_test::framework::master_test_suite().argv[i + 2], asBytes(json_spirit::write_string(v, true)));
-			}
-			catch (Exception const& _e)
-			{
-				BOOST_ERROR("Failed block test with Exception: " << diagnostic_information(_e));
-			}
-			catch (std::exception const& _e)
-			{
-				BOOST_ERROR("Failed block test with Exception: " << _e.what());
-			}
-		}
-	}
-}
+//BOOST_AUTO_TEST_CASE(ttCreateTest)
+//{
+//	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+//	{
+//		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+//		if (arg == "--createtest")
+//		{
+//			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
+//			{
+//				cnote << "usage: ./testeth --createtest <PathToConstructor> <PathToDestiny>\n";
+//				return;
+//			}
+//			try
+//			{
+//				cnote << "Populating tests...";
+//				json_spirit::mValue v;
+//				string s = asString(dev::contents(boost::unit_test::framework::master_test_suite().argv[i + 1]));
+//				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + (string)boost::unit_test::framework::master_test_suite().argv[i + 1] + " is empty.");
+//				json_spirit::read_string(s, v);
+//				dev::test::doBlockTests(v, true);
+//				writeFile(boost::unit_test::framework::master_test_suite().argv[i + 2], asBytes(json_spirit::write_string(v, true)));
+//			}
+//			catch (Exception const& _e)
+//			{
+//				BOOST_ERROR("Failed block test with Exception: " << diagnostic_information(_e));
+//			}
+//			catch (std::exception const& _e)
+//			{
+//				BOOST_ERROR("Failed block test with Exception: " << _e.what());
+//			}
+//		}
+//	}
+//}
 
-BOOST_AUTO_TEST_CASE(userDefinedFileTT)
-{
-	dev::test::userDefinedTest("--bltest", dev::test::doBlockTests);
-}
+//BOOST_AUTO_TEST_CASE(userDefinedFileTT)
+//{
+//	dev::test::userDefinedTest("--bltest", dev::test::doBlockTests);
+//}
 
 BOOST_AUTO_TEST_SUITE_END()

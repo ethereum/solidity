@@ -29,33 +29,6 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-Transaction createTransactionFromFields(mObject& _tObj)
-{
-	BOOST_REQUIRE(_tObj.count("data") > 0);
-	BOOST_REQUIRE(_tObj.count("value") > 0);
-	BOOST_REQUIRE(_tObj.count("gasPrice") > 0);
-	BOOST_REQUIRE(_tObj.count("gasLimit") > 0);
-	BOOST_REQUIRE(_tObj.count("nonce")> 0);
-	BOOST_REQUIRE(_tObj.count("to") > 0);
-
-	BOOST_REQUIRE(_tObj.count("v") > 0);
-	BOOST_REQUIRE(_tObj.count("r") > 0);
-	BOOST_REQUIRE(_tObj.count("s") > 0);
-
-	//Construct Rlp of the given transaction
-	RLPStream rlpStream;
-	rlpStream.appendList(9);
-	rlpStream <<  bigint(_tObj["nonce"].get_str()) << bigint(_tObj["gasPrice"].get_str()) << bigint(_tObj["gasLimit"].get_str());
-	if (_tObj["to"].get_str().empty())
-		rlpStream << "";
-	else
-		rlpStream << Address(_tObj["to"].get_str());
-	rlpStream << bigint(_tObj["value"].get_str()) << importData(_tObj);
-	rlpStream << bigint(_tObj["v"].get_str()) << bigint(_tObj["r"].get_str()) << bigint(_tObj["s"].get_str());
-
-	return Transaction(rlpStream.out(), CheckSignature::Sender);
-}
-
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
 	for (auto& i: _v.get_obj())
@@ -84,7 +57,8 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_REQUIRE(o.count("transaction") > 0);
 
 			mObject tObj = o["transaction"].get_obj();
-			Transaction txFromFields = createTransactionFromFields(tObj);
+			bytes txRLP = createTransactionFromFields(tObj);
+			Transaction txFromFields(txRLP, CheckSignature::Sender);
 
 			//Check the fields restored from RLP to original fields
 			BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), "Data in given RLP not matching the Transaction data!");
