@@ -867,19 +867,17 @@ unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedT
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	FunctionType thisType(_varDecl);
-	solAssert(thisType.getReturnParameterTypes().size() == 1, "");
-	TypePointer const& resultType = thisType.getReturnParameterTypes().front();
-	unsigned sizeOnStack;
+	FunctionType accessorType(_varDecl);
 
 	unsigned length = 0;
-	TypePointers const& params = thisType.getParameterTypes();
+	TypePointers const& params = accessorType.getParameterTypes();
 	// move arguments to memory
 	for (TypePointer const& param: boost::adaptors::reverse(params))
 		length += appendTypeConversionAndMoveToMemory(*param, *param, Location(), length);
 
-	// retrieve the position of the mapping
+	// retrieve the position of the variable
 	m_context << m_context.getStorageLocationOfVariable(_varDecl);
+	TypePointer returnType = _varDecl.getType();
 
 	for (TypePointer const& param: params)
 	{
@@ -888,13 +886,40 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		unsigned argLen = CompilerUtils::getPaddedSize(param->getCalldataEncodedSize());
 		length -= argLen;
 		m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
+
+		returnType = dynamic_cast<MappingType const&>(*returnType).getValueType();
 	}
 
-	m_currentLValue = LValue(m_context, LValue::STORAGE, *resultType);
-	m_currentLValue.retrieveValue(resultType, Location(), true);
-	sizeOnStack = resultType->getSizeOnStack();
-	solAssert(sizeOnStack <= 15, "Stack too deep.");
-	m_context << eth::dupInstruction(sizeOnStack + 1) << eth::Instruction::JUMP;
+	unsigned retSizeOnStack = 0;
+	solAssert(accessorType.getReturnParameterTypes().size() >= 1, "");
+	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
+	{
+		auto const& names = accessorType.getReturnParameterNames();
+		auto const& types = accessorType.getReturnParameterTypes();
+		// struct
+		for (size_t i = 0; i < names.size(); ++i)
+		{
+			m_context << eth::Instruction::DUP1
+					  << structType->getStorageOffsetOfMember(names[i])
+					  << eth::Instruction::ADD;
+			m_currentLValue = LValue(m_context, LValue::STORAGE, *types[i]);
+			m_currentLValue.retrieveValue(types[i], Location(), true);
+			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
+			m_context << eth::Instruction::SWAP1;
+			retSizeOnStack += types[i]->getSizeOnStack();
+		}
+		m_context << eth::Instruction::POP;
+	}
+	else
+	{
+		// simple value
+		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
+		m_currentLValue = LValue(m_context, LValue::STORAGE, *returnType);
+		m_currentLValue.retrieveValue(returnType, Location(), true);
+		retSizeOnStack = returnType->getSizeOnStack();
+	}
+	solAssert(retSizeOnStack <= 15, "Stack too deep.");
+	m_context << eth::dupInstruction(retSizeOnStack + 1) << eth::Instruction::JUMP;
 }
 
 ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType,

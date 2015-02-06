@@ -643,22 +643,31 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 {
 	TypePointers params;
 	vector<string> paramNames;
-	TypePointers retParams;
-	vector<string> retParamNames;
-	TypePointer varDeclType = _varDecl.getType();
-	auto mappingType = dynamic_cast<MappingType const*>(varDeclType.get());
-	auto returnType = varDeclType;
+	auto returnType = _varDecl.getType();
 
-	while (mappingType != nullptr)
+	while (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
 	{
 		params.push_back(mappingType->getKeyType());
 		paramNames.push_back("");
 		returnType = mappingType->getValueType();
-		mappingType = dynamic_cast<MappingType const*>(mappingType->getValueType().get());
 	}
 
-	retParams.push_back(returnType);
-	retParamNames.push_back("");
+	TypePointers retParams;
+	vector<string> retParamNames;
+	if (auto structType = dynamic_cast<StructType const*>(returnType.get()))
+	{
+		for (pair<string, TypePointer> const& member: structType->getMembers())
+			if (member.second->canLiveOutsideStorage())
+			{
+				retParamNames.push_back(member.first);
+				retParams.push_back(member.second);
+			}
+	}
+	else
+	{
+		retParams.push_back(returnType);
+		retParamNames.push_back("");
+	}
 
 	swap(params, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
