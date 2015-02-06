@@ -490,7 +490,7 @@ void FunctionCall::checkTypeRequirements()
 		if (functionType->getLocation() != FunctionType::Location::SHA3 && parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 
-		if (m_names.empty())  // LTODO: Totally ignoring sha3 case for named arguments for now just for the rebase to work
+		if (m_names.empty())
 		{
 			for (size_t i = 0; i < m_arguments.size(); ++i)
 			{
@@ -501,14 +501,14 @@ void FunctionCall::checkTypeRequirements()
 						BOOST_THROW_EXCEPTION(createTypeError("SHA3 called with argument that can't live outside storage"));
 #endif
 					if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[0]))
-						BOOST_THROW_EXCEPTION(createTypeError(std::string("SHA3 argument ") +
-															  boost::lexical_cast<std::string>(i + 1) +
-															  std::string("can't be converted to hash")));
+						BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError("SHA3 argument can't be converted to hash"));
 
 				} else if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
 					BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
 			}
 		}
+		else if (functionType->getLocation() == FunctionType::Location::SHA3)
+			BOOST_THROW_EXCEPTION(createTypeError("Named arguments can't be used for SHA3."));
 		else
 		{
 			auto const& parameterNames = functionType->getParameterNames();

@@ -275,7 +275,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << u256(0) << eth::Instruction::CODECOPY;
 
 			unsigned length = bytecode.size();
-			length += appendArgumentsCopyToMemory(function.getParameterTypes(), arguments, length);
+			length += appendArgumentsCopyToMemory(arguments, function.getParameterTypes(), length);
 			// size, offset, endowment
 			m_context << u256(length) << u256(0);
 			if (function.valueSet())
@@ -327,7 +327,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case Location::SHA3:
 		{
-			unsigned length = appendSameTypeArgumentsCopyToMemory(function.getParameterTypes().front(), arguments, 0);
+			unsigned length = appendArgumentsCopyToMemory(arguments);
 			m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
 			break;
 		}
@@ -800,7 +800,7 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 
 	// reserve space for the function identifier
 	unsigned dataOffset = bare ? 0 : CompilerUtils::dataStartOffset;
-	dataOffset += appendArgumentsCopyToMemory(_functionType.getParameterTypes(), _arguments, dataOffset);
+	dataOffset += appendArgumentsCopyToMemory(_arguments, _functionType.getParameterTypes(), dataOffset);
 
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
@@ -836,38 +836,44 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	}
 }
 
-unsigned ExpressionCompiler::appendArgumentsCopyToMemory(TypePointers const& _types,
-														 vector<ASTPointer<Expression const>> const& _arguments,
+unsigned ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expression const>> const& _arguments,
+														 TypePointers const& _types,
 														 unsigned _memoryOffset)
 {
 	unsigned length = 0;
+	if (!_types.empty())
+	{
+		for (unsigned i = 0; i < _arguments.size(); ++i)
+			length += appendExpressionCopyToMemory(*_types[i], *_arguments[i], _memoryOffset + length);
+		return length;
+	}
+
+	// without type conversion
 	for (unsigned i = 0; i < _arguments.size(); ++i)
-		length += appendExpressionCopyToMemory(*_types[i], *_arguments[i], _memoryOffset + length);
+	{
+		_arguments[i]->accept(*this);
+		length += moveTypeToMemory(*_arguments[i]->getType(), _arguments[i]->getLocation(), _memoryOffset + length);
+	}
 	return length;
 }
 
-unsigned ExpressionCompiler::appendSameTypeArgumentsCopyToMemory(TypePointer const& _type,
-																 vector<ASTPointer<Expression const>> const& _arguments,
-																 unsigned _memoryOffset)
+unsigned ExpressionCompiler::moveTypeToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset)
 {
-	unsigned length = 0;
-	for (unsigned i = 0; i < _arguments.size(); ++i)
-		length += appendExpressionCopyToMemory(*_type, *_arguments[i], _memoryOffset + length);
-	return length;
+	unsigned const c_numBytes = CompilerUtils::getPaddedSize(_type.getCalldataEncodedSize());
+	if (c_numBytes == 0 || c_numBytes > 32)
+		BOOST_THROW_EXCEPTION(CompilerError()
+							  << errinfo_sourceLocation(_location)
+							  << errinfo_comment("Type " + _type.toString() + " not yet supported."));
+	bool const c_leftAligned = _type.getCategory() == Type::Category::STRING;
+	bool const c_padToWords = true;
+	return CompilerUtils(m_context).storeInMemory(_memoryOffset, c_numBytes, c_leftAligned, c_padToWords);
 }
 
 unsigned ExpressionCompiler::appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,
 																 Location const& _location, unsigned _memoryOffset)
 {
 	appendTypeConversion(_type, _expectedType, true);
-	unsigned const c_numBytes = CompilerUtils::getPaddedSize(_expectedType.getCalldataEncodedSize());
-	if (c_numBytes == 0 || c_numBytes > 32)
-		BOOST_THROW_EXCEPTION(CompilerError()
-							  << errinfo_sourceLocation(_location)
-							  << errinfo_comment("Type " + _expectedType.toString() + " not yet supported."));
-	bool const c_leftAligned = _expectedType.getCategory() == Type::Category::STRING;
-	bool const c_padToWords = true;
-	return CompilerUtils(m_context).storeInMemory(_memoryOffset, c_numBytes, c_leftAligned, c_padToWords);
+	return moveTypeToMemory(_expectedType, _location, _memoryOffset);
 }
 
 unsigned ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
