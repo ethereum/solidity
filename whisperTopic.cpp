@@ -36,9 +36,12 @@ BOOST_AUTO_TEST_CASE(topic)
 	auto oldLogVerbosity = g_logVerbosity;
 	g_logVerbosity = 0;
 
-	Host phOther("Test", NetworkPreferences(30303, "127.0.0.1", false, true));
-	auto whOther = phOther.registerCapability(new WhisperHost());
-	phOther.start();
+	Host host1("Test", NetworkPreferences(30303, "127.0.0.1", false, true));
+	auto whost1 = host1.registerCapability(new WhisperHost());
+	host1.start();
+	
+	while (!host1.isStarted())
+		this_thread::sleep_for(chrono::milliseconds(2));
 	
 	bool started = false;
 	unsigned result = 0;
@@ -48,16 +51,16 @@ BOOST_AUTO_TEST_CASE(topic)
 		started = true;
 
 		/// Only interested in odd packets
-		auto w = whOther->installWatch(BuildTopicMask("odd"));
+		auto w = whost1->installWatch(BuildTopicMask("odd"));
 
 		started = true;
 		set<unsigned> received;
 
 		for (int iterout = 0, last = 0; iterout < 200 && last < 81; ++iterout)
 		{
-			for (auto i: whOther->checkWatch(w))
+			for (auto i: whost1->checkWatch(w))
 			{
-				Message msg = whOther->envelope(i).open(whOther->fullTopic(w));
+				Message msg = whost1->envelope(i).open(whost1->fullTopic(w));
 				last = RLP(msg.payload()).toInt<unsigned>();
 				if (received.count(last))
 					continue;
@@ -70,12 +73,15 @@ BOOST_AUTO_TEST_CASE(topic)
 		
 	});
 	
-	Host ph("Test", NetworkPreferences(30300, "127.0.0.1", false, true));
-	auto wh = ph.registerCapability(new WhisperHost());
-	ph.start();
+	Host host2("Test", NetworkPreferences(30300, "127.0.0.1", false, true));
+	auto whost2 = host2.registerCapability(new WhisperHost());
+	host2.start();
+	
+	while (!host2.isStarted())
+		this_thread::sleep_for(chrono::milliseconds(2));
 	
 	this_thread::sleep_for(chrono::milliseconds(100));
-	ph.addNode(phOther.id(), "127.0.0.1", 30303, 30303);
+	host2.addNode(host1.id(), "127.0.0.1", 30303, 30303);
 	
 	this_thread::sleep_for(chrono::milliseconds(500));
 
@@ -85,7 +91,7 @@ BOOST_AUTO_TEST_CASE(topic)
 	KeyPair us = KeyPair::create();
 	for (int i = 0; i < 10; ++i)
 	{
-		wh->post(us.sec(), RLPStream().append(i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"));
+		whost2->post(us.sec(), RLPStream().append(i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"));
 		this_thread::sleep_for(chrono::milliseconds(250));
 	}
 
@@ -100,33 +106,33 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	cnote << "Testing Whisper forwarding...";
 	auto oldLogVerbosity = g_logVerbosity;
 	g_logVerbosity = 0;
-
+	
+	// Host must be configured not to share peers.
+	Host host1("Listner", NetworkPreferences(30303, "", false, true));
+	host1.setIdealPeerCount(0);
+	auto whost1 = host1.registerCapability(new WhisperHost());
+	host1.start();
+	while (!host1.isStarted())
+		this_thread::sleep_for(chrono::milliseconds(2));
+	
 	unsigned result = 0;
 	bool done = false;
 
 	bool startedListener = false;
-	Public phid;
 	std::thread listener([&]()
 	{
 		setThreadName("listener");
 
-		// Host must be configured not to share peers.
-		Host ph("Listner", NetworkPreferences(30303, "", false, true));
-		ph.setIdealPeerCount(0);
-		auto wh = ph.registerCapability(new WhisperHost());
-		ph.start();
-		phid = ph.id();
-
 		startedListener = true;
 
 		/// Only interested in odd packets
-		auto w = wh->installWatch(BuildTopicMask("test"));
+		auto w = whost1->installWatch(BuildTopicMask("test"));
 
 		for (int i = 0; i < 200 && !result; ++i)
 		{
-			for (auto i: wh->checkWatch(w))
+			for (auto i: whost1->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open(wh->fullTopic(w));
+				Message msg = whost1->envelope(i).open(whost1->fullTopic(w));
 				unsigned last = RLP(msg.payload()).toInt<unsigned>();
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 				result = last;
@@ -135,8 +141,17 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		}
 	});
 
-	bool startedForwarder = false;
+	
+	// Host must be configured not to share peers.
+	Host host2("Forwarder", NetworkPreferences(30305, "", false, true));
+	host2.setIdealPeerCount(1);
+	auto whost2 = host2.registerCapability(new WhisperHost());
+	host2.start();
+	while (!host2.isStarted())
+		this_thread::sleep_for(chrono::milliseconds(2));
+	
 	Public fwderid;
+	bool startedForwarder = false;
 	std::thread forwarder([&]()
 	{
 		setThreadName("forwarder");
@@ -144,27 +159,19 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		while (!startedListener)
 			this_thread::sleep_for(chrono::milliseconds(50));
 
-		// Host must be configured not to share peers.
-		Host ph("Forwarder", NetworkPreferences(30305, "", false, true));
-		ph.setIdealPeerCount(0);
-		auto wh = ph.registerCapability(new WhisperHost());
 		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.start();
-		fwderid = ph.id();
-
-		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.addNode(phid, "127.0.0.1", 30303, 30303);
+		host2.addNode(host1.id(), "127.0.0.1", 30303, 30303);
 
 		startedForwarder = true;
 
 		/// Only interested in odd packets
-		auto w = wh->installWatch(BuildTopicMask("test"));
+		auto w = whost2->installWatch(BuildTopicMask("test"));
 
 		while (!done)
 		{
-			for (auto i: wh->checkWatch(w))
+			for (auto i: whost2->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open(wh->fullTopic(w));
+				Message msg = whost2->envelope(i).open(whost2->fullTopic(w));
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 			}
 			this_thread::sleep_for(chrono::milliseconds(50));
@@ -175,12 +182,12 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
 	Host ph("Sender", NetworkPreferences(30300, "", false, true));
-	ph.setIdealPeerCount(0);
+	ph.setIdealPeerCount(1);
 	shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
-	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
-	this_thread::sleep_for(chrono::milliseconds(500));
-	ph.addNode(fwderid, "127.0.0.1", 30305, 30305);
+	ph.addNode(host2.id(), "127.0.0.1", 30305, 30305);
+	while (!ph.isStarted())
+		this_thread::sleep_for(chrono::milliseconds(10));
 
 	KeyPair us = KeyPair::create();
 	wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
