@@ -2099,7 +2099,6 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
 {
 	char const* sourceCode = R"(
 		contract c {
-			// function foo(uint a) returns (hash d)
 			function foo(uint a, uint b, uint c) returns (hash d)
 			{
 				d = sha3(a, b, c);
@@ -2112,6 +2111,50 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
 						toBigEndian(u256(10)) +
 						toBigEndian(u256(12)) +
 						toBigEndian(u256(13)))));
+}
+
+BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_numeric_literals)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function foo(uint a, uint16 b) returns (hash d)
+			{
+				d = sha3(a, b, 145);
+			}
+		})";
+	compileAndRun(sourceCode);
+
+	BOOST_CHECK(callContractFunction("foo(uint256,uint16)", 10, 12) == encodeArgs(
+					dev::sha3(
+						toBigEndian(u256(10)) +
+						toBigEndian(u256(12)) +
+						toBigEndian(u256(145)))));
+}
+
+BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function foo() returns (hash d)
+			{
+				d = sha3("foo");
+			}
+			function bar(uint a, uint16 b) returns (hash d)
+			{
+				d = sha3(a, b, 145, "foo");
+			}
+		})";
+	compileAndRun(sourceCode);
+
+	BOOST_CHECK(callContractFunction("foo()") == encodeArgs(dev::sha3("foo")));
+#if 0 // work in progress
+	BOOST_CHECK(callContractFunction("bar(uint256,uint16)", 10, 12) == encodeArgs(
+					dev::sha3(
+						toBigEndian(u256(10)) +
+						toBigEndian(u256(12)) +
+						toBigEndian(u256(145)) +
+						asBytes("foo")))));
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()
