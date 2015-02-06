@@ -22,6 +22,7 @@ target_link_libraries(testeth ethcore)
 target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth solidity)
 target_link_libraries(testeth webthree)
+target_link_libraries(testeth natspec)
 
 if (JSONRPC)
 	target_link_libraries(testeth web3jsonrpc)
