@@ -660,6 +660,38 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
+BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)
+{
+	char const* text = R"(
+		contract c {
+			function c ()
+			{
+				 a = 1 wei;
+				 b = 2 szabo;
+				 c = 3 finney;
+				 b = 4 ether;
+			}
+			uint256 a;
+			uint256 b;
+			uint256 c;
+			uint256 d;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations_in_expressions)
+{
+	char const* text = R"(
+		contract c {
+			function c ()
+			{
+				 a = 1 wei * 100 wei + 7 szabo - 3;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
