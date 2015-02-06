@@ -11,7 +11,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 1 ]] 0 }",
                 "storage" : {
                     "0x01" : "0x01"
@@ -19,7 +19,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -47,7 +47,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 1 ]] 23 }",
                  "storage" : {
                      "0x01" : "0x01"
@@ -55,7 +55,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "1000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -83,7 +83,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 1 ]] 0 }",
                  "storage" : {
                      "0x01" : "0x01"
@@ -91,7 +91,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "500",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -119,7 +119,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 1 ]] 0 }",
                  "storage" : {
                      "0x01" : "0x01"
@@ -127,7 +127,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "502",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -155,7 +155,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 1 ]] 0 [[ 2 ]] 0 [[ 3 ]] 0 [[ 4 ]] 0 [[ 5 ]] 0 }",
                  "storage" : {
                      "0x01" : "0x01",
@@ -167,7 +167,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "10000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -195,7 +195,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 10 ]] 1 [[ 11 ]] 1 [[ 1 ]] 0 [[ 2 ]] 0 [[ 3 ]] 0 [[ 4 ]] 0 [[ 5 ]] 0 }",
                  "storage" : {
                      "0x01" : "0x01",
@@ -207,7 +207,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "10000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -235,7 +235,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ @@1 @@2 [[ 10 ]] (EXP 2 0xff) [[ 11 ]] (BALANCE (ADDRESS)) [[ 1 ]] 0 [[ 2 ]] 0 [[ 3 ]] 0 [[ 4 ]] 0 [[ 5 ]] 0 [[ 6 ]] 0 }",
                  "storage" : {
                      "0x01" : "0x01",
@@ -248,7 +248,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "10000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -276,7 +276,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ @@1 @@2 [[ 10 ]] (EXP 2 0xffff) [[ 11 ]] (BALANCE (ADDRESS)) [[ 1 ]] 0 [[ 2 ]] 0 [[ 3 ]] 0 [[ 4 ]] 0 [[ 5 ]] 0 [[ 6 ]] 0 }",
                  "storage" : {
                      "0x01" : "0x01",
@@ -289,7 +289,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "10000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }

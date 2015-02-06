@@ -229,7 +229,7 @@
         {
 	    "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
 		"balance": "0",
-		"nonce": 0,
+		"nonce": "0",
 		"code": "{(CREATE 0 0 32)}",
 		"storage": {}
 	     },
@@ -267,7 +267,7 @@
         {
 	    "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
 		"balance": "0",
-		"nonce": 0,
+		"nonce": "0",
 		"code": "{[[ 2 ]](ADDRESS)(CODECOPY 0 0 32)(CREATE 0 0 32)}",
 		"storage": {}
 	     },
@@ -305,7 +305,7 @@
         {
 	    "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
 		"balance": "1",
-		"nonce": 0,
+		"nonce": "0",
 		"//": "{[[0]] 12 (CREATE 0 64 32)}",
 		"code": "{(MSTORE 0 0x600c600055602060406000f0)(CREATE 0 20 12)}",
 		"storage": {}
@@ -344,7 +344,7 @@
         {
 	    "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
 		"balance": "1000",
-		"nonce": 0,
+		"nonce": "0",
 		"//": "(CREATE 0 64 32)",
 		"//": "{[[0]] 12 (MSTORE 32 0x602060406000f0)(RETURN 57 7)}",
 		"code": "{(MSTORE 0 0x600c60005566602060406000f060205260076039f3)[[0]](CREATE 1 11 21)(CALL 500 (SLOAD 0) 1 0 0 0 0)}",
@@ -384,7 +384,7 @@
         {
 	    "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
 		"balance": "0",
-		"nonce": 0,
+		"nonce": "0",
 		"//": "(CREATE 0 64 32)",
 		"//": "{[[0]] 12 (MSTORE 32 0x602060406000f0)(RETURN 57 7)}",
 		"code": "{(MSTORE 0 0x600c60005566602060406000f060205260076039f3)[[0]](CREATE 1 11 21)(CALL 0 (SLOAD 0) 0 0 0 0 0)}",
@@ -424,7 +424,7 @@
         {
 	    "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
 		"balance": "1000",
-		"nonce": 0,
+		"nonce": "0",
 		"//": "(CREATE 0 64 32)",
 		"//": "{[[0]] 12 (MSTORE 32 0x602060406000f0)(RETURN 57 7)}",
 		"code": "{(MSTORE 0 0x600c60005566602060406000f060205260076039f3)[[0]](CREATE 1 11 21)(CALL 0 (SLOAD 0) 1 0 0 0 0)}",
@@ -464,7 +464,7 @@
         {
 	    "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
 		"balance": "1000",
-		"nonce": 0,
+		"nonce": "0",
 		"//": "(CREATE 0 64 32)",
 		"//": "{[[0]] 12 (MSTORE 32 0x602060406000f0)(RETURN 57 7)}",
 		"code": "{(MSTORE 0 0x600c60005566602060406000f060205260076039f3)[[0]](CREATE 1001 11 21)}",
