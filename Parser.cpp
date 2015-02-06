@@ -89,8 +89,8 @@ void dev::eth::parseTreeLLL(string const& _s, sp::utree& o_out)
 	using qi::standard::space;
 	using qi::standard::space_type;
 	using dev::eth::parseTreeLLL_::tagNode;
-	typedef sp::basic_string<std::string, sp::utree_type::symbol_type> symbol_type;
-	typedef string::const_iterator it;
+	using symbol_type = sp::basic_string<std::string, sp::utree_type::symbol_type>;
+	using it = string::const_iterator;
 
 	static const u256 ether = u256(1000000000) * 1000000000;
 	static const u256 finney = u256(1000000000) * 1000000;
