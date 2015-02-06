@@ -959,6 +959,24 @@ BOOST_AUTO_TEST_CASE(complex_accessors)
 	BOOST_CHECK(callContractFunction("to_multiple_map(uint256,uint256)", 42, 23) == encodeArgs(31));
 }
 
+BOOST_AUTO_TEST_CASE(struct_accessor)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct Data { uint a; uint8 b; mapping(uint => uint) c; bool d; }
+			mapping(uint => Data) public data;
+			function test() {
+				data[7].a = 1;
+				data[7].b = 2;
+				data[7].c[0] = 3;
+				data[7].d = true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data(uint256)", 7) == encodeArgs(1, 2, true));
+}
+
 BOOST_AUTO_TEST_CASE(balance)
 {
 	char const* sourceCode = "contract test {\n"
