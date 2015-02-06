@@ -28,31 +28,48 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-Transaction createTransactionFromFields(mObject& _tObj)
+RLPStream createRLPStreamFromTransactionFields(mObject& _tObj)
 {
-	BOOST_REQUIRE(_tObj.count("data") > 0);
-	BOOST_REQUIRE(_tObj.count("value") > 0);
-	BOOST_REQUIRE(_tObj.count("gasPrice") > 0);
-	BOOST_REQUIRE(_tObj.count("gasLimit") > 0);
-	BOOST_REQUIRE(_tObj.count("nonce")> 0);
-	BOOST_REQUIRE(_tObj.count("to") > 0);
-
-	BOOST_REQUIRE(_tObj.count("v") > 0);
-	BOOST_REQUIRE(_tObj.count("r") > 0);
-	BOOST_REQUIRE(_tObj.count("s") > 0);
-
 	//Construct Rlp of the given transaction
 	RLPStream rlpStream;
-	rlpStream.appendList(9);
-	rlpStream <<  bigint(_tObj["nonce"].get_str()) << bigint(_tObj["gasPrice"].get_str()) << bigint(_tObj["gasLimit"].get_str());
-	if (_tObj["to"].get_str().empty())
-		rlpStream << "";
-	else
-		rlpStream << Address(_tObj["to"].get_str());
-	rlpStream << bigint(_tObj["value"].get_str()) << importData(_tObj);
-	rlpStream << bigint(_tObj["v"].get_str()) << bigint(_tObj["r"].get_str()) << bigint(_tObj["s"].get_str());
+	rlpStream.appendList(_tObj.size());
 
-	return Transaction(rlpStream.out(), CheckSignature::Sender);
+	if (_tObj.count("nonce") > 0)
+		rlpStream << bigint(_tObj["nonce"].get_str());
+
+	if (_tObj.count("gasPrice") > 0)
+		rlpStream << bigint(_tObj["gasPrice"].get_str());
+
+	if (_tObj.count("gasLimit") > 0)
+		rlpStream << bigint(_tObj["gasLimit"].get_str());
+
+	if (_tObj.count("to") > 0)
+	{
+		if (_tObj["to"].get_str().empty())
+			rlpStream << "";
+		else
+			rlpStream << importByteArray(_tObj["to"].get_str());
+	}
+
+	if (_tObj.count("value") > 0)
+		rlpStream << bigint(_tObj["value"].get_str());
+
+	if (_tObj.count("data") > 0)
+		rlpStream << importData(_tObj);
+
+	if (_tObj.count("v") > 0)
+		rlpStream << bigint(_tObj["v"].get_str());
+
+	if (_tObj.count("r") > 0)
+		rlpStream << bigint(_tObj["r"].get_str());
+
+	if (_tObj.count("s") > 0)
+		rlpStream <<  bigint(_tObj["s"].get_str());
+
+	if (_tObj.count("extrafield") > 0)
+		rlpStream << bigint(_tObj["extrafield"].get_str());
+
+	return rlpStream;
 }
 
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
@@ -83,7 +100,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_REQUIRE(o.count("transaction") > 0);
 
 			mObject tObj = o["transaction"].get_obj();
-			Transaction txFromFields = createTransactionFromFields(tObj);
+			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(),CheckSignature::Sender);
 
 			//Check the fields restored from RLP to original fields
 			BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), "Data in given RLP not matching the Transaction data!");
@@ -105,44 +122,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			mObject tObj = o["transaction"].get_obj();
 
 			//Construct Rlp of the given transaction
-			RLPStream rlpStream;
-			rlpStream.appendList(tObj.size());
-
-			if (tObj.count("nonce") > 0)
-				rlpStream << bigint(tObj["nonce"].get_str());
-
-			if (tObj.count("gasPrice") > 0)
-				rlpStream << bigint(tObj["gasPrice"].get_str());
-
-			if (tObj.count("gasLimit") > 0)
-				rlpStream << bigint(tObj["gasLimit"].get_str());
-
-			if (tObj.count("to") > 0)
-			{
-				if (tObj["to"].get_str().empty())
-					rlpStream << "";
-				else
-					rlpStream << Address(tObj["to"].get_str());
-			}
-
-			if (tObj.count("value") > 0)
-				rlpStream << bigint(tObj["value"].get_str());
-
-			if (tObj.count("data") > 0)
-				rlpStream << importData(tObj);
-
-			if (tObj.count("v") > 0)
-				rlpStream << bigint(tObj["v"].get_str());
-
-			if (tObj.count("r") > 0)
-				rlpStream << bigint(tObj["r"].get_str());
-
-			if (tObj.count("s") > 0)
-				rlpStream <<  bigint(tObj["s"].get_str());
-
-			if (tObj.count("extrafield") > 0)
-				rlpStream << bigint(tObj["extrafield"].get_str());
-
+			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
 			o["rlp"] = "0x" + toHex(rlpStream.out());
 
 			try
@@ -150,9 +130,6 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				Transaction txFromFields(rlpStream.out(), CheckSignature::Sender);
 				if (!txFromFields.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
-
-				//cause Address is length20 array, when trying to create address from sting of another length, field "to" would be diffrent from RLP encoded Address
-				BOOST_CHECK_MESSAGE(Address(tObj["to"].get_str()) == txFromFields.receiveAddress(), "seems that transaction 'to' address has wrong format");
 
 				o["sender"] = toString(txFromFields.sender());
 			}
@@ -163,7 +140,6 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		}
 	}//for
 }//doTransactionTests
-
 } }// Namespace Close
 
 
