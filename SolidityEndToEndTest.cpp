@@ -2107,7 +2107,7 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
 		})";
 	compileAndRun(sourceCode);
 
-	BOOST_CHECK(callContractFunction("foo(uint256,uint256,uint256)", 10 , 12, 13) == encodeArgs(
+	BOOST_CHECK(callContractFunction("foo(uint256,uint256,uint256)", 10, 12, 13) == encodeArgs(
 					dev::sha3(
 						toBigEndian(u256(10)) +
 						toBigEndian(u256(12)) +
