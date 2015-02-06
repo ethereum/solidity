@@ -144,7 +144,29 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			}
 			catch(...)
 			{
+				cnote << "block construction did throw an unknow exception\n";
 				o.erase(o.find("block"));
+			}
+
+			BOOST_REQUIRE(o.count("transactions") > 0);
+
+			for (auto const& txObj: o["transactions"].get_array())
+			{
+				mObject tx = txObj.get_obj();
+				BOOST_REQUIRE(tx.count("nonce") > 0);
+				BOOST_REQUIRE(tx.count("gasPrice") > 0);
+				BOOST_REQUIRE(tx.count("gasLimit") > 0);
+				BOOST_REQUIRE(tx.count("to") > 0);
+				BOOST_REQUIRE(tx.count("value") > 0);
+				BOOST_REQUIRE(tx.count("v") > 0);
+				BOOST_REQUIRE(tx.count("r") > 0);
+				BOOST_REQUIRE(tx.count("s") > 0);
+				BOOST_REQUIRE(tx.count("data") > 0);
+
+				Transaction txFromFields = createTransactionFromFields(tx);
+
+
+
 			}
 		}
 	}
