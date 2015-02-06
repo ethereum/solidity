@@ -209,19 +209,19 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 
 	unsigned result = 0;
 	bool done = false;
+	
+	// Host must be configured not to share peers.
+	Host host1("Forwarder", NetworkPreferences(30305, "", false, true));
+	host1.setIdealPeerCount(1);
+	auto whost1 = host1.registerCapability(new WhisperHost());
+	host1.start();
+	while (!host1.isStarted())
+		this_thread::sleep_for(chrono::milliseconds(2));
 
-	Public listenerid;
 	bool startedForwarder = false;
 	std::thread forwarder([&]()
 	{
 		setThreadName("forwarder");
-
-		// Host must be configured not to share peers.
-		Host ph("Forwarder", NetworkPreferences(30305, "", false, true));
-		ph.setIdealPeerCount(0);
-		auto wh = ph.registerCapability(new WhisperHost());
-		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.start();
 		
 		this_thread::sleep_for(chrono::milliseconds(500));
 //		ph.addNode("127.0.0.1", 30303, 30303);
@@ -229,13 +229,13 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		startedForwarder = true;
 
 		/// Only interested in odd packets
-		auto w = wh->installWatch(BuildTopicMask("test"));
+		auto w = whost1->installWatch(BuildTopicMask("test"));
 
 		while (!done)
 		{
-			for (auto i: wh->checkWatch(w))
+			for (auto i: whost1->checkWatch(w))
 			{
-				Message msg = wh->envelope(i).open(wh->fullTopic(w));
+				Message msg = whost1->envelope(i).open(whost1->fullTopic(w));
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 			}
 			this_thread::sleep_for(chrono::milliseconds(50));
@@ -245,28 +245,28 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 	while (!startedForwarder)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
+	Host host2("Sender", NetworkPreferences(30300, "", false, true));
+	host2.setIdealPeerCount(1);
+	shared_ptr<WhisperHost> whost2 = host2.registerCapability(new WhisperHost());
+	host2.start();
+	while (!host2.isStarted())
+		this_thread::sleep_for(chrono::milliseconds(2));
+	host2.addNode(host1.id(), "127.0.0.1", 30305, 30305);
+	
 	{
-		Host ph("Sender", NetworkPreferences(30300, "", false, true));
-		ph.setIdealPeerCount(0);
-		shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
-		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.start();
-		this_thread::sleep_for(chrono::milliseconds(500));
-//		ph.addNode("127.0.0.1", 30305, 30305);
-
 		KeyPair us = KeyPair::create();
-		wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
+		whost2->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
 		this_thread::sleep_for(chrono::milliseconds(250));
 	}
 
 	{
 		Host ph("Listener", NetworkPreferences(30300, "", false, true));
-		ph.setIdealPeerCount(0);
+		ph.setIdealPeerCount(1);
 		shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
-		this_thread::sleep_for(chrono::milliseconds(500));
 		ph.start();
-		this_thread::sleep_for(chrono::milliseconds(500));
-//		ph.addNode("127.0.0.1", 30305, 30305);
+		while (!ph.isStarted())
+			this_thread::sleep_for(chrono::milliseconds(2));
+		ph.addNode(host1.id(), "127.0.0.1", 30305, 30305);
 
 		/// Only interested in odd packets
 		auto w = wh->installWatch(BuildTopicMask("test"));
