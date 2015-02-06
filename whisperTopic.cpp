@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		setThreadName("listener");
 
 		// Host must be configured not to share peers.
-		Host ph("Listner", NetworkPreferences(50303, "", false, true));
+		Host ph("Listner", NetworkPreferences(30303, "", false, true));
 		ph.setIdealPeerCount(0);
 		auto wh = ph.registerCapability(new WhisperHost());
 		ph.start();
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 			this_thread::sleep_for(chrono::milliseconds(50));
 
 		// Host must be configured not to share peers.
-		Host ph("Forwarder", NetworkPreferences(50305, "", false, true));
+		Host ph("Forwarder", NetworkPreferences(30305, "", false, true));
 		ph.setIdealPeerCount(0);
 		auto wh = ph.registerCapability(new WhisperHost());
 		this_thread::sleep_for(chrono::milliseconds(500));
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		fwderid = ph.id();
 
 		this_thread::sleep_for(chrono::milliseconds(500));
-		ph.addNode(phid, "127.0.0.1", 50303, 50303);
+		ph.addNode(phid, "127.0.0.1", 30303, 30303);
 
 		startedForwarder = true;
 
@@ -174,13 +174,13 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	while (!startedForwarder)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
-	Host ph("Sender", NetworkPreferences(50300, "", false, true));
+	Host ph("Sender", NetworkPreferences(30300, "", false, true));
 	ph.setIdealPeerCount(0);
 	shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
 	this_thread::sleep_for(chrono::milliseconds(500));
 	ph.start();
 	this_thread::sleep_for(chrono::milliseconds(500));
-	ph.addNode(fwderid, "127.0.0.1", 50305, 50305);
+	ph.addNode(fwderid, "127.0.0.1", 30305, 30305);
 
 	KeyPair us = KeyPair::create();
 	wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
@@ -210,14 +210,14 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		setThreadName("forwarder");
 
 		// Host must be configured not to share peers.
-		Host ph("Forwarder", NetworkPreferences(50305, "", false, true));
+		Host ph("Forwarder", NetworkPreferences(30305, "", false, true));
 		ph.setIdealPeerCount(0);
 		auto wh = ph.registerCapability(new WhisperHost());
 		this_thread::sleep_for(chrono::milliseconds(500));
 		ph.start();
 		
 		this_thread::sleep_for(chrono::milliseconds(500));
-//		ph.addNode("127.0.0.1", 50303, 50303);
+//		ph.addNode("127.0.0.1", 30303, 30303);
 
 		startedForwarder = true;
 
@@ -239,13 +239,13 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
 	{
-		Host ph("Sender", NetworkPreferences(50300, "", false, true));
+		Host ph("Sender", NetworkPreferences(30300, "", false, true));
 		ph.setIdealPeerCount(0);
 		shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
 		this_thread::sleep_for(chrono::milliseconds(500));
 		ph.start();
 		this_thread::sleep_for(chrono::milliseconds(500));
-//		ph.addNode("127.0.0.1", 50305, 50305);
+//		ph.addNode("127.0.0.1", 30305, 30305);
 
 		KeyPair us = KeyPair::create();
 		wh->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
@@ -253,13 +253,13 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 	}
 
 	{
-		Host ph("Listener", NetworkPreferences(50300, "", false, true));
+		Host ph("Listener", NetworkPreferences(30300, "", false, true));
 		ph.setIdealPeerCount(0);
 		shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
 		this_thread::sleep_for(chrono::milliseconds(500));
 		ph.start();
 		this_thread::sleep_for(chrono::milliseconds(500));
-//		ph.addNode("127.0.0.1", 50305, 50305);
+//		ph.addNode("127.0.0.1", 30305, 30305);
 
 		/// Only interested in odd packets
 		auto w = wh->installWatch(BuildTopicMask("test"));

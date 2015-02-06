@@ -87,7 +87,7 @@ struct TestNodeTable: public NodeTable
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
 		for (auto& n: _testNodes)
 			if (_count--)
-				noteNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
+				noteActiveNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
 			else
 				break;
 	}
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	// Not yet a 'real' test.
 	TestNodeTableHost node(8);
 	node.start();
-	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
+	node.nodeTable->discover(); // ideally, joining with empty node table logs warning we can check for
 	node.setup();
 	node.populate();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
@@ -199,11 +199,11 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.populate(1);
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
-	node.nodeTable->join();
+	node.nodeTable->discover();
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 
-	BOOST_REQUIRE_EQUAL(node.nodeTable->size(), 8);
+	BOOST_REQUIRE_EQUAL(node.nodeTable->count(), 8);
 	
 	auto netNodes = node.nodeTable->nodes();
 	netNodes.sort();
