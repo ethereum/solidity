@@ -1112,13 +1112,22 @@ private:
 };
 
 /**
- * A literal string or number. @see Type::literalToBigEndian is used to actually parse its value.
+ * A literal string or number. @see ExpressionCompiler::endVisit() is used to actually parse its value.
  */
 class Literal: public PrimaryExpression
 {
 public:
-	Literal(Location const& _location, Token::Value _token, ASTPointer<ASTString> const& _value):
-		PrimaryExpression(_location), m_token(_token), m_value(_value) {}
+	enum class SubDenomination
+	{
+		None = Token::ILLEGAL,
+		Wei = Token::SubWei,
+		Szabo = Token::SubSzabo,
+		Finney = Token::SubFinney,
+		Ether = Token::SubEther
+	};
+	Literal(Location const& _location, Token::Value _token,
+			ASTPointer<ASTString> const& _value,
+			Token::Value _sub = Token::ILLEGAL);
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
@@ -1127,9 +1136,12 @@ public:
 	/// @returns the non-parsed value of the literal
 	ASTString const& getValue() const { return *m_value; }
 
+	SubDenomination getSubDenomination() const { return m_subDenomination; }
+
 private:
 	Token::Value m_token;
 	ASTPointer<ASTString> m_value;
+	SubDenomination m_subDenomination;
 };
 
 /// @}

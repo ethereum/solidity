@@ -326,15 +326,39 @@ string IntegerConstantType::toString() const
 	return "int_const " + m_value.str();
 }
 
-u256 IntegerConstantType::literalValue(Literal const*) const
+u256 IntegerConstantType::literalValue(Literal const* _literal) const
 {
+	u256 value;
 	// we ignore the literal and hope that the type was correctly determined
 	solAssert(m_value <= u256(-1), "Integer constant too large.");
 	solAssert(m_value >= -(bigint(1) << 255), "Integer constant too small.");
+
 	if (m_value >= 0)
-		return u256(m_value);
+		value = u256(m_value);
 	else
-		return s2u(s256(m_value));
+		value = s2u(s256(m_value));
+
+	if (_literal)
+	{
+		Literal::SubDenomination sub =_literal->getSubDenomination();
+		switch(sub)
+		{
+		case Literal::SubDenomination::Wei:
+		case Literal::SubDenomination::None:
+			break;
+		case Literal::SubDenomination::Szabo:
+			value *= u256(1000000000000);
+			break;
+		case Literal::SubDenomination::Finney:
+			value *= u256(1000000000000000);
+			break;
+		case Literal::SubDenomination::Ether:
+			value *= u256(1000000000000000000);
+			break;
+		}
+	}
+
+	return value;
 }
 
 shared_ptr<IntegerType const> IntegerConstantType::getIntegerType() const
