@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 	out.sign(k.sec());
 
 	bytesConstRef packet(out.data.data(), out.data.size());
-	bytesConstRef rlpBytes(packet.cropped(97, packet.size() - 97));
+	bytesConstRef rlpBytes(packet.cropped(h256::size + Signature::size + 1));
 	Neighbours in = Neighbours::fromBytesConstRef(to, rlpBytes);
 	int count = 0;
 	for (auto n: in.nodes)
