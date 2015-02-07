@@ -387,6 +387,26 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
+        Json::Value eth_getWork() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->CallMethod("eth_getWork",p);
+            if (result.isArray())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        bool eth_submitWork(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            Json::Value result = this->CallMethod("eth_submitWork",p);
+            if (result.isBool())
+                return result.asBool();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
         bool db_put(const std::string& param1, const std::string& param2, const std::string& param3) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
