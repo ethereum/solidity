@@ -110,9 +110,9 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 
 		bigint biValue256 = bigint("115792089237316195423570985008687907853269984665640564039457584007913129639936");
 		if (bigint(o["balance"].get_str()) >= biValue256)
-			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
 		if (bigint(o["nonce"].get_str()) >= biValue256)
-			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
 
 		Address address = Address(i.first);
 
@@ -148,14 +148,13 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 
 	bigint biValue256 = bigint("115792089237316195423570985008687907853269984665640564039457584007913129639936");
 	if (bigint(_o["nonce"].get_str()) >= biValue256)
-		BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
+		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
 	if (bigint(_o["gasPrice"].get_str()) >= biValue256)
-		BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
+		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
 	if (bigint(_o["gasLimit"].get_str()) >= biValue256)
-		BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
+		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
 	if (bigint(_o["value"].get_str()) >= biValue256)
-		BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
-
+		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
 	m_transaction = _o["to"].get_str().empty() ?
 		Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :

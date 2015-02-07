@@ -100,7 +100,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_REQUIRE(o.count("transaction") > 0);
 
 			mObject tObj = o["transaction"].get_obj();
-			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(),CheckSignature::Sender);
+			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckSignature::Sender);
 
 			//Check the fields restored from RLP to original fields
 			BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), "Data in given RLP not matching the Transaction data!");
