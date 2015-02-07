@@ -679,6 +679,19 @@ BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations)
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
 
+BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations_in_expressions)
+{
+	char const* text = R"(
+		contract c {
+			function c ()
+			{
+				 a = 1 wei * 100 wei + 7 szabo - 3;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
