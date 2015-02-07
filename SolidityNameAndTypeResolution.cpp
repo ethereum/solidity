@@ -904,6 +904,34 @@ BOOST_AUTO_TEST_CASE(invalid_parameter_names_in_named_args)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(disallow_declaration_of_void_type)
+{
+	char const* sourceCode = "contract c { function f() { var x = f(); } }";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
+{
+	char const* sourceCodeFine = R"(
+		contract c {
+			function c ()
+			{
+				 a = 115792089237316195423570985008687907853269984665640564039458;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCodeFine));
+	char const* sourceCode = R"(
+		contract c {
+			function c ()
+			{
+				 a = 115792089237316195423570985008687907853269984665640564039458 ether;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
