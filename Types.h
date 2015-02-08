@@ -177,7 +177,6 @@ public:
 	virtual MemberList const& getMembers() const { return isAddress() ? AddressMemberList : EmptyMemberList; }
 
 	virtual std::string toString() const override;
-	virtual TypePointer getRealType() const { return std::make_shared<IntegerType>(m_bits, m_modifier); }
 
 	int getNumBits() const { return m_bits; }
 	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
@@ -248,7 +247,6 @@ public:
 
 	virtual std::string toString() const override { return "string" + dev::toString(m_bytes); }
 	virtual u256 literalValue(Literal const* _literal) const override;
-	virtual TypePointer getRealType() const override { return std::make_shared<StaticStringType>(m_bytes); }
 
 	int getNumBytes() const { return m_bytes; }
 
