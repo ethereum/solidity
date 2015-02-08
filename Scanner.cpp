@@ -465,8 +465,14 @@ void Scanner::scanToken()
 				token = Token::Sub;
 			break;
 		case '*':
-			// * *=
-			token = selectToken('=', Token::AssignMul, Token::Mul);
+			// * ** *=
+			advance();
+			if (m_char == '*')
+				token = selectToken(Token::Exp);
+			else if (m_char == '=')
+				token = selectToken(Token::AssignMul);
+			else
+				token = Token::Mul;
 			break;
 		case '%':
 			// % %=

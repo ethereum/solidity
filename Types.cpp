@@ -320,6 +320,16 @@ TypePointer IntegerConstantType::binaryOperatorResult(Token::Value _operator, Ty
 				return TypePointer();
 			value = m_value % other.m_value;
 			break;
+		case Token::Exp:
+			if (other.m_value < 0)
+				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("exponent can't be negative"));
+			else
+			{
+				value = boost::multiprecision::powm(m_value, other.m_value, bigint(2) << 256);
+				if (value >= (bigint(1) << 256))
+					BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("exp result overflowed"));
+			}
+			break;
 		default:
 			return TypePointer();
 		}

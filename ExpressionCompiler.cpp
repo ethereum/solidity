@@ -650,6 +650,9 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	case Token::Mod:
 		m_context << (c_isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
 		break;
+	case Token::Exp:
+		m_context << eth::Instruction::EXP;
+		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
 	}
