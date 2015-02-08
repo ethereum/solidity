@@ -13,6 +13,8 @@ add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 add_dependencies(${EXECUTABLE} BuildInfo.h)
 
+target_link_libraries(${EXECUTABLE} ${Boost_DATE_TIME_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${Boost_CHRONO_LIBRARIES})
 target_link_libraries(${EXECUTABLE} lll)
 target_link_libraries(${EXECUTABLE} evmcore)
 target_link_libraries(${EXECUTABLE} devcore)
