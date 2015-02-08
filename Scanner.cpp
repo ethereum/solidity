@@ -458,10 +458,7 @@ void Scanner::scanToken()
 			// - -- -=
 			advance();
 			if (m_char == '-')
-			{
-				advance();
-				token = Token::DEC;
-			}
+				token = selectToken(Token::DEC);
 			else if (m_char == '=')
 				token = selectToken(Token::ASSIGN_SUB);
 			else
