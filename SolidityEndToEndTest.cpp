@@ -56,6 +56,36 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 	BOOST_CHECK(callContractFunction("i_am_not_there()", bytes()).empty());
 }
 
+BOOST_AUTO_TEST_CASE(exp_operator)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint d) { return 2 ** a; }
+		})";
+	compileAndRun(sourceCode);
+	testSolidityAgainstCppOnRange("f(uint256)", [](u256 const& a) -> u256 { return u256(1 << a.convert_to<int>()); }, 0, 16);
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_const)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) { return 2 ** 3; }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(8)));
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(int d) { return -2 ** 3; }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(-8)));
+}
+
 BOOST_AUTO_TEST_CASE(recursive_calls)
 {
 	char const* sourceCode = "contract test {\n"
