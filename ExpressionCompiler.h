@@ -94,13 +94,16 @@ private:
 									bool bare = false);
 	/// Appends code that copies the given arguments to memory (with optional offset).
 	/// @returns the number of bytes copied to memory
-	unsigned appendArgumentCopyToMemory(TypePointers const& _types,
-										std::vector<ASTPointer<Expression const>> const& _arguments,
-										unsigned _memoryOffset = 0);
+	unsigned appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
+										 TypePointers const& _types = {},
+										 unsigned _memoryOffset = 0);
 	/// Appends code that copies a type to memory.
 	/// @returns the number of bytes copied to memory
 	unsigned appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,
 												 Location const& _location, unsigned _memoryOffset = 0);
+	/// Appends code that moves a type to memory
+	/// @returns the number of bytes copied to memory
+	unsigned moveTypeToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset, bool _padToWordBoundaries = true);
 	/// Appends code that evaluates a single expression and copies it to memory (with optional offset).
 	/// @returns the number of bytes copied to memory
 	unsigned appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression,

@@ -489,15 +489,18 @@ void FunctionCall::checkTypeRequirements()
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
 		TypePointers const& parameterTypes = functionType->getParameterTypes();
-		if (parameterTypes.size() != m_arguments.size())
+		if (functionType->getLocation() != FunctionType::Location::SHA3 && parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 
 		if (m_names.empty())
 		{
 			for (size_t i = 0; i < m_arguments.size(); ++i)
-				if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
+				if (functionType->getLocation() != FunctionType::Location::SHA3 &&
+					!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
 					BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
 		}
+		else if (functionType->getLocation() == FunctionType::Location::SHA3)
+			BOOST_THROW_EXCEPTION(createTypeError("Named arguments can't be used for SHA3."));
 		else
 		{
 			auto const& parameterNames = functionType->getParameterNames();
