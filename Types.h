@@ -76,7 +76,9 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		INTEGER, INTEGER_CONSTANT, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE, MODIFIER, MAGIC
+		Integer, IntegerConstant, Bool, Real,
+		String, Contract, Struct, Function,
+		Mapping, Void, Type, Modifier, Magic
 	};
 
 	///@{
@@ -158,9 +160,9 @@ class IntegerType: public Type
 public:
 	enum class Modifier
 	{
-		UNSIGNED, SIGNED, HASH, ADDRESS
+		UNSIGNED, SIGNED, Hash, Address
 	};
-	virtual Category getCategory() const override { return Category::INTEGER; }
+	virtual Category getCategory() const override { return Category::Integer; }
 
 	explicit IntegerType(int _bits, Modifier _modifier = Modifier::UNSIGNED);
 
@@ -180,8 +182,8 @@ public:
 	virtual TypePointer getRealType() const { return std::make_shared<IntegerType>(m_bits, m_modifier); }
 
 	int getNumBits() const { return m_bits; }
-	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
-	bool isAddress() const { return m_modifier == Modifier::ADDRESS; }
+	bool isHash() const { return m_modifier == Modifier::Hash || m_modifier == Modifier::Address; }
+	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::SIGNED; }
 
 	static const MemberList AddressMemberList;
@@ -198,7 +200,7 @@ private:
 class IntegerConstantType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::INTEGER_CONSTANT; }
+	virtual Category getCategory() const override { return Category::IntegerConstant; }
 
 	explicit IntegerConstantType(Literal const& _literal);
 	explicit IntegerConstantType(bigint _value): m_value(_value) {}
@@ -231,7 +233,7 @@ private:
 class StaticStringType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::STRING; }
+	virtual Category getCategory() const override { return Category::String; }
 
 	/// @returns the smallest string type for the given literal or an empty pointer
 	/// if no type fits.
@@ -263,7 +265,7 @@ class BoolType: public Type
 {
 public:
 	BoolType() {}
-	virtual Category getCategory() const { return Category::BOOL; }
+	virtual Category getCategory() const { return Category::Bool; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
@@ -281,7 +283,7 @@ public:
 class ContractType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::CONTRACT; }
+	virtual Category getCategory() const override { return Category::Contract; }
 	explicit ContractType(ContractDefinition const& _contract, bool _super = false):
 		m_contract(_contract), m_super(_super) {}
 	/// Contracts can be implicitly converted to super classes and to addresses.
@@ -323,7 +325,7 @@ private:
 class StructType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::STRUCT; }
+	virtual Category getCategory() const override { return Category::Struct; }
 	explicit StructType(StructDefinition const& _struct): m_struct(_struct) {}
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
@@ -362,7 +364,7 @@ public:
 						  SET_GAS, SET_VALUE, BLOCKHASH,
 						  BARE };
 
-	virtual Category getCategory() const override { return Category::FUNCTION; }
+	virtual Category getCategory() const override { return Category::Function; }
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	explicit FunctionType(EventDefinition const& _event);
@@ -435,7 +437,7 @@ private:
 class MappingType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::MAPPING; }
+	virtual Category getCategory() const override { return Category::Mapping; }
 	MappingType(TypePointer const& _keyType, TypePointer const& _valueType):
 		m_keyType(_keyType), m_valueType(_valueType) {}
 
@@ -458,7 +460,7 @@ private:
 class VoidType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::VOID; }
+	virtual Category getCategory() const override { return Category::Void; }
 	VoidType() {}
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
@@ -476,7 +478,7 @@ public:
 class TypeType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::TYPE; }
+	virtual Category getCategory() const override { return Category::Type; }
 	explicit TypeType(TypePointer const& _actualType, ContractDefinition const* _currentContract = nullptr):
 		m_actualType(_actualType), m_currentContract(_currentContract) {}
 	TypePointer const& getActualType() const { return m_actualType; }
@@ -505,7 +507,7 @@ private:
 class ModifierType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::MODIFIER; }
+	virtual Category getCategory() const override { return Category::Modifier; }
 	explicit ModifierType(ModifierDefinition const& _modifier);
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
@@ -529,7 +531,7 @@ class MagicType: public Type
 {
 public:
 	enum class Kind { BLOCK, MSG, TX };
-	virtual Category getCategory() const override { return Category::MAGIC; }
+	virtual Category getCategory() const override { return Category::Magic; }
 
 	explicit MagicType(Kind _kind);
 

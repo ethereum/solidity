@@ -1119,7 +1119,7 @@ class Literal: public PrimaryExpression
 public:
 	enum class SubDenomination
 	{
-		None = Token::ILLEGAL,
+		None = Token::Illegal,
 		Wei = Token::SubWei,
 		Szabo = Token::SubSzabo,
 		Finney = Token::SubFinney,
