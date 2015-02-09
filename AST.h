@@ -250,7 +250,7 @@ public:
 
 	/// Returns the constructor or nullptr if no constructor was specified.
 	FunctionDefinition const* getConstructor() const;
-	/// Returns the fallback function or nullptr if no constructor was specified.
+	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* getFallbackFunction() const;
 
 private:

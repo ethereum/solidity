@@ -58,10 +58,21 @@ void ContractDefinition::checkTypeRequirements()
 		BOOST_THROW_EXCEPTION(constructor->getReturnParameterList()->createTypeError(
 									"Non-empty \"returns\" directive for constructor."));
 
-	FunctionDefinition const* fallbackFunction = getFallbackFunction();
-	if (fallbackFunction && fallbackFunction->getScope() == this && !fallbackFunction->getParameters().empty())
-		BOOST_THROW_EXCEPTION(fallbackFunction->getParameterList().createTypeError(
-									"Fallback function cannot take parameters."));
+	FunctionDefinition const* fallbackFunction = nullptr;
+	for (ASTPointer<FunctionDefinition> const& function: getDefinedFunctions())
+	{
+		if (function->getName().empty())
+		{
+			if (fallbackFunction)
+				BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Only one fallback function is allowed."));
+			else
+			{
+				fallbackFunction = function.get();
+				if (!fallbackFunction->getParameters().empty())
+					BOOST_THROW_EXCEPTION(fallbackFunction->getParameterList().createTypeError("Fallback function cannot take parameters."));
+			}
+		}
+	}
 
 	for (ASTPointer<ModifierDefinition> const& modifier: getFunctionModifiers())
 		modifier->checkTypeRequirements();

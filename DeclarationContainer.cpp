@@ -30,6 +30,9 @@ namespace solidity
 
 bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, bool _update)
 {
+	if (_declaration.getName().empty())
+		return true;
+
 	if (!_update && m_declarations.find(_declaration.getName()) != m_declarations.end())
 		return false;
 	m_declarations[_declaration.getName()] = &_declaration;
@@ -38,6 +41,7 @@ bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, 
 
 Declaration const* DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
 {
+	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	auto result = m_declarations.find(_name);
 	if (result != m_declarations.end())
 		return result->second;

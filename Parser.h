@@ -50,6 +50,7 @@ private:
 		bool allowVar = false;
 		bool isStateVariable = false;
 		bool allowIndexed = false;
+		bool allowEmptyName = false;
 	};
 
 	///@{
