@@ -180,13 +180,13 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 
 Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
 {
-	Declaration::Visibility visibility(Declaration::Visibility::DEFAULT);
+	Declaration::Visibility visibility(Declaration::Visibility::Default);
 	if (_token == Token::Public)
-		visibility = Declaration::Visibility::PUBLIC;
+		visibility = Declaration::Visibility::Public;
 	else if (_token == Token::Protected)
-		visibility = Declaration::Visibility::PROTECTED;
+		visibility = Declaration::Visibility::Protected;
 	else if (_token == Token::Private)
-		visibility = Declaration::Visibility::PRIVATE;
+		visibility = Declaration::Visibility::Private;
 	else
 		solAssert(false, "Invalid visibility specifier.");
 	m_scanner->next();
@@ -208,7 +208,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 		name = expectIdentifierToken();
 	ASTPointer<ParameterList> parameters(parseParameterList());
 	bool isDeclaredConst = false;
-	Declaration::Visibility visibility(Declaration::Visibility::DEFAULT);
+	Declaration::Visibility visibility(Declaration::Visibility::Default);
 	vector<ASTPointer<ModifierInvocation>> modifiers;
 	while (true)
 	{
@@ -222,7 +222,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 			modifiers.push_back(parseModifierInvocation());
 		else if (Token::isVisibilitySpecifier(token))
 		{
-			if (visibility != Declaration::Visibility::DEFAULT)
+			if (visibility != Declaration::Visibility::Default)
 				BOOST_THROW_EXCEPTION(createParserError("Multiple visibility specifiers."));
 			visibility = parseVisibilitySpecifier(token);
 		}
@@ -272,7 +272,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(VarDeclParserOp
 	bool isIndexed = false;
 	ASTPointer<ASTString> identifier;
 	Token::Value token = m_scanner->getCurrentToken();
-	Declaration::Visibility visibility(Declaration::Visibility::DEFAULT);
+	Declaration::Visibility visibility(Declaration::Visibility::Default);
 	if (_options.isStateVariable && Token::isVisibilitySpecifier(token))
 		visibility = parseVisibilitySpecifier(token);
 	if (_options.allowIndexed && token == Token::Indexed)

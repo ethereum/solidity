@@ -132,17 +132,17 @@ private:
 class Declaration: public ASTNode
 {
 public:
-	enum class LValueType { NONE, LOCAL, STORAGE };
-	enum class Visibility { DEFAULT, PUBLIC, PROTECTED, PRIVATE };
+	enum class LValueType { None, Local, Storage };
+	enum class Visibility { Default, Public, Protected, Private };
 
 	Declaration(Location const& _location, ASTPointer<ASTString> const& _name,
-				Visibility _visibility = Visibility::DEFAULT):
+				Visibility _visibility = Visibility::Default):
 		ASTNode(_location), m_name(_name), m_visibility(_visibility), m_scope(nullptr) {}
 
 	/// @returns the declared name.
 	ASTString const& getName() const { return *m_name; }
-	Visibility getVisibility() const { return m_visibility == Visibility::DEFAULT ? getDefaultVisibility() : m_visibility; }
-	bool isPublic() const { return getVisibility() == Visibility::PUBLIC; }
+	Visibility getVisibility() const { return m_visibility == Visibility::Default ? getDefaultVisibility() : m_visibility; }
+	bool isPublic() const { return getVisibility() == Visibility::Public; }
 
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
@@ -154,10 +154,10 @@ public:
 	/// contract types.
 	virtual TypePointer getType(ContractDefinition const* m_currentContract = nullptr) const = 0;
 	/// @returns the lvalue type of expressions referencing this declaration
-	virtual LValueType getLValueType() const { return LValueType::NONE; }
+	virtual LValueType getLValueType() const { return LValueType::None; }
 
 protected:
-	virtual Visibility getDefaultVisibility() const { return Visibility::PUBLIC; }
+	virtual Visibility getDefaultVisibility() const { return Visibility::Public; }
 
 private:
 	ASTPointer<ASTString> m_name;
@@ -414,7 +414,7 @@ public:
 	bool isIndexed() const { return m_isIndexed; }
 
 protected:
-	Visibility getDefaultVisibility() const override { return Visibility::PROTECTED; }
+	Visibility getDefaultVisibility() const override { return Visibility::Protected; }
 
 private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
@@ -847,8 +847,8 @@ public:
 	virtual void checkTypeRequirements() = 0;
 
 	std::shared_ptr<Type const> const& getType() const { return m_type; }
-	bool isLValue() const { return m_lvalue != Declaration::LValueType::NONE; }
-	bool isLocalLValue() const { return m_lvalue == Declaration::LValueType::LOCAL; }
+	bool isLValue() const { return m_lvalue != Declaration::LValueType::None; }
+	bool isLocalLValue() const { return m_lvalue == Declaration::LValueType::Local; }
 
 	/// Helper function, infer the type via @ref checkTypeRequirements and then check that it
 	/// is implicitly convertible to @a _expectedType. If not, throw exception.
@@ -865,7 +865,7 @@ protected:
 	std::shared_ptr<Type const> m_type;
 	//! If this expression is an lvalue (i.e. something that can be assigned to) and is stored
 	//! locally or in storage. This is set during calls to @a checkTypeRequirements()
-	Declaration::LValueType m_lvalue = Declaration::LValueType::NONE;
+	Declaration::LValueType m_lvalue = Declaration::LValueType::None;
 	//! Whether the outer expression requested the address (true) or the value (false) of this expression.
 	bool m_lvalueRequested = false;
 };

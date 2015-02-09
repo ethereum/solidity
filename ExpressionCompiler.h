@@ -120,7 +120,7 @@ private:
 	class LValue
 	{
 	public:
-		enum LValueType { NONE, STACK, MEMORY, STORAGE };
+		enum class LValueType { NONE, STACK, MEMORY, STORAGE };
 
 		explicit LValue(CompilerContext& _compilerContext): m_context(&_compilerContext) { reset(); }
 		LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType, unsigned _baseStackOffset = 0);
@@ -130,15 +130,15 @@ private:
 		void fromIdentifier(Identifier const& _identifier, Declaration const& _declaration);
 		/// Convenience function to set type for a state variable and retrieve the reference
 		void fromStateVariable(Declaration const& _varDecl, TypePointer const& _type);
-		void reset() { m_type = NONE; m_baseStackOffset = 0; m_size = 0; }
+		void reset() { m_type = LValueType::NONE; m_baseStackOffset = 0; m_size = 0; }
 
-		bool isValid() const { return m_type != NONE; }
-		bool isInOnStack() const { return m_type == STACK; }
-		bool isInMemory() const { return m_type == MEMORY; }
-		bool isInStorage() const { return m_type == STORAGE; }
+		bool isValid() const { return m_type != LValueType::NONE; }
+		bool isInOnStack() const { return m_type == LValueType::STACK; }
+		bool isInMemory() const { return m_type == LValueType::MEMORY; }
+		bool isInStorage() const { return m_type == LValueType::STORAGE; }
 
 		/// @returns true if this lvalue reference type occupies a slot on the stack.
-		bool storesReferenceOnStack() const { return m_type == STORAGE || m_type == MEMORY; }
+		bool storesReferenceOnStack() const { return m_type == LValueType::STORAGE || m_type == LValueType::MEMORY; }
 
 		/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
 		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).
@@ -162,7 +162,7 @@ private:
 		void retrieveValueFromStorage(TypePointer const& _type, bool _remove = false) const;
 
 		CompilerContext* m_context;
-		LValueType m_type = NONE;
+		LValueType m_type = LValueType::NONE;
 		/// If m_type is STACK, this is base stack offset (@see
 		/// CompilerContext::getBaseStackOffsetOfVariable) of a local variable.
 		unsigned m_baseStackOffset = 0;

@@ -279,9 +279,9 @@ string FunctionDefinition::getCanonicalSignature() const
 Declaration::LValueType VariableDeclaration::getLValueType() const
 {
 	if (dynamic_cast<FunctionDefinition const*>(getScope()) || dynamic_cast<ModifierDefinition const*>(getScope()))
-		return Declaration::LValueType::LOCAL;
+		return Declaration::LValueType::Local;
 	else
-		return Declaration::LValueType::STORAGE;
+		return Declaration::LValueType::Storage;
 }
 
 TypePointer ModifierDefinition::getType(ContractDefinition const*) const
@@ -577,7 +577,7 @@ void MemberAccess::checkTypeRequirements()
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
 											  "visible in " + type.toString()));
 	//@todo later, this will not always be STORAGE
-	m_lvalue = type.getCategory() == Type::Category::Struct ? Declaration::LValueType::STORAGE : Declaration::LValueType::NONE;
+	m_lvalue = type.getCategory() == Type::Category::Struct ? Declaration::LValueType::Storage : Declaration::LValueType::None;
 }
 
 void IndexAccess::checkTypeRequirements()
@@ -589,7 +589,7 @@ void IndexAccess::checkTypeRequirements()
 	MappingType const& type = dynamic_cast<MappingType const&>(*m_base->getType());
 	m_index->expectType(*type.getKeyType());
 	m_type = type.getValueType();
-	m_lvalue = Declaration::LValueType::STORAGE;
+	m_lvalue = Declaration::LValueType::Storage;
 }
 
 void Identifier::checkTypeRequirements()
