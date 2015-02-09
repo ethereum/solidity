@@ -180,7 +180,7 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 
 Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
 {
-	Declaration::Visibility visibility = Declaration::Visibility::DEFAULT;
+	Declaration::Visibility visibility(Declaration::Visibility::DEFAULT);
 	if (_token == Token::PUBLIC)
 		visibility = Declaration::Visibility::PUBLIC;
 	else if (_token == Token::PROTECTED)
@@ -278,20 +278,17 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(VarDeclParserOp
 		isIndexed = true;
 		m_scanner->next();
 	}
+	nodeFactory.markEndPosition();
 	if (_options.allowEmptyName && m_scanner->getCurrentToken() != Token::IDENTIFIER)
 	{
 		identifier = make_shared<ASTString>("");
 		nodeFactory.setEndPositionFromNode(type);
 	}
 	else
-	{
-		nodeFactory.markEndPosition();
 		identifier = expectIdentifierToken();
-	}
-	nodeFactory.markEndPosition();
 	return nodeFactory.createNode<VariableDeclaration>(type, identifier,
-													   visibility, _options.isStateVariable,
-													   isIndexed);
+												   visibility, _options.isStateVariable,
+												   isIndexed);
 }
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
