@@ -2113,6 +2113,33 @@ BOOST_AUTO_TEST_CASE(event_lots_of_data)
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(address,hash256,uint256,bool)")));
 }
 
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint, uint k) returns(uint ret_k, uint ret_g){
+				uint g = 8;
+				ret_k = k;
+				ret_g = g;
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", 5, 9) != encodeArgs(5, 8));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", 5, 9) == encodeArgs(9, 8));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint k) returns(uint){
+				return k;
+		}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", 9) == encodeArgs(9));
+}
+
 BOOST_AUTO_TEST_CASE(sha3_multiple_arguments)
 {
 	char const* sourceCode = R"(

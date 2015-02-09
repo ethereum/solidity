@@ -409,7 +409,78 @@ BOOST_AUTO_TEST_CASE(inherited)
 
 	checkInterface(sourceCode, interface);
 }
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
+{
+	char const* sourceCode = R"(
+	contract test {
+		function f(uint, uint k) returns(uint ret_k, uint ret_g){
+			uint g = 8;
+			ret_k = k;
+			ret_g = g;
+		}
+	})";
 
+	char const* interface = R"([
+	{
+		"name": "f",
+		"constant": false,
+		"type": "function",
+		"inputs": [
+		{
+			"name": "",
+			"type": "uint256"
+		},
+		{
+			"name": "k",
+			"type": "uint256"
+		}
+		],
+		"outputs": [
+		{
+			"name": "ret_k",
+			"type": "uint256"
+		},
+		{
+			"name": "ret_g",
+			"type": "uint256"
+		}
+		]
+	}
+	])";
+
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
+{
+	char const* sourceCode = R"(
+		contract test {
+		function f(uint k) returns(uint){
+			return k;
+		}
+	})";
+
+	char const* interface = R"([
+	{
+		"name": "f",
+		"constant": false,
+		"type": "function",
+		"inputs": [
+		{
+			"name": "k",
+			"type": "uint256"
+		}
+		],
+		"outputs": [
+		{
+			"name": "",
+			"type": "uint256"
+		}
+		]
+	}
+	])";
+	checkInterface(sourceCode, interface);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
