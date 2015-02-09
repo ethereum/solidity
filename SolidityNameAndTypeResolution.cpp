@@ -904,6 +904,48 @@ BOOST_AUTO_TEST_CASE(invalid_parameter_names_in_named_args)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint){
+		}
+	})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f() returns(bool){
+		}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint, uint k) returns(uint ret_k){
+				return k;
+		}
+	})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
+{
+	char const* text = R"(
+		contract test {
+			function f() returns(uint ret_k, uint){
+				return 5;
+		}
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(disallow_declaration_of_void_type)
 {
 	char const* sourceCode = "contract c { function f() { var x = f(); } }";
