@@ -161,22 +161,22 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 	std::string title;
 	switch(_type)
 	{
-	case DocumentationType::ABI_INTERFACE:
+	case DocumentationType::ABIInterface:
 		argName = g_argAbiStr;
 		suffix = ".abi";
 		title = "Contract JSON ABI";
 		break;
-	case DocumentationType::ABI_SOLIDITY_INTERFACE:
+	case DocumentationType::ABISolidityInterface:
 		argName = g_argSolAbiStr;
 		suffix = ".sol";
 		title = "Contract Solidity ABI";
 		break;
-	case DocumentationType::NATSPEC_USER:
+	case DocumentationType::NatspecUser:
 		argName = g_argNatspecUserStr;
 		suffix = ".docuser";
 		title = "User Documentation";
 		break;
-	case DocumentationType::NATSPEC_DEV:
+	case DocumentationType::NatspecDev:
 		argName = g_argNatspecDevStr;
 		suffix = ".docdev";
 		title = "Developer Documentation";
@@ -436,10 +436,10 @@ void CommandLineInterface::actOnInput()
 		}
 
 		handleBytecode(contract);
-		handleMeta(DocumentationType::ABI_INTERFACE, contract);
-		handleMeta(DocumentationType::ABI_SOLIDITY_INTERFACE, contract);
-		handleMeta(DocumentationType::NATSPEC_DEV, contract);
-		handleMeta(DocumentationType::NATSPEC_USER, contract);
+		handleMeta(DocumentationType::ABIInterface, contract);
+		handleMeta(DocumentationType::ABISolidityInterface, contract);
+		handleMeta(DocumentationType::NatspecDev, contract);
+		handleMeta(DocumentationType::NatspecUser, contract);
 	} // end of contracts iteration
 }
 
