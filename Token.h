@@ -67,27 +67,27 @@ namespace solidity
 
 #define IGNORE_TOKEN(name, string, precedence)
 
-#define TOKEN_LIST(T, K)                                               \
-	/* End of source indicator. */                                     \
-	T(EOS, "EOS", 0)                                                   \
-	\
-	/* Punctuators (ECMA-262, section 7.7, page 15). */                \
-	T(LParen, "(", 0)                                                  \
-	T(RParen, ")", 0)                                                  \
-	T(LBrack, "[", 0)                                                  \
-	T(RBrack, "]", 0)                                                  \
-	T(LBrace, "{", 0)                                                  \
-	T(RBrace, "}", 0)                                                  \
-	T(Colon, ":", 0)                                                   \
-	T(Semicolon, ";", 0)                                               \
-	T(Period, ".", 0)                                                  \
-	T(Conditional, "?", 3)                                             \
-	T(Arrow, "=>", 0)                                                  \
-	\
-	/* Assignment operators. */                                        \
-	/* IsAssignmentOp() relies on this block of enum values being */   \
-	/* contiguous and sorted in the same order!*/                      \
-	T(Assign, "=", 2)                                                  \
+#define TOKEN_LIST(T, K)												\
+	/* End of source indicator. */										\
+	T(EOS, "EOS", 0)													\
+																		\
+	/* Punctuators (ECMA-262, section 7.7, page 15). */				\
+	T(LParen, "(", 0)													\
+	T(RParen, ")", 0)													\
+	T(LBrack, "[", 0)													\
+	T(RBrack, "]", 0)													\
+	T(LBrace, "{", 0)													\
+	T(RBrace, "}", 0)													\
+	T(Colon, ":", 0)													\
+	T(Semicolon, ";", 0)												\
+	T(Period, ".", 0)													\
+	T(Conditional, "?", 3)												\
+	T(Arrow, "=>", 0)													\
+																		\
+	/* Assignment operators. */										\
+	/* IsAssignmentOp() relies on this block of enum values being */	\
+	/* contiguous and sorted in the same order!*/						\
+	T(Assign, "=", 2)													\
 	/* The following have to be in exactly the same order as the simple binary operators*/ \
 	T(AssignBitOr, "|=", 2)                                          \
 	T(AssignBitXor, "^=", 2)                                         \
