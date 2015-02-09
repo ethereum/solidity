@@ -92,20 +92,18 @@ private:
 	/// Appends code to call a function of the given type with the given arguments.
 	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
 									bool bare = false);
-	/// Appends code that copies the given arguments to memory (with optional offset).
-	/// @returns the number of bytes copied to memory
+	/// Appends code that evaluates the given arguments and moves the result to memory (with optional offset).
+	/// @returns the number of bytes moved to memory
 	unsigned appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
 										 TypePointers const& _types = {},
-										 unsigned _memoryOffset = 0);
-	/// Appends code that copies a type to memory.
-	/// @returns the number of bytes copied to memory
-	unsigned appendTypeConversionAndMoveToMemory(Type const& _expectedType, Type const& _type,
-												 Location const& _location, unsigned _memoryOffset = 0);
-	/// Appends code that moves a type to memory
-	/// @returns the number of bytes copied to memory
-	unsigned moveTypeToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset, bool _padToWordBoundaries = true);
-	/// Appends code that evaluates a single expression and copies it to memory (with optional offset).
-	/// @returns the number of bytes copied to memory
+										 unsigned _memoryOffset = 0,
+										 bool _padToWordBoundaries = true);
+	/// Appends code that moves a stack element of the given type to memory
+	/// @returns the number of bytes moved to memory
+	unsigned appendTypeMoveToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset,
+									bool _padToWordBoundaries = true);
+	/// Appends code that evaluates a single expression and moves the result to memory (with optional offset).
+	/// @returns the number of bytes moved to memory
 	unsigned appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression,
 										  unsigned _memoryOffset = 0);
 
