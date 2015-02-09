@@ -93,7 +93,7 @@ private:
 	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
 									bool bare = false);
 	/// Appends code that evaluates the given arguments and moves the result to memory (with optional offset).
-	/// @returns the number of bytes moven to memory
+	/// @returns the number of bytes moved to memory
 	unsigned appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
 										 TypePointers const& _types = {},
 										 unsigned _memoryOffset = 0,
