@@ -48,7 +48,7 @@ public:
 			auto msg = std::string("Parsing contract failed with: ") + boost::diagnostic_information(_e);
 			BOOST_FAIL(msg);
 		}
-		std::string generatedInterfaceString = m_compilerStack.getMetadata("", DocumentationType::ABI_INTERFACE);
+		std::string generatedInterfaceString = m_compilerStack.getMetadata("", DocumentationType::ABIInterface);
 		Json::Value generatedInterface;
 		m_reader.parse(generatedInterfaceString, generatedInterface);
 		Json::Value expectedInterface;
