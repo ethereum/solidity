@@ -112,6 +112,18 @@ void StructDefinition::accept(ASTVisitor& _visitor)
 	_visitor.endVisit(*this);
 }
 
+void EnumDefinition::accept(ASTVisitor& _visitor)
+{
+	_visitor.visit(*this)
+	_visitor.endVisit(*this);
+}
+
+void EnumDefinition::accept(ASTConstVisitor& _visitor) const
+{
+	_visitor.visit(*this)
+	_visitor.endVisit(*this);
+}
+
 void StructDefinition::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))

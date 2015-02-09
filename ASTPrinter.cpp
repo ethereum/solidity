@@ -71,6 +71,18 @@ bool ASTPrinter::visit(StructDefinition const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(EnumDefinition const& _node)
+{
+	writeLine("EnumDefinition \"" + _node.getName() + "\"");
+	return goDeeper();
+}
+
+bool ASTPrinter::visit(EnuumDeclaration const& _node)
+{
+	writeLine("EnumValue \"" + _node.getName() + "\"");
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(ParameterList const& _node)
 {
 	writeLine("ParameterList");
@@ -343,6 +355,16 @@ void ASTPrinter::endVisit(InheritanceSpecifier const&)
 }
 
 void ASTPrinter::endVisit(StructDefinition const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(EnumDefinition const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(EnumDeclaration const&)
 {
 	m_indentation--;
 }

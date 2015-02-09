@@ -166,6 +166,18 @@ private:
 };
 
 /**
+ * Declaration of an Enum Value
+ */
+class EnumDeclaration : public Declaration
+{
+	EnumDeclaration(Location const& _location,
+					ASTPointer<ASTString> const& _name):
+	Declaration(_location, _name) {}
+
+	TypePointer getType(ContractDefinition const*) const;
+};
+
+/**
  * Abstract class that is added to each AST node that can store local variables.
  */
 class VariableScope
@@ -209,6 +221,7 @@ public:
 					   ASTPointer<ASTString> const& _documentation,
 					   std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
 					   std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
+					   std::vector<ASTPointer<EnumDefinition>> const& _definedEnums,
 					   std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
 					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
 					   std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
@@ -216,6 +229,7 @@ public:
 		Declaration(_location, _name), Documented(_documentation),
 		m_baseContracts(_baseContracts),
 		m_definedStructs(_definedStructs),
+		m_definedEnums(_definedEnums),
 		m_stateVariables(_stateVariables),
 		m_definedFunctions(_definedFunctions),
 		m_functionModifiers(_functionModifiers),
@@ -227,6 +241,7 @@ public:
 
 	std::vector<ASTPointer<InheritanceSpecifier>> const& getBaseContracts() const { return m_baseContracts; }
 	std::vector<ASTPointer<StructDefinition>> const& getDefinedStructs() const { return m_definedStructs; }
+	std::vector<ASTPointer<EnumDefinition>> const& getDefinedEnums() const { return m_definedEnums; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getStateVariables() const { return m_stateVariables; }
 	std::vector<ASTPointer<ModifierDefinition>> const& getFunctionModifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<FunctionDefinition>> const& getDefinedFunctions() const { return m_definedFunctions; }
@@ -260,6 +275,7 @@ private:
 
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
 	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
+	std::vector<ASTPointer<EnumDefinition>> m_definedEnums;
 	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
 	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
@@ -313,6 +329,28 @@ private:
 	void checkRecursion() const;
 
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
+};
+
+class EnumDefinition: public Declaration
+{
+public:
+	EnumDefinition(Location const& _location,
+				   ASTPointer<ASTString> const& _name,
+				   std::vector<ASTPointer<EnumDeclaration>> const& _members):
+		Declaration(_location, _name), m_members(_members) {}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	std::vector<ASTPointer<EnumDeclaration>> const& getMembers() const { return m_members; }
+
+	virtual TypePointer getType(ContractDefinition const*) const override;
+
+	/// Checks that the members do not include any duplicate names
+	void checkValidityOfMembers() const;
+
+private:
+
+	std::vector<ASTPointer<EnumDeclaration>> m_members;
 };
 
 /**

@@ -61,6 +61,8 @@ private:
 	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
+	ASTPointer<EnumDefinition> parseEnumDefinition();
+	ASTPointer<EnumDeclaration> parseEnumDeclaration();
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(VarDeclParserOptions const& _options = VarDeclParserOptions());
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<EventDefinition> parseEventDefinition();
@@ -96,6 +98,7 @@ private:
 	void expectToken(Token::Value _value);
 	Token::Value expectAssignmentOperator();
 	ASTPointer<ASTString> expectIdentifierToken();
+	ASTPointer<ASTString> peekIdentifierToken();
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
