@@ -479,7 +479,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	{
 		StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
 		m_context << type.getStorageOffsetOfMember(member) << eth::Instruction::ADD;
-		m_currentLValue = LValue(m_context, LValue::LValueType::STORAGE, *_memberAccess.getType());
+		m_currentLValue = LValue(m_context, LValue::LValueType::Storage, *_memberAccess.getType());
 		m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 		break;
 	}
@@ -515,7 +515,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	length += CompilerUtils(m_context).storeInMemory(length);
 	m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
 
-	m_currentLValue = LValue(m_context, LValue::LValueType::STORAGE, *_indexAccess.getType());
+	m_currentLValue = LValue(m_context, LValue::LValueType::Storage, *_indexAccess.getType());
 	m_currentLValue.retrieveValueIfLValueNotRequested(_indexAccess);
 
 	return false;
@@ -922,7 +922,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			m_context << eth::Instruction::DUP1
 					  << structType->getStorageOffsetOfMember(names[i])
 					  << eth::Instruction::ADD;
-			m_currentLValue = LValue(m_context, LValue::LValueType::STORAGE, *types[i]);
+			m_currentLValue = LValue(m_context, LValue::LValueType::Storage, *types[i]);
 			m_currentLValue.retrieveValue(types[i], Location(), true);
 			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
 			m_context << eth::Instruction::SWAP1;
@@ -934,7 +934,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		// simple value
 		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
-		m_currentLValue = LValue(m_context, LValue::LValueType::STORAGE, *returnType);
+		m_currentLValue = LValue(m_context, LValue::LValueType::Storage, *returnType);
 		m_currentLValue.retrieveValue(returnType, Location(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
@@ -948,7 +948,7 @@ ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType
 {
 	//@todo change the type cast for arrays
 	solAssert(_dataType.getStorageSize() <= numeric_limits<unsigned>::max(), "The storage size of " +_dataType.toString() + " should fit in unsigned");
-	if (m_type == LValueType::STORAGE)
+	if (m_type == LValueType::Storage)
 		m_size = unsigned(_dataType.getStorageSize());
 	else
 		m_size = unsigned(_dataType.getSizeOnStack());
@@ -958,7 +958,7 @@ void ExpressionCompiler::LValue::retrieveValue(TypePointer const& _type, Locatio
 {
 	switch (m_type)
 	{
-	case LValueType::STACK:
+	case LValueType::Stack:
 	{
 		unsigned stackPos = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset));
 		if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
@@ -968,10 +968,10 @@ void ExpressionCompiler::LValue::retrieveValue(TypePointer const& _type, Locatio
 			*m_context << eth::dupInstruction(stackPos + 1);
 		break;
 	}
-	case LValueType::STORAGE:
+	case LValueType::Storage:
 		retrieveValueFromStorage(_type, _remove);
 		break;
-	case LValueType::MEMORY:
+	case LValueType::Memory:
 		if (!_type->isValueType())
 			break; // no distinction between value and reference for non-value types
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_location)
@@ -1007,7 +1007,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 {
 	switch (m_type)
 	{
-	case LValueType::STACK:
+	case LValueType::Stack:
 	{
 		unsigned stackDiff = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset)) - m_size + 1;
 		if (stackDiff > 16)
@@ -1020,7 +1020,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 			retrieveValue(_expression.getType(), _expression.getLocation());
 		break;
 	}
-	case LValueType::STORAGE:
+	case LValueType::Storage:
 		if (!_expression.getType()->isValueType())
 			break; // no distinction between value and reference for non-value types
 		// stack layout: value value ... value ref
@@ -1045,7 +1045,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 						   << u256(1) << eth::Instruction::SWAP1 << eth::Instruction::SUB;
 		}
 		break;
-	case LValueType::MEMORY:
+	case LValueType::Memory:
 		if (!_expression.getType()->isValueType())
 			break; // no distinction between value and reference for non-value types
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
@@ -1062,7 +1062,7 @@ void ExpressionCompiler::LValue::setToZero(Expression const& _expression) const
 {
 	switch (m_type)
 	{
-	case LValueType::STACK:
+	case LValueType::Stack:
 	{
 		unsigned stackDiff = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset));
 		if (stackDiff > 16)
@@ -1074,7 +1074,7 @@ void ExpressionCompiler::LValue::setToZero(Expression const& _expression) const
 						<< eth::Instruction::POP;
 		break;
 	}
-	case LValueType::STORAGE:
+	case LValueType::Storage:
 		if (m_size == 0)
 			*m_context << eth::Instruction::POP;
 		for (unsigned i = 0; i < m_size; ++i)
@@ -1086,7 +1086,7 @@ void ExpressionCompiler::LValue::setToZero(Expression const& _expression) const
 							<< u256(1) << eth::Instruction::ADD;
 		}
 		break;
-	case LValueType::MEMORY:
+	case LValueType::Memory:
 		if (!_expression.getType()->isValueType())
 			break; // no distinction between value and reference for non-value types
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
@@ -1111,7 +1111,7 @@ void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(Expression co
 
 void ExpressionCompiler::LValue::fromStateVariable(Declaration const& _varDecl, TypePointer const& _type)
 {
-	m_type = LValueType::STORAGE;
+	m_type = LValueType::Storage;
 	solAssert(_type->getStorageSize() <= numeric_limits<unsigned>::max(), "The storage size of " + _type->toString() + " should fit in an unsigned");
 	*m_context << m_context->getStorageLocationOfVariable(_varDecl);
 	m_size = unsigned(_type->getStorageSize());
@@ -1121,7 +1121,7 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 {
 	if (m_context->isLocalVariable(&_declaration))
 	{
-		m_type = LValueType::STACK;
+		m_type = LValueType::Stack;
 		m_size = _identifier.getType()->getSizeOnStack();
 		m_baseStackOffset = m_context->getBaseStackOffsetOfVariable(_declaration);
 	}
