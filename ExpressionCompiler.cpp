@@ -227,7 +227,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 		switch (function.getLocation())
 		{
-		case Location::INTERNAL:
+		case Location::Internal:
 		{
 			// Calling convention: Caller pushes return address and arguments
 			// Callee removes them and pushes return values
@@ -253,12 +253,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				CompilerUtils(m_context).popStackElement(*function.getReturnParameterTypes()[i]);
 			break;
 		}
-		case Location::EXTERNAL:
-		case Location::BARE:
+		case Location::External:
+		case Location::Bare:
 			_functionCall.getExpression().accept(*this);
-			appendExternalFunctionCall(function, arguments, function.getLocation() == Location::BARE);
+			appendExternalFunctionCall(function, arguments, function.getLocation() == Location::Bare);
 			break;
-		case Location::CREATION:
+		case Location::Creation:
 		{
 			_functionCall.getExpression().accept(*this);
 			solAssert(!function.gasSet(), "Gas limit set for contract creation.");
@@ -287,7 +287,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << eth::swapInstruction(1) << eth::Instruction::POP;
 			break;
 		}
-		case Location::SET_GAS:
+		case Location::SetGas:
 		{
 			// stack layout: contract_address function_id [gas] [value]
 			_functionCall.getExpression().accept(*this);
@@ -302,7 +302,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << eth::Instruction::POP;
 			break;
 		}
-		case Location::SET_VALUE:
+		case Location::SetValue:
 			// stack layout: contract_address function_id [gas] [value]
 			_functionCall.getExpression().accept(*this);
 			// Note that function is not the original function, but the ".value" function.
@@ -311,16 +311,16 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << eth::Instruction::POP;
 			arguments.front()->accept(*this);
 			break;
-		case Location::SEND:
+		case Location::Send:
 			_functionCall.getExpression().accept(*this);
 			m_context << u256(0); // 0 gas, we do not want to execute code
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(),
 								 *function.getParameterTypes().front(), true);
 			appendExternalFunctionCall(FunctionType(TypePointers{}, TypePointers{},
-													Location::EXTERNAL, true, true), {}, true);
+													Location::External, true, true), {}, true);
 			break;
-		case Location::SUICIDE:
+		case Location::Suicide:
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(), *function.getParameterTypes().front(), true);
 			m_context << eth::Instruction::SUICIDE;
@@ -331,13 +331,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
 			break;
 		}
-		case Location::LOG0:
-		case Location::LOG1:
-		case Location::LOG2:
-		case Location::LOG3:
-		case Location::LOG4:
+		case Location::Log0:
+		case Location::Log1:
+		case Location::Log2:
+		case Location::Log3:
+		case Location::Log4:
 		{
-			unsigned logNumber = int(function.getLocation()) - int(Location::LOG0);
+			unsigned logNumber = int(function.getLocation()) - int(Location::Log0);
 			for (unsigned arg = logNumber; arg > 0; --arg)
 			{
 				arguments[arg]->accept(*this);
@@ -349,7 +349,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << u256(length) << u256(0) << eth::logInstruction(logNumber);
 			break;
 		}
-		case Location::EVENT:
+		case Location::Event:
 		{
 			_functionCall.getExpression().accept(*this);
 			auto const& event = dynamic_cast<EventDefinition const&>(function.getDeclaration());
@@ -375,18 +375,18 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << u256(memLength) << u256(0) << eth::logInstruction(numIndexed);
 			break;
 		}
-		case Location::BLOCKHASH:
+		case Location::BlockHash:
 		{
 			arguments[0]->accept(*this);
 			appendTypeConversion(*arguments[0]->getType(), *function.getParameterTypes()[0], true);
 			m_context << eth::Instruction::BLOCKHASH;
 			break;
 		}
-		case Location::ECRECOVER:
+		case Location::ECRecover:
 		case Location::SHA256:
 		case Location::RIPEMD160:
 		{
-			static const map<Location, u256> contractAddresses{{Location::ECRECOVER, 1},
+			static const map<Location, u256> contractAddresses{{Location::ECRecover, 1},
 															   {Location::SHA256, 2},
 															   {Location::RIPEMD160, 3}};
 			m_context << contractAddresses.find(function.getLocation())->second;

@@ -565,7 +565,7 @@ void NewExpression::checkTypeRequirements()
 	shared_ptr<ContractType const> contractType = make_shared<ContractType>(*m_contract);
 	TypePointers const& parameterTypes = contractType->getConstructorType()->getParameterTypes();
 	m_type = make_shared<FunctionType>(parameterTypes, TypePointers{contractType},
-									   FunctionType::Location::CREATION);
+									   FunctionType::Location::Creation);
 }
 
 void MemberAccess::checkTypeRequirements()

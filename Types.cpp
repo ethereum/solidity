@@ -45,8 +45,8 @@ shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
 			bytes = 32;
 		int modifier = offset / 33;
 		return make_shared<IntegerType>(bytes * 8,
-										modifier == 0 ? IntegerType::Modifier::SIGNED :
-										modifier == 1 ? IntegerType::Modifier::UNSIGNED :
+										modifier == 0 ? IntegerType::Modifier::Signed :
+										modifier == 1 ? IntegerType::Modifier::Unsigned :
 										IntegerType::Modifier::Hash);
 	}
 	else if (_typeToken == Token::Address)
@@ -211,10 +211,10 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 const MemberList IntegerType::AddressMemberList =
 	MemberList({{"balance", make_shared<IntegerType >(256)},
 				{"callstring32", make_shared<FunctionType>(strings{"string32"}, strings{},
-														   FunctionType::Location::BARE)},
+														   FunctionType::Location::Bare)},
 				{"callstring32string32", make_shared<FunctionType>(strings{"string32", "string32"},
-																   strings{}, FunctionType::Location::BARE)},
-				{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::SEND)}});
+																   strings{}, FunctionType::Location::Bare)},
+				{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::Send)}});
 
 IntegerConstantType::IntegerConstantType(Literal const& _literal)
 {
@@ -374,8 +374,8 @@ shared_ptr<IntegerType const> IntegerConstantType::getIntegerType() const
 		return shared_ptr<IntegerType const>();
 	else
 		return make_shared<IntegerType>(max(bytesRequired(value), 1u) * 8,
-										negative ? IntegerType::Modifier::SIGNED
-												 : IntegerType::Modifier::UNSIGNED);
+										negative ? IntegerType::Modifier::Signed
+												 : IntegerType::Modifier::Unsigned);
 }
 
 shared_ptr<StaticStringType> StaticStringType::smallestTypeForLiteral(string const& _literal)
@@ -616,7 +616,7 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 }
 
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
-	m_location(_isInternal ? Location::INTERNAL : Location::EXTERNAL),
+	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),
 	m_declaration(&_function)
 {
@@ -646,7 +646,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
-	m_location(Location::EXTERNAL), m_isConstant(true), m_declaration(&_varDecl)
+	m_location(Location::External), m_isConstant(true), m_declaration(&_varDecl)
 {
 	TypePointers params;
 	vector<string> paramNames;
@@ -683,7 +683,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 }
 
 FunctionType::FunctionType(const EventDefinition& _event):
-	m_location(Location::EVENT), m_declaration(&_event)
+	m_location(Location::Event), m_declaration(&_event)
 {
 	TypePointers params;
 	vector<string> paramNames;
@@ -740,9 +740,9 @@ string FunctionType::toString() const
 unsigned FunctionType::getSizeOnStack() const
 {
 	unsigned size = 0;
-	if (m_location == Location::EXTERNAL)
+	if (m_location == Location::External)
 		size = 2;
-	else if (m_location == Location::INTERNAL || m_location == Location::BARE)
+	else if (m_location == Location::Internal || m_location == Location::Bare)
 		size = 1;
 	if (m_gasSet)
 		size++;
@@ -755,22 +755,22 @@ MemberList const& FunctionType::getMembers() const
 {
 	switch (m_location)
 	{
-	case Location::EXTERNAL:
-	case Location::CREATION:
-	case Location::ECRECOVER:
+	case Location::External:
+	case Location::Creation:
+	case Location::ECRecover:
 	case Location::SHA256:
 	case Location::RIPEMD160:
-	case Location::BARE:
+	case Location::Bare:
 		if (!m_members)
 		{
 			map<string, TypePointer> members{
 				{"gas", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
 												  TypePointers{copyAndSetGasOrValue(true, false)},
-												  Location::SET_GAS, m_gasSet, m_valueSet)},
+												  Location::SetGas, m_gasSet, m_valueSet)},
 				{"value", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
 													TypePointers{copyAndSetGasOrValue(false, true)},
-													Location::SET_VALUE, m_gasSet, m_valueSet)}};
-			if (m_location == Location::CREATION)
+													Location::SetValue, m_gasSet, m_valueSet)}};
+			if (m_location == Location::Creation)
 				members.erase("gas");
 			m_members.reset(new MemberList(members));
 		}
@@ -919,20 +919,20 @@ MagicType::MagicType(MagicType::Kind _kind):
 {
 	switch (m_kind)
 	{
-	case Kind::BLOCK:
+	case Kind::Block:
 		m_members = MemberList({{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"timestamp", make_shared<IntegerType>(256)},
-								{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"hash"}, FunctionType::Location::BLOCKHASH)},
+								{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"hash"}, FunctionType::Location::BlockHash)},
 								{"difficulty", make_shared<IntegerType>(256)},
 								{"number", make_shared<IntegerType>(256)},
 								{"gaslimit", make_shared<IntegerType>(256)}});
 		break;
-	case Kind::MSG:
+	case Kind::Message:
 		m_members = MemberList({{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"gas", make_shared<IntegerType>(256)},
 								{"value", make_shared<IntegerType>(256)}});
 		break;
-	case Kind::TX:
+	case Kind::Transaction:
 		m_members = MemberList({{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"gasprice", make_shared<IntegerType>(256)}});
 		break;
@@ -953,11 +953,11 @@ string MagicType::toString() const
 {
 	switch (m_kind)
 	{
-	case Kind::BLOCK:
+	case Kind::Block:
 		return "block";
-	case Kind::MSG:
+	case Kind::Message:
 		return "msg";
-	case Kind::TX:
+	case Kind::Transaction:
 		return "tx";
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));

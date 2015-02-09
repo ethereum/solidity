@@ -160,11 +160,11 @@ class IntegerType: public Type
 public:
 	enum class Modifier
 	{
-		UNSIGNED, SIGNED, Hash, Address
+		Unsigned, Signed, Hash, Address
 	};
 	virtual Category getCategory() const override { return Category::Integer; }
 
-	explicit IntegerType(int _bits, Modifier _modifier = Modifier::UNSIGNED);
+	explicit IntegerType(int _bits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -184,7 +184,7 @@ public:
 	int getNumBits() const { return m_bits; }
 	bool isHash() const { return m_modifier == Modifier::Hash || m_modifier == Modifier::Address; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
-	bool isSigned() const { return m_modifier == Modifier::SIGNED; }
+	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
 	static const MemberList AddressMemberList;
 
@@ -357,23 +357,23 @@ public:
 	/// BARE: contract address (non-abi contract call)
 	/// OTHERS: special virtual function, nothing on the stack
 	/// @todo This documentation is outdated, and Location should rather be named "Type"
-	enum class Location { INTERNAL, EXTERNAL, CREATION, SEND,
-						  SHA3, SUICIDE,
-						  ECRECOVER, SHA256, RIPEMD160,
-						  LOG0, LOG1, LOG2, LOG3, LOG4, EVENT,
-						  SET_GAS, SET_VALUE, BLOCKHASH,
-						  BARE };
+	enum class Location { Internal, External, Creation, Send,
+						  SHA3, Suicide,
+						  ECRecover, SHA256, RIPEMD160,
+						  Log0, Log1, Log2, Log3, Log4, Event,
+						  SetGas, SetValue, BlockHash,
+						  Bare };
 
 	virtual Category getCategory() const override { return Category::Function; }
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	explicit FunctionType(EventDefinition const& _event);
 	FunctionType(strings const& _parameterTypes, strings const& _returnParameterTypes,
-				 Location _location = Location::INTERNAL):
+				 Location _location = Location::Internal):
 		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),
 					 _location) {}
 	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
-				 Location _location = Location::INTERNAL,
+				 Location _location = Location::Internal,
 				 bool _gasSet = false, bool _valueSet = false):
 		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),
 		m_location(_location), m_gasSet(_gasSet), m_valueSet(_valueSet) {}
@@ -530,7 +530,7 @@ private:
 class MagicType: public Type
 {
 public:
-	enum class Kind { BLOCK, MSG, TX };
+	enum class Kind { Block, Message, Transaction };
 	virtual Category getCategory() const override { return Category::Magic; }
 
 	explicit MagicType(Kind _kind);
