@@ -214,11 +214,33 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
                 cnote << "state sync did throw an exception: " << _e.what();
             }
 
-            // write block and rlp to json
+			o["rlp"] = "0x" + toHex(theState.blockData());
 
-            //TODO if block rlp is invalid, delete transactions, and block
+			// write block header
 
+			mObject oBlockHeader;
+			BlockInfo current_BlockHeader = theState.info();
+			oBlockHeader["parentHash"] = toString(current_BlockHeader.parentHash);
+			oBlockHeader["uncleHash"] = toString(current_BlockHeader.sha3Uncles);
+			oBlockHeader["coinbase"] = toString(current_BlockHeader.coinbaseAddress);
+			oBlockHeader["stateRoot"] = toString(current_BlockHeader.stateRoot);
+			oBlockHeader["transactionsTrie"] = toString(current_BlockHeader.transactionsRoot);
+			oBlockHeader["receiptTrie"] = toString(current_BlockHeader.receiptsRoot);
+			oBlockHeader["bloom"] = toString(current_BlockHeader.logBloom);
+			oBlockHeader["difficulty"] = toString(current_BlockHeader.difficulty);
+			oBlockHeader["number"] = toString(current_BlockHeader.number);
+			oBlockHeader["gasLimit"] = toString(current_BlockHeader.gasLimit);
+			oBlockHeader["gasUsed"] = toString(current_BlockHeader.gasUsed);
+			oBlockHeader["timestamp"] = toString(current_BlockHeader.timestamp);
+			oBlockHeader["extraData"] = toHex(current_BlockHeader.extraData);
+			oBlockHeader["nonce"] = toString(current_BlockHeader.nonce);
 
+			o["blockHeader"] = oBlockHeader;
+
+			// write uncle list
+
+			mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles. That might change.
+			o["uncleHeaders"] = aUncleList;
 		}
 	}
 }
