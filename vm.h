@@ -25,8 +25,11 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
 #include <cstdint>
+
+// Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include <json_spirit/json_spirit.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>

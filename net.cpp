@@ -19,8 +19,10 @@
  * @date 2014
  */
 
+// Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include <libdevcore/Worker.h>
 #include <libdevcrypto/Common.h>
 #include <libp2p/UDP.h>
@@ -44,7 +46,7 @@ public:
 	void start() { startWorking(); }
 	void doWork() { m_io.run(); }
 	void doneWorking() { m_io.reset(); m_io.poll(); m_io.reset(); }
-	
+
 protected:
 	ba::io_service m_io;
 };
@@ -53,23 +55,23 @@ struct TestNodeTable: public NodeTable
 {
 	/// Constructor
 	TestNodeTable(ba::io_service& _io, KeyPair _alias, uint16_t _port = 30300): NodeTable(_io, _alias, _port) {}
-	
+
 	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(unsigned _count)
 	{
 		std::vector<std::pair<KeyPair,unsigned>> ret;
 		asserts(_count < 1000);
 		static uint16_t s_basePort = 30500;
-		
+
 		ret.clear();
 		for (unsigned i = 0; i < _count; i++)
 		{
 			KeyPair k = KeyPair::create();
 			ret.push_back(make_pair(k,s_basePort+i));
 		}
-		
+
 		return std::move(ret);
 	}
-	
+
 	void pingTestNodes(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
 	{
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
@@ -79,7 +81,7 @@ struct TestNodeTable: public NodeTable
 			this_thread::sleep_for(chrono::milliseconds(2));
 		}
 	}
-	
+
 	void populateTestNodes(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes, size_t _count = 0)
 	{
 		if (!_count)
@@ -92,7 +94,7 @@ struct TestNodeTable: public NodeTable
 			else
 				break;
 	}
-	
+
 	void reset()
 	{
 		Guard l(x_state);
@@ -109,13 +111,13 @@ struct TestNodeTableHost: public TestHost
 	~TestNodeTableHost() { m_io.stop(); stopWorking(); }
 
 	void setup() { for (auto n: testNodes) nodeTables.push_back(make_shared<TestNodeTable>(m_io,n.first,n.second)); }
-	
+
 	void pingAll() { for (auto& t: nodeTables) t->pingTestNodes(testNodes); }
-	
+
 	void populateAll(size_t _count = 0) { for (auto& t: nodeTables) t->populateTestNodes(testNodes, _count); }
-	
+
 	void populate(size_t _count = 0) { nodeTable->populateTestNodes(testNodes, _count); }
-	
+
 	KeyPair m_alias;
 	shared_ptr<TestNodeTable> nodeTable;
 	std::vector<std::pair<KeyPair,unsigned>> testNodes; // keypair and port
@@ -131,7 +133,7 @@ public:
 	void onReceived(UDPSocketFace*, bi::udp::endpoint const&, bytesConstRef _packet) { if (_packet.toString() == "AAAA") success = true; }
 
 	shared_ptr<UDPSocket<TestUDPSocket, 1024>> m_socket;
-	
+
 	bool success = false;
 };
 
@@ -140,7 +142,7 @@ BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 	KeyPair k = KeyPair::create();
 	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
 	bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
-	
+
 	Neighbours out(to);
 	for (auto n: testNodes)
 	{
@@ -187,7 +189,7 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.setup();
 	node.populate();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-	
+
 	node.populateAll();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	

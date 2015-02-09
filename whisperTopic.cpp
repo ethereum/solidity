@@ -19,8 +19,11 @@
  * @date 2014
  */
 #include <functional>
+
+// Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include <libp2p/Host.h>
 #include <libwhisper/WhisperPeer.h>
 #include <libwhisper/WhisperHost.h>

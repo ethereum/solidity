@@ -22,8 +22,11 @@
 #pragma once
 
 #include <functional>
+
+// Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include "JsonSpiritHeaders.h"
 #include <libethereum/State.h>
 #include <libevm/ExtVMFace.h>

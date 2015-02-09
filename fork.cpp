@@ -19,9 +19,12 @@
  * @date 2014
  * Tests for different forking behavior
  */
+
+// Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem/operations.hpp>
+
 #include <libethereum/Client.h>
 #include <libethereum/CanonBlockChain.h>
 #include <libethereum/EthereumHost.h>

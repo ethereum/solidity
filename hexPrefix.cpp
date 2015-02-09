@@ -21,8 +21,11 @@
  */
 
 #include <fstream>
+
+// Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
@@ -54,8 +57,8 @@ BOOST_AUTO_TEST_CASE(hexPrefix_test)
 		for (auto& i: o["seq"].get_array())
 			v.push_back((byte)i.get_int());
 		auto e = hexPrefixEncode(v, o["term"].get_bool());
-		BOOST_REQUIRE( ! o["out"].is_null() ); 
-		BOOST_CHECK( o["out"].get_str() == toHex(e) ); 
+		BOOST_REQUIRE( ! o["out"].is_null() );
+		BOOST_CHECK( o["out"].get_str() == toHex(e) );
 	}
 }
 

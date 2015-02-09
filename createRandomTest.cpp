@@ -23,9 +23,12 @@
 #include <string>
 #include <iostream>
 #include <chrono>
+
+// Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
 #include <boost/random.hpp>
 #include <boost/filesystem/path.hpp>
+
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <json_spirit/json_spirit.h>
 #include <json_spirit/json_spirit_reader_template.h>

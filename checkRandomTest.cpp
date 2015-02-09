@@ -20,7 +20,9 @@
  * Check a random test and return 0/1 for success or failure. To be used for efficiency in the random test simulation.
  */
 
+// Make sure boost/asio.hpp is included before windows.h.
 #include <boost/asio.hpp>
+
 #include <libdevcore/Common.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Log.h>
