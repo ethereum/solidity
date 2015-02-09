@@ -41,19 +41,19 @@ enum class DocumentationType: uint8_t;
 
 enum class DocTagType: uint8_t
 {
-	NONE = 0,
-	DEV,
-	NOTICE,
-	PARAM,
-	RETURN,
-	AUTHOR,
-	TITLE
+	None = 0,
+	Dev,
+	Notice,
+	Param,
+	Return,
+	Author,
+	Title
 };
 
 enum class CommentOwner
 {
-	CONTRACT,
-	FUNCTION
+	Contract,
+	Function
 };
 
 class InterfaceHandler
