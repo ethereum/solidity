@@ -974,6 +974,24 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(exp_operator_negative_exponent)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) { return 2 ** -3; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), InternalCompilerError);
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_const_overflowed)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) { return 10 ** 256; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), InternalCompilerError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
