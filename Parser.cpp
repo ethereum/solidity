@@ -284,7 +284,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(VarDeclParserOp
 	if (_options.allowEmptyName && m_scanner->getCurrentToken() != Token::IDENTIFIER)
 	{
 		identifier = make_shared<ASTString>("");
-		solAssert(!!type, "");
+		solAssert(type != nullptr, "");
 		nodeFactory.setEndPositionFromNode(type);
 	}
 	else
