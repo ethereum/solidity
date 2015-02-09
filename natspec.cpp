@@ -19,6 +19,8 @@
  * @date 2015
  */
 
+#if !ETH_HEADLESS
+
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
 #include <libnatspec/NatspecExpressionEvaluator.h>
@@ -110,3 +112,5 @@ BOOST_AUTO_TEST_CASE(natspec_js_eval_error)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif
