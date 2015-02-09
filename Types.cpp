@@ -57,6 +57,8 @@ shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
 		return make_shared<BoolType>();
 	else if (Token::String0 <= _typeToken && _typeToken <= Token::String32)
 		return make_shared<StaticStringType>(int(_typeToken) - int(Token::String0));
+	else if (_typeToken == Token::Bytes)
+		return make_shared<ByteArrayType>(ByteArrayType::Location::Storage, 0, 0, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -504,6 +506,15 @@ bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 {
 	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
+}
+
+bool ByteArrayType::operator==(Type const& _other) const
+{
+	if (_other.getCategory() != getCategory())
+		return false;
+	ByteArrayType const& other = dynamic_cast<ByteArrayType const&>(_other);
+	return other.m_location == m_location && other.m_dynamicLength == m_dynamicLength
+			&& other.m_length == m_length && other.m_offset == m_offset;
 }
 
 bool ContractType::operator==(Type const& _other) const
