@@ -360,7 +360,7 @@ u256 IntegerConstantType::literalValue(Literal const*) const
 TypePointer IntegerConstantType::getRealType() const
 {
 	auto intType = getIntegerType();
-	solAssert(!!intType, std::string("getRealType called with invalid integer constant") + toString());
+	solAssert(!!intType, "getRealType called with invalid integer constant " + toString());
 	return intType;
 }
 
