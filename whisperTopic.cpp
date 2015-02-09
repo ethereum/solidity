@@ -243,17 +243,20 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 	});
 
 	while (!startedForwarder)
-		this_thread::sleep_for(chrono::milliseconds(50));
-
-	Host host2("Sender", NetworkPreferences(30300, "", false, true));
-	host2.setIdealPeerCount(1);
-	shared_ptr<WhisperHost> whost2 = host2.registerCapability(new WhisperHost());
-	host2.start();
-	while (!host2.isStarted())
 		this_thread::sleep_for(chrono::milliseconds(2));
-	host2.addNode(host1.id(), "127.0.0.1", 30305, 30305);
 	
 	{
+		Host host2("Sender", NetworkPreferences(30300, "", false, true));
+		host2.setIdealPeerCount(1);
+		shared_ptr<WhisperHost> whost2 = host2.registerCapability(new WhisperHost());
+		host2.start();
+		while (!host2.isStarted())
+			this_thread::sleep_for(chrono::milliseconds(2));
+		host2.addNode(host1.id(), "127.0.0.1", 30305, 30305);
+
+		while (!host2.peerCount())
+			this_thread::sleep_for(chrono::milliseconds(5));
+		
 		KeyPair us = KeyPair::create();
 		whost2->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
 		this_thread::sleep_for(chrono::milliseconds(250));
