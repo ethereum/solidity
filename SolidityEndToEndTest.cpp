@@ -2254,6 +2254,31 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
 }
 
+BOOST_AUTO_TEST_CASE(storing_bytes)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function save() {
+				savedData = msg.data;
+			}
+			function forward() {
+				this.call(savedData);
+			}
+			function clear() {
+				delete savedData;
+			}
+			function doubleIt(uint a) returns (uint b) { return a * 2; }
+			bytes savedData;
+		}
+	)";
+	compileAndRun(sourceCode);
+	FixedHash<4> innerHash(dev::sha3("doubleIt(uint256)"));
+	BOOST_CHECK(callContractFunction("save()", innerHash.asBytes(), 7) == bytes());
+	BOOST_CHECK(callContractFunction("forward()") == encodeArgs(14));
+	BOOST_CHECK(callContractFunction("clear()") == bytes());
+	BOOST_CHECK(callContractFunction("forward()") == bytes());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
