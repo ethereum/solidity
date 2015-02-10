@@ -43,7 +43,7 @@ public:
 	{
 		m_code = _code;
 		BOOST_REQUIRE_NO_THROW(m_compilerStack.parse(_code));
-		m_interface = m_compilerStack.getMetadata("", DocumentationType::ABI_SOLIDITY_INTERFACE);
+		m_interface = m_compilerStack.getMetadata("", DocumentationType::ABISolidityInterface);
 		BOOST_REQUIRE_NO_THROW(m_reCompiler.parse(m_interface));
 		return m_reCompiler.getContractDefinition(_contractName);
 	}
