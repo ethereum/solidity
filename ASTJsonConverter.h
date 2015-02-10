@@ -27,7 +27,7 @@
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/Exceptions.h>
 #include <libsolidity/Utils.h>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 namespace dev
 {
