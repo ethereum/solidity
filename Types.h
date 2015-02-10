@@ -78,7 +78,7 @@ public:
 	{
 		Integer, IntegerConstant, Bool, Real,
 		String, Contract, Struct, Function,
-		Mapping, Void, Type, Modifier, Magic
+		Mapping, Void, TypeType, Modifier, Magic
 	};
 
 	///@{
@@ -478,7 +478,7 @@ public:
 class TypeType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::Type; }
+	virtual Category getCategory() const override { return Category::TypeType; }
 	explicit TypeType(TypePointer const& _actualType, ContractDefinition const* _currentContract = nullptr):
 		m_actualType(_actualType), m_currentContract(_currentContract) {}
 	TypePointer const& getActualType() const { return m_actualType; }

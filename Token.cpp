@@ -79,7 +79,6 @@ int8_t const Token::m_precedence[NUM_TOKENS] =
 char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
-
 };
 Token::Value Token::fromIdentifierOrKeyword(const std::string& _name)
 {

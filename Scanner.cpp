@@ -401,7 +401,7 @@ void Scanner::scanToken()
 			// < <= << <<=
 			advance();
 			if (m_char == '=')
-				token = selectToken(Token::LessThanOrEquals);
+				token = selectToken(Token::LessThanOrEqual);
 			else if (m_char == '<')
 				token = selectToken('=', Token::AssignShl, Token::SHL);
 			else
@@ -411,7 +411,7 @@ void Scanner::scanToken()
 			// > >= >> >>= >>> >>>=
 			advance();
 			if (m_char == '=')
-				token = selectToken(Token::GreaterThanOrEquals);
+				token = selectToken(Token::GreaterThanOrEqual);
 			else if (m_char == '>')
 			{
 				// >> >>= >>> >>>=
@@ -430,7 +430,7 @@ void Scanner::scanToken()
 			// = == =>
 			advance();
 			if (m_char == '=')
-				token = selectToken(Token::Equals);
+				token = selectToken(Token::Equal);
 			else if (m_char == '>')
 				token = selectToken(Token::Arrow);
 			else
@@ -440,7 +440,7 @@ void Scanner::scanToken()
 			// ! !=
 			advance();
 			if (m_char == '=')
-				token = selectToken(Token::NotEquals);
+				token = selectToken(Token::NotEqual);
 			else
 				token = Token::Not;
 			break;

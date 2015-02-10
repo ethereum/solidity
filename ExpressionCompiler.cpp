@@ -483,7 +483,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 		break;
 	}
-	case Type::Category::Type:
+	case Type::Category::TypeType:
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.getExpression().getType());
 		if (type.getMembers().getMemberType(member))
@@ -583,10 +583,10 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 
 void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type const& _type)
 {
-	if (_operator == Token::Equals || _operator == Token::NotEquals)
+	if (_operator == Token::Equal || _operator == Token::NotEqual)
 	{
 		m_context << eth::Instruction::EQ;
-		if (_operator == Token::NotEquals)
+		if (_operator == Token::NotEqual)
 			m_context << eth::Instruction::ISZERO;
 	}
 	else
@@ -596,11 +596,11 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 
 		switch (_operator)
 		{
-		case Token::GreaterThanOrEquals:
+		case Token::GreaterThanOrEqual:
 			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT)
 					  << eth::Instruction::ISZERO;
 			break;
-		case Token::LessThanOrEquals:
+		case Token::LessThanOrEqual:
 			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
 					  << eth::Instruction::ISZERO;
 			break;

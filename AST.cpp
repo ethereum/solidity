@@ -449,7 +449,7 @@ void Expression::requireLValue()
 
 void UnaryOperation::checkTypeRequirements()
 {
-	// INC, DEC, ADD, SUB, NOT, BitNot, DELETE
+	// Inc, Dec, Add, Sub, Not, BitNot, Delete
 	m_subExpression->checkTypeRequirements();
 	if (m_operator == Token::Value::Inc || m_operator == Token::Value::Dec || m_operator == Token::Value::Delete)
 		m_subExpression->requireLValue();
@@ -553,7 +553,7 @@ void FunctionCall::checkTypeRequirements()
 
 bool FunctionCall::isTypeConversion() const
 {
-	return m_expression->getType()->getCategory() == Type::Category::Type;
+	return m_expression->getType()->getCategory() == Type::Category::TypeType;
 }
 
 void NewExpression::checkTypeRequirements()

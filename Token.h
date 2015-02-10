@@ -122,12 +122,12 @@ namespace solidity
 	/* Compare operators sorted by precedence. */                      \
 	/* IsCompareOp() relies on this block of enum values */            \
 	/* being contiguous and sorted in the same order! */               \
-	T(Equals, "==", 6)                                                     \
-	T(NotEquals, "!=", 6)                                                     \
+	T(Equal, "==", 6)                                                     \
+	T(NotEqual, "!=", 6)                                                     \
 	T(LessThan, "<", 7)                                                      \
 	T(GreaterThan, ">", 7)                                                      \
-	T(LessThanOrEquals, "<=", 7)                                                    \
-	T(GreaterThanOrEquals, ">=", 7)                                                    \
+	T(LessThanOrEqual, "<=", 7)                                                    \
+	T(GreaterThanOrEqual, ">=", 7)                                                    \
 	K(In, "in", 7)                                                     \
 	\
 	/* Unary operators. */                                             \
@@ -183,7 +183,7 @@ namespace solidity
 	K(Int24, "int24", 0)                                               \
 	K(Int32, "int32", 0)                                               \
 	K(Int40, "int40", 0)                                               \
-	K(INT48, "int48", 0)                                               \
+	K(Int48, "int48", 0)                                               \
 	K(Int56, "int56", 0)                                               \
 	K(Int64, "int64", 0)                                               \
 	K(Int72, "int72", 0)                                               \
@@ -210,39 +210,39 @@ namespace solidity
 	K(Int240, "int240", 0)                                             \
 	K(Int248, "int248", 0)                                             \
 	K(Int256, "int256", 0)                                             \
-	K(Uint, "uint", 0)                                                 \
-	K(Uint8, "uint8", 0)                                               \
-	K(Uint16, "uint16", 0)                                             \
-	K(Uint24, "uint24", 0)                                             \
-	K(Uint32, "uint32", 0)                                             \
-	K(Uint40, "uint40", 0)                                             \
-	K(Uint48, "uint48", 0)                                             \
-	K(Uint56, "uint56", 0)                                             \
-	K(Uint64, "uint64", 0)                                             \
-	K(Uint72, "uint72", 0)                                             \
-	K(Uint80, "uint80", 0)                                             \
-	K(Uint88, "uint88", 0)                                             \
-	K(Uint96, "uint96", 0)                                             \
-	K(Uint104, "uint104", 0)                                           \
-	K(Uint112, "uint112", 0)                                           \
-	K(Uint120, "uint120", 0)                                           \
-	K(Uint128, "uint128", 0)                                           \
-	K(Uint136, "uint136", 0)                                           \
-	K(Uint144, "uint144", 0)                                           \
-	K(Uint152, "uint152", 0)                                           \
-	K(Uint160, "uint160", 0)                                           \
-	K(Uint168, "uint168", 0)                                           \
-	K(Uint176, "uint178", 0)                                           \
-	K(Uint184, "uint184", 0)                                           \
-	K(Uint192, "uint192", 0)                                           \
-	K(Uint200, "uint200", 0)                                           \
-	K(Uint208, "uint208", 0)                                           \
-	K(Uint216, "uint216", 0)                                           \
-	K(Uint224, "uint224", 0)                                           \
-	K(Uint232, "uint232", 0)                                           \
-	K(Uint240, "uint240", 0)                                           \
-	K(Uint248, "uint248", 0)                                           \
-	K(Uint256, "uint256", 0)                                           \
+	K(UInt, "uint", 0)                                                 \
+	K(UInt8, "uint8", 0)                                               \
+	K(UInt16, "uint16", 0)                                             \
+	K(UInt24, "uint24", 0)                                             \
+	K(UInt32, "uint32", 0)                                             \
+	K(UInt40, "uint40", 0)                                             \
+	K(UInt48, "uint48", 0)                                             \
+	K(UInt56, "uint56", 0)                                             \
+	K(UInt64, "uint64", 0)                                             \
+	K(UInt72, "uint72", 0)                                             \
+	K(UInt80, "uint80", 0)                                             \
+	K(UInt88, "uint88", 0)                                             \
+	K(UInt96, "uint96", 0)                                             \
+	K(UInt104, "uint104", 0)                                           \
+	K(UInt112, "uint112", 0)                                           \
+	K(UInt120, "uint120", 0)                                           \
+	K(UInt128, "uint128", 0)                                           \
+	K(UInt136, "uint136", 0)                                           \
+	K(UInt144, "uint144", 0)                                           \
+	K(UInt152, "uint152", 0)                                           \
+	K(UInt160, "uint160", 0)                                           \
+	K(UInt168, "uint168", 0)                                           \
+	K(UInt176, "uint178", 0)                                           \
+	K(UInt184, "uint184", 0)                                           \
+	K(UInt192, "uint192", 0)                                           \
+	K(UInt200, "uint200", 0)                                           \
+	K(UInt208, "uint208", 0)                                           \
+	K(UInt216, "uint216", 0)                                           \
+	K(UInt224, "uint224", 0)                                           \
+	K(UInt232, "uint232", 0)                                           \
+	K(UInt240, "uint240", 0)                                           \
+	K(UInt248, "uint248", 0)                                           \
+	K(UInt256, "uint256", 0)                                           \
 	K(Hash, "hash", 0)                                                 \
 	K(Hash8, "hash8", 0)                                               \
 	K(Hash16, "hash16", 0)                                             \
@@ -363,9 +363,9 @@ public:
 	static bool isAssignmentOp(Value tok) { return Assign <= tok && tok <= AssignMod; }
 	static bool isBinaryOp(Value op) { return Comma <= op && op <= Mod; }
 	static bool isCommutativeOp(Value op) { return op == BitOr || op == BitXor || op == BitAnd ||
-				op == Add || op == Mul || op == Equals || op == NotEquals; }
+				op == Add || op == Mul || op == Equal || op == NotEqual; }
 	static bool isArithmeticOp(Value op) { return Add <= op && op <= Mod; }
-	static bool isCompareOp(Value op) { return Equals <= op && op <= In; }
+	static bool isCompareOp(Value op) { return Equal <= op && op <= In; }
 
 	static Value AssignmentToBinaryOp(Value op)
 	{
