@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns(int d) { return -2 ** 3; }
+			function f() returns(int d) { return (-2) ** 3; }
 		})";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(-8)));

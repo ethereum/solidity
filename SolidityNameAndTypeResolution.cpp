@@ -980,16 +980,16 @@ BOOST_AUTO_TEST_CASE(exp_operator_negative_exponent)
 		contract test {
 			function f() returns(uint d) { return 2 ** -3; }
 		})";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), InternalCompilerError);
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(exp_operator_const_overflowed)
+BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function f() returns(uint d) { return 10 ** 256; }
+			function f() returns(uint d) { return 2 ** 10000000000; }
 		})";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), InternalCompilerError);
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
