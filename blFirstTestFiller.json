@@ -1,5 +1,22 @@
 {
     "firstBlockTest" : {
+        "block" : {
+            "parentHash": "0xefb4db878627027c81b3bb1c7dd3a18dae3914a49cdd24a3e40ab3bbfbb240c5",
+            "uncleHash": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+            "coinbase": "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "stateRoot": "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "transactionsTrie": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "receiptTrie": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "bloom": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "difficulty": "023101",
+            "number": "62",
+            "gasLimit": "0x0dddb6",
+            "gasUsed": "100",
+            "timestamp": "0x54c98c81",
+            "extraData": "42",
+            "nonce": "0x498e88f5c14b0b60d6e14ce9c6cc958cbe16a1df8dd90210e50d2d77562a348d"
+        },
+        "pre" : {},
         "transactions": [{
                 "nonce": "0",
                 "gasPrice": "0x09184e72a000",
