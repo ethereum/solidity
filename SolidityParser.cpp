@@ -387,6 +387,17 @@ BOOST_AUTO_TEST_CASE(complex_expression)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(exp_expression)
+{
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				uint256 x = 3 ** a;
+			}
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
 BOOST_AUTO_TEST_CASE(while_loop)
 {
 	char const* text = "contract test {\n"

@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(blockhash)
 							 "  }\n"
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode, {}, {},
-										{make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::BLOCK))});
+										{make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::Block))});
 
 	bytes expectation({byte(eth::Instruction::PUSH1), 0x03,
 					   byte(eth::Instruction::BLOCKHASH)});
