@@ -508,6 +508,16 @@ TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
 }
 
+bool ByteArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+{
+	if (*this == _convertTo)
+		return true;
+	if (_convertTo.getCategory() != Category::ByteArray)
+		return false;
+	auto const& other = dynamic_cast<ByteArrayType const&>(_convertTo);
+	return (m_dynamicLength == other.m_dynamicLength || m_length == other.m_length);
+}
+
 bool ByteArrayType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
@@ -952,7 +962,9 @@ MagicType::MagicType(MagicType::Kind _kind):
 	case Kind::Message:
 		m_members = MemberList({{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"gas", make_shared<IntegerType>(256)},
-								{"value", make_shared<IntegerType>(256)}});
+								{"value", make_shared<IntegerType>(256)},
+								{"data", make_shared<ByteArrayType>(ByteArrayType::Location::CallData,
+																	0, 0, true)}});
 		break;
 	case Kind::Transaction:
 		m_members = MemberList({{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},

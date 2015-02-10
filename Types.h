@@ -287,10 +287,10 @@ public:
 	virtual Category getCategory() const override { return Category::ByteArray; }
 	ByteArrayType(Location _location, u256 const& _offset, u256 const& _length, bool _dynamicLength):
 		m_location(_location), m_offset(_offset), m_length(_length), m_dynamicLength(_dynamicLength) {}
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned getSizeOnStack() const override { return 1; /* TODO */ }
 	virtual std::string toString() const override { return "bytes"; }
-
 
 private:
 	Location m_location;
