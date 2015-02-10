@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(mapping_state)
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
-	// voting without vote right shourd be rejected
+	// voting without vote right should be rejected
 	testSolidityAgainstCpp("vote(address,address)", vote, u160(0), u160(2));
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
@@ -2276,67 +2276,65 @@ BOOST_AUTO_TEST_CASE(store_bytes)
 BOOST_AUTO_TEST_CASE(call_forward_bytes)
 {
 	char const* sourceCode = R"(
-		contract C {
-			function save() {
-				savedData = msg.data;
-			}
-			function forward() {
-				this.call(savedData);
-			}
-			function clear() {
-				delete savedData;
-			}
-			function doubleIt(uint a) { val += a * 2; }
+		contract receiver {
+			uint public received;
+			function receive(uint x) { received += x + 1; }
+			function() { received = 0x80; }
+		}
+		contract sender {
+			function sender() { rec = new receiver(); }
+			function() { savedData = msg.data; }
+			function forward() { rec.call(savedData); }
+			function clear() { delete savedData; }
+			function val() returns (uint) { return rec.received(); }
+			receiver rec;
 			bytes savedData;
-			uint public val;
 		}
 	)";
-	compileAndRun(sourceCode);
-	FixedHash<4> innerHash(dev::sha3("doubleIt(uint256)"));
-	BOOST_CHECK(callContractFunction("save()", innerHash.asBytes(), 7) == bytes());
-	BOOST_CHECK(callContractFunction("val()") == bytes(0));
+	compileAndRun(sourceCode, 0, "sender");
+	BOOST_CHECK(callContractFunction("receive(uint256)", 7) == bytes());
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0));
 	BOOST_CHECK(callContractFunction("forward()") == bytes());
-	BOOST_CHECK(callContractFunction("val()") == bytes(14));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
 	BOOST_CHECK(callContractFunction("clear()") == bytes());
-	BOOST_CHECK(callContractFunction("val()") == bytes(14));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
 	BOOST_CHECK(callContractFunction("forward()") == bytes());
-	BOOST_CHECK(callContractFunction("val()") == bytes(14));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0x80));
 }
 
 BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 {
 	char const* sourceCode = R"(
-		contract C {
-			function save() {
-				data1 = data2 = msg.data;
-			}
+		contract receiver {
+			uint public received;
+			function receive(uint x) { received += x + 1; }
+			function() { received = 0x80; }
+		}
+		contract sender {
+			function sender() { rec = new receiver(); }
+			function() { savedData1 = savedData2 = msg.data; }
 			function forward(bool selector) {
-				if (selector)
-				{
-					this.call(data1);
-					delete data1;
-				}
-				else
-				{
-					this.call(data2);
-					delete data2;
-				}
+				if (selector) { rec.call(savedData1); delete savedData1; }
+				else { rec.call(savedData2); delete savedData2; }
 			}
-			function doubleIt(uint a) returns (uint b) { val += a * 2; }
-			bytes data1;
-			bytes data2;
-			uint public val;
+			function val() returns (uint) { return rec.received(); }
+			receiver rec;
+			bytes savedData1;
+			bytes savedData2;
 		}
 	)";
-	compileAndRun(sourceCode);
-	FixedHash<4> innerHash(dev::sha3("doubleIt(uint256)"));
-	BOOST_CHECK(callContractFunction("save()", innerHash.asBytes(), 7) == bytes());
-	BOOST_CHECK(callContractFunction("val()") == bytes(0));
+	compileAndRun(sourceCode, 0, "sender");
+	BOOST_CHECK(callContractFunction("receive(uint256)", 7) == bytes());
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0));
 	BOOST_CHECK(callContractFunction("forward(bool)", true) == bytes());
-	BOOST_CHECK(callContractFunction("val()") == bytes(14));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
 	BOOST_CHECK(callContractFunction("forward(bool)", false) == bytes());
-	BOOST_CHECK(callContractFunction("val()") == bytes(28));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(16));
+	BOOST_CHECK(callContractFunction("forward(bool)", true) == bytes());
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0x80));
 }
+
+// TODO test that "delete" also clears the values
 
 BOOST_AUTO_TEST_SUITE_END()
 
