@@ -50,6 +50,7 @@ BOOST_AUTO_TEST_CASE(topic)
 		auto w = wh->installWatch(BuildTopicMask("odd"));
 
 		started = true;
+		set<unsigned> received;
 
 		for (int iterout = 0, last = 0; iterout < 200 && last < 81; ++iterout)
 		{
@@ -57,6 +58,9 @@ BOOST_AUTO_TEST_CASE(topic)
 			{
 				Message msg = wh->envelope(i).open(wh->fullTopic(w));
 				last = RLP(msg.payload()).toInt<unsigned>();
+				if (received.count(last))
+					continue;
+				received.insert(last);
 				cnote << "New message from:" << msg.from().abridged() << RLP(msg.payload()).toInt<unsigned>();
 				result += last;
 			}

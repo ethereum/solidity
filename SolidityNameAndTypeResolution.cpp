@@ -467,6 +467,24 @@ BOOST_AUTO_TEST_CASE(illegal_override_indirect)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(illegal_override_visibility)
+{
+	char const* text = R"(
+		contract B { function f() protected {} }
+		contract C is B { function f() public {} }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(illegal_override_constness)
+{
+	char const* text = R"(
+		contract B { function f() constant {} }
+		contract C is B { function f() {} }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(complex_inheritance)
 {
 	char const* text = R"(
@@ -636,7 +654,9 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 					   "  function fun() {\n"
 					   "    uint64(2);\n"
 					   "  }\n"
-					   "uint256 foo;\n"
+					   "uint256 public foo;\n"
+					   "mapping(uint=>string4) public map;\n"
+					   "mapping(uint=>mapping(uint=>string4)) public multiple_map;\n"
 					   "}\n";
 
 	ASTPointer<SourceUnit> source;
@@ -644,9 +664,26 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
-	BOOST_REQUIRE(function->hasDeclaration());
+	BOOST_REQUIRE(function && function->hasDeclaration());
 	auto returnParams = function->getReturnParameterTypeNames();
 	BOOST_CHECK_EQUAL(returnParams.at(0), "uint256");
+	BOOST_CHECK(function->isConstant());
+
+	function = retrieveFunctionBySignature(contract, "map(uint256)");
+	BOOST_REQUIRE(function && function->hasDeclaration());
+	auto params = function->getParameterTypeNames();
+	BOOST_CHECK_EQUAL(params.at(0), "uint256");
+	returnParams = function->getReturnParameterTypeNames();
+	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
+	BOOST_CHECK(function->isConstant());
+
+	function = retrieveFunctionBySignature(contract, "multiple_map(uint256,uint256)");
+	BOOST_REQUIRE(function && function->hasDeclaration());
+	params = function->getParameterTypeNames();
+	BOOST_CHECK_EQUAL(params.at(0), "uint256");
+	BOOST_CHECK_EQUAL(params.at(1), "uint256");
+	returnParams = function->getReturnParameterTypeNames();
+	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
 	BOOST_CHECK(function->isConstant());
 }
 
@@ -668,16 +705,19 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 					   "  function fun() {\n"
 					   "    uint64(2);\n"
 					   "  }\n"
-					   "private:\n"
-					   "uint256 foo;\n"
+					   "uint256 private foo;\n"
+					   "uint256 protected bar;\n"
 					   "}\n";
 
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
 	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
 	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
-	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
+	FunctionTypePointer function;
+	function = retrieveFunctionBySignature(contract, "foo()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
+	function = retrieveFunctionBySignature(contract, "bar()");
+	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a protected variable should not exist");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function)
@@ -778,6 +818,160 @@ BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
 			event e2(uint a, uint e1, uint e2);
 		})";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
+{
+	char const* text = R"(
+		contract c {
+			function f() {}
+		}
+		contract d {
+			function g() { c(0).f(); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(access_to_protected_function)
+{
+	char const* text = R"(
+		contract c {
+			function f() protected {}
+		}
+		contract d {
+			function g() { c(0).f(); }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(access_to_default_state_variable_visibility)
+{
+	char const* text = R"(
+		contract c {
+			uint a;
+		}
+		contract d {
+			function g() { c(0).a(); }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(access_to_protected_state_variable)
+{
+	char const* text = R"(
+		contract c {
+			uint public a;
+		}
+		contract d {
+			function g() { c(0).a(); }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(error_count_in_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
+							 "  function b() returns (uint r) { r = a({a: 1}); }\n"
+							 "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(empty_in_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
+							 "  function b() returns (uint r) { r = a({}); }\n"
+							 "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(duplicate_parameter_names_in_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
+							 "  function b() returns (uint r) { r = a({a: 1, a: 2}); }\n"
+							 "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_parameter_names_in_named_args)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
+							 "  function b() returns (uint r) { r = a({a: 1, c: 2}); }\n"
+							 "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint){
+		}
+	})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f() returns(bool){
+		}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint, uint k) returns(uint ret_k){
+				return k;
+		}
+	})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
+{
+	char const* text = R"(
+		contract test {
+			function f() returns(uint ret_k, uint){
+				return 5;
+		}
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(disallow_declaration_of_void_type)
+{
+	char const* sourceCode = "contract c { function f() { var x = f(); } }";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
+{
+	char const* sourceCodeFine = R"(
+		contract c {
+			function c ()
+			{
+				 a = 115792089237316195423570985008687907853269984665640564039458;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCodeFine));
+	char const* sourceCode = R"(
+		contract c {
+			function c ()
+			{
+				 a = 115792089237316195423570985008687907853269984665640564039458 ether;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
