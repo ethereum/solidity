@@ -703,6 +703,20 @@ BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations_in_expression
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
 
+BOOST_AUTO_TEST_CASE(enum_declaration)
+{
+	char const* text = R"(
+		contract c {
+			enum foo { WARNING, NOTICE, ERROR, CRITICAL };
+			function c ()
+			{
+				a = foo.CRITICAL;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
