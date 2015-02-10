@@ -64,6 +64,9 @@ void connectClients(Client& c1, Client& c2)
 namespace test
 {
 
+struct ValueTooLarge: virtual Exception {};
+bigint const c_max256plus1 = bigint(1) << 256;
+
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller): m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
