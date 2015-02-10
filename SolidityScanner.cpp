@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(ambiguities)
 {
 	// test scanning of some operators which need look-ahead
 	Scanner scanner(CharStream("<=""<""+ +=a++ =>""<<"));
-	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::LessThanOrEquals);
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::LessThanOrEqual);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::LessThan);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::Add);
 	BOOST_CHECK_EQUAL(scanner.next(), Token::AssignAdd);
