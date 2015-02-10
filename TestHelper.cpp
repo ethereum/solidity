@@ -108,10 +108,9 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		BOOST_REQUIRE(o.count("storage") > 0);
 		BOOST_REQUIRE(o.count("code") > 0);
 
-		bigint biValue256 = bigint(1) << 256;
-		if (bigint(o["balance"].get_str()) >= biValue256)
+		if (bigint(o["balance"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
-		if (bigint(o["nonce"].get_str()) >= biValue256)
+		if (bigint(o["nonce"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
 
 		Address address = Address(i.first);
@@ -146,14 +145,13 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	BOOST_REQUIRE(_o.count("secretKey") > 0);
 	BOOST_REQUIRE(_o.count("data") > 0);
 
-	bigint biValue256 = bigint(1) << 256;
-	if (bigint(_o["nonce"].get_str()) >= biValue256)
+	if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
 		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
-	if (bigint(_o["gasPrice"].get_str()) >= biValue256)
+	if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
 		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
-	if (bigint(_o["gasLimit"].get_str()) >= biValue256)
+	if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
 		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
-	if (bigint(_o["value"].get_str()) >= biValue256)
+	if (bigint(_o["value"].get_str()) >= c_max256plus1)
 		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
 	m_transaction = _o["to"].get_str().empty() ?
