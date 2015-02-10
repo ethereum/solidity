@@ -105,22 +105,36 @@ void InheritanceSpecifier::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
-void StructDefinition::accept(ASTVisitor& _visitor)
+void EnumDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
 		listAccept(m_members, _visitor);
 	_visitor.endVisit(*this);
 }
 
-void EnumDefinition::accept(ASTVisitor& _visitor)
+void EnumDefinition::accept(ASTConstVisitor& _visitor) const
 {
-	_visitor.visit(*this)
+	if (_visitor.visit(*this))
+		listAccept(m_members, _visitor);
 	_visitor.endVisit(*this);
 }
 
-void EnumDefinition::accept(ASTConstVisitor& _visitor) const
+void EnumDeclaration::accept(ASTVisitor& _visitor)
 {
-	_visitor.visit(*this)
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
+void EnumDeclaration::accept(ASTConstVisitor& _visitor) const
+{
+	_visitor.visit(*this);
+	_visitor.endVisit(*this);
+}
+
+void StructDefinition::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+		listAccept(m_members, _visitor);
 	_visitor.endVisit(*this);
 }
 

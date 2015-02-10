@@ -170,10 +170,13 @@ private:
  */
 class EnumDeclaration : public Declaration
 {
+  public:
 	EnumDeclaration(Location const& _location,
 					ASTPointer<ASTString> const& _name):
 	Declaration(_location, _name) {}
 
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
 	TypePointer getType(ContractDefinition const*) const;
 };
 
@@ -717,7 +720,7 @@ public:
 
 	Expression const& getCondition() const { return *m_condition; }
 	Statement const& getTrueStatement() const { return *m_trueBody; }
-	/// @returns the "else" part of the if statement or nullptr if there is no "else" part. 
+	/// @returns the "else" part of the if statement or nullptr if there is no "else" part.
 	Statement const* getFalseStatement() const { return m_falseBody.get(); }
 
 private:

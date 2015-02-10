@@ -168,7 +168,7 @@ namespace solidity
 	K(Switch, "switch", 0)                                             \
 	K(Var, "var", 0)                                                   \
 	K(While, "while", 0)                                               \
-	\
+	K(Enum, "enum", 0)												   \
 	\
 	/* Ether subdenominations */                                        \
 	K(SubWei, "wei", 0)                                                 \

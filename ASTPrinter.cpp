@@ -77,7 +77,7 @@ bool ASTPrinter::visit(EnumDefinition const& _node)
 	return goDeeper();
 }
 
-bool ASTPrinter::visit(EnuumDeclaration const& _node)
+bool ASTPrinter::visit(EnumDeclaration const& _node)
 {
 	writeLine("EnumValue \"" + _node.getName() + "\"");
 	return goDeeper();

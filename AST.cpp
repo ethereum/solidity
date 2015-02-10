@@ -206,6 +206,12 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	return *m_interfaceFunctionList;
 }
 
+TypePointer EnumDeclaration::getType(ContractDefinition const*) const
+{
+	// LTODO
+	return nullptr;
+}
+
 void InheritanceSpecifier::checkTypeRequirements()
 {
 	m_baseName->checkTypeRequirements();
@@ -268,7 +274,9 @@ void EnumDefinition::checkValidityOfMembers() const
 
 TypePointer EnumDefinition::getType(ContractDefinition const*) const
 {
-	return make_shared<TypeType>(make_shared<EnumType>(*this));
+	//LTODO:
+	return nullptr;
+	// return make_shared<TypeType>(make_shared<EnumType>(*this));
 }
 
 TypePointer FunctionDefinition::getType(ContractDefinition const*) const

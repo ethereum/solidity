@@ -279,7 +279,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Enum);
 	ASTPointer<ASTString> name = expectIdentifierToken();
-	vector<ASTPointer<Declaration>> members;
+	vector<ASTPointer<EnumDeclaration>> members;
 	expectToken(Token::LBrace);
 
 	while (m_scanner->getCurrentToken() == Token::Identifier)
