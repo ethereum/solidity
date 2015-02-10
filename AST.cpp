@@ -497,20 +497,21 @@ void FunctionCall::checkTypeRequirements()
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
 		TypePointers const& parameterTypes = functionType->getParameterTypes();
-		if (functionType->getLocation() != FunctionType::Location::SHA3 && parameterTypes.size() != m_arguments.size())
+		if (!functionType->takesArbitraryParameters() && parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 
 		if (m_names.empty())
 		{
 			for (size_t i = 0; i < m_arguments.size(); ++i)
-				if (functionType->getLocation() != FunctionType::Location::SHA3 &&
+				if (!functionType->takesArbitraryParameters() &&
 						!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
 					BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError("Invalid type for argument in function call."));
 		}
 		else
 		{
-			if (functionType->getLocation() == FunctionType::Location::SHA3)
-				BOOST_THROW_EXCEPTION(createTypeError("Named arguments cannnot be used for SHA3."));
+			if (functionType->takesArbitraryParameters())
+				BOOST_THROW_EXCEPTION(createTypeError("Named arguments cannnot be used for functions "
+													  "that take arbitrary parameters."));
 			auto const& parameterNames = functionType->getParameterNames();
 			if (parameterNames.size() != m_names.size())
 				BOOST_THROW_EXCEPTION(createTypeError("Some argument names are missing."));

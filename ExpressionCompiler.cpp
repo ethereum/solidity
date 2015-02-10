@@ -206,7 +206,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		TypePointers const& parameterTypes = function.getParameterTypes();
 		vector<ASTPointer<Expression const>> const& callArguments = _functionCall.getArguments();
 		vector<ASTPointer<ASTString>> const& callArgumentNames = _functionCall.getNames();
-		if (function.getLocation() != Location::SHA3)
+		if (!function.takesArbitraryParameters())
 			solAssert(callArguments.size() == parameterTypes.size(), "");
 
 		vector<ASTPointer<Expression const>> arguments;
@@ -318,7 +318,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			appendTypeConversion(*arguments.front()->getType(),
 								 *function.getParameterTypes().front(), true);
 			appendExternalFunctionCall(FunctionType(TypePointers{}, TypePointers{},
-													Location::External, true, true), {}, true);
+													Location::External, false, true, true), {}, true);
 			break;
 		case Location::Suicide:
 			arguments.front()->accept(*this);
@@ -327,7 +327,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case Location::SHA3:
 		{
-			unsigned length = appendArgumentsCopyToMemory(arguments, TypePointers(), 0, false);
+			unsigned length = appendArgumentsCopyToMemory(arguments, TypePointers(), 0, function.padArguments());
 			m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
 			break;
 		}
@@ -700,21 +700,30 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 
 	if (stackTypeCategory == Type::Category::String)
 	{
+		StaticStringType const& typeOnStack = dynamic_cast<StaticStringType const&>(_typeOnStack);
 		if (targetTypeCategory == Type::Category::Integer)
 		{
 			// conversion from string to hash. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			StaticStringType const& typeOnStack = dynamic_cast<StaticStringType const&>(_typeOnStack);
 			solAssert(targetIntegerType.isHash(), "Only conversion between String and Hash is allowed.");
 			solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
 		}
 		else
 		{
+			// clear lower-order bytes for conversion to shorter strings - we always clean
 			solAssert(targetTypeCategory == Type::Category::String, "Invalid type conversion requested.");
-			// nothing to do, strings are high-order-bit-aligned
-			//@todo clear lower-order bytes if we allow explicit conversion to shorter strings
+			StaticStringType const& targetType = dynamic_cast<StaticStringType const&>(_targetType);
+			if (targetType.getNumBytes() < typeOnStack.getNumBytes())
+			{
+				if (targetType.getNumBytes() == 0)
+					m_context << eth::Instruction::DUP1 << eth::Instruction::XOR;
+				else
+					m_context << (u256(1) << (256 - targetType.getNumBytes() * 8))
+							  << eth::Instruction::DUP1 << eth::Instruction::SWAP2
+							  << eth::Instruction::DIV << eth::Instruction::MUL;
+			}
 		}
 	}
 	else if (stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::Contract ||
@@ -776,7 +785,8 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 													vector<ASTPointer<Expression const>> const& _arguments,
 													bool bare)
 {
-	solAssert(_arguments.size() == _functionType.getParameterTypes().size(), "");
+	solAssert(_functionType.takesArbitraryParameters() ||
+			  _arguments.size() == _functionType.getParameterTypes().size(), "");
 
 	// Assumed stack content here:
 	// <stack top>
@@ -800,7 +810,10 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 
 	// reserve space for the function identifier
 	unsigned dataOffset = bare ? 0 : CompilerUtils::dataStartOffset;
-	dataOffset += appendArgumentsCopyToMemory(_arguments, _functionType.getParameterTypes(), dataOffset);
+	// For bare call, activate "4 byte pad exception": If the first argument has exactly 4 bytes,
+	// do not pad it to 32 bytes.
+	dataOffset += appendArgumentsCopyToMemory(_arguments, _functionType.getParameterTypes(), dataOffset,
+											  _functionType.padArguments(), bare);
 
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
@@ -839,7 +852,8 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 unsigned ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expression const>> const& _arguments,
 														 TypePointers const& _types,
 														 unsigned _memoryOffset,
-														 bool _padToWordBoundaries)
+														 bool _padToWordBoundaries,
+														 bool _padExceptionIfFourBytes)
 {
 	solAssert(_types.empty() || _types.size() == _arguments.size(), "");
 	unsigned length = 0;
@@ -848,8 +862,12 @@ unsigned ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expre
 		_arguments[i]->accept(*this);
 		TypePointer const& expectedType = _types.empty() ? _arguments[i]->getType()->getRealType() : _types[i];
 		appendTypeConversion(*_arguments[i]->getType(), *expectedType, true);
+		bool pad = _padToWordBoundaries;
+		// Do not pad if the first argument has exactly four bytes
+		if (i == 0 && pad && _padExceptionIfFourBytes && expectedType->getCalldataEncodedSize() == 4)
+			pad = false;
 		length += appendTypeMoveToMemory(*expectedType, _arguments[i]->getLocation(),
-										 _memoryOffset + length, _padToWordBoundaries);
+										 _memoryOffset + length, pad);
 	}
 	return length;
 }

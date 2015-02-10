@@ -97,7 +97,8 @@ private:
 	unsigned appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
 										 TypePointers const& _types = {},
 										 unsigned _memoryOffset = 0,
-										 bool _padToWordBoundaries = true);
+										 bool _padToWordBoundaries = true,
+										 bool _padExceptionIfFourBytes = false);
 	/// Appends code that moves a stack element of the given type to memory
 	/// @returns the number of bytes moved to memory
 	unsigned appendTypeMoveToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset,

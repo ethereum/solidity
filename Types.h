@@ -367,14 +367,15 @@ public:
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	explicit FunctionType(EventDefinition const& _event);
 	FunctionType(strings const& _parameterTypes, strings const& _returnParameterTypes,
-				 Location _location = Location::Internal):
+				 Location _location = Location::Internal, bool _arbitraryParameters = false):
 		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),
-					 _location) {}
+					 _location, _arbitraryParameters) {}
 	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
 				 Location _location = Location::Internal,
-				 bool _gasSet = false, bool _valueSet = false):
+				 bool _arbitraryParameters = false, bool _gasSet = false, bool _valueSet = false):
 		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),
-		m_location(_location), m_gasSet(_gasSet), m_valueSet(_valueSet) {}
+		m_location(_location),
+		m_arbitraryParameters(_arbitraryParameters), m_gasSet(_gasSet), m_valueSet(_valueSet) {}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
 	std::vector<std::string> const& getParameterNames() const { return m_parameterNames; }
@@ -407,6 +408,9 @@ public:
 	/// Can contain a nullptr in which case indicates absence of documentation
 	ASTPointer<ASTString> getDocumentation() const;
 
+	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
+	bool padArguments() const { return !(m_location == Location::SHA3 || m_location == Location::SHA256 || m_location == Location::RIPEMD160); }
+	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
 
@@ -422,6 +426,8 @@ private:
 	std::vector<std::string> m_parameterNames;
 	std::vector<std::string> m_returnParameterNames;
 	Location const m_location;
+	/// true iff the function takes an arbitrary number of arguments of arbitrary types
+	bool const m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
 	bool m_isConstant;
