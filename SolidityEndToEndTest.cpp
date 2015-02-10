@@ -2254,7 +2254,26 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
 }
 
-BOOST_AUTO_TEST_CASE(storing_bytes)
+BOOST_AUTO_TEST_CASE(store_bytes)
+{
+	// this test just checks that the copy loop does not mess up the stack
+	char const* sourceCode = R"(
+		contract C {
+			function save() returns (uint r) {
+				r = 23;
+				savedData = msg.data;
+				r = 24;
+			}
+			bytes savedData;
+		}
+	)";
+	compileAndRun(sourceCode);
+	// empty copy loop
+	BOOST_CHECK(callContractFunction("save()") == encodeArgs(24));
+	BOOST_CHECK(callContractFunction("save()", "abcdefg") == encodeArgs(24));
+}
+
+BOOST_AUTO_TEST_CASE(call_forward_bytes)
 {
 	char const* sourceCode = R"(
 		contract C {
@@ -2267,16 +2286,56 @@ BOOST_AUTO_TEST_CASE(storing_bytes)
 			function clear() {
 				delete savedData;
 			}
-			function doubleIt(uint a) returns (uint b) { return a * 2; }
+			function doubleIt(uint a) { val += a * 2; }
 			bytes savedData;
+			uint public val;
 		}
 	)";
 	compileAndRun(sourceCode);
 	FixedHash<4> innerHash(dev::sha3("doubleIt(uint256)"));
 	BOOST_CHECK(callContractFunction("save()", innerHash.asBytes(), 7) == bytes());
-	BOOST_CHECK(callContractFunction("forward()") == encodeArgs(14));
-	BOOST_CHECK(callContractFunction("clear()") == bytes());
+	BOOST_CHECK(callContractFunction("val()") == bytes(0));
 	BOOST_CHECK(callContractFunction("forward()") == bytes());
+	BOOST_CHECK(callContractFunction("val()") == bytes(14));
+	BOOST_CHECK(callContractFunction("clear()") == bytes());
+	BOOST_CHECK(callContractFunction("val()") == bytes(14));
+	BOOST_CHECK(callContractFunction("forward()") == bytes());
+	BOOST_CHECK(callContractFunction("val()") == bytes(14));
+}
+
+BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function save() {
+				data1 = data2 = msg.data;
+			}
+			function forward(bool selector) {
+				if (selector)
+				{
+					this.call(data1);
+					delete data1;
+				}
+				else
+				{
+					this.call(data2);
+					delete data2;
+				}
+			}
+			function doubleIt(uint a) returns (uint b) { val += a * 2; }
+			bytes data1;
+			bytes data2;
+			uint public val;
+		}
+	)";
+	compileAndRun(sourceCode);
+	FixedHash<4> innerHash(dev::sha3("doubleIt(uint256)"));
+	BOOST_CHECK(callContractFunction("save()", innerHash.asBytes(), 7) == bytes());
+	BOOST_CHECK(callContractFunction("val()") == bytes(0));
+	BOOST_CHECK(callContractFunction("forward(bool)", true) == bytes());
+	BOOST_CHECK(callContractFunction("val()") == bytes(14));
+	BOOST_CHECK(callContractFunction("forward(bool)", false) == bytes());
+	BOOST_CHECK(callContractFunction("val()") == bytes(28));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
