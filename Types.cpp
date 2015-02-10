@@ -26,6 +26,8 @@
 #include <libsolidity/Types.h>
 #include <libsolidity/AST.h>
 
+#include <limits>
+
 using namespace std;
 
 namespace dev
@@ -322,13 +324,11 @@ TypePointer IntegerConstantType::binaryOperatorResult(Token::Value _operator, Ty
 			break;
 		case Token::Exp:
 			if (other.m_value < 0)
-				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("exponent can't be negative"));
+				return TypePointer();
+			else if (other.m_value > std::numeric_limits<unsigned int>::max())
+				return TypePointer();
 			else
-			{
-				value = boost::multiprecision::powm(m_value, other.m_value, bigint(2) << 256);
-				if (value >= (bigint(1) << 256))
-					BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("exp result overflowed"));
-			}
+				value = boost::multiprecision::pow(m_value, other.m_value.convert_to<unsigned int>());
 			break;
 		default:
 			return TypePointer();
