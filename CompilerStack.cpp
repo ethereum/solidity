@@ -227,12 +227,12 @@ void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractN
 
 string const& CompilerStack::getInterface(string const& _contractName) const
 {
-	return getMetadata(_contractName, DocumentationType::ABI_INTERFACE);
+	return getMetadata(_contractName, DocumentationType::ABIInterface);
 }
 
 string const& CompilerStack::getSolidityInterface(string const& _contractName) const
 {
-	return getMetadata(_contractName, DocumentationType::ABI_SOLIDITY_INTERFACE);
+	return getMetadata(_contractName, DocumentationType::ABISolidityInterface);
 }
 
 string const& CompilerStack::getMetadata(string const& _contractName, DocumentationType _type) const
@@ -245,16 +245,16 @@ string const& CompilerStack::getMetadata(string const& _contractName, Documentat
 	std::unique_ptr<string const>* doc;
 	switch (_type)
 	{
-	case DocumentationType::NATSPEC_USER:
+	case DocumentationType::NatspecUser:
 		doc = &contract.userDocumentation;
 		break;
-	case DocumentationType::NATSPEC_DEV:
+	case DocumentationType::NatspecDev:
 		doc = &contract.devDocumentation;
 		break;
-	case DocumentationType::ABI_INTERFACE:
+	case DocumentationType::ABIInterface:
 		doc = &contract.interface;
 		break;
-	case DocumentationType::ABI_SOLIDITY_INTERFACE:
+	case DocumentationType::ABISolidityInterface:
 		doc = &contract.solidityInterface;
 		break;
 	default:
