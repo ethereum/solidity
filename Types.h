@@ -86,6 +86,7 @@ public:
 	///@name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
 	static TypePointer fromElementaryTypeName(Token::Value _typeToken);
+	static TypePointer fromElementaryTypeName(std::string const& _name);
 	static TypePointer fromUserDefinedTypeName(UserDefinedTypeName const& _typeName);
 	static TypePointer fromMapping(Mapping const& _typeName);
 	static TypePointer fromFunction(FunctionDefinition const& _function);

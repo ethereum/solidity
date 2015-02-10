@@ -92,21 +92,18 @@ private:
 	/// Appends code to call a function of the given type with the given arguments.
 	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
 									bool bare = false);
-	/// Appends code that evaluates the given arguments and moves the result to memory (with optional offset).
-	/// @returns the number of bytes moved to memory
-	unsigned appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
-										 TypePointers const& _types = {},
-										 unsigned _memoryOffset = 0,
-										 bool _padToWordBoundaries = true,
-										 bool _padExceptionIfFourBytes = false);
-	/// Appends code that moves a stack element of the given type to memory
-	/// @returns the number of bytes moved to memory
-	unsigned appendTypeMoveToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset,
-									bool _padToWordBoundaries = true);
-	/// Appends code that evaluates a single expression and moves the result to memory (with optional offset).
-	/// @returns the number of bytes moved to memory
-	unsigned appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression,
-										  unsigned _memoryOffset = 0);
+	/// Appends code that evaluates the given arguments and moves the result to memory. The memory offset is
+	/// expected to be on the stack and is updated by this call.
+	void appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
+									 TypePointers const& _types = {},
+									 bool _padToWordBoundaries = true,
+									 bool _padExceptionIfFourBytes = false);
+	/// Appends code that moves a stack element of the given type to memory. The memory offset is
+	/// expected below the stack element and is updated by this call.
+	void appendTypeMoveToMemory(Type const& _type, bool _padToWordBoundaries = true);
+	/// Appends code that evaluates a single expression and moves the result to memory. The memory offset is
+	/// expected to be on the stack and is updated by this call.
+	void appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression);
 
 	/// Appends code for a State Variable accessor function
 	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);

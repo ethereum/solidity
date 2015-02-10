@@ -207,15 +207,10 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 
 	for (TypePointer const& type: _typeParameters)
 	{
-		unsigned numBytes = type->getCalldataEncodedSize();
-		if (numBytes > 32)
-			BOOST_THROW_EXCEPTION(CompilerError()
-								  << errinfo_comment("Type " + type->toString() + " not yet supported."));
 		CompilerUtils(m_context).copyToStackTop(stackDepth, *type);
 		ExpressionCompiler::appendTypeConversion(m_context, *type, *type, true);
-		bool const c_leftAligned = type->getCategory() == Type::Category::String;
 		bool const c_padToWords = true;
-		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, c_leftAligned, c_padToWords);
+		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, *type, c_padToWords);
 		stackDepth -= type->getSizeOnStack();
 	}
 	// note that the stack is not cleaned up here

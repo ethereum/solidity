@@ -47,13 +47,14 @@ public:
 							bool _fromCalldata = false, bool _padToWordBoundaries = false);
 	/// Stores data from stack in memory.
 	/// @param _offset offset in memory
-	/// @param _bytes number of bytes to store
-	/// @param _leftAligned if true, data is left aligned on stack (otherwise right aligned)
+	/// @param _type type of the data on the stack
 	/// @param _padToWordBoundaries if true, pad the data to word (32 byte) boundaries
 	/// @returns the number of bytes written to memory (can be different from _bytes if
 	///          _padToWordBoundaries is true)
-	unsigned storeInMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false,
-						   bool _padToWordBoundaries = false);
+	unsigned storeInMemory(unsigned _offset, Type const& _type = IntegerType(256), bool _padToWordBoundaries = false);
+	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
+	/// and also updates that.
+	void storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries = true);
 	/// @returns _size rounded up to the next multiple of 32 (the number of bytes occupied in the
 	///          padded calldata)
 	static unsigned getPaddedSize(unsigned _size) { return ((_size + 31) / 32) * 32; }
@@ -72,7 +73,10 @@ public:
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
 	static const unsigned int dataStartOffset;
+
 private:
+	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries);
+
 	CompilerContext& m_context;
 };
 

@@ -62,20 +62,22 @@ unsigned CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _
 	}
 }
 
-unsigned CompilerUtils::storeInMemory(unsigned _offset, unsigned _bytes, bool _leftAligned,
-									  bool _padToWordBoundaries)
+unsigned CompilerUtils::storeInMemory(unsigned _offset, Type const& _type, bool _padToWordBoundaries)
 {
-	if (_bytes == 0)
+	unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
+	if (numBytes > 0)
+		m_context << u256(_offset) << eth::Instruction::MSTORE;
+	return numBytes;
+}
+
+void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
+{
+	unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
+	if (numBytes > 0)
 	{
-		m_context << eth::Instruction::POP;
-		return 0;
+		m_context << eth::Instruction::DUP2 << eth::Instruction::MSTORE;
+		m_context << u256(numBytes) << eth::Instruction::ADD;
 	}
-	solAssert(_bytes <= 32, "Memory store of more than 32 bytes requested.");
-	if (_bytes != 32 && !_leftAligned && !_padToWordBoundaries)
-		// shift the value accordingly before storing
-		m_context << (u256(1) << ((32 - _bytes) * 8)) << eth::Instruction::MUL;
-	m_context << u256(_offset) << eth::Instruction::MSTORE;
-	return _padToWordBoundaries ? 32 : _bytes;
 }
 
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
@@ -112,6 +114,23 @@ unsigned CompilerUtils::getSizeOnStack(vector<shared_ptr<Type const>> const& _va
 	for (shared_ptr<Type const> const& type: _variableTypes)
 		size += type->getSizeOnStack();
 	return size;
+}
+
+unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries)
+{
+	unsigned _encodedSize = _type.getCalldataEncodedSize();
+	unsigned numBytes = _padToWordBoundaries ? getPaddedSize(_encodedSize) : _encodedSize;
+	bool leftAligned = _type.getCategory() == Type::Category::String;
+	if (numBytes == 0)
+		m_context << eth::Instruction::POP;
+	else
+	{
+		solAssert(numBytes <= 32, "Memory store of more than 32 bytes requested.");
+		if (numBytes != 32 && !leftAligned && !_padToWordBoundaries)
+			// shift the value accordingly before storing
+			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
+	}
+	return numBytes;
 }
 
 }
