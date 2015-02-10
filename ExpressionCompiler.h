@@ -148,7 +148,8 @@ private:
 		/// be on the top of the stack, if any) in the lvalue and removes the reference.
 		/// Also removes the stored value from the stack if @a _move is
 		/// true. @a _expression is the current expression, used for error reporting.
-		void storeValue(Expression const& _expression, bool _move = false) const;
+		/// @a _sourceType is the type of the expression that is assigned.
+		void storeValue(Expression const& _expression, Type const& _sourceType, bool _move = false) const;
 		/// Stores zero in the lvalue.
 		/// @a _expression is the current expression, used for error reporting.
 		void setToZero(Expression const& _expression) const;
@@ -159,6 +160,8 @@ private:
 	private:
 		/// Convenience function to retrieve Value from Storage. Specific version of @ref retrieveValue
 		void retrieveValueFromStorage(TypePointer const& _type, bool _remove = false) const;
+		/// Copies from a byte array to a byte array in storage, both references on the stack.
+		void copyByteArrayToStorage(ByteArrayType const& _targetType, ByteArrayType const& _sourceType) const;
 
 		CompilerContext* m_context;
 		LValueType m_type = LValueType::None;

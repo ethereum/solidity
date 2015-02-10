@@ -518,6 +518,13 @@ bool ByteArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	return (m_dynamicLength == other.m_dynamicLength || m_length == other.m_length);
 }
 
+TypePointer ByteArrayType::unaryOperatorResult(Token::Value _operator) const
+{
+	if (_operator == Token::Delete)
+		return make_shared<VoidType>();
+	return TypePointer();
+}
+
 bool ByteArrayType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
@@ -525,6 +532,14 @@ bool ByteArrayType::operator==(Type const& _other) const
 	ByteArrayType const& other = dynamic_cast<ByteArrayType const&>(_other);
 	return other.m_location == m_location && other.m_dynamicLength == m_dynamicLength
 			&& other.m_length == m_length && other.m_offset == m_offset;
+}
+
+unsigned ByteArrayType::getSizeOnStack() const
+{
+	if (m_location == Location::CallData)
+		return 0;
+	else
+		return 1;
 }
 
 bool ContractType::operator==(Type const& _other) const
@@ -963,8 +978,7 @@ MagicType::MagicType(MagicType::Kind _kind):
 		m_members = MemberList({{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"gas", make_shared<IntegerType>(256)},
 								{"value", make_shared<IntegerType>(256)},
-								{"data", make_shared<ByteArrayType>(ByteArrayType::Location::CallData,
-																	0, 0, true)}});
+								{"data", make_shared<ByteArrayType>(ByteArrayType::Location::CallData)}});
 		break;
 	case Kind::Transaction:
 		m_members = MemberList({{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},

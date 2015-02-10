@@ -59,13 +59,15 @@ void ExpressionCompiler::appendStateVariableAccessor(CompilerContext& _context, 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	_assignment.getRightHandSide().accept(*this);
-	appendTypeConversion(*_assignment.getRightHandSide().getType(), *_assignment.getType());
+	if (_assignment.getType()->isValueType())
+		appendTypeConversion(*_assignment.getRightHandSide().getType(), *_assignment.getType());
 	_assignment.getLeftHandSide().accept(*this);
 	solAssert(m_currentLValue.isValid(), "LValue not retrieved.");
 
 	Token::Value op = _assignment.getAssignmentOperator();
 	if (op != Token::Assign) // compound assignment
 	{
+		solAssert(_assignment.getType()->isValueType(), "Compound operators not implemented for non-value types.");
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
 		m_currentLValue.retrieveValue(_assignment.getType(), _assignment.getLocation(), true);
@@ -73,7 +75,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1;
 	}
-	m_currentLValue.storeValue(_assignment);
+	m_currentLValue.storeValue(_assignment, *_assignment.getRightHandSide().getType());
 	m_currentLValue.reset();
 
 	return false;
@@ -126,7 +128,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		// Stack for postfix: *ref [ref] (*ref)+-1
 		if (m_currentLValue.storesReferenceOnStack())
 			m_context << eth::Instruction::SWAP1;
-		m_currentLValue.storeValue(_unaryOperation, !_unaryOperation.isPrefixOperation());
+		m_currentLValue.storeValue(_unaryOperation, *_unaryOperation.getType(), !_unaryOperation.isPrefixOperation());
 		m_currentLValue.reset();
 		break;
 	case Token::Add: // +
@@ -472,6 +474,10 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			m_context << eth::Instruction::GAS;
 		else if (member == "gasprice")
 			m_context << eth::Instruction::GASPRICE;
+		else if (member == "data")
+		{
+			// nothing to store on the stack
+		}
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown magic member."));
 		break;
@@ -1014,7 +1020,7 @@ void ExpressionCompiler::LValue::retrieveValueFromStorage(TypePointer const& _ty
 		}
 }
 
-void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool _move) const
+void ExpressionCompiler::LValue::storeValue(Expression const& _expression, Type const& _sourceType, bool _move) const
 {
 	switch (m_type)
 	{
@@ -1032,28 +1038,45 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, bool 
 		break;
 	}
 	case LValueType::Storage:
-		if (!_expression.getType()->isValueType())
-			break; // no distinction between value and reference for non-value types
 		// stack layout: value value ... value ref
-		if (!_move) // copy values
+		if (_expression.getType()->isValueType())
 		{
-			if (m_size + 1 > 16)
-				BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
-													  << errinfo_comment("Stack too deep."));
+			if (!_move) // copy values
+			{
+				if (m_size + 1 > 16)
+					BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_expression.getLocation())
+														  << errinfo_comment("Stack too deep."));
+				for (unsigned i = 0; i < m_size; ++i)
+					*m_context << eth::dupInstruction(m_size + 1) << eth::Instruction::SWAP1;
+			}
+			if (m_size > 0) // store high index value first
+				*m_context << u256(m_size - 1) << eth::Instruction::ADD;
 			for (unsigned i = 0; i < m_size; ++i)
-				*m_context << eth::dupInstruction(m_size + 1) << eth::Instruction::SWAP1;
+			{
+				if (i + 1 >= m_size)
+					*m_context << eth::Instruction::SSTORE;
+				else
+					// v v ... v v r+x
+					*m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2
+							   << eth::Instruction::SSTORE
+							   << u256(1) << eth::Instruction::SWAP1 << eth::Instruction::SUB;
+			}
 		}
-		if (m_size > 0) // store high index value first
-			*m_context << u256(m_size - 1) << eth::Instruction::ADD;
-		for (unsigned i = 0; i < m_size; ++i)
+		else
 		{
-			if (i + 1 >= m_size)
-				*m_context << eth::Instruction::SSTORE;
+			solAssert(!_move, "Move assign for non-value types not implemented.");
+			solAssert(_sourceType.getCategory() == _expression.getType()->getCategory(), "");
+			if (_expression.getType()->getCategory() == Type::Category::ByteArray)
+				copyByteArrayToStorage(dynamic_cast<ByteArrayType const&>(*_expression.getType()),
+									   dynamic_cast<ByteArrayType const&>(_sourceType));
+			else if (_expression.getType()->getCategory() == Type::Category::Struct)
+			{
+				//@todo
+				solAssert(false, "Struct copy not yet implemented.");
+			}
 			else
-				// v v ... v v r+x
-				*m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2
-						   << eth::Instruction::SSTORE
-						   << u256(1) << eth::Instruction::SWAP1 << eth::Instruction::SUB;
+				BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
+															  << errinfo_comment("Invalid non-value type for assignment."));
 		}
 		break;
 	case LValueType::Memory:
@@ -1143,6 +1166,61 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_identifier.getLocation())
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
+}
+
+void ExpressionCompiler::LValue::copyByteArrayToStorage(ByteArrayType const& _targetType,
+														ByteArrayType const& _sourceType) const
+{
+	// stack layout: [source_ref] target_ref (head)
+	// need to leave target_ref on the stack at the end
+	solAssert(m_type == LValueType::Storage, "");
+	solAssert(_targetType.getLocation() == ByteArrayType::Location::Storage, "");
+	switch (_sourceType.getLocation())
+	{
+	case ByteArrayType::Location::CallData:
+	{
+		// @todo this does not take length into account. It also assumes that after "CALLDATALENGTH" we only have zeros.
+		// add some useful constants
+		*m_context << u256(32) << u256(1);
+		// stack here: target_ref 32 1
+		// store length (in bytes)
+		if (_sourceType.getOffset() == 0)
+			*m_context << eth::Instruction::CALLDATASIZE;
+		else
+			*m_context << _sourceType.getOffset() << eth::Instruction::CALLDATASIZE << eth::Instruction::SUB;
+		*m_context << eth::Instruction::DUP1 << eth::Instruction::DUP5 << eth::Instruction::SSTORE;
+		// jump to end if length is zero
+		*m_context << eth::Instruction::ISZERO;
+		eth::AssemblyItem loopEnd = m_context->newTag();
+		m_context->appendConditionalJumpTo(loopEnd);
+		// actual array data is stored at SHA3(storage_offset)
+		*m_context << eth::Instruction::DUP3;
+		CompilerUtils(*m_context).storeInMemory(0);
+		*m_context << u256(32) << u256(0) << eth::Instruction::SHA3;
+
+		*m_context << _sourceType.getOffset();
+		// stack now: target_ref 32 1 target_data_ref calldata_offset
+		eth::AssemblyItem loopStart = m_context->newTag();
+		*m_context << loopStart
+				   // copy from calldata and store
+				   << eth::Instruction::DUP1 << eth::Instruction::CALLDATALOAD
+				   << eth::Instruction::DUP3 << eth::Instruction::SSTORE
+				   // increment target_data_ref by 1
+				   << eth::Instruction::SWAP1 << eth::Instruction::DUP3 << eth::Instruction::ADD
+				   // increment calldata_offset by 32
+				   << eth::Instruction::SWAP1 << eth::Instruction::DUP4 << eth::Instruction::ADD
+				   // check for loop condition
+				   << eth::Instruction::DUP1 << eth::Instruction::CALLDATASIZE << eth::Instruction::GT;
+		m_context->appendConditionalJumpTo(loopStart);
+		*m_context << eth::Instruction::POP << eth::Instruction::POP;
+		*m_context << loopEnd << eth::Instruction::POP << eth::Instruction::POP;
+		break;
+	}
+	case ByteArrayType::Location::Storage:
+		break;
+	default:
+		solAssert(false, "Byte array location not implemented.");
+	}
 }
 
 }
