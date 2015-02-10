@@ -2201,6 +2201,29 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
 						bytes({0x66, 0x6f, 0x6f}))));
 }
 
+BOOST_AUTO_TEST_CASE(generic_call)
+{
+	char const* sourceCode = R"**(
+			contract receiver {
+				uint public received;
+				function receive(uint256 x) { received = x; }
+			}
+			contract sender {
+				function doSend(address rec) returns (uint d)
+				{
+					string4 signature = string4(string32(sha3("receive(uint256)")));
+					rec.call.value(2)(signature, 23);
+					return receiver(rec).received();
+				}
+			}
+	)**";
+	compileAndRun(sourceCode, 0, "receiver");
+	u160 const c_receiverAddress = m_contractAddress;
+	compileAndRun(sourceCode, 50, "sender");
+	BOOST_REQUIRE(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(23));
+	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
