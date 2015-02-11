@@ -5,13 +5,13 @@
         "currentNumber" : "1",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (BLOCKHASH 2) }",
             "storage": {}
         }
@@ -33,13 +33,13 @@
         "currentNumber" : "1",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (BLOCKHASH 1) }",
             "storage": {}
         }
@@ -61,13 +61,13 @@
         "currentNumber" : "258",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (BLOCKHASH 1) }",
             "storage": {}
         }
@@ -89,13 +89,13 @@
         "currentNumber" : "257",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (BLOCKHASH 0) }",
             "storage": {}
         }
@@ -117,13 +117,13 @@
         "currentNumber" : "257",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (BLOCKHASH 1) [[ 1 ]] (BLOCKHASH 2) [[ 2 ]] (BLOCKHASH 256) }",
             "storage": {}
         }
@@ -145,13 +145,13 @@
         "currentNumber" : "257",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (BLOCKHASH 0) [[ 1 ]] (BLOCKHASH 257) [[ 2 ]] (BLOCKHASH 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
             "storage": {}
         }
@@ -173,13 +173,13 @@
         "currentNumber" : "0",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (COINBASE) }",
             "storage": {}
         }
@@ -201,13 +201,13 @@
         "currentNumber" : "0",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (TIMESTAMP) }",
             "storage": {}
         }
@@ -229,13 +229,13 @@
         "currentNumber" : "0",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (NUMBER) }",
             "storage": {}
         }
@@ -257,13 +257,13 @@
         "currentNumber" : "0",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (DIFFICULTY) }",
             "storage": {}
         }
@@ -285,13 +285,13 @@
         "currentNumber" : "0",
         "currentGasLimit" : "1000000",
         "currentDifficulty" : "256",
-        "currentTimestamp" : 1,
+        "currentTimestamp" : "1",
         "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
-            "nonce" : 0,
+            "nonce" : "0",
             "code" : "{ [[ 0 ]] (GASLIMIT) }",
             "storage": {}
         }

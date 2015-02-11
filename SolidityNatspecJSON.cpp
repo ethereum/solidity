@@ -54,9 +54,9 @@ public:
 		}
 
 		if (_userDocumentation)
-			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NATSPEC_USER);
+			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NatspecUser);
 		else
-			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NATSPEC_DEV);
+			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NatspecDev);
 		Json::Value generatedDocumentation;
 		m_reader.parse(generatedDocumentationString, generatedDocumentation);
 		Json::Value expectedDocumentation;

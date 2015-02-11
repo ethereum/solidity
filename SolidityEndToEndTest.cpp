@@ -56,6 +56,36 @@ BOOST_AUTO_TEST_CASE(empty_contract)
 	BOOST_CHECK(callContractFunction("i_am_not_there()", bytes()).empty());
 }
 
+BOOST_AUTO_TEST_CASE(exp_operator)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint d) { return 2 ** a; }
+		})";
+	compileAndRun(sourceCode);
+	testSolidityAgainstCppOnRange("f(uint256)", [](u256 const& a) -> u256 { return u256(1 << a.convert_to<int>()); }, 0, 16);
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_const)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) { return 2 ** 3; }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(8)));
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(int d) { return (-2) ** 3; }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(-8)));
+}
+
 BOOST_AUTO_TEST_CASE(recursive_calls)
 {
 	char const* sourceCode = "contract test {\n"
@@ -2199,6 +2229,29 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
 						bytes({0x0, 0xc}) +
 						bytes({0x91}) +
 						bytes({0x66, 0x6f, 0x6f}))));
+}
+
+BOOST_AUTO_TEST_CASE(generic_call)
+{
+	char const* sourceCode = R"**(
+			contract receiver {
+				uint public received;
+				function receive(uint256 x) { received = x; }
+			}
+			contract sender {
+				function doSend(address rec) returns (uint d)
+				{
+					string4 signature = string4(string32(sha3("receive(uint256)")));
+					rec.call.value(2)(signature, 23);
+					return receiver(rec).received();
+				}
+			}
+	)**";
+	compileAndRun(sourceCode, 0, "receiver");
+	u160 const c_receiverAddress = m_contractAddress;
+	compileAndRun(sourceCode, 50, "sender");
+	BOOST_REQUIRE(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(23));
+	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
