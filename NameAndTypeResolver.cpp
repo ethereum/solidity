@@ -58,6 +58,8 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
 		ReferencesResolver resolver(*structDef, *this, &_contract, nullptr);
+	for (ASTPointer<EnumDefinition> const& enumDef: _contract.getDefinedEnums())
+		ReferencesResolver resolver(*enumDef, *this, &_contract, nullptr);
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		ReferencesResolver resolver(*variable, *this, &_contract, nullptr);
 	for (ASTPointer<EventDefinition> const& event: _contract.getEvents())
@@ -79,6 +81,8 @@ void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
 {
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
 		structDef->checkValidityOfMembers();
+	for (ASTPointer<EnumDefinition> const& enumDef: _contract.getDefinedEnums())
+		enumDef->checkValidityOfMembers();
 	_contract.checkTypeRequirements();
 }
 
@@ -217,6 +221,17 @@ bool DeclarationRegistrationHelper::visit(StructDefinition& _struct)
 }
 
 void DeclarationRegistrationHelper::endVisit(StructDefinition&)
+{
+	closeCurrentScope();
+}
+
+bool DeclarationRegistrationHelper::visit(EnumDefinition& _enum)
+{
+	registerDeclaration(_enum, true);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(EnumDefinition&)
 {
 	closeCurrentScope();
 }

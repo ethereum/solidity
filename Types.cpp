@@ -74,6 +74,8 @@ TypePointer Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
 	Declaration const* declaration = _typeName.getReferencedDeclaration();
 	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
 		return make_shared<StructType>(*structDef);
+	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
+		return make_shared<EnumType>(*enumDef);
 	else if (FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(declaration))
 		return make_shared<FunctionType>(*function);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
