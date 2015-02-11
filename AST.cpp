@@ -247,7 +247,7 @@ void StructDefinition::checkRecursion() const
 												<< errinfo_comment("Recursive struct definition."));
 		definitionsSeen.insert(def);
 		for (ASTPointer<VariableDeclaration> const& member: def->getMembers())
-			if (member->getType()->getCategory() == Type::Category::STRUCT)
+			if (member->getType()->getCategory() == Type::Category::Struct)
 			{
 				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->getTypeName());
 				queue.push_back(&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()));
@@ -279,9 +279,9 @@ string FunctionDefinition::getCanonicalSignature() const
 Declaration::LValueType VariableDeclaration::getLValueType() const
 {
 	if (dynamic_cast<FunctionDefinition const*>(getScope()) || dynamic_cast<ModifierDefinition const*>(getScope()))
-		return Declaration::LValueType::LOCAL;
+		return Declaration::LValueType::Local;
 	else
-		return Declaration::LValueType::STORAGE;
+		return Declaration::LValueType::Storage;
 }
 
 TypePointer ModifierDefinition::getType(ContractDefinition const*) const
@@ -384,14 +384,14 @@ void VariableDefinition::checkTypeRequirements()
 			// no type declared and no previous assignment, infer the type
 			m_value->checkTypeRequirements();
 			TypePointer type = m_value->getType();
-			if (type->getCategory() == Type::Category::INTEGER_CONSTANT)
+			if (type->getCategory() == Type::Category::IntegerConstant)
 			{
 				auto intType = dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType();
 				if (!intType)
 					BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString()));
 				type = intType;
 			}
-			else if (type->getCategory() == Type::Category::VOID)
+			else if (type->getCategory() == Type::Category::Void)
 				BOOST_THROW_EXCEPTION(m_variable->createTypeError("var cannot be void type"));
 			m_variable->setType(type);
 		}
@@ -406,7 +406,7 @@ void Assignment::checkTypeRequirements()
 	if (!m_leftHandSide->getType()->isValueType() && !m_leftHandSide->isLocalLValue())
 		BOOST_THROW_EXCEPTION(createTypeError("Assignment to non-local non-value lvalue."));
 	m_type = m_leftHandSide->getType();
-	if (m_assigmentOperator == Token::ASSIGN)
+	if (m_assigmentOperator == Token::Assign)
 		m_rightHandSide->expectType(*m_type);
 	else
 	{
@@ -425,7 +425,7 @@ void Assignment::checkTypeRequirements()
 void ExpressionStatement::checkTypeRequirements()
 {
 	m_expression->checkTypeRequirements();
-	if (m_expression->getType()->getCategory() == Type::Category::INTEGER_CONSTANT)
+	if (m_expression->getType()->getCategory() == Type::Category::IntegerConstant)
 		if (!dynamic_pointer_cast<IntegerConstantType const>(m_expression->getType())->getIntegerType())
 			BOOST_THROW_EXCEPTION(m_expression->createTypeError("Invalid integer constant."));
 }
@@ -449,9 +449,9 @@ void Expression::requireLValue()
 
 void UnaryOperation::checkTypeRequirements()
 {
-	// INC, DEC, ADD, SUB, NOT, BIT_NOT, DELETE
+	// Inc, Dec, Add, Sub, Not, BitNot, Delete
 	m_subExpression->checkTypeRequirements();
-	if (m_operator == Token::Value::INC || m_operator == Token::Value::DEC || m_operator == Token::Value::DELETE)
+	if (m_operator == Token::Value::Inc || m_operator == Token::Value::Dec || m_operator == Token::Value::Delete)
 		m_subExpression->requireLValue();
 	m_type = m_subExpression->getType()->unaryOperatorResult(m_operator);
 	if (!m_type)
@@ -497,20 +497,21 @@ void FunctionCall::checkTypeRequirements()
 		// and then ask if that is implicitly convertible to the struct represented by the
 		// function parameters
 		TypePointers const& parameterTypes = functionType->getParameterTypes();
-		if (functionType->getLocation() != FunctionType::Location::SHA3 && parameterTypes.size() != m_arguments.size())
+		if (!functionType->takesArbitraryParameters() && parameterTypes.size() != m_arguments.size())
 			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
 
 		if (m_names.empty())
 		{
 			for (size_t i = 0; i < m_arguments.size(); ++i)
-				if (functionType->getLocation() != FunctionType::Location::SHA3 &&
+				if (!functionType->takesArbitraryParameters() &&
 						!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
 					BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError("Invalid type for argument in function call."));
 		}
 		else
 		{
-			if (functionType->getLocation() == FunctionType::Location::SHA3)
-				BOOST_THROW_EXCEPTION(createTypeError("Named arguments cannnot be used for SHA3."));
+			if (functionType->takesArbitraryParameters())
+				BOOST_THROW_EXCEPTION(createTypeError("Named arguments cannnot be used for functions "
+													  "that take arbitrary parameters."));
 			auto const& parameterNames = functionType->getParameterNames();
 			if (parameterNames.size() != m_names.size())
 				BOOST_THROW_EXCEPTION(createTypeError("Some argument names are missing."));
@@ -551,7 +552,7 @@ void FunctionCall::checkTypeRequirements()
 
 bool FunctionCall::isTypeConversion() const
 {
-	return m_expression->getType()->getCategory() == Type::Category::TYPE;
+	return m_expression->getType()->getCategory() == Type::Category::TypeType;
 }
 
 void NewExpression::checkTypeRequirements()
@@ -563,7 +564,7 @@ void NewExpression::checkTypeRequirements()
 	shared_ptr<ContractType const> contractType = make_shared<ContractType>(*m_contract);
 	TypePointers const& parameterTypes = contractType->getConstructorType()->getParameterTypes();
 	m_type = make_shared<FunctionType>(parameterTypes, TypePointers{contractType},
-									   FunctionType::Location::CREATION);
+									   FunctionType::Location::Creation);
 }
 
 void MemberAccess::checkTypeRequirements()
@@ -575,19 +576,19 @@ void MemberAccess::checkTypeRequirements()
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
 											  "visible in " + type.toString()));
 	//@todo later, this will not always be STORAGE
-	m_lvalue = type.getCategory() == Type::Category::STRUCT ? Declaration::LValueType::STORAGE : Declaration::LValueType::NONE;
+	m_lvalue = type.getCategory() == Type::Category::Struct ? Declaration::LValueType::Storage : Declaration::LValueType::None;
 }
 
 void IndexAccess::checkTypeRequirements()
 {
 	m_base->checkTypeRequirements();
-	if (m_base->getType()->getCategory() != Type::Category::MAPPING)
+	if (m_base->getType()->getCategory() != Type::Category::Mapping)
 		BOOST_THROW_EXCEPTION(m_base->createTypeError("Indexed expression has to be a mapping (is " +
 													  m_base->getType()->toString() + ")"));
 	MappingType const& type = dynamic_cast<MappingType const&>(*m_base->getType());
 	m_index->expectType(*type.getKeyType());
 	m_type = type.getValueType();
-	m_lvalue = Declaration::LValueType::STORAGE;
+	m_lvalue = Declaration::LValueType::Storage;
 }
 
 void Identifier::checkTypeRequirements()

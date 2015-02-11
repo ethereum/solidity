@@ -43,10 +43,10 @@ class InterfaceHandler;
 
 enum class DocumentationType: uint8_t
 {
-	NATSPEC_USER = 1,
-	NATSPEC_DEV,
-	ABI_INTERFACE,
-	ABI_SOLIDITY_INTERFACE
+	NatspecUser = 1,
+	NatspecDev,
+	ABIInterface,
+	ABISolidityInterface
 };
 
 extern const std::map<std::string, std::string> StandardSources;

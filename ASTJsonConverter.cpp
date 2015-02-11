@@ -118,7 +118,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 
 bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 {
-	bool isLocalVariable = (_node.getLValueType() == VariableDeclaration::LValueType::LOCAL);
+	bool isLocalVariable = (_node.getLValueType() == VariableDeclaration::LValueType::Local);
 	addJsonNode("VariableDeclaration",
 				{   make_pair("name", _node.getName()),
 					make_pair("local", boost::lexical_cast<std::string>(isLocalVariable))},
