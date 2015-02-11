@@ -5,13 +5,13 @@
             "currentNumber" : "0",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (SHA3 0 0)}",
                 "storage": {}
             }
@@ -33,13 +33,13 @@
             "currentNumber" : "0",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (SHA3 4 5)}",
                 "storage": {}
             }
@@ -61,13 +61,13 @@
             "currentNumber" : "0",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (SHA3 10 10)}",
                 "storage": {}
             }
@@ -89,13 +89,13 @@
             "currentNumber" : "0",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (SHA3 1000 0xfffff)}",
                 "storage": {}
             }
@@ -117,13 +117,13 @@
             "currentNumber" : "0",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (SHA3  0xfffffffff 100)}",
                 "storage": {}
             }
@@ -145,13 +145,13 @@
             "currentNumber" : "0",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (SHA3 10000 0xfffffffff )}",
                 "storage": {}
             }
@@ -173,13 +173,13 @@
             "currentNumber" : "0",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (SHA3 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)}",
                 "storage": {}
             }

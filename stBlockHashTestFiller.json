@@ -11,13 +11,13 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 0 ]] (BLOCKHASH 0) [[ 1 ]] (BLOCKHASH 5) [[ 2 ]] (BLOCKHASH 4) }",
                  "storage": {}
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "100000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -45,13 +45,13 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 0 ]] (BLOCKHASH 0) [[ 1 ]] (BLOCKHASH 257) [[ 2 ]] (BLOCKHASH 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
                  "storage": {}
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "100000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -79,13 +79,13 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 0 ]] (BLOCKHASH 1) [[ 1 ]] (BLOCKHASH 2) [[ 2 ]] (BLOCKHASH 256) }",
                  "storage": {}
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "100000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }

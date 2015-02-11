@@ -11,13 +11,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 23 3 29) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -115,13 +115,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "10000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 11000 3 0xffffffffffffffffffffff) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -149,13 +149,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 23 3 0) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -183,13 +183,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 23 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -218,13 +218,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 23 0 0) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -252,13 +252,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 1000 3 29) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -286,13 +286,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 23 0xfffffffffff 29) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -320,13 +320,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 23 3 0xfffffffffff) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -354,13 +354,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (BALANCE 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0baa ) }",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -388,7 +388,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
             },
@@ -401,7 +401,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -430,7 +430,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 0xffffffffff 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 0xffffffffffff 64 0) }",
                 "storage": {}
             },
@@ -443,7 +443,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -472,7 +472,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000 0xaa945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
             },
@@ -485,7 +485,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -514,7 +514,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5aa 23 0 64 64 0) }",
                 "storage": {}
             },
@@ -527,7 +527,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -556,7 +556,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 0 0 0) }",
                 "storage": {}
             },
@@ -569,7 +569,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -598,7 +598,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 0 31 1) [[ 1 ]] @0 }",
                 "storage": {}
             },
@@ -611,7 +611,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -639,7 +639,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "0x6001601f60006000601773945304eb96065b2a98b57a48a06ae28d285a71b56103e8f1600055600051565b6023602355",
                 "storage": {}
             },
@@ -652,7 +652,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -680,7 +680,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "0x6001601f60006000601773945304eb96065b2a98b57a48a06ae28d285a71b56103e8f160005560005156605b6023602355",
                 "storage": {}
             },
@@ -693,7 +693,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -721,7 +721,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) (POST 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 ) }",
                 "storage": {}
             },
@@ -734,7 +734,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -763,7 +763,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLSTATELESS 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 0 2 ) }",
                 "storage": {}
             },
@@ -776,7 +776,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -805,7 +805,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 0 2 ) }",
                 "storage": {}
             },
@@ -818,7 +818,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -848,7 +848,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 100 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
             },
@@ -861,7 +861,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -890,7 +890,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 987654321 64 64 0) }",
                 "storage": {}
             },
@@ -903,7 +903,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -931,7 +931,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 9865432 64 0) }",
                 "storage": {}
             },
@@ -944,7 +944,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -972,7 +972,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 987654 1) }",
                 "storage": {}
             },
@@ -985,7 +985,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1014,7 +1014,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 987654 0) }",
                 "storage": {}
             },
@@ -1027,7 +1027,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1055,7 +1055,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 987654 0 64 0) }",
                 "storage": {}
             },
@@ -1068,7 +1068,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1096,19 +1096,19 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "20000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  (CALL 100000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 0 0 0)  }",
                  "storage": {}
              },
              "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ [[ 0 ]] (+ (SLOAD 0) 1) [[ 1 ]] (CALL (- (GAS) 224) (ADDRESS) 0 0 0 0 0) } ",
                  "storage": {}
              },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1136,19 +1136,19 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "20000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  (CALL 100000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 0 0 0)  }",
                  "storage": {}
              },
              "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (LOG0 0 32) [[ 0 ]] (+ (SLOAD 0) 1) [[ 1 ]] (CALL (- (GAS) 224) (ADDRESS) 0 0 0 0 0) } ",
                  "storage": {}
              },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1176,19 +1176,19 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "20000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  (CALL 100000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 0 0 0)  }",
                  "storage": {}
              },
              "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ (MSTORE 0 (GAS)) (LOG0 0 32) [[ 0 ]] (+ (SLOAD 0) 1) [[ 1 ]] (CALL (- (GAS) 224) (ADDRESS) 0 0 0 0 0) } ",
                  "storage": {}
              },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1216,13 +1216,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "20000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[ 0 ]] (+ (SLOAD 0) 1) [[ 2 ]] (MUL (DIV @@0 0x0402) 0xfffffffffffffffffff) [[ 1 ]] (CALL (- (GAS) 1024) (ADDRESS) 0 0 (MUL (DIV @@0 0x0402) 0xfffffffffffffffffff) 0 0) } ",
                 "storage": {}
             },
            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                "balance" : "1000000000000000000",
-               "nonce" : 0,
+               "nonce" : "0",
                "code" : "",
                "storage": {}
            }
@@ -1250,13 +1250,13 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "20000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  [[ 0 ]] (+ (SLOAD 0) 1) [[ 1 ]] (CALL (- (GAS) 224) (ADDRESS) 0 0 0 0 0)  }",
                  "storage": {}
              },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1284,13 +1284,13 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "20000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  [[ 0 ]] (+ (SLOAD 0) 1) [[ 1 ]] (CALL (- (GAS) 224) (ADDRESS) 0 0 0 0 0)  }",
                  "storage": {}
              },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1318,13 +1318,13 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "20000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  [[ 0 ]] (+ (SLOAD 0) 1) [[ 1 ]] (CALL (- (GAS) 224) (ADDRESS) 0 0 0 0 0)  }",
                  "storage": {}
              },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1352,13 +1352,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[0]] (CALLER) (SUICIDE (CALLER))}",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1386,13 +1386,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[0]] (CALLER) (SUICIDE 0xaaa94f5374fce5edbc8e2a8697c15331677e6ebf0b)}",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1420,13 +1420,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[0]] (CALLER) (SUICIDE 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0baa)}",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1454,13 +1454,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[0]] (ORIGIN) (SUICIDE (ORIGIN))}",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1488,13 +1488,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[0]] (ADDRESS) (SUICIDE (ADDRESS))}",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1522,13 +1522,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (SUICIDE 0xaa1722f3947def4cf144679da39c4c32bdc35681 )}",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1556,13 +1556,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (SUICIDE (ADDRESS) )}",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1597,7 +1597,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1632,7 +1632,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1667,7 +1667,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1695,7 +1695,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
             },
@@ -1708,7 +1708,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1736,7 +1736,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 1000 0xaa945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                  "storage": {}
              },
@@ -1749,7 +1749,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -1777,7 +1777,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5aa 23 0 64 64 0) }",
                  "storage": {}
              },
@@ -1790,7 +1790,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -1818,7 +1818,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 0 0 0) }",
                  "storage": {}
              },
@@ -1831,7 +1831,7 @@
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "",
                  "storage": {}
              }
@@ -1859,13 +1859,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "0x6000355415600957005b60203560003555",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1893,7 +1893,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) }",
                 "storage": {}
             },
@@ -1906,7 +1906,7 @@
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1934,7 +1934,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  [[ (PC) ]] (CALL (- (GAS) 1000) 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) }",
                  "storage": {}
              },
@@ -1947,7 +1947,7 @@
              },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
@@ -1975,7 +1975,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1000000000000000000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  [[ 0 ]] (ADD (SLOAD 0) 1) (CALL (- (GAS) 1000) 0x945304eb96065b2a98b57a48a06ae28d285a71b5 1 0 0 0 0) }",
                  "storage": {}
              },
@@ -1988,7 +1988,7 @@
             },
            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                "balance" : "1000000000000000000",
-               "nonce" : 0,
+               "nonce" : "0",
                "code" : "",
                "storage": {}
            }
@@ -2016,7 +2016,7 @@
          "pre" : {
              "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                  "balance" : "1025000",
-                 "nonce" : 0,
+                 "nonce" : "0",
                  "code" : "{  [[ 0 ]] (ADD (SLOAD 0) 1) (CALL (- (GAS) 1000) 0x945304eb96065b2a98b57a48a06ae28d285a71b5 1 0 0 0 0) }",
                  "storage": {}
              },
@@ -2029,7 +2029,7 @@
             },
            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                "balance" : "1000000000000000000",
-               "nonce" : 0,
+               "nonce" : "0",
                "code" : "",
                "storage": {}
            }
@@ -2057,7 +2057,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) (SUICIDE 0x945304eb96065b2a98b57a48a06ae28d285a71b5)  }",
                 "storage": {}
             },
@@ -2070,7 +2070,7 @@
             },
            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                "balance" : "1000000000000000000",
-               "nonce" : 0,
+               "nonce" : "0",
                "code" : "",
                "storage": {}
            }
@@ -2098,7 +2098,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0)   }",
                 "storage": {}
             },
@@ -2111,7 +2111,7 @@
             },
            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                "balance" : "1000000000000000000",
-               "nonce" : 0,
+               "nonce" : "0",
                "code" : "",
                "storage": {}
            }
@@ -2139,13 +2139,13 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ [[0]] (CALLVALUE) }",
                 "storage": {}
             },
            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                "balance" : "1000000000000000000",
-               "nonce" : 0,
+               "nonce" : "0",
                "code" : "",
                "storage": {}
            }
@@ -2173,13 +2173,13 @@
     "pre": {
       "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
         "balance": "1000000000000000000",
-        "nonce": 0,
+        "nonce": "0",
         "code": "{ [[0]] (balance (address)) }",
         "storage": {}
       },
       "a94f5374fce5edbc8e2a8697c15331677e6ebf0b": {
         "balance": "1000000000000000000",
-        "nonce": 0,
+        "nonce": "0",
         "code": "",
         "storage": {}
       }
@@ -2207,13 +2207,13 @@
     "pre": {
       "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
         "balance": "1000000000000000000",
-        "nonce": 0,
+        "nonce": "0",
         "code": "{ [[0]] (balance (caller)) }",
         "storage": {}
       },
       "a94f5374fce5edbc8e2a8697c15331677e6ebf0b": {
         "balance": "1000000000000000000",
-        "nonce": 0,
+        "nonce": "0",
         "code": "",
         "storage": {}
       }
