@@ -282,12 +282,15 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 	vector<ASTPointer<EnumDeclaration>> members;
 	expectToken(Token::LBrace);
 
-	while (m_scanner->getCurrentToken() == Token::Identifier)
+	while (m_scanner->getCurrentToken() != Token::RBrace)
 	{
 		members.push_back(parseEnumDeclaration());
 		if (m_scanner->getCurrentToken() == Token::RBrace)
 			break;
 		expectToken(Token::Comma);
+		if (m_scanner->getCurrentToken() != Token::Identifier) {
+			BOOST_THROW_EXCEPTION(createParserError("Expected Identifier after ,"));
+		}
 	}
 
 	nodeFactory.markEndPosition();
