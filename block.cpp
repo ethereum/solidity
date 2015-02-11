@@ -70,86 +70,174 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
         if (_fillin == false)
         {
-            // TODO
+            BOOST_REQUIRE(o.count("genesisBlockHeader") > 0);
 
-            //			BOOST_REQUIRE(o.count("rlp") > 0);
-            //			const bytes rlpReaded = importByteArray(o["rlp"].get_str());
-            //			RLP myRLP(rlpReaded);
-            //			BlockInfo blockFromRlp;
-
-            //			try
-            //			{
-            //				blockFromRlp.populateFromHeader(myRLP, false);
-            //				//blockFromRlp.verifyInternals(rlpReaded);
-            //			}
-            //			catch(Exception const& _e)
-            //			{
-            //				cnote << "block construction did throw an exception: " << diagnostic_information(_e);
-            //				BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
-            //				BOOST_CHECK_MESSAGE(o.count("block") == 0, "A block object should not be defined because the block RLP is invalid!");
-            //				return;
-            //			}
-
-            //			BOOST_REQUIRE(o.count("block") > 0);
-
-            //			mObject tObj = o["block"].get_obj();
-            //			BlockInfo blockFromFields;
-            //			const bytes rlpreade2 = createBlockRLPFromFields(tObj);
-            //			RLP mysecondRLP(rlpreade2);
-            //			blockFromFields.populateFromHeader(mysecondRLP, false);
-
-            //			//Check the fields restored from RLP to original fields
-            //			BOOST_CHECK_MESSAGE(blockFromFields.hash == blockFromRlp.hash, "hash in given RLP not matching the block hash!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.parentHash == blockFromRlp.parentHash, "parentHash in given RLP not matching the block parentHash!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.sha3Uncles == blockFromRlp.sha3Uncles, "sha3Uncles in given RLP not matching the block sha3Uncles!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.coinbaseAddress == blockFromRlp.coinbaseAddress,"coinbaseAddress in given RLP not matching the block coinbaseAddress!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.stateRoot == blockFromRlp.stateRoot, "stateRoot in given RLP not matching the block stateRoot!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.transactionsRoot == blockFromRlp.transactionsRoot, "transactionsRoot in given RLP not matching the block transactionsRoot!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.logBloom == blockFromRlp.logBloom, "logBloom in given RLP not matching the block logBloom!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.difficulty == blockFromRlp.difficulty, "difficulty in given RLP not matching the block difficulty!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.number == blockFromRlp.number, "number in given RLP not matching the block number!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.gasLimit == blockFromRlp.gasLimit,"gasLimit in given RLP not matching the block gasLimit!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.gasUsed == blockFromRlp.gasUsed, "gasUsed in given RLP not matching the block gasUsed!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.timestamp == blockFromRlp.timestamp, "timestamp in given RLP not matching the block timestamp!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.extraData == blockFromRlp.extraData, "extraData in given RLP not matching the block extraData!");
-            //			BOOST_CHECK_MESSAGE(blockFromFields.nonce == blockFromRlp.nonce, "nonce in given RLP not matching the block nonce!");
-
-            //			BOOST_CHECK_MESSAGE(blockFromFields == blockFromRlp, "However, blockFromFields != blockFromRlp!");
-
-        }
-        else
-        {
-            BOOST_REQUIRE(o.count("block") > 0);
-
-            // construct Rlp of the given block
-            bytes blockRLP = createBlockRLPFromFields(o["block"].get_obj());
+            // construct RLP of the genesis block
+            bytes blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
             RLP myRLP(blockRLP);
             BlockInfo blockFromFields;
-            cout << "blockFromFields diff:" << blockFromFields.difficulty << endl;
 
             try
             {
-
                 blockFromFields.populateFromHeader(myRLP, false);
-                //blockFromFields.verifyInternals(blockRLP);
             }
             catch (Exception const& _e)
             {
                 cnote << "block construction did throw an exception: " << diagnostic_information(_e);
                 BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
-                o.erase(o.find("block"));
+                return;
             }
             catch (std::exception const& _e)
             {
                 cnote << "block construction did throw an exception: " << _e.what();
                 BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
-                o.erase(o.find("block"));
+                return;
             }
             catch(...)
             {
                 cnote << "block construction did throw an unknown exception\n";
-                o.erase(o.find("block"));
+                return;
             }
+
+            BOOST_REQUIRE(o.count("pre") > 0);
+
+            ImportTest importer(o["pre"].get_obj());
+            State theState(Address(), OverlayDB(), BaseState::Empty);
+            importer.importState(o["pre"].get_obj(), theState);
+
+            // commit changes to DB
+            theState.commit();
+
+            BOOST_CHECK_MESSAGE(blockFromFields.stateRoot == theState.rootHash(), "root hash do not match");
+			cout << "root hash - no fill in : " << theState.rootHash() << endl;
+			cout << "root hash - no fill in  - from block: " << blockFromFields.stateRoot << endl;
+
+            // create new "genesis" block
+            RLPStream rlpStream;
+            blockFromFields.streamRLP(rlpStream, WithNonce);
+
+            RLPStream block(3);
+            block.appendRaw(rlpStream.out());
+            block.appendRaw(RLPEmptyList);
+            block.appendRaw(RLPEmptyList);
+
+            blockFromFields.verifyInternals(&block.out());
+
+            // construc blockchain
+            BlockChain bc(block.out(), string(), true);
+
+            try
+            {
+                theState.sync(bc);
+				bytes blockRLP = importByteArray(o["rlp"].get_str());
+				cout << "import block rlp\n";
+				bc.import(blockRLP, theState.db());
+				cout << "sync with the state\n";
+				theState.sync(bc);
+            }
+			// if exception is thrown, RLP is invalid and not blockHeader, Transaction list, and Uncle list should be given
+            catch (Exception const& _e)
+            {
+                cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
+				BOOST_CHECK(o.count("blockHeader") == 0);
+				BOOST_CHECK(o.count("transactions") == 0);
+				BOOST_CHECK(o.count("uncleHeaders") == 0);
+            }
+            catch (std::exception const& _e)
+            {
+                cnote << "state sync or block import did throw an exception: " << _e.what();
+				BOOST_CHECK(o.count("blockHeader") == 0);
+				BOOST_CHECK(o.count("transactions") == 0);
+				BOOST_CHECK(o.count("uncleHeaders") == 0);
+            }
+            catch(...)
+            {
+				cnote << "state sync or block import did throw an exception\n";
+                BOOST_CHECK(o.count("blockHeader") == 0);
+                BOOST_CHECK(o.count("transactions") == 0);
+                BOOST_CHECK(o.count("uncleHeaders") == 0);
+            }
+
+
+            // if yes, check parameters in blockHeader
+            // check transaction list
+            // check uncle list
+
+			BOOST_REQUIRE(o.count("blockHeader") > 0);
+
+			mObject tObj = o["blockHeader"].get_obj();
+			BlockInfo blockHeaderFromFields;
+			const bytes rlpBytesBlockHeader = createBlockRLPFromFields(tObj);
+			RLP blockHeaderRLP(rlpBytesBlockHeader);
+			blockHeaderFromFields.populateFromHeader(blockHeaderRLP, false);
+
+			BlockInfo blockFromRlp = bc.info();
+
+			cout << "root hash - no fill in - from state : " << theState.rootHash() << endl;
+			cout << " hash - no fill in - from rlp : " << blockFromRlp.hash << endl;
+			cout << " hash - no fill in  - from block: " << blockHeaderFromFields.hash << endl;
+
+			//Check the fields restored from RLP to original fields
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.headerHash() == blockFromRlp.headerHash(), "hash in given RLP not matching the block hash!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.parentHash == blockFromRlp.parentHash, "parentHash in given RLP not matching the block parentHash!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.sha3Uncles == blockFromRlp.sha3Uncles, "sha3Uncles in given RLP not matching the block sha3Uncles!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.coinbaseAddress == blockFromRlp.coinbaseAddress,"coinbaseAddress in given RLP not matching the block coinbaseAddress!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.stateRoot == blockFromRlp.stateRoot, "stateRoot in given RLP not matching the block stateRoot!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.transactionsRoot == blockFromRlp.transactionsRoot, "transactionsRoot in given RLP not matching the block transactionsRoot!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.logBloom == blockFromRlp.logBloom, "logBloom in given RLP not matching the block logBloom!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.difficulty == blockFromRlp.difficulty, "difficulty in given RLP not matching the block difficulty!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.number == blockFromRlp.number, "number in given RLP not matching the block number!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasLimit == blockFromRlp.gasLimit,"gasLimit in given RLP not matching the block gasLimit!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasUsed == blockFromRlp.gasUsed, "gasUsed in given RLP not matching the block gasUsed!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.timestamp == blockFromRlp.timestamp, "timestamp in given RLP not matching the block timestamp!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.extraData == blockFromRlp.extraData, "extraData in given RLP not matching the block extraData!");
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields.nonce == blockFromRlp.nonce, "nonce in given RLP not matching the block nonce!");
+
+			BOOST_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, "However, blockHeaderFromFields != blockFromRlp!");
+
+        }
+        else
+        {
+            BOOST_REQUIRE(o.count("genesisBlockHeader") > 0);
+
+            // construct RLP of the genesis block
+            bytes blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
+            RLP myRLP(blockRLP);
+            BlockInfo blockFromFields;
+
+            try
+            {
+                blockFromFields.populateFromHeader(myRLP, false);
+            }
+            catch (Exception const& _e)
+            {
+                cnote << "block construction did throw an exception: " << diagnostic_information(_e);
+                BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
+                return;
+            }
+            catch (std::exception const& _e)
+            {
+                cnote << "block construction did throw an exception: " << _e.what();
+                BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
+                return;
+            }
+            catch(...)
+            {
+                cnote << "block construction did throw an unknown exception\n";
+                return;
+            }            
+
+            BOOST_REQUIRE(o.count("pre") > 0);
+
+            ImportTest importer(o["pre"].get_obj());
+            State theState(Address(), OverlayDB(), BaseState::Empty);
+            importer.importState(o["pre"].get_obj(), theState);
+
+            // commit changes to DB
+            theState.commit();
+
+
+            // fillin specific --- start
 
             BOOST_REQUIRE(o.count("transactions") > 0);
 
@@ -167,32 +255,27 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
                 BOOST_REQUIRE(tx.count("r") > 0);
                 BOOST_REQUIRE(tx.count("s") > 0);
                 BOOST_REQUIRE(tx.count("data") > 0);
-                cout << "attempt to import transaction\n";
-                txs.attemptImport(createTransactionFromFields(tx));
+
+                if (!txs.attemptImport(createTransactionFromFields(tx)))
+                    cnote << "failed importing transaction\n";
             }
-            cout << "done importing txs\n";
 
-            BOOST_REQUIRE(o.count("pre") > 0);
-            // create state
-
-            ImportTest importer(o["pre"].get_obj());
-            State theState(Address(), OverlayDB(), BaseState::Empty);
-            importer.importState(o["pre"].get_obj(), theState);
-
-            cout << "current state diff 1 : " << theState.info().difficulty << endl;
-            cout << "balance of a94f5374fce5edbc8e2a8697c15331677e6ebf0b: " << theState.balance(Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")) << endl;
-            theState.commit();
-            cout << "balance of a94f5374fce5edbc8e2a8697c15331677e6ebf0b: " << theState.balance(Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")) << endl;
+            // update stateRootHash
             blockFromFields.stateRoot = theState.rootHash();
-            cout << "stateRoot: " << blockFromFields.stateRoot << endl;
+			cout << "root hash1: " << theState.rootHash() << endl;
 
-            // find new nonce
+            // find new valid nonce
             ProofOfWork pow;
             MineInfo ret;
             tie(ret, blockFromFields.nonce) = pow.mine(blockFromFields.headerHash(WithoutNonce), blockFromFields.difficulty, 1000, true, false);
+              //---stop
 
-            // create new "genesis" block"
+			//update genesis block in json file
+			o["genesisBlockHeader"].get_obj()["stateRoot"] = toString(blockFromFields.stateRoot);
+			o["genesisBlockHeader"].get_obj()["nonce"] = toString(blockFromFields.nonce);
 
+
+            // create new "genesis" block
             RLPStream rlpStream;
             blockFromFields.streamRLP(rlpStream, WithNonce);
 
@@ -200,46 +283,35 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
             block.appendRaw(rlpStream.out());
             block.appendRaw(RLPEmptyList);
             block.appendRaw(RLPEmptyList);
-            //return block.out();
-            cout << "my genesis hash: " << sha3(RLP(block.out())[0].data()) << endl;
 
-            cout << "construct bc\n";
-            BlockChain bc(block.out(), std::string(), true);
-            cout << "pre difficulty: " << blockFromFields.difficulty << endl;
+            blockFromFields.verifyInternals(&block.out());
+
+            // construct blockchain
+            BlockChain bc(block.out(), string(), true);
+
+
 
             try
             {
-                //cout << "sync state with pre block" << endl;
                 theState.sync(bc);
-                cout << "sync bc and txs in state\n";
-                cout << "balance of a94f5374fce5edbc8e2a8697c15331677e6ebf0b: " << theState.balance(Address("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")) << endl;
-                cout << "current state diff: " << theState.info().difficulty << endl;
+				cout << "root hash2: " << theState.rootHash() << endl;
                 theState.sync(bc,txs);
-                cout << "current state diff: " << theState.info().difficulty << endl;
-                // lock
-                cout << "commit to mine\n";
-                theState.commitToMine(bc);  // will call uncommitToMine if a repeat.
-                cout << "current state diff: " << theState.info().difficulty << endl;
-                // unlock
+				cout << "root hash3: " << theState.rootHash() << endl;
+                theState.commitToMine(bc);
+				cout << "root hash4: " << theState.rootHash() << endl;
                 MineInfo info;
-                cout << "mine...\n";
                 for (info.completed = false; !info.completed; info = theState.mine()) {}
-                cout << "done mining, completeMine\n";
-                // lock
+				cout << "root hash5: " << theState.rootHash() << endl;
                 theState.completeMine();
-                cout << "current state diff: " << theState.info().difficulty << endl;
-                // unlock
-
-                cout << "new block: " << theState.blockData() << endl << theState.info() << endl;
-                cout << "current diff: " << theState.info().difficulty << endl;
+				cout << "root hash6: " << theState.rootHash() << endl;
             }
             catch (Exception const& _e)
             {
-                cnote << "state sync did throw an exception: " << diagnostic_information(_e);
+                cnote << "state sync or mining did throw an exception: " << diagnostic_information(_e);
             }
             catch (std::exception const& _e)
             {
-                cnote << "state sync did throw an exception: " << _e.what();
+                cnote << "state sync or mining did throw an exception: " << _e.what();
             }
 
             o["rlp"] = "0x" + toHex(theState.blockData());
@@ -267,7 +339,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
             // write uncle list
 
-            mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles. That will change.
+            mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles.
             o["uncleHeaders"] = aUncleList;
         }
     }
@@ -278,53 +350,14 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(BlockTests)
 
-//BOOST_AUTO_TEST_CASE(blFirstTest)
-//{
-//    dev::test::executeTests("blFirstTest", "/BlockTests", dev::test::doBlockTests);
-//}
-
 BOOST_AUTO_TEST_CASE(blValidBlockTest)
 {
     dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
 }
 
-//BOOST_AUTO_TEST_CASE(ttCreateTest)
-//{
-//	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-//	{
-//		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-//		if (arg == "--createtest")
-//		{
-//			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
-//			{
-//				cnote << "usage: ./testeth --createtest <PathToConstructor> <PathToDestiny>\n";
-//				return;
-//			}
-//			try
-//			{
-//				cnote << "Populating tests...";
-//				json_spirit::mValue v;
-//				string s = asString(dev::contents(boost::unit_test::framework::master_test_suite().argv[i + 1]));
-//				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + (string)boost::unit_test::framework::master_test_suite().argv[i + 1] + " is empty.");
-//				json_spirit::read_string(s, v);
-//				dev::test::doBlockTests(v, true);
-//				writeFile(boost::unit_test::framework::master_test_suite().argv[i + 2], asBytes(json_spirit::write_string(v, true)));
-//			}
-//			catch (Exception const& _e)
-//			{
-//				BOOST_ERROR("Failed block test with Exception: " << diagnostic_information(_e));
-//			}
-//			catch (std::exception const& _e)
-//			{
-//				BOOST_ERROR("Failed block test with Exception: " << _e.what());
-//			}
-//		}
-//	}
-//}
-
-//BOOST_AUTO_TEST_CASE(userDefinedFileTT)
-//{
-//	dev::test::userDefinedTest("--bltest", dev::test::doBlockTests);
-//}
+BOOST_AUTO_TEST_CASE(userDefinedFileBl)
+{
+    dev::test::userDefinedTest("--bltest", dev::test::doBlockTests);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
