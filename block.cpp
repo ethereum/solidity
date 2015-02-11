@@ -48,16 +48,13 @@ bytes createBlockRLPFromFields(mObject& _tObj)
     BOOST_REQUIRE(_tObj.count("nonce") > 0);
 
     // construct RLP of the given block
-    cout << "done with require\n";
     RLPStream rlpStream;
     rlpStream.appendList(14);
-    cout << "increate aha1\n";
     rlpStream <<  h256(_tObj["parentHash"].get_str()) << h256(_tObj["uncleHash"].get_str()) << Address(_tObj["coinbase"].get_str());
     rlpStream << h256(_tObj["stateRoot"].get_str()) << h256(_tObj["transactionsTrie"].get_str()) << h256(_tObj["receiptTrie"].get_str());
     rlpStream << LogBloom(_tObj["bloom"].get_str()) << u256(_tObj["difficulty"].get_str()) << u256(_tObj["number"].get_str());
     rlpStream << u256(_tObj["gasLimit"].get_str()) << u256(_tObj["gasUsed"].get_str()) << u256(_tObj["timestamp"].get_str());
     rlpStream << importByteArray(_tObj["extraData"].get_str()) << h256(_tObj["nonce"].get_str());
-    cout << "done createBlockRLPFromFields" << endl;
 
     return rlpStream.out();
 }
@@ -72,45 +69,44 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 		BOOST_REQUIRE(o.count("genesisBlockHeader") > 0);
 
 		// construct RLP of the genesis block
-		bytes blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
-		RLP myRLP(blockRLP);
+		const bytes c_blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
+		const RLP c_bRLP(c_blockRLP);
 		BlockInfo blockFromFields;
 
 		try
 		{
-			blockFromFields.populateFromHeader(myRLP, false);
+			blockFromFields.populateFromHeader(c_bRLP, false);
 		}
 		catch (Exception const& _e)
 		{
-			cnote << "block construction did throw an exception: " << diagnostic_information(_e);
-			BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
+			cnote << "block population did throw an exception: " << diagnostic_information(_e);
+			BOOST_ERROR("Failed block population with Exception: " << _e.what());
 			return;
 		}
 		catch (std::exception const& _e)
 		{
-			cnote << "block construction did throw an exception: " << _e.what();
-			BOOST_ERROR("Failed block construction Test with Exception: " << _e.what());
+			BOOST_ERROR("Failed block population with Exception: " << _e.what());
 			return;
 		}
 		catch(...)
 		{
-			cnote << "block construction did throw an unknown exception\n";
+			cnote << "block population did throw an unknown exception\n";
 			return;
 		}
 
 		BOOST_REQUIRE(o.count("pre") > 0);
 
 		ImportTest importer(o["pre"].get_obj());
-		State theState(Address(), OverlayDB(), BaseState::Empty);
-		importer.importState(o["pre"].get_obj(), theState);
+		State state(Address(), OverlayDB(), BaseState::Empty);
+		importer.importState(o["pre"].get_obj(), state);
 
 		// commit changes to DB
-		theState.commit();
+		state.commit();
 
 		if (_fillin)
-			blockFromFields.stateRoot = theState.rootHash();
+			blockFromFields.stateRoot = state.rootHash();
 		else
-			BOOST_CHECK_MESSAGE(blockFromFields.stateRoot == theState.rootHash(), "root hash do not match");
+			BOOST_CHECK_MESSAGE(blockFromFields.stateRoot == state.rootHash(), "root hash does not match");
 
 		if (_fillin)
 		{
@@ -165,12 +161,12 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 			try
 			{
-				theState.sync(bc);
-				theState.sync(bc,txs);
-				theState.commitToMine(bc);
+				state.sync(bc);
+				state.sync(bc,txs);
+				state.commitToMine(bc);
 				MineInfo info;
-				for (info.completed = false; !info.completed; info = theState.mine()) {}
-				theState.completeMine();
+				for (info.completed = false; !info.completed; info = state.mine()) {}
+				state.completeMine();
 			}
 			catch (Exception const& _e)
 			{
@@ -181,12 +177,12 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				cnote << "state sync or mining did throw an exception: " << _e.what();
 			}
 
-			o["rlp"] = "0x" + toHex(theState.blockData());
+			o["rlp"] = "0x" + toHex(state.blockData());
 
 			// write block header
 
 			mObject oBlockHeader;
-			BlockInfo current_BlockHeader = theState.info();
+			BlockInfo current_BlockHeader = state.info();
 			oBlockHeader["parentHash"] = toString(current_BlockHeader.parentHash);
 			oBlockHeader["uncleHash"] = toString(current_BlockHeader.sha3Uncles);
 			oBlockHeader["coinbase"] = toString(current_BlockHeader.coinbaseAddress);
@@ -214,10 +210,10 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 		{
 			try
 			{
-				theState.sync(bc);
+				state.sync(bc);
 				bytes blockRLP = importByteArray(o["rlp"].get_str());
-				bc.import(blockRLP, theState.db());
-				theState.sync(bc);
+				bc.import(blockRLP, state.db());
+				state.sync(bc);
 			}
 			// if exception is thrown, RLP is invalid and not blockHeader, Transaction list, and Uncle list should be given
 			catch (Exception const& _e)
