@@ -149,7 +149,7 @@ private:
 		void storeValue(Expression const& _expression, Type const& _sourceType, bool _move = false) const;
 		/// Stores zero in the lvalue.
 		/// @a _expression is the current expression, used for error reporting.
-		void setToZero(Expression const& _expression) const;
+		void setToZero(Expression const& _expression, Type const& _type) const;
 		/// Convenience function to convert the stored reference to a value and reset type to NONE if
 		/// the reference was not requested by @a _expression.
 		void retrieveValueIfLValueNotRequested(Expression const& _expression);

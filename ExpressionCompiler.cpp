@@ -105,7 +105,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		break;
 	case Token::Delete: // delete
 		solAssert(m_currentLValue.isValid(), "LValue not retrieved.");
-		m_currentLValue.setToZero(_unaryOperation);
+		m_currentLValue.setToZero(_unaryOperation, *_unaryOperation.getSubExpression().getType());
 		m_currentLValue.reset();
 		break;
 	case Token::Inc: // ++ (pre- or postfix)
@@ -886,43 +886,7 @@ void ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expressio
 
 void ExpressionCompiler::appendTypeMoveToMemory(Type const& _type, bool _padToWordBoundaries)
 {
-	// @TODO move this to CompilerUtils!
-
-	if (_type.getCategory() == Type::Category::ByteArray)
-	{
-		auto const& type = dynamic_cast<ByteArrayType const&>(_type);
-		solAssert(type.getLocation() == ByteArrayType::Location::Storage, "Non-storage byte arrays not yet implemented.");
-
-		m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-		// stack here: memory_offset storage_offset length_bytes
-		// jump to end if length is zero
-		m_context << eth::Instruction::DUP1 << eth::Instruction::ISZERO;
-		eth::AssemblyItem loopEnd = m_context.newTag();
-		m_context.appendConditionalJumpTo(loopEnd);
-		// compute memory end offset
-		m_context << eth::Instruction::DUP3 << eth::Instruction::ADD << eth::Instruction::SWAP2;
-		// actual array data is stored at SHA3(storage_offset)
-		m_context << eth::Instruction::SWAP1;
-		CompilerUtils(m_context).computeHashStatic();
-		m_context << eth::Instruction::SWAP1;
-
-		// stack here: memory_end_offset storage_data_offset memory_offset
-		eth::AssemblyItem loopStart = m_context.newTag();
-		m_context << loopStart
-				  // load and store
-				  << eth::Instruction::DUP2 << eth::Instruction::SLOAD
-				  << eth::Instruction::DUP2 << eth::Instruction::MSTORE
-				  // increment storage_data_offset by 1
-				  << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD
-				  // increment memory offset by 32
-				  << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD
-				  // check for loop condition
-				  << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::GT;
-		m_context.appendConditionalJumpTo(loopStart);
-		m_context << loopEnd << eth::Instruction::POP << eth::Instruction::POP;
-	}
-	else
-		CompilerUtils(m_context).storeInMemoryDynamic(_type, _padToWordBoundaries);
+	CompilerUtils(m_context).storeInMemoryDynamic(_type, _padToWordBoundaries);
 }
 
 void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression)
@@ -1097,8 +1061,9 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, Type 
 			solAssert(!_move, "Move assign for non-value types not implemented.");
 			solAssert(_sourceType.getCategory() == _expression.getType()->getCategory(), "");
 			if (_expression.getType()->getCategory() == Type::Category::ByteArray)
-				copyByteArrayToStorage(dynamic_cast<ByteArrayType const&>(*_expression.getType()),
-									   dynamic_cast<ByteArrayType const&>(_sourceType));
+				CompilerUtils(*m_context).copyByteArrayToStorage(
+							dynamic_cast<ByteArrayType const&>(*_expression.getType()),
+							dynamic_cast<ByteArrayType const&>(_sourceType));
 			else if (_expression.getType()->getCategory() == Type::Category::Struct)
 			{
 				//@todo
@@ -1122,7 +1087,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, Type 
 	}
 }
 
-void ExpressionCompiler::LValue::setToZero(Expression const& _expression) const
+void ExpressionCompiler::LValue::setToZero(Expression const& _expression, Type const& _type) const
 {
 	switch (m_type)
 	{
@@ -1139,20 +1104,21 @@ void ExpressionCompiler::LValue::setToZero(Expression const& _expression) const
 		break;
 	}
 	case LValueType::Storage:
-		if (m_size == 0)
-			*m_context << eth::Instruction::POP;
-		for (unsigned i = 0; i < m_size; ++i)
+		if (_type.getCategory() == Type::Category::ByteArray)
+			CompilerUtils(*m_context).clearByteArray(dynamic_cast<ByteArrayType const&>(_type));
+		else
 		{
-			if (i + 1 >= m_size)
-				*m_context << u256(0) << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
-			else
-				*m_context << u256(0) << eth::Instruction::DUP2 << eth::Instruction::SSTORE
-							<< u256(1) << eth::Instruction::ADD;
+			if (m_size == 0)
+				*m_context << eth::Instruction::POP;
+			for (unsigned i = 0; i < m_size; ++i)
+				if (i + 1 >= m_size)
+					*m_context << u256(0) << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
+				else
+					*m_context << u256(0) << eth::Instruction::DUP2 << eth::Instruction::SSTORE
+								<< u256(1) << eth::Instruction::ADD;
 		}
 		break;
 	case LValueType::Memory:
-		if (!_expression.getType()->isValueType())
-			break; // no distinction between value and reference for non-value types
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_expression.getLocation())
 													  << errinfo_comment("Location type not yet implemented."));
 		break;
@@ -1161,7 +1127,6 @@ void ExpressionCompiler::LValue::setToZero(Expression const& _expression) const
 													  << errinfo_comment("Unsupported location type."));
 		break;
 	}
-
 }
 
 void ExpressionCompiler::LValue::retrieveValueIfLValueNotRequested(Expression const& _expression)
@@ -1198,123 +1163,6 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
 }
 
-void ExpressionCompiler::LValue::copyByteArrayToStorage(ByteArrayType const& _targetType,
-														ByteArrayType const& _sourceType) const
-{
-	// stack layout: [source_ref] target_ref (head)
-	// need to leave target_ref on the stack at the end
-	solAssert(m_type == LValueType::Storage, "");
-	solAssert(_targetType.getLocation() == ByteArrayType::Location::Storage, "");
-
-	// @TODO move this to CompilerUtils!
-
-	switch (_sourceType.getLocation())
-	{
-	case ByteArrayType::Location::CallData:
-	{
-		// @todo this does not take length into account. It also assumes that after "CALLDATALENGTH" we only have zeros.
-		// add some useful constants
-		*m_context << u256(32) << u256(1);
-		// stack here: target_ref 32 1
-		// store length (in bytes)
-		if (_sourceType.getOffset() == 0)
-			*m_context << eth::Instruction::CALLDATASIZE;
-		else
-			*m_context << _sourceType.getOffset() << eth::Instruction::CALLDATASIZE << eth::Instruction::SUB;
-		*m_context << eth::Instruction::DUP1 << eth::Instruction::DUP5 << eth::Instruction::SSTORE;
-		// jump to end if length is zero
-		*m_context << eth::Instruction::ISZERO;
-		eth::AssemblyItem loopEnd = m_context->newTag();
-		m_context->appendConditionalJumpTo(loopEnd);
-		// actual array data is stored at SHA3(storage_offset)
-		*m_context << eth::Instruction::DUP3;
-		CompilerUtils(*m_context).computeHashStatic();
-
-		*m_context << _sourceType.getOffset();
-		// stack now: target_ref 32 1 target_data_ref calldata_offset
-		eth::AssemblyItem loopStart = m_context->newTag();
-		*m_context << loopStart
-				   // copy from calldata and store
-				   << eth::Instruction::DUP1 << eth::Instruction::CALLDATALOAD
-				   << eth::Instruction::DUP3 << eth::Instruction::SSTORE
-				   // increment target_data_ref by 1
-				   << eth::Instruction::SWAP1 << eth::Instruction::DUP3 << eth::Instruction::ADD
-				   // increment calldata_offset by 32
-				   << eth::Instruction::SWAP1 << eth::Instruction::DUP4 << eth::Instruction::ADD
-				   // check for loop condition
-				   << eth::Instruction::DUP1 << eth::Instruction::CALLDATASIZE << eth::Instruction::GT;
-		m_context->appendConditionalJumpTo(loopStart);
-		*m_context << eth::Instruction::POP << eth::Instruction::POP;
-		*m_context << loopEnd << eth::Instruction::POP << eth::Instruction::POP;
-		break;
-	}
-	case ByteArrayType::Location::Storage:
-	{
-		// this copies source to target and also clears target if it was larger
-
-		// stack: source_ref target_ref
-		// fetch lengthes
-		*m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP2
-				   << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-		// stack: target_len_bytes target_ref source_ref source_len_bytes
-		// store new target length
-		*m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::SSTORE;
-		// compute hashes (data positions)
-		*m_context << eth::Instruction::SWAP2;
-		CompilerUtils(*m_context).computeHashStatic();
-		*m_context << eth::Instruction::SWAP1;
-		CompilerUtils(*m_context).computeHashStatic();
-		// stack: target_len_bytes source_len_bytes target_data_pos source_data_pos
-		// convert lengthes from bytes to storage slots
-		*m_context << u256(31) << u256(32) << eth::Instruction::DUP1 << eth::Instruction::DUP3
-				   << eth::Instruction::DUP8 << eth::Instruction::ADD << eth::Instruction::DIV
-				   << eth::Instruction::SWAP2
-				   << eth::Instruction::DUP6 << eth::Instruction::ADD << eth::Instruction::DIV;
-		// stack: target_len_bytes source_len_bytes target_data_pos source_data_pos target_len source_len
-		// @todo we might be able to go without a third counter
-		*m_context << u256(0);
-		// stack: target_len_bytes source_len_bytes target_data_pos source_data_pos target_len source_len counter
-		eth::AssemblyItem copyLoopStart = m_context->newTag();
-		*m_context << copyLoopStart;
-		// check for loop condition
-		*m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3
-				   << eth::Instruction::GT << eth::Instruction::ISZERO;
-		eth::AssemblyItem copyLoopEnd = m_context->newTag();
-		m_context->appendConditionalJumpTo(copyLoopEnd);
-		// copy
-		*m_context << eth::Instruction::DUP4 << eth::Instruction::DUP2 << eth::Instruction::ADD
-				   << eth::Instruction::SLOAD
-				   << eth::Instruction::DUP6 << eth::Instruction::DUP3 << eth::Instruction::ADD
-				   << eth::Instruction::SSTORE;
-		// increment
-		*m_context << u256(1) << eth::Instruction::ADD;
-		m_context->appendJumpTo(copyLoopStart);
-		*m_context << copyLoopEnd;
-		// zero-out leftovers in target
-		eth::AssemblyItem zeroLoopStart = m_context->newTag();
-		*m_context << zeroLoopStart;
-		// check for loop condition
-		*m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4
-				   << eth::Instruction::GT << eth::Instruction::ISZERO;
-		eth::AssemblyItem zeroLoopEnd = m_context->newTag();
-		m_context->appendConditionalJumpTo(zeroLoopEnd);
-		// zero out
-		*m_context << u256(0)
-				   << eth::Instruction::DUP6 << eth::Instruction::DUP3 << eth::Instruction::ADD
-				   << eth::Instruction::SSTORE;
-		// increment
-		*m_context << u256(1) << eth::Instruction::ADD;
-		m_context->appendJumpTo(zeroLoopStart);
-		// cleanup
-		*m_context << zeroLoopEnd;
-		*m_context << eth::Instruction::POP << eth::Instruction::POP << eth::Instruction::POP
-				   << eth::Instruction::POP << eth::Instruction::POP << eth::Instruction::POP;
-		break;
-	}
-	default:
-		solAssert(false, "Given byte array location not implemented.");
-	}
-}
 
 }
 }

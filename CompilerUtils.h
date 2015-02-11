@@ -75,12 +75,23 @@ public:
 	/// @note Only works for types of fixed size.
 	void computeHashStatic(Type const& _type = IntegerType(256), bool _padToWordBoundaries = false);
 
+	/// Copies a byte array to a byte array in storage, where the target is assumed to be on the
+	/// to top of the stay. Leaves a reference to the target on the stack.
+	void copyByteArrayToStorage(ByteArrayType const& _targetType, ByteArrayType const& _sourceType) const;
+	/// Clears the length and data elements of the byte array referenced on the stack.
+	/// Removes the reference from the stack.
+	void clearByteArray(ByteArrayType const& _type) const;
+
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
 	static const unsigned int dataStartOffset;
 
 private:
-	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries);
+	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const;
+	/// Appends a loop that clears all storage between the storage reference at the stack top
+	/// and the one below it (excluding).
+	/// Will leave the single value of the end pointer on the stack.
+	void clearStorageLoop() const;
 
 	CompilerContext& m_context;
 };
