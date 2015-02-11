@@ -42,9 +42,6 @@ void connectClients(Client& c1, Client& c2);
 namespace test
 {
 
-struct ValueTooLarge: virtual Exception {};
-bigint const c_max256plus1 = bigint(1) << 256;
-
 class ImportTest
 {
 public:
