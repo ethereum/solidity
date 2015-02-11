@@ -29,50 +29,6 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-RLPStream createRLPStreamFromTransactionFields(mObject& _tObj)
-{
-	//Construct Rlp of the given transaction
-	RLPStream rlpStream;
-	rlpStream.appendList(_tObj.size());
-
-	if (_tObj.count("nonce") > 0)
-		rlpStream << bigint(_tObj["nonce"].get_str());
-
-	if (_tObj.count("gasPrice") > 0)
-		rlpStream << bigint(_tObj["gasPrice"].get_str());
-
-	if (_tObj.count("gasLimit") > 0)
-		rlpStream << bigint(_tObj["gasLimit"].get_str());
-
-	if (_tObj.count("to") > 0)
-	{
-		if (_tObj["to"].get_str().empty())
-			rlpStream << "";
-		else
-			rlpStream << importByteArray(_tObj["to"].get_str());
-	}
-
-	if (_tObj.count("value") > 0)
-		rlpStream << bigint(_tObj["value"].get_str());
-
-	if (_tObj.count("data") > 0)
-		rlpStream << importData(_tObj);
-
-	if (_tObj.count("v") > 0)
-		rlpStream << bigint(_tObj["v"].get_str());
-
-	if (_tObj.count("r") > 0)
-		rlpStream << bigint(_tObj["r"].get_str());
-
-	if (_tObj.count("s") > 0)
-		rlpStream <<  bigint(_tObj["s"].get_str());
-
-	if (_tObj.count("extrafield") > 0)
-		rlpStream << bigint(_tObj["extrafield"].get_str());
-
-	return rlpStream;
-}
-
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
 	for (auto& i: _v.get_obj())

@@ -504,31 +504,48 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	}
 }
 
-bytes createTransactionFromFields(json_spirit::mObject& _tObj)
+RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 {
-	BOOST_REQUIRE(_tObj.count("data") > 0);
-	BOOST_REQUIRE(_tObj.count("value") > 0);
-	BOOST_REQUIRE(_tObj.count("gasPrice") > 0);
-	BOOST_REQUIRE(_tObj.count("gasLimit") > 0);
-	BOOST_REQUIRE(_tObj.count("nonce")> 0);
-	BOOST_REQUIRE(_tObj.count("to") > 0);
-
-	BOOST_REQUIRE(_tObj.count("v") > 0);
-	BOOST_REQUIRE(_tObj.count("r") > 0);
-	BOOST_REQUIRE(_tObj.count("s") > 0);
-
 	//Construct Rlp of the given transaction
 	RLPStream rlpStream;
-	rlpStream.appendList(9);
-	rlpStream <<  bigint(_tObj["nonce"].get_str()) << bigint(_tObj["gasPrice"].get_str()) << bigint(_tObj["gasLimit"].get_str());
-	if (_tObj["to"].get_str().empty())
-		rlpStream << "";
-	else
-		rlpStream << Address(_tObj["to"].get_str());
-	rlpStream << bigint(_tObj["value"].get_str()) << importData(_tObj);
-	rlpStream << bigint(_tObj["v"].get_str()) << bigint(_tObj["r"].get_str()) << bigint(_tObj["s"].get_str());
+	rlpStream.appendList(_tObj.size());
 
-	return rlpStream.out();
+	if (_tObj.count("nonce") > 0)
+		rlpStream << bigint(_tObj["nonce"].get_str());
+
+	if (_tObj.count("gasPrice") > 0)
+		rlpStream << bigint(_tObj["gasPrice"].get_str());
+
+	if (_tObj.count("gasLimit") > 0)
+		rlpStream << bigint(_tObj["gasLimit"].get_str());
+
+	if (_tObj.count("to") > 0)
+	{
+		if (_tObj["to"].get_str().empty())
+			rlpStream << "";
+		else
+			rlpStream << importByteArray(_tObj["to"].get_str());
+	}
+
+	if (_tObj.count("value") > 0)
+		rlpStream << bigint(_tObj["value"].get_str());
+
+	if (_tObj.count("data") > 0)
+		rlpStream << importData(_tObj);
+
+	if (_tObj.count("v") > 0)
+		rlpStream << bigint(_tObj["v"].get_str());
+
+	if (_tObj.count("r") > 0)
+		rlpStream << bigint(_tObj["r"].get_str());
+
+	if (_tObj.count("s") > 0)
+		rlpStream <<  bigint(_tObj["s"].get_str());
+
+	if (_tObj.count("extrafield") > 0)
+		rlpStream << bigint(_tObj["extrafield"].get_str());
+
+	return rlpStream;
 }
 
 

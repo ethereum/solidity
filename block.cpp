@@ -53,10 +53,11 @@ bytes createBlockRLPFromFields(mObject& _tObj)
     rlpStream.appendList(14);
     cout << "increate aha1\n";
     rlpStream <<  h256(_tObj["parentHash"].get_str()) << h256(_tObj["uncleHash"].get_str()) << Address(_tObj["coinbase"].get_str());
-    rlpStream << h256(_tObj["stateRoot"].get_str()) << h256(_tObj["transactionsTrie"].get_str()) << Address(_tObj["receiptTrie"].get_str());
+    rlpStream << h256(_tObj["stateRoot"].get_str()) << h256(_tObj["transactionsTrie"].get_str()) << h256(_tObj["receiptTrie"].get_str());
     rlpStream << LogBloom(_tObj["bloom"].get_str()) << u256(_tObj["difficulty"].get_str()) << u256(_tObj["number"].get_str());
     rlpStream << u256(_tObj["gasLimit"].get_str()) << u256(_tObj["gasUsed"].get_str()) << u256(_tObj["timestamp"].get_str());
     rlpStream << importByteArray(_tObj["extraData"].get_str()) << h256(_tObj["nonce"].get_str());
+    cout << "done createBlockRLPFromFields" << endl;
 
     return rlpStream.out();
 }
@@ -105,12 +106,10 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
             State theState(Address(), OverlayDB(), BaseState::Empty);
             importer.importState(o["pre"].get_obj(), theState);
 
-            // commit changes to DB
+             // commit changes to DB
             theState.commit();
 
             BOOST_CHECK_MESSAGE(blockFromFields.stateRoot == theState.rootHash(), "root hash do not match");
-			cout << "root hash - no fill in : " << theState.rootHash() << endl;
-			cout << "root hash - no fill in  - from block: " << blockFromFields.stateRoot << endl;
 
             // create new "genesis" block
             RLPStream rlpStream;
@@ -123,17 +122,15 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
             blockFromFields.verifyInternals(&block.out());
 
-            // construc blockchain
+            // construct blockchain
             BlockChain bc(block.out(), string(), true);
 
             try
             {
                 theState.sync(bc);
-				bytes blockRLP = importByteArray(o["rlp"].get_str());
-				cout << "import block rlp\n";
+                bytes blockRLP = importByteArray(o["rlp"].get_str());
 				bc.import(blockRLP, theState.db());
-				cout << "sync with the state\n";
-				theState.sync(bc);
+                theState.sync(bc);
             }
 			// if exception is thrown, RLP is invalid and not blockHeader, Transaction list, and Uncle list should be given
             catch (Exception const& _e)
@@ -173,18 +170,15 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 			BlockInfo blockFromRlp = bc.info();
 
-			cout << "root hash - no fill in - from state : " << theState.rootHash() << endl;
-			cout << " hash - no fill in - from rlp : " << blockFromRlp.hash << endl;
-			cout << " hash - no fill in  - from block: " << blockHeaderFromFields.hash << endl;
-
 			//Check the fields restored from RLP to original fields
-			BOOST_CHECK_MESSAGE(blockHeaderFromFields.headerHash() == blockFromRlp.headerHash(), "hash in given RLP not matching the block hash!");
+            BOOST_CHECK_MESSAGE(blockHeaderFromFields.headerHash(WithNonce) == blockFromRlp.headerHash(WithNonce), "hash in given RLP not matching the block hash!");
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.parentHash == blockFromRlp.parentHash, "parentHash in given RLP not matching the block parentHash!");
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.sha3Uncles == blockFromRlp.sha3Uncles, "sha3Uncles in given RLP not matching the block sha3Uncles!");
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.coinbaseAddress == blockFromRlp.coinbaseAddress,"coinbaseAddress in given RLP not matching the block coinbaseAddress!");
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.stateRoot == blockFromRlp.stateRoot, "stateRoot in given RLP not matching the block stateRoot!");
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.transactionsRoot == blockFromRlp.transactionsRoot, "transactionsRoot in given RLP not matching the block transactionsRoot!");
-			BOOST_CHECK_MESSAGE(blockHeaderFromFields.logBloom == blockFromRlp.logBloom, "logBloom in given RLP not matching the block logBloom!");
+            BOOST_CHECK_MESSAGE(blockHeaderFromFields.receiptsRoot == blockFromRlp.receiptsRoot, "receiptsRoot in given RLP not matching the block receiptsRoot!");
+            BOOST_CHECK_MESSAGE(blockHeaderFromFields.logBloom == blockFromRlp.logBloom, "logBloom in given RLP not matching the block logBloom!");
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.difficulty == blockFromRlp.difficulty, "difficulty in given RLP not matching the block difficulty!");
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.number == blockFromRlp.number, "number in given RLP not matching the block number!");
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasLimit == blockFromRlp.gasLimit,"gasLimit in given RLP not matching the block gasLimit!");
@@ -194,6 +188,65 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields.nonce == blockFromRlp.nonce, "nonce in given RLP not matching the block nonce!");
 
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, "However, blockHeaderFromFields != blockFromRlp!");
+
+            //Check transaction list
+
+            Transactions txsFromField;
+
+            for (auto const& txObj: o["transactions"].get_array())
+            {
+                mObject tx = txObj.get_obj();
+                BOOST_REQUIRE(tx.count("nonce") > 0);
+                BOOST_REQUIRE(tx.count("gasPrice") > 0);
+                BOOST_REQUIRE(tx.count("gasLimit") > 0);
+                BOOST_REQUIRE(tx.count("to") > 0);
+                BOOST_REQUIRE(tx.count("value") > 0);
+                BOOST_REQUIRE(tx.count("v") > 0);
+                BOOST_REQUIRE(tx.count("r") > 0);
+                BOOST_REQUIRE(tx.count("s") > 0);
+                BOOST_REQUIRE(tx.count("data") > 0);
+
+                Transaction t(createRLPStreamFromTransactionFields(tx).out(), CheckSignature::Sender);
+                txsFromField.push_back(t);
+            }
+
+            Transactions txsFromRlp;
+            bytes blockRLP2 = importByteArray(o["rlp"].get_str());
+            RLP root(blockRLP2);
+            for (auto const& tr: root[1])
+            {
+                Transaction tx(tr.data(), CheckSignature::Sender);
+                txsFromRlp.push_back(tx);
+            }
+
+            cout << "size of pending transactions: " << txsFromRlp.size() << endl;
+
+            BOOST_CHECK_MESSAGE(txsFromRlp.size() == txsFromField.size(), "transaction list size does not match");
+
+            for (size_t i = 0; i < txsFromField.size(); ++i)
+            {
+                BOOST_CHECK_MESSAGE(txsFromField[i].data() == txsFromRlp[i].data(), "transaction data in rlp and in field do not match");
+                BOOST_CHECK_MESSAGE(txsFromField[i].gas() == txsFromRlp[i].gas(), "transaction gasLimit in rlp and in field do not match");
+                BOOST_CHECK_MESSAGE(txsFromField[i].gasPrice() == txsFromRlp[i].gasPrice(), "transaction gasPrice in rlp and in field do not match");
+                BOOST_CHECK_MESSAGE(txsFromField[i].nonce() == txsFromRlp[i].nonce(), "transaction nonce in rlp and in field do not match");
+                BOOST_CHECK_MESSAGE(txsFromField[i].signature().r == txsFromRlp[i].signature().r, "transaction r in rlp and in field do not match");
+                BOOST_CHECK_MESSAGE(txsFromField[i].signature().s == txsFromRlp[i].signature().s, "transaction s in rlp and in field do not match");
+                BOOST_CHECK_MESSAGE(txsFromField[i].signature().v == txsFromRlp[i].signature().v, "transaction v in rlp and in field do not match");
+                BOOST_CHECK_MESSAGE(txsFromField[i].receiveAddress() == txsFromRlp[i].receiveAddress(), "transaction receiveAddress in rlp and in field do not match");
+                BOOST_CHECK_MESSAGE(txsFromField[i].value() == txsFromRlp[i].value(), "transaction receiveAddress in rlp and in field do not match");
+
+                BOOST_CHECK_MESSAGE(txsFromField[i] == txsFromRlp[i], "however, transactions in rlp and in field do not match");
+            }
+            
+            // check uncle list
+
+			BOOST_CHECK_MESSAGE(o["uncleList"].get_array().size() == 0, "Uncle list is not empty, but the genesis block can not have uncles");
+
+
+            
+            
+            
+
 
         }
         else
@@ -256,7 +309,9 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
                 BOOST_REQUIRE(tx.count("s") > 0);
                 BOOST_REQUIRE(tx.count("data") > 0);
 
-                if (!txs.attemptImport(createTransactionFromFields(tx)))
+                //Transaction txFromFields(createRLPStreamFromTransactionFields(tx).out(), CheckSignature::Sender);
+
+                if (!txs.attemptImport(&createRLPStreamFromTransactionFields(tx).out()))
                     cnote << "failed importing transaction\n";
             }
 
@@ -339,8 +394,8 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
             // write uncle list
 
-            mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles.
-            o["uncleHeaders"] = aUncleList;
+			mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles.
+			o["uncleHeaders"] = aUncleList;
         }
     }
 }
