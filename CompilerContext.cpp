@@ -76,7 +76,7 @@ bytes const& CompilerContext::getCompiledContract(const ContractDefinition& _con
 
 bool CompilerContext::isLocalVariable(Declaration const* _declaration) const
 {
-	return m_localVariables.count(_declaration);
+	return !!m_localVariables.count(_declaration);
 }
 
 eth::AssemblyItem CompilerContext::getFunctionEntryLabel(Declaration const& _declaration)
