@@ -70,6 +70,11 @@ public:
 	static unsigned getSizeOnStack(std::vector<T> const& _variables);
 	static unsigned getSizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
 
+	/// Appends code that computes tha SHA3 hash of the topmost stack element of type @a _type.
+	/// If @a _pad is set, padds the type to muliples of 32 bytes.
+	/// @note Only works for types of fixed size.
+	void computeHashStatic(Type const& _type = IntegerType(256), bool _padToWordBoundaries = false);
+
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
 	static const unsigned int dataStartOffset;

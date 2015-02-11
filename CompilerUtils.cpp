@@ -116,6 +116,12 @@ unsigned CompilerUtils::getSizeOnStack(vector<shared_ptr<Type const>> const& _va
 	return size;
 }
 
+void CompilerUtils::computeHashStatic(Type const& _type, bool _padToWordBoundaries)
+{
+	unsigned length = storeInMemory(0, _type, _padToWordBoundaries);
+	m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
+}
+
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries)
 {
 	unsigned _encodedSize = _type.getCalldataEncodedSize();
