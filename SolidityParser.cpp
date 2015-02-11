@@ -717,6 +717,20 @@ BOOST_AUTO_TEST_CASE(enum_declaration)
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
 
+BOOST_AUTO_TEST_CASE(empty_enum_declaration)
+{
+	char const* text = R"(
+		contract c {
+			enum foo { };
+			function c ()
+			{
+				a = 5;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
