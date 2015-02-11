@@ -991,6 +991,21 @@ BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
 		})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
+BOOST_AUTO_TEST_CASE(enum_member_access)
+{
+	char const* text = R"(
+			contract test {
+				struct foo { uint256 x;}
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				function test()
+				{
+					choices = ActionChoices.GoStraight;
+				}
+				ActionChoices choices;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

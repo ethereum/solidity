@@ -2499,6 +2499,26 @@ BOOST_AUTO_TEST_CASE(struct_copy_via_local)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(using_enums)
+{
+	char const* sourceCode = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				function test()
+				{
+					choices = ActionChoices.GoStraight;
+				}
+				function getChoice() returns (uint d)
+				{
+					d = choices;
+				}
+				ActionChoices choices;
+			}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getChoice()") == encodeArgs(2));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
