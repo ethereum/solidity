@@ -10,7 +10,7 @@
 class WebThreeStubClient : public jsonrpc::Client
 {
     public:
-        WebThreeStubClient(jsonrpc::IClientConnector &conn) : jsonrpc::Client(conn) {}
+        WebThreeStubClient(jsonrpc::IClientConnector &conn, jsonrpc::clientVersion_t type = jsonrpc::JSONRPC_CLIENT_V2) : jsonrpc::Client(conn, type) {}
 
         std::string web3_sha3(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
@@ -52,7 +52,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_setListening(const bool& param1) throw (jsonrpc::JsonRpcException)
+        bool eth_setListening(bool param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -72,7 +72,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_setMining(const bool& param1) throw (jsonrpc::JsonRpcException)
+        bool eth_setMining(bool param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -122,7 +122,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_setDefaultBlock(const int& param1) throw (jsonrpc::JsonRpcException)
+        bool eth_setDefaultBlock(int param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -233,7 +233,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_blockByNumber(const int& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_blockByNumber(int param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -243,7 +243,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_transactionByHash(const std::string& param1, const int& param2) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_transactionByHash(const std::string& param1, int param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -254,7 +254,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_transactionByNumber(const int& param1, const int& param2) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_transactionByNumber(int param1, int param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -265,7 +265,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_uncleByHash(const std::string& param1, const int& param2) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_uncleByHash(const std::string& param1, int param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -276,7 +276,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_uncleByNumber(const int& param1, const int& param2) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_uncleByNumber(int param1, int param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -347,7 +347,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_uninstallFilter(const int& param1) throw (jsonrpc::JsonRpcException)
+        bool eth_uninstallFilter(int param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -357,7 +357,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_changed(const int& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_changed(int param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -367,7 +367,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_filterLogs(const int& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_filterLogs(int param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -515,7 +515,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool shh_uninstallFilter(const int& param1) throw (jsonrpc::JsonRpcException)
+        bool shh_uninstallFilter(int param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -525,7 +525,7 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value shh_changed(const int& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value shh_changed(int param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -537,4 +537,4 @@ class WebThreeStubClient : public jsonrpc::Client
         }
 };
 
-#endif //JSONRPC_CPP_WEBTHREESTUBCLIENT_H_
+#endif //JSONRPC_CPP_STUB_WEBTHREESTUBCLIENT_H_
