@@ -662,6 +662,37 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage offset of non-existing member requested."));
 }
 
+TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
+{
+	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
+}
+
+bool EnumType::operator==(Type const& _other) const
+{
+	if (_other.getCategory() != getCategory())
+		return false;
+	EnumType const& other = dynamic_cast<EnumType const&>(_other);
+	return other.m_enum == m_enum;
+}
+
+string EnumType::toString() const
+{
+	return string("enum ") + m_enum.getName();
+}
+
+MemberList const& EnumType::getMembers() const
+{
+	// We need to lazy-initialize it because of recursive references.
+	if (!m_members)
+	{
+		map<string, shared_ptr<Type const>> members;
+		for (ASTPointer<EnumDeclaration> const& enumValue: m_enum.getMembers())
+			members.insert(make_pair(enumValue->getName(), make_shared<EnumType>(m_enum)));
+		m_members.reset(new MemberList(members));
+	}
+	return *m_members;
+}
+
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),

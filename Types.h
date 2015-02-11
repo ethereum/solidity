@@ -76,10 +76,9 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, Bool, Real, String,
-		ByteArray, Mapping,
-		Contract, Struct, Function,
-		Void, TypeType, Modifier, Magic
+		Integer, IntegerConstant, Bool, Real, ByteArray,
+		String, Contract, Struct, Function, Enum,
+		Mapping, Void, TypeType, Modifier, Magic
 	};
 
 	///@{
@@ -364,6 +363,27 @@ public:
 
 private:
 	StructDefinition const& m_struct;
+	/// List of member types, will be lazy-initialized because of recursive references.
+	mutable std::unique_ptr<MemberList> m_members;
+};
+
+/**
+ * The type of an enum instance, there is one distinct type per enum definition.
+ */
+class EnumType: public Type
+{
+public:
+	virtual Category getCategory() const override { return Category::Enum; }
+	explicit EnumType(EnumDefinition const& _enum): m_enum(_enum) {}
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual bool operator==(Type const& _other) const override;
+	virtual unsigned getSizeOnStack() const override { return 1; /*@todo*/ }
+	virtual std::string toString() const override;
+
+	virtual MemberList const& getMembers() const override;
+
+private:
+	EnumDefinition const& m_enum;
 	/// List of member types, will be lazy-initialized because of recursive references.
 	mutable std::unique_ptr<MemberList> m_members;
 };

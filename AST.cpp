@@ -208,7 +208,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 
 TypePointer EnumDeclaration::getType(ContractDefinition const*) const
 {
-	// LTODO
+	// LTODO: How to get the parent EnumDefinition and return its type here?
 	return nullptr;
 }
 
@@ -274,9 +274,7 @@ void EnumDefinition::checkValidityOfMembers() const
 
 TypePointer EnumDefinition::getType(ContractDefinition const*) const
 {
-	//LTODO:
-	return nullptr;
-	// return make_shared<TypeType>(make_shared<EnumType>(*this));
+	return make_shared<TypeType>(make_shared<EnumType>(*this));
 }
 
 TypePointer FunctionDefinition::getType(ContractDefinition const*) const
