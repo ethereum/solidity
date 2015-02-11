@@ -11,19 +11,19 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f20060003554156009570060203560003555) (CALL 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffec 0xaaaaaaaaace5edbc8e2a8697c15331677e6ebf0b 23 0 0 0 0) }",
                 "storage": {}
             },
             "aaaaaaaaace5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000000000000000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "0x600160015532600255",
                 "storage": {}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000",
-                "nonce" : 0,
+                "nonce" : "0",
                 "code" : "",
                 "storage": {}
             }
