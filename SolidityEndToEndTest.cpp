@@ -2284,8 +2284,8 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 		contract sender {
 			function sender() { rec = new receiver(); }
 			function() { savedData = msg.data; }
-			function forward() { rec.call(savedData); }
-			function clear() { delete savedData; }
+			function forward() returns (bool) { rec.call(savedData); return true; }
+			function clear() returns (bool) { delete savedData; return true; }
 			function val() returns (uint) { return rec.received(); }
 			receiver rec;
 			bytes savedData;
@@ -2294,11 +2294,11 @@ BOOST_AUTO_TEST_CASE(call_forward_bytes)
 	compileAndRun(sourceCode, 0, "sender");
 	BOOST_CHECK(callContractFunction("receive(uint256)", 7) == bytes());
 	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0));
-	BOOST_CHECK(callContractFunction("forward()") == bytes());
+	BOOST_CHECK(callContractFunction("forward()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
-	BOOST_CHECK(callContractFunction("clear()") == bytes());
+	BOOST_CHECK(callContractFunction("clear()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
-	BOOST_CHECK(callContractFunction("forward()") == bytes());
+	BOOST_CHECK(callContractFunction("forward()") == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0x80));
 }
 
@@ -2313,9 +2313,10 @@ BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 		contract sender {
 			function sender() { rec = new receiver(); }
 			function() { savedData1 = savedData2 = msg.data; }
-			function forward(bool selector) {
+			function forward(bool selector) returns (bool) {
 				if (selector) { rec.call(savedData1); delete savedData1; }
 				else { rec.call(savedData2); delete savedData2; }
+				return true;
 			}
 			function val() returns (uint) { return rec.received(); }
 			receiver rec;
@@ -2326,15 +2327,63 @@ BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
 	compileAndRun(sourceCode, 0, "sender");
 	BOOST_CHECK(callContractFunction("receive(uint256)", 7) == bytes());
 	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0));
-	BOOST_CHECK(callContractFunction("forward(bool)", true) == bytes());
+	BOOST_CHECK(callContractFunction("forward(bool)", true) == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
-	BOOST_CHECK(callContractFunction("forward(bool)", false) == bytes());
+	BOOST_CHECK(callContractFunction("forward(bool)", false) == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("val()") == encodeArgs(16));
-	BOOST_CHECK(callContractFunction("forward(bool)", true) == bytes());
+	BOOST_CHECK(callContractFunction("forward(bool)", true) == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0x80));
 }
 
-// TODO test that "delete" also clears the values
+BOOST_AUTO_TEST_CASE(delete_removes_bytes_data)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function() { data = msg.data; }
+			function del() returns (bool) { delete data; return true; }
+			bytes data;
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("---", 7) == bytes());
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("del()", 7) == encodeArgs(true));
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function set() returns (bool) { data = msg.data; return true; }
+			function() { data = msg.data; }
+			bytes data;
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("set()", 1, 2, 3, 4, 5) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	sendMessage(bytes(), false);
+	BOOST_CHECK(m_output == bytes());
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(copy_removes_bytes_data)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function set() returns (bool) { data1 = msg.data; return true; }
+			function reset() returns (bool) { data1 = data2; return true; }
+			bytes data1;
+			bytes data2;
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("set()", 1, 2, 3, 4, 5) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("reset()") == encodeArgs(true));
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
