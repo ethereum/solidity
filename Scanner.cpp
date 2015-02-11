@@ -225,7 +225,7 @@ Token::Value Scanner::skipSingleLineComment()
 	// separately by the lexical grammar and becomes part of the
 	// stream of input elements for the syntactic grammar
 	while (advance() && !isLineTerminator(m_char)) { };
-	return Token::WHITESPACE;
+	return Token::Whitespace;
 }
 
 Token::Value Scanner::scanSingleLineDocComment()
@@ -255,7 +255,7 @@ Token::Value Scanner::scanSingleLineDocComment()
 		advance();
 	}
 	literal.complete();
-	return Token::COMMENT_LITERAL;
+	return Token::CommentLiteral;
 }
 
 Token::Value Scanner::skipMultiLineComment()
@@ -272,11 +272,11 @@ Token::Value Scanner::skipMultiLineComment()
 		if (ch == '*' && m_char == '/')
 		{
 			m_char = ' ';
-			return Token::WHITESPACE;
+			return Token::Whitespace;
 		}
 	}
 	// Unterminated multi-line comment.
-	return Token::ILLEGAL;
+	return Token::Illegal;
 }
 
 Token::Value Scanner::scanMultiLineDocComment()
@@ -319,9 +319,9 @@ Token::Value Scanner::scanMultiLineDocComment()
 	}
 	literal.complete();
 	if (!endFound)
-		return Token::ILLEGAL;
+		return Token::Illegal;
 	else
-		return Token::COMMENT_LITERAL;
+		return Token::CommentLiteral;
 }
 
 Token::Value Scanner::scanSlash()
@@ -331,7 +331,7 @@ Token::Value Scanner::scanSlash()
 	if (m_char == '/')
 	{
 		if (!advance()) /* double slash comment directly before EOS */
-			return  Token::WHITESPACE;
+			return  Token::Whitespace;
 		else if (m_char == '/')
 		{
 			// doxygen style /// comment
@@ -340,7 +340,7 @@ Token::Value Scanner::scanSlash()
 			comment = scanSingleLineDocComment();
 			m_nextSkippedComment.location.end = getSourcePos();
 			m_nextSkippedComment.token = comment;
-			return Token::WHITESPACE;
+			return Token::Whitespace;
 		}
 		else
 			return skipSingleLineComment();
@@ -349,7 +349,7 @@ Token::Value Scanner::scanSlash()
 	{
 		// doxygen style /** natspec comment
 		if (!advance()) /* slash star comment before EOS */
-			return Token::WHITESPACE;
+			return Token::Whitespace;
 		else if (m_char == '*')
 		{
 			advance(); //consume the last '*' at /**
@@ -366,15 +366,15 @@ Token::Value Scanner::scanSlash()
 				m_nextSkippedComment.location.end = getSourcePos();
 				m_nextSkippedComment.token = comment;
 			}
-			return Token::WHITESPACE;
+			return Token::Whitespace;
 		}
 		else
 			return skipMultiLineComment();
 	}
 	else if (m_char == '=')
-		return selectToken(Token::ASSIGN_DIV);
+		return selectToken(Token::AssignDiv);
 	else
-		return Token::DIV;
+		return Token::Div;
 }
 
 void Scanner::scanToken()
@@ -391,7 +391,7 @@ void Scanner::scanToken()
 		case '\n': // fall-through
 		case ' ':
 		case '\t':
-			token = selectToken(Token::WHITESPACE);
+			token = selectToken(Token::Whitespace);
 			break;
 		case '"':
 		case '\'':
@@ -401,76 +401,82 @@ void Scanner::scanToken()
 			// < <= << <<=
 			advance();
 			if (m_char == '=')
-				token = selectToken(Token::LTE);
+				token = selectToken(Token::LessThanOrEqual);
 			else if (m_char == '<')
-				token = selectToken('=', Token::ASSIGN_SHL, Token::SHL);
+				token = selectToken('=', Token::AssignShl, Token::SHL);
 			else
-				token = Token::LT;
+				token = Token::LessThan;
 			break;
 		case '>':
 			// > >= >> >>= >>> >>>=
 			advance();
 			if (m_char == '=')
-				token = selectToken(Token::GTE);
+				token = selectToken(Token::GreaterThanOrEqual);
 			else if (m_char == '>')
 			{
 				// >> >>= >>> >>>=
 				advance();
 				if (m_char == '=')
-					token = selectToken(Token::ASSIGN_SAR);
+					token = selectToken(Token::AssignSar);
 				else if (m_char == '>')
-					token = selectToken('=', Token::ASSIGN_SHR, Token::SHR);
+					token = selectToken('=', Token::AssignShr, Token::SHR);
 				else
 					token = Token::SAR;
 			}
 			else
-				token = Token::GT;
+				token = Token::GreaterThan;
 			break;
 		case '=':
 			// = == =>
 			advance();
 			if (m_char == '=')
-				token = selectToken(Token::EQ);
+				token = selectToken(Token::Equal);
 			else if (m_char == '>')
-				token = selectToken(Token::ARROW);
+				token = selectToken(Token::Arrow);
 			else
-				token = Token::ASSIGN;
+				token = Token::Assign;
 			break;
 		case '!':
 			// ! !=
 			advance();
 			if (m_char == '=')
-				token = selectToken(Token::NE);
+				token = selectToken(Token::NotEqual);
 			else
-				token = Token::NOT;
+				token = Token::Not;
 			break;
 		case '+':
 			// + ++ +=
 			advance();
 			if (m_char == '+')
-				token = selectToken(Token::INC);
+				token = selectToken(Token::Inc);
 			else if (m_char == '=')
-				token = selectToken(Token::ASSIGN_ADD);
+				token = selectToken(Token::AssignAdd);
 			else
-				token = Token::ADD;
+				token = Token::Add;
 			break;
 		case '-':
 			// - -- -=
 			advance();
 			if (m_char == '-')
-				token = selectToken(Token::DEC);
+				token = selectToken(Token::Dec);
 			else if (m_char == '=')
-				token = selectToken(Token::ASSIGN_SUB);
+				token = selectToken(Token::AssignSub);
 			else
-				token = Token::SUB;
+				token = Token::Sub;
 			break;
 		case '*':
-			// * *=
-			token = selectToken('=', Token::ASSIGN_MUL, Token::MUL);
+			// * ** *=
+			advance();
+			if (m_char == '*')
+				token = selectToken(Token::Exp);
+			else if (m_char == '=')
+				token = selectToken(Token::AssignMul);
+			else
+				token = Token::Mul;
 			break;
 		case '%':
 			// % %=
-			token = selectToken('=', Token::ASSIGN_MOD, Token::MOD);
+			token = selectToken('=', Token::AssignMod, Token::Mod);
 			break;
 		case '/':
 			// /  // /* /=
@@ -480,25 +486,25 @@ void Scanner::scanToken()
 			// & && &=
 			advance();
 			if (m_char == '&')
-				token = selectToken(Token::AND);
+				token = selectToken(Token::And);
 			else if (m_char == '=')
-				token = selectToken(Token::ASSIGN_BIT_AND);
+				token = selectToken(Token::AssignBitAnd);
 			else
-				token = Token::BIT_AND;
+				token = Token::BitAnd;
 			break;
 		case '|':
 			// | || |=
 			advance();
 			if (m_char == '|')
-				token = selectToken(Token::OR);
+				token = selectToken(Token::Or);
 			else if (m_char == '=')
-				token = selectToken(Token::ASSIGN_BIT_OR);
+				token = selectToken(Token::AssignBitOr);
 			else
-				token = Token::BIT_OR;
+				token = Token::BitOr;
 			break;
 		case '^':
 			// ^ ^=
-			token = selectToken('=', Token::ASSIGN_BIT_XOR, Token::BIT_XOR);
+			token = selectToken('=', Token::AssignBitXor, Token::BitXor);
 			break;
 		case '.':
 			// . Number
@@ -506,40 +512,40 @@ void Scanner::scanToken()
 			if (isDecimalDigit(m_char))
 				token = scanNumber('.');
 			else
-				token = Token::PERIOD;
+				token = Token::Period;
 			break;
 		case ':':
-			token = selectToken(Token::COLON);
+			token = selectToken(Token::Colon);
 			break;
 		case ';':
-			token = selectToken(Token::SEMICOLON);
+			token = selectToken(Token::Semicolon);
 			break;
 		case ',':
-			token = selectToken(Token::COMMA);
+			token = selectToken(Token::Comma);
 			break;
 		case '(':
-			token = selectToken(Token::LPAREN);
+			token = selectToken(Token::LParen);
 			break;
 		case ')':
-			token = selectToken(Token::RPAREN);
+			token = selectToken(Token::RParen);
 			break;
 		case '[':
-			token = selectToken(Token::LBRACK);
+			token = selectToken(Token::LBrack);
 			break;
 		case ']':
-			token = selectToken(Token::RBRACK);
+			token = selectToken(Token::RBrack);
 			break;
 		case '{':
-			token = selectToken(Token::LBRACE);
+			token = selectToken(Token::LBrace);
 			break;
 		case '}':
-			token = selectToken(Token::RBRACE);
+			token = selectToken(Token::RBrace);
 			break;
 		case '?':
-			token = selectToken(Token::CONDITIONAL);
+			token = selectToken(Token::Conditional);
 			break;
 		case '~':
-			token = selectToken(Token::BIT_NOT);
+			token = selectToken(Token::BitNot);
 			break;
 		default:
 			if (isIdentifierStart(m_char))
@@ -547,17 +553,17 @@ void Scanner::scanToken()
 			else if (isDecimalDigit(m_char))
 				token = scanNumber();
 			else if (skipWhitespace())
-				token = Token::WHITESPACE;
+				token = Token::Whitespace;
 			else if (isSourcePastEndOfInput())
 				token = Token::EOS;
 			else
-				token = selectToken(Token::ILLEGAL);
+				token = selectToken(Token::Illegal);
 			break;
 		}
 		// Continue scanning for tokens as long as we're just skipping
 		// whitespace.
 	}
-	while (token == Token::WHITESPACE);
+	while (token == Token::Whitespace);
 	m_nextToken.location.end = getSourcePos();
 	m_nextToken.token = token;
 }
@@ -615,16 +621,16 @@ Token::Value Scanner::scanString()
 		if (c == '\\')
 		{
 			if (isSourcePastEndOfInput() || !scanEscape())
-				return Token::ILLEGAL;
+				return Token::Illegal;
 		}
 		else
 			addLiteralChar(c);
 	}
 	if (m_char != quote)
-		return Token::ILLEGAL;
+		return Token::Illegal;
 	literal.complete();
 	advance();  // consume quote
-	return Token::STRING_LITERAL;
+	return Token::StringLiteral;
 }
 
 void Scanner::scanDecimalDigits()
@@ -657,7 +663,7 @@ Token::Value Scanner::scanNumber(char _charSeen)
 				kind = HEX;
 				addLiteralCharAndAdvance();
 				if (!isHexDigit(m_char))
-					return Token::ILLEGAL; // we must have at least one hex digit after 'x'/'X'
+					return Token::Illegal; // we must have at least one hex digit after 'x'/'X'
 				while (isHexDigit(m_char))
 					addLiteralCharAndAdvance();
 			}
@@ -678,13 +684,13 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	{
 		solAssert(kind != HEX, "'e'/'E' must be scanned as part of the hex number");
 		if (kind != DECIMAL)
-			return Token::ILLEGAL;
+			return Token::Illegal;
 		// scan exponent
 		addLiteralCharAndAdvance();
 		if (m_char == '+' || m_char == '-')
 			addLiteralCharAndAdvance();
 		if (!isDecimalDigit(m_char))
-			return Token::ILLEGAL; // we must have at least one decimal digit after 'e'/'E'
+			return Token::Illegal; // we must have at least one decimal digit after 'e'/'E'
 		scanDecimalDigits();
 	}
 	// The source character immediately following a numeric literal must
@@ -692,9 +698,9 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	// section 7.8.3, page 17 (note that we read only one decimal digit
 	// if the value is 0).
 	if (isDecimalDigit(m_char) || isIdentifierStart(m_char))
-		return Token::ILLEGAL;
+		return Token::Illegal;
 	literal.complete();
-	return Token::NUMBER;
+	return Token::Number;
 }
 
 Token::Value Scanner::scanIdentifierOrKeyword()

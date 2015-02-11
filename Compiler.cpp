@@ -189,7 +189,7 @@ unsigned Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, b
 		if (c_numBytes > 32)
 			BOOST_THROW_EXCEPTION(CompilerError()
 								  << errinfo_comment("Type " + type->toString() + " not yet supported."));
-		bool const c_leftAligned = type->getCategory() == Type::Category::STRING;
+		bool const c_leftAligned = type->getCategory() == Type::Category::String;
 		bool const c_padToWords = true;
 		dataOffset += CompilerUtils(m_context).loadFromMemory(dataOffset, c_numBytes, c_leftAligned,
 															  !_fromMemory, c_padToWords);
@@ -213,7 +213,7 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 								  << errinfo_comment("Type " + type->toString() + " not yet supported."));
 		CompilerUtils(m_context).copyToStackTop(stackDepth, *type);
 		ExpressionCompiler::appendTypeConversion(m_context, *type, *type, true);
-		bool const c_leftAligned = type->getCategory() == Type::Category::STRING;
+		bool const c_leftAligned = type->getCategory() == Type::Category::String;
 		bool const c_padToWords = true;
 		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, numBytes, c_leftAligned, c_padToWords);
 		stackDepth -= type->getSizeOnStack();

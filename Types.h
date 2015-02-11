@@ -76,7 +76,9 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		INTEGER, INTEGER_CONSTANT, BOOL, REAL, STRING, CONTRACT, STRUCT, FUNCTION, MAPPING, VOID, TYPE, MODIFIER, MAGIC
+		Integer, IntegerConstant, Bool, Real,
+		String, Contract, Struct, Function,
+		Mapping, Void, TypeType, Modifier, Magic
 	};
 
 	///@{
@@ -158,11 +160,11 @@ class IntegerType: public Type
 public:
 	enum class Modifier
 	{
-		UNSIGNED, SIGNED, HASH, ADDRESS
+		Unsigned, Signed, Hash, Address
 	};
-	virtual Category getCategory() const override { return Category::INTEGER; }
+	virtual Category getCategory() const override { return Category::Integer; }
 
-	explicit IntegerType(int _bits, Modifier _modifier = Modifier::UNSIGNED);
+	explicit IntegerType(int _bits, Modifier _modifier = Modifier::Unsigned);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -179,9 +181,9 @@ public:
 	virtual std::string toString() const override;
 
 	int getNumBits() const { return m_bits; }
-	bool isHash() const { return m_modifier == Modifier::HASH || m_modifier == Modifier::ADDRESS; }
-	bool isAddress() const { return m_modifier == Modifier::ADDRESS; }
-	bool isSigned() const { return m_modifier == Modifier::SIGNED; }
+	bool isHash() const { return m_modifier == Modifier::Hash || m_modifier == Modifier::Address; }
+	bool isAddress() const { return m_modifier == Modifier::Address; }
+	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
 	static const MemberList AddressMemberList;
 
@@ -197,7 +199,7 @@ private:
 class IntegerConstantType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::INTEGER_CONSTANT; }
+	virtual Category getCategory() const override { return Category::IntegerConstant; }
 
 	explicit IntegerConstantType(Literal const& _literal);
 	explicit IntegerConstantType(bigint _value): m_value(_value) {}
@@ -230,7 +232,7 @@ private:
 class StaticStringType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::STRING; }
+	virtual Category getCategory() const override { return Category::String; }
 
 	/// @returns the smallest string type for the given literal or an empty pointer
 	/// if no type fits.
@@ -261,7 +263,7 @@ class BoolType: public Type
 {
 public:
 	BoolType() {}
-	virtual Category getCategory() const { return Category::BOOL; }
+	virtual Category getCategory() const { return Category::Bool; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
@@ -279,7 +281,7 @@ public:
 class ContractType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::CONTRACT; }
+	virtual Category getCategory() const override { return Category::Contract; }
 	explicit ContractType(ContractDefinition const& _contract, bool _super = false):
 		m_contract(_contract), m_super(_super) {}
 	/// Contracts can be implicitly converted to super classes and to addresses.
@@ -321,7 +323,7 @@ private:
 class StructType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::STRUCT; }
+	virtual Category getCategory() const override { return Category::Struct; }
 	explicit StructType(StructDefinition const& _struct): m_struct(_struct) {}
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
@@ -353,26 +355,27 @@ public:
 	/// BARE: contract address (non-abi contract call)
 	/// OTHERS: special virtual function, nothing on the stack
 	/// @todo This documentation is outdated, and Location should rather be named "Type"
-	enum class Location { INTERNAL, EXTERNAL, CREATION, SEND,
-						  SHA3, SUICIDE,
-						  ECRECOVER, SHA256, RIPEMD160,
-						  LOG0, LOG1, LOG2, LOG3, LOG4, EVENT,
-						  SET_GAS, SET_VALUE, BLOCKHASH,
-						  BARE };
+	enum class Location { Internal, External, Creation, Send,
+						  SHA3, Suicide,
+						  ECRecover, SHA256, RIPEMD160,
+						  Log0, Log1, Log2, Log3, Log4, Event,
+						  SetGas, SetValue, BlockHash,
+						  Bare };
 
-	virtual Category getCategory() const override { return Category::FUNCTION; }
+	virtual Category getCategory() const override { return Category::Function; }
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	explicit FunctionType(EventDefinition const& _event);
 	FunctionType(strings const& _parameterTypes, strings const& _returnParameterTypes,
-				 Location _location = Location::INTERNAL):
+				 Location _location = Location::Internal, bool _arbitraryParameters = false):
 		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),
-					 _location) {}
+					 _location, _arbitraryParameters) {}
 	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
-				 Location _location = Location::INTERNAL,
-				 bool _gasSet = false, bool _valueSet = false):
+				 Location _location = Location::Internal,
+				 bool _arbitraryParameters = false, bool _gasSet = false, bool _valueSet = false):
 		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),
-		m_location(_location), m_gasSet(_gasSet), m_valueSet(_valueSet) {}
+		m_location(_location),
+		m_arbitraryParameters(_arbitraryParameters), m_gasSet(_gasSet), m_valueSet(_valueSet) {}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
 	std::vector<std::string> const& getParameterNames() const { return m_parameterNames; }
@@ -405,6 +408,9 @@ public:
 	/// Can contain a nullptr in which case indicates absence of documentation
 	ASTPointer<ASTString> getDocumentation() const;
 
+	/// true iff arguments are to be padded to multiples of 32 bytes for external calls
+	bool padArguments() const { return !(m_location == Location::SHA3 || m_location == Location::SHA256 || m_location == Location::RIPEMD160); }
+	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
 
@@ -420,6 +426,8 @@ private:
 	std::vector<std::string> m_parameterNames;
 	std::vector<std::string> m_returnParameterNames;
 	Location const m_location;
+	/// true iff the function takes an arbitrary number of arguments of arbitrary types
+	bool const m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
 	bool m_isConstant;
@@ -433,7 +441,7 @@ private:
 class MappingType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::MAPPING; }
+	virtual Category getCategory() const override { return Category::Mapping; }
 	MappingType(TypePointer const& _keyType, TypePointer const& _valueType):
 		m_keyType(_keyType), m_valueType(_valueType) {}
 
@@ -456,7 +464,7 @@ private:
 class VoidType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::VOID; }
+	virtual Category getCategory() const override { return Category::Void; }
 	VoidType() {}
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
@@ -474,7 +482,7 @@ public:
 class TypeType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::TYPE; }
+	virtual Category getCategory() const override { return Category::TypeType; }
 	explicit TypeType(TypePointer const& _actualType, ContractDefinition const* _currentContract = nullptr):
 		m_actualType(_actualType), m_currentContract(_currentContract) {}
 	TypePointer const& getActualType() const { return m_actualType; }
@@ -503,7 +511,7 @@ private:
 class ModifierType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::MODIFIER; }
+	virtual Category getCategory() const override { return Category::Modifier; }
 	explicit ModifierType(ModifierDefinition const& _modifier);
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
@@ -526,8 +534,8 @@ private:
 class MagicType: public Type
 {
 public:
-	enum class Kind { BLOCK, MSG, TX };
-	virtual Category getCategory() const override { return Category::MAGIC; }
+	enum class Kind { Block, Message, Transaction };
+	virtual Category getCategory() const override { return Category::Magic; }
 
 	explicit MagicType(Kind _kind);
 
