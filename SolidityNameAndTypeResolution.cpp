@@ -1022,6 +1022,40 @@ BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				function test()
+				{
+					a = uint256(ActionChoices.GoStraight);
+					b = uint64(ActionChoices.Sit);
+				}
+				uint256 a;
+				uint64 b;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				function test()
+				{
+					a = ActionChoices.GoStraight;
+					b = ActionChoices.Sit;
+				}
+				uint256 a;
+				uint64 b;
+			}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

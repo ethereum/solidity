@@ -2510,7 +2510,7 @@ BOOST_AUTO_TEST_CASE(using_enums)
 				}
 				function getChoice() returns (uint d)
 				{
-					d = choices;
+					d = uint256(choices);
 				}
 				ActionChoices choices;
 			}
