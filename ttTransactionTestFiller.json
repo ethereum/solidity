@@ -44,6 +44,21 @@
         }
     },
 
+    "WrongVRSTestIncorrectSize" : {
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "2000",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "10",
+            "v" : "28",
+            "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a02c3",
+            "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a302c3"
+        }
+    },
+
     "SenderTest" : {
         "//" : "sender a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
         "transaction" :
@@ -196,33 +211,18 @@
         }
     },
 
-    "RLPElementsWithZeros" : {
+    "AddressMoreThan20PrefixedBy0" : {
         "transaction" :
         {
-            "data" : "0x0000011222333",
-            "gasLimit" : "1000",
-            "gasPrice" : "00123",
-            "nonce" : "0054",
-            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-            "value" : "00000011",
-            "v" : "27",
-            "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
-            "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
-        }
-    },
-
-    "RLPWrongHexElements" : {
-        "transaction" :
-        {
-            "data" : "0x0000000012",
+            "data" : "0x12",
             "gasLimit" : "1000",
             "gasPrice" : "123",
             "nonce" : "54",
-            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+            "to" : "0x0000000000000000095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "11",
             "v" : "27",
-            "r" : "0x0048b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
-            "s" : "0x00efffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
+            "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
+            "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
         }
     },
 
@@ -295,6 +295,36 @@
             "nonce" : "0",
             "to" : "0x000000000000000000000000000b9331677e6ebf",
             "value" : "10",
+            "v" : "28",
+            "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
+            "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
+        }
+    },
+
+    "ValuesAsHex" : {
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0xadc053",
+            "gasPrice" : "1",
+            "nonce" : "0xffdc5",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "0xfffdc12c",
+            "v" : "28",
+            "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
+            "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
+        }
+    },
+
+    "ValuesAsDec" : {
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "11386963",
+            "gasPrice" : "1",
+            "nonce" : "1048005",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "4501151495864620",
             "v" : "28",
             "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
             "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
