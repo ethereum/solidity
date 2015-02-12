@@ -22,7 +22,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libsolidity/CompilerStack.h>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 #include <libdevcore/Exceptions.h>
 
 namespace dev
