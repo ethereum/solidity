@@ -58,7 +58,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 	else if (Token::String0 <= _typeToken && _typeToken <= Token::String32)
 		return make_shared<StaticStringType>(int(_typeToken) - int(Token::String0));
 	else if (_typeToken == Token::Bytes)
-		return make_shared<ByteArrayType>(ByteArrayType::Location::Storage, 0, 0, true);
+		return make_shared<ByteArrayType>(ByteArrayType::Location::Storage);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -515,12 +515,7 @@ TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 
 bool ByteArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 {
-	if (*this == _convertTo)
-		return true;
-	if (_convertTo.getCategory() != Category::ByteArray)
-		return false;
-	auto const& other = dynamic_cast<ByteArrayType const&>(_convertTo);
-	return (m_dynamicLength == other.m_dynamicLength || m_length == other.m_length);
+	return _convertTo.getCategory() == getCategory();
 }
 
 TypePointer ByteArrayType::unaryOperatorResult(Token::Value _operator) const
@@ -535,8 +530,7 @@ bool ByteArrayType::operator==(Type const& _other) const
 	if (_other.getCategory() != getCategory())
 		return false;
 	ByteArrayType const& other = dynamic_cast<ByteArrayType const&>(_other);
-	return other.m_location == m_location && other.m_dynamicLength == m_dynamicLength
-			&& other.m_length == m_length && other.m_offset == m_offset;
+	return other.m_location == m_location;
 }
 
 unsigned ByteArrayType::getSizeOnStack() const
@@ -546,6 +540,8 @@ unsigned ByteArrayType::getSizeOnStack() const
 	else
 		return 1;
 }
+
+const MemberList ByteArrayType::s_byteArrayMemberList = MemberList({{"length", make_shared<IntegerType >(256)}});
 
 bool ContractType::operator==(Type const& _other) const
 {
