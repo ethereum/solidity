@@ -32,29 +32,50 @@ namespace dev {  namespace test {
 
 bytes createBlockRLPFromFields(mObject& _tObj)
 {
-    BOOST_REQUIRE(_tObj.count("parentHash") > 0);
-    BOOST_REQUIRE(_tObj.count("uncleHash") > 0);
-    BOOST_REQUIRE(_tObj.count("coinbase") > 0);
-    BOOST_REQUIRE(_tObj.count("stateRoot") > 0);
-    BOOST_REQUIRE(_tObj.count("transactionsTrie")> 0);
-    BOOST_REQUIRE(_tObj.count("receiptTrie") > 0);
-    BOOST_REQUIRE(_tObj.count("bloom") > 0);
-    BOOST_REQUIRE(_tObj.count("difficulty") > 0);
-    BOOST_REQUIRE(_tObj.count("number") > 0);
-    BOOST_REQUIRE(_tObj.count("gasLimit")> 0);
-    BOOST_REQUIRE(_tObj.count("gasUsed") > 0);
-    BOOST_REQUIRE(_tObj.count("timestamp") > 0);
-    BOOST_REQUIRE(_tObj.count("extraData") > 0);
-    BOOST_REQUIRE(_tObj.count("nonce") > 0);
-
-    // construct RLP of the given block
     RLPStream rlpStream;
-    rlpStream.appendList(14);
-    rlpStream <<  h256(_tObj["parentHash"].get_str()) << h256(_tObj["uncleHash"].get_str()) << Address(_tObj["coinbase"].get_str());
-    rlpStream << h256(_tObj["stateRoot"].get_str()) << h256(_tObj["transactionsTrie"].get_str()) << h256(_tObj["receiptTrie"].get_str());
-    rlpStream << LogBloom(_tObj["bloom"].get_str()) << u256(_tObj["difficulty"].get_str()) << u256(_tObj["number"].get_str());
-    rlpStream << u256(_tObj["gasLimit"].get_str()) << u256(_tObj["gasUsed"].get_str()) << u256(_tObj["timestamp"].get_str());
-    rlpStream << importByteArray(_tObj["extraData"].get_str()) << h256(_tObj["nonce"].get_str());
+    rlpStream.appendList(_tObj.size());
+
+    if (_tObj.count("parentHash") > 0)
+        rlpStream << importByteArray(_tObj["parentHash"].get_str());
+
+    if (_tObj.count("uncleHash") > 0)
+        rlpStream << importByteArray(_tObj["uncleHash"].get_str());
+
+    if (_tObj.count("coinbase") > 0)
+        rlpStream << importByteArray(_tObj["coinbase"].get_str());
+
+    if (_tObj.count("stateRoot") > 0)
+        rlpStream << importByteArray(_tObj["stateRoot"].get_str());
+
+    if (_tObj.count("transactionsTrie") > 0)
+        rlpStream << importByteArray(_tObj["transactionsTrie"].get_str());
+
+    if (_tObj.count("receiptTrie") > 0)
+        rlpStream << importByteArray(_tObj["receiptTrie"].get_str());
+
+    if (_tObj.count("bloom") > 0)
+        rlpStream << importByteArray(_tObj["bloom"].get_str());
+
+    if (_tObj.count("difficulty") > 0)
+        rlpStream << bigint(_tObj["difficulty"].get_str());
+
+    if (_tObj.count("number") > 0)
+        rlpStream << bigint(_tObj["number"].get_str());
+
+    if (_tObj.count("gasLimit") > 0)
+        rlpStream << bigint(_tObj["gasLimit"].get_str());
+
+    if (_tObj.count("gasUsed") > 0)
+        rlpStream << bigint(_tObj["gasUsed"].get_str());
+
+    if (_tObj.count("timestamp") > 0)
+        rlpStream << bigint(_tObj["timestamp"].get_str());
+
+    if (_tObj.count("extraData") > 0)
+        rlpStream << importByteArray(_tObj["extraData"].get_str());
+
+    if (_tObj.count("nonce") > 0)
+        rlpStream << importByteArray(_tObj["nonce"].get_str());
 
     return rlpStream.out();
 }
@@ -67,6 +88,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
         mObject& o = i.second.get_obj();
 
 		BOOST_REQUIRE(o.count("genesisBlockHeader") > 0);
+		cout << "construc genesis\n";
 
 		// construct RLP of the genesis block
 		const bytes c_blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
@@ -95,6 +117,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 		}
 
 		BOOST_REQUIRE(o.count("pre") > 0);
+		cout << "read state\n";
 
 		ImportTest importer(o["pre"].get_obj());
 		State state(Address(), OverlayDB(), BaseState::Empty);
@@ -137,6 +160,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 		{
 			BOOST_REQUIRE(o.count("transactions") > 0);
+			cout << "read transactions\n";
 
 			TransactionQueue txs;
 
@@ -152,17 +176,18 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_REQUIRE(tx.count("r") > 0);
 				BOOST_REQUIRE(tx.count("s") > 0);
 				BOOST_REQUIRE(tx.count("data") > 0);
-
-				//Transaction txFromFields(createRLPStreamFromTransactionFields(tx).out(), CheckSignature::Sender);
-
+				cout << "import tx\n";
 				if (!txs.attemptImport(&createRLPStreamFromTransactionFields(tx).out()))
 					cnote << "failed importing transaction\n";
 			}
 
 			try
 			{
-				state.sync(bc);
-				state.sync(bc,txs);
+				cout << "sync state: " << state.sync(bc) << endl;
+				TransactionReceipts txReceipts = state.sync(bc,txs);
+				cout << "sync state done\n";
+				//if (syncSuccess)
+				//	throw Exception();
 				state.commitToMine(bc);
 				MineInfo info;
 				for (info.completed = false; !info.completed; info = state.mine()) {}
@@ -171,11 +196,35 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			catch (Exception const& _e)
 			{
 				cnote << "state sync or mining did throw an exception: " << diagnostic_information(_e);
+				return;
 			}
 			catch (std::exception const& _e)
 			{
 				cnote << "state sync or mining did throw an exception: " << _e.what();
+				return;
 			}
+
+			// write valid txs
+			cout << "number of valid txs: " << txs.transactions().size();
+			mArray txArray;
+			for (auto const& txi: txs.transactions())
+			{
+				Transaction tx(txi.second, CheckSignature::Sender);
+				mObject txObject;
+				txObject["nonce"] = toString(tx.nonce());
+				txObject["data"] = toHex(tx.data());
+				txObject["gasLimit"] = toString(tx.gas());
+				txObject["gasPrice"] = toString(tx.gasPrice());
+				txObject["r"] = toString(tx.signature().r);
+				txObject["s"] = toString(tx.signature().s);
+				txObject["v"] = to_string(tx.signature().v + 27);
+				txObject["to"] = toString(tx.receiveAddress());
+				txObject["value"] = toString(tx.value());
+
+				txArray.push_back(txObject);
+			}
+
+			o["transactions"] = txArray;
 
 			o["rlp"] = "0x" + toHex(state.blockData());
 
@@ -215,7 +264,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				bc.import(blockRLP, state.db());
 				state.sync(bc);
 			}
-			// if exception is thrown, RLP is invalid and not blockHeader, Transaction list, and Uncle list should be given
+            // if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 			catch (Exception const& _e)
 			{
 				cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
@@ -238,18 +287,13 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK(o.count("uncleHeaders") == 0);
 			}
 
-
-			// if yes, check parameters in blockHeader
-			// check transaction list
-			// check uncle list
-
 			BOOST_REQUIRE(o.count("blockHeader") > 0);
 
 			mObject tObj = o["blockHeader"].get_obj();
 			BlockInfo blockHeaderFromFields;
-			const bytes rlpBytesBlockHeader = createBlockRLPFromFields(tObj);
-			RLP blockHeaderRLP(rlpBytesBlockHeader);
-			blockHeaderFromFields.populateFromHeader(blockHeaderRLP, false);
+			const bytes c_rlpBytesBlockHeader = createBlockRLPFromFields(tObj);
+			const RLP c_blockHeaderRLP(c_rlpBytesBlockHeader);
+			blockHeaderFromFields.populateFromHeader(c_blockHeaderRLP, false);
 
 			BlockInfo blockFromRlp = bc.info();
 
@@ -294,15 +338,13 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			}
 
 			Transactions txsFromRlp;
-			bytes blockRLP2 = importByteArray(o["rlp"].get_str());
-			RLP root(blockRLP2);
+			bytes blockRLP = importByteArray(o["rlp"].get_str());
+			RLP root(blockRLP);
 			for (auto const& tr: root[1])
 			{
 				Transaction tx(tr.data(), CheckSignature::Sender);
 				txsFromRlp.push_back(tx);
 			}
-
-			cout << "size of pending transactions: " << txsFromRlp.size() << endl;
 
 			BOOST_CHECK_MESSAGE(txsFromRlp.size() == txsFromField.size(), "transaction list size does not match");
 
