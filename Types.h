@@ -379,8 +379,9 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned getSizeOnStack() const override { return 1; /*@todo*/ }
 	virtual std::string toString() const override;
+	virtual bool isValueType() const override { return true; }
 
-	virtual MemberList const& getMembers() const override;
+	EnumDefinition const& getEnumDefinition() const { return m_enum; }
 
 private:
 	EnumDefinition const& m_enum;

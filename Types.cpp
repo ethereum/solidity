@@ -682,19 +682,6 @@ string EnumType::toString() const
 	return string("enum ") + m_enum.getName();
 }
 
-MemberList const& EnumType::getMembers() const
-{
-	// We need to lazy-initialize it because of recursive references.
-	if (!m_members)
-	{
-		map<string, shared_ptr<Type const>> members;
-		for (ASTPointer<EnumDeclaration> const& enumValue: m_enum.getMembers())
-			members.insert(make_pair(enumValue->getName(), make_shared<EnumType>(m_enum)));
-		m_members.reset(new MemberList(members));
-	}
-	return *m_members;
-}
-
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),
@@ -956,6 +943,13 @@ MemberList const& TypeType::getMembers() const
 				for (ASTPointer<FunctionDefinition> const& f: contract.getDefinedFunctions())
 					if (!f->isConstructor() && !f->getName().empty())
 						members[f->getName()] = make_shared<FunctionType>(*f);
+		}
+		else if (m_actualType->getCategory() == Category::Enum)
+		{
+			EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).getEnumDefinition();
+			for (ASTPointer<EnumDeclaration> const& enumValue: enumDef.getMembers())
+			members.insert(make_pair(enumValue->getName(), make_shared<EnumType>(enumDef)));
+			m_members.reset(new MemberList(members));
 		}
 		m_members.reset(new MemberList(members));
 	}
