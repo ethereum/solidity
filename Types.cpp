@@ -541,6 +541,8 @@ unsigned ByteArrayType::getSizeOnStack() const
 		return 1;
 }
 
+const MemberList ByteArrayType::s_byteArrayMemberList = MemberList({{"length", make_shared<IntegerType >(256)}});
+
 bool ContractType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())

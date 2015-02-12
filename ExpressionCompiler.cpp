@@ -504,6 +504,12 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		}
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to " + type.toString()));
 	}
+	case Type::Category::ByteArray:
+	{
+		solAssert(member == "length", "Illegal bytearray member.");
+		m_context << eth::Instruction::SLOAD;
+		break;
+	}
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to unknown type."));
 	}

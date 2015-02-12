@@ -292,11 +292,13 @@ public:
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned getSizeOnStack() const override;
 	virtual std::string toString() const override { return "bytes"; }
+	virtual MemberList const& getMembers() const override { return s_byteArrayMemberList; }
 
 	Location getLocation() const { return m_location; }
 
 private:
 	Location m_location;
+	static const MemberList s_byteArrayMemberList;
 };
 
 /**
