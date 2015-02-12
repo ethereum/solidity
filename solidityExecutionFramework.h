@@ -139,6 +139,7 @@ private:
 		return encode(_cppFunction(_arguments...));
 	}
 
+protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
@@ -171,7 +172,6 @@ private:
 		m_logs = executive.logs();
 	}
 
-protected:
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
 	Address m_sender;

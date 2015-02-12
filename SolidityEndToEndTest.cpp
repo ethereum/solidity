@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(mapping_state)
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(2));
-	// voting without vote right shourd be rejected
+	// voting without vote right should be rejected
 	testSolidityAgainstCpp("vote(address,address)", vote, u160(0), u160(2));
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(0));
 	testSolidityAgainstCpp("getVoteCount(address)", getVoteCount, u160(1));
@@ -963,7 +963,7 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
 	BOOST_CHECK(callContractFunction("name()") == encodeArgs("Celina"));
-	BOOST_CHECK(callContractFunction("a_hash()") == encodeArgs(dev::sha3(bytes{0x7b})));
+	BOOST_CHECK(callContractFunction("a_hash()") == encodeArgs(dev::sha3(bytes(1, 0x7b))));
 	BOOST_CHECK(callContractFunction("an_address()") == encodeArgs(toBigEndian(u160(0x1337))));
 	BOOST_CHECK(callContractFunction("super_secret_data()") == bytes());
 }
@@ -2203,7 +2203,7 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_numeric_literals)
 					dev::sha3(
 						toBigEndian(u256(10)) +
 						bytes{0x0, 0xc} +
-						bytes{0x91})));
+						bytes(1, 0x91))));
 }
 
 BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
@@ -2227,7 +2227,7 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
 					dev::sha3(
 						toBigEndian(u256(10)) +
 						bytes{0x0, 0xc} +
-						bytes{0x91} +
+						bytes(1, 0x91) +
 						bytes{0x66, 0x6f, 0x6f})));
 }
 
@@ -2252,6 +2252,176 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	compileAndRun(sourceCode, 50, "sender");
 	BOOST_REQUIRE(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(23));
 	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
+}
+
+BOOST_AUTO_TEST_CASE(store_bytes)
+{
+	// this test just checks that the copy loop does not mess up the stack
+	char const* sourceCode = R"(
+		contract C {
+			function save() returns (uint r) {
+				r = 23;
+				savedData = msg.data;
+				r = 24;
+			}
+			bytes savedData;
+		}
+	)";
+	compileAndRun(sourceCode);
+	// empty copy loop
+	BOOST_CHECK(callContractFunction("save()") == encodeArgs(24));
+	BOOST_CHECK(callContractFunction("save()", "abcdefg") == encodeArgs(24));
+}
+
+BOOST_AUTO_TEST_CASE(call_forward_bytes)
+{
+	char const* sourceCode = R"(
+		contract receiver {
+			uint public received;
+			function receive(uint x) { received += x + 1; }
+			function() { received = 0x80; }
+		}
+		contract sender {
+			function sender() { rec = new receiver(); }
+			function() { savedData = msg.data; }
+			function forward() returns (bool) { rec.call(savedData); return true; }
+			function clear() returns (bool) { delete savedData; return true; }
+			function val() returns (uint) { return rec.received(); }
+			receiver rec;
+			bytes savedData;
+		}
+	)";
+	compileAndRun(sourceCode, 0, "sender");
+	BOOST_CHECK(callContractFunction("receive(uint256)", 7) == bytes());
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("forward()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("clear()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("forward()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0x80));
+}
+
+BOOST_AUTO_TEST_CASE(copying_bytes_multiassign)
+{
+	char const* sourceCode = R"(
+		contract receiver {
+			uint public received;
+			function receive(uint x) { received += x + 1; }
+			function() { received = 0x80; }
+		}
+		contract sender {
+			function sender() { rec = new receiver(); }
+			function() { savedData1 = savedData2 = msg.data; }
+			function forward(bool selector) returns (bool) {
+				if (selector) { rec.call(savedData1); delete savedData1; }
+				else { rec.call(savedData2); delete savedData2; }
+				return true;
+			}
+			function val() returns (uint) { return rec.received(); }
+			receiver rec;
+			bytes savedData1;
+			bytes savedData2;
+		}
+	)";
+	compileAndRun(sourceCode, 0, "sender");
+	BOOST_CHECK(callContractFunction("receive(uint256)", 7) == bytes());
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("forward(bool)", true) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("forward(bool)", false) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(16));
+	BOOST_CHECK(callContractFunction("forward(bool)", true) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("val()") == encodeArgs(0x80));
+}
+
+BOOST_AUTO_TEST_CASE(delete_removes_bytes_data)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function() { data = msg.data; }
+			function del() returns (bool) { delete data; return true; }
+			bytes data;
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("---", 7) == bytes());
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("del()", 7) == encodeArgs(true));
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function set() returns (bool) { data = msg.data; return true; }
+			function() { data = msg.data; }
+			bytes data;
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("set()", 1, 2, 3, 4, 5) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	sendMessage(bytes(), false);
+	BOOST_CHECK(m_output == bytes());
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(copy_removes_bytes_data)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function set() returns (bool) { data1 = msg.data; return true; }
+			function reset() returns (bool) { data1 = data2; return true; }
+			bytes data1;
+			bytes data2;
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("set()", 1, 2, 3, 4, 5) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("reset()") == encodeArgs(true));
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(bytes_inside_mappings)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function set(uint key) returns (bool) { data[key] = msg.data; return true; }
+			function copy(uint from, uint to) returns (bool) { data[to] = data[from]; return true; }
+			mapping(uint => bytes) data;
+		}
+	)";
+	compileAndRun(sourceCode);
+	// store a short byte array at 1 and a longer one at 2
+	BOOST_CHECK(callContractFunction("set(uint256)", 1, 2) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("set(uint256)", 2, 2, 3, 4, 5) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	// copy shorter to longer
+	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 1, 2) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	// copy empty to both
+	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 99, 1) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 99, 2) == encodeArgs(true));
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(bytes_length_member)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function set() returns (bool) { data = msg.data; return true; }
+			function getLength() returns (uint) { return data.length; }
+			bytes data;
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getLength()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("set()", 1, 2) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getLength()") == encodeArgs(4+32+32));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
