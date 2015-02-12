@@ -1032,7 +1032,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, Type 
 		break;
 	}
 	case LValueType::Storage:
-		// stack layout: value value ... value ref
+		// stack layout: value value ... value target_ref
 		if (_expression.getType()->isValueType())
 		{
 			if (!_move) // copy values
@@ -1050,7 +1050,7 @@ void ExpressionCompiler::LValue::storeValue(Expression const& _expression, Type 
 				if (i + 1 >= m_size)
 					*m_context << eth::Instruction::SSTORE;
 				else
-					// v v ... v v r+x
+					// stack here: value value ... value value (target_ref+offset)
 					*m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2
 							   << eth::Instruction::SSTORE
 							   << u256(1) << eth::Instruction::SWAP1 << eth::Instruction::SUB;

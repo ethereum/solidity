@@ -54,6 +54,8 @@ public:
 	unsigned storeInMemory(unsigned _offset, Type const& _type = IntegerType(256), bool _padToWordBoundaries = false);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that.
+	/// Stack pre: memory_offset value...
+	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries = true);
 	/// @returns _size rounded up to the next multiple of 32 (the number of bytes occupied in the
 	///          padded calldata)
@@ -75,11 +77,13 @@ public:
 	/// @note Only works for types of fixed size.
 	void computeHashStatic(Type const& _type = IntegerType(256), bool _padToWordBoundaries = false);
 
-	/// Copies a byte array to a byte array in storage, where the target is assumed to be on the
-	/// to top of the stay. Leaves a reference to the target on the stack.
+	/// Copies a byte array to a byte array in storage.
+	/// Stack pre: [source_reference] target_reference
+	/// Stack post: target_reference
 	void copyByteArrayToStorage(ByteArrayType const& _targetType, ByteArrayType const& _sourceType) const;
 	/// Clears the length and data elements of the byte array referenced on the stack.
-	/// Removes the reference from the stack.
+	/// Stack pre: reference
+	/// Stack post:
 	void clearByteArray(ByteArrayType const& _type) const;
 
 	/// Bytes we need to the start of call data.
@@ -87,10 +91,11 @@ public:
 	static const unsigned int dataStartOffset;
 
 private:
+	/// Prepares the given type for storing in memory by shifting it if necessary.
 	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const;
-	/// Appends a loop that clears all storage between the storage reference at the stack top
-	/// and the one below it (excluding).
-	/// Will leave the single value of the end pointer on the stack.
+	/// Appends a loop that clears a sequence of storage slots (excluding end).
+	/// Stack pre: end_ref start_ref
+	/// Stack post: end_ref
 	void clearStorageLoop() const;
 
 	CompilerContext& m_context;
