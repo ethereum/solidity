@@ -381,6 +381,8 @@ public:
 	virtual std::string toString() const override;
 	virtual bool isValueType() const override { return true; }
 
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+
 	EnumDefinition const& getEnumDefinition() const { return m_enum; }
 
 private:

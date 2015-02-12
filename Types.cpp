@@ -682,6 +682,11 @@ string EnumType::toString() const
 	return string("enum ") + m_enum.getName();
 }
 
+bool EnumType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	return _convertTo.getCategory() == getCategory() || _convertTo.getCategory() == Category::Integer;
+}
+
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),

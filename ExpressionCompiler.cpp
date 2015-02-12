@@ -489,6 +489,12 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 		break;
 	}
+	case Type::Category::Enum:
+	{
+		EnumType const& type = dynamic_cast<EnumType const&>(*_memberAccess.getExpression().getType());
+		EnumDefinition const& enumDef = type.getEnumDefinition();
+		m_context << enumDef.getMemberValue(_memberAccess.getMemberName());
+	}
 	case Type::Category::TypeType:
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.getExpression().getType());
@@ -559,6 +565,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		// no-op
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<EnumDefinition const*>(declaration))
 	{
 		// no-op
 	}
@@ -746,7 +756,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 		}
 	}
 	else if (stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::Contract ||
-			 stackTypeCategory == Type::Category::IntegerConstant)
+			 stackTypeCategory == Type::Category::IntegerConstant || stackTypeCategory == Type::Category::Enum)
 	{
 		if (targetTypeCategory == Type::Category::String && stackTypeCategory == Type::Category::Integer)
 		{

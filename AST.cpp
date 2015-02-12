@@ -277,6 +277,19 @@ TypePointer EnumDefinition::getType(ContractDefinition const*) const
 	return make_shared<TypeType>(make_shared<EnumType>(*this));
 }
 
+
+unsigned int EnumDefinition::getMemberValue(ASTString const& _member) const
+{
+	unsigned int index = 0;
+	for (ASTPointer<EnumDeclaration> const& decl: m_members)
+	{
+		if (decl->getName() == _member)
+			return index;
+		++index;
+	}
+	BOOST_THROW_EXCEPTION(createTypeError("Requested unknown enum value ." + _member));
+}
+
 TypePointer FunctionDefinition::getType(ContractDefinition const*) const
 {
 	return make_shared<FunctionType>(*this);
