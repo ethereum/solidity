@@ -184,17 +184,14 @@ void CompilerUtils::copyByteArrayToStorage(ByteArrayType const& _targetType,
 				  << eth::Instruction::SWAP1;
 		// stack here: target_ref target_data_end target_data_ref
 		// store length (in bytes)
-		if (_sourceType.getOffset() == 0)
-			m_context << eth::Instruction::CALLDATASIZE;
-		else
-			m_context << _sourceType.getOffset() << eth::Instruction::CALLDATASIZE << eth::Instruction::SUB;
+		m_context << eth::Instruction::CALLDATASIZE;
 		m_context << eth::Instruction::DUP1 << eth::Instruction::DUP5 << eth::Instruction::SSTORE;
 		// jump to end if length is zero
 		m_context << eth::Instruction::ISZERO;
 		eth::AssemblyItem copyLoopEnd = m_context.newTag();
 		m_context.appendConditionalJumpTo(copyLoopEnd);
-
-		m_context << _sourceType.getOffset();
+		// store start offset
+		m_context << u256(0);
 		// stack now: target_ref target_data_end target_data_ref calldata_offset
 		eth::AssemblyItem copyLoopStart = m_context.newTag();
 		m_context << copyLoopStart

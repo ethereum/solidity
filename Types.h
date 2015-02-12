@@ -286,9 +286,7 @@ public:
 	enum class Location { Storage, CallData, Memory };
 
 	virtual Category getCategory() const override { return Category::ByteArray; }
-	explicit ByteArrayType(Location _location, u256 const& _offset = 0, u256 const& _length = 0,
-						   bool _dynamicLength = false):
-		m_location(_location), m_offset(_offset), m_length(_length), m_dynamicLength(_dynamicLength) {}
+	explicit ByteArrayType(Location _location): m_location(_location) {}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(const Type& _other) const override;
@@ -296,15 +294,9 @@ public:
 	virtual std::string toString() const override { return "bytes"; }
 
 	Location getLocation() const { return m_location; }
-	u256 const& getOffset() const { return m_offset; }
-	u256 const& getLength() const { return m_length; }
-	bool hasDynamicLength() const { return m_dynamicLength; }
 
 private:
 	Location m_location;
-	u256 m_offset;
-	u256 m_length;
-	bool m_dynamicLength;
 };
 
 /**
