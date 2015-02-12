@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(assignment_to_struct)
 					   "    data = a;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(returns_in_constructor)
