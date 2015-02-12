@@ -176,8 +176,7 @@ namespace solidity
 	K(SubFinney, "finney", 0)                                           \
 	K(SubEther, "ether", 0)                                             \
 	/* type keywords, keep them in this order, keep int as first keyword
-	 * the implementation in Types.cpp has to be synced to this here
-	 *  TODO more to be added */                                       \
+	 * the implementation in Types.cpp has to be synced to this here */\
 	K(Int, "int", 0)                                                   \
 	K(Int8, "int8", 0)                                                 \
 	K(Int16, "int16", 0)                                               \
@@ -279,7 +278,8 @@ namespace solidity
 	K(Hash256, "hash256", 0)                                           \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
-	K(StringType, "string", 0)                                        \
+	K(Bytes, "bytes", 0)                                               \
+	K(StringType, "string", 0)                                         \
 	K(String0, "string0", 0)                                           \
 	K(String1, "string1", 0)                                           \
 	K(String2, "string2", 0)                                           \

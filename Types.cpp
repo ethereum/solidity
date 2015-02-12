@@ -35,7 +35,7 @@ namespace dev
 namespace solidity
 {
 
-shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
+TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 {
 	solAssert(Token::isElementaryTypeName(_typeToken), "Elementary type name expected.");
 
@@ -57,12 +57,19 @@ shared_ptr<Type const> Type::fromElementaryTypeName(Token::Value _typeToken)
 		return make_shared<BoolType>();
 	else if (Token::String0 <= _typeToken && _typeToken <= Token::String32)
 		return make_shared<StaticStringType>(int(_typeToken) - int(Token::String0));
+	else if (_typeToken == Token::Bytes)
+		return make_shared<ByteArrayType>(ByteArrayType::Location::Storage, 0, 0, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
 }
 
-shared_ptr<Type const> Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
+TypePointer Type::fromElementaryTypeName(string const& _name)
+{
+	return fromElementaryTypeName(Token::fromIdentifierOrKeyword(_name));
+}
+
+TypePointer Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
 {
 	Declaration const* declaration = _typeName.getReferencedDeclaration();
 	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
@@ -71,21 +78,21 @@ shared_ptr<Type const> Type::fromUserDefinedTypeName(UserDefinedTypeName const& 
 		return make_shared<FunctionType>(*function);
 	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 		return make_shared<ContractType>(*contract);
-	return shared_ptr<Type const>();
+	return TypePointer();
 }
 
-shared_ptr<Type const> Type::fromMapping(Mapping const& _typeName)
+TypePointer Type::fromMapping(Mapping const& _typeName)
 {
-	shared_ptr<Type const> keyType = _typeName.getKeyType().toType();
+	TypePointer keyType = _typeName.getKeyType().toType();
 	if (!keyType)
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Error resolving type name."));
-	shared_ptr<Type const> valueType = _typeName.getValueType().toType();
+	TypePointer valueType = _typeName.getValueType().toType();
 	if (!valueType)
 		BOOST_THROW_EXCEPTION(_typeName.getValueType().createTypeError("Invalid type name"));
 	return make_shared<MappingType>(keyType, valueType);
 }
 
-shared_ptr<Type const> Type::forLiteral(Literal const& _literal)
+TypePointer Type::forLiteral(Literal const& _literal)
 {
 	switch (_literal.getToken())
 	{
@@ -506,6 +513,40 @@ TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
 }
 
+bool ByteArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+{
+	if (*this == _convertTo)
+		return true;
+	if (_convertTo.getCategory() != Category::ByteArray)
+		return false;
+	auto const& other = dynamic_cast<ByteArrayType const&>(_convertTo);
+	return (m_dynamicLength == other.m_dynamicLength || m_length == other.m_length);
+}
+
+TypePointer ByteArrayType::unaryOperatorResult(Token::Value _operator) const
+{
+	if (_operator == Token::Delete)
+		return make_shared<VoidType>();
+	return TypePointer();
+}
+
+bool ByteArrayType::operator==(Type const& _other) const
+{
+	if (_other.getCategory() != getCategory())
+		return false;
+	ByteArrayType const& other = dynamic_cast<ByteArrayType const&>(_other);
+	return other.m_location == m_location && other.m_dynamicLength == m_dynamicLength
+			&& other.m_length == m_length && other.m_offset == m_offset;
+}
+
+unsigned ByteArrayType::getSizeOnStack() const
+{
+	if (m_location == Location::CallData)
+		return 0;
+	else
+		return 1;
+}
+
 bool ContractType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
@@ -525,8 +566,8 @@ MemberList const& ContractType::getMembers() const
 	if (!m_members)
 	{
 		// All address members and all interface functions
-		map<string, shared_ptr<Type const>> members(IntegerType::AddressMemberList.begin(),
-													IntegerType::AddressMemberList.end());
+		map<string, TypePointer> members(IntegerType::AddressMemberList.begin(),
+										 IntegerType::AddressMemberList.end());
 		if (m_super)
 		{
 			for (ContractDefinition const* base: m_contract.getLinearizedBaseContracts())
@@ -581,14 +622,14 @@ bool StructType::operator==(Type const& _other) const
 u256 StructType::getStorageSize() const
 {
 	u256 size = 0;
-	for (pair<string, shared_ptr<Type const>> const& member: getMembers())
+	for (pair<string, TypePointer> const& member: getMembers())
 		size += member.second->getStorageSize();
 	return max<u256>(1, size);
 }
 
 bool StructType::canLiveOutsideStorage() const
 {
-	for (pair<string, shared_ptr<Type const>> const& member: getMembers())
+	for (pair<string, TypePointer> const& member: getMembers())
 		if (!member.second->canLiveOutsideStorage())
 			return false;
 	return true;
@@ -604,7 +645,7 @@ MemberList const& StructType::getMembers() const
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
 	{
-		map<string, shared_ptr<Type const>> members;
+		map<string, TypePointer> members;
 		for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
 			members[variable->getName()] = variable->getType();
 		m_members.reset(new MemberList(members));
@@ -811,7 +852,7 @@ TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 	TypePointers pointers;
 	pointers.reserve(_types.size());
 	for (string const& type: _types)
-		pointers.push_back(Type::fromElementaryTypeName(Token::fromIdentifierOrKeyword(type)));
+		pointers.push_back(Type::fromElementaryTypeName(type));
 	return pointers;
 }
 
@@ -941,7 +982,8 @@ MagicType::MagicType(MagicType::Kind _kind):
 	case Kind::Message:
 		m_members = MemberList({{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"gas", make_shared<IntegerType>(256)},
-								{"value", make_shared<IntegerType>(256)}});
+								{"value", make_shared<IntegerType>(256)},
+								{"data", make_shared<ByteArrayType>(ByteArrayType::Location::CallData)}});
 		break;
 	case Kind::Transaction:
 		m_members = MemberList({{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},

@@ -92,21 +92,18 @@ private:
 	/// Appends code to call a function of the given type with the given arguments.
 	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
 									bool bare = false);
-	/// Appends code that evaluates the given arguments and moves the result to memory (with optional offset).
-	/// @returns the number of bytes moved to memory
-	unsigned appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
-										 TypePointers const& _types = {},
-										 unsigned _memoryOffset = 0,
-										 bool _padToWordBoundaries = true,
-										 bool _padExceptionIfFourBytes = false);
-	/// Appends code that moves a stack element of the given type to memory
-	/// @returns the number of bytes moved to memory
-	unsigned appendTypeMoveToMemory(Type const& _type, Location const& _location, unsigned _memoryOffset,
-									bool _padToWordBoundaries = true);
-	/// Appends code that evaluates a single expression and moves the result to memory (with optional offset).
-	/// @returns the number of bytes moved to memory
-	unsigned appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression,
-										  unsigned _memoryOffset = 0);
+	/// Appends code that evaluates the given arguments and moves the result to memory. The memory offset is
+	/// expected to be on the stack and is updated by this call.
+	void appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
+									 TypePointers const& _types = {},
+									 bool _padToWordBoundaries = true,
+									 bool _padExceptionIfFourBytes = false);
+	/// Appends code that moves a stack element of the given type to memory. The memory offset is
+	/// expected below the stack element and is updated by this call.
+	void appendTypeMoveToMemory(Type const& _type, bool _padToWordBoundaries = true);
+	/// Appends code that evaluates a single expression and moves the result to memory. The memory offset is
+	/// expected to be on the stack and is updated by this call.
+	void appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression);
 
 	/// Appends code for a State Variable accessor function
 	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);
@@ -148,10 +145,11 @@ private:
 		/// be on the top of the stack, if any) in the lvalue and removes the reference.
 		/// Also removes the stored value from the stack if @a _move is
 		/// true. @a _expression is the current expression, used for error reporting.
-		void storeValue(Expression const& _expression, bool _move = false) const;
+		/// @a _sourceType is the type of the expression that is assigned.
+		void storeValue(Expression const& _expression, Type const& _sourceType, bool _move = false) const;
 		/// Stores zero in the lvalue.
 		/// @a _expression is the current expression, used for error reporting.
-		void setToZero(Expression const& _expression) const;
+		void setToZero(Expression const& _expression, Type const& _type) const;
 		/// Convenience function to convert the stored reference to a value and reset type to NONE if
 		/// the reference was not requested by @a _expression.
 		void retrieveValueIfLValueNotRequested(Expression const& _expression);
@@ -159,6 +157,8 @@ private:
 	private:
 		/// Convenience function to retrieve Value from Storage. Specific version of @ref retrieveValue
 		void retrieveValueFromStorage(TypePointer const& _type, bool _remove = false) const;
+		/// Copies from a byte array to a byte array in storage, both references on the stack.
+		void copyByteArrayToStorage(ByteArrayType const& _targetType, ByteArrayType const& _sourceType) const;
 
 		CompilerContext* m_context;
 		LValueType m_type = LValueType::None;

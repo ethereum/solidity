@@ -403,7 +403,8 @@ void Assignment::checkTypeRequirements()
 	m_leftHandSide->checkTypeRequirements();
 	m_leftHandSide->requireLValue();
 	//@todo later, assignments to structs might be possible, but not to mappings
-	if (!m_leftHandSide->getType()->isValueType() && !m_leftHandSide->isLocalLValue())
+	if (m_leftHandSide->getType()->getCategory() != Type::Category::ByteArray &&
+			!m_leftHandSide->getType()->isValueType() && !m_leftHandSide->isLocalLValue())
 		BOOST_THROW_EXCEPTION(createTypeError("Assignment to non-local non-value lvalue."));
 	m_type = m_leftHandSide->getType();
 	if (m_assigmentOperator == Token::Assign)
