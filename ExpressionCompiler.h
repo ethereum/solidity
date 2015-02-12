@@ -22,8 +22,10 @@
  */
 
 #include <functional>
+#include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
+#include <libsolidity/BaseTypes.h>
 #include <libsolidity/ASTVisitor.h>
 
 namespace dev {
@@ -37,6 +39,7 @@ namespace solidity {
 class CompilerContext;
 class Type;
 class IntegerType;
+class ByteArrayType;
 class StaticStringType;
 
 /**
@@ -119,14 +122,13 @@ private:
 		enum class LValueType { None, Stack, Memory, Storage };
 
 		explicit LValue(CompilerContext& _compilerContext): m_context(&_compilerContext) { reset(); }
-		LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType, unsigned _baseStackOffset = 0);
+		LValue(CompilerContext& _compilerContext, LValueType _type,
+			   std::shared_ptr<Type const> const& _dataType, unsigned _baseStackOffset = 0);
 
 		/// Set type according to the declaration and retrieve the reference.
 		/// @a _expression is the current expression
 		void fromIdentifier(Identifier const& _identifier, Declaration const& _declaration);
-		/// Convenience function to set type for a state variable and retrieve the reference
-		void fromStateVariable(Declaration const& _varDecl, TypePointer const& _type);
-		void reset() { m_type = LValueType::None; m_baseStackOffset = 0; m_size = 0; }
+		void reset() { m_type = LValueType::None; m_dataType.reset(); m_baseStackOffset = 0; m_size = 0; }
 
 		bool isValid() const { return m_type != LValueType::None; }
 		bool isInOnStack() const { return m_type == LValueType::Stack; }
@@ -138,30 +140,29 @@ private:
 
 		/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
 		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).
-		/// @a _type is the type of the current expression and @ _location its location, used for error reporting.
-		/// @a _location can be a nullptr for expressions that don't have an actual ASTNode equivalent
-		void retrieveValue(TypePointer const& _type, Location const& _location, bool _remove = false) const;
-		/// Stores a value (from the stack directly beneath the reference, which is assumed to
-		/// be on the top of the stack, if any) in the lvalue and removes the reference.
-		/// Also removes the stored value from the stack if @a _move is
-		/// true. @a _expression is the current expression, used for error reporting.
-		/// @a _sourceType is the type of the expression that is assigned.
-		void storeValue(Expression const& _expression, Type const& _sourceType, bool _move = false) const;
+		/// @a _location source location of the current expression, used for error reporting.
+		void retrieveValue(Location const& _location, bool _remove = false) const;
+		/// Moves a value from the stack to the lvalue. Removes the value if @a _move is true.
+		/// @a _location is the source location of the expression that caused this operation.
+		/// Stack pre: [lvalue_ref] value
+		/// Stack post if !_move: value_of(lvalue_ref)
+		void storeValue(Type const& _sourceType, Location const& _location = Location(), bool _move = false) const;
 		/// Stores zero in the lvalue.
-		/// @a _expression is the current expression, used for error reporting.
-		void setToZero(Expression const& _expression, Type const& _type) const;
+		/// @a _location is the source location of the requested operation
+		void setToZero(Location const& _location = Location()) const;
 		/// Convenience function to convert the stored reference to a value and reset type to NONE if
 		/// the reference was not requested by @a _expression.
 		void retrieveValueIfLValueNotRequested(Expression const& _expression);
 
 	private:
 		/// Convenience function to retrieve Value from Storage. Specific version of @ref retrieveValue
-		void retrieveValueFromStorage(TypePointer const& _type, bool _remove = false) const;
+		void retrieveValueFromStorage(bool _remove = false) const;
 		/// Copies from a byte array to a byte array in storage, both references on the stack.
 		void copyByteArrayToStorage(ByteArrayType const& _targetType, ByteArrayType const& _sourceType) const;
 
 		CompilerContext* m_context;
 		LValueType m_type = LValueType::None;
+		std::shared_ptr<Type const> m_dataType;
 		/// If m_type is STACK, this is base stack offset (@see
 		/// CompilerContext::getBaseStackOffsetOfVariable) of a local variable.
 		unsigned m_baseStackOffset = 0;

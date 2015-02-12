@@ -653,7 +653,7 @@ u256 StructType::getStorageOffsetOfMember(string const& _name) const
 {
 	//@todo cache member offset?
 	u256 offset;
-	for (ASTPointer<VariableDeclaration> variable: m_struct.getMembers())
+	for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
 	{
 		if (variable->getName() == _name)
 			return offset;
