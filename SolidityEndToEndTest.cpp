@@ -2409,6 +2409,21 @@ BOOST_AUTO_TEST_CASE(bytes_inside_mappings)
 	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
 }
 
+BOOST_AUTO_TEST_CASE(bytes_length_member)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function set() returns (bool) { data = msg.data; return true; }
+			function getLength() returns (uint) { return data.length; }
+			bytes data;
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getLength()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("set()", 1, 2) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getLength()") == encodeArgs(4+32+32));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
