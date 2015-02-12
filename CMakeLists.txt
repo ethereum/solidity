@@ -4,6 +4,7 @@ set(CMAKE_AUTOMOC OFF)
 aux_source_directory(. SRC_LIST)
 
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${JSONCPP_INCLUDE_DIRS})
 include_directories(..)
 
 set(EXECUTABLE solc)
