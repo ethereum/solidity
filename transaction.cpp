@@ -64,7 +64,7 @@ RLPStream createRLPStreamFromTransactionFields(mObject& _tObj)
 		rlpStream << bigint(_tObj["r"].get_str());
 
 	if (_tObj.count("s") > 0)
-		rlpStream <<  bigint(_tObj["s"].get_str());
+		rlpStream << bigint(_tObj["s"].get_str());
 
 	if (_tObj.count("extrafield") > 0)
 		rlpStream << bigint(_tObj["extrafield"].get_str());
@@ -82,18 +82,18 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin == false)
 		{
 			BOOST_REQUIRE(o.count("rlp") > 0);
-			bytes rlpReaded = importByteArray(o["rlp"].get_str());
 			Transaction txFromRlp;
-
 			try
 			{
-				txFromRlp = Transaction(rlpReaded, CheckSignature::Sender);
+				bytes stream = importByteArray(o["rlp"].get_str());
+				RLP rlp(stream);
+				txFromRlp = Transaction(rlp.data(), CheckSignature::Sender);
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 			}
 			catch(...)
 			{
-				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transction object should not be defined because the RLP is invalid!");
+				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transaction object should not be defined because the RLP is invalid!");
 				return;
 			}
 
@@ -115,6 +115,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 			Address addressReaded = Address(o["sender"].get_str());
 			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, "Signature address of sender does not match given sender address!");
+
 		}
 		else
 		{
