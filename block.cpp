@@ -217,8 +217,8 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				txObject["data"] = toHex(tx.data());
 				txObject["gasLimit"] = toString(tx.gas());
 				txObject["gasPrice"] = toString(tx.gasPrice());
-				txObject["r"] = toString(tx.signature().r);
-				txObject["s"] = toString(tx.signature().s);
+				txObject["r"] = "0x" + toString(tx.signature().r);
+				txObject["s"] = "0x" + toString(tx.signature().s);
 				txObject["v"] = to_string(tx.signature().v + 27);
 				txObject["to"] = toString(tx.receiveAddress());
 				txObject["value"] = toString(tx.value());
