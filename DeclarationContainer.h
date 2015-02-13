@@ -23,6 +23,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <boost/noncopyable.hpp>
 
 #include <libsolidity/ASTForward.h>
@@ -43,8 +44,10 @@ public:
 								  DeclarationContainer const* _enclosingContainer = nullptr):
 		m_enclosingDeclaration(_enclosingDeclaration), m_enclosingContainer(_enclosingContainer) {}
 	/// Registers the declaration in the scope unless its name is already declared or the name is empty.
+	/// @param _invisible if true, registers the declaration, reports name clashes but does not return it in @a resolveName
+	/// @param _update if true, replaces a potential declaration that is already present
 	/// @returns false if the name was already declared.
-	bool registerDeclaration(Declaration const& _declaration, bool _update = false);
+	bool registerDeclaration(Declaration const& _declaration, bool _invisible = false, bool _update = false);
 	Declaration const* resolveName(ASTString const& _name, bool _recursive = false) const;
 	Declaration const* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
 	std::map<ASTString, Declaration const*> const& getDeclarations() const { return m_declarations; }
@@ -53,6 +56,7 @@ private:
 	Declaration const* m_enclosingDeclaration;
 	DeclarationContainer const* m_enclosingContainer;
 	std::map<ASTString, Declaration const*> m_declarations;
+	std::set<ASTString> m_invisibleDeclarations;
 };
 
 }

@@ -150,6 +150,7 @@ namespace solidity
 	K(Do, "do", 0)                                                     \
 	K(Else, "else", 0)                                                 \
 	K(Event, "event", 0)                                               \
+	K(External, "external", 0)                                         \
 	K(Is, "is", 0)                                                     \
 	K(Indexed, "indexed", 0)                                           \
 	K(For, "for", 0)                                                   \
@@ -378,7 +379,8 @@ public:
 	static bool isUnaryOp(Value op) { return (Not <= op && op <= Delete) || op == Add || op == Sub; }
 	static bool isCountOp(Value op) { return op == Inc || op == Dec; }
 	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
-	static bool isVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Protected; }
+	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }
+	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Protected; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == Token::SubEther; }
 
 	// Returns a string corresponding to the JS token string

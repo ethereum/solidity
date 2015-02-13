@@ -28,14 +28,19 @@ namespace dev
 namespace solidity
 {
 
-bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, bool _update)
+bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, bool _invisible, bool _update)
 {
-	if (_declaration.getName().empty())
+	ASTString const& name(_declaration.getName());
+	if (name.empty())
 		return true;
 
-	if (!_update && m_declarations.find(_declaration.getName()) != m_declarations.end())
+	if (!_update && (m_declarations.count(name) || m_invisibleDeclarations.count(name)))
 		return false;
-	m_declarations[_declaration.getName()] = &_declaration;
+
+	if (_invisible)
+		m_invisibleDeclarations.insert(name);
+	else
+		m_declarations[name] = &_declaration;
 	return true;
 }
 

@@ -572,7 +572,8 @@ MemberList const& ContractType::getMembers() const
 		{
 			for (ContractDefinition const* base: m_contract.getLinearizedBaseContracts())
 				for (ASTPointer<FunctionDefinition> const& function: base->getDefinedFunctions())
-					if (!function->isConstructor() && !function->getName().empty())
+					if (!function->isConstructor() && !function->getName().empty() &&
+							function->isVisibleInDerivedContracts())
 						members.insert(make_pair(function->getName(), make_shared<FunctionType>(*function, true)));
 		}
 		else
@@ -957,10 +958,10 @@ MemberList const& TypeType::getMembers() const
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).getContractDefinition();
 			vector<ContractDefinition const*> currentBases = m_currentContract->getLinearizedBaseContracts();
 			if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
-				// We are accessing the type of a base contract, so add all public and private
+				// We are accessing the type of a base contract, so add all public and protected
 				// functions. Note that this does not add inherited functions on purpose.
 				for (ASTPointer<FunctionDefinition> const& f: contract.getDefinedFunctions())
-					if (!f->isConstructor() && !f->getName().empty())
+					if (!f->isConstructor() && !f->getName().empty() && f->isVisibleInDerivedContracts())
 						members[f->getName()] = make_shared<FunctionType>(*f);
 		}
 		else if (m_actualType->getCategory() == Category::Enum)
