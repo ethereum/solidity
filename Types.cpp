@@ -156,7 +156,9 @@ bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		StaticStringType const& convertTo = dynamic_cast<StaticStringType const&>(_convertTo);
 		return isHash() && (m_bits == convertTo.getNumBytes() * 8);
 	}
-	return _convertTo.getCategory() == getCategory() || _convertTo.getCategory() == Category::Contract;
+	return _convertTo.getCategory() == getCategory() ||
+		   _convertTo.getCategory() == Category::Contract ||
+		   _convertTo.getCategory() == Category::Enum;
 }
 
 TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
