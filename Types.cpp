@@ -687,6 +687,18 @@ bool EnumType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.getCategory() == getCategory() || _convertTo.getCategory() == Category::Integer;
 }
 
+unsigned int EnumType::getMemberValue(ASTString const& _member) const
+{
+	unsigned int index = 0;
+	for (ASTPointer<EnumValue> const& decl: m_enum.getMembers())
+	{
+		if (decl->getName() == _member)
+			return index;
+		++index;
+	}
+	BOOST_THROW_EXCEPTION(m_enum.createTypeError("Requested unknown enum value ." + _member));
+}
+
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),

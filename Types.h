@@ -384,6 +384,8 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 
 	EnumDefinition const& getEnumDefinition() const { return m_enum; }
+	/// @returns the value that the string has in the Enum
+	unsigned int getMemberValue(ASTString const& _member) const;
 
 private:
 	EnumDefinition const& m_enum;

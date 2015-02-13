@@ -333,9 +333,6 @@ public:
 
 	virtual TypePointer getType(ContractDefinition const*) const override;
 
-	/// @returns the value that the string has in the Enum
-	unsigned int getMemberValue(ASTString const& _member) const;
-
 	/// Checks that the members do not include any duplicate names
 	void checkValidityOfMembers() const;
 

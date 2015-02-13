@@ -492,8 +492,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::Enum:
 	{
 		EnumType const& type = dynamic_cast<EnumType const&>(*_memberAccess.getExpression().getType());
-		EnumDefinition const& enumDef = type.getEnumDefinition();
-		m_context << enumDef.getMemberValue(_memberAccess.getMemberName());
+		m_context << type.getMemberValue(_memberAccess.getMemberName());
 		break;
 	}
 	case Type::Category::TypeType:
@@ -516,8 +515,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		}
 		else if ((enumType = dynamic_cast<EnumType const*>(type.getActualType().get())))
 		{
-			EnumDefinition const &enumDef = enumType->getEnumDefinition();
-			m_context << enumDef.getMemberValue(_memberAccess.getMemberName());
+			m_context << enumType->getMemberValue(_memberAccess.getMemberName());
 			return;
 		}
 
