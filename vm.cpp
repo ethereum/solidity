@@ -32,6 +32,8 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
+using Millisecs = chrono::duration<int,milli>;
+
 FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
 	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, test::lastHashes(_currentBlock.number), _depth) {}
 
@@ -513,13 +515,39 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 	dev::test::executeTests("vmSystemOperationsTest", "/VMTests", dev::test::doVMTests);
 }
 
+BOOST_AUTO_TEST_CASE(vmPerformanceTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--performance")
+		{
+			chrono::steady_clock::time_point start = chrono::steady_clock::now();
+
+			dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
+
+			chrono::steady_clock::time_point end = chrono::steady_clock::now();
+			Millisecs duration(chrono::duration_cast<Millisecs>(end - start));
+			cnote << "test duration: " << duration.count() << " milliseconds.\n";
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
 		if (arg == "--inputlimits")
+		{
+			chrono::steady_clock::time_point start = chrono::steady_clock::now();
+
 			dev::test::executeTests("vmInputLimitsTest1", "/VMTests", dev::test::doVMTests);
+
+			chrono::steady_clock::time_point end = chrono::steady_clock::now();
+			Millisecs duration(chrono::duration_cast<Millisecs>(end - start));
+			cnote << "test duration: " << duration.count() << " milliseconds.\n";
+		}
 	}
 }
 
