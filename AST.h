@@ -166,21 +166,6 @@ private:
 };
 
 /**
- * Declaration of an Enum Value
- */
-class EnumValue: public Declaration
-{
-  public:
-	EnumValue(Location const& _location,
-			  ASTPointer<ASTString> const& _name):
-		Declaration(_location, _name) {}
-
-	virtual void accept(ASTVisitor& _visitor) override;
-	virtual void accept(ASTConstVisitor& _visitor) const override;
-	TypePointer getType(ContractDefinition const* = nullptr) const;
-};
-
-/**
  * Abstract class that is added to each AST node that can store local variables.
  */
 class VariableScope
@@ -357,6 +342,21 @@ public:
 private:
 
 	std::vector<ASTPointer<EnumValue>> m_members;
+};
+
+/**
+ * Declaration of an Enum Value
+ */
+class EnumValue: public Declaration
+{
+  public:
+	EnumValue(Location const& _location,
+			  ASTPointer<ASTString> const& _name):
+		Declaration(_location, _name) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+	TypePointer getType(ContractDefinition const* = nullptr) const;
 };
 
 /**

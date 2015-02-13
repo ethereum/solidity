@@ -266,12 +266,11 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 	return nodeFactory.createNode<StructDefinition>(name, members);
 }
 
-ASTPointer<EnumValue> Parser::parseEnumDeclaration()
+ASTPointer<EnumValue> Parser::parseEnumValue()
 {
 	ASTNodeFactory nodeFactory(*this);
-	ASTPointer<ASTString> name = expectIdentifierToken();
 	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<EnumValue>(name);
+	return nodeFactory.createNode<EnumValue>(expectIdentifierToken());
 }
 
 ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
@@ -284,13 +283,12 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 
 	while (m_scanner->getCurrentToken() != Token::RBrace)
 	{
-		members.push_back(parseEnumDeclaration());
+		members.push_back(parseEnumValue());
 		if (m_scanner->getCurrentToken() == Token::RBrace)
 			break;
 		expectToken(Token::Comma);
-		if (m_scanner->getCurrentToken() != Token::Identifier) {
+		if (m_scanner->getCurrentToken() != Token::Identifier)
 			BOOST_THROW_EXCEPTION(createParserError("Expected Identifier after ','"));
-		}
 	}
 
 	nodeFactory.markEndPosition();
@@ -856,13 +854,6 @@ ASTPointer<ASTString> Parser::expectIdentifierToken()
 {
 	if (m_scanner->getCurrentToken() != Token::Identifier)
 		BOOST_THROW_EXCEPTION(createParserError("Expected identifier"));
-	return getLiteralAndAdvance();
-}
-
-ASTPointer<ASTString> Parser::peekIdentifierToken()
-{
-	if (m_scanner->getCurrentToken() != Token::Identifier)
-		return nullptr;
 	return getLiteralAndAdvance();
 }
 

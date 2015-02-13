@@ -209,6 +209,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 TypePointer EnumValue::getType(ContractDefinition const*) const
 {
 	EnumDefinition const* parentDef = dynamic_cast<EnumDefinition const*>(getScope());
+	solAssert(parentDef, "Enclosing Scope of EnumValue was not set");
 	return make_shared<EnumType>(*parentDef);
 }
 
@@ -271,7 +272,7 @@ void EnumDefinition::checkValidityOfMembers() const
 	sort(begin(members), end(members), compareDecls);
 	for (size_t i = 0; i < members.size() - 1; ++i)
 		if (members[i]->getName() == members[i + 1]->getName())
-			BOOST_THROW_EXCEPTION(createTypeError("Duplicate member detected in Enum"));
+			BOOST_THROW_EXCEPTION(members[i]->createTypeError("Duplicate member detected in Enum"));
 }
 
 TypePointer EnumDefinition::getType(ContractDefinition const*) const

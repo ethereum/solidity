@@ -501,26 +501,26 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.getExpression().getType());
 		ContractType const* contractType;
 		EnumType const* enumType;
-		if (type.getMembers().getMemberType(member))
+		if (!type.getMembers().getMemberType(member))
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to " + type.toString()));			
+
+		if ((contractType = dynamic_cast<ContractType const*>(type.getActualType().get())))
 		{
-			if ((contractType = dynamic_cast<ContractType const*>(type.getActualType().get())))
-			{
-				ContractDefinition const& contract = contractType->getContractDefinition();
-				for (ASTPointer<FunctionDefinition> const& function: contract.getDefinedFunctions())
-					if (function->getName() == member)
-					{
-						m_context << m_context.getFunctionEntryLabel(*function).pushTag();
-						return;
-					}
-			}
-			else if ((enumType = dynamic_cast<EnumType const*>(type.getActualType().get())))
-			{
-				EnumDefinition const &enumDef = enumType->getEnumDefinition();
-				m_context << enumDef.getMemberValue(_memberAccess.getMemberName());
-				return;
-			}
+			ContractDefinition const& contract = contractType->getContractDefinition();
+			for (ASTPointer<FunctionDefinition> const& function: contract.getDefinedFunctions())
+				if (function->getName() == member)
+				{
+					m_context << m_context.getFunctionEntryLabel(*function).pushTag();
+					return;
+				}
 		}
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to " + type.toString()));
+		else if ((enumType = dynamic_cast<EnumType const*>(type.getActualType().get())))
+		{
+			EnumDefinition const &enumDef = enumType->getEnumDefinition();
+			m_context << enumDef.getMemberValue(_memberAccess.getMemberName());
+			return;
+		}
+
 	}
 	case Type::Category::ByteArray:
 	{

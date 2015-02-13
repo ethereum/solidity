@@ -377,7 +377,7 @@ public:
 	explicit EnumType(EnumDefinition const& _enum): m_enum(_enum) {}
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
-	virtual unsigned getSizeOnStack() const override { return 1; /*@todo*/ }
+	virtual unsigned getSizeOnStack() const override { return 1; }
 	virtual std::string toString() const override;
 	virtual bool isValueType() const override { return true; }
 
