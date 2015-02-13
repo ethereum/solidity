@@ -513,13 +513,39 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 	dev::test::executeTests("vmSystemOperationsTest", "/VMTests", dev::test::doVMTests);
 }
 
+BOOST_AUTO_TEST_CASE(vmPerformanceTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--performance")
+		{
+			auto start = chrono::steady_clock::now();
+
+			dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
+
+			auto end = chrono::steady_clock::now();
+			chrono::milliseconds duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+			cnote << "test duration: " << duration.count() << " milliseconds.\n";
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
 		if (arg == "--inputlimits")
+		{
+			auto start = chrono::steady_clock::now();
+
 			dev::test::executeTests("vmInputLimitsTest1", "/VMTests", dev::test::doVMTests);
+
+			auto end = chrono::steady_clock::now();
+			chrono::milliseconds duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+			cnote << "test duration: " << duration.count() << " milliseconds.\n";
+		}
 	}
 }
 
