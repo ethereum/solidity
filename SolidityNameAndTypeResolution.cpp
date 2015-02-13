@@ -996,7 +996,7 @@ BOOST_AUTO_TEST_CASE(enum_member_access)
 {
 	char const* text = R"(
 			contract test {
-				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 				function test()
 				{
 					choices = ActionChoices.GoStraight;
@@ -1011,7 +1011,7 @@ BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
 {
 	char const* text = R"(
 			contract test {
-				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 				function test()
 				{
 					choices = ActionChoices.RunAroundWavingYourHands;
@@ -1026,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
 {
 	char const* text = R"(
 			contract test {
-				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 				function test()
 				{
 					a = uint256(ActionChoices.GoStraight);
@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
 {
 	char const* text = R"(
 			contract test {
-				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 				function test()
 				{
 					a = 2;
@@ -1060,7 +1060,7 @@ BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
 {
 	char const* text = R"(
 			contract test {
-				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 				function test()
 				{
 					a = ActionChoices.GoStraight;
@@ -1077,7 +1077,7 @@ BOOST_AUTO_TEST_CASE(enum_duplicate_values)
 {
 	char const* text = R"(
 			contract test {
-				enum ActionChoices { GoLeft, GoRight, GoLeft, Sit };
+				enum ActionChoices { GoLeft, GoRight, GoLeft, Sit }
 			}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);

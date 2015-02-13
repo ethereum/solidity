@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE(enum_valid_declaration)
 {
 	char const* text = R"(
 		contract c {
-			enum validEnum { Value1, Value2, Value3, Value4 };
+			enum validEnum { Value1, Value2, Value3, Value4 }
 			function c ()
 			{
 				a = foo.Value3;
@@ -721,7 +721,7 @@ BOOST_AUTO_TEST_CASE(empty_enum_declaration)
 {
 	char const* text = R"(
 		contract c {
-			enum foo { };
+			enum foo { }
 		})";
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(malformed_enum_declaration)
 {
 	char const* text = R"(
 		contract c {
-			enum foo { WARNING,};
+			enum foo { WARNING,}
 		})";
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }

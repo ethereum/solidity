@@ -2503,7 +2503,7 @@ BOOST_AUTO_TEST_CASE(using_enums)
 {
 	char const* sourceCode = R"(
 			contract test {
-				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 				function test()
 				{
 					choices = ActionChoices.GoStraight;
