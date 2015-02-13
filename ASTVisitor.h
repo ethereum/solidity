@@ -48,7 +48,7 @@ public:
 	virtual bool visit(InheritanceSpecifier&) { return true; }
 	virtual bool visit(StructDefinition&) { return true; }
 	virtual bool visit(EnumDefinition&) { return true; }
-	virtual bool visit(EnumDeclaration&) { return true; }
+	virtual bool visit(EnumvValue&) { return true; }
 	virtual bool visit(ParameterList&) { return true; }
 	virtual bool visit(FunctionDefinition&) { return true; }
 	virtual bool visit(VariableDeclaration&) { return true; }
@@ -91,7 +91,7 @@ public:
 	virtual void endVisit(InheritanceSpecifier&) { }
 	virtual void endVisit(StructDefinition&) { }
 	virtual void endVisit(EnumDefinition&) { }
-	virtual void endVisit(EnumDeclaration&) { }
+	virtual void endVisit(EnumvValue&) { }
 	virtual void endVisit(ParameterList&) { }
 	virtual void endVisit(FunctionDefinition&) { }
 	virtual void endVisit(VariableDeclaration&) { }
@@ -138,7 +138,7 @@ public:
 	virtual bool visit(InheritanceSpecifier const&) { return true; }
 	virtual bool visit(StructDefinition const&) { return true; }
 	virtual bool visit(EnumDefinition const&) { return true; }
-	virtual bool visit(EnumDeclaration const&) { return true; }
+	virtual bool visit(EnumvValue const&) { return true; }
 	virtual bool visit(ParameterList const&) { return true; }
 	virtual bool visit(FunctionDefinition const&) { return true; }
 	virtual bool visit(VariableDeclaration const&) { return true; }
@@ -181,7 +181,7 @@ public:
 	virtual void endVisit(InheritanceSpecifier const&) { }
 	virtual void endVisit(StructDefinition const&) { }
 	virtual void endVisit(EnumDefinition const&) { }
-	virtual void endVisit(EnumDeclaration const&) { }
+	virtual void endVisit(EnumvValue const&) { }
 	virtual void endVisit(ParameterList const&) { }
 	virtual void endVisit(FunctionDefinition const&) { }
 	virtual void endVisit(VariableDeclaration const&) { }

@@ -206,7 +206,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	return *m_interfaceFunctionList;
 }
 
-TypePointer EnumDeclaration::getType(ContractDefinition const*) const
+TypePointer EnumvValue::getType(ContractDefinition const*) const
 {
 	// LTODO: How to get the parent EnumDefinition and return its type here?
 	return nullptr;
@@ -263,8 +263,8 @@ void StructDefinition::checkRecursion() const
 
 void EnumDefinition::checkValidityOfMembers() const
 {
-	vector<ASTPointer<EnumDeclaration>> members(getMembers());
-	auto compareDecls = [](ASTPointer<EnumDeclaration> a, ASTPointer<EnumDeclaration> b)
+	vector<ASTPointer<EnumvValue>> members(getMembers());
+	auto compareDecls = [](ASTPointer<EnumvValue> a, ASTPointer<EnumvValue> b)
 	{
 		return a->getName() < b->getName();
 	};
@@ -283,7 +283,7 @@ TypePointer EnumDefinition::getType(ContractDefinition const*) const
 unsigned int EnumDefinition::getMemberValue(ASTString const& _member) const
 {
 	unsigned int index = 0;
-	for (ASTPointer<EnumDeclaration> const& decl: m_members)
+	for (ASTPointer<EnumvValue> const& decl: m_members)
 	{
 		if (decl->getName() == _member)
 			return index;

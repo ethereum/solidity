@@ -121,13 +121,13 @@ void EnumDefinition::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
-void EnumDeclaration::accept(ASTVisitor& _visitor)
+void EnumvValue::accept(ASTVisitor& _visitor)
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);
 }
 
-void EnumDeclaration::accept(ASTConstVisitor& _visitor) const
+void EnumvValue::accept(ASTConstVisitor& _visitor) const
 {
 	_visitor.visit(*this);
 	_visitor.endVisit(*this);

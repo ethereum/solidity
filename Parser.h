@@ -62,7 +62,7 @@ private:
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
-	ASTPointer<EnumDeclaration> parseEnumDeclaration();
+	ASTPointer<EnumvValue> parseEnumDeclaration();
 	ASTPointer<VariableDeclaration> parseVariableDeclaration(VarDeclParserOptions const& _options = VarDeclParserOptions());
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<EventDefinition> parseEventDefinition();
