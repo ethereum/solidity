@@ -39,18 +39,18 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin == false)
 		{
 			BOOST_REQUIRE(o.count("rlp") > 0);
-			bytes rlpReaded = importByteArray(o["rlp"].get_str());
 			Transaction txFromRlp;
-
 			try
 			{
-				txFromRlp = Transaction(rlpReaded, CheckSignature::Sender);
+				bytes stream = importByteArray(o["rlp"].get_str());
+				RLP rlp(stream);
+				txFromRlp = Transaction(rlp.data(), CheckSignature::Sender);
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 			}
 			catch(...)
 			{
-				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transction object should not be defined because the RLP is invalid!");
+				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transaction object should not be defined because the RLP is invalid!");
 				return;
 			}
 

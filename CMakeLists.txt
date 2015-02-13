@@ -4,11 +4,12 @@ aux_source_directory(. SRC_LIST)
 list(REMOVE_ITEM SRC_LIST "./createRandomTest.cpp")
 list(REMOVE_ITEM SRC_LIST "./checkRandomTest.cpp")
 
+include_directories(..)
+include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CRYPTOPP_INCLUDE_DIRS})
-include_directories(${JSONCPP_INCLUDE_DIRS})
 include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
-include_directories(..)
+
 
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})

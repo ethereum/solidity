@@ -159,6 +159,11 @@ BOOST_AUTO_TEST_CASE(stBlockHashTest)
 	dev::test::executeTests("stBlockHashTest", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stSolidityTest)
+{
+	dev::test::executeTests("stSolidityTest", "/StateTests", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stCreateTest)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
