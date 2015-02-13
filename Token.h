@@ -72,26 +72,26 @@ namespace solidity
 	T(EOS, "EOS", 0)													\
 																		\
 	/* Punctuators (ECMA-262, section 7.7, page 15). */				\
-	T(LParen, "(", 0)													\
-	T(RParen, ")", 0)													\
-	T(LBrack, "[", 0)													\
-	T(RBrack, "]", 0)													\
-	T(LBrace, "{", 0)													\
-	T(RBrace, "}", 0)													\
-	T(Colon, ":", 0)													\
-	T(Semicolon, ";", 0)												\
-	T(Period, ".", 0)													\
-	T(Conditional, "?", 3)												\
-	T(Arrow, "=>", 0)													\
-																		\
+	T(LParen, "(", 0)                                                   \
+	T(RParen, ")", 0)                                                   \
+	T(LBrack, "[", 0)                                                   \
+	T(RBrack, "]", 0)                                                   \
+	T(LBrace, "{", 0)                                                   \
+	T(RBrace, "}", 0)                                                   \
+	T(Colon, ":", 0)                                                    \
+	T(Semicolon, ";", 0)                                                \
+	T(Period, ".", 0)                                                   \
+	T(Conditional, "?", 3)                                              \
+	T(Arrow, "=>", 0)                                                   \
+	\
 	/* Assignment operators. */										\
 	/* IsAssignmentOp() relies on this block of enum values being */	\
 	/* contiguous and sorted in the same order!*/						\
-	T(Assign, "=", 2)													\
+	T(Assign, "=", 2)                                                   \
 	/* The following have to be in exactly the same order as the simple binary operators*/ \
-	T(AssignBitOr, "|=", 2)                                          \
-	T(AssignBitXor, "^=", 2)                                         \
-	T(AssignBitAnd, "&=", 2)                                         \
+	T(AssignBitOr, "|=", 2)                                           \
+	T(AssignBitXor, "^=", 2)                                          \
+	T(AssignBitAnd, "&=", 2)                                          \
 	T(AssignShl, "<<=", 2)                                            \
 	T(AssignSar, ">>=", 2)                                            \
 	T(AssignShr, ">>>=", 2)                                           \
@@ -107,9 +107,9 @@ namespace solidity
 	T(Comma, ",", 1)                                                   \
 	T(Or, "||", 4)                                                     \
 	T(And, "&&", 5)                                                    \
-	T(BitOr, "|", 8)                                                  \
-	T(BitXor, "^", 9)                                                 \
-	T(BitAnd, "&", 10)                                                \
+	T(BitOr, "|", 8)                                                   \
+	T(BitXor, "^", 9)                                                  \
+	T(BitAnd, "&", 10)                                                 \
 	T(SHL, "<<", 11)                                                   \
 	T(SAR, ">>", 11)                                                   \
 	T(SHR, ">>>", 11)                                                  \
@@ -123,19 +123,19 @@ namespace solidity
 	/* Compare operators sorted by precedence. */                      \
 	/* IsCompareOp() relies on this block of enum values */            \
 	/* being contiguous and sorted in the same order! */               \
-	T(Equal, "==", 6)                                                     \
-	T(NotEqual, "!=", 6)                                                     \
-	T(LessThan, "<", 7)                                                      \
-	T(GreaterThan, ">", 7)                                                      \
-	T(LessThanOrEqual, "<=", 7)                                                    \
-	T(GreaterThanOrEqual, ">=", 7)                                                    \
+	T(Equal, "==", 6)                                                  \
+	T(NotEqual, "!=", 6)                                               \
+	T(LessThan, "<", 7)                                                \
+	T(GreaterThan, ">", 7)                                             \
+	T(LessThanOrEqual, "<=", 7)                                        \
+	T(GreaterThanOrEqual, ">=", 7)                                     \
 	K(In, "in", 7)                                                     \
 	\
 	/* Unary operators. */                                             \
 	/* IsUnaryOp() relies on this block of enum values */              \
 	/* being contiguous and sorted in the same order! */               \
 	T(Not, "!", 0)                                                     \
-	T(BitNot, "~", 0)                                                 \
+	T(BitNot, "~", 0)                                                  \
 	T(Inc, "++", 0)                                                    \
 	T(Dec, "--", 0)                                                    \
 	K(Delete, "delete", 0)                                             \
@@ -168,7 +168,7 @@ namespace solidity
 	K(Switch, "switch", 0)                                             \
 	K(Var, "var", 0)                                                   \
 	K(While, "while", 0)                                               \
-	K(Enum, "enum", 0)												   \
+	K(Enum, "enum", 0)                                                 \
 	\
 	/* Ether subdenominations */                                        \
 	K(SubWei, "wei", 0)                                                 \
@@ -316,15 +316,15 @@ namespace solidity
 	K(Text, "text", 0)                                                 \
 	K(Real, "real", 0)                                                 \
 	K(UReal, "ureal", 0)                                               \
-	T(TypesEnd, NULL, 0) /* used as type enum end marker */           \
+	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
-	K(NullLiteral, "null", 0)                                         \
-	K(TrueLiteral, "true", 0)                                         \
-	K(FalseLiteral, "false", 0)                                       \
+	K(NullLiteral, "null", 0)                                          \
+	K(TrueLiteral, "true", 0)                                          \
+	K(FalseLiteral, "false", 0)                                        \
 	T(Number, NULL, 0)                                                 \
-	T(StringLiteral, NULL, 0)                                         \
-	T(CommentLiteral, NULL, 0)                                        \
+	T(StringLiteral, NULL, 0)                                          \
+	T(CommentLiteral, NULL, 0)                                         \
 	\
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(Identifier, NULL, 0)                                             \

@@ -289,7 +289,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 			break;
 		expectToken(Token::Comma);
 		if (m_scanner->getCurrentToken() != Token::Identifier) {
-			BOOST_THROW_EXCEPTION(createParserError("Expected Identifier after ,"));
+			BOOST_THROW_EXCEPTION(createParserError("Expected Identifier after ','"));
 		}
 	}
 
