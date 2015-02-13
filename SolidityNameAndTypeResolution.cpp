@@ -1063,8 +1063,8 @@ BOOST_AUTO_TEST_CASE(enum_duplicate_values)
 				enum ActionChoices { GoLeft, GoRight, GoLeft, Sit };
 				function test()
 				{
-                   a = 1;
-                   b = 2;
+					a = 1;
+					b = 2;
 				}
 				uint256 a;
 				uint64 b;
