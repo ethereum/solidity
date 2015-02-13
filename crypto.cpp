@@ -331,17 +331,16 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	ECDHE eA;
 	bytes nAbytes(fromHex("0xAAAA"));
 	h256 nonceA(sha3(nAbytes));
-	
 	bytes auth(Signature::size + h256::size + Public::size + h256::size + 1);
+	Secret ssA;
 	{
 		bytesConstRef sig(&auth[0], Signature::size);
 		bytesConstRef hepubk(&auth[Signature::size], h256::size);
 		bytesConstRef pubk(&auth[Signature::size + h256::size], Public::size);
 		bytesConstRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
 		
-		Secret ss;
-		s_secp256k1.agree(nodeA.sec(), nodeB.pub(), ss);
-		sign(eA.seckey(), ss ^ nonceA).ref().copyTo(sig);
+		s_secp256k1.agree(nodeA.sec(), nodeB.pub(), ssA);
+		sign(eA.seckey(), ssA ^ nonceA).ref().copyTo(sig);
 		sha3(eA.pubkey().ref(), hepubk);
 		nodeA.pub().ref().copyTo(pubk);
 		nonceA.ref().copyTo(nonce);
@@ -366,6 +365,44 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	bytes ackcipher;
 	encrypt(nodeA.pub(), &ack, ackcipher);
 	cnote << "ackAuth:" << toHex(ackcipher);
+	
+	/// Alice
+	// TODO: decrypt ackcipher and check decrypted pubk is eb
+	Secret aEncryptK;
+	Secret aMacK;
+	Secret aEgressMac;
+	Secret aIngressMac;
+	{
+		bytes keyMaterial(512);
+		
+		h256 ess;
+		// todo: ecdh-agree should be able to output bytes
+		s_secp256k1.agree(eA.seckey(), eB.pubkey(), ess);
+		ess.ref().copyTo(bytesConstRef(&keyMaterial).cropped(0, h256::size));
+		ssA.ref().copyTo(bytesConstRef(&keyMaterial).cropped(h256::size, h256::size));
+//		auto token = sha3(ssA);
+		aEncryptK = sha3(keyMaterial);
+		aEncryptK.ref().copyTo(bytesConstRef(&keyMaterial).cropped(h256::size, h256::size));
+		aMacK = sha3(keyMaterial);
+		
+		// todo: resize key-material and copy ciphertext
+		aEgressMac = sha3(keyMaterial);
+		aIngressMac = sha3(keyMaterial);
+	}
+	
+	
+//	ecdhe-shared-secret = ecdh.agree(ecdhe-random, remote-ecdhe-random-pubk)
+//	shared-secret = sha3(ecdhe-shared-secret || sha3(nonce || initiator-nonce))
+//	token = sha3(shared-secret)
+//	aes-secret = sha3(ecdhe-shared-secret || shared-secret)
+//# destroy shared-secret
+//	mac-secret = sha3(ecdhe-shared-secret || aes-secret)
+//# destroy ecdhe-shared-secret
+//	egress-mac = sha3(mac-secret^nonce || auth)
+//# destroy nonce
+//	ingress-mac = sha3(mac-secret^initiator-nonce || auth)
+//# destroy remote-nonce
+	
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
