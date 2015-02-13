@@ -208,8 +208,8 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 
 TypePointer EnumvValue::getType(ContractDefinition const*) const
 {
-	// LTODO: How to get the parent EnumDefinition and return its type here?
-	return nullptr;
+	EnumDefinition const* parentDef = dynamic_cast<EnumDefinition const*>(getScope());
+	return make_shared<EnumType>(*parentDef);
 }
 
 void InheritanceSpecifier::checkTypeRequirements()
