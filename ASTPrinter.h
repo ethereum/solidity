@@ -47,7 +47,7 @@ public:
 	bool visit(InheritanceSpecifier const& _node) override;
 	bool visit(StructDefinition const& _node) override;
 	bool visit(EnumDefinition const& _node) override;
-	bool visit(EnumvValue const& _node) override;
+	bool visit(EnumValue const& _node) override;
 	bool visit(ParameterList const& _node) override;
 	bool visit(FunctionDefinition const& _node) override;
 	bool visit(VariableDeclaration const& _node) override;
@@ -88,7 +88,7 @@ public:
 	void endVisit(InheritanceSpecifier const&) override;
 	void endVisit(StructDefinition const&) override;
 	void endVisit(EnumDefinition const&) override;
-	void endVisit(EnumvValue const&) override;
+	void endVisit(EnumValue const&) override;
 	void endVisit(ParameterList const&) override;
 	void endVisit(FunctionDefinition const&) override;
 	void endVisit(VariableDeclaration const&) override;

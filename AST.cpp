@@ -206,7 +206,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	return *m_interfaceFunctionList;
 }
 
-TypePointer EnumvValue::getType(ContractDefinition const*) const
+TypePointer EnumValue::getType(ContractDefinition const*) const
 {
 	EnumDefinition const* parentDef = dynamic_cast<EnumDefinition const*>(getScope());
 	return make_shared<EnumType>(*parentDef);
@@ -263,8 +263,8 @@ void StructDefinition::checkRecursion() const
 
 void EnumDefinition::checkValidityOfMembers() const
 {
-	vector<ASTPointer<EnumvValue>> members(getMembers());
-	auto compareDecls = [](ASTPointer<EnumvValue> a, ASTPointer<EnumvValue> b)
+	vector<ASTPointer<EnumValue>> members(getMembers());
+	auto compareDecls = [](ASTPointer<EnumValue> a, ASTPointer<EnumValue> b)
 	{
 		return a->getName() < b->getName();
 	};
@@ -283,7 +283,7 @@ TypePointer EnumDefinition::getType(ContractDefinition const*) const
 unsigned int EnumDefinition::getMemberValue(ASTString const& _member) const
 {
 	unsigned int index = 0;
-	for (ASTPointer<EnumvValue> const& decl: m_members)
+	for (ASTPointer<EnumValue> const& decl: m_members)
 	{
 		if (decl->getName() == _member)
 			return index;

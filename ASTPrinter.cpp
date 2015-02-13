@@ -77,7 +77,7 @@ bool ASTPrinter::visit(EnumDefinition const& _node)
 	return goDeeper();
 }
 
-bool ASTPrinter::visit(EnumvValue const& _node)
+bool ASTPrinter::visit(EnumValue const& _node)
 {
 	writeLine("EnumValue \"" + _node.getName() + "\"");
 	return goDeeper();
@@ -364,7 +364,7 @@ void ASTPrinter::endVisit(EnumDefinition const&)
 	m_indentation--;
 }
 
-void ASTPrinter::endVisit(EnumvValue const&)
+void ASTPrinter::endVisit(EnumValue const&)
 {
 	m_indentation--;
 }

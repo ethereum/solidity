@@ -168,12 +168,12 @@ private:
 /**
  * Declaration of an Enum Value
  */
-class EnumvValue : public Declaration
+class EnumValue: public Declaration
 {
   public:
-	EnumvValue(Location const& _location,
-					ASTPointer<ASTString> const& _name):
-	Declaration(_location, _name) {}
+	EnumValue(Location const& _location,
+			  ASTPointer<ASTString> const& _name):
+		Declaration(_location, _name) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -339,12 +339,12 @@ class EnumDefinition: public Declaration
 public:
 	EnumDefinition(Location const& _location,
 				   ASTPointer<ASTString> const& _name,
-				   std::vector<ASTPointer<EnumvValue>> const& _members):
+				   std::vector<ASTPointer<EnumValue>> const& _members):
 		Declaration(_location, _name), m_members(_members) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	std::vector<ASTPointer<EnumvValue>> const& getMembers() const { return m_members; }
+	std::vector<ASTPointer<EnumValue>> const& getMembers() const { return m_members; }
 
 	virtual TypePointer getType(ContractDefinition const*) const override;
 
@@ -356,7 +356,7 @@ public:
 
 private:
 
-	std::vector<ASTPointer<EnumvValue>> m_members;
+	std::vector<ASTPointer<EnumValue>> m_members;
 };
 
 /**

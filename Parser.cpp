@@ -266,12 +266,12 @@ ASTPointer<StructDefinition> Parser::parseStructDefinition()
 	return nodeFactory.createNode<StructDefinition>(name, members);
 }
 
-ASTPointer<EnumvValue> Parser::parseEnumDeclaration()
+ASTPointer<EnumValue> Parser::parseEnumDeclaration()
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> name = expectIdentifierToken();
 	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<EnumvValue>(name);
+	return nodeFactory.createNode<EnumValue>(name);
 }
 
 ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
@@ -279,7 +279,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Enum);
 	ASTPointer<ASTString> name = expectIdentifierToken();
-	vector<ASTPointer<EnumvValue>> members;
+	vector<ASTPointer<EnumValue>> members;
 	expectToken(Token::LBrace);
 
 	while (m_scanner->getCurrentToken() != Token::RBrace)

@@ -952,7 +952,7 @@ MemberList const& TypeType::getMembers() const
 		else if (m_actualType->getCategory() == Category::Enum)
 		{
 			EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).getEnumDefinition();
-			for (ASTPointer<EnumvValue> const& enumValue: enumDef.getMembers())
+			for (ASTPointer<EnumValue> const& enumValue: enumDef.getMembers())
 				members.insert(make_pair(enumValue->getName(), make_shared<EnumType>(enumDef)));
 			m_members.reset(new MemberList(members));
 		}

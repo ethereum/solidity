@@ -41,7 +41,7 @@ class ContractDefinition;
 class InheritanceSpecifier;
 class StructDefinition;
 class EnumDefinition;
-class EnumvValue;
+class EnumValue;
 class ParameterList;
 class FunctionDefinition;
 class VariableDeclaration;
