@@ -13,7 +13,7 @@ FunctionDefinition = 'function' Identifier ParameterList
                      ( 'returns' ParameterList )? Block
 
 EnumValue = Identifier
-EnumDefinition = 'enum' '{' EnumValue (',' EnumValue)* '}' ';'
+EnumDefinition = 'enum' '{' EnumValue (',' EnumValue)* '}'
 ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists

@@ -293,7 +293,6 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
-	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<EnumDefinition>(name, members);
 }
 
