@@ -157,6 +157,8 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 		// construct blockchain
 		BlockChain bc(block.out(), string(), true);
 
+		cout << "constructed bc\n";
+
 		if (_fillin)
 		{
 			BOOST_REQUIRE(o.count("transactions") > 0);
@@ -260,9 +262,13 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			try
 			{
 				state.sync(bc);
+				cout << "synced bc\n";
 				bytes blockRLP = importByteArray(o["rlp"].get_str());
+				cout << "imported rlp bc\n";
 				bc.import(blockRLP, state.db());
+				cout << "imported rlp to bc bc\n";
 				state.sync(bc);
+				cout << "synced state bc\n";
 			}
             // if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 			catch (Exception const& _e)
@@ -316,6 +322,8 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, "However, blockHeaderFromFields != blockFromRlp!");
 
+			cout << "checked block header bc\n";
+
 			//Check transaction list
 
 			Transactions txsFromField;
@@ -323,6 +331,9 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			for (auto const& txObj: o["transactions"].get_array())
 			{
 				mObject tx = txObj.get_obj();
+
+				cout << "read single tx\n";
+
 				BOOST_REQUIRE(tx.count("nonce") > 0);
 				BOOST_REQUIRE(tx.count("gasPrice") > 0);
 				BOOST_REQUIRE(tx.count("gasLimit") > 0);
@@ -333,9 +344,24 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_REQUIRE(tx.count("s") > 0);
 				BOOST_REQUIRE(tx.count("data") > 0);
 
-				Transaction t(createRLPStreamFromTransactionFields(tx).out(), CheckSignature::Sender);
-				txsFromField.push_back(t);
+				cout << "construct single tx\n";
+				try
+				{
+					Transaction t(createRLPStreamFromTransactionFields(tx).out(), CheckSignature::Sender);
+					txsFromField.push_back(t);
+				}
+				catch (Exception const& _e)
+				{
+					BOOST_ERROR("Failed transaction constructor with Exception: " << diagnostic_information(_e));
+
+				}
+				catch (exception const& _e)
+				{
+					cout << _e.what() << endl;
+				}
 			}
+
+			cout << "read txs bc\n";
 
 			Transactions txsFromRlp;
 			bytes blockRLP = importByteArray(o["rlp"].get_str());
@@ -362,6 +388,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 				BOOST_CHECK_MESSAGE(txsFromField[i] == txsFromRlp[i], "however, transactions in rlp and in field do not match");
 			}
+			cout << "checked txs bc\n";
 
 			// check uncle list
 
