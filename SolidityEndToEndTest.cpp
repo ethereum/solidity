@@ -2273,6 +2273,21 @@ BOOST_AUTO_TEST_CASE(store_bytes)
 	BOOST_CHECK(callContractFunction("save()", "abcdefg") == encodeArgs(24));
 }
 
+BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function() returns (hash) {
+				return sha3("abc", msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	bytes calldata = bytes(61, 0x22) + bytes(12, 0x12);
+	sendMessage(calldata, false);
+	BOOST_CHECK(m_output == encodeArgs(dev::sha3(bytes{'a', 'b', 'c'} + calldata)));
+}
+
 BOOST_AUTO_TEST_CASE(call_forward_bytes)
 {
 	char const* sourceCode = R"(
