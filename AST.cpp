@@ -263,13 +263,15 @@ void StructDefinition::checkRecursion() const
 
 void EnumDefinition::checkValidityOfMembers() const
 {
-#if 0  // LTODO: Make this work for the Declarations
-	vector<ASTPointer<ASTString>> members = getMembers();
-	sort(begin(members), end(members));
-	for (size_t i = 0; i < members.size(); ++i)
-		if (members[i] == members[i + 1])
+	vector<ASTPointer<EnumDeclaration>> members(getMembers());
+	auto compareDecls = [](ASTPointer<EnumDeclaration> a, ASTPointer<EnumDeclaration> b)
+	{
+		return a->getName() < b->getName();
+	};
+	sort(begin(members), end(members), compareDecls);
+	for (size_t i = 0; i < members.size() - 1; ++i)
+		if (members[i]->getName() == members[i + 1]->getName())
 			BOOST_THROW_EXCEPTION(createTypeError("Duplicate member detected in Enum"));
-#endif
 }
 
 TypePointer EnumDefinition::getType(ContractDefinition const*) const
