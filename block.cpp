@@ -169,27 +169,15 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			for (auto const& txObj: o["transactions"].get_array())
 			{
 				mObject tx = txObj.get_obj();
-				BOOST_REQUIRE(tx.count("nonce") > 0);
-				BOOST_REQUIRE(tx.count("gasPrice") > 0);
-				BOOST_REQUIRE(tx.count("gasLimit") > 0);
-				BOOST_REQUIRE(tx.count("to") > 0);
-				BOOST_REQUIRE(tx.count("value") > 0);
-				BOOST_REQUIRE(tx.count("v") > 0);
-				BOOST_REQUIRE(tx.count("r") > 0);
-				BOOST_REQUIRE(tx.count("s") > 0);
-				BOOST_REQUIRE(tx.count("data") > 0);
-				cout << "import tx\n";
-				if (!txs.attemptImport(&createRLPStreamFromTransactionFields(tx).out()))
+				importer.importTransaction(tx);
+				if (!txs.attemptImport(importer.m_transaction.rlp()))
 					cnote << "failed importing transaction\n";
 			}
 
 			try
 			{
-				cout << "sync state: " << state.sync(bc) << endl;
-				TransactionReceipts txReceipts = state.sync(bc,txs);
-				cout << "sync state done\n";
-				//if (syncSuccess)
-				//	throw Exception();
+				state.sync(bc);
+				state.sync(bc,txs);
 				state.commitToMine(bc);
 				MineInfo info;
 				for (info.completed = false; !info.completed; info = state.mine()) {}
@@ -262,13 +250,9 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			try
 			{
 				state.sync(bc);
-				cout << "synced bc\n";
 				bytes blockRLP = importByteArray(o["rlp"].get_str());
-				cout << "imported rlp bc\n";
 				bc.import(blockRLP, state.db());
-				cout << "imported rlp to bc bc\n";
 				state.sync(bc);
-				cout << "synced state bc\n";
 			}
             // if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 			catch (Exception const& _e)

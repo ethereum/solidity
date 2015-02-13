@@ -548,7 +548,6 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 	return rlpStream;
 }
 
-
 void processCommandLineOptions()
 {
 	auto argc = boost::unit_test::framework::master_test_suite().argc;
