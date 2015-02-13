@@ -316,6 +316,43 @@ BOOST_AUTO_TEST_CASE(ecdhe)
 	BOOST_REQUIRE_EQUAL(sremote, slocal);
 }
 
+BOOST_AUTO_TEST_CASE(handshakeNew)
+{
+	//	authInitiator -> E(remote-pubk, S(ecdhe-random, ecdh-shared-secret^nonce) || H(ecdhe-random-pubk) || pubk || nonce || 0x0)
+	//	authRecipient -> E(remote-pubk, ecdhe-random-pubk || nonce || 0x0)
+	
+	Secret nodeAsecret(sha3("privacy"));
+	KeyPair nodeA(nodeAsecret);
+	
+	Secret nodeBsecret(sha3("privacy++"));
+	KeyPair nodeB(nodeBsecret);
+	
+	// Initiator is Alice (nodeA)
+	ECDHE eA;
+	bytes nAbytes(fromHex("0xAAAA"));
+	h256 nonceA(sha3(nAbytes));
+	
+	bytes auth(Signature::size + h256::size + Public::size + h256::size + 1);
+	{
+		bytesConstRef sig(&auth[0], Signature::size);
+		bytesConstRef hepubk(&auth[Signature::size], h256::size);
+		bytesConstRef pubk(&auth[Signature::size + h256::size], Public::size);
+		bytesConstRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
+		
+		Secret ss;
+		s_secp256k1.agree(nodeA.sec(), nodeB.pub(), ss);
+		sign(eA.seckey(), ss ^ nonceA).ref().copyTo(sig);
+		sha3(eA.pubkey().ref(), hepubk);
+		nodeA.pub().ref().copyTo(pubk);
+		nonceA.ref().copyTo(nonce);
+		auth[auth.size() - 1] = 0x0;
+	}
+	
+	cnote << "initAuth:" << toHex(auth);
+	
+//	bytes ack(h256::size * 2 + 1);
+}
+
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
 {
 	// New connections require new ECDH keypairs
