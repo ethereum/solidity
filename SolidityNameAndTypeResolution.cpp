@@ -1039,6 +1039,23 @@ BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
 }
 
+BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit };
+				function test()
+				{
+					a = 2;
+					b = ActionChoices(a);
+				}
+				uint256 a;
+				ActionChoices b;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
 BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
 {
 	char const* text = R"(
