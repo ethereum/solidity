@@ -1,18 +1,18 @@
 /*
-    This file is part of cpp-ethereum.
+	This file is part of cpp-ethereum.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file block.cpp
  * @author Christoph Jentzsch <cj@ethdev.com>
@@ -32,60 +32,60 @@ namespace dev {  namespace test {
 
 bytes createBlockRLPFromFields(mObject& _tObj)
 {
-    RLPStream rlpStream;
-    rlpStream.appendList(_tObj.size());
+	RLPStream rlpStream;
+	rlpStream.appendList(_tObj.size());
 
-    if (_tObj.count("parentHash") > 0)
-        rlpStream << importByteArray(_tObj["parentHash"].get_str());
+	if (_tObj.count("parentHash") > 0)
+		rlpStream << importByteArray(_tObj["parentHash"].get_str());
 
-    if (_tObj.count("uncleHash") > 0)
-        rlpStream << importByteArray(_tObj["uncleHash"].get_str());
+	if (_tObj.count("uncleHash") > 0)
+		rlpStream << importByteArray(_tObj["uncleHash"].get_str());
 
-    if (_tObj.count("coinbase") > 0)
-        rlpStream << importByteArray(_tObj["coinbase"].get_str());
+	if (_tObj.count("coinbase") > 0)
+		rlpStream << importByteArray(_tObj["coinbase"].get_str());
 
-    if (_tObj.count("stateRoot") > 0)
-        rlpStream << importByteArray(_tObj["stateRoot"].get_str());
+	if (_tObj.count("stateRoot") > 0)
+		rlpStream << importByteArray(_tObj["stateRoot"].get_str());
 
-    if (_tObj.count("transactionsTrie") > 0)
-        rlpStream << importByteArray(_tObj["transactionsTrie"].get_str());
+	if (_tObj.count("transactionsTrie") > 0)
+		rlpStream << importByteArray(_tObj["transactionsTrie"].get_str());
 
-    if (_tObj.count("receiptTrie") > 0)
-        rlpStream << importByteArray(_tObj["receiptTrie"].get_str());
+	if (_tObj.count("receiptTrie") > 0)
+		rlpStream << importByteArray(_tObj["receiptTrie"].get_str());
 
-    if (_tObj.count("bloom") > 0)
-        rlpStream << importByteArray(_tObj["bloom"].get_str());
+	if (_tObj.count("bloom") > 0)
+		rlpStream << importByteArray(_tObj["bloom"].get_str());
 
-    if (_tObj.count("difficulty") > 0)
-        rlpStream << bigint(_tObj["difficulty"].get_str());
+	if (_tObj.count("difficulty") > 0)
+		rlpStream << bigint(_tObj["difficulty"].get_str());
 
-    if (_tObj.count("number") > 0)
-        rlpStream << bigint(_tObj["number"].get_str());
+	if (_tObj.count("number") > 0)
+		rlpStream << bigint(_tObj["number"].get_str());
 
-    if (_tObj.count("gasLimit") > 0)
-        rlpStream << bigint(_tObj["gasLimit"].get_str());
+	if (_tObj.count("gasLimit") > 0)
+		rlpStream << bigint(_tObj["gasLimit"].get_str());
 
-    if (_tObj.count("gasUsed") > 0)
-        rlpStream << bigint(_tObj["gasUsed"].get_str());
+	if (_tObj.count("gasUsed") > 0)
+		rlpStream << bigint(_tObj["gasUsed"].get_str());
 
-    if (_tObj.count("timestamp") > 0)
-        rlpStream << bigint(_tObj["timestamp"].get_str());
+	if (_tObj.count("timestamp") > 0)
+		rlpStream << bigint(_tObj["timestamp"].get_str());
 
-    if (_tObj.count("extraData") > 0)
-        rlpStream << importByteArray(_tObj["extraData"].get_str());
+	if (_tObj.count("extraData") > 0)
+		rlpStream << importByteArray(_tObj["extraData"].get_str());
 
-    if (_tObj.count("nonce") > 0)
-        rlpStream << importByteArray(_tObj["nonce"].get_str());
+	if (_tObj.count("nonce") > 0)
+		rlpStream << importByteArray(_tObj["nonce"].get_str());
 
-    return rlpStream.out();
+	return rlpStream.out();
 }
 
 void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 {
-    for (auto& i: _v.get_obj())
-    {
-        cerr << i.first << endl;
-        mObject& o = i.second.get_obj();
+	for (auto& i: _v.get_obj())
+	{
+		cerr << i.first << endl;
+		mObject& o = i.second.get_obj();
 
 		BOOST_REQUIRE(o.count("genesisBlockHeader") > 0);
 		cout << "construc genesis\n";
@@ -197,9 +197,12 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			// write valid txs
 			cout << "number of valid txs: " << txs.transactions().size();
 			mArray txArray;
+			Transactions txList;
 			for (auto const& txi: txs.transactions())
 			{
+				cout << "AHA0" << endl;
 				Transaction tx(txi.second, CheckSignature::Sender);
+				txList.push_back(tx);
 				mObject txObject;
 				txObject["nonce"] = toString(tx.nonce());
 				txObject["data"] = toHex(tx.data());
@@ -210,10 +213,11 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				txObject["v"] = to_string(tx.signature().v + 27);
 				txObject["to"] = toString(tx.receiveAddress());
 				txObject["value"] = toString(tx.value());
+				cout << "AHA0.5" << endl;
 
 				txArray.push_back(txObject);
 			}
-
+			cout << "AHA1" << endl;
 			o["transactions"] = txArray;
 
 			o["rlp"] = "0x" + toHex(state.blockData());
@@ -237,12 +241,125 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			oBlockHeader["extraData"] = toHex(current_BlockHeader.extraData);
 			oBlockHeader["nonce"] = toString(current_BlockHeader.nonce);
 
-			o["blockHeader"] = oBlockHeader;
 
-			// write uncle list
 
-			mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles.
-			o["uncleHeaders"] = aUncleList;
+			// overwrite (wrong) data from blockheader in filler" << endl;
+
+			if (o.count("blockHeader") > 0)
+			{
+				if (o["blockHeader"].get_obj().size() != 14)
+				{
+
+					BlockInfo tmp = current_BlockHeader;
+
+					if (o["blockHeader"].get_obj().count("parentHash") > 0)
+						tmp.parentHash = h256(o["blockHeader"].get_obj()["parentHash"].get_str());
+
+					if (o["blockHeader"].get_obj().count("sha3Uncles") > 0)
+						tmp.sha3Uncles = h256(o["blockHeader"].get_obj()["uncleHash"].get_str());
+
+					if (o["blockHeader"].get_obj().count("coinbase") > 0)
+						tmp.coinbaseAddress = Address(o["blockHeader"].get_obj()["coinbase"].get_str());
+
+					if (o["blockHeader"].get_obj().count("stateRoot") > 0)
+						tmp.stateRoot = h256(o["blockHeader"].get_obj()["stateRoot"].get_str());
+
+					if (o["blockHeader"].get_obj().count("transactionsTrie") > 0)
+						tmp.transactionsRoot = h256(o["blockHeader"].get_obj()["transactionsTrie"].get_str());
+
+					if (o["blockHeader"].get_obj().count("receiptTrie") > 0)
+						tmp.receiptsRoot = h256(o["blockHeader"].get_obj()["receiptTrie"].get_str());
+
+					if (o["blockHeader"].get_obj().count("bloom") > 0)
+						tmp.logBloom = LogBloom(o["blockHeader"].get_obj()["bloom"].get_str());
+
+					if (o["blockHeader"].get_obj().count("difficulty") > 0)
+						tmp.difficulty = toInt(o["blockHeader"].get_obj()["difficulty"]);
+
+					if (o["blockHeader"].get_obj().count("number") > 0)
+						tmp.number = toInt(o["blockHeader"].get_obj()["number"]);
+
+					if (o["blockHeader"].get_obj().count("gasLimit") > 0)
+						tmp.gasLimit = toInt(o["blockHeader"].get_obj()["gasLimit"]);
+
+					if (o["blockHeader"].get_obj().count("gasUsed") > 0)
+						tmp.gasUsed = toInt(o["blockHeader"].get_obj()["gasUsed"]);
+
+					if (o["blockHeader"].get_obj().count("timestamp") > 0)
+						tmp.timestamp = toInt(o["blockHeader"].get_obj()["timestamp"]);
+
+					if (o["blockHeader"].get_obj().count("extraData") > 0)
+						tmp.extraData = importByteArray(o["blockHeader"].get_obj()["extraData"].get_str());
+
+					// find new valid nonce
+
+					if (tmp != current_BlockHeader)
+					{
+						current_BlockHeader = tmp;
+						cout << "new header!\n";
+						ProofOfWork pow;
+						MineInfo ret;
+						while (!ProofOfWork::verify(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.nonce, current_BlockHeader.difficulty))
+							tie(ret, current_BlockHeader.nonce) = pow.mine(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.difficulty, 10000, true, true);
+						oBlockHeader["nonce"] = toString(current_BlockHeader.nonce);
+					}
+				}
+				else
+				{
+					// take the blockheader as is
+					const bytes c_blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
+					const RLP c_bRLP(c_blockRLP);
+					current_BlockHeader.populateFromHeader(c_bRLP, false);
+				}
+			}
+
+			//txs:
+
+			RLPStream txStream;
+			txStream.appendList(txList.size());
+			for (unsigned i = 0; i < txList.size(); ++i)
+			{
+				RLPStream txrlp;
+				txList[i].streamRLP(txrlp);
+				txStream.appendRaw(txrlp.out());
+			}
+
+			cout <<  "create block:" << endl;
+
+			RLPStream rlpStream2;
+			current_BlockHeader.streamRLP(rlpStream2, WithNonce);
+
+			RLPStream block2(3);
+			block2.appendRaw(rlpStream2.out());
+			block2.appendRaw(txStream.out());
+			block2.appendRaw(RLPEmptyList);
+
+			if (sha3(RLP(state.blockData())[0].data()) != sha3(RLP(block2.out())[0].data()))
+				cout << "block 0 wrong" << endl;
+
+			if (sha3(RLP(state.blockData())[1].data()) != sha3(RLP(block2.out())[1].data()))
+				cout << "block 1 wrong" << endl;
+
+			if (sha3(RLP(state.blockData())[2].data()) != sha3(RLP(block2.out())[2].data()))
+				cout << "block 2 wrong" << endl;
+
+
+			if (sha3(state.blockData()) != sha3(block2.out()))
+			{
+				cout << "blocks do not match!" << endl;
+				o["rlp"] = "0x" + toHex(block2.out());
+				o.erase(o.find("blockHeader"));
+				o.erase(o.find("uncleHeaders"));
+				o.erase(o.find("transactions"));
+			}
+			else
+			{
+				o["blockHeader"] = oBlockHeader;
+
+				// write uncle list
+				mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles.
+				o["uncleHeaders"] = aUncleList;
+			}
 		}
 
 		else
@@ -254,13 +371,14 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				bc.import(blockRLP, state.db());
 				state.sync(bc);
 			}
-            // if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
+			// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 			catch (Exception const& _e)
 			{
 				cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
 				BOOST_CHECK(o.count("blockHeader") == 0);
 				BOOST_CHECK(o.count("transactions") == 0);
 				BOOST_CHECK(o.count("uncleHeaders") == 0);
+				return;
 			}
 			catch (std::exception const& _e)
 			{
@@ -268,6 +386,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK(o.count("blockHeader") == 0);
 				BOOST_CHECK(o.count("transactions") == 0);
 				BOOST_CHECK(o.count("uncleHeaders") == 0);
+				return;
 			}
 			catch(...)
 			{
@@ -275,8 +394,10 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK(o.count("blockHeader") == 0);
 				BOOST_CHECK(o.count("transactions") == 0);
 				BOOST_CHECK(o.count("uncleHeaders") == 0);
+				return;
 			}
-
+			cout << "valid block header\n";
+			//cout << "block number: " <<
 			BOOST_REQUIRE(o.count("blockHeader") > 0);
 
 			mObject tObj = o["blockHeader"].get_obj();
@@ -388,12 +509,12 @@ BOOST_AUTO_TEST_SUITE(BlockTests)
 
 BOOST_AUTO_TEST_CASE(blValidBlockTest)
 {
-    dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
+	dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
 }
 
 BOOST_AUTO_TEST_CASE(userDefinedFileBl)
 {
-    dev::test::userDefinedTest("--bltest", dev::test::doBlockTests);
+	dev::test::userDefinedTest("--bltest", dev::test::doBlockTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,85 +1,8 @@
 {
-    "diffTooLow" : {
-        "genesisBlockHeader" : {
-            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
-            "difficulty" : "1023",
-            "extraData" : "42",
-            "gasLimit" : "100000",
-            "gasUsed" : "0",
-            "nonce" : "0x498e88f5c14b0b60d6e14ce9c6cc958cbe16a1df8dd90210e50d2d77562a348d",
-            "number" : "0",
-            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
-            "timestamp" : "0x54c98c81",
-            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
-        },
-        "pre" : {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000000",
-                "nonce" : "0",
-                "code" : "",
-                "storage": {}
-            }
-        },
-        "transactions" : [
-            {
-                "data" : "",
-                "gasLimit" : "850",
-                "gasPrice" : "1",
-                "nonce" : "0",
-                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                "value" : "10"
-            }
-        ],
-        "uncleHeaders" : [
-        ]
-    },
-
-    "diff1024" : {
-        "genesisBlockHeader" : {
-            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
-            "difficulty" : "1024",
-            "extraData" : "42",
-            "gasLimit" : "100000",
-            "gasUsed" : "0",
-            "nonce" : "0x498e88f5c14b0b60d6e14ce9c6cc958cbe16a1df8dd90210e50d2d77562a348d",
-            "number" : "0",
-            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
-            "timestamp" : "0x54c98c81",
-            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
-        },
-        "pre" : {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000000",
-                "nonce" : "0",
-                "code" : "",
-                "storage": {}
-            }
-        },
-        "transactions" : [
-            {
-                "data" : "",
-                "gasLimit" : "850",
-                "gasPrice" : "1",
-                "nonce" : "0",
-                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                "value" : "10"
-            }
-        ],
-        "uncleHeaders" : [
-        ]
-    },
-
-    "gasPrice0" : {
+    "log1" : {
+        "blockHeader" : {
+                    "number" : "2"
+                },
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -102,151 +25,19 @@
                 "nonce" : "0",
                 "code" : "",
                 "storage": {}
-            }
-        },
-        "transactions" : [
-            {
-                "data" : "",
-                "gasLimit" : "850",
-                "gasPrice" : "0",
-                "nonce" : "0",
-                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                "value" : "10"
-            }
-        ],
-        "uncleHeaders" : [
-        ]
-    },
-
-    "tx" : {
-        "genesisBlockHeader" : {
-            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
-            "difficulty" : "10000",
-            "extraData" : "42",
-            "gasLimit" : "100000",
-            "gasUsed" : "0",
-            "nonce" : "0x498e88f5c14b0b60d6e14ce9c6cc958cbe16a1df8dd90210e50d2d77562a348d",
-            "number" : "0",
-            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
-            "timestamp" : "0x54c98c81",
-            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
-        },
-        "pre" : {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000000",
-                "nonce" : "0",
-                "code" : "",
-                "storage": {}
-            }
-        },
-        "transactions" : [
-            {
-                "data" : "",
-                "gasLimit" : "500",
-                "gasPrice" : "10",
-                "nonce" : "0",
-                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                "value" : "10"
-            }
-        ],
-        "uncleHeaders" : [
-        ]
-    },
-
-    "txOrder" : {
-        "genesisBlockHeader" : {
-            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
-            "difficulty" : "10000",
-            "extraData" : "42",
-            "gasLimit" : "100000",
-            "gasUsed" : "0",
-            "nonce" : "0x498e88f5c14b0b60d6e14ce9c6cc958cbe16a1df8dd90210e50d2d77562a348d",
-            "number" : "0",
-            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
-            "timestamp" : "0x54c98c81",
-            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
-        },
-        "pre" : {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000000",
-                "nonce" : "0",
-                "code" : "",
-                "storage": {}
-            }
-        },
-        "transactions" : [
-            {
-                "data" : "",
-                "gasLimit" : "500",
-                "gasPrice" : "10",
-                "nonce" : "0",
-                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                "value" : "7000000000"
             },
-            {
-                "data" : "",
-                "gasLimit" : "500",
-                "gasPrice" : "10",
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "100",
                 "nonce" : "0",
-                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                "value" : "8000000000"
-            }
-        ],
-        "uncleHeaders" : [
-        ]
-    },
-
-    "txEqualValue" : {
-        "genesisBlockHeader" : {
-            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
-            "difficulty" : "10000",
-            "extraData" : "42",
-            "gasLimit" : "100000",
-            "gasUsed" : "0",
-            "nonce" : "0x498e88f5c14b0b60d6e14ce9c6cc958cbe16a1df8dd90210e50d2d77562a348d",
-            "number" : "0",
-            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
-            "timestamp" : "0x54c98c81",
-            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
-        },
-        "pre" : {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000000",
-                "nonce" : "0",
-                "code" : "",
+                "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (LOG1 0 32 0) }",
                 "storage": {}
             }
         },
         "transactions" : [
             {
                 "data" : "",
-                "gasLimit" : "500",
+                "gasLimit" : "5000",
                 "gasPrice" : "10",
-                "nonce" : "0",
-                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                "value" : "5000000000"
-            },
-            {
-                "data" : "",
-                "gasLimit" : "500",
-                "gasPrice" : "9",
                 "nonce" : "0",
                 "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                 "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -256,8 +47,5 @@
         "uncleHeaders" : [
         ]
     }
-
-
-
 }
 
