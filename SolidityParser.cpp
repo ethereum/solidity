@@ -703,14 +703,14 @@ BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations_in_expression
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
 
-BOOST_AUTO_TEST_CASE(enum_declaration)
+BOOST_AUTO_TEST_CASE(enum_valid_declaration)
 {
 	char const* text = R"(
 		contract c {
-			enum foo { WARNING, NOTICE, ERROR, CRITICAL };
+			enum validEnum { Value1, Value2, Value3, Value4 };
 			function c ()
 			{
-				a = foo.CRITICAL;
+				a = foo.Value3;
 			}
 			uint256 a;
 		})";
@@ -722,11 +722,6 @@ BOOST_AUTO_TEST_CASE(empty_enum_declaration)
 	char const* text = R"(
 		contract c {
 			enum foo { };
-			function c ()
-			{
-				a = 5;
-			}
-			uint256 a;
 		})";
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
@@ -736,11 +731,6 @@ BOOST_AUTO_TEST_CASE(malformed_enum_declaration)
 	char const* text = R"(
 		contract c {
 			enum foo { WARNING,};
-			function c ()
-			{
-				a = foo.CRITICAL;
-			}
-			uint256 a;
 		})";
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
