@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 			dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
 
 			auto end = chrono::steady_clock::now();
-			chrono::milliseconds duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
 			cnote << "test duration: " << duration.count() << " milliseconds.\n";
 		}
 	}
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
 			dev::test::executeTests("vmInputLimitsTest1", "/VMTests", dev::test::doVMTests);
 
 			auto end = chrono::steady_clock::now();
-			chrono::milliseconds duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
 			cnote << "test duration: " << duration.count() << " milliseconds.\n";
 		}
 	}
