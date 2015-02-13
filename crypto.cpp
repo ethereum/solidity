@@ -347,10 +347,25 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		nonceA.ref().copyTo(nonce);
 		auth[auth.size() - 1] = 0x0;
 	}
+	bytes authcipher;
+	encrypt(nodeB.pub(), &auth, authcipher);
+	cnote << "initAuth:" << toHex(authcipher);
 	
-	cnote << "initAuth:" << toHex(auth);
-	
-//	bytes ack(h256::size * 2 + 1);
+	ECDHE eB;
+	bytes nBbytes(fromHex("0xBBBB"));
+	h256 nonceB(sha3(nAbytes));
+	bytes ack(h256::size * 2 + 1);
+	{
+		bytesConstRef epubk(&auth[0], Secret::size);
+		bytesConstRef nonce(&auth[Secret::size], h256::size);
+		
+		eB.pubkey().ref().copyTo(epubk);
+		nonceB.ref().copyTo(nonce);
+		auth[auth.size() - 1] = 0x0;
+	}
+	bytes ackcipher;
+	encrypt(nodeA.pub(), &ack, ackcipher);
+	cnote << "ackAuth:" << toHex(ackcipher);
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
