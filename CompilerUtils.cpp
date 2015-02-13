@@ -76,35 +76,44 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	if (_type.getCategory() == Type::Category::ByteArray)
 	{
 		auto const& type = dynamic_cast<ByteArrayType const&>(_type);
-		solAssert(type.getLocation() == ByteArrayType::Location::Storage, "Non-storage byte arrays not yet implemented.");
 
-		m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-		// stack here: memory_offset storage_offset length_bytes
-		// jump to end if length is zero
-		m_context << eth::Instruction::DUP1 << eth::Instruction::ISZERO;
-		eth::AssemblyItem loopEnd = m_context.newTag();
-		m_context.appendConditionalJumpTo(loopEnd);
-		// compute memory end offset
-		m_context << eth::Instruction::DUP3 << eth::Instruction::ADD << eth::Instruction::SWAP2;
-		// actual array data is stored at SHA3(storage_offset)
-		m_context << eth::Instruction::SWAP1;
-		CompilerUtils(m_context).computeHashStatic();
-		m_context << eth::Instruction::SWAP1;
+		if (type.getLocation() == ByteArrayType::Location::CallData)
+		{
+			m_context << eth::Instruction::CALLDATASIZE << u256(0) << eth::Instruction::DUP3
+					  << eth::Instruction::CALLDATACOPY
+					  << eth::Instruction::CALLDATASIZE << eth::Instruction::ADD;
+		}
+		else
+		{
+			solAssert(type.getLocation() == ByteArrayType::Location::Storage, "Memory byte arrays not yet implemented.");
+			m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
+			// stack here: memory_offset storage_offset length_bytes
+			// jump to end if length is zero
+			m_context << eth::Instruction::DUP1 << eth::Instruction::ISZERO;
+			eth::AssemblyItem loopEnd = m_context.newTag();
+			m_context.appendConditionalJumpTo(loopEnd);
+			// compute memory end offset
+			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD << eth::Instruction::SWAP2;
+			// actual array data is stored at SHA3(storage_offset)
+			m_context << eth::Instruction::SWAP1;
+			CompilerUtils(m_context).computeHashStatic();
+			m_context << eth::Instruction::SWAP1;
 
-		// stack here: memory_end_offset storage_data_offset memory_offset
-		eth::AssemblyItem loopStart = m_context.newTag();
-		m_context << loopStart
-				  // load and store
-				  << eth::Instruction::DUP2 << eth::Instruction::SLOAD
-				  << eth::Instruction::DUP2 << eth::Instruction::MSTORE
-				  // increment storage_data_offset by 1
-				  << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD
-				  // increment memory offset by 32
-				  << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD
-				  // check for loop condition
-				  << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::GT;
-		m_context.appendConditionalJumpTo(loopStart);
-		m_context << loopEnd << eth::Instruction::POP << eth::Instruction::POP;
+			// stack here: memory_end_offset storage_data_offset memory_offset
+			eth::AssemblyItem loopStart = m_context.newTag();
+			m_context << loopStart
+					  // load and store
+					  << eth::Instruction::DUP2 << eth::Instruction::SLOAD
+					  << eth::Instruction::DUP2 << eth::Instruction::MSTORE
+					  // increment storage_data_offset by 1
+					  << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD
+					  // increment memory offset by 32
+					  << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD
+					  // check for loop condition
+					  << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::GT;
+			m_context.appendConditionalJumpTo(loopStart);
+			m_context << loopEnd << eth::Instruction::POP << eth::Instruction::POP;
+		}
 	}
 	else
 	{
