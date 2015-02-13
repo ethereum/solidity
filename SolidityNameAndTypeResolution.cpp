@@ -1056,6 +1056,23 @@ BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(enum_duplicate_values)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoLeft, Sit };
+				function test()
+				{
+                   a = 1;
+                   b = 2;
+				}
+				uint256 a;
+				uint64 b;
+			}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
