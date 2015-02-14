@@ -498,12 +498,10 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::TypeType:
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.getExpression().getType());
-		ContractType const* contractType;
-		EnumType const* enumType;
 		if (!type.getMembers().getMemberType(member))
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to " + type.toString()));			
+			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to " + type.toString()));
 
-		if ((contractType = dynamic_cast<ContractType const*>(type.getActualType().get())))
+		if (auto contractType = dynamic_cast<ContractType const*>(type.getActualType().get()))
 		{
 			ContractDefinition const& contract = contractType->getContractDefinition();
 			for (ASTPointer<FunctionDefinition> const& function: contract.getDefinedFunctions())
@@ -513,12 +511,9 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 					return;
 				}
 		}
-		else if ((enumType = dynamic_cast<EnumType const*>(type.getActualType().get())))
-		{
+		else if (auto enumType = dynamic_cast<EnumType const*>(type.getActualType().get()))
 			m_context << enumType->getMemberValue(_memberAccess.getMemberName());
-			return;
-		}
-
+		break;
 	}
 	case Type::Category::ByteArray:
 	{

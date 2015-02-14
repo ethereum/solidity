@@ -81,8 +81,6 @@ void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
 {
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
 		structDef->checkValidityOfMembers();
-	for (ASTPointer<EnumDefinition> const& enumDef: _contract.getDefinedEnums())
-		enumDef->checkValidityOfMembers();
 	_contract.checkTypeRequirements();
 }
 
@@ -234,6 +232,12 @@ bool DeclarationRegistrationHelper::visit(EnumDefinition& _enum)
 void DeclarationRegistrationHelper::endVisit(EnumDefinition&)
 {
 	closeCurrentScope();
+}
+
+bool DeclarationRegistrationHelper::visit(EnumValue& _value)
+{
+	registerDeclaration(_value, false);
+	return true;
 }
 
 bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)

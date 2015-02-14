@@ -333,11 +333,7 @@ public:
 
 	virtual TypePointer getType(ContractDefinition const*) const override;
 
-	/// Checks that the members do not include any duplicate names
-	void checkValidityOfMembers() const;
-
 private:
-
 	std::vector<ASTPointer<EnumValue>> m_members;
 };
 
