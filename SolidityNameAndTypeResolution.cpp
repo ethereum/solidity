@@ -1080,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(enum_duplicate_values)
 				enum ActionChoices { GoLeft, GoRight, GoLeft, Sit }
 			}
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
