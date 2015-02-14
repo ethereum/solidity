@@ -1133,6 +1133,36 @@ BOOST_AUTO_TEST_CASE(external_base_visibility)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(external_argument_assign)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { a = 1; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_increment)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { a++; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_delete)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { delete a; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

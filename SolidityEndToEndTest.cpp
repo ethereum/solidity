@@ -2534,6 +2534,21 @@ BOOST_AUTO_TEST_CASE(constructing_enums_from_ints)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
 }
 
+BOOST_AUTO_TEST_CASE(external_function)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) returns (uint) { return a; }
+			function test(uint a, uint b) external returns (uint r_a, uint r_b) {
+				r_a = f(a + 7);
+				r_b = b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", 2, 3) == encodeArgs(2, 3+7));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
