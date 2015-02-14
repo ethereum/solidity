@@ -352,14 +352,16 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	bytes authcipher;
 	encrypt(nodeB.pub(), &auth, authcipher);
+	BOOST_REQUIRE(authcipher.size());
 	
+	// Receipient is Bob (nodeB)
 	ECDHE eB;
 	bytes nBbytes(fromHex("0xBBBB"));
 	h256 nonceB(sha3(nAbytes));
-	bytes ack(h256::size * 2 + 1);
+	bytes ack(Public::size + h256::size + 1);
 	{
-		bytesConstRef epubk(&auth[0], Secret::size);
-		bytesConstRef nonce(&auth[Secret::size], h256::size);
+		bytesConstRef epubk(&ack[0], Public::size);
+		bytesConstRef nonce(&ack[Public::size], h256::size);
 		
 		eB.pubkey().ref().copyTo(epubk);
 		nonceB.ref().copyTo(nonce);
@@ -367,18 +369,29 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	bytes ackcipher;
 	encrypt(nodeA.pub(), &ack, ackcipher);
+	BOOST_REQUIRE(ackcipher.size());
 	
 	BOOST_REQUIRE(eA.pubkey());
 	BOOST_REQUIRE(eB.pubkey());
 	BOOST_REQUIRE_NE(eA.seckey(), eB.seckey());
 	
-	/// Alice
+	/// Alice (after receiving ack)
 	Secret aEncryptK;
 	Secret aMacK;
 	Secret aEgressMac;
 	Secret aIngressMac;
 	{
-		// TODO: decrypt ackcipher and check decrypted material
+		bytes ackdecrypted;
+		decrypt(nodeA.sec(), &ackcipher, ackdecrypted);
+		BOOST_REQUIRE(ackdecrypted.size());
+		bytesConstRef ackRef(&ackdecrypted);
+		Public eBAck;
+		h256 nonceBAck;
+		ackRef.cropped(0, Public::size).copyTo(bytesConstRef(eBAck.data(), Public::size));
+		ackRef.cropped(Public::size, h256::size).copyTo(nonceBAck.ref());
+		BOOST_REQUIRE_EQUAL(eBAck, eB.pubkey());
+		BOOST_REQUIRE_EQUAL(nonceBAck, nonceB);
+		
 		// TODO: export ess and require equal to b
 		
 		bytes keyMaterialBytes(512);
@@ -386,18 +399,17 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		
 		h256 ess;
 		// todo: ecdh-agree should be able to output bytes
-		s_secp256k1.agree(eA.seckey(), eB.pubkey(), ess);
+		s_secp256k1.agree(eA.seckey(), eBAck, ess);
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssA.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));
 //		auto token = sha3(ssA);
 		aEncryptK = sha3(keyMaterial);
 		aEncryptK.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));
 		aMacK = sha3(keyMaterial);
-		
-		// todo: replace nonceB with decrypted nonceB
+
 		keyMaterialBytes.resize(h256::size + authcipher.size());
 		keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());
-		(aMacK ^ nonceB).ref().copyTo(keyMaterial);
+		(aMacK ^ nonceBAck).ref().copyTo(keyMaterial);
 		bytesConstRef(&authcipher).copyTo(keyMaterial.cropped(h256::size, authcipher.size()));
 		aEgressMac = sha3(keyMaterial);
 		
@@ -409,7 +421,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	
 	
-	/// Bob
+	/// Bob (after sending ack)
 	Secret ssB;
 	s_secp256k1.agree(nodeB.sec(), nodeA.pub(), ssB);
 	BOOST_REQUIRE_EQUAL(ssA, ssB);
@@ -419,12 +431,42 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	Secret bEgressMac;
 	Secret bIngressMac;
 	{
+		bytes authdecrypted;
+		decrypt(nodeB.sec(), &authcipher, authdecrypted);
+		BOOST_REQUIRE(authdecrypted.size());
+		bytesConstRef ackRef(&authdecrypted);
+		Signature sigAuth;
+		h256 heA;
+		Public eAAuth;
+		Public nodeAAuth;
+		h256 nonceAAuth;
+		bytesConstRef sig(&authdecrypted[0], Signature::size);
+		bytesConstRef hepubk(&authdecrypted[Signature::size], h256::size);
+		bytesConstRef pubk(&authdecrypted[Signature::size + h256::size], Public::size);
+		bytesConstRef nonce(&authdecrypted[Signature::size + h256::size + Public::size], h256::size);
+
+		nonce.copyTo(nonceAAuth.ref());
+		pubk.copyTo(nodeAAuth.ref());
+		BOOST_REQUIRE(nonceAAuth);
+		BOOST_REQUIRE_EQUAL(nonceA, nonceAAuth);
+		BOOST_REQUIRE(nodeAAuth);
+		BOOST_REQUIRE_EQUAL(nodeA.pub(), nodeAAuth); // bad test, bad!!!
+		hepubk.copyTo(heA.ref());
+		sig.copyTo(sigAuth.ref());
+		
+		Secret ss;
+		s_secp256k1.agree(nodeB.sec(), nodeAAuth, ss);
+		eAAuth = recover(sigAuth, ss ^ nonceAAuth);
+		// todo: test when this fails; means remote is bad or packet bits were flipped
+		BOOST_REQUIRE_EQUAL(heA, sha3(eAAuth));
+		BOOST_REQUIRE_EQUAL(eAAuth, eA.pubkey());
+		
 		bytes keyMaterialBytes(512);
 		bytesConstRef keyMaterial(&keyMaterialBytes);
 		
 		h256 ess;
 		// todo: ecdh-agree should be able to output bytes
-		s_secp256k1.agree(eB.seckey(), eA.pubkey(), ess);
+		s_secp256k1.agree(eB.seckey(), eAAuth, ess);
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssB.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));
 //		auto token = sha3(ssA);
@@ -435,7 +477,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		// todo: replace nonceB with decrypted nonceB
 		keyMaterialBytes.resize(h256::size + ackcipher.size());
 		keyMaterial.retarget(keyMaterialBytes.data(), keyMaterialBytes.size());
-		(bMacK ^ nonceA).ref().copyTo(keyMaterial);
+		(bMacK ^ nonceAAuth).ref().copyTo(keyMaterial);
 		bytesConstRef(&ackcipher).copyTo(keyMaterial.cropped(h256::size, ackcipher.size()));
 		bEgressMac = sha3(keyMaterial);
 		
