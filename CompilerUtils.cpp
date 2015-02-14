@@ -33,33 +33,34 @@ namespace solidity
 
 const unsigned int CompilerUtils::dataStartOffset = 4;
 
-unsigned CompilerUtils::loadFromMemory(unsigned _offset, unsigned _bytes, bool _leftAligned,
-									   bool _fromCalldata, bool _padToWordBoundaries)
+unsigned CompilerUtils::loadFromMemory(unsigned _offset, Type const& _type,
+	bool _fromCalldata, bool _padToWordBoundaries)
 {
-	if (_bytes == 0)
-	{
+	solAssert(_type.getCategory() != Type::Category::ByteArray, "Unable to statically load dynamic type.");
+	unsigned _encodedSize = _type.getCalldataEncodedSize();
+	unsigned numBytes = _padToWordBoundaries ? getPaddedSize(_encodedSize) : _encodedSize;
+	bool leftAligned = _type.getCategory() == Type::Category::String;
+	if (numBytes == 0)
 		m_context << u256(0);
-		return 0;
-	}
-	eth::Instruction load = _fromCalldata ? eth::Instruction::CALLDATALOAD : eth::Instruction::MLOAD;
-	solAssert(_bytes <= 32, "Memory load of more than 32 bytes requested.");
-	if (_bytes == 32 || _padToWordBoundaries)
-	{
-		m_context << u256(_offset) << load;
-		return 32;
-	}
 	else
 	{
-		// load data and add leading or trailing zeros by dividing/multiplying depending on alignment
-		u256 shiftFactor = u256(1) << ((32 - _bytes) * 8);
-		m_context << shiftFactor;
-		if (_leftAligned)
-			m_context << eth::Instruction::DUP1;
-		m_context << u256(_offset) << load << eth::Instruction::DIV;
-		if (_leftAligned)
-			m_context << eth::Instruction::MUL;
-		return _bytes;
+		eth::Instruction load = _fromCalldata ? eth::Instruction::CALLDATALOAD : eth::Instruction::MLOAD;
+		solAssert(numBytes <= 32, "Static memory load of more than 32 bytes requested.");
+		if (numBytes == 32)
+			m_context << u256(_offset) << load;
+		else
+		{
+			// load data and add leading or trailing zeros by dividing/multiplying depending on alignment
+			u256 shiftFactor = u256(1) << ((32 - numBytes) * 8);
+			m_context << shiftFactor;
+			if (leftAligned)
+				m_context << eth::Instruction::DUP1;
+			m_context << u256(_offset) << load << eth::Instruction::DIV;
+			if (leftAligned)
+				m_context << eth::Instruction::MUL;
+		}
 	}
+	return numBytes;
 }
 
 unsigned CompilerUtils::storeInMemory(unsigned _offset, Type const& _type, bool _padToWordBoundaries)

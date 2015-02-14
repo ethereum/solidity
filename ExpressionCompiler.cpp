@@ -885,11 +885,8 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		m_context << eth::Instruction::POP;
 	m_context << eth::Instruction::POP; // pop contract address
 
-	if (retSize > 0)
-	{
-		bool const c_leftAligned = firstType->getCategory() == Type::Category::String;
-		CompilerUtils(m_context).loadFromMemory(0, retSize, c_leftAligned, false, true);
-	}
+	if (firstType)
+		CompilerUtils(m_context).loadFromMemory(0, *firstType, false, true);
 }
 
 void ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expression const>> const& _arguments,

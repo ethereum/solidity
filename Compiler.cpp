@@ -147,7 +147,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
-		CompilerUtils(m_context).loadFromMemory(0, 4, false, true);
+		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true);
 
 	// stack now is: 1 0 <funhash>
 	for (auto const& it: interfaceFunctions)
@@ -182,18 +182,10 @@ unsigned Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, b
 {
 	// We do not check the calldata size, everything is zero-padded.
 	unsigned dataOffset = CompilerUtils::dataStartOffset; // the 4 bytes of the function hash signature
-	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
+
+	bool const c_padToWords = true;
 	for (TypePointer const& type: _typeParameters)
-	{
-		unsigned const c_numBytes = type->getCalldataEncodedSize();
-		if (c_numBytes > 32)
-			BOOST_THROW_EXCEPTION(CompilerError()
-								  << errinfo_comment("Type " + type->toString() + " not yet supported."));
-		bool const c_leftAligned = type->getCategory() == Type::Category::String;
-		bool const c_padToWords = true;
-		dataOffset += CompilerUtils(m_context).loadFromMemory(dataOffset, c_numBytes, c_leftAligned,
-															  !_fromMemory, c_padToWords);
-	}
+		dataOffset += CompilerUtils(m_context).loadFromMemory(dataOffset, *type, !_fromMemory, c_padToWords);
 	return dataOffset;
 }
 
@@ -255,22 +247,12 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
 	// reserve additional slots: [retarg0] ... [retargm] [localvar0] ... [localvarp]
 
-	if (_function.getVisibility() != Declaration::Visibility::External)
+	unsigned parametersSize = CompilerUtils::getSizeOnStack(_function.getParameters());
+	m_context.adjustStackOffset(parametersSize);
+	for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
 	{
-		unsigned parametersSize = CompilerUtils::getSizeOnStack(_function.getParameters());
-		m_context.adjustStackOffset(parametersSize);
-		for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
-		{
-			m_context.addVariable(*variable, parametersSize);
-			parametersSize -= variable->getType()->getSizeOnStack();
-		}
-	}
-	else
-	{
-		unsigned calldataPos = CompilerUtils::dataStartOffset;
-		// calldatapos is _always_ dynamic.
-		for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
-			m_context.addCalldataVariable(*variable, calldataPos);
+		m_context.addVariable(*variable, parametersSize);
+		parametersSize -= variable->getType()->getSizeOnStack();
 	}
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.getReturnParameters())
 		m_context.addAndInitializeVariable(*variable);

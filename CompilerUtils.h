@@ -37,14 +37,13 @@ public:
 
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
-	/// @param _bytes number of bytes to load
-	/// @param _leftAligned if true, store left aligned on stack (otherwise right aligned)
+	/// @param _type data type to load
 	/// @param _fromCalldata if true, load from calldata, not from memory
 	/// @param _padToWordBoundaries if true, assume the data is padded to word (32 byte) boundaries
 	/// @returns the number of bytes consumed in memory (can be different from _bytes if
-	///          _padToWordBoundaries is true)
-	unsigned loadFromMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false,
-							bool _fromCalldata = false, bool _padToWordBoundaries = false);
+	/// _padToWordBoundaries is true)
+	unsigned loadFromMemory(unsigned _offset, Type const& _type = IntegerType(256),
+		bool _fromCalldata = false, bool _padToWordBoundaries = false);
 	/// Stores data from stack in memory.
 	/// @param _offset offset in memory
 	/// @param _type type of the data on the stack
