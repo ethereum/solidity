@@ -255,12 +255,22 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	// stack upon entry: [return address] [arg0] [arg1] ... [argn]
 	// reserve additional slots: [retarg0] ... [retargm] [localvar0] ... [localvarp]
 
-	unsigned parametersSize = CompilerUtils::getSizeOnStack(_function.getParameters());
-	m_context.adjustStackOffset(parametersSize);
-	for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
+	if (_function.getVisibility() != Declaration::Visibility::External)
 	{
-		m_context.addVariable(*variable, parametersSize);
-		parametersSize -= variable->getType()->getSizeOnStack();
+		unsigned parametersSize = CompilerUtils::getSizeOnStack(_function.getParameters());
+		m_context.adjustStackOffset(parametersSize);
+		for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
+		{
+			m_context.addVariable(*variable, parametersSize);
+			parametersSize -= variable->getType()->getSizeOnStack();
+		}
+	}
+	else
+	{
+		unsigned calldataPos = CompilerUtils::dataStartOffset;
+		// calldatapos is _always_ dynamic.
+		for (ASTPointer<VariableDeclaration const> const& variable: _function.getParameters())
+			m_context.addCalldataVariable(*variable, calldataPos);
 	}
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.getReturnParameters())
 		m_context.addAndInitializeVariable(*variable);
@@ -277,7 +287,8 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	// Note that the fact that the return arguments are of increasing index is vital for this
 	// algorithm to work.
 
-	unsigned const c_argumentsSize = CompilerUtils::getSizeOnStack(_function.getParameters());
+	unsigned const c_argumentsSize = (_function.getVisibility() == Declaration::Visibility::External
+		? 0 : CompilerUtils::getSizeOnStack(_function.getParameters()));
 	unsigned const c_returnValuesSize = CompilerUtils::getSizeOnStack(_function.getReturnParameters());
 	unsigned const c_localVariablesSize = CompilerUtils::getSizeOnStack(_function.getLocalVariables());
 
