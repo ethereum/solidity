@@ -759,8 +759,11 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			}
 		}
 	}
+	else if (stackTypeCategory == Type::Category::Enum)
+		solAssert(targetTypeCategory == Type::Category::Integer ||
+			targetTypeCategory == Type::Category::Enum, "");
 	else if (stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::Contract ||
-			 stackTypeCategory == Type::Category::IntegerConstant || stackTypeCategory == Type::Category::Enum)
+			 stackTypeCategory == Type::Category::IntegerConstant)
 	{
 		if (targetTypeCategory == Type::Category::String && stackTypeCategory == Type::Category::Integer)
 		{
@@ -772,6 +775,9 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			solAssert(typeOnStack.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBits())) << eth::Instruction::MUL;
 		}
+		else if (targetTypeCategory == Type::Category::Enum)
+			// just clean
+			appendTypeConversion(_typeOnStack, *_typeOnStack.getRealType(), true);
 		else
 		{
 			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract, "");
