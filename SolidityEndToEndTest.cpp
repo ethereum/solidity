@@ -2519,6 +2519,21 @@ BOOST_AUTO_TEST_CASE(using_enums)
 	BOOST_CHECK(callContractFunction("getChoice()") == encodeArgs(2));
 }
 
+BOOST_AUTO_TEST_CASE(constructing_enums_from_ints)
+{
+	char const* sourceCode = R"(
+			contract c {
+				enum Truth { False, True }
+				function test() returns (uint)
+				{
+					return uint(Truth(uint8(0x701)));
+				}
+			}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
