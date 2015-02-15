@@ -100,6 +100,7 @@ private:
 	void endVisit(StructDefinition& _struct) override;
 	bool visit(EnumDefinition& _enum) override;
 	void endVisit(EnumDefinition& _enum) override;
+	bool visit(EnumValue& _value) override;
 	bool visit(FunctionDefinition& _function) override;
 	void endVisit(FunctionDefinition& _function) override;
 	bool visit(ModifierDefinition& _modifier) override;
