@@ -37,31 +37,21 @@ unsigned CompilerUtils::loadFromMemory(unsigned _offset, Type const& _type,
 	bool _fromCalldata, bool _padToWordBoundaries)
 {
 	solAssert(_type.getCategory() != Type::Category::ByteArray, "Unable to statically load dynamic type.");
-	unsigned _encodedSize = _type.getCalldataEncodedSize();
-	unsigned numBytes = _padToWordBoundaries ? getPaddedSize(_encodedSize) : _encodedSize;
-	bool leftAligned = _type.getCategory() == Type::Category::String;
-	if (numBytes == 0)
-		m_context << u256(0);
-	else
-	{
-		eth::Instruction load = _fromCalldata ? eth::Instruction::CALLDATALOAD : eth::Instruction::MLOAD;
-		solAssert(numBytes <= 32, "Static memory load of more than 32 bytes requested.");
-		if (numBytes == 32)
-			m_context << u256(_offset) << load;
-		else
-		{
-			// load data and add leading or trailing zeros by dividing/multiplying depending on alignment
-			u256 shiftFactor = u256(1) << ((32 - numBytes) * 8);
-			m_context << shiftFactor;
-			if (leftAligned)
-				m_context << eth::Instruction::DUP1;
-			m_context << u256(_offset) << load << eth::Instruction::DIV;
-			if (leftAligned)
-				m_context << eth::Instruction::MUL;
-		}
-	}
-	return numBytes;
+	m_context << u256(_offset);
+	return loadFromMemoryHelper(_type, _fromCalldata, _padToWordBoundaries);
 }
+
+void CompilerUtils::loadFromMemoryDynamic(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
+{
+	solAssert(_type.getCategory() != Type::Category::ByteArray, "Byte arrays not yet implemented.");
+	m_context << eth::Instruction::DUP1;
+	unsigned numBytes = loadFromMemoryHelper(_type, _fromCalldata, _padToWordBoundaries);
+	// update memory counter
+	for (unsigned i = 0; i < _type.getSizeOnStack(); ++i)
+		m_context << eth::swapInstruction(1 + i);
+	m_context << u256(numBytes) << eth::Instruction::ADD;
+}
+
 
 unsigned CompilerUtils::storeInMemory(unsigned _offset, Type const& _type, bool _padToWordBoundaries)
 {
@@ -121,6 +111,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
 		if (numBytes > 0)
 		{
+			solAssert(_type.getSizeOnStack() == 1, "Memory store of types with stack size != 1 not implemented.");
 			m_context << eth::Instruction::DUP2 << eth::Instruction::MSTORE;
 			m_context << u256(numBytes) << eth::Instruction::ADD;
 		}
@@ -288,6 +279,30 @@ void CompilerUtils::copyByteArrayToStorage(ByteArrayType const& _targetType,
 	default:
 		solAssert(false, "Given byte array location not implemented.");
 	}
+}
+
+unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
+{
+	unsigned _encodedSize = _type.getCalldataEncodedSize();
+	unsigned numBytes = _padToWordBoundaries ? getPaddedSize(_encodedSize) : _encodedSize;
+	bool leftAligned = _type.getCategory() == Type::Category::String;
+	if (numBytes == 0)
+		m_context << eth::Instruction::POP << u256(0);
+	else
+	{
+		solAssert(numBytes <= 32, "Static memory load of more than 32 bytes requested.");
+		m_context << (_fromCalldata ? eth::Instruction::CALLDATALOAD : eth::Instruction::MLOAD);
+		if (numBytes != 32)
+		{
+			// add leading or trailing zeros by dividing/multiplying depending on alignment
+			u256 shiftFactor = u256(1) << ((32 - numBytes) * 8);
+			m_context << shiftFactor << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			if (leftAligned)
+				m_context << shiftFactor << eth::Instruction::MUL;
+		}
+	}
+
+	return numBytes;
 }
 
 void CompilerUtils::clearByteArray(ByteArrayType const& _type) const
