@@ -333,6 +333,11 @@ void CompilerStack::resolveImports()
 	swap(m_sourceOrder, sourceOrder);
 }
 
+std::string CompilerStack::defaultContractName() const
+{
+	return getContract("").contract->getName();
+}
+
 CompilerStack::Contract const& CompilerStack::getContract(string const& _contractName) const
 {
 	if (m_contracts.empty())

@@ -73,6 +73,7 @@ public:
 	void parse(std::string const& _sourceCode);
 	/// Returns a list of the contract names in the sources.
 	std::vector<std::string> getContractNames() const;
+	std::string defaultContractName() const;
 
 	/// Compiles the source units that were previously added and parsed.
 	void compile(bool _optimize = false);
