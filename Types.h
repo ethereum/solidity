@@ -122,6 +122,8 @@ public:
 	/// is not a simple big-endian encoding or the type cannot be stored in calldata.
 	/// Note that irrespective of this size, each calldata element is padded to a multiple of 32 bytes.
 	virtual unsigned getCalldataEncodedSize() const { return 0; }
+	/// @returns true if the type is dynamically encoded in calldata
+	virtual bool isDynamicallySized() const { return false; }
 	/// @returns number of bytes required to hold this value in storage.
 	/// For dynamically "allocated" types, it returns the size of the statically allocated head,
 	virtual u256 getStorageSize() const { return 1; }
@@ -289,6 +291,7 @@ public:
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(const Type& _other) const override;
+	virtual bool isDynamicallySized() const { return true; }
 	virtual unsigned getSizeOnStack() const override;
 	virtual std::string toString() const override { return "bytes"; }
 	virtual MemberList const& getMembers() const override { return s_byteArrayMemberList; }

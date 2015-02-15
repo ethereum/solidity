@@ -178,15 +178,40 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	}
 }
 
-unsigned Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory)
+void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory)
 {
 	// We do not check the calldata size, everything is zero-padded.
-	unsigned dataOffset = CompilerUtils::dataStartOffset; // the 4 bytes of the function hash signature
-
+	unsigned offset(CompilerUtils::dataStartOffset);
 	bool const c_padToWords = true;
+
+	unsigned dynamicParameterCount = 0;
 	for (TypePointer const& type: _typeParameters)
-		dataOffset += CompilerUtils(m_context).loadFromMemory(dataOffset, *type, !_fromMemory, c_padToWords);
-	return dataOffset;
+		if (type->isDynamicallySized())
+			dynamicParameterCount++;
+	offset += dynamicParameterCount * 32;
+	unsigned currentDynamicParameter = 0;
+	for (TypePointer const& type: _typeParameters)
+		if (type->isDynamicallySized())
+		{
+			// value on stack: [memory_offset] (only if we are already in dynamic mode)
+			if (currentDynamicParameter == 0)
+				// switch from static to dynamic
+				m_context << u256(offset);
+			CompilerUtils(m_context).loadFromMemory(
+				CompilerUtils::dataStartOffset + currentDynamicParameter * 32,
+				IntegerType(256), !_fromMemory, c_padToWords);
+			// store new memory pointer
+			m_context << eth::Instruction::DUP2 << eth::Instruction::DUP2 << eth::Instruction::ADD;
+			currentDynamicParameter++;
+			// value on stack: offset length next_memory_offset
+		}
+		else if (currentDynamicParameter == 0)
+			// we can still use static load
+			offset += CompilerUtils(m_context).loadFromMemory(offset, *type, !_fromMemory, c_padToWords);
+		else
+			CompilerUtils(m_context).loadFromMemoryDynamic(*type, !_fromMemory, c_padToWords);
+	if (dynamicParameterCount > 0)
+		m_context << eth::Instruction::POP;
 }
 
 void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
