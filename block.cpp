@@ -35,46 +35,46 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	RLPStream rlpStream;
 	rlpStream.appendList(_tObj.size());
 
-	if (_tObj.count("parentHash") > 0)
+	if (_tObj.count("parentHash"))
 		rlpStream << importByteArray(_tObj["parentHash"].get_str());
 
-	if (_tObj.count("uncleHash") > 0)
+	if (_tObj.count("uncleHash"))
 		rlpStream << importByteArray(_tObj["uncleHash"].get_str());
 
-	if (_tObj.count("coinbase") > 0)
+	if (_tObj.count("coinbase"))
 		rlpStream << importByteArray(_tObj["coinbase"].get_str());
 
-	if (_tObj.count("stateRoot") > 0)
+	if (_tObj.count("stateRoot"))
 		rlpStream << importByteArray(_tObj["stateRoot"].get_str());
 
-	if (_tObj.count("transactionsTrie") > 0)
+	if (_tObj.count("transactionsTrie"))
 		rlpStream << importByteArray(_tObj["transactionsTrie"].get_str());
 
-	if (_tObj.count("receiptTrie") > 0)
+	if (_tObj.count("receiptTrie"))
 		rlpStream << importByteArray(_tObj["receiptTrie"].get_str());
 
-	if (_tObj.count("bloom") > 0)
+	if (_tObj.count("bloom"))
 		rlpStream << importByteArray(_tObj["bloom"].get_str());
 
-	if (_tObj.count("difficulty") > 0)
+	if (_tObj.count("difficulty"))
 		rlpStream << bigint(_tObj["difficulty"].get_str());
 
-	if (_tObj.count("number") > 0)
+	if (_tObj.count("number"))
 		rlpStream << bigint(_tObj["number"].get_str());
 
-	if (_tObj.count("gasLimit") > 0)
+	if (_tObj.count("gasLimit"))
 		rlpStream << bigint(_tObj["gasLimit"].get_str());
 
-	if (_tObj.count("gasUsed") > 0)
+	if (_tObj.count("gasUsed"))
 		rlpStream << bigint(_tObj["gasUsed"].get_str());
 
-	if (_tObj.count("timestamp") > 0)
+	if (_tObj.count("timestamp"))
 		rlpStream << bigint(_tObj["timestamp"].get_str());
 
-	if (_tObj.count("extraData") > 0)
+	if (_tObj.count("extraData"))
 		rlpStream << importByteArray(_tObj["extraData"].get_str());
 
-	if (_tObj.count("nonce") > 0)
+	if (_tObj.count("nonce"))
 		rlpStream << importByteArray(_tObj["nonce"].get_str());
 
 	return rlpStream.out();
@@ -87,43 +87,37 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 		cerr << i.first << endl;
 		mObject& o = i.second.get_obj();
 
-		BOOST_REQUIRE(o.count("genesisBlockHeader") > 0);
-		cout << "construc genesis\n";
-
-		// construct RLP of the genesis block
-		const bytes c_blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
-		const RLP c_bRLP(c_blockRLP);
+		BOOST_REQUIRE(o.count("genesisBlockHeader"));
 		BlockInfo blockFromFields;
-
 		try
 		{
+			// construct genesis block
+			const bytes c_blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
+			const RLP c_bRLP(c_blockRLP);
 			blockFromFields.populateFromHeader(c_bRLP, false);
 		}
 		catch (Exception const& _e)
 		{
 			cnote << "block population did throw an exception: " << diagnostic_information(_e);
 			BOOST_ERROR("Failed block population with Exception: " << _e.what());
-			return;
+			continue;
 		}
 		catch (std::exception const& _e)
 		{
 			BOOST_ERROR("Failed block population with Exception: " << _e.what());
-			return;
+			continue;
 		}
 		catch(...)
 		{
 			cnote << "block population did throw an unknown exception\n";
-			return;
+			continue;
 		}
 
-		BOOST_REQUIRE(o.count("pre") > 0);
-		cout << "read state\n";
+		BOOST_REQUIRE(o.count("pre"));
 
 		ImportTest importer(o["pre"].get_obj());
 		State state(Address(), OverlayDB(), BaseState::Empty);
 		importer.importState(o["pre"].get_obj(), state);
-
-		// commit changes to DB
 		state.commit();
 
 		if (_fillin)
@@ -136,7 +130,8 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			// find new valid nonce
 			ProofOfWork pow;
 			MineInfo ret;
-			tie(ret, blockFromFields.nonce) = pow.mine(blockFromFields.headerHash(WithoutNonce), blockFromFields.difficulty, 1000, true, false);
+			while (!ProofOfWork::verify(blockFromFields.headerHash(WithoutNonce), blockFromFields.nonce, blockFromFields.difficulty))
+				tie(ret, blockFromFields.nonce) = pow.mine(blockFromFields.headerHash(WithoutNonce), blockFromFields.difficulty, 1000, true, true);
 
 			//update genesis block in json file
 			o["genesisBlockHeader"].get_obj()["stateRoot"] = toString(blockFromFields.stateRoot);
@@ -157,12 +152,9 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 		// construct blockchain
 		BlockChain bc(block.out(), string(), true);
 
-		cout << "constructed bc\n";
-
 		if (_fillin)
 		{
-			BOOST_REQUIRE(o.count("transactions") > 0);
-			cout << "read transactions\n";
+			BOOST_REQUIRE(o.count("transactions"));
 
 			TransactionQueue txs;
 
@@ -195,12 +187,10 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			}
 
 			// write valid txs
-			cout << "number of valid txs: " << txs.transactions().size();
 			mArray txArray;
 			Transactions txList;
 			for (auto const& txi: txs.transactions())
 			{
-				cout << "AHA0" << endl;
 				Transaction tx(txi.second, CheckSignature::Sender);
 				txList.push_back(tx);
 				mObject txObject;
@@ -213,19 +203,87 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				txObject["v"] = to_string(tx.signature().v + 27);
 				txObject["to"] = toString(tx.receiveAddress());
 				txObject["value"] = toString(tx.value());
-				cout << "AHA0.5" << endl;
 
 				txArray.push_back(txObject);
 			}
-			cout << "AHA1" << endl;
-			o["transactions"] = txArray;
 
+			o["transactions"] = txArray;
 			o["rlp"] = "0x" + toHex(state.blockData());
+
+			BlockInfo current_BlockHeader = state.info();
+
+			// overwrite blockheader with (possible wrong) data from "blockheader" in filler;
+
+			if (o.count("blockHeader"))
+			{
+				if (o["blockHeader"].get_obj().size() != 14)
+				{
+
+					BlockInfo tmp = current_BlockHeader;
+
+					if (o["blockHeader"].get_obj().count("parentHash"))
+						tmp.parentHash = h256(o["blockHeader"].get_obj()["parentHash"].get_str());
+
+					if (o["blockHeader"].get_obj().count("sha3Uncles"))
+						tmp.sha3Uncles = h256(o["blockHeader"].get_obj()["uncleHash"].get_str());
+
+					if (o["blockHeader"].get_obj().count("coinbase"))
+						tmp.coinbaseAddress = Address(o["blockHeader"].get_obj()["coinbase"].get_str());
+
+					if (o["blockHeader"].get_obj().count("stateRoot"))
+						tmp.stateRoot = h256(o["blockHeader"].get_obj()["stateRoot"].get_str());
+
+					if (o["blockHeader"].get_obj().count("transactionsTrie"))
+						tmp.transactionsRoot = h256(o["blockHeader"].get_obj()["transactionsTrie"].get_str());
+
+					if (o["blockHeader"].get_obj().count("receiptTrie"))
+						tmp.receiptsRoot = h256(o["blockHeader"].get_obj()["receiptTrie"].get_str());
+
+					if (o["blockHeader"].get_obj().count("bloom"))
+						tmp.logBloom = LogBloom(o["blockHeader"].get_obj()["bloom"].get_str());
+
+					if (o["blockHeader"].get_obj().count("difficulty"))
+						tmp.difficulty = toInt(o["blockHeader"].get_obj()["difficulty"]);
+
+					if (o["blockHeader"].get_obj().count("number"))
+						tmp.number = toInt(o["blockHeader"].get_obj()["number"]);
+
+					if (o["blockHeader"].get_obj().count("gasLimit"))
+						tmp.gasLimit = toInt(o["blockHeader"].get_obj()["gasLimit"]);
+
+					if (o["blockHeader"].get_obj().count("gasUsed"))
+						tmp.gasUsed = toInt(o["blockHeader"].get_obj()["gasUsed"]);
+
+					if (o["blockHeader"].get_obj().count("timestamp"))
+						tmp.timestamp = toInt(o["blockHeader"].get_obj()["timestamp"]);
+
+					if (o["blockHeader"].get_obj().count("extraData"))
+						tmp.extraData = importByteArray(o["blockHeader"].get_obj()["extraData"].get_str());
+
+					// find new valid nonce
+
+					if (tmp != current_BlockHeader)
+					{
+						current_BlockHeader = tmp;
+						cout << "new header!\n";
+						ProofOfWork pow;
+						MineInfo ret;
+						while (!ProofOfWork::verify(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.nonce, current_BlockHeader.difficulty))
+							tie(ret, current_BlockHeader.nonce) = pow.mine(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.difficulty, 10000, true, true);
+					}
+				}
+				else
+				{
+					// take the blockheader as is
+					const bytes c_blockRLP = createBlockRLPFromFields(o["blockHeader"].get_obj());
+					const RLP c_bRLP(c_blockRLP);
+					current_BlockHeader.populateFromHeader(c_bRLP, false);
+				}
+			}
 
 			// write block header
 
 			mObject oBlockHeader;
-			BlockInfo current_BlockHeader = state.info();
 			oBlockHeader["parentHash"] = toString(current_BlockHeader.parentHash);
 			oBlockHeader["uncleHash"] = toString(current_BlockHeader.sha3Uncles);
 			oBlockHeader["coinbase"] = toString(current_BlockHeader.coinbaseAddress);
@@ -241,77 +299,11 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			oBlockHeader["extraData"] = toHex(current_BlockHeader.extraData);
 			oBlockHeader["nonce"] = toString(current_BlockHeader.nonce);
 
+			o["blockHeader"] = oBlockHeader;
 
-
-			// overwrite (wrong) data from blockheader in filler" << endl;
-
-			if (o.count("blockHeader") > 0)
-			{
-				if (o["blockHeader"].get_obj().size() != 14)
-				{
-
-					BlockInfo tmp = current_BlockHeader;
-
-					if (o["blockHeader"].get_obj().count("parentHash") > 0)
-						tmp.parentHash = h256(o["blockHeader"].get_obj()["parentHash"].get_str());
-
-					if (o["blockHeader"].get_obj().count("sha3Uncles") > 0)
-						tmp.sha3Uncles = h256(o["blockHeader"].get_obj()["uncleHash"].get_str());
-
-					if (o["blockHeader"].get_obj().count("coinbase") > 0)
-						tmp.coinbaseAddress = Address(o["blockHeader"].get_obj()["coinbase"].get_str());
-
-					if (o["blockHeader"].get_obj().count("stateRoot") > 0)
-						tmp.stateRoot = h256(o["blockHeader"].get_obj()["stateRoot"].get_str());
-
-					if (o["blockHeader"].get_obj().count("transactionsTrie") > 0)
-						tmp.transactionsRoot = h256(o["blockHeader"].get_obj()["transactionsTrie"].get_str());
-
-					if (o["blockHeader"].get_obj().count("receiptTrie") > 0)
-						tmp.receiptsRoot = h256(o["blockHeader"].get_obj()["receiptTrie"].get_str());
-
-					if (o["blockHeader"].get_obj().count("bloom") > 0)
-						tmp.logBloom = LogBloom(o["blockHeader"].get_obj()["bloom"].get_str());
-
-					if (o["blockHeader"].get_obj().count("difficulty") > 0)
-						tmp.difficulty = toInt(o["blockHeader"].get_obj()["difficulty"]);
-
-					if (o["blockHeader"].get_obj().count("number") > 0)
-						tmp.number = toInt(o["blockHeader"].get_obj()["number"]);
-
-					if (o["blockHeader"].get_obj().count("gasLimit") > 0)
-						tmp.gasLimit = toInt(o["blockHeader"].get_obj()["gasLimit"]);
-
-					if (o["blockHeader"].get_obj().count("gasUsed") > 0)
-						tmp.gasUsed = toInt(o["blockHeader"].get_obj()["gasUsed"]);
-
-					if (o["blockHeader"].get_obj().count("timestamp") > 0)
-						tmp.timestamp = toInt(o["blockHeader"].get_obj()["timestamp"]);
-
-					if (o["blockHeader"].get_obj().count("extraData") > 0)
-						tmp.extraData = importByteArray(o["blockHeader"].get_obj()["extraData"].get_str());
-
-					// find new valid nonce
-
-					if (tmp != current_BlockHeader)
-					{
-						current_BlockHeader = tmp;
-						cout << "new header!\n";
-						ProofOfWork pow;
-						MineInfo ret;
-						while (!ProofOfWork::verify(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.nonce, current_BlockHeader.difficulty))
-							tie(ret, current_BlockHeader.nonce) = pow.mine(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.difficulty, 10000, true, true);
-						oBlockHeader["nonce"] = toString(current_BlockHeader.nonce);
-					}
-				}
-				else
-				{
-					// take the blockheader as is
-					const bytes c_blockRLP = createBlockRLPFromFields(o["genesisBlockHeader"].get_obj());
-					const RLP c_bRLP(c_blockRLP);
-					current_BlockHeader.populateFromHeader(c_bRLP, false);
-				}
-			}
+			// write uncle list
+			mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles.
+			o["uncleHeaders"] = aUncleList;
 
 			//txs:
 
@@ -324,8 +316,6 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				txStream.appendRaw(txrlp.out());
 			}
 
-			cout <<  "create block:" << endl;
-
 			RLPStream rlpStream2;
 			current_BlockHeader.streamRLP(rlpStream2, WithNonce);
 
@@ -334,40 +324,45 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			block2.appendRaw(txStream.out());
 			block2.appendRaw(RLPEmptyList);
 
+			o["rlp"] = "0x" + toHex(block2.out());
+
 			if (sha3(RLP(state.blockData())[0].data()) != sha3(RLP(block2.out())[0].data()))
-				cout << "block 0 wrong" << endl;
+				cnote << "block header mismatch\n";
 
 			if (sha3(RLP(state.blockData())[1].data()) != sha3(RLP(block2.out())[1].data()))
-				cout << "block 1 wrong" << endl;
+				cnote << "txs mismatch\n";
 
 			if (sha3(RLP(state.blockData())[2].data()) != sha3(RLP(block2.out())[2].data()))
-				cout << "block 2 wrong" << endl;
+				cnote << "uncle list mismatch\n";
 
-
-			if (sha3(state.blockData()) != sha3(block2.out()))
+			try
 			{
-				cout << "blocks do not match!" << endl;
-				o["rlp"] = "0x" + toHex(block2.out());
+				ImportTest importerTmp(o["pre"].get_obj());
+				State stateTmp(Address(), OverlayDB(), BaseState::Empty);
+				importerTmp.importState(o["pre"].get_obj(), stateTmp);
+				stateTmp.commit();
+				BlockChain bcTmp(block.out(), "/tmp/", true);
+				stateTmp.sync(bcTmp);
+				bc.import(block2.out(), stateTmp.db());
+				stateTmp.sync(bcTmp);
+			}
+			// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
+			catch (...)
+			{
+				cnote << "block is invalid!\n";
 				o.erase(o.find("blockHeader"));
 				o.erase(o.find("uncleHeaders"));
 				o.erase(o.find("transactions"));
-			}
-			else
-			{
-				o["blockHeader"] = oBlockHeader;
-
-				// write uncle list
-				mArray aUncleList; // as of now, our parent is always the genesis block, so we can not have uncles.
-				o["uncleHeaders"] = aUncleList;
 			}
 		}
 
 		else
 		{
+			bytes blockRLP;
 			try
 			{
 				state.sync(bc);
-				bytes blockRLP = importByteArray(o["rlp"].get_str());
+				blockRLP = importByteArray(o["rlp"].get_str());
 				bc.import(blockRLP, state.db());
 				state.sync(bc);
 			}
@@ -378,7 +373,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK(o.count("blockHeader") == 0);
 				BOOST_CHECK(o.count("transactions") == 0);
 				BOOST_CHECK(o.count("uncleHeaders") == 0);
-				return;
+				continue;
 			}
 			catch (std::exception const& _e)
 			{
@@ -386,7 +381,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK(o.count("blockHeader") == 0);
 				BOOST_CHECK(o.count("transactions") == 0);
 				BOOST_CHECK(o.count("uncleHeaders") == 0);
-				return;
+				continue;
 			}
 			catch(...)
 			{
@@ -394,11 +389,10 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK(o.count("blockHeader") == 0);
 				BOOST_CHECK(o.count("transactions") == 0);
 				BOOST_CHECK(o.count("uncleHeaders") == 0);
-				return;
+				continue;
 			}
-			cout << "valid block header\n";
-			//cout << "block number: " <<
-			BOOST_REQUIRE(o.count("blockHeader") > 0);
+
+			BOOST_REQUIRE(o.count("blockHeader"));
 
 			mObject tObj = o["blockHeader"].get_obj();
 			BlockInfo blockHeaderFromFields;
@@ -427,8 +421,6 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 			BOOST_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, "However, blockHeaderFromFields != blockFromRlp!");
 
-			cout << "checked block header bc\n";
-
 			//Check transaction list
 
 			Transactions txsFromField;
@@ -437,19 +429,16 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			{
 				mObject tx = txObj.get_obj();
 
-				cout << "read single tx\n";
+				BOOST_REQUIRE(tx.count("nonce"));
+				BOOST_REQUIRE(tx.count("gasPrice"));
+				BOOST_REQUIRE(tx.count("gasLimit"));
+				BOOST_REQUIRE(tx.count("to"));
+				BOOST_REQUIRE(tx.count("value"));
+				BOOST_REQUIRE(tx.count("v"));
+				BOOST_REQUIRE(tx.count("r"));
+				BOOST_REQUIRE(tx.count("s"));
+				BOOST_REQUIRE(tx.count("data"));
 
-				BOOST_REQUIRE(tx.count("nonce") > 0);
-				BOOST_REQUIRE(tx.count("gasPrice") > 0);
-				BOOST_REQUIRE(tx.count("gasLimit") > 0);
-				BOOST_REQUIRE(tx.count("to") > 0);
-				BOOST_REQUIRE(tx.count("value") > 0);
-				BOOST_REQUIRE(tx.count("v") > 0);
-				BOOST_REQUIRE(tx.count("r") > 0);
-				BOOST_REQUIRE(tx.count("s") > 0);
-				BOOST_REQUIRE(tx.count("data") > 0);
-
-				cout << "construct single tx\n";
 				try
 				{
 					Transaction t(createRLPStreamFromTransactionFields(tx).out(), CheckSignature::Sender);
@@ -458,18 +447,14 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				catch (Exception const& _e)
 				{
 					BOOST_ERROR("Failed transaction constructor with Exception: " << diagnostic_information(_e));
-
 				}
 				catch (exception const& _e)
 				{
-					cout << _e.what() << endl;
+					cnote << _e.what();
 				}
 			}
 
-			cout << "read txs bc\n";
-
 			Transactions txsFromRlp;
-			bytes blockRLP = importByteArray(o["rlp"].get_str());
 			RLP root(blockRLP);
 			for (auto const& tr: root[1])
 			{
@@ -491,12 +476,10 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK_MESSAGE(txsFromField[i].receiveAddress() == txsFromRlp[i].receiveAddress(), "transaction receiveAddress in rlp and in field do not match");
 				BOOST_CHECK_MESSAGE(txsFromField[i].value() == txsFromRlp[i].value(), "transaction receiveAddress in rlp and in field do not match");
 
-				BOOST_CHECK_MESSAGE(txsFromField[i] == txsFromRlp[i], "however, transactions in rlp and in field do not match");
+				BOOST_CHECK_MESSAGE(txsFromField[i] == txsFromRlp[i], "transactions in rlp and in transaction field do not match");
 			}
-			cout << "checked txs bc\n";
 
 			// check uncle list
-
 			BOOST_CHECK_MESSAGE((o["uncleList"].type() == json_spirit::null_type ? 0 : o["uncleList"].get_array().size()) == 0, "Uncle list is not empty, but the genesis block can not have uncles");
 		}
 	}
@@ -507,9 +490,14 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(BlockTests)
 
-BOOST_AUTO_TEST_CASE(blValidBlockTest)
+//BOOST_AUTO_TEST_CASE(blValidBlockTest)
+//{
+//	dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
+//}
+
+BOOST_AUTO_TEST_CASE(blInvalidHeaderTest)
 {
-	dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
+	dev::test::executeTests("blInvalidHeaderTest", "/BlockTests", dev::test::doBlockTests);
 }
 
 BOOST_AUTO_TEST_CASE(userDefinedFileBl)

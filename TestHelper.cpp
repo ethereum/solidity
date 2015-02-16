@@ -510,16 +510,16 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 	RLPStream rlpStream;
 	rlpStream.appendList(_tObj.size());
 
-	if (_tObj.count("nonce") > 0)
+	if (_tObj.count("nonce"))
 		rlpStream << bigint(_tObj["nonce"].get_str());
 
-	if (_tObj.count("gasPrice") > 0)
+	if (_tObj.count("gasPrice"))
 		rlpStream << bigint(_tObj["gasPrice"].get_str());
 
-	if (_tObj.count("gasLimit") > 0)
+	if (_tObj.count("gasLimit"))
 		rlpStream << bigint(_tObj["gasLimit"].get_str());
 
-	if (_tObj.count("to") > 0)
+	if (_tObj.count("to"))
 	{
 		if (_tObj["to"].get_str().empty())
 			rlpStream << "";
@@ -527,22 +527,22 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 			rlpStream << importByteArray(_tObj["to"].get_str());
 	}
 
-	if (_tObj.count("value") > 0)
+	if (_tObj.count("value"))
 		rlpStream << bigint(_tObj["value"].get_str());
 
-	if (_tObj.count("data") > 0)
+	if (_tObj.count("data"))
 		rlpStream << importData(_tObj);
 
-	if (_tObj.count("v") > 0)
+	if (_tObj.count("v"))
 		rlpStream << bigint(_tObj["v"].get_str());
 
-	if (_tObj.count("r") > 0)
+	if (_tObj.count("r"))
 		rlpStream << bigint(_tObj["r"].get_str());
 
-	if (_tObj.count("s") > 0)
+	if (_tObj.count("s"))
 		rlpStream <<  bigint(_tObj["s"].get_str());
 
-	if (_tObj.count("extrafield") > 0)
+	if (_tObj.count("extrafield"))
 		rlpStream << bigint(_tObj["extrafield"].get_str());
 
 	return rlpStream;
