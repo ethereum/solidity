@@ -193,17 +193,23 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 	for (TypePointer const& type: _typeParameters)
 		if (type->isDynamicallySized())
 		{
-			// value on stack: [memory_offset] (only if we are already in dynamic mode)
+			// value on stack: [calldata_offset] (only if we are already in dynamic mode)
 			if (currentDynamicParameter == 0)
 				// switch from static to dynamic
 				m_context << u256(offset);
+			// retrieve length
 			CompilerUtils(m_context).loadFromMemory(
 				CompilerUtils::dataStartOffset + currentDynamicParameter * 32,
 				IntegerType(256), !_fromMemory, c_padToWords);
-			// store new memory pointer
-			m_context << eth::Instruction::DUP2 << eth::Instruction::DUP2 << eth::Instruction::ADD;
+			// stack: offset length
+			// add 32-byte padding to copy of length
+			m_context << u256(32) << eth::Instruction::DUP1 << u256(31)
+				<< eth::Instruction::DUP4 << eth::Instruction::ADD
+				<< eth::Instruction::DIV << eth::Instruction::MUL;
+			// stack: offset length padded_length
+			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
 			currentDynamicParameter++;
-			// value on stack: offset length next_memory_offset
+			// stack: offset length next_calldata_offset
 		}
 		else if (currentDynamicParameter == 0)
 			// we can still use static load
@@ -294,8 +300,7 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	// Note that the fact that the return arguments are of increasing index is vital for this
 	// algorithm to work.
 
-	unsigned const c_argumentsSize = (_function.getVisibility() == Declaration::Visibility::External
-		? 0 : CompilerUtils::getSizeOnStack(_function.getParameters()));
+	unsigned const c_argumentsSize = CompilerUtils::getSizeOnStack(_function.getParameters());
 	unsigned const c_returnValuesSize = CompilerUtils::getSizeOnStack(_function.getReturnParameters());
 	unsigned const c_localVariablesSize = CompilerUtils::getSizeOnStack(_function.getLocalVariables());
 

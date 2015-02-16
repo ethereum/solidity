@@ -475,9 +475,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "gasprice")
 			m_context << eth::Instruction::GASPRICE;
 		else if (member == "data")
-		{
-			// nothing to store on the stack
-		}
+			m_context << u256(0) << eth::Instruction::CALLDATASIZE;
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown magic member."));
 		break;
@@ -510,6 +508,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 					m_context << m_context.getFunctionEntryLabel(*function).pushTag();
 					return;
 				}
+			solAssert(false, "Function not found in member access.");
 		}
 		else if (auto enumType = dynamic_cast<EnumType const*>(type.getActualType().get()))
 			m_context << enumType->getMemberValue(_memberAccess.getMemberName());
@@ -518,7 +517,19 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::ByteArray:
 	{
 		solAssert(member == "length", "Illegal bytearray member.");
-		m_context << eth::Instruction::SLOAD;
+		auto const& type = dynamic_cast<ByteArrayType const&>(*_memberAccess.getExpression().getType());
+		switch (type.getLocation())
+		{
+		case ByteArrayType::Location::CallData:
+			m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+			break;
+		case ByteArrayType::Location::Storage:
+			m_context << eth::Instruction::SLOAD;
+			break;
+		default:
+			solAssert(false, "Unsupported byte array location.");
+			break;
+		}
 		break;
 	}
 	default:

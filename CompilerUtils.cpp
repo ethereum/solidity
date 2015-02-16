@@ -70,9 +70,12 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 
 		if (type.getLocation() == ByteArrayType::Location::CallData)
 		{
-			m_context << eth::Instruction::CALLDATASIZE << u256(0) << eth::Instruction::DUP3
-					  << eth::Instruction::CALLDATACOPY
-					  << eth::Instruction::CALLDATASIZE << eth::Instruction::ADD;
+			// stack: target source_offset source_len
+			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::DUP5
+				// stack: target source_offset source_len source_len source_offset target
+				<< eth::Instruction::CALLDATACOPY
+				<< eth::Instruction::DUP3 << eth::Instruction::ADD
+				<< eth::Instruction::SWAP2 << eth::Instruction::POP << eth::Instruction::POP;
 		}
 		else
 		{
@@ -171,29 +174,32 @@ void CompilerUtils::copyByteArrayToStorage(ByteArrayType const& _targetType,
 	{
 	case ByteArrayType::Location::CallData:
 	{
-		// @todo this does not take length into account. It also assumes that after "CALLDATALENGTH" we only have zeros.
+		// This also assumes that after "length" we only have zeros, i.e. it cannot be used to
+		// slice a byte array from calldata.
+
+		// stack: source_offset source_len target_ref
 		// fetch old length and convert to words
 		m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
 		m_context << u256(31) << eth::Instruction::ADD
 				  << u256(32) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
-		// stack here: target_ref target_length_words
+		// stack here: source_offset source_len target_ref target_length_words
 		// actual array data is stored at SHA3(storage_offset)
 		m_context << eth::Instruction::DUP2;
 		CompilerUtils(m_context).computeHashStatic();
 		// compute target_data_end
 		m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2 << eth::Instruction::ADD
 				  << eth::Instruction::SWAP1;
-		// stack here: target_ref target_data_end target_data_ref
+		// stack here: source_offset source_len target_ref target_data_end target_data_ref
 		// store length (in bytes)
-		m_context << eth::Instruction::CALLDATASIZE;
-		m_context << eth::Instruction::DUP1 << eth::Instruction::DUP5 << eth::Instruction::SSTORE;
+		m_context << eth::Instruction::DUP4 << eth::Instruction::DUP1 << eth::Instruction::DUP5
+			<< eth::Instruction::SSTORE;
 		// jump to end if length is zero
 		m_context << eth::Instruction::ISZERO;
 		eth::AssemblyItem copyLoopEnd = m_context.newTag();
 		m_context.appendConditionalJumpTo(copyLoopEnd);
 		// store start offset
-		m_context << u256(0);
-		// stack now: target_ref target_data_end target_data_ref calldata_offset
+		m_context << eth::Instruction::DUP5;
+		// stack now: source_offset source_len target_ref target_data_end target_data_ref calldata_offset
 		eth::AssemblyItem copyLoopStart = m_context.newTag();
 		m_context << copyLoopStart
 				  // copy from calldata and store
@@ -204,16 +210,18 @@ void CompilerUtils::copyByteArrayToStorage(ByteArrayType const& _targetType,
 				  // increment calldata_offset by 32
 				  << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD
 				  // check for loop condition
-				  << eth::Instruction::DUP1 << eth::Instruction::CALLDATASIZE << eth::Instruction::GT;
+				  << eth::Instruction::DUP1 << eth::Instruction::DUP6 << eth::Instruction::GT;
 		m_context.appendConditionalJumpTo(copyLoopStart);
 		m_context << eth::Instruction::POP;
 		m_context << copyLoopEnd;
 
 		// now clear leftover bytes of the old value
-		// stack now: target_ref target_data_end target_data_ref
+		// stack now: source_offset source_len target_ref target_data_end target_data_ref
 		clearStorageLoop();
+		// stack now: source_offset source_len target_ref target_data_end
 
-		m_context << eth::Instruction::POP;
+		m_context << eth::Instruction::POP << eth::Instruction::SWAP2
+			<< eth::Instruction::POP << eth::Instruction::POP;
 		break;
 	}
 	case ByteArrayType::Location::Storage:

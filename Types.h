@@ -298,6 +298,10 @@ public:
 
 	Location getLocation() const { return m_location; }
 
+	/// @returns a copy of this type with location changed to @a _location
+	/// @todo this might move as far up as Type later
+	std::shared_ptr<ByteArrayType> copyForLocation(Location _location) const;
+
 private:
 	Location m_location;
 	static const MemberList s_byteArrayMemberList;

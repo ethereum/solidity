@@ -274,6 +274,15 @@ TypePointer FunctionDefinition::getType(ContractDefinition const*) const
 
 void FunctionDefinition::checkTypeRequirements()
 {
+	// change all byte arrays parameters to point to calldata
+	if (getVisibility() == Visibility::External)
+		for (ASTPointer<VariableDeclaration> const& var: getParameters())
+		{
+			auto const& type = var->getType();
+			solAssert(!!type, "");
+			if (auto const* byteArrayType = dynamic_cast<ByteArrayType const*>(type.get()))
+				var->setType(byteArrayType->copyForLocation(ByteArrayType::Location::CallData));
+		}
 	for (ASTPointer<VariableDeclaration> const& var: getParameters() + getReturnParameters())
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));

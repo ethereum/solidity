@@ -540,12 +540,19 @@ bool ByteArrayType::operator==(Type const& _other) const
 unsigned ByteArrayType::getSizeOnStack() const
 {
 	if (m_location == Location::CallData)
-		return 0;
+		// offset, length (stack top)
+		return 2;
 	else
+		// offset
 		return 1;
 }
 
-const MemberList ByteArrayType::s_byteArrayMemberList = MemberList({{"length", make_shared<IntegerType >(256)}});
+shared_ptr<ByteArrayType> ByteArrayType::copyForLocation(ByteArrayType::Location _location) const
+{
+	return make_shared<ByteArrayType>(_location);
+}
+
+const MemberList ByteArrayType::s_byteArrayMemberList = MemberList({{"length", make_shared<IntegerType>(256)}});
 
 bool ContractType::operator==(Type const& _other) const
 {
