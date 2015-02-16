@@ -53,7 +53,6 @@ public:
 	void importState(json_spirit::mObject& _o, eth::State& _state);
 	void importTransaction(json_spirit::mObject& _o);
 	void exportTest(bytes _output, eth::State& _statePost);
-	std::map<Address, eth::Account> getStateMap(eth::State& _state){return _state.m_cache;}
 
 	eth::State m_statePre;
 	eth::State m_statePost;
