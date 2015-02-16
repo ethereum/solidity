@@ -108,16 +108,7 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 			ret.pop_back();
 		ret += "{}";
 	}
-	for (auto const& it: _contractDef.getInterfaceEvents())
-	{
-		std::string params;
-		for (auto const& p: it->getParameters())
-			params += (params.empty() ? "(" : ",") + p->getType()->toString() + (p->isIndexed() ? " indexed " : " ") + p->getName();
-		if (!params.empty())
-			params += ")";
 
-		ret += "event " + it->getName() + params + ";";
-	}
 	return unique_ptr<string>(new string(ret + "}"));
 }
 
