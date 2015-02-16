@@ -20,6 +20,7 @@
  * block test functions.
  */
 
+#include <libdevcrypto/FileSystem.h>
 #include <libethereum/CanonBlockChain.h>
 #include "TestHelper.h"
 
@@ -341,7 +342,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				State stateTmp(Address(), OverlayDB(), BaseState::Empty);
 				importerTmp.importState(o["pre"].get_obj(), stateTmp);
 				stateTmp.commit();
-				BlockChain bcTmp(block.out(), "/tmp/", true);
+				BlockChain bcTmp(block.out(), getDataDir() + "/tmpBlockChain.bc", true);
 				stateTmp.sync(bcTmp);
 				bc.import(block2.out(), stateTmp.db());
 				stateTmp.sync(bcTmp);
