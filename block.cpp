@@ -224,7 +224,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 					if (o["blockHeader"].get_obj().count("parentHash"))
 						tmp.parentHash = h256(o["blockHeader"].get_obj()["parentHash"].get_str());
 
-					if (o["blockHeader"].get_obj().count("sha3Uncles"))
+					if (o["blockHeader"].get_obj().count("uncleHash"))
 						tmp.sha3Uncles = h256(o["blockHeader"].get_obj()["uncleHash"].get_str());
 
 					if (o["blockHeader"].get_obj().count("coinbase"))
