@@ -490,10 +490,10 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(BlockTests)
 
-//BOOST_AUTO_TEST_CASE(blValidBlockTest)
-//{
-//	dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
-//}
+BOOST_AUTO_TEST_CASE(blValidBlockTest)
+{
+	dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
+}
 
 BOOST_AUTO_TEST_CASE(blInvalidHeaderTest)
 {
