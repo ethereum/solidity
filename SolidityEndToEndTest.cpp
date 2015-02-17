@@ -2283,9 +2283,9 @@ BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
 		}
 	)";
 	compileAndRun(sourceCode);
-	bytes calldata = bytes(61, 0x22) + bytes(12, 0x12);
-	sendMessage(calldata, false);
-	BOOST_CHECK(m_output == encodeArgs(dev::sha3(bytes{'a', 'b', 'c'} + calldata)));
+	bytes calldata1 = bytes(61, 0x22) + bytes(12, 0x12);
+	sendMessage(calldata1, false);
+	BOOST_CHECK(m_output == encodeArgs(dev::sha3(bytes{'a', 'b', 'c'} + calldata1)));
 }
 
 BOOST_AUTO_TEST_CASE(call_forward_bytes)
@@ -2532,6 +2532,49 @@ BOOST_AUTO_TEST_CASE(constructing_enums_from_ints)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(external_function)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) returns (uint) { return a; }
+			function test(uint a, uint b) external returns (uint r_a, uint r_b) {
+				r_a = f(a + 7);
+				r_b = b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", 2, 3) == encodeArgs(2+7, 3));
+}
+
+BOOST_AUTO_TEST_CASE(bytes_in_arguments)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint result;
+			function f(uint a, uint b) { result += a + b; }
+			function g(uint a) { result *= a; }
+			function test(uint a, bytes data1, bytes data2, uint b) external returns (uint r_a, uint r, uint r_b, uint l) {
+				r_a = a;
+				this.call(data1);
+				this.call(data2);
+				r = result;
+				r_b = b;
+				l = data1.length;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	string innercalldata1 = asString(FixedHash<4>(dev::sha3("f(uint256,uint256)")).asBytes() + encodeArgs(8, 9));
+	bytes calldata1 = encodeArgs(u256(innercalldata1.length()), 12, innercalldata1, 13);
+	string innercalldata2 = asString(FixedHash<4>(dev::sha3("g(uint256)")).asBytes() + encodeArgs(3));
+	bytes calldata = encodeArgs(
+		u256(innercalldata1.length()), u256(innercalldata2.length()),
+		12, innercalldata1, innercalldata2, 13);
+	BOOST_CHECK(callContractFunction("test(uint256,bytes,bytes,uint256)", calldata)
+		== encodeArgs(12, (8 + 9) * 3, 13, u256(innercalldata1.length())));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
