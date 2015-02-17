@@ -45,7 +45,7 @@ namespace test
 class ImportTest
 {
 public:
-	ImportTest() = default;
+	ImportTest(json_spirit::mObject& _o) : m_TestObject(_o) {}
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
 
 	// imports
@@ -79,6 +79,7 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
 std::string getTestPath();
 void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
+RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 void processCommandLineOptions();
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 
