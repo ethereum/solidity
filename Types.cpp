@@ -769,7 +769,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 }
 
 FunctionType::FunctionType(const EventDefinition& _event):
-	m_location(Location::Event), m_declaration(&_event)
+	m_location(Location::Event), m_isConstant(true), m_declaration(&_event)
 {
 	TypePointers params;
 	vector<string> paramNames;
