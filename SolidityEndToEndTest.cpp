@@ -2570,6 +2570,61 @@ BOOST_AUTO_TEST_CASE(constructing_enums_from_ints)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
 }
 
+BOOST_AUTO_TEST_CASE(inline_member_init)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function test(){
+				m_b = 6;
+				m_c = 8;
+			}
+			uint m_a = 5;
+			uint m_b;
+			uint m_c = 7;
+			function get() returns (uint a, uint b, uint c){
+				a = m_a;
+				b = m_b;
+				c = m_c;
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(5, 6, 8));
+}
+
+BOOST_AUTO_TEST_CASE(inline_member_init_inheritence)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			function Base(){}
+			uint m_base = 5;
+			function getBMember() returns (uint i) { return m_base; }
+		}
+		contract Derived is Base {
+			function Derived(){}
+			uint m_derived = 6;
+			function getDMember() returns (uint i) { return m_derived; }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getBMember()") == encodeArgs(5));
+	BOOST_CHECK(callContractFunction("getDMember()") == encodeArgs(6));
+}
+
+BOOST_AUTO_TEST_CASE(inline_member_init_inheritence_without_constructor)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			uint m_base = 5;
+			function getBMember() returns (uint i) { return m_base; }
+		}
+		contract Derived is Base {
+			uint m_derived = 6;
+			function getDMember() returns (uint i) { return m_derived; }
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getBMember()") == encodeArgs(5));
+	BOOST_CHECK(callContractFunction("getDMember()") == encodeArgs(6));
+}
+
 BOOST_AUTO_TEST_CASE(external_function)
 {
 	char const* sourceCode = R"(
