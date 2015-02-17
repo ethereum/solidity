@@ -56,6 +56,19 @@ void ExpressionCompiler::appendStateVariableAccessor(CompilerContext& _context, 
 	compiler.appendStateVariableAccessor(_varDecl);
 }
 
+void ExpressionCompiler::appendStateVariableInitialization(CompilerContext& _context, VariableDeclaration const& _varDecl, bool _optimize)
+{
+	ExpressionCompiler compiler(_context, _optimize);
+	compiler.appendStateVariableInitialization(_varDecl);
+}
+
+void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration const& _varDecl)
+{
+	m_currentLValue.fromStateVariable(_varDecl);
+	m_currentLValue.storeValue(*_varDecl.getType(), _varDecl.getLocation());
+	m_currentLValue.reset();
+}
+
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	_assignment.getRightHandSide().accept(*this);
@@ -77,7 +90,6 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	}
 	m_currentLValue.storeValue(*_assignment.getRightHandSide().getType(), _assignment.getLocation());
 	m_currentLValue.reset();
-
 	return false;
 }
 
@@ -1018,10 +1030,22 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 		m_dataType = _identifier.getType();
 		solAssert(m_dataType->getStorageSize() <= numeric_limits<unsigned>::max(),
 				  "The storage size of " + m_dataType->toString() + " should fit in an unsigned");
-		m_size = unsigned(m_dataType->getStorageSize());	}
+		m_size = unsigned(m_dataType->getStorageSize());
+	}
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_identifier.getLocation())
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
+}
+
+void ExpressionCompiler::LValue::fromStateVariable(VariableDeclaration const& _declaration)
+{
+	solAssert(m_context->isStateVariable(&_declaration), "Not a state variable.");
+	*m_context << m_context->getStorageLocationOfVariable(_declaration);
+	m_type = LValueType::Storage;
+	m_dataType = _declaration.getType();
+	solAssert(m_dataType->getStorageSize() <= numeric_limits<unsigned>::max(),
+			  "The storage size of " + m_dataType->toString() + " should fit in an unsigned");
+	m_size = unsigned(m_dataType->getStorageSize());
 }
 
 void ExpressionCompiler::LValue::retrieveValue(Location const& _location, bool _remove) const
@@ -1117,7 +1141,7 @@ void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, Location co
 		}
 		else
 		{
-			solAssert(_sourceType.getCategory() == m_dataType->getCategory(), "");
+			solAssert(_sourceType.getCategory() == m_dataType->getCategory(), "Wrong type conversation for assignment.");
 			if (m_dataType->getCategory() == Type::Category::ByteArray)
 			{
 				CompilerUtils(*m_context).copyByteArrayToStorage(

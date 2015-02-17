@@ -69,7 +69,7 @@ public:
 	virtual bool visit(Continue&) { return true; }
 	virtual bool visit(Break&) { return true; }
 	virtual bool visit(Return&) { return true; }
-	virtual bool visit(VariableDefinition&) { return true; }
+	virtual bool visit(VariableDeclarationStatement&) { return true; }
 	virtual bool visit(ExpressionStatement&) { return true; }
 	virtual bool visit(Expression&) { return true; }
 	virtual bool visit(Assignment&) { return true; }
@@ -112,7 +112,7 @@ public:
 	virtual void endVisit(Continue&) { }
 	virtual void endVisit(Break&) { }
 	virtual void endVisit(Return&) { }
-	virtual void endVisit(VariableDefinition&) { }
+	virtual void endVisit(VariableDeclarationStatement&) { }
 	virtual void endVisit(ExpressionStatement&) { }
 	virtual void endVisit(Expression&) { }
 	virtual void endVisit(Assignment&) { }
@@ -159,7 +159,7 @@ public:
 	virtual bool visit(Continue const&) { return true; }
 	virtual bool visit(Break const&) { return true; }
 	virtual bool visit(Return const&) { return true; }
-	virtual bool visit(VariableDefinition const&) { return true; }
+	virtual bool visit(VariableDeclarationStatement const&) { return true; }
 	virtual bool visit(ExpressionStatement const&) { return true; }
 	virtual bool visit(Expression const&) { return true; }
 	virtual bool visit(Assignment const&) { return true; }
@@ -202,7 +202,7 @@ public:
 	virtual void endVisit(Continue const&) { }
 	virtual void endVisit(Break const&) { }
 	virtual void endVisit(Return const&) { }
-	virtual void endVisit(VariableDefinition const&) { }
+	virtual void endVisit(VariableDeclarationStatement const&) { }
 	virtual void endVisit(ExpressionStatement const&) { }
 	virtual void endVisit(Expression const&) { }
 	virtual void endVisit(Assignment const&) { }

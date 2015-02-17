@@ -432,14 +432,17 @@ class VariableDeclaration: public Declaration
 {
 public:
 	VariableDeclaration(Location const& _location, ASTPointer<TypeName> const& _type,
-						ASTPointer<ASTString> const& _name, Visibility _visibility,
-						bool _isStateVar = false, bool _isIndexed = false):
-		Declaration(_location, _name, _visibility), m_typeName(_type),
-		m_isStateVariable(_isStateVar), m_isIndexed(_isIndexed) {}
+							ASTPointer<ASTString> const& _name, ASTPointer<Expression> _value,
+							Visibility _visibility,
+							bool _isStateVar = false, bool _isIndexed = false):
+			Declaration(_location, _name, _visibility),
+			m_typeName(_type), m_value(_value),
+			m_isStateVariable(_isStateVar), m_isIndexed(_isIndexed) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	TypeName const* getTypeName() const { return m_typeName.get(); }
+	ASTPointer<Expression> const& getValue() const { return m_value; }
 
 	/// Returns the declared or inferred type. Can be an empty pointer if no type was explicitly
 	/// declared and there is no assignment to the variable that fixes the type.
@@ -447,6 +450,9 @@ public:
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
 
 	virtual bool isLValue() const override;
+
+	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
+	void checkTypeRequirements();
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
 	bool isExternalFunctionParameter() const;
 	bool isStateVariable() const { return m_isStateVariable; }
@@ -457,6 +463,7 @@ protected:
 
 private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
+	ASTPointer<Expression> m_value;		///< the assigned value, can be missing
 	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
 	bool m_isIndexed;                   ///< Whether this is an indexed variable (used by events).
 
@@ -833,22 +840,20 @@ private:
  * also be "var") but the actual assignment can be missing.
  * Examples: var a = 2; uint256 a;
  */
-class VariableDefinition: public Statement
+class VariableDeclarationStatement: public Statement
 {
 public:
-	VariableDefinition(Location const& _location, ASTPointer<VariableDeclaration> _variable,
-					   ASTPointer<Expression> _value):
-		Statement(_location), m_variable(_variable), m_value(_value) {}
+	VariableDeclarationStatement(Location const& _location, ASTPointer<VariableDeclaration> _variable):
+		Statement(_location), m_variable(_variable) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
 
 	VariableDeclaration const& getDeclaration() const { return *m_variable; }
-	Expression const* getExpression() const { return m_value.get(); }
+	Expression const* getExpression() const { return m_variable->getValue().get(); }
 
 private:
 	ASTPointer<VariableDeclaration> m_variable;
-	ASTPointer<Expression> m_value; ///< the assigned value, can be missing
 };
 
 /**

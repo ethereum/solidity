@@ -63,7 +63,7 @@ class ForStatement;
 class Continue;
 class Break;
 class Return;
-class VariableDefinition;
+class VariableDeclarationStatement;
 class ExpressionStatement;
 class Expression;
 class Assignment;

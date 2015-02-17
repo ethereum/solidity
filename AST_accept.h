@@ -475,24 +475,24 @@ void ExpressionStatement::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
-void VariableDefinition::accept(ASTVisitor& _visitor)
+void VariableDeclarationStatement::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
 	{
 		m_variable->accept(_visitor);
-		if (m_value)
-			m_value->accept(_visitor);
+		if (m_variable->getValue())
+			m_variable->getValue()->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }
 
-void VariableDefinition::accept(ASTConstVisitor& _visitor) const
+void VariableDeclarationStatement::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
 	{
 		m_variable->accept(_visitor);
-		if (m_value)
-			m_value->accept(_visitor);
+		if (m_variable->getValue())
+			m_variable->getValue()->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }

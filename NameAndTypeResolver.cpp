@@ -267,12 +267,12 @@ void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 	closeCurrentScope();
 }
 
-void DeclarationRegistrationHelper::endVisit(VariableDefinition& _variableDefinition)
+void DeclarationRegistrationHelper::endVisit(VariableDeclarationStatement& _variableDeclarationStatement)
 {
 	// Register the local variables with the function
 	// This does not fit here perfectly, but it saves us another AST visit.
-	solAssert(m_currentFunction, "Variable definition without function.");
-	m_currentFunction->addLocalVariable(_variableDefinition.getDeclaration());
+	solAssert(m_currentFunction, "Variable declaration without function.");
+	m_currentFunction->addLocalVariable(_variableDeclarationStatement.getDeclaration());
 }
 
 bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)
