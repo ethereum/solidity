@@ -20,6 +20,8 @@
  * Solidity AST to EVM bytecode compiler.
  */
 
+#pragma once
+
 #include <ostream>
 #include <functional>
 #include <libsolidity/ASTVisitor.h>
