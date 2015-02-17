@@ -2479,6 +2479,42 @@ BOOST_AUTO_TEST_CASE(struct_copy)
 	BOOST_CHECK(callContractFunction("retrieve(uint256)", 8) == encodeArgs(0, 0, 0, 0));
 }
 
+BOOST_AUTO_TEST_CASE(struct_containing_bytes_copy_and_delete)
+{
+	char const* sourceCode = R"(
+		contract c {
+			struct Struct { uint a; bytes data; uint b; }
+			Struct data1;
+			Struct data2;
+			function set(uint _a, bytes _data, uint _b) external returns (bool) {
+				data1.a = _a;
+				data1.b = _b;
+				data1.data = _data;
+				return true;
+			}
+			function copy() returns (bool) {
+				data1 = data2;
+				return true;
+			}
+			function del() returns (bool) {
+				delete data1;
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	string data = "123456789012345678901234567890123";
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("set(uint256,bytes,uint256)", u256(data.length()), 12, data, 13) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("copy()") == encodeArgs(true));
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("set(uint256,bytes,uint256)", u256(data.length()), 12, data, 13) == encodeArgs(true));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("del()") == encodeArgs(true));
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
 BOOST_AUTO_TEST_CASE(struct_copy_via_local)
 {
 	char const* sourceCode = R"(
