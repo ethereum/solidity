@@ -48,6 +48,7 @@ public:
 	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
 
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
+	unsigned getStackHeight() { solAssert(m_asm.deposit() >= 0, ""); return unsigned(m_asm.deposit()); }
 
 	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration) != 0; }
 	bool isLocalVariable(Declaration const* _declaration) const;

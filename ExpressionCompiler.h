@@ -144,7 +144,7 @@ private:
 		void retrieveValue(Location const& _location, bool _remove = false) const;
 		/// Moves a value from the stack to the lvalue. Removes the value if @a _move is true.
 		/// @a _location is the source location of the expression that caused this operation.
-		/// Stack pre: [lvalue_ref] value
+		/// Stack pre: value [lvalue_ref]
 		/// Stack post if !_move: value_of(lvalue_ref)
 		void storeValue(Type const& _sourceType, Location const& _location = Location(), bool _move = false) const;
 		/// Stores zero in the lvalue.
