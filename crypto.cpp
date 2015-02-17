@@ -321,13 +321,16 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	//	authInitiator -> E(remote-pubk, S(ecdhe-random, ecdh-shared-secret^nonce) || H(ecdhe-random-pubk) || pubk || nonce || 0x0)
 	//	authRecipient -> E(remote-pubk, ecdhe-random-pubk || nonce || 0x0)
 	
-	Secret nodeAsecret(sha3("privacy"));
+	h256 base(sha3("privacy"));
+	sha3(base.ref(), base.ref());
+	Secret nodeAsecret(base);
 	KeyPair nodeA(nodeAsecret);
 	BOOST_REQUIRE(nodeA.pub());
 	
-	Secret nodeBsecret(sha3("privacy++"));
+	sha3(base.ref(), base.ref());
+	Secret nodeBsecret(base);
 	KeyPair nodeB(nodeBsecret);
-	BOOST_REQUIRE(nodeA.pub());
+	BOOST_REQUIRE(nodeB.pub());
 	
 	BOOST_REQUIRE_NE(nodeA.sec(), nodeB.sec());
 	
@@ -343,7 +346,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		bytesConstRef pubk(&auth[Signature::size + h256::size], Public::size);
 		bytesConstRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
 		
-		s_secp256k1.agree(nodeA.sec(), nodeB.pub(), ssA);
+		crypto::ecdh::agree(nodeA.sec(), nodeB.pub(), ssA);
 		sign(eA.seckey(), ssA ^ nonceA).ref().copyTo(sig);
 		sha3(eA.pubkey().ref(), hepubk);
 		nodeA.pub().ref().copyTo(pubk);
@@ -352,7 +355,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	bytes authcipher;
 	encrypt(nodeB.pub(), &auth, authcipher);
-	BOOST_REQUIRE(authcipher.size());
+	BOOST_REQUIRE_EQUAL(authcipher.size(), 279);
 	
 	// Receipient is Bob (nodeB)
 	ECDHE eB;
@@ -360,6 +363,14 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	h256 nonceB(sha3(nAbytes));
 	bytes ack(Public::size + h256::size + 1);
 	{
+		// todo: replace nodeA.pub() in encrypt()
+		// decrypt public key from auth
+		bytes authdecrypted;
+		decrypt(nodeB.sec(), &authcipher, authdecrypted);
+		Public node;
+		bytesConstRef pubk(&authdecrypted[Signature::size + h256::size], Public::size);
+		pubk.copyTo(node.ref());
+		
 		bytesConstRef epubk(&ack[0], Public::size);
 		bytesConstRef nonce(&ack[Public::size], h256::size);
 		
@@ -369,7 +380,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	}
 	bytes ackcipher;
 	encrypt(nodeA.pub(), &ack, ackcipher);
-	BOOST_REQUIRE(ackcipher.size());
+	BOOST_REQUIRE_EQUAL(ackcipher.size(), 182);
 	
 	BOOST_REQUIRE(eA.pubkey());
 	BOOST_REQUIRE(eB.pubkey());
@@ -399,7 +410,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		
 		h256 ess;
 		// todo: ecdh-agree should be able to output bytes
-		s_secp256k1.agree(eA.seckey(), eBAck, ess);
+		eA.agree(eBAck, ess);
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssA.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));
 //		auto token = sha3(ssA);
@@ -423,7 +434,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	
 	/// Bob (after sending ack)
 	Secret ssB;
-	s_secp256k1.agree(nodeB.sec(), nodeA.pub(), ssB);
+	crypto::ecdh::agree(nodeB.sec(), nodeA.pub(), ssB);
 	BOOST_REQUIRE_EQUAL(ssA, ssB);
 	
 	Secret bEncryptK;
@@ -466,7 +477,8 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		
 		h256 ess;
 		// todo: ecdh-agree should be able to output bytes
-		s_secp256k1.agree(eB.seckey(), eAAuth, ess);
+		eB.agree(eAAuth, ess);
+//		s_secp256k1.agree(eB.seckey(), eAAuth, ess);
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssB.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));
 //		auto token = sha3(ssA);
@@ -492,6 +504,9 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	BOOST_REQUIRE_EQUAL(aMacK, bMacK);
 	BOOST_REQUIRE_EQUAL(aEgressMac, bIngressMac);
 	BOOST_REQUIRE_EQUAL(bEgressMac, aIngressMac);
+	
+	
+	
 }
 
 BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
@@ -502,6 +517,37 @@ BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
 	// All connections should share seed for PRF (or PRNG) for nonces
 	
 	
+}
+
+BOOST_AUTO_TEST_CASE(crypto_rlpxwire)
+{
+	Secret encryptK(sha3("..."));
+	h256 egressMac(sha3("+++"));
+	// TESTING: send encrypt magic sequence
+	bytes magic {0x22,0x40,0x08,0x91};
+	bytes magicCipherAndMac;
+	encryptSymNoAuth(encryptK, &magic, magicCipherAndMac, h256());
+	magicCipherAndMac.resize(magicCipherAndMac.size() + 32);
+	sha3mac(egressMac.ref(), &magic, egressMac.ref());
+	egressMac.ref().copyTo(bytesConstRef(&magicCipherAndMac).cropped(magicCipherAndMac.size() - 32, 32));
+	
+	bytes plaintext;
+	bytesConstRef cipher(&magicCipherAndMac[0], magicCipherAndMac.size() - 32);
+	decryptSymNoAuth(encryptK, h256(), cipher, plaintext);
+}
+
+BOOST_AUTO_TEST_CASE(crypto_aes128_ctr)
+{
+	Secret k(sha3("0xAAAA"));
+	string m = "AAAAAAAAAAAAAAAA";
+	bytesConstRef msg((byte*)m.data(), m.size());
+
+	bytes ciphertext;
+	auto iv = encryptSymNoAuth(k, msg, ciphertext);
+	
+	bytes plaintext;
+	decryptSymNoAuth(k, iv, &ciphertext, plaintext);
+	BOOST_REQUIRE_EQUAL(asString(plaintext), m);
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
@@ -535,7 +581,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		
 		// 68 % 255 should be difference of counter
 		e.ProcessData(out, in, text.size());
-		ctr = h128(u128(ctr) + text.size() % 16);
+		ctr = h128(u128(ctr) + text.size() / 16);
 		
 		BOOST_REQUIRE(text != original);
 		cipherCopy = text;
