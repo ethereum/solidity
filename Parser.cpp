@@ -190,6 +190,8 @@ Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
 		visibility = Declaration::Visibility::Protected;
 	else if (_token == Token::Private)
 		visibility = Declaration::Visibility::Private;
+	else if (_token == Token::External)
+		visibility = Declaration::Visibility::External;
 	else
 		solAssert(false, "Invalid visibility specifier.");
 	m_scanner->next();
@@ -306,7 +308,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(VarDeclParserOp
 	ASTPointer<ASTString> identifier;
 	Token::Value token = m_scanner->getCurrentToken();
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
-	if (_options.isStateVariable && Token::isVisibilitySpecifier(token))
+	if (_options.isStateVariable && Token::isVariableVisibilitySpecifier(token))
 		visibility = parseVisibilitySpecifier(token);
 	if (_options.allowIndexed && token == Token::Indexed)
 	{

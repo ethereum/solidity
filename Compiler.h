@@ -52,8 +52,8 @@ private:
 	void appendConstructorCall(FunctionDefinition const& _constructor);
 	void appendFunctionSelector(ContractDefinition const& _contract);
 	/// Creates code that unpacks the arguments for the given function represented by a vector of TypePointers.
-	/// From memory if @a _fromMemory is true, otherwise from call data. @returns the size of the data in bytes.
-	unsigned appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory = false);
+	/// From memory if @a _fromMemory is true, otherwise from call data.
+	void appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory = false);
 	void appendReturnValuePacker(TypePointers const& _typeParameters);
 
 	void registerStateVariables(ContractDefinition const& _contract);

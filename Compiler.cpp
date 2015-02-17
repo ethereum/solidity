@@ -147,7 +147,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 
 	// retrieve the function signature hash from the calldata
 	if (!interfaceFunctions.empty())
-		CompilerUtils(m_context).loadFromMemory(0, 4, false, true);
+		CompilerUtils(m_context).loadFromMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8), true);
 
 	// stack now is: 1 0 <funhash>
 	for (auto const& it: interfaceFunctions)
@@ -178,23 +178,46 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	}
 }
 
-unsigned Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory)
+void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory)
 {
 	// We do not check the calldata size, everything is zero-padded.
-	unsigned dataOffset = CompilerUtils::dataStartOffset; // the 4 bytes of the function hash signature
-	//@todo this can be done more efficiently, saving some CALLDATALOAD calls
+	unsigned offset(CompilerUtils::dataStartOffset);
+	bool const c_padToWords = true;
+
+	unsigned dynamicParameterCount = 0;
 	for (TypePointer const& type: _typeParameters)
-	{
-		unsigned const c_numBytes = type->getCalldataEncodedSize();
-		if (c_numBytes > 32)
-			BOOST_THROW_EXCEPTION(CompilerError()
-								  << errinfo_comment("Type " + type->toString() + " not yet supported."));
-		bool const c_leftAligned = type->getCategory() == Type::Category::String;
-		bool const c_padToWords = true;
-		dataOffset += CompilerUtils(m_context).loadFromMemory(dataOffset, c_numBytes, c_leftAligned,
-															  !_fromMemory, c_padToWords);
-	}
-	return dataOffset;
+		if (type->isDynamicallySized())
+			dynamicParameterCount++;
+	offset += dynamicParameterCount * 32;
+	unsigned currentDynamicParameter = 0;
+	for (TypePointer const& type: _typeParameters)
+		if (type->isDynamicallySized())
+		{
+			// value on stack: [calldata_offset] (only if we are already in dynamic mode)
+			if (currentDynamicParameter == 0)
+				// switch from static to dynamic
+				m_context << u256(offset);
+			// retrieve length
+			CompilerUtils(m_context).loadFromMemory(
+				CompilerUtils::dataStartOffset + currentDynamicParameter * 32,
+				IntegerType(256), !_fromMemory, c_padToWords);
+			// stack: offset length
+			// add 32-byte padding to copy of length
+			m_context << u256(32) << eth::Instruction::DUP1 << u256(31)
+				<< eth::Instruction::DUP4 << eth::Instruction::ADD
+				<< eth::Instruction::DIV << eth::Instruction::MUL;
+			// stack: offset length padded_length
+			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
+			currentDynamicParameter++;
+			// stack: offset length next_calldata_offset
+		}
+		else if (currentDynamicParameter == 0)
+			// we can still use static load
+			offset += CompilerUtils(m_context).loadFromMemory(offset, *type, !_fromMemory, c_padToWords);
+		else
+			CompilerUtils(m_context).loadFromMemoryDynamic(*type, !_fromMemory, c_padToWords);
+	if (dynamicParameterCount > 0)
+		m_context << eth::Instruction::POP;
 }
 
 void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)

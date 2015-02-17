@@ -37,14 +37,16 @@ public:
 
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
-	/// @param _bytes number of bytes to load
-	/// @param _leftAligned if true, store left aligned on stack (otherwise right aligned)
+	/// @param _type data type to load
 	/// @param _fromCalldata if true, load from calldata, not from memory
 	/// @param _padToWordBoundaries if true, assume the data is padded to word (32 byte) boundaries
-	/// @returns the number of bytes consumed in memory (can be different from _bytes if
-	///          _padToWordBoundaries is true)
-	unsigned loadFromMemory(unsigned _offset, unsigned _bytes = 32, bool _leftAligned = false,
-							bool _fromCalldata = false, bool _padToWordBoundaries = false);
+	/// @returns the number of bytes consumed in memory.
+	unsigned loadFromMemory(unsigned _offset, Type const& _type = IntegerType(256),
+		bool _fromCalldata = false, bool _padToWordBoundaries = false);
+	/// Dynamic version of @see loadFromMemory, expects the memory offset on the stack.
+	/// Stack pre: memory_offset
+	/// Stack post: value... (memory_offset+length)
+	void loadFromMemoryDynamic(Type const& _type, bool _fromCalldata = false, bool _padToWordBoundaries = true);
 	/// Stores data from stack in memory.
 	/// @param _offset offset in memory
 	/// @param _type type of the data on the stack
@@ -93,6 +95,8 @@ public:
 private:
 	/// Prepares the given type for storing in memory by shifting it if necessary.
 	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const;
+	/// Loads type from memory assuming memory offset is on stack top.
+	unsigned loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries);
 	/// Appends a loop that clears a sequence of storage slots (excluding end).
 	/// Stack pre: end_ref start_ref
 	/// Stack post: end_ref
