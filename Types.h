@@ -50,14 +50,16 @@ using TypePointers = std::vector<TypePointer>;
 class MemberList
 {
 public:
-	using MemberMap = std::map<std::string, TypePointer>;
+	using MemberMap = std::vector<std::pair<std::string, TypePointer>>;
 
 	MemberList() {}
 	explicit MemberList(MemberMap const& _members): m_memberTypes(_members) {}
 	TypePointer getMemberType(std::string const& _name) const
 	{
-		auto it = m_memberTypes.find(_name);
-		return it != m_memberTypes.end() ? it->second : TypePointer();
+		for (auto const& it: m_memberTypes)
+			if (it.first == _name)
+				return it.second;
+		return TypePointer();
 	}
 
 	MemberMap::const_iterator begin() const { return m_memberTypes.begin(); }
