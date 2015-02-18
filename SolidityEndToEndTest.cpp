@@ -2273,6 +2273,21 @@ BOOST_AUTO_TEST_CASE(store_bytes)
 	BOOST_CHECK(callContractFunction("save()", "abcdefg") == encodeArgs(24));
 }
 
+BOOST_AUTO_TEST_CASE(bytes_from_calldata_to_memory)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function() returns (hash) {
+				return sha3("abc", msg.data);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	bytes calldata1 = bytes(61, 0x22) + bytes(12, 0x12);
+	sendMessage(calldata1, false);
+	BOOST_CHECK(m_output == encodeArgs(dev::sha3(bytes{'a', 'b', 'c'} + calldata1)));
+}
+
 BOOST_AUTO_TEST_CASE(call_forward_bytes)
 {
 	char const* sourceCode = R"(
@@ -2422,6 +2437,144 @@ BOOST_AUTO_TEST_CASE(bytes_length_member)
 	BOOST_CHECK(callContractFunction("getLength()") == encodeArgs(0));
 	BOOST_CHECK(callContractFunction("set()", 1, 2) == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("getLength()") == encodeArgs(4+32+32));
+}
+
+BOOST_AUTO_TEST_CASE(struct_copy)
+{
+	char const* sourceCode = R"(
+		contract c {
+			struct Nested { uint x; uint y; }
+			struct Struct { uint a; mapping(uint => Struct) b; Nested nested; uint c; }
+			mapping(uint => Struct) public data;
+			function set(uint k) returns (bool) {
+				data[k].a = 1;
+				data[k].nested.x = 3;
+				data[k].nested.y = 4;
+				data[k].c = 2;
+				return true;
+			}
+			function copy(uint from, uint to) returns (bool) {
+				data[to] = data[from];
+				return true;
+			}
+			function retrieve(uint k) returns (uint a, uint x, uint y, uint c)
+			{
+				a = data[k].a;
+				x = data[k].nested.x;
+				y = data[k].nested.y;
+				c = data[k].c;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("set(uint256)", 7) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("retrieve(uint256)", 7) == encodeArgs(1, 3, 4, 2));
+	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 7, 8) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("retrieve(uint256)", 7) == encodeArgs(1, 3, 4, 2));
+	BOOST_CHECK(callContractFunction("retrieve(uint256)", 8) == encodeArgs(1, 3, 4, 2));
+	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 0, 7) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("retrieve(uint256)", 7) == encodeArgs(0, 0, 0, 0));
+	BOOST_CHECK(callContractFunction("retrieve(uint256)", 8) == encodeArgs(1, 3, 4, 2));
+	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 7, 8) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("retrieve(uint256)", 8) == encodeArgs(0, 0, 0, 0));
+}
+
+BOOST_AUTO_TEST_CASE(struct_copy_via_local)
+{
+	char const* sourceCode = R"(
+		contract c {
+			struct Struct { uint a; uint b; }
+			Struct data1;
+			Struct data2;
+			function test() returns (bool) {
+				data1.a = 1;
+				data1.b = 2;
+				var x = data1;
+				data2 = x;
+				return data2.a == data1.a && data2.b == data1.b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(using_enums)
+{
+	char const* sourceCode = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					choices = ActionChoices.GoStraight;
+				}
+				function getChoice() returns (uint d)
+				{
+					d = uint256(choices);
+				}
+				ActionChoices choices;
+			}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getChoice()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(constructing_enums_from_ints)
+{
+	char const* sourceCode = R"(
+			contract c {
+				enum Truth { False, True }
+				function test() returns (uint)
+				{
+					return uint(Truth(uint8(0x701)));
+				}
+			}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(external_function)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) returns (uint) { return a; }
+			function test(uint a, uint b) external returns (uint r_a, uint r_b) {
+				r_a = f(a + 7);
+				r_b = b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test(uint256,uint256)", 2, 3) == encodeArgs(2+7, 3));
+}
+
+BOOST_AUTO_TEST_CASE(bytes_in_arguments)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint result;
+			function f(uint a, uint b) { result += a + b; }
+			function g(uint a) { result *= a; }
+			function test(uint a, bytes data1, bytes data2, uint b) external returns (uint r_a, uint r, uint r_b, uint l) {
+				r_a = a;
+				this.call(data1);
+				this.call(data2);
+				r = result;
+				r_b = b;
+				l = data1.length;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	string innercalldata1 = asString(FixedHash<4>(dev::sha3("f(uint256,uint256)")).asBytes() + encodeArgs(8, 9));
+	bytes calldata1 = encodeArgs(u256(innercalldata1.length()), 12, innercalldata1, 13);
+	string innercalldata2 = asString(FixedHash<4>(dev::sha3("g(uint256)")).asBytes() + encodeArgs(3));
+	bytes calldata = encodeArgs(
+		u256(innercalldata1.length()), u256(innercalldata2.length()),
+		12, innercalldata1, innercalldata2, 13);
+	BOOST_CHECK(callContractFunction("test(uint256,bytes,bytes,uint256)", calldata)
+		== encodeArgs(12, (8 + 9) * 3, 13, u256(innercalldata1.length())));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

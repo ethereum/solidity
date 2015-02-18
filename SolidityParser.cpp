@@ -703,6 +703,56 @@ BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations_in_expression
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
 }
 
+BOOST_AUTO_TEST_CASE(enum_valid_declaration)
+{
+	char const* text = R"(
+		contract c {
+			enum validEnum { Value1, Value2, Value3, Value4 }
+			function c ()
+			{
+				a = foo.Value3;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_enum_declaration)
+{
+	char const* text = R"(
+		contract c {
+			enum foo { }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(malformed_enum_declaration)
+{
+	char const* text = R"(
+		contract c {
+			enum foo { WARNING,}
+		})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(external_function)
+{
+	char const* text = R"(
+		contract c {
+			function x() external {}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(external_variable)
+{
+	char const* text = R"(
+		contract c {
+			uint external x;
+		})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

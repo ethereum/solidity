@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(assignment_to_struct)
 					   "    data = a;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(returns_in_constructor)
@@ -989,6 +989,177 @@ BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
 		contract test {
 			function f() returns(uint d) { return 2 ** 10000000000; }
 		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(enum_member_access)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					choices = ActionChoices.GoStraight;
+				}
+				ActionChoices choices;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					choices = ActionChoices.RunAroundWavingYourHands;
+				}
+				ActionChoices choices;
+			}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					a = uint256(ActionChoices.GoStraight);
+					b = uint64(ActionChoices.Sit);
+				}
+				uint256 a;
+				uint64 b;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					a = 2;
+					b = ActionChoices(a);
+				}
+				uint256 a;
+				ActionChoices b;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					a = ActionChoices.GoStraight;
+					b = ActionChoices.Sit;
+				}
+				uint256 a;
+				uint64 b;
+			}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(enum_duplicate_values)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoLeft, Sit }
+			}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(private_visibility)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() private {}
+		}
+		contract derived is base {
+			function g() { f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(private_visibility_via_explicit_base_access)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() private {}
+		}
+		contract derived is base {
+			function g() { base.f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_visibility)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f() external {}
+			function g() { f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(external_base_visibility)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() external {}
+		}
+		contract derived is base {
+			function g() { base.f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_assign)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { a = 1; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_increment)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { a++; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_delete)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { delete a; }
+		}
+		)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
