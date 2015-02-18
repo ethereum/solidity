@@ -186,8 +186,8 @@ Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
 	if (_token == Token::Public)
 		visibility = Declaration::Visibility::Public;
-	else if (_token == Token::Protected)
-		visibility = Declaration::Visibility::Protected;
+	else if (_token == Token::Inheritable)
+		visibility = Declaration::Visibility::Inheritable;
 	else if (_token == Token::Private)
 		visibility = Declaration::Visibility::Private;
 	else if (_token == Token::External)

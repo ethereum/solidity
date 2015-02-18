@@ -162,7 +162,7 @@ namespace solidity
 	K(New, "new", 0)                                                   \
 	K(Public, "public", 0)                                             \
 	K(Private, "private", 0)                                           \
-	K(Protected, "protected", 0)                                       \
+	K(Inheritable, "inheritable", 0)                                   \
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
 	K(Struct, "struct", 0)                                             \
@@ -380,7 +380,7 @@ public:
 	static bool isCountOp(Value op) { return op == Inc || op == Dec; }
 	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
 	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }
-	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Protected; }
+	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Inheritable; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == Token::SubEther; }
 
 	// Returns a string corresponding to the JS token string
