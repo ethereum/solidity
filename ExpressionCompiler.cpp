@@ -1119,9 +1119,13 @@ void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, Location co
 		{
 			solAssert(_sourceType.getCategory() == m_dataType->getCategory(), "");
 			if (m_dataType->getCategory() == Type::Category::ByteArray)
+			{
 				CompilerUtils(*m_context).copyByteArrayToStorage(
 							dynamic_cast<ByteArrayType const&>(*m_dataType),
 							dynamic_cast<ByteArrayType const&>(_sourceType));
+				if (_move)
+					*m_context << eth::Instruction::POP;
+			}
 			else if (m_dataType->getCategory() == Type::Category::Struct)
 			{
 				// stack layout: source_ref target_ref
@@ -1136,12 +1140,14 @@ void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, Location co
 					*m_context << structType.getStorageOffsetOfMember(member.first)
 							   << eth::Instruction::DUP3 << eth::Instruction::DUP2
 							   << eth::Instruction::ADD;
+					// stack: source_ref target_ref member_offset source_member_ref
 					LValue rightHandSide(*m_context, LValueType::Storage, memberType);
 					rightHandSide.retrieveValue(_location, true);
-					// stack: source_ref target_ref offset source_value...
+					// stack: source_ref target_ref member_offset source_value...
 					*m_context << eth::dupInstruction(2 + memberType->getSizeOnStack())
 							   << eth::dupInstruction(2 + memberType->getSizeOnStack())
 							   << eth::Instruction::ADD;
+					// stack: source_ref target_ref member_offset source_value... target_member_ref
 					LValue memberLValue(*m_context, LValueType::Storage, memberType);
 					memberLValue.storeValue(*memberType, _location, true);
 					*m_context << eth::Instruction::POP;
@@ -1189,6 +1195,23 @@ void ExpressionCompiler::LValue::setToZero(Location const& _location) const
 	case LValueType::Storage:
 		if (m_dataType->getCategory() == Type::Category::ByteArray)
 			CompilerUtils(*m_context).clearByteArray(dynamic_cast<ByteArrayType const&>(*m_dataType));
+		else if (m_dataType->getCategory() == Type::Category::Struct)
+		{
+			// stack layout: ref
+			auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
+			for (auto const& member: structType.getMembers())
+			{
+				// zero each member that is not a mapping
+				TypePointer const& memberType = member.second;
+				if (memberType->getCategory() == Type::Category::Mapping)
+					continue;
+				*m_context << structType.getStorageOffsetOfMember(member.first)
+					<< eth::Instruction::DUP2 << eth::Instruction::ADD;
+				LValue memberValue(*m_context, LValueType::Storage, memberType);
+				memberValue.setToZero();
+			}
+			*m_context << eth::Instruction::POP;
+		}
 		else
 		{
 			if (m_size == 0)
