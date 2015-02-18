@@ -1083,6 +1083,86 @@ BOOST_AUTO_TEST_CASE(enum_duplicate_values)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
 }
 
+BOOST_AUTO_TEST_CASE(private_visibility)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() private {}
+		}
+		contract derived is base {
+			function g() { f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(private_visibility_via_explicit_base_access)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() private {}
+		}
+		contract derived is base {
+			function g() { base.f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_visibility)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f() external {}
+			function g() { f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(external_base_visibility)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() external {}
+		}
+		contract derived is base {
+			function g() { base.f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_assign)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { a = 1; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_increment)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { a++; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_delete)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { delete a; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -735,6 +735,24 @@ BOOST_AUTO_TEST_CASE(malformed_enum_declaration)
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
+BOOST_AUTO_TEST_CASE(external_function)
+{
+	char const* text = R"(
+		contract c {
+			function x() external {}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(external_variable)
+{
+	char const* text = R"(
+		contract c {
+			uint external x;
+		})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
