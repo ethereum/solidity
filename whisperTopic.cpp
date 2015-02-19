@@ -30,6 +30,7 @@ using namespace dev::shh;
 
 BOOST_AUTO_TEST_SUITE(whisper)
 
+#if ALEX_HASH_FIXED_NETWORKING
 BOOST_AUTO_TEST_CASE(topic)
 {
 	cnote << "Testing Whisper...";
@@ -293,5 +294,6 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 
 	BOOST_REQUIRE_EQUAL(result, 1);
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
