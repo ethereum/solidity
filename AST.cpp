@@ -274,15 +274,6 @@ TypePointer FunctionDefinition::getType(ContractDefinition const*) const
 
 void FunctionDefinition::checkTypeRequirements()
 {
-	// change all byte arrays parameters to point to calldata
-	if (getVisibility() == Visibility::External)
-		for (ASTPointer<VariableDeclaration> const& var: getParameters())
-		{
-			auto const& type = var->getType();
-			solAssert(!!type, "");
-			if (auto const* byteArrayType = dynamic_cast<ByteArrayType const*>(type.get()))
-				var->setType(byteArrayType->copyForLocation(ByteArrayType::Location::CallData));
-		}
 	for (ASTPointer<VariableDeclaration> const& var: getParameters() + getReturnParameters())
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
@@ -299,16 +290,14 @@ string FunctionDefinition::getCanonicalSignature() const
 
 bool VariableDeclaration::isLValue() const
 {
-	if (auto const* function = dynamic_cast<FunctionDefinition const*>(getScope()))
-		if (function->getVisibility() == Declaration::Visibility::External && isFunctionParameter())
-			return false;
-	return true;
+	// External function parameters are Read-Only
+	return !isExternalFunctionParameter();
 }
 
-bool VariableDeclaration::isFunctionParameter() const
+bool VariableDeclaration::isExternalFunctionParameter() const
 {
 	auto const* function = dynamic_cast<FunctionDefinition const*>(getScope());
-	if (!function)
+	if (!function || function->getVisibility() != Declaration::Visibility::External)
 		return false;
 	for (auto const& variable: function->getParameters())
 		if (variable.get() == this)

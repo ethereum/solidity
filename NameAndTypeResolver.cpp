@@ -333,7 +333,13 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 	// or mapping
 	if (_variable.getTypeName())
 	{
-		_variable.setType(_variable.getTypeName()->toType());
+		TypePointer type = _variable.getTypeName()->toType();
+		// All byte array parameter types should point to call data
+		if (_variable.isExternalFunctionParameter())
+			if (auto const* byteArrayType = dynamic_cast<ByteArrayType const*>(type.get()))
+				type = byteArrayType->copyForLocation(ByteArrayType::Location::CallData);
+		_variable.setType(type);
+
 		if (!_variable.getType())
 			BOOST_THROW_EXCEPTION(_variable.getTypeName()->createTypeError("Invalid type name"));
 	}

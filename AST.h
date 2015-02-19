@@ -448,7 +448,7 @@ public:
 
 	virtual bool isLValue() const override;
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
-	bool isFunctionParameter() const;
+	bool isExternalFunctionParameter() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 
