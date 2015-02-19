@@ -651,13 +651,13 @@ BOOST_AUTO_TEST_CASE(visibility_specifiers)
 	char const* text = R"(
 		contract c {
 			uint private a;
-			uint protected b;
+			uint inheritable b;
 			uint public c;
 			uint d;
 			function f() {}
 			function f_priv() private {}
 			function f_public() public {}
-			function f_protected() protected {}
+			function f_inheritable() inheritable {}
 		})";
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 {
 	char const* text = R"(
 		contract c {
-			uint private protected a;
+			uint private inheritable a;
 		})";
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
