@@ -372,7 +372,7 @@ public:
 	static Value AssignmentToBinaryOp(Value op)
 	{
 		solAssert(isAssignmentOp(op) && op != Assign, "");
-		return Token::Value(op + (BitOr - AssignBitOr));
+		return Value(op + (BitOr - AssignBitOr));
 	}
 
 	static bool isBitOp(Value op) { return (BitOr <= op && op <= SHR) || op == BitNot; }

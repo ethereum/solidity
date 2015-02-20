@@ -430,12 +430,21 @@ public:
 				 Location _location = Location::Internal, bool _arbitraryParameters = false):
 		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),
 					 _location, _arbitraryParameters) {}
-	FunctionType(TypePointers const& _parameterTypes, TypePointers const& _returnParameterTypes,
-				 Location _location = Location::Internal,
-				 bool _arbitraryParameters = false, bool _gasSet = false, bool _valueSet = false):
-		m_parameterTypes(_parameterTypes), m_returnParameterTypes(_returnParameterTypes),
-		m_location(_location),
-		m_arbitraryParameters(_arbitraryParameters), m_gasSet(_gasSet), m_valueSet(_valueSet) {}
+	FunctionType(
+		TypePointers const&	_parameterTypes,
+		TypePointers const&	_returnParameterTypes,
+		Location			_location = Location::Internal,
+		bool				_arbitraryParameters = false,
+		bool				_gasSet = false,
+		bool				_valueSet = false
+	):
+		m_parameterTypes		(_parameterTypes),
+		m_returnParameterTypes	(_returnParameterTypes),
+		m_location				(_location),
+		m_arbitraryParameters	(_arbitraryParameters),
+		m_gasSet				(_gasSet),
+		m_valueSet				(_valueSet)
+	{}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
 	std::vector<std::string> const& getParameterNames() const { return m_parameterNames; }
@@ -490,7 +499,7 @@ private:
 	bool const m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
-	bool m_isConstant;
+	bool m_isConstant = false;
 	mutable std::unique_ptr<MemberList> m_members;
 	Declaration const* m_declaration = nullptr;
 };
