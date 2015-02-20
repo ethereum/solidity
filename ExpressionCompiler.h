@@ -137,7 +137,7 @@ private:
 
 		/// Set type according to the declaration and retrieve the reference.
 		/// @a _declaration is the variable declaration
-		void fromStateVariable(VariableDeclaration const& _declaration);
+		void fromVariableDeclaration(const Declaration &_declaration);
 
 		void reset() { m_type = LValueType::None; m_dataType.reset(); m_baseStackOffset = 0; m_size = 0; }
 

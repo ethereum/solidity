@@ -64,7 +64,7 @@ void ExpressionCompiler::appendStateVariableInitialization(CompilerContext& _con
 
 void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration const& _varDecl)
 {
-	m_currentLValue.fromStateVariable(_varDecl);
+	m_currentLValue.fromVariableDeclaration(_varDecl);
 	m_currentLValue.storeValue(*_varDecl.getType(), _varDecl.getLocation());
 	m_currentLValue.reset();
 }
@@ -1024,22 +1024,17 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 		m_baseStackOffset = m_context->getBaseStackOffsetOfVariable(_declaration);
 	}
 	else if (m_context->isStateVariable(&_declaration))
-	{
-		*m_context << m_context->getStorageLocationOfVariable(_declaration);
-		m_type = LValueType::Storage;
-		m_dataType = _identifier.getType();
-		solAssert(m_dataType->getStorageSize() <= numeric_limits<unsigned>::max(),
-				  "The storage size of " + m_dataType->toString() + " should fit in an unsigned");
-		m_size = unsigned(m_dataType->getStorageSize());
-	}
+	//{
+		fromVariableDeclaration(_declaration);
+	//}
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_identifier.getLocation())
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
 }
 
-void ExpressionCompiler::LValue::fromStateVariable(VariableDeclaration const& _declaration)
+void ExpressionCompiler::LValue::fromVariableDeclaration(Declaration const& _declaration)
 {
-	solAssert(m_context->isStateVariable(&_declaration), "Not a state variable.");
+	//solAssert(m_context->isStateVariable(&_declaration), "Not a state variable.");
 	*m_context << m_context->getStorageLocationOfVariable(_declaration);
 	m_type = LValueType::Storage;
 	m_dataType = _declaration.getType();

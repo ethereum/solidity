@@ -251,7 +251,7 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 
 void Compiler::initializeStateVariables(ContractDefinition const& _contract)
 {
-	for(ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
+	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		if (variable->getValue())
 		{
 			compileExpression(*(variable->getValue()), (variable->getValue())->getType());
