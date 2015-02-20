@@ -480,6 +480,7 @@ BOOST_AUTO_TEST_CASE(statement_starting_with_type_conversion)
 	char const* text = "contract test {\n"
 					   "  function fun() {\n"
 					   "    uint64(2);\n"
+					   "    uint64[7](3);\n"
 					   "  }\n"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseText(text));
@@ -751,6 +752,45 @@ BOOST_AUTO_TEST_CASE(external_variable)
 			uint external x;
 		})";
 	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(arrays_in_storage)
+{
+	char const* text = R"(
+		contract c {
+			uint[10] a;
+			uint[] a2;
+			struct x { uint[2**20] b; y[0] c; }
+			struct y { uint d; mapping(uint=>x)[] e; }
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(arrays_in_events)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint[10] a, string7[8] indexed b, c[3] x);
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(arrays_in_expressions)
+{
+	char const* text = R"(
+		contract c {
+			function f() { c[10] a = 7; uint8[10 * 2] x; }
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(multi_arrays)
+{
+	char const* text = R"(
+		contract c {
+			mapping(uint => mapping(uint => int8)[8][][9])[] x;
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

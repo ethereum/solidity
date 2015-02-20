@@ -1176,6 +1176,15 @@ BOOST_AUTO_TEST_CASE(test_for_bug_override_function_with_bytearray_type)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(sourceCode));
 }
 
+BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
+{
+	char const* text = R"(
+		contract c {
+			function f(uint a) { uint8[a] x; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
