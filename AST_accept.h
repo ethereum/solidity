@@ -214,6 +214,7 @@ void VariableDeclaration::accept(ASTConstVisitor& _visitor) const
 		if (m_value)
 			m_value->accept(_visitor);
 	}
+	_visitor.endVisit(*this);
 }
 
 void ModifierDefinition::accept(ASTVisitor& _visitor)

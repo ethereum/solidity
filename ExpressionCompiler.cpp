@@ -68,9 +68,9 @@ void ExpressionCompiler::appendStateVariableInitialization(CompilerContext& _con
 
 void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration const& _varDecl)
 {
-	LValue lvalue = LValue(m_context);
-	lvalue.fromDeclaration(_varDecl, _varDecl.getValue()->getLocation());
-	lvalue.storeValue(*_varDecl.getType(), _varDecl.getLocation());
+	LValue var = LValue(m_context);
+	var.fromDeclaration(_varDecl, _varDecl.getValue()->getLocation());
+	var.storeValue(*_varDecl.getType(), _varDecl.getLocation());
 }
 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
