@@ -451,7 +451,7 @@ public:
 
 	virtual bool isLValue() const override;
 
-	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
+	/// Calls checkTypeRequirments for all state variables.
 	void checkTypeRequirements();
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
 	bool isExternalFunctionParameter() const;

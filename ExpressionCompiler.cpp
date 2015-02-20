@@ -58,15 +58,19 @@ void ExpressionCompiler::appendStateVariableAccessor(CompilerContext& _context, 
 
 void ExpressionCompiler::appendStateVariableInitialization(CompilerContext& _context, VariableDeclaration const& _varDecl, bool _optimize)
 {
+	compileExpression(_context, *(_varDecl.getValue()), _optimize);
+	if (_varDecl.getValue()->getType())
+		appendTypeConversion(_context, *(_varDecl.getValue())->getType(), *(_varDecl.getValue())->getType());
+
 	ExpressionCompiler compiler(_context, _optimize);
 	compiler.appendStateVariableInitialization(_varDecl);
 }
 
 void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration const& _varDecl)
 {
-	m_currentLValue.fromVariableDeclaration(_varDecl);
-	m_currentLValue.storeValue(*_varDecl.getType(), _varDecl.getLocation());
-	m_currentLValue.reset();
+	LValue lvalue = LValue(m_context);
+	lvalue.fromVariableDeclaration(_varDecl);
+	lvalue.storeValue(*_varDecl.getType(), _varDecl.getLocation());
 }
 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
@@ -1024,9 +1028,7 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 		m_baseStackOffset = m_context->getBaseStackOffsetOfVariable(_declaration);
 	}
 	else if (m_context->isStateVariable(&_declaration))
-	//{
 		fromVariableDeclaration(_declaration);
-	//}
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_identifier.getLocation())
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
@@ -1034,7 +1036,6 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 
 void ExpressionCompiler::LValue::fromVariableDeclaration(Declaration const& _declaration)
 {
-	//solAssert(m_context->isStateVariable(&_declaration), "Not a state variable.");
 	*m_context << m_context->getStorageLocationOfVariable(_declaration);
 	m_type = LValueType::Storage;
 	m_dataType = _declaration.getType();

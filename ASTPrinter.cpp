@@ -227,7 +227,7 @@ bool ASTPrinter::visit(Return const& _node)
 
 bool ASTPrinter::visit(VariableDeclarationStatement const& _node)
 {
-	writeLine("VariableDefinition");
+	writeLine("VariableDeclarationStatement");
 	printSourcePart(_node);
 	return goDeeper();
 }

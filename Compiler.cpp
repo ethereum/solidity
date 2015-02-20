@@ -253,10 +253,7 @@ void Compiler::initializeStateVariables(ContractDefinition const& _contract)
 {
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		if (variable->getValue())
-		{
-			compileExpression(*(variable->getValue()), (variable->getValue())->getType());
 			ExpressionCompiler::appendStateVariableInitialization(m_context, *variable);
-		}
 }
 
 bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
