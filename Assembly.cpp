@@ -441,7 +441,7 @@ Assembly& Assembly::optimise(bool _enable)
 			if (i.type() == PushTag)
 				tags.erase(i.data());
 
-		if (tags.empty())
+		if (!tags.empty())
 		{
 			auto t = *tags.begin();
 			unsigned i = t.second;
