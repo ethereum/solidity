@@ -58,14 +58,15 @@ CompilerStack::CompilerStack(bool _addStandardSources):
 	m_addStandardSources(_addStandardSources), m_parseSuccessful(false)
 {
 	if (m_addStandardSources)
-		addSources(StandardSources);
+		addSources(StandardSources, true); // add them as libraries
 }
 
-bool CompilerStack::addSource(string const& _name, string const& _content)
+bool CompilerStack::addSource(string const& _name, string const& _content, bool _isLibrary)
 {
 	bool existed = m_sources.count(_name) != 0;
 	reset(true);
 	m_sources[_name].scanner = make_shared<Scanner>(CharStream(expanded(_content)), _name);
+	m_sources[_name].isLibrary = _isLibrary;
 	return existed;
 }
 
@@ -328,7 +329,8 @@ void CompilerStack::resolveImports()
 	};
 
 	for (auto const& sourcePair: m_sources)
-		toposort(&sourcePair.second);
+		if (!sourcePair.second.isLibrary)
+			toposort(&sourcePair.second);
 
 	swap(m_sourceOrder, sourceOrder);
 }
