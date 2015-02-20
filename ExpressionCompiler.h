@@ -132,12 +132,8 @@ private:
 			   std::shared_ptr<Type const> const& _dataType, unsigned _baseStackOffset = 0);
 
 		/// Set type according to the declaration and retrieve the reference.
-		/// @a _identifier is the current identifier
-		void fromIdentifier(Identifier const& _identifier, Declaration const& _declaration);
-
-		/// Set type according to the declaration and retrieve the reference.
-		/// @a _declaration is the variable declaration
-		void fromVariableDeclaration(const Declaration &_declaration);
+		/// @a _location is the current location
+		void fromDeclaration(Declaration const& _declaration, Location const& _location);
 
 		void reset() { m_type = LValueType::None; m_dataType.reset(); m_baseStackOffset = 0; m_size = 0; }
 

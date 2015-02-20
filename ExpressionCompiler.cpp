@@ -69,7 +69,7 @@ void ExpressionCompiler::appendStateVariableInitialization(CompilerContext& _con
 void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration const& _varDecl)
 {
 	LValue lvalue = LValue(m_context);
-	lvalue.fromVariableDeclaration(_varDecl);
+	lvalue.fromDeclaration(_varDecl, _varDecl.getValue()->getLocation());
 	lvalue.storeValue(*_varDecl.getType(), _varDecl.getLocation());
 }
 
@@ -588,7 +588,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
 	else if (dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		m_currentLValue.fromIdentifier(_identifier, *declaration);
+		m_currentLValue.fromDeclaration(*declaration, _identifier.getLocation());
 		m_currentLValue.retrieveValueIfLValueNotRequested(_identifier);
 	}
 	else if (dynamic_cast<ContractDefinition const*>(declaration))
@@ -1018,30 +1018,27 @@ ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType
 		m_size = unsigned(m_dataType->getSizeOnStack());
 }
 
-void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, Declaration const& _declaration)
+void ExpressionCompiler::LValue::fromDeclaration(Declaration const& _declaration, Location const& _location)
 {
 	if (m_context->isLocalVariable(&_declaration))
 	{
 		m_type = LValueType::Stack;
-		m_dataType = _identifier.getType();
+		m_dataType = _declaration.getType();
 		m_size = m_dataType->getSizeOnStack();
 		m_baseStackOffset = m_context->getBaseStackOffsetOfVariable(_declaration);
 	}
 	else if (m_context->isStateVariable(&_declaration))
-		fromVariableDeclaration(_declaration);
+	{
+		*m_context << m_context->getStorageLocationOfVariable(_declaration);
+		m_type = LValueType::Storage;
+		m_dataType = _declaration.getType();
+		solAssert(m_dataType->getStorageSize() <= numeric_limits<unsigned>::max(),
+				  "The storage size of " + m_dataType->toString() + " should fit in an unsigned");
+		m_size = unsigned(m_dataType->getStorageSize());
+	}
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_identifier.getLocation())
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_location)
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
-}
-
-void ExpressionCompiler::LValue::fromVariableDeclaration(Declaration const& _declaration)
-{
-	*m_context << m_context->getStorageLocationOfVariable(_declaration);
-	m_type = LValueType::Storage;
-	m_dataType = _declaration.getType();
-	solAssert(m_dataType->getStorageSize() <= numeric_limits<unsigned>::max(),
-			  "The storage size of " + m_dataType->toString() + " should fit in an unsigned");
-	m_size = unsigned(m_dataType->getStorageSize());
 }
 
 void ExpressionCompiler::LValue::retrieveValue(Location const& _location, bool _remove) const
