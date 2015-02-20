@@ -530,20 +530,21 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			m_context << enumType->getMemberValue(_memberAccess.getMemberName());
 		break;
 	}
-	case Type::Category::ByteArray:
+	case Type::Category::Array:
 	{
-		solAssert(member == "length", "Illegal bytearray member.");
-		auto const& type = dynamic_cast<ByteArrayType const&>(*_memberAccess.getExpression().getType());
+		solAssert(member == "length", "Illegal array member.");
+		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.getExpression().getType());
+		solAssert(type.isByteArray(), "Non byte arrays not yet implemented here.");
 		switch (type.getLocation())
 		{
-		case ByteArrayType::Location::CallData:
+		case ArrayType::Location::CallData:
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 			break;
-		case ByteArrayType::Location::Storage:
+		case ArrayType::Location::Storage:
 			m_context << eth::Instruction::SLOAD;
 			break;
 		default:
-			solAssert(false, "Unsupported byte array location.");
+			solAssert(false, "Unsupported array location.");
 			break;
 		}
 		break;
@@ -1135,11 +1136,11 @@ void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, Location co
 		else
 		{
 			solAssert(_sourceType.getCategory() == m_dataType->getCategory(), "Wrong type conversation for assignment.");
-			if (m_dataType->getCategory() == Type::Category::ByteArray)
+			if (m_dataType->getCategory() == Type::Category::Array)
 			{
 				CompilerUtils(*m_context).copyByteArrayToStorage(
-							dynamic_cast<ByteArrayType const&>(*m_dataType),
-							dynamic_cast<ByteArrayType const&>(_sourceType));
+							dynamic_cast<ArrayType const&>(*m_dataType),
+							dynamic_cast<ArrayType const&>(_sourceType));
 				if (_move)
 					*m_context << eth::Instruction::POP;
 			}
@@ -1210,8 +1211,8 @@ void ExpressionCompiler::LValue::setToZero(Location const& _location) const
 		break;
 	}
 	case LValueType::Storage:
-		if (m_dataType->getCategory() == Type::Category::ByteArray)
-			CompilerUtils(*m_context).clearByteArray(dynamic_cast<ByteArrayType const&>(*m_dataType));
+		if (m_dataType->getCategory() == Type::Category::Array)
+			CompilerUtils(*m_context).clearByteArray(dynamic_cast<ArrayType const&>(*m_dataType));
 		else if (m_dataType->getCategory() == Type::Category::Struct)
 		{
 			// stack layout: ref

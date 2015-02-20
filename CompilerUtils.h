@@ -82,11 +82,11 @@ public:
 	/// Copies a byte array to a byte array in storage.
 	/// Stack pre: [source_reference] target_reference
 	/// Stack post: target_reference
-	void copyByteArrayToStorage(ByteArrayType const& _targetType, ByteArrayType const& _sourceType) const;
+	void copyByteArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const;
 	/// Clears the length and data elements of the byte array referenced on the stack.
 	/// Stack pre: reference
 	/// Stack post:
-	void clearByteArray(ByteArrayType const& _type) const;
+	void clearByteArray(ArrayType const& _type) const;
 
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.

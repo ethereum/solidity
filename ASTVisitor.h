@@ -59,6 +59,7 @@ public:
 	virtual bool visit(ElementaryTypeName&) { return true; }
 	virtual bool visit(UserDefinedTypeName&) { return true; }
 	virtual bool visit(Mapping&) { return true; }
+	virtual bool visit(ArrayTypeName&) { return true; }
 	virtual bool visit(Statement&) { return true; }
 	virtual bool visit(Block&) { return true; }
 	virtual bool visit(PlaceholderStatement&) { return true; }
@@ -102,6 +103,7 @@ public:
 	virtual void endVisit(ElementaryTypeName&) { }
 	virtual void endVisit(UserDefinedTypeName&) { }
 	virtual void endVisit(Mapping&) { }
+	virtual void endVisit(ArrayTypeName&) { }
 	virtual void endVisit(Statement&) { }
 	virtual void endVisit(Block&) { }
 	virtual void endVisit(PlaceholderStatement&) { }
@@ -149,6 +151,7 @@ public:
 	virtual bool visit(ElementaryTypeName const&) { return true; }
 	virtual bool visit(UserDefinedTypeName const&) { return true; }
 	virtual bool visit(Mapping const&) { return true; }
+	virtual bool visit(ArrayTypeName const&) { return true; }
 	virtual bool visit(Statement const&) { return true; }
 	virtual bool visit(Block const&) { return true; }
 	virtual bool visit(PlaceholderStatement const&) { return true; }
@@ -192,6 +195,7 @@ public:
 	virtual void endVisit(ElementaryTypeName const&) { }
 	virtual void endVisit(UserDefinedTypeName const&) { }
 	virtual void endVisit(Mapping const&) { }
+	virtual void endVisit(ArrayTypeName const&) { }
 	virtual void endVisit(Statement const&) { }
 	virtual void endVisit(Block const&) { }
 	virtual void endVisit(PlaceholderStatement const&) { }

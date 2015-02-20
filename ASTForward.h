@@ -53,6 +53,7 @@ class TypeName;
 class ElementaryTypeName;
 class UserDefinedTypeName;
 class Mapping;
+class ArrayTypeName;
 class Statement;
 class Block;
 class PlaceholderStatement;

@@ -36,14 +36,14 @@ const unsigned int CompilerUtils::dataStartOffset = 4;
 unsigned CompilerUtils::loadFromMemory(unsigned _offset, Type const& _type,
 	bool _fromCalldata, bool _padToWordBoundaries)
 {
-	solAssert(_type.getCategory() != Type::Category::ByteArray, "Unable to statically load dynamic type.");
+	solAssert(_type.getCategory() != Type::Category::Array, "Unable to statically load dynamic type.");
 	m_context << u256(_offset);
 	return loadFromMemoryHelper(_type, _fromCalldata, _padToWordBoundaries);
 }
 
 void CompilerUtils::loadFromMemoryDynamic(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
 {
-	solAssert(_type.getCategory() != Type::Category::ByteArray, "Byte arrays not yet implemented.");
+	solAssert(_type.getCategory() != Type::Category::Array, "Arrays not yet implemented.");
 	m_context << eth::Instruction::DUP1;
 	unsigned numBytes = loadFromMemoryHelper(_type, _fromCalldata, _padToWordBoundaries);
 	// update memory counter
@@ -55,7 +55,7 @@ void CompilerUtils::loadFromMemoryDynamic(Type const& _type, bool _fromCalldata,
 
 unsigned CompilerUtils::storeInMemory(unsigned _offset, Type const& _type, bool _padToWordBoundaries)
 {
-	solAssert(_type.getCategory() != Type::Category::ByteArray, "Unable to statically store dynamic type.");
+	solAssert(_type.getCategory() != Type::Category::Array, "Unable to statically store dynamic type.");
 	unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
 	if (numBytes > 0)
 		m_context << u256(_offset) << eth::Instruction::MSTORE;
@@ -64,11 +64,12 @@ unsigned CompilerUtils::storeInMemory(unsigned _offset, Type const& _type, bool 
 
 void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
 {
-	if (_type.getCategory() == Type::Category::ByteArray)
+	if (_type.getCategory() == Type::Category::Array)
 	{
-		auto const& type = dynamic_cast<ByteArrayType const&>(_type);
+		auto const& type = dynamic_cast<ArrayType const&>(_type);
+		solAssert(type.isByteArray(), "Non byte arrays not yet implemented here.");
 
-		if (type.getLocation() == ByteArrayType::Location::CallData)
+		if (type.getLocation() == ArrayType::Location::CallData)
 		{
 			// stack: target source_offset source_len
 			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::DUP5
@@ -79,7 +80,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		}
 		else
 		{
-			solAssert(type.getLocation() == ByteArrayType::Location::Storage, "Memory byte arrays not yet implemented.");
+			solAssert(type.getLocation() == ArrayType::Location::Storage, "Memory byte arrays not yet implemented.");
 			m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
 			// stack here: memory_offset storage_offset length_bytes
 			// jump to end if length is zero
@@ -163,16 +164,18 @@ void CompilerUtils::computeHashStatic(Type const& _type, bool _padToWordBoundari
 	m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
 }
 
-void CompilerUtils::copyByteArrayToStorage(ByteArrayType const& _targetType,
-										   ByteArrayType const& _sourceType) const
+void CompilerUtils::copyByteArrayToStorage(
+	ArrayType const& _targetType, ArrayType const& _sourceType) const
 {
 	// stack layout: [source_ref] target_ref (top)
 	// need to leave target_ref on the stack at the end
-	solAssert(_targetType.getLocation() == ByteArrayType::Location::Storage, "");
+	solAssert(_targetType.getLocation() == ArrayType::Location::Storage, "");
+	solAssert(_targetType.isByteArray(), "Non byte arrays not yet implemented here.");
+	solAssert(_sourceType.isByteArray(), "Non byte arrays not yet implemented here.");
 
 	switch (_sourceType.getLocation())
 	{
-	case ByteArrayType::Location::CallData:
+	case ArrayType::Location::CallData:
 	{
 		// This also assumes that after "length" we only have zeros, i.e. it cannot be used to
 		// slice a byte array from calldata.
@@ -224,7 +227,7 @@ void CompilerUtils::copyByteArrayToStorage(ByteArrayType const& _targetType,
 			<< eth::Instruction::POP << eth::Instruction::POP;
 		break;
 	}
-	case ByteArrayType::Location::Storage:
+	case ArrayType::Location::Storage:
 	{
 		// this copies source to target and also clears target if it was larger
 
@@ -313,9 +316,10 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	return numBytes;
 }
 
-void CompilerUtils::clearByteArray(ByteArrayType const& _type) const
+void CompilerUtils::clearByteArray(ArrayType const& _type) const
 {
-	solAssert(_type.getLocation() == ByteArrayType::Location::Storage, "");
+	solAssert(_type.getLocation() == ArrayType::Location::Storage, "");
+	solAssert(_type.isByteArray(), "Non byte arrays not yet implemented here.");
 
 	// fetch length
 	m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;

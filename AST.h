@@ -441,7 +441,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	TypeName const* getTypeName() const { return m_typeName.get(); }
+	TypeName* getTypeName() { return m_typeName.get(); }
 	ASTPointer<Expression> const& getValue() const { return m_value; }
 
 	/// Returns the declared or inferred type. Can be an empty pointer if no type was explicitly
@@ -588,7 +588,7 @@ public:
 	/// Retrieve the element of the type hierarchy this node refers to. Can return an empty shared
 	/// pointer until the types have been resolved using the @ref NameAndTypeResolver.
 	/// If it returns an empty shared pointer after that, this indicates that the type was not found.
-	virtual std::shared_ptr<Type const> toType() const = 0;
+	virtual std::shared_ptr<Type const> toType() = 0;
 };
 
 /**
@@ -605,7 +605,7 @@ public:
 	}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
-	virtual std::shared_ptr<Type const> toType() const override { return Type::fromElementaryTypeName(m_type); }
+	virtual std::shared_ptr<Type const> toType() override { return Type::fromElementaryTypeName(m_type); }
 
 	Token::Value getTypeName() const { return m_type; }
 
@@ -623,7 +623,7 @@ public:
 		TypeName(_location), m_name(_name), m_referencedDeclaration(nullptr) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
-	virtual std::shared_ptr<Type const> toType() const override { return Type::fromUserDefinedTypeName(*this); }
+	virtual std::shared_ptr<Type const> toType() override { return Type::fromUserDefinedTypeName(*this); }
 
 	ASTString const& getName() const { return *m_name; }
 	void setReferencedDeclaration(Declaration const& _referencedDeclaration) { m_referencedDeclaration = &_referencedDeclaration; }
@@ -646,7 +646,7 @@ public:
 		TypeName(_location), m_keyType(_keyType), m_valueType(_valueType) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
-	virtual std::shared_ptr<Type const> toType() const override { return Type::fromMapping(*this); }
+	virtual TypePointer toType() override { return Type::fromMapping(*m_keyType, *m_valueType); }
 
 	ElementaryTypeName const& getKeyType() const { return *m_keyType; }
 	TypeName const& getValueType() const { return *m_valueType; }
@@ -654,6 +654,27 @@ public:
 private:
 	ASTPointer<ElementaryTypeName> m_keyType;
 	ASTPointer<TypeName> m_valueType;
+};
+
+/**
+ * An array type, can be "typename[]" or "typename[<expression>]".
+ */
+class ArrayTypeName: public TypeName
+{
+public:
+	ArrayTypeName(Location const& _location, ASTPointer<TypeName> const& _baseType,
+			ASTPointer<Expression> const& _length):
+		TypeName(_location), m_baseType(_baseType), m_length(_length) {}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+	virtual std::shared_ptr<Type const> toType() override { return Type::fromArrayTypeName(*m_baseType, m_length.get()); }
+
+	TypeName const& getBaseType() const { return *m_baseType; }
+	Expression const* getLength() const { return m_length.get(); }
+
+private:
+	ASTPointer<TypeName> m_baseType;
+	ASTPointer<Expression> m_length; ///< Length of the array, might be empty.
 };
 
 /// @}

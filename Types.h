@@ -36,8 +36,6 @@ namespace dev
 namespace solidity
 {
 
-// @todo realMxN, dynamic strings, text, arrays
-
 class Type; // forward
 class FunctionType; // forward
 using TypePointer = std::shared_ptr<Type const>;
@@ -78,7 +76,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, Bool, Real, ByteArray,
+		Integer, IntegerConstant, Bool, Real, Array,
 		String, Contract, Struct, Function, Enum,
 		Mapping, Void, TypeType, Modifier, Magic
 	};
@@ -89,8 +87,8 @@ public:
 	static TypePointer fromElementaryTypeName(Token::Value _typeToken);
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 	static TypePointer fromUserDefinedTypeName(UserDefinedTypeName const& _typeName);
-	static TypePointer fromMapping(Mapping const& _typeName);
-	static TypePointer fromFunction(FunctionDefinition const& _function);
+	static TypePointer fromMapping(ElementaryTypeName& _keyType, TypeName& _valueType);
+	static TypePointer fromArrayTypeName(TypeName& _baseTypeName, Expression* _length);
 	/// @}
 
 	/// Auto-detect the proper type for a literal. @returns an empty pointer if the literal does
@@ -283,30 +281,47 @@ public:
 /**
  * The type of a byte array, prototype for a general array.
  */
-class ByteArrayType: public Type
+class ArrayType: public Type
 {
 public:
 	enum class Location { Storage, CallData, Memory };
 
-	virtual Category getCategory() const override { return Category::ByteArray; }
-	explicit ByteArrayType(Location _location): m_location(_location) {}
+	virtual Category getCategory() const override { return Category::Array; }
+
+	/// Constructor for a byte array ("bytes")
+	explicit ArrayType(Location _location):
+		m_location(_location), m_isByteArray(true), m_baseType(std::make_shared<IntegerType>(8)) {}
+	/// Constructor for a dynamically sized array type ("type[]")
+	ArrayType(Location _location, const TypePointer &_baseType):
+		m_location(_location), m_baseType(_baseType) {}
+	/// Constructor for a fixed-size array type ("type[20]")
+	ArrayType(Location _location, const TypePointer &_baseType, u256 const& _length):
+		m_location(_location), m_baseType(_baseType), m_hasDynamicLength(false), m_length(_length) {}
+
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(const Type& _other) const override;
-	virtual bool isDynamicallySized() const { return true; }
+	virtual bool isDynamicallySized() const { return m_hasDynamicLength; }
 	virtual unsigned getSizeOnStack() const override;
-	virtual std::string toString() const override { return "bytes"; }
-	virtual MemberList const& getMembers() const override { return s_byteArrayMemberList; }
+	virtual std::string toString() const override;
+	virtual MemberList const& getMembers() const override { return s_arrayTypeMemberList; }
 
 	Location getLocation() const { return m_location; }
+	bool isByteArray() const { return m_isByteArray; }
+	TypePointer const& getBaseType() const { solAssert(!!m_baseType, ""); return m_baseType;}
+	u256 const& getLength() const { return m_length; }
 
 	/// @returns a copy of this type with location changed to @a _location
 	/// @todo this might move as far up as Type later
-	std::shared_ptr<ByteArrayType> copyForLocation(Location _location) const;
+	std::shared_ptr<ArrayType> copyForLocation(Location _location) const;
 
 private:
 	Location m_location;
-	static const MemberList s_byteArrayMemberList;
+	bool m_isByteArray = false; ///< Byte arrays ("bytes") have different semantics from ordinary arrays.
+	TypePointer m_baseType;
+	bool m_hasDynamicLength = true;
+	u256 m_length;
+	static const MemberList s_arrayTypeMemberList;
 };
 
 /**

@@ -39,7 +39,7 @@ namespace solidity {
 class CompilerContext;
 class Type;
 class IntegerType;
-class ByteArrayType;
+class ArrayType;
 class StaticStringType;
 
 /**
@@ -165,7 +165,7 @@ private:
 		/// Convenience function to retrieve Value from Storage. Specific version of @ref retrieveValue
 		void retrieveValueFromStorage(bool _remove = false) const;
 		/// Copies from a byte array to a byte array in storage, both references on the stack.
-		void copyByteArrayToStorage(ByteArrayType const& _targetType, ByteArrayType const& _sourceType) const;
+		void copyByteArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const;
 
 		CompilerContext* m_context;
 		LValueType m_type = LValueType::None;

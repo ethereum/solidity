@@ -58,7 +58,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 	else if (Token::String0 <= _typeToken && _typeToken <= Token::String32)
 		return make_shared<StaticStringType>(int(_typeToken) - int(Token::String0));
 	else if (_typeToken == Token::Bytes)
-		return make_shared<ByteArrayType>(ByteArrayType::Location::Storage);
+		return make_shared<ArrayType>(ArrayType::Location::Storage);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -83,15 +83,33 @@ TypePointer Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
 	return TypePointer();
 }
 
-TypePointer Type::fromMapping(Mapping const& _typeName)
+TypePointer Type::fromMapping(ElementaryTypeName& _keyType, TypeName& _valueType)
 {
-	TypePointer keyType = _typeName.getKeyType().toType();
+	TypePointer keyType = _keyType.toType();
 	if (!keyType)
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Error resolving type name."));
-	TypePointer valueType = _typeName.getValueType().toType();
+	TypePointer valueType = _valueType.toType();
 	if (!valueType)
-		BOOST_THROW_EXCEPTION(_typeName.getValueType().createTypeError("Invalid type name"));
+		BOOST_THROW_EXCEPTION(_valueType.createTypeError("Invalid type name."));
 	return make_shared<MappingType>(keyType, valueType);
+}
+
+TypePointer Type::fromArrayTypeName(TypeName& _baseTypeName, Expression* _length)
+{
+	TypePointer baseType = _baseTypeName.toType();
+	if (!baseType)
+		BOOST_THROW_EXCEPTION(_baseTypeName.createTypeError("Invalid type name."));
+	if (_length)
+	{
+		if (!_length->getType())
+			_length->checkTypeRequirements();
+		auto const* length = dynamic_cast<IntegerConstantType const*>(_length->getType().get());
+		if (!length)
+			BOOST_THROW_EXCEPTION(_length->createTypeError("Invalid array length."));
+		return make_shared<ArrayType>(ArrayType::Location::Storage, baseType, length->literalValue(nullptr));
+	}
+	else
+		return make_shared<ArrayType>(ArrayType::Location::Storage, baseType);
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -517,27 +535,27 @@ TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
 }
 
-bool ByteArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
+bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 {
 	return _convertTo.getCategory() == getCategory();
 }
 
-TypePointer ByteArrayType::unaryOperatorResult(Token::Value _operator) const
+TypePointer ArrayType::unaryOperatorResult(Token::Value _operator) const
 {
 	if (_operator == Token::Delete)
 		return make_shared<VoidType>();
 	return TypePointer();
 }
 
-bool ByteArrayType::operator==(Type const& _other) const
+bool ArrayType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
-	ByteArrayType const& other = dynamic_cast<ByteArrayType const&>(_other);
+	ArrayType const& other = dynamic_cast<ArrayType const&>(_other);
 	return other.m_location == m_location;
 }
 
-unsigned ByteArrayType::getSizeOnStack() const
+unsigned ArrayType::getSizeOnStack() const
 {
 	if (m_location == Location::CallData)
 		// offset, length (stack top)
@@ -547,12 +565,30 @@ unsigned ByteArrayType::getSizeOnStack() const
 		return 1;
 }
 
-shared_ptr<ByteArrayType> ByteArrayType::copyForLocation(ByteArrayType::Location _location) const
+string ArrayType::toString() const
 {
-	return make_shared<ByteArrayType>(_location);
+	if (isByteArray())
+		return "bytes";
+	string ret = getBaseType()->toString() + "[";
+	if (!isDynamicallySized())
+		ret += getLength().str();
+	return ret + "]";
 }
 
-const MemberList ByteArrayType::s_byteArrayMemberList = MemberList({{"length", make_shared<IntegerType>(256)}});
+shared_ptr<ArrayType> ArrayType::copyForLocation(ArrayType::Location _location) const
+{
+	auto copy = make_shared<ArrayType>(_location);
+	copy->m_isByteArray = m_isByteArray;
+	if (m_baseType->getCategory() == Type::Category::Array)
+		copy->m_baseType = dynamic_cast<ArrayType const&>(*m_baseType).copyForLocation(_location);
+	else
+		copy->m_baseType = m_baseType;
+	copy->m_hasDynamicLength = m_hasDynamicLength;
+	copy->m_length = m_length;
+	return copy;
+}
+
+const MemberList ArrayType::s_arrayTypeMemberList = MemberList({{"length", make_shared<IntegerType>(256)}});
 
 bool ContractType::operator==(Type const& _other) const
 {
@@ -1033,7 +1069,7 @@ MagicType::MagicType(MagicType::Kind _kind):
 		m_members = MemberList({{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"gas", make_shared<IntegerType>(256)},
 								{"value", make_shared<IntegerType>(256)},
-								{"data", make_shared<ByteArrayType>(ByteArrayType::Location::CallData)}});
+								{"data", make_shared<ArrayType>(ArrayType::Location::CallData)}});
 		break;
 	case Kind::Transaction:
 		m_members = MemberList({{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
