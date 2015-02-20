@@ -1,12 +1,19 @@
-ContractDefinition = 'contract' Identifier '{' ContractPart* '}'
-ContractPart = VariableDeclaration ';' | StructDefinition |
-               FunctionDefinition | 'public:' | 'private:'
+ContractDefinition = 'contract' Identifier
+                     ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
+                     '{' ContractPart* '}'
+ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition | FunctionDefinition | EnumDefinition
 
+InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration (';' VariableDeclaration)* )? '}
-
-FunctionDefinition = 'function' Identifier ParameterList 'const'?
+StateVariableDeclaration = TypeName ( 'public' | 'inheritable' | 'private' )? Identifier ';'
+ModifierDefinition = 'modifier' Identifier ParameterList? Block
+FunctionDefinition = 'function' Identifier ParameterList
+					 ( Identifier | 'constant' | 'external' | 'public' | 'inheritable' | 'private' )*
                      ( 'returns' ParameterList )? Block
+
+EnumValue = Identifier
+EnumDefinition = 'enum' '{' EnumValue (',' EnumValue)* '}'
 ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
@@ -33,7 +40,7 @@ Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewE
 // The expression syntax is actually much more complicated
 Assignment = Expression (AssignmentOp Expression)
 FunctionCall = Expression '(' Expression ( ',' Expression )* ')'
-NewExpression = 'new' Identifier '(' ( Expression ( ',' Expression )* ) ')'
+NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expresison ']'
 PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'

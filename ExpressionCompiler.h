@@ -16,13 +16,16 @@
 */
 /**
  * @author Christian <c@ethdev.com>
+ * @author Gav Wood <g@ethdev.com>
  * @date 2014
  * Solidity AST to EVM bytecode compiler for expressions.
  */
 
 #include <functional>
+#include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
+#include <libsolidity/BaseTypes.h>
 #include <libsolidity/ASTVisitor.h>
 
 namespace dev {
@@ -36,6 +39,7 @@ namespace solidity {
 class CompilerContext;
 class Type;
 class IntegerType;
+class ByteArrayType;
 class StaticStringType;
 
 /**
@@ -50,14 +54,17 @@ public:
 	static void compileExpression(CompilerContext& _context, Expression const& _expression, bool _optimize = false);
 
 	/// Appends code to remove dirty higher order bits in case of an implicit promotion to a wider type.
-	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack, Type const& _targetType);
+	static void appendTypeConversion(CompilerContext& _context, Type const& _typeOnStack,
+									 Type const& _targetType, bool _cleanupNeeded = false);
+	/// Appends code for a State Variable accessor function
+	static void appendStateVariableAccessor(CompilerContext& _context, VariableDeclaration const& _varDecl, bool _optimize = false);
 
 private:
 	explicit ExpressionCompiler(CompilerContext& _compilerContext, bool _optimize = false):
 		m_optimize(_optimize), m_context(_compilerContext), m_currentLValue(m_context) {}
 
 	virtual bool visit(Assignment const& _assignment) override;
-	virtual void endVisit(UnaryOperation const& _unaryOperation) override;
+	virtual bool visit(UnaryOperation const& _unaryOperation) override;
 	virtual bool visit(BinaryOperation const& _binaryOperation) override;
 	virtual bool visit(FunctionCall const& _functionCall) override;
 	virtual bool visit(NewExpression const& _newExpression) override;
@@ -85,24 +92,24 @@ private:
 	//// Appends code that cleans higher-order bits for integer types.
 	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
 
-	/// Additional options used in appendExternalFunctionCall.
-	struct FunctionCallOptions
-	{
-		FunctionCallOptions() {}
-		/// Invoked to copy the address to the stack
-		std::function<void()> obtainAddress;
-		/// Invoked to copy the ethe value to the stack (if not specified, value is 0).
-		std::function<void()> obtainValue;
-		/// If true, do not prepend function index to call data
-		bool bare = false;
-		/// If false, use calling convention that all arguments and return values are packed as
-		/// 32 byte values with padding.
-		bool packDensely = true;
-	};
-
 	/// Appends code to call a function of the given type with the given arguments.
 	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
-									FunctionCallOptions const& _options = FunctionCallOptions());
+									bool bare = false);
+	/// Appends code that evaluates the given arguments and moves the result to memory. The memory offset is
+	/// expected to be on the stack and is updated by this call.
+	void appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
+									 TypePointers const& _types = {},
+									 bool _padToWordBoundaries = true,
+									 bool _padExceptionIfFourBytes = false);
+	/// Appends code that moves a stack element of the given type to memory. The memory offset is
+	/// expected below the stack element and is updated by this call.
+	void appendTypeMoveToMemory(Type const& _type, bool _padToWordBoundaries = true);
+	/// Appends code that evaluates a single expression and moves the result to memory. The memory offset is
+	/// expected to be on the stack and is updated by this call.
+	void appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression);
+
+	/// Appends code for a State Variable accessor function
+	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);
 
 	/**
 	 * Helper class to store and retrieve lvalues to and from various locations.
@@ -112,46 +119,55 @@ private:
 	class LValue
 	{
 	public:
-		enum LValueType { NONE, STACK, MEMORY, STORAGE };
+		enum class LValueType { None, Stack, Memory, Storage };
 
 		explicit LValue(CompilerContext& _compilerContext): m_context(&_compilerContext) { reset(); }
-		LValue(CompilerContext& _compilerContext, LValueType _type, Type const& _dataType, unsigned _baseStackOffset = 0);
+		LValue(CompilerContext& _compilerContext, LValueType _type,
+			   std::shared_ptr<Type const> const& _dataType, unsigned _baseStackOffset = 0);
 
 		/// Set type according to the declaration and retrieve the reference.
 		/// @a _expression is the current expression
 		void fromIdentifier(Identifier const& _identifier, Declaration const& _declaration);
-		void reset() { m_type = NONE; m_baseStackOffset = 0; }
+		void reset() { m_type = LValueType::None; m_dataType.reset(); m_baseStackOffset = 0; m_size = 0; }
 
-		bool isValid() const { return m_type != NONE; }
-		bool isInOnStack() const { return m_type == STACK; }
-		bool isInMemory() const { return m_type == MEMORY; }
-		bool isInStorage() const { return m_type == STORAGE; }
+		bool isValid() const { return m_type != LValueType::None; }
+		bool isInOnStack() const { return m_type == LValueType::Stack; }
+		bool isInMemory() const { return m_type == LValueType::Memory; }
+		bool isInStorage() const { return m_type == LValueType::Storage; }
 
 		/// @returns true if this lvalue reference type occupies a slot on the stack.
-		bool storesReferenceOnStack() const { return m_type == STORAGE || m_type == MEMORY; }
+		bool storesReferenceOnStack() const { return m_type == LValueType::Storage || m_type == LValueType::Memory; }
 
 		/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
 		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).
-		/// @a _expression is the current expression, used for error reporting.
-		void retrieveValue(Expression const& _expression, bool _remove = false) const;
-		/// Stores a value (from the stack directly beneath the reference, which is assumed to
-		/// be on the top of the stack, if any) in the lvalue and removes the reference.
-		/// Also removes the stored value from the stack if @a _move is
-		/// true. @a _expression is the current expression, used for error reporting.
-		void storeValue(Expression const& _expression, bool _move = false) const;
-
+		/// @a _location source location of the current expression, used for error reporting.
+		void retrieveValue(Location const& _location, bool _remove = false) const;
+		/// Moves a value from the stack to the lvalue. Removes the value if @a _move is true.
+		/// @a _location is the source location of the expression that caused this operation.
+		/// Stack pre: value [lvalue_ref]
+		/// Stack post if !_move: value_of(lvalue_ref)
+		void storeValue(Type const& _sourceType, Location const& _location = Location(), bool _move = false) const;
+		/// Stores zero in the lvalue.
+		/// @a _location is the source location of the requested operation
+		void setToZero(Location const& _location = Location()) const;
 		/// Convenience function to convert the stored reference to a value and reset type to NONE if
 		/// the reference was not requested by @a _expression.
 		void retrieveValueIfLValueNotRequested(Expression const& _expression);
 
 	private:
+		/// Convenience function to retrieve Value from Storage. Specific version of @ref retrieveValue
+		void retrieveValueFromStorage(bool _remove = false) const;
+		/// Copies from a byte array to a byte array in storage, both references on the stack.
+		void copyByteArrayToStorage(ByteArrayType const& _targetType, ByteArrayType const& _sourceType) const;
+
 		CompilerContext* m_context;
-		LValueType m_type;
+		LValueType m_type = LValueType::None;
+		std::shared_ptr<Type const> m_dataType;
 		/// If m_type is STACK, this is base stack offset (@see
 		/// CompilerContext::getBaseStackOffsetOfVariable) of a local variable.
-		unsigned m_baseStackOffset;
-		/// Size of the value of this lvalue on the stack.
-		unsigned m_stackSize;
+		unsigned m_baseStackOffset = 0;
+		/// Size of the value of this lvalue on the stack or the storage.
+		unsigned m_size = 0;
 	};
 
 	bool m_optimize;

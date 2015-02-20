@@ -20,7 +20,10 @@
  * Solidity AST to EVM bytecode compiler.
  */
 
+#pragma once
+
 #include <ostream>
+#include <functional>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/CompilerContext.h>
 
@@ -30,32 +33,34 @@ namespace solidity {
 class Compiler: private ASTConstVisitor
 {
 public:
-	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_returnTag(m_context.newTag()) {}
+	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_context(),
+		m_returnTag(m_context.newTag()) {}
 
-	void compileContract(ContractDefinition const& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals,
+	void compileContract(ContractDefinition const& _contract,
 						 std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(m_optimize); }
+	bytes getRuntimeBytecode() { return m_runtimeContext.getAssembledBytecode(m_optimize);}
 	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
 
 private:
-	/// Registers the global objects and the non-function objects inside the contract with the context.
-	void initializeContext(ContractDefinition const& _contract, std::vector<MagicVariableDeclaration const*> const& _magicGlobals,
+	/// Registers the non-function objects inside the contract with the context.
+	void initializeContext(ContractDefinition const& _contract,
 						   std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	/// Adds the code that is run at creation time. Should be run after exchanging the run-time context
-	/// with a new and initialized context.
-	/// adds the constructor code.
+	/// with a new and initialized context. Adds the constructor code.
 	void packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext);
+	void appendBaseConstructorCall(FunctionDefinition const& _constructor,
+								   std::vector<ASTPointer<Expression>> const& _arguments);
 	void appendConstructorCall(FunctionDefinition const& _constructor);
-	/// Recursively searches the call graph and returns all functions needed by the constructor (including itself).
-	std::set<FunctionDefinition const*> getFunctionsNeededByConstructor(FunctionDefinition const& _constructor);
 	void appendFunctionSelector(ContractDefinition const& _contract);
-	/// Creates code that unpacks the arguments for the given function, from memory if
-	/// @a _fromMemory is true, otherwise from call data. @returns the size of the data in bytes.
-	unsigned appendCalldataUnpacker(FunctionDefinition const& _function, bool _fromMemory = false);
-	void appendReturnValuePacker(FunctionDefinition const& _function);
+	/// Creates code that unpacks the arguments for the given function represented by a vector of TypePointers.
+	/// From memory if @a _fromMemory is true, otherwise from call data.
+	void appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory = false);
+	void appendReturnValuePacker(TypePointers const& _typeParameters);
 
 	void registerStateVariables(ContractDefinition const& _contract);
 
+	virtual bool visit(VariableDeclaration const& _variableDeclaration) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(IfStatement const& _ifStatement) override;
 	virtual bool visit(WhileStatement const& _whileStatement) override;
@@ -65,14 +70,23 @@ private:
 	virtual bool visit(Return const& _return) override;
 	virtual bool visit(VariableDefinition const& _variableDefinition) override;
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
+	virtual bool visit(PlaceholderStatement const&) override;
 
-	void compileExpression(Expression const& _expression);
+	/// Appends one layer of function modifier code of the current function, or the function
+	/// body itself if the last modifier was reached.
+	void appendModifierOrFunctionCode();
+
+	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
 
 	bool const m_optimize;
 	CompilerContext m_context;
+	CompilerContext m_runtimeContext;
 	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
 	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement
 	eth::AssemblyItem m_returnTag; ///< tag to jump to for a "return" statement
+	unsigned m_modifierDepth = 0;
+	FunctionDefinition const* m_currentFunction;
+	unsigned m_stackCleanupForReturn; ///< this number of stack elements need to be removed before jump to m_returnTag
 };
 
 }

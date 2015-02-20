@@ -48,16 +48,16 @@ public:
 	GlobalContext();
 	void setCurrentContract(ContractDefinition const& _contract);
 	MagicVariableDeclaration const* getCurrentThis() const;
+	MagicVariableDeclaration const* getCurrentSuper() const;
 
-	/// @returns all magic variables.
-	std::vector<MagicVariableDeclaration const*> getMagicVariables() const;
 	/// @returns a vector of all implicit global declarations excluding "this".
 	std::vector<Declaration const*> getDeclarations() const;
 
 private:
 	std::vector<std::shared_ptr<MagicVariableDeclaration const>> m_magicVariables;
-	ContractDefinition const* m_currentContract;
+	ContractDefinition const* m_currentContract = nullptr;
 	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration const>> mutable m_thisPointer;
+	std::map<ContractDefinition const*, std::shared_ptr<MagicVariableDeclaration const>> mutable m_superPointer;
 };
 
 }

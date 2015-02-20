@@ -11,9 +11,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
 aux_source_directory(. SRC_LIST)
 
+include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
+include_directories(BEFORE ..)
 include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${JSONCPP_INCLUDE_DIRS})
-include_directories(..)
 
 set(EXECUTABLE solidity)
 
@@ -28,6 +28,7 @@ endif()
 target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
 target_link_libraries(${EXECUTABLE} evmcore)
 target_link_libraries(${EXECUTABLE} devcore)
+target_link_libraries(${EXECUTABLE} devcrypto)
 
 install( TARGETS ${EXECUTABLE} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )

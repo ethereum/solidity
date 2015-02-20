@@ -16,6 +16,7 @@
 */
 /**
  * @author Christian <c@ethdev.com>
+ * @author Gav Wood <g@ethdev.com>
  * @date 2014
  * Full-stack compiler that converts a source code string to bytecode.
  */
@@ -27,6 +28,7 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev {
 namespace solidity {
@@ -41,10 +43,13 @@ class InterfaceHandler;
 
 enum class DocumentationType: uint8_t
 {
-	NATSPEC_USER = 1,
-	NATSPEC_DEV,
-	ABI_INTERFACE
+	NatspecUser = 1,
+	NatspecDev,
+	ABIInterface,
+	ABISolidityInterface
 };
+
+extern const std::map<std::string, std::string> StandardSources;
 
 /**
  * Easy to use and self-contained Solidity compiler with as few header dependencies as possible.
@@ -54,18 +59,21 @@ enum class DocumentationType: uint8_t
 class CompilerStack: boost::noncopyable
 {
 public:
-	CompilerStack(): m_parseSuccessful(false) {}
+	/// Creates a new compiler stack. Adds standard sources if @a _addStandardSources.
+	explicit CompilerStack(bool _addStandardSources = false);
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
+	void addSources(std::map<std::string, std::string> const& _nameContents) { for (auto const& i: _nameContents) addSource(i.first, i.second); }
 	bool addSource(std::string const& _name, std::string const& _content);
 	void setSource(std::string const& _sourceCode);
 	/// Parses all source units that were added
 	void parse();
-	/// Sets the given source code as the only source unit and parses it.
+	/// Sets the given source code as the only source unit apart from standard sources and parses it.
 	void parse(std::string const& _sourceCode);
 	/// Returns a list of the contract names in the sources.
 	std::vector<std::string> getContractNames() const;
+	std::string defaultContractName() const;
 
 	/// Compiles the source units that were previously added and parsed.
 	void compile(bool _optimize = false);
@@ -73,7 +81,13 @@ public:
 	/// @returns the compiled bytecode
 	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);
 
+	/// @returns the assembled bytecode for a contract.
 	bytes const& getBytecode(std::string const& _contractName = "") const;
+	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
+	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
+	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
+	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
+
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// Prerequisite: Successful compilation.
 	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "") const;
@@ -81,11 +95,14 @@ public:
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& getInterface(std::string const& _contractName = "") const;
+	/// Returns a string representing the contract interface in Solidity.
+	/// Prerequisite: Successful call to parse or compile.
+	std::string const& getSolidityInterface(std::string const& _contractName = "") const;
 	/// Returns a string representing the contract's documentation in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
-	/// Can be one of 3 types defined at @c DocumentationType
-	std::string const& getJsonDocumentation(std::string const& _contractName, DocumentationType _type) const;
+	/// Can be one of 4 types defined at @c DocumentationType
+	std::string const& getMetadata(std::string const& _contractName, DocumentationType _type) const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& getScanner(std::string const& _sourceName = "") const;
@@ -113,16 +130,22 @@ private:
 
 	struct Contract
 	{
-		ContractDefinition const* contract;
+		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
 		bytes bytecode;
+		bytes runtimeBytecode;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;
 		mutable std::unique_ptr<std::string const> interface;
+		mutable std::unique_ptr<std::string const> solidityInterface;
 		mutable std::unique_ptr<std::string const> userDocumentation;
 		mutable std::unique_ptr<std::string const> devDocumentation;
 
 		Contract();
 	};
+
+	/// Expand source code with preprocessor-like includes.
+	/// @todo Replace with better framework.
+	std::string expanded(std::string const& _sourceCode);
 
 	void reset(bool _keepSources = false);
 	void resolveImports();
@@ -130,6 +153,7 @@ private:
 	Contract const& getContract(std::string const& _contractName = "") const;
 	Source const& getSource(std::string const& _sourceName = "") const;
 
+	bool m_addStandardSources; ///< If true, standard sources are added.
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;

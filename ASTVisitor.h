@@ -45,16 +45,23 @@ public:
 	virtual bool visit(SourceUnit&) { return true; }
 	virtual bool visit(ImportDirective&) { return true; }
 	virtual bool visit(ContractDefinition&) { return true; }
+	virtual bool visit(InheritanceSpecifier&) { return true; }
 	virtual bool visit(StructDefinition&) { return true; }
+	virtual bool visit(EnumDefinition&) { return true; }
+	virtual bool visit(EnumValue&) { return true; }
 	virtual bool visit(ParameterList&) { return true; }
 	virtual bool visit(FunctionDefinition&) { return true; }
 	virtual bool visit(VariableDeclaration&) { return true; }
+	virtual bool visit(ModifierDefinition&) { return true; }
+	virtual bool visit(ModifierInvocation&) { return true; }
+	virtual bool visit(EventDefinition&) { return true; }
 	virtual bool visit(TypeName&) { return true; }
 	virtual bool visit(ElementaryTypeName&) { return true; }
 	virtual bool visit(UserDefinedTypeName&) { return true; }
 	virtual bool visit(Mapping&) { return true; }
 	virtual bool visit(Statement&) { return true; }
 	virtual bool visit(Block&) { return true; }
+	virtual bool visit(PlaceholderStatement&) { return true; }
 	virtual bool visit(IfStatement&) { return true; }
 	virtual bool visit(BreakableStatement&) { return true; }
 	virtual bool visit(WhileStatement&) { return true; }
@@ -81,16 +88,23 @@ public:
 	virtual void endVisit(SourceUnit&) { }
 	virtual void endVisit(ImportDirective&) { }
 	virtual void endVisit(ContractDefinition&) { }
+	virtual void endVisit(InheritanceSpecifier&) { }
 	virtual void endVisit(StructDefinition&) { }
+	virtual void endVisit(EnumDefinition&) { }
+	virtual void endVisit(EnumValue&) { }
 	virtual void endVisit(ParameterList&) { }
 	virtual void endVisit(FunctionDefinition&) { }
 	virtual void endVisit(VariableDeclaration&) { }
+	virtual void endVisit(ModifierDefinition&) { }
+	virtual void endVisit(ModifierInvocation&) { }
+	virtual void endVisit(EventDefinition&) { }
 	virtual void endVisit(TypeName&) { }
 	virtual void endVisit(ElementaryTypeName&) { }
 	virtual void endVisit(UserDefinedTypeName&) { }
 	virtual void endVisit(Mapping&) { }
 	virtual void endVisit(Statement&) { }
 	virtual void endVisit(Block&) { }
+	virtual void endVisit(PlaceholderStatement&) { }
 	virtual void endVisit(IfStatement&) { }
 	virtual void endVisit(BreakableStatement&) { }
 	virtual void endVisit(WhileStatement&) { }
@@ -121,16 +135,23 @@ public:
 	virtual bool visit(SourceUnit const&) { return true; }
 	virtual bool visit(ImportDirective const&) { return true; }
 	virtual bool visit(ContractDefinition const&) { return true; }
+	virtual bool visit(InheritanceSpecifier const&) { return true; }
 	virtual bool visit(StructDefinition const&) { return true; }
+	virtual bool visit(EnumDefinition const&) { return true; }
+	virtual bool visit(EnumValue const&) { return true; }
 	virtual bool visit(ParameterList const&) { return true; }
 	virtual bool visit(FunctionDefinition const&) { return true; }
 	virtual bool visit(VariableDeclaration const&) { return true; }
+	virtual bool visit(ModifierDefinition const&) { return true; }
+	virtual bool visit(ModifierInvocation const&) { return true; }
+	virtual bool visit(EventDefinition const&) { return true; }
 	virtual bool visit(TypeName const&) { return true; }
 	virtual bool visit(ElementaryTypeName const&) { return true; }
 	virtual bool visit(UserDefinedTypeName const&) { return true; }
 	virtual bool visit(Mapping const&) { return true; }
 	virtual bool visit(Statement const&) { return true; }
 	virtual bool visit(Block const&) { return true; }
+	virtual bool visit(PlaceholderStatement const&) { return true; }
 	virtual bool visit(IfStatement const&) { return true; }
 	virtual bool visit(BreakableStatement const&) { return true; }
 	virtual bool visit(WhileStatement const&) { return true; }
@@ -157,16 +178,23 @@ public:
 	virtual void endVisit(SourceUnit const&) { }
 	virtual void endVisit(ImportDirective const&) { }
 	virtual void endVisit(ContractDefinition const&) { }
+	virtual void endVisit(InheritanceSpecifier const&) { }
 	virtual void endVisit(StructDefinition const&) { }
+	virtual void endVisit(EnumDefinition const&) { }
+	virtual void endVisit(EnumValue const&) { }
 	virtual void endVisit(ParameterList const&) { }
 	virtual void endVisit(FunctionDefinition const&) { }
 	virtual void endVisit(VariableDeclaration const&) { }
+	virtual void endVisit(ModifierDefinition const&) { }
+	virtual void endVisit(ModifierInvocation const&) { }
+	virtual void endVisit(EventDefinition const&) { }
 	virtual void endVisit(TypeName const&) { }
 	virtual void endVisit(ElementaryTypeName const&) { }
 	virtual void endVisit(UserDefinedTypeName const&) { }
 	virtual void endVisit(Mapping const&) { }
 	virtual void endVisit(Statement const&) { }
 	virtual void endVisit(Block const&) { }
+	virtual void endVisit(PlaceholderStatement const&) { }
 	virtual void endVisit(IfStatement const&) { }
 	virtual void endVisit(BreakableStatement const&) { }
 	virtual void endVisit(WhileStatement const&) { }

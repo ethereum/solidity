@@ -28,7 +28,7 @@
 
 #include <string>
 #include <memory>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 namespace dev
 {
@@ -41,19 +41,19 @@ enum class DocumentationType: uint8_t;
 
 enum class DocTagType: uint8_t
 {
-	NONE = 0,
-	DEV,
-	NOTICE,
-	PARAM,
-	RETURN,
-	AUTHOR,
-	TITLE
+	None = 0,
+	Dev,
+	Notice,
+	Param,
+	Return,
+	Author,
+	Title
 };
 
 enum class CommentOwner
 {
-	CONTRACT,
-	FUNCTION
+	Contract,
+	Function
 };
 
 class InterfaceHandler
@@ -74,6 +74,7 @@ public:
 	/// @return             A unique pointer contained string with the json
 	///                     representation of the contract's ABI Interface
 	std::unique_ptr<std::string> getABIInterface(ContractDefinition const& _contractDef);
+	std::unique_ptr<std::string> getABISolidityInterface(ContractDefinition const& _contractDef);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json

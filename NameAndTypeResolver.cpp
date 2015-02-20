@@ -31,7 +31,6 @@ namespace dev
 namespace solidity
 {
 
-
 NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration const*> const& _globals)
 {
 	for (Declaration const* declaration: _globals)
@@ -46,18 +45,36 @@ void NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
 
 void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
+	m_currentScope = &m_scopes[nullptr];
+
+	for (ASTPointer<InheritanceSpecifier> const& baseContract: _contract.getBaseContracts())
+		ReferencesResolver resolver(*baseContract, *this, &_contract, nullptr);
+
 	m_currentScope = &m_scopes[&_contract];
+
+	linearizeBaseContracts(_contract);
+	for (ContractDefinition const* base: _contract.getLinearizedBaseContracts())
+		importInheritedScope(*base);
+
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
-		ReferencesResolver resolver(*structDef, *this, nullptr);
+		ReferencesResolver resolver(*structDef, *this, &_contract, nullptr);
+	for (ASTPointer<EnumDefinition> const& enumDef: _contract.getDefinedEnums())
+		ReferencesResolver resolver(*enumDef, *this, &_contract, nullptr);
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
-		ReferencesResolver resolver(*variable, *this, nullptr);
+		ReferencesResolver resolver(*variable, *this, &_contract, nullptr);
+	for (ASTPointer<EventDefinition> const& event: _contract.getEvents())
+		ReferencesResolver resolver(*event, *this, &_contract, nullptr);
+	for (ASTPointer<ModifierDefinition> const& modifier: _contract.getFunctionModifiers())
+	{
+		m_currentScope = &m_scopes[modifier.get()];
+		ReferencesResolver resolver(*modifier, *this, &_contract, nullptr);
+	}
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
 	{
 		m_currentScope = &m_scopes[function.get()];
-		ReferencesResolver referencesResolver(*function, *this,
+		ReferencesResolver referencesResolver(*function, *this, &_contract,
 											  function->getReturnParameterList().get());
 	}
-	m_currentScope = &m_scopes[nullptr];
 }
 
 void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
@@ -69,7 +86,7 @@ void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
 
 void NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 {
-	m_scopes[nullptr].registerDeclaration(_declaration, true);
+	m_scopes[nullptr].registerDeclaration(_declaration, false, true);
 	solAssert(_declaration.getScope() == nullptr, "Updated declaration outside global scope.");
 }
 
@@ -84,6 +101,98 @@ Declaration const* NameAndTypeResolver::resolveName(ASTString const& _name, Decl
 Declaration const* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
 {
 	return m_currentScope->resolveName(_name, _recursive);
+}
+
+void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
+{
+	auto iterator = m_scopes.find(&_base);
+	solAssert(iterator != end(m_scopes), "");
+	for (auto const& nameAndDeclaration: iterator->second.getDeclarations())
+	{
+		Declaration const* declaration = nameAndDeclaration.second;
+		// Import if it was declared in the base, is not the constructor and is visible in derived classes
+		if (declaration->getScope() == &_base && declaration->getName() != _base.getName() &&
+				declaration->isVisibleInDerivedContracts())
+			m_currentScope->registerDeclaration(*declaration);
+	}
+}
+
+void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract) const
+{
+	// order in the lists is from derived to base
+	// list of lists to linearize, the last element is the list of direct bases
+	list<list<ContractDefinition const*>> input(1, {});
+	for (ASTPointer<InheritanceSpecifier> const& baseSpecifier: _contract.getBaseContracts())
+	{
+		ASTPointer<Identifier> baseName = baseSpecifier->getName();
+		ContractDefinition const* base = dynamic_cast<ContractDefinition const*>(
+														baseName->getReferencedDeclaration());
+		if (!base)
+			BOOST_THROW_EXCEPTION(baseName->createTypeError("Contract expected."));
+		// "push_front" has the effect that bases mentioned later can overwrite members of bases
+		// mentioned earlier
+		input.back().push_front(base);
+		vector<ContractDefinition const*> const& basesBases = base->getLinearizedBaseContracts();
+		if (basesBases.empty())
+			BOOST_THROW_EXCEPTION(baseName->createTypeError("Definition of base has to precede definition of derived contract"));
+		input.push_front(list<ContractDefinition const*>(basesBases.begin(), basesBases.end()));
+	}
+	input.back().push_front(&_contract);
+	vector<ContractDefinition const*> result = cThreeMerge(input);
+	if (result.empty())
+		BOOST_THROW_EXCEPTION(_contract.createTypeError("Linearization of inheritance graph impossible"));
+	_contract.setLinearizedBaseContracts(result);
+}
+
+template <class _T>
+vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMerge)
+{
+	// returns true iff _candidate appears only as last element of the lists
+	auto appearsOnlyAtHead = [&](_T const* _candidate) -> bool
+	{
+		for (list<_T const*> const& bases: _toMerge)
+		{
+			solAssert(!bases.empty(), "");
+			if (find(++bases.begin(), bases.end(), _candidate) != bases.end())
+				return false;
+		}
+		return true;
+	};
+	// returns the next candidate to append to the linearized list or nullptr on failure
+	auto nextCandidate = [&]() -> _T const*
+	{
+		for (list<_T const*> const& bases: _toMerge)
+		{
+			solAssert(!bases.empty(), "");
+			if (appearsOnlyAtHead(bases.front()))
+				return bases.front();
+		}
+		return nullptr;
+	};
+	// removes the given contract from all lists
+	auto removeCandidate = [&](_T const* _candidate)
+	{
+		for (auto it = _toMerge.begin(); it != _toMerge.end();)
+		{
+			it->remove(_candidate);
+			if (it->empty())
+				it = _toMerge.erase(it);
+			else
+				++it;
+		}
+	};
+
+	_toMerge.remove_if([](list<_T const*> const& _bases) { return _bases.empty(); });
+	vector<_T const*> result;
+	while (!_toMerge.empty())
+	{
+		_T const* candidate = nextCandidate();
+		if (!candidate)
+			return vector<_T const*>();
+		result.push_back(candidate);
+		removeCandidate(candidate);
+	}
+	return result;
 }
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode const*, DeclarationContainer>& _scopes,
@@ -115,6 +224,23 @@ void DeclarationRegistrationHelper::endVisit(StructDefinition&)
 	closeCurrentScope();
 }
 
+bool DeclarationRegistrationHelper::visit(EnumDefinition& _enum)
+{
+	registerDeclaration(_enum, true);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(EnumDefinition&)
+{
+	closeCurrentScope();
+}
+
+bool DeclarationRegistrationHelper::visit(EnumValue& _value)
+{
+	registerDeclaration(_value, false);
+	return true;
+}
+
 bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)
 {
 	registerDeclaration(_function, true);
@@ -123,6 +249,19 @@ bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)
 }
 
 void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
+{
+	m_currentFunction = nullptr;
+	closeCurrentScope();
+}
+
+bool DeclarationRegistrationHelper::visit(ModifierDefinition& _modifier)
+{
+	registerDeclaration(_modifier, true);
+	m_currentFunction = &_modifier;
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(ModifierDefinition&)
 {
 	m_currentFunction = nullptr;
 	closeCurrentScope();
@@ -142,6 +281,17 @@ bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)
 	return true;
 }
 
+bool DeclarationRegistrationHelper::visit(EventDefinition& _event)
+{
+	registerDeclaration(_event, true);
+	return true;
+}
+
+void DeclarationRegistrationHelper::endVisit(EventDefinition&)
+{
+	closeCurrentScope();
+}
+
 void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declaration)
 {
 	map<ASTNode const*, DeclarationContainer>::iterator iter;
@@ -159,7 +309,7 @@ void DeclarationRegistrationHelper::closeCurrentScope()
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
-	if (!m_scopes[m_currentScope].registerDeclaration(_declaration))
+	if (!m_scopes[m_currentScope].registerDeclaration(_declaration, !_declaration.isVisibleInContract()))
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_declaration.getLocation())
 												 << errinfo_comment("Identifier already declared."));
 	//@todo the exception should also contain the location of the first declaration
@@ -169,8 +319,10 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 }
 
 ReferencesResolver::ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver,
-									   ParameterList* _returnParameters, bool _allowLazyTypes):
-	m_resolver(_resolver), m_returnParameters(_returnParameters), m_allowLazyTypes(_allowLazyTypes)
+									   ContractDefinition const* _currentContract,
+									   ParameterList const* _returnParameters, bool _allowLazyTypes):
+	m_resolver(_resolver), m_currentContract(_currentContract),
+	m_returnParameters(_returnParameters), m_allowLazyTypes(_allowLazyTypes)
 {
 	_root.accept(*this);
 }
@@ -181,7 +333,13 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 	// or mapping
 	if (_variable.getTypeName())
 	{
-		_variable.setType(_variable.getTypeName()->toType());
+		TypePointer type = _variable.getTypeName()->toType();
+		// All byte array parameter types should point to call data
+		if (_variable.isExternalFunctionParameter())
+			if (auto const* byteArrayType = dynamic_cast<ByteArrayType const*>(type.get()))
+				type = byteArrayType->copyForLocation(ByteArrayType::Location::CallData);
+		_variable.setType(type);
+
 		if (!_variable.getType())
 			BOOST_THROW_EXCEPTION(_variable.getTypeName()->createTypeError("Invalid type name"));
 	}
@@ -192,8 +350,7 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 
 bool ReferencesResolver::visit(Return& _return)
 {
-	solAssert(m_returnParameters, "Return parameters not set.");
-	_return.setFunctionReturnParameters(*m_returnParameters);
+	_return.setFunctionReturnParameters(m_returnParameters);
 	return true;
 }
 
@@ -218,7 +375,7 @@ bool ReferencesResolver::visit(Identifier& _identifier)
 	if (!declaration)
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_identifier.getLocation())
 												 << errinfo_comment("Undeclared identifier."));
-	_identifier.setReferencedDeclaration(*declaration);
+	_identifier.setReferencedDeclaration(*declaration, m_currentContract);
 	return false;
 }
 

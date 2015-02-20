@@ -40,7 +40,10 @@
 // You should have received a copy of the GNU General Public License
 // along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <map>
 #include <libsolidity/Token.h>
+
+using namespace std;
 
 namespace dev
 {
@@ -77,6 +80,19 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
+Token::Value Token::fromIdentifierOrKeyword(const std::string& _name)
+{
+	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
+	// and keywords to be put inside the keywords variable.
+#define KEYWORD(name, string, precedence) {string, Token::name},
+#define TOKEN(name, string, precedence)
+	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
+#undef KEYWORD
+#undef TOKEN
+	auto it = keywords.find(_name);
+	return it == keywords.end() ? Token::Identifier : it->second;
+}
+
 #undef KT
 #undef KK
 

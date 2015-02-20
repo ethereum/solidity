@@ -57,10 +57,29 @@ bool ASTPrinter::visit(ContractDefinition const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(InheritanceSpecifier const& _node)
+{
+	writeLine("InheritanceSpecifier \"" + _node.getName()->getName() + "\"");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(StructDefinition const& _node)
 {
 	writeLine("StructDefinition \"" + _node.getName() + "\"");
 	printSourcePart(_node);
+	return goDeeper();
+}
+
+bool ASTPrinter::visit(EnumDefinition const& _node)
+{
+	writeLine("EnumDefinition \"" + _node.getName() + "\"");
+	return goDeeper();
+}
+
+bool ASTPrinter::visit(EnumValue const& _node)
+{
+	writeLine("EnumValue \"" + _node.getName() + "\"");
 	return goDeeper();
 }
 
@@ -83,6 +102,27 @@ bool ASTPrinter::visit(FunctionDefinition const& _node)
 bool ASTPrinter::visit(VariableDeclaration const& _node)
 {
 	writeLine("VariableDeclaration \"" + _node.getName() + "\"");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
+bool ASTPrinter::visit(ModifierDefinition const& _node)
+{
+	writeLine("ModifierDefinition \"" + _node.getName() + "\"");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
+bool ASTPrinter::visit(ModifierInvocation const& _node)
+{
+	writeLine("ModifierInvocation \"" + _node.getName()->getName() + "\"");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
+bool ASTPrinter::visit(EventDefinition const& _node)
+{
+	writeLine("EventDefinition \"" + _node.getName() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -125,6 +165,13 @@ bool ASTPrinter::visit(Statement const& _node)
 bool ASTPrinter::visit(Block const& _node)
 {
 	writeLine("Block");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
+bool ASTPrinter::visit(PlaceholderStatement const& _node)
+{
+	writeLine("PlaceholderStatement");
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -302,7 +349,22 @@ void ASTPrinter::endVisit(ContractDefinition const&)
 	m_indentation--;
 }
 
+void ASTPrinter::endVisit(InheritanceSpecifier const&)
+{
+	m_indentation--;
+}
+
 void ASTPrinter::endVisit(StructDefinition const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(EnumDefinition const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(EnumValue const&)
 {
 	m_indentation--;
 }
@@ -318,6 +380,21 @@ void ASTPrinter::endVisit(FunctionDefinition const&)
 }
 
 void ASTPrinter::endVisit(VariableDeclaration const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(ModifierDefinition const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(ModifierInvocation const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(EventDefinition const&)
 {
 	m_indentation--;
 }
@@ -348,6 +425,11 @@ void ASTPrinter::endVisit(Statement const&)
 }
 
 void ASTPrinter::endVisit(Block const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(PlaceholderStatement const&)
 {
 	m_indentation--;
 }

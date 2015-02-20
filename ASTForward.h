@@ -38,10 +38,16 @@ class SourceUnit;
 class ImportDirective;
 class Declaration;
 class ContractDefinition;
+class InheritanceSpecifier;
 class StructDefinition;
+class EnumDefinition;
+class EnumValue;
 class ParameterList;
 class FunctionDefinition;
 class VariableDeclaration;
+class ModifierDefinition;
+class ModifierInvocation;
+class EventDefinition;
 class MagicVariableDeclaration;
 class TypeName;
 class ElementaryTypeName;
@@ -49,6 +55,7 @@ class UserDefinedTypeName;
 class Mapping;
 class Statement;
 class Block;
+class PlaceholderStatement;
 class IfStatement;
 class BreakableStatement;
 class WhileStatement;
@@ -70,6 +77,8 @@ class PrimaryExpression;
 class Identifier;
 class ElementaryTypeNameExpression;
 class Literal;
+
+class VariableScope;
 
 // Used as pointers to AST nodes, to be replaced by more clever pointers, e.g. pointers which do
 // not do reference counting but point to a special memory area that is completely released

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <map>
+#include <list>
 #include <boost/noncopyable.hpp>
 
 #include <libsolidity/DeclarationContainer.h>
@@ -64,12 +65,23 @@ public:
 private:
 	void reset();
 
+	/// Imports all members declared directly in the given contract (i.e. does not import inherited
+	/// members) into the current scope if they are not present already.
+	void importInheritedScope(ContractDefinition const& _base);
+
+	/// Computes "C3-Linearization" of base contracts and stores it inside the contract.
+	void linearizeBaseContracts(ContractDefinition& _contract) const;
+	/// Computes the C3-merge of the given list of lists of bases.
+	/// @returns the linearized vector or an empty vector if linearization is not possible.
+	template <class _T>
+	static std::vector<_T const*> cThreeMerge(std::list<std::list<_T const*>>& _toMerge);
+
 	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
 	/// where nullptr denotes the global scope. Note that structs are not scope since they do
 	/// not contain code.
 	std::map<ASTNode const*, DeclarationContainer> m_scopes;
 
-	DeclarationContainer* m_currentScope;
+	DeclarationContainer* m_currentScope = nullptr;
 };
 
 /**
@@ -82,14 +94,21 @@ public:
 	DeclarationRegistrationHelper(std::map<ASTNode const*, DeclarationContainer>& _scopes, ASTNode& _astRoot);
 
 private:
-	bool visit(ContractDefinition& _contract);
-	void endVisit(ContractDefinition& _contract);
-	bool visit(StructDefinition& _struct);
-	void endVisit(StructDefinition& _struct);
-	bool visit(FunctionDefinition& _function);
-	void endVisit(FunctionDefinition& _function);
-	void endVisit(VariableDefinition& _variableDefinition);
-	bool visit(VariableDeclaration& _declaration);
+	bool visit(ContractDefinition& _contract) override;
+	void endVisit(ContractDefinition& _contract) override;
+	bool visit(StructDefinition& _struct) override;
+	void endVisit(StructDefinition& _struct) override;
+	bool visit(EnumDefinition& _enum) override;
+	void endVisit(EnumDefinition& _enum) override;
+	bool visit(EnumValue& _value) override;
+	bool visit(FunctionDefinition& _function) override;
+	void endVisit(FunctionDefinition& _function) override;
+	bool visit(ModifierDefinition& _modifier) override;
+	void endVisit(ModifierDefinition& _modifier) override;
+	void endVisit(VariableDefinition& _variableDefinition) override;
+	bool visit(VariableDeclaration& _declaration) override;
+	bool visit(EventDefinition& _event) override;
+	void endVisit(EventDefinition& _event) override;
 
 	void enterNewSubScope(Declaration const& _declaration);
 	void closeCurrentScope();
@@ -97,7 +116,7 @@ private:
 
 	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
 	Declaration const* m_currentScope;
-	FunctionDefinition* m_currentFunction;
+	VariableScope* m_currentFunction;
 };
 
 /**
@@ -108,7 +127,9 @@ class ReferencesResolver: private ASTVisitor
 {
 public:
 	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver,
-					   ParameterList* _returnParameters, bool _allowLazyTypes = true);
+					   ContractDefinition const* _currentContract,
+					   ParameterList const* _returnParameters,
+					   bool _allowLazyTypes = true);
 
 private:
 	virtual void endVisit(VariableDeclaration& _variable) override;
@@ -118,7 +139,8 @@ private:
 	virtual bool visit(Return& _return) override;
 
 	NameAndTypeResolver& m_resolver;
-	ParameterList* m_returnParameters;
+	ContractDefinition const* m_currentContract;
+	ParameterList const* m_returnParameters;
 	bool m_allowLazyTypes;
 };
 

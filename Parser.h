@@ -45,16 +45,32 @@ private:
 	/// End position of the current token
 	int getEndPosition() const;
 
+	struct VarDeclParserOptions {
+		VarDeclParserOptions() {}
+		bool allowVar = false;
+		bool isStateVariable = false;
+		bool allowIndexed = false;
+		bool allowEmptyName = false;
+	};
+
 	///@{
 	///@name Parsing functions for the AST nodes
 	ASTPointer<ImportDirective> parseImportDirective();
 	ASTPointer<ContractDefinition> parseContractDefinition();
-	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
+	ASTPointer<InheritanceSpecifier> parseInheritanceSpecifier();
+	Declaration::Visibility parseVisibilitySpecifier(Token::Value _token);
+	ASTPointer<FunctionDefinition> parseFunctionDefinition(ASTString const* _contractName);
 	ASTPointer<StructDefinition> parseStructDefinition();
-	ASTPointer<VariableDeclaration> parseVariableDeclaration(bool _allowVar);
+	ASTPointer<EnumDefinition> parseEnumDefinition();
+	ASTPointer<EnumValue> parseEnumValue();
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(VarDeclParserOptions const& _options = VarDeclParserOptions());
+	ASTPointer<ModifierDefinition> parseModifierDefinition();
+	ASTPointer<EventDefinition> parseEventDefinition();
+	ASTPointer<ModifierInvocation> parseModifierInvocation();
+	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<TypeName> parseTypeName(bool _allowVar);
 	ASTPointer<Mapping> parseMapping();
-	ASTPointer<ParameterList> parseParameterList(bool _allowEmpty = true);
+	ASTPointer<ParameterList> parseParameterList(bool _allowEmpty = true, bool _allowIndexed = false);
 	ASTPointer<Block> parseBlock();
 	ASTPointer<Statement> parseStatement();
 	ASTPointer<IfStatement> parseIfStatement();
@@ -68,7 +84,8 @@ private:
 	ASTPointer<Expression> parseUnaryExpression();
 	ASTPointer<Expression> parseLeftHandSideExpression();
 	ASTPointer<Expression> parsePrimaryExpression();
-	std::vector<ASTPointer<Expression>> parseFunctionCallArguments();
+	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
+	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
 	///@}
 
 	///@{
@@ -84,11 +101,16 @@ private:
 	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
+	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
+	ASTPointer<ParameterList> createEmptyParameterList();
+
 	/// Creates a @ref ParserError exception and annotates it with the current position and the
 	/// given @a _description.
 	ParserError createParserError(std::string const& _description) const;
 
 	std::shared_ptr<Scanner> m_scanner;
+	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
+	bool m_insideModifier = false;
 };
 
 }

@@ -41,27 +41,41 @@ class CompilerContext
 public:
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration);
-	void startNewFunction() { m_localVariables.clear(); m_asm.setDeposit(0); }
-	void addVariable(VariableDeclaration const& _declaration);
+	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
-	void addFunction(FunctionDefinition const& _function);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
 	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
 
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
+	unsigned getStackHeight() { solAssert(m_asm.deposit() >= 0, ""); return unsigned(m_asm.deposit()); }
 
-	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration); }
-	bool isFunctionDefinition(Declaration const* _declaration) const { return m_functionEntryLabels.count(_declaration); }
+	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration) != 0; }
 	bool isLocalVariable(Declaration const* _declaration) const;
-	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration); }
+	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
-	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
-	/// Returns the distance of the given local variable from the top of the local variable stack.
+	eth::AssemblyItem getFunctionEntryLabel(Declaration const& _declaration);
+	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
+	/// @returns the entry label of the given function and takes overrides into account.
+	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function);
+	/// @returns the entry label of function with the given name from the most derived class just
+	/// above _base in the current inheritance hierarchy.
+	eth::AssemblyItem getSuperFunctionEntryLabel(std::string const& _name, ContractDefinition const& _base);
+	/// @returns the set of functions for which we still need to generate code
+	std::set<Declaration const*> getFunctionsWithoutCode();
+	/// Resets function specific members, inserts the function entry label and marks the function
+	/// as "having code".
+	void startFunction(Declaration const& _function);
+
+	ModifierDefinition const& getFunctionModifier(std::string const& _name) const;
+	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
 	unsigned getBaseStackOffsetOfVariable(Declaration const& _declaration) const;
 	/// If supplied by a value returned by @ref getBaseStackOffsetOfVariable(variable), returns
 	/// the distance of that variable from the current top of the stack.
 	unsigned baseToCurrentStackOffset(unsigned _baseOffset) const;
+	/// Converts an offset relative to the current stack height to a value that can be used later
+	/// with baseToCurrentStackOffset to point to the same stack element.
+	unsigned currentToBaseStackOffset(unsigned _offset) const;
 	u256 getStorageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
@@ -109,10 +123,12 @@ private:
 	std::map<Declaration const*, u256> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).
 	std::map<Declaration const*, unsigned> m_localVariables;
-	/// Sum of stack sizes of local variables
-	unsigned m_localVariablesSize;
-	/// Labels pointing to the entry points of funcitons.
+	/// Labels pointing to the entry points of functions.
 	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
+	/// Set of functions for which we did not yet generate code.
+	std::set<Declaration const*> m_functionsWithCode;
+	/// List of current inheritance hierarchy from derived to base.
+	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
 };
 
 }
