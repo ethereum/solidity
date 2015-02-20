@@ -214,7 +214,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 
-	if (m_data.size() || m_subs.size())
+	if (!m_data.empty() || !m_subs.empty())
 	{
 		_out << _prefix << ".data:" << endl;
 		for (auto const& i: m_data)
@@ -441,7 +441,7 @@ Assembly& Assembly::optimise(bool _enable)
 			if (i.type() == PushTag)
 				tags.erase(i.data());
 
-		if (tags.size())
+		if (tags.empty())
 		{
 			auto t = *tags.begin();
 			unsigned i = t.second;
@@ -567,7 +567,7 @@ bytes Assembly::assemble() const
 		toBigEndian(tagPos[i.second], r);
 	}
 
-	if (m_data.size())
+	if (!m_data.empty())
 	{
 		ret.push_back(0);
 		for (auto const& i: m_data)
