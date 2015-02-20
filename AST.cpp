@@ -609,13 +609,28 @@ void MemberAccess::checkTypeRequirements()
 void IndexAccess::checkTypeRequirements()
 {
 	m_base->checkTypeRequirements();
-	if (m_base->getType()->getCategory() != Type::Category::Mapping)
-		BOOST_THROW_EXCEPTION(m_base->createTypeError("Indexed expression has to be a mapping (is " +
-													  m_base->getType()->toString() + ")"));
-	MappingType const& type = dynamic_cast<MappingType const&>(*m_base->getType());
-	m_index->expectType(*type.getKeyType());
-	m_type = type.getValueType();
-	m_isLValue = true;
+	switch (m_base->getType()->getCategory())
+	{
+	case Type::Category::Array:
+	{
+		ArrayType const& type = dynamic_cast<ArrayType const&>(*m_base->getType());
+		m_index->expectType(IntegerType(256));
+		m_type = type.getBaseType();
+		m_isLValue = true;
+		break;
+	}
+	case Type::Category::Mapping:
+	{
+		MappingType const& type = dynamic_cast<MappingType const&>(*m_base->getType());
+		m_index->expectType(*type.getKeyType());
+		m_type = type.getValueType();
+		m_isLValue = true;
+		break;
+	}
+	default:
+		BOOST_THROW_EXCEPTION(m_base->createTypeError(
+			"Indexed expression has to be a mapping or array (is " + m_base->getType()->toString() + ")"));
+	}
 }
 
 void Identifier::checkTypeRequirements()
