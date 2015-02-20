@@ -1163,6 +1163,19 @@ BOOST_AUTO_TEST_CASE(external_argument_delete)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(test_for_bug_override_function_with_bytearray_type)
+{
+	char const* sourceCode = R"(
+		contract Vehicle {
+			function f(bytes _a) external returns (uint256 r) {r = 1;}
+		}
+		contract Bike is Vehicle {
+			function f(bytes _a) external returns (uint256 r) {r = 42;}
+		}
+		)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(sourceCode));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
