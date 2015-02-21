@@ -198,7 +198,7 @@ bool ASTJsonConverter::visit(Return const&)
 	return true;
 }
 
-bool ASTJsonConverter::visit(VariableDefinition const&)
+bool ASTJsonConverter::visit(VariableDeclarationStatement const&)
 {
 	addJsonNode("VariableDefinition", {}, true);
 	return true;
@@ -394,7 +394,7 @@ void ASTJsonConverter::endVisit(Return const&)
 	goUp();
 }
 
-void ASTJsonConverter::endVisit(VariableDefinition const&)
+void ASTJsonConverter::endVisit(VariableDeclarationStatement const&)
 {
 	goUp();
 }

@@ -56,6 +56,23 @@ void ExpressionCompiler::appendStateVariableAccessor(CompilerContext& _context, 
 	compiler.appendStateVariableAccessor(_varDecl);
 }
 
+void ExpressionCompiler::appendStateVariableInitialization(CompilerContext& _context, VariableDeclaration const& _varDecl, bool _optimize)
+{
+	compileExpression(_context, *(_varDecl.getValue()), _optimize);
+	if (_varDecl.getValue()->getType())
+		appendTypeConversion(_context, *(_varDecl.getValue())->getType(), *(_varDecl.getValue())->getType());
+
+	ExpressionCompiler compiler(_context, _optimize);
+	compiler.appendStateVariableInitialization(_varDecl);
+}
+
+void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration const& _varDecl)
+{
+	LValue var = LValue(m_context);
+	var.fromDeclaration(_varDecl, _varDecl.getValue()->getLocation());
+	var.storeValue(*_varDecl.getType(), _varDecl.getLocation());
+}
+
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	_assignment.getRightHandSide().accept(*this);
@@ -77,7 +94,6 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	}
 	m_currentLValue.storeValue(*_assignment.getRightHandSide().getType(), _assignment.getLocation());
 	m_currentLValue.reset();
-
 	return false;
 }
 
@@ -572,7 +588,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
 	else if (dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		m_currentLValue.fromIdentifier(_identifier, *declaration);
+		m_currentLValue.fromDeclaration(*declaration, _identifier.getLocation());
 		m_currentLValue.retrieveValueIfLValueNotRequested(_identifier);
 	}
 	else if (dynamic_cast<ContractDefinition const*>(declaration))
@@ -1002,12 +1018,12 @@ ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType
 		m_size = unsigned(m_dataType->getSizeOnStack());
 }
 
-void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, Declaration const& _declaration)
+void ExpressionCompiler::LValue::fromDeclaration(Declaration const& _declaration, Location const& _location)
 {
 	if (m_context->isLocalVariable(&_declaration))
 	{
 		m_type = LValueType::Stack;
-		m_dataType = _identifier.getType();
+		m_dataType = _declaration.getType();
 		m_size = m_dataType->getSizeOnStack();
 		m_baseStackOffset = m_context->getBaseStackOffsetOfVariable(_declaration);
 	}
@@ -1015,12 +1031,13 @@ void ExpressionCompiler::LValue::fromIdentifier(Identifier const& _identifier, D
 	{
 		*m_context << m_context->getStorageLocationOfVariable(_declaration);
 		m_type = LValueType::Storage;
-		m_dataType = _identifier.getType();
+		m_dataType = _declaration.getType();
 		solAssert(m_dataType->getStorageSize() <= numeric_limits<unsigned>::max(),
 				  "The storage size of " + m_dataType->toString() + " should fit in an unsigned");
-		m_size = unsigned(m_dataType->getStorageSize());	}
+		m_size = unsigned(m_dataType->getStorageSize());
+	}
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_identifier.getLocation())
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_sourceLocation(_location)
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
 }
 
@@ -1117,7 +1134,7 @@ void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, Location co
 		}
 		else
 		{
-			solAssert(_sourceType.getCategory() == m_dataType->getCategory(), "");
+			solAssert(_sourceType.getCategory() == m_dataType->getCategory(), "Wrong type conversation for assignment.");
 			if (m_dataType->getCategory() == Type::Category::ByteArray)
 			{
 				CompilerUtils(*m_context).copyByteArrayToStorage(

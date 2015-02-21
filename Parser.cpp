@@ -148,6 +148,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		{
 			VarDeclParserOptions options;
 			options.isStateVariable = true;
+			options.allowInitialValue = true;
 			stateVariables.push_back(parseVariableDeclaration(options));
 			expectToken(Token::Semicolon);
 		}
@@ -324,9 +325,19 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(VarDeclParserOp
 	}
 	else
 		identifier = expectIdentifierToken();
-	return nodeFactory.createNode<VariableDeclaration>(type, identifier,
-												   visibility, _options.isStateVariable,
-												   isIndexed);
+	ASTPointer<Expression> value;
+	if (_options.allowInitialValue)
+	{
+		if (m_scanner->getCurrentToken() == Token::Assign)
+		{
+			m_scanner->next();
+			value = parseExpression();
+			nodeFactory.setEndPositionFromNode(value);
+		}
+	}
+	return nodeFactory.createNode<VariableDeclaration>(type, identifier, value,
+									visibility, _options.isStateVariable,
+									isIndexed);
 }
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
@@ -519,7 +530,7 @@ ASTPointer<Statement> Parser::parseStatement()
 		}
 	// fall-through
 	default:
-		statement = parseVarDefOrExprStmt();
+		statement = parseVarDeclOrExprStmt();
 	}
 	expectToken(Token::Semicolon);
 	return statement;
@@ -568,7 +579,7 @@ ASTPointer<ForStatement> Parser::parseForStatement()
 
 	// LTODO: Maybe here have some predicate like peekExpression() instead of checking for semicolon and RParen?
 	if (m_scanner->getCurrentToken() != Token::Semicolon)
-		initExpression = parseVarDefOrExprStmt();
+		initExpression = parseVarDeclOrExprStmt();
 	expectToken(Token::Semicolon);
 
 	if (m_scanner->getCurrentToken() != Token::Semicolon)
@@ -587,30 +598,22 @@ ASTPointer<ForStatement> Parser::parseForStatement()
 												body);
 }
 
-ASTPointer<Statement> Parser::parseVarDefOrExprStmt()
+ASTPointer<Statement> Parser::parseVarDeclOrExprStmt()
 {
-	if (peekVariableDefinition())
-		return parseVariableDefinition();
+	if (peekVariableDeclarationStatement())
+		return parseVariableDeclarationStatement();
 	else
 		return parseExpressionStatement();
 }
 
-ASTPointer<VariableDefinition> Parser::parseVariableDefinition()
+ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStatement()
 {
 	ASTNodeFactory nodeFactory(*this);
 	VarDeclParserOptions options;
 	options.allowVar = true;
+	options.allowInitialValue = true;
 	ASTPointer<VariableDeclaration> variable = parseVariableDeclaration(options);
-	ASTPointer<Expression> value;
-	if (m_scanner->getCurrentToken() == Token::Assign)
-	{
-		m_scanner->next();
-		value = parseExpression();
-		nodeFactory.setEndPositionFromNode(value);
-	}
-	else
-		nodeFactory.setEndPositionFromNode(variable);
-	return nodeFactory.createNode<VariableDefinition>(variable, value);
+	return nodeFactory.createNode<VariableDeclarationStatement>(variable);
 }
 
 ASTPointer<ExpressionStatement> Parser::parseExpressionStatement()
@@ -822,11 +825,11 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 }
 
 
-bool Parser::peekVariableDefinition()
+bool Parser::peekVariableDeclarationStatement()
 {
-	// distinguish between variable definition (and potentially assignment) and expression statement
+	// distinguish between variable declaration (and potentially assignment) and expression statement
 	// (which include assignments to other expressions and pre-declared variables)
-	// We have a variable definition if we get a keyword that specifies a type name, or
+	// We have a variable declaration if we get a keyword that specifies a type name, or
 	// in the case of a user-defined type, we have two identifiers following each other.
 	return (m_scanner->getCurrentToken() == Token::Mapping ||
 			m_scanner->getCurrentToken() == Token::Var ||

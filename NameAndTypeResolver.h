@@ -105,7 +105,7 @@ private:
 	void endVisit(FunctionDefinition& _function) override;
 	bool visit(ModifierDefinition& _modifier) override;
 	void endVisit(ModifierDefinition& _modifier) override;
-	void endVisit(VariableDefinition& _variableDefinition) override;
+	void endVisit(VariableDeclarationStatement& _variableDeclarationStatement) override;
 	bool visit(VariableDeclaration& _declaration) override;
 	bool visit(EventDefinition& _event) override;
 	void endVisit(EventDefinition& _event) override;

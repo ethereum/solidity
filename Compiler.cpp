@@ -73,7 +73,7 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->getBaseContracts())
 		{
 			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
-													base->getName()->getReferencedDeclaration());
+						base->getName()->getReferencedDeclaration());
 			solAssert(baseContract, "");
 			if (baseArguments.count(baseContract) == 0)
 				baseArguments[baseContract] = &base->getArguments();
@@ -85,12 +85,14 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 	{
 		ContractDefinition const* base = bases[bases.size() - i];
 		solAssert(base, "");
+		initializeStateVariables(*base);
 		FunctionDefinition const* baseConstructor = base->getConstructor();
 		if (!baseConstructor)
 			continue;
 		solAssert(baseArguments[base], "");
 		appendBaseConstructorCall(*baseConstructor, *baseArguments[base]);
 	}
+	initializeStateVariables(_contract);
 	if (_contract.getConstructor())
 		appendConstructorCall(*_contract.getConstructor());
 
@@ -245,6 +247,13 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.getLinearizedBaseContracts()))
 		for (ASTPointer<VariableDeclaration> const& variable: contract->getStateVariables())
 			m_context.addStateVariable(*variable);
+}
+
+void Compiler::initializeStateVariables(ContractDefinition const& _contract)
+{
+	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
+		if (variable->getValue())
+			ExpressionCompiler::appendStateVariableInitialization(m_context, *variable);
 }
 
 bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
@@ -429,7 +438,7 @@ bool Compiler::visit(Return const& _return)
 	return false;
 }
 
-bool Compiler::visit(VariableDefinition const& _variableDefinition)
+bool Compiler::visit(VariableDeclarationStatement const& _variableDefinition)
 {
 	if (Expression const* expression = _variableDefinition.getExpression())
 	{

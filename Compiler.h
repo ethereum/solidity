@@ -59,6 +59,7 @@ private:
 	void appendReturnValuePacker(TypePointers const& _typeParameters);
 
 	void registerStateVariables(ContractDefinition const& _contract);
+	void initializeStateVariables(ContractDefinition const& _contract);
 
 	virtual bool visit(VariableDeclaration const& _variableDeclaration) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
@@ -68,7 +69,7 @@ private:
 	virtual bool visit(Continue const& _continue) override;
 	virtual bool visit(Break const& _break) override;
 	virtual bool visit(Return const& _return) override;
-	virtual bool visit(VariableDefinition const& _variableDefinition) override;
+	virtual bool visit(VariableDeclarationStatement const& _variableDefinition) override;
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
 	virtual bool visit(PlaceholderStatement const&) override;
 
