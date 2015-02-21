@@ -562,7 +562,8 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	solAssert(baseType.getCategory() == Type::Category::Mapping, "");
 	Type const& keyType = *dynamic_cast<MappingType const&>(baseType).getKeyType();
 	m_context << u256(0);
-	appendExpressionCopyToMemory(keyType, _indexAccess.getIndexExpression());
+	solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
+	appendExpressionCopyToMemory(keyType, *_indexAccess.getIndexExpression());
 	solAssert(baseType.getSizeOnStack() == 1,
 			  "Unexpected: Not exactly one stack slot taken by subscriptable expression.");
 	m_context << eth::Instruction::SWAP1;

@@ -645,14 +645,11 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 	vector<pair<ASTPointer<Expression>, Location>> indices;
 	solAssert(m_scanner->getCurrentToken() == Token::LBrack, "");
 	Location indexLocation = primary->getLocation();
-	bool encounteredEmptyBrackets = false;
 	do
 	{
 		expectToken(Token::LBrack);
 		ASTPointer<Expression> index;
-		if (m_scanner->getCurrentToken() == Token::RBrack)
-			encounteredEmptyBrackets = true;
-		else
+		if (m_scanner->getCurrentToken() != Token::RBrack)
 			index = parseExpression();
 		indexLocation.end = getEndPosition();
 		indices.push_back(make_pair(index, indexLocation));
@@ -660,7 +657,7 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 	}
 	while (m_scanner->getCurrentToken() == Token::LBrack);
 
-	if (m_scanner->getCurrentToken() == Token::Identifier || encounteredEmptyBrackets)
+	if (m_scanner->getCurrentToken() == Token::Identifier)
 		return parseVariableDeclarationStatement(typeNameFromArrayIndexStructure(primary, indices));
 	else
 		return parseExpressionStatement(expressionFromArrayIndexStructure(primary, indices));
@@ -768,7 +765,9 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 		case Token::LBrack:
 		{
 			m_scanner->next();
-			ASTPointer<Expression> index = parseExpression();
+			ASTPointer<Expression> index;
+			if (m_scanner->getCurrentToken() != Token::RBrack)
+				index = parseExpression();
 			nodeFactory.markEndPosition();
 			expectToken(Token::RBrack);
 			expression = nodeFactory.createNode<IndexAccess>(expression, index);

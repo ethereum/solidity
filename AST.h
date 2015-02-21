@@ -1102,7 +1102,7 @@ public:
 	virtual void checkTypeRequirements() override;
 
 	Expression const& getBaseExpression() const { return *m_base; }
-	Expression const& getIndexExpression() const { return *m_index; }
+	Expression const* getIndexExpression() const { return m_index.get(); }
 
 private:
 	ASTPointer<Expression> m_base;
