@@ -125,7 +125,7 @@ private:
 		std::shared_ptr<Scanner> scanner;
 		std::shared_ptr<SourceUnit> ast;
 		std::string interface;
-		bool isLibrary;
+		bool isLibrary = false;
 		void reset() { scanner.reset(); ast.reset(); interface.clear(); isLibrary = false;}
 	};
 
