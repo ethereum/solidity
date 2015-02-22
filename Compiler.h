@@ -69,7 +69,7 @@ private:
 	virtual bool visit(Continue const& _continue) override;
 	virtual bool visit(Break const& _break) override;
 	virtual bool visit(Return const& _return) override;
-	virtual bool visit(VariableDeclarationStatement const& _variableDefinition) override;
+	virtual bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
 	virtual bool visit(PlaceholderStatement const&) override;
 
