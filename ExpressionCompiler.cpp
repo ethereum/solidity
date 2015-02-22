@@ -534,19 +534,24 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	{
 		solAssert(member == "length", "Illegal array member.");
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.getExpression().getType());
-		solAssert(type.isByteArray(), "Non byte arrays not yet implemented here.");
-		switch (type.getLocation())
+		if (!type.isDynamicallySized())
 		{
-		case ArrayType::Location::CallData:
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
-			break;
-		case ArrayType::Location::Storage:
-			m_context << eth::Instruction::SLOAD;
-			break;
-		default:
-			solAssert(false, "Unsupported array location.");
-			break;
+			CompilerUtils(m_context).popStackElement(type);
+			m_context << type.getLength();
 		}
+		else
+			switch (type.getLocation())
+			{
+			case ArrayType::Location::CallData:
+				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+				break;
+			case ArrayType::Location::Storage:
+				m_context << eth::Instruction::SLOAD;
+				break;
+			default:
+				solAssert(false, "Unsupported array location.");
+				break;
+			}
 		break;
 	}
 	default:
@@ -559,19 +564,40 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	_indexAccess.getBaseExpression().accept(*this);
 
 	Type const& baseType = *_indexAccess.getBaseExpression().getType();
-	solAssert(baseType.getCategory() == Type::Category::Mapping, "");
-	Type const& keyType = *dynamic_cast<MappingType const&>(baseType).getKeyType();
-	m_context << u256(0);
-	solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
-	appendExpressionCopyToMemory(keyType, *_indexAccess.getIndexExpression());
-	solAssert(baseType.getSizeOnStack() == 1,
-			  "Unexpected: Not exactly one stack slot taken by subscriptable expression.");
-	m_context << eth::Instruction::SWAP1;
-	appendTypeMoveToMemory(IntegerType(256));
-	m_context << u256(0) << eth::Instruction::SHA3;
-
-	m_currentLValue = LValue(m_context, LValue::LValueType::Storage, _indexAccess.getType());
-	m_currentLValue.retrieveValueIfLValueNotRequested(_indexAccess);
+	if (baseType.getCategory() == Type::Category::Mapping)
+	{
+		Type const& keyType = *dynamic_cast<MappingType const&>(baseType).getKeyType();
+		m_context << u256(0);
+		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
+		appendExpressionCopyToMemory(keyType, *_indexAccess.getIndexExpression());
+		solAssert(baseType.getSizeOnStack() == 1,
+				  "Unexpected: Not exactly one stack slot taken by subscriptable expression.");
+		m_context << eth::Instruction::SWAP1;
+		appendTypeMoveToMemory(IntegerType(256));
+		m_context << u256(0) << eth::Instruction::SHA3;
+		m_currentLValue = LValue(m_context, LValue::LValueType::Storage, _indexAccess.getType());
+		m_currentLValue.retrieveValueIfLValueNotRequested(_indexAccess);
+	}
+	else if (baseType.getCategory() == Type::Category::Array)
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
+		solAssert(arrayType.getLocation() == ArrayType::Location::Storage,
+			"TODO: Index acces only implemented for storage arrays.");
+		solAssert(!arrayType.isDynamicallySized(),
+			"TODO: Index acces only implemented for fixed-size arrays.");
+		solAssert(!arrayType.isByteArray(),
+			"TODO: Index acces not implemented for byte arrays.");
+		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
+		// TODO: for dynamically-sized arrays, update the length for each write
+		// TODO: do we want to check the index?
+		_indexAccess.getIndexExpression()->accept(*this);
+		m_context << arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL
+			<< eth::Instruction::ADD;
+		m_currentLValue = LValue(m_context, LValue::LValueType::Storage, _indexAccess.getType());
+		m_currentLValue.retrieveValueIfLValueNotRequested(_indexAccess);
+	}
+	else
+		solAssert(false, "Index access only allowed for mappings or arrays.");
 
 	return false;
 }

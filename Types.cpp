@@ -555,6 +555,19 @@ bool ArrayType::operator==(Type const& _other) const
 	return other.m_location == m_location;
 }
 
+u256 ArrayType::getStorageSize() const
+{
+	if (isDynamicallySized())
+		return 1;
+	else
+	{
+		bigint size = bigint(getLength()) * getBaseType()->getStorageSize();
+		if (size >= bigint(1) << 256)
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Array too large for storage."));
+		return max<u256>(1, u256(size));
+	}
+}
+
 unsigned ArrayType::getSizeOnStack() const
 {
 	if (m_location == Location::CallData)
@@ -665,10 +678,12 @@ bool StructType::operator==(Type const& _other) const
 
 u256 StructType::getStorageSize() const
 {
-	u256 size = 0;
+	bigint size = 0;
 	for (pair<string, TypePointer> const& member: getMembers())
 		size += member.second->getStorageSize();
-	return max<u256>(1, size);
+	if (size >= bigint(1) << 256)
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Struct too large for storage."));
+	return max<u256>(1, u256(size));
 }
 
 bool StructType::canLiveOutsideStorage() const
