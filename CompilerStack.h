@@ -60,7 +60,7 @@ class CompilerStack: boost::noncopyable
 {
 public:
 	/// Creates a new compiler stack. Adds standard sources if @a _addStandardSources.
-	explicit CompilerStack(bool _addStandardSources = false);
+	explicit CompilerStack(bool _addStandardSources = true);
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
