@@ -2711,6 +2711,9 @@ BOOST_AUTO_TEST_CASE(dynamic_arrays_in_storage)
 		}
 	)";
 	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("getLengths()") == encodeArgs(0, 0));
+	BOOST_CHECK(callContractFunction("setLengths(uint256,uint256)", 48, 49) == bytes());
+	BOOST_CHECK(callContractFunction("getLengths()") == encodeArgs(48, 49));
 	BOOST_CHECK(callContractFunction("setIDStatic(uint256)", 11) == bytes());
 	BOOST_CHECK(callContractFunction("getID(uint256)", 2) == encodeArgs(11));
 	BOOST_CHECK(callContractFunction("setID(uint256,uint256)", 7, 8) == bytes());
@@ -2719,8 +2722,50 @@ BOOST_AUTO_TEST_CASE(dynamic_arrays_in_storage)
 	BOOST_CHECK(callContractFunction("setData(uint256,uint256,uint256)", 8, 10, 11) == bytes());
 	BOOST_CHECK(callContractFunction("getData(uint256)", 7) == encodeArgs(8, 9));
 	BOOST_CHECK(callContractFunction("getData(uint256)", 8) == encodeArgs(10, 11));
-	BOOST_CHECK(callContractFunction("setLengths(uint256,uint256)", 48, 49) == bytes());
-	BOOST_CHECK(callContractFunction("getLengths()") == encodeArgs(48, 49));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_out_of_bounds_array_access)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[4] data;
+			function set(uint index, uint value) returns (bool) { data[index] = value; return true; }
+			function get(uint index) returns (uint) { return data[index]; }
+			function length() returns (uint) { return data.length; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("length()") == encodeArgs(4));
+	BOOST_CHECK(callContractFunction("set(uint256,uint256)", 3, 4) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("set(uint256,uint256)", 4, 5) == bytes());
+	BOOST_CHECK(callContractFunction("set(uint256,uint256)", 400, 5) == bytes());
+	BOOST_CHECK(callContractFunction("get(uint256)", 3) == encodeArgs(4));
+	BOOST_CHECK(callContractFunction("get(uint256)", 4) == bytes());
+	BOOST_CHECK(callContractFunction("get(uint256)", 400) == bytes());
+	BOOST_CHECK(callContractFunction("length()") == encodeArgs(4));
+}
+
+BOOST_AUTO_TEST_CASE(dynamic_out_of_bounds_array_access)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[] data;
+			function enlarge(uint amount) returns (uint) { return data.length += amount; }
+			function set(uint index, uint value) returns (bool) { data[index] = value; return true; }
+			function get(uint index) returns (uint) { return data[index]; }
+			function length() returns (uint) { return data.length; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("length()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("get(uint256)", 3) == bytes());
+	BOOST_CHECK(callContractFunction("enlarge(uint256)", 4) == encodeArgs(4));
+	BOOST_CHECK(callContractFunction("length()") == encodeArgs(4));
+	BOOST_CHECK(callContractFunction("set(uint256,uint256)", 3, 4) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("get(uint256)", 3) == encodeArgs(4));
+	BOOST_CHECK(callContractFunction("length()") == encodeArgs(4));
+	BOOST_CHECK(callContractFunction("set(uint256,uint256)", 4, 8) == bytes());
+	BOOST_CHECK(callContractFunction("length()") == encodeArgs(4));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
