@@ -2137,7 +2137,7 @@ BOOST_AUTO_TEST_CASE(event_lots_of_data)
 	callContractFunctionWithValue("deposit(hash256)", value, id);
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(m_sender, id, value, true));
+	BOOST_CHECK(m_logs[0].data == encodeArgs((u160)m_sender, id, value, true));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(address,hash256,uint256,bool)")));
 }
