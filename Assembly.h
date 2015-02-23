@@ -25,6 +25,7 @@
 #include <sstream>
 #include <libdevcore/Common.h>
 #include <libevmcore/Instruction.h>
+#include <libsolidity/BaseTypes.h>
 #include "Exceptions.h"
 
 namespace dev
@@ -57,10 +58,12 @@ public:
 	int deposit() const;
 
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
+	void setLocation(dev::solidity::Location const& _location) { m_location = _location;}
 
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
+	dev::solidity::Location m_location;
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
@@ -84,7 +87,7 @@ public:
 	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
 	void append(Assembly const& _a, int _deposit);
-	AssemblyItem const& append(AssemblyItem const& _i);
+	AssemblyItem const& append(AssemblyItem const& _i, solidity::Location const& _location = solidity::Location());
 	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 	AssemblyItem appendSubSize(Assembly const& _a) { auto ret = newSub(_a); append(newPushSubSize(ret.data())); return ret; }
@@ -99,7 +102,7 @@ public:
 
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
 
-	AssemblyItem const& back() { return m_items.back(); }
+	AssemblyItem const& back() const { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
 
 	void onePath() { if (asserts(!m_totalDeposit && !m_baseDeposit)) BOOST_THROW_EXCEPTION(InvalidDeposit()); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
