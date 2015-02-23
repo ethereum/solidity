@@ -273,6 +273,7 @@ void Compiler::initializeStateVariables(ContractDefinition const& _contract)
 bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
 {
 	solAssert(_variableDeclaration.isStateVariable(), "Compiler visit to non-state variable declaration.");
+	CompilerContext::LocationSetter locationSetter(m_context, &_variableDeclaration);
 
 	m_context.startFunction(_variableDeclaration);
 	m_breakTags.clear();
@@ -286,6 +287,7 @@ bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
 
 bool Compiler::visit(FunctionDefinition const& _function)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, &_function);
 	//@todo to simplify this, the calling convention could by changed such that
 	// caller puts: [retarg0] ... [retargm] [return address] [arg0] ... [argn]
 	// although note that this reduces the size of the visible stack
@@ -355,7 +357,7 @@ bool Compiler::visit(FunctionDefinition const& _function)
 bool Compiler::visit(IfStatement const& _ifStatement)
 {
 	StackHeightChecker checker(m_context);
-
+	CompilerContext::LocationSetter locationSetter(m_context, &_ifStatement);
 	compileExpression(_ifStatement.getCondition());
 	eth::AssemblyItem trueTag = m_context.appendConditionalJump();
 	if (_ifStatement.getFalseStatement())
@@ -372,7 +374,7 @@ bool Compiler::visit(IfStatement const& _ifStatement)
 bool Compiler::visit(WhileStatement const& _whileStatement)
 {
 	StackHeightChecker checker(m_context);
-
+	CompilerContext::LocationSetter locationSetter(m_context, &_whileStatement);
 	eth::AssemblyItem loopStart = m_context.newTag();
 	eth::AssemblyItem loopEnd = m_context.newTag();
 	m_continueTags.push_back(loopStart);
@@ -398,7 +400,7 @@ bool Compiler::visit(WhileStatement const& _whileStatement)
 bool Compiler::visit(ForStatement const& _forStatement)
 {
 	StackHeightChecker checker(m_context);
-
+	CompilerContext::LocationSetter locationSetter(m_context, &_forStatement);
 	eth::AssemblyItem loopStart = m_context.newTag();
 	eth::AssemblyItem loopEnd = m_context.newTag();
 	m_continueTags.push_back(loopStart);
@@ -433,15 +435,17 @@ bool Compiler::visit(ForStatement const& _forStatement)
 	return false;
 }
 
-bool Compiler::visit(Continue const&)
+bool Compiler::visit(Continue const& _continueStatement)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, &_continueStatement);
 	if (!m_continueTags.empty())
 		m_context.appendJumpTo(m_continueTags.back());
 	return false;
 }
 
-bool Compiler::visit(Break const&)
+bool Compiler::visit(Break const& _breakStatement)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, &_breakStatement);
 	if (!m_breakTags.empty())
 		m_context.appendJumpTo(m_breakTags.back());
 	return false;
@@ -449,6 +453,7 @@ bool Compiler::visit(Break const&)
 
 bool Compiler::visit(Return const& _return)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, &_return);
 	//@todo modifications are needed to make this work with functions returning multiple values
 	if (Expression const* expression = _return.getExpression())
 	{
@@ -467,6 +472,7 @@ bool Compiler::visit(Return const& _return)
 bool Compiler::visit(VariableDeclarationStatement const& _variableDeclarationStatement)
 {
 	StackHeightChecker checker(m_context);
+    CompilerContext::LocationSetter locationSetter(m_context, &_variableDefinition);
 	if (Expression const* expression = _variableDeclarationStatement.getExpression())
 	{
 		compileExpression(*expression, _variableDeclarationStatement.getDeclaration().getType());
@@ -479,6 +485,7 @@ bool Compiler::visit(VariableDeclarationStatement const& _variableDeclarationSta
 bool Compiler::visit(ExpressionStatement const& _expressionStatement)
 {
 	StackHeightChecker checker(m_context);
+	CompilerContext::LocationSetter locationSetter(m_context, &_expressionStatement);
 	Expression const& expression = _expressionStatement.getExpression();
 	compileExpression(expression);
 	CompilerUtils(m_context).popStackElement(*expression.getType());
@@ -486,9 +493,10 @@ bool Compiler::visit(ExpressionStatement const& _expressionStatement)
 	return false;
 }
 
-bool Compiler::visit(PlaceholderStatement const&)
+bool Compiler::visit(PlaceholderStatement const& _placeholderStatement)
 {
 	StackHeightChecker checker(m_context);
+	CompilerContext::LocationSetter locationSetter(m_context, &_placeholderStatement);
 	++m_modifierDepth;
 	appendModifierOrFunctionCode();
 	--m_modifierDepth;

@@ -166,5 +166,33 @@ u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declarati
 	return it->second;
 }
 
+CompilerContext& CompilerContext::operator<<(eth::AssemblyItem _item)
+{
+	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");
+	m_asm.append(_item);
+	return *this;
+}
+
+CompilerContext& CompilerContext::operator<<(eth::Instruction _instruction)
+{
+	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");
+	m_asm.append(_instruction);
+	return *this;
+}
+
+CompilerContext& CompilerContext::operator<<(u256 const& _value)
+{
+	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");
+	m_asm.append(_value);
+	return *this;
+}
+
+CompilerContext& CompilerContext::operator<<(bytes const& _data)
+{
+	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");
+	m_asm.append(_data);
+	return *this;
+}
+
 }
 }

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ostream>
+#include <stack>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Assembly.h>
 #include <libsolidity/ASTForward.h>
@@ -99,19 +100,32 @@ public:
 	void appendProgramSize() { return m_asm.appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
 	eth::AssemblyItem appendData(bytes const& _data) { return m_asm.append(_data); }
+	/// Pops the stack of visited nodes
+	void popVisitedNodes() { m_visitedNodes.pop();}
+	/// Pushes an ASTNode to the stack of visited nodes
+	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); }
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
-	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
-	CompilerContext& operator<<(eth::Instruction _instruction) { m_asm.append(_instruction); return *this; }
-	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
-	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
+	CompilerContext& operator<<(eth::AssemblyItem _item);
+	CompilerContext& operator<<(eth::Instruction _instruction);
+	CompilerContext& operator<<(u256 const& _value);
+	CompilerContext& operator<<(bytes const& _data);
 
 	eth::Assembly const& getAssembly() const { return m_asm; }
 	void streamAssembly(std::ostream& _stream) const { _stream << m_asm; }
 	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
 
-private:
+	/**
+	 * Helper class to pop the visited nodes stack when a scope closes
+	 */
+	class LocationSetter: public ScopeGuard
+	{
+	public:
+		LocationSetter(CompilerContext& _compilerContext, ASTNode const* _node):
+			ScopeGuard(std::bind(&CompilerContext::popVisitedNodes, _compilerContext)) { _compilerContext.pushVisitedNodes(_node); }
+	};
 	eth::Assembly m_asm;
+private:
 
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
@@ -129,6 +143,8 @@ private:
 	std::set<Declaration const*> m_functionsWithCode;
 	/// List of current inheritance hierarchy from derived to base.
 	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
+	/// Stack of current visited AST nodes, used for location attachment
+	std::stack<ASTNode const*> m_visitedNodes;
 };
 
 }
