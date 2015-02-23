@@ -327,6 +327,28 @@ void Mapping::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void ArrayTypeName::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_baseType->accept(_visitor);
+		if (m_length)
+			m_length->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void ArrayTypeName::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_baseType->accept(_visitor);
+		if (m_length)
+			m_length->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void Block::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
@@ -604,7 +626,8 @@ void IndexAccess::accept(ASTVisitor& _visitor)
 	if (_visitor.visit(*this))
 	{
 		m_base->accept(_visitor);
-		m_index->accept(_visitor);
+		if (m_index)
+			m_index->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }
@@ -614,7 +637,8 @@ void IndexAccess::accept(ASTConstVisitor& _visitor) const
 	if (_visitor.visit(*this))
 	{
 		m_base->accept(_visitor);
-		m_index->accept(_visitor);
+		if (m_index)
+			m_index->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }

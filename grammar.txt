@@ -18,8 +18,9 @@ ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
 VariableDeclaration = TypeName Identifier
-TypeName = ElementaryTypeName | Identifier | Mapping
+TypeName = ElementaryTypeName | Identifier | Mapping | ArrayTypeName
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
+ArrayTypeName = TypeName '[' (Expression)? ']'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | Block |
@@ -42,5 +43,5 @@ Assignment = Expression (AssignmentOp Expression)
 FunctionCall = Expression '(' Expression ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
-IndexAccess = Expression '[' Expresison ']'
+IndexAccess = Expression '[' (Expresison)? ']'
 PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'

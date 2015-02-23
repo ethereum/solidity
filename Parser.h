@@ -64,7 +64,9 @@ private:
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
-	ASTPointer<VariableDeclaration> parseVariableDeclaration(VarDeclParserOptions const& _options = VarDeclParserOptions());
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(
+		VarDeclParserOptions const& _options = VarDeclParserOptions(),
+		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>());
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<EventDefinition> parseEventDefinition();
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
@@ -77,13 +79,20 @@ private:
 	ASTPointer<IfStatement> parseIfStatement();
 	ASTPointer<WhileStatement> parseWhileStatement();
 	ASTPointer<ForStatement> parseForStatement();
-	ASTPointer<Statement> parseVarDeclOrExprStmt();
-	ASTPointer<VariableDeclarationStatement> parseVariableDeclarationStatement();
-	ASTPointer<ExpressionStatement> parseExpressionStatement();
-	ASTPointer<Expression> parseExpression();
-	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4);
-	ASTPointer<Expression> parseUnaryExpression();
-	ASTPointer<Expression> parseLeftHandSideExpression();
+	/// A "simple statement" can be a variable declaration statement or an expression statement.
+	ASTPointer<Statement> parseSimpleStatement();
+	ASTPointer<VariableDeclarationStatement> parseVariableDeclarationStatement(
+		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>());
+	ASTPointer<ExpressionStatement> parseExpressionStatement(
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+	ASTPointer<Expression> parseExpression(
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4,
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+	ASTPointer<Expression> parseUnaryExpression(
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+	ASTPointer<Expression> parseLeftHandSideExpression(
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
 	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
@@ -92,9 +101,24 @@ private:
 	///@{
 	///@name Helper functions
 
-	/// Peeks ahead in the scanner to determine if a variable declaration statement is going to follow
-	bool peekVariableDeclarationStatement();
+	/// Used as return value of @see peekStatementType.
+	enum class LookAheadInfo
+	{
+		IndexAccessStructure, VariableDeclarationStatement, ExpressionStatement
+	};
 
+	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.
+	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this is not possible to
+	/// decide with constant look-ahead.
+	LookAheadInfo peekStatementType() const;
+	/// Returns a typename parsed in look-ahead fashion from something like "a[8][2**70]".
+	ASTPointer<TypeName> typeNameIndexAccessStructure(
+		ASTPointer<PrimaryExpression> const& _primary,
+		std::vector<std::pair<ASTPointer<Expression>, Location>> const& _indices);
+	/// Returns an expression parsed in look-ahead fashion from something like "a[8][2**70]".
+	ASTPointer<Expression> expressionFromIndexAccessStructure(
+		ASTPointer<PrimaryExpression> const& _primary,
+		std::vector<std::pair<ASTPointer<Expression>, Location>> const& _indices);
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
 	Token::Value expectAssignmentOperator();
