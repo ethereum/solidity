@@ -279,7 +279,7 @@ public:
 };
 
 /**
- * The type of an array, the flavours are byte array (bytes), statically- (<type>[<length>])
+ * The type of an array. The flavours are byte array (bytes), statically- (<type>[<length>])
  * and dynamically-sized array (<type>[]).
  */
 class ArrayType: public Type

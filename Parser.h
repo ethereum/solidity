@@ -108,7 +108,7 @@ private:
 	};
 
 	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.
-	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this it is not possible to
+	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this is not possible to
 	/// decide with constant look-ahead.
 	LookAheadInfo peekStatementType() const;
 	/// Returns a typename parsed in look-ahead fashion from something like "a[8][2**70]".

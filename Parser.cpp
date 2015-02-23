@@ -631,6 +631,8 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 		return parseVariableDeclarationStatement();
 	case LookAheadInfo::ExpressionStatement:
 		return parseExpressionStatement();
+	default:
+		break;
 	}
 
 	// At this point, we have '(Identifier|ElementaryTypeName) "["'.
