@@ -30,7 +30,7 @@ using namespace dev::p2p;
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
-BOOST_AUTO_TEST_SUITE(p2p)
+BOOST_AUTO_TEST_SUITE(net)
 
 /**
  * Only used for testing. Not useful beyond tests.
@@ -87,7 +87,7 @@ struct TestNodeTable: public NodeTable
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
 		for (auto& n: _testNodes)
 			if (_count--)
-				noteNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
+				noteActiveNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
 			else
 				break;
 	}
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 	out.sign(k.sec());
 
 	bytesConstRef packet(out.data.data(), out.data.size());
-	bytesConstRef rlpBytes(packet.cropped(97, packet.size() - 97));
+	bytesConstRef rlpBytes(packet.cropped(h256::size + Signature::size + 1));
 	Neighbours in = Neighbours::fromBytesConstRef(to, rlpBytes);
 	int count = 0;
 	for (auto n: in.nodes)
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	// Not yet a 'real' test.
 	TestNodeTableHost node(8);
 	node.start();
-	node.nodeTable->join(); // ideally, joining with empty node table logs warning we can check for
+	node.nodeTable->discover(); // ideally, joining with empty node table logs warning we can check for
 	node.setup();
 	node.populate();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
@@ -190,15 +190,24 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	node.populateAll();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
+	auto nodes = node.nodeTable->nodes();
+	nodes.sort();
+	
 	node.nodeTable->reset();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 
 	node.populate(1);
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 	
-	node.nodeTable->join();
+	node.nodeTable->discover();
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
+
+	BOOST_REQUIRE_EQUAL(node.nodeTable->count(), 8);
+	
+	auto netNodes = node.nodeTable->nodes();
+	netNodes.sort();
+
 }
 
 BOOST_AUTO_TEST_CASE(test_udp_once)

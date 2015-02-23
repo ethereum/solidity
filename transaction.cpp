@@ -29,33 +29,6 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-Transaction createTransactionFromFields(mObject& _tObj)
-{
-	BOOST_REQUIRE(_tObj.count("data") > 0);
-	BOOST_REQUIRE(_tObj.count("value") > 0);
-	BOOST_REQUIRE(_tObj.count("gasPrice") > 0);
-	BOOST_REQUIRE(_tObj.count("gasLimit") > 0);
-	BOOST_REQUIRE(_tObj.count("nonce")> 0);
-	BOOST_REQUIRE(_tObj.count("to") > 0);
-
-	BOOST_REQUIRE(_tObj.count("v") > 0);
-	BOOST_REQUIRE(_tObj.count("r") > 0);
-	BOOST_REQUIRE(_tObj.count("s") > 0);
-
-	//Construct Rlp of the given transaction
-	RLPStream rlpStream;
-	rlpStream.appendList(9);
-	rlpStream <<  bigint(_tObj["nonce"].get_str()) << bigint(_tObj["gasPrice"].get_str()) << bigint(_tObj["gasLimit"].get_str());
-	if (_tObj["to"].get_str().empty())
-		rlpStream << "";
-	else
-		rlpStream << Address(_tObj["to"].get_str());
-	rlpStream << bigint(_tObj["value"].get_str()) << importData(_tObj);
-	rlpStream << bigint(_tObj["v"].get_str()) << bigint(_tObj["r"].get_str()) << bigint(_tObj["s"].get_str());
-
-	return Transaction(rlpStream.out(), CheckSignature::Sender);
-}
-
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
 	for (auto& i: _v.get_obj())
@@ -66,25 +39,25 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin == false)
 		{
 			BOOST_REQUIRE(o.count("rlp") > 0);
-			bytes rlpReaded = importByteArray(o["rlp"].get_str());
 			Transaction txFromRlp;
-
 			try
 			{
-				txFromRlp = Transaction(rlpReaded, CheckSignature::Sender);
+				bytes stream = importByteArray(o["rlp"].get_str());
+				RLP rlp(stream);
+				txFromRlp = Transaction(rlp.data(), CheckSignature::Sender);
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 			}
 			catch(...)
 			{
-				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transction object should not be defined because the RLP is invalid!");
-				return;
+				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transaction object should not be defined because the RLP is invalid!");
+				continue;
 			}
 
 			BOOST_REQUIRE(o.count("transaction") > 0);
 
 			mObject tObj = o["transaction"].get_obj();
-			Transaction txFromFields = createTransactionFromFields(tObj);
+			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckSignature::Sender);
 
 			//Check the fields restored from RLP to original fields
 			BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), "Data in given RLP not matching the Transaction data!");
@@ -106,44 +79,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			mObject tObj = o["transaction"].get_obj();
 
 			//Construct Rlp of the given transaction
-			RLPStream rlpStream;
-			rlpStream.appendList(tObj.size());
-
-			if (tObj.count("nonce") > 0)
-				rlpStream << bigint(tObj["nonce"].get_str());
-
-			if (tObj.count("gasPrice") > 0)
-				rlpStream << bigint(tObj["gasPrice"].get_str());
-
-			if (tObj.count("gasLimit") > 0)
-				rlpStream << bigint(tObj["gasLimit"].get_str());
-
-			if (tObj.count("to") > 0)
-			{
-				if (tObj["to"].get_str().empty())
-					rlpStream << "";
-				else
-					rlpStream << Address(tObj["to"].get_str());
-			}
-
-			if (tObj.count("value") > 0)
-				rlpStream << bigint(tObj["value"].get_str());
-
-			if (tObj.count("data") > 0)
-				rlpStream << importData(tObj);
-
-			if (tObj.count("v") > 0)
-				rlpStream << bigint(tObj["v"].get_str());
-
-			if (tObj.count("r") > 0)
-				rlpStream << bigint(tObj["r"].get_str());
-
-			if (tObj.count("s") > 0)
-				rlpStream <<  bigint(tObj["s"].get_str());
-
-			if (tObj.count("extrafield") > 0)
-				rlpStream << bigint(tObj["extrafield"].get_str());
-
+			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
 			o["rlp"] = "0x" + toHex(rlpStream.out());
 
 			try
@@ -170,6 +106,11 @@ BOOST_AUTO_TEST_SUITE(TransactionTests)
 BOOST_AUTO_TEST_CASE(TransactionTest)
 {
 	dev::test::executeTests("ttTransactionTest", "/TransactionTests", dev::test::doTransactionTests);
+}
+
+BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
+{
+	dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(tt10mbDataField)

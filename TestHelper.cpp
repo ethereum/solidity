@@ -64,6 +64,9 @@ void connectClients(Client& c1, Client& c2)
 namespace test
 {
 
+struct ValueTooLarge: virtual Exception {};
+bigint const c_max256plus1 = bigint(1) << 256;
+
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller): m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
@@ -108,6 +111,11 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 		BOOST_REQUIRE(o.count("storage") > 0);
 		BOOST_REQUIRE(o.count("code") > 0);
 
+		if (bigint(o["balance"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
+		if (bigint(o["nonce"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
+
 		Address address = Address(i.first);
 
 		bytes code = importCode(o);
@@ -139,6 +147,15 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	BOOST_REQUIRE(_o.count("value") > 0);
 	BOOST_REQUIRE(_o.count("secretKey") > 0);
 	BOOST_REQUIRE(_o.count("data") > 0);
+
+	if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
+		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
+	if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
+		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
+	if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
+		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
+	if (bigint(_o["value"].get_str()) >= c_max256plus1)
+		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
 	m_transaction = _o["to"].get_str().empty() ?
 		Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
@@ -230,7 +247,7 @@ byte toByte(json_spirit::mValue const& _v)
 
 bytes importByteArray(std::string const& _str)
 {
-	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str);
+	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, ThrowType::Throw);
 }
 
 bytes importData(json_spirit::mObject& _o)
@@ -458,11 +475,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 			}
 			catch (Exception const& _e)
 			{
-				BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+				BOOST_ERROR("Failed filling test with Exception: " << diagnostic_information(_e));
 			}
 			catch (std::exception const& _e)
 			{
-				BOOST_ERROR("Failed test with Exception: " << _e.what());
+				BOOST_ERROR("Failed filling test with Exception: " << _e.what());
 			}
 			break;
 		}
@@ -487,6 +504,49 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	}
 }
 
+RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
+{
+	//Construct Rlp of the given transaction
+	RLPStream rlpStream;
+	rlpStream.appendList(_tObj.size());
+
+	if (_tObj.count("nonce"))
+		rlpStream << bigint(_tObj["nonce"].get_str());
+
+	if (_tObj.count("gasPrice"))
+		rlpStream << bigint(_tObj["gasPrice"].get_str());
+
+	if (_tObj.count("gasLimit"))
+		rlpStream << bigint(_tObj["gasLimit"].get_str());
+
+	if (_tObj.count("to"))
+	{
+		if (_tObj["to"].get_str().empty())
+			rlpStream << "";
+		else
+			rlpStream << importByteArray(_tObj["to"].get_str());
+	}
+
+	if (_tObj.count("value"))
+		rlpStream << bigint(_tObj["value"].get_str());
+
+	if (_tObj.count("data"))
+		rlpStream << importData(_tObj);
+
+	if (_tObj.count("v"))
+		rlpStream << bigint(_tObj["v"].get_str());
+
+	if (_tObj.count("r"))
+		rlpStream << bigint(_tObj["r"].get_str());
+
+	if (_tObj.count("s"))
+		rlpStream <<  bigint(_tObj["s"].get_str());
+
+	if (_tObj.count("extrafield"))
+		rlpStream << bigint(_tObj["extrafield"].get_str());
+
+	return rlpStream;
+}
 
 void processCommandLineOptions()
 {

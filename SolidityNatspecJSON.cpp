@@ -21,7 +21,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/Exceptions.h>
 #include <libdevcore/Exceptions.h>
@@ -54,9 +54,9 @@ public:
 		}
 
 		if (_userDocumentation)
-			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NATSPEC_USER);
+			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NatspecUser);
 		else
-			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NATSPEC_DEV);
+			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NatspecDev);
 		Json::Value generatedDocumentation;
 		m_reader.parse(generatedDocumentationString, generatedDocumentation);
 		Json::Value expectedDocumentation;

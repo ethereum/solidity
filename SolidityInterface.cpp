@@ -43,7 +43,7 @@ public:
 	{
 		m_code = _code;
 		BOOST_REQUIRE_NO_THROW(m_compilerStack.parse(_code));
-		m_interface = m_compilerStack.getMetadata("", DocumentationType::ABI_SOLIDITY_INTERFACE);
+		m_interface = m_compilerStack.getMetadata("", DocumentationType::ABISolidityInterface);
 		BOOST_REQUIRE_NO_THROW(m_reCompiler.parse(m_interface));
 		return m_reCompiler.getContractDefinition(_contractName);
 	}
@@ -111,24 +111,6 @@ BOOST_AUTO_TEST_CASE(exclude_fallback_function)
 	BOOST_CHECK_EQUAL(getSourcePart(contract), "contract test{}");
 }
 
-BOOST_AUTO_TEST_CASE(event)
-{
-	ContractDefinition const& contract = checkInterface(
-			"contract test { event Event; }");
-	BOOST_REQUIRE_EQUAL(1, contract.getEvents().size());
-	BOOST_CHECK_EQUAL(getSourcePart(*contract.getEvents().front()),
-					  "event Event;");
-}
-
-BOOST_AUTO_TEST_CASE(event_arguments)
-{
-	ContractDefinition const& contract = checkInterface(
-			"contract test { event Event(uint a, uint indexed b); }");
-	BOOST_REQUIRE_EQUAL(1, contract.getEvents().size());
-	BOOST_CHECK_EQUAL(getSourcePart(*contract.getEvents().front()),
-					  "event Event(uint256 a,uint256 indexed b);");
-}
-
 BOOST_AUTO_TEST_CASE(events)
 {
 	char const* sourceCode = "contract test {\n"
@@ -137,10 +119,8 @@ BOOST_AUTO_TEST_CASE(events)
 	"  event e2(); \n"
 	"}\n";
 	ContractDefinition const& contract = checkInterface(sourceCode);
-	set<string> expectation({"event e1(uint256 b,address indexed c);", "event e2;"});
-	BOOST_REQUIRE_EQUAL(2, contract.getEvents().size());
-	BOOST_CHECK(expectation == set<string>({getSourcePart(*contract.getEvents().at(0)),
-											getSourcePart(*contract.getEvents().at(1))}));
+	// events should not appear in the Solidity Interface
+	BOOST_REQUIRE_EQUAL(0, contract.getEvents().size());
 }
 
 BOOST_AUTO_TEST_CASE(inheritance)
@@ -155,12 +135,8 @@ BOOST_AUTO_TEST_CASE(inheritance)
 	"		event derivedEvent(uint indexed evtArgDerived); \n"
 	"	}";
 	ContractDefinition const& contract = checkInterface(sourceCode);
-	set<string> expectedEvents({"event derivedEvent(uint256 indexed evtArgDerived);",
-								"event baseEvent(string32 indexed evtArgBase);"});
 	set<string> expectedFunctions({"function baseFunction(uint256 p)returns(uint256 i){}",
 								   "function derivedFunction(string32 p)returns(string32 i){}"});
-	BOOST_CHECK(expectedEvents == set<string>({getSourcePart(*contract.getEvents().at(0)),
-											   getSourcePart(*contract.getEvents().at(1))}));
 	BOOST_REQUIRE_EQUAL(2, contract.getDefinedFunctions().size());
 	BOOST_CHECK(expectedFunctions == set<string>({getSourcePart(*contract.getDefinedFunctions().at(0)),
 												  getSourcePart(*contract.getDefinedFunctions().at(1))}));

@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(assignment_to_struct)
 					   "    data = a;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(returns_in_constructor)
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_indirect)
 BOOST_AUTO_TEST_CASE(illegal_override_visibility)
 {
 	char const* text = R"(
-		contract B { function f() protected {} }
+		contract B { function f() internal {} }
 		contract C is B { function f() public {} }
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 					   "    uint64(2);\n"
 					   "  }\n"
 					   "uint256 private foo;\n"
-					   "uint256 protected bar;\n"
+					   "uint256 internal bar;\n"
 					   "}\n";
 
 	ASTPointer<SourceUnit> source;
@@ -717,7 +717,7 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	function = retrieveFunctionBySignature(contract, "foo()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
 	function = retrieveFunctionBySignature(contract, "bar()");
-	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a protected variable should not exist");
+	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function)
@@ -832,11 +832,11 @@ BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
-BOOST_AUTO_TEST_CASE(access_to_protected_function)
+BOOST_AUTO_TEST_CASE(access_to_internal_function)
 {
 	char const* text = R"(
 		contract c {
-			function f() protected {}
+			function f() internal {}
 		}
 		contract d {
 			function g() { c(0).f(); }
@@ -856,7 +856,7 @@ BOOST_AUTO_TEST_CASE(access_to_default_state_variable_visibility)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(access_to_protected_state_variable)
+BOOST_AUTO_TEST_CASE(access_to_internal_state_variable)
 {
 	char const* text = R"(
 		contract c {
@@ -904,6 +904,48 @@ BOOST_AUTO_TEST_CASE(invalid_parameter_names_in_named_args)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint){
+		}
+	})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f() returns(bool){
+		}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint, uint k) returns(uint ret_k){
+				return k;
+		}
+	})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
+{
+	char const* text = R"(
+		contract test {
+			function f() returns(uint ret_k, uint){
+				return 5;
+		}
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(disallow_declaration_of_void_type)
 {
 	char const* sourceCode = "contract c { function f() { var x = f(); } }";
@@ -930,6 +972,208 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 			uint256 a;
 		})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_negative_exponent)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) { return 2 ** -3; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) { return 2 ** 10000000000; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(enum_member_access)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					choices = ActionChoices.GoStraight;
+				}
+				ActionChoices choices;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					choices = ActionChoices.RunAroundWavingYourHands;
+				}
+				ActionChoices choices;
+			}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					a = uint256(ActionChoices.GoStraight);
+					b = uint64(ActionChoices.Sit);
+				}
+				uint256 a;
+				uint64 b;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					a = 2;
+					b = ActionChoices(a);
+				}
+				uint256 a;
+				ActionChoices b;
+			}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+				function test()
+				{
+					a = ActionChoices.GoStraight;
+					b = ActionChoices.Sit;
+				}
+				uint256 a;
+				uint64 b;
+			}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(enum_duplicate_values)
+{
+	char const* text = R"(
+			contract test {
+				enum ActionChoices { GoLeft, GoRight, GoLeft, Sit }
+			}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(private_visibility)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() private {}
+		}
+		contract derived is base {
+			function g() { f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(private_visibility_via_explicit_base_access)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() private {}
+		}
+		contract derived is base {
+			function g() { base.f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_visibility)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f() external {}
+			function g() { f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(external_base_visibility)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f() external {}
+		}
+		contract derived is base {
+			function g() { base.f(); }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_assign)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { a = 1; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_increment)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { a++; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_argument_delete)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function f(uint a) external { delete a; }
+		}
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(test_for_bug_override_function_with_bytearray_type)
+{
+	char const* sourceCode = R"(
+		contract Vehicle {
+			function f(bytes _a) external returns (uint256 r) {r = 1;}
+		}
+		contract Bike is Vehicle {
+			function f(bytes _a) external returns (uint256 r) {r = 42;}
+		}
+		)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(sourceCode));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

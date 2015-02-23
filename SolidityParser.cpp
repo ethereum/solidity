@@ -387,6 +387,17 @@ BOOST_AUTO_TEST_CASE(complex_expression)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(exp_expression)
+{
+	char const* text = R"(
+		contract test {
+			function fun(uint256 a) {
+				uint256 x = 3 ** a;
+			}
+		})";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
 BOOST_AUTO_TEST_CASE(while_loop)
 {
 	char const* text = "contract test {\n"
@@ -640,13 +651,13 @@ BOOST_AUTO_TEST_CASE(visibility_specifiers)
 	char const* text = R"(
 		contract c {
 			uint private a;
-			uint protected b;
+			uint internal b;
 			uint public c;
 			uint d;
 			function f() {}
 			function f_priv() private {}
 			function f_public() public {}
-			function f_protected() protected {}
+			function f_internal() internal {}
 		})";
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
@@ -655,7 +666,7 @@ BOOST_AUTO_TEST_CASE(multiple_visibility_specifiers)
 {
 	char const* text = R"(
 		contract c {
-			uint private protected a;
+			uint private internal a;
 		})";
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
@@ -690,6 +701,56 @@ BOOST_AUTO_TEST_CASE(literal_constants_with_ether_subdenominations_in_expression
 			uint256 a;
 		})";
 	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(enum_valid_declaration)
+{
+	char const* text = R"(
+		contract c {
+			enum validEnum { Value1, Value2, Value3, Value4 }
+			function c ()
+			{
+				a = foo.Value3;
+			}
+			uint256 a;
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_enum_declaration)
+{
+	char const* text = R"(
+		contract c {
+			enum foo { }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(malformed_enum_declaration)
+{
+	char const* text = R"(
+		contract c {
+			enum foo { WARNING,}
+		})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(external_function)
+{
+	char const* text = R"(
+		contract c {
+			function x() external {}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextExplainError(text));
+}
+
+BOOST_AUTO_TEST_CASE(external_variable)
+{
+	char const* text = R"(
+		contract c {
+			uint external x;
+		})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
