@@ -530,7 +530,7 @@
                 }
             },
 
-	    "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+            "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "100000",
                 "code" : "{ (CALLDATACOPY 0 0 32) }",
                 "nonce" : "0",
@@ -540,9 +540,9 @@
         },
         "transaction" :
         {
-	    "//" : "run(int256)",
+            "//" : "run(int256)",
             "data" : "0x61a47706000000000000000000000000000000000000000000000000000000000000c350",
-	    "gasLimit" : "904+68*x+e",
+            "gasLimit" : "904+68*x+e",
             "gasLimit" : "3500000",
             "gasPrice" : "1",
             "nonce" : "0",
