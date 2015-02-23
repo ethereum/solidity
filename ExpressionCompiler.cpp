@@ -586,11 +586,29 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			"TODO: Index acces only implemented for storage arrays.");
 		solAssert(!arrayType.isByteArray(), "TODO: Index acces not implemented for byte arrays.");
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
-		if (arrayType.isDynamicallySized())
-			CompilerUtils(m_context).computeHashStatic();
+
 		_indexAccess.getIndexExpression()->accept(*this);
-		m_context << arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL
-			<< eth::Instruction::ADD;
+		// retrieve length
+		if (arrayType.isDynamicallySized())
+			m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
+		else
+			m_context << arrayType.getLength();
+		// stack: <base_ref> <index> <length>
+		// check out-of-bounds access
+		m_context << eth::Instruction::DUP2 << eth::Instruction::LT;
+		eth::AssemblyItem legalAccess = m_context.appendConditionalJump();
+		// out-of-bounds access throws exception (just STOP for now)
+		m_context << eth::Instruction::STOP;
+
+		m_context << legalAccess;
+		// stack: <base_ref> <index>
+		m_context << arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL;
+		if (arrayType.isDynamicallySized())
+		{
+			m_context << eth::Instruction::SWAP1;
+			CompilerUtils(m_context).computeHashStatic();
+		}
+		m_context << eth::Instruction::ADD;
 		m_currentLValue = LValue(m_context, LValue::LValueType::Storage, _indexAccess.getType());
 		m_currentLValue.retrieveValueIfLValueNotRequested(_indexAccess);
 	}
