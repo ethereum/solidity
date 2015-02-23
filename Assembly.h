@@ -24,8 +24,8 @@
 #include <iostream>
 #include <sstream>
 #include <libdevcore/Common.h>
+#include <libdevcore/SourceLocation.h>
 #include <libevmcore/Instruction.h>
-#include <libsolidity/BaseTypes.h>
 #include "Exceptions.h"
 
 namespace dev
@@ -58,12 +58,12 @@ public:
 	int deposit() const;
 
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
-	void setLocation(dev::solidity::Location const& _location) { m_location = _location;}
+	void setLocation(dev::SourceLocation const& _location) { m_location = _location;}
 
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
-	dev::solidity::Location m_location;
+	dev::SourceLocation m_location;
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
@@ -87,7 +87,7 @@ public:
 	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
 	void append(Assembly const& _a, int _deposit);
-	AssemblyItem const& append(AssemblyItem const& _i, solidity::Location const& _location = solidity::Location());
+	AssemblyItem const& append(AssemblyItem const& _i, SourceLocation const& _location = SourceLocation());
 	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 	AssemblyItem appendSubSize(Assembly const& _a) { auto ret = newSub(_a); append(newPushSubSize(ret.data())); return ret; }

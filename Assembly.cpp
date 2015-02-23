@@ -229,7 +229,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
 	return _out;
 }
 
-AssemblyItem const& Assembly::append(AssemblyItem const& _i, solidity::Location const& _location)
+AssemblyItem const& Assembly::append(AssemblyItem const& _i, SourceLocation const& _location)
 {
 	m_deposit += _i.deposit();
 	m_items.push_back(_i);
