@@ -546,7 +546,8 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 				break;
 			case ArrayType::Location::Storage:
-				m_context << eth::Instruction::SLOAD;
+				m_currentLValue = LValue(m_context, LValue::LValueType::Storage, _memberAccess.getType());
+				m_currentLValue.retrieveValueIfLValueNotRequested(_memberAccess);
 				break;
 			default:
 				solAssert(false, "Unsupported array location.");
@@ -583,13 +584,10 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
 		solAssert(arrayType.getLocation() == ArrayType::Location::Storage,
 			"TODO: Index acces only implemented for storage arrays.");
-		solAssert(!arrayType.isDynamicallySized(),
-			"TODO: Index acces only implemented for fixed-size arrays.");
-		solAssert(!arrayType.isByteArray(),
-			"TODO: Index acces not implemented for byte arrays.");
+		solAssert(!arrayType.isByteArray(), "TODO: Index acces not implemented for byte arrays.");
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
-		// TODO: for dynamically-sized arrays, update the length for each write
-		// TODO: do we want to check the index?
+		if (arrayType.isDynamicallySized())
+			CompilerUtils(m_context).computeHashStatic();
 		_indexAccess.getIndexExpression()->accept(*this);
 		m_context << arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL
 			<< eth::Instruction::ADD;
@@ -1075,7 +1073,7 @@ void ExpressionCompiler::LValue::retrieveValue(Location const& _location, bool _
 	{
 	case LValueType::Stack:
 	{
-		unsigned stackPos = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset));
+		unsigned stackPos = m_context->baseToCurrentStackOffset(m_baseStackOffset);
 		if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
 			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_location)
 												  << errinfo_comment("Stack too deep."));
@@ -1124,7 +1122,7 @@ void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, Location co
 	{
 	case LValueType::Stack:
 	{
-		unsigned stackDiff = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset)) - m_size + 1;
+		unsigned stackDiff = m_context->baseToCurrentStackOffset(m_baseStackOffset) - m_size + 1;
 		if (stackDiff > 16)
 			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_location)
 												  << errinfo_comment("Stack too deep."));
@@ -1227,7 +1225,7 @@ void ExpressionCompiler::LValue::setToZero(Location const& _location) const
 	{
 	case LValueType::Stack:
 	{
-		unsigned stackDiff = m_context->baseToCurrentStackOffset(unsigned(m_baseStackOffset));
+		unsigned stackDiff = m_context->baseToCurrentStackOffset(m_baseStackOffset);
 		if (stackDiff > 16)
 			BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_location)
 												  << errinfo_comment("Stack too deep."));
