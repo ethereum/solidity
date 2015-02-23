@@ -1669,7 +1669,6 @@ BOOST_AUTO_TEST_CASE(value_insane)
 			function test() { h = new helper(); }
 			function sendAmount(uint amount) returns (uint256 bal) {
 				var x1 = h.getBalance.value;
-				uint someStackElement = 20;
 				var x2 = x1(amount).gas;
 				var x3 = x2(1000).value;
 				return x3(amount + 3)();// overwrite value
