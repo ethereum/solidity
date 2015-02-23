@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_indirect)
 BOOST_AUTO_TEST_CASE(illegal_override_visibility)
 {
 	char const* text = R"(
-		contract B { function f() inheritable {} }
+		contract B { function f() internal {} }
 		contract C is B { function f() public {} }
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
@@ -706,7 +706,7 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 					   "    uint64(2);\n"
 					   "  }\n"
 					   "uint256 private foo;\n"
-					   "uint256 inheritable bar;\n"
+					   "uint256 internal bar;\n"
 					   "}\n";
 
 	ASTPointer<SourceUnit> source;
@@ -717,7 +717,7 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	function = retrieveFunctionBySignature(contract, "foo()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
 	function = retrieveFunctionBySignature(contract, "bar()");
-	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an inheritable variable should not exist");
+	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function)
@@ -832,11 +832,11 @@ BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
-BOOST_AUTO_TEST_CASE(access_to_inheritable_function)
+BOOST_AUTO_TEST_CASE(access_to_internal_function)
 {
 	char const* text = R"(
 		contract c {
-			function f() inheritable {}
+			function f() internal {}
 		}
 		contract d {
 			function g() { c(0).f(); }
@@ -856,7 +856,7 @@ BOOST_AUTO_TEST_CASE(access_to_default_state_variable_visibility)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(access_to_inheritable_state_variable)
+BOOST_AUTO_TEST_CASE(access_to_internal_state_variable)
 {
 	char const* text = R"(
 		contract c {
