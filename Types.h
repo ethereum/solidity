@@ -279,7 +279,8 @@ public:
 };
 
 /**
- * The type of a byte array, prototype for a general array.
+ * The type of an array, the flavours are byte array (bytes), statically- (<type>[<length>])
+ * and dynamically-sized array (<type>[]).
  */
 class ArrayType: public Type
 {

@@ -625,11 +625,13 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 	// These two cases are very hard to distinguish:
 	// x[7 * 20 + 3] a;  -  x[7 * 20 + 3] = 9;
 	// In the first case, x is a type name, in the second it is the name of a variable.
-	int isVariableDeclaration = peekVariableDeclarationStatement();
-	if (isVariableDeclaration == 1)
+	switch (peekStatementType())
+	{
+	case LookAheadInfo::VariableDeclarationStatement:
 		return parseVariableDeclarationStatement();
-	else if (isVariableDeclaration == -1)
+	case LookAheadInfo::ExpressionStatement:
 		return parseExpressionStatement();
+	}
 
 	// At this point, we have '(Identifier|ElementaryTypeName) "["'.
 	// We parse '(Identifier|ElementaryTypeName) ( "[" Expression "]" )+' and then decide whether to hand this over
@@ -658,9 +660,9 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 	while (m_scanner->getCurrentToken() == Token::LBrack);
 
 	if (m_scanner->getCurrentToken() == Token::Identifier)
-		return parseVariableDeclarationStatement(typeNameFromArrayIndexStructure(primary, indices));
+		return parseVariableDeclarationStatement(typeNameIndexAccessStructure(primary, indices));
 	else
-		return parseExpressionStatement(expressionFromArrayIndexStructure(primary, indices));
+		return parseExpressionStatement(expressionFromIndexAccessStructure(primary, indices));
 }
 
 ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStatement(
@@ -675,16 +677,16 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 }
 
 ASTPointer<ExpressionStatement> Parser::parseExpressionStatement(
-	ASTPointer<Expression> const& _lookAheadArrayExpression)
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
 {
-	ASTPointer<Expression> expression = parseExpression(_lookAheadArrayExpression);
+	ASTPointer<Expression> expression = parseExpression(_lookAheadIndexAccessStructure);
 	return ASTNodeFactory(*this, expression).createNode<ExpressionStatement>(expression);
 }
 
 ASTPointer<Expression> Parser::parseExpression(
-		ASTPointer<Expression> const& _lookAheadArrayExpression)
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
 {
-	ASTPointer<Expression> expression = parseBinaryExpression(4, _lookAheadArrayExpression);
+	ASTPointer<Expression> expression = parseBinaryExpression(4, _lookAheadIndexAccessStructure);
 	if (!Token::isAssignmentOp(m_scanner->getCurrentToken()))
 		return expression;
 	Token::Value assignmentOperator = expectAssignmentOperator();
@@ -695,9 +697,9 @@ ASTPointer<Expression> Parser::parseExpression(
 }
 
 ASTPointer<Expression> Parser::parseBinaryExpression(int _minPrecedence,
-	ASTPointer<Expression> const& _lookAheadArrayExpression)
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
 {
-	ASTPointer<Expression> expression = parseUnaryExpression(_lookAheadArrayExpression);
+	ASTPointer<Expression> expression = parseUnaryExpression(_lookAheadIndexAccessStructure);
 	ASTNodeFactory nodeFactory(*this, expression);
 	int precedence = Token::precedence(m_scanner->getCurrentToken());
 	for (; precedence >= _minPrecedence; --precedence)
@@ -713,12 +715,12 @@ ASTPointer<Expression> Parser::parseBinaryExpression(int _minPrecedence,
 }
 
 ASTPointer<Expression> Parser::parseUnaryExpression(
-	ASTPointer<Expression> const& _lookAheadArrayExpression)
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
 {
-	ASTNodeFactory nodeFactory = _lookAheadArrayExpression ?
-		ASTNodeFactory(*this, _lookAheadArrayExpression) : ASTNodeFactory(*this);
+	ASTNodeFactory nodeFactory = _lookAheadIndexAccessStructure ?
+		ASTNodeFactory(*this, _lookAheadIndexAccessStructure) : ASTNodeFactory(*this);
 	Token::Value token = m_scanner->getCurrentToken();
-	if (!_lookAheadArrayExpression && (Token::isUnaryOp(token) || Token::isCountOp(token)))
+	if (!_lookAheadIndexAccessStructure && (Token::isUnaryOp(token) || Token::isCountOp(token)))
 	{
 		// prefix expression
 		m_scanner->next();
@@ -729,7 +731,7 @@ ASTPointer<Expression> Parser::parseUnaryExpression(
 	else
 	{
 		// potential postfix expression
-		ASTPointer<Expression> subExpression = parseLeftHandSideExpression(_lookAheadArrayExpression);
+		ASTPointer<Expression> subExpression = parseLeftHandSideExpression(_lookAheadIndexAccessStructure);
 		token = m_scanner->getCurrentToken();
 		if (!Token::isCountOp(token))
 			return subExpression;
@@ -740,14 +742,14 @@ ASTPointer<Expression> Parser::parseUnaryExpression(
 }
 
 ASTPointer<Expression> Parser::parseLeftHandSideExpression(
-	ASTPointer<Expression> const& _lookAheadArrayExpression)
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
 {
-	ASTNodeFactory nodeFactory = _lookAheadArrayExpression ?
-		ASTNodeFactory(*this, _lookAheadArrayExpression) : ASTNodeFactory(*this);
+	ASTNodeFactory nodeFactory = _lookAheadIndexAccessStructure ?
+		ASTNodeFactory(*this, _lookAheadIndexAccessStructure) : ASTNodeFactory(*this);
 
 	ASTPointer<Expression> expression;
-	if (_lookAheadArrayExpression)
-		expression = _lookAheadArrayExpression;
+	if (_lookAheadIndexAccessStructure)
+		expression = _lookAheadIndexAccessStructure;
 	else if (m_scanner->getCurrentToken() == Token::New)
 	{
 		expectToken(Token::New);
@@ -889,7 +891,7 @@ pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::pars
 	return ret;
 }
 
-int Parser::peekVariableDeclarationStatement() const
+Parser::LookAheadInfo Parser::peekStatementType() const
 {
 	// Distinguish between variable declaration (and potentially assignment) and expression statement
 	// (which include assignments to other expressions and pre-declared variables).
@@ -902,13 +904,13 @@ int Parser::peekVariableDeclarationStatement() const
 	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
 	if (token == Token::Mapping || token == Token::Var ||
 			(mightBeTypeName && m_scanner->peekNextToken() == Token::Identifier))
-		return 1;
+		return LookAheadInfo::VariableDeclarationStatement;
 	if (mightBeTypeName && m_scanner->peekNextToken() == Token::LBrack)
-		return 0;
-	return -1;
+		return LookAheadInfo::IndexAccessStructure;
+	return LookAheadInfo::ExpressionStatement;
 }
 
-ASTPointer<TypeName> Parser::typeNameFromArrayIndexStructure(
+ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
 	ASTPointer<PrimaryExpression> const& _primary, vector<pair<ASTPointer<Expression>, Location>> const& _indices)
 {
 	ASTNodeFactory nodeFactory(*this, _primary);
@@ -927,7 +929,7 @@ ASTPointer<TypeName> Parser::typeNameFromArrayIndexStructure(
 	return type;
 }
 
-ASTPointer<Expression> Parser::expressionFromArrayIndexStructure(
+ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
 	ASTPointer<PrimaryExpression> const& _primary, vector<pair<ASTPointer<Expression>, Location>> const& _indices)
 {
 	ASTNodeFactory nodeFactory(*this, _primary);

@@ -84,15 +84,15 @@ private:
 	ASTPointer<VariableDeclarationStatement> parseVariableDeclarationStatement(
 		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>());
 	ASTPointer<ExpressionStatement> parseExpressionStatement(
-		ASTPointer<Expression> const& _lookAheadArrayExpression = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
 	ASTPointer<Expression> parseExpression(
-		ASTPointer<Expression> const& _lookAheadArrayExpression = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
 	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4,
-		ASTPointer<Expression> const& _lookAheadArrayExpression = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
 	ASTPointer<Expression> parseUnaryExpression(
-		ASTPointer<Expression> const& _lookAheadArrayExpression = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
 	ASTPointer<Expression> parseLeftHandSideExpression(
-		ASTPointer<Expression> const& _lookAheadArrayExpression = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
 	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
@@ -101,16 +101,22 @@ private:
 	///@{
 	///@name Helper functions
 
+	/// Used as return value of @see peekStatementType.
+	enum class LookAheadInfo
+	{
+		IndexAccessStructure, VariableDeclarationStatement, ExpressionStatement
+	};
+
 	/// Performs limited look-ahead to distinguish between variable declaration and expression statement.
-	/// @returns 1 if it is a variable declaration, -1 if it is an expression statement and 0 if
-	/// it might be an array-typed variable declaration or an index access to an existing variable.
-	int peekVariableDeclarationStatement() const;
+	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this it is not possible to
+	/// decide with constant look-ahead.
+	LookAheadInfo peekStatementType() const;
 	/// Returns a typename parsed in look-ahead fashion from something like "a[8][2**70]".
-	ASTPointer<TypeName> typeNameFromArrayIndexStructure(
+	ASTPointer<TypeName> typeNameIndexAccessStructure(
 		ASTPointer<PrimaryExpression> const& _primary,
 		std::vector<std::pair<ASTPointer<Expression>, Location>> const& _indices);
 	/// Returns an expression parsed in look-ahead fashion from something like "a[8][2**70]".
-	ASTPointer<Expression> expressionFromArrayIndexStructure(
+	ASTPointer<Expression> expressionFromIndexAccessStructure(
 		ASTPointer<PrimaryExpression> const& _primary,
 		std::vector<std::pair<ASTPointer<Expression>, Location>> const& _indices);
 	/// If current token value is not _value, throw exception otherwise advance token.
