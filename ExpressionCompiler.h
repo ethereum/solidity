@@ -25,7 +25,7 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
-#include <libsolidity/BaseTypes.h>
+#include <libdevcore/SourceLocation.h>
 #include <libsolidity/ASTVisitor.h>
 
 namespace dev {
@@ -133,7 +133,7 @@ private:
 
 		/// Set type according to the declaration and retrieve the reference.
 		/// @a _location is the current location
-		void fromDeclaration(Declaration const& _declaration, Location const& _location);
+		void fromDeclaration(Declaration const& _declaration, SourceLocation const& _location);
 
 		void reset() { m_type = LValueType::None; m_dataType.reset(); m_baseStackOffset = 0; m_size = 0; }
 
@@ -148,15 +148,15 @@ private:
 		/// Copies the value of the current lvalue to the top of the stack and, if @a _remove is true,
 		/// also removes the reference from the stack (note that is does not reset the type to @a NONE).
 		/// @a _location source location of the current expression, used for error reporting.
-		void retrieveValue(Location const& _location, bool _remove = false) const;
+		void retrieveValue(SourceLocation const& _location, bool _remove = false) const;
 		/// Moves a value from the stack to the lvalue. Removes the value if @a _move is true.
 		/// @a _location is the source location of the expression that caused this operation.
 		/// Stack pre: value [lvalue_ref]
 		/// Stack post if !_move: value_of(lvalue_ref)
-		void storeValue(Type const& _sourceType, Location const& _location = Location(), bool _move = false) const;
+		void storeValue(Type const& _sourceType, SourceLocation const& _location = SourceLocation(), bool _move = false) const;
 		/// Stores zero in the lvalue.
 		/// @a _location is the source location of the requested operation
-		void setToZero(Location const& _location = Location()) const;
+		void setToZero(SourceLocation const& _location = SourceLocation()) const;
 		/// Convenience function to convert the stored reference to a value and reset type to NONE if
 		/// the reference was not requested by @a _expression.
 		void retrieveValueIfLValueNotRequested(Expression const& _expression);

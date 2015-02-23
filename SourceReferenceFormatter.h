@@ -23,7 +23,7 @@
 #pragma once
 
 #include <ostream>
-#include <libsolidity/BaseTypes.h>
+#include <libdevcore/SourceLocation.h>
 
 namespace dev
 {
@@ -39,7 +39,7 @@ class CompilerStack; // forward
 struct SourceReferenceFormatter
 {
 public:
-	static void printSourceLocation(std::ostream& _stream, Location const& _location, Scanner const& _scanner);
+	static void printSourceLocation(std::ostream& _stream, SourceLocation const& _location, Scanner const& _scanner);
 	static void printExceptionInformation(std::ostream& _stream, Exception const& _exception,
 										  std::string const& _name, CompilerStack const& _compiler);
 };

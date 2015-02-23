@@ -24,7 +24,7 @@
 
 #include <string>
 #include <libdevcore/Exceptions.h>
-#include <libsolidity/BaseTypes.h>
+#include <libdevcore/SourceLocation.h>
 
 namespace dev
 {
@@ -38,7 +38,7 @@ struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
 struct DocstringParsingError: virtual Exception {};
 
-using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, Location>;
+using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
 
 }
 }

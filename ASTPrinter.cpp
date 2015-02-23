@@ -555,7 +555,7 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 {
 	if (!m_source.empty())
 	{
-		Location const& location(_node.getLocation());
+		SourceLocation const& location(_node.getLocation());
 		*m_ostream << getIndentation() << "   Source: "
 				   << escaped(m_source.substr(location.start, location.end - location.start), false) << endl;
 	}

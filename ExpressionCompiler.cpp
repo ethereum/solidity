@@ -1035,7 +1035,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 					  << structType->getStorageOffsetOfMember(names[i])
 					  << eth::Instruction::ADD;
 			m_currentLValue = LValue(m_context, LValue::LValueType::Storage, types[i]);
-			m_currentLValue.retrieveValue(Location(), true);
+			m_currentLValue.retrieveValue(SourceLocation(), true);
 			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
 			m_context << eth::Instruction::SWAP1;
 			retSizeOnStack += types[i]->getSizeOnStack();
@@ -1047,7 +1047,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		// simple value
 		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
 		m_currentLValue = LValue(m_context, LValue::LValueType::Storage, returnType);
-		m_currentLValue.retrieveValue(Location(), true);
+		m_currentLValue.retrieveValue(SourceLocation(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
 	solAssert(retSizeOnStack <= 15, "Stack too deep.");
@@ -1068,7 +1068,7 @@ ExpressionCompiler::LValue::LValue(CompilerContext& _compilerContext, LValueType
 		m_size = unsigned(m_dataType->getSizeOnStack());
 }
 
-void ExpressionCompiler::LValue::fromDeclaration(Declaration const& _declaration, Location const& _location)
+void ExpressionCompiler::LValue::fromDeclaration(Declaration const& _declaration, SourceLocation const& _location)
 {
 	if (m_context->isLocalVariable(&_declaration))
 	{
@@ -1091,7 +1091,7 @@ void ExpressionCompiler::LValue::fromDeclaration(Declaration const& _declaration
 													  << errinfo_comment("Identifier type not supported or identifier not found."));
 }
 
-void ExpressionCompiler::LValue::retrieveValue(Location const& _location, bool _remove) const
+void ExpressionCompiler::LValue::retrieveValue(SourceLocation const& _location, bool _remove) const
 {
 	switch (m_type)
 	{
@@ -1140,7 +1140,7 @@ void ExpressionCompiler::LValue::retrieveValueFromStorage(bool _remove) const
 		}
 }
 
-void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, Location const& _location, bool _move) const
+void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
 {
 	switch (m_type)
 	{
@@ -1243,7 +1243,7 @@ void ExpressionCompiler::LValue::storeValue(Type const& _sourceType, Location co
 	}
 }
 
-void ExpressionCompiler::LValue::setToZero(Location const& _location) const
+void ExpressionCompiler::LValue::setToZero(SourceLocation const& _location) const
 {
 	switch (m_type)
 	{

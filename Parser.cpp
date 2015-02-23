@@ -22,7 +22,7 @@
 
 #include <vector>
 #include <libdevcore/Log.h>
-#include <libsolidity/BaseTypes.h>
+#include <libdevcore/SourceLocation.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Exceptions.h>
@@ -60,7 +60,7 @@ public:
 
 private:
 	Parser const& m_parser;
-	Location m_location;
+	SourceLocation m_location;
 };
 
 ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
@@ -983,7 +983,7 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 
 ParserError Parser::createParserError(string const& _description) const
 {
-	return ParserError() << errinfo_sourceLocation(Location(getPosition(), getPosition(), getSourceName()))
+	return ParserError() << errinfo_sourceLocation(SourceLocation(getPosition(), getPosition(), getSourceName()))
 						 << errinfo_comment(_description);
 }
 
