@@ -166,6 +166,13 @@ u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declarati
 	return it->second;
 }
 
+void CompilerContext::resetVisitedNodes(ASTNode const* _node)
+{
+	stack<ASTNode const*> newStack;
+	newStack.push(_node);
+	std::swap(m_visitedNodes, newStack);
+}
+
 CompilerContext& CompilerContext::operator<<(eth::AssemblyItem _item)
 {
 	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");

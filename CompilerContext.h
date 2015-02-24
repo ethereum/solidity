@@ -100,6 +100,8 @@ public:
 	void appendProgramSize() { return m_asm.appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
 	eth::AssemblyItem appendData(bytes const& _data) { return m_asm.append(_data); }
+	/// Resets the stack of visited nodes with a new stack having only @c _node
+	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
 	void popVisitedNodes() { m_visitedNodes.pop();}
 	/// Pushes an ASTNode to the stack of visited nodes

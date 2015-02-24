@@ -74,6 +74,7 @@ void Compiler::initializeContext(ContractDefinition const& _contract,
 	m_context.setCompiledContracts(_contracts);
 	m_context.setInheritanceHierarchy(_contract.getLinearizedBaseContracts());
 	registerStateVariables(_contract);
+	m_context.resetVisitedNodes(&_contract);
 }
 
 void Compiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
