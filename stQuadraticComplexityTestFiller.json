@@ -3,7 +3,7 @@
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
-            "currentGasLimit" : "5000000000",
+            "currentGasLimit" : "350000000",
             "currentNumber" : "0",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -34,7 +34,7 @@
 
             "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "5000000",
-                "code" : "{ (CALLDATACOPY 0 0 32) }",
+                "code" : "{ (CALLDATACOPY 0 0 50000) }",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -45,7 +45,7 @@
             "//" : "run(int256)",
             "data" : "0x61a47706000000000000000000000000000000000000000000000000000000000000c350",
             "gasLimit" : "904+68*x+e",
-            "gasLimit" : "3500000",
+            "gasLimit" : "350000000",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
