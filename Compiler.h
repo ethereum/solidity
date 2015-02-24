@@ -41,6 +41,8 @@ public:
 	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(m_optimize); }
 	bytes getRuntimeBytecode() { return m_runtimeContext.getAssembledBytecode(m_optimize);}
 	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
+	CompilerContext const& getContext() const { return m_context; }
+	CompilerContext const& getRuntimeContext() const { return m_runtimeContext; }
 
 private:
 	/// Registers the non-function objects inside the contract with the context.
