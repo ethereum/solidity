@@ -662,7 +662,7 @@ private:
 class ArrayTypeName: public TypeName
 {
 public:
-	ArrayTypeName(Location const& _location, ASTPointer<TypeName> const& _baseType,
+	ArrayTypeName(SourceLocation const& _location, ASTPointer<TypeName> const& _baseType,
 			ASTPointer<Expression> const& _length):
 		TypeName(_location), m_baseType(_baseType), m_length(_length) {}
 	virtual void accept(ASTVisitor& _visitor) override;

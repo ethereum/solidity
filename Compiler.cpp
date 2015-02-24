@@ -473,7 +473,7 @@ bool Compiler::visit(Return const& _return)
 bool Compiler::visit(VariableDeclarationStatement const& _variableDeclarationStatement)
 {
 	StackHeightChecker checker(m_context);
-    CompilerContext::LocationSetter locationSetter(m_context, &_variableDefinition);
+    CompilerContext::LocationSetter locationSetter(m_context, &_variableDeclarationStatement);
 	if (Expression const* expression = _variableDeclarationStatement.getExpression())
 	{
 		compileExpression(*expression, _variableDeclarationStatement.getDeclaration().getType());
