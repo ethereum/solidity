@@ -40,7 +40,12 @@ void CompilerContext::addMagicGlobal(MagicVariableDeclaration const& _declaratio
 void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
 {
 	m_stateVariables[&_declaration] = m_stateVariablesSize;
-	m_stateVariablesSize += _declaration.getType()->getStorageSize();
+	bigint newSize = bigint(m_stateVariablesSize) + _declaration.getType()->getStorageSize();
+	if (newSize >= bigint(1) << 256)
+		BOOST_THROW_EXCEPTION(TypeError()
+			<< errinfo_comment("State variable does not fit in storage.")
+			<< errinfo_sourceLocation(_declaration.getLocation()));
+	m_stateVariablesSize = u256(newSize);
 }
 
 void CompilerContext::startFunction(Declaration const& _function)

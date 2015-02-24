@@ -603,7 +603,17 @@ void MemberAccess::checkTypeRequirements()
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
 											  "visible in " + type.toString()));
-	m_isLValue = (type.getCategory() == Type::Category::Struct);
+	// This should probably move somewhere else.
+	if (type.getCategory() == Type::Category::Struct)
+		m_isLValue = true;
+	else if (type.getCategory() == Type::Category::Array)
+	{
+		auto const& arrayType(dynamic_cast<ArrayType const&>(type));
+		m_isLValue = (*m_memberName == "length" &&
+			arrayType.getLocation() != ArrayType::Location::CallData && arrayType.isDynamicallySized());
+	}
+	else
+		m_isLValue = false;
 }
 
 void IndexAccess::checkTypeRequirements()
