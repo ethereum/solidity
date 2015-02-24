@@ -159,6 +159,11 @@ BOOST_AUTO_TEST_CASE(stBlockHashTest)
 	dev::test::executeTests("stBlockHashTest", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
+{
+	dev::test::executeTests("stQuadraticComplexityTest", "/StateTests", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stSolidityTest)
 {
 	dev::test::executeTests("stSolidityTest", "/StateTests", dev::test::doStateTests);
