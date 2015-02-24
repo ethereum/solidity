@@ -4,6 +4,10 @@ aux_source_directory(. SRC_LIST)
 list(REMOVE_ITEM SRC_LIST "./createRandomTest.cpp")
 list(REMOVE_ITEM SRC_LIST "./checkRandomTest.cpp")
 
+if (NOT JSONRPC)
+	list(REMOVE_ITEM SRC_LIST "./AccountHolder.cpp")
+endif()
+
 include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
 include_directories(BEFORE ..)
 include_directories(${Boost_INCLUDE_DIRS})

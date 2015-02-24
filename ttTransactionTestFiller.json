@@ -241,21 +241,6 @@
         }
     },
 
-    "WrongAddress" : {
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "",
-            "gasPrice" : "",
-            "nonce" : "",
-            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d8v",
-            "value" : "",
-            "v" : "27",
-            "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
-            "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
-        }
-    },
-
     "AddressMoreThan20" : {
         "transaction" :
         {
@@ -309,7 +294,7 @@
             "gasPrice" : "1",
             "nonce" : "0xffdc5",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
-            "value" : "0xfffdc12c",
+            "value" : "4294820140",
             "v" : "28",
             "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
             "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
@@ -328,6 +313,19 @@
             "v" : "28",
             "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
             "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
+        }
+    },
+    "unpadedRValue": {
+        "transaction": {
+            "nonce": "13",
+            "gasPrice": "0x09184e72a000",
+            "gasLimit": "0x2710",
+            "to": "7c47ef93268a311f4cad0c750724299e9b72c268",
+            "data": "0x379607f50000000000000000000000000000000000000000000000000000000000000005",
+            "r": "0x006ab6dda9f4df56ea45583af36660329147f1753f3724ea5eb9ed83e812ca77",
+            "s": "0x495701e230667832c8999e884e366a61028633ecf951e8cd66d119f381ae5718",
+            "v": "28",
+            "value": ""
         }
     }
 }

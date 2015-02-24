@@ -51,7 +51,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			catch(...)
 			{
 				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transaction object should not be defined because the RLP is invalid!");
-				return;
+				continue;
 			}
 
 			BOOST_REQUIRE(o.count("transaction") > 0);
@@ -106,6 +106,11 @@ BOOST_AUTO_TEST_SUITE(TransactionTests)
 BOOST_AUTO_TEST_CASE(TransactionTest)
 {
 	dev::test::executeTests("ttTransactionTest", "/TransactionTests", dev::test::doTransactionTests);
+}
+
+BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
+{
+	dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(tt10mbDataField)
