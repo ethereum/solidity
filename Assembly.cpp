@@ -64,7 +64,7 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 			Compiler compiler;
 			compiler.compileContract(*contract, map<ContractDefinition const*, bytes const*>{});
 
-			return compiler.getRuntimeContext().getAssembly().getItems();
+			return compiler.getRuntimeAssemblyItems();
 		}
 	BOOST_FAIL("No contract found in source.");
 	return AssemblyItems();
