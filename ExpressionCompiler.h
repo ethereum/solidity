@@ -25,7 +25,7 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
-#include <libdevcore/SourceLocation.h>
+#include <libevmcore/SourceLocation.h>
 #include <libsolidity/ASTVisitor.h>
 
 namespace dev {

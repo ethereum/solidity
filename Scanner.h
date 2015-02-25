@@ -55,7 +55,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonData.h>
-#include <libdevcore/SourceLocation.h>
+#include <libevmcore/SourceLocation.h>
 #include <libsolidity/Token.h>
 
 namespace dev
