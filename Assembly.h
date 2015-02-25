@@ -58,13 +58,13 @@ public:
 	int deposit() const;
 
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
-	void setLocation(dev::SourceLocation const& _location) { m_location = _location;}
-	dev::SourceLocation const& getLocation() const { return m_location; }
+	void setLocation(SourceLocation const& _location) { m_location = _location;}
+	SourceLocation const& getLocation() const { return m_location; }
 
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
-	dev::SourceLocation m_location;
+	SourceLocation m_location;
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
