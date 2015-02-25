@@ -175,28 +175,28 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 
 CompilerContext& CompilerContext::operator<<(eth::AssemblyItem _item)
 {
-	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");
+	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
 	m_asm.append(_item, m_visitedNodes.top()->getLocation());
 	return *this;
 }
 
 CompilerContext& CompilerContext::operator<<(eth::Instruction _instruction)
 {
-	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");
+	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
 	m_asm.append(_instruction, m_visitedNodes.top()->getLocation());
 	return *this;
 }
 
 CompilerContext& CompilerContext::operator<<(u256 const& _value)
 {
-	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");
+	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
 	m_asm.append(_value, m_visitedNodes.top()->getLocation());
 	return *this;
 }
 
 CompilerContext& CompilerContext::operator<<(bytes const& _data)
 {
-	solAssert(m_visitedNodes.size() > 0, "No node on the visited stack");
+	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
 	m_asm.append(_data, m_visitedNodes.top()->getLocation());
 	return *this;
 }

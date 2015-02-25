@@ -165,7 +165,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 
 bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 {
-		CompilerContext::LocationSetter locationSetter(m_context, &_binaryOperation);
+	CompilerContext::LocationSetter locationSetter(m_context, &_binaryOperation);
 	Expression const& leftExpression = _binaryOperation.getLeftExpression();
 	Expression const& rightExpression = _binaryOperation.getRightExpression();
 	Type const& commonType = _binaryOperation.getCommonType();
