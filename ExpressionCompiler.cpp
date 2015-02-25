@@ -93,7 +93,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			m_context << eth::Instruction::DUP1
 					  << structType->getStorageOffsetOfMember(names[i])
 					  << eth::Instruction::ADD;
-			StorageItem(m_context, types[i]).retrieveValue(SourceLocation(), true);
+			StorageItem(m_context, *types[i]).retrieveValue(SourceLocation(), true);
 			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
 			m_context << eth::Instruction::SWAP1;
 			retSizeOnStack += types[i]->getSizeOnStack();
@@ -104,7 +104,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		// simple value
 		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
-		StorageItem(m_context, returnType).retrieveValue(SourceLocation(), true);
+		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
 	solAssert(retSizeOnStack <= 15, "Stack too deep.");
@@ -680,7 +680,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 				break;
 			case ArrayType::Location::Storage:
-				setLValueToStorageItem(_memberAccess);
+				setLValue<StorageArrayLength>(_memberAccess, type);
 				break;
 			default:
 				solAssert(false, "Unsupported array location.");
@@ -1044,7 +1044,7 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 {
-	setLValue<StorageItem>(_expression, _expression.getType());
+	setLValue<StorageItem>(_expression, *_expression.getType());
 }
 
 }

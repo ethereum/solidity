@@ -164,134 +164,6 @@ void CompilerUtils::computeHashStatic(Type const& _type, bool _padToWordBoundari
 	m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
 }
 
-void CompilerUtils::copyByteArrayToStorage(
-	ArrayType const& _targetType, ArrayType const& _sourceType) const
-{
-	// stack layout: [source_ref] target_ref (top)
-	// need to leave target_ref on the stack at the end
-	solAssert(_targetType.getLocation() == ArrayType::Location::Storage, "");
-	solAssert(_targetType.isByteArray(), "Non byte arrays not yet implemented here.");
-	solAssert(_sourceType.isByteArray(), "Non byte arrays not yet implemented here.");
-
-	switch (_sourceType.getLocation())
-	{
-	case ArrayType::Location::CallData:
-	{
-		// This also assumes that after "length" we only have zeros, i.e. it cannot be used to
-		// slice a byte array from calldata.
-
-		// stack: source_offset source_len target_ref
-		// fetch old length and convert to words
-		m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-		m_context << u256(31) << eth::Instruction::ADD
-				  << u256(32) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
-		// stack here: source_offset source_len target_ref target_length_words
-		// actual array data is stored at SHA3(storage_offset)
-		m_context << eth::Instruction::DUP2;
-		CompilerUtils(m_context).computeHashStatic();
-		// compute target_data_end
-		m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2 << eth::Instruction::ADD
-				  << eth::Instruction::SWAP1;
-		// stack here: source_offset source_len target_ref target_data_end target_data_ref
-		// store length (in bytes)
-		m_context << eth::Instruction::DUP4 << eth::Instruction::DUP1 << eth::Instruction::DUP5
-			<< eth::Instruction::SSTORE;
-		// jump to end if length is zero
-		m_context << eth::Instruction::ISZERO;
-		eth::AssemblyItem copyLoopEnd = m_context.newTag();
-		m_context.appendConditionalJumpTo(copyLoopEnd);
-		// store start offset
-		m_context << eth::Instruction::DUP5;
-		// stack now: source_offset source_len target_ref target_data_end target_data_ref calldata_offset
-		eth::AssemblyItem copyLoopStart = m_context.newTag();
-		m_context << copyLoopStart
-				  // copy from calldata and store
-				  << eth::Instruction::DUP1 << eth::Instruction::CALLDATALOAD
-				  << eth::Instruction::DUP3 << eth::Instruction::SSTORE
-				  // increment target_data_ref by 1
-				  << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD
-				  // increment calldata_offset by 32
-				  << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD
-				  // check for loop condition
-				  << eth::Instruction::DUP1 << eth::Instruction::DUP6 << eth::Instruction::GT;
-		m_context.appendConditionalJumpTo(copyLoopStart);
-		m_context << eth::Instruction::POP;
-		m_context << copyLoopEnd;
-
-		// now clear leftover bytes of the old value
-		// stack now: source_offset source_len target_ref target_data_end target_data_ref
-		clearStorageLoop();
-		// stack now: source_offset source_len target_ref target_data_end
-
-		m_context << eth::Instruction::POP << eth::Instruction::SWAP2
-			<< eth::Instruction::POP << eth::Instruction::POP;
-		break;
-	}
-	case ArrayType::Location::Storage:
-	{
-		// this copies source to target and also clears target if it was larger
-
-		// stack: source_ref target_ref
-		// store target_ref
-		m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
-		// fetch lengthes
-		m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP2
-				  << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-		// stack: target_ref target_len_bytes target_ref source_ref source_len_bytes
-		// store new target length
-		m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::SSTORE;
-		// compute hashes (data positions)
-		m_context << eth::Instruction::SWAP2;
-		CompilerUtils(m_context).computeHashStatic();
-		m_context << eth::Instruction::SWAP1;
-		CompilerUtils(m_context).computeHashStatic();
-		// stack: target_ref target_len_bytes source_len_bytes target_data_pos source_data_pos
-		// convert lengthes from bytes to storage slots
-		m_context << u256(31) << u256(32) << eth::Instruction::DUP1 << eth::Instruction::DUP3
-				  << eth::Instruction::DUP8 << eth::Instruction::ADD << eth::Instruction::DIV
-				  << eth::Instruction::SWAP2
-				  << eth::Instruction::DUP6 << eth::Instruction::ADD << eth::Instruction::DIV;
-		// stack: target_ref target_len_bytes source_len_bytes target_data_pos source_data_pos target_len source_len
-		// @todo we might be able to go without a third counter
-		m_context << u256(0);
-		// stack: target_ref target_len_bytes source_len_bytes target_data_pos source_data_pos target_len source_len counter
-		eth::AssemblyItem copyLoopStart = m_context.newTag();
-		m_context << copyLoopStart;
-		// check for loop condition
-		m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3
-				   << eth::Instruction::GT << eth::Instruction::ISZERO;
-		eth::AssemblyItem copyLoopEnd = m_context.newTag();
-		m_context.appendConditionalJumpTo(copyLoopEnd);
-		// copy
-		m_context << eth::Instruction::DUP4 << eth::Instruction::DUP2 << eth::Instruction::ADD
-				  << eth::Instruction::SLOAD
-				  << eth::Instruction::DUP6 << eth::Instruction::DUP3 << eth::Instruction::ADD
-				  << eth::Instruction::SSTORE;
-		// increment
-		m_context << u256(1) << eth::Instruction::ADD;
-		m_context.appendJumpTo(copyLoopStart);
-		m_context << copyLoopEnd;
-
-		// zero-out leftovers in target
-		// stack: target_ref target_len_bytes source_len_bytes target_data_pos source_data_pos target_len source_len counter
-		// add counter to target_data_pos
-		m_context << eth::Instruction::DUP5 << eth::Instruction::ADD
-				  << eth::Instruction::SWAP5 << eth::Instruction::POP;
-		// stack: target_ref target_len_bytes target_data_pos_updated target_data_pos source_data_pos target_len source_len
-		// add length to target_data_pos to get target_data_end
-		m_context << eth::Instruction::POP << eth::Instruction::DUP3 << eth::Instruction::ADD
-				  << eth::Instruction::SWAP4
-				  << eth::Instruction::POP  << eth::Instruction::POP << eth::Instruction::POP;
-		// stack: target_ref target_data_end target_data_pos_updated
-		clearStorageLoop();
-		m_context << eth::Instruction::POP;
-		break;
-	}
-	default:
-		solAssert(false, "Given byte array location not implemented.");
-	}
-}
-
 unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
 {
 	unsigned _encodedSize = _type.getCalldataEncodedSize();
@@ -316,28 +188,6 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	return numBytes;
 }
 
-void CompilerUtils::clearByteArray(ArrayType const& _type) const
-{
-	solAssert(_type.getLocation() == ArrayType::Location::Storage, "");
-	solAssert(_type.isByteArray(), "Non byte arrays not yet implemented here.");
-
-	// fetch length
-	m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-	// set length to zero
-	m_context << u256(0) << eth::Instruction::DUP3 << eth::Instruction::SSTORE;
-	// convert length from bytes to storage slots
-	m_context << u256(31) << eth::Instruction::ADD
-			  << u256(32) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
-	// compute data positions
-	m_context << eth::Instruction::SWAP1;
-	CompilerUtils(m_context).computeHashStatic();
-	// stack: len data_pos
-	m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2 << eth::Instruction::ADD
-			  << eth::Instruction::SWAP1;
-	clearStorageLoop();
-	// cleanup
-	m_context << eth::Instruction::POP;
-}
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const
 {
@@ -354,26 +204,6 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBou
 			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
 	}
 	return numBytes;
-}
-
-void CompilerUtils::clearStorageLoop() const
-{
-	// stack: end_pos pos
-	eth::AssemblyItem loopStart = m_context.newTag();
-	m_context << loopStart;
-	// check for loop condition
-	m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3
-			   << eth::Instruction::GT << eth::Instruction::ISZERO;
-	eth::AssemblyItem zeroLoopEnd = m_context.newTag();
-	m_context.appendConditionalJumpTo(zeroLoopEnd);
-	// zero out
-	m_context << u256(0) << eth::Instruction::DUP2 << eth::Instruction::SSTORE;
-	// increment
-	m_context << u256(1) << eth::Instruction::ADD;
-	m_context.appendJumpTo(loopStart);
-	// cleanup
-	m_context << zeroLoopEnd;
-	m_context << eth::Instruction::POP;
 }
 
 }
