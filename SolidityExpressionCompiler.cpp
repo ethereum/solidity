@@ -127,6 +127,7 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 			BOOST_REQUIRE(extractor.getExpression() != nullptr);
 
 			CompilerContext context;
+			context.resetVisitedNodes(contract);
 			context.setInheritanceHierarchy(inheritanceHierarchy);
 			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(parametersSize);
