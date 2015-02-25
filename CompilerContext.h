@@ -108,7 +108,7 @@ public:
 	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); }
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
-	CompilerContext& operator<<(eth::AssemblyItem _item);
+	CompilerContext& operator<<(eth::AssemblyItem const& _item);
 	CompilerContext& operator<<(eth::Instruction _instruction);
 	CompilerContext& operator<<(u256 const& _value);
 	CompilerContext& operator<<(bytes const& _data);

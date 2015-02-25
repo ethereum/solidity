@@ -68,6 +68,7 @@ void ExpressionCompiler::appendStateVariableInitialization(CompilerContext& _con
 
 void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration const& _varDecl)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, &_varDecl);
 	LValue var = LValue(m_context);
 	var.fromDeclaration(_varDecl, _varDecl.getValue()->getLocation());
 	var.storeValue(*_varDecl.getType(), _varDecl.getLocation());
@@ -999,6 +1000,7 @@ void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, &_varDecl);
 	FunctionType accessorType(_varDecl);
 
 	unsigned length = 0;

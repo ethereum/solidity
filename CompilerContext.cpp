@@ -65,8 +65,8 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 
 void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
 {
+	LocationSetter locationSetter(*this, &_declaration);
 	addVariable(_declaration);
-
 	int const size = _declaration.getType()->getSizeOnStack();
 	for (int i = 0; i < size; ++i)
 		*this << u256(0);
@@ -173,7 +173,7 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 	std::swap(m_visitedNodes, newStack);
 }
 
-CompilerContext& CompilerContext::operator<<(eth::AssemblyItem _item)
+CompilerContext& CompilerContext::operator<<(eth::AssemblyItem const& _item)
 {
 	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
 	m_asm.append(_item, m_visitedNodes.top()->getLocation());

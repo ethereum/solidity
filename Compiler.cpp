@@ -129,6 +129,7 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 void Compiler::appendBaseConstructorCall(FunctionDefinition const& _constructor,
 										 vector<ASTPointer<Expression>> const& _arguments)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, &_constructor);
 	FunctionType constructorType(_constructor);
 	eth::AssemblyItem returnLabel = m_context.pushNewTag();
 	for (unsigned i = 0; i < _arguments.size(); ++i)
@@ -139,6 +140,7 @@ void Compiler::appendBaseConstructorCall(FunctionDefinition const& _constructor,
 
 void Compiler::appendConstructorCall(FunctionDefinition const& _constructor)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, &_constructor);
 	eth::AssemblyItem returnTag = m_context.pushNewTag();
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
 	unsigned argumentSize = 0;
@@ -513,8 +515,8 @@ void Compiler::appendModifierOrFunctionCode()
 	else
 	{
 		ASTPointer<ModifierInvocation> const& modifierInvocation = m_currentFunction->getModifiers()[m_modifierDepth];
-
 		ModifierDefinition const& modifier = m_context.getFunctionModifier(modifierInvocation->getName()->getName());
+		CompilerContext::LocationSetter locationSetter(m_context, &modifier);
 		solAssert(modifier.getParameters().size() == modifierInvocation->getArguments().size(), "");
 		for (unsigned i = 0; i < modifier.getParameters().size(); ++i)
 		{
