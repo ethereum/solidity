@@ -54,14 +54,10 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
-		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-		{
 			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
-		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -81,7 +77,7 @@ void checkAssemblyLocations(AssemblyItems const& _items, std::vector<SourceLocat
 	for (auto const& it: _items)
 	{
 		BOOST_CHECK_MESSAGE(it.getLocation() == _locations[i], std::string("Location mismatch for item" + i));
-		++ i;
+		++i;
 	}
 
 }
