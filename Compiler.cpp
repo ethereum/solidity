@@ -250,7 +250,7 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 	for (TypePointer const& type: _typeParameters)
 	{
 		CompilerUtils(m_context).copyToStackTop(stackDepth, *type);
-		ExpressionCompiler::appendTypeConversion(m_context, *type, *type, true);
+		ExpressionCompiler(m_context, m_optimize).appendTypeConversion(*type, *type, true);
 		bool const c_padToWords = true;
 		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, *type, c_padToWords);
 		stackDepth -= type->getSizeOnStack();
@@ -270,7 +270,7 @@ void Compiler::initializeStateVariables(ContractDefinition const& _contract)
 {
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		if (variable->getValue())
-			ExpressionCompiler::appendStateVariableInitialization(m_context, *variable);
+			ExpressionCompiler(m_context, m_optimize).appendStateVariableInitialization(*variable);
 }
 
 bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
@@ -283,7 +283,7 @@ bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
 	m_continueTags.clear();
 
 	m_context << m_context.getFunctionEntryLabel(_variableDeclaration);
-	ExpressionCompiler::appendStateVariableAccessor(m_context, _variableDeclaration);
+	ExpressionCompiler(m_context, m_optimize).appendStateVariableAccessor(_variableDeclaration);
 
 	return false;
 }
@@ -475,7 +475,7 @@ bool Compiler::visit(Return const& _return)
 bool Compiler::visit(VariableDeclarationStatement const& _variableDeclarationStatement)
 {
 	StackHeightChecker checker(m_context);
-    CompilerContext::LocationSetter locationSetter(m_context, &_variableDeclarationStatement);
+	CompilerContext::LocationSetter locationSetter(m_context, &_variableDeclarationStatement);
 	if (Expression const* expression = _variableDeclarationStatement.getExpression())
 	{
 		compileExpression(*expression, _variableDeclarationStatement.getDeclaration().getType());
@@ -541,9 +541,10 @@ void Compiler::appendModifierOrFunctionCode()
 
 void Compiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)
 {
-	ExpressionCompiler::compileExpression(m_context, _expression, m_optimize);
+	ExpressionCompiler expressionCompiler(m_context, m_optimize);
+	expressionCompiler.compile(_expression);
 	if (_targetType)
-		ExpressionCompiler::appendTypeConversion(m_context, *_expression.getType(), *_targetType);
+		expressionCompiler.appendTypeConversion(*_expression.getType(), *_targetType);
 }
 
 }
