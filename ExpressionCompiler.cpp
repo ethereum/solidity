@@ -1031,30 +1031,19 @@ void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
 
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)
 {
-	solAssert(!m_currentLValue, "Current LValue not reset when trying to set to new one.");
-	std::unique_ptr<LValue> lvalue;
 	if (m_context.isLocalVariable(&_declaration))
-		lvalue.reset(new StackVariable(m_context, _declaration));
+		setLValue<StackVariable>(_expression, _declaration);
 	else if (m_context.isStateVariable(&_declaration))
-		lvalue.reset(new StorageItem(m_context, _declaration));
+			setLValue<StorageItem>(_expression, _declaration);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError()
 			<< errinfo_sourceLocation(_expression.getLocation())
 			<< errinfo_comment("Identifier type not supported or identifier not found."));
-	if (_expression.lvalueRequested())
-		m_currentLValue = move(lvalue);
-	else
-		lvalue->retrieveValue(_expression.getLocation(), true);
 }
 
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 {
-	solAssert(!m_currentLValue, "Current LValue not reset when trying to set to new one.");
-	std::unique_ptr<LValue> lvalue(new StorageItem(m_context, _expression.getType()));
-	if (_expression.lvalueRequested())
-		m_currentLValue = move(lvalue);
-	else
-		lvalue->retrieveValue(_expression.getLocation(), true);
+	setLValue<StorageItem>(_expression, _expression.getType());
 }
 
 }

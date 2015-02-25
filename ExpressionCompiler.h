@@ -120,12 +120,27 @@ private:
 	/// to be on the stack.
 	/// Also retrieves the value if it was not requested by @a _expression.
 	void setLValueToStorageItem(Expression const& _expression);
+	/// Sets the current LValue to a new LValue constructed from the arguments.
+	/// Also retrieves the value if it was not requested by @a _expression.
+	template <class _LValueType, class... _Arguments>
+	void setLValue(Expression const& _expression, _Arguments const&... _arguments);
 
 	bool m_optimize;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;
 };
 
+template <class _LValueType, class... _Arguments>
+void ExpressionCompiler::setLValue(Expression const& _expression, _Arguments const&... _arguments)
+{
+	solAssert(!m_currentLValue, "Current LValue not reset when trying to set to new one.");
+	std::unique_ptr<_LValueType> lvalue(new _LValueType(m_context, _arguments...));
+	if (_expression.lvalueRequested())
+		m_currentLValue = move(lvalue);
+	else
+		lvalue->retrieveValue(_expression.getLocation(), true);
+
+}
 
 }
 }
