@@ -135,7 +135,7 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 				context.addVariable(dynamic_cast<VariableDeclaration const&>(resolveDeclaration(variable, resolver)),
 									parametersSize--);
 
-			ExpressionCompiler::compileExpression(context, *extractor.getExpression());
+			ExpressionCompiler(context).compile(*extractor.getExpression());
 
 			for (vector<string> const& function: _functions)
 				context << context.getFunctionEntryLabel(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
