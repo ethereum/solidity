@@ -720,6 +720,18 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
 }
 
+BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
+{
+	// test for issue #1126 https://github.com/ethereum/cpp-ethereum/issues/1126
+	char const* text = "contract Parent {\n"
+					   "    uint256 public m_aMember;\n"
+					   "}\n"
+					   "contract Child {\n"
+					   "    function foo() returns (uint256) { return Parent.m_aMember(); }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
 BOOST_AUTO_TEST_CASE(fallback_function)
 {
 	char const* text = R"(
