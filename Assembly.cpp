@@ -76,7 +76,8 @@ void checkAssemblyLocations(AssemblyItems const& _items, std::vector<SourceLocat
 	BOOST_CHECK_EQUAL(_items.size(), _locations.size());
 	for (auto const& it: _items)
 	{
-		BOOST_CHECK_MESSAGE(it.getLocation() == _locations[i], std::string("Location mismatch for item" + i));
+		BOOST_CHECK_MESSAGE(it.getLocation() == _locations[i],
+							std::string("Location mismatch for assembly item ") + std::to_string(i));
 		++i;
 	}
 
@@ -108,7 +109,7 @@ BOOST_AUTO_TEST_CASE(location_test)
 		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
 		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
 		SourceLocation(0, 77, n),
-		SourceLocation(18, 75, n), SourceLocation(18, 75, n),
+		SourceLocation(18, 75, n), SourceLocation(40, 49, n),
 		SourceLocation(61, 70, n), SourceLocation(61, 70, n), SourceLocation(61, 70, n),
 		SourceLocation(), SourceLocation(),
 		SourceLocation(61, 70, n), SourceLocation(61, 70, n), SourceLocation(61, 70, n)
