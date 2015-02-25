@@ -209,6 +209,33 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	return *m_interfaceFunctionList;
 }
 
+vector<ASTPointer<Declaration>> const& ContractDefinition::getInheritableMembers() const
+{
+	if (!m_inheritableMembers)
+	{
+		set<string> memberSeen;
+		m_inheritableMembers.reset(new vector<ASTPointer<Declaration>>());
+		for (ContractDefinition const* contract: getLinearizedBaseContracts())
+		{
+			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
+				if (f->isPublic() && !f->isConstructor() && !f->getName().empty()
+					&& memberSeen.count(f->getName()) == 0 && f->isVisibleInDerivedContracts())
+				{
+					memberSeen.insert(f->getName());
+					m_inheritableMembers->push_back(f);
+				}
+
+			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
+				if (v->isPublic() && memberSeen.count(v->getName()) == 0)
+				{
+					memberSeen.insert(v->getName());
+					m_inheritableMembers->push_back(v);
+				}
+		}
+	}
+	return *m_inheritableMembers;
+}
+
 TypePointer EnumValue::getType(ContractDefinition const*) const
 {
 	EnumDefinition const* parentDef = dynamic_cast<EnumDefinition const*>(getScope());

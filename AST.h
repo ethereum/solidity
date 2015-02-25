@@ -247,6 +247,9 @@ public:
 	/// as intended for use by the ABI.
 	std::map<FixedHash<4>, FunctionTypePointer> getInterfaceFunctions() const;
 
+	/// @returns a list of the inheritable members of this contract
+	std::vector<ASTPointer<Declaration>> const& getInheritableMembers() const;
+
 	/// List of all (direct and indirect) base contracts in order from derived to base, including
 	/// the contract itself. Available after name resolution
 	std::vector<ContractDefinition const*> const& getLinearizedBaseContracts() const { return m_linearizedBaseContracts; }
@@ -273,6 +276,7 @@ private:
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
 	mutable std::unique_ptr<std::vector<ASTPointer<EventDefinition>>> m_interfaceEvents;
+	mutable std::unique_ptr<std::vector<ASTPointer<Declaration>>> m_inheritableMembers;
 };
 
 class InheritanceSpecifier: public ASTNode

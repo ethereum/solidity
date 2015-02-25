@@ -1025,9 +1025,8 @@ MemberList const& TypeType::getMembers() const
 			if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
 				// We are accessing the type of a base contract, so add all public and protected
 				// functions. Note that this does not add inherited functions on purpose.
-				for (ASTPointer<FunctionDefinition> const& f: contract.getDefinedFunctions())
-					if (!f->isConstructor() && !f->getName().empty() && f->isVisibleInDerivedContracts())
-						members.push_back(make_pair(f->getName(), make_shared<FunctionType>(*f)));
+				for (ASTPointer<Declaration> const& decl: contract.getInheritableMembers())
+					members.push_back(make_pair(decl->getName(), decl->getType()));
 		}
 		else if (m_actualType->getCategory() == Category::Enum)
 		{
