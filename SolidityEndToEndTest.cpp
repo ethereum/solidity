@@ -2768,6 +2768,96 @@ BOOST_AUTO_TEST_CASE(dynamic_out_of_bounds_array_access)
 	BOOST_CHECK(callContractFunction("length()") == encodeArgs(4));
 }
 
+BOOST_AUTO_TEST_CASE(fixed_array_cleanup)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint spacer1;
+			uint spacer2;
+			uint[20] data;
+			function fill() {
+				for (uint i = 0; i < data.length; ++i) data[i] = i+1;
+			}
+			function clear() { delete data; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("fill()") == bytes());
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("clear()") == bytes());
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(short_fixed_array_cleanup)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint spacer1;
+			uint spacer2;
+			uint[3] data;
+			function fill() {
+				for (uint i = 0; i < data.length; ++i) data[i] = i+1;
+			}
+			function clear() { delete data; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("fill()") == bytes());
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("clear()") == bytes());
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(dynamic_array_cleanup)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[20] spacer;
+			uint[] dynamic;
+			function fill() {
+				dynamic.length = 21;
+				for (uint i = 0; i < dynamic.length; ++i) dynamic[i] = i+1;
+			}
+			function halfClear() { dynamic.length = 5; }
+			function fullClear() { delete dynamic; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("fill()") == bytes());
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("halfClear()") == bytes());
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("fullClear()") == bytes());
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(dynamic_multi_array_cleanup)
+{
+	char const* sourceCode = R"(
+		contract c {
+			struct s { uint[][] d; }
+			s[] data;
+			function fill() returns (uint) {
+				data.length = 3;
+				data[2].d.length = 4;
+				data[2].d[3].length = 5;
+				data[2].d[3][4] = 8;
+				return data[2].d[3][4];
+			}
+			function clear() { delete data; }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("fill()") == encodeArgs(8));
+	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(callContractFunction("clear()") == bytes());
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
