@@ -496,6 +496,11 @@ BOOST_AUTO_TEST_CASE(blValidBlockTest)
 	dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
 }
 
+BOOST_AUTO_TEST_CASE(blInvalidTransactionRLP)
+{
+	dev::test::executeTests("blInvalidTransactionRLP", "/BlockTests", dev::test::doBlockTests);
+}
+
 BOOST_AUTO_TEST_CASE(blInvalidHeaderTest)
 {
 	dev::test::executeTests("blInvalidHeaderTest", "/BlockTests", dev::test::doBlockTests);
