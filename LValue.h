@@ -53,7 +53,7 @@ public:
 	/// Moves a value from the stack to the lvalue. Removes the value if @a _move is true.
 	/// @a _location is the source location of the expression that caused this operation.
 	/// Stack pre: value [lvalue_ref]
-	/// Stack post if !_move: value_of(lvalue_ref)
+	/// Stack post: if !_move: value_of(lvalue_ref)
 	virtual void storeValue(Type const& _sourceType,
 		SourceLocation const& _location = SourceLocation(), bool _move = false) const = 0;
 	/// Stores zero in the lvalue.

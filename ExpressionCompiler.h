@@ -26,6 +26,7 @@
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
 #include <libevmcore/SourceLocation.h>
+#include <libsolidity/Utils.h>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/LValue.h>
 
@@ -133,7 +134,7 @@ private:
 template <class _LValueType, class... _Arguments>
 void ExpressionCompiler::setLValue(Expression const& _expression, _Arguments const&... _arguments)
 {
-	solAssert(!m_currentLValue, "Current LValue not reset when trying to set to new one.");
+	solAssert(!m_currentLValue, "Current LValue not reset before trying to set new one.");
 	std::unique_ptr<_LValueType> lvalue(new _LValueType(m_context, _arguments...));
 	if (_expression.lvalueRequested())
 		m_currentLValue = move(lvalue);

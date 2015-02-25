@@ -153,8 +153,9 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	else if (stackTypeCategory == Type::Category::Enum)
 		solAssert(targetTypeCategory == Type::Category::Integer ||
 			targetTypeCategory == Type::Category::Enum, "");
-	else if (stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::Contract ||
-			 stackTypeCategory == Type::Category::IntegerConstant)
+	else if (stackTypeCategory == Type::Category::Integer ||
+		stackTypeCategory == Type::Category::Contract ||
+		stackTypeCategory == Type::Category::IntegerConstant)
 	{
 		if (targetTypeCategory == Type::Category::String && stackTypeCategory == Type::Category::Integer)
 		{
