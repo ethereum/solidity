@@ -76,14 +76,6 @@
 		"//" : "	if (!testCryptographicFunctions())										",
 		"//" : "            res = hash(int(res) + int(0x00000f0000000000000000000000000000000000000000000000000000000000));		",
 		"//" : " 															",
-		"//" : "        //Tested 27.01.2015 												",
-		"//" : "        //should run out of gas 											",
-		"//" : "        //if (!testInfiniteLoop()) 											",
-		"//" : "        //    res = hash(int(res) + int(0x000f000000000000000000000000000000000000000000000000000000000000)); 		",
-		"//" : "        //     														",
-		"//" : "        //should run out of gas     											",
-		"//" : "        //if (!testRecursiveMethods()) 											",
-		"//" : "        //    res = hash(int(res) + int(0x0000000000000000000000000000000000000000000000000000000000000000));		",
 		"//" : "    } 															",
 		"//" : "     															",
 		"//" : "    function testCryptographicFunctions() returns (bool res)								",
@@ -155,25 +147,6 @@
 		"//" : "     															",
 		"//" : "    } 															",
 		"//" : "     															",
-		"//" : "    function testInfiniteLoop() returns (bool res) 									",
-		"//" : "    { 															",
-		"//" : "        res = false; 													",
-		"//" : "        while(true){} 													",
-		"//" : "        return true; 													",
-		"//" : "    } 															",
-		"//" : "     															",
-		"//" : "    function testRecursiveMethods() returns (bool res) 									",
-		"//" : "    { 															",
-		"//" : "        res = false; 													",
-		"//" : "        testRecursiveMethods2(); 											",
-		"//" : "        return true; 													",
-		"//" : "    } 															",
-		"//" : "    function testRecursiveMethods2() 											",
-		"//" : "    { 															",
-		"//" : "        testRecursiveMethods(); 											",
-    		"//" : "} 															",
-		"//" : "     															",
-		"//" : "     															",
 		"//" : "    function testContractSuicide() returns (bool res) 									",
 		"//" : "    { 															",
 		"//" : "        TestContract a = new TestContract(); 										",
@@ -219,7 +192,6 @@
 		"//" : "            } 														",
 		"//" : "        } 														",
 		"//" : "          														",
-		"//" : "          														",
 		"//" : "        if (i == 0) 													",
 		"//" : "            return true; 												",
 		"//" : "         														",
@@ -264,7 +236,7 @@
         },
         "pre" :
         {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "100000",
 		"//": "contract subcaller			",
 		"//": "{					",
@@ -294,6 +266,12 @@
                 "nonce" : "0",
                 "storage" : {
                 }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "100000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
             }
         },
         "transaction" :
@@ -304,7 +282,7 @@
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "1"
         }
     },
@@ -320,7 +298,7 @@
         },
         "pre" :
         {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "100000",
 		"//" : "contract recursiveMethods		",
 		"//" : "{					",
@@ -343,17 +321,23 @@
                 "nonce" : "0",
                 "storage" : {
                 }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "100000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
             }
         },
         "transaction" :
         {
 	    "//" : "testRecursiveMethods()",
             "data" : "0x981a3165",
-            "gasLimit" : "7000",
+            "gasLimit" : "2000",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "1"
         }
     },
@@ -369,7 +353,7 @@
         },
         "pre" :
         {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "100000",
 		"//" : "contract recursiveMethods		",
 		"//" : "{					",
@@ -392,6 +376,12 @@
                 "nonce" : "0",
                 "storage" : {
                 }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "500",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
             }
         },
         "transaction" :
@@ -402,7 +392,7 @@
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "1"
         }
     },
@@ -418,7 +408,7 @@
         },
         "pre" :
         {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000",
 		"//" : "contract recursiveCreate1							",
 		"//" : "{										",
@@ -461,6 +451,12 @@
                 "nonce" : "0",
                 "storage" : {
                 }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "500000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
             }
         },
         "transaction" :
@@ -471,12 +467,67 @@
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "1"
         }
     },
 
-    "AmbigiousMethod" : {
+    "AmbiguousMethod" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+            "currentGasLimit" : "100000000",
+            "currentNumber" : "0",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+        "pre" :
+        {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "100000",
+		"//" : "contract contract1		",
+		"//" : "{				",
+		"//" : "    uint value;			",
+		"//" : "    function run()		",
+		"//" : "    {				",
+		"//" : "        value = 225;		",
+		"//" : "    }				",
+		"//" : "}				",
+		"//" : "				",
+		"//" : "contract contract2		",
+		"//" : "{				",
+		"//" : "    uint value2;		",
+		"//" : "    function run()		",
+		"//" : "    {				",
+		"//" : "        value2 = 335;		",
+		"//" : "    }				",
+		"//" : "}				",
+                "code" : "0x60003560e060020a90048063c040622614601557005b601b6021565b60006000f35b61014f60008190555056",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "500",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "transaction" :
+        {
+	    "//" : "run()",
+            "data" : "0xc0406226",
+            "gasLimit" : "10000",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+            "value" : "1"
+        }
+    },
+
+    "QuadraticComplexity" : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
@@ -488,8 +539,30 @@
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000",
+		"//" : "contract caller								",
+		"//" : "{									",
+		"//" : "    int value;								",
+		"//" : "    function run(int count)						",
+		"//" : "    {									",
+		"//" : "        value = count;							",
+		"//" : "        address a = 0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b;		",
+		"//" : "        while(count > 0)						",
+		"//" : "        {								",
+		"//" : "            a.call('just', 'call');					",
+		"//" : "            count = count - 1;						",
+		"//" : "        }								",
+		"//" : "    }									",
+		"//" : "}									",
+		"code" : "0x60003560e060020a9004806361a4770614601557005b601e6004356024565b60006000f35b60008160008190555073b94f5374fce5edbc8e2a8697c15331677e6ebf0b90505b600082131560bf5780600160a060020a03166000600060007f6a7573740000000000000000000000000000000000000000000000000000000081526004017f63616c6c000000000000000000000000000000000000000000000000000000008152602001600060008560155a03f150506001820391506045565b505056",
+		"nonce" : "0",
+		"storage" : {
+                }
+            },
+
+            "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "100000",
-                "code" : "0x60003560e060020a90048063c040622614601557005b601b6021565b60006000f35b61014f60008190555056",
+                "code" : "{ (CALLDATACOPY 0 0 32) }",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -497,9 +570,10 @@
         },
         "transaction" :
         {
-	    "//" : "run()",
-            "data" : "0xc0406226",
-            "gasLimit" : "10000",
+            "//" : "run(int256)",
+            "data" : "0x61a47706000000000000000000000000000000000000000000000000000000000000c350",
+            "gasLimit" : "904+68*x+e",
+            "gasLimit" : "3500000",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",

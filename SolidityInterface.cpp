@@ -50,7 +50,7 @@ public:
 
 	string getSourcePart(ASTNode const& _node) const
 	{
-		Location location = _node.getLocation();
+		SourceLocation location = _node.getLocation();
 		BOOST_REQUIRE(!location.isEmpty());
 		return m_interface.substr(location.start, location.end - location.start);
 	}
