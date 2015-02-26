@@ -20,8 +20,6 @@
  * State test functions.
  */
 
-// Make sure boost/asio.hpp is included before windows.h.
-#include <boost/asio.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 

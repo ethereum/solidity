@@ -20,8 +20,6 @@
  * Simple peer transaction send test.
  */
 
-// Make sure boost/asio.hpp is included before windows.h.
-#include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem/operations.hpp>
 

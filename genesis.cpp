@@ -23,8 +23,6 @@
 #include <fstream>
 #include <random>
 
-// Make sure boost/asio.hpp is included before windows.h.
-#include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "JsonSpiritHeaders.h"
@@ -44,7 +42,7 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 {
 	h256 emptyListSHA3(fromHex("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
 	BOOST_REQUIRE_EQUAL(emptyListSHA3, EmptyListSHA3);
-	
+
 	h256 emptySHA3(fromHex("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"));
 	BOOST_REQUIRE_EQUAL(emptySHA3, EmptySHA3);
 }

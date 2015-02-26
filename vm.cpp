@@ -22,8 +22,6 @@
 
 #include <chrono>
 
-// Make sure boost/asio.hpp is included before windows.h.
-#include <boost/asio.hpp>
 #include <boost/filesystem.hpp>
 
 #include <libethereum/Executive.h>

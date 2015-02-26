@@ -19,8 +19,6 @@
  * @date 2014
  */
 
-// Make sure boost/asio.hpp is included before windows.h.
-#include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <libdevcore/Worker.h>
@@ -192,22 +190,22 @@ BOOST_AUTO_TEST_CASE(kademlia)
 
 	node.populateAll();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-	
+
 	auto nodes = node.nodeTable->nodes();
 	nodes.sort();
-	
+
 	node.nodeTable->reset();
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 
 	node.populate(1);
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-	
+
 	node.nodeTable->discover();
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
 
 	BOOST_REQUIRE_EQUAL(node.nodeTable->count(), 8);
-	
+
 	auto netNodes = node.nodeTable->nodes();
 	netNodes.sort();
 
