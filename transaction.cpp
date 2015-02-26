@@ -90,8 +90,9 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 				o["sender"] = toString(txFromFields.sender());
 			}
-			catch(...)
+			catch(Exception const& _e)
 			{
+				cnote << "Transaction Exception: " << diagnostic_information(_e);
 				o.erase(o.find("transaction"));
 			}
 		}
