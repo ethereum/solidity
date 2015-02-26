@@ -40,6 +40,7 @@ StackVariable::StackVariable(CompilerContext& _compilerContext, Declaration cons
 
 void StackVariable::retrieveValue(SourceLocation const& _location, bool _remove) const
 {
+	(void)_remove;
 	unsigned stackPos = m_context.baseToCurrentStackOffset(m_baseStackOffset);
 	if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
 		BOOST_THROW_EXCEPTION(CompilerError()
@@ -50,6 +51,7 @@ void StackVariable::retrieveValue(SourceLocation const& _location, bool _remove)
 
 void StackVariable::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
 {
+	(void)_sourceType;
 	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset) - m_size + 1;
 	if (stackDiff > 16)
 		BOOST_THROW_EXCEPTION(CompilerError()
@@ -188,6 +190,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 
 void StorageItem::setToZero(SourceLocation const& _location) const
 {
+	(void)_location;
 	if (m_dataType->getCategory() == Type::Category::Array)
 		CompilerUtils(m_context).clearByteArray(dynamic_cast<ArrayType const&>(*m_dataType));
 	else if (m_dataType->getCategory() == Type::Category::Struct)
