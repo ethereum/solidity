@@ -726,8 +726,8 @@ BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
 	char const* text = "contract Parent {\n"
 					   "    uint256 public m_aMember;\n"
 					   "}\n"
-					   "contract Child {\n"
-					   "    function foo() returns (uint256) { return Parent.m_aMember(); }\n"
+					   "contract Child is Parent{\n"
+					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
 					   "}\n";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
 }
