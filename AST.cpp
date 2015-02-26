@@ -231,6 +231,13 @@ vector<ASTPointer<Declaration>> const& ContractDefinition::getInheritableMembers
 					memberSeen.insert(v->getName());
 					m_inheritableMembers->push_back(v);
 				}
+
+			for (ASTPointer<StructDefinition> const& s: contract->getDefinedStructs())
+				if (s->isPublic() && memberSeen.count(s->getName()) == 0)
+				{
+					memberSeen.insert(s->getName());
+					m_inheritableMembers->push_back(s);
+				}
 		}
 	}
 	return *m_inheritableMembers;
