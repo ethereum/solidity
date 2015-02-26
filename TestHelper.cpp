@@ -140,9 +140,9 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
 {	
-	if (_o.count("secretKey")> 0)
+	if (_o.count("secretKey") > 0)
 	{
-		BOOST_REQUIRE(_o.count("nonce")> 0);
+		BOOST_REQUIRE(_o.count("nonce") > 0);
 		BOOST_REQUIRE(_o.count("gasPrice") > 0);
 		BOOST_REQUIRE(_o.count("gasLimit") > 0);
 		BOOST_REQUIRE(_o.count("to") > 0);
