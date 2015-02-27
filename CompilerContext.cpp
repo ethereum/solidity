@@ -51,8 +51,6 @@ void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
 void CompilerContext::startFunction(Declaration const& _function)
 {
 	m_functionsWithCode.insert(&_function);
-	m_localVariables.clear();
-	m_asm.setDeposit(0);
 	*this << getFunctionEntryLabel(_function);
 }
 
@@ -61,6 +59,12 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 {
 	solAssert(m_asm.deposit() >= 0 && unsigned(m_asm.deposit()) >= _offsetToCurrent, "");
 	m_localVariables[&_declaration] = unsigned(m_asm.deposit()) - _offsetToCurrent;
+}
+
+void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
+{
+	solAssert(m_localVariables.count(&_declaration), "");
+	m_localVariables.erase(&_declaration);
 }
 
 void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
@@ -110,16 +114,23 @@ eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(FunctionDefiniti
 
 eth::AssemblyItem CompilerContext::getSuperFunctionEntryLabel(string const& _name, ContractDefinition const& _base)
 {
-	// search for first contract after _base
-	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
-	auto it = find(m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end(), &_base);
-	solAssert(it != m_inheritanceHierarchy.end(), "Base not found in inheritance hierarchy.");
-	for (++it; it != m_inheritanceHierarchy.end(); ++it)
+	auto it = getSuperContract(_base);
+	for (; it != m_inheritanceHierarchy.end(); ++it)
 		for (ASTPointer<FunctionDefinition> const& function: (*it)->getDefinedFunctions())
 			if (!function->isConstructor() && function->getName() == _name)
 				return getFunctionEntryLabel(*function);
 	solAssert(false, "Super function " + _name + " not found.");
 	return m_asm.newTag(); // not reached
+}
+
+FunctionDefinition const* CompilerContext::getNextConstructor(ContractDefinition const& _contract) const
+{
+	vector<ContractDefinition const*>::const_iterator it = getSuperContract(_contract);
+	for (; it != m_inheritanceHierarchy.end(); it = getSuperContract(**it))
+		if ((*it)->getConstructor())
+			return (*it)->getConstructor();
+
+	return nullptr;
 }
 
 set<Declaration const*> CompilerContext::getFunctionsWithoutCode()
@@ -199,6 +210,14 @@ CompilerContext& CompilerContext::operator<<(bytes const& _data)
 	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
 	m_asm.append(_data, m_visitedNodes.top()->getLocation());
 	return *this;
+}
+
+vector<ContractDefinition const*>::const_iterator CompilerContext::getSuperContract(ContractDefinition const& _contract) const
+{
+	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
+	auto it = find(m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end(), &_contract);
+	solAssert(it != m_inheritanceHierarchy.end(), "Base not found in inheritance hierarchy.");
+	return ++it;
 }
 
 }

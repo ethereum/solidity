@@ -510,7 +510,7 @@ private:
 };
 
 /**
- * Invocation/usage of a modifier in a function header.
+ * Invocation/usage of a modifier in a function header or a base constructor call.
  */
 class ModifierInvocation: public ASTNode
 {
@@ -525,11 +525,12 @@ public:
 	ASTPointer<Identifier> const& getName() const { return m_modifierName; }
 	std::vector<ASTPointer<Expression>> const& getArguments() const { return m_arguments; }
 
-	void checkTypeRequirements();
+	void checkTypeRequirements(std::vector<ASTPointer<InheritanceSpecifier>> const& _bases);
 
 private:
 	ASTPointer<Identifier> m_modifierName;
 	std::vector<ASTPointer<Expression>> m_arguments;
+	FunctionDefinition const* m_referencedConstructor = nullptr;
 };
 
 /**

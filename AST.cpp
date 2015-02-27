@@ -308,7 +308,9 @@ void FunctionDefinition::checkTypeRequirements()
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
-		modifier->checkTypeRequirements();
+		modifier->checkTypeRequirements(isConstructor() ?
+			dynamic_cast<ContractDefinition const&>(*getScope()).getBaseContracts() :
+			vector<ASTPointer<InheritanceSpecifier>>());
 
 	m_body->checkTypeRequirements();
 }
@@ -351,19 +353,34 @@ void ModifierDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-void ModifierInvocation::checkTypeRequirements()
+void ModifierInvocation::checkTypeRequirements(std::vector<ASTPointer<InheritanceSpecifier>> const& _bases)
 {
 	m_modifierName->checkTypeRequirements();
 	for (ASTPointer<Expression> const& argument: m_arguments)
 		argument->checkTypeRequirements();
 
-	ModifierDefinition const* modifier = dynamic_cast<ModifierDefinition const*>(m_modifierName->getReferencedDeclaration());
-	solAssert(modifier, "Function modifier not found.");
-	vector<ASTPointer<VariableDeclaration>> const& parameters = modifier->getParameters();
-	if (parameters.size() != m_arguments.size())
+	auto declaration = m_modifierName->getReferencedDeclaration();
+	vector<ASTPointer<VariableDeclaration>> emptyParameterList;
+	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
+	if (auto modifier = dynamic_cast<ModifierDefinition const*>(declaration))
+		parameters = &modifier->getParameters();
+	else
+		for (auto const& base: _bases)
+			if (declaration == base->getName()->getReferencedDeclaration())
+			{
+				m_referencedConstructor = dynamic_cast<ContractDefinition const&>(*declaration).getConstructor();
+				if (m_referencedConstructor)
+					parameters = &m_referencedConstructor->getParameters();
+				else
+					parameters = &emptyParameterList;
+				break;
+			}
+	if (!parameters)
+		BOOST_THROW_EXCEPTION(createTypeError("Referenced declaration is neither modifier nor base class."));
+	if (parameters->size() != m_arguments.size())
 		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for modifier invocation."));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
-		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
+		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*(*parameters)[i]->getType()))
 			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in modifier invocation."));
 }
 
