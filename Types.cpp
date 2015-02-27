@@ -537,7 +537,19 @@ TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 
 bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 {
-	return _convertTo.getCategory() == getCategory();
+	if (_convertTo.getCategory() != getCategory())
+		return false;
+	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
+	// let us not allow assignment to memory arrays for now
+	if (convertTo.getLocation() != Location::Storage)
+		return false;
+	if (convertTo.isByteArray() != isByteArray())
+		return false;
+	if (!getBaseType()->isImplicitlyConvertibleTo(*convertTo.getBaseType()))
+		return false;
+	if (convertTo.isDynamicallySized())
+		return true;
+	return !isDynamicallySized() && convertTo.getLength() >= getLength();
 }
 
 TypePointer ArrayType::unaryOperatorResult(Token::Value _operator) const
@@ -552,7 +564,10 @@ bool ArrayType::operator==(Type const& _other) const
 	if (_other.getCategory() != getCategory())
 		return false;
 	ArrayType const& other = dynamic_cast<ArrayType const&>(_other);
-	return other.m_location == m_location;
+	if (other.m_location != m_location || other.isByteArray() != isByteArray() ||
+			other.isDynamicallySized() != isDynamicallySized())
+		return false;
+	return isDynamicallySized() || getLength()  == other.getLength();
 }
 
 u256 ArrayType::getStorageSize() const
