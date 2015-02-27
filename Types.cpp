@@ -628,8 +628,7 @@ MemberList const& ContractType::getMembers() const
 		{
 			for (ContractDefinition const* base: m_contract.getLinearizedBaseContracts())
 				for (ASTPointer<FunctionDefinition> const& function: base->getDefinedFunctions())
-					if (!function->isConstructor() && !function->getName().empty()&&
-							function->isVisibleInDerivedContracts())
+					if (function->isVisibleInDerivedContracts())
 						members.push_back(make_pair(function->getName(), make_shared<FunctionType>(*function, true)));
 		}
 		else

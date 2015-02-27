@@ -218,22 +218,21 @@ vector<ASTPointer<Declaration>> const& ContractDefinition::getInheritableMembers
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
 		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
-				if (f->isPublic() && !f->isConstructor() && !f->getName().empty()
-					&& memberSeen.count(f->getName()) == 0 && f->isVisibleInDerivedContracts())
+				if (memberSeen.count(f->getName()) == 0 && f->isVisibleInDerivedContracts())
 				{
 					memberSeen.insert(f->getName());
 					m_inheritableMembers->push_back(f);
 				}
 
 			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
-				if (v->isPublic() && memberSeen.count(v->getName()) == 0)
+				if (memberSeen.count(v->getName()) == 0 && v->isVisibleInDerivedContracts())
 				{
 					memberSeen.insert(v->getName());
 					m_inheritableMembers->push_back(v);
 				}
 
 			for (ASTPointer<StructDefinition> const& s: contract->getDefinedStructs())
-				if (s->isPublic() && memberSeen.count(s->getName()) == 0)
+				if (memberSeen.count(s->getName()) == 0 && s->isVisibleInDerivedContracts())
 				{
 					memberSeen.insert(s->getName());
 					m_inheritableMembers->push_back(s);

@@ -144,7 +144,7 @@ public:
 	Visibility getVisibility() const { return m_visibility == Visibility::Default ? getDefaultVisibility() : m_visibility; }
 	bool isPublic() const { return getVisibility() >= Visibility::Public; }
 	bool isVisibleInContract() const { return getVisibility() != Visibility::External; }
-	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && getVisibility() >= Visibility::Internal; }
+	virtual bool isVisibleInDerivedContracts() const { return isVisibleInContract() && getVisibility() >= Visibility::Internal; }
 
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
@@ -409,6 +409,11 @@ public:
 	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
 	Block const& getBody() const { return *m_body; }
 
+	virtual bool isVisibleInDerivedContracts() const override
+	{
+		return !isConstructor() && !getName().empty() && isVisibleInContract() &&
+			getVisibility() >= Visibility::Internal;
+	}
 	virtual TypePointer getType(ContractDefinition const*) const override;
 
 	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
