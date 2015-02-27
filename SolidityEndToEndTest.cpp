@@ -2946,6 +2946,70 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_struct)
 	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
 }
 
+BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			function Base(uint i)
+			{
+				m_i = i;
+			}
+			uint public m_i;
+		}
+		contract Derived is Base(2) {
+			function Derived(uint i) Base(i)
+			{}
+		}
+		contract Final is Derived(4) {
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("m_i()") == encodeArgs(4));
+}
+
+BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			function Base(uint j)
+			{
+				m_i = j;
+			}
+			uint public m_i;
+		}
+		contract Base1 is Base(3) {
+			function Base1(uint k) Base(k*k) {}
+		}
+		contract Derived is Base(3), Base1(2) {
+			function Derived(uint i) Base(i) Base1(i)
+			{}
+		}
+		contract Final is Derived(4) {
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("m_i()") == encodeArgs(4));
+}
+
+BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			function Base(uint i)
+			{
+				m_i = i;
+			}
+			uint public m_i;
+		}
+		contract Base1 is Base(3) {}
+		contract Derived is Base(2), Base1 {
+			function Derived(uint i) Base(i) {}
+		}
+		contract Final is Derived(4) {
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("m_i()") == encodeArgs(4));
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
