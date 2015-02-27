@@ -39,7 +39,8 @@ class ArrayUtils
 public:
 	ArrayUtils(CompilerContext& _context): m_context(_context) {}
 
-	/// Copies an array to an array in storage.
+	/// Copies an array to an array in storage. The arrays can be of different types only if
+	/// their storage representation is the same.
 	/// Stack pre: [source_reference] target_reference
 	/// Stack post: target_reference
 	void copyArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const;
@@ -63,6 +64,11 @@ public:
 	/// Stack pre: length
 	/// Stack post: size
 	void convertLengthToSize(ArrayType const& _arrayType) const;
+	/// Retrieves the length (number of elements) of the array ref on the stack. This also
+	/// works for statically-sized arrays.
+	/// Stack pre: reference
+	/// Stack post: reference length
+	void retrieveLength(ArrayType const& _arrayType) const;
 
 private:
 	CompilerContext& m_context;
