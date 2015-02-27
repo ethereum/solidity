@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
 			function g() { f(); rootFunction(); }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
 }
 
 BOOST_AUTO_TEST_CASE(cyclic_inheritance)
@@ -725,6 +725,17 @@ BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
 	// test for issue #1126 https://github.com/ethereum/cpp-ethereum/issues/1126
 	char const* text = "contract Parent {\n"
 					   "    uint256 public m_aMember;\n"
+					   "}\n"
+					   "contract Child is Parent{\n"
+					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
+{
+	char const* text = "contract Parent {\n"
+					   "    uint256 internal m_aMember;\n"
 					   "}\n"
 					   "contract Child is Parent{\n"
 					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
