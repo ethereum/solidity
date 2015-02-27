@@ -24,6 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include <libdevcore/Common.h>
+#include <libevmcore/SourceLocation.h>
 #include <libevmcore/Instruction.h>
 #include "Exceptions.h"
 
@@ -57,10 +58,13 @@ public:
 	int deposit() const;
 
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
+	void setLocation(SourceLocation const& _location) { m_location = _location;}
+	SourceLocation const& getLocation() const { return m_location; }
 
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
+	SourceLocation m_location;
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
@@ -84,9 +88,9 @@ public:
 	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
 	void append(Assembly const& _a, int _deposit);
-	AssemblyItem const& append(AssemblyItem const& _i);
-	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
-	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
+	AssemblyItem const& append(AssemblyItem const& _i, SourceLocation const& _location = SourceLocation());
+	AssemblyItem const& append(std::string const& _data, SourceLocation const& _location = SourceLocation()) { return append(newPushString(_data), _location); }
+	AssemblyItem const& append(bytes const& _data, SourceLocation const& _location = SourceLocation()) { return append(newData(_data), _location); }
 	AssemblyItem appendSubSize(Assembly const& _a) { auto ret = newSub(_a); append(newPushSubSize(ret.data())); return ret; }
 	/// Pushes the final size of the current assembly itself. Use this when the code is modified
 	/// after compilation and CODESIZE is not an option.
@@ -99,7 +103,8 @@ public:
 
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
 
-	AssemblyItem const& back() { return m_items.back(); }
+	AssemblyItems const& getItems() const { return m_items; }
+	AssemblyItem const& back() const { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
 
 	void onePath() { if (asserts(!m_totalDeposit && !m_baseDeposit)) BOOST_THROW_EXCEPTION(InvalidDeposit()); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
