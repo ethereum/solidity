@@ -55,7 +55,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonData.h>
-#include <libsolidity/BaseTypes.h>
+#include <libevmcore/SourceLocation.h>
 #include <libsolidity/Token.h>
 
 namespace dev
@@ -120,14 +120,14 @@ public:
 		return m_currentToken.token;
 	}
 
-	Location getCurrentLocation() const { return m_currentToken.location; }
+	SourceLocation getCurrentLocation() const { return m_currentToken.location; }
 	std::string const& getCurrentLiteral() const { return m_currentToken.literal; }
 	///@}
 
 	///@{
 	///@name Information about the current comment token
 
-	Location getCurrentCommentLocation() const { return m_skippedComment.location; }
+	SourceLocation getCurrentCommentLocation() const { return m_skippedComment.location; }
 	std::string const& getCurrentCommentLiteral() const { return m_skippedComment.literal; }
 	/// Called by the parser during FunctionDefinition parsing to clear the current comment
 	void clearCurrentCommentLiteral() { m_skippedComment.literal.clear(); }
@@ -139,7 +139,7 @@ public:
 
 	/// Returns the next token without advancing input.
 	Token::Value peekNextToken() const { return m_nextToken.token; }
-	Location peekLocation() const { return m_nextToken.location; }
+	SourceLocation peekLocation() const { return m_nextToken.location; }
 	std::string const& peekLiteral() const { return m_nextToken.literal; }
 	///@}
 
@@ -158,7 +158,7 @@ private:
 	struct TokenDesc
 	{
 		Token::Value token;
-		Location location;
+		SourceLocation location;
 		std::string literal;
 	};
 

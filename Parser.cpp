@@ -22,7 +22,7 @@
 
 #include <vector>
 #include <libdevcore/Log.h>
-#include <libsolidity/BaseTypes.h>
+#include <libevmcore/SourceLocation.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Exceptions.h>
@@ -45,7 +45,7 @@ public:
 		m_parser(_parser), m_location(_childNode->getLocation()) {}
 
 	void markEndPosition() { m_location.end = m_parser.getEndPosition(); }
-	void setLocation(Location const& _location) { m_location = _location; }
+	void setLocation(SourceLocation const& _location) { m_location = _location; }
 	void setLocationEmpty() { m_location.end = m_location.start; }
 	/// Set the end position to the one of the given node.
 	void setEndPositionFromNode(ASTPointer<ASTNode> const& _node) { m_location.end = _node->getLocation().end; }
@@ -60,7 +60,7 @@ public:
 
 private:
 	Parser const& m_parser;
-	Location m_location;
+	SourceLocation m_location;
 };
 
 ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
@@ -646,9 +646,9 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 		primary = ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(m_scanner->getCurrentToken());
 		m_scanner->next();
 	}
-	vector<pair<ASTPointer<Expression>, Location>> indices;
+	vector<pair<ASTPointer<Expression>, SourceLocation>> indices;
 	solAssert(m_scanner->getCurrentToken() == Token::LBrack, "");
-	Location indexLocation = primary->getLocation();
+	SourceLocation indexLocation = primary->getLocation();
 	do
 	{
 		expectToken(Token::LBrack);
@@ -913,7 +913,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 }
 
 ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
-	ASTPointer<PrimaryExpression> const& _primary, vector<pair<ASTPointer<Expression>, Location>> const& _indices)
+	ASTPointer<PrimaryExpression> const& _primary, vector<pair<ASTPointer<Expression>, SourceLocation>> const& _indices)
 {
 	ASTNodeFactory nodeFactory(*this, _primary);
 	ASTPointer<TypeName> type;
@@ -932,7 +932,7 @@ ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
 }
 
 ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
-	ASTPointer<PrimaryExpression> const& _primary, vector<pair<ASTPointer<Expression>, Location>> const& _indices)
+	ASTPointer<PrimaryExpression> const& _primary, vector<pair<ASTPointer<Expression>, SourceLocation>> const& _indices)
 {
 	ASTNodeFactory nodeFactory(*this, _primary);
 	ASTPointer<Expression> expression(_primary);
@@ -983,7 +983,7 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 
 ParserError Parser::createParserError(string const& _description) const
 {
-	return ParserError() << errinfo_sourceLocation(Location(getPosition(), getPosition(), getSourceName()))
+	return ParserError() << errinfo_sourceLocation(SourceLocation(getPosition(), getPosition(), getSourceName()))
 						 << errinfo_comment(_description);
 }
 

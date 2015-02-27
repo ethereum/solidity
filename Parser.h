@@ -114,11 +114,11 @@ private:
 	/// Returns a typename parsed in look-ahead fashion from something like "a[8][2**70]".
 	ASTPointer<TypeName> typeNameIndexAccessStructure(
 		ASTPointer<PrimaryExpression> const& _primary,
-		std::vector<std::pair<ASTPointer<Expression>, Location>> const& _indices);
+		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices);
 	/// Returns an expression parsed in look-ahead fashion from something like "a[8][2**70]".
 	ASTPointer<Expression> expressionFromIndexAccessStructure(
 		ASTPointer<PrimaryExpression> const& _primary,
-		std::vector<std::pair<ASTPointer<Expression>, Location>> const& _indices);
+		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices);
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
 	Token::Value expectAssignmentOperator();

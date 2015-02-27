@@ -65,8 +65,8 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 
 void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
 {
+	LocationSetter locationSetter(*this, &_declaration);
 	addVariable(_declaration);
-
 	int const size = _declaration.getType()->getSizeOnStack();
 	for (int i = 0; i < size; ++i)
 		*this << u256(0);
@@ -164,6 +164,41 @@ u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declarati
 	auto it = m_stateVariables.find(&_declaration);
 	solAssert(it != m_stateVariables.end(), "Variable not found in storage.");
 	return it->second;
+}
+
+void CompilerContext::resetVisitedNodes(ASTNode const* _node)
+{
+	stack<ASTNode const*> newStack;
+	newStack.push(_node);
+	std::swap(m_visitedNodes, newStack);
+}
+
+CompilerContext& CompilerContext::operator<<(eth::AssemblyItem const& _item)
+{
+	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
+	m_asm.append(_item, m_visitedNodes.top()->getLocation());
+	return *this;
+}
+
+CompilerContext& CompilerContext::operator<<(eth::Instruction _instruction)
+{
+	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
+	m_asm.append(_instruction, m_visitedNodes.top()->getLocation());
+	return *this;
+}
+
+CompilerContext& CompilerContext::operator<<(u256 const& _value)
+{
+	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
+	m_asm.append(_value, m_visitedNodes.top()->getLocation());
+	return *this;
+}
+
+CompilerContext& CompilerContext::operator<<(bytes const& _data)
+{
+	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
+	m_asm.append(_data, m_visitedNodes.top()->getLocation());
+	return *this;
 }
 
 }
