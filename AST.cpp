@@ -217,26 +217,23 @@ vector<ASTPointer<Declaration>> const& ContractDefinition::getInheritableMembers
 		m_inheritableMembers.reset(new vector<ASTPointer<Declaration>>());
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
 		{
-			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
-				if (memberSeen.count(f->getName()) == 0 && f->isVisibleInDerivedContracts())
+			auto addInheritableMember = [&](ASTPointer<Declaration> const& _decl)
+			{
+				if (memberSeen.count(_decl->getName()) == 0 && _decl->isVisibleInDerivedContracts())
 				{
-					memberSeen.insert(f->getName());
-					m_inheritableMembers->push_back(f);
+					memberSeen.insert(_decl->getName());
+					m_inheritableMembers->push_back(_decl);
 				}
+			};
+
+			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
+				addInheritableMember(f);
 
 			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
-				if (memberSeen.count(v->getName()) == 0 && v->isVisibleInDerivedContracts())
-				{
-					memberSeen.insert(v->getName());
-					m_inheritableMembers->push_back(v);
-				}
+				addInheritableMember(v);
 
 			for (ASTPointer<StructDefinition> const& s: contract->getDefinedStructs())
-				if (memberSeen.count(s->getName()) == 0 && s->isVisibleInDerivedContracts())
-				{
-					memberSeen.insert(s->getName());
-					m_inheritableMembers->push_back(s);
-				}
+				addInheritableMember(s);
 		}
 	}
 	return *m_inheritableMembers;
