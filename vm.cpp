@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--performance")
+		if (arg == "--performance" || arg == "--all")
 		{
 			auto start = chrono::steady_clock::now();
 
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--inputlimits")
+		if (arg == "--inputlimits" || arg == "--all")
 		{
 			auto start = chrono::steady_clock::now();
 
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(vmInputLimitsTest2)
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--inputlimits")
+		if (arg == "--inputlimits" || arg == "--all")
 			dev::test::executeTests("vmInputLimitsTest2", "/VMTests", dev::test::doVMTests);
 	}
 }

@@ -139,27 +139,35 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 }
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
-{
-	BOOST_REQUIRE(_o.count("nonce")> 0);
-	BOOST_REQUIRE(_o.count("gasPrice") > 0);
-	BOOST_REQUIRE(_o.count("gasLimit") > 0);
-	BOOST_REQUIRE(_o.count("to") > 0);
-	BOOST_REQUIRE(_o.count("value") > 0);
-	BOOST_REQUIRE(_o.count("secretKey") > 0);
-	BOOST_REQUIRE(_o.count("data") > 0);
+{	
+	if (_o.count("secretKey") > 0)
+	{
+		BOOST_REQUIRE(_o.count("nonce") > 0);
+		BOOST_REQUIRE(_o.count("gasPrice") > 0);
+		BOOST_REQUIRE(_o.count("gasLimit") > 0);
+		BOOST_REQUIRE(_o.count("to") > 0);
+		BOOST_REQUIRE(_o.count("value") > 0);
+		BOOST_REQUIRE(_o.count("data") > 0);
 
-	if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
-		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
-	if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
-		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
-	if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
-		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
-	if (bigint(_o["value"].get_str()) >= c_max256plus1)
-		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
+		if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
+		if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
+		if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
+		if (bigint(_o["value"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
-	m_transaction = _o["to"].get_str().empty() ?
-		Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
-		Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
+		m_transaction = _o["to"].get_str().empty() ?
+			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
+			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
+	}
+	else
+	{
+		RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
+		RLP transactionRLP(transactionRLPStream.out());
+		m_transaction = Transaction(transactionRLP.data(), CheckSignature::Sender);
+	}
 }
 
 void ImportTest::exportTest(bytes _output, State& _statePost)
