@@ -424,23 +424,23 @@ BOOST_AUTO_TEST_CASE(cyclic_inheritance)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_direct)
+BOOST_AUTO_TEST_CASE(legal_override_direct)
 {
 	char const* text = R"(
 		contract B { function f() {} }
 		contract C is B { function f(uint i) {} }
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_indirect)
+BOOST_AUTO_TEST_CASE(legal_override_indirect)
 {
 	char const* text = R"(
 		contract A { function f(uint a) {} }
 		contract B { function f() {} }
 		contract C is A, B { }
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(illegal_override_visibility)

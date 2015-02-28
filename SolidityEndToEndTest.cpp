@@ -3214,6 +3214,30 @@ BOOST_AUTO_TEST_CASE(overloaded_function_call_with_if_else)
 	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs(10));
 }
 
+BOOST_AUTO_TEST_CASE(derived_overload_base_function_direct)
+{
+	char const* sourceCode = R"(
+		contract B { function f() returns(uint) { return 10; } }
+		contract C is B { function f(uint i) returns(uint) { return 2 * i; } }
+	)";
+	compileAndRun(sourceCode, "C");
+	BOOST_CHECK(callContractFunction("f(uint)", 1) == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(derived_overload_base_function_indirect)
+{
+	char const* sourceCode = R"(
+		contract A { function f(uint a) returns(uint) { return 2 * a; } }
+		contract B { function f() returns(uint) { return 10; } }
+		contract C is A, B { }
+	)";
+	compileAndRun(sourceCode, "C");
+	BOOST_CHECK(callContractFunction("f(uint)", 1) == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 }
 }
 } // end namespaces
