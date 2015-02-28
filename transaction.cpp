@@ -104,7 +104,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
 
-BOOST_AUTO_TEST_CASE(TransactionTest)
+BOOST_AUTO_TEST_CASE(ttTransactionTest)
 {
 	dev::test::executeTests("ttTransactionTest", "/TransactionTests", dev::test::doTransactionTests);
 }

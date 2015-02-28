@@ -170,7 +170,7 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	}
 }
 
-void ImportTest::exportTest(bytes _output, State& _statePost)
+void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
 	m_TestObject["out"] = "0x" + toHex(_output);
