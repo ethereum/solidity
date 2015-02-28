@@ -22,6 +22,7 @@
 
 #include <libsolidity/DeclarationContainer.h>
 #include <libsolidity/AST.h>
+#include <libsolidity/Types.h>
 
 namespace dev
 {
@@ -34,17 +35,35 @@ bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, 
 	if (name.empty())
 		return true;
 
-	if (!_update && (m_declarations.count(name) || m_invisibleDeclarations.count(name)))
-		return false;
+	if (!_update)
+	{
+		if (dynamic_cast<FunctionDefinition const*>(&_declaration))
+		{
+			// other declarations must be FunctionDefinition, otherwise clash with other declarations.
+			for (auto&& declaration: m_declarations[_declaration.getName()])
+				if (dynamic_cast<FunctionDefinition const*>(declaration) == nullptr)
+					return false;
+		}
+		else if (m_declarations.count(_declaration.getName()) != 0)
+				return false;
+	}
+	else
+	{
+		// update declaration
+		solAssert(dynamic_cast<FunctionDefinition const*>(&_declaration) == nullptr, "cannot be FunctionDefinition");
+
+		m_declarations[_declaration.getName()].clear();
+	}
 
 	if (_invisible)
 		m_invisibleDeclarations.insert(name);
 	else
-		m_declarations[name] = &_declaration;
+		m_declarations[_declaration.getName()].insert(&_declaration);
+
 	return true;
 }
 
-Declaration const* DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
+std::set<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	auto result = m_declarations.find(_name);
@@ -52,7 +71,7 @@ Declaration const* DeclarationContainer::resolveName(ASTString const& _name, boo
 		return result->second;
 	if (_recursive && m_enclosingContainer)
 		return m_enclosingContainer->resolveName(_name, true);
-	return nullptr;
+	return std::set<Declaration const*>({});
 }
 
 }
