@@ -1134,8 +1134,8 @@ public:
 class Identifier: public PrimaryExpression
 {
 public:
-	Identifier(SourceLocation const& _location, ASTPointer<ASTString> const& _name):
-		PrimaryExpression(_location), m_name(_name) {}
+	Identifier(SourceLocation const& _location, ASTPointer<ASTString> const& _name, bool _isCallable):
+		PrimaryExpression(_location), m_name(_name), m_isCallable(_isCallable) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
@@ -1151,6 +1151,8 @@ public:
 	Declaration const* getReferencedDeclaration() const { return m_referencedDeclaration; }
 	ContractDefinition const* getCurrentContract() const { return m_currentContract; }
 
+	bool isCallable() const { return m_isCallable; }
+
 private:
 	ASTPointer<ASTString> m_name;
 
@@ -1159,6 +1161,7 @@ private:
 	/// Stores a reference to the current contract. This is needed because types of base contracts
 	/// change depending on the context.
 	ContractDefinition const* m_currentContract = nullptr;
+	bool m_isCallable = false;
 };
 
 /**

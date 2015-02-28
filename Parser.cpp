@@ -837,9 +837,14 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Identifier:
+	{
 		nodeFactory.markEndPosition();
-		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
+		// if the next token is '(', this identifier looks like function call,
+		// it could be a contract, event etc.
+		bool isCallable = m_scanner->peekNextToken() == Token::LParen;
+		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance(), isCallable);
 		break;
+	}
 	case Token::LParen:
 	{
 		m_scanner->next();
