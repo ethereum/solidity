@@ -77,7 +77,7 @@ public:
 	enum class Category
 	{
 		Integer, IntegerConstant, Bool, Real, Array,
-		String, Contract, Struct, Function, Enum,
+		String, Contract, Struct, Function, OverloadedFunctions, Enum,
 		Mapping, Void, TypeType, Modifier, Magic
 	};
 
@@ -522,6 +522,19 @@ private:
 	bool m_isConstant = false;
 	mutable std::unique_ptr<MemberList> m_members;
 	Declaration const* m_declaration = nullptr;
+};
+
+class OverloadedFunctionType: public Type
+{
+public:
+	explicit OverloadedFunctionType(std::set<Declaration const*> const& _overloadedDeclarations, Identifier* _identifier):
+		m_overloadedDeclarations(_overloadedDeclarations), m_identifier(_identifier) {}
+	virtual Category getCategory() const override { return Category::OverloadedFunctions; }
+	virtual std::string toString() const override { return "OverloadedFunctions"; }
+
+// private:
+	std::set<Declaration const*> m_overloadedDeclarations;
+	Identifier * m_identifier;
 };
 
 /**

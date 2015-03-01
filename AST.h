@@ -1134,8 +1134,8 @@ public:
 class Identifier: public PrimaryExpression
 {
 public:
-	Identifier(SourceLocation const& _location, ASTPointer<ASTString> const& _name, bool _isCallable):
-		PrimaryExpression(_location), m_name(_name), m_isCallable(_isCallable) {}
+	Identifier(SourceLocation const& _location, ASTPointer<ASTString> const& _name):
+		PrimaryExpression(_location), m_name(_name) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	virtual void checkTypeRequirements() override;
@@ -1151,9 +1151,15 @@ public:
 	Declaration const* getReferencedDeclaration() const { return m_referencedDeclaration; }
 	ContractDefinition const* getCurrentContract() const { return m_currentContract; }
 
-	bool isCallable() const { return m_isCallable; }
+	void setOverloadedDeclarations(std::set<Declaration const*> const& _declarations) { m_overloadedDeclarations = _declarations; }
+	std::set<Declaration const*> getOverloadedDeclarations() const { return m_overloadedDeclarations; }
 
+	void checkTypeRequirementsWithFunctionCall(FunctionCall const& _functionCall);
+	void checkTypeRequirementsFromVariableDeclaration();
+
+	void overloadResolution(FunctionCall const& _functionCall);
 private:
+
 	ASTPointer<ASTString> m_name;
 
 	/// Declaration the name refers to.
@@ -1161,7 +1167,8 @@ private:
 	/// Stores a reference to the current contract. This is needed because types of base contracts
 	/// change depending on the context.
 	ContractDefinition const* m_currentContract = nullptr;
-	bool m_isCallable = false;
+	/// A set of overloaded declarations, right now only FunctionDefinition has overloaded declarations.
+	std::set<Declaration const*> m_overloadedDeclarations;
 };
 
 /**

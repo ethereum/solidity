@@ -56,11 +56,11 @@ public:
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
 	/// the global scope is used (i.e. the one containing only the contract).
 	/// @returns a pointer to the declaration on success or nullptr on failure.
-	Declaration const* resolveName(ASTString const& _name, Declaration const* _scope = nullptr) const;
+	std::set<Declaration const*> resolveName(ASTString const& _name, Declaration const* _scope = nullptr) const;
 
 	/// Resolves a name in the "current" scope. Should only be called during the initial
 	/// resolving phase.
-	Declaration const* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
+	std::set<Declaration const*> getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
 private:
 	void reset();

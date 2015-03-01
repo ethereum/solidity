@@ -90,15 +90,15 @@ void NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 	solAssert(_declaration.getScope() == nullptr, "Updated declaration outside global scope.");
 }
 
-Declaration const* NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
+std::set<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
 {
 	auto iterator = m_scopes.find(_scope);
 	if (iterator == end(m_scopes))
-		return nullptr;
+		return std::set<Declaration const*>({});
 	return iterator->second.resolveName(_name, false);
 }
 
-Declaration const* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
+std::set<Declaration const*> NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
 {
 	return m_currentScope->resolveName(_name, _recursive);
 }
@@ -108,13 +108,11 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 	auto iterator = m_scopes.find(&_base);
 	solAssert(iterator != end(m_scopes), "");
 	for (auto const& nameAndDeclaration: iterator->second.getDeclarations())
-	{
-		Declaration const* declaration = nameAndDeclaration.second;
-		// Import if it was declared in the base, is not the constructor and is visible in derived classes
-		if (declaration->getScope() == &_base && declaration->getName() != _base.getName() &&
-				declaration->isVisibleInDerivedContracts())
-			m_currentScope->registerDeclaration(*declaration);
-	}
+		for (auto const& declaration: nameAndDeclaration.second)
+			// Import if it was declared in the base, is not the constructor and is visible in derived classes
+			if (declaration->getScope() == &_base && declaration->getName() != _base.getName() &&
+					declaration->isVisibleInDerivedContracts())
+				m_currentScope->registerDeclaration(*declaration);
 }
 
 void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract) const
@@ -361,24 +359,31 @@ bool ReferencesResolver::visit(Mapping&)
 
 bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 {
-	Declaration const* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
-	if (!declaration)
+	auto declarations = m_resolver.getNameFromCurrentScope(_typeName.getName());
+	if (declarations.empty())
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
 												 << errinfo_comment("Undeclared identifier."));
-	_typeName.setReferencedDeclaration(*declaration);
+	else if (declarations.size() > 1)
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
+												 << errinfo_comment("Duplicate identifier."));
+	else
+		_typeName.setReferencedDeclaration(**declarations.begin());
 	return false;
 }
 
 bool ReferencesResolver::visit(Identifier& _identifier)
 {
-	Declaration const* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
-	if (!declaration)
+	auto declarations = m_resolver.getNameFromCurrentScope(_identifier.getName());
+	if (declarations.empty())
 		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_identifier.getLocation())
 												 << errinfo_comment("Undeclared identifier."));
-	_identifier.setReferencedDeclaration(*declaration, m_currentContract);
+	else if (declarations.size() == 1)
+		_identifier.setReferencedDeclaration(**declarations.begin(), m_currentContract);
+	else
+		// Duplicate declaration will be checked in checkTypeRequirements()
+		_identifier.setOverloadedDeclarations(declarations);
 	return false;
 }
-
 
 }
 }

@@ -822,7 +822,11 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 void ExpressionCompiler::endVisit(Identifier const& _identifier)
 {
 	Declaration const* declaration = _identifier.getReferencedDeclaration();
-	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
+	if (declaration == nullptr)
+	{
+		// no-op
+	}
+	else if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
 		if (magicVar->getType()->getCategory() == Type::Category::Contract)
 			// "this" or "super"

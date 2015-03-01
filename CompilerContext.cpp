@@ -108,8 +108,8 @@ eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(FunctionDefiniti
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
 		{
 			if (!function->isConstructor() &&
-				dynamic_cast<FunctionType const&>(*function->getType()).getCanonicalSignature() ==
-				dynamic_cast<FunctionType const&>(*_function.getType()).getCanonicalSignature())
+				dynamic_cast<FunctionType const&>(*function->getType(contract)).getCanonicalSignature() ==
+				dynamic_cast<FunctionType const&>(*_function.getType(contract)).getCanonicalSignature())
 				return getFunctionEntryLabel(*function);
 		}
 	solAssert(false, "Virtual function " + _function.getName() + " not found.");
