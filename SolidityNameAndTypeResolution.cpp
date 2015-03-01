@@ -1287,6 +1287,31 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint) { return 1; }
+			function f(uint a) returns(uint) { return a; }
+			function g() returns(uint) { return f(3, 5); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(ambiguous_overloaded_function)
+{
+	// literal 1 can be both converted to uint8 and uint8, so it's ambiguous.
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint8 a) returns(uint) { return a; }
+			function f(uint a) returns(uint) { return 2*a; }
+			function g() returns(uint) { return f(1); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

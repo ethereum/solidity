@@ -3218,10 +3218,13 @@ BOOST_AUTO_TEST_CASE(derived_overload_base_function_direct)
 {
 	char const* sourceCode = R"(
 		contract B { function f() returns(uint) { return 10; } }
-		contract C is B { function f(uint i) returns(uint) { return 2 * i; } }
+		contract C is B {
+			function f(uint i) returns(uint) { return 2 * i; }
+			function g() returns(uint) { return f(1); }
+		}
 	)";
-	compileAndRun(sourceCode, "C");
-	BOOST_CHECK(callContractFunction("f(uint)", 1) == encodeArgs(2));
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(2));
 }
 
 BOOST_AUTO_TEST_CASE(derived_overload_base_function_indirect)
@@ -3229,11 +3232,14 @@ BOOST_AUTO_TEST_CASE(derived_overload_base_function_indirect)
 	char const* sourceCode = R"(
 		contract A { function f(uint a) returns(uint) { return 2 * a; } }
 		contract B { function f() returns(uint) { return 10; } }
-		contract C is A, B { }
+		contract C is A, B {
+			function g() returns(uint) { return f(); }
+			function h() returns(uint) { return f(1); }
+		}
 	)";
-	compileAndRun(sourceCode, "C");
-	BOOST_CHECK(callContractFunction("f(uint)", 1) == encodeArgs(2));
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs(10));
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(2));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
