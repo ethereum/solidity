@@ -506,6 +506,11 @@ BOOST_AUTO_TEST_CASE(blInvalidHeaderTest)
 	dev::test::executeTests("blInvalidHeaderTest", "/BlockTests", dev::test::doBlockTests);
 }
 
+BOOST_AUTO_TEST_CASE(blForkBlocks)
+{
+	dev::test::executeTests("blForkBlocks", "/BlockTests", dev::test::doBlockTests);
+}
+
 BOOST_AUTO_TEST_CASE(userDefinedFileBl)
 {
 	dev::test::userDefinedTest("--bltest", dev::test::doBlockTests);
