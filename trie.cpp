@@ -52,6 +52,26 @@ using dev::operator <<;
 
 BOOST_AUTO_TEST_SUITE(TrieTests)
 
+BOOST_AUTO_TEST_CASE(fat_trie)
+{
+	h256 r;
+	MemoryDB fm;
+	{
+		FatGenericTrieDB<MemoryDB> ft(&fm);
+		ft.init();
+		ft.insert(h256("69", h256::FromHex, h256::AlignRight).ref(), h256("414243", h256::FromHex, h256::AlignRight).ref());
+		for (auto i: ft)
+			cnote << i.first << i.second;
+		r = ft.root();
+	}
+	{
+		FatGenericTrieDB<MemoryDB> ft(&fm);
+		ft.setRoot(r);
+		for (auto i: ft)
+			cnote << i.first << i.second;
+	}
+}
+
 BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 {
 	string testPath = test::getTestPath();
