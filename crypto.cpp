@@ -228,6 +228,51 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(ecies_kdf)
+{
+	KeyPair local = KeyPair::create();
+	KeyPair remote = KeyPair::create();
+	// nonce
+	Secret z1;
+	ecdh::agree(local.sec(), remote.pub(), z1);
+	auto key1 = s_secp256k1.eciesKDF(z1, bytes(), 512);
+	bytesConstRef eKey1 = bytesConstRef(&key1).cropped(0, 32);
+	bytesRef mKey1 = bytesRef(&key1).cropped(32, 32);
+	sha3(mKey1, mKey1);
+	
+	Secret z2;
+	ecdh::agree(remote.sec(), local.pub(), z2);
+	auto key2 = s_secp256k1.eciesKDF(z2, bytes(), 512);
+	bytesConstRef eKey2 = bytesConstRef(&key2).cropped(0, 32);
+	bytesRef mKey2 = bytesRef(&key2).cropped(32, 32);
+	sha3(mKey2, mKey2);
+	
+	BOOST_REQUIRE(eKey1.toBytes() == eKey2.toBytes());
+	BOOST_REQUIRE(mKey1.toBytes() == mKey2.toBytes());
+	
+	BOOST_REQUIRE((u256)h256(z1) > 0);
+	BOOST_REQUIRE(z1 == z2);
+	
+	BOOST_REQUIRE(key1.size() > 0 && ((u512)h512(key1)) > 0);
+	BOOST_REQUIRE(key1 == key2);
+}
+
+BOOST_AUTO_TEST_CASE(ecies_standard)
+{
+	KeyPair k = KeyPair::create();
+	
+	string message("Now is the time for all good persons to come to the aid of humanity.");
+	string original = message;
+	bytes b = asBytes(message);
+	
+	s_secp256k1.encryptECIES(k.pub(), b);
+	BOOST_REQUIRE(b != asBytes(original));
+	BOOST_REQUIRE(b.size() > 0 && ((u128)h128(b)) > 0);
+	
+	s_secp256k1.decryptECIES(k.sec(), b);
+	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
+}
+
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 {
 	KeyPair k = KeyPair::create();
@@ -341,10 +386,10 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	bytes auth(Signature::size + h256::size + Public::size + h256::size + 1);
 	Secret ssA;
 	{
-		bytesConstRef sig(&auth[0], Signature::size);
-		bytesConstRef hepubk(&auth[Signature::size], h256::size);
-		bytesConstRef pubk(&auth[Signature::size + h256::size], Public::size);
-		bytesConstRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
+		bytesRef sig(&auth[0], Signature::size);
+		bytesRef hepubk(&auth[Signature::size], h256::size);
+		bytesRef pubk(&auth[Signature::size + h256::size], Public::size);
+		bytesRef nonce(&auth[Signature::size + h256::size + Public::size], h256::size);
 		
 		crypto::ecdh::agree(nodeA.sec(), nodeB.pub(), ssA);
 		sign(eA.seckey(), ssA ^ nonceA).ref().copyTo(sig);
@@ -371,8 +416,8 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		bytesConstRef pubk(&authdecrypted[Signature::size + h256::size], Public::size);
 		pubk.copyTo(node.ref());
 		
-		bytesConstRef epubk(&ack[0], Public::size);
-		bytesConstRef nonce(&ack[Public::size], h256::size);
+		bytesRef epubk(&ack[0], Public::size);
+		bytesRef nonce(&ack[Public::size], h256::size);
 		
 		eB.pubkey().ref().copyTo(epubk);
 		nonceB.ref().copyTo(nonce);
@@ -398,7 +443,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		bytesConstRef ackRef(&ackdecrypted);
 		Public eBAck;
 		h256 nonceBAck;
-		ackRef.cropped(0, Public::size).copyTo(bytesConstRef(eBAck.data(), Public::size));
+		ackRef.cropped(0, Public::size).copyTo(bytesRef(eBAck.data(), Public::size));
 		ackRef.cropped(Public::size, h256::size).copyTo(nonceBAck.ref());
 		BOOST_REQUIRE_EQUAL(eBAck, eB.pubkey());
 		BOOST_REQUIRE_EQUAL(nonceBAck, nonceB);
@@ -406,7 +451,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		// TODO: export ess and require equal to b
 		
 		bytes keyMaterialBytes(512);
-		bytesConstRef keyMaterial(&keyMaterialBytes);
+		bytesRef keyMaterial(&keyMaterialBytes);
 		
 		h256 ess;
 		// todo: ecdh-agree should be able to output bytes
@@ -473,7 +518,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		BOOST_REQUIRE_EQUAL(eAAuth, eA.pubkey());
 		
 		bytes keyMaterialBytes(512);
-		bytesConstRef keyMaterial(&keyMaterialBytes);
+		bytesRef keyMaterial(&keyMaterialBytes);
 		
 		h256 ess;
 		// todo: ecdh-agree should be able to output bytes
@@ -519,24 +564,29 @@ BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
 	
 }
 
-BOOST_AUTO_TEST_CASE(crypto_rlpxwire)
+BOOST_AUTO_TEST_CASE(ecies_aes128_ctr_unaligned)
 {
 	Secret encryptK(sha3("..."));
 	h256 egressMac(sha3("+++"));
 	// TESTING: send encrypt magic sequence
 	bytes magic {0x22,0x40,0x08,0x91};
 	bytes magicCipherAndMac;
-	encryptSymNoAuth(encryptK, &magic, magicCipherAndMac, h256());
+	encryptSymNoAuth(encryptK, &magic, magicCipherAndMac, h128());
+	
 	magicCipherAndMac.resize(magicCipherAndMac.size() + 32);
 	sha3mac(egressMac.ref(), &magic, egressMac.ref());
-	egressMac.ref().copyTo(bytesConstRef(&magicCipherAndMac).cropped(magicCipherAndMac.size() - 32, 32));
+	egressMac.ref().copyTo(bytesRef(&magicCipherAndMac).cropped(magicCipherAndMac.size() - 32, 32));
 	
 	bytes plaintext;
 	bytesConstRef cipher(&magicCipherAndMac[0], magicCipherAndMac.size() - 32);
-	decryptSymNoAuth(encryptK, h256(), cipher, plaintext);
+	decryptSymNoAuth(encryptK, h128(), cipher, plaintext);
+	
+	plaintext.resize(magic.size());
+	BOOST_REQUIRE(plaintext.size() > 0);
+	BOOST_REQUIRE(magic == plaintext);
 }
 
-BOOST_AUTO_TEST_CASE(crypto_aes128_ctr)
+BOOST_AUTO_TEST_CASE(ecies_aes128_ctr)
 {
 	Secret k(sha3("0xAAAA"));
 	string m = "AAAAAAAAAAAAAAAA";
