@@ -48,6 +48,8 @@ static unsigned fac(unsigned _i)
 }
 }
 
+using dev::operator <<;
+
 BOOST_AUTO_TEST_SUITE(TrieTests)
 
 BOOST_AUTO_TEST_CASE(trie_test_anyorder)
@@ -79,15 +81,35 @@ BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 			next_permutation(ss.begin(), ss.end());
 			MemoryDB m;
 			GenericTrieDB<MemoryDB> t(&m);
+			MemoryDB hm;
+			HashedGenericTrieDB<MemoryDB> ht(&hm);
+			MemoryDB fm;
+			FatGenericTrieDB<MemoryDB> ft(&fm);
 			t.init();
+			ht.init();
+			ft.init();
 			BOOST_REQUIRE(t.check(true));
+			BOOST_REQUIRE(ht.check(true));
+			BOOST_REQUIRE(ft.check(true));
 			for (auto const& k: ss)
 			{
 				t.insert(k.first, k.second);
+				ht.insert(k.first, k.second);
+				ft.insert(k.first, k.second);
 				BOOST_REQUIRE(t.check(true));
+				BOOST_REQUIRE(ht.check(true));
+				BOOST_REQUIRE(ft.check(true));
+				for (auto i = ft.begin(), j = t.begin(); i != ft.end() && j != t.end(); ++i, ++j)
+				{
+					BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());
+					BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
+					BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
+				}
+				BOOST_CHECK_EQUAL(ht.root(), ft.root());
 			}
 			BOOST_REQUIRE(!o["root"].is_null());
 			BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(t.root().asArray()));
+			BOOST_CHECK_EQUAL(ht.root(), ft.root());
 		}
 	}
 }
@@ -139,15 +161,33 @@ BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 
 		MemoryDB m;
 		GenericTrieDB<MemoryDB> t(&m);
+		MemoryDB hm;
+		HashedGenericTrieDB<MemoryDB> ht(&hm);
+		MemoryDB fm;
+		FatGenericTrieDB<MemoryDB> ft(&fm);
 		t.init();
+		ht.init();
+		ft.init();
 		BOOST_REQUIRE(t.check(true));
+		BOOST_REQUIRE(ht.check(true));
+		BOOST_REQUIRE(ft.check(true));
+
 		for (auto const& k: ss)
 		{
 			if (find(keysToBeDeleted.begin(), keysToBeDeleted.end(), k.first) != keysToBeDeleted.end() && k.second.empty())
-				t.remove(k.first);
+				t.remove(k.first), ht.remove(k.first), ft.remove(k.first);
 			else
-				t.insert(k.first, k.second);
+				t.insert(k.first, k.second), ht.insert(k.first, k.second), ft.insert(k.first, k.second);
 			BOOST_REQUIRE(t.check(true));
+			BOOST_REQUIRE(ht.check(true));
+			BOOST_REQUIRE(ft.check(true));
+			for (auto i = ft.begin(), j = t.begin(); i != ft.end() && j != t.end(); ++i, ++j)
+			{
+				BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());
+				BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
+				BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
+			}
+			BOOST_CHECK_EQUAL(ht.root(), ft.root());
 		}
 
 		BOOST_REQUIRE(!o["root"].is_null());
