@@ -367,6 +367,40 @@ BOOST_AUTO_TEST_CASE(variable_definition_with_initialization)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(variable_definition_in_function_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function fun(var a) {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(variable_definition_in_mapping)
+{
+	char const* text = R"(
+		contract test {
+			function fun() {
+				mapping(var=>hash) d;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(variable_definition_in_function_return)
+{
+	char const* text = R"(
+		contract test {
+			function fun() returns(var d) {
+				return 1;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_CASE(operator_expression)
 {
 	char const* text = "contract test {\n"
