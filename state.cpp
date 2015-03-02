@@ -177,6 +177,24 @@ BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(stMemoryStressTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--memory" || arg == "--all")
+		{
+			auto start = chrono::steady_clock::now();
+
+			dev::test::executeTests("stMemoryStressTest", "/StateTests", dev::test::doStateTests);
+
+			auto end = chrono::steady_clock::now();
+			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+			cnote << "test duration: " << duration.count() << " milliseconds.\n";
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(stSolidityTest)
 {
 	dev::test::executeTests("stSolidityTest", "/StateTests", dev::test::doStateTests);
