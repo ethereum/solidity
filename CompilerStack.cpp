@@ -155,6 +155,16 @@ bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 	return getBytecode();
 }
 
+eth::AssemblyItems const& CompilerStack::getAssemblyItems(string const& _contractName) const
+{
+	return getContract(_contractName).compiler->getAssemblyItems();
+}
+
+eth::AssemblyItems const& CompilerStack::getRuntimeAssemblyItems(string const& _contractName) const
+{
+	return getContract(_contractName).compiler->getRuntimeAssemblyItems();
+}
+
 bytes const& CompilerStack::getBytecode(string const& _contractName) const
 {
 	return getContract(_contractName).bytecode;

@@ -26,11 +26,18 @@
 #include <ostream>
 #include <string>
 #include <memory>
+#include <vector>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
 
 namespace dev {
+
+namespace eth {
+	class AssemblyItem;
+	using AssemblyItems = std::vector<AssemblyItem>;
+}
+
 namespace solidity {
 
 // forward declarations
@@ -85,6 +92,10 @@ public:
 	bytes const& getBytecode(std::string const& _contractName = "") const;
 	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
+	/// @returns normal contract assembly items
+	eth::AssemblyItems const& getAssemblyItems(std::string const& _contractName = "") const;
+	/// @returns runtime contract assembly items
+	eth::AssemblyItems const& getRuntimeAssemblyItems(std::string const& _contractName = "") const;
 	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
 
