@@ -31,14 +31,17 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
 
-namespace dev {
+namespace dev
+{
 
-namespace eth {
-	class AssemblyItem;
-	using AssemblyItems = std::vector<AssemblyItem>;
+namespace eth
+{
+class AssemblyItem;
+using AssemblyItems = std::vector<AssemblyItem>;
 }
 
-namespace solidity {
+namespace solidity
+{
 
 // forward declarations
 class Scanner;
