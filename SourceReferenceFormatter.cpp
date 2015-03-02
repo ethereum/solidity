@@ -44,8 +44,14 @@ void SourceReferenceFormatter::printSourceLocation(ostream& _stream,
 	tie(endLine, endColumn) = _scanner.translatePositionToLineColumn(_location.end);
 	if (startLine == endLine)
 	{
-		_stream << _scanner.getLineAtPosition(_location.start) << endl
-				<< string(startColumn, ' ') << "^";
+		string line = _scanner.getLineAtPosition(_location.start);
+		_stream << line << endl;
+		std::for_each(line.cbegin(), line.cbegin() + startColumn,
+			[&_stream](char const& ch)
+			{
+				_stream << (ch == '\t' ? '\t' : ' ');
+			});
+		_stream << "^";
 		if (endColumn > startColumn + 2)
 			_stream << string(endColumn - startColumn - 2, '-');
 		if (endColumn > startColumn + 1)

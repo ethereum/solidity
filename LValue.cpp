@@ -32,15 +32,14 @@ using namespace solidity;
 
 
 StackVariable::StackVariable(CompilerContext& _compilerContext, Declaration const& _declaration):
-	LValue(_compilerContext, _declaration.getType()),
+	LValue(_compilerContext, *_declaration.getType()),
 	m_baseStackOffset(m_context.getBaseStackOffsetOfVariable(_declaration)),
-	m_size(m_dataType->getSizeOnStack())
+	m_size(m_dataType.getSizeOnStack())
 {
 }
 
-void StackVariable::retrieveValue(SourceLocation const& _location, bool _remove) const
+void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 {
-	(void)_remove;
 	unsigned stackPos = m_context.baseToCurrentStackOffset(m_baseStackOffset);
 	if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
 		BOOST_THROW_EXCEPTION(CompilerError()
@@ -49,9 +48,8 @@ void StackVariable::retrieveValue(SourceLocation const& _location, bool _remove)
 		m_context << eth::dupInstruction(stackPos + 1);
 }
 
-void StackVariable::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
+void StackVariable::storeValue(Type const&, SourceLocation const& _location, bool _move) const
 {
-	(void)_sourceType;
 	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset) - m_size + 1;
 	if (stackDiff > 16)
 		BOOST_THROW_EXCEPTION(CompilerError()
@@ -63,7 +61,7 @@ void StackVariable::storeValue(Type const& _sourceType, SourceLocation const& _l
 		retrieveValue(_location);
 }
 
-void StackVariable::setToZero(SourceLocation const& _location) const
+void StackVariable::setToZero(SourceLocation const& _location, bool) const
 {
 	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset);
 	if (stackDiff > 16)
@@ -77,20 +75,20 @@ void StackVariable::setToZero(SourceLocation const& _location) const
 
 
 StorageItem::StorageItem(CompilerContext& _compilerContext, Declaration const& _declaration):
-	StorageItem(_compilerContext, _declaration.getType())
+	StorageItem(_compilerContext, *_declaration.getType())
 {
 	m_context << m_context.getStorageLocationOfVariable(_declaration);
 }
 
-StorageItem::StorageItem(CompilerContext& _compilerContext, TypePointer const& _type):
+StorageItem::StorageItem(CompilerContext& _compilerContext, Type const& _type):
 	LValue(_compilerContext, _type)
 {
-	if (m_dataType->isValueType())
+	if (m_dataType.isValueType())
 	{
-		solAssert(m_dataType->getStorageSize() == m_dataType->getSizeOnStack(), "");
-		solAssert(m_dataType->getStorageSize() <= numeric_limits<unsigned>::max(),
-			"The storage size of " + m_dataType->toString() + " should fit in an unsigned");
-		m_size = unsigned(m_dataType->getStorageSize());
+		solAssert(m_dataType.getStorageSize() == m_dataType.getSizeOnStack(), "");
+		solAssert(m_dataType.getStorageSize() <= numeric_limits<unsigned>::max(),
+			"The storage size of " + m_dataType.toString() + " should fit in an unsigned");
+		m_size = unsigned(m_dataType.getStorageSize());
 	}
 	else
 		m_size = 0; // unused
@@ -98,7 +96,7 @@ StorageItem::StorageItem(CompilerContext& _compilerContext, TypePointer const& _
 
 void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 {
-	if (!m_dataType->isValueType())
+	if (!m_dataType.isValueType())
 		return; // no distinction between value and reference for non-value types
 	if (!_remove)
 		m_context << eth::Instruction::DUP1;
@@ -118,7 +116,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
 {
 	// stack layout: value value ... value target_ref
-	if (m_dataType->isValueType())
+	if (m_dataType.isValueType())
 	{
 		if (!_move) // copy values
 		{
@@ -143,20 +141,20 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	}
 	else
 	{
-		solAssert(_sourceType.getCategory() == m_dataType->getCategory(),
+		solAssert(_sourceType.getCategory() == m_dataType.getCategory(),
 			"Wrong type conversation for assignment.");
-		if (m_dataType->getCategory() == Type::Category::Array)
+		if (m_dataType.getCategory() == Type::Category::Array)
 		{
-			CompilerUtils(m_context).copyByteArrayToStorage(
-						dynamic_cast<ArrayType const&>(*m_dataType),
+			ArrayUtils(m_context).copyArrayToStorage(
+						dynamic_cast<ArrayType const&>(m_dataType),
 						dynamic_cast<ArrayType const&>(_sourceType));
 			if (_move)
 				m_context << eth::Instruction::POP;
 		}
-		else if (m_dataType->getCategory() == Type::Category::Struct)
+		else if (m_dataType.getCategory() == Type::Category::Struct)
 		{
 			// stack layout: source_ref target_ref
-			auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
+			auto const& structType = dynamic_cast<StructType const&>(m_dataType);
 			solAssert(structType == _sourceType, "Struct assignment with conversion.");
 			for (auto const& member: structType.getMembers())
 			{
@@ -167,12 +165,12 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				m_context << structType.getStorageOffsetOfMember(member.first)
 					<< eth::Instruction::DUP3 << eth::Instruction::DUP2 << eth::Instruction::ADD;
 				// stack: source_ref target_ref member_offset source_member_ref
-				StorageItem(m_context, memberType).retrieveValue(_location, true);
+				StorageItem(m_context, *memberType).retrieveValue(_location, true);
 				// stack: source_ref target_ref member_offset source_value...
 				m_context << eth::dupInstruction(2 + memberType->getSizeOnStack())
 					<< eth::dupInstruction(2 + memberType->getSizeOnStack()) << eth::Instruction::ADD;
 				// stack: source_ref target_ref member_offset source_value... target_member_ref
-				StorageItem(m_context, memberType).storeValue(*memberType, _location, true);
+				StorageItem(m_context, *memberType).storeValue(*memberType, _location, true);
 				m_context << eth::Instruction::POP;
 			}
 			if (_move)
@@ -187,16 +185,18 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	}
 }
 
-
-void StorageItem::setToZero(SourceLocation const& _location) const
+void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 {
-	(void)_location;
-	if (m_dataType->getCategory() == Type::Category::Array)
-		CompilerUtils(m_context).clearByteArray(dynamic_cast<ArrayType const&>(*m_dataType));
-	else if (m_dataType->getCategory() == Type::Category::Struct)
+	if (m_dataType.getCategory() == Type::Category::Array)
+	{
+		if (!_removeReference)
+			m_context << eth::Instruction::DUP1;
+		ArrayUtils(m_context).clearArray(dynamic_cast<ArrayType const&>(m_dataType));
+	}
+	else if (m_dataType.getCategory() == Type::Category::Struct)
 	{
 		// stack layout: ref
-		auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
+		auto const& structType = dynamic_cast<StructType const&>(m_dataType);
 		for (auto const& member: structType.getMembers())
 		{
 			// zero each member that is not a mapping
@@ -205,19 +205,61 @@ void StorageItem::setToZero(SourceLocation const& _location) const
 				continue;
 			m_context << structType.getStorageOffsetOfMember(member.first)
 				<< eth::Instruction::DUP2 << eth::Instruction::ADD;
-			StorageItem(m_context, memberType).setToZero();
+			StorageItem(m_context, *memberType).setToZero();
 		}
-		m_context << eth::Instruction::POP;
+		if (_removeReference)
+			m_context << eth::Instruction::POP;
 	}
 	else
 	{
-		if (m_size == 0)
+		if (m_size == 0 && _removeReference)
 			m_context << eth::Instruction::POP;
-		for (unsigned i = 0; i < m_size; ++i)
-			if (i + 1 >= m_size)
-				m_context << u256(0) << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
-			else
-				m_context << u256(0) << eth::Instruction::DUP2 << eth::Instruction::SSTORE
-					<< u256(1) << eth::Instruction::ADD;
+		else if (m_size == 1)
+			m_context
+				<< u256(0) << (_removeReference ? eth::Instruction::SWAP1 : eth::Instruction::DUP2)
+				<< eth::Instruction::SSTORE;
+		else
+		{
+			if (!_removeReference)
+				m_context << eth::Instruction::DUP1;
+			for (unsigned i = 0; i < m_size; ++i)
+				if (i + 1 >= m_size)
+					m_context << u256(0) << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
+				else
+					m_context << u256(0) << eth::Instruction::DUP2 << eth::Instruction::SSTORE
+						<< u256(1) << eth::Instruction::ADD;
+		}
 	}
 }
+
+
+StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, const ArrayType& _arrayType):
+	LValue(_compilerContext, *_arrayType.getMemberType("length")),
+	m_arrayType(_arrayType)
+{
+	solAssert(m_arrayType.isDynamicallySized(), "");
+}
+
+void StorageArrayLength::retrieveValue(SourceLocation const& _location, bool _remove) const
+{
+	if (!_remove)
+		m_context << eth::Instruction::DUP1;
+	m_context << eth::Instruction::SLOAD;
+}
+
+void StorageArrayLength::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
+{
+	if (_move)
+		m_context << eth::Instruction::SWAP1;
+	else
+		m_context << eth::Instruction::DUP2;
+	ArrayUtils(m_context).resizeDynamicArray(m_arrayType);
+}
+
+void StorageArrayLength::setToZero(SourceLocation const& _location, bool _removeReference) const
+{
+	if (!_removeReference)
+		m_context << eth::Instruction::DUP1;
+	ArrayUtils(m_context).clearDynamicArray(m_arrayType);
+}
+

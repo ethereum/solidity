@@ -209,6 +209,33 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	return *m_interfaceFunctionList;
 }
 
+vector<Declaration const*> const& ContractDefinition::getInheritableMembers() const
+{
+	if (!m_inheritableMembers)
+	{
+		set<string> memberSeen;
+		m_inheritableMembers.reset(new vector<Declaration const*>());
+		auto addInheritableMember = [&](Declaration const* _decl)
+		{
+			if (memberSeen.count(_decl->getName()) == 0 && _decl->isVisibleInDerivedContracts())
+			{
+				memberSeen.insert(_decl->getName());
+				m_inheritableMembers->push_back(_decl);
+			}
+		};
+
+		for (ASTPointer<FunctionDefinition> const& f: getDefinedFunctions())
+			addInheritableMember(f.get());
+
+		for (ASTPointer<VariableDeclaration> const& v: getStateVariables())
+			addInheritableMember(v.get());
+
+		for (ASTPointer<StructDefinition> const& s: getDefinedStructs())
+			addInheritableMember(s.get());
+	}
+	return *m_inheritableMembers;
+}
+
 TypePointer EnumValue::getType(ContractDefinition const*) const
 {
 	EnumDefinition const* parentDef = dynamic_cast<EnumDefinition const*>(getScope());
@@ -281,7 +308,9 @@ void FunctionDefinition::checkTypeRequirements()
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
-		modifier->checkTypeRequirements();
+		modifier->checkTypeRequirements(isConstructor() ?
+			dynamic_cast<ContractDefinition const&>(*getScope()).getBaseContracts() :
+			vector<ASTPointer<InheritanceSpecifier>>());
 
 	m_body->checkTypeRequirements();
 }
@@ -324,19 +353,34 @@ void ModifierDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-void ModifierInvocation::checkTypeRequirements()
+void ModifierInvocation::checkTypeRequirements(vector<ASTPointer<InheritanceSpecifier>> const& _bases)
 {
 	m_modifierName->checkTypeRequirements();
 	for (ASTPointer<Expression> const& argument: m_arguments)
 		argument->checkTypeRequirements();
 
-	ModifierDefinition const* modifier = dynamic_cast<ModifierDefinition const*>(m_modifierName->getReferencedDeclaration());
-	solAssert(modifier, "Function modifier not found.");
-	vector<ASTPointer<VariableDeclaration>> const& parameters = modifier->getParameters();
-	if (parameters.size() != m_arguments.size())
+	auto declaration = m_modifierName->getReferencedDeclaration();
+	vector<ASTPointer<VariableDeclaration>> emptyParameterList;
+	vector<ASTPointer<VariableDeclaration>> const* parameters = nullptr;
+	if (auto modifier = dynamic_cast<ModifierDefinition const*>(declaration))
+		parameters = &modifier->getParameters();
+	else
+		// check parameters for Base constructors
+		for (auto const& base: _bases)
+			if (declaration == base->getName()->getReferencedDeclaration())
+			{
+				if (auto referencedConstructor = dynamic_cast<ContractDefinition const&>(*declaration).getConstructor())
+					parameters = &referencedConstructor->getParameters();
+				else
+					parameters = &emptyParameterList;
+				break;
+			}
+	if (!parameters)
+		BOOST_THROW_EXCEPTION(createTypeError("Referenced declaration is neither modifier nor base class."));
+	if (parameters->size() != m_arguments.size())
 		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for modifier invocation."));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
-		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameters[i]->getType()))
+		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*(*parameters)[i]->getType()))
 			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in modifier invocation."));
 }
 

@@ -537,7 +537,19 @@ TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 
 bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 {
-	return _convertTo.getCategory() == getCategory();
+	if (_convertTo.getCategory() != getCategory())
+		return false;
+	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
+	// let us not allow assignment to memory arrays for now
+	if (convertTo.getLocation() != Location::Storage)
+		return false;
+	if (convertTo.isByteArray() != isByteArray())
+		return false;
+	if (!getBaseType()->isImplicitlyConvertibleTo(*convertTo.getBaseType()))
+		return false;
+	if (convertTo.isDynamicallySized())
+		return true;
+	return !isDynamicallySized() && convertTo.getLength() >= getLength();
 }
 
 TypePointer ArrayType::unaryOperatorResult(Token::Value _operator) const
@@ -552,7 +564,10 @@ bool ArrayType::operator==(Type const& _other) const
 	if (_other.getCategory() != getCategory())
 		return false;
 	ArrayType const& other = dynamic_cast<ArrayType const&>(_other);
-	return other.m_location == m_location;
+	if (other.m_location != m_location || other.isByteArray() != isByteArray() ||
+			other.isDynamicallySized() != isDynamicallySized())
+		return false;
+	return isDynamicallySized() || getLength()  == other.getLength();
 }
 
 u256 ArrayType::getStorageSize() const
@@ -628,8 +643,7 @@ MemberList const& ContractType::getMembers() const
 		{
 			for (ContractDefinition const* base: m_contract.getLinearizedBaseContracts())
 				for (ASTPointer<FunctionDefinition> const& function: base->getDefinedFunctions())
-					if (!function->isConstructor() && !function->getName().empty()&&
-							function->isVisibleInDerivedContracts())
+					if (function->isVisibleInDerivedContracts())
 						members.push_back(make_pair(function->getName(), make_shared<FunctionType>(*function, true)));
 		}
 		else
@@ -1024,10 +1038,9 @@ MemberList const& TypeType::getMembers() const
 			vector<ContractDefinition const*> currentBases = m_currentContract->getLinearizedBaseContracts();
 			if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
 				// We are accessing the type of a base contract, so add all public and protected
-				// functions. Note that this does not add inherited functions on purpose.
-				for (ASTPointer<FunctionDefinition> const& f: contract.getDefinedFunctions())
-					if (!f->isConstructor() && !f->getName().empty() && f->isVisibleInDerivedContracts())
-						members.push_back(make_pair(f->getName(), make_shared<FunctionType>(*f)));
+				// members. Note that this does not add inherited functions on purpose.
+				for (Declaration const* decl: contract.getInheritableMembers())
+					members.push_back(make_pair(decl->getName(), decl->getType()));
 		}
 		else if (m_actualType->getCategory() == Category::Enum)
 		{
