@@ -240,14 +240,14 @@ StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, const 
 	solAssert(m_arrayType.isDynamicallySized(), "");
 }
 
-void StorageArrayLength::retrieveValue(SourceLocation const& _location, bool _remove) const
+void StorageArrayLength::retrieveValue(SourceLocation const&, bool _remove) const
 {
 	if (!_remove)
 		m_context << eth::Instruction::DUP1;
 	m_context << eth::Instruction::SLOAD;
 }
 
-void StorageArrayLength::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
+void StorageArrayLength::storeValue(Type const&, SourceLocation const&, bool _move) const
 {
 	if (_move)
 		m_context << eth::Instruction::SWAP1;
@@ -256,7 +256,7 @@ void StorageArrayLength::storeValue(Type const& _sourceType, SourceLocation cons
 	ArrayUtils(m_context).resizeDynamicArray(m_arrayType);
 }
 
-void StorageArrayLength::setToZero(SourceLocation const& _location, bool _removeReference) const
+void StorageArrayLength::setToZero(SourceLocation const&, bool _removeReference) const
 {
 	if (!_removeReference)
 		m_context << eth::Instruction::DUP1;
