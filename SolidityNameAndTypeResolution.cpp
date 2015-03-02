@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
 			function g() { f(); rootFunction(); }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
 }
 
 BOOST_AUTO_TEST_CASE(cyclic_inheritance)
@@ -718,6 +718,58 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
 	function = retrieveFunctionBySignature(contract, "bar()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
+}
+
+BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
+{
+	// test for issue #1126 https://github.com/ethereum/cpp-ethereum/issues/1126
+	char const* text = "contract Parent {\n"
+					   "    uint256 public m_aMember;\n"
+					   "}\n"
+					   "contract Child is Parent{\n"
+					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
+{
+	char const* text = "contract Parent {\n"
+					   "    uint256 internal m_aMember;\n"
+					   "}\n"
+					   "contract Child is Parent{\n"
+					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
+					   "}\n";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+}
+
+BOOST_AUTO_TEST_CASE(state_variable_member_of_wrong_class1)
+{
+	char const* text = "contract Parent1 {\n"
+					   "    uint256 internal m_aMember1;\n"
+					   "}\n"
+					   "contract Parent2 is Parent1{\n"
+					   "    uint256 internal m_aMember2;\n"
+					   "}\n"
+					   "contract Child is Parent2{\n"
+					   "    function foo() returns (uint256) { return Parent2.m_aMember1; }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(state_variable_member_of_wrong_class2)
+{
+	char const* text = "contract Parent1 {\n"
+					   "    uint256 internal m_aMember1;\n"
+					   "}\n"
+					   "contract Parent2 is Parent1{\n"
+					   "    uint256 internal m_aMember2;\n"
+					   "}\n"
+					   "contract Child is Parent2{\n"
+					   "    function foo() returns (uint256) { return Child.m_aMember2; }\n"
+					   "    uint256 public m_aMember3;\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function)
