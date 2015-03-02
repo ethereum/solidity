@@ -91,6 +91,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 			// check addresses
 #if ETH_FATDB
+			cout << "fatDB is defined\n";
 			auto expectedAddrs = importer.m_statePost.addresses();
 			auto resultAddrs = theState.addresses();
 			for (auto& expectedPair : expectedAddrs)
