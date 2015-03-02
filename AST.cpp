@@ -353,7 +353,7 @@ void ModifierDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-void ModifierInvocation::checkTypeRequirements(std::vector<ASTPointer<InheritanceSpecifier>> const& _bases)
+void ModifierInvocation::checkTypeRequirements(vector<ASTPointer<InheritanceSpecifier>> const& _bases)
 {
 	m_modifierName->checkTypeRequirements();
 	for (ASTPointer<Expression> const& argument: m_arguments)
@@ -365,12 +365,12 @@ void ModifierInvocation::checkTypeRequirements(std::vector<ASTPointer<Inheritanc
 	if (auto modifier = dynamic_cast<ModifierDefinition const*>(declaration))
 		parameters = &modifier->getParameters();
 	else
+		// check parameters for Base constructors
 		for (auto const& base: _bases)
 			if (declaration == base->getName()->getReferencedDeclaration())
 			{
-				m_referencedConstructor = dynamic_cast<ContractDefinition const&>(*declaration).getConstructor();
-				if (m_referencedConstructor)
-					parameters = &m_referencedConstructor->getParameters();
+				if (auto referencedConstructor = dynamic_cast<ContractDefinition const&>(*declaration).getConstructor())
+					parameters = &referencedConstructor->getParameters();
 				else
 					parameters = &emptyParameterList;
 				break;

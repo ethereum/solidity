@@ -525,12 +525,12 @@ public:
 	ASTPointer<Identifier> const& getName() const { return m_modifierName; }
 	std::vector<ASTPointer<Expression>> const& getArguments() const { return m_arguments; }
 
+	/// @param _bases is the list of base contracts for base constructor calls. For modifiers an empty vector should be passed.
 	void checkTypeRequirements(std::vector<ASTPointer<InheritanceSpecifier>> const& _bases);
 
 private:
 	ASTPointer<Identifier> m_modifierName;
 	std::vector<ASTPointer<Expression>> m_arguments;
-	FunctionDefinition const* m_referencedConstructor = nullptr;
 };
 
 /**

@@ -126,7 +126,7 @@ eth::AssemblyItem CompilerContext::getSuperFunctionEntryLabel(string const& _nam
 FunctionDefinition const* CompilerContext::getNextConstructor(ContractDefinition const& _contract) const
 {
 	vector<ContractDefinition const*>::const_iterator it = getSuperContract(_contract);
-	for (; it != m_inheritanceHierarchy.end(); it = getSuperContract(**it))
+	for (; it != m_inheritanceHierarchy.end(); ++it)
 		if ((*it)->getConstructor())
 			return (*it)->getConstructor();
 
