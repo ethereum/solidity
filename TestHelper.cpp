@@ -203,6 +203,8 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 	}
 	m_TestObject["post"] = json_spirit::mValue(postState);
 
+	m_TestObject["postStateRoot"] = toHex(_statePost.rootHash().asBytes());
+
 	// export pre state
 	json_spirit::mObject preState;
 
