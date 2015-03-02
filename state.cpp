@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(stCreateTest)
 
 BOOST_AUTO_TEST_CASE(userDefinedFileState)
 {
-	dev::test::userDefinedTest("--statetest", dev::test::doStateTests);
+	dev::test::userDefinedTest("--singletest", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -167,9 +167,9 @@ BOOST_AUTO_TEST_CASE(ttCreateTest)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(userDefinedFileTT)
+BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
-	dev::test::userDefinedTest("--ttTest", dev::test::doTransactionTests);
+	dev::test::userDefinedTest("--singletest", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
