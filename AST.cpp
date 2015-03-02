@@ -209,13 +209,13 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	return *m_interfaceFunctionList;
 }
 
-vector<ASTPointer<Declaration>> const& ContractDefinition::getInheritableMembers() const
+vector<Declaration const*> const& ContractDefinition::getInheritableMembers() const
 {
 	if (!m_inheritableMembers)
 	{
 		set<string> memberSeen;
-		m_inheritableMembers.reset(new vector<ASTPointer<Declaration>>());
-		auto addInheritableMember = [&](ASTPointer<Declaration> const& _decl)
+		m_inheritableMembers.reset(new vector<Declaration const*>());
+		auto addInheritableMember = [&](Declaration const* _decl)
 		{
 			if (memberSeen.count(_decl->getName()) == 0 && _decl->isVisibleInDerivedContracts())
 			{
@@ -225,13 +225,13 @@ vector<ASTPointer<Declaration>> const& ContractDefinition::getInheritableMembers
 		};
 
 		for (ASTPointer<FunctionDefinition> const& f: getDefinedFunctions())
-			addInheritableMember(f);
+			addInheritableMember(f.get());
 
 		for (ASTPointer<VariableDeclaration> const& v: getStateVariables())
-			addInheritableMember(v);
+			addInheritableMember(v.get());
 
 		for (ASTPointer<StructDefinition> const& s: getDefinedStructs())
-			addInheritableMember(s);
+			addInheritableMember(s.get());
 	}
 	return *m_inheritableMembers;
 }
