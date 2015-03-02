@@ -52,7 +52,7 @@ public:
 	void importEnv(json_spirit::mObject& _o);
 	void importState(json_spirit::mObject& _o, eth::State& _state);
 	void importTransaction(json_spirit::mObject& _o);
-	void exportTest(bytes _output, eth::State& _statePost);
+	void exportTest(bytes const& _output, eth::State const& _statePost);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
