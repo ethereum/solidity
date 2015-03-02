@@ -984,9 +984,10 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
 		// send all gas except for the 21 needed to execute "SUB" and "CALL"
-		m_context << u256(21) << eth::Instruction::GAS << eth::Instruction::SUB;
-	m_context << eth::Instruction::CALL
-			  << eth::Instruction::POP; // @todo do not ignore failure indicator
+		m_context << u256(_functionType.valueSet() ? 6741 : 41) << eth::Instruction::GAS << eth::Instruction::SUB;
+	m_context << eth::Instruction::CALL;
+	auto tag = m_context.appendConditionalJump();
+	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.
 	if (_functionType.valueSet())
 		m_context << eth::Instruction::POP;
 	if (_functionType.gasSet())
@@ -999,10 +1000,12 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		CompilerUtils(m_context).loadFromMemory(0, *firstType, false, true);
 }
 
-void ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expression const>> const& _arguments,
-													 TypePointers const& _types,
-													 bool _padToWordBoundaries,
-													 bool _padExceptionIfFourBytes)
+void ExpressionCompiler::appendArgumentsCopyToMemory(
+	vector<ASTPointer<Expression const>> const& _arguments,
+	TypePointers const& _types,
+	bool _padToWordBoundaries,
+	bool _padExceptionIfFourBytes
+)
 {
 	solAssert(_types.empty() || _types.size() == _arguments.size(), "");
 	for (size_t i = 0; i < _arguments.size(); ++i)
