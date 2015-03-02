@@ -72,7 +72,13 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		if (_fillin)
+		{
+#if ETH_FATDB
 			importer.exportTest(output, theState);
+#else
+			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("You can not fill tests when FATDB is switched off"));
+#endif
+		}
 		else
 		{
 			BOOST_REQUIRE(o.count("post") > 0);
@@ -85,6 +91,8 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 			checkLog(theState.pending().size() ? theState.log(0) : LogEntries(), importer.m_environment.sub.logs);
 
 			// check addresses
+#if ETH_FATDB
+			cout << "fatDB is defined\n";
 			auto expectedAddrs = importer.m_statePost.addresses();
 			auto resultAddrs = theState.addresses();
 			for (auto& expectedPair : expectedAddrs)
@@ -103,6 +111,8 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 				}
 			}
 			checkAddresses<map<Address, u256> >(expectedAddrs, resultAddrs);
+#endif
+			BOOST_CHECK_MESSAGE(theState.rootHash() == h256(o["postStateRoot"].get_str()), "wrong post state root");
 		}
 	}
 }
