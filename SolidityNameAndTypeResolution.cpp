@@ -1185,6 +1185,61 @@ BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types1)
+{
+	char const* text = R"(
+		contract c {
+			bytes a;
+			uint[] b;
+			function f() { b = a; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types2)
+{
+	char const* text = R"(
+		contract c {
+			uint32[] a;
+			uint8[] b;
+			function f() { b = a; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types_conversion_possible)
+{
+	char const* text = R"(
+		contract c {
+			uint32[] a;
+			uint8[] b;
+			function f() { a = b; }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types_static_dynamic)
+{
+	char const* text = R"(
+		contract c {
+			uint32[] a;
+			uint8[80] b;
+			function f() { a = b; }
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types_dynamic_static)
+{
+	char const* text = R"(
+		contract c {
+			uint[] a;
+			uint[80] b;
+			function f() { b = a; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
