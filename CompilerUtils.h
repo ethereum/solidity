@@ -46,7 +46,8 @@ public:
 	/// Dynamic version of @see loadFromMemory, expects the memory offset on the stack.
 	/// Stack pre: memory_offset
 	/// Stack post: value... (memory_offset+length)
-	void loadFromMemoryDynamic(Type const& _type, bool _fromCalldata = false, bool _padToWordBoundaries = true);
+	void loadFromMemoryDynamic(Type const& _type, bool _fromCalldata = false,
+		bool _padToWordBoundaries = true, bool _keepUpdatedMemoryOffset = true);
 	/// Stores data from stack in memory.
 	/// @param _offset offset in memory
 	/// @param _type type of the data on the stack
@@ -65,8 +66,9 @@ public:
 
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);
-	/// Copies a variable of type @a _type from a stack depth of @a _stackDepth to the top of the stack.
-	void copyToStackTop(unsigned _stackDepth, Type const& _type);
+	/// Copies an item that occupies @a _itemSize stack slots from a stack depth of @a _stackDepth
+	/// to the top of the stack.
+	void copyToStackTop(unsigned _stackDepth, unsigned _itemSize);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);
 

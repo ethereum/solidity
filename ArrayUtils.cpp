@@ -70,22 +70,25 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 		m_context << eth::Instruction::ISZERO;
 		eth::AssemblyItem copyLoopEnd = m_context.newTag();
 		m_context.appendConditionalJumpTo(copyLoopEnd);
+		// add length to source offset
+		m_context << eth::Instruction::DUP5 << eth::Instruction::DUP5 << eth::Instruction::ADD;
+		// stack now: source_offset source_len target_ref target_data_end target_data_ref source_end
 		// store start offset
-		m_context << eth::Instruction::DUP5;
-		// stack now: source_offset source_len target_ref target_data_end target_data_ref calldata_offset
+		m_context << eth::Instruction::DUP6;
+		// stack now: source_offset source_len target_ref target_data_end target_data_ref source_end calldata_offset
 		eth::AssemblyItem copyLoopStart = m_context.newTag();
 		m_context << copyLoopStart
 				  // copy from calldata and store
 				  << eth::Instruction::DUP1 << eth::Instruction::CALLDATALOAD
-				  << eth::Instruction::DUP3 << eth::Instruction::SSTORE
+				  << eth::Instruction::DUP4 << eth::Instruction::SSTORE
 				  // increment target_data_ref by 1
-				  << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD
+				  << eth::Instruction::SWAP2 << u256(1) << eth::Instruction::ADD
 				  // increment calldata_offset by 32
-				  << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD
+				  << eth::Instruction::SWAP2 << u256(32) << eth::Instruction::ADD
 				  // check for loop condition
-				  << eth::Instruction::DUP1 << eth::Instruction::DUP6 << eth::Instruction::GT;
+				  << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::GT;
 		m_context.appendConditionalJumpTo(copyLoopStart);
-		m_context << eth::Instruction::POP;
+		m_context << eth::Instruction::POP << eth::Instruction::POP;
 		m_context << copyLoopEnd;
 
 		// now clear leftover bytes of the old value
@@ -179,6 +182,7 @@ void ArrayUtils::clearArray(ArrayType const& _type) const
 		m_context << eth::Instruction::POP;
 	else if (_type.getLength() < 5) // unroll loop for small arrays @todo choose a good value
 	{
+		solAssert(!_type.isByteArray(), "");
 		for (unsigned i = 1; i < _type.getLength(); ++i)
 		{
 			StorageItem(m_context, *_type.getBaseType()).setToZero(SourceLocation(), false);
@@ -188,6 +192,7 @@ void ArrayUtils::clearArray(ArrayType const& _type) const
 	}
 	else
 	{
+		solAssert(!_type.isByteArray(), "");
 		m_context
 			<< eth::Instruction::DUP1 << u256(_type.getLength())
 			<< u256(_type.getBaseType()->getStorageSize())
@@ -296,9 +301,23 @@ void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType) const
 
 void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
 {
-	if (_arrayType.isDynamicallySized())
-		m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-	else
+	if (!_arrayType.isDynamicallySized())
 		m_context << _arrayType.getLength();
+	else
+	{
+		m_context << eth::Instruction::DUP1;
+		switch (_arrayType.getLocation())
+		{
+		case ArrayType::Location::CallData:
+			// length is stored on the stack
+			break;
+		case ArrayType::Location::Memory:
+			m_context << eth::Instruction::MLOAD;
+			break;
+		case ArrayType::Location::Storage:
+			m_context << eth::Instruction::SLOAD;
+			break;
+		}
+	}
 }
 
