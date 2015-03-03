@@ -64,6 +64,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		catch (Exception const& _e)
 		{
 			cnote << "state execution did throw an exception: " << diagnostic_information(_e);
+			theState.commit();
 		}
 		catch (std::exception const& _e)
 		{
@@ -168,23 +169,23 @@ BOOST_AUTO_TEST_CASE(stBlockHashTest)
 	dev::test::executeTests("stBlockHashTest", "/StateTests", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
-{
-	   for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	   {
-			   string arg = boost::unit_test::framework::master_test_suite().argv[i];
-			   if (arg == "--quadratic" || arg == "--all")
-			   {
-					   auto start = chrono::steady_clock::now();
+//BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
+//{
+//	   for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+//	   {
+//			   string arg = boost::unit_test::framework::master_test_suite().argv[i];
+//			   if (arg == "--quadratic" || arg == "--all")
+//			   {
+//					   auto start = chrono::steady_clock::now();
 
-					   dev::test::executeTests("stQuadraticComplexityTest", "/StateTests", dev::test::doStateTests);
+//					   dev::test::executeTests("stQuadraticComplexityTest", "/StateTests", dev::test::doStateTests);
 
-					   auto end = chrono::steady_clock::now();
-					   auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-					   cnote << "test duration: " << duration.count() << " milliseconds.\n";
-			   }
-	   }
-}
+//					   auto end = chrono::steady_clock::now();
+//					   auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+//					   cnote << "test duration: " << duration.count() << " milliseconds.\n";
+//			   }
+//	   }
+//}
 
 BOOST_AUTO_TEST_CASE(stMemoryStressTest)
 {
@@ -204,28 +205,16 @@ BOOST_AUTO_TEST_CASE(stMemoryStressTest)
 	   }
 }
 
-BOOST_AUTO_TEST_CASE(stSolidityTest)
-{
-	   for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	   {
-			   string arg = boost::unit_test::framework::master_test_suite().argv[i];
-			   if (arg == "--quadratic" || arg == "--all")
-			   {
-					   auto start = chrono::steady_clock::now();
-
-					   dev::test::executeTests("stQuadraticComplexityTest", "/StateTests", dev::test::doStateTests);
-
-					   auto end = chrono::steady_clock::now();
-					   auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-					   cnote << "test duration: " << duration.count() << " milliseconds.\n";
-			   }
-	   }
-}
+ BOOST_AUTO_TEST_CASE(stSolidityTest)
+ {
+		dev::test::executeTests("stSolidityTest", "/StateTests", dev::test::doStateTests);
+ }
 
 BOOST_AUTO_TEST_CASE(stMemoryTest)
 {
 	   dev::test::executeTests("stMemoryTest", "/StateTests", dev::test::doStateTests);
 }
+
 
 BOOST_AUTO_TEST_CASE(stCreateTest)
 {
