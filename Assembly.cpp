@@ -171,8 +171,9 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 	return _out;
 }
 
-ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
+ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap _sourceCodes) const
 {
+	(void)_sourceCodes;
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
 		switch (i.m_type)
