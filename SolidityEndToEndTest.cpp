@@ -2949,6 +2949,65 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_struct)
 	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
 }
 
+BOOST_AUTO_TEST_CASE(external_array_args)
+{
+	char const* sourceCode = R"(
+		contract c {
+			function test(uint[8] a, uint[] b, uint[5] c, uint a_index, uint b_index, uint c_index)
+					external returns (uint av, uint bv, uint cv) {
+				av = a[a_index];
+				bv = b[b_index];
+				cv = c[c_index];
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	bytes params = encodeArgs(
+		1, 2, 3, 4, 5, 6, 7, 8, // a
+		3, // b.length
+		21, 22, 23, 24, 25, // c
+		0, 1, 2, // (a,b,c)_index
+		11, 12, 13 // b
+		);
+	BOOST_CHECK(callContractFunction("test(uint256[8],uint256[],uint256[5],uint256,uint256,uint256)", params) == encodeArgs(1, 12, 23));
+}
+
+BOOST_AUTO_TEST_CASE(bytes_index_access)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function direct(bytes arg, uint index) external returns (uint) {
+				return uint(arg[index]);
+			}
+			function storageCopyRead(bytes arg, uint index) external returns (uint) {
+				data = arg;
+				return uint(data[index]);
+			}
+			function storageWrite() external returns (uint) {
+				data.length = 35;
+				data[31] = 0x77;
+				data[32] = 0x14;
+
+				data[31] = 1;
+				data[31] |= 8;
+				data[30] = 1;
+				data[32] = 3;
+				return uint(data[30]) * 0x100 | uint(data[31]) * 0x10 | uint(data[32]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	string array{
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+		20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+		30, 31, 32, 33};
+	BOOST_CHECK(callContractFunction("direct(bytes,uint256)", u256(array.length()), 32, array) == encodeArgs(32));
+	BOOST_CHECK(callContractFunction("storageCopyRead(bytes,uint256)", u256(array.length()), 32, array) == encodeArgs(32));
+	BOOST_CHECK(callContractFunction("storageWrite()") == encodeArgs(0x193));
+}
+
 BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base)
 {
 	char const* sourceCode = R"(
