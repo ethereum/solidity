@@ -230,11 +230,51 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 
 BOOST_AUTO_TEST_CASE(ecies_interop_test)
 {
+	CryptoPP::SHA256 sha256ctx;
+	bytes emptyExpected(fromHex("0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
+	bytes empty;
+	sha256ctx.Update(empty.data(), 0);
+	bytes emptyTestOut(32);
+	sha256ctx.Final(emptyTestOut.data());
+	BOOST_REQUIRE(emptyExpected == emptyTestOut);
+	
+	bytes hash1Expected(fromHex("0x8949b278bbafb8da1aaa18cb724175c5952280f74be5d29ab4b37d1b45c84b08"));
+	bytes hash1input(fromHex("0x55a53b55afb12affff3c"));
+	sha256ctx.Update(hash1input.data(), hash1input.size());
+	bytes hash1Out(32);
+	sha256ctx.Final(hash1Out.data());
+	BOOST_REQUIRE(hash1Out == hash1Expected);
+	
+	h128 hmack(fromHex("0x07a4b6dfa06369a570f2dcba2f11a18f"));
+	CryptoPP::HMAC<SHA256> hmacctx(hmack.data(), h128::size);
+	bytes input(fromHex("0x4dcb92ed4fc67fe86832"));
+	hmacctx.Update(input.data(), input.size());
+	bytes hmacExpected(fromHex("0xc90b62b1a673b47df8e395e671a68bfa68070d6e2ef039598bb829398b89b9a9"));
+	bytes hmacOut(hmacExpected.size());
+	hmacctx.Final(hmacOut.data());
+	BOOST_REQUIRE(hmacExpected == hmacOut);
+	
+	// go messageTag
+	bytes tagSecret(fromHex("0xaf6623e52208c596e17c72cea6f1cb09"));
+	bytes tagInput(fromHex("0x3461282bcedace970df2"));
+	bytes tagExpected(fromHex("0xb3ce623bce08d5793677ba9441b22bb34d3e8a7de964206d26589df3e8eb5183"));
+	CryptoPP::HMAC<SHA256> hmactagctx(tagSecret.data(), tagSecret.size());
+	hmactagctx.Update(tagInput.data(), tagInput.size());
+	h256 mac;
+	hmactagctx.Final(mac.data());
+	BOOST_REQUIRE(mac.asBytes() == tagExpected);
+	
 	Secret input1(fromHex("0x0de72f1223915fa8b8bf45dffef67aef8d89792d116eb61c9a1eb02c422a4663"));
 	bytes expect1(fromHex("0x1d0c446f9899a3426f2b89a8cb75c14b"));
 	bytes test1;
 	test1 = s_secp256k1.eciesKDF(input1, bytes(), 16);
 	BOOST_REQUIRE(test1 == expect1);
+	
+	Secret kdfInput2(fromHex("0x961c065873443014e0371f1ed656c586c6730bf927415757f389d92acf8268df"));
+	bytes kdfExpect2(fromHex("0x4050c52e6d9c08755e5a818ac66fabe478b825b1836fd5efc4d44e40d04dabcc"));
+	bytes kdfTest2;
+	kdfTest2 = s_secp256k1.eciesKDF(kdfInput2, bytes(), 32);
+	BOOST_REQUIRE(kdfTest2 == kdfExpect2);
 	
 	KeyPair k(Secret(fromHex("0x332143e9629eedff7d142d741f896258f5a1bfab54dab2121d3ec5000093d74b")));
 	Public p(fromHex("0xf0d2b97981bd0d415a843b5dfe8ab77a30300daab3658c578f2340308a2da1a07f0821367332598b6aa4e180a41e92f4ebbae3518da847f0b1c0bbfe20bcf4e1"));
@@ -242,6 +282,13 @@ BOOST_AUTO_TEST_CASE(ecies_interop_test)
 	Secret agreeTest;
 	s_secp256k1.agree(k.sec(), p, agreeTest);
 	BOOST_REQUIRE(agreeExpected == agreeTest);
+	
+	KeyPair kmK(Secret(fromHex("0x57baf2c62005ddec64c357d96183ebc90bf9100583280e848aa31d683cad73cb")));
+	bytes kmCipher(fromHex("0x04ff2c874d0a47917c84eea0b2a4141ca95233720b5c70f81a8415bae1dc7b746b61df7558811c1d6054333907333ef9bb0cc2fbf8b34abb9730d14e0140f4553f4b15d705120af46cf653a1dc5b95b312cf8444714f95a4f7a0425b67fc064d18f4d0a528761565ca02d97faffdac23de10"));
+	bytes kmPlain = kmCipher;
+	bytes kmExpected(asBytes("a"));
+	BOOST_REQUIRE(s_secp256k1.decryptECIES(kmK.sec(), kmPlain));
+	BOOST_REQUIRE(kmExpected == kmPlain);
 	
 	KeyPair kenc(Secret(fromHex("0x472413e97f1fd58d84e28a559479e6b6902d2e8a0cee672ef38a3a35d263886b")));
 	Public penc(Public(fromHex("0x7a2aa2951282279dc1171549a7112b07c38c0d97c0fe2c0ae6c4588ba15be74a04efc4f7da443f6d61f68a9279bc82b73e0cc8d090048e9f87e838ae65dd8d4c")));
