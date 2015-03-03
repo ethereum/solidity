@@ -67,7 +67,7 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller): m_TestObject(_o)
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller) : m_statePre(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
@@ -181,13 +181,8 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 	// export post state
 	json_spirit::mObject postState;
 
-	std::map<Address, Account> genesis = genesisState();
-
 	for (auto const& a: _statePost.addresses())
 	{
-		if (genesis.count(a.first))
-			continue;
-
 		json_spirit::mObject o;
 		o["balance"] = toString(_statePost.balance(a.first));
 		o["nonce"] = toString(_statePost.transactionsFrom(a.first));
@@ -210,9 +205,6 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 
 	for (auto const& a: m_statePre.addresses())
 	{
-		if (genesis.count(a.first))
-			continue;
-
 		json_spirit::mObject o;
 		o["balance"] = toString(m_statePre.balance(a.first));
 		o["nonce"] = toString(m_statePre.transactionsFrom(a.first));
