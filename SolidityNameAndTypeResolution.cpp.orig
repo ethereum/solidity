@@ -1288,6 +1288,7 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+<<<<<<< HEAD
 BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 {
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
@@ -1402,8 +1403,7 @@ BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
 			function f() { byte a = arr[0];}
 		})";
 	ETH_TEST_REQUIRE_NO_THROW(parseTextAndResolveNames(text), "Type resolving failed");
-}
-
+=======
 BOOST_AUTO_TEST_CASE(constant_function_editing_state_variable)
 {
 	char const* text = R"(
@@ -1422,6 +1422,7 @@ BOOST_AUTO_TEST_CASE(constant_function_editing_const_state_variable)
 			function editIt() constant { x = 2; }
 	})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+>>>>>>> 0925feb... added parsing for constant variables
 }
 
 BOOST_AUTO_TEST_SUITE_END()

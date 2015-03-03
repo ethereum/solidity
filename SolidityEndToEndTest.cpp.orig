@@ -3196,6 +3196,8 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 	BOOST_CHECK(callContractFunction("m_i()") == encodeArgs(4));
 }
 
+<<<<<<< HEAD
+=======
 BOOST_AUTO_TEST_CASE(constant_functions)
 {
 	char const* sourceCode = R"(
@@ -3217,6 +3219,8 @@ BOOST_AUTO_TEST_CASE(const_state_variable)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("getX()") == encodeArgs(56));
 }
+
+>>>>>>> 0925feb... added parsing for constant variables
 BOOST_AUTO_TEST_SUITE_END()
 
 }
