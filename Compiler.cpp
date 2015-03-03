@@ -205,42 +205,49 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 {
 	// We do not check the calldata size, everything is zero-padded.
 	unsigned offset(CompilerUtils::dataStartOffset);
-	bool const c_padToWords = true;
 
-	unsigned dynamicParameterCount = 0;
+	bigint parameterHeadEnd = offset;
 	for (TypePointer const& type: _typeParameters)
-		if (type->isDynamicallySized())
-			dynamicParameterCount++;
-	offset += dynamicParameterCount * 32;
-	unsigned currentDynamicParameter = 0;
+		parameterHeadEnd += type->isDynamicallySized() ? 32 :
+			CompilerUtils::getPaddedSize(type->getCalldataEncodedSize());
+	solAssert(parameterHeadEnd <= numeric_limits<unsigned>::max(), "Arguments too large.");
+
+	unsigned stackHeightOfPreviousDynamicArgument = 0;
+	ArrayType const* previousDynamicType = nullptr;
 	for (TypePointer const& type: _typeParameters)
-		if (type->isDynamicallySized())
+	{
+		switch (type->getCategory())
 		{
-			// value on stack: [calldata_offset] (only if we are already in dynamic mode)
-			if (currentDynamicParameter == 0)
-				// switch from static to dynamic
+		case Type::Category::Array:
+			if (type->isDynamicallySized())
+			{
+				// put on stack: data_offset length
+				unsigned newStackHeight = m_context.getStackHeight();
+				if (previousDynamicType)
+				{
+					// Retrieve data start offset by adding length to start offset of previous dynamic type
+					unsigned stackDepth = m_context.getStackHeight() - stackHeightOfPreviousDynamicArgument;
+					m_context << eth::dupInstruction(stackDepth) << eth::dupInstruction(stackDepth);
+					ArrayUtils(m_context).convertLengthToSize(*previousDynamicType);
+					m_context << u256(32) << eth::Instruction::MUL << eth::Instruction::ADD;
+				}
+				else
+					m_context << u256(parameterHeadEnd);
+				stackHeightOfPreviousDynamicArgument = newStackHeight;
+				previousDynamicType = &dynamic_cast<ArrayType const&>(*type);
+				offset += CompilerUtils(m_context).loadFromMemory(offset, IntegerType(256), !_fromMemory);
+			}
+			else
+			{
 				m_context << u256(offset);
-			// retrieve length
-			CompilerUtils(m_context).loadFromMemory(
-				CompilerUtils::dataStartOffset + currentDynamicParameter * 32,
-				IntegerType(256), !_fromMemory, c_padToWords);
-			// stack: offset length
-			// add 32-byte padding to copy of length
-			m_context << u256(32) << eth::Instruction::DUP1 << u256(31)
-				<< eth::Instruction::DUP4 << eth::Instruction::ADD
-				<< eth::Instruction::DIV << eth::Instruction::MUL;
-			// stack: offset length padded_length
-			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
-			currentDynamicParameter++;
-			// stack: offset length next_calldata_offset
+				offset += CompilerUtils::getPaddedSize(type->getCalldataEncodedSize());
+			}
+			break;
+		default:
+			solAssert(!type->isDynamicallySized(), "Unknown dynamically sized type: " + type->toString());
+			offset += CompilerUtils(m_context).loadFromMemory(offset, *type, !_fromMemory, true);
 		}
-		else if (currentDynamicParameter == 0)
-			// we can still use static load
-			offset += CompilerUtils(m_context).loadFromMemory(offset, *type, !_fromMemory, c_padToWords);
-		else
-			CompilerUtils(m_context).loadFromMemoryDynamic(*type, !_fromMemory, c_padToWords);
-	if (dynamicParameterCount > 0)
-		m_context << eth::Instruction::POP;
+	}
 }
 
 void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)

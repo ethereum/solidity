@@ -570,6 +570,15 @@ bool ArrayType::operator==(Type const& _other) const
 	return isDynamicallySized() || getLength()  == other.getLength();
 }
 
+unsigned ArrayType::getCalldataEncodedSize() const
+{
+	if (isDynamicallySized())
+		return 0;
+	bigint size = bigint(getLength()) * (isByteArray() ? 1 : getBaseType()->getCalldataEncodedSize());
+	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
+	return unsigned(size);
+}
+
 u256 ArrayType::getStorageSize() const
 {
 	if (isDynamicallySized())
@@ -586,8 +595,8 @@ u256 ArrayType::getStorageSize() const
 unsigned ArrayType::getSizeOnStack() const
 {
 	if (m_location == Location::CallData)
-		// offset, length (stack top)
-		return 2;
+		// offset [length] (stack top)
+		return 1 + (isDynamicallySized() ? 1 : 0);
 	else
 		// offset
 		return 1;
