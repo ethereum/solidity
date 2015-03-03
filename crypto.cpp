@@ -228,6 +228,44 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(ecies_interop_test)
+{
+	Secret input1(fromHex("0x0de72f1223915fa8b8bf45dffef67aef8d89792d116eb61c9a1eb02c422a4663"));
+	bytes expect1(fromHex("0x1d0c446f9899a3426f2b89a8cb75c14b"));
+	bytes test1;
+	test1 = s_secp256k1.eciesKDF(input1, bytes(), 16);
+	BOOST_REQUIRE(test1 == expect1);
+	
+	KeyPair k(Secret(fromHex("0x332143e9629eedff7d142d741f896258f5a1bfab54dab2121d3ec5000093d74b")));
+	Public p(fromHex("0xf0d2b97981bd0d415a843b5dfe8ab77a30300daab3658c578f2340308a2da1a07f0821367332598b6aa4e180a41e92f4ebbae3518da847f0b1c0bbfe20bcf4e1"));
+	Secret agreeExpected(fromHex("0xee1418607c2fcfb57fda40380e885a707f49000a5dda056d828b7d9bd1f29a08"));
+	Secret agreeTest;
+	s_secp256k1.agree(k.sec(), p, agreeTest);
+	BOOST_REQUIRE(agreeExpected == agreeTest);
+	
+	KeyPair kenc(Secret(fromHex("0x472413e97f1fd58d84e28a559479e6b6902d2e8a0cee672ef38a3a35d263886b")));
+	Public penc(Public(fromHex("0x7a2aa2951282279dc1171549a7112b07c38c0d97c0fe2c0ae6c4588ba15be74a04efc4f7da443f6d61f68a9279bc82b73e0cc8d090048e9f87e838ae65dd8d4c")));
+	BOOST_REQUIRE(penc == kenc.pub());
+	
+	bytes cipher1(fromHex("0x046f647e1bd8a5cd1446d31513bac233e18bdc28ec0e59d46de453137a72599533f1e97c98154343420d5f16e171e5107999a7c7f1a6e26f57bcb0d2280655d08fb148d36f1d4b28642d3bb4a136f0e33e3dd2e3cffe4b45a03fb7c5b5ea5e65617250fdc89e1a315563c20504b9d3a72555"));
+	bytes plainTest1 = cipher1;
+	bytes expectedPlain1 = asBytes("a");
+	BOOST_REQUIRE(s_secp256k1.decryptECIES(kenc.sec(), plainTest1));
+	BOOST_REQUIRE(plainTest1 == expectedPlain1);
+	
+	bytes cipher2(fromHex("0x0443c24d6ccef3ad095140760bb143078b3880557a06392f17c5e368502d79532bc18903d59ced4bbe858e870610ab0d5f8b7963dd5c9c4cf81128d10efd7c7aa80091563c273e996578403694673581829e25a865191bdc9954db14285b56eb0043b6288172e0d003c10f42fe413222e273d1d4340c38a2d8344d7aadcbc846ee"));
+	bytes plainTest2 = cipher2;
+	bytes expectedPlain2 = asBytes("aaaaaaaaaaaaaaaa");
+	BOOST_REQUIRE(s_secp256k1.decryptECIES(kenc.sec(), plainTest2));
+	BOOST_REQUIRE(plainTest2 == expectedPlain2);
+	
+	bytes cipher3(fromHex("0x04c4e40c86bb5324e017e598c6d48c19362ae527af8ab21b077284a4656c8735e62d73fb3d740acefbec30ca4c024739a1fcdff69ecaf03301eebf156eb5f17cca6f9d7a7e214a1f3f6e34d1ee0ec00ce0ef7d2b242fbfec0f276e17941f9f1bfbe26de10a15a6fac3cda039904ddd1d7e06e7b96b4878f61860e47f0b84c8ceb64f6a900ff23844f4359ae49b44154980a626d3c73226c19e"));
+	bytes plainTest3 = cipher3;
+	bytes expectedPlain3 = asBytes("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+	BOOST_REQUIRE(s_secp256k1.decryptECIES(kenc.sec(), plainTest3));
+	BOOST_REQUIRE(plainTest3 == expectedPlain3);
+}
+
 BOOST_AUTO_TEST_CASE(ecies_kdf)
 {
 	KeyPair local = KeyPair::create();
@@ -550,16 +588,6 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 	BOOST_REQUIRE_EQUAL(aEgressMac, bIngressMac);
 	BOOST_REQUIRE_EQUAL(bEgressMac, aIngressMac);
 	
-	
-	
-}
-
-BOOST_AUTO_TEST_CASE(ecdhe_aes128_ctr_sha3mac)
-{
-	// New connections require new ECDH keypairs
-	// Every new connection requires a new EC keypair
-	// Every new trust requires a new EC keypair
-	// All connections should share seed for PRF (or PRNG) for nonces
 	
 	
 }
