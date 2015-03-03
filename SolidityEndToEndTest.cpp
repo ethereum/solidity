@@ -1619,9 +1619,11 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 			function sendAmount(uint amount) returns (uint256 bal) {
 				return h.getBalance.value(amount)();
 			}
-			function outOfGas() returns (bool flagBefore, bool flagAfter, uint myBal) {
-				flagBefore = h.getFlag();
-				h.setFlag.gas(2)(); // should fail due to OOG, return value can be garbage
+			function outOfGas() returns (bool ret) {
+				h.setFlag.gas(2)(); // should fail due to OOG
+				return true;
+			}
+			function checkState() returns (bool flagAfter, uint myBal) {
 				flagAfter = h.getFlag();
 				myBal = this.balance;
 			}
@@ -1630,7 +1632,8 @@ BOOST_AUTO_TEST_CASE(gas_and_value_basic)
 	compileAndRun(sourceCode, 20);
 	BOOST_REQUIRE(callContractFunction("sendAmount(uint256)", 5) == encodeArgs(5));
 	// call to helper should not succeed but amount should be transferred anyway
-	BOOST_REQUIRE(callContractFunction("outOfGas()", 5) == encodeArgs(false, false, 20 - 5));
+	BOOST_REQUIRE(callContractFunction("outOfGas()", 5) == bytes());
+	BOOST_REQUIRE(callContractFunction("checkState()", 5) == encodeArgs(false, 20 - 5));
 }
 
 BOOST_AUTO_TEST_CASE(value_complex)
