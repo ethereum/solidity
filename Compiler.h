@@ -41,8 +41,11 @@ public:
 						 std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(m_optimize); }
 	bytes getRuntimeBytecode() { return m_runtimeContext.getAssembledBytecode(m_optimize);}
-	void streamAssembly(std::ostream& _stream) const { m_context.streamAssembly(_stream); }
-
+	/// @arg _sourceCodes is the map of input files to source code strings
+	void streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const
+	{
+		m_context.streamAssembly(_stream, _sourceCodes);
+	}
 	/// @returns Assembly items of the normal compiler context
 	eth::AssemblyItems const& getAssemblyItems() const { return m_context.getAssembly().getItems(); }
 	/// @returns Assembly items of the runtime compiler context

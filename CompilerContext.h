@@ -28,6 +28,7 @@
 #include <libevmcore/Assembly.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Types.h>
+#include <libdevcore/Common.h>
 
 namespace dev {
 namespace solidity {
@@ -118,7 +119,9 @@ public:
 	CompilerContext& operator<<(bytes const& _data);
 
 	eth::Assembly const& getAssembly() const { return m_asm; }
-	void streamAssembly(std::ostream& _stream) const { _stream << m_asm; }
+	/// @arg _sourceCodes is the map of input files to source code strings
+	void streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const { m_asm.streamRLP(_stream, "", _sourceCodes); }
+
 	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
 
 	/**
