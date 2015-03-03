@@ -855,8 +855,11 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
-	else if (dynamic_cast<VariableDeclaration const*>(declaration))
-		setLValueFromDeclaration(*declaration, _identifier);
+	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
+	{
+		if (!variable->isConstant())
+			setLValueFromDeclaration(*declaration, _identifier);
+	}
 	else if (dynamic_cast<ContractDefinition const*>(declaration))
 	{
 		// no-op

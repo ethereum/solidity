@@ -54,6 +54,7 @@ private:
 		bool allowIndexed = false;
 		bool allowEmptyName = false;
 		bool allowInitialValue = false;
+		bool isDeclaredConst = false;
 	};
 
 	///@{

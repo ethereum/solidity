@@ -276,13 +276,14 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 {
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.getLinearizedBaseContracts()))
 		for (ASTPointer<VariableDeclaration> const& variable: contract->getStateVariables())
-			m_context.addStateVariable(*variable);
+			if (!variable->isConstant())
+				m_context.addStateVariable(*variable);
 }
 
 void Compiler::initializeStateVariables(ContractDefinition const& _contract)
 {
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
-		if (variable->getValue())
+		if (variable->getValue() && !variable->isConstant())
 			ExpressionCompiler(m_context, m_optimize).appendStateVariableInitialization(*variable);
 }
 

@@ -135,6 +135,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		}
 		while (m_scanner->getCurrentToken() == Token::Comma);
 	expectToken(Token::LBrace);
+	bool isDeclaredConst = false;
 	while (true)
 	{
 		Token::Value currentToken = m_scanner->getCurrentToken();
@@ -152,13 +153,21 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			VarDeclParserOptions options;
 			options.isStateVariable = true;
 			options.allowInitialValue = true;
+			options.isDeclaredConst = isDeclaredConst;
 			stateVariables.push_back(parseVariableDeclaration(options));
+			isDeclaredConst = false;
 			expectToken(Token::Semicolon);
 		}
 		else if (currentToken == Token::Modifier)
 			modifiers.push_back(parseModifierDefinition());
 		else if (currentToken == Token::Event)
 			events.push_back(parseEventDefinition());
+		else if (currentToken == Token::Const)
+		{
+			solAssert(Token::isElementaryTypeName(m_scanner->peekNextToken()), "");
+			isDeclaredConst = true;
+			m_scanner->next();
+		}
 		else
 			BOOST_THROW_EXCEPTION(createParserError("Function, variable, struct or modifier declaration expected."));
 	}
@@ -348,7 +357,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	}
 	return nodeFactory.createNode<VariableDeclaration>(type, identifier, value,
 									visibility, _options.isStateVariable,
-									isIndexed);
+									isIndexed, _options.isDeclaredConst);
 }
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()

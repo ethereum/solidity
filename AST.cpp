@@ -197,7 +197,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 				}
 
 			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
-				if (v->isPublic() && functionsSeen.count(v->getName()) == 0)
+				if (v->isPublic() && functionsSeen.count(v->getName()) == 0 && !v->isConstant())
 				{
 					FunctionType ftype(*v);
 					functionsSeen.insert(v->getName());
@@ -322,8 +322,8 @@ string FunctionDefinition::getCanonicalSignature() const
 
 bool VariableDeclaration::isLValue() const
 {
-	// External function parameters are Read-Only
-	return !isExternalFunctionParameter();
+	// External function parameters and constant declared variables are Read-Only
+	return !isExternalFunctionParameter() && !m_isConstant;
 }
 
 void VariableDeclaration::checkTypeRequirements()
