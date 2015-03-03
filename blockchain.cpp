@@ -81,7 +81,7 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	return rlpStream.out();
 }
 
-void doBlockTests(json_spirit::mValue& _v, bool _fillin)
+void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
 	for (auto& i: _v.get_obj())
 	{
@@ -271,7 +271,6 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 						if (tmp != current_BlockHeader)
 						{
 							current_BlockHeader = tmp;
-							cout << "new header!\n";
 							ProofOfWork pow;
 							MineInfo ret;
 							while (!ProofOfWork::verify(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.nonce, current_BlockHeader.difficulty))
@@ -343,14 +342,9 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 				try
 				{
-					ImportTest importerTmp(o["pre"].get_obj());
-					State stateTmp(Address(), OverlayDB(), BaseState::Empty);
-					importerTmp.importState(o["pre"].get_obj(), stateTmp);
-					stateTmp.commit();
-					BlockChain bcTmp(block.out(), getDataDir() + "/tmpBlockChain.bc", true);
-					stateTmp.sync(bcTmp);
-					bc.import(block2.out(), stateTmp.db());
-					stateTmp.sync(bcTmp);
+					state.sync(bc);
+					bc.import(block2.out(), state.db());
+					state.sync(bc);
 				}
 				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 				catch (...)
@@ -505,32 +499,23 @@ BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 BOOST_AUTO_TEST_CASE(bcBlockChainTest)
 {
-	dev::test::executeTests("bcBlockChainTest", "/BlockTests", dev::test::doBlockTests);
+	dev::test::executeTests("bcBlockChainTest", "/BlockTests", dev::test::doBlockchainTests);
 }
 
-//BOOST_AUTO_TEST_CASE(blValidBlockTest)
-//{
-//	dev::test::executeTests("blValidBlockTest", "/BlockTests", dev::test::doBlockTests);
-//}
-
-//BOOST_AUTO_TEST_CASE(blInvalidTransactionRLP)
-//{
-//	dev::test::executeTests("blInvalidTransactionRLP", "/BlockTests", dev::test::doBlockTests);
-//}
-
-//BOOST_AUTO_TEST_CASE(blInvalidHeaderTest)
-//{
-//	dev::test::executeTests("blInvalidHeaderTest", "/BlockTests", dev::test::doBlockTests);
-//}
-
-//BOOST_AUTO_TEST_CASE(blForkBlocks)
-//{
-//	dev::test::executeTests("blForkBlocks", "/BlockTests", dev::test::doBlockTests);
-//}
-
-BOOST_AUTO_TEST_CASE(userDefinedFileBl)
+BOOST_AUTO_TEST_CASE(bcValidBlockTest)
 {
-	dev::test::userDefinedTest("--bltest", dev::test::doBlockTests);
+	dev::test::executeTests("bcValidBlockTest", "/BlockTests", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest)
+{
+	dev::test::executeTests("bcInvalidHeaderTest", "/BlockTests", dev::test::doBlockchainTests);
+}
+
+
+BOOST_AUTO_TEST_CASE(userDefinedFileBc)
+{
+	dev::test::userDefinedTest("--bctest", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
