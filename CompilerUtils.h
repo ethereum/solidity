@@ -79,15 +79,6 @@ public:
 	/// @note Only works for types of fixed size.
 	void computeHashStatic(Type const& _type = IntegerType(256), bool _padToWordBoundaries = false);
 
-	/// Copies a byte array to a byte array in storage.
-	/// Stack pre: [source_reference] target_reference
-	/// Stack post: target_reference
-	void copyByteArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const;
-	/// Clears the length and data elements of the byte array referenced on the stack.
-	/// Stack pre: reference
-	/// Stack post:
-	void clearByteArray(ArrayType const& _type) const;
-
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
 	static const unsigned int dataStartOffset;
@@ -97,10 +88,6 @@ private:
 	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const;
 	/// Loads type from memory assuming memory offset is on stack top.
 	unsigned loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries);
-	/// Appends a loop that clears a sequence of storage slots (excluding end).
-	/// Stack pre: end_ref start_ref
-	/// Stack post: end_ref
-	void clearStorageLoop() const;
 
 	CompilerContext& m_context;
 };

@@ -93,7 +93,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			m_context << eth::Instruction::DUP1
 					  << structType->getStorageOffsetOfMember(names[i])
 					  << eth::Instruction::ADD;
-			StorageItem(m_context, types[i]).retrieveValue(SourceLocation(), true);
+			StorageItem(m_context, *types[i]).retrieveValue(SourceLocation(), true);
 			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
 			m_context << eth::Instruction::SWAP1;
 			retSizeOnStack += types[i]->getSizeOnStack();
@@ -104,7 +104,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		// simple value
 		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
-		StorageItem(m_context, returnType).retrieveValue(SourceLocation(), true);
+		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
 	solAssert(retSizeOnStack <= 15, "Stack too deep.");
@@ -680,7 +680,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 				break;
 			case ArrayType::Location::Storage:
-				setLValueToStorageItem(_memberAccess);
+				setLValue<StorageArrayLength>(_memberAccess, type);
 				break;
 			default:
 				solAssert(false, "Unsupported array location.");
@@ -984,9 +984,10 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
 		// send all gas except for the 21 needed to execute "SUB" and "CALL"
-		m_context << u256(21) << eth::Instruction::GAS << eth::Instruction::SUB;
-	m_context << eth::Instruction::CALL
-			  << eth::Instruction::POP; // @todo do not ignore failure indicator
+		m_context << u256(_functionType.valueSet() ? 6741 : 41) << eth::Instruction::GAS << eth::Instruction::SUB;
+	m_context << eth::Instruction::CALL;
+	auto tag = m_context.appendConditionalJump();
+	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.
 	if (_functionType.valueSet())
 		m_context << eth::Instruction::POP;
 	if (_functionType.gasSet())
@@ -999,10 +1000,12 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		CompilerUtils(m_context).loadFromMemory(0, *firstType, false, true);
 }
 
-void ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expression const>> const& _arguments,
-													 TypePointers const& _types,
-													 bool _padToWordBoundaries,
-													 bool _padExceptionIfFourBytes)
+void ExpressionCompiler::appendArgumentsCopyToMemory(
+	vector<ASTPointer<Expression const>> const& _arguments,
+	TypePointers const& _types,
+	bool _padToWordBoundaries,
+	bool _padExceptionIfFourBytes
+)
 {
 	solAssert(_types.empty() || _types.size() == _arguments.size(), "");
 	for (size_t i = 0; i < _arguments.size(); ++i)
@@ -1044,7 +1047,7 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 
 void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 {
-	setLValue<StorageItem>(_expression, _expression.getType());
+	setLValue<StorageItem>(_expression, *_expression.getType());
 }
 
 }
