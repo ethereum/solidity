@@ -72,6 +72,68 @@ BOOST_AUTO_TEST_CASE(fat_trie)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(hex_encoded_securetrie_test)
+{
+	string testPath = test::getTestPath();
+
+	testPath += "/TrieTests";
+
+	cnote << "Testing Secure Trie...";
+	js::mValue v;
+	string s = asString(contents(testPath + "/hex_encoded_securetrie_test.json"));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'hex_encoded_securetrie_test.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	js::read_string(s, v);
+	for (auto& i: v.get_obj())
+	{
+		cnote << i.first;
+		js::mObject& o = i.second.get_obj();
+		vector<pair<string, string>> ss;
+		for (auto i: o["in"].get_obj())
+		{
+			ss.push_back(make_pair(i.first, i.second.get_str()));
+			if (!ss.back().first.find("0x"))
+				ss.back().first = asString(fromHex(ss.back().first.substr(2)));
+			if (!ss.back().second.find("0x"))
+				ss.back().second = asString(fromHex(ss.back().second.substr(2)));
+		}
+		for (unsigned j = 0; j < min(1000000000u, dev::test::fac((unsigned)ss.size())); ++j)
+		{
+			next_permutation(ss.begin(), ss.end());
+			MemoryDB m;
+			GenericTrieDB<MemoryDB> t(&m);
+			MemoryDB hm;
+			HashedGenericTrieDB<MemoryDB> ht(&hm);
+			MemoryDB fm;
+			FatGenericTrieDB<MemoryDB> ft(&fm);
+			t.init();
+			ht.init();
+			ft.init();
+			BOOST_REQUIRE(t.check(true));
+			BOOST_REQUIRE(ht.check(true));
+			BOOST_REQUIRE(ft.check(true));
+			for (auto const& k: ss)
+			{
+				t.insert(k.first, k.second);
+				ht.insert(k.first, k.second);
+				ft.insert(k.first, k.second);
+				BOOST_REQUIRE(t.check(true));
+				BOOST_REQUIRE(ht.check(true));
+				BOOST_REQUIRE(ft.check(true));
+				for (auto i = ft.begin(), j = t.begin(); i != ft.end() && j != t.end(); ++i, ++j)
+				{
+					BOOST_CHECK_EQUAL(i == ft.end(), j == t.end());
+					BOOST_REQUIRE((*i).first.toBytes() == (*j).first.toBytes());
+					BOOST_REQUIRE((*i).second.toBytes() == (*j).second.toBytes());
+				}
+				BOOST_CHECK_EQUAL(ht.root(), ft.root());
+			}
+			BOOST_REQUIRE(!o["root"].is_null());
+			BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(ht.root().asArray()));
+			BOOST_CHECK_EQUAL(o["root"].get_str(), "0x" + toHex(ft.root().asArray()));
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(trie_test_anyorder)
 {
 	string testPath = test::getTestPath();
