@@ -228,6 +228,42 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(rlpx_sha3_norestart)
+{
+	CryptoPP::SHA3_256 ctx;
+	bytes input(asBytes("test"));
+	ctx.Update(input.data(), 4);
+	CryptoPP::SHA3_256 ctxCopy(ctx);
+	bytes interimDigest(32);
+	ctx.Final(interimDigest.data());
+	ctx.Update(input.data(), 4);
+	bytes firstDigest(32);
+	ctx.Final(firstDigest.data());
+	BOOST_REQUIRE(interimDigest == firstDigest);
+	
+	ctxCopy.Update(input.data(), 4);
+	bytes finalDigest(32);
+	ctxCopy.Final(interimDigest.data());
+	BOOST_REQUIRE(interimDigest != finalDigest);
+	
+	// we can do this another way -- copy the context for final
+	ctxCopy.Update(input.data(), 4);
+	ctxCopy.Update(input.data(), 4);
+	CryptoPP::SHA3_256 finalCtx(ctxCopy);
+	bytes finalDigest2(32);
+	finalCtx.Final(finalDigest2.data());
+	BOOST_REQUIRE(finalDigest2 == interimDigest);
+	ctxCopy.Update(input.data(), 4);
+	bytes finalDigest3(32);
+	finalCtx.Final(finalDigest3.data());
+	BOOST_REQUIRE(finalDigest2 != finalDigest3);
+}
+
+BOOST_AUTO_TEST_CASE(rlpx_updatemac_aesecb_sha3)
+{
+	
+}
+
 BOOST_AUTO_TEST_CASE(ecies_interop_test)
 {
 	CryptoPP::SHA256 sha256ctx;
