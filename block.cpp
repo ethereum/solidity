@@ -131,8 +131,12 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			// find new valid nonce
 			ProofOfWork pow;
 			MineInfo ret;
-			while (!ProofOfWork::verify(blockFromFields.headerHash(WithoutNonce), blockFromFields.nonce, blockFromFields.difficulty))
-				tie(ret, blockFromFields.nonce) = pow.mine(blockFromFields.headerHash(WithoutNonce), blockFromFields.difficulty, 1000, true, true);
+			ProofOfWork::Proof proof;
+			while (!ProofOfWork::verify(blockFromFields))
+			{
+				tie(ret, proof) = pow.mine(blockFromFields, 1000, true, true);
+				ProofOfWork::assignResult(proof, blockFromFields);
+			}
 
 			//update genesis block in json file
 			o["genesisBlockHeader"].get_obj()["stateRoot"] = toString(blockFromFields.stateRoot);
@@ -211,7 +215,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			o["transactions"] = txArray;
 			o["rlp"] = "0x" + toHex(state.blockData());
 
-			BlockInfo current_BlockHeader = state.info();
+			BlockInfo currentBlockHeader = state.info();
 
 			// overwrite blockheader with (possible wrong) data from "blockheader" in filler;
 
@@ -220,7 +224,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 				if (o["blockHeader"].get_obj().size() != 14)
 				{
 
-					BlockInfo tmp = current_BlockHeader;
+					BlockInfo tmp = currentBlockHeader;
 
 					if (o["blockHeader"].get_obj().count("parentHash"))
 						tmp.parentHash = h256(o["blockHeader"].get_obj()["parentHash"].get_str());
@@ -263,14 +267,18 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 
 					// find new valid nonce
 
-					if (tmp != current_BlockHeader)
+					if (tmp != currentBlockHeader)
 					{
-						current_BlockHeader = tmp;
+						currentBlockHeader = tmp;
 						cout << "new header!\n";
 						ProofOfWork pow;
 						MineInfo ret;
-						while (!ProofOfWork::verify(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.nonce, current_BlockHeader.difficulty))
-							tie(ret, current_BlockHeader.nonce) = pow.mine(current_BlockHeader.headerHash(WithoutNonce), current_BlockHeader.difficulty, 10000, true, true);
+						ProofOfWork::Proof proof;
+						while (!ProofOfWork::verify(currentBlockHeader))
+						{
+							tie(ret, proof) = pow.mine(currentBlockHeader, 10000, true, true);
+							ProofOfWork::assignResult(proof, currentBlockHeader);
+						}
 					}
 				}
 				else
@@ -278,27 +286,27 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 					// take the blockheader as is
 					const bytes c_blockRLP = createBlockRLPFromFields(o["blockHeader"].get_obj());
 					const RLP c_bRLP(c_blockRLP);
-					current_BlockHeader.populateFromHeader(c_bRLP, false);
+					currentBlockHeader.populateFromHeader(c_bRLP, false);
 				}
 			}
 
 			// write block header
 
 			mObject oBlockHeader;
-			oBlockHeader["parentHash"] = toString(current_BlockHeader.parentHash);
-			oBlockHeader["uncleHash"] = toString(current_BlockHeader.sha3Uncles);
-			oBlockHeader["coinbase"] = toString(current_BlockHeader.coinbaseAddress);
-			oBlockHeader["stateRoot"] = toString(current_BlockHeader.stateRoot);
-			oBlockHeader["transactionsTrie"] = toString(current_BlockHeader.transactionsRoot);
-			oBlockHeader["receiptTrie"] = toString(current_BlockHeader.receiptsRoot);
-			oBlockHeader["bloom"] = toString(current_BlockHeader.logBloom);
-			oBlockHeader["difficulty"] = toString(current_BlockHeader.difficulty);
-			oBlockHeader["number"] = toString(current_BlockHeader.number);
-			oBlockHeader["gasLimit"] = toString(current_BlockHeader.gasLimit);
-			oBlockHeader["gasUsed"] = toString(current_BlockHeader.gasUsed);
-			oBlockHeader["timestamp"] = toString(current_BlockHeader.timestamp);
-			oBlockHeader["extraData"] = toHex(current_BlockHeader.extraData);
-			oBlockHeader["nonce"] = toString(current_BlockHeader.nonce);
+			oBlockHeader["parentHash"] = toString(currentBlockHeader.parentHash);
+			oBlockHeader["uncleHash"] = toString(currentBlockHeader.sha3Uncles);
+			oBlockHeader["coinbase"] = toString(currentBlockHeader.coinbaseAddress);
+			oBlockHeader["stateRoot"] = toString(currentBlockHeader.stateRoot);
+			oBlockHeader["transactionsTrie"] = toString(currentBlockHeader.transactionsRoot);
+			oBlockHeader["receiptTrie"] = toString(currentBlockHeader.receiptsRoot);
+			oBlockHeader["bloom"] = toString(currentBlockHeader.logBloom);
+			oBlockHeader["difficulty"] = toString(currentBlockHeader.difficulty);
+			oBlockHeader["number"] = toString(currentBlockHeader.number);
+			oBlockHeader["gasLimit"] = toString(currentBlockHeader.gasLimit);
+			oBlockHeader["gasUsed"] = toString(currentBlockHeader.gasUsed);
+			oBlockHeader["timestamp"] = toString(currentBlockHeader.timestamp);
+			oBlockHeader["extraData"] = toHex(currentBlockHeader.extraData);
+			oBlockHeader["nonce"] = toString(currentBlockHeader.nonce);
 
 			o["blockHeader"] = oBlockHeader;
 
@@ -318,7 +326,7 @@ void doBlockTests(json_spirit::mValue& _v, bool _fillin)
 			}
 
 			RLPStream rlpStream2;
-			current_BlockHeader.streamRLP(rlpStream2, WithNonce);
+			currentBlockHeader.streamRLP(rlpStream2, WithNonce);
 
 			RLPStream block2(3);
 			block2.appendRaw(rlpStream2.out());
