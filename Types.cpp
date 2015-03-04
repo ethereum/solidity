@@ -39,7 +39,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 {
 	solAssert(Token::isElementaryTypeName(_typeToken), "Elementary type name expected.");
 
-	if (Token::Int <= _typeToken && _typeToken <= Token::Hash256)
+	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes256)
 	{
 		int offset = _typeToken - Token::Int;
 		int bytes = offset % 33;
