@@ -121,9 +121,10 @@ public:
 
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
-	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "", StringMap _sourceCodes = StringMap()) const;
+	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap()) const;
 
-private:
+protected:
+	std::string getLocationFromSources(const StringMap &_sourceCodes, const SourceLocation &_location) const;
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired() const;
 
