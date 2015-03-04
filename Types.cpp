@@ -308,6 +308,8 @@ TypePointer IntegerConstantType::unaryOperatorResult(Token::Value _operator) con
 	case Token::Sub:
 		value = -m_value;
 		break;
+	case Token::After:
+		return shared_from_this();
 	default:
 		return TypePointer();
 	}
