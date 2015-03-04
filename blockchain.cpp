@@ -78,8 +78,8 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	if (_tObj.count("seedHash"))
 		rlpStream << importByteArray(_tObj["seedHash"].get_str());
 
-	if (_tObj.count("mixBytes"))
-		rlpStream << importByteArray(_tObj["mixBytes"].get_str());
+	if (_tObj.count("mixHash"))
+		rlpStream << importByteArray(_tObj["mixHash"].get_str());
 
 	if (_tObj.count("nonce"))
 		rlpStream << importByteArray(_tObj["nonce"].get_str());
@@ -146,7 +146,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			//update genesis block in json file
 			o["genesisBlockHeader"].get_obj()["stateRoot"] = toString(blockFromFields.stateRoot);
 			o["genesisBlockHeader"].get_obj()["nonce"] = toString(blockFromFields.nonce);
-			o["genesisBlockHeader"].get_obj()["mixBytes"] = toString(blockFromFields.mixBytes);
+			o["genesisBlockHeader"].get_obj()["mixHash"] = toString(blockFromFields.mixHash);
 		}
 
 		// create new "genesis" block
@@ -276,8 +276,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 						if (blObj["blockHeader"].get_obj().count("extraData"))
 							tmp.extraData = importByteArray(blObj["blockHeader"].get_obj()["extraData"].get_str());
 
-						if (blObj["blockHeader"].get_obj().count("mixBytes"))
-							tmp.mixBytes = h256(blObj["blockHeader"].get_obj()["mixBytes"].get_str());
+						if (blObj["blockHeader"].get_obj().count("mixHash"))
+							tmp.mixHash = h256(blObj["blockHeader"].get_obj()["mixHash"].get_str());
 
 						if (blObj["blockHeader"].get_obj().count("seedHash"))
 							tmp.seedHash = h256(blObj["blockHeader"].get_obj()["seedHash"].get_str());
@@ -322,7 +322,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				oBlockHeader["gasUsed"] = toString(current_BlockHeader.gasUsed);
 				oBlockHeader["timestamp"] = toString(current_BlockHeader.timestamp);
 				oBlockHeader["extraData"] = toHex(current_BlockHeader.extraData);
-				oBlockHeader["mixBytes"] = toString(current_BlockHeader.mixBytes);
+				oBlockHeader["mixHash"] = toString(current_BlockHeader.mixHash);
 				oBlockHeader["seedHash"] = toString(current_BlockHeader.seedHash);
 				oBlockHeader["nonce"] = toString(current_BlockHeader.nonce);
 
@@ -445,7 +445,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasUsed == blockFromRlp.gasUsed, "gasUsed in given RLP not matching the block gasUsed!");
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.timestamp == blockFromRlp.timestamp, "timestamp in given RLP not matching the block timestamp!");
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.extraData == blockFromRlp.extraData, "extraData in given RLP not matching the block extraData!");
-				BOOST_CHECK_MESSAGE(blockHeaderFromFields.mixBytes == blockFromRlp.mixBytes, "mixBytes in given RLP not matching the block mixBytes!");
+				BOOST_CHECK_MESSAGE(blockHeaderFromFields.mixHash == blockFromRlp.mixHash, "mixHash in given RLP not matching the block mixHash!");
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.seedHash == blockFromRlp.seedHash, "transactionsRoot in given RLP not matching the block transactionsRoot!");
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.nonce == blockFromRlp.nonce, "nonce in given RLP not matching the block nonce!");
 
