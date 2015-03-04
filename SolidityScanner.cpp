@@ -264,6 +264,23 @@ BOOST_AUTO_TEST_CASE(ether_subdenominations)
 	BOOST_CHECK_EQUAL(scanner.next(), Token::SubEther);
 }
 
+BOOST_AUTO_TEST_CASE(time_subdenominations)
+{
+	Scanner scanner(CharStream("seconds minutes hours days weeks years"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::SubSecond);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SubMinute);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SubHour);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SubDay);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SubWeek);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::SubYear);
+}
+
+BOOST_AUTO_TEST_CASE(time_after)
+{
+	Scanner scanner(CharStream("after 1"));
+	BOOST_CHECK_EQUAL(scanner.getCurrentToken(), Token::After);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
