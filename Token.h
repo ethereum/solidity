@@ -252,8 +252,6 @@ namespace solidity
 	K(UInt240, "uint240", 0)                                           \
 	K(UInt248, "uint248", 0)                                           \
 	K(UInt256, "uint256", 0)                                           \
-	K(Hash, "hash", 0)                                                 \
-	K(Bytes, "bytes", 0)                                               \
 	K(Bytes8, "bytes8", 0)                                               \
 	K(Bytes16, "bytes16", 0)                                             \
 	K(Bytes24, "bytes24", 0)                                             \
@@ -286,10 +284,10 @@ namespace solidity
 	K(Bytes240, "bytes240", 0)                                           \
 	K(Bytes248, "bytes248", 0)                                           \
 	K(Bytes256, "bytes256", 0)                                           \
+	K(Bytes, "bytes", 0)												\
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(StringType, "string", 0)                                         \
-	K(Text, "text", 0)                                                 \
 	K(Real, "real", 0)                                                 \
 	K(UReal, "ureal", 0)                                               \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \

@@ -165,7 +165,7 @@ class IntegerType: public Type
 public:
 	enum class Modifier
 	{
-		Unsigned, Signed, Hash, Address
+		Unsigned, Signed, Bytes, Address
 	};
 	virtual Category getCategory() const override { return Category::Integer; }
 
@@ -186,7 +186,7 @@ public:
 	virtual std::string toString() const override;
 
 	int getNumBits() const { return m_bits; }
-	bool isHash() const { return m_modifier == Modifier::Hash || m_modifier == Modifier::Address; }
+	bool isBytes() const { return m_modifier == Modifier::Bytes || m_modifier == Modifier::Address; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 

@@ -131,7 +131,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			// conversion from string to hash. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			solAssert(targetIntegerType.isHash(), "Only conversion between String and Hash is allowed.");
+			solAssert(targetIntegerType.isBytes(), "Only conversion between String and Bytes is allowed.");
 			solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
 		}
@@ -164,7 +164,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			// only to shift left because of opposite alignment
 			StaticStringType const& targetStringType = dynamic_cast<StaticStringType const&>(_targetType);
 			IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
-			solAssert(typeOnStack.isHash(), "Only conversion between String and Hash is allowed.");
+			solAssert(typeOnStack.isBytes(), "Only conversion between String and Bytes is allowed.");
 			solAssert(typeOnStack.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBits())) << eth::Instruction::MUL;
 		}

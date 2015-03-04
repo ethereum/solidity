@@ -49,14 +49,12 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 		return make_shared<IntegerType>(bytes * 8,
 										modifier == 0 ? IntegerType::Modifier::Signed :
 										modifier == 1 ? IntegerType::Modifier::Unsigned :
-										IntegerType::Modifier::Hash);
+										IntegerType::Modifier::Bytes);
 	}
 	else if (_typeToken == Token::Address)
 		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
 	else if (_typeToken == Token::Bool)
 		return make_shared<BoolType>();
-	else if (Token::String0 <= _typeToken && _typeToken <= Token::String32)
-		return make_shared<StaticStringType>(int(_typeToken) - int(Token::String0));
 	else if (_typeToken == Token::Bytes)
 		return make_shared<ArrayType>(ArrayType::Location::Storage);
 	else
@@ -159,8 +157,8 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return false;
 	if (isAddress())
 		return convertTo.isAddress();
-	else if (isHash())
-		return convertTo.isHash();
+	else if (isBytes())
+		return convertTo.isBytes();
 	else if (isSigned())
 		return convertTo.isSigned();
 	else
@@ -169,14 +167,9 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.getCategory() == Category::String)
-	{
-		StaticStringType const& convertTo = dynamic_cast<StaticStringType const&>(_convertTo);
-		return isHash() && (m_bits == convertTo.getNumBytes() * 8);
-	}
 	return _convertTo.getCategory() == getCategory() ||
-		   _convertTo.getCategory() == Category::Contract ||
-		   _convertTo.getCategory() == Category::Enum;
+        _convertTo.getCategory() == Category::Contract ||
+        _convertTo.getCategory() == Category::Enum;
 }
 
 TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
@@ -190,8 +183,8 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 	// "~" is ok for all other types
 	else if (_operator == Token::BitNot)
 		return shared_from_this();
-	// nothing else for hashes
-	else if (isHash())
+	// nothing else for bytes
+	else if (isBytes())
 		return TypePointer();
 	// for non-hash integers, we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
@@ -214,7 +207,7 @@ string IntegerType::toString() const
 {
 	if (isAddress())
 		return "address";
-	string prefix = isHash() ? "hash" : (isSigned() ? "int" : "uint");
+	string prefix = isBytes() ? "bytes" : (isSigned() ? "int" : "uint");
 	return prefix + dev::toString(m_bits);
 }
 
@@ -231,10 +224,10 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	if (Token::isCompareOp(_operator))
 		return commonType;
 
-	// Nothing else can be done with addresses, but hashes can receive bit operators
+	// Nothing else can be done with addresses, but bytes can receive bit operators
 	if (commonType->isAddress())
 		return TypePointer();
-	else if (commonType->isHash() && !Token::isBitOp(_operator))
+	else if (commonType->isBytes() && !Token::isBitOp(_operator))
 		return TypePointer();
 	else
 		return commonType;
@@ -461,7 +454,7 @@ bool StaticStringType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.getCategory() == Category::Integer)
 	{
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (convertTo.isHash() && (m_bytes * 8 == convertTo.getNumBits()))
+		if (convertTo.isBytes() && (m_bytes * 8 == convertTo.getNumBits()))
 			return true;
 	}
 
