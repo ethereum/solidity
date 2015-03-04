@@ -30,6 +30,7 @@ using namespace dev::eth;
 
 int daggerTest()
 {
+#if 0
 	cnote << "Testing ProofOfWork...";
 	// Test dagger
 	{
@@ -46,6 +47,7 @@ int daggerTest()
 		cout << hex << ProofOfWork().eval((h256)(u256)1, (h256)(u256)1);
 		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
 	}
+#endif
 	return 0;
 }
 
