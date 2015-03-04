@@ -822,6 +822,15 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			expression = nodeFactory.createNode<Literal>(token, literal, subdenomination);
 			break;
 		}
+		if (Token::isTimeSubdenomination(m_scanner->peekNextToken()))
+		{
+			ASTPointer<ASTString> literal = getLiteralAndAdvance();
+			nodeFactory.markEndPosition();
+			Literal::SubDenomination subdenomination = static_cast<Literal::SubDenomination>(m_scanner->getCurrentToken());
+			m_scanner->next();
+			expression = nodeFactory.createNode<Literal>(token, literal, subdenomination);
+			break;
+		}
 		// fall-through
 	case Token::StringLiteral:
 		nodeFactory.markEndPosition();

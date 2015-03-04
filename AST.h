@@ -1197,7 +1197,13 @@ public:
 		Wei = Token::SubWei,
 		Szabo = Token::SubSzabo,
 		Finney = Token::SubFinney,
-		Ether = Token::SubEther
+		Ether = Token::SubEther,
+		Second = Token::SubSecond,
+		Minute = Token::SubMinute,
+		Hour = Token::SubHour,
+		Day = Token::SubDay,
+		Week = Token::SubWeek,
+		Year = Token::SubYear
 	};
 	Literal(SourceLocation const& _location, Token::Value _token,
 			ASTPointer<ASTString> const& _value,
