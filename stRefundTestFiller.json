@@ -18,7 +18,7 @@
                 }
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "1000",
+                "balance" : "100000",
                 "nonce" : "0",
                 "code" : "",
                 "storage": {}
@@ -27,7 +27,7 @@
         "transaction" : {
             "nonce" : "0",
             "gasPrice" : "1",
-            "gasLimit" : "850",
+            "gasLimit" : "22850",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "10",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -54,7 +54,7 @@
                  }
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                 "balance" : "1000",
+                 "balance" : "100000",
                  "nonce" : "0",
                  "code" : "",
                  "storage": {}
@@ -63,7 +63,7 @@
          "transaction" : {
              "nonce" : "0",
              "gasPrice" : "1",
-             "gasLimit" : "850",
+             "gasLimit" : "22850",
              "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
              "value" : "10",
              "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -90,7 +90,7 @@
                  }
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                 "balance" : "500",
+                 "balance" : "50000",
                  "nonce" : "0",
                  "code" : "",
                  "storage": {}
@@ -99,7 +99,7 @@
          "transaction" : {
              "nonce" : "0",
              "gasPrice" : "1",
-             "gasLimit" : "500",
+             "gasLimit" : "21000",
              "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
              "value" : "0",
              "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -126,7 +126,7 @@
                  }
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                 "balance" : "502",
+                 "balance" : "50200",
                  "nonce" : "0",
                  "code" : "",
                  "storage": {}
@@ -135,7 +135,7 @@
          "transaction" : {
              "nonce" : "0",
              "gasPrice" : "1",
-             "gasLimit" : "502",
+             "gasLimit" : "21002",
              "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
              "value" : "0",
              "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -166,7 +166,7 @@
                  }
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                 "balance" : "10000",
+                 "balance" : "100000",
                  "nonce" : "0",
                  "code" : "",
                  "storage": {}
@@ -175,7 +175,7 @@
          "transaction" : {
              "nonce" : "0",
              "gasPrice" : "1",
-             "gasLimit" : "10000",
+             "gasLimit" : "100000",
              "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
              "value" : "0",
              "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -206,7 +206,7 @@
                  }
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                 "balance" : "10000",
+                 "balance" : "100000",
                  "nonce" : "0",
                  "code" : "",
                  "storage": {}
@@ -215,7 +215,7 @@
          "transaction" : {
              "nonce" : "0",
              "gasPrice" : "1",
-             "gasLimit" : "10000",
+             "gasLimit" : "100000",
              "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
              "value" : "0",
              "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -247,7 +247,7 @@
                  }
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                 "balance" : "10000",
+                 "balance" : "100000",
                  "nonce" : "0",
                  "code" : "",
                  "storage": {}
@@ -256,7 +256,7 @@
          "transaction" : {
              "nonce" : "0",
              "gasPrice" : "1",
-             "gasLimit" : "10000",
+             "gasLimit" : "100000",
              "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
              "value" : "0",
              "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -288,7 +288,7 @@
                  }
              },
              "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                 "balance" : "10000",
+                 "balance" : "100000",
                  "nonce" : "0",
                  "code" : "",
                  "storage": {}
@@ -297,7 +297,7 @@
          "transaction" : {
              "nonce" : "0",
              "gasPrice" : "1",
-             "gasLimit" : "10000",
+             "gasLimit" : "100000",
              "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
              "value" : "0",
              "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
