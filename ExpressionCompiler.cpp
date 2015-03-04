@@ -258,6 +258,9 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	case Token::BitNot: // ~
 		m_context << eth::Instruction::NOT;
 		break;
+	case Token::After: // after
+		m_context << eth::Instruction::TIMESTAMP << eth::Instruction::ADD;
+		break;
 	case Token::Delete: // delete
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
 		m_currentLValue->setToZero(_unaryOperation.getLocation());
