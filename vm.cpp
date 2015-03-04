@@ -21,7 +21,9 @@
  */
 
 #include <chrono>
+
 #include <boost/filesystem.hpp>
+
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
 #include "vm.h"
@@ -286,7 +288,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 			/*add the storage*/
 			Object storage;
 			for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
-				storage.push_back(Pair( (string)i.first , (string)i.second));			
+				storage.push_back(Pair( (string)i.first , (string)i.second));
 
 			/*add all the other details*/
 			o_step.push_back(Pair("storage", storage));
@@ -365,7 +367,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		auto argc = boost::unit_test::framework::master_test_suite().argc;
 		auto argv = boost::unit_test::framework::master_test_suite().argv;
 		for (auto i = 0; i < argc; ++i)
-		{	       
+		{
 			if (std::string(argv[i]) == "--show-times")
 			{
 				auto testDuration = endTime - startTime;

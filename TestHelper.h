@@ -22,7 +22,9 @@
 #pragma once
 
 #include <functional>
+
 #include <boost/test/unit_test.hpp>
+
 #include "JsonSpiritHeaders.h"
 #include <libethereum/State.h>
 #include <libevm/ExtVMFace.h>

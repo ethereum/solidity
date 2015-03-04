@@ -22,11 +22,13 @@
 
 #include <fstream>
 #include <sstream>
+
+#include <boost/test/unit_test.hpp>
+
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
-#include <boost/test/unit_test.hpp>
 #include <algorithm>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
@@ -66,76 +68,76 @@ namespace dev
 			testPath += "/BasicTests";
 
 			string s = asString(contents(testPath + "/rlptest.json"));
-			BOOST_REQUIRE_MESSAGE( s.length() > 0, 
-				"Contents of 'rlptest.json' is empty. Have you cloned the 'tests' repo branch develop?"); 
+			BOOST_REQUIRE_MESSAGE( s.length() > 0,
+				"Contents of 'rlptest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 			js::read_string(s, v);
-		} 	
+		}
 
 		static void checkRLPTestCase(js::mObject& o)
-		{ 
-			BOOST_REQUIRE( o.count("in") > 0 ); 
-			BOOST_REQUIRE( o.count("out") > 0 ); 
-			BOOST_REQUIRE(!o["out"].is_null());			
-		} 
+		{
+			BOOST_REQUIRE( o.count("in") > 0 );
+			BOOST_REQUIRE( o.count("out") > 0 );
+			BOOST_REQUIRE(!o["out"].is_null());
+		}
 
 		static void checkRLPAgainstJson(js::mValue& v, RLP& u)
 		{
-			if ( v.type() == js::str_type ) 
-			{ 
+			if ( v.type() == js::str_type )
+			{
 				const std::string& expectedText = v.get_str();
-				if ( !expectedText.empty() && expectedText.front() == '#' ) 
-				{ 
-					// Deal with bigint instead of a raw string 
-					std::string bigIntStr = expectedText.substr(1,expectedText.length()-1); 
-					std::stringstream bintStream(bigIntStr);  
-					bigint val; 
-					bintStream >> val; 
-					BOOST_CHECK( !u.isList() ); 
+				if ( !expectedText.empty() && expectedText.front() == '#' )
+				{
+					// Deal with bigint instead of a raw string
+					std::string bigIntStr = expectedText.substr(1,expectedText.length()-1);
+					std::stringstream bintStream(bigIntStr);
+					bigint val;
+					bintStream >> val;
+					BOOST_CHECK( !u.isList() );
 					BOOST_CHECK( !u.isNull() );
 					BOOST_CHECK( u );             // operator bool()
-					BOOST_CHECK(u == val); 
-				} 
-				else 
-				{ 
-					BOOST_CHECK( !u.isList() ); 
-					BOOST_CHECK( !u.isNull() ); 
-					BOOST_CHECK( u.isData() ); 
-					BOOST_CHECK( u ); 
-					BOOST_CHECK( u.size() == expectedText.length() ); 
-					BOOST_CHECK(u == expectedText); 
+					BOOST_CHECK(u == val);
 				}
-			} 
-			else if ( v.type() == js::int_type ) 
-			{ 
-				const int expectedValue = v.get_int(); 
-				BOOST_CHECK( u.isInt() ); 
-				BOOST_CHECK( !u.isList() ); 
+				else
+				{
+					BOOST_CHECK( !u.isList() );
+					BOOST_CHECK( !u.isNull() );
+					BOOST_CHECK( u.isData() );
+					BOOST_CHECK( u );
+					BOOST_CHECK( u.size() == expectedText.length() );
+					BOOST_CHECK(u == expectedText);
+				}
+			}
+			else if ( v.type() == js::int_type )
+			{
+				const int expectedValue = v.get_int();
+				BOOST_CHECK( u.isInt() );
+				BOOST_CHECK( !u.isList() );
 				BOOST_CHECK( !u.isNull() );
 				BOOST_CHECK( u );             // operator bool()
-				BOOST_CHECK(u == expectedValue); 
-			} 
-			else if ( v.type() == js::array_type ) 
-			{ 
-				BOOST_CHECK( u.isList() ); 
-				BOOST_CHECK( !u.isInt() ); 
-				BOOST_CHECK( !u.isData() ); 
-				js::mArray& arr = v.get_array(); 
-				BOOST_CHECK( u.itemCount() == arr.size() ); 
-				unsigned i; 
-				for( i = 0; i < arr.size(); i++ ) 
-				{ 
-					RLP item = u[i]; 
-					checkRLPAgainstJson(arr[i], item); 
-				}  
-			} 
-			else 
-			{ 
+				BOOST_CHECK(u == expectedValue);
+			}
+			else if ( v.type() == js::array_type )
+			{
+				BOOST_CHECK( u.isList() );
+				BOOST_CHECK( !u.isInt() );
+				BOOST_CHECK( !u.isData() );
+				js::mArray& arr = v.get_array();
+				BOOST_CHECK( u.itemCount() == arr.size() );
+				unsigned i;
+				for( i = 0; i < arr.size(); i++ )
+				{
+					RLP item = u[i];
+					checkRLPAgainstJson(arr[i], item);
+				}
+			}
+			else
+			{
 				BOOST_ERROR("Invalid Javascript object!");
-			}  
-			
-		} 
+			}
+
+		}
 	}
-} 
+}
 
 BOOST_AUTO_TEST_SUITE(BasicTests)
 
@@ -154,30 +156,30 @@ BOOST_AUTO_TEST_CASE(rlp_encoding_test)
 		RLPStream s;
 		dev::test::buildRLP(o["in"], s);
 
-		std::string expectedText(o["out"].get_str()); 
-		std::transform(expectedText.begin(), expectedText.end(), expectedText.begin(), ::tolower ); 
+		std::string expectedText(o["out"].get_str());
+		std::transform(expectedText.begin(), expectedText.end(), expectedText.begin(), ::tolower );
 
-		const std::string& computedText = toHex(s.out()); 
+		const std::string& computedText = toHex(s.out());
 
-		std::stringstream msg; 
+		std::stringstream msg;
 		msg << "Encoding Failed: expected: " << expectedText << std::endl;
-		msg << " But Computed: " << computedText; 
+		msg << " But Computed: " << computedText;
 
 		BOOST_CHECK_MESSAGE(
-			expectedText == computedText, 
+			expectedText == computedText,
 			msg.str()
-			); 
+			);
 	}
 
 }
 
 BOOST_AUTO_TEST_CASE(rlp_decoding_test)
 {
-	cnote << "Testing RLP decoding..."; 
-	// Uses the same test cases as encoding but in reverse. 
-	// We read into the string of hex values, convert to bytes, 
-	// and then compare the output structure to the json of the 
-	// input object. 
+	cnote << "Testing RLP decoding...";
+	// Uses the same test cases as encoding but in reverse.
+	// We read into the string of hex values, convert to bytes,
+	// and then compare the output structure to the json of the
+	// input object.
 	js::mValue v;
 	dev::test::getRLPTestCases(v);
 	for (auto& i: v.get_obj())
@@ -185,11 +187,11 @@ BOOST_AUTO_TEST_CASE(rlp_decoding_test)
 		js::mObject& o = i.second.get_obj();
 		cnote << i.first;
 		dev::test::checkRLPTestCase(o);
-		
-		js::mValue& inputData = o["in"];
-		bytes payloadToDecode = fromHex(o["out"].get_str()); 
 
-		RLP payload(payloadToDecode); 
+		js::mValue& inputData = o["in"];
+		bytes payloadToDecode = fromHex(o["out"].get_str());
+
+		RLP payload(payloadToDecode);
 
 		dev::test::checkRLPAgainstJson(inputData, payload);
 
