@@ -424,13 +424,13 @@ void CommandLineInterface::actOnInput()
 			if (outputToStdout(choice))
 			{
 				cout << "EVM assembly:" << endl;
-				m_compiler->streamAssembly(cout, contract);
+				m_compiler->streamAssembly(cout, contract, m_sourceCodes);
 			}
 
 			if (outputToFile(choice))
 			{
 				ofstream outFile(contract + ".evm");
-				m_compiler->streamAssembly(outFile, contract);
+				m_compiler->streamAssembly(outFile, contract, m_sourceCodes);
 				outFile.close();
 			}
 		}
