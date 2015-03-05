@@ -120,8 +120,10 @@ public:
 
 	/// @returns number of bytes used by this type when encoded for CALL, or 0 if the encoding
 	/// is not a simple big-endian encoding or the type cannot be stored in calldata.
-	/// Note that irrespective of this size, each calldata element is padded to a multiple of 32 bytes.
-	virtual unsigned getCalldataEncodedSize() const { return 0; }
+	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
+	virtual unsigned getCalldataEncodedSize(bool _padded) const { (void)_padded; return 0; }
+	/// Convenience eversion of @see getCalldataEncodedSize(bool)
+	unsigned getCalldataEncodedSize() const { return getCalldataEncodedSize(true); }
 	/// @returns true if the type is dynamically encoded in calldata
 	virtual bool isDynamicallySized() const { return false; }
 	/// @returns number of bytes required to hold this value in storage.
@@ -176,7 +178,7 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 
-	virtual unsigned getCalldataEncodedSize() const override { return m_bits / 8; }
+	virtual unsigned getCalldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_bits / 8; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual MemberList const& getMembers() const { return isAddress() ? AddressMemberList : EmptyMemberList; }
@@ -247,7 +249,7 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool operator==(Type const& _other) const override;
 
-	virtual unsigned getCalldataEncodedSize() const override { return m_bytes; }
+	virtual unsigned getCalldataEncodedSize(bool _padded) const override { return _padded && m_bytes > 0 ? 32 : m_bytes; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString() const override { return "string" + dev::toString(m_bytes); }
@@ -271,7 +273,7 @@ public:
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
-	virtual unsigned getCalldataEncodedSize() const { return 1; }
+	virtual unsigned getCalldataEncodedSize(bool _padded) const { return _padded ? 32 : 1; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString() const override { return "bool"; }
@@ -302,7 +304,7 @@ public:
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(const Type& _other) const override;
-	virtual unsigned getCalldataEncodedSize() const override;
+	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
 	virtual bool isDynamicallySized() const { return m_hasDynamicLength; }
 	virtual u256 getStorageSize() const override;
 	virtual unsigned getSizeOnStack() const override;

@@ -37,140 +37,110 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// stack layout: [source_ref] target_ref (top)
 	// need to leave target_ref on the stack at the end
 	solAssert(_targetType.getLocation() == ArrayType::Location::Storage, "");
+	solAssert(
+		_sourceType.getLocation() == ArrayType::Location::CallData ||
+			_sourceType.getLocation() == ArrayType::Location::Storage,
+		"Given array location not implemented."
+	);
 
 	IntegerType uint256(256);
 	Type const* targetBaseType = _targetType.isByteArray() ? &uint256 : &(*_targetType.getBaseType());
 	Type const* sourceBaseType = _sourceType.isByteArray() ? &uint256 : &(*_sourceType.getBaseType());
 
-	switch (_sourceType.getLocation())
-	{
-	case ArrayType::Location::CallData:
-	{
-		solAssert(_targetType.isByteArray(), "Non byte arrays not yet implemented here.");
-		solAssert(_sourceType.isByteArray(), "Non byte arrays not yet implemented here.");
-		// This also assumes that after "length" we only have zeros, i.e. it cannot be used to
-		// slice a byte array from calldata.
+	// this copies source to target and also clears target if it was larger
 
-		// stack: source_offset source_len target_ref
-		// fetch old length and convert to words
-		m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-		convertLengthToSize(_targetType);
-		// stack here: source_offset source_len target_ref target_length_words
-		// actual array data is stored at SHA3(storage_offset)
-		m_context << eth::Instruction::DUP2;
+	// TODO unroll loop for small sizes
+
+	// stack: source_ref [source_length] target_ref
+	// store target_ref
+	for (unsigned i = _sourceType.getSizeOnStack(); i > 0; --i)
+		m_context << eth::swapInstruction(i);
+	if (_sourceType.getLocation() != ArrayType::Location::CallData || !_sourceType.isDynamicallySized())
+		retrieveLength(_sourceType); // otherwise, length is already there
+	// stack: target_ref source_ref source_length
+	m_context << eth::Instruction::DUP3;
+	// stack: target_ref source_ref source_length target_ref
+	retrieveLength(_targetType);
+	// stack: target_ref source_ref source_length target_ref target_length
+	if (_targetType.isDynamicallySized())
+		// store new target length
+		m_context << eth::Instruction::DUP3 << eth::Instruction::DUP3 << eth::Instruction::SSTORE;
+	// compute hashes (data positions)
+	m_context << eth::Instruction::SWAP1;
+	if (_targetType.isDynamicallySized())
 		CompilerUtils(m_context).computeHashStatic();
-		// compute target_data_end
-		m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2 << eth::Instruction::ADD
-				  << eth::Instruction::SWAP1;
-		// stack here: source_offset source_len target_ref target_data_end target_data_ref
-		// store length (in bytes)
-		m_context << eth::Instruction::DUP4 << eth::Instruction::DUP1 << eth::Instruction::DUP5
-			<< eth::Instruction::SSTORE;
-		// jump to end if length is zero
-		m_context << eth::Instruction::ISZERO;
-		eth::AssemblyItem copyLoopEnd = m_context.newTag();
-		m_context.appendConditionalJumpTo(copyLoopEnd);
-		// add length to source offset
-		m_context << eth::Instruction::DUP5 << eth::Instruction::DUP5 << eth::Instruction::ADD;
-		// stack now: source_offset source_len target_ref target_data_end target_data_ref source_end
-		// store start offset
-		m_context << eth::Instruction::DUP6;
-		// stack now: source_offset source_len target_ref target_data_end target_data_ref source_end calldata_offset
-		eth::AssemblyItem copyLoopStart = m_context.newTag();
-		m_context << copyLoopStart
-				  // copy from calldata and store
-				  << eth::Instruction::DUP1 << eth::Instruction::CALLDATALOAD
-				  << eth::Instruction::DUP4 << eth::Instruction::SSTORE
-				  // increment target_data_ref by 1
-				  << eth::Instruction::SWAP2 << u256(1) << eth::Instruction::ADD
-				  // increment calldata_offset by 32
-				  << eth::Instruction::SWAP2 << u256(32) << eth::Instruction::ADD
-				  // check for loop condition
-				  << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::GT;
-		m_context.appendConditionalJumpTo(copyLoopStart);
-		m_context << eth::Instruction::POP << eth::Instruction::POP;
-		m_context << copyLoopEnd;
+	// stack: target_ref source_ref source_length target_length target_data_pos
+	m_context << eth::Instruction::SWAP1;
+	convertLengthToSize(_targetType);
+	m_context << eth::Instruction::DUP2 << eth::Instruction::ADD;
+	// stack: target_ref source_ref source_length target_data_pos target_data_end
+	m_context << eth::Instruction::SWAP3;
+	// stack: target_ref target_data_end source_length target_data_pos source_ref
+	// skip copying if source length is zero
+	m_context << eth::Instruction::DUP3 << eth::Instruction::ISZERO;
+	eth::AssemblyItem copyLoopEnd = m_context.newTag();
+	m_context.appendConditionalJumpTo(copyLoopEnd);
 
-		// now clear leftover bytes of the old value
-		// stack now: source_offset source_len target_ref target_data_end target_data_ref
-		clearStorageLoop(IntegerType(256));
-		// stack now: source_offset source_len target_ref target_data_end
-
-		m_context << eth::Instruction::POP << eth::Instruction::SWAP2
-			<< eth::Instruction::POP << eth::Instruction::POP;
-		break;
-	}
-	case ArrayType::Location::Storage:
+	if (_sourceType.getLocation() == ArrayType::Location::Storage && _sourceType.isDynamicallySized())
+		CompilerUtils(m_context).computeHashStatic();
+	// stack: target_ref target_data_end source_length target_data_pos source_data_pos
+	m_context << eth::Instruction::SWAP2;
+	convertLengthToSize(_sourceType);
+	m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
+	// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end
+	eth::AssemblyItem copyLoopStart = m_context.newTag();
+	m_context << copyLoopStart;
+	// check for loop condition
+	m_context
+		<< eth::Instruction::DUP3 << eth::Instruction::DUP2
+		<< eth::Instruction::GT << eth::Instruction::ISZERO;
+	m_context.appendConditionalJumpTo(copyLoopEnd);
+	// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end
+	// copy
+	if (sourceBaseType->getCategory() == Type::Category::Array)
 	{
-		// this copies source to target and also clears target if it was larger
-
-		solAssert(sourceBaseType->getStorageSize() == targetBaseType->getStorageSize(),
-			"Copying with different storage sizes not yet implemented.");
-		// stack: source_ref target_ref
-		// store target_ref
-		m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
-		// stack: target_ref source_ref target_ref
-		// fetch lengthes
-		retrieveLength(_targetType);
-		m_context << eth::Instruction::SWAP2;
-		// stack: target_ref target_len target_ref source_ref
-		retrieveLength(_sourceType);
-		// stack: target_ref target_len target_ref source_ref source_len
-		if (_targetType.isDynamicallySized())
-			// store new target length
-			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::SSTORE;
-		// compute hashes (data positions)
-		m_context << eth::Instruction::SWAP2;
-		if (_targetType.isDynamicallySized())
-			CompilerUtils(m_context).computeHashStatic();
-		m_context << eth::Instruction::SWAP1;
-		if (_sourceType.isDynamicallySized())
-			CompilerUtils(m_context).computeHashStatic();
-		// stack: target_ref target_len source_len target_data_pos source_data_pos
-		m_context << eth::Instruction::DUP4;
-		convertLengthToSize(_sourceType);
-		m_context << eth::Instruction::DUP4;
-		convertLengthToSize(_sourceType);
-		// stack: target_ref target_len source_len target_data_pos source_data_pos target_size source_size
-		// @todo we might be able to go without a third counter
-		m_context << u256(0);
-		// stack: target_ref target_len source_len target_data_pos source_data_pos target_size source_size counter
-		eth::AssemblyItem copyLoopStart = m_context.newTag();
-		m_context << copyLoopStart;
-		// check for loop condition
-		m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3
-				   << eth::Instruction::GT << eth::Instruction::ISZERO;
-		eth::AssemblyItem copyLoopEnd = m_context.newTag();
-		m_context.appendConditionalJumpTo(copyLoopEnd);
-		// copy
-		m_context << eth::Instruction::DUP4 << eth::Instruction::DUP2 << eth::Instruction::ADD;
-		StorageItem(m_context, *sourceBaseType).retrieveValue(SourceLocation(), true);
-		m_context << eth::dupInstruction(5 + sourceBaseType->getSizeOnStack())
-			<< eth::dupInstruction(2 + sourceBaseType->getSizeOnStack()) << eth::Instruction::ADD;
-		StorageItem(m_context, *targetBaseType).storeValue(*sourceBaseType, SourceLocation(), true);
-		// increment
-		m_context << targetBaseType->getStorageSize() << eth::Instruction::ADD;
-		m_context.appendJumpTo(copyLoopStart);
-		m_context << copyLoopEnd;
-
-		// zero-out leftovers in target
-		// stack: target_ref target_len source_len target_data_pos source_data_pos target_size source_size counter
-		// add counter to target_data_pos
-		m_context << eth::Instruction::DUP5 << eth::Instruction::ADD
-				  << eth::Instruction::SWAP5 << eth::Instruction::POP;
-		// stack: target_ref target_len target_data_pos_updated target_data_pos source_data_pos target_size source_size
-		// add size to target_data_pos to get target_data_end
-		m_context << eth::Instruction::POP << eth::Instruction::DUP3 << eth::Instruction::ADD
-				  << eth::Instruction::SWAP4
-				  << eth::Instruction::POP  << eth::Instruction::POP << eth::Instruction::POP;
-		// stack: target_ref target_data_end target_data_pos_updated
-		clearStorageLoop(*targetBaseType);
+		m_context << eth::Instruction::DUP3 << eth::Instruction::DUP3;
+		copyArrayToStorage(
+			dynamic_cast<ArrayType const&>(*targetBaseType),
+			dynamic_cast<ArrayType const&>(*sourceBaseType)
+		);
 		m_context << eth::Instruction::POP;
-		break;
 	}
-	default:
-		solAssert(false, "Given byte array location not implemented.");
+	else
+	{
+		m_context << eth::Instruction::DUP3;
+		if (_sourceType.getLocation() == ArrayType::Location::Storage)
+			StorageItem(m_context, *sourceBaseType).retrieveValue(SourceLocation(), true);
+		else if (sourceBaseType->isValueType())
+			CompilerUtils(m_context).loadFromMemoryDynamic(*sourceBaseType, true, true, false);
+		else
+			solAssert(false, "Copying of unknown type requested.");
+		m_context << eth::dupInstruction(2 + sourceBaseType->getSizeOnStack());
+		StorageItem(m_context, *targetBaseType).storeValue(*sourceBaseType, SourceLocation(), true);
 	}
+	// increment source
+	m_context
+		<< eth::Instruction::SWAP2
+		<< (_sourceType.getLocation() == ArrayType::Location::Storage ?
+			sourceBaseType->getStorageSize() :
+			sourceBaseType->getCalldataEncodedSize())
+		<< eth::Instruction::ADD
+		<< eth::Instruction::SWAP2;
+	// increment target
+	m_context
+		<< eth::Instruction::SWAP1
+		<< targetBaseType->getStorageSize()
+		<< eth::Instruction::ADD
+		<< eth::Instruction::SWAP1;
+	m_context.appendJumpTo(copyLoopStart);
+	m_context << copyLoopEnd;
+
+	// zero-out leftovers in target
+	// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end
+	m_context << eth::Instruction::POP << eth::Instruction::SWAP1 << eth::Instruction::POP;
+	// stack: target_ref target_data_end target_data_pos_updated
+	clearStorageLoop(*targetBaseType);
+	m_context << eth::Instruction::POP;
 }
 
 void ArrayUtils::clearArray(ArrayType const& _type) const
@@ -290,13 +260,25 @@ void ArrayUtils::clearStorageLoop(Type const& _type) const
 	m_context << eth::Instruction::POP;
 }
 
-void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType) const
+void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) const
 {
-	if (_arrayType.isByteArray())
-		m_context << u256(31) << eth::Instruction::ADD
-			<< u256(32) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
-	else if (_arrayType.getBaseType()->getStorageSize() > 1)
-		m_context << _arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL;
+	if (_arrayType.getLocation() == ArrayType::Location::Storage)
+	{
+		if (_arrayType.isByteArray())
+			m_context << u256(31) << eth::Instruction::ADD
+				<< u256(32) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+		else if (_arrayType.getBaseType()->getStorageSize() > 1)
+			m_context << _arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL;
+	}
+	else
+	{
+		if (!_arrayType.isByteArray())
+			m_context << _arrayType.getBaseType()->getCalldataEncodedSize() << eth::Instruction::MUL;
+		else if (_pad)
+			m_context << u256(31) << eth::Instruction::ADD
+				<< u256(32) << eth::Instruction::DUP1
+				<< eth::Instruction::SWAP2 << eth::Instruction::DIV << eth::Instruction::MUL;
+	}
 }
 
 void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
