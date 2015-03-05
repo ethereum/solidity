@@ -44,6 +44,23 @@ namespace test
 namespace
 {
 
+// LTODO: Move to some more generic location. We really need it
+/// Make sure that no Exception is thrown during testing. If one is thrown show its info.
+/// @param _expression    The expression for which to make sure no exceptions are thrown
+/// @param _message       A message to act as a prefix to the expression's error information
+#define ETH_TEST_REQUIRE_NO_THROW(_expression, _message)				\
+	do {																\
+		try															\
+		{																\
+			_expression;												\
+		}																\
+		catch (boost::exception const& _e)								\
+		{																\
+			auto msg = std::string(_message) + boost::diagnostic_information(_e); \
+			BOOST_FAIL(msg);											\
+		}																\
+	}while (0)
+
 /// Helper class that extracts the first expression in an AST.
 class FirstExpressionExtractor: private ASTVisitor
 {
@@ -72,8 +89,8 @@ private:
 	Expression* m_expression;
 };
 
-Declaration const& resolveDeclaration(vector<string> const& _namespacedName,
-											  NameAndTypeResolver const& _resolver)
+Declaration const& resolveDeclaration(
+	vector<string> const& _namespacedName, NameAndTypeResolver const& _resolver)
 {
 	Declaration const* declaration = nullptr;
 	// bracers are required, cause msvc couldnt handle this macro in for statement
@@ -112,13 +129,13 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
+			ETH_TEST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
 			inheritanceHierarchy = vector<ContractDefinition const*>(1, contract);
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
+			ETH_TEST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract), "Checking type Requirements failed");
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
