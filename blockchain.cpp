@@ -32,7 +32,7 @@ using namespace dev::eth;
 namespace dev {  namespace test {
 
 bytes createBlockRLPFromFields(mObject& _tObj);
-void overwriteBlockHeader(BlockInfo& current_BlockHeader, mObject& blObj);
+void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj);
 BlockInfo constructBlock(mObject& _o);
 void updatePoW(BlockInfo& _bi);
 void writeBlockHeaderToJson(mObject& _o, const BlockInfo& _bi);
@@ -106,8 +106,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					BlockInfo uncleBlockFromFields = constructBlock(uncleHeaderObj);
 
 					// make uncle header valid
-					uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size()-2]);
 					uncleBlockFromFields.timestamp = (u256)time(0);
+					uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size()-2]);
 
 					updatePoW(uncleBlockFromFields);
 					writeBlockHeaderToJson(uncleHeaderObj, uncleBlockFromFields);
@@ -462,79 +462,79 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	return rlpStream.out();
 }
 
-void overwriteBlockHeader(BlockInfo& current_BlockHeader, mObject& blObj)
+void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
 {
-	if (blObj["blockHeader"].get_obj().size() != 14)
+	if (_blObj["blockHeader"].get_obj().size() != 14)
 	{
 
-		BlockInfo tmp = current_BlockHeader;
+		BlockInfo tmp = _current_BlockHeader;
 
-		if (blObj["blockHeader"].get_obj().count("parentHash"))
-			tmp.parentHash = h256(blObj["blockHeader"].get_obj()["parentHash"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("parentHash"))
+			tmp.parentHash = h256(_blObj["blockHeader"].get_obj()["parentHash"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("uncleHash"))
-			tmp.sha3Uncles = h256(blObj["blockHeader"].get_obj()["uncleHash"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("uncleHash"))
+			tmp.sha3Uncles = h256(_blObj["blockHeader"].get_obj()["uncleHash"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("coinbase"))
-			tmp.coinbaseAddress = Address(blObj["blockHeader"].get_obj()["coinbase"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("coinbase"))
+			tmp.coinbaseAddress = Address(_blObj["blockHeader"].get_obj()["coinbase"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("stateRoot"))
-			tmp.stateRoot = h256(blObj["blockHeader"].get_obj()["stateRoot"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("stateRoot"))
+			tmp.stateRoot = h256(_blObj["blockHeader"].get_obj()["stateRoot"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("transactionsTrie"))
-			tmp.transactionsRoot = h256(blObj["blockHeader"].get_obj()["transactionsTrie"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("transactionsTrie"))
+			tmp.transactionsRoot = h256(_blObj["blockHeader"].get_obj()["transactionsTrie"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("receiptTrie"))
-			tmp.receiptsRoot = h256(blObj["blockHeader"].get_obj()["receiptTrie"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("receiptTrie"))
+			tmp.receiptsRoot = h256(_blObj["blockHeader"].get_obj()["receiptTrie"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("bloom"))
-			tmp.logBloom = LogBloom(blObj["blockHeader"].get_obj()["bloom"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("bloom"))
+			tmp.logBloom = LogBloom(_blObj["blockHeader"].get_obj()["bloom"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("difficulty"))
-			tmp.difficulty = toInt(blObj["blockHeader"].get_obj()["difficulty"]);
+		if (_blObj["blockHeader"].get_obj().count("difficulty"))
+			tmp.difficulty = toInt(_blObj["blockHeader"].get_obj()["difficulty"]);
 
-		if (blObj["blockHeader"].get_obj().count("number"))
-			tmp.number = toInt(blObj["blockHeader"].get_obj()["number"]);
+		if (_blObj["blockHeader"].get_obj().count("number"))
+			tmp.number = toInt(_blObj["blockHeader"].get_obj()["number"]);
 
-		if (blObj["blockHeader"].get_obj().count("gasLimit"))
-			tmp.gasLimit = toInt(blObj["blockHeader"].get_obj()["gasLimit"]);
+		if (_blObj["blockHeader"].get_obj().count("gasLimit"))
+			tmp.gasLimit = toInt(_blObj["blockHeader"].get_obj()["gasLimit"]);
 
-		if (blObj["blockHeader"].get_obj().count("gasUsed"))
-			tmp.gasUsed = toInt(blObj["blockHeader"].get_obj()["gasUsed"]);
+		if (_blObj["blockHeader"].get_obj().count("gasUsed"))
+			tmp.gasUsed = toInt(_blObj["blockHeader"].get_obj()["gasUsed"]);
 
-		if (blObj["blockHeader"].get_obj().count("timestamp"))
-			tmp.timestamp = toInt(blObj["blockHeader"].get_obj()["timestamp"]);
+		if (_blObj["blockHeader"].get_obj().count("timestamp"))
+			tmp.timestamp = toInt(_blObj["blockHeader"].get_obj()["timestamp"]);
 
-		if (blObj["blockHeader"].get_obj().count("extraData"))
-			tmp.extraData = importByteArray(blObj["blockHeader"].get_obj()["extraData"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("extraData"))
+			tmp.extraData = importByteArray(_blObj["blockHeader"].get_obj()["extraData"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("mixHash"))
-			tmp.mixHash = h256(blObj["blockHeader"].get_obj()["mixHash"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("mixHash"))
+			tmp.mixHash = h256(_blObj["blockHeader"].get_obj()["mixHash"].get_str());
 
-		if (blObj["blockHeader"].get_obj().count("seedHash"))
-			tmp.seedHash = h256(blObj["blockHeader"].get_obj()["seedHash"].get_str());
+		if (_blObj["blockHeader"].get_obj().count("seedHash"))
+			tmp.seedHash = h256(_blObj["blockHeader"].get_obj()["seedHash"].get_str());
 
 		// find new valid nonce
 
-		if (tmp != current_BlockHeader)
+		if (tmp != _current_BlockHeader)
 		{
-			current_BlockHeader = tmp;
+			_current_BlockHeader = tmp;
 
 			ProofOfWork pow;
 			std::pair<MineInfo, Ethash::Proof> ret;
-			while (!ProofOfWork::verify(current_BlockHeader))
+			while (!ProofOfWork::verify(_current_BlockHeader))
 			{
-				ret = pow.mine(current_BlockHeader, 1000, true, true); // tie(ret, blockFromFields.nonce)
-				Ethash::assignResult(ret.second, current_BlockHeader);
+				ret = pow.mine(_current_BlockHeader, 1000, true, true); // tie(ret, blockFromFields.nonce)
+				Ethash::assignResult(ret.second, _current_BlockHeader);
 			}
 		}
 	}
 	else
 	{
 		// take the blockheader as is
-		const bytes c_blockRLP = createBlockRLPFromFields(blObj["blockHeader"].get_obj());
+		const bytes c_blockRLP = createBlockRLPFromFields(_blObj["blockHeader"].get_obj());
 		const RLP c_bRLP(c_blockRLP);
-		current_BlockHeader.populateFromHeader(c_bRLP, false);
+		_current_BlockHeader.populateFromHeader(c_bRLP, false);
 	}
 }
 
@@ -614,20 +614,20 @@ RLPStream createFullBlockFromHeader(const BlockInfo& _bi,const bytes& _txs, cons
 
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
-//BOOST_AUTO_TEST_CASE(bcBlockChainTest)
-//{
-//	dev::test::executeTests("bcBlockChainTest", "/BlockTests", dev::test::doBlockchainTests);
-//}
+BOOST_AUTO_TEST_CASE(bcBlockChainTest)
+{
+	dev::test::executeTests("bcBlockChainTest", "/BlockTests", dev::test::doBlockchainTests);
+}
 
-//BOOST_AUTO_TEST_CASE(bcValidBlockTest)
-//{
-//	dev::test::executeTests("bcValidBlockTest", "/BlockTests", dev::test::doBlockchainTests);
-//}
+BOOST_AUTO_TEST_CASE(bcValidBlockTest)
+{
+	dev::test::executeTests("bcValidBlockTest", "/BlockTests", dev::test::doBlockchainTests);
+}
 
-//BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest)
-//{
-//	dev::test::executeTests("bcInvalidHeaderTest", "/BlockTests", dev::test::doBlockchainTests);
-//}
+BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest)
+{
+	dev::test::executeTests("bcInvalidHeaderTest", "/BlockTests", dev::test::doBlockchainTests);
+}
 
 BOOST_AUTO_TEST_CASE(bcUncleTest)
 {
