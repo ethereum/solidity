@@ -218,20 +218,22 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_getBlockByHash(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getBlockByHash(const std::string& param1, bool param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
+            p.append(param2);
             Json::Value result = this->CallMethod("eth_getBlockByHash",p);
             if (result.isObject())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_getBlockByNumber(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getBlockByNumber(const std::string& param1, bool param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
+            p.append(param2);
             Json::Value result = this->CallMethod("eth_getBlockByNumber",p);
             if (result.isObject())
                 return result;
