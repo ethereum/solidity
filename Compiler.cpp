@@ -260,7 +260,7 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 
 	for (TypePointer const& type: _typeParameters)
 	{
-		CompilerUtils(m_context).copyToStackTop(stackDepth, *type);
+		CompilerUtils(m_context).copyToStackTop(stackDepth, type->getSizeOnStack());
 		ExpressionCompiler(m_context, m_optimize).appendTypeConversion(*type, *type, true);
 		bool const c_padToWords = true;
 		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, *type, c_padToWords);

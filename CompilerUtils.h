@@ -41,19 +41,31 @@ public:
 	/// @param _fromCalldata if true, load from calldata, not from memory
 	/// @param _padToWordBoundaries if true, assume the data is padded to word (32 byte) boundaries
 	/// @returns the number of bytes consumed in memory.
-	unsigned loadFromMemory(unsigned _offset, Type const& _type = IntegerType(256),
-		bool _fromCalldata = false, bool _padToWordBoundaries = false);
+	unsigned loadFromMemory(
+		unsigned _offset,
+		Type const& _type = IntegerType(256),
+		bool _fromCalldata = false,
+		bool _padToWordBoundaries = false
+	);
 	/// Dynamic version of @see loadFromMemory, expects the memory offset on the stack.
 	/// Stack pre: memory_offset
 	/// Stack post: value... (memory_offset+length)
-	void loadFromMemoryDynamic(Type const& _type, bool _fromCalldata = false, bool _padToWordBoundaries = true);
+	void loadFromMemoryDynamic(
+		Type const& _type,
+		bool _fromCalldata = false,
+		bool _padToWordBoundaries = true,
+		bool _keepUpdatedMemoryOffset = true
+	);
 	/// Stores data from stack in memory.
 	/// @param _offset offset in memory
 	/// @param _type type of the data on the stack
 	/// @param _padToWordBoundaries if true, pad the data to word (32 byte) boundaries
 	/// @returns the number of bytes written to memory (can be different from _bytes if
 	///          _padToWordBoundaries is true)
-	unsigned storeInMemory(unsigned _offset, Type const& _type = IntegerType(256), bool _padToWordBoundaries = false);
+	unsigned storeInMemory(unsigned _offset,
+		Type const& _type = IntegerType(256),
+		bool _padToWordBoundaries = false
+	);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that.
 	/// Stack pre: memory_offset value...
@@ -65,8 +77,9 @@ public:
 
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);
-	/// Copies a variable of type @a _type from a stack depth of @a _stackDepth to the top of the stack.
-	void copyToStackTop(unsigned _stackDepth, Type const& _type);
+	/// Copies an item that occupies @a _itemSize stack slots from a stack depth of @a _stackDepth
+	/// to the top of the stack.
+	void copyToStackTop(unsigned _stackDepth, unsigned _itemSize);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);
 

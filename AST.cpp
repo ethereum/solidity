@@ -671,8 +671,11 @@ void IndexAccess::checkTypeRequirements()
 		if (!m_index)
 			BOOST_THROW_EXCEPTION(createTypeError("Index expression cannot be omitted."));
 		m_index->expectType(IntegerType(256));
-		m_type = type.getBaseType();
-		m_isLValue = true;
+		if (type.isByteArray())
+			m_type = make_shared<IntegerType>(8, IntegerType::Modifier::Hash);
+		else
+			m_type = type.getBaseType();
+		m_isLValue = type.getLocation() != ArrayType::Location::CallData;
 		break;
 	}
 	case Type::Category::Mapping:
