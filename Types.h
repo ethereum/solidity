@@ -77,12 +77,12 @@ public:
 	enum class Category
 	{
 		Integer, IntegerConstant, Bool, Real, Array,
-		String, Contract, Struct, Function, Enum,
+		FixedBytes, Contract, Struct, Function, Enum,
 		Mapping, Void, TypeType, Modifier, Magic
 	};
 
-	///@{
-	///@name Factory functions
+	/// @{
+	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
 	static TypePointer fromElementaryTypeName(Token::Value _typeToken);
 	static TypePointer fromElementaryTypeName(std::string const& _name);
@@ -158,14 +158,14 @@ protected:
 };
 
 /**
- * Any kind of integer type including hash and address.
+ * Any kind of integer type including address.
  */
 class IntegerType: public Type
 {
 public:
 	enum class Modifier
 	{
-		Unsigned, Signed, Bytes, Address
+		Unsigned, Signed, Address
 	};
 	virtual Category getCategory() const override { return Category::Integer; }
 
@@ -186,7 +186,6 @@ public:
 	virtual std::string toString() const override;
 
 	int getNumBits() const { return m_bits; }
-	bool isBytes() const { return m_modifier == Modifier::Bytes || m_modifier == Modifier::Address; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
 
@@ -232,27 +231,29 @@ private:
 };
 
 /**
- * String type with fixed length, up to 32 bytes.
+ * Bytes type with fixed length of up to 32 bytes
  */
-class StaticStringType: public Type
+class FixedBytesType: public Type
 {
 public:
-	virtual Category getCategory() const override { return Category::String; }
+	virtual Category getCategory() const override { return Category::FixedBytes; }
 
-	/// @returns the smallest string type for the given literal or an empty pointer
+	/// @returns the smallest bytes type for the given literal or an empty pointer
 	/// if no type fits.
-	static std::shared_ptr<StaticStringType> smallestTypeForLiteral(std::string const& _literal);
+	static std::shared_ptr<FixedBytesType> smallestTypeForLiteral(std::string const& _literal);
 
-	explicit StaticStringType(int _bytes);
+	explicit FixedBytesType(int _bytes);
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
 	virtual unsigned getCalldataEncodedSize(bool _padded) const override { return _padded && m_bytes > 0 ? 32 : m_bytes; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual std::string toString() const override { return "string" + dev::toString(m_bytes); }
+	virtual std::string toString() const override { return "bytes" + dev::toString(m_bytes); }
 	virtual u256 literalValue(Literal const* _literal) const override;
 
 	int getNumBytes() const { return m_bytes; }

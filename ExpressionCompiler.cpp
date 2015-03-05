@@ -123,23 +123,23 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	Type::Category stackTypeCategory = _typeOnStack.getCategory();
 	Type::Category targetTypeCategory = _targetType.getCategory();
 
-	if (stackTypeCategory == Type::Category::String)
+	if (stackTypeCategory == Type::Category::FixedBytes)
 	{
-		StaticStringType const& typeOnStack = dynamic_cast<StaticStringType const&>(_typeOnStack);
+		FixedBytesType const& typeOnStack = dynamic_cast<FixedBytesType const&>(_typeOnStack);
 		if (targetTypeCategory == Type::Category::Integer)
 		{
-			// conversion from string to hash. no need to clean the high bit
+			// conversion from string to bytes. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			solAssert(targetIntegerType.isBytes(), "Only conversion between String and Bytes is allowed.");
+			solAssert(targetIntegerType.isAddress(), "Only conversion between Address and FixedBytes is allowed.");
 			solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
 		}
 		else
 		{
-			// clear lower-order bytes for conversion to shorter strings - we always clean
-			solAssert(targetTypeCategory == Type::Category::String, "Invalid type conversion requested.");
-			StaticStringType const& targetType = dynamic_cast<StaticStringType const&>(_targetType);
+			// clear lower-order bytes for conversion to shorter bytes - we always clean
+			solAssert(targetTypeCategory == Type::Category::FixedBytes, "Invalid type conversion requested.");
+			FixedBytesType const& targetType = dynamic_cast<FixedBytesType const&>(_targetType);
 			if (targetType.getNumBytes() < typeOnStack.getNumBytes())
 			{
 				if (targetType.getNumBytes() == 0)
@@ -158,14 +158,14 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 		stackTypeCategory == Type::Category::Contract ||
 		stackTypeCategory == Type::Category::IntegerConstant)
 	{
-		if (targetTypeCategory == Type::Category::String && stackTypeCategory == Type::Category::Integer)
+		if (targetTypeCategory == Type::Category::FixedBytes && stackTypeCategory == Type::Category::Integer)
 		{
-			// conversion from hash to string. no need to clean the high bit
+			// conversion from bytes to string. no need to clean the high bit
 			// only to shift left because of opposite alignment
-			StaticStringType const& targetStringType = dynamic_cast<StaticStringType const&>(_targetType);
+			FixedBytesType const& targetBytesType = dynamic_cast<FixedBytesType const&>(_targetType);
 			IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
-			solAssert(typeOnStack.isBytes(), "Only conversion between String and Bytes is allowed.");
-			solAssert(typeOnStack.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
+			solAssert(typeOnStack.isAddress(), "Only conversion between Address and Bytes is allowed.");
+			solAssert(typeOnStack.getNumBits() == targetBytesType.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBits())) << eth::Instruction::MUL;
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
@@ -870,7 +870,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	{
 	case Type::Category::IntegerConstant:
 	case Type::Category::Bool:
-	case Type::Category::String:
+	case Type::Category::FixedBytes:
 		m_context << _literal.getType()->literalValue(&_literal);
 		break;
 	default:
