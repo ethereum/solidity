@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	bytes macSecret(32);
 	outRef.copyTo(&macSecret);
 	BOOST_REQUIRE(macSecret == fromHex("2ec149072353d54437422837c886b0538a9206e6c559f6b4a55f65a866867723"));
-	m_macEnc.SetKey(outRef.data(), h256::size);
+	m_macEnc.SetKey(outRef.data(), h128::size);
 	
 	// Initiator egress-mac: sha3(mac-secret^recipient-nonce || auth-sent-init)
 	//           ingress-mac: sha3(mac-secret^initiator-nonce || auth-recvd-ack)
