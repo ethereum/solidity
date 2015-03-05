@@ -33,8 +33,12 @@ namespace solidity
 
 const unsigned int CompilerUtils::dataStartOffset = 4;
 
-unsigned CompilerUtils::loadFromMemory(unsigned _offset, Type const& _type,
-	bool _fromCalldata, bool _padToWordBoundaries)
+unsigned CompilerUtils::loadFromMemory(
+	unsigned _offset,
+	Type const& _type,
+	bool _fromCalldata,
+	bool _padToWordBoundaries
+)
 {
 	solAssert(_type.getCategory() != Type::Category::Array, "Unable to statically load dynamic type.");
 	m_context << u256(_offset);
@@ -42,7 +46,11 @@ unsigned CompilerUtils::loadFromMemory(unsigned _offset, Type const& _type,
 }
 
 void CompilerUtils::loadFromMemoryDynamic(
-	Type const& _type, bool _fromCalldata, bool _padToWordBoundaries, bool _keepUpdatedMemoryOffset)
+	Type const& _type,
+	bool _fromCalldata,
+	bool _padToWordBoundaries,
+	bool _keepUpdatedMemoryOffset
+)
 {
 	solAssert(_type.getCategory() != Type::Category::Array, "Arrays not yet implemented.");
 	if (_keepUpdatedMemoryOffset)

@@ -61,7 +61,9 @@ public:
 	/// Stores zero in the lvalue. Removes the reference from the stack if @a _removeReference is true.
 	/// @a _location is the source location of the requested operation
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(), bool _removeReference = true) const = 0;
+		SourceLocation const& _location = SourceLocation(),
+		bool _removeReference = true
+	) const = 0;
 
 protected:
 	CompilerContext& m_context;
@@ -78,10 +80,15 @@ public:
 
 	virtual unsigned sizeOnStack() const override { return 0; }
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(), bool _move = false) const override;
+	virtual void storeValue(
+		Type const& _sourceType,
+		SourceLocation const& _location = SourceLocation(),
+		bool _move = false
+	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(), bool _removeReference = true) const override;
+		SourceLocation const& _location = SourceLocation(),
+		bool _removeReference = true
+	) const override;
 
 private:
 	/// Base stack offset (@see CompilerContext::getBaseStackOffsetOfVariable) of the local variable.
@@ -101,10 +108,15 @@ public:
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageItem(CompilerContext& _compilerContext, Type const& _type);
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(), bool _move = false) const override;
+	virtual void storeValue(
+		Type const& _sourceType,
+		SourceLocation const& _location = SourceLocation(),
+		bool _move = false
+	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(), bool _removeReference = true) const override;
+		SourceLocation const& _location = SourceLocation(),
+		bool _removeReference = true
+	) const override;
 
 private:
 	/// Number of stack elements occupied by the value (not the reference).
@@ -123,10 +135,15 @@ public:
 	StorageByteArrayElement(CompilerContext& _compilerContext);
 	virtual unsigned sizeOnStack() const override { return 2; }
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(), bool _move = false) const override;
+	virtual void storeValue(
+		Type const& _sourceType,
+		SourceLocation const& _location = SourceLocation(),
+		bool _move = false
+	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(), bool _removeReference = true) const override;
+		SourceLocation const& _location = SourceLocation(),
+		bool _removeReference = true
+	) const override;
 };
 
 /**
@@ -140,10 +157,15 @@ public:
 	/// Constructs the LValue, assumes that the reference to the array head is already on the stack.
 	StorageArrayLength(CompilerContext& _compilerContext, ArrayType const& _arrayType);
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
-	virtual void storeValue(Type const& _sourceType,
-		SourceLocation const& _location = SourceLocation(), bool _move = false) const override;
+	virtual void storeValue(
+		Type const& _sourceType,
+		SourceLocation const& _location = SourceLocation(),
+		bool _move = false
+	) const override;
 	virtual void setToZero(
-		SourceLocation const& _location = SourceLocation(), bool _removeReference = true) const override;
+		SourceLocation const& _location = SourceLocation(),
+		bool _removeReference = true
+	) const override;
 
 private:
 	ArrayType const& m_arrayType;
