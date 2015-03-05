@@ -124,7 +124,7 @@ public:
 	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap()) const;
 
 protected:
-	std::string getLocationFromSources(const StringMap &_sourceCodes, const SourceLocation &_location) const;
+	std::string getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired() const;
 
