@@ -30,6 +30,7 @@
 #include <libsolidity/Exceptions.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Token.h>
+#include <libdevcore/UndefMacros.h>
 
 namespace dev
 {
@@ -66,7 +67,6 @@ public:
 private:
 	MemberMap m_memberTypes;
 };
-
 
 /**
  * Abstract base class that forms the root of the type hierarchy.

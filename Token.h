@@ -46,6 +46,7 @@
 #include <libdevcore/Log.h>
 #include <libsolidity/Utils.h>
 #include <libsolidity/Exceptions.h>
+#include <libdevcore/UndefMacros.h>
 
 namespace dev
 {
