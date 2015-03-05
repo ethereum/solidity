@@ -77,6 +77,20 @@ int AssemblyItem::deposit() const
 	return 0;
 }
 
+string AssemblyItem::getJumpTypeAsString() const
+{
+	switch (m_jumpType)
+	{
+	case JumpType::IntoFunction:
+		return "->";
+	case JumpType::OutOfFunction:
+		return "<-";
+	case JumpType::Ordinary:
+	default:
+		return "->";
+	}
+}
+
 unsigned Assembly::bytesRequired() const
 {
 	for (unsigned br = 1;; ++br)
@@ -205,7 +219,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 		switch (i.m_type)
 		{
 		case Operation:
-			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name;
+			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name  << "  " << i.getJumpTypeAsString( ) << endl;
 			break;
 		case Push:
 			_out << "  PUSH " << i.m_data;

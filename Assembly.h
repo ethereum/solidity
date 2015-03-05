@@ -42,6 +42,8 @@ class AssemblyItem
 	friend class Assembly;
 
 public:
+	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
+
 	AssemblyItem(u256 _push): m_type(Push), m_data(_push) {}
 	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0): m_type(_type), m_data(_data) {}
@@ -58,13 +60,18 @@ public:
 	int deposit() const;
 
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
-	void setLocation(SourceLocation const& _location) { m_location = _location;}
+	void setLocation(SourceLocation const& _location) { m_location = _location; }
 	SourceLocation const& getLocation() const { return m_location; }
+
+	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }
+	JumpType getJumpType() const { return m_jumpType; }
+	std::string getJumpTypeAsString() const;
 
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
 	SourceLocation m_location;
+	JumpType m_jumpType;
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
