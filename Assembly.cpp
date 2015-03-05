@@ -182,16 +182,16 @@ string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLoc
 	if (it == _sourceCodes.end())
 		return "";
 
-	string toReturn = it->second;
-	if (_location.start >= (int)toReturn.size())
+	string const& source = it->second;
+	if (size_t(_location.start) >= source.size())
 		return "";
 
-	toReturn = toReturn.substr(_location.start, _location.end - _location.start);
-	auto newLinePos = toReturn.find_first_of("\n");
-	if (newLinePos != string::npos && newLinePos != toReturn.size() - 1)
-		toReturn = toReturn.substr(0, newLinePos) + "...";
+	string cut = source.substr(_location.start, _location.end - _location.start);
+	auto newLinePos = cut.find_first_of("\n");
+	if (newLinePos != string::npos)
+		cut = cut.substr(0, newLinePos) + "...";
 
-	return move(toReturn);
+	return move(cut);
 }
 
 ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
@@ -239,7 +239,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
-		_out << string(20, ' ') << sourceLine << endl;
+		_out << string("\t\t") << sourceLine << endl;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
