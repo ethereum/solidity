@@ -539,11 +539,11 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value shh_changed(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value shh_getFilterChanges(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("shh_changed",p);
+            Json::Value result = this->CallMethod("shh_getFilterChanges",p);
             if (result.isArray())
                 return result;
             else
