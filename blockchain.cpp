@@ -367,7 +367,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				// uncles from uncle list field
 				vector<BlockInfo> uBlHsFromField;
 				if (blObj["uncleHeaders"].type() != json_spirit::null_type)
-				{
 					for (auto const& uBlHeaderObj: blObj["uncleHeaders"].get_array())
 					{
 						mObject uBlH = uBlHeaderObj.get_obj();
@@ -386,7 +385,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 						}
 						uBlHsFromField.push_back(uncleBlockHeader);
 					}
-				}
 
 				// uncles from block RLP
 				vector<BlockInfo> uBlHsFromRlp;
