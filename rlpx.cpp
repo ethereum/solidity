@@ -323,9 +323,48 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 		BOOST_CHECK(digest == fromHex("0x75823d96e23136c89666ee025fb21a432be906512b3dd4a3049e898adb433847"));
 	}
 	
-//	bytes initHello(fromHex("6ef23fcf1cec7312df623f9ae701e63b550cdb8517fefd8dd398fc2acd1d935e6e0434a2b96769078477637347b7b01924fff9ff1c06df2f804df3b0402bbb9f87365b3c6856b45e1e2b6470986813c3816a71bff9d69dd297a5dbd935ab578f6e5d7e93e4506a44f307c332d95e8a4b102585fd8ef9fc9e3e055537a5cec2e9"));
-//	
-//	bytes recvHello(fromHex("6ef23fcf1cec7312df623f9ae701e63be36a1cdd1b19179146019984f3625d4a6e0434a2b96769050577657247b7b02bc6c314470eca7e3ef650b98c83e9d7dd4830b3f718ff562349aead2530a8d28a8484604f92e5fced2c6183f304344ab0e7c301a0c05559f4c25db65e36820b4b909a226171a60ac6cb7beea09376d6d8"));
+	bytes initHello(fromHex("6ef23fcf1cec7312df623f9ae701e63b550cdb8517fefd8dd398fc2acd1d935e6e0434a2b96769078477637347b7b01924fff9ff1c06df2f804df3b0402bbb9f87365b3c6856b45e1e2b6470986813c3816a71bff9d69dd297a5dbd935ab578f6e5d7e93e4506a44f307c332d95e8a4b102585fd8ef9fc9e3e055537a5cec2e9"));
+	
+	bytes recvHello(fromHex("6ef23fcf1cec7312df623f9ae701e63be36a1cdd1b19179146019984f3625d4a6e0434a2b96769050577657247b7b02bc6c314470eca7e3ef650b98c83e9d7dd4830b3f718ff562349aead2530a8d28a8484604f92e5fced2c6183f304344ab0e7c301a0c05559f4c25db65e36820b4b909a226171a60ac6cb7beea09376d6d8"));
+
+	/// test macs of frame headers
+	{
+		SHA3_256 egressmac(m_egressMac);
+		SHA3_256 prevDigest(egressmac);
+		h128 prevDigestOut;
+		prevDigest.TruncatedFinal(prevDigestOut.data(), h128::size);
+		h128 encDigest;
+		m_macEnc.ProcessData(encDigest.data(), prevDigestOut.data(), h128::size);
+		encDigest ^= *(h128*)initHello.data();
+		egressmac.Update(encDigest.data(), h128::size);
+		egressmac.TruncatedFinal(encDigest.data(), h128::size);
+		
+		bytes provided(16);
+		bytesConstRef(&initHello).cropped(16, 16).copyTo(bytesRef(&provided));
+		BOOST_REQUIRE(*(h128*)encDigest.data() == *(h128*)provided.data());
+	}
+	
+	{
+		SHA3_256 ingressmac(m_ingressMac);
+		SHA3_256 prevDigest(ingressmac);
+		h128 prevDigestOut;
+		prevDigest.TruncatedFinal(prevDigestOut.data(), h128::size);
+		h128 encDigest;
+		m_macEnc.ProcessData(encDigest.data(), prevDigestOut.data(), h128::size);
+		encDigest ^= *(h128*)recvHello.data();
+		ingressmac.Update(encDigest.data(), h128::size);
+		ingressmac.TruncatedFinal(encDigest.data(), h128::size);
+		
+		bytes provided(16);
+		bytesConstRef(&recvHello).cropped(16, 16).copyTo(bytesRef(&provided));
+		BOOST_REQUIRE(*(h128*)encDigest.data() == *(h128*)provided.data());
+	}
+	
+	// test decrypt of frame headers for recvHello
+	bytes plaintext(16);
+	m_frameDec.ProcessData(plaintext.data(), recvHello.data(), h128::size);
+	cout << "decrypt recv got: " << *(h128*)plaintext.data();
+	
 }
 
 BOOST_AUTO_TEST_CASE(ecies_interop_test_primitives)
