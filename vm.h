@@ -25,7 +25,9 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
 #include <cstdint>
+
 #include <boost/test/unit_test.hpp>
+
 #include <json_spirit/json_spirit.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>

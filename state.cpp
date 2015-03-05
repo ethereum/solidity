@@ -22,6 +22,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/CommonIO.h>
 #include <libethereum/CanonBlockChain.h>
@@ -241,7 +242,7 @@ BOOST_AUTO_TEST_CASE(stCreateTest)
 
 BOOST_AUTO_TEST_CASE(userDefinedFileState)
 {
-	dev::test::userDefinedTest("--statetest", dev::test::doStateTests);
+	dev::test::userDefinedTest("--singletest", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

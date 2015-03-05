@@ -22,12 +22,14 @@
 
 #include <fstream>
 #include <random>
+
+#include <boost/test/unit_test.hpp>
+
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/CommonIO.h>
 #include <libdevcrypto/TrieDB.h>
 #include "TrieHash.h"
 #include "MemTrie.h"
-#include <boost/test/unit_test.hpp>
 #include "TestHelper.h"
 
 using namespace std;
