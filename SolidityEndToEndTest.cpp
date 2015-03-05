@@ -3008,6 +3008,68 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 	BOOST_CHECK(callContractFunction("storageWrite()") == encodeArgs(0x193));
 }
 
+BOOST_AUTO_TEST_CASE(array_copy_calldata_storage)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[9] m_data;
+			uint[] m_data_dyn;
+			uint8[][] m_byte_data;
+			function store(uint[9] a, uint8[3][] b) external returns (uint8) {
+				m_data = a;
+				m_data_dyn = a;
+				m_byte_data = b;
+				return b[3][1]; // note that access and declaration[ are reversed to each other
+			}
+			function retrieve() returns (uint a, uint b, uint c, uint d, uint e, uint f, uint g) {
+				a = m_data.length;
+				b = m_data[7];
+				c = m_data_dyn.length;
+				d = m_data_dyn[7];
+				e = m_byte_data.length;
+				f = m_byte_data[3].length;
+				g = m_byte_data[3][1];
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("store(uint256[9],uint8[3][])", encodeArgs(
+		21, 22, 23, 24, 25, 26, 27, 28, 29, // a
+		4, // size of b
+		1, 2, 3, // b[0]
+		11, 12, 13, // b[1]
+		21, 22, 23, // b[2]
+		31, 32, 33 // b[3]
+	)) == encodeArgs(32));
+	BOOST_CHECK(callContractFunction("retrieve()") == encodeArgs(
+		9, 28, 9, 28,
+		4, 3, 32));
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_nested_array)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint[4][] a;
+			uint[5][] b;
+			uint[][] c;
+			function test(uint[2][] d) external returns (uint) {
+				a = d;
+				b = a;
+				c = b;
+				return c[1][1] | c[1][2] | c[1][3] | c[1][4];
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test(uint256[2][])", encodeArgs(
+		3,
+		7, 8,
+		9, 10,
+		11, 12
+	)) == encodeArgs(10));
+}
+
 BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base)
 {
 	char const* sourceCode = R"(
