@@ -19,7 +19,9 @@
  * @date 2014
  */
 #include <functional>
+
 #include <boost/test/unit_test.hpp>
+
 #include <libp2p/Host.h>
 #include <libwhisper/WhisperPeer.h>
 #include <libwhisper/WhisperHost.h>
@@ -40,10 +42,10 @@ BOOST_AUTO_TEST_CASE(topic)
 	Host host1("Test", NetworkPreferences(30303, "127.0.0.1", false, true));
 	auto whost1 = host1.registerCapability(new WhisperHost());
 	host1.start();
-	
+
 	while (!host1.isStarted())
 		this_thread::sleep_for(chrono::milliseconds(2));
-	
+
 	bool started = false;
 	unsigned result = 0;
 	std::thread listener([&]()
@@ -71,19 +73,19 @@ BOOST_AUTO_TEST_CASE(topic)
 			}
 			this_thread::sleep_for(chrono::milliseconds(50));
 		}
-		
+
 	});
-	
+
 	Host host2("Test", NetworkPreferences(30300, "127.0.0.1", false, true));
 	auto whost2 = host2.registerCapability(new WhisperHost());
 	host2.start();
-	
+
 	while (!host2.isStarted())
 		this_thread::sleep_for(chrono::milliseconds(2));
-	
+
 	this_thread::sleep_for(chrono::milliseconds(100));
 	host2.addNode(host1.id(), "127.0.0.1", 30303, 30303);
-	
+
 	this_thread::sleep_for(chrono::milliseconds(500));
 
 	while (!started)
@@ -107,7 +109,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	cnote << "Testing Whisper forwarding...";
 	auto oldLogVerbosity = g_logVerbosity;
 	g_logVerbosity = 0;
-	
+
 	// Host must be configured not to share peers.
 	Host host1("Listner", NetworkPreferences(30303, "", false, true));
 	host1.setIdealPeerCount(0);
@@ -115,7 +117,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	host1.start();
 	while (!host1.isStarted())
 		this_thread::sleep_for(chrono::milliseconds(2));
-	
+
 	unsigned result = 0;
 	bool done = false;
 
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 		}
 	});
 
-	
+
 	// Host must be configured not to share peers.
 	Host host2("Forwarder", NetworkPreferences(30305, "", false, true));
 	host2.setIdealPeerCount(1);
@@ -150,7 +152,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	host2.start();
 	while (!host2.isStarted())
 		this_thread::sleep_for(chrono::milliseconds(2));
-	
+
 	Public fwderid;
 	bool startedForwarder = false;
 	std::thread forwarder([&]()
@@ -210,7 +212,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 
 	unsigned result = 0;
 	bool done = false;
-	
+
 	// Host must be configured not to share peers.
 	Host host1("Forwarder", NetworkPreferences(30305, "", false, true));
 	host1.setIdealPeerCount(1);
@@ -223,7 +225,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 	std::thread forwarder([&]()
 	{
 		setThreadName("forwarder");
-		
+
 		this_thread::sleep_for(chrono::milliseconds(500));
 //		ph.addNode("127.0.0.1", 30303, 30303);
 
@@ -245,7 +247,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 
 	while (!startedForwarder)
 		this_thread::sleep_for(chrono::milliseconds(2));
-	
+
 	{
 		Host host2("Sender", NetworkPreferences(30300, "", false, true));
 		host2.setIdealPeerCount(1);
@@ -257,7 +259,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 
 		while (!host2.peerCount())
 			this_thread::sleep_for(chrono::milliseconds(5));
-		
+
 		KeyPair us = KeyPair::create();
 		whost2->post(us.sec(), RLPStream().append(1).out(), BuildTopic("test"));
 		this_thread::sleep_for(chrono::milliseconds(250));

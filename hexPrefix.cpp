@@ -21,11 +21,13 @@
  */
 
 #include <fstream>
+
+#include <boost/test/unit_test.hpp>
+
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcrypto/TrieCommon.h>
-#include <boost/test/unit_test.hpp>
 #include "TestHelper.h"
 
 using namespace std;
@@ -53,8 +55,8 @@ BOOST_AUTO_TEST_CASE(hexPrefix_test)
 		for (auto& i: o["seq"].get_array())
 			v.push_back((byte)i.get_int());
 		auto e = hexPrefixEncode(v, o["term"].get_bool());
-		BOOST_REQUIRE( ! o["out"].is_null() ); 
-		BOOST_CHECK( o["out"].get_str() == toHex(e) ); 
+		BOOST_REQUIRE( ! o["out"].is_null() );
+		BOOST_CHECK( o["out"].get_str() == toHex(e) );
 	}
 }
 

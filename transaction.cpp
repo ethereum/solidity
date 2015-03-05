@@ -90,8 +90,9 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 				o["sender"] = toString(txFromFields.sender());
 			}
-			catch(...)
+			catch(Exception const& _e)
 			{
+				cnote << "Transaction Exception: " << diagnostic_information(_e);
 				o.erase(o.find("transaction"));
 			}
 		}
@@ -103,7 +104,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
 
-BOOST_AUTO_TEST_CASE(TransactionTest)
+BOOST_AUTO_TEST_CASE(ttTransactionTest)
 {
 	dev::test::executeTests("ttTransactionTest", "/TransactionTests", dev::test::doTransactionTests);
 }
@@ -115,7 +116,21 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 
 BOOST_AUTO_TEST_CASE(tt10mbDataField)
 {
-	dev::test::executeTests("tt10mbDataField", "/TransactionTests", dev::test::doTransactionTests);
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--bigdata" || arg == "--all")
+		{
+			auto start = chrono::steady_clock::now();
+
+			dev::test::executeTests("tt10mbDataField", "/TransactionTests", dev::test::doTransactionTests);
+
+			auto end = chrono::steady_clock::now();
+			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+			cnote << "test duration: " << duration.count() << " milliseconds.\n";
+		}
+	}
+
 }
 
 BOOST_AUTO_TEST_CASE(ttCreateTest)
@@ -152,9 +167,9 @@ BOOST_AUTO_TEST_CASE(ttCreateTest)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(userDefinedFileTT)
+BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
-	dev::test::userDefinedTest("--ttTest", dev::test::doTransactionTests);
+	dev::test::userDefinedTest("--singletest", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
