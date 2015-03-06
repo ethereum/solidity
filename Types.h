@@ -122,7 +122,7 @@ public:
 	/// is not a simple big-endian encoding or the type cannot be stored in calldata.
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
 	virtual unsigned getCalldataEncodedSize(bool _padded) const { (void)_padded; return 0; }
-	/// Convenience eversion of @see getCalldataEncodedSize(bool)
+	/// Convenience version of @see getCalldataEncodedSize(bool)
 	unsigned getCalldataEncodedSize() const { return getCalldataEncodedSize(true); }
 	/// @returns true if the type is dynamically encoded in calldata
 	virtual bool isDynamicallySized() const { return false; }
