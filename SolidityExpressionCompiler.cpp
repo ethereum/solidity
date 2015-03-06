@@ -30,7 +30,7 @@
 #include <libsolidity/CompilerContext.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/AST.h>
-#include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 
 using namespace std;
 
@@ -72,8 +72,8 @@ private:
 	Expression* m_expression;
 };
 
-Declaration const& resolveDeclaration(vector<string> const& _namespacedName,
-											  NameAndTypeResolver const& _resolver)
+Declaration const& resolveDeclaration(
+	vector<string> const& _namespacedName, NameAndTypeResolver const& _resolver)
 {
 	Declaration const* declaration = nullptr;
 	// bracers are required, cause msvc couldnt handle this macro in for statement
@@ -112,13 +112,13 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
+			ETH_TEST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
 			inheritanceHierarchy = vector<ContractDefinition const*>(1, contract);
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
+			ETH_TEST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract), "Checking type Requirements failed");
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
