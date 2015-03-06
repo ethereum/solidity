@@ -199,7 +199,6 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
 	{
-		string sourceLine = getLocationFromSources(_sourceCodes, i.getLocation());
 		_out << _prefix;
 		switch (i.m_type)
 		{
@@ -239,7 +238,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
-		_out << string("\t\t") << sourceLine << endl;
+		_out << string("\t\t") << getLocationFromSources(_sourceCodes, i.getLocation()) << endl;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -251,7 +250,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 		for (auto const& i: m_subs)
 		{
 			_out << _prefix << "  " << hex << (unsigned)(u256)i.first << ": " << endl;
-			i.second.streamRLP(_out, _prefix + "  ");
+			i.second.streamRLP(_out, _prefix + "  ", _sourceCodes);
 		}
 	}
 	return _out;
