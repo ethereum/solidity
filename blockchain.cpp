@@ -80,6 +80,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_REQUIRE(o.count("blocks"));
 			mArray blArray;
 			vector<BlockInfo> vBiBlocks;
+			vBiBlocks.push_back(biGenesisBlock);
 			for (auto const& bl: o["blocks"].get_array())
 			{
 				mObject blObj = bl.get_obj();
@@ -107,7 +108,10 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 					// make uncle header valid
 					uncleBlockFromFields.timestamp = (u256)time(0);
-					uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size()-2]);
+					if (vBiBlocks.size() > 2)
+						uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size()-2]);
+					else
+						continue;
 
 					updatePoW(uncleBlockFromFields);
 					writeBlockHeaderToJson(uncleHeaderObj, uncleBlockFromFields);
