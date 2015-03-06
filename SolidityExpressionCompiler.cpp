@@ -30,7 +30,7 @@
 #include <libsolidity/CompilerContext.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/AST.h>
-#include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 
 using namespace std;
 
@@ -43,23 +43,6 @@ namespace test
 
 namespace
 {
-
-// LTODO: Move to some more generic location. We really need it
-/// Make sure that no Exception is thrown during testing. If one is thrown show its info.
-/// @param _expression    The expression for which to make sure no exceptions are thrown
-/// @param _message       A message to act as a prefix to the expression's error information
-#define ETH_TEST_REQUIRE_NO_THROW(_expression, _message)				\
-	do {																\
-		try															\
-		{																\
-			_expression;												\
-		}																\
-		catch (boost::exception const& _e)								\
-		{																\
-			auto msg = std::string(_message) + boost::diagnostic_information(_e); \
-			BOOST_FAIL(msg);											\
-		}																\
-	}while (0)
 
 /// Helper class that extracts the first expression in an AST.
 class FirstExpressionExtractor: private ASTVisitor
