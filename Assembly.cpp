@@ -21,6 +21,8 @@
 
 #include "Assembly.h"
 
+#include <fstream>
+
 #include <libdevcore/Log.h>
 
 using namespace std;
@@ -171,48 +173,74 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 	return _out;
 }
 
-ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
+string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const
+{
+	if (_location.isEmpty() || _sourceCodes.empty() || _location.start >= _location.end || _location.start < 0)
+		return "";
+
+	auto it = _sourceCodes.find(*_location.sourceName);
+	if (it == _sourceCodes.end())
+		return "";
+
+	string const& source = it->second;
+	if (size_t(_location.start) >= source.size())
+		return "";
+
+	string cut = source.substr(_location.start, _location.end - _location.start);
+	auto newLinePos = cut.find_first_of("\n");
+	if (newLinePos != string::npos)
+		cut = cut.substr(0, newLinePos) + "...";
+
+	return move(cut);
+}
+
+ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
+	{
+		string sourceLine = getLocationFromSources(_sourceCodes, i.getLocation());
+		_out << _prefix;
 		switch (i.m_type)
 		{
 		case Operation:
-			_out << _prefix << "  " << instructionInfo((Instruction)(byte)i.m_data).name << endl;
+			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name;
 			break;
 		case Push:
-			_out << _prefix << "  PUSH " << i.m_data << endl;
+			_out << "  PUSH " << i.m_data;
 			break;
 		case PushString:
-			_out << _prefix << "  PUSH \"" << m_strings.at((h256)i.m_data) << "\"" << endl;
+			_out << "  PUSH \"" << m_strings.at((h256)i.m_data) << "\"";
 			break;
 		case PushTag:
-			_out << _prefix << "  PUSH [tag" << i.m_data << "]" << endl;
+			_out << "  PUSH [tag" << i.m_data << "]";
 			break;
 		case PushSub:
-			_out << _prefix << "  PUSH [$" << h256(i.m_data).abridged() << "]" << endl;
+			_out << "  PUSH [$" << h256(i.m_data).abridged() << "]";
 			break;
 		case PushSubSize:
-			_out << _prefix << "  PUSH #[$" << h256(i.m_data).abridged() << "]" << endl;
+			_out << "  PUSH #[$" << h256(i.m_data).abridged() << "]";
 			break;
 		case PushProgramSize:
-			_out << _prefix << "  PUSHSIZE" << endl;
+			_out << "  PUSHSIZE";
 			break;
 		case Tag:
-			_out << _prefix << "tag" << i.m_data << ": " << endl << _prefix << "  JUMPDEST" << endl;
+			_out << "tag" << i.m_data << ": " << endl << _prefix << "  JUMPDEST";
 			break;
 		case PushData:
-			_out << _prefix << "  PUSH [" << hex << (unsigned)i.m_data << "]" << endl;
+			_out << "  PUSH [" << hex << (unsigned)i.m_data << "]";
 			break;
 		case NoOptimizeBegin:
-			_out << _prefix << "DoNotOptimze{{" << endl;
+			_out << "DoNotOptimze{{";
 			break;
 		case NoOptimizeEnd:
-			_out << _prefix << "DoNotOptimze}}" << endl;
+			_out << "DoNotOptimze}}";
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
+		_out << string("\t\t") << sourceLine << endl;
+	}
 
 	if (!m_data.empty() || !m_subs.empty())
 	{

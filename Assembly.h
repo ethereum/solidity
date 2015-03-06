@@ -100,9 +100,7 @@ public:
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMPI); return ret; }
-
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
-
 	AssemblyItems const& getItems() const { return m_items; }
 	AssemblyItem const& back() const { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
@@ -116,18 +114,17 @@ public:
 	void popTo(int _deposit) { while (m_deposit > _deposit) append(Instruction::POP); }
 
 	void injectStart(AssemblyItem const& _i);
-
 	std::string out() const { std::stringstream ret; streamRLP(ret); return ret.str(); }
-
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	void setDeposit(int _deposit) { m_deposit = _deposit; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
-	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "") const;
+	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap()) const;
 
-private:
+protected:
+	std::string getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired() const;
 
