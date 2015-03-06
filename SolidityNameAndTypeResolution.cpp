@@ -1292,6 +1292,24 @@ BOOST_AUTO_TEST_CASE(array_copy_with_different_types_dynamic_static)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_int)
+{
+	char const* text = R"(
+		contract c {
+			uint8 a = 1000;
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
+{
+	char const* text = R"(
+		contract c {
+			uint a = "abc";
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

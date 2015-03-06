@@ -20,6 +20,7 @@
  * State test functions.
  */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <secp256k1/secp256k1.h>
 #include <libethereum/CanonBlockChain.h>
@@ -29,7 +30,21 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-int stateTest()
+namespace dev
+{
+namespace test
+{
+
+int stateTest();
+
+BOOST_AUTO_TEST_SUITE(StateIntegration)
+
+BOOST_AUTO_TEST_CASE(Basic)
+{
+	State s;
+}
+
+BOOST_AUTO_TEST_CASE(Complex)
 {
 	cnote << "Testing State...";
 
@@ -37,13 +52,14 @@ int stateTest()
 	KeyPair myMiner = sha3("Gav's Miner");
 //	KeyPair you = sha3("123");
 
-	Defaults::setDBPath(boost::filesystem::temp_directory_path().string());
+	Defaults::setDBPath(boost::filesystem::temp_directory_path().string() + "/" + toString(chrono::system_clock::now().time_since_epoch().count()));
 
 	OverlayDB stateDB = State::openDB();
 	CanonBlockChain bc;
-	State s(myMiner.address(), stateDB);
-
 	cout << bc;
+
+	State s(myMiner.address(), stateDB);
+	cout << s;
 
 	// Sync up - this won't do much until we use the last state.
 	s.sync(bc);
@@ -52,7 +68,7 @@ int stateTest()
 
 	// Mine to get some ether!
 	s.commitToMine(bc);
-	while (!s.mine(100).completed) {}
+	while (!s.mine(100, true).completed) {}
 	s.completeMine();
 	bc.attemptImport(s.blockData(), stateDB);
 
@@ -65,7 +81,7 @@ int stateTest()
 	// Inject a transaction to transfer funds from miner to me.
 	bytes tx;
 	{
-		Transaction t(1000, 0, 0, me.address(), bytes(), s.transactionsFrom(myMiner.address()), myMiner.secret());
+		Transaction t(1000, 10000, 10000, me.address(), bytes(), s.transactionsFrom(myMiner.address()), myMiner.secret());
 		assert(t.sender() == myMiner.address());
 		tx = t.rlp();
 	}
@@ -76,7 +92,7 @@ int stateTest()
 	// Mine to get some ether and set in stone.
 	s.commitToMine(bc);
 	s.commitToMine(bc);
-	while (!s.mine(50).completed) { s.commitToMine(bc); }
+	while (!s.mine(100, true).completed) {}
 	s.completeMine();
 	bc.attemptImport(s.blockData(), stateDB);
 
@@ -85,7 +101,9 @@ int stateTest()
 	s.sync(bc);
 
 	cout << s;
-
-	return 0;
 }
 
+BOOST_AUTO_TEST_SUITE_END()
+
+}
+}

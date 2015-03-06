@@ -17,35 +17,69 @@
 /** @file dagger.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
- * ProofOfWork test functions.
+ * Dashimoto test functions.
  */
 
-#include <chrono>
-#include <libdevcore/Log.h>
+#include <fstream>
+#include <random>
+#include "JsonSpiritHeaders.h"
+#include <libdevcore/CommonIO.h>
 #include <libethcore/ProofOfWork.h>
+#include <libethcore/Ethasher.h>
+#include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
+
 using namespace std;
-using namespace std::chrono;
 using namespace dev;
 using namespace dev::eth;
 
-int daggerTest()
+namespace js = json_spirit;
+
+using dev::operator <<;
+
+BOOST_AUTO_TEST_SUITE(DashimotoTests)
+
+BOOST_AUTO_TEST_CASE(basic_test)
 {
-	cnote << "Testing ProofOfWork...";
-	// Test dagger
+	string testPath = test::getTestPath();
+
+	testPath += "/PoWTests";
+
+	cnote << "Testing Secure Trie...";
+	js::mValue v;
+	string s = asString(contents(testPath + "/ethash_tests.json"));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'ethash_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	js::read_string(s, v);
+	for (auto& i: v.get_obj())
 	{
-		auto s = steady_clock::now();
-		cout << hex << ProofOfWork().eval((h256)(u256)1, (h256)(u256)0);
-		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
-		cout << hex << ProofOfWork().eval((h256)(u256)1, (h256)(u256)1);
-		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
+		cnote << i.first;
+		js::mObject& o = i.second.get_obj();
+		vector<pair<string, string>> ss;
+		BlockInfo header = BlockInfo::fromHeader(fromHex(o["header"].get_str()));
+		h256 headerHash(o["header_hash"].get_str());
+		Nonce nonce(o["nonce"].get_str());
+		BOOST_REQUIRE_EQUAL(headerHash, header.headerHash(WithoutNonce));
+		BOOST_REQUIRE_EQUAL(nonce, header.nonce);
+
+		unsigned cacheSize(o["cache_size"].get_int());
+		h256 cacheHash(o["cache_hash"].get_str());
+		BOOST_REQUIRE_EQUAL(Ethasher::get()->cache(header).size(), cacheSize);
+		BOOST_REQUIRE_EQUAL(sha3(Ethasher::get()->cache(header)), cacheHash);
+
+#if TEST_FULL
+		unsigned fullSize(o["full_size"].get_int());
+		h256 fullHash(o["full_hash"].get_str());
+		BOOST_REQUIRE_EQUAL(Ethasher::get()->full(header).size(), fullSize);
+		BOOST_REQUIRE_EQUAL(sha3(Ethasher::get()->full(header)), fullHash);
+#endif
+
+		h256 result(o["result"].get_str());
+		Ethasher::Result r = Ethasher::eval(header);
+		BOOST_REQUIRE_EQUAL(r.value, result);
+		BOOST_REQUIRE_EQUAL(r.mixHash, header.mixHash);
 	}
-	{
-		auto s = steady_clock::now();
-		cout << hex << ProofOfWork().eval((h256)(u256)1, (h256)(u256)0);
-		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
-		cout << hex << ProofOfWork().eval((h256)(u256)1, (h256)(u256)1);
-		cout << " " << dec << duration_cast<milliseconds>(steady_clock::now() - s).count() << " ms" << endl;
-	}
-	return 0;
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
 
