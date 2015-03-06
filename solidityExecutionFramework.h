@@ -178,7 +178,7 @@ protected:
 	Address m_contractAddress;
 	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
-	u256 const m_gas = 1000000;
+	u256 const m_gas = 100000000;
 	bytes m_output;
 	eth::LogEntries m_logs;
 };
