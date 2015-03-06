@@ -65,6 +65,16 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	if (_targetType.isDynamicallySized())
 		// store new target length
 		m_context << eth::Instruction::DUP3 << eth::Instruction::DUP3 << eth::Instruction::SSTORE;
+	if (sourceBaseType->getCategory() == Type::Category::Mapping)
+	{
+		solAssert(targetBaseType->getCategory() == Type::Category::Mapping, "");
+		solAssert(_sourceType.getLocation() == ArrayType::Location::Storage, "");
+		// nothing to copy
+		m_context
+			<< eth::Instruction::POP << eth::Instruction::POP
+			<< eth::Instruction::POP << eth::Instruction::POP;
+		return;
+	}
 	// compute hashes (data positions)
 	m_context << eth::Instruction::SWAP1;
 	if (_targetType.isDynamicallySized())
@@ -114,7 +124,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 		else if (sourceBaseType->isValueType())
 			CompilerUtils(m_context).loadFromMemoryDynamic(*sourceBaseType, true, true, false);
 		else
-			solAssert(false, "Copying of unknown type requested.");
+			solAssert(false, "Copying of unknown type requested: " + sourceBaseType->toString());
 		m_context << eth::dupInstruction(2 + sourceBaseType->getSizeOnStack());
 		StorageItem(m_context, *targetBaseType).storeValue(*sourceBaseType, SourceLocation(), true);
 	}
@@ -148,7 +158,7 @@ void ArrayUtils::clearArray(ArrayType const& _type) const
 	solAssert(_type.getLocation() == ArrayType::Location::Storage, "");
 	if (_type.isDynamicallySized())
 		clearDynamicArray(_type);
-	else if (_type.getLength() == 0)
+	else if (_type.getLength() == 0 || _type.getBaseType()->getCategory() == Type::Category::Mapping)
 		m_context << eth::Instruction::POP;
 	else if (_type.getLength() < 5) // unroll loop for small arrays @todo choose a good value
 	{
@@ -242,6 +252,11 @@ void ArrayUtils::resizeDynamicArray(const ArrayType& _type) const
 
 void ArrayUtils::clearStorageLoop(Type const& _type) const
 {
+	if (_type.getCategory() == Type::Category::Mapping)
+	{
+		m_context << eth::Instruction::POP;
+		return;
+	}
 	// stack: end_pos pos
 	eth::AssemblyItem loopStart = m_context.newTag();
 	m_context << loopStart;
