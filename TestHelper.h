@@ -49,34 +49,36 @@ namespace test
 /// @param _expression    The expression for which to make sure no exceptions are thrown
 /// @param _message       A message to act as a prefix to the expression's error information
 #define ETH_TEST_REQUIRE_NO_THROW(_expression, _message)				\
-	do {																\
+	do																	\
+	{																	\
 		try															\
 		{																\
 			_expression;												\
 		}																\
 		catch (boost::exception const& _e)								\
 		{																\
-			auto msg = std::string(_message) + boost::diagnostic_information(_e); \
+			auto msg = std::string(_message"\n") + boost::diagnostic_information(_e); \
 			BOOST_FAIL(msg);											\
 		}																\
-	}while (0)
+	} while (0)
 
 /// Check if an Exception is thrown during testing. If one is thrown show its info and continue the test
 /// Our version of BOOST_CHECK_NO_THROW()
 /// @param _expression    The expression for which to make sure no exceptions are thrown
 /// @param _message       A message to act as a prefix to the expression's error information
 #define ETH_TEST_CHECK_NO_THROW(_expression, _message)					\
-	do {																\
+	do																	\
+	{																	\
 		try															\
 		{																\
 			_expression;												\
 		}																\
 		catch (boost::exception const& _e)								\
 		{																\
-			auto msg = std::string(_message) + boost::diagnostic_information(_e); \
+			auto msg = std::string(_message"\n") + boost::diagnostic_information(_e); \
 			BOOST_MESSAGE(msg);										\
 		}																\
-	}while (0)
+	} while (0)
 
 
 class ImportTest
