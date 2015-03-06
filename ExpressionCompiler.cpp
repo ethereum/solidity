@@ -215,12 +215,20 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	if (op != Token::Assign) // compound assignment
 	{
 		solAssert(_assignment.getType()->isValueType(), "Compound operators not implemented for non-value types.");
-		if (m_currentLValue->storesReferenceOnStack())
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
+		unsigned lvalueSize = m_currentLValue->sizeOnStack();
+		unsigned itemSize = _assignment.getType()->getSizeOnStack();
+		if (lvalueSize > 0)
+		{
+			CompilerUtils(m_context).copyToStackTop(lvalueSize + itemSize, itemSize);
+			CompilerUtils(m_context).copyToStackTop(itemSize + lvalueSize, lvalueSize);
+			// value lvalue_ref value lvalue_ref
+		}
 		m_currentLValue->retrieveValue(_assignment.getLocation(), true);
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
-		if (m_currentLValue->storesReferenceOnStack())
-			m_context << eth::Instruction::SWAP1;
+		if (lvalueSize > 0)
+			// value [lvalue_ref] updated_value
+			for (unsigned i = 0; i < itemSize; ++i)
+				m_context << eth::swapInstruction(itemSize + lvalueSize) << eth::Instruction::POP;
 	}
 	m_currentLValue->storeValue(*_assignment.getRightHandSide().getType(), _assignment.getLocation());
 	m_currentLValue.reset();
@@ -250,6 +258,9 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	case Token::BitNot: // ~
 		m_context << eth::Instruction::NOT;
 		break;
+	case Token::After: // after
+		m_context << eth::Instruction::TIMESTAMP << eth::Instruction::ADD;
+		break;
 	case Token::Delete: // delete
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
 		m_currentLValue->setToZero(_unaryOperation.getLocation());
@@ -259,9 +270,10 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	case Token::Dec: // -- (pre- or postfix)
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
 		m_currentLValue->retrieveValue(_unaryOperation.getLocation());
+		solAssert(m_currentLValue->sizeOnStack() <= 1, "Not implemented.");
 		if (!_unaryOperation.isPrefixOperation())
 		{
-			if (m_currentLValue->storesReferenceOnStack())
+			if (m_currentLValue->sizeOnStack() == 1)
 				m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
 			else
 				m_context << eth::Instruction::DUP1;
@@ -273,7 +285,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::SUB; // @todo avoid the swap
 		// Stack for prefix: [ref] (*ref)+-1
 		// Stack for postfix: *ref [ref] (*ref)+-1
-		if (m_currentLValue->storesReferenceOnStack())
+		if (m_currentLValue->sizeOnStack() == 1)
 			m_context << eth::Instruction::SWAP1;
 		m_currentLValue->storeValue(
 			*_unaryOperation.getType(), _unaryOperation.getLocation(),
@@ -714,18 +726,24 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	}
 	else if (baseType.getCategory() == Type::Category::Array)
 	{
+		// stack layout: <base_ref> [<length>] <index>
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
-		solAssert(arrayType.getLocation() == ArrayType::Location::Storage,
-			"TODO: Index acces only implemented for storage arrays.");
-		solAssert(!arrayType.isByteArray(), "TODO: Index acces not implemented for byte arrays.");
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
+		ArrayType::Location location = arrayType.getLocation();
+		eth::Instruction load =
+			location == ArrayType::Location::Storage ? eth::Instruction::SLOAD :
+			location == ArrayType::Location::Memory ? eth::Instruction::MLOAD :
+			eth::Instruction::CALLDATALOAD;
 
 		_indexAccess.getIndexExpression()->accept(*this);
 		// retrieve length
-		if (arrayType.isDynamicallySized())
-			m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
-		else
+		if (!arrayType.isDynamicallySized())
 			m_context << arrayType.getLength();
+		else if (location == ArrayType::Location::CallData)
+			// length is stored on the stack
+			m_context << eth::Instruction::SWAP1;
+		else
+			m_context << eth::Instruction::DUP2 << load;
 		// stack: <base_ref> <index> <length>
 		// check out-of-bounds access
 		m_context << eth::Instruction::DUP2 << eth::Instruction::LT;
@@ -735,14 +753,64 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 
 		m_context << legalAccess;
 		// stack: <base_ref> <index>
-		m_context << arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL;
-		if (arrayType.isDynamicallySized())
+		if (arrayType.isByteArray())
+			// byte array is packed differently, especially in storage
+			switch (location)
+			{
+			case ArrayType::Location::Storage:
+				// byte array index storage lvalue on stack (goal):
+				// <ref> <byte_number> = <base_ref + index / 32> <index % 32>
+				m_context << u256(32) << eth::Instruction::SWAP2;
+				CompilerUtils(m_context).computeHashStatic();
+				// stack: 32 index data_ref
+				m_context
+					<< eth::Instruction::DUP3 << eth::Instruction::DUP3
+					<< eth::Instruction::DIV << eth::Instruction::ADD
+				// stack: 32 index (data_ref + index / 32)
+					<< eth::Instruction::SWAP2 << eth::Instruction::SWAP1 << eth::Instruction::MOD;
+				setLValue<StorageByteArrayElement>(_indexAccess);
+				break;
+			case ArrayType::Location::CallData:
+				// no lvalue, just retrieve the value
+				m_context
+					<< eth::Instruction::ADD << eth::Instruction::CALLDATALOAD
+					<< u256(0) << eth::Instruction::BYTE;
+				break;
+			case ArrayType::Location::Memory:
+				solAssert(false, "Memory lvalues not yet implemented.");
+			}
+		else
 		{
-			m_context << eth::Instruction::SWAP1;
-			CompilerUtils(m_context).computeHashStatic();
+			u256 elementSize =
+				location == ArrayType::Location::Storage ? arrayType.getBaseType()->getStorageSize() :
+				CompilerUtils::getPaddedSize(arrayType.getBaseType()->getCalldataEncodedSize());
+			solAssert(elementSize != 0, "Invalid element size.");
+			if (elementSize > 1)
+				m_context << elementSize << eth::Instruction::MUL;
+			if (arrayType.isDynamicallySized())
+			{
+				if (location == ArrayType::Location::Storage)
+				{
+					m_context << eth::Instruction::SWAP1;
+					CompilerUtils(m_context).computeHashStatic();
+				}
+				else if (location == ArrayType::Location::Memory)
+					m_context << u256(32) << eth::Instruction::ADD;
+			}
+			m_context << eth::Instruction::ADD;
+			switch (location)
+			{
+			case ArrayType::Location::CallData:
+				// no lvalue
+				CompilerUtils(m_context).loadFromMemoryDynamic(*arrayType.getBaseType(), true, true, false);
+				break;
+			case ArrayType::Location::Storage:
+				setLValueToStorageItem(_indexAccess);
+				break;
+			case ArrayType::Location::Memory:
+				solAssert(false, "Memory lvalues not yet implemented.");
+			}
 		}
-		m_context << eth::Instruction::ADD;
-		setLValueToStorageItem(_indexAccess);
 	}
 	else
 		solAssert(false, "Index access only allowed for mappings or arrays.");

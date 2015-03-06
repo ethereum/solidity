@@ -328,8 +328,30 @@ bool VariableDeclaration::isLValue() const
 
 void VariableDeclaration::checkTypeRequirements()
 {
-	if (m_value)
+	// Variables can be declared without type (with "var"), in which case the first assignment
+	// sets the type.
+	// Note that assignments before the first declaration are legal because of the special scoping
+	// rules inherited from JavaScript.
+	if (!m_value)
+		return;
+	if (m_type)
+		m_value->expectType(*m_type);
+	else
+	{
+		// no type declared and no previous assignment, infer the type
 		m_value->checkTypeRequirements();
+		TypePointer type = m_value->getType();
+		if (type->getCategory() == Type::Category::IntegerConstant)
+		{
+			auto intType = dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType();
+			if (!intType)
+				BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString() + "."));
+			type = intType;
+		}
+		else if (type->getCategory() == Type::Category::Void)
+			BOOST_THROW_EXCEPTION(createTypeError("Variable cannot have void type."));
+		m_type = type;
+	}
 }
 
 bool VariableDeclaration::isExternalFunctionParameter() const
@@ -445,32 +467,9 @@ void Return::checkTypeRequirements()
 
 void VariableDeclarationStatement::checkTypeRequirements()
 {
-	// Variables can be declared without type (with "var"), in which case the first assignment
-	// sets the type.
-	// Note that assignments before the first declaration are legal because of the special scoping
-	// rules inherited from JavaScript.
-	if (m_variable->getValue())
-	{
-		if (m_variable->getType())
-			m_variable->getValue()->expectType(*m_variable->getType());
-		else
-		{
-			// no type declared and no previous assignment, infer the type
-			m_variable->getValue()->checkTypeRequirements();
-			TypePointer type = m_variable->getValue()->getType();
-			if (type->getCategory() == Type::Category::IntegerConstant)
-			{
-				auto intType = dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType();
-				if (!intType)
-					BOOST_THROW_EXCEPTION(m_variable->getValue()->createTypeError("Invalid integer constant " + type->toString()));
-				type = intType;
-			}
-			else if (type->getCategory() == Type::Category::Void)
-				BOOST_THROW_EXCEPTION(m_variable->createTypeError("var cannot be void type"));
-			m_variable->setType(type);
-		}
-	}
+	m_variable->checkTypeRequirements();
 }
+
 void Assignment::checkTypeRequirements()
 {
 	m_leftHandSide->checkTypeRequirements();
@@ -671,8 +670,11 @@ void IndexAccess::checkTypeRequirements()
 		if (!m_index)
 			BOOST_THROW_EXCEPTION(createTypeError("Index expression cannot be omitted."));
 		m_index->expectType(IntegerType(256));
-		m_type = type.getBaseType();
-		m_isLValue = true;
+		if (type.isByteArray())
+			m_type = make_shared<IntegerType>(8, IntegerType::Modifier::Hash);
+		else
+			m_type = type.getBaseType();
+		m_isLValue = type.getLocation() != ArrayType::Location::CallData;
 		break;
 	}
 	case Type::Category::Mapping:

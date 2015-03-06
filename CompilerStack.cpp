@@ -180,9 +180,9 @@ dev::h256 CompilerStack::getContractCodeHash(string const& _contractName) const
 	return dev::sha3(getRuntimeBytecode(_contractName));
 }
 
-void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName) const
+void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes) const
 {
-	getContract(_contractName).compiler->streamAssembly(_outStream);
+	getContract(_contractName).compiler->streamAssembly(_outStream, _sourceCodes);
 }
 
 string const& CompilerStack::getInterface(string const& _contractName) const

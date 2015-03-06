@@ -195,7 +195,8 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 		return TypePointer();
 	// for non-hash integers, we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
-			_operator == Token::Inc || _operator == Token::Dec)
+			_operator == Token::Inc || _operator == Token::Dec ||
+			_operator == Token::After)
 		return shared_from_this();
 	else
 		return TypePointer();
@@ -251,6 +252,7 @@ IntegerConstantType::IntegerConstantType(Literal const& _literal)
 	switch (_literal.getSubDenomination())
 	{
 	case Literal::SubDenomination::Wei:
+	case Literal::SubDenomination::Second:
 	case Literal::SubDenomination::None:
 		break;
 	case Literal::SubDenomination::Szabo:
@@ -261,6 +263,21 @@ IntegerConstantType::IntegerConstantType(Literal const& _literal)
 		break;
 	case Literal::SubDenomination::Ether:
 		m_value *= bigint("1000000000000000000");
+		break;
+	case Literal::SubDenomination::Minute:
+		m_value *= bigint("60");
+		break;
+	case Literal::SubDenomination::Hour:
+		m_value *= bigint("3600");
+		break;
+	case Literal::SubDenomination::Day:
+		m_value *= bigint("86400");
+		break;
+	case Literal::SubDenomination::Week:
+		m_value *= bigint("604800");
+		break;
+	case Literal::SubDenomination::Year:
+		m_value *= bigint("31536000");
 		break;
 	}
 }
@@ -291,6 +308,8 @@ TypePointer IntegerConstantType::unaryOperatorResult(Token::Value _operator) con
 	case Token::Sub:
 		value = -m_value;
 		break;
+	case Token::After:
+		return shared_from_this();
 	default:
 		return TypePointer();
 	}
