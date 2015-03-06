@@ -1157,7 +1157,7 @@ public:
 	void checkTypeRequirementsWithFunctionCall(FunctionCall const& _functionCall);
 	void checkTypeRequirementsFromVariableDeclaration();
 
-	void overloadResolution(FunctionCall const& _functionCall);
+	Declaration const* overloadResolution(FunctionCall const& _functionCall);
 private:
 
 	ASTPointer<ASTString> m_name;

@@ -822,11 +822,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 void ExpressionCompiler::endVisit(Identifier const& _identifier)
 {
 	Declaration const* declaration = _identifier.getReferencedDeclaration();
-	if (declaration == nullptr)
-	{
-		// no-op
-	}
-	else if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
+	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
 		if (magicVar->getType()->getCategory() == Type::Category::Contract)
 			// "this" or "super"
@@ -848,6 +844,13 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	else if (dynamic_cast<EnumDefinition const*>(declaration))
 	{
 		// no-op
+	}
+	else if (declaration == nullptr && _identifier.getOverloadedDeclarations().size() > 1)
+	{
+		// var x = f;
+		declaration = *_identifier.getOverloadedDeclarations().begin();
+		FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration);
+		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
 	}
 	else
 	{

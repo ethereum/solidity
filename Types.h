@@ -527,13 +527,14 @@ private:
 class OverloadedFunctionType: public Type
 {
 public:
-	explicit OverloadedFunctionType(std::set<Declaration const*> const& _overloadedDeclarations, Identifier* _identifier):
-		m_overloadedDeclarations(_overloadedDeclarations), m_identifier(_identifier) {}
+	explicit OverloadedFunctionType(Identifier* _identifier): m_identifier(_identifier) {}
+
 	virtual Category getCategory() const override { return Category::OverloadedFunctions; }
 	virtual std::string toString() const override { return "OverloadedFunctions"; }
 
-// private:
-	std::set<Declaration const*> m_overloadedDeclarations;
+	Identifier* getIdentifier() const { return m_identifier; }
+
+private:
 	Identifier * m_identifier;
 };
 

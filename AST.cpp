@@ -674,15 +674,23 @@ void FunctionCall::checkTypeRequirements()
 	else if (OverloadedFunctionType const* overloadedTypes = dynamic_cast<OverloadedFunctionType const*>(expressionType))
 	{
 		// this only applies to "x(3)" where x is assigned by "var x = f;" where f is an overloaded functions.
-		overloadedTypes->m_identifier->overloadResolution(*this);
-		FunctionType const* functionType = dynamic_cast<FunctionType const*>(overloadedTypes->m_identifier->getType().get());
+		auto identifier = dynamic_cast<Identifier*>(m_expression.get());
+		solAssert(identifier, "only applies to 'var x = f;'");
 
-		// @todo actually the return type should be an anonymous struct,
-		// but we change it to the type of the first return value until we have structs
+		Declaration const* function = overloadedTypes->getIdentifier()->overloadResolution(*this);
+		if (!function)
+			BOOST_THROW_EXCEPTION(createTypeError("Can't resolve declarations"));
+
+		identifier->setReferencedDeclaration(*function);
+		identifier->checkTypeRequirements();
+
+		TypePointer type = identifier->getType();
+		FunctionType const* functionType = dynamic_cast<FunctionType const*>(type.get());
+
 		if (functionType->getReturnParameterTypes().empty())
 			m_type = make_shared<VoidType>();
 		else
-			m_type = functionType->getReturnParameterTypes().front();		
+			m_type = functionType->getReturnParameterTypes().front();
 	}
 	else
 		BOOST_THROW_EXCEPTION(createTypeError("Type is not callable."));
@@ -781,7 +789,7 @@ void Identifier::checkTypeRequirementsWithFunctionCall(FunctionCall const& _func
 	solAssert(m_referencedDeclaration || !m_overloadedDeclarations.empty(), "Identifier not resolved.");
 
 	if (!m_referencedDeclaration)
-		overloadResolution(_functionCall);
+		setReferencedDeclaration(*overloadResolution(_functionCall));
 
 	checkTypeRequirements();
 }
@@ -791,7 +799,7 @@ void Identifier::checkTypeRequirementsFromVariableDeclaration()
 	solAssert(m_referencedDeclaration || !m_overloadedDeclarations.empty(), "Identifier not resolved.");
 
 	if (!m_referencedDeclaration)
-		m_type = make_shared<OverloadedFunctionType>(m_overloadedDeclarations, this);
+		m_type = make_shared<OverloadedFunctionType>(this);
 	else
 		checkTypeRequirements();
 
@@ -808,12 +816,10 @@ void Identifier::checkTypeRequirements()
 		BOOST_THROW_EXCEPTION(createTypeError("Declaration referenced before type could be determined."));
 }
 
-void Identifier::overloadResolution(FunctionCall const& _functionCall)
+Declaration const* Identifier::overloadResolution(FunctionCall const& _functionCall)
 {
 	solAssert(m_overloadedDeclarations.size() > 1, "FunctionIdentifier not resolved.");
 	solAssert(!m_referencedDeclaration, "Referenced declaration should be null before overload resolution.");
-
-	bool resolved = false;
 
 	std::vector<ASTPointer<Expression const>> arguments = _functionCall.getArguments();
 	std::vector<ASTPointer<ASTString>> const& argumentNames = _functionCall.getNames();
@@ -844,7 +850,7 @@ void Identifier::overloadResolution(FunctionCall const& _functionCall)
 			{
 				return declaration->getScope() == possibles.front()->getScope();
 			}))
-				setReferencedDeclaration(*possibles.front());
+				return possibles.front();
 		else
 			BOOST_THROW_EXCEPTION(createTypeError("Can't resolve identifier"));
 	}
@@ -852,6 +858,7 @@ void Identifier::overloadResolution(FunctionCall const& _functionCall)
 		// named arguments
 		// TODO: don't support right now
 		BOOST_THROW_EXCEPTION(createTypeError("Named arguments with overloaded functions are not supported yet."));
+	return nullptr;
 }
 
 void ElementaryTypeNameExpression::checkTypeRequirements()
