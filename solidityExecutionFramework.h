@@ -25,7 +25,7 @@
 
 #include <string>
 #include <tuple>
-#include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
@@ -46,16 +46,8 @@ public:
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
 		dev::solidity::CompilerStack compiler(m_addStandardSources);
-		try
-		{
-			compiler.addSource("", _sourceCode);
-			compiler.compile(m_optimize);
-		}
-		catch(boost::exception const& _e)
-		{
-			auto msg = std::string("Compiling contract failed with: ") + boost::diagnostic_information(_e);
-			BOOST_FAIL(msg);
-		}
+		compiler.addSource("", _sourceCode);
+		ETH_TEST_REQUIRE_NO_THROW(compiler.compile(m_optimize), "Compiling contract failed");
 
 		bytes code = compiler.getBytecode(_contractName);
 		sendMessage(code, true, _value);
