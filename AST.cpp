@@ -493,14 +493,10 @@ void VariableDeclarationStatement::checkTypeRequirements()
 	if (m_variable->getValue())
 	{
 		if (m_variable->getType())
-		{
-			std::cout << "getType() ok" << std::endl;
 			m_variable->getValue()->expectType(*m_variable->getType());
-		}
 		else
 		{
 			// no type declared and no previous assignment, infer the type
-			std::cout << "here's where called...." << std::endl;
 			Identifier* identifier = dynamic_cast<Identifier*>(m_variable->getValue().get());
 			if (identifier)
 				identifier->checkTypeRequirementsFromVariableDeclaration();
@@ -804,14 +800,9 @@ void Identifier::checkTypeRequirementsFromVariableDeclaration()
 
 void Identifier::checkTypeRequirements()
 {
-	// var x = f; TODO!
 	solAssert(m_referencedDeclaration, "Identifier not resolved.");
 
 	m_isLValue = m_referencedDeclaration->isLValue();
-	if (m_isLValue)
-		std::cout << "Identifier: " << string(getName()) << " -> true" << std::endl;
-	else
-		std::cout << "Identifier: " << string(getName()) << " -> true" << std::endl;
 	m_type = m_referencedDeclaration->getType(m_currentContract);
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Declaration referenced before type could be determined."));
@@ -846,7 +837,6 @@ void Identifier::overloadResolution(FunctionCall const& _functionCall)
 							})))
 				possibles.push_back(declaration);			
 		}
-		std::cout << "possibles: " << possibles.size() << std::endl;
 		if (possibles.empty())
 			BOOST_THROW_EXCEPTION(createTypeError("Can't resolve identifier"));
 		else if (std::none_of(possibles.cbegin() + 1, possibles.cend(),
@@ -859,11 +849,9 @@ void Identifier::overloadResolution(FunctionCall const& _functionCall)
 			BOOST_THROW_EXCEPTION(createTypeError("Can't resolve identifier"));
 	}
 	else
-	{
 		// named arguments
 		// TODO: don't support right now
-		// BOOST_THROW_EXCEPTION(createTypeError("Named arguments with overloaded functions are not supported yet."));
-	}
+		BOOST_THROW_EXCEPTION(createTypeError("Named arguments with overloaded functions are not supported yet."));
 }
 
 void ElementaryTypeNameExpression::checkTypeRequirements()
