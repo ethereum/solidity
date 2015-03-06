@@ -589,11 +589,12 @@ bool ArrayType::operator==(Type const& _other) const
 	return isDynamicallySized() || getLength()  == other.getLength();
 }
 
-unsigned ArrayType::getCalldataEncodedSize() const
+unsigned ArrayType::getCalldataEncodedSize(bool _padded) const
 {
 	if (isDynamicallySized())
 		return 0;
-	bigint size = bigint(getLength()) * (isByteArray() ? 1 : getBaseType()->getCalldataEncodedSize());
+	bigint size = bigint(getLength()) * (isByteArray() ? 1 : getBaseType()->getCalldataEncodedSize(_padded));
+	size = ((size + 31) / 32) * 32;
 	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
 	return unsigned(size);
 }

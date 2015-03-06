@@ -150,7 +150,7 @@ void Compiler::appendConstructor(FunctionDefinition const& _constructor)
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
 	unsigned argumentSize = 0;
 	for (ASTPointer<VariableDeclaration> const& var: _constructor.getParameters())
-		argumentSize += CompilerUtils::getPaddedSize(var->getType()->getCalldataEncodedSize());
+		argumentSize += var->getType()->getCalldataEncodedSize();
 
 	if (argumentSize > 0)
 	{
@@ -208,8 +208,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 
 	bigint parameterHeadEnd = offset;
 	for (TypePointer const& type: _typeParameters)
-		parameterHeadEnd += type->isDynamicallySized() ? 32 :
-			CompilerUtils::getPaddedSize(type->getCalldataEncodedSize());
+		parameterHeadEnd += type->isDynamicallySized() ? 32 : type->getCalldataEncodedSize();
 	solAssert(parameterHeadEnd <= numeric_limits<unsigned>::max(), "Arguments too large.");
 
 	unsigned stackHeightOfPreviousDynamicArgument = 0;
@@ -228,8 +227,8 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 					// Retrieve data start offset by adding length to start offset of previous dynamic type
 					unsigned stackDepth = m_context.getStackHeight() - stackHeightOfPreviousDynamicArgument;
 					m_context << eth::dupInstruction(stackDepth) << eth::dupInstruction(stackDepth);
-					ArrayUtils(m_context).convertLengthToSize(*previousDynamicType);
-					m_context << u256(32) << eth::Instruction::MUL << eth::Instruction::ADD;
+					ArrayUtils(m_context).convertLengthToSize(*previousDynamicType, true);
+					m_context << eth::Instruction::ADD;
 				}
 				else
 					m_context << u256(parameterHeadEnd);
@@ -240,7 +239,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 			else
 			{
 				m_context << u256(offset);
-				offset += CompilerUtils::getPaddedSize(type->getCalldataEncodedSize());
+				offset += type->getCalldataEncodedSize();
 			}
 			break;
 		default:
