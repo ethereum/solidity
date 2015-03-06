@@ -3210,6 +3210,27 @@ BOOST_AUTO_TEST_CASE(overloaded_function_call_with_if_else)
 			}
 		}
 	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(3));
+	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_with_var)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint k) returns(uint d) { return k; }
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function g(bool flag) returns(uint d) {
+				var x = f;
+				if (flag)
+					return x(3);
+				else
+					return x(3, 7);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(3));
 	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs(10));
 }
