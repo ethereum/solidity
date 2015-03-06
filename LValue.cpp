@@ -234,7 +234,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 }
 
 /// Used in StorageByteArrayElement
-static IntegerType byteType(8, IntegerType::Modifier::Hash);
+static FixedBytesType byteType(1);
 
 StorageByteArrayElement::StorageByteArrayElement(CompilerContext& _compilerContext):
 	LValue(_compilerContext, byteType)
