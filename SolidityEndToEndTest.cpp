@@ -3019,7 +3019,7 @@ BOOST_AUTO_TEST_CASE(array_copy_calldata_storage)
 				m_data = a;
 				m_data_dyn = a;
 				m_byte_data = b;
-				return b[3][1]; // note that access and declaration[ are reversed to each other
+				return b[3][1]; // note that access and declaration are reversed to each other
 			}
 			function retrieve() returns (uint a, uint b, uint c, uint d, uint e, uint f, uint g) {
 				a = m_data.length;
