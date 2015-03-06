@@ -10,7 +10,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0x601080600c6000396000f3006000355415600957005b60203560003555) [[ 0 ]] (CREATE 23 3 29) }",
                 "storage": {}
@@ -23,7 +23,7 @@
             "value" : "1000000000000000000",
             "data" : "",
             "gasPrice" : "100000000000000",
-            "gas" : "10000"
+            "gas" : "100000"
         }
     },
 
@@ -51,7 +51,7 @@
             "value" : "100",
             "data" : "",
             "gasPrice" : "100000000000000",
-            "gas" : "10000"
+            "gas" : "100000"
         }
     },
 
@@ -79,7 +79,7 @@
             "value" : "100",
             "data" : "",
             "gasPrice" : "100000000000000",
-            "gas" : "10000"
+            "gas" : "100000"
         }
     },
 
@@ -107,7 +107,7 @@
             "value" : "100",
             "data" : "",
             "gasPrice" : "100000000000000",
-            "gas" : "10000"
+            "gas" : "100000"
         }
     },
 
@@ -122,7 +122,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
@@ -161,14 +161,14 @@
                 "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
                 "code" : "0x4243434242434243f14555",
                 "data" : "0x",
-                "gas" : "10000",
+                "gas" : "100000",
                 "gasPrice" : "100000000000000",
                 "origin" : "cd1722f3947def4cf144679da39c4c32bdc35681",
                 "value" : "1000000000000000000"
             },
             "pre" : {
                 "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                    "balance" : "1000000000000000000",
+                    "balance" : "100000000000000000000000",
                     "code" : "0x4243434242434243f14555",
                     "nonce" : "0",
                     "storage" : {
@@ -188,7 +188,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 0 2) }",
                 "storage": {}
@@ -224,7 +224,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) (POST 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 ) }",
                 "storage": {}
@@ -260,7 +260,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLSTATELESS 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 0 2 ) }",
                 "storage": {}
@@ -296,7 +296,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 0 2 ) }",
                 "storage": {}
@@ -333,7 +333,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 100 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
@@ -369,7 +369,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 987654321 64 64 0) }",
                 "storage": {}
@@ -405,7 +405,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 9865432 64 0) }",
                 "storage": {}
@@ -441,7 +441,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 987654 1) }",
                 "storage": {}
@@ -478,7 +478,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 987654 0) }",
                 "storage": {}
@@ -514,7 +514,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 500 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 987654 0 64 0) }",
                 "storage": {}
@@ -556,7 +556,7 @@
                  "storage": {}
              },
              "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
-                 "balance" : "1000000000000000000",
+                 "balance" : "100000000000000000000000",
                  "nonce" : "0",
                  "code" : "{ [[ 0 ]] (+ (SLOAD 0) 1) [[ 1 ]] (CALL (- (GAS) 224) (ADDRESS) 0 0 0 0 0) } ",
                  "storage": {}
@@ -668,7 +668,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (SUICIDE (CALLER))}",
                 "storage": {}
@@ -704,7 +704,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (SUICIDE 0xaa1722f3947def4cf144679da39c4c32bdc35681 )}",
                 "storage": {}
@@ -740,7 +740,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (SUICIDE (ADDRESS) )}",
                 "storage": {}
@@ -866,7 +866,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) (POST 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 ) }",
                 "storage": {}
@@ -902,7 +902,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLSTATELESS 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
@@ -938,7 +938,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALLCODE 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
@@ -974,7 +974,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "0x6000355415600957005b60203560003555",
                 "storage": {}
@@ -987,7 +987,7 @@
             "value" : "1000000000000000000",
             "data" : "0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffafffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa",
             "gasPrice" : "100000000000000",
-            "gas" : "10000"
+            "gas" : "100000"
         }
     },
 
@@ -1002,7 +1002,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) }",
                 "storage": {}
@@ -1038,7 +1038,7 @@
          },
          "pre" : {
              "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                 "balance" : "1000000000000000000",
+                 "balance" : "100000000000000000000000",
                  "nonce" : "0",
                  "code" : "{  [[ (PC) ]] (CALL (- (GAS) 1000) 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) }",
                  "storage": {}
@@ -1074,7 +1074,7 @@
          },
          "pre" : {
              "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                 "balance" : "1000000000000000000",
+                 "balance" : "100000000000000000000000",
                  "nonce" : "0",
                  "code" : "{  [[ 0 ]] (ADD (SLOAD 0) 1) (CALL (- (GAS) 1000) 0x945304eb96065b2a98b57a48a06ae28d285a71b5 1 0 0 0 0) }",
                  "storage": {}
@@ -1146,7 +1146,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0) (SUICIDE 0x945304eb96065b2a98b57a48a06ae28d285a71b5)  }",
                 "storage": {}
@@ -1182,7 +1182,7 @@
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "balance" : "1000000000000000000",
+                "balance" : "100000000000000000000000",
                 "nonce" : "0",
                 "code" : "{  [[ (PC) ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 24 0 0 0 0)   }",
                 "storage": {}

@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(jsToAddress)
 	cnote << "Testing jsToPublic...";
 	KeyPair kp = KeyPair::create();
 	string string = toJS(kp.address());
-	Address address = dev::eth::jsToAddress(string);
+	Address address = dev::jsToAddress(string);
 	BOOST_CHECK_EQUAL(kp.address(), address);
 }
 

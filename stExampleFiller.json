@@ -26,7 +26,7 @@
         },
         "transaction" : {
             "data" : "",
-            "gasLimit" : "10000",
+            "gasLimit" : "400000",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
