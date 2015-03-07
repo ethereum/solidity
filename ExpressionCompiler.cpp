@@ -48,7 +48,7 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	if (!_varDecl.getValue())
 		return;
 	solAssert(!!_varDecl.getValue()->getType(), "Type information not available.");
-	CompilerContext::LocationSetter locationSetter(m_context, &_varDecl);
+	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.getValue()->accept(*this);
 	appendTypeConversion(*_varDecl.getValue()->getType(), *_varDecl.getType(), true);
 
@@ -57,7 +57,7 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_varDecl);
+	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
 	unsigned length = 0;
@@ -204,7 +204,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_assignment);
+	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
 	_assignment.getRightHandSide().accept(*this);
 	if (_assignment.getType()->isValueType())
 		appendTypeConversion(*_assignment.getRightHandSide().getType(), *_assignment.getType());
@@ -237,7 +237,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 
 bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_unaryOperation);
+	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
 	//@todo type checking and creating code for an operator should be in the same place:
 	// the operator should know how to convert itself and to which types it applies, so
 	// put this code together with "Type::acceptsBinary/UnaryOperator" into a class that
@@ -307,7 +307,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 
 bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_binaryOperation);
+	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.getLeftExpression();
 	Expression const& rightExpression = _binaryOperation.getRightExpression();
 	Type const& commonType = _binaryOperation.getCommonType();
@@ -354,7 +354,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_functionCall);
+	CompilerContext::LocationSetter locationSetter(m_context, _functionCall);
 	using Location = FunctionType::Location;
 	if (_functionCall.isTypeConversion())
 	{
@@ -572,7 +572,7 @@ bool ExpressionCompiler::visit(NewExpression const&)
 
 void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_memberAccess);
+	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
 	ASTString const& member = _memberAccess.getMemberName();
 	switch (_memberAccess.getExpression().getType()->getCategory())
 	{
@@ -707,7 +707,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 
 bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_indexAccess);
+	CompilerContext::LocationSetter locationSetter(m_context, _indexAccess);
 	_indexAccess.getBaseExpression().accept(*this);
 
 	Type const& baseType = *_indexAccess.getBaseExpression().getType();
@@ -821,6 +821,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 
 void ExpressionCompiler::endVisit(Identifier const& _identifier)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, _identifier);
 	Declaration const* declaration = _identifier.getReferencedDeclaration();
 	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
@@ -853,6 +854,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 
 void ExpressionCompiler::endVisit(Literal const& _literal)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, _literal);
 	switch (_literal.getType()->getCategory())
 	{
 	case Type::Category::IntegerConstant:
