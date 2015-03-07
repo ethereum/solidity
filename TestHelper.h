@@ -44,12 +44,48 @@ void connectClients(Client& c1, Client& c2);
 namespace test
 {
 
+/// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
+/// Our version of BOOST_REQUIRE_NO_THROW()
+/// @param _expression    The expression for which to make sure no exceptions are thrown
+/// @param _message       A message to act as a prefix to the expression's error information
+#define ETH_TEST_REQUIRE_NO_THROW(_expression, _message)				\
+	do																	\
+	{																	\
+		try															\
+		{																\
+			_expression;												\
+		}																\
+		catch (boost::exception const& _e)								\
+		{																\
+			auto msg = std::string(_message"\n") + boost::diagnostic_information(_e); \
+			BOOST_FAIL(msg);											\
+		}																\
+	} while (0)
+
+/// Check if an Exception is thrown during testing. If one is thrown show its info and continue the test
+/// Our version of BOOST_CHECK_NO_THROW()
+/// @param _expression    The expression for which to make sure no exceptions are thrown
+/// @param _message       A message to act as a prefix to the expression's error information
+#define ETH_TEST_CHECK_NO_THROW(_expression, _message)					\
+	do																	\
+	{																	\
+		try															\
+		{																\
+			_expression;												\
+		}																\
+		catch (boost::exception const& _e)								\
+		{																\
+			auto msg = std::string(_message"\n") + boost::diagnostic_information(_e); \
+			BOOST_MESSAGE(msg);										\
+		}																\
+	} while (0)
+
+
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o) : m_TestObject(_o) {}
+	ImportTest(json_spirit::mObject& _o) : m_statePre(Address(), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o) {}
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
-
 	// imports
 	void importEnv(json_spirit::mObject& _o);
 	void importState(json_spirit::mObject& _o, eth::State& _state);

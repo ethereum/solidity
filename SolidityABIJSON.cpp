@@ -20,7 +20,7 @@
  * Unit tests for the solidity compiler JSON Interface output.
  */
 
-#include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 #include <libsolidity/CompilerStack.h>
 #include <json/json.h>
 #include <libdevcore/Exceptions.h>
@@ -39,15 +39,7 @@ public:
 
 	void checkInterface(std::string const& _code, std::string const& _expectedInterfaceString)
 	{
-		try
-		{
-			m_compilerStack.parse(_code);
-		}
-		catch(boost::exception const& _e)
-		{
-			auto msg = std::string("Parsing contract failed with: ") + boost::diagnostic_information(_e);
-			BOOST_FAIL(msg);
-		}
+		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse(_code), "Parsing contract failed");
 		std::string generatedInterfaceString = m_compilerStack.getMetadata("", DocumentationType::ABIInterface);
 		Json::Value generatedInterface;
 		m_reader.parse(generatedInterfaceString, generatedInterface);

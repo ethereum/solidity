@@ -20,7 +20,7 @@
  * Unit tests for generating source interfaces for Solidity contracts.
  */
 
-#include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/AST.h>
 
@@ -42,9 +42,9 @@ public:
 	ContractDefinition const& checkInterface(string const& _code, string const& _contractName = "")
 	{
 		m_code = _code;
-		BOOST_REQUIRE_NO_THROW(m_compilerStack.parse(_code));
+		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse(_code), "Parsing failed");
 		m_interface = m_compilerStack.getMetadata("", DocumentationType::ABISolidityInterface);
-		BOOST_REQUIRE_NO_THROW(m_reCompiler.parse(m_interface));
+		ETH_TEST_REQUIRE_NO_THROW(m_reCompiler.parse(m_interface), "Interface parsing failed");
 		return m_reCompiler.getContractDefinition(_contractName);
 	}
 
