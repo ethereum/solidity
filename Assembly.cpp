@@ -257,11 +257,12 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 	return _out;
 }
 
-AssemblyItem const& Assembly::append(AssemblyItem const& _i, SourceLocation const& _location)
+AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
 	m_deposit += _i.deposit();
 	m_items.push_back(_i);
-	m_items.back().setLocation(_location);
+	if (m_items.back().getLocation().isEmpty() && !m_currentSourceLocation.isEmpty())
+		m_items.back().setLocation(m_currentSourceLocation);
 	return back();
 }
 

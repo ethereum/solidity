@@ -88,9 +88,9 @@ public:
 	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
 	void append(Assembly const& _a, int _deposit);
-	AssemblyItem const& append(AssemblyItem const& _i, SourceLocation const& _location = SourceLocation());
-	AssemblyItem const& append(std::string const& _data, SourceLocation const& _location = SourceLocation()) { return append(newPushString(_data), _location); }
-	AssemblyItem const& append(bytes const& _data, SourceLocation const& _location = SourceLocation()) { return append(newData(_data), _location); }
+	AssemblyItem const& append(AssemblyItem const& _i);
+	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
+	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 	AssemblyItem appendSubSize(Assembly const& _a) { auto ret = newSub(_a); append(newPushSubSize(ret.data())); return ret; }
 	/// Pushes the final size of the current assembly itself. Use this when the code is modified
 	/// after compilation and CODESIZE is not an option.
@@ -119,6 +119,9 @@ public:
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	void setDeposit(int _deposit) { m_deposit = _deposit; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 
+	/// Changes the source location used for each appended item.
+	void setSourceLocation(SourceLocation const& _location) { m_currentSourceLocation = _location; }
+
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
 	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap()) const;
@@ -137,6 +140,8 @@ protected:
 	int m_deposit = 0;
 	int m_baseDeposit = 0;
 	int m_totalDeposit = 0;
+
+	SourceLocation m_currentSourceLocation;
 };
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
