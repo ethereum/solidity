@@ -87,7 +87,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				// get txs
 				TransactionQueue txs;
-				GasPricer gp(10000);
+				TrivialGasPricer gp;
 				BOOST_REQUIRE(blObj.count("transactions"));
 				for (auto const& txObj: blObj["transactions"].get_array())
 				{
