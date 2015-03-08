@@ -658,9 +658,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		BOOST_REQUIRE(text != original);
 		cipherCopy = text;
 	}
-	catch(CryptoPP::Exception& e)
+	catch (CryptoPP::Exception& _e)
 	{
-		cerr << e.what() << endl;
+		cerr << _e.what() << endl;
 	}
 	
 	try
@@ -670,9 +670,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		d.ProcessData(out, in, text.size());
 		BOOST_REQUIRE(text == original);
 	}
-	catch(CryptoPP::Exception& e)
+	catch (CryptoPP::Exception& _e)
 	{
-		cerr << e.what() << endl;
+		cerr << _e.what() << endl;
 	}
 	
 	
@@ -690,9 +690,9 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 		// yep, ctr mode.
 		BOOST_REQUIRE(cipherCopy == original);
 	}
-	catch(CryptoPP::Exception& e)
+	catch (CryptoPP::Exception& _e)
 	{
-		cerr << e.what() << endl;
+		cerr << _e.what() << endl;
 	}
 	
 }
