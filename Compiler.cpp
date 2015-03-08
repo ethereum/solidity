@@ -375,7 +375,7 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	for (VariableDeclaration const* localVariable: _function.getLocalVariables())
 		m_context.removeVariable(*localVariable);
 
-	m_context.adjustStackOffset(-c_returnValuesSize);
+	m_context.adjustStackOffset(-(int)c_returnValuesSize);
 	if (!_function.isConstructor())
 		m_context << eth::Instruction::JUMP;
 	return false;

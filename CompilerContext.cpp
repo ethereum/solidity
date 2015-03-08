@@ -63,7 +63,7 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 
 void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
 {
-	solAssert(m_localVariables.count(&_declaration), "");
+	solAssert(!!m_localVariables.count(&_declaration), "");
 	m_localVariables.erase(&_declaration);
 }
 
