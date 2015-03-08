@@ -267,14 +267,14 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 	// nonce
 	Secret z1;
 	ecdh::agree(local.sec(), remote.pub(), z1);
-	auto key1 = s_secp256k1.eciesKDF(z1, bytes(), 512);
+	auto key1 = s_secp256k1.eciesKDF(z1, bytes(), 64);
 	bytesConstRef eKey1 = bytesConstRef(&key1).cropped(0, 32);
 	bytesRef mKey1 = bytesRef(&key1).cropped(32, 32);
 	sha3(mKey1, mKey1);
 	
 	Secret z2;
 	ecdh::agree(remote.sec(), local.pub(), z2);
-	auto key2 = s_secp256k1.eciesKDF(z2, bytes(), 512);
+	auto key2 = s_secp256k1.eciesKDF(z2, bytes(), 64);
 	bytesConstRef eKey2 = bytesConstRef(&key2).cropped(0, 32);
 	bytesRef mKey2 = bytesRef(&key2).cropped(32, 32);
 	sha3(mKey2, mKey2);
