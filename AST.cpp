@@ -356,7 +356,12 @@ void VariableDeclaration::checkTypeRequirements()
 	else
 	{
 		// no type declared and no previous assignment, infer the type
-		m_value->checkTypeRequirements();
+		Identifier* identifier = dynamic_cast<Identifier*>(m_value.get());
+		if (identifier)
+			identifier->checkTypeRequirementsFromVariableDeclaration();
+		else
+			m_value->checkTypeRequirements();
+
 		TypePointer type = m_value->getType();
 		if (type->getCategory() == Type::Category::IntegerConstant)
 		{
@@ -484,39 +489,7 @@ void Return::checkTypeRequirements()
 
 void VariableDeclarationStatement::checkTypeRequirements()
 {
-<<<<<<< HEAD
 	m_variable->checkTypeRequirements();
-=======
-	// Variables can be declared without type (with "var"), in which case the first assignment
-	// sets the type.
-	// Note that assignments before the first declaration are legal because of the special scoping
-	// rules inherited from JavaScript.
-	if (m_variable->getValue())
-	{
-		if (m_variable->getType())
-			m_variable->getValue()->expectType(*m_variable->getType());
-		else
-		{
-			// no type declared and no previous assignment, infer the type
-			Identifier* identifier = dynamic_cast<Identifier*>(m_variable->getValue().get());
-			if (identifier)
-				identifier->checkTypeRequirementsFromVariableDeclaration();
-			else
-				m_variable->getValue()->checkTypeRequirements();
-			TypePointer type = m_variable->getValue()->getType();
-			if (type->getCategory() == Type::Category::IntegerConstant)
-			{
-				auto intType = dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType();
-				if (!intType)
-					BOOST_THROW_EXCEPTION(m_variable->getValue()->createTypeError("Invalid integer constant " + type->toString()));
-				type = intType;
-			}
-			else if (type->getCategory() == Type::Category::Void)
-				BOOST_THROW_EXCEPTION(m_variable->createTypeError("var cannot be void type"));
-			m_variable->setType(type);
-		}
-	}
->>>>>>> implement overload resolution
 }
 
 void Assignment::checkTypeRequirements()
