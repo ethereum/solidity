@@ -82,7 +82,8 @@ void ContractDefinition::checkTypeRequirements()
 	{
 		string signature = function->getCanonicalSignature();
 		if (functions.count(signature))
-			BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Duplicate functions are not allowed."));
+			BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(function->getLocation())
+														<< errinfo_comment("Duplicate functions are not allowed."));
 		functions.insert(signature);
 	}
 
