@@ -46,39 +46,55 @@ namespace test
 
 /// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
 /// Our version of BOOST_REQUIRE_NO_THROW()
-/// @param _expression    The expression for which to make sure no exceptions are thrown
+/// @param _statenent    The statement for which to make sure no exceptions are thrown
 /// @param _message       A message to act as a prefix to the expression's error information
-#define ETH_TEST_REQUIRE_NO_THROW(_expression, _message)				\
+#define ETH_TEST_REQUIRE_NO_THROW(_statement, _message)				\
 	do																	\
 	{																	\
 		try															\
 		{																\
-			_expression;												\
+			BOOST_TEST_PASSPOINT();										\
+			_statement;												\
 		}																\
 		catch (boost::exception const& _e)								\
 		{																\
-			auto msg = std::string(_message"\n") + boost::diagnostic_information(_e); \
-			BOOST_FAIL(msg);											\
+			auto msg = std::string(_message" due to an exception thrown by " \
+				BOOST_STRINGIZE(_statement)"\n") + boost::diagnostic_information(_e); \
+			BOOST_CHECK_IMPL(false, msg, REQUIRE, CHECK_MSG);			\
 		}																\
-	} while (0)
+		catch (...)														\
+		{																\
+			BOOST_CHECK_IMPL( false, "Unknown exception thrown by "		\
+				BOOST_STRINGIZE(_statement), REQUIRE, CHECK_MSG);		\
+		}																\
+	}																	\
+	while (0)
 
 /// Check if an Exception is thrown during testing. If one is thrown show its info and continue the test
 /// Our version of BOOST_CHECK_NO_THROW()
-/// @param _expression    The expression for which to make sure no exceptions are thrown
+/// @param _statement    The statement for which to make sure no exceptions are thrown
 /// @param _message       A message to act as a prefix to the expression's error information
-#define ETH_TEST_CHECK_NO_THROW(_expression, _message)					\
+#define ETH_TEST_CHECK_NO_THROW(_statement, _message)					\
 	do																	\
 	{																	\
 		try															\
 		{																\
-			_expression;												\
+			BOOST_TEST_PASSPOINT();										\
+			_statement;												\
 		}																\
 		catch (boost::exception const& _e)								\
 		{																\
-			auto msg = std::string(_message"\n") + boost::diagnostic_information(_e); \
-			BOOST_MESSAGE(msg);										\
+			auto msg = std::string(_message" due to an exception thrown by " \
+				BOOST_STRINGIZE(_statement)"\n") + boost::diagnostic_information(_e); \
+			BOOST_CHECK_IMPL(false, msg, CHECK, CHECK_MSG);				\
 		}																\
-	} while (0)
+		catch (...)														\
+		{																\
+			BOOST_CHECK_IMPL( false, "Unknown exception thrown by "		\
+				BOOST_STRINGIZE(_statement), CHECK, CHECK_MSG );		\
+		}																\
+	}																	\
+	while (0)
 
 
 class ImportTest
