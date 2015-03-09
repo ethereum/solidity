@@ -92,7 +92,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		}
 		else
 		{
-			solAssert(type.getLocation() == ArrayType::Location::Storage, "Memory byte arrays not yet implemented.");
+			solAssert(type.getLocation() == ArrayType::Location::Storage, "Memory arrays not yet implemented.");
 			m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
 			// stack here: memory_offset storage_offset length_bytes
 			// jump to end if length is zero
@@ -177,8 +177,7 @@ void CompilerUtils::computeHashStatic(Type const& _type, bool _padToWordBoundari
 
 unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
 {
-	unsigned _encodedSize = _type.getCalldataEncodedSize();
-	unsigned numBytes = _padToWordBoundaries ? getPaddedSize(_encodedSize) : _encodedSize;
+	unsigned numBytes = _type.getCalldataEncodedSize(_padToWordBoundaries);
 	bool leftAligned = _type.getCategory() == Type::Category::String;
 	if (numBytes == 0)
 		m_context << eth::Instruction::POP << u256(0);
@@ -202,8 +201,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const
 {
-	unsigned _encodedSize = _type.getCalldataEncodedSize();
-	unsigned numBytes = _padToWordBoundaries ? getPaddedSize(_encodedSize) : _encodedSize;
+	unsigned numBytes = _type.getCalldataEncodedSize(_padToWordBoundaries);
 	bool leftAligned = _type.getCategory() == Type::Category::String;
 	if (numBytes == 0)
 		m_context << eth::Instruction::POP;

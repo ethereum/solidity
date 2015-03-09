@@ -212,6 +212,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 	}
 	else
 	{
+		solAssert(m_dataType.isValueType(), "Clearing of unsupported type requested: " + m_dataType.toString());
 		if (m_size == 0 && _removeReference)
 			m_context << eth::Instruction::POP;
 		else if (m_size == 1)

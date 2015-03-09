@@ -71,9 +71,6 @@ public:
 	/// Stack pre: memory_offset value...
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries = true);
-	/// @returns _size rounded up to the next multiple of 32 (the number of bytes occupied in the
-	///          padded calldata)
-	static unsigned getPaddedSize(unsigned _size) { return ((_size + 31) / 32) * 32; }
 
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);

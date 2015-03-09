@@ -48,7 +48,7 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	if (!_varDecl.getValue())
 		return;
 	solAssert(!!_varDecl.getValue()->getType(), "Type information not available.");
-	CompilerContext::LocationSetter locationSetter(m_context, &_varDecl);
+	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.getValue()->accept(*this);
 	appendTypeConversion(*_varDecl.getValue()->getType(), *_varDecl.getType(), true);
 
@@ -57,7 +57,7 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_varDecl);
+	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
 	unsigned length = 0;
@@ -74,7 +74,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		// move offset to memory
 		CompilerUtils(m_context).storeInMemory(length);
-		unsigned argLen = CompilerUtils::getPaddedSize(paramType->getCalldataEncodedSize());
+		unsigned argLen = paramType->getCalldataEncodedSize();
 		length -= argLen;
 		m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
 
@@ -204,7 +204,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_assignment);
+	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
 	_assignment.getRightHandSide().accept(*this);
 	if (_assignment.getType()->isValueType())
 		appendTypeConversion(*_assignment.getRightHandSide().getType(), *_assignment.getType());
@@ -237,7 +237,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 
 bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_unaryOperation);
+	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
 	//@todo type checking and creating code for an operator should be in the same place:
 	// the operator should know how to convert itself and to which types it applies, so
 	// put this code together with "Type::acceptsBinary/UnaryOperator" into a class that
@@ -307,7 +307,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 
 bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_binaryOperation);
+	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.getLeftExpression();
 	Expression const& rightExpression = _binaryOperation.getRightExpression();
 	Type const& commonType = _binaryOperation.getCommonType();
@@ -354,7 +354,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_functionCall);
+	CompilerContext::LocationSetter locationSetter(m_context, _functionCall);
 	using Location = FunctionType::Location;
 	if (_functionCall.isTypeConversion())
 	{
@@ -572,7 +572,7 @@ bool ExpressionCompiler::visit(NewExpression const&)
 
 void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_memberAccess);
+	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
 	ASTString const& member = _memberAccess.getMemberName();
 	switch (_memberAccess.getExpression().getType()->getCategory())
 	{
@@ -707,7 +707,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 
 bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_indexAccess);
+	CompilerContext::LocationSetter locationSetter(m_context, _indexAccess);
 	_indexAccess.getBaseExpression().accept(*this);
 
 	Type const& baseType = *_indexAccess.getBaseExpression().getType();
@@ -782,8 +782,9 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		else
 		{
 			u256 elementSize =
-				location == ArrayType::Location::Storage ? arrayType.getBaseType()->getStorageSize() :
-				CompilerUtils::getPaddedSize(arrayType.getBaseType()->getCalldataEncodedSize());
+				location == ArrayType::Location::Storage ?
+					arrayType.getBaseType()->getStorageSize() :
+					arrayType.getBaseType()->getCalldataEncodedSize();
 			solAssert(elementSize != 0, "Invalid element size.");
 			if (elementSize > 1)
 				m_context << elementSize << eth::Instruction::MUL;
@@ -801,8 +802,8 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			switch (location)
 			{
 			case ArrayType::Location::CallData:
-				// no lvalue
-				CompilerUtils(m_context).loadFromMemoryDynamic(*arrayType.getBaseType(), true, true, false);
+				if (arrayType.getBaseType()->isValueType())
+					CompilerUtils(m_context).loadFromMemoryDynamic(*arrayType.getBaseType(), true, true, false);
 				break;
 			case ArrayType::Location::Storage:
 				setLValueToStorageItem(_indexAccess);
@@ -820,6 +821,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 
 void ExpressionCompiler::endVisit(Identifier const& _identifier)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, _identifier);
 	Declaration const* declaration = _identifier.getReferencedDeclaration();
 	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
@@ -852,6 +854,7 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 
 void ExpressionCompiler::endVisit(Literal const& _literal)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, _literal);
 	switch (_literal.getType()->getCategory())
 	{
 	case Type::Category::IntegerConstant:
@@ -1021,7 +1024,7 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
 							_functionType.getReturnParameterTypes().front().get();
-	unsigned retSize = firstType ? CompilerUtils::getPaddedSize(firstType->getCalldataEncodedSize()) : 0;
+	unsigned retSize = firstType ? firstType->getCalldataEncodedSize() : 0;
 	m_context << u256(retSize) << u256(0);
 
 	if (bare)
@@ -1051,8 +1054,9 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	if (_functionType.gasSet())
 		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
-		// send all gas except for the 21 needed to execute "SUB" and "CALL"
-		m_context << u256(_functionType.valueSet() ? 6741 : 41) << eth::Instruction::GAS << eth::Instruction::SUB;
+		// send all gas except the amount needed to execute "SUB" and "CALL"
+		// @todo this retains too much gas for now, needs to be fine-tuned.
+		m_context << u256(50 + (_functionType.valueSet() ? 9000 : 0)) << eth::Instruction::GAS << eth::Instruction::SUB;
 	m_context << eth::Instruction::CALL;
 	auto tag = m_context.appendConditionalJump();
 	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.
@@ -1083,7 +1087,7 @@ void ExpressionCompiler::appendArgumentsCopyToMemory(
 		appendTypeConversion(*_arguments[i]->getType(), *expectedType, true);
 		bool pad = _padToWordBoundaries;
 		// Do not pad if the first argument has exactly four bytes
-		if (i == 0 && pad && _padExceptionIfFourBytes && expectedType->getCalldataEncodedSize() == 4)
+		if (i == 0 && pad && _padExceptionIfFourBytes && expectedType->getCalldataEncodedSize(false) == 4)
 			pad = false;
 		appendTypeMoveToMemory(*expectedType, pad);
 	}

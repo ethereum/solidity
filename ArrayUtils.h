@@ -60,10 +60,11 @@ public:
 	/// Stack pre: end_ref start_ref
 	/// Stack post: end_ref
 	void clearStorageLoop(Type const& _type) const;
-	/// Converts length to size (multiplies by size on stack), rounds up for byte arrays.
+	/// Converts length to size (number of storage slots or calldata/memory bytes).
+	/// if @a _pad then add padding to multiples of 32 bytes for calldata/memory.
 	/// Stack pre: length
 	/// Stack post: size
-	void convertLengthToSize(ArrayType const& _arrayType) const;
+	void convertLengthToSize(ArrayType const& _arrayType, bool _pad = false) const;
 	/// Retrieves the length (number of elements) of the array ref on the stack. This also
 	/// works for statically-sized arrays.
 	/// Stack pre: reference
