@@ -82,12 +82,12 @@ string AssemblyItem::getJumpTypeAsString() const
 	switch (m_jumpType)
 	{
 	case JumpType::IntoFunction:
-		return "->";
+		return "in";
 	case JumpType::OutOfFunction:
-		return "<-";
+		return "out";
 	case JumpType::Ordinary:
 	default:
-		return "->";
+		return "";
 	}
 }
 
@@ -219,7 +219,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 		switch (i.m_type)
 		{
 		case Operation:
-			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name  << "  " << i.getJumpTypeAsString( ) << endl;
+			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name  << "\t\t" << i.getJumpTypeAsString();
 			break;
 		case Push:
 			_out << "  PUSH " << i.m_data;
@@ -254,7 +254,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
-		_out << string("\t\t") << getLocationFromSources(_sourceCodes, i.getLocation()) << endl;
+		_out << "\t\t" << getLocationFromSources(_sourceCodes, i.getLocation()) << endl;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
