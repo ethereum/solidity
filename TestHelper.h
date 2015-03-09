@@ -117,6 +117,13 @@ private:
 	json_spirit::mObject& m_TestObject;
 };
 
+class ZeroGasPricer: public eth::GasPricer
+{
+protected:
+	u256 ask(eth::State const&) const override { return 0; }
+	u256 bid(eth::TransactionPriority = eth::TransactionPriority::Medium) const override { return 0; }
+};
+
 // helping functions
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
@@ -136,6 +143,7 @@ void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::m
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 void processCommandLineOptions();
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
+json_spirit::mObject fillJsonWithState(eth::State _state);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)

@@ -52,6 +52,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		ImportTest importer(o["pre"].get_obj());
 		State state(Address(), OverlayDB(), BaseState::Empty);
 		importer.importState(o["pre"].get_obj(), state);
+		o["pre"] = fillJsonWithState(state);
 		state.commit();
 
 		if (_fillin)
@@ -87,7 +88,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				// get txs
 				TransactionQueue txs;
-				TrivialGasPricer gp;
+				ZeroGasPricer gp;
 				BOOST_REQUIRE(blObj.count("transactions"));
 				for (auto const& txObj: blObj["transactions"].get_array())
 				{
@@ -101,10 +102,18 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				BlockQueue uncleBlockQueue;
 				mArray aUncleList;
 				vector<BlockInfo> vBiUncles;
+				mObject uncleHeaderObj_pre;
 
 				for (auto const& uHObj: blObj["uncleHeaders"].get_array())
 				{
 					mObject uncleHeaderObj = uHObj.get_obj();
+					if ( uncleHeaderObj.count("theSameAsBefore") )
+					{
+						writeBlockHeaderToJson(uncleHeaderObj_pre, vBiUncles[vBiUncles.size()-1]);
+						aUncleList.push_back(uncleHeaderObj_pre);
+						vBiUncles.push_back(vBiUncles[vBiUncles.size()-1]);
+						continue;
+					}
 					BlockInfo uncleBlockFromFields = constructBlock(uncleHeaderObj);
 
 					// make uncle header valid
@@ -123,6 +132,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					cnote << "import uncle in blockQueue";
 					RLPStream uncle = createFullBlockFromHeader(uncleBlockFromFields);
 					uncleBlockQueue.import(&uncle.out(), bc);
+
+					uncleHeaderObj_pre = uncleHeaderObj;
 				}
 
 				blObj["uncleHeaders"] = aUncleList;
@@ -579,6 +590,7 @@ void updatePoW(BlockInfo& _bi)
 		ret = pow.mine(_bi, 10000, true, true); // tie(ret, blockFromFields.nonce)
 		Ethash::assignResult(ret.second, _bi);
 	}
+	_bi.hash = _bi.headerHash(WithNonce);
 }
 
 void writeBlockHeaderToJson(mObject& _o, const BlockInfo& _bi)
