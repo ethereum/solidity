@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(mapping_in_struct)
 					   "  struct test_struct {\n"
 					   "    address addr;\n"
 					   "    uint256 count;\n"
-					   "    mapping(hash => test_struct) self_reference;\n"
+					   "    mapping(bytes32 => test_struct) self_reference;\n"
 					   "  }\n"
 					   "}\n";
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed");
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(mapping_to_mapping_in_struct)
 	char const* text = "contract test {\n"
 					   "  struct test_struct {\n"
 					   "    address addr;\n"
-					   "    mapping (uint64 => mapping (hash => uint)) complex_mapping;\n"
+					   "    mapping (uint64 => mapping (bytes32 => uint)) complex_mapping;\n"
 					   "  }\n"
 					   "}\n";
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed");
