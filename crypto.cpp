@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(ecies_standard)
 	
 	s_secp256k1.encryptECIES(k.pub(), b);
 	BOOST_REQUIRE(b != asBytes(original));
-	BOOST_REQUIRE(b.size() > 0 && ((u128)h128(b)) > 0);
+	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
 	
 	s_secp256k1.decryptECIES(k.sec(), b);
 	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
