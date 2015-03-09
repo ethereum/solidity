@@ -91,7 +91,7 @@ public:
 	/// Appends a JUMP to a new tag and @returns the tag
 	eth::AssemblyItem appendJumpToNew() { return m_asm.appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
-	CompilerContext&  appendJump() { return *this << eth::Instruction::JUMP; }
+	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.

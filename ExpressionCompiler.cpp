@@ -108,7 +108,8 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
 	solAssert(retSizeOnStack <= 15, "Stack too deep.");
-	m_context << eth::dupInstruction(retSizeOnStack + 1) << eth::Instruction::JUMP;
+	m_context << eth::dupInstruction(retSizeOnStack + 1);
+	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 }
 
 void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
@@ -405,7 +406,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			_functionCall.getExpression().accept(*this);
 
-			m_context.appendJump();
+			m_context.appendJump(eth::AssemblyItem::JumpType::IntoFunction);
 			m_context << returnLabel;
 
 			unsigned returnParametersSize = CompilerUtils::getSizeOnStack(function.getReturnParameterTypes());
