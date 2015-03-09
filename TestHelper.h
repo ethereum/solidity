@@ -58,13 +58,13 @@ namespace test
 		}																\
 		catch (boost::exception const& _e)								\
 		{																\
-			auto msg = std::string(_message" due to an exception thrown by " \
-				BOOST_STRINGIZE(_statement)"\n") + boost::diagnostic_information(_e); \
+			auto msg = std::string(_message " due to an exception thrown by " \
+				BOOST_STRINGIZE(_statement) "\n") + boost::diagnostic_information(_e); \
 			BOOST_CHECK_IMPL(false, msg, REQUIRE, CHECK_MSG);			\
 		}																\
 		catch (...)														\
 		{																\
-			BOOST_CHECK_IMPL( false, "Unknown exception thrown by "		\
+			BOOST_CHECK_IMPL(false, "Unknown exception thrown by "		\
 				BOOST_STRINGIZE(_statement), REQUIRE, CHECK_MSG);		\
 		}																\
 	}																	\
@@ -84,13 +84,13 @@ namespace test
 		}																\
 		catch (boost::exception const& _e)								\
 		{																\
-			auto msg = std::string(_message" due to an exception thrown by " \
-				BOOST_STRINGIZE(_statement)"\n") + boost::diagnostic_information(_e); \
+			auto msg = std::string(_message " due to an exception thrown by " \
+				BOOST_STRINGIZE(_statement) "\n") + boost::diagnostic_information(_e); \
 			BOOST_CHECK_IMPL(false, msg, CHECK, CHECK_MSG);				\
 		}																\
 		catch (...)														\
 		{																\
-			BOOST_CHECK_IMPL( false, "Unknown exception thrown by "		\
+			BOOST_CHECK_IMPL(false, "Unknown exception thrown by "		\
 				BOOST_STRINGIZE(_statement), CHECK, CHECK_MSG );		\
 		}																\
 	}																	\
