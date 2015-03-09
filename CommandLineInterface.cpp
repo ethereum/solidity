@@ -272,7 +272,7 @@ bool CommandLineInterface::processInput()
 		while (!cin.eof())
 		{
 			getline(cin, s);
-			m_sourceCodes["<stdin>"].append(s);
+			m_sourceCodes["<stdin>"].append(s + '\n');
 		}
 	}
 	else
