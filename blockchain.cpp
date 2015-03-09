@@ -107,7 +107,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				for (auto const& uHObj: blObj["uncleHeaders"].get_array())
 				{
 					mObject uncleHeaderObj = uHObj.get_obj();
-					if ( uncleHeaderObj.count("theSameAsBefore") )
+					if (uncleHeaderObj.count("sameAsPreviousSibling"))
 					{
 						writeBlockHeaderToJson(uncleHeaderObj_pre, vBiUncles[vBiUncles.size()-1]);
 						aUncleList.push_back(uncleHeaderObj_pre);
