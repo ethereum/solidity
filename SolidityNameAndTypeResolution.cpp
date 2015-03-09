@@ -75,6 +75,7 @@ static FunctionTypePointer const& retrieveFunctionBySignature(ContractDefinition
 	FixedHash<4> hash(dev::sha3(_signature));
 	return _contract->getInterfaceFunctions()[hash];
 }
+
 }
 
 BOOST_AUTO_TEST_SUITE(SolidityNameAndTypeResolution)
@@ -353,7 +354,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature)
 					   "    ret = arg1 + arg2;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(sourceUnit = parseTextAndResolveNames(text));
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -366,16 +367,16 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 {
 	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = "contract Test {\n"
-					   "  function boo(uint arg1, hash arg2, address arg3) returns (uint ret) {\n"
+					   "  function boo(uint arg1, bytes32 arg2, address arg3) returns (uint ret) {\n"
 					   "    ret = 5;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(sourceUnit = parseTextAndResolveNames(text));
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			auto functions = contract->getDefinedFunctions();
-			BOOST_CHECK_EQUAL("boo(uint256,hash256,address)", functions[0]->getCanonicalSignature());
+			BOOST_CHECK_EQUAL("boo(uint256,bytes32,address)", functions[0]->getCanonicalSignature());
 		}
 }
 
@@ -537,7 +538,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 		contract B {
 			function f() mod1(2, true) mod2("0123456") { }
 			modifier mod1(uint a, bool b) { if (b) _ }
-			modifier mod2(string7 a) { while (a == "1234567") _ }
+			modifier mod2(bytes7 a) { while (a == "1234567") _ }
 		}
 	)";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
@@ -558,9 +559,9 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
 {
 	char const* text = R"(
 		contract B {
-			function f(uint8 a) mod1(a, true) mod2(r) returns (string7 r) { }
+			function f(uint8 a) mod1(a, true) mod2(r) returns (bytes7 r) { }
 			modifier mod1(uint a, bool b) { if (b) _ }
-			modifier mod2(string7 a) { while (a == "1234567") _ }
+			modifier mod2(bytes7 a) { while (a == "1234567") _ }
 		}
 	)";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
@@ -631,8 +632,8 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 					   "    uint64(2);\n"
 					   "  }\n"
 					   "uint256 public foo;\n"
-					   "mapping(uint=>string4) public map;\n"
-					   "mapping(uint=>mapping(uint=>string4)) public multiple_map;\n"
+					   "mapping(uint=>bytes4) public map;\n"
+					   "mapping(uint=>mapping(uint=>bytes4)) public multiple_map;\n"
 					   "}\n";
 
 	ASTPointer<SourceUnit> source;
@@ -650,7 +651,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	auto params = function->getParameterTypeNames();
 	BOOST_CHECK_EQUAL(params.at(0), "uint256");
 	returnParams = function->getReturnParameterTypeNames();
-	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
+	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
 	BOOST_CHECK(function->isConstant());
 
 	function = retrieveFunctionBySignature(contract, "multiple_map(uint256,uint256)");
@@ -659,7 +660,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_CHECK_EQUAL(params.at(0), "uint256");
 	BOOST_CHECK_EQUAL(params.at(1), "uint256");
 	returnParams = function->getReturnParameterTypeNames();
-	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
+	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
 	BOOST_CHECK(function->isConstant());
 }
 
@@ -800,7 +801,7 @@ BOOST_AUTO_TEST_CASE(event)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint indexed a, string3 indexed s, bool indexed b);
+			event e(uint indexed a, bytes3 indexed s, bool indexed b);
 			function f() { e(2, "abc", true); }
 		})";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
@@ -810,7 +811,7 @@ BOOST_AUTO_TEST_CASE(event_too_many_indexed)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint indexed a, string3 indexed b, bool indexed c, uint indexed d);
+			event e(uint indexed a, bytes3 indexed b, bool indexed c, uint indexed d);
 			function f() { e(2, "abc", true); }
 		})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
@@ -820,7 +821,7 @@ BOOST_AUTO_TEST_CASE(event_call)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint a, string3 indexed s, bool indexed b);
+			event e(uint a, bytes3 indexed s, bool indexed b);
 			function f() { e(2, "abc", true); }
 		})";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
@@ -830,7 +831,7 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 {
 	char const* text = R"(
 		contract base {
-			event e(uint a, string3 indexed s, bool indexed b);
+			event e(uint a, bytes3 indexed s, bool indexed b);
 		}
 		contract c is base {
 			function f() { e(2, "abc", true); }
