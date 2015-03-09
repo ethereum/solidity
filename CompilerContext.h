@@ -131,8 +131,7 @@ public:
 	{
 	public:
 		LocationSetter(CompilerContext& _compilerContext, ASTNode const& _node):
-			ScopeGuard([&]{ _compilerContext.popVisitedNodes(); })
-		{ _compilerContext.pushVisitedNodes(&_node); }
+			ScopeGuard([&]{ _compilerContext.popVisitedNodes(); }) { _compilerContext.pushVisitedNodes(&_node); }
 	};
 
 private:
