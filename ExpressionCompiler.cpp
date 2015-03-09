@@ -131,7 +131,6 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			// conversion from string to bytes. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			solAssert(targetIntegerType.isAddress(), "Only conversion between Address and FixedBytes is allowed.");
 			solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
 		}
@@ -164,7 +163,6 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			// only to shift left because of opposite alignment
 			FixedBytesType const& targetBytesType = dynamic_cast<FixedBytesType const&>(_targetType);
 			IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
-			solAssert(typeOnStack.isAddress(), "Only conversion between Address and Bytes is allowed.");
 			solAssert(typeOnStack.getNumBits() == targetBytesType.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBits())) << eth::Instruction::MUL;
 		}

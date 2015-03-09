@@ -37,13 +37,15 @@ namespace solidity
 
 TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 {
-	solAssert(Token::isElementaryTypeName(_typeToken), "Elementary type name expected.");
+	char const* tokenCstr = Token::toString(_typeToken);
+	solAssert(Token::isElementaryTypeName(_typeToken),
+		"Expected an elementary type name but got " + ((tokenCstr) ? std::string(Token::toString(_typeToken)) : ""));
 
 	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
 	{
 		int offset = _typeToken - Token::Int;
 		int bytes = offset % 33;
-		if (bytes == 0)
+		if (bytes == 0 && _typeToken != Token::Bytes0)
 			bytes = 32;
 		int modifier = offset / 33;
 		switch(modifier)
@@ -173,6 +175,11 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
+	if (_convertTo.getCategory() == Category::FixedBytes)
+	{
+		FixedBytesType const& convertTo = dynamic_cast<FixedBytesType const&>(_convertTo);
+		return (m_bits == convertTo.getNumBytes() * 8);
+	}
 	return _convertTo.getCategory() == getCategory() ||
         _convertTo.getCategory() == Category::Contract ||
         _convertTo.getCategory() == Category::Enum;
@@ -436,7 +443,7 @@ shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& 
 FixedBytesType::FixedBytesType(int _bytes): m_bytes(_bytes)
 {
 	solAssert(m_bytes >= 0 && m_bytes <= 32,
-			  "Invalid byte number for static string type: " + dev::toString(m_bytes));
+			  "Invalid byte number for fixed bytes type: " + dev::toString(m_bytes));
 }
 
 bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const

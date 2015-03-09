@@ -41,23 +41,23 @@ m_magicVariables(vector<shared_ptr<MagicVariableDeclaration const>>{make_shared<
 					make_shared<MagicVariableDeclaration>("suicide",
 							make_shared<FunctionType>(strings{"address"}, strings{}, FunctionType::Location::Suicide)),
 					make_shared<MagicVariableDeclaration>("sha3",
-							make_shared<FunctionType>(strings(), strings{"hash"}, FunctionType::Location::SHA3, true)),
+							make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Location::SHA3, true)),
 					make_shared<MagicVariableDeclaration>("log0",
-							make_shared<FunctionType>(strings{"hash"},strings{}, FunctionType::Location::Log0)),
+							make_shared<FunctionType>(strings{"bytes32"}, strings{}, FunctionType::Location::Log0)),
 					make_shared<MagicVariableDeclaration>("log1",
-							make_shared<FunctionType>(strings{"hash", "hash"},strings{}, FunctionType::Location::Log1)),
+							make_shared<FunctionType>(strings{"bytes32", "bytes32"}, strings{}, FunctionType::Location::Log1)),
 					make_shared<MagicVariableDeclaration>("log2",
-							make_shared<FunctionType>(strings{"hash", "hash", "hash"},strings{}, FunctionType::Location::Log2)),
+							make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Location::Log2)),
 					make_shared<MagicVariableDeclaration>("log3",
-							make_shared<FunctionType>(strings{"hash", "hash", "hash", "hash"},strings{}, FunctionType::Location::Log3)),
+							make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Location::Log3)),
 					make_shared<MagicVariableDeclaration>("log4",
-							make_shared<FunctionType>(strings{"hash", "hash", "hash", "hash", "hash"},strings{}, FunctionType::Location::Log4)),
+							make_shared<FunctionType>(strings{"bytes32", "bytes32", "bytes32", "bytes32", "bytes32"}, strings{}, FunctionType::Location::Log4)),
 					make_shared<MagicVariableDeclaration>("sha256",
-							make_shared<FunctionType>(strings(), strings{"hash"}, FunctionType::Location::SHA256, true)),
+							make_shared<FunctionType>(strings(), strings{"bytes32"}, FunctionType::Location::SHA256, true)),
 					make_shared<MagicVariableDeclaration>("ecrecover",
-							make_shared<FunctionType>(strings{"hash", "hash8", "hash", "hash"}, strings{"address"}, FunctionType::Location::ECRecover)),
+							make_shared<FunctionType>(strings{"bytes32", "bytes1", "bytes32", "bytes32"}, strings{"address"}, FunctionType::Location::ECRecover)),
 					make_shared<MagicVariableDeclaration>("ripemd160",
-							make_shared<FunctionType>(strings(), strings{"hash160"}, FunctionType::Location::RIPEMD160, true))})
+							make_shared<FunctionType>(strings(), strings{"bytes20"}, FunctionType::Location::RIPEMD160, true))})
 {
 }
 
