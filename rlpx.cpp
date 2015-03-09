@@ -363,7 +363,6 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	// test decrypt of frame headers for recvHello
 	bytes plaintext(16);
 	m_frameDec.ProcessData(plaintext.data(), recvHello.data(), h128::size);
-	cout << "decrypt recv got: " << *(h128*)plaintext.data();
 	
 }
 
