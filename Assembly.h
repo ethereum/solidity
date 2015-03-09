@@ -81,9 +81,9 @@ public:
 	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
 	AssemblyItem newData(bytes const& _data) { h256 h = (u256)std::hash<std::string>()(asString(_data)); m_data[h] = _data; return AssemblyItem(PushData, h); }
-	AssemblyItem newSub(Assembly const& _sub) { h256 h = h256::random(s_fixedHashEngine); m_subs[h] = _sub; return AssemblyItem(PushSub, h); }
+	AssemblyItem newSub(Assembly const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	AssemblyItem newPushString(std::string const& _data) { h256 h = (u256)std::hash<std::string>()(_data); m_strings[h] = _data; return AssemblyItem(PushString, h); }
-	AssemblyItem newPushSubSize(h256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
+	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 
 	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
@@ -134,7 +134,7 @@ protected:
 	unsigned m_usedTags = 0;
 	AssemblyItems m_items;
 	mutable std::map<h256, bytes> m_data;
-	std::map<h256, Assembly> m_subs;
+	std::vector<Assembly> m_subs;
 	std::map<h256, std::string> m_strings;
 
 	int m_deposit = 0;
