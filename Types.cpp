@@ -39,7 +39,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 {
 	solAssert(Token::isElementaryTypeName(_typeToken), "Elementary type name expected.");
 
-	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes256)
+	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
 	{
 		int offset = _typeToken - Token::Int;
 		int bytes = offset % 33;
@@ -226,8 +226,11 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	// All integer types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
+	// Nothing else can be done with addresses, but hashes can receive bit operators
+	if (commonType->isAddress())
+		return TypePointer();
 
-	return TypePointer();
+	return commonType;
 }
 
 const MemberList IntegerType::AddressMemberList =

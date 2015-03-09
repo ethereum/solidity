@@ -252,39 +252,39 @@ namespace solidity
 	K(UInt240, "uint240", 0)                                           \
 	K(UInt248, "uint248", 0)                                           \
 	K(UInt256, "uint256", 0)                                           \
-	K(Bytes8, "bytes8", 0)                                               \
-	K(Bytes16, "bytes16", 0)                                             \
-	K(Bytes24, "bytes24", 0)                                             \
-	K(Bytes32, "bytes32", 0)                                             \
-	K(Bytes40, "bytes40", 0)                                             \
-	K(Bytes48, "bytes48", 0)                                             \
-	K(Bytes56, "bytes56", 0)                                             \
-	K(Bytes64, "bytes64", 0)                                             \
-	K(Bytes72, "bytes72", 0)                                             \
-	K(Bytes80, "bytes80", 0)                                             \
-	K(Bytes88, "bytes88", 0)                                             \
-	K(Bytes96, "bytes96", 0)                                             \
-	K(Bytes104, "bytes104", 0)                                           \
-	K(Bytes112, "bytes112", 0)                                           \
-	K(Bytes120, "bytes120", 0)                                           \
-	K(Bytes128, "bytes128", 0)                                           \
-	K(Bytes136, "bytes136", 0)                                           \
-	K(Bytes144, "bytes144", 0)                                           \
-	K(Bytes152, "bytes152", 0)                                           \
-	K(Bytes160, "bytes160", 0)                                           \
-	K(Bytes168, "bytes168", 0)                                           \
-	K(Bytes176, "bytes178", 0)                                           \
-	K(Bytes184, "bytes184", 0)                                           \
-	K(Bytes192, "bytes192", 0)                                           \
-	K(Bytes200, "bytes200", 0)                                           \
-	K(Bytes208, "bytes208", 0)                                           \
-	K(Bytes216, "bytes216", 0)                                           \
-	K(Bytes224, "bytes224", 0)                                           \
-	K(Bytes232, "bytes232", 0)                                           \
-	K(Bytes240, "bytes240", 0)                                           \
-	K(Bytes248, "bytes248", 0)                                           \
-	K(Bytes256, "bytes256", 0)                                           \
 	K(Bytes, "bytes", 0)												\
+	K(Bytes1, "bytes1", 0)                                               \
+	K(Bytes2, "bytes2", 0)                                             \
+	K(Bytes3, "bytes3", 0)                                             \
+	K(Bytes4, "bytes4", 0)                                             \
+	K(Bytes5, "bytes5", 0)                                             \
+	K(Bytes6, "bytes6", 0)                                             \
+	K(Bytes7, "bytes7", 0)                                             \
+	K(Bytes8, "bytes8", 0)                                             \
+	K(Bytes9, "bytes9", 0)                                             \
+	K(Bytes10, "bytes10", 0)                                             \
+	K(Bytes11, "bytes11", 0)                                             \
+	K(Bytes12, "bytes12", 0)                                             \
+	K(Bytes13, "bytes13", 0)                                           \
+	K(Bytes14, "bytes14", 0)                                           \
+	K(Bytes15, "bytes15", 0)                                           \
+	K(Bytes16, "bytes16", 0)                                           \
+	K(Bytes17, "bytes17", 0)                                           \
+	K(Bytes18, "bytes18", 0)                                           \
+	K(Bytes19, "bytes19", 0)                                           \
+	K(Bytes20, "bytes20", 0)                                           \
+	K(Bytes21, "bytes21", 0)                                           \
+	K(Bytes22, "bytes22", 0)                                           \
+	K(Bytes23, "bytes23", 0)                                           \
+	K(Bytes24, "bytes24", 0)                                           \
+	K(Bytes25, "bytes25", 0)                                           \
+	K(Bytes26, "bytes26", 0)                                           \
+	K(Bytes27, "bytes27", 0)                                           \
+	K(Bytes28, "bytes28", 0)                                           \
+	K(Bytes29, "bytes29", 0)                                           \
+	K(Bytes30, "bytes30", 0)                                           \
+	K(Bytes31, "bytes31", 0)                                           \
+	K(Bytes32, "bytes32", 0)                                           \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(StringType, "string", 0)                                         \
