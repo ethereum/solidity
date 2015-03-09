@@ -87,6 +87,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				// get txs
 				TransactionQueue txs;
+				TrivialGasPricer gp;
 				BOOST_REQUIRE(blObj.count("transactions"));
 				for (auto const& txObj: blObj["transactions"].get_array())
 				{
@@ -131,7 +132,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				try
 				{
 					state.sync(bc);
-					state.sync(bc,txs);
+					state.sync(bc, txs, gp);
 					state.commitToMine(bc);
 					MineInfo info;
 					for (info.completed = false; !info.completed; info = state.mine()) {}
@@ -281,7 +282,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				BlockInfo blockHeaderFromFields;
 				const bytes c_rlpBytesBlockHeader = createBlockRLPFromFields(tObj);
 				const RLP c_blockHeaderRLP(c_rlpBytesBlockHeader);
-				blockHeaderFromFields.populateFromHeader(c_blockHeaderRLP, false);
+				blockHeaderFromFields.populateFromHeader(c_blockHeaderRLP, IgnoreNonce);
 
 				BlockInfo blockFromRlp = bc.info();
 
@@ -381,7 +382,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 						BlockInfo uncleBlockHeader;
 						try
 						{
-							uncleBlockHeader.populateFromHeader(c_uRLP, true);
+							uncleBlockHeader.populateFromHeader(c_uRLP);
 						}
 						catch(...)
 						{
@@ -395,7 +396,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				for	(auto const& uRLP: root[2])
 				{
 					BlockInfo uBl;
-					uBl.populateFromHeader(uRLP, true);
+					uBl.populateFromHeader(uRLP);
 					uBlHsFromRlp.push_back(uBl);
 				}
 
@@ -538,7 +539,7 @@ void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
 		// take the blockheader as is
 		const bytes c_blockRLP = createBlockRLPFromFields(_blObj["blockHeader"].get_obj());
 		const RLP c_bRLP(c_blockRLP);
-		_current_BlockHeader.populateFromHeader(c_bRLP, false);
+		_current_BlockHeader.populateFromHeader(c_bRLP, IgnoreNonce);
 	}
 }
 
@@ -551,7 +552,7 @@ BlockInfo constructBlock(mObject& _o)
 		// construct genesis block
 		const bytes c_blockRLP = createBlockRLPFromFields(_o);
 		const RLP c_bRLP(c_blockRLP);
-		ret.populateFromHeader(c_bRLP, false);
+		ret.populateFromHeader(c_bRLP, IgnoreNonce);
 	}
 	catch (Exception const& _e)
 	{

@@ -20,7 +20,7 @@
  * Unit tests for the solidity compiler JSON Interface output.
  */
 
-#include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 #include <json/json.h>
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/Exceptions.h>
@@ -43,15 +43,7 @@ public:
 					  bool _userDocumentation)
 	{
 		std::string generatedDocumentationString;
-		try
-		{
-			m_compilerStack.parse(_code);
-		}
-		catch(boost::exception const& _e)
-		{
-			auto msg = std::string("Parsing contract failed with: ") + boost::diagnostic_information(_e);
-			BOOST_FAIL(msg);
-		}
+		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse(_code), "Parsing failed");
 
 		if (_userDocumentation)
 			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NatspecUser);
