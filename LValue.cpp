@@ -246,10 +246,11 @@ void StorageByteArrayElement::retrieveValue(SourceLocation const&, bool _remove)
 	// stack: ref byte_number
 	if (_remove)
 		m_context << eth::Instruction::SWAP1 << eth::Instruction::SLOAD
-			<< eth::Instruction::SWAP1 << eth::Instruction::BYTE;
+			<< eth::Instruction::SWAP1 << eth::Instruction::BYTE ;
 	else
 		m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD
 			<< eth::Instruction::DUP2 << eth::Instruction::BYTE;
+	m_context << (u256(1) << (256 - 8)) << eth::Instruction::MUL;
 }
 
 void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, bool _move) const
@@ -265,8 +266,9 @@ void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, boo
 	m_context << eth::Instruction::DUP2 << u256(0xff) << eth::Instruction::MUL
 		<< eth::Instruction::NOT << eth::Instruction::AND;
 	// stack: value ref (1<<(32-byte_number)) old_full_value_with_cleared_byte
-	m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP4 << eth::Instruction::MUL
-		<< eth::Instruction::OR;
+	m_context << eth::Instruction::SWAP1;
+	m_context << (u256(1) << (256 - 8)) << eth::Instruction::DUP5 << eth::Instruction::DIV
+			  << eth::Instruction::MUL << eth::Instruction::OR;
 	// stack: value ref new_full_value
 	m_context << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
 	if (_move)

@@ -123,16 +123,20 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	Type::Category stackTypeCategory = _typeOnStack.getCategory();
 	Type::Category targetTypeCategory = _targetType.getCategory();
 
-	if (stackTypeCategory == Type::Category::FixedBytes)
+	switch (stackTypeCategory)
+	{
+	case Type::Category::FixedBytes:
 	{
 		FixedBytesType const& typeOnStack = dynamic_cast<FixedBytesType const&>(_typeOnStack);
 		if (targetTypeCategory == Type::Category::Integer)
 		{
-			// conversion from string to bytes. no need to clean the high bit
+			// conversion from bytes to integer. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
+			// solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			if (targetIntegerType.getNumBits() < typeOnStack.getNumBytes() * 8)
+				appendTypeConversion(IntegerType(typeOnStack.getNumBytes() * 8), _targetType, _cleanupNeeded); 
 		}
 		else
 		{
@@ -150,21 +154,24 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			}
 		}
 	}
-	else if (stackTypeCategory == Type::Category::Enum)
-		solAssert(targetTypeCategory == Type::Category::Integer ||
-			targetTypeCategory == Type::Category::Enum, "");
-	else if (stackTypeCategory == Type::Category::Integer ||
-		stackTypeCategory == Type::Category::Contract ||
-		stackTypeCategory == Type::Category::IntegerConstant)
-	{
-		if (targetTypeCategory == Type::Category::FixedBytes && stackTypeCategory == Type::Category::Integer)
+		break;
+	case Type::Category::Enum:
+		solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Enum, "");
+		break;
+	case Type::Category::Integer:
+	case Type::Category::Contract:
+	case Type::Category::IntegerConstant:
+		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
+			solAssert(stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::IntegerConstant,
+				"Invalid conversion to FixedBytesType requested.");
 			// conversion from bytes to string. no need to clean the high bit
 			// only to shift left because of opposite alignment
 			FixedBytesType const& targetBytesType = dynamic_cast<FixedBytesType const&>(_targetType);
-			IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
-			solAssert(typeOnStack.getNumBits() == targetBytesType.getNumBytes() * 8, "The size should be the same.");
-			m_context << (u256(1) << (256 - typeOnStack.getNumBits())) << eth::Instruction::MUL;
+			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
+				if (targetBytesType.getNumBytes() * 8 > typeOnStack->getNumBits())
+					appendHighBitsCleanup(*typeOnStack);
+			m_context << (u256(1) << (256 - targetBytesType.getNumBytes() * 8)) << eth::Instruction::MUL;
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 			// just clean
@@ -174,7 +181,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract, "");
 			IntegerType addressType(0, IntegerType::Modifier::Address);
 			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
-											? dynamic_cast<IntegerType const&>(_targetType) : addressType;
+				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
 			if (stackTypeCategory == Type::Category::IntegerConstant)
 			{
 				IntegerConstantType const& constType = dynamic_cast<IntegerConstantType const&>(_typeOnStack);
@@ -186,7 +193,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			else
 			{
 				IntegerType const& typeOnStack = stackTypeCategory == Type::Category::Integer
-												? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
+					? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
 				// Widening: clean up according to source type width
 				// Non-widening and force: clean up according to target type bits
 				if (targetType.getNumBits() > typeOnStack.getNumBits())
@@ -195,10 +202,12 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 					appendHighBitsCleanup(targetType);
 			}
 		}
-	}
-	else if (_typeOnStack != _targetType)
+		break;
+	default:
 		// All other types should not be convertible to non-equal types.
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));
+		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+		break;
+	}
 }
 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
@@ -773,7 +782,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 				// no lvalue, just retrieve the value
 				m_context
 					<< eth::Instruction::ADD << eth::Instruction::CALLDATALOAD
-					<< u256(0) << eth::Instruction::BYTE;
+					<< ((u256(1) << (256 - 8)) - 1)  << eth::Instruction::AND;
 				break;
 			case ArrayType::Location::Memory:
 				solAssert(false, "Memory lvalues not yet implemented.");

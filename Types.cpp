@@ -175,14 +175,10 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.getCategory() == Category::FixedBytes)
-	{
-		FixedBytesType const& convertTo = dynamic_cast<FixedBytesType const&>(_convertTo);
-		return (m_bits == convertTo.getNumBytes() * 8);
-	}
 	return _convertTo.getCategory() == getCategory() ||
         _convertTo.getCategory() == Category::Contract ||
-        _convertTo.getCategory() == Category::Enum;
+        _convertTo.getCategory() == Category::Enum ||
+		_convertTo.getCategory() == Category::FixedBytes;
 }
 
 TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
@@ -284,7 +280,15 @@ IntegerConstantType::IntegerConstantType(Literal const& _literal)
 
 bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	TypePointer integerType = getIntegerType();
+	auto integerType = getIntegerType();
+	if (_convertTo.getCategory() == Category::FixedBytes)
+	{
+		FixedBytesType const& convertTo = dynamic_cast<FixedBytesType const&>(_convertTo);
+		if (convertTo.getNumBytes() * 8 >= integerType->getNumBits())
+			return true;
+		return false;
+	}
+		
 	return integerType && integerType->isImplicitlyConvertibleTo(_convertTo);
 }
 
@@ -461,7 +465,7 @@ bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	if (_convertTo.getCategory() == Category::Integer)
 	{
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (m_bytes * 8 == convertTo.getNumBits())
+		if (m_bytes * 8 <= convertTo.getNumBits())
 			return true;
 	}
 
