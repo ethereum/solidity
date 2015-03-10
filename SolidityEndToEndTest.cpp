@@ -1031,6 +1031,17 @@ BOOST_AUTO_TEST_CASE(blockchain)
 	BOOST_CHECK(callContractFunctionWithValue("someInfo()", 28) == encodeArgs(28, 0, 1));
 }
 
+BOOST_AUTO_TEST_CASE(now)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function someInfo() returns (bool success) {\n"
+							 "    return block.timestamp == now && now > 0;\n"
+							 "  }\n"
+							 "}\n";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("someInfo()") == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_CASE(function_types)
 {
 	char const* sourceCode = "contract test {\n"
