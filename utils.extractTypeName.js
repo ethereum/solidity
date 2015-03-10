@@ -1,5 +1,5 @@
 var assert = require('assert');
-var utils = require('../lib/utils.js');
+var utils = require('../lib/utils/utils.js');
 
 describe('utils', function () {
     describe('extractTypeName', function () {

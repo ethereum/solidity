@@ -1,6 +1,6 @@
 var assert = require('assert');
 var BigNumber = require('bignumber.js');
-var abi = require('../lib/abi.js');
+var abi = require('../lib/solidity/abi.js');
 var clone = function (object) { return JSON.parse(JSON.stringify(object)); };
 
 var description =  [{
@@ -453,6 +453,22 @@ describe('abi', function() {
 
             // then
             assert.equal(parser.test("0x")[0], 0);
+
+        });
+
+        it('should throw an incorrect type error', function () {
+
+            // given
+            var d = clone(description);
+            d[0].outputs = [
+                { type: 'uin' }
+            ]
+
+            // when
+            var parser = abi.outputParser(d);
+
+            // then
+            assert.throws(function () {parser.test('0x')}, Error);
 
         });
 

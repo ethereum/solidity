@@ -1,5 +1,5 @@
 var assert = require('assert');
-var jsonrpc = require('../lib/jsonrpc');
+var jsonrpc = require('../lib/web3/jsonrpc');
 
 describe('jsonrpc', function () {
     describe('isValidResponse', function () {

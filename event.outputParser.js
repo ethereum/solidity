@@ -1,5 +1,5 @@
 var assert = require('assert');
-var event = require('../lib/event.js');
+var event = require('../lib/web3/event.js');
 
 describe('event', function () {
     describe('outputParser', function () {
