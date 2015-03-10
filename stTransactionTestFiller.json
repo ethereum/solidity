@@ -709,7 +709,7 @@
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "1000000",
+                "balance" : "180000",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -737,7 +737,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "50000",
+            "gasLimit" : "150000",
             "gasPrice" : "1",
             "nonce" : "",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
