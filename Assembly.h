@@ -121,7 +121,7 @@ public:
 	void popTo(int _deposit) { while (m_deposit > _deposit) append(Instruction::POP); }
 
 	void injectStart(AssemblyItem const& _i);
-	std::string out() const { std::stringstream ret; streamRLP(ret); return ret.str(); }
+	std::string out() const { std::stringstream ret; stream(ret); return ret.str(); }
 	int deposit() const { return m_deposit; }
 	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	void setDeposit(int _deposit) { m_deposit = _deposit; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
@@ -131,7 +131,7 @@ public:
 
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
-	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap()) const;
+	std::ostream& stream(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap()) const;
 
 protected:
 	std::string getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
@@ -153,7 +153,7 @@ protected:
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
 {
-	_a.streamRLP(_out);
+	_a.stream(_out);
 	return _out;
 }
 
