@@ -177,9 +177,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	{
 		callDataUnpackerEntryPoints.insert(std::make_pair(it.first, m_context.newTag()));
 		m_context << eth::dupInstruction(1) << u256(FixedHash<4>::Arith(it.first)) << eth::Instruction::EQ;
-		auto assemblyItem = callDataUnpackerEntryPoints.at(it.first);
-		//assemblyItem.setJumpType(eth::AssemblyItem::JumpType::IntoFunction);
-		m_context.appendConditionalJumpTo(assemblyItem);
+		m_context.appendConditionalJumpTo(callDataUnpackerEntryPoints.at(it.first));
 	}
 	if (FunctionDefinition const* fallback = _contract.getFallbackFunction())
 	{
@@ -199,9 +197,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		m_context << callDataUnpackerEntryPoints.at(it.first);
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		appendCalldataUnpacker(functionType->getParameterTypes());
-		auto assemblyItem = m_context.getFunctionEntryLabel(functionType->getDeclaration());
-		//assemblyItem.setJumpType(eth::AssemblyItem::JumpType::IntoFunction);
-		m_context.appendJumpTo(assemblyItem);
+		m_context.appendJumpTo(m_context.getFunctionEntryLabel(functionType->getDeclaration()));
 		m_context << returnTag;
 		appendReturnValuePacker(functionType->getReturnParameterTypes());
 	}
