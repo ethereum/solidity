@@ -10,6 +10,7 @@ RUN apt-get install -qy automake libtool yasm scons
 
 RUN useradd -ms /bin/bash user
 USER user
+ENV HOME /home/user
 WORKDIR /home/user
 
 # Emscripten SDK
