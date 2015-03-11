@@ -61,6 +61,8 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 			return TypePointer();
 		}
 	}
+	else if (_typeToken == Token::Byte)
+		return make_shared<FixedBytesType>(1);
 	else if (_typeToken == Token::Address)
 		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
 	else if (_typeToken == Token::Bool)

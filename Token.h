@@ -252,8 +252,8 @@ namespace solidity
 	K(UInt240, "uint240", 0)                                           \
 	K(UInt248, "uint248", 0)                                           \
 	K(UInt256, "uint256", 0)                                           \
-	K(Bytes0, "bytes0", 0)												\
-	K(Bytes1, "bytes1", 0)                                               \
+	K(Bytes0, "bytes0", 0)                                             \
+	K(Bytes1, "bytes1", 0)                                             \
 	K(Bytes2, "bytes2", 0)                                             \
 	K(Bytes3, "bytes3", 0)                                             \
 	K(Bytes4, "bytes4", 0)                                             \
@@ -285,7 +285,8 @@ namespace solidity
 	K(Bytes30, "bytes30", 0)                                           \
 	K(Bytes31, "bytes31", 0)                                           \
 	K(Bytes32, "bytes32", 0)                                           \
-	K(Bytes, "bytes", 0)												\
+	K(Bytes, "bytes", 0)                                               \
+	K(Byte, "byte", 0)                                                 \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(StringType, "string", 0)                                         \
