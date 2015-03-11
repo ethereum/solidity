@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(natspec_eval_function_exists)
 	// given
 	NatspecExpressionEvaluator e;
 	// when
-	string result = e.evalExpression("`typeof evaluateExpression`").toStdString();
+	string result = e.evalExpression("`typeof natspec.evaluateExpression`").toStdString();
 	// then
 	BOOST_CHECK_EQUAL(result, "function");
 }
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(natspec_js_eval_input_params)
 	// given
 	char const* abi = R"([
 	{
-		"name": "f",
+		"name": "multiply",
 		"constant": false,
 		"type": "function",
 		"inputs": [
@@ -94,7 +94,18 @@ BOOST_AUTO_TEST_CASE(natspec_js_eval_input_params)
 		]
 	}
 	])";
-	NatspecExpressionEvaluator e(abi, "'f'", "[4]");
+	
+	char const* transaction = R"({
+		"jsonrpc": "2.0",
+		"method": "eth_call",
+		"params": [{
+				   "to": "0x8521742d3f456bd237e312d6e30724960f72517a",
+				   "data": "0xc6888fa10000000000000000000000000000000000000000000000000000000000000004"
+				   }],
+		"id": 6
+	})";
+	
+	NatspecExpressionEvaluator e(abi, transaction , "multiply");
 	// when
 	string result = e.evalExpression("Will multiply `a` by 7 and return `a * 7`.").toStdString();
 	// then
@@ -108,7 +119,7 @@ BOOST_AUTO_TEST_CASE(natspec_js_eval_error)
 	// when
 	string result = e.evalExpression("`test(`").toStdString();
 	// then
-	BOOST_CHECK_EQUAL(result, "`test(`");
+	BOOST_CHECK_EQUAL(result, "Natspec evaluation failed, wrong input params");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

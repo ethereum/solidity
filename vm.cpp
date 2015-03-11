@@ -533,33 +533,43 @@ BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 	}
 }
 
-//BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
-//{
-//	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-//	{
-//		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-//		if (arg == "--inputlimits" || arg == "--all")
-//		{
-//			auto start = chrono::steady_clock::now();
+BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--inputlimits" || arg == "--all")
+		{
+			auto start = chrono::steady_clock::now();
 
-//			dev::test::executeTests("vmInputLimitsTest1", "/VMTests", dev::test::doVMTests);
+			dev::test::executeTests("vmInputLimits1", "/VMTests", dev::test::doVMTests);
 
-//			auto end = chrono::steady_clock::now();
-//			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-//			cnote << "test duration: " << duration.count() << " milliseconds.\n";
-//		}
-//	}
-//}
+			auto end = chrono::steady_clock::now();
+			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+			cnote << "test duration: " << duration.count() << " milliseconds.\n";
+		}
+	}
+}
 
-//BOOST_AUTO_TEST_CASE(vmInputLimitsTest2)
-//{
-//	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-//	{
-//		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-//		if (arg == "--inputlimits" || arg == "--all")
-//			dev::test::executeTests("vmInputLimitsTest2", "/VMTests", dev::test::doVMTests);
-//	}
-//}
+BOOST_AUTO_TEST_CASE(vmInputLimitsTest2)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--inputlimits" || arg == "--all")
+			dev::test::executeTests("vmInputLimits2", "/VMTests", dev::test::doVMTests);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
+{
+	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	{
+		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+		if (arg == "--inputlimits" || arg == "--all")
+			dev::test::executeTests("vmInputLimitsLight", "/VMTests", dev::test::doVMTests);
+	}
+}
 
 BOOST_AUTO_TEST_CASE(vmRandom)
 {
