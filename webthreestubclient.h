@@ -436,11 +436,11 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_queuedTransactions(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_fetchQueuedTransactions(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_queuedTransactions",p);
+            Json::Value result = this->CallMethod("eth_fetchQueuedTransactions",p);
             if (result.isArray())
                 return result;
             else
