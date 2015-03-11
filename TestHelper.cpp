@@ -181,46 +181,35 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
 
 	// export post state
-	json_spirit::mObject postState;
 
-	for (auto const& a: _statePost.addresses())
-	{
-		json_spirit::mObject o;
-		o["balance"] = toString(_statePost.balance(a.first));
-		o["nonce"] = toString(_statePost.transactionsFrom(a.first));
-		{
-			json_spirit::mObject store;
-			for (auto const& s: _statePost.storage(a.first))
-				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
-			o["storage"] = store;
-		}
-		o["code"] = "0x" + toHex(_statePost.code(a.first));
-
-		postState[toString(a.first)] = o;
-	}
-	m_TestObject["post"] = json_spirit::mValue(postState);
-
+	m_TestObject["post"] = fillJsonWithState(_statePost);
 	m_TestObject["postStateRoot"] = toHex(_statePost.rootHash().asBytes());
 
 	// export pre state
-	json_spirit::mObject preState;
+	m_TestObject["pre"] = fillJsonWithState(m_statePre);
+}
 
-	for (auto const& a: m_statePre.addresses())
+json_spirit::mObject fillJsonWithState(State _state)
+{
+	// export pre state
+	json_spirit::mObject oState;
+
+	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = toString(m_statePre.balance(a.first));
-		o["nonce"] = toString(m_statePre.transactionsFrom(a.first));
+		o["balance"] = toString(_state.balance(a.first));
+		o["nonce"] = toString(_state.transactionsFrom(a.first));
 		{
 			json_spirit::mObject store;
-			for (auto const& s: m_statePre.storage(a.first))
+			for (auto const& s: _state.storage(a.first))
 				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
 			o["storage"] = store;
 		}
-		o["code"] = "0x" + toHex(m_statePre.code(a.first));
+		o["code"] = "0x" + toHex(_state.code(a.first));
 
-		preState[toString(a.first)] = o;
+		oState[toString(a.first)] = o;
 	}
-	m_TestObject["pre"] = json_spirit::mValue(preState);
+	return oState;
 }
 
 u256 toInt(json_spirit::mValue const& _v)
