@@ -534,6 +534,27 @@ BOOST_AUTO_TEST_CASE(empty_string_on_stack)
 	BOOST_CHECK(callContractFunction("run(bytes0,uint8)", string(), byte(0x02)) == encodeArgs(0x2, string(""), string("abc\0")));
 }
 
+BOOST_AUTO_TEST_CASE(inc_dec_operators)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint8 x;
+			uint v;
+			function f() returns (uint r) {
+				uint a = 6;
+				r = a;
+				r += (a++) * 0x10;
+				r += (++a) * 0x100;
+				v = 3;
+				r += (v++) * 0x1000;
+				r += (++v) * 0x10000;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(0x53866));
+}
+
 BOOST_AUTO_TEST_CASE(state_smoke_test)
 {
 	char const* sourceCode = "contract test {\n"
@@ -2502,7 +2523,7 @@ BOOST_AUTO_TEST_CASE(struct_copy)
 		contract c {
 			struct Nested { uint x; uint y; }
 			struct Struct { uint a; mapping(uint => Struct) b; Nested nested; uint c; }
-			mapping(uint => Struct) public data;
+			mapping(uint => Struct) data;
 			function set(uint k) returns (bool) {
 				data[k].a = 1;
 				data[k].nested.x = 3;
