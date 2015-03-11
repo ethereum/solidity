@@ -3016,7 +3016,6 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 		20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 		30, 31, 32, 33};
-	cout << toHex(callContractFunction("direct(bytes,uint256)", u256(array.length()), 32, array)) << endl;
 	BOOST_CHECK(callContractFunction("direct(bytes,uint256)", u256(array.length()), 32, array) == encodeArgs(32));
 	BOOST_CHECK(callContractFunction("storageCopyRead(bytes,uint256)", u256(array.length()), 32, array) == encodeArgs(32));
 	BOOST_CHECK(callContractFunction("storageWrite()") == encodeArgs(0x193));
