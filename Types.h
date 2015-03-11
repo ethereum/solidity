@@ -284,6 +284,9 @@ public:
 /**
  * The type of an array. The flavours are byte array (bytes), statically- (<type>[<length>])
  * and dynamically-sized array (<type>[]).
+ * In storage, all arrays are packed tightly (as long as more than one elementary type fits in
+ * one slot). Dynamically sized arrays (including byte arrays) start with their size as a uint and
+ * thus start on their own slot.
  */
 class ArrayType: public Type
 {
@@ -384,7 +387,7 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override;
-	virtual unsigned getSizeOnStack() const override { return 1; /*@todo*/ }
+	virtual unsigned getSizeOnStack() const override { return 2; }
 	virtual std::string toString() const override;
 
 	virtual MemberList const& getMembers() const override;
@@ -527,6 +530,7 @@ private:
 
 /**
  * The type of a mapping, there is one distinct type per key/value type pair.
+ * Mappings always occupy their own storage slot, but do not actually use it.
  */
 class MappingType: public Type
 {
@@ -537,6 +541,7 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString() const override;
+	virtual unsigned getSizeOnStack() const override { return 2; }
 	virtual bool canLiveOutsideStorage() const override { return false; }
 
 	TypePointer const& getKeyType() const { return m_keyType; }

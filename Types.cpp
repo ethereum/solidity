@@ -644,6 +644,9 @@ unsigned ArrayType::getSizeOnStack() const
 	if (m_location == Location::CallData)
 		// offset [length] (stack top)
 		return 1 + (isDynamicallySized() ? 1 : 0);
+	else if (m_location == Location::Storage)
+		// storage_key storage_offset
+		return 2;
 	else
 		// offset
 		return 1;

@@ -77,7 +77,7 @@ void StackVariable::setToZero(SourceLocation const& _location, bool) const
 StorageItem::StorageItem(CompilerContext& _compilerContext, Declaration const& _declaration):
 	StorageItem(_compilerContext, *_declaration.getType())
 {
-	m_context << m_context.getStorageLocationOfVariable(_declaration);
+	m_context << m_context.getStorageLocationOfVariable(_declaration) << u256(0);
 }
 
 StorageItem::StorageItem(CompilerContext& _compilerContext, Type const& _type):
@@ -86,62 +86,42 @@ StorageItem::StorageItem(CompilerContext& _compilerContext, Type const& _type):
 	if (m_dataType.isValueType())
 	{
 		solAssert(m_dataType.getStorageSize() == m_dataType.getSizeOnStack(), "");
-		solAssert(m_dataType.getStorageSize() <= numeric_limits<unsigned>::max(),
-			"The storage size of " + m_dataType.toString() + " should fit in an unsigned");
-		m_size = unsigned(m_dataType.getStorageSize());
+		//@todo the meaning of getStorageSize() probably changes
+		solAssert(m_dataType.getStorageSize() == 1, "Invalid storage size.");
 	}
-	else
-		m_size = 0; // unused
 }
 
 void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 {
+	// stack: storage_key storage_offset
 	if (!m_dataType.isValueType())
 		return; // no distinction between value and reference for non-value types
 	if (!_remove)
-		m_context << eth::Instruction::DUP1;
-	if (m_size == 1)
-		m_context << eth::Instruction::SLOAD;
-	else
-		for (unsigned i = 0; i < m_size; ++i)
-		{
-			m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP1;
-			if (i + 1 < m_size)
-				m_context << u256(1) << eth::Instruction::ADD;
-			else
-				m_context << eth::Instruction::POP;
-		}
+		CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
+	m_context
+		<< eth::Instruction::SWAP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP1
+		<< u256(2) << eth::Instruction::EXP << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+	//@todo higher order bits might be dirty. Is this bad?
+	//@todo this does not work for types that are left-aligned on the stack.
+	// make those types right-aligned?
 }
 
 void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
 {
-	// stack layout: value value ... value target_ref
+	// stack: value storage_key storage_offset
 	if (m_dataType.isValueType())
 	{
-		if (!_move) // copy values
-		{
-			if (m_size + 1 > 16)
-				BOOST_THROW_EXCEPTION(CompilerError()
-					<< errinfo_sourceLocation(_location) << errinfo_comment("Stack too deep."));
-			for (unsigned i = 0; i < m_size; ++i)
-				m_context << eth::dupInstruction(m_size + 1) << eth::Instruction::SWAP1;
-		}
-		if (m_size > 1) // store high index value first
-			m_context << u256(m_size - 1) << eth::Instruction::ADD;
-		for (unsigned i = 0; i < m_size; ++i)
-		{
-			if (i + 1 >= m_size)
-				m_context << eth::Instruction::SSTORE;
-			else
-				// stack here: value value ... value value (target_ref+offset)
-				m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2
-					<< eth::Instruction::SSTORE
-					<< u256(1) << eth::Instruction::SWAP1 << eth::Instruction::SUB;
-		}
+		//@todo OR the value into the storage like it is done for ByteArrayElement
+		m_context
+			<< u256(2) << eth::Instruction::EXP << eth::Instruction::DUP3 << eth::Instruction::MUL
+			<< eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
+		if (_move)
+			m_context << eth::Instruction::POP;
 	}
 	else
 	{
-		solAssert(_sourceType.getCategory() == m_dataType.getCategory(),
+		solAssert(
+			_sourceType.getCategory() == m_dataType.getCategory(),
 			"Wrong type conversation for assignment.");
 		if (m_dataType.getCategory() == Type::Category::Array)
 		{
@@ -149,40 +129,48 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 						dynamic_cast<ArrayType const&>(m_dataType),
 						dynamic_cast<ArrayType const&>(_sourceType));
 			if (_move)
-				m_context << eth::Instruction::POP;
+				CompilerUtils(m_context).popStackElement(_sourceType);
 		}
 		else if (m_dataType.getCategory() == Type::Category::Struct)
 		{
-			// stack layout: source_ref target_ref
+			// stack layout: source_ref source_offset target_ref target_offset
 			auto const& structType = dynamic_cast<StructType const&>(m_dataType);
 			solAssert(structType == _sourceType, "Struct assignment with conversion.");
 			for (auto const& member: structType.getMembers())
 			{
+				//@todo actually use offsets
 				// assign each member that is not a mapping
 				TypePointer const& memberType = member.second;
 				if (memberType->getCategory() == Type::Category::Mapping)
 					continue;
 				m_context << structType.getStorageOffsetOfMember(member.first)
-					<< eth::Instruction::DUP3 << eth::Instruction::DUP2 << eth::Instruction::ADD;
-				// stack: source_ref target_ref member_offset source_member_ref
+					<< eth::Instruction::DUP5 << eth::Instruction::DUP2 << eth::Instruction::ADD;
+				m_context << u256(0); // zero offset
+				// stack: source_ref source_off target_ref target_off member_offset source_member_ref source_member_off
 				StorageItem(m_context, *memberType).retrieveValue(_location, true);
-				// stack: source_ref target_ref member_offset source_value...
+				// stack: source_ref source_off target_ref target_off member_offset source_value...
 				solAssert(2 + memberType->getSizeOnStack() <= 16, "Stack too deep.");
-				m_context << eth::dupInstruction(2 + memberType->getSizeOnStack())
+				m_context << eth::dupInstruction(3 + memberType->getSizeOnStack())
 					<< eth::dupInstruction(2 + memberType->getSizeOnStack()) << eth::Instruction::ADD;
-				// stack: source_ref target_ref member_offset source_value... target_member_ref
+				// stack: source_ref source_off target_ref target_off member_offset source_value... target_member_ref
+				m_context << u256(0); // zero offset
 				StorageItem(m_context, *memberType).storeValue(*memberType, _location, true);
 				m_context << eth::Instruction::POP;
 			}
 			if (_move)
-				m_context << eth::Instruction::POP;
+				m_context
+					<< eth::Instruction::POP << eth::Instruction::POP
+					<< eth::Instruction::POP << eth::Instruction::POP;
 			else
-				m_context << eth::Instruction::SWAP1;
-			m_context << eth::Instruction::POP;
+				m_context
+					<< eth::Instruction::SWAP2 << eth::Instruction::POP
+					<< eth::Instruction::SWAP2 << eth::Instruction::POP;
 		}
 		else
-			BOOST_THROW_EXCEPTION(InternalCompilerError()
-				<< errinfo_sourceLocation(_location) << errinfo_comment("Invalid non-value type for assignment."));
+			BOOST_THROW_EXCEPTION(
+				InternalCompilerError()
+					<< errinfo_sourceLocation(_location)
+					<< errinfo_comment("Invalid non-value type for assignment."));
 	}
 }
 
@@ -191,12 +179,12 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 	if (m_dataType.getCategory() == Type::Category::Array)
 	{
 		if (!_removeReference)
-			m_context << eth::Instruction::DUP1;
+			CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
 		ArrayUtils(m_context).clearArray(dynamic_cast<ArrayType const&>(m_dataType));
 	}
 	else if (m_dataType.getCategory() == Type::Category::Struct)
 	{
-		// stack layout: ref
+		// stack layout: storage_key storage_offset
 		auto const& structType = dynamic_cast<StructType const&>(m_dataType);
 		for (auto const& member: structType.getMembers())
 		{
@@ -204,33 +192,23 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 			TypePointer const& memberType = member.second;
 			if (memberType->getCategory() == Type::Category::Mapping)
 				continue;
-			m_context << structType.getStorageOffsetOfMember(member.first)
-				<< eth::Instruction::DUP2 << eth::Instruction::ADD;
+			// @todo actually use offset
+			m_context
+				<< structType.getStorageOffsetOfMember(member.first)
+				<< eth::Instruction::DUP3 << eth::Instruction::ADD;
+			m_context << u256(0);
 			StorageItem(m_context, *memberType).setToZero();
 		}
 		if (_removeReference)
-			m_context << eth::Instruction::POP;
+			m_context << eth::Instruction::POP << eth::Instruction::POP;
 	}
 	else
 	{
 		solAssert(m_dataType.isValueType(), "Clearing of unsupported type requested: " + m_dataType.toString());
-		if (m_size == 0 && _removeReference)
-			m_context << eth::Instruction::POP;
-		else if (m_size == 1)
-			m_context
-				<< u256(0) << (_removeReference ? eth::Instruction::SWAP1 : eth::Instruction::DUP2)
-				<< eth::Instruction::SSTORE;
-		else
-		{
-			if (!_removeReference)
-				m_context << eth::Instruction::DUP1;
-			for (unsigned i = 0; i < m_size; ++i)
-				if (i + 1 >= m_size)
-					m_context << u256(0) << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
-				else
-					m_context << u256(0) << eth::Instruction::DUP2 << eth::Instruction::SSTORE
-						<< u256(1) << eth::Instruction::ADD;
-		}
+		// @todo actually use offset
+		if (!_removeReference)
+			CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
+		m_context << eth::Instruction::POP << u256(0) << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
 	}
 }
 
@@ -300,6 +278,8 @@ StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, const 
 	m_arrayType(_arrayType)
 {
 	solAssert(m_arrayType.isDynamicallySized(), "");
+	// storage byte offset must be zero
+	m_context << eth::Instruction::POP;
 }
 
 void StorageArrayLength::retrieveValue(SourceLocation const&, bool _remove) const

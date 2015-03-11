@@ -98,7 +98,9 @@ private:
 };
 
 /**
- * Reference to some item in storage. The (starting) position of the item is stored on the stack.
+ * Reference to some item in storage. On the stack this is <storage key> <offset_inside_value>,
+ * where 0 <= offset_inside_value < 32 and an offset of i means that the value is multiplied
+ * by 2**i before storing it.
  */
 class StorageItem: public LValue
 {
@@ -107,6 +109,7 @@ public:
 	StorageItem(CompilerContext& _compilerContext, Declaration const& _declaration);
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageItem(CompilerContext& _compilerContext, Type const& _type);
+	virtual unsigned sizeOnStack() const { return 2; }
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
@@ -117,11 +120,6 @@ public:
 		SourceLocation const& _location = SourceLocation(),
 		bool _removeReference = true
 	) const override;
-
-private:
-	/// Number of stack elements occupied by the value (not the reference).
-	/// Only used for value types.
-	unsigned m_size;
 };
 
 /**
