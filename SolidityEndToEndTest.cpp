@@ -1189,7 +1189,7 @@ BOOST_AUTO_TEST_CASE(log0)
 {
 	char const* sourceCode = "contract test {\n"
 							 "  function a() {\n"
-							 "    log0(bytes32(int(1)));\n"
+							 "    log0(bytes32(1));\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
@@ -1204,7 +1204,7 @@ BOOST_AUTO_TEST_CASE(log1)
 {
 	char const* sourceCode = "contract test {\n"
 							 "  function a() {\n"
-							 "    log1(bytes32(int(1)), bytes32(int(2)));\n"
+							 "    log1(bytes32(1), bytes32(2));\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
@@ -1220,7 +1220,7 @@ BOOST_AUTO_TEST_CASE(log2)
 {
 	char const* sourceCode = "contract test {\n"
 							 "  function a() {\n"
-							 "    log2(bytes32(int(1)), bytes32(int(2)), bytes32(int(3)));\n"
+							 "    log2(bytes32(1), bytes32(2), bytes32(3));\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
@@ -1237,7 +1237,7 @@ BOOST_AUTO_TEST_CASE(log3)
 {
 	char const* sourceCode = "contract test {\n"
 							 "  function a() {\n"
-							 "    log3(bytes32(int(1)), bytes32(int(2)), bytes32(int(3)), bytes32(int(4)));\n"
+							 "    log3(bytes32(1), bytes32(2), bytes32(3), bytes32(4));\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
@@ -1254,7 +1254,7 @@ BOOST_AUTO_TEST_CASE(log4)
 {
 	char const* sourceCode = "contract test {\n"
 							 "  function a() {\n"
-							 "    log4(bytes32(int(1)), bytes32(int(2)), bytes32(int(3)), bytes32(int(4)), bytes32(int(5)));\n"
+							 "    log4(bytes32(1), bytes32(2), bytes32(3), bytes32(4), bytes32(5));\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
@@ -1271,7 +1271,7 @@ BOOST_AUTO_TEST_CASE(log_in_constructor)
 {
 	char const* sourceCode = "contract test {\n"
 							 "  function test() {\n"
-							 "    log1(bytes32(int(1)), bytes32(int(2)));\n"
+							 "    log1(bytes32(1), bytes32(2));\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
