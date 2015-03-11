@@ -246,7 +246,7 @@ void StorageByteArrayElement::retrieveValue(SourceLocation const&, bool _remove)
 	// stack: ref byte_number
 	if (_remove)
 		m_context << eth::Instruction::SWAP1 << eth::Instruction::SLOAD
-			<< eth::Instruction::SWAP1 << eth::Instruction::BYTE ;
+			<< eth::Instruction::SWAP1 << eth::Instruction::BYTE;
 	else
 		m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD
 			<< eth::Instruction::DUP2 << eth::Instruction::BYTE;

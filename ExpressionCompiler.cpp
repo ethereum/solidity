@@ -133,7 +133,6 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			// conversion from bytes to integer. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			// solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
 			if (targetIntegerType.getNumBits() < typeOnStack.getNumBytes() * 8)
 				appendTypeConversion(IntegerType(typeOnStack.getNumBytes() * 8), _targetType, _cleanupNeeded); 
@@ -782,7 +781,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 				// no lvalue, just retrieve the value
 				m_context
 					<< eth::Instruction::ADD << eth::Instruction::CALLDATALOAD
-					<< ((u256(1) << (256 - 8)) - 1)  << eth::Instruction::AND;
+					<< ((u256(0xff) << (256 - 8)))  << eth::Instruction::AND;
 				break;
 			case ArrayType::Location::Memory:
 				solAssert(false, "Memory lvalues not yet implemented.");
