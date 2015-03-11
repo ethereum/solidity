@@ -339,10 +339,10 @@ BOOST_AUTO_TEST_CASE(inherited)
 	char const* sourceCode =
 	"	contract Base { \n"
 	"		function baseFunction(uint p) returns (uint i) { return p; } \n"
-	"		event baseEvent(string32 indexed evtArgBase); \n"
+	"		event baseEvent(bytes32 indexed evtArgBase); \n"
 	"	} \n"
 	"	contract Derived is Base { \n"
-	"		function derivedFunction(string32 p) returns (string32 i) { return p; } \n"
+	"		function derivedFunction(bytes32 p) returns (bytes32 i) { return p; } \n"
 	"		event derivedEvent(uint indexed evtArgDerived); \n"
 	"	}";
 
@@ -369,12 +369,12 @@ BOOST_AUTO_TEST_CASE(inherited)
 		"inputs":
 		[{
 			"name": "p",
-			"type": "string32"
+			"type": "bytes32"
 		}],
 		"outputs":
 		[{
 			"name": "i",
-			"type": "string32"
+			"type": "bytes32"
 		}]
 	},
 	{
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(inherited)
 		[{
 			"indexed": true,
 			"name": "evtArgBase",
-			"type": "string32"
+			"type": "bytes32"
 		}]
 	}])";
 
