@@ -1393,6 +1393,16 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes32) == *make_shared<FixedBytesType>(32));
 }
 
+BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
+{
+	char const* text = R"(
+		contract c {
+			bytes arr;
+			function f() { byte a = arr[0];}
+		})";
+	ETH_TEST_REQUIRE_NO_THROW(parseTextAndResolveNames(text), "Type resolving failed");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
