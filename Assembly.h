@@ -71,7 +71,7 @@ private:
 	AssemblyItemType m_type;
 	u256 m_data;
 	SourceLocation m_location;
-	JumpType m_jumpType;
+	JumpType m_jumpType = JumpType::Ordinary;
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
