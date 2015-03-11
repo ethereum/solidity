@@ -158,7 +158,7 @@ protected:
 };
 
 /**
- * Any kind of integer type including address.
+ * Any kind of integer type (signed, unsigned, address).
  */
 class IntegerType: public Type
 {
@@ -231,7 +231,7 @@ private:
 };
 
 /**
- * Bytes type with fixed length of up to 32 bytes
+ * Bytes type with fixed length of up to 32 bytes.
  */
 class FixedBytesType: public Type
 {

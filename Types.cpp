@@ -178,8 +178,8 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.getCategory() == getCategory() ||
-        _convertTo.getCategory() == Category::Contract ||
-        _convertTo.getCategory() == Category::Enum ||
+		_convertTo.getCategory() == Category::Contract ||
+		_convertTo.getCategory() == Category::Enum ||
 		_convertTo.getCategory() == Category::FixedBytes;
 }
 
@@ -488,7 +488,6 @@ TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
 TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	auto commonType = dynamic_pointer_cast<FixedBytesType const>(Type::commonType(shared_from_this(), _other));
-
 	if (!commonType)
 		return TypePointer();
 
