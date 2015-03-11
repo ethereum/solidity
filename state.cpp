@@ -130,6 +130,11 @@ BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
 	dev::test::executeTests("stSystemOperationsTest", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest)
+{
+	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 {
 	dev::test::executeTests("stPreCompiledContracts", "/StateTests", dev::test::doStateTests);
