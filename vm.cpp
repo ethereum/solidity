@@ -312,7 +312,7 @@ namespace dev { namespace test {
 
 void doVMTests(json_spirit::mValue& v, bool _fillin)
 {
-	processCommandLineOptions();
+	Options::get(); // process command line options // TODO: We need to control the main() function
 
 	for (auto& i: v.get_obj())
 	{
@@ -344,7 +344,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		try
 		{
 			auto vm = eth::VMFactory::create(fev.gas);
-			output = vm->go(fev, fev.simpleTrace()).toBytes();
+			auto vmtrace = Options::get().vmtrace ? fev.simpleTrace() : OnOpFunc{};
+			output = vm->go(fev, vmtrace).toBytes();
 			gas = vm->gas();
 		}
 		catch (VMException const&)
@@ -364,18 +365,12 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		auto endTime = std::chrono::high_resolution_clock::now();
-		auto argc = boost::unit_test::framework::master_test_suite().argc;
-		auto argv = boost::unit_test::framework::master_test_suite().argv;
-		for (auto i = 0; i < argc; ++i)
+		if (Options::get().showTimes)
 		{
-			if (std::string(argv[i]) == "--show-times")
-			{
-				auto testDuration = endTime - startTime;
-				cnote << "Execution time: "
-				      << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
-				      << " ms";
-				break;
-			}
+			auto testDuration = endTime - startTime;
+			cnote << "Execution time: "
+				  << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+				  << " ms";
 		}
 
 		// delete null entries in storage for the sake of comparison
@@ -517,58 +512,42 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 
 BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 {
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	if (test::Options::get().performance)
 	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--performance" || arg == "--all")
-		{
-			auto start = chrono::steady_clock::now();
+		auto start = chrono::steady_clock::now();
 
-			dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
+		dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
 
-			auto end = chrono::steady_clock::now();
-			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-			cnote << "test duration: " << duration.count() << " milliseconds.\n";
-		}
+		auto end = chrono::steady_clock::now();
+		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
 {
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	if (test::Options::get().inputLimits)
 	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--inputlimits" || arg == "--all")
-		{
-			auto start = chrono::steady_clock::now();
+		auto start = chrono::steady_clock::now();
 
-			dev::test::executeTests("vmInputLimits1", "/VMTests", dev::test::doVMTests);
+		dev::test::executeTests("vmInputLimits1", "/VMTests", dev::test::doVMTests);
 
-			auto end = chrono::steady_clock::now();
-			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-			cnote << "test duration: " << duration.count() << " milliseconds.\n";
-		}
+		auto end = chrono::steady_clock::now();
+		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest2)
 {
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--inputlimits" || arg == "--all")
-			dev::test::executeTests("vmInputLimits2", "/VMTests", dev::test::doVMTests);
-	}
+	if (test::Options::get().inputLimits)
+		dev::test::executeTests("vmInputLimits2", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
 {
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--inputlimits" || arg == "--all")
-			dev::test::executeTests("vmInputLimitsLight", "/VMTests", dev::test::doVMTests);
-	}
+	if (test::Options::get().inputLimits)
+		dev::test::executeTests("vmInputLimitsLight", "/VMTests", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmRandom)
