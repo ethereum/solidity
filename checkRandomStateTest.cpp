@@ -125,8 +125,6 @@ bool doStateTest(mValue& _v)
 				return 1;
 		}
 
-
-		// check logs
 		//checkLog(theState.pending().size() ? theState.log(0) : LogEntries(), importer.m_environment.sub.logs);
 		eth::LogEntries logs = theState.pending().size() ? theState.log(0) : eth::LogEntries();
 
@@ -219,7 +217,6 @@ bool doStateTest(mValue& _v)
 		}
 		if(expectedAddrs != resultAddrs)
 			return 1;
-
 #endif
 		if(theState.rootHash() != h256(o["postStateRoot"].get_str()), "wrong post state root")
 			return 1;
