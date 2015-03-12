@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	for (auto i:{0,1,2,3,4,5})
 	{
 		Host* h = new Host("Test", NetworkPreferences(30300 + i, "127.0.0.1", true, true));
+		h->setIdealPeerCount(10);
 		// starting host is required so listenport is available
 		h->start();
 		while (!h->isStarted())
