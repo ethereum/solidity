@@ -859,6 +859,8 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	{
 		if (!variable->isConstant())
 			setLValueFromDeclaration(*declaration, _identifier);
+		else
+			variable->getValue()->accept(*this);
 	}
 	else if (dynamic_cast<ContractDefinition const*>(declaration))
 	{

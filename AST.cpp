@@ -189,7 +189,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
 		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
-				if (f->isPublic() && !f->isConstructor() && !f->getName().empty() && functionsSeen.count(f->getName()) == 0)
+				if (functionsSeen.count(f->getName()) == 0 && f->isPartOfExternalInterface())
 				{
 					functionsSeen.insert(f->getName());
 					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
@@ -197,7 +197,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 				}
 
 			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
-				if (v->isPublic() && functionsSeen.count(v->getName()) == 0 && !v->isConstant())
+				if (functionsSeen.count(v->getName()) == 0 && v->isPartOfExternalInterface())
 				{
 					FunctionType ftype(*v);
 					functionsSeen.insert(v->getName());

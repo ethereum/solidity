@@ -54,7 +54,6 @@ private:
 		bool allowIndexed = false;
 		bool allowEmptyName = false;
 		bool allowInitialValue = false;
-		bool isDeclaredConst = false;
 	};
 
 	///@{
@@ -67,8 +66,7 @@ private:
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
-	ASTPointer<VariableDeclaration> parseVariableDeclaration(
-		VarDeclParserOptions const& _options = VarDeclParserOptions(),
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(VarDeclParserOptions const& _options = VarDeclParserOptions(),
 		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>());
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<EventDefinition> parseEventDefinition();
