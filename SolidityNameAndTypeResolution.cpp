@@ -1358,6 +1358,7 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt248) == *make_shared<IntegerType>(248, IntegerType::Modifier::Unsigned));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt256) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
 
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Byte) == *make_shared<FixedBytesType>(1));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes0) == *make_shared<FixedBytesType>(0));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes1) == *make_shared<FixedBytesType>(1));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes2) == *make_shared<FixedBytesType>(2));
