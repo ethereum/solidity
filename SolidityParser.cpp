@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(single_function_param)
 {
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
-					   "  function functionName(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed.");
 }
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  /// This is a test function\n"
-					   "  function functionName(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
 	auto functions = contract->getDefinedFunctions();
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  // We won't see this comment\n"
-					   "  function functionName(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
 	auto functions = contract->getDefinedFunctions();
@@ -164,13 +164,13 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  /// This is test function 1\n"
-					   "  function functionName1(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function functionName1(bytes32 input) returns (bytes32 out) {}\n"
 					   "  /// This is test function 2\n"
-					   "  function functionName2(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function functionName2(bytes32 input) returns (bytes32 out) {}\n"
 					   "  // nothing to see here\n"
-					   "  function functionName3(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function functionName3(bytes32 input) returns (bytes32 out) {}\n"
 					   "  /// This is test function 4\n"
-					   "  function functionName4(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function functionName4(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
 	auto functions = contract->getDefinedFunctions();
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 					   "  uint256 stateVar;\n"
 					   "  /// This is a test function\n"
 					   "  /// and it has 2 lines\n"
-					   "  function functionName1(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function functionName1(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
 	auto functions = contract->getDefinedFunctions();
@@ -218,11 +218,11 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 					   "    /// I should not interfere with actual natspec comments\n"
 					   "    uint256 c;\n"
 					   "    mapping(address=>bytes32) d;\n"
-					   "    string name = \"Solidity\";"
+					   "    bytes7 name = \"Solidity\";"
 					   "  }\n"
 					   "  /// This is a test function\n"
 					   "  /// and it has 2 lines\n"
-					   "  function fun(bytes32 in) returns (bytes32 out) {}\n"
+					   "  function fun(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
 	auto functions = contract->getDefinedFunctions();
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 					   "    /// I should not interfere with actual natspec comments\n"
 					   "    uint256 c;\n"
 					   "    mapping(address=>bytes32) d;\n"
-					   "    string name = \"Solidity\";"
+					   "    bytes7 name = \"Solidity\";"
 					   "  }\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 					   "    /// I should not interfere with actual natspec comments\n"
 					   "    uint256 c;\n"
 					   "    mapping(address=>bytes32) d;\n"
-					   "    string name = \"Solidity\";"
+					   "    bytes7 name = \"Solidity\";"
 					   "  }\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(struct_definition)
 BOOST_AUTO_TEST_CASE(mapping)
 {
 	char const* text = "contract test {\n"
-					   "  mapping(address => string) names;\n"
+					   "  mapping(address => bytes32) names;\n"
 					   "}\n";
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed");
 }
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(variable_definition_with_initialization)
 					   "    var b = 2;\n"
 					   "    uint256 c = 0x87;\n"
 					   "    mapping(address=>bytes32) d;\n"
-					   "    string name = \"Solidity\";"
+					   "    bytes7 name = \"Solidity\";"
 					   "    customtype varname;\n"
 					   "  }\n"
 					   "}\n";
@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE(event_arguments)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint a, string32 s);
+			event e(uint a, bytes32 s);
 		})";
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed");
 }
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(event_arguments_indexed)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint a, string32 indexed s, bool indexed b);
+			event e(uint a, bytes32 indexed s, bool indexed b);
 		})";
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed");
 }
@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(arrays_in_events)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint[10] a, string7[8] indexed b, c[3] x);
+			event e(uint[10] a, bytes7[8] indexed b, c[3] x);
 		})";
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed");
 }
