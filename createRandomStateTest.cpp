@@ -82,57 +82,53 @@ int main(int argc, char *argv[])
 			i--;
 	}
 
-    string const s = R"(
-    {
-        "randomStatetest" : {
-            "env" : {
-                "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-                "currentDifficulty" : "256",
-                "currentGasLimit" : "1000000",
-                "currentNumber" : "0",
-                "currentTimestamp" : 1,
-                "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
-            },
-            "pre" : {
-                "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                    "balance" : "1000000000000000000",
-                    "code" : "0x6001600101600055",
-                    "nonce" : "0",
-                    "storage" : {
-                    }
-                },
-                "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                    "balance" : "1000000000000000000",
-                    "code" : "0x",
-                    "nonce" : "0",
-                    "storage" : {
-                    }
-                }
-            },
-            "transaction" : {
-                "data" : "",
-                "gasLimit" : "400000",
-                "gasPrice" : "1",
-                "nonce" : "0",
-                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                "value" : "100000"
-            }
-        }
-    }
+	string const s = R"(
+	{
+		"randomStatetest" : {
+			"env" : {
+				"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+				"currentDifficulty" : "256",
+				"currentGasLimit" : "1000000",
+				"currentNumber" : "0",
+				"currentTimestamp" : 1,
+				"previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+			},
+			"pre" : {
+				"095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+					"balance" : "1000000000000000000",
+					"code" : "0x6001600101600055",
+					"nonce" : "0",
+					"storage" : {
+					}
+				},
+				"a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+					"balance" : "1000000000000000000",
+					"code" : "0x",
+					"nonce" : "0",
+					"storage" : {
+					}
+				}
+			},
+			"transaction" : {
+				"data" : "",
+				"gasLimit" : "400000",
+				"gasPrice" : "1",
+				"nonce" : "0",
+				"secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+				"to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+				"value" : "100000"
+			}
+		}
+	}
 )";
-
-
-    cout << "the test: " <<  s << endl;
-
-    mValue v;
+	mValue v;
 	read_string(s, v);
 
 	// insert new random code
-    v.get_obj().find("randomStatetest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode + (randGen() > 128 ? "55" : "");
+	v.get_obj().find("randomStatetest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode + (randGen() > 128 ? "55" : "");
 
-    // fill test
-    doStateTests(v);
+	// fill test
+	doStateTests(v);
 
 	// stream to output for further handling by the bash script
 	cout << json_spirit::write_string(v, true);
@@ -142,45 +138,41 @@ int main(int argc, char *argv[])
 
 void doStateTests(json_spirit::mValue& _v)
 {
-   try{
-    for (auto& i: _v.get_obj())
-    {
-        cerr << i.first << endl;
-        mObject& o = i.second.get_obj();
+	eth::VMFactory::setKind(eth::VMKind::Interpreter);
 
-        assert(o.count("env") > 0);
-        assert(o.count("pre") > 0);
-        assert(o.count("transaction") > 0);
+	for (auto& i: _v.get_obj())
+	{
+		//cerr << i.first << endl;
+		mObject& o = i.second.get_obj();
 
-        test::ImportTest importer(o, true);
+		assert(o.count("env") > 0);
+		assert(o.count("pre") > 0);
+		assert(o.count("transaction") > 0);
 
-        eth::State theState = importer.m_statePre;
-        bytes tx = importer.m_transaction.rlp();
-        bytes output;
+		test::ImportTest importer(o, true);
 
-        try
-        {
-            theState.execute(test::lastHashes(importer.m_environment.currentBlock.number), tx, &output);
-        }
-        catch (Exception const& _e)
-        {
-            cnote << "state execution did throw an exception: " << diagnostic_information(_e);
-            theState.commit();
-        }
-        catch (std::exception const& _e)
-        {
-            cnote << "state execution did throw an exception: " << _e.what();
-        }
+		eth::State theState = importer.m_statePre;
+		bytes tx = importer.m_transaction.rlp();
+		bytes output;
+
+		try
+		{
+			theState.execute(test::lastHashes(importer.m_environment.currentBlock.number), tx, &output);
+		}
+		catch (Exception const& _e)
+		{
+			cnote << "state execution did throw an exception: " << diagnostic_information(_e);
+			theState.commit();
+		}
+		catch (std::exception const& _e)
+		{
+			cnote << "state execution did throw an exception: " << _e.what();
+		}
 #if ETH_FATDB
-        importer.exportTest(output, theState);
+		importer.exportTest(output, theState);
 #else
-        BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("You can not fill tests when FATDB is switched off"));
+		cout << "You can not fill tests when FATDB is switched off";
 #endif
-    }
-    }
-    catch (Exception const& _e)
-    {
-        cout << "problem: " << diagnostic_information(_e);
-    }
+	}
 }
 
