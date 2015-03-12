@@ -141,7 +141,6 @@ void executeTests(const std::string& _name, const std::string& _testPathAppendix
 std::string getTestPath();
 void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
-void processCommandLineOptions();
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
 
@@ -157,6 +156,32 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 	}
 	BOOST_CHECK(_expectedAddrs == _resultAddrs);
 }
+
+class Options
+{
+public:
+	bool jit = false;		///< Use JIT
+	bool vmtrace = false;	///< Create EVM execution tracer // TODO: Link with log verbosity?
+	bool showTimes = false;	///< Print test groups execution times
+	bool fillTests = false; ///< Create JSON test files from execution results
+
+	/// Test selection
+	/// @{
+	bool performance = false;
+	bool quadratic = false;
+	bool memory = false;
+	bool inputLimits = false;
+	bool bigData = false;
+	/// @}
+
+	/// Get reference to options
+	/// The first time used, options are parsed
+	static Options const& get();
+
+private:
+	Options();
+	Options(Options const&) = delete;
+};
 
 }
 }
