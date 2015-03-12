@@ -191,13 +191,10 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 	// no further unary operators for addresses
 	else if (isAddress())
 		return TypePointer();
-	// "~" is ok for all other types
-	else if (_operator == Token::BitNot)
-		return shared_from_this();
 	// for non-address integers, we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
 			_operator == Token::Inc || _operator == Token::Dec ||
-			_operator == Token::After)
+			_operator == Token::After || _operator == Token::BitNot)
 		return shared_from_this();
 	else
 		return TypePointer();
@@ -1154,7 +1151,7 @@ MagicType::MagicType(MagicType::Kind _kind):
 	case Kind::Block:
 		m_members = MemberList({{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"timestamp", make_shared<IntegerType>(256)},
-								{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes"}, FunctionType::Location::BlockHash)},
+								{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Location::BlockHash)},
 								{"difficulty", make_shared<IntegerType>(256)},
 								{"number", make_shared<IntegerType>(256)},
 								{"gaslimit", make_shared<IntegerType>(256)}});
