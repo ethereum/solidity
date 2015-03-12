@@ -272,7 +272,7 @@ bool CommandLineInterface::processInput()
 		while (!cin.eof())
 		{
 			getline(cin, s);
-			m_sourceCodes["<stdin>"].append(s);
+			m_sourceCodes["<stdin>"].append(s + '\n');
 		}
 	}
 	else
@@ -345,18 +345,11 @@ bool CommandLineInterface::processInput()
 void CommandLineInterface::handleAst(string const& _argStr)
 {
 	string title;
-	string suffix;
 
 	if (_argStr == g_argAstStr)
-	{
 		title = "Syntax trees:";
-		suffix = ".ast";
-	}
 	else if (_argStr == g_argAstJson)
-	{
 		title = "JSON AST:";
-		suffix = ".json";
-	}
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal argStr for AST"));
 
