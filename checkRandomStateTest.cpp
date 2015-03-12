@@ -218,8 +218,11 @@ bool doStateTest(mValue& _v)
 		if(expectedAddrs != resultAddrs)
 			return 1;
 #endif
-		if(theState.rootHash() != h256(o["postStateRoot"].get_str()), "wrong post state root")
+		if(theState.rootHash() != h256(o["postStateRoot"].get_str()))
+		{
+			cout << "wrong post state root" << endl;
 			return 1;
+		}
 	}
 	return 0;
 }

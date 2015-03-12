@@ -86,8 +86,8 @@ int main(int argc, char *argv[])
 	{
 		"randomStatetest" : {
 			"env" : {
-				"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-				"currentDifficulty" : "0x945304eb96065b2a98b57a48a06ae28d285a71b5",
+				"currentCoinbase" : "945304eb96065b2a98b57a48a06ae28d285a71b5",
+				"currentDifficulty" : "5623894562375",
 				"currentGasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
 				"currentNumber" : "0",
 				"currentTimestamp" : "1",
