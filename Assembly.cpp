@@ -77,6 +77,20 @@ int AssemblyItem::deposit() const
 	return 0;
 }
 
+string AssemblyItem::getJumpTypeAsString() const
+{
+	switch (m_jumpType)
+	{
+	case JumpType::IntoFunction:
+		return "[in]";
+	case JumpType::OutOfFunction:
+		return "[out]";
+	case JumpType::Ordinary:
+	default:
+		return "";
+	}
+}
+
 unsigned Assembly::bytesRequired() const
 {
 	for (unsigned br = 1;; ++br)
@@ -99,6 +113,8 @@ void Assembly::append(Assembly const& _a)
 	{
 		if (i.type() == Tag || i.type() == PushTag)
 			i.m_data += m_usedTags;
+		else if (i.type() == PushSub || i.type() == PushSubSize)
+			i.m_data += m_subs.size();
 		append(i);
 	}
 	m_deposit = newDeposit;
@@ -108,7 +124,7 @@ void Assembly::append(Assembly const& _a)
 	for (auto const& i: _a.m_strings)
 		m_strings.insert(i);
 	for (auto const& i: _a.m_subs)
-		m_subs.insert(i);
+		m_subs.push_back(i);
 
 	assert(!_a.m_baseDeposit);
 	assert(!_a.m_totalDeposit);
@@ -194,7 +210,7 @@ string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLoc
 	return move(cut);
 }
 
-ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
+ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
@@ -203,7 +219,7 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 		switch (i.m_type)
 		{
 		case Operation:
-			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name;
+			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name  << "\t" << i.getJumpTypeAsString();
 			break;
 		case Push:
 			_out << "  PUSH " << i.m_data;
@@ -238,19 +254,19 @@ ostream& Assembly::streamRLP(ostream& _out, string const& _prefix, StringMap con
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
-		_out << string("\t\t") << getLocationFromSources(_sourceCodes, i.getLocation()) << endl;
+		_out << "\t\t" << getLocationFromSources(_sourceCodes, i.getLocation()) << endl;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
 		_out << _prefix << ".data:" << endl;
 		for (auto const& i: m_data)
-			if (!m_subs.count(i.first))
+			if (u256(i.first) >= m_subs.size())
 				_out << _prefix << "  " << hex << (unsigned)(u256)i.first << ": " << toHex(i.second) << endl;
-		for (auto const& i: m_subs)
+		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
-			_out << _prefix << "  " << hex << (unsigned)(u256)i.first << ": " << endl;
-			i.second.streamRLP(_out, _prefix + "  ", _sourceCodes);
+			_out << _prefix << "  " << hex << i << ": " << endl;
+			m_subs[i].stream(_out, _prefix + "  ", _sourceCodes);
 		}
 	}
 	return _out;
@@ -493,8 +509,8 @@ Assembly& Assembly::optimise(bool _enable)
 
 	copt << total << " optimisations done.";
 
-	for (auto& i: m_subs)
-	  i.second.optimise(true);
+	for (auto& sub: m_subs)
+	  sub.optimise(true);
 
 	return *this;
 }
@@ -511,8 +527,8 @@ bytes Assembly::assemble() const
 	unsigned bytesPerTag = dev::bytesRequired(totalBytes);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
 
-	for (auto const& i: m_subs)
-		m_data[i.first] = i.second.assemble();
+	for (size_t i = 0; i < m_subs.size(); ++i)
+		m_data[u256(i)] = m_subs[i].assemble();
 
 	unsigned bytesRequiredIncludingData = bytesRequired();
 	unsigned bytesPerDataRef = dev::bytesRequired(bytesRequiredIncludingData);
