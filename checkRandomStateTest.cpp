@@ -155,6 +155,7 @@ bool doStateTest(mValue& _v)
 			{
 				cout << "Missing expected address " << expectedAddr;
 				return 1;
+			}
 			else
 			{
 				if (importer.m_statePost.balance(expectedAddr) !=  theState.balance(expectedAddr))

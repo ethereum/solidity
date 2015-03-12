@@ -87,16 +87,23 @@ int main(int argc, char *argv[])
 		"randomStatetest" : {
 			"env" : {
 				"currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-				"currentDifficulty" : "256",
-				"currentGasLimit" : "1000000",
+				"currentDifficulty" : "0x945304eb96065b2a98b57a48a06ae28d285a71b5",
+				"currentGasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
 				"currentNumber" : "0",
-				"currentTimestamp" : 1,
+				"currentTimestamp" : "1",
 				"previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
 			},
 			"pre" : {
 				"095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
 					"balance" : "1000000000000000000",
 					"code" : "0x6001600101600055",
+					"nonce" : "0",
+					"storage" : {
+					}
+				},
+				"945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+					"balance" : "46",
+					"code" : "0x6000355415600957005b60203560003555",
 					"nonce" : "0",
 					"storage" : {
 					}
@@ -110,7 +117,7 @@ int main(int argc, char *argv[])
 				}
 			},
 			"transaction" : {
-				"data" : "",
+				"data" : "0x42",
 				"gasLimit" : "400000",
 				"gasPrice" : "1",
 				"nonce" : "0",
