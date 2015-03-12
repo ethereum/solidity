@@ -58,10 +58,8 @@ int main(int argc, char *argv[])
 	boost::random::uniform_int_distribution<> lengthOfCodeDist(2, 16);
 	boost::random::uniform_int_distribution<> opcodeDist(0, 255);
 	boost::random::uniform_int_distribution<> BlockInfoOpcodeDist(0x40, 0x45);
-	boost::random::variate_generator<boost::mt19937&,
-			boost::random::uniform_int_distribution<> > randGen(gen, opcodeDist);
-	boost::random::variate_generator<boost::mt19937&,
-			boost::random::uniform_int_distribution<> > randGenBlockInfoOpcode(gen, BlockInfoOpcodeDist);
+	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGen(gen, opcodeDist);
+	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGenBlockInfoOpcode(gen, BlockInfoOpcodeDist);
 
 	int lengthOfCode  = lengthOfCodeDist(gen);
 	string randomCode;
