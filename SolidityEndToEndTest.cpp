@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(strings)
 	BOOST_CHECK(callContractFunction("fixed()") == encodeArgs(string("abc\0\xff__", 7)));
 	BOOST_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true) == encodeArgs(string("\0\x2", 2), true));
 }
-#
+
 BOOST_AUTO_TEST_CASE(empty_string_on_stack)
 {
 	char const* sourceCode = "contract test {\n"
