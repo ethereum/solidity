@@ -262,9 +262,9 @@ namespace solidity
 	K(Bytes7, "bytes7", 0)                                             \
 	K(Bytes8, "bytes8", 0)                                             \
 	K(Bytes9, "bytes9", 0)                                             \
-	K(Bytes10, "bytes10", 0)                                             \
-	K(Bytes11, "bytes11", 0)                                             \
-	K(Bytes12, "bytes12", 0)                                             \
+	K(Bytes10, "bytes10", 0)                                           \
+	K(Bytes11, "bytes11", 0)                                           \
+	K(Bytes12, "bytes12", 0)                                           \
 	K(Bytes13, "bytes13", 0)                                           \
 	K(Bytes14, "bytes14", 0)                                           \
 	K(Bytes15, "bytes15", 0)                                           \

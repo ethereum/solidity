@@ -268,7 +268,7 @@ void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, boo
 	// stack: value ref (1<<(32-byte_number)) old_full_value_with_cleared_byte
 	m_context << eth::Instruction::SWAP1;
 	m_context << (u256(1) << (256 - 8)) << eth::Instruction::DUP5 << eth::Instruction::DIV
-			  << eth::Instruction::MUL << eth::Instruction::OR;
+		<< eth::Instruction::MUL << eth::Instruction::OR;
 	// stack: value ref new_full_value
 	m_context << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
 	if (_move)
