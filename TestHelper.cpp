@@ -439,8 +439,6 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 			}
 			g_logVerbosity = currentVerbosity;
 		}
-		else
-			continue;
 	}
 }
 
@@ -449,32 +447,27 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	string testPath = getTestPath();
 	testPath += _testPathAppendix;
 
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	if (Options::get().fillTests)
 	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--filltests")
+		try
 		{
-			try
-			{
-				cnote << "Populating tests...";
-				json_spirit::mValue v;
-				boost::filesystem::path p(__FILE__);
-				boost::filesystem::path dir = p.parent_path();
-				string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
-				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
-				json_spirit::read_string(s, v);
-				doTests(v, true);
-				writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
-			}
-			catch (Exception const& _e)
-			{
-				BOOST_ERROR("Failed filling test with Exception: " << diagnostic_information(_e));
-			}
-			catch (std::exception const& _e)
-			{
-				BOOST_ERROR("Failed filling test with Exception: " << _e.what());
-			}
-			break;
+			cnote << "Populating tests...";
+			json_spirit::mValue v;
+			boost::filesystem::path p(__FILE__);
+			boost::filesystem::path dir = p.parent_path();
+			string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
+			json_spirit::read_string(s, v);
+			doTests(v, true);
+			writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+		}
+		catch (Exception const& _e)
+		{
+			BOOST_ERROR("Failed filling test with Exception: " << diagnostic_information(_e));
+		}
+		catch (std::exception const& _e)
+		{
+			BOOST_ERROR("Failed filling test with Exception: " << _e.what());
 		}
 	}
 
@@ -541,19 +534,46 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 	return rlpStream;
 }
 
-void processCommandLineOptions()
+Options::Options()
 {
 	auto argc = boost::unit_test::framework::master_test_suite().argc;
 	auto argv = boost::unit_test::framework::master_test_suite().argv;
 
-	for (auto i =  0; i < argc; ++i)
+	for (auto i = 0; i < argc; ++i)
 	{
-		if (std::string(argv[i]) == "--jit")
+		auto arg = std::string{argv[i]};
+		if (arg == "--jit")
 		{
+			jit = true;
 			eth::VMFactory::setKind(eth::VMKind::JIT);
-			break;
+		}
+		else if (arg == "--vmtrace")
+			vmtrace = true;
+		else if (arg == "--performance")
+			performance = true;
+		else if (arg == "--quadratic")
+			quadratic = true;
+		else if (arg == "--memory")
+			memory = true;
+		else if (arg == "--inputlimits")
+			inputLimits = true;
+		else if (arg == "--bigdata")
+			bigData = true;
+		else if (arg == "--all")
+		{
+			performance = true;
+			quadratic = true;
+			memory = true;
+			inputLimits = true;
+			bigData = true;
 		}
 	}
+}
+
+Options const& Options::get()
+{
+	static Options instance;
+	return instance;
 }
 
 LastHashes lastHashes(u256 _currentBlockNumber)
