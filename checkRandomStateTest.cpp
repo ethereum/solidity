@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file checkRandomTest.cpp
+/** @file checkRandomStateTest.cpp
  * @author Christoph Jentzsch <jentzsch.simulationsoftware@gmail.com>
  * @date 2015
  * Check a random test and return 0/1 for success or failure. To be used for efficiency in the random test simulation.
@@ -33,7 +33,7 @@ using namespace json_spirit;
 using namespace dev::test;
 using namespace dev;
 
-bool doStateTest(mValue& v);
+bool doStateTest(mValue& _v);
 
 int main(int argc, char *argv[])
 {
@@ -67,11 +67,11 @@ int main(int argc, char *argv[])
 	return ret;
 }
 
-bool doStateTest(mValue& v)
+bool doStateTest(mValue& _v)
 {
 	eth::VMFactory::setKind(eth::VMKind::JIT);
 
-	for (auto& i: v.get_obj())
+	for (auto& i: _v.get_obj())
 	{
 		mObject& o = i.second.get_obj();
 
@@ -152,7 +152,9 @@ bool doStateTest(mValue& v)
 			auto& expectedAddr = expectedPair.first;
 			auto resultAddrIt = resultAddrs.find(expectedAddr);
 			if (resultAddrIt == resultAddrs.end())
-				BOOST_ERROR("Missing expected address " << expectedAddr);
+			{
+				cout << "Missing expected address " << expectedAddr;
+				return 1;
 			else
 			{
 				if (importer.m_statePost.balance(expectedAddr) !=  theState.balance(expectedAddr))
