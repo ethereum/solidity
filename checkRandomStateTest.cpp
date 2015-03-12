@@ -73,7 +73,6 @@ bool doStateTest(mValue& v)
 
 	for (auto& i: v.get_obj())
 	{
-		//cerr << i.first << endl;
 		mObject& o = i.second.get_obj();
 
 		assert(o.count("env") > 0);
@@ -103,7 +102,6 @@ bool doStateTest(mValue& v)
 		assert(o.count("post") > 0);
 		assert(o.count("out") > 0);
 
-
 		//checkOutput(output, o);
 		int j = 0;
 		if (o["out"].type() == array_type)
@@ -132,20 +130,17 @@ bool doStateTest(mValue& v)
 		//checkLog(theState.pending().size() ? theState.log(0) : LogEntries(), importer.m_environment.sub.logs);
 		eth::LogEntries logs = theState.pending().size() ? theState.log(0) : eth::LogEntries();
 
-		//checkLog(logs, importer.m_environment.sub.logs);
-		{
-			if (assertsEqual(logs.size(), importer.m_environment.sub.logs.size()))
-				return 1;
+		if (assertsEqual(logs.size(), importer.m_environment.sub.logs.size()))
+			return 1;
 
-			for (size_t i = 0; i < logs.size(); ++i)
-			{
-				if (assertsEqual(logs[i].address, importer.m_environment.sub.logs[i].address))
-					return 1;
-				if (assertsEqual(logs[i].topics, importer.m_environment.sub.logs[i].topics))
-					return 1;
-				if (asserts(logs[i].data == importer.m_environment.sub.logs[i].data))
-					return 1;
-			}
+		for (size_t i = 0; i < logs.size(); ++i)
+		{
+			if (assertsEqual(logs[i].address, importer.m_environment.sub.logs[i].address))
+				return 1;
+			if (assertsEqual(logs[i].topics, importer.m_environment.sub.logs[i].topics))
+				return 1;
+			if (asserts(logs[i].data == importer.m_environment.sub.logs[i].data))
+				return 1;
 		}
 
 		// check addresses
@@ -160,12 +155,23 @@ bool doStateTest(mValue& v)
 				BOOST_ERROR("Missing expected address " << expectedAddr);
 			else
 			{
-				BOOST_CHECK_MESSAGE(importer.m_statePost.balance(expectedAddr) ==  theState.balance(expectedAddr), expectedAddr << ": incorrect balance " << theState.balance(expectedAddr) << ", expected " << importer.m_statePost.balance(expectedAddr));
-				BOOST_CHECK_MESSAGE(importer.m_statePost.transactionsFrom(expectedAddr) ==  theState.transactionsFrom(expectedAddr), expectedAddr << ": incorrect txCount " << theState.transactionsFrom(expectedAddr) << ", expected " << importer.m_statePost.transactionsFrom(expectedAddr));
-				BOOST_CHECK_MESSAGE(importer.m_statePost.code(expectedAddr) == theState.code(expectedAddr), expectedAddr << ": incorrect code");
+				if (importer.m_statePost.balance(expectedAddr) !=  theState.balance(expectedAddr))
+				{
+					cout << expectedAddr << ": incorrect balance " << theState.balance(expectedAddr) << ", expected " << importer.m_statePost.balance(expectedAddr);
+					return 1;
+				}
+				if (importer.m_statePost.transactionsFrom(expectedAddr) !=  theState.transactionsFrom(expectedAddr))
+				{
+					cout << expectedAddr << ": incorrect txCount " << theState.transactionsFrom(expectedAddr) << ", expected " << importer.m_statePost.transactionsFrom(expectedAddr);
+					return 1;
+				}
+				if (importer.m_statePost.code(expectedAddr) != theState.code(expectedAddr))
+				{
+					cout << expectedAddr << ": incorrect code";
+					return 1;
+				}
 
 				//checkStorage(importer.m_statePost.storage(expectedAddr), theState.storage(expectedAddr), expectedAddr);
-
 				map<u256, u256> _resultStore = theState.storage(expectedAddr);
 
 				for (auto&& expectedStorePair : importer.m_statePost.storage(expectedAddr))
