@@ -549,6 +549,8 @@ Options::Options()
 		}
 		else if (arg == "--vmtrace")
 			vmtrace = true;
+		else if (arg == "--filltests")
+			fillTests = true;
 		else if (arg == "--performance")
 			performance = true;
 		else if (arg == "--quadratic")
