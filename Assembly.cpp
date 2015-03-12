@@ -74,17 +74,19 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	return AssemblyItems();
 }
 
-void checkAssemblyLocations(AssemblyItems const& _items, std::vector<SourceLocation> _locations)
+void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> const& _locations)
 {
-	size_t i = 0;
 	BOOST_CHECK_EQUAL(_items.size(), _locations.size());
-	for (auto const& it: _items)
+	for (size_t i = 0; i < min(_items.size(), _locations.size()); ++i)
 	{
-		BOOST_CHECK_MESSAGE(it.getLocation() == _locations[i],
-							std::string("Location mismatch for assembly item ") + std::to_string(i));
-		++i;
+		BOOST_CHECK_MESSAGE(
+			_items[i].getLocation() == _locations[i],
+			"Location mismatch for assembly item " + to_string(i) + ". Found: " +
+					to_string(_items[i].getLocation().start) + "-" +
+					to_string(_items[i].getLocation().end) + ", expected: " +
+					to_string(_locations[i].start) + "-" +
+					to_string(_locations[i].end));
 	}
-
 }
 
 } // end anonymous namespace
@@ -93,31 +95,21 @@ BOOST_AUTO_TEST_SUITE(Assembly)
 
 BOOST_AUTO_TEST_CASE(location_test)
 {
-	char const* sourceCode = "contract test {\n"
-							 "  function f() returns (uint256 a)\n"
-							 "  {\n"
-							 "      return 16;\n"
-							 "  }\n"
-							 "}\n";
-	std::shared_ptr<std::string const> n = make_shared<std::string>("source");
+	char const* sourceCode = R"(
+	contract test {
+		function f() returns (uint256 a) {
+			return 16;
+		}
+	}
+	)";
+	shared_ptr<string const> n = make_shared<string>("source");
 	AssemblyItems items = compileContract(sourceCode);
-	std::vector<SourceLocation> locations {
-		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
-		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
-		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
-		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
-		SourceLocation(), SourceLocation(),
-		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
-		SourceLocation(), SourceLocation(), SourceLocation(),
-		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
-		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
-		SourceLocation(0, 77, n), SourceLocation(0, 77, n),
-		SourceLocation(0, 77, n),
-		SourceLocation(18, 75, n), SourceLocation(40, 49, n),
-		SourceLocation(61, 70, n), SourceLocation(61, 70, n), SourceLocation(61, 70, n),
-		SourceLocation(), SourceLocation(),
-		SourceLocation(61, 70, n), SourceLocation(61, 70, n), SourceLocation(61, 70, n)
-		};
+	vector<SourceLocation> locations =
+		vector<SourceLocation>(11, SourceLocation(2, 75, n)) +
+		vector<SourceLocation>(12, SourceLocation(20, 72, n)) +
+		vector<SourceLocation>{SourceLocation(42, 51, n), SourceLocation(65, 67, n)} +
+		vector<SourceLocation>(4, SourceLocation(58, 67, n)) +
+		vector<SourceLocation>(3, SourceLocation(20, 72, n));
 	checkAssemblyLocations(items, locations);
 }
 
