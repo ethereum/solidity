@@ -177,6 +177,13 @@ u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declarati
 	return it->second;
 }
 
+CompilerContext& CompilerContext::appendJump(eth::AssemblyItem::JumpType _jumpType)
+{
+	eth::AssemblyItem item(eth::Instruction::JUMP);
+	item.setJumpType(_jumpType);
+	return *this << item;
+}
+
 void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 {
 	stack<ASTNode const*> newStack;

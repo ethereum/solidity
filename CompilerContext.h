@@ -91,7 +91,7 @@ public:
 	/// Appends a JUMP to a new tag and @returns the tag
 	eth::AssemblyItem appendJumpToNew() { return m_asm.appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
-	CompilerContext&  appendJump() { return *this << eth::Instruction::JUMP; }
+	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.
@@ -120,7 +120,7 @@ public:
 
 	eth::Assembly const& getAssembly() const { return m_asm; }
 	/// @arg _sourceCodes is the map of input files to source code strings
-	void streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const { m_asm.streamRLP(_stream, "", _sourceCodes); }
+	void streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const { m_asm.stream(_stream, "", _sourceCodes); }
 
 	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
 

@@ -378,8 +378,9 @@ bool Compiler::visit(FunctionDefinition const& _function)
 		m_context.removeVariable(*localVariable);
 
 	m_context.adjustStackOffset(-(int)c_returnValuesSize);
+
 	if (!_function.isConstructor())
-		m_context << eth::Instruction::JUMP;
+		m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 	return false;
 }
 

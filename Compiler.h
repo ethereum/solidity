@@ -94,8 +94,8 @@ private:
 	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement
 	eth::AssemblyItem m_returnTag; ///< tag to jump to for a "return" statement
 	unsigned m_modifierDepth = 0;
-	FunctionDefinition const* m_currentFunction;
-	unsigned m_stackCleanupForReturn; ///< this number of stack elements need to be removed before jump to m_returnTag
+	FunctionDefinition const* m_currentFunction = nullptr;
+	unsigned m_stackCleanupForReturn = 0; ///< this number of stack elements need to be removed before jump to m_returnTag
 	// arguments for base constructors, filled in derived-to-base order
 	std::map<FunctionDefinition const*, std::vector<ASTPointer<Expression>> const*> m_baseArguments;
 };
