@@ -1,0 +1,186 @@
+/*
+	This file is part of cpp-ethereum.
+
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** @file createRandomStateTest.cpp
+ * @author Christoph Jentzsch <jentzsch.simulationsoftware@gmail.com>
+ * @date 2015
+ * Creating a random state test.
+ */
+
+#include <string>
+#include <iostream>
+#include <chrono>
+
+#include <boost/random.hpp>
+#include <boost/filesystem/path.hpp>
+
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <json_spirit/json_spirit.h>
+#include <json_spirit/json_spirit_reader_template.h>
+#include <json_spirit/json_spirit_writer_template.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/CommonData.h>
+#include <libevmcore/Instruction.h>
+#include <libevm/VMFactory.h>
+#include "TestHelper.h"
+#include "vm.h"
+
+using namespace std;
+using namespace json_spirit;
+using namespace dev;
+
+void doStateTests(json_spirit::mValue& _v);
+
+int main(int argc, char *argv[])
+{
+	g_logVerbosity = 0;
+
+	// create random code
+
+	boost::random::mt19937 gen;
+
+	auto now = chrono::steady_clock::now().time_since_epoch();
+	auto timeSinceEpoch = chrono::duration_cast<chrono::nanoseconds>(now).count();
+	gen.seed(static_cast<unsigned int>(timeSinceEpoch));
+	boost::random::uniform_int_distribution<> lengthOfCodeDist(2, 16);
+	boost::random::uniform_int_distribution<> opcodeDist(0, 255);
+	boost::random::uniform_int_distribution<> BlockInfoOpcodeDist(0x40, 0x45);
+	boost::random::variate_generator<boost::mt19937&,
+			boost::random::uniform_int_distribution<> > randGen(gen, opcodeDist);
+	boost::random::variate_generator<boost::mt19937&,
+			boost::random::uniform_int_distribution<> > randGenBlockInfoOpcode(gen, BlockInfoOpcodeDist);
+
+	int lengthOfCode  = lengthOfCodeDist(gen);
+	string randomCode;
+
+	for (int i = 0; i < lengthOfCode; ++i)
+	{
+		if (i < 8 && (randGen() < 192))
+		{
+			randomCode += toHex(toCompactBigEndian((uint8_t)randGenBlockInfoOpcode()));
+			continue;
+		}
+
+		uint8_t opcode = randGen();
+		// disregard all invalid commands, except of one (0x0c)
+		if ((dev::eth::isValidInstruction(dev::eth::Instruction(opcode)) || (randGen() > 250)))
+			randomCode += toHex(toCompactBigEndian(opcode));
+		else
+			i--;
+	}
+
+    string const s = R"(
+    {
+        "randomStatetest" : {
+            "env" : {
+                "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+                "currentDifficulty" : "256",
+                "currentGasLimit" : "1000000",
+                "currentNumber" : "0",
+                "currentTimestamp" : 1,
+                "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+            },
+            "pre" : {
+                "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                    "balance" : "1000000000000000000",
+                    "code" : "0x6001600101600055",
+                    "nonce" : "0",
+                    "storage" : {
+                    }
+                },
+                "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                    "balance" : "1000000000000000000",
+                    "code" : "0x",
+                    "nonce" : "0",
+                    "storage" : {
+                    }
+                }
+            },
+            "transaction" : {
+                "data" : "",
+                "gasLimit" : "400000",
+                "gasPrice" : "1",
+                "nonce" : "0",
+                "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                "value" : "100000"
+            }
+        }
+    }
+)";
+
+
+    cout << "the test: " <<  s << endl;
+
+    mValue v;
+	read_string(s, v);
+
+	// insert new random code
+    v.get_obj().find("randomStatetest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode + (randGen() > 128 ? "55" : "");
+
+    // fill test
+    doStateTests(v);
+
+	// stream to output for further handling by the bash script
+	cout << json_spirit::write_string(v, true);
+
+	return 0;
+}
+
+void doStateTests(json_spirit::mValue& _v)
+{
+   try{
+    for (auto& i: _v.get_obj())
+    {
+        cerr << i.first << endl;
+        mObject& o = i.second.get_obj();
+
+        assert(o.count("env") > 0);
+        assert(o.count("pre") > 0);
+        assert(o.count("transaction") > 0);
+
+        test::ImportTest importer(o, true);
+
+        eth::State theState = importer.m_statePre;
+        bytes tx = importer.m_transaction.rlp();
+        bytes output;
+
+        try
+        {
+            theState.execute(test::lastHashes(importer.m_environment.currentBlock.number), tx, &output);
+        }
+        catch (Exception const& _e)
+        {
+            cnote << "state execution did throw an exception: " << diagnostic_information(_e);
+            theState.commit();
+        }
+        catch (std::exception const& _e)
+        {
+            cnote << "state execution did throw an exception: " << _e.what();
+        }
+#if ETH_FATDB
+        importer.exportTest(output, theState);
+#else
+        BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("You can not fill tests when FATDB is switched off"));
+#endif
+    }
+    }
+    catch (Exception const& _e)
+    {
+        cout << "problem: " << diagnostic_information(_e);
+    }
+}
+
