@@ -1404,22 +1404,12 @@ BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
 	ETH_TEST_REQUIRE_NO_THROW(parseTextAndResolveNames(text), "Type resolving failed");
 }
 
-BOOST_AUTO_TEST_CASE(constant_function_editing_state_variable)
+BOOST_AUTO_TEST_CASE(const_state_variable)
 {
 	char const* text = R"(
 		contract Foo {
-			uint x = 56;
-			function editIt() constant { x = 2; }
-	})";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
-}
-
-BOOST_AUTO_TEST_CASE(constant_function_editing_const_state_variable)
-{
-	char const* text = R"(
-		contract Foo {
-			constant uint x = 56;
-			function editIt() constant { x = 2; }
+			function changeIt() { x = 9; }
+			uint constant x = 56;
 	})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }

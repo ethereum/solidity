@@ -3212,7 +3212,7 @@ BOOST_AUTO_TEST_CASE(const_state_variable)
 	char const* sourceCode = R"(
 		contract Foo {
 			function getX() constant returns (uint r) { return x; }
-			constant uint x = 56;
+			uint constant x = 56;
 	})";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("getX()") == encodeArgs(56));
