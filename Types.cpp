@@ -231,7 +231,7 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	// All integer types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
-	// Nothing else can be done with addresses, but hashes can receive bit operators
+	// Nothing else can be done with addresses
 	if (commonType->isAddress())
 		return TypePointer();
 
@@ -282,16 +282,17 @@ IntegerConstantType::IntegerConstantType(Literal const& _literal)
 
 bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	auto integerType = getIntegerType();
+	shared_ptr<IntegerType const> integerType = getIntegerType();
+	if (!integerType)
+		return false;
+
 	if (_convertTo.getCategory() == Category::FixedBytes)
 	{
 		FixedBytesType const& convertTo = dynamic_cast<FixedBytesType const&>(_convertTo);
-		if (convertTo.getNumBytes() * 8 >= integerType->getNumBits())
-			return true;
-		return false;
+		return convertTo.getNumBytes() * 8 >= integerType->getNumBits();
 	}
-		
-	return integerType && integerType->isImplicitlyConvertibleTo(_convertTo);
+
+	return integerType->isImplicitlyConvertibleTo(_convertTo);
 }
 
 bool IntegerConstantType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -462,8 +463,6 @@ bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.getCategory() == getCategory())
-		return true;
 	if (_convertTo.getCategory() == Category::Integer)
 	{
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
@@ -471,7 +470,8 @@ bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 			return true;
 	}
 
-	return false;
+	return _convertTo.getCategory() == Category::Contract ||
+		_convertTo.getCategory() == getCategory();
 }
 
 TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
