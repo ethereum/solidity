@@ -1031,6 +1031,19 @@ BOOST_AUTO_TEST_CASE(blockchain)
 	BOOST_CHECK(callContractFunctionWithValue("someInfo()", 28) == encodeArgs(28, 0, 1));
 }
 
+BOOST_AUTO_TEST_CASE(msg_sig)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function foo(uint256 a) returns (bytes4 value) {
+				return msg.sig;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunctionWithValue("foo(uint256)", 13) == encodeArgs(asString(FixedHash<4>(dev::sha3("foo(uint256)")).asBytes())));
+}
+
 BOOST_AUTO_TEST_CASE(now)
 {
 	char const* sourceCode = "contract test {\n"
