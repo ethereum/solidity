@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 				data;
 			}
 		})";
-	compileBothVersions(29, sourceCode);
+	compileBothVersions(36, sourceCode);
 	compareVersions("f()");
 }
 
