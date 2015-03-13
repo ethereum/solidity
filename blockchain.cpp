@@ -533,7 +533,7 @@ void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
 			std::pair<MineInfo, Ethash::Proof> ret;
 			while (!ProofOfWork::verify(_current_BlockHeader))
 			{
-				ret = pow.mine(_current_BlockHeader, 1000, true, true); // tie(ret, blockFromFields.nonce)
+				ret = pow.mine(_current_BlockHeader, 1000, true, true);
 				Ethash::assignResult(ret.second, _current_BlockHeader);
 			}
 		}
@@ -580,7 +580,7 @@ void updatePoW(BlockInfo& _bi)
 	std::pair<MineInfo, Ethash::Proof> ret;
 	while (!ProofOfWork::verify(_bi))
 	{
-		ret = pow.mine(_bi, 10000, true, true); // tie(ret, blockFromFields.nonce)
+		ret = pow.mine(_bi, 10000, true, true);
 		Ethash::assignResult(ret.second, _bi);
 	}
 	_bi.hash = _bi.headerHash(WithNonce);
