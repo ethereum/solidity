@@ -473,7 +473,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 
 	try
 	{
-		cnote << "Testing ..." << _name;
+		std::cout << "TEST " << _name << ":\n";
 		json_spirit::mValue v;
 		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");

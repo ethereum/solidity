@@ -47,7 +47,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 	for (auto& i: v.get_obj())
 	{
-		cerr << i.first << endl;
+		std::cout << "  " << i.first << "\n";
 		mObject& o = i.second.get_obj();
 
 		BOOST_REQUIRE(o.count("env") > 0);
@@ -67,12 +67,12 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		}
 		catch (Exception const& _e)
 		{
-			cnote << "state execution did throw an exception: " << diagnostic_information(_e);
+			cnote << "Exception:\n" << diagnostic_information(_e);
 			theState.commit();
 		}
 		catch (std::exception const& _e)
 		{
-			cnote << "state execution did throw an exception: " << _e.what();
+			cnote << "state execution exception: " << _e.what();
 		}
 
 		if (_fillin)

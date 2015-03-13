@@ -316,7 +316,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 	for (auto& i: v.get_obj())
 	{
-		cnote << i.first;
+		std::cout << "  " << i.first << "\n";
 		mObject& o = i.second.get_obj();
 
 		BOOST_REQUIRE(o.count("env") > 0);
@@ -354,7 +354,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 		catch (VMException const&)
 		{
-			cnote << "Safe VM Exception";
+			std::cout << "    Safe VM Exception\n";
 			vmExceptionOccured = true;
 		}
 		catch (Exception const& _e)
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 	{
 		try
 		{
-			cnote << "Testing ..." << path.filename();
+			std::cout << "TEST " << path.filename() << "\n";
 			json_spirit::mValue v;
 			string s = asString(dev::contents(path.string()));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
