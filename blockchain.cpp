@@ -386,7 +386,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					{
 						mObject uBlH = uBlHeaderObj.get_obj();
 						cout << "uBlH.size(): " << uBlH.size() << endl;
-						BOOST_REQUIRE(uBlH.size() == 17);
+						BOOST_REQUIRE(uBlH.size() == 16);
 						bytes uncleRLP = createBlockRLPFromFields(uBlH);
 						const RLP c_uRLP(uncleRLP);
 						BlockInfo uncleBlockHeader;
