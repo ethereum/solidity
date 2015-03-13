@@ -31,6 +31,7 @@
 #include <libethereum/Defaults.h>
 #include <libevm/VM.h>
 #include "TestHelper.h"
+#include "Stats.h"
 
 using namespace std;
 using namespace json_spirit;
@@ -41,7 +42,8 @@ namespace dev {  namespace test {
 
 void doStateTests(json_spirit::mValue& v, bool _fillin)
 {
-	Options::get(); // process command line options
+	if (Options::get().stats)
+		Listener::registerListener(Stats::get());
 
 	for (auto& i: v.get_obj())
 	{
@@ -60,6 +62,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 		try
 		{
+			Listener::ExecTimeGuard guard{i.first};
 			theState.execute(lastHashes(importer.m_environment.currentBlock.number), tx, &output);
 		}
 		catch (Exception const& _e)
@@ -178,29 +181,13 @@ BOOST_AUTO_TEST_CASE(stBlockHashTest)
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
 {
 	if (test::Options::get().quadratic)
-	{
-		auto start = chrono::steady_clock::now();
-
 		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests", dev::test::doStateTests);
-
-		auto end = chrono::steady_clock::now();
-		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-		cnote << "test duration: " << duration.count() << " milliseconds.\n";
-	}
 }
 
 BOOST_AUTO_TEST_CASE(stMemoryStressTest)
 {
 	if (test::Options::get().memory)
-	{
-		auto start = chrono::steady_clock::now();
-
 		dev::test::executeTests("stMemoryStressTest", "/StateTests", dev::test::doStateTests);
-
-		auto end = chrono::steady_clock::now();
-		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-		cnote << "test duration: " << duration.count() << " milliseconds.\n";
-	}
 }
 
 BOOST_AUTO_TEST_CASE(stSolidityTest)

@@ -20,13 +20,12 @@
  * vm test functions.
  */
 
-#include <chrono>
-
 #include <boost/filesystem.hpp>
 
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
 #include "vm.h"
+#include "Stats.h"
 
 using namespace std;
 using namespace json_spirit;
@@ -312,7 +311,8 @@ namespace dev { namespace test {
 
 void doVMTests(json_spirit::mValue& v, bool _fillin)
 {
-	Options::get(); // process command line options // TODO: We need to control the main() function
+	if (Options::get().stats)
+		Listener::registerListener(Stats::get());
 
 	for (auto& i: v.get_obj())
 	{
@@ -340,12 +340,16 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		bytes output;
 		u256 gas;
 		bool vmExceptionOccured = false;
-		auto startTime = std::chrono::high_resolution_clock::now();
 		try
 		{
 			auto vm = eth::VMFactory::create(fev.gas);
 			auto vmtrace = Options::get().vmtrace ? fev.simpleTrace() : OnOpFunc{};
-			output = vm->go(fev, vmtrace).toBytes();
+			auto outputRef = bytesConstRef{};
+			{
+				Listener::ExecTimeGuard guard{i.first};
+				outputRef = vm->go(fev, vmtrace);
+			}
+			output = outputRef.toBytes();
 			gas = vm->gas();
 		}
 		catch (VMException const&)
@@ -362,15 +366,6 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
 			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
-		}
-
-		auto endTime = std::chrono::high_resolution_clock::now();
-		if (Options::get().showTimes)
-		{
-			auto testDuration = endTime - startTime;
-			cnote << "Execution time: "
-				  << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
-				  << " ms";
 		}
 
 		// delete null entries in storage for the sake of comparison
@@ -513,29 +508,13 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 {
 	if (test::Options::get().performance)
-	{
-		auto start = chrono::steady_clock::now();
-
 		dev::test::executeTests("vmPerformanceTest", "/VMTests", dev::test::doVMTests);
-
-		auto end = chrono::steady_clock::now();
-		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-		cnote << "test duration: " << duration.count() << " milliseconds.\n";
-	}
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
 {
 	if (test::Options::get().inputLimits)
-	{
-		auto start = chrono::steady_clock::now();
-
 		dev::test::executeTests("vmInputLimits1", "/VMTests", dev::test::doVMTests);
-
-		auto end = chrono::steady_clock::now();
-		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-		cnote << "test duration: " << duration.count() << " milliseconds.\n";
-	}
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest2)
