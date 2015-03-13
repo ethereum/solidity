@@ -332,6 +332,13 @@ void VariableDeclaration::checkTypeRequirements()
 	// sets the type.
 	// Note that assignments before the first declaration are legal because of the special scoping
 	// rules inherited from JavaScript.
+	if (m_isConstant)
+	{
+		if (!dynamic_cast<ContractDefinition const*>(getScope()))
+			BOOST_THROW_EXCEPTION(createTypeError("Illegal use of \"constant\" specifier."));
+		if ((m_type && !m_type->isValueType()) || !m_value)
+			BOOST_THROW_EXCEPTION(createTypeError("Unitialized \"constant\" variable."));
+	}
 	if (!m_value)
 		return;
 	if (m_type)

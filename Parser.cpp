@@ -330,8 +330,11 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	}
 	if (token == Token::Const)
 	{
-		m_scanner->next();
+		solAssert(_options.isStateVariable, "");
+		if (m_scanner->peekNextToken() != Token::Identifier && !Token::isElementaryTypeName(m_scanner->peekNextToken()))
+			BOOST_THROW_EXCEPTION(createParserError("Invalid use of \"constant\" specifier"));
 		isDeclaredConst = true;
+		m_scanner->next();
 	}
 	nodeFactory.markEndPosition();
 
@@ -920,6 +923,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->getCurrentToken());
 	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
+
 	if (token == Token::Mapping || token == Token::Var ||
 			(mightBeTypeName && m_scanner->peekNextToken() == Token::Identifier))
 		return LookAheadInfo::VariableDeclarationStatement;
