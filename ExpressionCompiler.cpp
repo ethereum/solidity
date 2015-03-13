@@ -646,6 +646,8 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			m_context << eth::Instruction::GASPRICE;
 		else if (member == "data")
 			m_context << u256(0) << eth::Instruction::CALLDATASIZE;
+		else if (member == "sig")
+			m_context << u256(0) << eth::Instruction::CALLDATALOAD << (u256(0xffffffff) << (256 - 32))<< eth::Instruction::AND;
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown magic member."));
 		break;
