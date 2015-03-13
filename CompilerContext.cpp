@@ -37,15 +37,13 @@ void CompilerContext::addMagicGlobal(MagicVariableDeclaration const& _declaratio
 	m_magicGlobals.insert(&_declaration);
 }
 
-void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
+void CompilerContext::addStateVariable(
+	VariableDeclaration const& _declaration,
+	u256 const& _storageOffset,
+	unsigned _byteOffset
+)
 {
-	m_stateVariables[&_declaration] = m_stateVariablesSize;
-	bigint newSize = bigint(m_stateVariablesSize) + _declaration.getType()->getStorageSize();
-	if (newSize >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(TypeError()
-			<< errinfo_comment("State variable does not fit in storage.")
-			<< errinfo_sourceLocation(_declaration.getLocation()));
-	m_stateVariablesSize = u256(newSize);
+	m_stateVariables[&_declaration] = make_pair(_storageOffset, _byteOffset);
 }
 
 void CompilerContext::startFunction(Declaration const& _function)
@@ -170,7 +168,7 @@ unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 	return m_asm.deposit() - _offset - 1;
 }
 
-u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
+pair<u256, unsigned> CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
 {
 	auto it = m_stateVariables.find(&_declaration);
 	solAssert(it != m_stateVariables.end(), "Variable not found in storage.");

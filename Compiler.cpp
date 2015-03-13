@@ -274,10 +274,19 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 
 void Compiler::registerStateVariables(ContractDefinition const& _contract)
 {
+	vector<VariableDeclaration const*> variables;
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.getLinearizedBaseContracts()))
 		for (ASTPointer<VariableDeclaration> const& variable: contract->getStateVariables())
 			if (!variable->isConstant())
-				m_context.addStateVariable(*variable);
+				variables.push_back(variable.get());
+	TypePointers types;
+	for (auto variable: variables)
+		types.push_back(variable->getType());
+	StorageOffsets offsets;
+	offsets.computeOffsets(types);
+	for (size_t index = 0; index < variables.size(); ++index)
+		if (auto const* offset = offsets.getOffset(index))
+			m_context.addStateVariable(*variables[index], offset->first, offset->second);
 }
 
 void Compiler::initializeStateVariables(ContractDefinition const& _contract)

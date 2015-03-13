@@ -24,6 +24,7 @@
 
 #include <ostream>
 #include <stack>
+#include <utility>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Assembly.h>
 #include <libsolidity/ASTForward.h>
@@ -42,7 +43,7 @@ class CompilerContext
 {
 public:
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
-	void addStateVariable(VariableDeclaration const& _declaration);
+	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(VariableDeclaration const& _declaration);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
@@ -82,7 +83,7 @@ public:
 	/// Converts an offset relative to the current stack height to a value that can be used later
 	/// with baseToCurrentStackOffset to point to the same stack element.
 	unsigned currentToBaseStackOffset(unsigned _offset) const;
-	u256 getStorageLocationOfVariable(Declaration const& _declaration) const;
+	std::pair<u256, unsigned> getStorageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
 	eth::AssemblyItem appendConditionalJump() { return m_asm.appendJumpI().tag(); }
@@ -144,10 +145,8 @@ private:
 	std::set<Declaration const*> m_magicGlobals;
 	/// Other already compiled contracts to be used in contract creation calls.
 	std::map<ContractDefinition const*, bytes const*> m_compiledContracts;
-	/// Size of the state variables, offset of next variable to be added.
-	u256 m_stateVariablesSize = 0;
 	/// Storage offsets of state variables
-	std::map<Declaration const*, u256> m_stateVariables;
+	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).
 	std::map<Declaration const*, unsigned> m_localVariables;
 	/// Labels pointing to the entry points of functions.

@@ -35,54 +35,72 @@ namespace dev
 namespace solidity
 {
 
+void StorageOffsets::computeOffsets(TypePointers const& _types)
+{
+	bigint slotOffset = 0;
+	unsigned byteOffset = 0;
+	map<size_t, pair<u256, unsigned>> offsets;
+	for (size_t i = 0; i < _types.size(); ++i)
+	{
+		TypePointer const& type = _types[i];
+		if (!type->canBeStored())
+			continue;
+		if (byteOffset + type->getStorageBytes() > 32)
+		{
+			// would overflow, go to next slot
+			++slotOffset;
+			byteOffset = 0;
+		}
+		if (slotOffset >= bigint(1) << 256)
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Object too large for storage."));
+		offsets[i] = make_pair(u256(slotOffset), byteOffset);
+		solAssert(type->getStorageSize() >= 1, "Invalid storage size.");
+		if (type->getStorageSize() == 1 && byteOffset + type->getStorageBytes() <= 32)
+			byteOffset += type->getStorageBytes();
+		else
+		{
+			slotOffset += type->getStorageSize();
+			byteOffset = 0;
+		}
+	}
+	if (byteOffset > 0)
+		++slotOffset;
+	if (slotOffset >= bigint(1) << 256)
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Object too large for storage."));
+	m_storageSize = u256(slotOffset);
+	swap(m_offsets, offsets);
+}
+
+pair<u256, unsigned> const* StorageOffsets::getOffset(size_t _index) const
+{
+	if (m_offsets.count(_index))
+		return &m_offsets.at(_index);
+	else
+		return nullptr;
+}
+
 std::pair<u256, unsigned> const* MemberList::getMemberStorageOffset(string const& _name) const
 {
 	if (!m_storageOffsets)
 	{
-		bigint slotOffset = 0;
-		unsigned byteOffset = 0;
-		map<string, pair<u256, unsigned>> offsets;
+		TypePointers memberTypes;
+		memberTypes.reserve(m_memberTypes.size());
 		for (auto const& nameAndType: m_memberTypes)
-		{
-			TypePointer const& type = nameAndType.second;
-			if (!type->canBeStored())
-				continue;
-			if (byteOffset + type->getStorageBytes() > 32)
-			{
-				// would overflow, go to next slot
-				++slotOffset;
-				byteOffset = 0;
-			}
-			if (slotOffset >= bigint(1) << 256)
-				BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Object too large for storage."));
-			offsets[nameAndType.first] = make_pair(u256(slotOffset), byteOffset);
-			solAssert(type->getStorageSize() >= 1, "Invalid storage size.");
-			if (type->getStorageSize() == 1 && byteOffset + type->getStorageBytes() <= 32)
-				byteOffset += type->getStorageBytes();
-			else
-			{
-				slotOffset += type->getStorageSize();
-				byteOffset = 0;
-			}
-		}
-		if (byteOffset > 0)
-			++slotOffset;
-		if (slotOffset >= bigint(1) << 256)
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Object too large for storage."));
-		m_storageSize = u256(slotOffset);
-		m_storageOffsets.reset(new decltype(offsets)(move(offsets)));
+			memberTypes.push_back(nameAndType.second);
+		m_storageOffsets.reset(new StorageOffsets());
+		m_storageOffsets->computeOffsets(memberTypes);
 	}
-	if (m_storageOffsets->count(_name))
-		return &((*m_storageOffsets)[_name]);
-	else
-		return nullptr;
+	for (size_t index = 0; index < m_memberTypes.size(); ++index)
+		if (m_memberTypes[index].first == _name)
+			return m_storageOffsets->getOffset(index);
+	return nullptr;
 }
 
 u256 const& MemberList::getStorageSize() const
 {
 	// trigger lazy computation
 	getMemberStorageOffset("");
-	return m_storageSize;
+	return m_storageOffsets->getStorageSize();
 }
 
 TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
@@ -830,18 +848,11 @@ MemberList const& StructType::getMembers() const
 	return *m_members;
 }
 
-u256 StructType::getStorageOffsetOfMember(string const& _name) const
+pair<u256, unsigned> const& StructType::getStorageOffsetsOfMember(string const& _name) const
 {
-
-	//@todo cache member offset?
-	u256 offset;
-	for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
-	{
-		if (variable->getName() == _name)
-			return offset;
-		offset += variable->getType()->getStorageSize();
-	}
-	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage offset of non-existing member requested."));
+	auto const* offsets = getMembers().getMemberStorageOffset(_name);
+	solAssert(offsets, "Storage offset of non-existing member requested.");
+	return *offsets;
 }
 
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const

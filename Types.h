@@ -43,6 +43,26 @@ using TypePointer = std::shared_ptr<Type const>;
 using FunctionTypePointer = std::shared_ptr<FunctionType const>;
 using TypePointers = std::vector<TypePointer>;
 
+
+/**
+ * Helper class to compute storage offsets of members of structs and contracts.
+ */
+class StorageOffsets
+{
+public:
+	/// Resets the StorageOffsets objects and determines the position in storage for each
+	/// of the elements of @a _types.
+	void computeOffsets(TypePointers const& _types);
+	/// @returns the offset of the given member, might be null if the member is not part of storage.
+	std::pair<u256, unsigned> const* getOffset(size_t _index) const;
+	/// @returns the total number of slots occupied by all members.
+	u256 const& getStorageSize() const { return m_storageSize; }
+
+private:
+	u256 m_storageSize;
+	std::map<size_t, std::pair<u256, unsigned>> m_offsets;
+};
+
 /**
  * List of members of a type.
  */
@@ -71,8 +91,7 @@ public:
 
 private:
 	MemberMap m_memberTypes;
-	mutable u256 m_storageSize = 0;
-	mutable std::unique_ptr<std::map<std::string, std::pair<u256, unsigned>>> m_storageOffsets;
+	mutable std::unique_ptr<StorageOffsets> m_storageOffsets;
 };
 
 /**
@@ -411,7 +430,7 @@ public:
 
 	virtual MemberList const& getMembers() const override;
 
-	u256 getStorageOffsetOfMember(std::string const& _name) const;
+	std::pair<u256, unsigned> const& getStorageOffsetsOfMember(std::string const& _name) const;
 
 private:
 	StructDefinition const& m_struct;

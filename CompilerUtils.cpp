@@ -199,7 +199,6 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	return numBytes;
 }
 
-
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const
 {
 	unsigned numBytes = _type.getCalldataEncodedSize(_padToWordBoundaries);

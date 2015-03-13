@@ -67,9 +67,10 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		length += CompilerUtils(m_context).storeInMemory(length, *paramType, true);
 
 	// retrieve the position of the variable
-	m_context << m_context.getStorageLocationOfVariable(_varDecl);
-	TypePointer returnType = _varDecl.getType();
+	auto const& location = m_context.getStorageLocationOfVariable(_varDecl);
+	m_context << location.first;
 
+	TypePointer returnType = _varDecl.getType();
 	for (TypePointer const& paramType: paramTypes)
 	{
 		// move offset to memory
@@ -81,7 +82,6 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		returnType = dynamic_cast<MappingType const&>(*returnType).getValueType();
 	}
 
-	m_context << u256(0); // @todo
 	unsigned retSizeOnStack = 0;
 	solAssert(accessorType.getReturnParameterTypes().size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
@@ -93,21 +93,20 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		{
 			if (types[i]->getCategory() == Type::Category::Mapping)
 				continue;
-			m_context
-				<< eth::Instruction::DUP2 << structType->getStorageOffsetOfMember(names[i])
-				<< eth::Instruction::ADD;
-			m_context << u256(0); //@todo
+			pair<u256, unsigned> const& offsets = structType->getStorageOffsetsOfMember(names[i]);
+			m_context << eth::Instruction::DUP1 << u256(offsets.first) << eth::Instruction::ADD << u256(offsets.second);
 			StorageItem(m_context, *types[i]).retrieveValue(SourceLocation(), true);
 			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
-			m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
+			m_context << eth::Instruction::SWAP1;
 			retSizeOnStack += types[i]->getSizeOnStack();
 		}
-		m_context << eth::Instruction::POP << eth::Instruction::POP;
+		m_context << eth::Instruction::POP;
 	}
 	else
 	{
 		// simple value
 		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
+		m_context << u256(location.second);
 		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
@@ -666,10 +665,9 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::Struct:
 	{
 		StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
-		m_context << eth::Instruction::POP; //@todo
-		m_context << type.getStorageOffsetOfMember(member) << eth::Instruction::ADD;
-		//@todo
-		m_context << u256(0);
+		m_context << eth::Instruction::POP; // structs always align to new slot
+		pair<u256, unsigned> const& offsets = type.getStorageOffsetsOfMember(member);
+		m_context << offsets.first << eth::Instruction::ADD << u256(offsets.second);
 		setLValueToStorageItem(_memberAccess);
 		break;
 	}
