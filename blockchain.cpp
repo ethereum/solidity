@@ -313,7 +313,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.timestamp == blockFromRlp.timestamp, "timestamp in given RLP not matching the block timestamp!");
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.extraData == blockFromRlp.extraData, "extraData in given RLP not matching the block extraData!");
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.mixHash == blockFromRlp.mixHash, "mixHash in given RLP not matching the block mixHash!");
-				BOOST_CHECK_MESSAGE(blockHeaderFromFields.seedHash == blockFromRlp.seedHash, "transactionsRoot in given RLP not matching the block transactionsRoot!");
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields.nonce == blockFromRlp.nonce, "nonce in given RLP not matching the block nonce!");
 
 				BOOST_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, "However, blockHeaderFromFields != blockFromRlp!");
@@ -466,9 +465,6 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	if (_tObj.count("extraData"))
 		rlpStream << fromHex(_tObj["extraData"].get_str());
 
-	if (_tObj.count("seedHash"))
-		rlpStream << importByteArray(_tObj["seedHash"].get_str());
-
 	if (_tObj.count("mixHash"))
 		rlpStream << importByteArray(_tObj["mixHash"].get_str());
 
@@ -526,9 +522,6 @@ void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
 
 		if (_blObj["blockHeader"].get_obj().count("mixHash"))
 			tmp.mixHash = h256(_blObj["blockHeader"].get_obj()["mixHash"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("seedHash"))
-			tmp.seedHash = h256(_blObj["blockHeader"].get_obj()["seedHash"].get_str());
 
 		// find new valid nonce
 
@@ -609,7 +602,6 @@ void writeBlockHeaderToJson(mObject& _o, const BlockInfo& _bi)
 	_o["timestamp"] = toString(_bi.timestamp);
 	_o["extraData"] ="0x" + toHex(_bi.extraData);
 	_o["mixHash"] = toString(_bi.mixHash);
-	_o["seedHash"] = toString(_bi.seedHash);
 	_o["nonce"] = toString(_bi.nonce);
 	_o["hash"] = toString(_bi.hash);
 }
