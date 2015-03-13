@@ -822,6 +822,15 @@ BOOST_AUTO_TEST_CASE(multi_arrays)
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed");
 }
 
+BOOST_AUTO_TEST_CASE(constant_is_keyword)
+{
+	char const* text = R"(
+		contract Foo {
+			uint constant = 4;
+	})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

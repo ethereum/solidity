@@ -3196,26 +3196,28 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 	BOOST_CHECK(callContractFunction("m_i()") == encodeArgs(4));
 }
 
-BOOST_AUTO_TEST_CASE(constant_functions)
+BOOST_AUTO_TEST_CASE(simple_constant_variables_test)
 {
 	char const* sourceCode = R"(
 		contract Foo {
-			function getX() constant returns (uint r) { r = x; }
-			uint x = 56;
+			function getX() returns (uint r) { return x; }
+			uint constant x = 56;
 	})";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("getX()") == encodeArgs(56));
 }
 
-BOOST_AUTO_TEST_CASE(const_state_variable)
+BOOST_AUTO_TEST_CASE(constant_variables)
 {
+	//for now constant specifier is valid only for uint bytesXX and enums
 	char const* sourceCode = R"(
 		contract Foo {
-			function getX() constant returns (uint r) { return x; }
 			uint constant x = 56;
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			ActionChoices constant choices = ActionChoices.GoLeft;
+			bytes32 constant st = "abc\x00\xff__";
 	})";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("getX()") == encodeArgs(56));
 }
 BOOST_AUTO_TEST_SUITE_END()
 
