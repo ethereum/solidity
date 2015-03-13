@@ -75,6 +75,7 @@ static FunctionTypePointer const& retrieveFunctionBySignature(ContractDefinition
 	FixedHash<4> hash(dev::sha3(_signature));
 	return _contract->getInterfaceFunctions()[hash];
 }
+
 }
 
 BOOST_AUTO_TEST_SUITE(SolidityNameAndTypeResolution)
@@ -353,7 +354,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature)
 					   "    ret = arg1 + arg2;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(sourceUnit = parseTextAndResolveNames(text));
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -366,16 +367,16 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 {
 	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = "contract Test {\n"
-					   "  function boo(uint arg1, hash arg2, address arg3) returns (uint ret) {\n"
+					   "  function boo(uint arg1, bytes32 arg2, address arg3) returns (uint ret) {\n"
 					   "    ret = 5;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(sourceUnit = parseTextAndResolveNames(text));
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			auto functions = contract->getDefinedFunctions();
-			BOOST_CHECK_EQUAL("boo(uint256,hash256,address)", functions[0]->getCanonicalSignature());
+			BOOST_CHECK_EQUAL("boo(uint256,bytes32,address)", functions[0]->getCanonicalSignature());
 		}
 }
 
@@ -537,7 +538,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 		contract B {
 			function f() mod1(2, true) mod2("0123456") { }
 			modifier mod1(uint a, bool b) { if (b) _ }
-			modifier mod2(string7 a) { while (a == "1234567") _ }
+			modifier mod2(bytes7 a) { while (a == "1234567") _ }
 		}
 	)";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
@@ -558,9 +559,9 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
 {
 	char const* text = R"(
 		contract B {
-			function f(uint8 a) mod1(a, true) mod2(r) returns (string7 r) { }
+			function f(uint8 a) mod1(a, true) mod2(r) returns (bytes7 r) { }
 			modifier mod1(uint a, bool b) { if (b) _ }
-			modifier mod2(string7 a) { while (a == "1234567") _ }
+			modifier mod2(bytes7 a) { while (a == "1234567") _ }
 		}
 	)";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
@@ -631,8 +632,8 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 					   "    uint64(2);\n"
 					   "  }\n"
 					   "uint256 public foo;\n"
-					   "mapping(uint=>string4) public map;\n"
-					   "mapping(uint=>mapping(uint=>string4)) public multiple_map;\n"
+					   "mapping(uint=>bytes4) public map;\n"
+					   "mapping(uint=>mapping(uint=>bytes4)) public multiple_map;\n"
 					   "}\n";
 
 	ASTPointer<SourceUnit> source;
@@ -650,7 +651,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	auto params = function->getParameterTypeNames();
 	BOOST_CHECK_EQUAL(params.at(0), "uint256");
 	returnParams = function->getReturnParameterTypeNames();
-	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
+	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
 	BOOST_CHECK(function->isConstant());
 
 	function = retrieveFunctionBySignature(contract, "multiple_map(uint256,uint256)");
@@ -659,7 +660,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 	BOOST_CHECK_EQUAL(params.at(0), "uint256");
 	BOOST_CHECK_EQUAL(params.at(1), "uint256");
 	returnParams = function->getReturnParameterTypeNames();
-	BOOST_CHECK_EQUAL(returnParams.at(0), "string4");
+	BOOST_CHECK_EQUAL(returnParams.at(0), "bytes4");
 	BOOST_CHECK(function->isConstant());
 }
 
@@ -800,7 +801,7 @@ BOOST_AUTO_TEST_CASE(event)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint indexed a, string3 indexed s, bool indexed b);
+			event e(uint indexed a, bytes3 indexed s, bool indexed b);
 			function f() { e(2, "abc", true); }
 		})";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
@@ -810,7 +811,7 @@ BOOST_AUTO_TEST_CASE(event_too_many_indexed)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint indexed a, string3 indexed b, bool indexed c, uint indexed d);
+			event e(uint indexed a, bytes3 indexed b, bool indexed c, uint indexed d);
 			function f() { e(2, "abc", true); }
 		})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
@@ -820,7 +821,7 @@ BOOST_AUTO_TEST_CASE(event_call)
 {
 	char const* text = R"(
 		contract c {
-			event e(uint a, string3 indexed s, bool indexed b);
+			event e(uint a, bytes3 indexed s, bool indexed b);
 			function f() { e(2, "abc", true); }
 		})";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
@@ -830,7 +831,7 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 {
 	char const* text = R"(
 		contract base {
-			event e(uint a, string3 indexed s, bool indexed b);
+			event e(uint a, bytes3 indexed s, bool indexed b);
 		}
 		contract c is base {
 			function f() { e(2, "abc", true); }
@@ -1285,6 +1286,122 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
 			uint a = "abc";
 		})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
+{
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int8) == *make_shared<IntegerType>(8, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int16) == *make_shared<IntegerType>(16, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int24) == *make_shared<IntegerType>(24, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int32) == *make_shared<IntegerType>(32, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int40) == *make_shared<IntegerType>(40, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int48) == *make_shared<IntegerType>(48, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int56) == *make_shared<IntegerType>(56, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int64) == *make_shared<IntegerType>(64, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int72) == *make_shared<IntegerType>(72, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int80) == *make_shared<IntegerType>(80, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int88) == *make_shared<IntegerType>(88, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int96) == *make_shared<IntegerType>(96, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int104) == *make_shared<IntegerType>(104, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int112) == *make_shared<IntegerType>(112, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int120) == *make_shared<IntegerType>(120, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int128) == *make_shared<IntegerType>(128, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int136) == *make_shared<IntegerType>(136, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int144) == *make_shared<IntegerType>(144, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int152) == *make_shared<IntegerType>(152, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int160) == *make_shared<IntegerType>(160, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int168) == *make_shared<IntegerType>(168, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int176) == *make_shared<IntegerType>(176, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int184) == *make_shared<IntegerType>(184, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int192) == *make_shared<IntegerType>(192, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int200) == *make_shared<IntegerType>(200, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int208) == *make_shared<IntegerType>(208, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int216) == *make_shared<IntegerType>(216, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int224) == *make_shared<IntegerType>(224, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int232) == *make_shared<IntegerType>(232, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int240) == *make_shared<IntegerType>(240, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int248) == *make_shared<IntegerType>(248, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int256) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
+
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt8) == *make_shared<IntegerType>(8, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt16) == *make_shared<IntegerType>(16, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt24) == *make_shared<IntegerType>(24, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt32) == *make_shared<IntegerType>(32, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt40) == *make_shared<IntegerType>(40, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt48) == *make_shared<IntegerType>(48, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt56) == *make_shared<IntegerType>(56, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt64) == *make_shared<IntegerType>(64, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt72) == *make_shared<IntegerType>(72, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt80) == *make_shared<IntegerType>(80, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt88) == *make_shared<IntegerType>(88, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt96) == *make_shared<IntegerType>(96, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt104) == *make_shared<IntegerType>(104, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt112) == *make_shared<IntegerType>(112, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt120) == *make_shared<IntegerType>(120, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt128) == *make_shared<IntegerType>(128, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt136) == *make_shared<IntegerType>(136, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt144) == *make_shared<IntegerType>(144, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt152) == *make_shared<IntegerType>(152, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt160) == *make_shared<IntegerType>(160, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt168) == *make_shared<IntegerType>(168, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt176) == *make_shared<IntegerType>(176, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt184) == *make_shared<IntegerType>(184, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt192) == *make_shared<IntegerType>(192, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt200) == *make_shared<IntegerType>(200, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt208) == *make_shared<IntegerType>(208, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt216) == *make_shared<IntegerType>(216, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt224) == *make_shared<IntegerType>(224, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt232) == *make_shared<IntegerType>(232, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt240) == *make_shared<IntegerType>(240, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt248) == *make_shared<IntegerType>(248, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt256) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
+
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Byte) == *make_shared<FixedBytesType>(1));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes0) == *make_shared<FixedBytesType>(0));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes1) == *make_shared<FixedBytesType>(1));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes2) == *make_shared<FixedBytesType>(2));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes3) == *make_shared<FixedBytesType>(3));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes4) == *make_shared<FixedBytesType>(4));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes5) == *make_shared<FixedBytesType>(5));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes6) == *make_shared<FixedBytesType>(6));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes7) == *make_shared<FixedBytesType>(7));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes8) == *make_shared<FixedBytesType>(8));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes9) == *make_shared<FixedBytesType>(9));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes10) == *make_shared<FixedBytesType>(10));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes11) == *make_shared<FixedBytesType>(11));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes12) == *make_shared<FixedBytesType>(12));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes13) == *make_shared<FixedBytesType>(13));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes14) == *make_shared<FixedBytesType>(14));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes15) == *make_shared<FixedBytesType>(15));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes16) == *make_shared<FixedBytesType>(16));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes17) == *make_shared<FixedBytesType>(17));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes18) == *make_shared<FixedBytesType>(18));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes19) == *make_shared<FixedBytesType>(19));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes20) == *make_shared<FixedBytesType>(20));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes21) == *make_shared<FixedBytesType>(21));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes22) == *make_shared<FixedBytesType>(22));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes23) == *make_shared<FixedBytesType>(23));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes24) == *make_shared<FixedBytesType>(24));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes25) == *make_shared<FixedBytesType>(25));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes26) == *make_shared<FixedBytesType>(26));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes27) == *make_shared<FixedBytesType>(27));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes28) == *make_shared<FixedBytesType>(28));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes29) == *make_shared<FixedBytesType>(29));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes30) == *make_shared<FixedBytesType>(30));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes31) == *make_shared<FixedBytesType>(31));
+	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes32) == *make_shared<FixedBytesType>(32));
+}
+
+BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
+{
+	char const* text = R"(
+		contract c {
+			bytes arr;
+			function f() { byte a = arr[0];}
+		})";
+	ETH_TEST_REQUIRE_NO_THROW(parseTextAndResolveNames(text), "Type resolving failed");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
