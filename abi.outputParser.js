@@ -21,13 +21,13 @@ var description =  [{
 
 describe('abi', function() {
     describe('outputParser', function() {
-        it('should parse output string', function() {
+        it('should parse output fixed bytes type', function() {
 
             // given
             var d = clone(description);
 
             d[0].outputs = [
-                { type: "string" }
+                { type: "bytes" }
             ];
 
             // when
@@ -181,64 +181,6 @@ describe('abi', function() {
             assert.equal(parser.test("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0], -16);
         });
 
-        it('should parse output hash', function() {
-            
-            // given
-            var d = clone(description);
-
-            d[0].outputs = [
-                { type: 'hash' }
-            ];
-
-            // when
-            var parser = abi.outputParser(d);
-
-            // then
-            assert.equal(
-                parser.test("0x000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1")[0],
-                "0x000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1"
-                );
-        });
-        
-        it('should parse output hash256', function() {
-        
-            // given
-            var d = clone(description);
-
-            d[0].outputs = [
-                { type: 'hash256' }
-            ];
-
-            // when
-            var parser = abi.outputParser(d);
-
-            // then
-            assert.equal(
-                parser.test("0x000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1")[0],
-                "0x000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1"
-                );
-        });
-
-        it('should parse output hash160', function() {
-            
-            // given
-            var d = clone(description);
-
-            d[0].outputs = [
-                { type: 'hash160' }
-            ];
-
-            // when
-            var parser = abi.outputParser(d);
-
-            // then
-            assert.equal(
-                parser.test("0x000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1")[0],
-                "0x000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1"
-                );
-            // TODO shouldnt' the expected hash be shorter?
-        });
-
         it('should parse output address', function() {
             
             // given
@@ -317,14 +259,14 @@ describe('abi', function() {
         });
         
 
-        it('should parse multiple output strings', function() {
+        it('should parse multiple output fixed bytes type', function() {
 
             // given
             var d = clone(description);
 
             d[0].outputs = [
-                { type: "string" },
-                { type: "string" }
+                { type: "bytes" },
+                { type: "bytes" }
             ];
 
             // when
@@ -380,8 +322,8 @@ describe('abi', function() {
             },{
                 name: "test2",
                 type: "function",
-                inputs: [{ type: "string" }],
-                outputs: [{ type: "string" }]
+                inputs: [{ type: "bytes" }],
+                outputs: [{ type: "bytes" }]
             }];
 
             // when

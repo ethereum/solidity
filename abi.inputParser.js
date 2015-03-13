@@ -227,56 +227,6 @@ describe('abi', function() {
 
         });
 
-        it('should parse input hash', function() {
-
-            // given
-            var d = clone(description);
-
-            d[0].inputs = [
-                { type: "hash" }
-            ];
-
-            // when
-            var parser = abi.inputParser(d);
-
-            // then
-            assert.equal(parser.test("0x407d73d8a49eeb85d32cf465507dd71d507100c1"), "000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1");
-
-        });
-
-        it('should parse input hash256', function() {
-
-            // given
-            var d = clone(description);
-
-            d[0].inputs = [
-                { type: "hash256" }
-            ];
-
-            // when
-            var parser = abi.inputParser(d);
-
-            // then
-            assert.equal(parser.test("0x407d73d8a49eeb85d32cf465507dd71d507100c1"), "000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1");
-
-        });
-
-
-        it('should parse input hash160', function() {
-            // given
-            var d = clone(description);
-
-            d[0].inputs = [
-                { type: "hash160" }
-            ];
-
-            // when
-            var parser = abi.inputParser(d);
-
-            // then
-            assert.equal(parser.test("0x407d73d8a49eeb85d32cf465507dd71d507100c1"), "000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1");
-        });
-
         it('should parse input address', function () {
 
             // given
@@ -294,13 +244,13 @@ describe('abi', function() {
 
         });
 
-        it('should parse input string', function () {
+        it('should parse input fixed bytes type', function () {
 
             // given
             var d = clone(description);
 
             d[0].inputs = [
-                { type: "string" }
+                { type: "bytes" }
             ];
 
             // when
@@ -318,14 +268,14 @@ describe('abi', function() {
                 );
         });
 
-        it('should parse input int followed by a string', function () {
+        it('should parse input int followed by a fixed bytes type', function () {
 
             // given
             var d = clone(description);
 
             d[0].inputs = [
                 { type: "int" },
-                { type: "string" }
+                { type: "bytes" }
             ];
 
             // when
@@ -340,13 +290,13 @@ describe('abi', function() {
                 );
         });
 
-        it('should parse input string followed by an int', function () {
+        it('should parse input fixed bytes type followed by an int', function () {
 
             // given
             var d = clone(description);
 
             d[0].inputs = [
-                { type: "string" },
+                { type: "bytes" },
                 { type: "int" }
             ];
 
@@ -391,8 +341,8 @@ describe('abi', function() {
             },{
                 name: "test2",
                 type: "function",
-                inputs: [{ type: "string" }],
-                outputs: [{ type: "string" }]
+                inputs: [{ type: "bytes" }],
+                outputs: [{ type: "bytes" }]
             }];
 
             // when
