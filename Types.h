@@ -60,12 +60,19 @@ public:
 				return it.second;
 		return TypePointer();
 	}
+	/// @returns the offset of the given member in storage slots and bytes inside a slot or
+	/// a nullptr if the member is not part of storage.
+	std::pair<u256, unsigned> const* getMemberStorageOffset(std::string const& _name) const;
+	/// @returns the number of storage slots occupied by the members.
+	u256 const& getStorageSize() const;
 
 	MemberMap::const_iterator begin() const { return m_memberTypes.begin(); }
 	MemberMap::const_iterator end() const { return m_memberTypes.end(); }
 
 private:
 	MemberMap m_memberTypes;
+	mutable u256 m_storageSize = 0;
+	mutable std::unique_ptr<std::map<std::string, std::pair<u256, unsigned>>> m_storageOffsets;
 };
 
 /**
@@ -97,6 +104,8 @@ public:
 	/// @returns a pointer to _a or _b if the other is implicitly convertible to it or nullptr otherwise
 	static TypePointer commonType(TypePointer const& _a, TypePointer const& _b);
 
+	/// Calculates the
+
 	virtual Category getCategory() const = 0;
 	virtual bool isImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -126,9 +135,15 @@ public:
 	unsigned getCalldataEncodedSize() const { return getCalldataEncodedSize(true); }
 	/// @returns true if the type is dynamically encoded in calldata
 	virtual bool isDynamicallySized() const { return false; }
-	/// @returns number of bytes required to hold this value in storage.
+	/// @returns the number of storage slots required to hold this value in storage.
 	/// For dynamically "allocated" types, it returns the size of the statically allocated head,
 	virtual u256 getStorageSize() const { return 1; }
+	/// Multiple small types can be packed into a single storage slot. If such a packing is possible
+	/// this function @returns the size in bytes smaller than 32. Data is moved to the next slot if
+	/// it does not fit.
+	/// In order to avoid computation at runtime of whether such moving is necessary, structs and
+	/// array data (not each element) always start a new slot.
+	virtual unsigned getStorageBytes() const { return 32; }
 	/// Returns true if the type can be stored in storage.
 	virtual bool canBeStored() const { return true; }
 	/// Returns false if the type cannot live outside the storage, i.e. if it includes some mapping.
@@ -179,6 +194,7 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 
 	virtual unsigned getCalldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : m_bits / 8; }
+	virtual unsigned getStorageBytes() const override { return m_bits / 8; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual MemberList const& getMembers() const { return isAddress() ? AddressMemberList : EmptyMemberList; }
@@ -251,6 +267,7 @@ public:
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
 	virtual unsigned getCalldataEncodedSize(bool _padded) const override { return _padded && m_bytes > 0 ? 32 : m_bytes; }
+	virtual unsigned getStorageBytes() const override { return m_bytes; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString() const override { return "bytes" + dev::toString(m_bytes); }
@@ -275,6 +292,7 @@ public:
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
 	virtual unsigned getCalldataEncodedSize(bool _padded) const { return _padded ? 32 : 1; }
+	virtual unsigned getStorageBytes() const override { return 1; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString() const override { return "bool"; }
@@ -348,6 +366,7 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual unsigned getStorageBytes() const override { return 20; }
 	virtual bool isValueType() const override { return true; }
 	virtual std::string toString() const override;
 
@@ -411,6 +430,7 @@ public:
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned getSizeOnStack() const override { return 1; }
+	virtual unsigned getStorageBytes() const override;
 	virtual std::string toString() const override;
 	virtual bool isValueType() const override { return true; }
 
@@ -480,7 +500,7 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString() const override;
 	virtual bool canBeStored() const override { return false; }
-	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable function type requested.")); }
+	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override;
 	virtual MemberList const& getMembers() const override;
@@ -565,7 +585,7 @@ public:
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual std::string toString() const override { return "void"; }
 	virtual bool canBeStored() const override { return false; }
-	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable void type requested.")); }
+	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override { return 0; }
 };
@@ -585,7 +605,7 @@ public:
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
-	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); }
+	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override { return 0; }
 	virtual std::string toString() const override { return "type(" + m_actualType->toString() + ")"; }
@@ -611,7 +631,7 @@ public:
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual bool canBeStored() const override { return false; }
-	virtual u256 getStorageSize() const override { BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Storage size of non-storable type type requested.")); }
+	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override { return 0; }
 	virtual bool operator==(Type const& _other) const override;

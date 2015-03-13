@@ -35,6 +35,56 @@ namespace dev
 namespace solidity
 {
 
+std::pair<u256, unsigned> const* MemberList::getMemberStorageOffset(string const& _name) const
+{
+	if (!m_storageOffsets)
+	{
+		bigint slotOffset = 0;
+		unsigned byteOffset = 0;
+		map<string, pair<u256, unsigned>> offsets;
+		for (auto const& nameAndType: m_memberTypes)
+		{
+			TypePointer const& type = nameAndType.second;
+			if (!type->canBeStored())
+				continue;
+			if (byteOffset + type->getStorageBytes() > 32)
+			{
+				// would overflow, go to next slot
+				++slotOffset;
+				byteOffset = 0;
+			}
+			if (slotOffset >= bigint(1) << 256)
+				BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Object too large for storage."));
+			offsets[nameAndType.first] = make_pair(u256(slotOffset), byteOffset);
+			solAssert(type->getStorageSize() >= 1, "Invalid storage size.");
+			if (type->getStorageSize() == 1 && byteOffset + type->getStorageBytes() <= 32)
+				byteOffset += type->getStorageBytes();
+			else
+			{
+				slotOffset += type->getStorageSize();
+				byteOffset = 0;
+			}
+		}
+		if (byteOffset > 0)
+			++slotOffset;
+		if (slotOffset >= bigint(1) << 256)
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Object too large for storage."));
+		m_storageSize = u256(slotOffset);
+		m_storageOffsets.reset(new decltype(offsets)(move(offsets)));
+	}
+	if (m_storageOffsets->count(_name))
+		return &((*m_storageOffsets)[_name]);
+	else
+		return nullptr;
+}
+
+u256 const& MemberList::getStorageSize() const
+{
+	// trigger lazy computation
+	getMemberStorageOffset("");
+	return m_storageSize;
+}
+
 TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 {
 	char const* tokenCstr = Token::toString(_typeToken);
@@ -751,12 +801,7 @@ bool StructType::operator==(Type const& _other) const
 
 u256 StructType::getStorageSize() const
 {
-	bigint size = 0;
-	for (pair<string, TypePointer> const& member: getMembers())
-		size += member.second->getStorageSize();
-	if (size >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Struct too large for storage."));
-	return max<u256>(1, u256(size));
+	return max<u256>(1, getMembers().getStorageSize());
 }
 
 bool StructType::canLiveOutsideStorage() const
@@ -787,6 +832,7 @@ MemberList const& StructType::getMembers() const
 
 u256 StructType::getStorageOffsetOfMember(string const& _name) const
 {
+
 	//@todo cache member offset?
 	u256 offset;
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
@@ -809,6 +855,15 @@ bool EnumType::operator==(Type const& _other) const
 		return false;
 	EnumType const& other = dynamic_cast<EnumType const&>(_other);
 	return other.m_enum == m_enum;
+}
+
+unsigned EnumType::getStorageBytes() const
+{
+	size_t elements = m_enum.getMembers().size();
+	if (elements <= 1)
+		return 1;
+	else
+		return dev::bytesRequired(elements - 1);
 }
 
 string EnumType::toString() const
@@ -955,6 +1010,13 @@ string FunctionType::toString() const
 	return name + ")";
 }
 
+u256 FunctionType::getStorageSize() const
+{
+	BOOST_THROW_EXCEPTION(
+		InternalCompilerError()
+			<< errinfo_comment("Storage size of non-storable function type requested."));
+}
+
 unsigned FunctionType::getSizeOnStack() const
 {
 	Location location = m_location;
@@ -1077,12 +1139,26 @@ string MappingType::toString() const
 	return "mapping(" + getKeyType()->toString() + " => " + getValueType()->toString() + ")";
 }
 
+u256 VoidType::getStorageSize() const
+{
+	BOOST_THROW_EXCEPTION(
+		InternalCompilerError()
+			<< errinfo_comment("Storage size of non-storable void type requested."));
+}
+
 bool TypeType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
 	TypeType const& other = dynamic_cast<TypeType const&>(_other);
 	return *getActualType() == *other.getActualType();
+}
+
+u256 TypeType::getStorageSize() const
+{
+	BOOST_THROW_EXCEPTION(
+		InternalCompilerError()
+			<< errinfo_comment("Storage size of non-storable type type requested."));
 }
 
 MemberList const& TypeType::getMembers() const
@@ -1120,6 +1196,13 @@ ModifierType::ModifierType(const ModifierDefinition& _modifier)
 	for (ASTPointer<VariableDeclaration> const& var: _modifier.getParameters())
 		params.push_back(var->getType());
 	swap(params, m_parameterTypes);
+}
+
+u256 ModifierType::getStorageSize() const
+{
+	BOOST_THROW_EXCEPTION(
+		InternalCompilerError()
+			<< errinfo_comment("Storage size of non-storable type type requested."));
 }
 
 bool ModifierType::operator==(Type const& _other) const
