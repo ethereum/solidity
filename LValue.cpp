@@ -167,6 +167,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				// stack: source_ref target_ref member_offset source_member_ref
 				StorageItem(m_context, *memberType).retrieveValue(_location, true);
 				// stack: source_ref target_ref member_offset source_value...
+				solAssert(2 + memberType->getSizeOnStack() <= 16, "Stack too deep.");
 				m_context << eth::dupInstruction(2 + memberType->getSizeOnStack())
 					<< eth::dupInstruction(2 + memberType->getSizeOnStack()) << eth::Instruction::ADD;
 				// stack: source_ref target_ref member_offset source_value... target_member_ref

@@ -228,6 +228,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 				{
 					// Retrieve data start offset by adding length to start offset of previous dynamic type
 					unsigned stackDepth = m_context.getStackHeight() - stackHeightOfPreviousDynamicArgument;
+					solAssert(stackDepth <= 16, "Stack too deep.");
 					m_context << eth::dupInstruction(stackDepth) << eth::dupInstruction(stackDepth);
 					ArrayUtils(m_context).convertLengthToSize(*previousDynamicType, true);
 					m_context << eth::Instruction::ADD;
@@ -359,6 +360,7 @@ bool Compiler::visit(FunctionDefinition const& _function)
 		stackLayout.push_back(i);
 	stackLayout += vector<int>(c_localVariablesSize, -1);
 
+	solAssert(stackLayout.size() <= 17, "Stack too deep.");
 	while (stackLayout.back() != int(stackLayout.size() - 1))
 		if (stackLayout.back() < 0)
 		{

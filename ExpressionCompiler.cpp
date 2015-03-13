@@ -233,9 +233,12 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		m_currentLValue->retrieveValue(_assignment.getLocation(), true);
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
 		if (lvalueSize > 0)
+		{
+			solAssert(itemSize + lvalueSize <= 16, "Stack too deep.");
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
 				m_context << eth::swapInstruction(itemSize + lvalueSize) << eth::Instruction::POP;
+		}
 	}
 	m_currentLValue->storeValue(*_assignment.getRightHandSide().getType(), _assignment.getLocation());
 	m_currentLValue.reset();
@@ -557,10 +560,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case Location::SHA256:
 		case Location::RIPEMD160:
 		{
+			_functionCall.getExpression().accept(*this);
 			static const map<Location, u256> contractAddresses{{Location::ECRecover, 1},
 															   {Location::SHA256, 2},
 															   {Location::RIPEMD160, 3}};
 			m_context << contractAddresses.find(function.getLocation())->second;
+			for (unsigned i = function.getSizeOnStack(); i > 0; --i)
+				m_context << eth::swapInstruction(i);
 			appendExternalFunctionCall(function, arguments, true);
 			break;
 		}
