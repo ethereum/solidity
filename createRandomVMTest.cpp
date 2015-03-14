@@ -41,7 +41,7 @@ using namespace std;
 using namespace json_spirit;
 using namespace dev;
 
-void doMyTests(json_spirit::mValue& v);
+void doMyTests(json_spirit::mValue& _v);
 
 int main(int argc, char *argv[])
 {
@@ -127,11 +127,11 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void doMyTests(json_spirit::mValue& v)
+void doMyTests(json_spirit::mValue& _v)
 {
 	eth::VMFactory::setKind(eth::VMKind::Interpreter);
 
-	for (auto& i: v.get_obj())
+	for (auto& i: _v.get_obj())
 	{
 		cnote << i.first;
 		mObject& o = i.second.get_obj();

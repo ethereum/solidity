@@ -389,7 +389,7 @@
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
                 "nonce" : "0",
-                "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 1000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
+                "code" : "{ (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa ) [[ 0 ]] (CALL 100000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0) }",
                 "storage": {}
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
@@ -410,7 +410,7 @@
         "transaction" : {
             "nonce" : "0",
             "gasPrice" : "1",
-            "gasLimit" : "30000",
+            "gasLimit" : "300000",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "100000",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
