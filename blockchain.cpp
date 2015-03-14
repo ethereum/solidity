@@ -119,7 +119,12 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					// make uncle header valid
 					uncleBlockFromFields.timestamp = (u256)time(0);
 					if (vBiBlocks.size() > 2)
-						uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size()-2]);
+					{
+						if (uncleBlockFromFields.number - 1 < vBiBlocks.size())
+							uncleBlockFromFields.populateFromParent(vBiBlocks[(size_t)uncleBlockFromFields.number - 1]);
+						else
+							uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size() - 2]);
+					}
 					else
 						continue;
 
