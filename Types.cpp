@@ -79,6 +79,12 @@ pair<u256, unsigned> const* StorageOffsets::getOffset(size_t _index) const
 		return nullptr;
 }
 
+MemberList& MemberList::operator=(MemberList&& _other)
+{
+	m_memberTypes = std::move(_other.m_memberTypes);
+	m_storageOffsets = std::move(_other.m_storageOffsets);
+}
+
 std::pair<u256, unsigned> const* MemberList::getMemberStorageOffset(string const& _name) const
 {
 	if (!m_storageOffsets)

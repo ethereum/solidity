@@ -73,6 +73,7 @@ public:
 
 	MemberList() {}
 	explicit MemberList(MemberMap const& _members): m_memberTypes(_members) {}
+	MemberList& operator=(MemberList&& _other);
 	TypePointer getMemberType(std::string const& _name) const
 	{
 		for (auto const& it: m_memberTypes)
