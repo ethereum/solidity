@@ -1160,7 +1160,8 @@ MagicType::MagicType(MagicType::Kind _kind):
 		m_members = MemberList({{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"gas", make_shared<IntegerType>(256)},
 								{"value", make_shared<IntegerType>(256)},
-								{"data", make_shared<ArrayType>(ArrayType::Location::CallData)}});
+								{"data", make_shared<ArrayType>(ArrayType::Location::CallData)},
+								{"sig", make_shared<FixedBytesType>(4)}});
 		break;
 	case Kind::Transaction:
 		m_members = MemberList({{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
