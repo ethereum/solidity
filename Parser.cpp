@@ -330,9 +330,6 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	}
 	if (token == Token::Const)
 	{
-		solAssert(_options.isStateVariable, "");
-		if (m_scanner->peekNextToken() != Token::Identifier && !Token::isElementaryTypeName(m_scanner->peekNextToken()))
-			BOOST_THROW_EXCEPTION(createParserError("Invalid use of \"constant\" specifier"));
 		isDeclaredConst = true;
 		m_scanner->next();
 	}

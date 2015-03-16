@@ -443,14 +443,15 @@ class VariableDeclaration: public Declaration
 {
 public:
 	VariableDeclaration(
-			SourceLocation const& _location,
-			ASTPointer<TypeName> const& _type,
-			ASTPointer<ASTString> const& _name,
-			ASTPointer<Expression> _value,
-			Visibility _visibility,
-			bool _isStateVar = false,
-			bool _isIndexed = false,
-			bool _isConstant = false):
+		SourceLocation const& _location,
+		ASTPointer<TypeName> const& _type,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<Expression> _value,
+		Visibility _visibility,
+		bool _isStateVar = false,
+		bool _isIndexed = false,
+		bool _isConstant = false
+	):
 		Declaration(_location, _name, _visibility),
 		m_typeName(_type),
 		m_value(_value),
