@@ -2202,6 +2202,21 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit()")));
 }
 
+BOOST_AUTO_TEST_CASE(event_anonymous)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event anonymous Deposit();
+			function deposit() {
+				Deposit();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("deposit()");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 0);
+}
+
 BOOST_AUTO_TEST_CASE(event_lots_of_data)
 {
 	char const* sourceCode = R"(
