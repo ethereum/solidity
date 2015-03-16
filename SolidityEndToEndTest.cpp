@@ -1044,6 +1044,22 @@ BOOST_AUTO_TEST_CASE(msg_sig)
 	BOOST_CHECK(callContractFunctionWithValue("foo(uint256)", 13) == encodeArgs(asString(FixedHash<4>(dev::sha3("foo(uint256)")).asBytes())));
 }
 
+BOOST_AUTO_TEST_CASE(msg_sig_after_internal_call_is_same)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function boo() returns (bytes4 value) {
+				return msg.sig;
+			}
+			function foo(uint256 a) returns (bytes4 value) {
+				return boo();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunctionWithValue("foo(uint256)", 13) == encodeArgs(asString(FixedHash<4>(dev::sha3("foo(uint256)")).asBytes())));
+}
+
 BOOST_AUTO_TEST_CASE(now)
 {
 	char const* sourceCode = "contract test {\n"
