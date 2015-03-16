@@ -706,13 +706,21 @@ u256 ArrayType::getStorageSize() const
 {
 	if (isDynamicallySized())
 		return 1;
-	else
+
+	bigint size;
+	unsigned baseBytes = getBaseType()->getStorageBytes();
+	if (baseBytes == 0)
+		size = 1;
+	else if (baseBytes < 32)
 	{
-		bigint size = bigint(getLength()) * getBaseType()->getStorageSize();
-		if (size >= bigint(1) << 256)
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Array too large for storage."));
-		return max<u256>(1, u256(size));
+		unsigned itemsPerSlot = 32 / baseBytes;
+		size = (bigint(getLength()) + (itemsPerSlot - 1)) / itemsPerSlot;
 	}
+	else
+		size = bigint(getLength()) * getBaseType()->getStorageSize();
+	if (size >= bigint(1) << 256)
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Array too large for storage."));
+	return max<u256>(1, u256(size));
 }
 
 unsigned ArrayType::getSizeOnStack() const

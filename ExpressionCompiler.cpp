@@ -753,7 +753,6 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	}
 	else if (baseType.getCategory() == Type::Category::Array)
 	{
-		// stack layout: <base_ref> [storage_byte_offset] [<length>] <index>
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
 		ArrayType::Location location = arrayType.getLocation();
@@ -762,6 +761,11 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			location == ArrayType::Location::Memory ? eth::Instruction::MLOAD :
 			eth::Instruction::CALLDATALOAD;
 
+		// remove storage byte offset
+		if (location == ArrayType::Location::Storage)
+			m_context << eth::Instruction::POP;
+
+		// stack layout: <base_ref> [<length>] <index>
 		_indexAccess.getIndexExpression()->accept(*this);
 		// retrieve length
 		if (!arrayType.isDynamicallySized())
@@ -769,11 +773,9 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		else if (location == ArrayType::Location::CallData)
 			// length is stored on the stack
 			m_context << eth::Instruction::SWAP1;
-		else if (location == ArrayType::Location::Storage)
-			m_context << eth::Instruction::DUP3 << load;
 		else
 			m_context << eth::Instruction::DUP2 << load;
-		// stack: <base_ref> [storage_byte_offset] <index> <length>
+		// stack: <base_ref> <index> <length>
 		// check out-of-bounds access
 		m_context << eth::Instruction::DUP2 << eth::Instruction::LT;
 		eth::AssemblyItem legalAccess = m_context.appendConditionalJump();
@@ -781,23 +783,22 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		m_context << eth::Instruction::STOP;
 
 		m_context << legalAccess;
-		// stack: <base_ref> [storage_byte_offset] <index>
+		// stack: <base_ref> <index>
 		if (arrayType.isByteArray())
-			// byte array is packed differently, especially in storage
 			switch (location)
 			{
 			case ArrayType::Location::Storage:
 				// byte array index storage lvalue on stack (goal):
 				// <ref> <byte_number> = <base_ref + index / 32> <index % 32>
-				m_context << u256(32) << eth::Instruction::SWAP3;
+				m_context << u256(32) << eth::Instruction::SWAP2;
 				CompilerUtils(m_context).computeHashStatic();
-				// stack: 32 storage_byte_offset index data_ref
+				// stack: 32 index data_ref
 				m_context
-					<< eth::Instruction::DUP4 << eth::Instruction::DUP3
+					<< eth::Instruction::DUP3 << eth::Instruction::DUP3
 					<< eth::Instruction::DIV << eth::Instruction::ADD
-				// stack: 32 storage_byte_offset index (data_ref + index / 32)
-					<< eth::Instruction::SWAP3 << eth::Instruction::SWAP2
-					<< eth::Instruction::POP << eth::Instruction::MOD;
+				// stack: 32 index (data_ref + index / 32)
+					<< eth::Instruction::SWAP2 << eth::Instruction::SWAP1
+					<< eth::Instruction::MOD;
 				setLValue<StorageByteArrayElement>(_indexAccess);
 				break;
 			case ArrayType::Location::CallData:
@@ -811,36 +812,50 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			}
 		else
 		{
-			// stack: <base_ref> [storage_byte_offset] <index>
-			if (location == ArrayType::Location::Storage)
-				//@todo use byte offset, remove it for now
-				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
-			u256 elementSize =
-				location == ArrayType::Location::Storage ?
-					arrayType.getBaseType()->getStorageSize() :
-					arrayType.getBaseType()->getCalldataEncodedSize();
-			solAssert(elementSize != 0, "Invalid element size.");
-			if (elementSize > 1)
-				m_context << elementSize << eth::Instruction::MUL;
+			// stack: <base_ref> <index>
+			m_context << eth::Instruction::SWAP1;
 			if (arrayType.isDynamicallySized())
 			{
 				if (location == ArrayType::Location::Storage)
-				{
-					m_context << eth::Instruction::SWAP1;
 					CompilerUtils(m_context).computeHashStatic();
-				}
 				else if (location == ArrayType::Location::Memory)
 					m_context << u256(32) << eth::Instruction::ADD;
 			}
-			m_context << eth::Instruction::ADD;
+			// stack: <index> <data_ref>
 			switch (location)
 			{
 			case ArrayType::Location::CallData:
+				m_context
+					<< eth::Instruction::SWAP1 << arrayType.getBaseType()->getCalldataEncodedSize()
+					<< eth::Instruction::MUL << eth::Instruction::ADD;
 				if (arrayType.getBaseType()->isValueType())
 					CompilerUtils(m_context).loadFromMemoryDynamic(*arrayType.getBaseType(), true, true, false);
 				break;
 			case ArrayType::Location::Storage:
-				m_context << u256(0); // @todo
+				m_context << eth::Instruction::SWAP1;
+				if (arrayType.getBaseType()->getStorageBytes() <= 16)
+				{
+					// stack: <data_ref> <index>
+					// goal:
+					// <ref> <byte_number> = <base_ref + index / itemsPerSlot> <(index % itemsPerSlot) * byteSize>
+					unsigned byteSize = arrayType.getBaseType()->getStorageBytes();
+					unsigned itemsPerSlot = 32 / byteSize;
+					m_context << u256(itemsPerSlot) << eth::Instruction::SWAP2;
+					// stack: itemsPerSlot index data_ref
+					m_context
+						<< eth::Instruction::DUP3 << eth::Instruction::DUP3
+						<< eth::Instruction::DIV << eth::Instruction::ADD
+					// stack: itemsPerSlot index (data_ref + index / itemsPerSlot)
+						<< eth::Instruction::SWAP2 << eth::Instruction::SWAP1
+						<< eth::Instruction::MOD
+						<< u256(byteSize) << eth::Instruction::MUL;
+				}
+				else
+				{
+					if (arrayType.getBaseType()->getStorageSize() != 1)
+						m_context << arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL;
+					m_context << eth::Instruction::ADD << u256(0);
+				}
 				setLValueToStorageItem(_indexAccess);
 				break;
 			case ArrayType::Location::Memory:
