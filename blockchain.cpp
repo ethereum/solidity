@@ -50,7 +50,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 		BOOST_REQUIRE(o.count("pre"));
 		ImportTest importer(o["pre"].get_obj());
-		State state(Address(), OverlayDB(), BaseState::Empty);
+		State state(biGenesisBlock.coinbaseAddress, OverlayDB(), BaseState::Empty);
 		importer.importState(o["pre"].get_obj(), state);
 		o["pre"] = fillJsonWithState(state);
 		state.commit();
@@ -119,7 +119,12 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					// make uncle header valid
 					uncleBlockFromFields.timestamp = (u256)time(0);
 					if (vBiBlocks.size() > 2)
-						uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size()-2]);
+					{
+						if (uncleBlockFromFields.number - 1 < vBiBlocks.size())
+							uncleBlockFromFields.populateFromParent(vBiBlocks[(size_t)uncleBlockFromFields.number - 1]);
+						else
+							uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size() - 2]);
+					}
 					else
 						continue;
 
@@ -227,7 +232,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				if (sha3(RLP(state.blockData())[2].data()) != sha3(RLP(block2.out())[2].data()))
 					cnote << "uncle list mismatch\n" << RLP(state.blockData())[2].data() << "\n" << RLP(block2.out())[2].data();
-
 				try
 				{
 					state.sync(bc);
@@ -246,6 +250,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				blArray.push_back(blObj);
 			}
 			o["blocks"] = blArray;
+			o["postState"] = fillJsonWithState(state);
 		}
 
 		else
@@ -623,9 +628,9 @@ RLPStream createFullBlockFromHeader(const BlockInfo& _bi,const bytes& _txs, cons
 
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
-BOOST_AUTO_TEST_CASE(bcBlockChainTest)
+BOOST_AUTO_TEST_CASE(bcJS_API_Test)
 {
-	dev::test::executeTests("bcBlockChainTest", "/BlockTests", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcJS_API_Test", "/BlockTests", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcValidBlockTest)
