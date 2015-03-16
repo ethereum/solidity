@@ -556,14 +556,16 @@ public:
 	EventDefinition(SourceLocation const& _location,
 					ASTPointer<ASTString> const& _name,
 					ASTPointer<ASTString> const& _documentation,
-					ASTPointer<ParameterList> const& _parameters):
-		Declaration(_location, _name), Documented(_documentation), m_parameters(_parameters) {}
+					ASTPointer<ParameterList> const& _parameters,
+					bool _anonymous = false):
+		Declaration(_location, _name), Documented(_documentation), m_parameters(_parameters) , m_anonymous(_anonymous){}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
 	ParameterList const& getParameterList() const { return *m_parameters; }
+	bool IsAnonymous() const { return m_anonymous; }
 
 	virtual TypePointer getType(ContractDefinition const* = nullptr) const override
 	{
@@ -574,6 +576,7 @@ public:
 
 private:
 	ASTPointer<ParameterList> m_parameters;
+	bool m_anonymous;
 };
 
 /**

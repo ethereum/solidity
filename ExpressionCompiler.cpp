@@ -542,9 +542,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					appendTypeConversion(*arguments[arg - 1]->getType(),
 										 *function.getParameterTypes()[arg - 1], true);
 				}
-			m_context << u256(h256::Arith(dev::sha3(function.getCanonicalSignature(event.getName()))));
-			++numIndexed;
-			solAssert(numIndexed <= 4, "Too many indexed arguments.");
+			if (!event.IsAnonymous())
+			{
+				m_context << u256(h256::Arith(dev::sha3(function.getCanonicalSignature(event.getName()))));
+				++numIndexed;
+			}
+			solAssert(numIndexed <= 4 - (event.IsAnonymous() ? 1 : 0), "Too many indexed arguments.");
 			// Copy all non-indexed arguments to memory (data)
 			m_context << u256(0);
 			for (unsigned arg = 0; arg < arguments.size(); ++arg)

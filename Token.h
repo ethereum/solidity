@@ -145,6 +145,7 @@ namespace solidity
 	K(Break, "break", 0)                                               \
 	K(Case, "case", 0)                                                 \
 	K(Const, "constant", 0)                                            \
+	K(Anonymous, "anonymous", 0)                                       \
 	K(Continue, "continue", 0)                                         \
 	K(Contract, "contract", 0)                                         \
 	K(Default, "default", 0)                                           \
