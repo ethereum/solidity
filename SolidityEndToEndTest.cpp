@@ -2214,7 +2214,7 @@ BOOST_AUTO_TEST_CASE(event_anonymous)
 	)";
 	compileAndRun(sourceCode);
 	callContractFunction("deposit()");
-	BOOST_REQUIRE_EQUAL(m_logs.size(), 0);
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(event_lots_of_data)
