@@ -162,8 +162,9 @@ class Options
 public:
 	bool jit = false;		///< Use JIT
 	bool vmtrace = false;	///< Create EVM execution tracer // TODO: Link with log verbosity?
-	bool showTimes = false;	///< Print test groups execution times
 	bool fillTests = false; ///< Create JSON test files from execution results
+	bool stats = false;		///< Execution time stats
+	bool statsFull = false; ///< Output full stats - execution times for every test
 
 	/// Test selection
 	/// @{
@@ -182,6 +183,33 @@ private:
 	Options();
 	Options(Options const&) = delete;
 };
+
+/// Allows observing test execution process.
+/// This class also provides methods for registering and notifying the listener
+class Listener
+{
+public:
+	virtual ~Listener() = default;
+
+	virtual void testStarted(std::string const& _name) = 0;
+	virtual void testFinished() = 0;
+
+	static void registerListener(Listener& _listener);
+	static void notifyTestStarted(std::string const& _name);
+	static void notifyTestFinished();
+
+	/// Test started/finished notification RAII helper
+	class ExecTimeGuard
+	{
+	public:
+		ExecTimeGuard(std::string const& _testName) { notifyTestStarted(_testName);	}
+		~ExecTimeGuard() { notifyTestFinished(); }
+		ExecTimeGuard(ExecTimeGuard const&) = delete;
+		ExecTimeGuard& operator=(ExecTimeGuard) = delete;
+	};
+};
+
+
 
 }
 }
