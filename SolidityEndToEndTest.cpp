@@ -3040,6 +3040,123 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_static_dynamic)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(9, 4));
 }
 
+BOOST_AUTO_TEST_CASE(array_copy_different_packing)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes8[] data1; // 4 per slot
+			bytes10[] data2; // 3 per slot
+			function test() returns (bytes10 a, bytes10 b, bytes10 c, bytes10 d, bytes10 e) {
+				data1.length = 9;
+				for (uint i = 0; i < data1.length; ++i)
+					data1[i] = bytes8(i);
+				data2 = data1;
+				a = data2[1];
+				b = data2[2];
+				c = data2[3];
+				d = data2[4];
+				e = data2[5];
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(
+		asString(fromHex("0000000000000001")),
+		asString(fromHex("0000000000000002")),
+		asString(fromHex("0000000000000003")),
+		asString(fromHex("0000000000000004")),
+		asString(fromHex("0000000000000005"))
+	));
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_target_simple)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes8[9] data1; // 4 per slot
+			bytes17[10] data2; // 1 per slot, no offset counter
+			function test() returns (bytes17 a, bytes17 b, bytes17 c, bytes17 d, bytes17 e) {
+				for (uint i = 0; i < data1.length; ++i)
+					data1[i] = bytes8(i);
+				data2[8] = data2[9] = 2;
+				data2 = data1;
+				a = data2[1];
+				b = data2[2];
+				c = data2[3];
+				d = data2[4];
+				e = data2[9];
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(
+		asString(fromHex("0000000000000001")),
+		asString(fromHex("0000000000000002")),
+		asString(fromHex("0000000000000003")),
+		asString(fromHex("0000000000000004")),
+		asString(fromHex("0000000000000000"))
+	));
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_target_leftover)
+{
+	// test that leftover elements in the last slot of target are correctly cleared during assignment
+	char const* sourceCode = R"(
+		contract c {
+			byte[10] data1;
+			bytes2[32] data2;
+			function test() returns (uint check, uint res1, uint res2) {
+				uint i;
+				for (i = 0; i < data2.length; ++i)
+					data2[i] = 0xffff;
+				check = uint(data2[31]) * 0x10000 | uint(data2[14]);
+				for (i = 0; i < data1.length; ++i)
+					data1[i] = byte(uint8(1 + i));
+				data2 = data1;
+				for (i = 0; i < 16; ++i)
+					res1 |= uint(data2[i]) * 0x10000**i;
+				for (i = 0; i < 16; ++i)
+					res2 |= uint(data2[16 + i]) * 0x10000**i;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(
+		u256("0xffffffff"),
+		asString(fromHex("0000000000000000""000000000a000900""0800070006000500""0400030002000100")),
+		asString(fromHex("0000000000000000""0000000000000000""0000000000000000""0000000000000000"))
+	));
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_target_leftover2)
+{
+	// since the copy always copies whole slots, we have to make sure that the source size maxes
+	// out a whole slot and at the same time there are still elements left in the target at that point
+	char const* sourceCode = R"(
+		contract c {
+			bytes8[4] data1; // fits into one slot
+			bytes10[6] data2; // 4 elements need two slots
+			function test() returns (bytes10 r1, bytes10 r2, bytes10 r3) {
+				data1[0] = 1;
+				data1[1] = 2;
+				data1[2] = 3;
+				data1[3] = 4;
+				for (uint i = 0; i < data2.length; ++i)
+					data2[i] = bytes10(0xffff00 | (1 + i));
+				data2 = data1;
+				r1 = data2[3];
+				r2 = data2[4];
+				r3 = data2[5];
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(
+		asString(fromHex("0000000000000004")),
+		asString(fromHex("0000000000000000")),
+		asString(fromHex("0000000000000000"))
+	));
+}
 BOOST_AUTO_TEST_CASE(array_copy_storage_storage_struct)
 {
 	char const* sourceCode = R"(
@@ -3166,7 +3283,7 @@ BOOST_AUTO_TEST_CASE(array_copy_nested_array)
 	char const* sourceCode = R"(
 		contract c {
 			uint[4][] a;
-			uint[5][] b;
+			uint[10][] b;
 			uint[][] c;
 			function test(uint[2][] d) external returns (uint) {
 				a = d;
