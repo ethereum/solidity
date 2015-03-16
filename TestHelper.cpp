@@ -84,12 +84,12 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller) : m_statePre(Add
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
-	BOOST_REQUIRE(_o.count("previousHash") > 0);
-	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
-	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
-	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
-	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
-	BOOST_REQUIRE(_o.count("currentNumber") > 0);
+	assert(_o.count("previousHash") > 0);
+	assert(_o.count("currentGasLimit") > 0);
+	assert(_o.count("currentDifficulty") > 0);
+	assert(_o.count("currentTimestamp") > 0);
+	assert(_o.count("currentCoinbase") > 0);
+	assert(_o.count("currentNumber") > 0);
 
 	m_environment.previousBlock.hash = h256(_o["previousHash"].get_str());
 	m_environment.currentBlock.number = toInt(_o["currentNumber"]);
@@ -108,10 +108,10 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 	{
 		json_spirit::mObject o = i.second.get_obj();
 
-		BOOST_REQUIRE(o.count("balance") > 0);
-		BOOST_REQUIRE(o.count("nonce") > 0);
-		BOOST_REQUIRE(o.count("storage") > 0);
-		BOOST_REQUIRE(o.count("code") > 0);
+		assert(o.count("balance") > 0);
+		assert(o.count("nonce") > 0);
+		assert(o.count("storage") > 0);
+		assert(o.count("code") > 0);
 
 		if (bigint(o["balance"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
@@ -144,12 +144,12 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 {	
 	if (_o.count("secretKey") > 0)
 	{
-		BOOST_REQUIRE(_o.count("nonce") > 0);
-		BOOST_REQUIRE(_o.count("gasPrice") > 0);
-		BOOST_REQUIRE(_o.count("gasLimit") > 0);
-		BOOST_REQUIRE(_o.count("to") > 0);
-		BOOST_REQUIRE(_o.count("value") > 0);
-		BOOST_REQUIRE(_o.count("data") > 0);
+		assert(_o.count("nonce") > 0);
+		assert(_o.count("gasPrice") > 0);
+		assert(_o.count("gasLimit") > 0);
+		assert(_o.count("to") > 0);
+		assert(_o.count("value") > 0);
+		assert(_o.count("data") > 0);
 
 		if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
@@ -473,7 +473,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 
 	try
 	{
-		cnote << "Testing ..." << _name;
+		std::cout << "TEST " << _name << ":\n";
 		json_spirit::mValue v;
 		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
@@ -551,6 +551,10 @@ Options::Options()
 			vmtrace = true;
 		else if (arg == "--filltests")
 			fillTests = true;
+		else if (arg == "--stats")
+			stats = true;
+		else if (arg == "--stats=full")
+			stats = statsFull = true;
 		else if (arg == "--performance")
 			performance = true;
 		else if (arg == "--quadratic")
@@ -578,12 +582,36 @@ Options const& Options::get()
 	return instance;
 }
 
+
 LastHashes lastHashes(u256 _currentBlockNumber)
 {
 	LastHashes ret;
 	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
 		ret.push_back(sha3(toString(_currentBlockNumber - i)));
 	return ret;
+}
+
+
+namespace
+{
+	Listener* g_listener;
+}
+
+void Listener::registerListener(Listener& _listener)
+{
+	g_listener = &_listener;
+}
+
+void Listener::notifyTestStarted(std::string const& _name)
+{
+	if (g_listener)
+		g_listener->testStarted(_name);
+}
+
+void Listener::notifyTestFinished()
+{
+	if (g_listener)
+		g_listener->testFinished();
 }
 
 } } // namespaces
