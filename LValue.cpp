@@ -167,6 +167,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				// stack: source_ref target_ref member_offset source_member_ref
 				StorageItem(m_context, *memberType).retrieveValue(_location, true);
 				// stack: source_ref target_ref member_offset source_value...
+				solAssert(2 + memberType->getSizeOnStack() <= 16, "Stack too deep.");
 				m_context << eth::dupInstruction(2 + memberType->getSizeOnStack())
 					<< eth::dupInstruction(2 + memberType->getSizeOnStack()) << eth::Instruction::ADD;
 				// stack: source_ref target_ref member_offset source_value... target_member_ref
@@ -234,7 +235,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 }
 
 /// Used in StorageByteArrayElement
-static IntegerType byteType(8, IntegerType::Modifier::Hash);
+static FixedBytesType byteType(1);
 
 StorageByteArrayElement::StorageByteArrayElement(CompilerContext& _compilerContext):
 	LValue(_compilerContext, byteType)
@@ -250,6 +251,7 @@ void StorageByteArrayElement::retrieveValue(SourceLocation const&, bool _remove)
 	else
 		m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD
 			<< eth::Instruction::DUP2 << eth::Instruction::BYTE;
+	m_context << (u256(1) << (256 - 8)) << eth::Instruction::MUL;
 }
 
 void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, bool _move) const
@@ -265,8 +267,9 @@ void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, boo
 	m_context << eth::Instruction::DUP2 << u256(0xff) << eth::Instruction::MUL
 		<< eth::Instruction::NOT << eth::Instruction::AND;
 	// stack: value ref (1<<(32-byte_number)) old_full_value_with_cleared_byte
-	m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP4 << eth::Instruction::MUL
-		<< eth::Instruction::OR;
+	m_context << eth::Instruction::SWAP1;
+	m_context << (u256(1) << (256 - 8)) << eth::Instruction::DUP5 << eth::Instruction::DIV
+		<< eth::Instruction::MUL << eth::Instruction::OR;
 	// stack: value ref new_full_value
 	m_context << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
 	if (_move)

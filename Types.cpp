@@ -37,26 +37,36 @@ namespace solidity
 
 TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 {
-	solAssert(Token::isElementaryTypeName(_typeToken), "Elementary type name expected.");
+	char const* tokenCstr = Token::toString(_typeToken);
+	solAssert(Token::isElementaryTypeName(_typeToken),
+		"Expected an elementary type name but got " + ((tokenCstr) ? std::string(Token::toString(_typeToken)) : ""));
 
-	if (Token::Int <= _typeToken && _typeToken <= Token::Hash256)
+	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
 	{
 		int offset = _typeToken - Token::Int;
 		int bytes = offset % 33;
-		if (bytes == 0)
+		if (bytes == 0 && _typeToken != Token::Bytes0)
 			bytes = 32;
 		int modifier = offset / 33;
-		return make_shared<IntegerType>(bytes * 8,
-										modifier == 0 ? IntegerType::Modifier::Signed :
-										modifier == 1 ? IntegerType::Modifier::Unsigned :
-										IntegerType::Modifier::Hash);
+		switch(modifier)
+		{
+		case 0:
+			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Signed);
+		case 1:
+			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Unsigned);
+		case 2:
+			return make_shared<FixedBytesType>(bytes);
+		default:
+			solAssert(false, "Unexpected modifier value. Should never happen");
+			return TypePointer();
+		}
 	}
+	else if (_typeToken == Token::Byte)
+		return make_shared<FixedBytesType>(1);
 	else if (_typeToken == Token::Address)
 		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
 	else if (_typeToken == Token::Bool)
 		return make_shared<BoolType>();
-	else if (Token::String0 <= _typeToken && _typeToken <= Token::String32)
-		return make_shared<StaticStringType>(int(_typeToken) - int(Token::String0));
 	else if (_typeToken == Token::Bytes)
 		return make_shared<ArrayType>(ArrayType::Location::Storage);
 	else
@@ -123,7 +133,7 @@ TypePointer Type::forLiteral(Literal const& _literal)
 		return make_shared<IntegerConstantType>(_literal);
 	case Token::StringLiteral:
 		//@todo put larger strings into dynamic strings
-		return StaticStringType::smallestTypeForLiteral(_literal.getValue());
+		return FixedBytesType::smallestTypeForLiteral(_literal.getValue());
 	default:
 		return shared_ptr<Type>();
 	}
@@ -159,8 +169,6 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return false;
 	if (isAddress())
 		return convertTo.isAddress();
-	else if (isHash())
-		return convertTo.isHash();
 	else if (isSigned())
 		return convertTo.isSigned();
 	else
@@ -169,14 +177,10 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.getCategory() == Category::String)
-	{
-		StaticStringType const& convertTo = dynamic_cast<StaticStringType const&>(_convertTo);
-		return isHash() && (m_bits == convertTo.getNumBytes() * 8);
-	}
 	return _convertTo.getCategory() == getCategory() ||
-		   _convertTo.getCategory() == Category::Contract ||
-		   _convertTo.getCategory() == Category::Enum;
+		_convertTo.getCategory() == Category::Contract ||
+		_convertTo.getCategory() == Category::Enum ||
+		_convertTo.getCategory() == Category::FixedBytes;
 }
 
 TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
@@ -187,16 +191,10 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 	// no further unary operators for addresses
 	else if (isAddress())
 		return TypePointer();
-	// "~" is ok for all other types
-	else if (_operator == Token::BitNot)
-		return shared_from_this();
-	// nothing else for hashes
-	else if (isHash())
-		return TypePointer();
-	// for non-hash integers, we allow +, -, ++ and --
+	// for non-address integers, we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
 			_operator == Token::Inc || _operator == Token::Dec ||
-			_operator == Token::After)
+			_operator == Token::After || _operator == Token::BitNot)
 		return shared_from_this();
 	else
 		return TypePointer();
@@ -214,7 +212,7 @@ string IntegerType::toString() const
 {
 	if (isAddress())
 		return "address";
-	string prefix = isHash() ? "hash" : (isSigned() ? "int" : "uint");
+	string prefix = isSigned() ? "int" : "uint";
 	return prefix + dev::toString(m_bits);
 }
 
@@ -230,14 +228,11 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	// All integer types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
-
-	// Nothing else can be done with addresses, but hashes can receive bit operators
+	// Nothing else can be done with addresses
 	if (commonType->isAddress())
 		return TypePointer();
-	else if (commonType->isHash() && !Token::isBitOp(_operator))
-		return TypePointer();
-	else
-		return commonType;
+
+	return commonType;
 }
 
 const MemberList IntegerType::AddressMemberList =
@@ -284,8 +279,17 @@ IntegerConstantType::IntegerConstantType(Literal const& _literal)
 
 bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	TypePointer integerType = getIntegerType();
-	return integerType && integerType->isImplicitlyConvertibleTo(_convertTo);
+	shared_ptr<IntegerType const> integerType = getIntegerType();
+	if (!integerType)
+		return false;
+
+	if (_convertTo.getCategory() == Category::FixedBytes)
+	{
+		FixedBytesType const& convertTo = dynamic_cast<FixedBytesType const&>(_convertTo);
+		return convertTo.getNumBytes() * 8 >= integerType->getNumBits();
+	}
+
+	return integerType->isImplicitlyConvertibleTo(_convertTo);
 }
 
 bool IntegerConstantType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -433,50 +437,73 @@ shared_ptr<IntegerType const> IntegerConstantType::getIntegerType() const
 												 : IntegerType::Modifier::Unsigned);
 }
 
-shared_ptr<StaticStringType> StaticStringType::smallestTypeForLiteral(string const& _literal)
+shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)
 {
 	if (_literal.length() <= 32)
-		return make_shared<StaticStringType>(_literal.length());
-	return shared_ptr<StaticStringType>();
+		return make_shared<FixedBytesType>(_literal.length());
+	return shared_ptr<FixedBytesType>();
 }
 
-StaticStringType::StaticStringType(int _bytes): m_bytes(_bytes)
+FixedBytesType::FixedBytesType(int _bytes): m_bytes(_bytes)
 {
 	solAssert(m_bytes >= 0 && m_bytes <= 32,
-			  "Invalid byte number for static string type: " + dev::toString(m_bytes));
+			  "Invalid byte number for fixed bytes type: " + dev::toString(m_bytes));
 }
 
-bool StaticStringType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.getCategory() != getCategory())
 		return false;
-	StaticStringType const& convertTo = dynamic_cast<StaticStringType const&>(_convertTo);
+	FixedBytesType const& convertTo = dynamic_cast<FixedBytesType const&>(_convertTo);
 	return convertTo.m_bytes >= m_bytes;
 }
 
-bool StaticStringType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.getCategory() == getCategory())
-		return true;
 	if (_convertTo.getCategory() == Category::Integer)
 	{
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (convertTo.isHash() && (m_bytes * 8 == convertTo.getNumBits()))
+		if (m_bytes * 8 <= convertTo.getNumBits())
 			return true;
 	}
 
-	return false;
+	return _convertTo.getCategory() == Category::Contract ||
+		_convertTo.getCategory() == getCategory();
 }
 
-bool StaticStringType::operator==(Type const& _other) const
+TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
+{
+	// "delete" and "~" is okay for FixedBytesType
+	if (_operator == Token::Delete)
+		return make_shared<VoidType>();
+	else if (_operator == Token::BitNot)
+		return shared_from_this();
+
+	return TypePointer();
+}
+
+TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+{
+	auto commonType = dynamic_pointer_cast<FixedBytesType const>(Type::commonType(shared_from_this(), _other));
+	if (!commonType)
+		return TypePointer();
+
+	// FixedBytes can be compared and have bitwise operators applied to them
+	if (Token::isCompareOp(_operator) || Token::isBitOp(_operator))
+		return commonType;
+
+	return TypePointer();
+}
+
+bool FixedBytesType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
 		return false;
-	StaticStringType const& other = dynamic_cast<StaticStringType const&>(_other);
+	FixedBytesType const& other = dynamic_cast<FixedBytesType const&>(_other);
 	return other.m_bytes == m_bytes;
 }
 
-u256 StaticStringType::literalValue(const Literal* _literal) const
+u256 FixedBytesType::literalValue(const Literal* _literal) const
 {
 	solAssert(_literal, "");
 	u256 value = 0;
@@ -1124,7 +1151,7 @@ MagicType::MagicType(MagicType::Kind _kind):
 	case Kind::Block:
 		m_members = MemberList({{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 								{"timestamp", make_shared<IntegerType>(256)},
-								{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"hash"}, FunctionType::Location::BlockHash)},
+								{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Location::BlockHash)},
 								{"difficulty", make_shared<IntegerType>(256)},
 								{"number", make_shared<IntegerType>(256)},
 								{"gaslimit", make_shared<IntegerType>(256)}});

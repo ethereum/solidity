@@ -125,6 +125,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			CompilerUtils(m_context).loadFromMemoryDynamic(*sourceBaseType, true, true, false);
 		else
 			solAssert(false, "Copying of unknown type requested: " + sourceBaseType->toString());
+		solAssert(2 + sourceBaseType->getSizeOnStack() <= 16, "Stack too deep.");
 		m_context << eth::dupInstruction(2 + sourceBaseType->getSizeOnStack());
 		StorageItem(m_context, *targetBaseType).storeValue(*sourceBaseType, SourceLocation(), true);
 	}

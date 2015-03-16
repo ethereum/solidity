@@ -138,6 +138,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 {
 	unsigned const stackPosition = m_context.baseToCurrentStackOffset(m_context.getBaseStackOffsetOfVariable(_variable));
 	unsigned const size = _variable.getType()->getSizeOnStack();
+	solAssert(stackPosition >= size, "Variable size and position mismatch.");
 	// move variable starting from its top end in the stack
 	if (stackPosition - size + 1 > 16)
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_sourceLocation(_variable.getLocation())
@@ -148,8 +149,7 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 
 void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 {
-	if (_stackDepth > 16)
-		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Stack too deep."));
+	solAssert(_stackDepth <= 16, "Stack too deep.");
 	for (unsigned i = 0; i < _itemSize; ++i)
 		m_context << eth::dupInstruction(_stackDepth);
 }
@@ -178,7 +178,7 @@ void CompilerUtils::computeHashStatic(Type const& _type, bool _padToWordBoundari
 unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
 {
 	unsigned numBytes = _type.getCalldataEncodedSize(_padToWordBoundaries);
-	bool leftAligned = _type.getCategory() == Type::Category::String;
+	bool leftAligned = _type.getCategory() == Type::Category::FixedBytes;
 	if (numBytes == 0)
 		m_context << eth::Instruction::POP << u256(0);
 	else
@@ -202,7 +202,7 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const
 {
 	unsigned numBytes = _type.getCalldataEncodedSize(_padToWordBoundaries);
-	bool leftAligned = _type.getCategory() == Type::Category::String;
+	bool leftAligned = _type.getCategory() == Type::Category::FixedBytes;
 	if (numBytes == 0)
 		m_context << eth::Instruction::POP;
 	else
