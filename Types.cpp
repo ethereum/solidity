@@ -20,13 +20,13 @@
  * Solidity data types
  */
 
+#include <libsolidity/Types.h>
+#include <limits>
+#include <boost/range/adaptor/reversed.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libsolidity/Utils.h>
-#include <libsolidity/Types.h>
 #include <libsolidity/AST.h>
-
-#include <limits>
 
 using namespace std;
 
@@ -810,6 +810,26 @@ u256 ContractType::getFunctionIdentifier(string const& _functionName) const
 			return FixedHash<4>::Arith(it.first);
 
 	return Invalid256;
+}
+
+vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::getStateVariables() const
+{
+	vector<VariableDeclaration const*> variables;
+	for (ContractDefinition const* contract: boost::adaptors::reverse(m_contract.getLinearizedBaseContracts()))
+		for (ASTPointer<VariableDeclaration> const& variable: contract->getStateVariables())
+			if (!variable->isConstant())
+				variables.push_back(variable.get());
+	TypePointers types;
+	for (auto variable: variables)
+		types.push_back(variable->getType());
+	StorageOffsets offsets;
+	offsets.computeOffsets(types);
+
+	vector<tuple<VariableDeclaration const*, u256, unsigned>> variablesAndOffsets;
+	for (size_t index = 0; index < variables.size(); ++index)
+		if (auto const* offset = offsets.getOffset(index))
+			variablesAndOffsets.push_back(make_tuple(variables[index], offset->first, offset->second));
+	return variablesAndOffsets;
 }
 
 TypePointer StructType::unaryOperatorResult(Token::Value _operator) const

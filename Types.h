@@ -403,6 +403,10 @@ public:
 	/// not exist.
 	u256 getFunctionIdentifier(std::string const& _functionName) const;
 
+	/// @returns a list of all state variables (including inherited) of the contract and their
+	/// offsets in storage.
+	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> getStateVariables() const;
+
 private:
 	ContractDefinition const& m_contract;
 	/// If true, it is the "super" type of the current contract, i.e. it contains only inherited
