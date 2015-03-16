@@ -83,6 +83,7 @@ MemberList& MemberList::operator=(MemberList&& _other)
 {
 	m_memberTypes = std::move(_other.m_memberTypes);
 	m_storageOffsets = std::move(_other.m_storageOffsets);
+	return *this;
 }
 
 std::pair<u256, unsigned> const* MemberList::getMemberStorageOffset(string const& _name) const
@@ -223,7 +224,7 @@ TypePointer Type::commonType(TypePointer const& _a, TypePointer const& _b)
 		return TypePointer();
 }
 
-const MemberList Type::EmptyMemberList = MemberList();
+const MemberList Type::EmptyMemberList;
 
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
@@ -309,10 +310,11 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	return commonType;
 }
 
-const MemberList IntegerType::AddressMemberList =
-	MemberList({{"balance", make_shared<IntegerType >(256)},
-				{"call", make_shared<FunctionType>(strings(), strings(), FunctionType::Location::Bare, true)},
-				{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::Send)}});
+const MemberList IntegerType::AddressMemberList({
+	{"balance", make_shared<IntegerType >(256)},
+	{"call", make_shared<FunctionType>(strings(), strings(), FunctionType::Location::Bare, true)},
+	{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::Send)}
+});
 
 IntegerConstantType::IntegerConstantType(Literal const& _literal)
 {
@@ -749,7 +751,7 @@ shared_ptr<ArrayType> ArrayType::copyForLocation(ArrayType::Location _location) 
 	return copy;
 }
 
-const MemberList ArrayType::s_arrayTypeMemberList = MemberList({{"length", make_shared<IntegerType>(256)}});
+const MemberList ArrayType::s_arrayTypeMemberList({{"length", make_shared<IntegerType>(256)}});
 
 bool ContractType::operator==(Type const& _other) const
 {
