@@ -187,6 +187,9 @@ public:
 																		 "for type without literals."));
 	}
 
+	/// Returns address of type for ABI interface
+	virtual TypePointer ABIType() const { return TypePointer(); }
+
 protected:
 	/// Convenience object used when returning an empty member list.
 	static const MemberList EmptyMemberList;
@@ -217,9 +220,11 @@ public:
 	virtual unsigned getStorageBytes() const override { return m_bits / 8; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual MemberList const& getMembers() const { return isAddress() ? AddressMemberList : EmptyMemberList; }
+	virtual MemberList const& getMembers() const override { return isAddress() ? AddressMemberList : EmptyMemberList; }
 
 	virtual std::string toString() const override;
+
+	virtual TypePointer ABIType() const override { return shared_from_this(); }
 
 	int getNumBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
@@ -258,6 +263,7 @@ public:
 	virtual std::string toString() const override;
 	virtual u256 literalValue(Literal const* _literal) const override;
 	virtual TypePointer getRealType() const override;
+	virtual TypePointer ABIType() const override { return shared_from_this(); }
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> getIntegerType() const;
@@ -311,7 +317,7 @@ public:
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
-	virtual unsigned getCalldataEncodedSize(bool _padded) const { return _padded ? 32 : 1; }
+	virtual unsigned getCalldataEncodedSize(bool _padded) const override{ return _padded ? 32 : 1; }
 	virtual unsigned getStorageBytes() const override { return 1; }
 	virtual bool isValueType() const override { return true; }
 
@@ -361,7 +367,7 @@ public:
 	virtual unsigned getSizeOnStack() const override;
 	virtual std::string toString() const override;
 	virtual MemberList const& getMembers() const override { return s_arrayTypeMemberList; }
-
+	virtual TypePointer ABIType() const override { return (m_baseType->ABIType() ? m_baseType->ABIType() : ABIType()); }
 	Location getLocation() const { return m_location; }
 	bool isByteArray() const { return m_isByteArray; }
 	TypePointer const& getBaseType() const { solAssert(!!m_baseType, ""); return m_baseType;}
@@ -400,6 +406,7 @@ public:
 	virtual std::string toString() const override;
 
 	virtual MemberList const& getMembers() const override;
+	virtual TypePointer ABIType() const override { return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address); }
 
 	bool isSuper() const { return m_super; }
 	ContractDefinition const& getContractDefinition() const { return m_contract; }
@@ -468,6 +475,7 @@ public:
 	virtual bool isValueType() const override { return true; }
 
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer ABIType() const override { return std::make_shared<IntegerType>(8 * int(getStorageBytes())); }
 
 	EnumDefinition const& getEnumDefinition() const { return m_enum; }
 	/// @returns the value that the string has in the Enum
