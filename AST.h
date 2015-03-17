@@ -553,12 +553,17 @@ private:
 class EventDefinition: public Declaration, public VariableScope, public Documented
 {
 public:
-	EventDefinition(SourceLocation const& _location,
-					ASTPointer<ASTString> const& _name,
-					ASTPointer<ASTString> const& _documentation,
-					ASTPointer<ParameterList> const& _parameters,
-					bool _anonymous = false):
-		Declaration(_location, _name), Documented(_documentation), m_parameters(_parameters) , m_anonymous(_anonymous){}
+	EventDefinition(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<ParameterList> const& _parameters,
+		bool _anonymous = false
+	):
+		Declaration(_location, _name),
+		Documented(_documentation),
+		m_parameters(_parameters),
+		m_anonymous(_anonymous){}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;

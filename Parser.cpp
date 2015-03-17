@@ -388,18 +388,18 @@ ASTPointer<EventDefinition> Parser::parseEventDefinition()
 		docstring = make_shared<ASTString>(m_scanner->getCurrentCommentLiteral());
 
 	expectToken(Token::Event);
-	bool anonymous = false;
-	if (m_scanner->getCurrentToken() == Token::Anonymous)
-	{
-		anonymous = true;
-		m_scanner->next();
-	}
 	ASTPointer<ASTString> name(expectIdentifierToken());
 	ASTPointer<ParameterList> parameters;
 	if (m_scanner->getCurrentToken() == Token::LParen)
 		parameters = parseParameterList(true, true);
 	else
 		parameters = createEmptyParameterList();
+	bool anonymous = false;
+	if (m_scanner->getCurrentToken() == Token::Anonymous)
+	{
+		anonymous = true;
+		m_scanner->next();
+	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<EventDefinition>(name, docstring, parameters, anonymous);

@@ -547,7 +547,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				m_context << u256(h256::Arith(dev::sha3(function.getCanonicalSignature(event.getName()))));
 				++numIndexed;
 			}
-			solAssert(numIndexed <= 4 - (event.IsAnonymous() ? 1 : 0), "Too many indexed arguments.");
+			solAssert(numIndexed <= 4, "Too many indexed arguments.");
 			// Copy all non-indexed arguments to memory (data)
 			m_context << u256(0);
 			for (unsigned arg = 0; arg < arguments.size(); ++arg)
