@@ -3549,6 +3549,30 @@ BOOST_AUTO_TEST_CASE(packed_storage_structs_delete)
 	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
 }
 
+BOOST_AUTO_TEST_CASE(packed_storage_structs_with_bytes0)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct str { uint8 a; bytes0 b; uint8 c; }
+			uint8 a;
+			bytes0 x;
+			uint8 b;
+			str data;
+			function test() returns (bool) {
+				a = 2;
+				b = 3;
+				data.a = 4;
+				data.c = 5;
+				delete x;
+				delete data.b;
+				return a == 2 && b == 3 && data.a == 4 && data.c == 5;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
