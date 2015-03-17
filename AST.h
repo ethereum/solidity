@@ -570,7 +570,7 @@ public:
 
 	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
 	ParameterList const& getParameterList() const { return *m_parameters; }
-	bool IsAnonymous() const { return m_anonymous; }
+	bool isAnonymous() const { return m_anonymous; }
 
 	virtual TypePointer getType(ContractDefinition const* = nullptr) const override
 	{

@@ -70,7 +70,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		Json::Value event;
 		event["type"] = "event";
 		event["name"] = it->getName();
-		//todo add anonymous!;
+		event["anonymous"] = it->isAnonymous();
 		Json::Value params(Json::arrayValue);
 		for (auto const& p: it->getParameters())
 		{

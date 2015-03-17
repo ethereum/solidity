@@ -542,7 +542,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					appendTypeConversion(*arguments[arg - 1]->getType(),
 										 *function.getParameterTypes()[arg - 1], true);
 				}
-			if (!event.IsAnonymous())
+			if (!event.isAnonymous())
 			{
 				m_context << u256(h256::Arith(dev::sha3(function.getCanonicalSignature(event.getName()))));
 				++numIndexed;
