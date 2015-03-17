@@ -1192,6 +1192,18 @@ BOOST_AUTO_TEST_CASE(convert_fixed_bytes_to_uint_different_size)
 		encodeArgs(u160("0x6161626361626361626361616263616263616263")));
 }
 
+BOOST_AUTO_TEST_CASE(convert_fixed_bytes_to_uint_greater_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function bytesToUint(bytes4 s) returns (uint64 h) {
+				return uint64(s);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("bytesToUint(bytes4)", string("abcd")) ==
+		encodeArgs(u256("0x61626364")));
+}
 
 BOOST_AUTO_TEST_CASE(convert_fixed_bytes_to_uint_different_min_size)
 {
@@ -1218,6 +1230,19 @@ BOOST_AUTO_TEST_CASE(convert_uint_to_fixed_bytes_different_min_size)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("UintToBytes(uint8)", u256("0x61")) ==
 		encodeArgs(string("a")));
+}
+
+BOOST_AUTO_TEST_CASE(convert_uint_to_fixed_bytes_greater_size)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function UintToBytes(uint16 h) returns (bytes8 s) {
+				return bytes8(h);
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("UintToBytes(uint16)", u256("0x6162")) ==
+                encodeArgs(string("\0\0\0\0\0\0ab", 8)));
 }
 
 BOOST_AUTO_TEST_CASE(send_ether)
