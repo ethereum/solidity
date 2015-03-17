@@ -20,10 +20,9 @@
  */
 
 #include "Assembly.h"
-
 #include <fstream>
-
 #include <libdevcore/Log.h>
+#include <libevmcore/CommonSubexpressionEliminator.h>
 
 using namespace std;
 using namespace dev;
@@ -408,6 +407,21 @@ Assembly& Assembly::optimise(bool _enable)
 		return m.toVector();
 	};
 	rules.push_back({{Push}, computeConstants});
+
+	copt << *this;
+
+	copt << "Performing common subexpression elimination...";
+	AssemblyItems optimizedItems;
+	for (auto iter = m_items.begin(); iter != m_items.end(); ++iter)
+	{
+		CommonSubexpressionEliminator eliminator;
+		iter = eliminator.feedItems(iter, m_items.end());
+		optimizedItems += eliminator.getOptimizedItems();
+		if (iter != m_items.end())
+			optimizedItems.push_back(*iter);
+	}
+	copt << "Old size: " << m_items.size() << ", new size: " << optimizedItems.size();
+	swap(m_items, optimizedItems);
 
 	copt << *this;
 
