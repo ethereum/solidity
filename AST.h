@@ -581,7 +581,7 @@ public:
 
 private:
 	ASTPointer<ParameterList> m_parameters;
-	bool m_anonymous;
+	bool m_anonymous = false;
 };
 
 /**
