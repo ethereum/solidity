@@ -184,6 +184,8 @@ TypePointer Type::fromArrayTypeName(TypeName& _baseTypeName, Expression* _length
 	TypePointer baseType = _baseTypeName.toType();
 	if (!baseType)
 		BOOST_THROW_EXCEPTION(_baseTypeName.createTypeError("Invalid type name."));
+	if (baseType->getStorageBytes() == 0)
+		BOOST_THROW_EXCEPTION(_baseTypeName.createTypeError("Illegal base type of storage size zero for array."));
 	if (_length)
 	{
 		if (!_length->getType())
