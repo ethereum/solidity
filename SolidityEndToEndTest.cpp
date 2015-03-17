@@ -2206,7 +2206,7 @@ BOOST_AUTO_TEST_CASE(event_anonymous)
 {
 	char const* sourceCode = R"(
 		contract ClientReceipt {
-			event anonymous Deposit();
+			event Deposit() anonymous;
 			function deposit() {
 				Deposit();
 			}
