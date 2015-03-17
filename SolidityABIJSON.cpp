@@ -309,6 +309,7 @@ BOOST_AUTO_TEST_CASE(events)
 	{
 		"name": "e1",
 		"type": "event",
+		"anonymous": false,
 		"inputs": [
 		{
 			"indexed": false,
@@ -325,6 +326,7 @@ BOOST_AUTO_TEST_CASE(events)
 	{
 		"name": "e2",
 		"type": "event",
+		"anonymous": false,
 		"inputs": []
 	}
 
@@ -333,6 +335,23 @@ BOOST_AUTO_TEST_CASE(events)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(events_anonymous)
+{
+	char const* sourceCode = "contract test {\n"
+	"  event e() anonymous; \n"
+	"}\n";
+	char const* interface = R"([
+	{
+		"name": "e",
+		"type": "event",
+		"anonymous": true,
+		"inputs": []
+	}
+
+	])";
+
+	checkInterface(sourceCode, interface);
+}
 
 BOOST_AUTO_TEST_CASE(inherited)
 {
@@ -380,6 +399,7 @@ BOOST_AUTO_TEST_CASE(inherited)
 	{
 		"name": "derivedEvent",
 		"type": "event",
+		"anonymous": false,
 		"inputs":
 		[{
 			"indexed": true,
@@ -390,6 +410,7 @@ BOOST_AUTO_TEST_CASE(inherited)
 	{
 		"name": "baseEvent",
 		"type": "event",
+		"anonymous": false,
 		"inputs":
 		[{
 			"indexed": true,
