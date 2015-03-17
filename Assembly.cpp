@@ -47,9 +47,6 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case PushData:
 	case PushSub:
 		return 1 + _addressLength;
-	case NoOptimizeBegin:
-	case NoOptimizeEnd:
-		return 0;
 	default:
 		break;
 	}
@@ -174,12 +171,6 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 		case PushProgramSize:
 			_out << " PUSHSIZE";
 			break;
-		case NoOptimizeBegin:
-			_out << " DoNotOptimze{{";
-			break;
-		case NoOptimizeEnd:
-			_out << " DoNotOptimze}}";
-			break;
 		case UndefinedItem:
 			_out << " ???";
 			break;
@@ -244,12 +235,6 @@ ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const&
 			break;
 		case PushData:
 			_out << "  PUSH [" << hex << (unsigned)i.m_data << "]";
-			break;
-		case NoOptimizeBegin:
-			_out << "DoNotOptimze{{";
-			break;
-		case NoOptimizeEnd:
-			_out << "DoNotOptimze}}";
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
@@ -424,12 +409,6 @@ Assembly& Assembly::optimise(bool _enable)
 		count = 0;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 		{
-			if (m_items[i].type() == NoOptimizeBegin)
-			{
-				while (i < m_items.size() && m_items[i].type() != NoOptimizeEnd)
-					++i;
-				continue;
-			}
 			for (auto const& r: rules)
 			{
 				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
@@ -464,8 +443,6 @@ Assembly& Assembly::optimise(bool _enable)
 				bool o = false;
 				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
 				{
-					if (m_items[i + 1].type() == NoOptimizeBegin)
-						break;
 					m_items.erase(m_items.begin() + i + 1);
 					o = true;
 				}
@@ -598,9 +575,6 @@ bytes Assembly::assemble() const
 		case Tag:
 			tagPos[(unsigned)i.m_data] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
-			break;
-		case NoOptimizeBegin:
-		case NoOptimizeEnd:
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
