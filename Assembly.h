@@ -52,7 +52,9 @@ public:
 	AssemblyItem pushTag() const { if (asserts(m_type == PushTag || m_type == Tag)) BOOST_THROW_EXCEPTION(Exception()); return AssemblyItem(PushTag, m_data); }
 
 	AssemblyItemType type() const { return m_type; }
-	u256 data() const { return m_data; }
+	u256 const& data() const { return m_data; }
+	/// @returns the instruction of this item (only valid if type() == Operation)
+	Instruction instruction() const { return Instruction(byte(m_data)); }
 
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.

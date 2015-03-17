@@ -58,7 +58,7 @@ int AssemblyItem::deposit() const
 	switch (m_type)
 	{
 	case Operation:
-		return instructionInfo((Instruction)(byte)m_data).ret - instructionInfo((Instruction)(byte)m_data).args;
+		return instructionInfo(instruction()).ret - instructionInfo(instruction()).args;
 	case Push:
 	case PushString:
 	case PushTag:
@@ -145,7 +145,7 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 		switch (i.type())
 		{
 		case Operation:
-			_out << " " << instructionInfo((Instruction)(byte)i.data()).name;
+			_out << " " << instructionInfo(i.instruction()).name;
 			break;
 		case Push:
 			_out << " PUSH" << i.data();
@@ -210,7 +210,7 @@ ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const&
 		switch (i.m_type)
 		{
 		case Operation:
-			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name  << "\t" << i.getJumpTypeAsString();
+			_out << "  " << instructionInfo(i.instruction()).name  << "\t" << i.getJumpTypeAsString();
 			break;
 		case Push:
 			_out << "  PUSH " << i.m_data;
@@ -369,7 +369,7 @@ Assembly& Assembly::optimise(bool _enable)
 					  {
 						  if (m[0].type() != Operation)
 							return m.toVector();
-						  Instruction instr = Instruction(byte(m[0].data()));
+						  Instruction instr = m[0].instruction();
 						  if (Instruction::DUP1 <= instr && instr <= Instruction::DUP16)
 							return {};
 						  InstructionInfo info = instructionInfo(instr);
@@ -438,7 +438,7 @@ Assembly& Assembly::optimise(bool _enable)
 					}
 				}
 			}
-			if (m_items[i].type() == Operation && m_items[i].data() == (byte)Instruction::JUMP)
+			if (m_items[i].type() == Operation && m_items[i].instruction() == Instruction::JUMP)
 			{
 				bool o = false;
 				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
@@ -467,7 +467,7 @@ Assembly& Assembly::optimise(bool _enable)
 		{
 			auto t = *tags.begin();
 			unsigned i = t.second;
-			if (i && m_items[i - 1].type() == Operation && m_items[i - 1].data() == (byte)Instruction::JUMP)
+			if (i && m_items[i - 1].type() == Operation && m_items[i - 1].instruction() == Instruction::JUMP)
 				while (i < m_items.size() && (m_items[i].type() != Tag || tags.count(m_items[i].data())))
 				{
 					if (m_items[i].type() == Tag && tags.count(m_items[i].data()))
