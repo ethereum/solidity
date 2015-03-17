@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 
 	auto short_circuiting_cpp = [](u256 n) -> u256
 	{
-		n == 0 || (n = 8) > 0;
+		(void)(n == 0 || (n = 8) > 0);
 		return n;
 	};
 
