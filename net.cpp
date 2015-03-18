@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <libdevcore/Worker.h>
+#include <libdevcore/Assertions.h>
 #include <libdevcrypto/Common.h>
 #include <libp2p/UDP.h>
 #include <libp2p/NodeTable.h>

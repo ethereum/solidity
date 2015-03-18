@@ -21,6 +21,7 @@
  */
 
 #include <libdevcore/Common.h>
+#include <libdevcore/Assertions.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Log.h>
 #include <libevm/VMFactory.h>
