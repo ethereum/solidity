@@ -47,9 +47,6 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case PushData:
 	case PushSub:
 		return 1 + _addressLength;
-	case NoOptimizeBegin:
-	case NoOptimizeEnd:
-		return 0;
 	default:
 		break;
 	}
@@ -61,7 +58,7 @@ int AssemblyItem::deposit() const
 	switch (m_type)
 	{
 	case Operation:
-		return instructionInfo((Instruction)(byte)m_data).ret - instructionInfo((Instruction)(byte)m_data).args;
+		return instructionInfo(instruction()).ret - instructionInfo(instruction()).args;
 	case Push:
 	case PushString:
 	case PushTag:
@@ -89,6 +86,48 @@ string AssemblyItem::getJumpTypeAsString() const
 	default:
 		return "";
 	}
+}
+
+ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
+{
+	switch (_item.type())
+	{
+	case Operation:
+		_out << " " << instructionInfo(_item.instruction()).name;
+		if (_item.instruction() == eth::Instruction::JUMP || _item.instruction() == eth::Instruction::JUMPI)
+			_out << "\t" << _item.getJumpTypeAsString();
+		break;
+	case Push:
+		_out << " PUSH " << hex << _item.data();
+		break;
+	case PushString:
+		_out << " PushString"  << hex << (unsigned)_item.data();
+		break;
+	case PushTag:
+		_out << " PushTag " << _item.data();
+		break;
+	case Tag:
+		_out << " Tag " << _item.data();
+		break;
+	case PushData:
+		_out << " PushData " << hex << (unsigned)_item.data();
+		break;
+	case PushSub:
+		_out << " PushSub " << hex << h256(_item.data()).abridged();
+		break;
+	case PushSubSize:
+		_out << " PushSubSize " << hex << h256(_item.data()).abridged();
+		break;
+	case PushProgramSize:
+		_out << " PushProgramSize";
+		break;
+	case UndefinedItem:
+		_out << " ???";
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InvalidOpcode());
+	}
+	return _out;
 }
 
 unsigned Assembly::bytesRequired() const
@@ -145,47 +184,7 @@ void Assembly::append(Assembly const& _a, int _deposit)
 ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 {
 	for (AssemblyItem const& i: _i)
-		switch (i.type())
-		{
-		case Operation:
-			_out << " " << instructionInfo((Instruction)(byte)i.data()).name;
-			break;
-		case Push:
-			_out << " PUSH" << i.data();
-			break;
-		case PushString:
-			_out << " PUSH'[" << hex << (unsigned)i.data() << "]";
-			break;
-		case PushTag:
-			_out << " PUSH[tag" << i.data() << "]";
-			break;
-		case Tag:
-			_out << " tag" << i.data() << ": JUMPDEST";
-			break;
-		case PushData:
-			_out << " PUSH*[" << hex << (unsigned)i.data() << "]";
-			break;
-		case PushSub:
-			_out << " PUSHs[" << hex << h256(i.data()).abridged() << "]";
-			break;
-		case PushSubSize:
-			_out << " PUSHss[" << hex << h256(i.data()).abridged() << "]";
-			break;
-		case PushProgramSize:
-			_out << " PUSHSIZE";
-			break;
-		case NoOptimizeBegin:
-			_out << " DoNotOptimze{{";
-			break;
-		case NoOptimizeEnd:
-			_out << " DoNotOptimze}}";
-			break;
-		case UndefinedItem:
-			_out << " ???";
-			break;
-		default:
-			BOOST_THROW_EXCEPTION(InvalidOpcode());
-		}
+		_out << i;
 	return _out;
 }
 
@@ -219,7 +218,7 @@ ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const&
 		switch (i.m_type)
 		{
 		case Operation:
-			_out << "  " << instructionInfo((Instruction)(byte)i.m_data).name  << "\t" << i.getJumpTypeAsString();
+			_out << "  " << instructionInfo(i.instruction()).name  << "\t" << i.getJumpTypeAsString();
 			break;
 		case Push:
 			_out << "  PUSH " << i.m_data;
@@ -244,12 +243,6 @@ ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const&
 			break;
 		case PushData:
 			_out << "  PUSH [" << hex << (unsigned)i.m_data << "]";
-			break;
-		case NoOptimizeBegin:
-			_out << "DoNotOptimze{{";
-			break;
-		case NoOptimizeEnd:
-			_out << "DoNotOptimze}}";
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
@@ -384,7 +377,7 @@ Assembly& Assembly::optimise(bool _enable)
 					  {
 						  if (m[0].type() != Operation)
 							return m.toVector();
-						  Instruction instr = Instruction(byte(m[0].data()));
+						  Instruction instr = m[0].instruction();
 						  if (Instruction::DUP1 <= instr && instr <= Instruction::DUP16)
 							return {};
 						  InstructionInfo info = instructionInfo(instr);
@@ -424,12 +417,6 @@ Assembly& Assembly::optimise(bool _enable)
 		count = 0;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 		{
-			if (m_items[i].type() == NoOptimizeBegin)
-			{
-				while (i < m_items.size() && m_items[i].type() != NoOptimizeEnd)
-					++i;
-				continue;
-			}
 			for (auto const& r: rules)
 			{
 				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
@@ -459,13 +446,11 @@ Assembly& Assembly::optimise(bool _enable)
 					}
 				}
 			}
-			if (m_items[i].type() == Operation && m_items[i].data() == (byte)Instruction::JUMP)
+			if (m_items[i].type() == Operation && m_items[i].instruction() == Instruction::JUMP)
 			{
 				bool o = false;
 				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
 				{
-					if (m_items[i + 1].type() == NoOptimizeBegin)
-						break;
 					m_items.erase(m_items.begin() + i + 1);
 					o = true;
 				}
@@ -490,7 +475,7 @@ Assembly& Assembly::optimise(bool _enable)
 		{
 			auto t = *tags.begin();
 			unsigned i = t.second;
-			if (i && m_items[i - 1].type() == Operation && m_items[i - 1].data() == (byte)Instruction::JUMP)
+			if (i && m_items[i - 1].type() == Operation && m_items[i - 1].instruction() == Instruction::JUMP)
 				while (i < m_items.size() && (m_items[i].type() != Tag || tags.count(m_items[i].data())))
 				{
 					if (m_items[i].type() == Tag && tags.count(m_items[i].data()))
@@ -598,9 +583,6 @@ bytes Assembly::assemble() const
 		case Tag:
 			tagPos[(unsigned)i.m_data] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
-			break;
-		case NoOptimizeBegin:
-		case NoOptimizeEnd:
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());

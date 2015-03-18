@@ -34,7 +34,7 @@ namespace dev
 namespace eth
 {
 
-enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, PushProgramSize, Tag, PushData, NoOptimizeBegin, NoOptimizeEnd };
+enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, PushProgramSize, Tag, PushData };
 
 class Assembly;
 
@@ -53,7 +53,13 @@ public:
 	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(PushTag, m_data); }
 
 	AssemblyItemType type() const { return m_type; }
-	u256 data() const { return m_data; }
+	u256 const& data() const { return m_data; }
+	/// @returns the instruction of this item (only valid if type() == Operation)
+	Instruction instruction() const { return Instruction(byte(m_data)); }
+
+	/// @returns true iff the type and data of the items are equal.
+	bool operator==(AssemblyItem const& _other) const { return m_type == _other.m_type && m_data == _other.m_data; }
+	bool operator!=(AssemblyItem const& _other) const { return !operator==(_other); }
 
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.
@@ -78,6 +84,7 @@ private:
 using AssemblyItems = std::vector<AssemblyItem>;
 using AssemblyItemsConstRef = vector_ref<AssemblyItem const>;
 
+std::ostream& operator<<(std::ostream& _out, AssemblyItem const& _item);
 std::ostream& operator<<(std::ostream& _out, AssemblyItemsConstRef _i);
 inline std::ostream& operator<<(std::ostream& _out, AssemblyItems const& _i) { return operator<<(_out, AssemblyItemsConstRef(&_i)); }
 
