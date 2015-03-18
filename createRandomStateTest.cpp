@@ -55,20 +55,37 @@ int main(int argc, char *argv[])
 	auto now = chrono::steady_clock::now().time_since_epoch();
 	auto timeSinceEpoch = chrono::duration_cast<chrono::nanoseconds>(now).count();
 	gen.seed(static_cast<unsigned int>(timeSinceEpoch));
-	boost::random::uniform_int_distribution<> lengthOfCodeDist(2, 16);
+	// set min and max length of the random evm code
+	boost::random::uniform_int_distribution<> lengthOfCodeDist(8, 24);
+	boost::random::uniform_int_distribution<> reasonableInputValuesSize(0, 7);
 	boost::random::uniform_int_distribution<> opcodeDist(0, 255);
 	boost::random::uniform_int_distribution<> BlockInfoOpcodeDist(0x40, 0x45);
+	boost::random::uniform_int_distribution<> uniformInt(0, 0x7fffffff);
+	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGenInputValue(gen, reasonableInputValuesSize);
+	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGenUniformInt(gen, uniformInt);
 	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGen(gen, opcodeDist);
 	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGenBlockInfoOpcode(gen, BlockInfoOpcodeDist);
+
+	std::vector<u256> reasonableInputValues;
+	reasonableInputValues.push_back(0);
+	reasonableInputValues.push_back(1);
+	reasonableInputValues.push_back(50000);
+	reasonableInputValues.push_back(u256("0x10000000000000000000000000000000000000000"));
+	reasonableInputValues.push_back(u256("0xffffffffffffffffffffffffffffffffffffffff"));
+	reasonableInputValues.push_back(u256("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"));
+	reasonableInputValues.push_back(u256("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
+	reasonableInputValues.push_back(u256("0x945304eb96065b2a98b57a48a06ae28d285a71b5"));
+	reasonableInputValues.push_back(randGenUniformInt());
 
 	int lengthOfCode  = lengthOfCodeDist(gen);
 	string randomCode;
 
 	for (int i = 0; i < lengthOfCode; ++i)
 	{
+		// pre-fill stack to avoid that most of the test fail with a stackunderflow
 		if (i < 8 && (randGen() < 192))
 		{
-			randomCode += toHex(toCompactBigEndian((uint8_t)randGenBlockInfoOpcode()));
+			randomCode += randGen() < 32 ? toHex(toCompactBigEndian((uint8_t)randGenBlockInfoOpcode())) : "7f" +  toHex(reasonableInputValues[randGenInputValue()]);
 			continue;
 		}
 
@@ -93,7 +110,7 @@ int main(int argc, char *argv[])
 			},
 			"pre" : {
 				"095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-					"balance" : "1000000000000000000",
+					"balance" : "0",
 					"code" : "0x6001600101600055",
 					"nonce" : "0",
 					"storage" : {
@@ -130,7 +147,16 @@ int main(int argc, char *argv[])
 	read_string(s, v);
 
 	// insert new random code
-	v.get_obj().find("randomStatetest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode + (randGen() > 128 ? "55" : "");
+	v.get_obj().find("randomStatetest")->second.get_obj().find("pre")->second.get_obj().begin()->second.get_obj()["code"] = "0x" + randomCode + (randGen() > 128 ? "55" : "") + (randGen() > 128 ? "60005155" : "");
+
+	// insert new data in tx
+	v.get_obj().find("randomStatetest")->second.get_obj().find("transaction")->second.get_obj()["data"] = "0x" + randomCode;
+
+	// insert new value in tx
+	v.get_obj().find("randomStatetest")->second.get_obj().find("transaction")->second.get_obj()["value"] = toString(randGenUniformInt());
+
+	// insert new gasLimit in tx
+	v.get_obj().find("randomStatetest")->second.get_obj().find("transaction")->second.get_obj()["gasLimit"] = "0x" + toHex(toCompactBigEndian((int)randGenUniformInt()));
 
 	// fill test
 	doStateTests(v);
