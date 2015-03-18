@@ -88,6 +88,48 @@ string AssemblyItem::getJumpTypeAsString() const
 	}
 }
 
+ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
+{
+	switch (_item.type())
+	{
+	case Operation:
+		_out << " " << instructionInfo(_item.instruction()).name;
+		if (_item.instruction() == eth::Instruction::JUMP || _item.instruction() == eth::Instruction::JUMPI)
+			_out << "\t" << _item.getJumpTypeAsString();
+		break;
+	case Push:
+		_out << " PUSH " << hex << _item.data();
+		break;
+	case PushString:
+		_out << " PushString"  << hex << (unsigned)_item.data();
+		break;
+	case PushTag:
+		_out << " PushTag " << _item.data();
+		break;
+	case Tag:
+		_out << " Tag " << _item.data();
+		break;
+	case PushData:
+		_out << " PushData " << hex << (unsigned)_item.data();
+		break;
+	case PushSub:
+		_out << " PushSub " << hex << h256(_item.data()).abridged();
+		break;
+	case PushSubSize:
+		_out << " PushSubSize " << hex << h256(_item.data()).abridged();
+		break;
+	case PushProgramSize:
+		_out << " PushProgramSize";
+		break;
+	case UndefinedItem:
+		_out << " ???";
+		break;
+	default:
+		BOOST_THROW_EXCEPTION(InvalidOpcode());
+	}
+	return _out;
+}
+
 unsigned Assembly::bytesRequired() const
 {
 	for (unsigned br = 1;; ++br)
@@ -142,41 +184,7 @@ void Assembly::append(Assembly const& _a, int _deposit)
 ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 {
 	for (AssemblyItem const& i: _i)
-		switch (i.type())
-		{
-		case Operation:
-			_out << " " << instructionInfo(i.instruction()).name;
-			break;
-		case Push:
-			_out << " PUSH" << i.data();
-			break;
-		case PushString:
-			_out << " PUSH'[" << hex << (unsigned)i.data() << "]";
-			break;
-		case PushTag:
-			_out << " PUSH[tag" << i.data() << "]";
-			break;
-		case Tag:
-			_out << " tag" << i.data() << ": JUMPDEST";
-			break;
-		case PushData:
-			_out << " PUSH*[" << hex << (unsigned)i.data() << "]";
-			break;
-		case PushSub:
-			_out << " PUSHs[" << hex << h256(i.data()).abridged() << "]";
-			break;
-		case PushSubSize:
-			_out << " PUSHss[" << hex << h256(i.data()).abridged() << "]";
-			break;
-		case PushProgramSize:
-			_out << " PUSHSIZE";
-			break;
-		case UndefinedItem:
-			_out << " ???";
-			break;
-		default:
-			BOOST_THROW_EXCEPTION(InvalidOpcode());
-		}
+		_out << i;
 	return _out;
 }
 
