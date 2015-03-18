@@ -55,11 +55,12 @@ int main(int argc, char *argv[])
 	auto now = chrono::steady_clock::now().time_since_epoch();
 	auto timeSinceEpoch = chrono::duration_cast<chrono::nanoseconds>(now).count();
 	gen.seed(static_cast<unsigned int>(timeSinceEpoch));
+	// set min and max length of the random evm code
 	boost::random::uniform_int_distribution<> lengthOfCodeDist(8, 24);
 	boost::random::uniform_int_distribution<> reasonableInputValuesSize(0, 7);
 	boost::random::uniform_int_distribution<> opcodeDist(0, 255);
 	boost::random::uniform_int_distribution<> BlockInfoOpcodeDist(0x40, 0x45);
-	boost::random::uniform_int_distribution<> uniformInt(0, 2147483647);
+	boost::random::uniform_int_distribution<> uniformInt(0, 0x7fffffff);
 	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGenInputValue(gen, reasonableInputValuesSize);
 	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGenUniformInt(gen, uniformInt);
 	boost::random::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > randGen(gen, opcodeDist);
