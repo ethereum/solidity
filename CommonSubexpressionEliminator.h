@@ -33,6 +33,10 @@ namespace eth
 {
 
 class AssemblyItem;
+using AssemblyItems = std::vector<AssemblyItem>;
+
+using EquivalenceClassId = unsigned;
+using EquivalenceClassIds = std::vector<EquivalenceClassId>;
 
 /**
  * Optimizer step that performs common subexpression elimination and stack reorginasation,
@@ -56,27 +60,24 @@ public:
 	_AssemblyItemIterator feedItems(_AssemblyItemIterator _iterator, _AssemblyItemIterator _end);
 
 	/// @returns the resulting items after optimization.
-	std::vector<AssemblyItem> getOptimizedItems() const;
+	AssemblyItems getOptimizedItems();
 
 private:
-	using EquivalenceClass = unsigned;
-	using EquivalenceClasses = std::vector<EquivalenceClass>;
-
 	/// @returns true if the given items starts a new basic block
 	bool breaksBasicBlock(AssemblyItem const& _item);
 	/// Feeds the item into the system for analysis.
 	void feedItem(AssemblyItem const& _item);
 
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.
-	void setStackElement(int _stackHeight, EquivalenceClass _class);
+	void setStackElement(int _stackHeight, EquivalenceClassId _class);
 	/// Swaps the given stack elements in their next sequence number.
 	void swapStackElements(int _stackHeightA, int _stackHeightB);
 	/// Retrieves the current equivalence class fo the given stack element (or generates a new
 	/// one if it does not exist yet).
-	EquivalenceClass getStackElement(int _stackHeight);
+	EquivalenceClassId getStackElement(int _stackHeight);
 	/// Retrieves the equivalence class resulting from the given item applied to the given classes,
 	/// might also create a new one.
-	EquivalenceClass getClass(AssemblyItem const& _item, EquivalenceClasses const& _arguments = {});
+	EquivalenceClassId getClass(AssemblyItem const& _item, EquivalenceClassIds const& _arguments = {});
 
 	/// @returns the next sequence number of the given stack element.
 	unsigned getNextStackElementSequence(int _stackHeight);
@@ -84,12 +85,32 @@ private:
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
 	/// Mapping (stack height, sequence number) -> equivalence class
-	std::map<std::pair<int, unsigned>, EquivalenceClass> m_stackElements;
+	std::map<std::pair<int, unsigned>, EquivalenceClassId> m_stackElements;
 	/// Vector of equivalence class representatives - we only store one item of an equivalence
 	/// class and the index is used as identifier.
-	std::vector<std::pair<AssemblyItem const*, EquivalenceClasses>> m_equivalenceClasses;
+	std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> m_equivalenceClasses;
 	/// List of items generated during analysis.
 	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItem;
+
+};
+
+class CSECodeGenerator
+{
+public:
+	/// @returns the assembly items generated from the given requirements
+	/// @param _targetStackHeight target stack height starting from an assumed initial stack height of zero
+	/// @param _targetStackContents final contents of the stack, by stack height relative to initial
+	/// @param _equivalenceClasses equivalence classes as expressions of how to compute them
+	AssemblyItems generateCode(
+		int _targetStackHeight,
+		std::map<int, EquivalenceClassId> const& _targetStackContents,
+		std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> const& _equivalenceClasses
+	);
+
+private:
+	AssemblyItems m_generatedItems;
+	/// Number of requests for an equivalence class, used as a reference counter.
+	std::map<EquivalenceClassId, unsigned> m_classRequestCount;
 };
 
 template <class _AssemblyItemIterator>

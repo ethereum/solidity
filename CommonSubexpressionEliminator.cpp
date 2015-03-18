@@ -29,14 +29,14 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems() const
+vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {
-	auto streamEquivalenceClass = [this](ostream& _out, EquivalenceClass _id)
+	auto streamEquivalenceClass = [this](ostream& _out, EquivalenceClassId _id)
 	{
 		auto const& eqClass = m_equivalenceClasses[_id];
 		_out << "  " << _id << ": " << *eqClass.first;
 		_out << "(";
-		for (EquivalenceClass arg: eqClass.second)
+		for (EquivalenceClassId arg: eqClass.second)
 			_out << dec << arg << ",";
 		_out << ")" << endl;
 	};
@@ -52,19 +52,20 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems() const
 		streamEquivalenceClass(cout, it.second);
 	}
 	cout << "Equivalence classes: " << endl;
-	for (EquivalenceClass eqClass = 0; eqClass < m_equivalenceClasses.size(); ++eqClass)
+	for (EquivalenceClassId eqClass = 0; eqClass < m_equivalenceClasses.size(); ++eqClass)
 		streamEquivalenceClass(cout, eqClass);
 	cout << "----------------------------" << endl;
 
-	if (m_stackElements.size() == 0)
-	{
+	map<int, EquivalenceClassId> targetStackContents;
+	int minStackHeight = m_stackHeight;
+	if (m_stackElements.size() > 0)
+		minStackHeight = min(minStackHeight, m_stackElements.begin()->first.first);
+	for (int stackHeight = minStackHeight; stackHeight <= m_stackHeight; ++stackHeight)
+		targetStackContents[stackHeight] = getStackElement(stackHeight);
 
-	}
-	int stackHeight;
-//	m_stackElements
-	// for all stack elements from most neg to most pos:
-	//
-	return vector<AssemblyItem>();
+	CSECodeGenerator generator;
+
+	return generator.generateCode(m_stackHeight, targetStackContents, m_equivalenceClasses);
 }
 
 bool CommonSubexpressionEliminator::breaksBasicBlock(AssemblyItem const& _item)
@@ -112,7 +113,7 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 			);
 		else if (instruction != Instruction::POP)
 		{
-			vector<EquivalenceClass> arguments(info.args);
+			vector<EquivalenceClassId> arguments(info.args);
 			for (int i = 0; i < info.args; ++i)
 				arguments[i] = getStackElement(m_stackHeight - i);
 			setStackElement(m_stackHeight + info.ret - info.args, getClass(_item, arguments));
@@ -121,7 +122,7 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 	}
 }
 
-void CommonSubexpressionEliminator::setStackElement(int _stackHeight, EquivalenceClass _class)
+void CommonSubexpressionEliminator::setStackElement(int _stackHeight, EquivalenceClassId _class)
 {
 	unsigned nextSequence = getNextStackElementSequence(_stackHeight);
 	m_stackElements[make_pair(_stackHeight, nextSequence)] = _class;
@@ -131,8 +132,8 @@ void CommonSubexpressionEliminator::swapStackElements(int _stackHeightA, int _st
 {
 	if (_stackHeightA == _stackHeightB)
 		BOOST_THROW_EXCEPTION(OptimizerException() << errinfo_comment("Swap on same stack elements."));
-	EquivalenceClass classA = getStackElement(_stackHeightA);
-	EquivalenceClass classB = getStackElement(_stackHeightB);
+	EquivalenceClassId classA = getStackElement(_stackHeightA);
+	EquivalenceClassId classB = getStackElement(_stackHeightB);
 
 	unsigned nextSequenceA = getNextStackElementSequence(_stackHeightA);
 	unsigned nextSequenceB = getNextStackElementSequence(_stackHeightB);
@@ -140,7 +141,7 @@ void CommonSubexpressionEliminator::swapStackElements(int _stackHeightA, int _st
 	m_stackElements[make_pair(_stackHeightB, nextSequenceB)] = classA;
 }
 
-CommonSubexpressionEliminator::EquivalenceClass CommonSubexpressionEliminator::getStackElement(int _stackHeight)
+EquivalenceClassId CommonSubexpressionEliminator::getStackElement(int _stackHeight)
 {
 	// retrieve class by last sequence number
 	unsigned nextSequence = getNextStackElementSequence(_stackHeight);
@@ -154,13 +155,13 @@ CommonSubexpressionEliminator::EquivalenceClass CommonSubexpressionEliminator::g
 		BOOST_THROW_EXCEPTION(OptimizerException() << errinfo_comment("Stack too deep."));
 	// This is a special assembly item that refers to elements pre-existing on the initial stack.
 	m_spareAssemblyItem.push_back(make_shared<AssemblyItem>(dupInstruction(1 - _stackHeight)));
-	m_equivalenceClasses.push_back(make_pair(m_spareAssemblyItem.back().get(), EquivalenceClasses()));
-	return m_stackElements[make_pair(_stackHeight, nextSequence)] = EquivalenceClass(m_equivalenceClasses.size() - 1);
+	m_equivalenceClasses.push_back(make_pair(m_spareAssemblyItem.back().get(), EquivalenceClassIds()));
+	return m_stackElements[make_pair(_stackHeight, nextSequence)] = EquivalenceClassId(m_equivalenceClasses.size() - 1);
 }
 
-CommonSubexpressionEliminator::EquivalenceClass CommonSubexpressionEliminator::getClass(
+EquivalenceClassId CommonSubexpressionEliminator::getClass(
 	const AssemblyItem& _item,
-	EquivalenceClasses const& _arguments
+	EquivalenceClassIds const& _arguments
 )
 {
 	// do a clever search, i.e.
@@ -168,7 +169,7 @@ CommonSubexpressionEliminator::EquivalenceClass CommonSubexpressionEliminator::g
 	// - check whether the two items are equal for a SUB instruction
 	// - check whether 0 or 1 is in one of the classes for a MUL
 	// - for commutative opcodes, sort the arguments before searching
-	for (EquivalenceClass c = 0; c < m_equivalenceClasses.size(); ++c)
+	for (EquivalenceClassId c = 0; c < m_equivalenceClasses.size(); ++c)
 	{
 		AssemblyItem const& classItem = *m_equivalenceClasses[c].first;
 		if (classItem != _item)
@@ -184,7 +185,7 @@ CommonSubexpressionEliminator::EquivalenceClass CommonSubexpressionEliminator::g
 	if (_item.type() == Operation && _arguments.size() == 2 && all_of(
 				_arguments.begin(),
 				_arguments.end(),
-				[this](EquivalenceClass eqc) { return m_equivalenceClasses[eqc].first->match(Push); }))
+				[this](EquivalenceClassId eqc) { return m_equivalenceClasses[eqc].first->match(Push); }))
 	{
 		map<Instruction, function<u256(u256, u256)>> const arithmetics =
 		{
@@ -231,4 +232,15 @@ unsigned CommonSubexpressionEliminator::getNextStackElementSequence(int _stackHe
 		return it->first.second + 1;
 	else
 		return 0;
+}
+
+
+AssemblyItems CSECodeGenerator::generateCode(
+	int _targetStackHeight,
+	map<int, EquivalenceClassId> const& _targetStackContents,
+	vector<pair<const AssemblyItem*, EquivalenceClassIds>> const& _equivalenceClasses)
+{
+	m_generatedItems.clear();
+	m_classRequestCount.clear();
+	return m_generatedItems;
 }
