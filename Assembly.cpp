@@ -421,7 +421,7 @@ Assembly& Assembly::optimise(bool _enable)
 			optimizedItems.push_back(*iter);
 	}
 	copt << "Old size: " << m_items.size() << ", new size: " << optimizedItems.size();
-	swap(m_items, optimizedItems);
+//	swap(m_items, optimizedItems);
 
 	copt << *this;
 
