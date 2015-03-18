@@ -24,6 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include <libdevcore/Common.h>
+#include <libdevcore/Assertions.h>
 #include <libevmcore/SourceLocation.h>
 #include <libevmcore/Instruction.h>
 #include "Exceptions.h"
@@ -48,8 +49,8 @@ public:
 	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0): m_type(_type), m_data(_data) {}
 
-	AssemblyItem tag() const { if (asserts(m_type == PushTag || m_type == Tag)) BOOST_THROW_EXCEPTION(Exception()); return AssemblyItem(Tag, m_data); }
-	AssemblyItem pushTag() const { if (asserts(m_type == PushTag || m_type == Tag)) BOOST_THROW_EXCEPTION(Exception()); return AssemblyItem(PushTag, m_data); }
+	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(Tag, m_data); }
+	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(PushTag, m_data); }
 
 	AssemblyItemType type() const { return m_type; }
 	u256 data() const { return m_data; }

@@ -22,6 +22,7 @@
 #pragma once
 
 #include <libdevcore/Common.h>
+#include <libdevcore/Assertions.h>
 #include <libevmcore/Exceptions.h>
 
 namespace dev
@@ -194,32 +195,28 @@ inline unsigned getSwapNumber(Instruction _inst)
 /// @returns the PUSH<_number> instruction
 inline Instruction pushInstruction(unsigned _number)
 {
-	if (asserts(1 <= _number && _number <= 32))
-		BOOST_THROW_EXCEPTION(InvalidOpcode() << errinfo_comment("Invalid PUSH instruction requested."));
+	assertThrow(1 <= _number && _number <= 32, InvalidOpcode, "Invalid PUSH instruction requested.");
 	return Instruction(unsigned(Instruction::PUSH1) + _number - 1);
 }
 
 /// @returns the DUP<_number> instruction
 inline Instruction dupInstruction(unsigned _number)
 {
-	if (asserts(1 <= _number && _number <= 16))
-		BOOST_THROW_EXCEPTION(InvalidOpcode() << errinfo_comment("Invalid DUP instruction requested."));
+	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, "Invalid DUP instruction requested.");
 	return Instruction(unsigned(Instruction::DUP1) + _number - 1);
 }
 
 /// @returns the SWAP<_number> instruction
 inline Instruction swapInstruction(unsigned _number)
 {
-	if (asserts(1 <= _number && _number <= 16))
-		BOOST_THROW_EXCEPTION(InvalidOpcode() << errinfo_comment("Invalid SWAP instruction requested."));
+	assertThrow(1 <= _number && _number <= 16, InvalidOpcode, "Invalid SWAP instruction requested.");
 	return Instruction(unsigned(Instruction::SWAP1) + _number - 1);
 }
 
 /// @returns the LOG<_number> instruction
 inline Instruction logInstruction(unsigned _number)
 {
-	if (asserts(_number <= 4))
-		BOOST_THROW_EXCEPTION(InvalidOpcode() << errinfo_comment("Invalid LOG instruction requested."));
+	assertThrow(_number <= 4, InvalidOpcode, "Invalid LOG instruction requested.");
 	return Instruction(unsigned(Instruction::LOG0) + _number);
 }
 
