@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 
 	testPath += "/PoWTests";
 
-	cnote << "Testing Secure Trie...";
+	cnote << "Testing Proof of Work...";
 	js::mValue v;
 	string s = asString(contents(testPath + "/ethash_tests.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'ethash_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
