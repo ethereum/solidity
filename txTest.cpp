@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(mine_local_simple_tx)
 	auto txAmount = c1bal / 2u;
 	auto gasPrice = 10 * szabo;
 	auto gas = dev::eth::c_callGas;
-	c1.transact(kp1.secret(), txAmount, kp2.address(), bytes(), gas, gasPrice);
+	c1.submitTransaction(kp1.secret(), txAmount, kp2.address(), bytes(), gas, gasPrice);
 
 	//mine some more to include the transaction on chain
 	mine(c1, 1);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(mine_and_send_to_peer)
 	auto txAmount = c1bal / 2u;
 	auto gasPrice = 10 * szabo;
 	auto gas = dev::eth::c_callGas;
-	c1.transact(kp1.secret(), txAmount, kp2.address(), bytes(), gas, gasPrice);
+	c1.submitTransaction(kp1.secret(), txAmount, kp2.address(), bytes(), gas, gasPrice);
 
 	//mine some more to include the transaction on chain
 	mine(c1, 1);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(mine_and_send_to_peer_fee_check)
 	auto txAmount = c1StartBalance / 2u;
 	auto gasPrice = 10 * szabo;
 	auto gas = dev::eth::c_callGas;
-	c1.transact(kp1.secret(), txAmount, c2.address(), bytes(), gas, gasPrice);
+	c1.submitTransaction(kp1.secret(), txAmount, c2.address(), bytes(), gas, gasPrice);
 
 	//mine some more, this time with second client (so he can get fees from first client's tx)
 	mine(c2, 1);
