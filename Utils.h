@@ -22,34 +22,9 @@
 
 #pragma once
 
-#include <string>
-#include <libsolidity/Exceptions.h>
-
-namespace dev
-{
-namespace solidity
-{
+#include <libdevcore/Assertions.h>
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
 #define solAssert(CONDITION, DESCRIPTION) \
-	::dev::solidity::solAssertAux(CONDITION, DESCRIPTION, __LINE__, __FILE__, ETH_FUNC)
+	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
 
-inline void solAssertAux(bool _condition, std::string const& _errorDescription, unsigned _line,
-						 char const* _file, char const* _function)
-{
-	if (!_condition)
-		::boost::throw_exception( InternalCompilerError()
-				<< errinfo_comment(_errorDescription)
-				<< ::boost::throw_function(_function)
-				<< ::boost::throw_file(_file)
-				<< ::boost::throw_line(_line));
-}
-
-inline void solAssertAux(void const* _pointer, std::string const& _errorDescription, unsigned _line,
-						 char const* _file, char const* _function)
-{
-	solAssertAux(_pointer != nullptr, _errorDescription, _line, _file, _function);
-}
-
-}
-}
