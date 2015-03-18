@@ -628,6 +628,11 @@ RLPStream createFullBlockFromHeader(const BlockInfo& _bi,const bytes& _txs, cons
 
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
+BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
+{
+	dev::test::executeTests("bcInvalidRLPTest", "/BlockTests", dev::test::doBlockchainTests);
+}
+
 BOOST_AUTO_TEST_CASE(bcJS_API_Test)
 {
 	dev::test::executeTests("bcJS_API_Test", "/BlockTests", dev::test::doBlockchainTests);
