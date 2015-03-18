@@ -162,7 +162,7 @@ void doStateTests(json_spirit::mValue& _v)
 
 		try
 		{
-			theState.execute(test::lastHashes(importer.m_environment.currentBlock.number), tx, &output);
+			output = theState.execute(test::lastHashes(importer.m_environment.currentBlock.number), tx).output;
 		}
 		catch (Exception const& _e)
 		{

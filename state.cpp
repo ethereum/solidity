@@ -63,7 +63,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		try
 		{
 			Listener::ExecTimeGuard guard{i.first};
-			theState.execute(lastHashes(importer.m_environment.currentBlock.number), tx, &output);
+			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number), tx).output;
 		}
 		catch (Exception const& _e)
 		{
