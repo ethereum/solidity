@@ -26,6 +26,7 @@
 #include <vector>
 #include <map>
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/Exceptions.h>
 
 namespace dev
 {
@@ -98,19 +99,49 @@ class CSECodeGenerator
 {
 public:
 	/// @returns the assembly items generated from the given requirements
-	/// @param _targetStackHeight target stack height starting from an assumed initial stack height of zero
+	/// @param _currentStack current contents of the stack (up to stack height of zero)
 	/// @param _targetStackContents final contents of the stack, by stack height relative to initial
 	/// @param _equivalenceClasses equivalence classes as expressions of how to compute them
 	AssemblyItems generateCode(
-		int _targetStackHeight,
+		std::map<int, EquivalenceClassId> const& _currentStack,
 		std::map<int, EquivalenceClassId> const& _targetStackContents,
 		std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> const& _equivalenceClasses
 	);
 
 private:
+	/// Recursively discovers all dependencies to @a m_requests.
+	void addDependencies(EquivalenceClassId _c);
+
+	/// Produce code that generates the given element if it is not yet present.
+	/// @returns the stack position of the element.
+	int generateClassElement(EquivalenceClassId _c);
+
+	/// @returns true if @a _element can be removed while computing @a _result.
+	bool canBeRemoved(EquivalenceClassId _element, EquivalenceClassId _result);
+
+	/// Appends a dup instruction to m_generatedItems to retrieve the element at the given stack position.
+	void appendDup(int _fromPosition);
+	/// Appends a swap instruction to m_generatedItems to retrieve the element at the given stack position.
+	void appendSwap(int _fromPosition);
+	/// Appends the given assembly item.
+	void appendItem(AssemblyItem const& _item);
+
+	static const int c_invalidPosition = std::numeric_limits<int>::min();
+
 	AssemblyItems m_generatedItems;
-	/// Number of requests for an equivalence class, used as a reference counter.
-	std::map<EquivalenceClassId, unsigned> m_classRequestCount;
+	/// Current height of the stack relative to the start.
+	int m_stackHeight = 0;
+	/// If (b, a) is in m_requests then b is needed to compute a.
+	std::multimap<EquivalenceClassId, EquivalenceClassId> m_neededBy;
+	/// Current content of the stack.
+	std::map<int, EquivalenceClassId> m_stack;
+	/// Current positions of equivalence classes, equal to c_invalidPosition if already deleted.
+	std::map<EquivalenceClassId, int> m_classPositions;
+
+	/// The actual eqivalence class items and how to compute them.
+	std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> m_equivalenceClasses;
+	/// The set of equivalence classes that should be present on the stack at the end.
+	std::set<EquivalenceClassId> m_finalClasses;
 };
 
 template <class _AssemblyItemIterator>

@@ -22,6 +22,7 @@
  */
 
 #include <functional>
+#include <boost/range/adaptor/reversed.hpp>
 #include <libevmcore/CommonSubexpressionEliminator.h>
 #include <libevmcore/Assembly.h>
 
@@ -56,16 +57,19 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 		streamEquivalenceClass(cout, eqClass);
 	cout << "----------------------------" << endl;
 
+	map<int, EquivalenceClassId> currentStackContents;
 	map<int, EquivalenceClassId> targetStackContents;
 	int minStackHeight = m_stackHeight;
 	if (m_stackElements.size() > 0)
 		minStackHeight = min(minStackHeight, m_stackElements.begin()->first.first);
 	for (int stackHeight = minStackHeight; stackHeight <= m_stackHeight; ++stackHeight)
+	{
+		if (stackHeight <= 0)
+			currentStackContents[stackHeight] = getClass(AssemblyItem(dupInstruction(1 - stackHeight)));
 		targetStackContents[stackHeight] = getStackElement(stackHeight);
+	}
 
-	CSECodeGenerator generator;
-
-	return generator.generateCode(m_stackHeight, targetStackContents, m_equivalenceClasses);
+	return CSECodeGenerator().generateCode(currentStackContents, targetStackContents, m_equivalenceClasses);
 }
 
 bool CommonSubexpressionEliminator::breaksBasicBlock(AssemblyItem const& _item)
@@ -234,13 +238,160 @@ unsigned CommonSubexpressionEliminator::getNextStackElementSequence(int _stackHe
 		return 0;
 }
 
-
 AssemblyItems CSECodeGenerator::generateCode(
-	int _targetStackHeight,
+	map<int, EquivalenceClassId> const& _currentStack,
 	map<int, EquivalenceClassId> const& _targetStackContents,
-	vector<pair<const AssemblyItem*, EquivalenceClassIds>> const& _equivalenceClasses)
+	vector<pair<AssemblyItem const*, EquivalenceClassIds>> const& _equivalenceClasses
+)
 {
-	m_generatedItems.clear();
-	m_classRequestCount.clear();
+	// reset
+	*this = move(CSECodeGenerator());
+	m_stack = _currentStack;
+	m_equivalenceClasses = _equivalenceClasses;
+	for (auto const& item: m_stack)
+		m_classPositions[item.second] = item.first;
+
+	// generate the dependency graph
+	for (auto const& stackContent: _targetStackContents)
+	{
+		m_finalClasses.insert(stackContent.second);
+		addDependencies(stackContent.second);
+	}
+
+	for (auto const& cid: m_finalClasses)
+		generateClassElement(cid);
+
+	// @TODO shuffle and copy the elements
+
+	cout << "--------------- generated code: ---------------" << endl;
+	for (auto const& it: m_generatedItems)
+		cout << it << endl;
+	cout << "-----------------------------" << endl;
+
 	return m_generatedItems;
+}
+
+void CSECodeGenerator::addDependencies(EquivalenceClassId _c)
+{
+	if (m_neededBy.count(_c))
+		return;
+	for (EquivalenceClassId argument: m_equivalenceClasses[_c].second)
+	{
+		addDependencies(argument);
+		m_neededBy.insert(make_pair(argument, _c));
+	}
+}
+
+int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
+{
+	if (m_classPositions.count(_c))
+		return m_classPositions[_c];
+	assertThrow(
+		m_classPositions[_c] != c_invalidPosition,
+		OptimizerException,
+		"Element already removed but still needed."
+	);
+	EquivalenceClassIds const& arguments = m_equivalenceClasses[_c].second;
+	for (EquivalenceClassId arg: boost::adaptors::reverse(arguments))
+		generateClassElement(arg);
+
+	if (arguments.size() == 1)
+	{
+		if (canBeRemoved(arguments[0], _c))
+			appendSwap(generateClassElement(arguments[0]));
+		else
+			appendDup(generateClassElement(arguments[0]));
+	}
+	else if (arguments.size() == 2)
+	{
+		if (canBeRemoved(arguments[1], _c))
+		{
+			appendSwap(generateClassElement(arguments[1]));
+			if (arguments[0] == arguments[1])
+				appendDup(m_stackHeight);
+			else if (canBeRemoved(arguments[0], _c))
+			{
+				appendSwap(m_stackHeight - 1);
+				appendSwap(generateClassElement(arguments[1]));
+			}
+			else
+				appendDup(generateClassElement(arguments[1]));
+		}
+		else
+		{
+			if (arguments[0] == arguments[1])
+			{
+				appendDup(generateClassElement(arguments[0]));
+				appendDup(m_stackHeight);
+			}
+			else if (canBeRemoved(arguments[0], _c))
+			{
+				appendSwap(generateClassElement(arguments[0]));
+				appendDup(generateClassElement(arguments[1]));
+				appendSwap(m_stackHeight - 1);
+			}
+			else
+			{
+				appendDup(generateClassElement(arguments[1]));
+				appendDup(generateClassElement(arguments[0]));
+			}
+		}
+	}
+	else
+		assertThrow(
+			arguments.size() <= 2,
+			OptimizerException,
+			"Opcodes with more than two arguments not implemented yet."
+		);
+	for (auto arg: arguments)
+		if (canBeRemoved(arg, _c))
+			m_classPositions[arguments[1]] = c_invalidPosition;
+	appendItem(*m_equivalenceClasses[_c].first);
+	m_stack[m_stackHeight] = _c;
+	return m_classPositions[_c] = m_stackHeight;
+}
+
+bool CSECodeGenerator::canBeRemoved(EquivalenceClassId _element, EquivalenceClassId _result)
+{
+	// Returns false if _element is finally needed or is needed by a class that has not been
+	// computed yet. Note that m_classPositions also includes classes that were deleted in the meantime.
+	if (m_finalClasses.count(_element))
+		return false;
+
+	auto range = m_neededBy.equal_range(_element);
+	for (auto it = range.first; it != range.second; ++it)
+		if (it->second != _result && !m_classPositions.count(it->second))
+			return false;
+	return true;
+}
+
+void CSECodeGenerator::appendDup(int _fromPosition)
+{
+	m_generatedItems.push_back(AssemblyItem(swapInstruction(1 + m_stackHeight - _fromPosition)));
+	int nr = 1 + m_stackHeight - _fromPosition;
+	assertThrow(1 <= nr && nr <= 16, OptimizerException, "Stack too deep.");
+	m_generatedItems.push_back(AssemblyItem(dupInstruction(nr)));
+	m_stackHeight++;
+	m_stack[m_stackHeight] = m_stack[_fromPosition];
+}
+
+void CSECodeGenerator::appendSwap(int _fromPosition)
+{
+	if (_fromPosition == m_stackHeight)
+		return;
+	int nr = m_stackHeight - _fromPosition;
+	assertThrow(1 <= nr && nr <= 16, OptimizerException, "Stack too deep.");
+	m_generatedItems.push_back(AssemblyItem(swapInstruction(nr)));
+	// only update if they are the "canonical" positions
+	if (m_classPositions[m_stack[m_stackHeight]] == m_stackHeight)
+		m_classPositions[m_stack[m_stackHeight]] = _fromPosition;
+	if (m_classPositions[m_stack[_fromPosition]] == _fromPosition)
+		m_classPositions[m_stack[_fromPosition]] = m_stackHeight;
+	swap(m_stack[m_stackHeight], m_stack[_fromPosition]);
+}
+
+void CSECodeGenerator::appendItem(AssemblyItem const& _item)
+{
+	m_generatedItems.push_back(_item);
+	m_stackHeight += _item.deposit();
 }
