@@ -839,6 +839,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 					// goal:
 					// <ref> <byte_number> = <base_ref + index / itemsPerSlot> <(index % itemsPerSlot) * byteSize>
 					unsigned byteSize = arrayType.getBaseType()->getStorageBytes();
+					solAssert(byteSize != 0, "");
 					unsigned itemsPerSlot = 32 / byteSize;
 					m_context << u256(itemsPerSlot) << eth::Instruction::SWAP2;
 					// stack: itemsPerSlot index data_ref

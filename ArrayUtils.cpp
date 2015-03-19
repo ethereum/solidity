@@ -440,9 +440,10 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
 	}
 }
 
-void ArrayUtils::incrementByteOffset(unsigned byteSize, unsigned byteOffsetPosition, unsigned storageOffsetPosition) const
+void ArrayUtils::incrementByteOffset(unsigned _byteSize, unsigned _byteOffsetPosition, unsigned _storageOffsetPosition) const
 {
-	solAssert(byteSize < 32, "");
+	solAssert(_byteSize < 32, "");
+	solAssert(_byteSize != 0, "");
 	// We do the following, but avoiding jumps:
 	// byteOffset += byteSize
 	// if (byteOffset + byteSize > 32)
@@ -450,28 +451,28 @@ void ArrayUtils::incrementByteOffset(unsigned byteSize, unsigned byteOffsetPosit
 	//     storageOffset++;
 	//     byteOffset = 0;
 	// }
-	if (byteOffsetPosition > 1)
-		m_context << eth::swapInstruction(byteOffsetPosition - 1);
-	m_context << u256(byteSize) << eth::Instruction::ADD;
-	if (byteOffsetPosition > 1)
-		m_context << eth::swapInstruction(byteOffsetPosition - 1);
+	if (_byteOffsetPosition > 1)
+		m_context << eth::swapInstruction(_byteOffsetPosition - 1);
+	m_context << u256(_byteSize) << eth::Instruction::ADD;
+	if (_byteOffsetPosition > 1)
+		m_context << eth::swapInstruction(_byteOffsetPosition - 1);
 	// compute, X := (byteOffset + byteSize - 1) / 32, should be 1 iff byteOffset + bytesize > 32
 	m_context
-		<< u256(32) << eth::dupInstruction(1 + byteOffsetPosition) << u256(byteSize - 1)
+		<< u256(32) << eth::dupInstruction(1 + _byteOffsetPosition) << u256(_byteSize - 1)
 		<< eth::Instruction::ADD << eth::Instruction::DIV;
 	// increment storage offset if X == 1 (just add X to it)
 	// stack: X
 	m_context
-		<< eth::swapInstruction(storageOffsetPosition) << eth::dupInstruction(storageOffsetPosition + 1)
-		<< eth::Instruction::ADD << eth::swapInstruction(storageOffsetPosition);
+		<< eth::swapInstruction(_storageOffsetPosition) << eth::dupInstruction(_storageOffsetPosition + 1)
+		<< eth::Instruction::ADD << eth::swapInstruction(_storageOffsetPosition);
 	// stack: X
 	// set source_byte_offset to zero if X == 1 (using source_byte_offset *= 1 - X)
 	m_context << u256(1) << eth::Instruction::SUB;
 	// stack: 1 - X
-	if (byteOffsetPosition == 1)
+	if (_byteOffsetPosition == 1)
 		m_context << eth::Instruction::MUL;
 	else
 		m_context
-			<< eth::dupInstruction(byteOffsetPosition + 1) << eth::Instruction::MUL
-			<< eth::swapInstruction(byteOffsetPosition) << eth::Instruction::POP;
+			<< eth::dupInstruction(_byteOffsetPosition + 1) << eth::Instruction::MUL
+			<< eth::swapInstruction(_byteOffsetPosition) << eth::Instruction::POP;
 }
