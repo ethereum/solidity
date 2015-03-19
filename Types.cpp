@@ -742,6 +742,23 @@ string ArrayType::toString() const
 	return ret + "]";
 }
 
+TypePointer ArrayType::externalType() const
+{
+	if (m_location != Location::CallData)
+		return TypePointer();
+	if (m_isByteArray)
+		return shared_from_this();
+	if (!(m_baseType->externalType()))
+		return TypePointer();
+	if (dynamic_cast<ArrayType const*>(m_baseType.get()) && m_baseType->isDynamicallySized())
+		return TypePointer();
+
+	if (m_baseType->isDynamicallySized())
+		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType());
+	else
+		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType(), m_length);
+}
+
 shared_ptr<ArrayType> ArrayType::copyForLocation(ArrayType::Location _location) const
 {
 	auto copy = make_shared<ArrayType>(_location);
