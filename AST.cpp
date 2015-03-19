@@ -305,8 +305,12 @@ TypePointer FunctionDefinition::getType(ContractDefinition const*) const
 void FunctionDefinition::checkTypeRequirements()
 {
 	for (ASTPointer<VariableDeclaration> const& var: getParameters() + getReturnParameters())
+	{
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
+		if (!var->getType()->externalType() && getVisibility() >= Visibility::Internal)
+			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to have an external address."));
+	}
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
 		modifier->checkTypeRequirements(isConstructor() ?
 			dynamic_cast<ContractDefinition const&>(*getScope()).getBaseContracts() :
@@ -653,6 +657,10 @@ void MemberAccess::checkTypeRequirements()
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
 											  "visible in " + type.toString()));
+	//todo check for visibility
+//	else if (!m_type->externalType())
+//		BOOST_THROW_EXCEPTION(createTypeError("Type is required to have an external address."));
+
 	// This should probably move somewhere else.
 	if (type.getCategory() == Type::Category::Struct)
 		m_isLValue = true;
