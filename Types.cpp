@@ -536,14 +536,8 @@ bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (_convertTo.getCategory() == Category::Integer)
-	{
-		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (m_bytes * 8 <= convertTo.getNumBits())
-			return true;
-	}
-
-	return _convertTo.getCategory() == Category::Contract ||
+	return _convertTo.getCategory() == Category::Integer ||
+		_convertTo.getCategory() == Category::Contract ||
 		_convertTo.getCategory() == getCategory();
 }
 
