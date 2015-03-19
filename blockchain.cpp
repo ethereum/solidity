@@ -653,9 +653,9 @@ BOOST_AUTO_TEST_CASE(bcUncleTest)
 	dev::test::executeTests("bcUncleTest", "/BlockTests", dev::test::doBlockchainTests);
 }
 
-BOOST_AUTO_TEST_CASE(userDefinedFileBc)
+BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
-	dev::test::userDefinedTest("--bctest", dev::test::doBlockchainTests);
+	dev::test::userDefinedTest("--singletest", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
