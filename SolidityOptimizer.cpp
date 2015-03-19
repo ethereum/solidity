@@ -26,8 +26,11 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
 #include <test/solidityExecutionFramework.h>
+#include <libevmcore/CommonSubexpressionEliminator.h>
+#include <libevmcore/Assembly.h>
 
 using namespace std;
+using namespace dev::eth;
 
 namespace dev
 {
@@ -41,16 +44,21 @@ class OptimizerTestFramework: public ExecutionFramework
 public:
 	OptimizerTestFramework() { }
 	/// Compiles the source code with and without optimizing.
-	void compileBothVersions(unsigned _expectedSizeDecrease, std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "") {
+	void compileBothVersions(
+		std::string const& _sourceCode,
+		u256 const& _value = 0,
+		std::string const& _contractName = ""
+	)
+	{
 		m_optimize = false;
 		bytes nonOptimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
 		m_nonOptimizedContract = m_contractAddress;
 		m_optimize = true;
 		bytes optimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
-		int sizeDiff = nonOptimizedBytecode.size() - optimizedBytecode.size();
-		BOOST_CHECK_MESSAGE(sizeDiff == int(_expectedSizeDecrease), "Bytecode shrank by "
-							+ boost::lexical_cast<string>(sizeDiff) + " bytes, expected: "
-							+ boost::lexical_cast<string>(_expectedSizeDecrease));
+		BOOST_CHECK_MESSAGE(
+			nonOptimizedBytecode.size() > optimizedBytecode.size(),
+			"Optimizer did not reduce bytecode size."
+		);
 		m_optimizedContract = m_contractAddress;
 	}
 
@@ -81,24 +89,11 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 				return a;
 			}
 		})";
-	compileBothVersions(29, sourceCode);
+	compileBothVersions(sourceCode);
 	compareVersions("f(uint256)", u256(7));
 }
 
-BOOST_AUTO_TEST_CASE(large_integers)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function f() returns (uint a, uint b) {
-				a = 0x234234872642837426347000000;
-				b = 0x10000000000000000000000002;
-			}
-		})";
-	compileBothVersions(36, sourceCode);
-	compareVersions("f()");
-}
-
-BOOST_AUTO_TEST_CASE(invariants)
+BOOST_AUTO_TEST_CASE(identities)
 {
 	char const* sourceCode = R"(
 		contract test {
@@ -106,7 +101,7 @@ BOOST_AUTO_TEST_CASE(invariants)
 				return int(0) | (int(1) * (int(0) ^ (0 + a)));
 			}
 		})";
-	compileBothVersions(41, sourceCode);
+	compileBothVersions(sourceCode);
 	compareVersions("f(uint256)", u256(0x12334664));
 }
 
@@ -120,7 +115,7 @@ BOOST_AUTO_TEST_CASE(unused_expressions)
 				data;
 			}
 		})";
-	compileBothVersions(36, sourceCode);
+	compileBothVersions(sourceCode);
 	compareVersions("f()");
 }
 
@@ -135,8 +130,130 @@ BOOST_AUTO_TEST_CASE(constant_folding_both_sides)
 				return 98 ^ (7 * ((1 | (x | 1000)) * 40) ^ 102);
 			}
 		})";
-	compileBothVersions(37, sourceCode);
+	compileBothVersions(sourceCode);
 	compareVersions("f(uint256)");
+}
+
+BOOST_AUTO_TEST_CASE(storage_access)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint8[40] data;
+			function f(uint x) returns (uint y) {
+				data[2] = data[7] = uint8(x);
+				data[4] = data[2] * 10 + data[3];
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(uint256)");
+}
+
+BOOST_AUTO_TEST_CASE(array_copy)
+{
+	char const* sourceCode = R"(
+		contract test {
+			bytes2[] data1;
+			bytes5[] data2;
+			function f(uint x) returns (uint l, uint y) {
+				for (uint i = 0; i < msg.data.length; ++i)
+					data1[i] = msg.data[i];
+				data2 = data1;
+				l = data2.length;
+				y = uint(data2[x]);
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(uint256)", 0);
+	compareVersions("f(uint256)", 10);
+	compareVersions("f(uint256)", 36);
+}
+
+BOOST_AUTO_TEST_CASE(function_calls)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f1(uint x) returns (uint) { return x*x; }
+			function f(uint x) returns (uint) { return f1(7+x) - this.f1(x**9); }
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(uint256)", 0);
+	compareVersions("f(uint256)", 10);
+	compareVersions("f(uint256)", 36);
+}
+
+BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
+{
+	eth::CommonSubexpressionEliminator cse;
+	AssemblyItems input{
+		Instruction::SWAP1, Instruction::POP, Instruction::ADD, u256(0), Instruction::SWAP1,
+		Instruction::SLOAD, Instruction::SWAP1, u256(100), Instruction::EXP, Instruction::SWAP1,
+		Instruction::DIV, u256(0xff), Instruction::AND
+	};
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	AssemblyItems output = cse.getOptimizedItems();
+	BOOST_CHECK(!output.empty());
+}
+
+BOOST_AUTO_TEST_CASE(cse_negative_stack_access)
+{
+	eth::CommonSubexpressionEliminator cse;
+	AssemblyItems input{AssemblyItem(Instruction::DUP2), AssemblyItem(u256(0))};
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	AssemblyItems output = cse.getOptimizedItems();
+	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+}
+
+BOOST_AUTO_TEST_CASE(cse_negative_stack_end)
+{
+	eth::CommonSubexpressionEliminator cse;
+	AssemblyItems input{
+		AssemblyItem(Instruction::ADD)
+	};
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	AssemblyItems output = cse.getOptimizedItems();
+	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+}
+
+BOOST_AUTO_TEST_CASE(cse_intermediate_negative_stack)
+{
+	eth::CommonSubexpressionEliminator cse;
+	AssemblyItems input{
+		AssemblyItem(Instruction::ADD),
+		AssemblyItem(u256(1)),
+		AssemblyItem(Instruction::DUP2)
+	};
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	AssemblyItems output = cse.getOptimizedItems();
+	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+}
+
+BOOST_AUTO_TEST_CASE(cse_pop)
+{
+	eth::CommonSubexpressionEliminator cse;
+	AssemblyItems input{
+		AssemblyItem(Instruction::POP)
+	};
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	AssemblyItems output = cse.getOptimizedItems();
+	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+}
+
+BOOST_AUTO_TEST_CASE(cse_unneeded_items)
+{
+	eth::CommonSubexpressionEliminator cse;
+	AssemblyItems input{
+		AssemblyItem(Instruction::ADD),
+		AssemblyItem(Instruction::SWAP1),
+		AssemblyItem(Instruction::POP),
+		AssemblyItem(u256(7)),
+		AssemblyItem(u256(8)),
+	};
+	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+	AssemblyItems output = cse.getOptimizedItems();
+	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
