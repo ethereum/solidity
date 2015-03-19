@@ -288,12 +288,6 @@ inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 	return true;
 }
 
-inline bool popCountIncreased(AssemblyItemsConstRef _pre, AssemblyItems const& _post)
-{
-	auto isPop = [](AssemblyItem const& _item) -> bool { return _item.match(AssemblyItem(Instruction::POP)); };
-	return count_if(begin(_post), end(_post), isPop) > count_if(begin(_pre), end(_pre), isPop);
-}
-
 //@todo this has to move to a special optimizer class soon
 template<class Iterator>
 unsigned bytesRequiredBySlice(Iterator _begin, Iterator _end)
@@ -313,29 +307,6 @@ Assembly& Assembly::optimise(bool _enable)
 {
 	if (!_enable)
 		return *this;
-	auto signextend = [](u256 a, u256 b) -> u256
-	{
-		if (a >= 31)
-			return b;
-		unsigned testBit = unsigned(a) * 8 + 7;
-		u256 mask = (u256(1) << testBit) - 1;
-		return boost::multiprecision::bit_test(b, testBit) ? b | ~mask : b & mask;
-	};
-	map<Instruction, function<u256(u256, u256)>> const c_simple =
-	{
-		{ Instruction::SUB, [](u256 a, u256 b)->u256{return a - b;} },
-		{ Instruction::DIV, [](u256 a, u256 b)->u256{return a / b;} },
-		{ Instruction::SDIV, [](u256 a, u256 b)->u256{return s2u(u2s(a) / u2s(b));} },
-		{ Instruction::MOD, [](u256 a, u256 b)->u256{return a % b;} },
-		{ Instruction::SMOD, [](u256 a, u256 b)->u256{return s2u(u2s(a) % u2s(b));} },
-		{ Instruction::EXP, [](u256 a, u256 b)->u256{return (u256)boost::multiprecision::powm((bigint)a, (bigint)b, bigint(1) << 256);} },
-		{ Instruction::SIGNEXTEND, signextend },
-		{ Instruction::LT, [](u256 a, u256 b)->u256{return a < b ? 1 : 0;} },
-		{ Instruction::GT, [](u256 a, u256 b)->u256{return a > b ? 1 : 0;} },
-		{ Instruction::SLT, [](u256 a, u256 b)->u256{return u2s(a) < u2s(b) ? 1 : 0;} },
-		{ Instruction::SGT, [](u256 a, u256 b)->u256{return u2s(a) > u2s(b) ? 1 : 0;} },
-		{ Instruction::EQ, [](u256 a, u256 b)->u256{return a == b ? 1 : 0;} },
-	};
 	map<Instruction, function<u256(u256, u256)>> const c_associative =
 	{
 		{ Instruction::ADD, [](u256 a, u256 b)->u256{return a + b;} },
@@ -358,8 +329,6 @@ Assembly& Assembly::optimise(bool _enable)
 		{ { Instruction::ISZERO, Instruction::ISZERO }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 	};
 
-	for (auto const& i: c_simple)
-		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
 	for (auto const& i: c_associative)
 	{
 		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
@@ -371,64 +340,33 @@ Assembly& Assembly::optimise(bool _enable)
 	// jump to next instruction
 	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
 
-	// pop optimization, do not compute values that are popped again anyway
-	rules.push_back({ { AssemblyItem(UndefinedItem), Instruction::POP }, [](AssemblyItemsConstRef m) -> AssemblyItems
-					  {
-						  if (m[0].type() != Operation)
-							return m.toVector();
-						  Instruction instr = m[0].instruction();
-						  if (Instruction::DUP1 <= instr && instr <= Instruction::DUP16)
-							return {};
-						  InstructionInfo info = instructionInfo(instr);
-						  if (info.sideEffects || info.additional != 0 || info.ret != 1)
-							  return m.toVector();
-						  return AssemblyItems(info.args, Instruction::POP);
-					  } });
-	// compute constants close to powers of two by expressions
-	auto computeConstants = [](AssemblyItemsConstRef m) -> AssemblyItems
-	{
-		u256 const& c = m[0].data();
-		unsigned const minBits = 4 * 8;
-		if (c < (bigint(1) << minBits))
-			return m.toVector(); // we need at least "PUSH1 <bits> PUSH1 <2> EXP"
-		if (c == u256(-1))
-			return {u256(0), Instruction::NOT};
-		for (unsigned bits = minBits; bits < 256; ++bits)
-		{
-			bigint const diff = c - (bigint(1) << bits);
-			if (abs(diff) > 0xff)
-				continue;
-			AssemblyItems powerOfTwo{u256(bits), u256(2), Instruction::EXP};
-			if (diff == 0)
-				return powerOfTwo;
-			return AssemblyItems{u256(abs(diff))} + powerOfTwo +
-				   AssemblyItems{diff > 0 ? Instruction::ADD : Instruction::SUB};
-		}
-		return m.toVector();
-	};
-	rules.push_back({{Push}, computeConstants});
-
-	copt << *this;
-
-	copt << "Performing common subexpression elimination...";
-	AssemblyItems optimizedItems;
-	for (auto iter = m_items.begin(); iter != m_items.end(); ++iter)
-	{
-		CommonSubexpressionEliminator eliminator;
-		iter = eliminator.feedItems(iter, m_items.end());
-		optimizedItems += eliminator.getOptimizedItems();
-		if (iter != m_items.end())
-			optimizedItems.push_back(*iter);
-	}
-	copt << "Old size: " << m_items.size() << ", new size: " << optimizedItems.size();
-//	swap(m_items, optimizedItems);
-
 	copt << *this;
 
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
 	{
 		count = 0;
+
+		copt << "Performing common subexpression elimination...";
+		for (auto iter = m_items.begin(); iter != m_items.end();)
+		{
+			CommonSubexpressionEliminator eliminator;
+			auto orig = iter;
+			iter = eliminator.feedItems(iter, m_items.end());
+			AssemblyItems optItems = eliminator.getOptimizedItems();
+			copt << "Old size: " << (iter - orig) << ", new size: " << optItems.size();
+			if (optItems.size() < size_t(iter - orig))
+			{
+				// replace items
+				count++;
+				for (auto moveIter = optItems.begin(); moveIter != optItems.end(); ++orig, ++moveIter)
+					*orig = move(*moveIter);
+				iter = m_items.erase(orig, iter);
+			}
+			if (iter != m_items.end())
+				++iter;
+		}
+
 		for (unsigned i = 0; i < m_items.size(); ++i)
 		{
 			for (auto const& r: rules)
@@ -437,12 +375,10 @@ Assembly& Assembly::optimise(bool _enable)
 				if (matches(vr, &r.first))
 				{
 					auto rw = r.second(vr);
-					unsigned const vrSizeInBytes = bytesRequiredBySlice(vr.begin(), vr.end());
-					unsigned const rwSizeInBytes = bytesRequiredBySlice(rw.begin(), rw.end());
-					if (rwSizeInBytes < vrSizeInBytes || (rwSizeInBytes == vrSizeInBytes && popCountIncreased(vr, rw)))
+					if (rw.size() < vr.size())
 					{
-						copt << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
-						copt << AssemblyItemsConstRef(&rw);
+						copt << "Rule " << vr << " matches " << AssemblyItemsConstRef(&r.first) << " becomes...";
+						copt << AssemblyItemsConstRef(&rw) << "\n";
 						if (rw.size() > vr.size())
 						{
 							// create hole in the vector
@@ -456,7 +392,7 @@ Assembly& Assembly::optimise(bool _enable)
 						copy(rw.begin(), rw.end(), m_items.begin() + i);
 
 						count++;
-						copt << "Now:\n" << m_items;
+						copt << "Now:" << m_items;
 					}
 				}
 			}

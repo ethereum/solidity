@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <map>
+#include <ostream>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
 
@@ -63,9 +64,14 @@ public:
 	/// @returns the resulting items after optimization.
 	AssemblyItems getOptimizedItems();
 
+	/// Streams debugging information to @a _out.
+	std::ostream& stream(
+		std::ostream& _out,
+		std::map<int, EquivalenceClassId> _currentStack = {},
+		std::map<int, EquivalenceClassId> _targetStack = {}
+	) const;
+
 private:
-	/// @returns true if the given items starts a new basic block
-	bool breaksBasicBlock(AssemblyItem const& _item);
 	/// Feeds the item into the system for analysis.
 	void feedItem(AssemblyItem const& _item);
 
@@ -92,9 +98,26 @@ private:
 	std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> m_equivalenceClasses;
 	/// List of items generated during analysis.
 	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItem;
-
 };
 
+/**
+ * Helper functions to provide context-independent information about assembly items.
+ */
+struct SemanticInformation
+{
+	/// @returns true if the given items starts a new basic block
+	static bool breaksBasicBlock(AssemblyItem const& _item);
+	/// @returns true if the item is a two-argument operation whose value does not depend on the
+	/// order of its arguments.
+	static bool isCommutativeOperation(AssemblyItem const& _item);
+	static bool isDupInstruction(AssemblyItem const& _item);
+	static bool isSwapInstruction(AssemblyItem const& _item);
+};
+
+/**
+ * Unit that generates code from current stack layout, target stack layout and information about
+ * the equivalence classes.
+ */
 class CSECodeGenerator
 {
 public:
@@ -116,8 +139,11 @@ private:
 	/// @returns the stack position of the element.
 	int generateClassElement(EquivalenceClassId _c);
 
-	/// @returns true if @a _element can be removed while computing @a _result.
-	bool canBeRemoved(EquivalenceClassId _element, EquivalenceClassId _result);
+	/// @returns true if @a _element can be removed - in general or, if given, while computing @a _result.
+	bool canBeRemoved(EquivalenceClassId _element, EquivalenceClassId _result = EquivalenceClassId(-1));
+
+	/// Appends code to remove the topmost stack element if it can be removed.
+	bool removeStackTopIfPossible();
 
 	/// Appends a dup instruction to m_generatedItems to retrieve the element at the given stack position.
 	void appendDup(int _fromPosition);
@@ -150,8 +176,7 @@ _AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 	_AssemblyItemIterator _end
 )
 {
-	std::cout << "---------------Feeding items to the CSE engine:--------------" << std::endl;
-	for (; _iterator != _end && !breaksBasicBlock(*_iterator); ++_iterator)
+	for (; _iterator != _end && !SemanticInformation::breaksBasicBlock(*_iterator); ++_iterator)
 		feedItem(*_iterator);
 	return _iterator;
 }
