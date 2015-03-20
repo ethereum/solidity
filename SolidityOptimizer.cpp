@@ -74,6 +74,14 @@ public:
 							"\nOptimized:     " + toHex(optimizedOutput));
 	}
 
+	void checkCSE(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	{
+		eth::CommonSubexpressionEliminator cse;
+		BOOST_REQUIRE(cse.feedItems(_input.begin(), _input.end()) == _input.end());
+		AssemblyItems output = cse.getOptimizedItems();
+		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
+	}
+
 protected:
 	Address m_optimizedContract;
 	Address m_nonOptimizedContract;
@@ -199,61 +207,59 @@ BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 
 BOOST_AUTO_TEST_CASE(cse_negative_stack_access)
 {
-	eth::CommonSubexpressionEliminator cse;
-	AssemblyItems input{AssemblyItem(Instruction::DUP2), AssemblyItem(u256(0))};
-	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
-	AssemblyItems output = cse.getOptimizedItems();
-	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+	AssemblyItems input{Instruction::DUP2, u256(0)};
+	checkCSE(input, input);
 }
 
 BOOST_AUTO_TEST_CASE(cse_negative_stack_end)
 {
-	eth::CommonSubexpressionEliminator cse;
-	AssemblyItems input{
-		AssemblyItem(Instruction::ADD)
-	};
-	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
-	AssemblyItems output = cse.getOptimizedItems();
-	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+	AssemblyItems input{Instruction::ADD};
+	checkCSE(input, input);
 }
 
 BOOST_AUTO_TEST_CASE(cse_intermediate_negative_stack)
 {
-	eth::CommonSubexpressionEliminator cse;
-	AssemblyItems input{
-		AssemblyItem(Instruction::ADD),
-		AssemblyItem(u256(1)),
-		AssemblyItem(Instruction::DUP2)
-	};
-	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
-	AssemblyItems output = cse.getOptimizedItems();
-	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+	AssemblyItems input{Instruction::ADD, u256(1), Instruction::DUP1};
+	checkCSE(input, input);
 }
 
 BOOST_AUTO_TEST_CASE(cse_pop)
 {
-	eth::CommonSubexpressionEliminator cse;
-	AssemblyItems input{
-		AssemblyItem(Instruction::POP)
-	};
-	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
-	AssemblyItems output = cse.getOptimizedItems();
-	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+	checkCSE({Instruction::POP}, {Instruction::POP});
 }
 
 BOOST_AUTO_TEST_CASE(cse_unneeded_items)
 {
-	eth::CommonSubexpressionEliminator cse;
 	AssemblyItems input{
-		AssemblyItem(Instruction::ADD),
-		AssemblyItem(Instruction::SWAP1),
-		AssemblyItem(Instruction::POP),
-		AssemblyItem(u256(7)),
-		AssemblyItem(u256(8)),
+		Instruction::ADD,
+		Instruction::SWAP1,
+		Instruction::POP,
+		u256(7),
+		u256(8),
 	};
-	BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
-	AssemblyItems output = cse.getOptimizedItems();
-	BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+	checkCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_invariants)
+{
+	AssemblyItems input{
+		Instruction::DUP1,
+		Instruction::DUP1,
+		u256(0),
+		Instruction::OR,
+		Instruction::OR
+	};
+	checkCSE(input, {Instruction::DUP1});
+}
+
+BOOST_AUTO_TEST_CASE(cse_subself)
+{
+	checkCSE({Instruction::DUP1, Instruction::SUB}, {Instruction::POP, u256(0)});
+}
+
+BOOST_AUTO_TEST_CASE(cse_subother)
+{
+	checkCSE({Instruction::SUB}, {Instruction::SUB});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
