@@ -311,8 +311,8 @@ void FunctionDefinition::checkTypeRequirements()
 		modifier->checkTypeRequirements(isConstructor() ?
 			dynamic_cast<ContractDefinition const&>(*getScope()).getBaseContracts() :
 			vector<ASTPointer<InheritanceSpecifier>>());
-
-	m_body->checkTypeRequirements();
+	if (m_body)
+		m_body->checkTypeRequirements();
 }
 
 string FunctionDefinition::getCanonicalSignature() const
