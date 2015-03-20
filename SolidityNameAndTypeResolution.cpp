@@ -346,6 +346,21 @@ BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
+BOOST_AUTO_TEST_CASE(function_no_implementation)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = "contract test {\n"
+		"  function functionName(bytes32 input) returns (bytes32 out);\n"
+		"}\n";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
+	ContractDefinition* contract;
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		contract = dynamic_cast<ContractDefinition*>(node.get());
+	BOOST_CHECK(contract);
+	BOOST_CHECK(!contract->isFullyImplemented());
+	BOOST_CHECK(!contract->getDefinedFunctions()[0]->isFullyImplemented());
+}
+
 BOOST_AUTO_TEST_CASE(function_canonical_signature)
 {
 	ASTPointer<SourceUnit> sourceUnit;

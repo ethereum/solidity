@@ -108,6 +108,14 @@ BOOST_AUTO_TEST_CASE(single_function_param)
 	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed.");
 }
 
+BOOST_AUTO_TEST_CASE(function_no_body)
+{
+	char const* text = "contract test {\n"
+					   "  function functionName(bytes32 input) returns (bytes32 out);\n"
+					   "}\n";
+	ETH_TEST_CHECK_NO_THROW(parseText(text), "Parsing failed.");
+}
+
 BOOST_AUTO_TEST_CASE(missing_parameter_name_in_named_args)
 {
 	char const* text = "contract test {\n"
