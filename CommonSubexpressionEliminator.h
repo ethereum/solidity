@@ -28,6 +28,7 @@
 #include <ostream>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
+#include <libevmcore/ExpressionClasses.h>
 
 namespace dev
 {
@@ -36,9 +37,6 @@ namespace eth
 
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
-
-using EquivalenceClassId = unsigned;
-using EquivalenceClassIds = std::vector<EquivalenceClassId>;
 
 /**
  * Optimizer step that performs common subexpression elimination and stack reorganisation,
@@ -67,24 +65,22 @@ public:
 	/// Streams debugging information to @a _out.
 	std::ostream& stream(
 		std::ostream& _out,
-		std::map<int, EquivalenceClassId> _currentStack = std::map<int, EquivalenceClassId>(),
-		std::map<int, EquivalenceClassId> _targetStack = std::map<int, EquivalenceClassId>()
+		std::map<int, ExpressionClasses::Id> _currentStack = std::map<int, ExpressionClasses::Id>(),
+		std::map<int, ExpressionClasses::Id> _targetStack = std::map<int, ExpressionClasses::Id>()
 	) const;
 
 private:
 	/// Feeds the item into the system for analysis.
 	void feedItem(AssemblyItem const& _item);
 
+	/// Simplifies the given item using
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.
-	void setStackElement(int _stackHeight, EquivalenceClassId _class);
+	void setStackElement(int _stackHeight, ExpressionClasses::Id _class);
 	/// Swaps the given stack elements in their next sequence number.
 	void swapStackElements(int _stackHeightA, int _stackHeightB);
 	/// Retrieves the current equivalence class fo the given stack element (or generates a new
 	/// one if it does not exist yet).
-	EquivalenceClassId getStackElement(int _stackHeight);
-	/// Retrieves the equivalence class resulting from the given item applied to the given classes,
-	/// might also create a new one.
-	EquivalenceClassId getClass(AssemblyItem const& _item, EquivalenceClassIds const& _arguments = {});
+	ExpressionClasses::Id getStackElement(int _stackHeight);
 
 	/// @returns the next sequence number of the given stack element.
 	unsigned getNextStackElementSequence(int _stackHeight);
@@ -92,12 +88,9 @@ private:
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
 	/// Mapping (stack height, sequence number) -> equivalence class
-	std::map<std::pair<int, unsigned>, EquivalenceClassId> m_stackElements;
-	/// Vector of equivalence class representatives - we only store one item of an equivalence
-	/// class and the index is used as identifier.
-	std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> m_equivalenceClasses;
-	/// List of items generated during analysis.
-	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItem;
+	std::map<std::pair<int, unsigned>, ExpressionClasses::Id> m_stackElements;
+	/// Structure containing the classes of equivalent expressions.
+	ExpressionClasses m_expressionClasses;
 };
 
 /**
@@ -121,27 +114,30 @@ struct SemanticInformation
 class CSECodeGenerator
 {
 public:
+	CSECodeGenerator(ExpressionClasses const& _expressionClasses):
+		m_expressionClasses(_expressionClasses)
+	{}
+
 	/// @returns the assembly items generated from the given requirements
 	/// @param _initialStack current contents of the stack (up to stack height of zero)
 	/// @param _targetStackContents final contents of the stack, by stack height relative to initial
 	/// @param _equivalenceClasses equivalence classes as expressions of how to compute them
-	/// @note resuts the state of the object for each call.
+	/// @note should only be called once on each object.
 	AssemblyItems generateCode(
-		std::map<int, EquivalenceClassId> const& _initialStack,
-		std::map<int, EquivalenceClassId> const& _targetStackContents,
-		std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> const& _equivalenceClasses
+		std::map<int, ExpressionClasses::Id> const& _initialStack,
+		std::map<int, ExpressionClasses::Id> const& _targetStackContents
 	);
 
 private:
 	/// Recursively discovers all dependencies to @a m_requests.
-	void addDependencies(EquivalenceClassId _c);
+	void addDependencies(ExpressionClasses::Id _c);
 
 	/// Produce code that generates the given element if it is not yet present.
 	/// @returns the stack position of the element.
-	int generateClassElement(EquivalenceClassId _c);
+	int generateClassElement(ExpressionClasses::Id _c);
 
 	/// @returns true if @a _element can be removed - in general or, if given, while computing @a _result.
-	bool canBeRemoved(EquivalenceClassId _element, EquivalenceClassId _result = EquivalenceClassId(-1));
+	bool canBeRemoved(ExpressionClasses::Id _element, ExpressionClasses::Id _result = ExpressionClasses::Id(-1));
 
 	/// Appends code to remove the topmost stack element if it can be removed.
 	bool removeStackTopIfPossible();
@@ -160,16 +156,16 @@ private:
 	/// Current height of the stack relative to the start.
 	int m_stackHeight = 0;
 	/// If (b, a) is in m_requests then b is needed to compute a.
-	std::multimap<EquivalenceClassId, EquivalenceClassId> m_neededBy;
+	std::multimap<ExpressionClasses::Id, ExpressionClasses::Id> m_neededBy;
 	/// Current content of the stack.
-	std::map<int, EquivalenceClassId> m_stack;
+	std::map<int, ExpressionClasses::Id> m_stack;
 	/// Current positions of equivalence classes, equal to c_invalidPosition if already deleted.
-	std::map<EquivalenceClassId, int> m_classPositions;
+	std::map<ExpressionClasses::Id, int> m_classPositions;
 
 	/// The actual eqivalence class items and how to compute them.
-	std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> m_equivalenceClasses;
+	ExpressionClasses const& m_expressionClasses;
 	/// The set of equivalence classes that should be present on the stack at the end.
-	std::set<EquivalenceClassId> m_finalClasses;
+	std::set<ExpressionClasses::Id> m_finalClasses;
 };
 
 template <class _AssemblyItemIterator>

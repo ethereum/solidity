@@ -32,17 +32,17 @@ using namespace dev::eth;
 
 vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {
-	map<int, EquivalenceClassId> initialStackContents;
-	map<int, EquivalenceClassId> targetStackContents;
+	map<int, ExpressionClasses::Id> initialStackContents;
+	map<int, ExpressionClasses::Id> targetStackContents;
 	int minHeight = m_stackHeight + 1;
 	if (!m_stackElements.empty())
 		minHeight = min(minHeight, m_stackElements.begin()->first.first);
 	for (int height = minHeight; height <= max(0, m_stackHeight); ++height)
 	{
 		// make sure it is created
-		EquivalenceClassId c = getStackElement(height);
+		ExpressionClasses::Id c = getStackElement(height);
 		if (height <= 0)
-			initialStackContents[height] = getClass(AssemblyItem(dupInstruction(1 - height)));
+			initialStackContents[height] = m_expressionClasses.find(AssemblyItem(dupInstruction(1 - height)));
 		if (height <= m_stackHeight)
 			targetStackContents[height] = c;
 	}
@@ -50,21 +50,21 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	// Debug info:
 	//stream(cout, currentStackContents, targetStackContents);
 
-	return CSECodeGenerator().generateCode(initialStackContents, targetStackContents, m_equivalenceClasses);
+	return CSECodeGenerator(m_expressionClasses).generateCode(initialStackContents, targetStackContents);
 }
 
 ostream& CommonSubexpressionEliminator::stream(
 	ostream& _out,
-	map<int, EquivalenceClassId> _currentStack,
-	map<int, EquivalenceClassId> _targetStack
+	map<int, ExpressionClasses::Id> _currentStack,
+	map<int, ExpressionClasses::Id> _targetStack
 ) const
 {
-	auto streamEquivalenceClass = [this](ostream& _out, EquivalenceClassId _id)
+	auto streamExpressionClass = [this](ostream& _out, ExpressionClasses::Id _id)
 	{
-		auto const& eqClass = m_equivalenceClasses.at(_id);
-		_out << "  " << _id << ": " << *eqClass.first;
+		auto const& expr = m_expressionClasses.representative(_id);
+		_out << "  " << _id << ": " << *expr.item;
 		_out << "(";
-		for (EquivalenceClassId arg: eqClass.second)
+		for (ExpressionClasses::Id arg: expr.arguments)
 			_out << dec << arg << ",";
 		_out << ")" << endl;
 	};
@@ -75,23 +75,23 @@ ostream& CommonSubexpressionEliminator::stream(
 	for (auto const& it: m_stackElements)
 	{
 		_out << "  " << dec << it.first.first << "(" << it.first.second << ") = ";
-		streamEquivalenceClass(_out, it.second);
+		streamExpressionClass(_out, it.second);
 	}
 	_out << "Equivalence classes: " << endl;
-	for (EquivalenceClassId eqClass = 0; eqClass < m_equivalenceClasses.size(); ++eqClass)
-		streamEquivalenceClass(_out, eqClass);
+	for (ExpressionClasses::Id eqClass = 0; eqClass < m_expressionClasses.size(); ++eqClass)
+		streamExpressionClass(_out, eqClass);
 
 	_out << "Current stack: " << endl;
 	for (auto const& it: _currentStack)
 	{
 		_out << "  " << dec << it.first << ": ";
-		streamEquivalenceClass(_out, it.second);
+		streamExpressionClass(_out, it.second);
 	}
 	_out << "Target stack: " << endl;
 	for (auto const& it: _targetStack)
 	{
 		_out << "  " << dec << it.first << ": ";
-		streamEquivalenceClass(_out, it.second);
+		streamExpressionClass(_out, it.second);
 	}
 
 	return _out;
@@ -103,7 +103,7 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 	{
 		if (_item.deposit() != 1)
 			BOOST_THROW_EXCEPTION(InvalidDeposit());
-		setStackElement(++m_stackHeight, getClass(_item, {}));
+		setStackElement(++m_stackHeight, m_expressionClasses.find(_item, {}));
 	}
 	else
 	{
@@ -121,16 +121,16 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 			);
 		else if (instruction != Instruction::POP)
 		{
-			vector<EquivalenceClassId> arguments(info.args);
+			vector<ExpressionClasses::Id> arguments(info.args);
 			for (int i = 0; i < info.args; ++i)
 				arguments[i] = getStackElement(m_stackHeight - i);
-			setStackElement(m_stackHeight + _item.deposit(), getClass(_item, arguments));
+			setStackElement(m_stackHeight + _item.deposit(), m_expressionClasses.find(_item, arguments));
 		}
 		m_stackHeight += _item.deposit();
 	}
 }
 
-void CommonSubexpressionEliminator::setStackElement(int _stackHeight, EquivalenceClassId _class)
+void CommonSubexpressionEliminator::setStackElement(int _stackHeight, ExpressionClasses::Id _class)
 {
 	unsigned nextSequence = getNextStackElementSequence(_stackHeight);
 	m_stackElements[make_pair(_stackHeight, nextSequence)] = _class;
@@ -140,8 +140,8 @@ void CommonSubexpressionEliminator::swapStackElements(int _stackHeightA, int _st
 {
 	if (_stackHeightA == _stackHeightB)
 		BOOST_THROW_EXCEPTION(OptimizerException() << errinfo_comment("Swap on same stack elements."));
-	EquivalenceClassId classA = getStackElement(_stackHeightA);
-	EquivalenceClassId classB = getStackElement(_stackHeightB);
+	ExpressionClasses::Id classA = getStackElement(_stackHeightA);
+	ExpressionClasses::Id classB = getStackElement(_stackHeightB);
 
 	unsigned nextSequenceA = getNextStackElementSequence(_stackHeightA);
 	unsigned nextSequenceB = getNextStackElementSequence(_stackHeightB);
@@ -149,7 +149,7 @@ void CommonSubexpressionEliminator::swapStackElements(int _stackHeightA, int _st
 	m_stackElements[make_pair(_stackHeightB, nextSequenceB)] = classA;
 }
 
-EquivalenceClassId CommonSubexpressionEliminator::getStackElement(int _stackHeight)
+ExpressionClasses::Id CommonSubexpressionEliminator::getStackElement(int _stackHeight)
 {
 	// retrieve class by last sequence number
 	unsigned nextSequence = getNextStackElementSequence(_stackHeight);
@@ -162,86 +162,8 @@ EquivalenceClassId CommonSubexpressionEliminator::getStackElement(int _stackHeig
 	if (_stackHeight <= -16)
 		BOOST_THROW_EXCEPTION(OptimizerException() << errinfo_comment("Stack too deep."));
 	// This is a special assembly item that refers to elements pre-existing on the initial stack.
-	m_spareAssemblyItem.push_back(make_shared<AssemblyItem>(dupInstruction(1 - _stackHeight)));
-	m_equivalenceClasses.push_back(make_pair(m_spareAssemblyItem.back().get(), EquivalenceClassIds()));
-	return m_stackElements[make_pair(_stackHeight, nextSequence)] = EquivalenceClassId(m_equivalenceClasses.size() - 1);
-}
-
-EquivalenceClassId CommonSubexpressionEliminator::getClass(
-	const AssemblyItem& _item,
-	EquivalenceClassIds const& _arguments
-)
-{
-	// TODO: do a clever search, i.e.
-	// - check for the presence of constants in the argument classes and do arithmetic
-	// - check whether the two items are equal for a SUB instruction
-	// - check whether 0 or 1 is in one of the classes for a MUL
-
-	EquivalenceClassIds args = _arguments;
-	if (SemanticInformation::isCommutativeOperation(_item))
-		sort(args.begin(), args.end());
-
-	//@todo use a better data structure for search here
-	for (EquivalenceClassId c = 0; c < m_equivalenceClasses.size(); ++c)
-	{
-		AssemblyItem const& classItem = *m_equivalenceClasses.at(c).first;
-		if (classItem != _item)
-			continue;
-
-		assertThrow(
-			args.size() == m_equivalenceClasses.at(c).second.size(),
-			OptimizerException,
-			"Equal assembly items with different number of arguments."
-		);
-		if (equal(args.begin(), args.end(), m_equivalenceClasses.at(c).second.begin()))
-			return c;
-	}
-	// constant folding
-	if (_item.type() == Operation && args.size() == 2 && all_of(
-				args.begin(),
-				args.end(),
-				[this](EquivalenceClassId eqc) { return m_equivalenceClasses.at(eqc).first->match(Push); }))
-	{
-		auto signextend = [](u256 const& _a, u256 const& _b) -> u256
-		{
-			if (_a >= 31)
-				return _b;
-			unsigned testBit = unsigned(_a) * 8 + 7;
-			u256 mask = (u256(1) << testBit) - 1;
-			return boost::multiprecision::bit_test(_b, testBit) ? _b | ~mask : _b & mask;
-		};
-		map<Instruction, function<u256(u256 const&, u256 const&)>> const arithmetics =
-		{
-			{ Instruction::SUB, [](u256 const& _a, u256 const& _b) -> u256 {return _a - _b; } },
-			{ Instruction::DIV, [](u256 const& _a, u256 const& _b) -> u256 {return _b == 0 ? 0 : _a / _b; } },
-			{ Instruction::SDIV, [](u256 const& _a, u256 const& _b) -> u256 { return _b == 0 ? 0 : s2u(u2s(_a) / u2s(_b)); } },
-			{ Instruction::MOD, [](u256 const& _a, u256 const& _b) -> u256 { return _b == 0 ? 0 : _a % _b; } },
-			{ Instruction::SMOD, [](u256 const& _a, u256 const& _b) -> u256 { return _b == 0 ? 0 : s2u(u2s(_a) % u2s(_b)); } },
-			{ Instruction::EXP, [](u256 const& _a, u256 const& _b) -> u256 { return (u256)boost::multiprecision::powm(bigint(_a), bigint(_b), bigint(1) << 256); } },
-			{ Instruction::SIGNEXTEND, signextend },
-			{ Instruction::LT, [](u256 const& _a, u256 const& _b) -> u256 { return _a < _b ? 1 : 0; } },
-			{ Instruction::GT, [](u256 const& _a, u256 const& _b) -> u256 { return _a > _b ? 1 : 0; } },
-			{ Instruction::SLT, [](u256 const& _a, u256 const& _b) -> u256 { return u2s(_a) < u2s(_b) ? 1 : 0; } },
-			{ Instruction::SGT, [](u256 const& _a, u256 const& _b) -> u256 { return u2s(_a) > u2s(_b) ? 1 : 0; } },
-			{ Instruction::EQ, [](u256 const& _a, u256 const& _b) -> u256 { return _a == _b ? 1 : 0; } },
-			{ Instruction::ADD, [](u256 const& _a, u256 const& _b) -> u256 { return _a + _b; } },
-			{ Instruction::MUL, [](u256 const& _a, u256 const& _b) -> u256 { return _a * _b; } },
-			{ Instruction::AND, [](u256 const& _a, u256 const& _b) -> u256 { return _a & _b; } },
-			{ Instruction::OR, [](u256 const& _a, u256 const& _b) -> u256 { return _a | _b; } },
-			{ Instruction::XOR, [](u256 const& _a, u256 const& _b) -> u256 { return _a ^ _b; } },
-		};
-		if (arithmetics.count(_item.instruction()))
-		{
-			u256 result = arithmetics.at(_item.instruction())(
-				m_equivalenceClasses.at(args[0]).first->data(),
-				m_equivalenceClasses.at(args[1]).first->data()
-			);
-			m_spareAssemblyItem.push_back(make_shared<AssemblyItem>(result));
-			return getClass(*m_spareAssemblyItem.back());
-		}
-	}
-	m_equivalenceClasses.push_back(make_pair(&_item, args));
-	return m_equivalenceClasses.size() - 1;
+	return m_stackElements[make_pair(_stackHeight, nextSequence)] =
+		m_expressionClasses.find(AssemblyItem(dupInstruction(1 - _stackHeight)));
 }
 
 unsigned CommonSubexpressionEliminator::getNextStackElementSequence(int _stackHeight)
@@ -318,15 +240,11 @@ bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
-	map<int, EquivalenceClassId> const& _initialStack,
-	map<int, EquivalenceClassId> const& _targetStackContents,
-	vector<pair<AssemblyItem const*, EquivalenceClassIds>> const& _equivalenceClasses
+	map<int, ExpressionClasses::Id> const& _initialStack,
+	map<int, ExpressionClasses::Id> const& _targetStackContents
 )
 {
-	// reset
-	*this = move(CSECodeGenerator());
 	m_stack = _initialStack;
-	m_equivalenceClasses = _equivalenceClasses;
 	for (auto const& item: m_stack)
 		if (!m_classPositions.count(item.second))
 			m_classPositions[item.second] = item.first;
@@ -377,18 +295,18 @@ AssemblyItems CSECodeGenerator::generateCode(
 	return m_generatedItems;
 }
 
-void CSECodeGenerator::addDependencies(EquivalenceClassId _c)
+void CSECodeGenerator::addDependencies(ExpressionClasses::Id _c)
 {
 	if (m_neededBy.count(_c))
 		return;
-	for (EquivalenceClassId argument: m_equivalenceClasses.at(_c).second)
+	for (ExpressionClasses::Id argument: m_expressionClasses.representative(_c).arguments)
 	{
 		addDependencies(argument);
 		m_neededBy.insert(make_pair(argument, _c));
 	}
 }
 
-int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
+int CSECodeGenerator::generateClassElement(ExpressionClasses::Id _c)
 {
 	if (m_classPositions.count(_c))
 	{
@@ -399,8 +317,8 @@ int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
 		);
 		return m_classPositions[_c];
 	}
-	EquivalenceClassIds const& arguments = m_equivalenceClasses.at(_c).second;
-	for (EquivalenceClassId arg: boost::adaptors::reverse(arguments))
+	ExpressionClasses::Ids const& arguments = m_expressionClasses.representative(_c).arguments;
+	for (ExpressionClasses::Id arg: boost::adaptors::reverse(arguments))
 		generateClassElement(arg);
 
 	// The arguments are somewhere on the stack now, so it remains to move them at the correct place.
@@ -458,7 +376,7 @@ int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
 	for (size_t i = 0; i < arguments.size(); ++i)
 		assertThrow(m_stack[m_stackHeight - i] == arguments[i], OptimizerException, "Expected arguments not present." );
 
-	AssemblyItem const& item = *m_equivalenceClasses.at(_c).first;
+	AssemblyItem const& item = *m_expressionClasses.representative(_c).item;
 	while (SemanticInformation::isCommutativeOperation(item) &&
 			!m_generatedItems.empty() &&
 			m_generatedItems.back() == AssemblyItem(Instruction::SWAP1))
@@ -469,12 +387,12 @@ int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
 			m_classPositions[arg] = c_invalidPosition;
 	for (size_t i = 0; i < arguments.size(); ++i)
 		m_stack.erase(m_stackHeight - i);
-	appendItem(*m_equivalenceClasses.at(_c).first);
+	appendItem(*m_expressionClasses.representative(_c).item);
 	m_stack[m_stackHeight] = _c;
 	return m_classPositions[_c] = m_stackHeight;
 }
 
-bool CSECodeGenerator::canBeRemoved(EquivalenceClassId _element, EquivalenceClassId _result)
+bool CSECodeGenerator::canBeRemoved(ExpressionClasses::Id _element, ExpressionClasses::Id _result)
 {
 	// Returns false if _element is finally needed or is needed by a class that has not been
 	// computed yet. Note that m_classPositions also includes classes that were deleted in the meantime.
@@ -493,7 +411,7 @@ bool CSECodeGenerator::removeStackTopIfPossible()
 	if (m_stack.empty())
 		return false;
 	assertThrow(m_stack.count(m_stackHeight), OptimizerException, "");
-	EquivalenceClassId top = m_stack[m_stackHeight];
+	ExpressionClasses::Id top = m_stack[m_stackHeight];
 	if (!canBeRemoved(top))
 		return false;
 	m_generatedItems.push_back(AssemblyItem(Instruction::POP));
