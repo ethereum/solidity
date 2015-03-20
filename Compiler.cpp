@@ -20,12 +20,12 @@
  * Solidity compiler.
  */
 
+#include <libsolidity/Compiler.h>
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Assembly.h>
 #include <libsolidity/AST.h>
-#include <libsolidity/Compiler.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/CompilerUtils.h>
 
@@ -274,19 +274,8 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 
 void Compiler::registerStateVariables(ContractDefinition const& _contract)
 {
-	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.getLinearizedBaseContracts()))
-		for (ASTPointer<VariableDeclaration> const& variable: contract->getStateVariables())
-			if (!variable->isConstant())
-				variables.push_back(variable.get());
-	TypePointers types;
-	for (auto variable: variables)
-		types.push_back(variable->getType());
-	StorageOffsets offsets;
-	offsets.computeOffsets(types);
-	for (size_t index = 0; index < variables.size(); ++index)
-		if (auto const* offset = offsets.getOffset(index))
-			m_context.addStateVariable(*variables[index], offset->first, offset->second);
+	for (auto const& var: ContractType(_contract).getStateVariables())
+		m_context.addStateVariable(*get<0>(var), get<1>(var), get<2>(var));
 }
 
 void Compiler::initializeStateVariables(ContractDefinition const& _contract)

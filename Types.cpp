@@ -20,13 +20,13 @@
  * Solidity data types
  */
 
+#include <libsolidity/Types.h>
+#include <limits>
+#include <boost/range/adaptor/reversed.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libsolidity/Utils.h>
-#include <libsolidity/Types.h>
 #include <libsolidity/AST.h>
-
-#include <limits>
 
 using namespace std;
 
@@ -184,6 +184,8 @@ TypePointer Type::fromArrayTypeName(TypeName& _baseTypeName, Expression* _length
 	TypePointer baseType = _baseTypeName.toType();
 	if (!baseType)
 		BOOST_THROW_EXCEPTION(_baseTypeName.createTypeError("Invalid type name."));
+	if (baseType->getStorageBytes() == 0)
+		BOOST_THROW_EXCEPTION(_baseTypeName.createTypeError("Illegal base type of storage size zero for array."));
 	if (_length)
 	{
 		if (!_length->getType())
@@ -700,13 +702,21 @@ u256 ArrayType::getStorageSize() const
 {
 	if (isDynamicallySized())
 		return 1;
-	else
+
+	bigint size;
+	unsigned baseBytes = getBaseType()->getStorageBytes();
+	if (baseBytes == 0)
+		size = 1;
+	else if (baseBytes < 32)
 	{
-		bigint size = bigint(getLength()) * getBaseType()->getStorageSize();
-		if (size >= bigint(1) << 256)
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Array too large for storage."));
-		return max<u256>(1, u256(size));
+		unsigned itemsPerSlot = 32 / baseBytes;
+		size = (bigint(getLength()) + (itemsPerSlot - 1)) / itemsPerSlot;
 	}
+	else
+		size = bigint(getLength()) * getBaseType()->getStorageSize();
+	if (size >= bigint(1) << 256)
+		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Array too large for storage."));
+	return max<u256>(1, u256(size));
 }
 
 unsigned ArrayType::getSizeOnStack() const
@@ -804,6 +814,26 @@ u256 ContractType::getFunctionIdentifier(string const& _functionName) const
 			return FixedHash<4>::Arith(it.first);
 
 	return Invalid256;
+}
+
+vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::getStateVariables() const
+{
+	vector<VariableDeclaration const*> variables;
+	for (ContractDefinition const* contract: boost::adaptors::reverse(m_contract.getLinearizedBaseContracts()))
+		for (ASTPointer<VariableDeclaration> const& variable: contract->getStateVariables())
+			if (!variable->isConstant())
+				variables.push_back(variable.get());
+	TypePointers types;
+	for (auto variable: variables)
+		types.push_back(variable->getType());
+	StorageOffsets offsets;
+	offsets.computeOffsets(types);
+
+	vector<tuple<VariableDeclaration const*, u256, unsigned>> variablesAndOffsets;
+	for (size_t index = 0; index < variables.size(); ++index)
+		if (auto const* offset = offsets.getOffset(index))
+			variablesAndOffsets.push_back(make_tuple(variables[index], offset->first, offset->second));
+	return variablesAndOffsets;
 }
 
 TypePointer StructType::unaryOperatorResult(Token::Value _operator) const

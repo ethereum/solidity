@@ -335,13 +335,22 @@ public:
 
 	/// Constructor for a byte array ("bytes")
 	explicit ArrayType(Location _location):
-		m_location(_location), m_isByteArray(true), m_baseType(std::make_shared<IntegerType>(8)) {}
+		m_location(_location),
+		m_isByteArray(true),
+		m_baseType(std::make_shared<FixedBytesType>(8))
+	{}
 	/// Constructor for a dynamically sized array type ("type[]")
 	ArrayType(Location _location, const TypePointer &_baseType):
-		m_location(_location), m_baseType(_baseType) {}
+		m_location(_location),
+		m_baseType(_baseType)
+	{}
 	/// Constructor for a fixed-size array type ("type[20]")
 	ArrayType(Location _location, const TypePointer &_baseType, u256 const& _length):
-		m_location(_location), m_baseType(_baseType), m_hasDynamicLength(false), m_length(_length) {}
+		m_location(_location),
+		m_baseType(_baseType),
+		m_hasDynamicLength(false),
+		m_length(_length)
+	{}
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
@@ -402,6 +411,10 @@ public:
 	/// @returns the identifier of the function with the given name or Invalid256 if such a name does
 	/// not exist.
 	u256 getFunctionIdentifier(std::string const& _functionName) const;
+
+	/// @returns a list of all state variables (including inherited) of the contract and their
+	/// offsets in storage.
+	std::vector<std::tuple<VariableDeclaration const*, u256, unsigned>> getStateVariables() const;
 
 private:
 	ContractDefinition const& m_contract;

@@ -72,6 +72,12 @@ public:
 	void retrieveLength(ArrayType const& _arrayType) const;
 
 private:
+	/// Adds the given number of bytes to a storage byte offset counter and also increments
+	/// the storage offset if adding this number again would increase the counter over 32.
+	/// @param byteOffsetPosition the stack offset of the storage byte offset
+	/// @param storageOffsetPosition the stack offset of the storage slot offset
+	void incrementByteOffset(unsigned _byteSize, unsigned _byteOffsetPosition, unsigned _storageOffsetPosition) const;
+
 	CompilerContext& m_context;
 };
 
