@@ -288,18 +288,6 @@ inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 	return true;
 }
 
-//@todo this has to move to a special optimizer class soon
-template<class Iterator>
-unsigned bytesRequiredBySlice(Iterator _begin, Iterator _end)
-{
-	// this is only used in the optimizer, so we can provide a guess for the address length
-	unsigned addressLength = 4;
-	unsigned size = 0;
-	for (; _begin != _end; ++_begin)
-		size += _begin->bytesRequired(addressLength);
-	return size;
-}
-
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
 #define copt dev::LogOutputStream<OptimiserChannel, true>()
 
@@ -315,8 +303,6 @@ Assembly& Assembly::optimise(bool _enable)
 		{ Instruction::OR, [](u256 a, u256 b)->u256{return a | b;} },
 		{ Instruction::XOR, [](u256 a, u256 b)->u256{return a ^ b;} },
 	};
-	std::vector<pair<AssemblyItem, u256>> const c_identities =
-	{ { Instruction::ADD, 0}, { Instruction::MUL, 1}, { Instruction::MOD, 0}, { Instruction::OR, 0}, { Instruction::XOR, 0} };
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules =
 	{
 		{ { Push, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
@@ -334,17 +320,13 @@ Assembly& Assembly::optimise(bool _enable)
 		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
 		rules.push_back({ { Push, i.first, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[2].data(), m[0].data()), i.first }; } });
 	}
-	for (auto const& i: c_identities)
-		rules.push_back({{Push, i.first}, [&](AssemblyItemsConstRef m) -> AssemblyItems
-							{ return m[0].data() == i.second ? AssemblyItems() : m.toVector(); }});
 	// jump to next instruction
 	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
-
-	copt << *this;
 
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
 	{
+		copt << *this;
 		count = 0;
 
 		copt << "Performing common subexpression elimination...";
@@ -353,11 +335,22 @@ Assembly& Assembly::optimise(bool _enable)
 			CommonSubexpressionEliminator eliminator;
 			auto orig = iter;
 			iter = eliminator.feedItems(iter, m_items.end());
-			AssemblyItems optItems = eliminator.getOptimizedItems();
-			copt << "Old size: " << (iter - orig) << ", new size: " << optItems.size();
-			if (optItems.size() < size_t(iter - orig))
+			AssemblyItems optItems;
+			bool shouldReplace = false;
+			try
 			{
-				// replace items
+				optItems = eliminator.getOptimizedItems();
+				shouldReplace = (optItems.size() < size_t(iter - orig));
+			}
+			catch (StackTooDeepException const&)
+			{
+				// This might happen if the opcode reconstruction is not as efficient
+				// as the hand-crafted code.
+			}
+
+			if (shouldReplace)
+			{
+				copt << "Old size: " << (iter - orig) << ", new size: " << optItems.size();
 				count++;
 				for (auto moveIter = optItems.begin(); moveIter != optItems.end(); ++orig, ++moveIter)
 					*orig = move(*moveIter);

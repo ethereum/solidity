@@ -24,7 +24,7 @@
 #pragma once
 
 #include <vector>
-#include <set>
+#include <map>
 #include <memory>
 
 namespace dev
@@ -49,6 +49,7 @@ public:
 		Id id;
 		AssemblyItem const* item;
 		Ids arguments;
+		bool operator<(Expression const& _other) const;
 	};
 
 	/// Retrieves the id of the expression equivalence class resulting from the given item applied to the
@@ -60,6 +61,10 @@ public:
 	Id size() const { return m_representatives.size(); }
 
 private:
+	/// Tries to simplify the given expression.
+	/// @returns its class if it possible or Id(-1) otherwise.
+	/// @param _secondRun is set to true for the second run where arguments of commutative expressions are reversed
+	Id tryToSimplify(Expression const& _expr, bool _secondRun = false);
 
 	/// Expression equivalence class representatives - we only store one item of an equivalence.
 	std::vector<Expression> m_representatives;

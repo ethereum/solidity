@@ -157,10 +157,8 @@ ExpressionClasses::Id CommonSubexpressionEliminator::getStackElement(int _stackH
 		return m_stackElements[make_pair(_stackHeight, nextSequence - 1)];
 
 	// Stack element not found (not assigned yet), create new equivalence class.
-	if (_stackHeight > 0)
-		BOOST_THROW_EXCEPTION(OptimizerException() << errinfo_comment("Stack element accessed before assignment."));
-	if (_stackHeight <= -16)
-		BOOST_THROW_EXCEPTION(OptimizerException() << errinfo_comment("Stack too deep."));
+	assertThrow(_stackHeight <= 0, OptimizerException, "Stack element accessed before assignment.");
+	assertThrow(_stackHeight > -16, StackTooDeepException, "");
 	// This is a special assembly item that refers to elements pre-existing on the initial stack.
 	return m_stackElements[make_pair(_stackHeight, nextSequence)] =
 		m_expressionClasses.find(AssemblyItem(dupInstruction(1 - _stackHeight)));
@@ -423,7 +421,8 @@ bool CSECodeGenerator::removeStackTopIfPossible()
 void CSECodeGenerator::appendDup(int _fromPosition)
 {
 	int nr = 1 + m_stackHeight - _fromPosition;
-	assertThrow(1 <= nr && nr <= 16, OptimizerException, "Stack too deep.");
+	assertThrow(nr <= 16, StackTooDeepException, "Stack too deep.");
+	assertThrow(1 <= nr, OptimizerException, "Invalid stack access.");
 	m_generatedItems.push_back(AssemblyItem(dupInstruction(nr)));
 	m_stackHeight++;
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
@@ -434,7 +433,8 @@ void CSECodeGenerator::appendSwapOrRemove(int _fromPosition)
 	if (_fromPosition == m_stackHeight)
 		return;
 	int nr = m_stackHeight - _fromPosition;
-	assertThrow(1 <= nr && nr <= 16, OptimizerException, "Stack too deep.");
+	assertThrow(nr <= 16, StackTooDeepException, "Stack too deep.");
+	assertThrow(1 <= nr, OptimizerException, "Invalid stack access.");
 	m_generatedItems.push_back(AssemblyItem(swapInstruction(nr)));
 	// The value of a class can be present in multiple locations on the stack. We only update the
 	// "canonical" one that is tracked by m_classPositions
