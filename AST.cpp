@@ -346,8 +346,11 @@ void VariableDeclaration::checkTypeRequirements()
 	if (!m_value)
 		return;
 	if (m_type)
+	{
 		m_value->expectType(*m_type);
-	else
+		if (m_isStateVariable && !m_type->externalType() && getVisibility() >= Visibility::Public)
+			BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for state variables."));
+	} else
 	{
 		// no type declared and no previous assignment, infer the type
 		m_value->checkTypeRequirements();
@@ -426,6 +429,8 @@ void EventDefinition::checkTypeRequirements()
 			numIndexed++;
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
+		if (!var->getType()->externalType() && getVisibility() >= Visibility::Public)
+			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for Events"));
 	}
 	if (numIndexed > 3)
 		BOOST_THROW_EXCEPTION(createTypeError("More than 3 indexed arguments for event."));
@@ -657,9 +662,9 @@ void MemberAccess::checkTypeRequirements()
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
 											  "visible in " + type.toString()));
-	//todo check for visibility
-//	else if (!m_type->externalType())
-//		BOOST_THROW_EXCEPTION(createTypeError("Internal type not allowed for function with external visibility"));
+//	if (auto f = dynamic_cast<FunctionType const*>(m_expression->getType().get()))
+//		if (f->getLocation() == FunctionType::Location::External && !m_type->externalType())
+//			BOOST_THROW_EXCEPTION(createTypeError(*m_memberName + " member has an internal type."));
 
 	// This should probably move somewhere else.
 	if (type.getCategory() == Type::Category::Struct)

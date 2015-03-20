@@ -187,7 +187,8 @@ public:
 																		 "for type without literals."));
 	}
 
-	/// Returns address of type for ABI interface
+	/// @returns a type suitable for outside of Solidity, i.e. for contract types it returns address.
+	/// If there is no such type, returns an empty shared pointer.
 	virtual TypePointer externalType() const { return TypePointer(); }
 
 protected:

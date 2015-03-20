@@ -748,14 +748,12 @@ TypePointer ArrayType::externalType() const
 		return TypePointer();
 	if (m_isByteArray)
 		return shared_from_this();
-	if (!(m_baseType->externalType()))
-	{
+	if (!m_baseType->externalType())
 		return TypePointer();
-	}
-	if (dynamic_cast<ArrayType const*>(m_baseType.get()) && m_baseType->isDynamicallySized())
+	if (m_baseType->getCategory() == Category::Array && m_baseType->isDynamicallySized())
 		return TypePointer();
 
-	if (m_baseType->isDynamicallySized())
+	if (isDynamicallySized())
 		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType());
 	else
 		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType(), m_length);
