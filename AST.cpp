@@ -308,8 +308,8 @@ void FunctionDefinition::checkTypeRequirements()
 	{
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
-		if (!var->getType()->externalType() && getVisibility() >= Visibility::Internal)
-			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to have an external address."));
+		if (!var->getType()->externalType() && getVisibility() >= Visibility::Public)
+			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for function with external visibility"));
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
 		modifier->checkTypeRequirements(isConstructor() ?
@@ -659,7 +659,7 @@ void MemberAccess::checkTypeRequirements()
 											  "visible in " + type.toString()));
 	//todo check for visibility
 //	else if (!m_type->externalType())
-//		BOOST_THROW_EXCEPTION(createTypeError("Type is required to have an external address."));
+//		BOOST_THROW_EXCEPTION(createTypeError("Internal type not allowed for function with external visibility"));
 
 	// This should probably move somewhere else.
 	if (type.getCategory() == Type::Category::Struct)

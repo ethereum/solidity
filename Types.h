@@ -263,7 +263,6 @@ public:
 	virtual std::string toString() const override;
 	virtual u256 literalValue(Literal const* _literal) const override;
 	virtual TypePointer getRealType() const override;
-	virtual TypePointer externalType() const override { return shared_from_this(); }
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> getIntegerType() const;
@@ -298,6 +297,7 @@ public:
 
 	virtual std::string toString() const override { return "bytes" + dev::toString(m_bytes); }
 	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual TypePointer externalType() const override { return shared_from_this(); }
 
 	int getNumBytes() const { return m_bytes; }
 
@@ -323,6 +323,7 @@ public:
 
 	virtual std::string toString() const override { return "bool"; }
 	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual TypePointer externalType() const override { return shared_from_this(); }
 };
 
 /**

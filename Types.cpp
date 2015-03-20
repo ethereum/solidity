@@ -749,7 +749,9 @@ TypePointer ArrayType::externalType() const
 	if (m_isByteArray)
 		return shared_from_this();
 	if (!(m_baseType->externalType()))
+	{
 		return TypePointer();
+	}
 	if (dynamic_cast<ArrayType const*>(m_baseType.get()) && m_baseType->isDynamicallySized())
 		return TypePointer();
 
