@@ -80,15 +80,15 @@ private:
 	void swapStackElements(int _stackHeightA, int _stackHeightB);
 	/// Retrieves the current equivalence class fo the given stack element (or generates a new
 	/// one if it does not exist yet).
-	ExpressionClasses::Id getStackElement(int _stackHeight);
-
-	/// @returns the next sequence number of the given stack element.
-	unsigned getNextStackElementSequence(int _stackHeight);
+	ExpressionClasses::Id stackElement(int _stackHeight);
+	/// @returns the equivalence class id of the special initial stack element at the given height
+	/// (must not be positive).
+	ExpressionClasses::Id initialStackElement(int _stackHeight);
 
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
-	/// Mapping (stack height, sequence number) -> equivalence class
-	std::map<std::pair<int, unsigned>, ExpressionClasses::Id> m_stackElements;
+	/// Current stack layout, mapping stack height -> equivalence class
+	std::map<int, ExpressionClasses::Id> m_stackElements;
 	/// Structure containing the classes of equivalent expressions.
 	ExpressionClasses m_expressionClasses;
 };

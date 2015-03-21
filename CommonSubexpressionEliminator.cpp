@@ -36,16 +36,11 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	map<int, ExpressionClasses::Id> targetStackContents;
 	int minHeight = m_stackHeight + 1;
 	if (!m_stackElements.empty())
-		minHeight = min(minHeight, m_stackElements.begin()->first.first);
-	for (int height = minHeight; height <= max(0, m_stackHeight); ++height)
-	{
-		// make sure it is created
-		ExpressionClasses::Id c = getStackElement(height);
-		if (height <= 0)
-			initialStackContents[height] = m_expressionClasses.find(AssemblyItem(dupInstruction(1 - height)));
-		if (height <= m_stackHeight)
-			targetStackContents[height] = c;
-	}
+		minHeight = min(minHeight, m_stackElements.begin()->first);
+	for (int height = minHeight; height <= 0; ++height)
+		initialStackContents[height] = initialStackElement(height);
+	for (int height = minHeight; height <= m_stackHeight; ++height)
+		targetStackContents[height] = stackElement(height);
 
 	// Debug info:
 	//stream(cout, currentStackContents, targetStackContents);
@@ -74,7 +69,7 @@ ostream& CommonSubexpressionEliminator::stream(
 	_out << "Stack elements: " << endl;
 	for (auto const& it: m_stackElements)
 	{
-		_out << "  " << dec << it.first.first << "(" << it.first.second << ") = ";
+		_out << "  " << dec << it.first << " = ";
 		streamExpressionClass(_out, it.second);
 	}
 	_out << "Equivalence classes: " << endl;
@@ -112,7 +107,7 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 		if (SemanticInformation::isDupInstruction(_item))
 			setStackElement(
 				m_stackHeight + 1,
-				getStackElement(m_stackHeight - int(instruction) + int(Instruction::DUP1))
+				stackElement(m_stackHeight - int(instruction) + int(Instruction::DUP1))
 			);
 		else if (SemanticInformation::isSwapInstruction(_item))
 			swapStackElements(
@@ -123,7 +118,7 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 		{
 			vector<ExpressionClasses::Id> arguments(info.args);
 			for (int i = 0; i < info.args; ++i)
-				arguments[i] = getStackElement(m_stackHeight - i);
+				arguments[i] = stackElement(m_stackHeight - i);
 			setStackElement(m_stackHeight + _item.deposit(), m_expressionClasses.find(_item, arguments));
 		}
 		m_stackHeight += _item.deposit();
@@ -132,48 +127,34 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 
 void CommonSubexpressionEliminator::setStackElement(int _stackHeight, ExpressionClasses::Id _class)
 {
-	unsigned nextSequence = getNextStackElementSequence(_stackHeight);
-	m_stackElements[make_pair(_stackHeight, nextSequence)] = _class;
+	m_stackElements[_stackHeight] = _class;
 }
 
 void CommonSubexpressionEliminator::swapStackElements(int _stackHeightA, int _stackHeightB)
 {
 	if (_stackHeightA == _stackHeightB)
 		BOOST_THROW_EXCEPTION(OptimizerException() << errinfo_comment("Swap on same stack elements."));
-	ExpressionClasses::Id classA = getStackElement(_stackHeightA);
-	ExpressionClasses::Id classB = getStackElement(_stackHeightB);
+	// ensure they are created
+	stackElement(_stackHeightA);
+	stackElement(_stackHeightB);
 
-	unsigned nextSequenceA = getNextStackElementSequence(_stackHeightA);
-	unsigned nextSequenceB = getNextStackElementSequence(_stackHeightB);
-	m_stackElements[make_pair(_stackHeightA, nextSequenceA)] = classB;
-	m_stackElements[make_pair(_stackHeightB, nextSequenceB)] = classA;
+	swap(m_stackElements[_stackHeightA], m_stackElements[_stackHeightB]);
 }
 
-ExpressionClasses::Id CommonSubexpressionEliminator::getStackElement(int _stackHeight)
+ExpressionClasses::Id CommonSubexpressionEliminator::stackElement(int _stackHeight)
 {
-	// retrieve class by last sequence number
-	unsigned nextSequence = getNextStackElementSequence(_stackHeight);
-	if (nextSequence > 0)
-		return m_stackElements[make_pair(_stackHeight, nextSequence - 1)];
-
+	if (m_stackElements.count(_stackHeight))
+		return m_stackElements.at(_stackHeight);
 	// Stack element not found (not assigned yet), create new equivalence class.
-	assertThrow(_stackHeight <= 0, OptimizerException, "Stack element accessed before assignment.");
+	return m_stackElements[_stackHeight] = initialStackElement(_stackHeight);
+}
+
+ExpressionClasses::Id CommonSubexpressionEliminator::initialStackElement(int _stackHeight)
+{
+	assertThrow(_stackHeight <= 0, OptimizerException, "Initial stack element of positive height requested.");
 	assertThrow(_stackHeight > -16, StackTooDeepException, "");
 	// This is a special assembly item that refers to elements pre-existing on the initial stack.
-	return m_stackElements[make_pair(_stackHeight, nextSequence)] =
-		m_expressionClasses.find(AssemblyItem(dupInstruction(1 - _stackHeight)));
-}
-
-unsigned CommonSubexpressionEliminator::getNextStackElementSequence(int _stackHeight)
-{
-	auto it = m_stackElements.upper_bound(make_pair(_stackHeight, unsigned(-1)));
-	if (it == m_stackElements.begin())
-		return 0;
-	--it;
-	if (it->first.first == _stackHeight)
-		return it->first.second + 1;
-	else
-		return 0;
+	return m_expressionClasses.find(AssemblyItem(dupInstruction(1 - _stackHeight)));
 }
 
 bool SemanticInformation::breaksBasicBlock(AssemblyItem const& _item)
