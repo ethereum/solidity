@@ -89,7 +89,16 @@ struct TestNodeTable: public NodeTable
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
 		for (auto& n: _testNodes)
 			if (_count--)
+			{
+				// manually add node for test
+				{
+					Guard ln(x_nodes);
+					shared_ptr<NodeEntry> node(new NodeEntry(m_node, n.first.pub(), NodeIPEndpoint(bi::udp::endpoint(ourIp, n.second), bi::tcp::endpoint(ourIp, n.second))));
+					node->pending = false;
+					m_nodes[node->id] = node;
+				}
 				noteActiveNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
+			}
 			else
 				break;
 	}
