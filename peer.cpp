@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	
 	RLP r(firstHostNetwork);
 	BOOST_REQUIRE(r.itemCount() == 3);
-	BOOST_REQUIRE(r[0].toInt<int>() == NodeTable::c_version);
+	BOOST_REQUIRE(r[0].toInt<int>() == dev::p2p::c_protocolVersion);
 	BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
 	BOOST_REQUIRE_EQUAL(r[2].itemCount(), 5);
 }
