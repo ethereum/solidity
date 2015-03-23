@@ -26,6 +26,7 @@
 #include <tuple>
 #include <functional>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/noncopyable.hpp>
 #include <libevmcore/Assembly.h>
 #include <libevmcore/CommonSubexpressionEliminator.h>
 
@@ -45,6 +46,7 @@ bool ExpressionClasses::Expression::operator<(const ExpressionClasses::Expressio
 ExpressionClasses::Id ExpressionClasses::find(AssemblyItem const& _item, Ids const& _arguments)
 {
 	Expression exp;
+	exp.id = Id(-1);
 	exp.item = &_item;
 	exp.arguments = _arguments;
 
@@ -72,158 +74,168 @@ ExpressionClasses::Id ExpressionClasses::find(AssemblyItem const& _item, Ids con
 	return exp.id;
 }
 
+string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id)
+{
+	Expression const& expr = representative(_id);
+	stringstream str;
+	str << dec << expr.id << ":" << *expr.item << "(";
+	for (Id arg: expr.arguments)
+		str << fullDAGToString(arg) << ",";
+	str << ")";
+	return str.str();
+}
+
+class Rules: public boost::noncopyable
+{
+public:
+	Rules();
+	void resetMatchGroups() { m_matchGroups.clear(); }
+	vector<pair<Pattern, function<Pattern()>>> rules() const { return m_rules; }
+
+private:
+	using Expression = ExpressionClasses::Expression;
+	map<unsigned, Expression const*> m_matchGroups;
+	vector<pair<Pattern, function<Pattern()>>> m_rules;
+};
+
+Rules::Rules()
+{
+	// Multiple occurences of one of these inside one rule must match the same equivalence class.
+	// Constants.
+	Pattern A(Push);
+	Pattern B(Push);
+	Pattern C(Push);
+	// Anything.
+	Pattern X;
+	Pattern Y;
+	Pattern Z;
+	A.setMatchGroup(1, m_matchGroups);
+	B.setMatchGroup(2, m_matchGroups);
+	C.setMatchGroup(3, m_matchGroups);
+	X.setMatchGroup(4, m_matchGroups);
+	Y.setMatchGroup(5, m_matchGroups);
+	Z.setMatchGroup(6, m_matchGroups);
+
+	m_rules = vector<pair<Pattern, function<Pattern()>>>{
+		// arithmetics on constants
+		{{Instruction::ADD, {A, B}}, [=]{ return A.d() + B.d(); }},
+		{{Instruction::MUL, {A, B}}, [=]{ return A.d() * B.d(); }},
+		{{Instruction::SUB, {A, B}}, [=]{ return A.d() - B.d(); }},
+		{{Instruction::DIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : A.d() / B.d(); }},
+		{{Instruction::SDIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(u2s(A.d()) / u2s(B.d())); }},
+		{{Instruction::MOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : A.d() % B.d(); }},
+		{{Instruction::SMOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(u2s(A.d()) % u2s(B.d())); }},
+		{{Instruction::EXP, {A, B}}, [=]{ return u256(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << 256)); }},
+		{{Instruction::NOT, {A}}, [=]{ return ~A.d(); }},
+		{{Instruction::LT, {A, B}}, [=]() { return A.d() < B.d() ? u256(1) : 0; }},
+		{{Instruction::GT, {A, B}}, [=]() -> u256 { return A.d() > B.d() ? 1 : 0; }},
+		{{Instruction::SLT, {A, B}}, [=]() -> u256 { return u2s(A.d()) < u2s(B.d()) ? 1 : 0; }},
+		{{Instruction::SGT, {A, B}}, [=]() -> u256 { return u2s(A.d()) > u2s(B.d()) ? 1 : 0; }},
+		{{Instruction::EQ, {A, B}}, [=]() -> u256 { return A.d() == B.d() ? 1 : 0; }},
+		{{Instruction::ISZERO, {A}}, [=]() -> u256 { return A.d() == 0 ? 1 : 0; }},
+		{{Instruction::AND, {A, B}}, [=]{ return A.d() & B.d(); }},
+		{{Instruction::OR, {A, B}}, [=]{ return A.d() | B.d(); }},
+		{{Instruction::XOR, {A, B}}, [=]{ return A.d() ^ B.d(); }},
+		{{Instruction::BYTE, {A, B}}, [=]{ return A.d() >= 32 ? 0 : (B.d() >> unsigned(8 * (31 - A.d()))) & 0xff; }},
+		{{Instruction::ADDMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) + bigint(B.d())) % C.d()); }},
+		{{Instruction::MULMOD, {A, B, C}}, [=]{ return C.d() == 0 ? 0 : u256((bigint(A.d()) * bigint(B.d())) % C.d()); }},
+		{{Instruction::MULMOD, {A, B, C}}, [=]{ return A.d() * B.d(); }},
+		{{Instruction::SIGNEXTEND, {A, B}}, [=]() -> u256 {
+			if (A.d() >= 31)
+				return B.d();
+			unsigned testBit = unsigned(A.d()) * 8 + 7;
+			u256 mask = (u256(1) << testBit) - 1;
+			return u256(boost::multiprecision::bit_test(B.d(), testBit) ? B.d() | ~mask : B.d() & mask);
+		}},
+
+		// invariants involving known constants
+		{{Instruction::ADD, {X, 0}}, [=]{ return X; }},
+		{{Instruction::MUL, {X, 1}}, [=]{ return X; }},
+		{{Instruction::DIV, {X, 1}}, [=]{ return X; }},
+		{{Instruction::SDIV, {X, 1}}, [=]{ return X; }},
+		{{Instruction::OR, {X, 0}}, [=]{ return X; }},
+		{{Instruction::XOR, {X, 0}}, [=]{ return X; }},
+		{{Instruction::AND, {X, ~u256(0)}}, [=]{ return X; }},
+		{{Instruction::MUL, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::DIV, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::MOD, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::MOD, {0, X}}, [=]{ return u256(0); }},
+		{{Instruction::AND, {X, 0}}, [=]{ return u256(0); }},
+		{{Instruction::OR, {X, ~u256(0)}}, [=]{ return ~u256(0); }},
+		// operations involving an expression and itself
+		{{Instruction::AND, {X, X}}, [=]{ return X; }},
+		{{Instruction::OR, {X, X}}, [=]{ return X; }},
+		{{Instruction::SUB, {X, X}}, [=]{ return u256(0); }},
+		{{Instruction::EQ, {X, X}}, [=]{ return u256(1); }},
+		{{Instruction::EQ, {X, X}}, [=]{ return u256(1); }},
+		{{Instruction::LT, {X, X}}, [=]{ return u256(0); }},
+		{{Instruction::SLT, {X, X}}, [=]{ return u256(0); }},
+		{{Instruction::GT, {X, X}}, [=]{ return u256(0); }},
+		{{Instruction::SGT, {X, X}}, [=]{ return u256(0); }},
+		{{Instruction::MOD, {X, X}}, [=]{ return u256(0); }},
+
+		{{Instruction::NOT, {{Instruction::NOT, {X}}}}, [=]{ return X; }},
+	};
+	// Associative operations
+	for (auto const& opFun: vector<pair<Instruction,function<u256(u256 const&,u256 const&)>>>{
+		{Instruction::ADD, plus<u256>()},
+		{Instruction::MUL, multiplies<u256>()},
+		{Instruction::AND, bit_and<u256>()},
+		{Instruction::OR, bit_or<u256>()},
+		{Instruction::XOR, bit_xor<u256>()}
+	})
+	{
+		auto op = opFun.first;
+		auto fun = opFun.second;
+		// Moving constants to the outside, order matters here!
+		// we need actions that return expressions (or patterns?) here, and we need also reversed rules
+		// (X+A)+B -> X+(A+B)
+		m_rules.push_back({
+			{op, {{op, {X, A}}, B}},
+			[=]() -> Pattern { return {op, {X, fun(A.d(), B.d())}}; }
+		});
+		// X+(Y+A) -> (X+Y)+A
+		m_rules.push_back({
+			{op, {{op, {X, A}}, Y}},
+			[=]() -> Pattern { return {op, {{op, {X, Y}}, A}}; }
+		});
+		// For now, we still need explicit commutativity for the inner pattern
+		m_rules.push_back({
+			{op, {{op, {A, X}}, B}},
+			[=]() -> Pattern { return {op, {X, fun(A.d(), B.d())}}; }
+		});
+		m_rules.push_back({
+			{op, {{op, {A, X}}, Y}},
+			[=]() -> Pattern { return {op, {{op, {X, Y}}, A}}; }
+		});
+	};
+
+	//@todo: (x+8)-3 and other things
+}
+
 ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, bool _secondRun)
 {
+	static Rules rules;
+
 	if (_expr.item->type() != Operation)
 		return -1;
 
-	// @todo:
-	// ISZERO ISZERO
-	// associative operations (as done in Assembly.cpp)
-	// 2 * x == x + x
-
-	Id arg1;
-	Id arg2;
-	Id arg3;
-	u256 data1;
-	u256 data2;
-	u256 data3;
-	switch (_expr.arguments.size())
+	for (auto const& rule: rules.rules())
 	{
-	default:
-		arg3 = _expr.arguments.at(2);
-		data3 = representative(arg3).item->data();
-	case 2:
-		arg2 = _expr.arguments.at(1);
-		data2 = representative(arg2).item->data();
-	case 1:
-		arg1 = _expr.arguments.at(0);
-		data1 = representative(arg1).item->data();
-	case 0:
-		break;
+		rules.resetMatchGroups();
+		if (rule.first.matches(_expr, *this))
+		{
+			// Debug info
+			//cout << "Simplifying " << *_expr.item << "(";
+			//for (Id arg: _expr.arguments)
+			//	cout << fullDAGToString(arg) << ", ";
+			//cout << ")" << endl;
+			//cout << "with rule " << rule.first.toString() << endl;
+			//ExpressionTemplate t(rule.second());
+			//cout << "to" << rule.second().toString() << endl;
+			return rebuildExpression(ExpressionTemplate(rule.second()));
+		}
 	}
-
-	/**
-	 * Simplification rule. If _strict is false, Push or a constant matches any constant,
-	 * otherwise Push matches "0" and a constant matches itself.
-	 * "UndefinedItem" matches any expression, but all of them must be equal inside one rule.
-	 */
-	struct Rule
-	{
-		Rule(AssemblyItems const& _pattern, bool _strict, function<AssemblyItem()> const& _action):
-			pattern(_pattern),
-			assemblyItemAction(_action),
-			strict(_strict)
-		{}
-		Rule(AssemblyItems const& _pattern, function<AssemblyItem()> _action):
-			Rule(_pattern, false, _action)
-		{}
-		Rule(AssemblyItems const& _pattern, bool _strict, function<Id()> const& _action):
-			pattern(_pattern),
-			idAction(_action),
-			strict(_strict)
-		{}
-		Rule(AssemblyItems const& _pattern, function<Id()> _action):
-			Rule(_pattern, false, _action)
-		{}
-		bool matches(ExpressionClasses const& _classes, Expression const& _expr) const
-		{
-			if (!_expr.item->match(pattern.front()))
-				return false;
-			assertThrow(_expr.arguments.size() == pattern.size() - 1, OptimizerException, "");
-			Id argRequiredToBeEqual(-1);
-			for (size_t i = 1; i < pattern.size(); ++i)
-			{
-				Id arg = _expr.arguments[i - 1];
-				if (pattern[i].type() == UndefinedItem)
-				{
-					if (argRequiredToBeEqual == Id(-1))
-						argRequiredToBeEqual = arg;
-					else if (argRequiredToBeEqual != arg)
-						return false;
-				}
-				else
-				{
-					AssemblyItem const& argItem = *_classes.representative(arg).item;
-					if (strict && argItem != pattern[i])
-						return false;
-					else if (!strict && !argItem.match(pattern[i]))
-						return false;
-				}
-			}
-			return true;
-		}
-
-		AssemblyItems pattern;
-		function<AssemblyItem()> assemblyItemAction;
-		function<Id()> idAction;
-		bool strict;
-	};
-
-	vector<Rule> c_singleLevel{
-		// arithmetics on constants involving only stack variables
-		{{Instruction::ADD, Push, Push}, [&]{ return data1 + data2; }},
-		{{Instruction::MUL, Push, Push}, [&]{ return data1 * data2; }},
-		{{Instruction::SUB, Push, Push}, [&]{ return data1 - data2; }},
-		{{Instruction::DIV, Push, Push}, [&]{ return data2 == 0 ? 0 : data1 / data2; }},
-		{{Instruction::SDIV, Push, Push}, [&]{ return data2 == 0 ? 0 : s2u(u2s(data1) / u2s(data2)); }},
-		{{Instruction::MOD, Push, Push}, [&]{ return data2 == 0 ? 0 : data1 % data2; }},
-		{{Instruction::SMOD, Push, Push}, [&]{ return data2 == 0 ? 0 : s2u(u2s(data1) % u2s(data2)); }},
-		{{Instruction::EXP, Push, Push}, [&]{ return u256(boost::multiprecision::powm(bigint(data1), bigint(data2), bigint(1) << 256)); }},
-		{{Instruction::NOT, Push}, [&]{ return ~data1; }},
-		{{Instruction::LT, Push, Push}, [&]() -> u256 { return data1 < data2 ? 1 : 0; }},
-		{{Instruction::GT, Push, Push}, [&]() -> u256 { return data1 > data2 ? 1 : 0; }},
-		{{Instruction::SLT, Push, Push}, [&]() -> u256 { return u2s(data1) < u2s( data2) ? 1 : 0; }},
-		{{Instruction::SGT, Push, Push}, [&]() -> u256 { return u2s(data1) > u2s( data2) ? 1 : 0; }},
-		{{Instruction::EQ, Push, Push}, [&]() -> u256 { return data1 == data2 ? 1 : 0; }},
-		{{Instruction::ISZERO, Push}, [&]() -> u256 { return data1 == 0 ? 1 : 0; }},
-		{{Instruction::AND, Push, Push}, [&]{ return data1 & data2; }},
-		{{Instruction::OR, Push, Push}, [&]{ return data1 | data2; }},
-		{{Instruction::XOR, Push, Push}, [&]{ return data1 ^ data2; }},
-		{{Instruction::BYTE, Push, Push}, [&]{ return data1 >= 32 ? 0 : (data2 >> unsigned(8 * (31 - data1))) & 0xff; }},
-		{{Instruction::ADDMOD, Push, Push, Push}, [&]{ return data3 == 0 ? 0 : u256((bigint(data1) + bigint(data2)) % data3); }},
-		{{Instruction::MULMOD, Push, Push, Push}, [&]{ return data3 == 0 ? 0 : u256((bigint(data1) * bigint(data2)) % data3); }},
-		{{Instruction::MULMOD, Push, Push, Push}, [&]{ return data1 * data2; }},
-		{{Instruction::SIGNEXTEND, Push, Push}, [&]{
-			if (data1 >= 31)
-				return data2;
-			unsigned testBit = unsigned(data1) * 8 + 7;
-			u256 mask = (u256(1) << testBit) - 1;
-			return u256(boost::multiprecision::bit_test(data2, testBit) ? data2 | ~mask : data2 & mask);
-		}},
-		{{Instruction::ADD, UndefinedItem, u256(0)}, true, [&]{ return arg1; }},
-		{{Instruction::MUL, UndefinedItem, u256(1)}, true, [&]{ return arg1; }},
-		{{Instruction::OR, UndefinedItem, u256(0)}, true, [&]{ return arg1; }},
-		{{Instruction::XOR, UndefinedItem, u256(0)}, true, [&]{ return arg1; }},
-		{{Instruction::AND, UndefinedItem, ~u256(0)}, true, [&]{ return arg1; }},
-		{{Instruction::MUL, UndefinedItem, u256(0)}, true, [&]{ return u256(0); }},
-		{{Instruction::DIV, UndefinedItem, u256(0)}, true, [&]{ return u256(0); }},
-		{{Instruction::MOD, UndefinedItem, u256(0)}, true, [&]{ return u256(0); }},
-		{{Instruction::MOD, u256(0), UndefinedItem}, true, [&]{ return u256(0); }},
-		{{Instruction::AND, UndefinedItem, u256(0)}, true, [&]{ return u256(0); }},
-		{{Instruction::OR, UndefinedItem, ~u256(0)}, true, [&]{ return ~u256(0); }},
-		{{Instruction::AND, UndefinedItem, UndefinedItem}, true, [&]{ return arg1; }},
-		{{Instruction::OR, UndefinedItem, UndefinedItem}, true, [&]{ return arg1; }},
-		{{Instruction::SUB, UndefinedItem, UndefinedItem}, true, [&]{ return u256(0); }},
-		{{Instruction::EQ, UndefinedItem, UndefinedItem}, true, [&]{ return u256(1); }},
-		{{Instruction::LT, UndefinedItem, UndefinedItem}, true, [&]{ return u256(0); }},
-		{{Instruction::SLT, UndefinedItem, UndefinedItem}, true, [&]{ return u256(0); }},
-		{{Instruction::GT, UndefinedItem, UndefinedItem}, true, [&]{ return u256(0); }},
-		{{Instruction::SGT, UndefinedItem, UndefinedItem}, true, [&]{ return u256(0); }},
-		{{Instruction::MOD, UndefinedItem, UndefinedItem}, true, [&]{ return u256(0); }},
-	};
-
-	for (auto const& rule: c_singleLevel)
-		if (rule.matches(*this, _expr))
-		{
-			if (rule.idAction)
-				return rule.idAction();
-			else
-			{
-				m_spareAssemblyItem.push_back(make_shared<AssemblyItem>(rule.assemblyItemAction()));
-				return find(*m_spareAssemblyItem.back());
-			}
-		}
 
 	if (!_secondRun && _expr.arguments.size() == 2 && SemanticInformation::isCommutativeOperation(*_expr.item))
 	{
@@ -233,4 +245,128 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, 
 	}
 
 	return -1;
+}
+
+ExpressionClasses::Id ExpressionClasses::rebuildExpression(ExpressionTemplate const& _template)
+{
+	if (_template.hasId)
+		return _template.id;
+
+	Ids arguments;
+	for (ExpressionTemplate const& t: _template.arguments)
+		arguments.push_back(rebuildExpression(t));
+	m_spareAssemblyItem.push_back(make_shared<AssemblyItem>(_template.item));
+	return find(*m_spareAssemblyItem.back(), arguments);
+}
+
+
+Pattern::Pattern(Instruction _instruction, std::vector<Pattern> const& _arguments):
+	m_type(Operation),
+	m_requireDataMatch(true),
+	m_data(_instruction),
+	m_arguments(_arguments)
+{
+}
+
+void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _matchGroups)
+{
+	m_matchGroup = _group;
+	m_matchGroups = &_matchGroups;
+}
+
+bool Pattern::matches(Expression const& _expr, ExpressionClasses const& _classes) const
+{
+	if (!matchesBaseItem(*_expr.item))
+		return false;
+	if (m_matchGroup)
+	{
+		if (!m_matchGroups->count(m_matchGroup))
+			(*m_matchGroups)[m_matchGroup] = &_expr;
+		else if ((*m_matchGroups)[m_matchGroup]->id != _expr.id)
+			return false;
+	}
+	assertThrow(m_arguments.size() == 0 || _expr.arguments.size() == m_arguments.size(), OptimizerException, "");
+	for (size_t i = 0; i < m_arguments.size(); ++i)
+		if (!m_arguments[i].matches(_classes.representative(_expr.arguments[i]), _classes))
+			return false;
+	return true;
+}
+
+string Pattern::toString() const
+{
+	stringstream s;
+	switch (m_type)
+	{
+	case Operation:
+		s << instructionInfo(Instruction(unsigned(m_data))).name;
+		break;
+	case Push:
+		s << "PUSH " << hex << m_data;
+		break;
+	case UndefinedItem:
+		s << "ANY";
+		break;
+	default:
+		s << "t=" << dec << m_type << " d=" << hex << m_data;
+		break;
+	}
+	if (!m_requireDataMatch)
+		s << " ~";
+	if (m_matchGroup)
+		s << "[" << dec << m_matchGroup << "]";
+	s << "(";
+	for (Pattern const& p: m_arguments)
+		s << p.toString() << ", ";
+	s << ")";
+	return s.str();
+}
+
+bool Pattern::matchesBaseItem(AssemblyItem const& _item) const
+{
+	if (m_type == UndefinedItem)
+		return true;
+	if (m_type != _item.type())
+		return false;
+	if (m_requireDataMatch && m_data != _item.data())
+		return false;
+	return true;
+}
+
+Pattern::Expression const& Pattern::matchGroupValue() const
+{
+	assertThrow(m_matchGroup > 0, OptimizerException, "");
+	assertThrow(!!m_matchGroups, OptimizerException, "");
+	assertThrow((*m_matchGroups)[m_matchGroup], OptimizerException, "");
+	return *(*m_matchGroups)[m_matchGroup];
+}
+
+
+ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern)
+{
+	if (_pattern.matchGroup())
+	{
+		hasId = true;
+		id = _pattern.id();
+	}
+	else
+	{
+		hasId = false;
+		item = _pattern.toAssemblyItem();
+	}
+	for (auto const& arg: _pattern.arguments())
+		arguments.push_back(ExpressionTemplate(arg));
+}
+
+string ExpressionTemplate::toString() const
+{
+	stringstream s;
+	if (hasId)
+		s << id;
+	else
+		s << item;
+	s << "(";
+	for (auto const& arg: arguments)
+		s << arg.toString();
+	s << ")";
+	return s.str();
 }

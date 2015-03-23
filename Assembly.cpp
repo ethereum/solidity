@@ -28,122 +28,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
-{
-	switch (m_type)
-	{
-	case Operation:
-	case Tag: // 1 byte for the JUMPDEST
-		return 1;
-	case PushString:
-		return 33;
-	case Push:
-		return 1 + max<unsigned>(1, dev::bytesRequired(m_data));
-	case PushSubSize:
-	case PushProgramSize:
-		return 4;		// worst case: a 16MB program
-	case PushTag:
-	case PushData:
-	case PushSub:
-		return 1 + _addressLength;
-	default:
-		break;
-	}
-	BOOST_THROW_EXCEPTION(InvalidOpcode());
-}
-
-int AssemblyItem::deposit() const
-{
-	switch (m_type)
-	{
-	case Operation:
-		return instructionInfo(instruction()).ret - instructionInfo(instruction()).args;
-	case Push:
-	case PushString:
-	case PushTag:
-	case PushData:
-	case PushSub:
-	case PushSubSize:
-	case PushProgramSize:
-		return 1;
-	case Tag:
-		return 0;
-	default:;
-	}
-	return 0;
-}
-
-string AssemblyItem::getJumpTypeAsString() const
-{
-	switch (m_jumpType)
-	{
-	case JumpType::IntoFunction:
-		return "[in]";
-	case JumpType::OutOfFunction:
-		return "[out]";
-	case JumpType::Ordinary:
-	default:
-		return "";
-	}
-}
-
-ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
-{
-	switch (_item.type())
-	{
-	case Operation:
-		_out << " " << instructionInfo(_item.instruction()).name;
-		if (_item.instruction() == eth::Instruction::JUMP || _item.instruction() == eth::Instruction::JUMPI)
-			_out << "\t" << _item.getJumpTypeAsString();
-		break;
-	case Push:
-		_out << " PUSH " << hex << _item.data();
-		break;
-	case PushString:
-		_out << " PushString"  << hex << (unsigned)_item.data();
-		break;
-	case PushTag:
-		_out << " PushTag " << _item.data();
-		break;
-	case Tag:
-		_out << " Tag " << _item.data();
-		break;
-	case PushData:
-		_out << " PushData " << hex << (unsigned)_item.data();
-		break;
-	case PushSub:
-		_out << " PushSub " << hex << h256(_item.data()).abridged();
-		break;
-	case PushSubSize:
-		_out << " PushSubSize " << hex << h256(_item.data()).abridged();
-		break;
-	case PushProgramSize:
-		_out << " PushProgramSize";
-		break;
-	case UndefinedItem:
-		_out << " ???";
-		break;
-	default:
-		BOOST_THROW_EXCEPTION(InvalidOpcode());
-	}
-	return _out;
-}
-
-unsigned Assembly::bytesRequired() const
-{
-	for (unsigned br = 1;; ++br)
-	{
-		unsigned ret = 1;
-		for (auto const& i: m_data)
-			ret += i.second.size();
-
-		for (AssemblyItem const& i: m_items)
-			ret += i.bytesRequired(br);
-		if (dev::bytesRequired(ret) <= br)
-			return ret;
-	}
-}
-
 void Assembly::append(Assembly const& _a)
 {
 	auto newDeposit = m_deposit + _a.deposit();
@@ -180,11 +64,19 @@ void Assembly::append(Assembly const& _a, int _deposit)
 	}
 }
 
-ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
+unsigned Assembly::bytesRequired() const
 {
-	for (AssemblyItem const& i: _i)
-		_out << i;
-	return _out;
+	for (unsigned br = 1;; ++br)
+	{
+		unsigned ret = 1;
+		for (auto const& i: m_data)
+			ret += i.second.size();
+
+		for (AssemblyItem const& i: m_items)
+			ret += i.bytesRequired(br);
+		if (dev::bytesRequired(ret) <= br)
+			return ret;
+	}
 }
 
 string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const
@@ -295,14 +187,6 @@ Assembly& Assembly::optimise(bool _enable)
 {
 	if (!_enable)
 		return *this;
-	map<Instruction, function<u256(u256, u256)>> const c_associative =
-	{
-		{ Instruction::ADD, [](u256 a, u256 b)->u256{return a + b;} },
-		{ Instruction::MUL, [](u256 a, u256 b)->u256{return a * b;} },
-		{ Instruction::AND, [](u256 a, u256 b)->u256{return a & b;} },
-		{ Instruction::OR, [](u256 a, u256 b)->u256{return a | b;} },
-		{ Instruction::XOR, [](u256 a, u256 b)->u256{return a ^ b;} },
-	};
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules =
 	{
 		{ { Push, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
@@ -315,11 +199,6 @@ Assembly& Assembly::optimise(bool _enable)
 		{ { Instruction::ISZERO, Instruction::ISZERO }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 	};
 
-	for (auto const& i: c_associative)
-	{
-		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
-		rules.push_back({ { Push, i.first, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[2].data(), m[0].data()), i.first }; } });
-	}
 	// jump to next instruction
 	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
 

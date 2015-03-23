@@ -26,13 +26,16 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <libdevcore/Common.h>
+#include <libevmcore/AssemblyItem.h>
 
 namespace dev
 {
 namespace eth
 {
 
-class AssemblyItem;
+class Pattern;
+struct ExpressionTemplate;
 
 /**
  * Collection of classes of equivalent expressions that can also determine the class of an expression.
@@ -60,15 +63,87 @@ public:
 	/// @returns the number of classes.
 	Id size() const { return m_representatives.size(); }
 
+	std::string fullDAGToString(Id _id);
+
 private:
 	/// Tries to simplify the given expression.
 	/// @returns its class if it possible or Id(-1) otherwise.
 	/// @param _secondRun is set to true for the second run where arguments of commutative expressions are reversed
 	Id tryToSimplify(Expression const& _expr, bool _secondRun = false);
 
+	/// Rebuilds an expression from a (matched) pattern.
+	Id rebuildExpression(ExpressionTemplate const& _template);
+
+	std::vector<std::pair<Pattern, std::function<Pattern()>>> createRules() const;
+
 	/// Expression equivalence class representatives - we only store one item of an equivalence.
 	std::vector<Expression> m_representatives;
 	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItem;
+};
+
+/**
+ * Pattern to match against an expression.
+ * Also stores matched expressions to retrieve them later, for constructing new expressions using
+ * ExpressionTemplate.
+ */
+class Pattern
+{
+public:
+	using Expression = ExpressionClasses::Expression;
+	using Id = ExpressionClasses::Id;
+
+	// Matches a specific constant value.
+	Pattern(unsigned _value): Pattern(u256(_value)) {}
+	// Matches a specific constant value.
+	Pattern(u256 const& _value): m_type(Push), m_requireDataMatch(true), m_data(_value) {}
+	// Matches a specific assembly item type or anything if not given.
+	Pattern(AssemblyItemType _type = UndefinedItem): m_type(_type) {}
+	// Matches a given instruction with given arguments
+	Pattern(Instruction _instruction, std::vector<Pattern> const& _arguments = {});
+	/// Sets this pattern to be part of the match group with the identifier @a _group.
+	/// Inside one rule, all patterns in the same match group have to match expressions from the
+	/// same expression equivalence class.
+	void setMatchGroup(unsigned _group, std::map<unsigned, Expression const*>& _matchGroups);
+	unsigned matchGroup() const { return m_matchGroup; }
+	bool matches(Expression const& _expr, ExpressionClasses const& _classes) const;
+
+	AssemblyItem toAssemblyItem() const { return AssemblyItem(m_type, m_data); }
+	std::vector<Pattern> arguments() const { return m_arguments; }
+
+	/// @returns the id of the matched expression if this pattern is part of a match group.
+	Id id() const { return matchGroupValue().id; }
+	/// @returns the data of the matched expression if this pattern is part of a match group.
+	u256 d() const { return matchGroupValue().item->data(); }
+
+	std::string toString() const;
+
+private:
+	bool matchesBaseItem(AssemblyItem const& _item) const;
+	Expression const& matchGroupValue() const;
+
+	AssemblyItemType m_type;
+	bool m_requireDataMatch = false;
+	u256 m_data = 0;
+	std::vector<Pattern> m_arguments;
+	unsigned m_matchGroup = 0;
+	std::map<unsigned, Expression const*>* m_matchGroups = nullptr;
+};
+
+/**
+ * Template for a new expression that can be built from matched patterns.
+ */
+struct ExpressionTemplate
+{
+	using Expression = ExpressionClasses::Expression;
+	using Id = ExpressionClasses::Id;
+	explicit ExpressionTemplate(Pattern const& _pattern);
+	std::string toString() const;
+	bool hasId = false;
+	/// Id of the matched expression, if available.
+	Id id = Id(-1);
+	// Otherwise, assembly item.
+	AssemblyItem item = UndefinedItem;
+	std::vector<ExpressionTemplate> arguments;
 };
 
 }

@@ -43,7 +43,7 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 		targetStackContents[height] = stackElement(height);
 
 	// Debug info:
-	//stream(cout, currentStackContents, targetStackContents);
+	//stream(cout, initialStackContents, targetStackContents);
 
 	return CSECodeGenerator(m_expressionClasses).generateCode(initialStackContents, targetStackContents);
 }
