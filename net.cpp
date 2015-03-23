@@ -145,6 +145,17 @@ public:
 	bool success = false;
 };
 
+BOOST_AUTO_TEST_CASE(badPingNodePacket)
+{
+	// test old versino of pingNode packet w/new
+	RLPStream s;
+	s.appendList(3); s << "1.1.1.1" << 30303 << std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now() + chrono::seconds(60)).time_since_epoch()).count();
+
+	PingNode p((bi::udp::endpoint()));
+	BOOST_REQUIRE_NO_THROW(p = PingNode::fromBytesConstRef(bi::udp::endpoint(), bytesConstRef(&s.out())));
+	BOOST_REQUIRE(p.version = 0);
+}
+
 BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 {
 	KeyPair k = KeyPair::create();
