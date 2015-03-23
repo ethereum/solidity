@@ -72,6 +72,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		// create new "genesis" block
 		RLPStream rlpGenesisBlock = createFullBlockFromHeader(biGenesisBlock);
 		biGenesisBlock.verifyInternals(&rlpGenesisBlock.out());
+		o["genesisRLP"] = "0x" + toHex(rlpGenesisBlock.out());
 
 		// construct blockchain
 		BlockChain bc(rlpGenesisBlock.out(), string(), true);
@@ -114,6 +115,15 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 						vBiUncles.push_back(vBiUncles[vBiUncles.size()-1]);
 						continue;
 					}
+
+					if (uncleHeaderObj.count("sameAsBlock"))
+					{
+						writeBlockHeaderToJson(uncleHeaderObj_pre, vBiBlocks[(size_t)toInt(uncleHeaderObj["sameAsBlock"])]);
+						aUncleList.push_back(uncleHeaderObj_pre);
+						vBiUncles.push_back(vBiBlocks[(size_t)toInt(uncleHeaderObj["sameAsBlock"])]);
+						continue;
+					}
+
 					BlockInfo uncleBlockFromFields = constructBlock(uncleHeaderObj);
 
 					// make uncle header valid
