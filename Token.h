@@ -290,7 +290,6 @@ namespace solidity
 	K(Byte, "byte", 0)                                                 \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
-	K(StringType, "string", 0)                                         \
 	K(Real, "real", 0)                                                 \
 	K(UReal, "ureal", 0)                                               \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \

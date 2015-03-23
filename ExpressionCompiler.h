@@ -42,7 +42,6 @@ class CompilerContext;
 class Type;
 class IntegerType;
 class ArrayType;
-class StaticStringType;
 
 /**
  * Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
