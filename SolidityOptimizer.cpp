@@ -240,6 +240,12 @@ BOOST_AUTO_TEST_CASE(cse_unneeded_items)
 	checkCSE(input, input);
 }
 
+BOOST_AUTO_TEST_CASE(cse_constant_addition)
+{
+	AssemblyItems input{u256(7), u256(8), Instruction::ADD};
+	checkCSE(input, {u256(7 + 8)});
+}
+
 BOOST_AUTO_TEST_CASE(cse_invariants)
 {
 	AssemblyItems input{
@@ -260,6 +266,41 @@ BOOST_AUTO_TEST_CASE(cse_subself)
 BOOST_AUTO_TEST_CASE(cse_subother)
 {
 	checkCSE({Instruction::SUB}, {Instruction::SUB});
+}
+
+BOOST_AUTO_TEST_CASE(cse_double_negation)
+{
+	checkCSE({Instruction::DUP5, Instruction::NOT, Instruction::NOT}, {Instruction::DUP5});
+}
+
+BOOST_AUTO_TEST_CASE(cse_associativity)
+{
+	AssemblyItems input{
+		Instruction::DUP1,
+		Instruction::DUP1,
+		u256(0),
+		Instruction::OR,
+		Instruction::OR
+	};
+	checkCSE(input, {Instruction::DUP1});
+}
+
+BOOST_AUTO_TEST_CASE(cse_associativity2)
+{
+	AssemblyItems input{
+		u256(0),
+		Instruction::DUP2,
+		u256(2),
+		u256(1),
+		Instruction::DUP6,
+		Instruction::ADD,
+		u256(2),
+		Instruction::ADD,
+		Instruction::ADD,
+		Instruction::ADD,
+		Instruction::ADD
+	};
+	checkCSE(input, {Instruction::DUP2, Instruction::DUP2, Instruction::ADD, u256(5), Instruction::ADD});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
