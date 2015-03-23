@@ -67,8 +67,8 @@ public:
 	/// Streams debugging information to @a _out.
 	std::ostream& stream(
 		std::ostream& _out,
-		std::map<int, EquivalenceClassId> _currentStack = {},
-		std::map<int, EquivalenceClassId> _targetStack = {}
+		std::map<int, EquivalenceClassId> _currentStack = std::map<int, EquivalenceClassId>(),
+		std::map<int, EquivalenceClassId> _targetStack = std::map<int, EquivalenceClassId>()
 	) const;
 
 private:
