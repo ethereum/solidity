@@ -88,7 +88,7 @@ void ContractDefinition::checkTypeRequirements()
 		if (hashes.count(hash))
 			BOOST_THROW_EXCEPTION(createTypeError(
 									  std::string("Function signature hash collision for ") +
-									  it.second->getCanonicalSignature()));
+									  it.second->externalTypes()));
 		hashes.insert(hash);
 	}
 }
@@ -192,7 +192,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 				if (functionsSeen.count(f->getName()) == 0 && f->isPartOfExternalInterface())
 				{
 					functionsSeen.insert(f->getName());
-					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
+					FixedHash<4> hash(dev::sha3(f->externalTypes()));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*f, false)));
 				}
 
@@ -200,8 +200,9 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 				if (functionsSeen.count(v->getName()) == 0 && v->isPartOfExternalInterface())
 				{
 					FunctionType ftype(*v);
+					solAssert(v->getType().get(), "");
 					functionsSeen.insert(v->getName());
-					FixedHash<4> hash(dev::sha3(ftype.getCanonicalSignature(v->getName())));
+					FixedHash<4> hash(dev::sha3(ftype.externalTypes(v->getName())));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*v)));
 				}
 		}
@@ -319,9 +320,9 @@ void FunctionDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-string FunctionDefinition::getCanonicalSignature() const
+string FunctionDefinition::externalTypes() const
 {
-	return FunctionType(*this).getCanonicalSignature(getName());
+	return FunctionType(*this).externalTypes(getName());
 }
 
 bool VariableDeclaration::isLValue() const

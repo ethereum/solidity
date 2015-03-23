@@ -424,7 +424,7 @@ public:
 	/// @returns the canonical signature of the function
 	/// That consists of the name of the function followed by the types of the
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
-	std::string getCanonicalSignature() const;
+	std::string externalTypes() const;
 
 private:
 	bool m_isConstructor;

@@ -1127,7 +1127,7 @@ MemberList const& FunctionType::getMembers() const
 	}
 }
 
-string FunctionType::getCanonicalSignature(std::string const& _name) const
+string FunctionType::externalTypes(std::string const& _name) const
 {
 	std::string funcName = _name;
 	if (_name == "")
@@ -1138,8 +1138,10 @@ string FunctionType::getCanonicalSignature(std::string const& _name) const
 	string ret = funcName + "(";
 
 	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
-		ret += (*it)->toString() + (it + 1 == m_parameterTypes.cend() ? "" : ",");
-
+	{
+		solAssert(!!(*it)->externalType(), "Parameter should have external type");
+		ret += (*it)->externalType()->toString() + (it + 1 == m_parameterTypes.cend() ? "" : ",");
+	}
 	return ret + ")";
 }
 
