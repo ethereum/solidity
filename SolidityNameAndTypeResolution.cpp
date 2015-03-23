@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			auto functions = contract->getDefinedFunctions();
-			BOOST_CHECK_EQUAL("foo(uint256,uint64,bool)", functions[0]->getCanonicalSignature());
+			BOOST_CHECK_EQUAL("foo(uint256,uint64,bool)", functions[0]->externalTypes());
 		}
 }
 
@@ -376,9 +376,40 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			auto functions = contract->getDefinedFunctions();
-			BOOST_CHECK_EQUAL("boo(uint256,bytes32,address)", functions[0]->getCanonicalSignature());
+			BOOST_CHECK_EQUAL("boo(uint256,bytes32,address)", functions[0]->externalTypes());
 		}
 }
+
+BOOST_AUTO_TEST_CASE(function_external_types)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract Test {
+			function boo(uint arg2, bool arg3, bytes8 arg4) returns (uint ret) {
+			   ret = 5;
+			}
+		})";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->getDefinedFunctions();
+			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8)", functions[0]->externalTypes());
+		}
+}
+
+//todo should check arrays and contract. also event
+//BOOST_AUTO_TEST_CASE(function_external_types_throw)
+//{
+//	ASTPointer<SourceUnit> sourceUnit;
+//	char const* text = R"(
+//		contract Test {
+//			function boo(uint32[] arg5) returns (uint ret) {
+//			   ret = 5;
+//			}
+//		})";
+//	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+//}
 
 BOOST_AUTO_TEST_CASE(hash_collision_in_interface)
 {
@@ -635,7 +666,6 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 					   "mapping(uint=>bytes4) public map;\n"
 					   "mapping(uint=>mapping(uint=>bytes4)) public multiple_map;\n"
 					   "}\n";
-
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
 	ETH_TEST_CHECK_NO_THROW(source = parseTextAndResolveNames(text), "Parsing and Resolving names failed");

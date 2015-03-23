@@ -86,6 +86,7 @@ BOOST_AUTO_TEST_CASE(storage_layout_arrays)
 	BOOST_CHECK(ArrayType(ArrayType::Location::Storage, make_shared<FixedBytesType>(32), 9).getStorageSize() == 9);
 }
 
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
