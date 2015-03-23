@@ -1446,6 +1446,16 @@ BOOST_AUTO_TEST_CASE(local_const_variable)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), ParserError);
 }
 
+BOOST_AUTO_TEST_CASE(bytes0_array)
+{
+	char const* text = R"(
+		contract Foo {
+			bytes0[] illegalArray;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
