@@ -32,7 +32,7 @@ using namespace dev::eth;
 
 vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {
-	map<int, EquivalenceClassId> currentStackContents;
+	map<int, EquivalenceClassId> initialStackContents;
 	map<int, EquivalenceClassId> targetStackContents;
 	int minHeight = m_stackHeight + 1;
 	if (!m_stackElements.empty())
@@ -42,7 +42,7 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 		// make sure it is created
 		EquivalenceClassId c = getStackElement(height);
 		if (height <= 0)
-			currentStackContents[height] = getClass(AssemblyItem(dupInstruction(1 - height)));
+			initialStackContents[height] = getClass(AssemblyItem(dupInstruction(1 - height)));
 		if (height <= m_stackHeight)
 			targetStackContents[height] = c;
 	}
@@ -50,7 +50,7 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	// Debug info:
 	//stream(cout, currentStackContents, targetStackContents);
 
-	return CSECodeGenerator().generateCode(currentStackContents, targetStackContents, m_equivalenceClasses);
+	return CSECodeGenerator().generateCode(initialStackContents, targetStackContents, m_equivalenceClasses);
 }
 
 ostream& CommonSubexpressionEliminator::stream(
@@ -124,9 +124,9 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 			vector<EquivalenceClassId> arguments(info.args);
 			for (int i = 0; i < info.args; ++i)
 				arguments[i] = getStackElement(m_stackHeight - i);
-			setStackElement(m_stackHeight + info.ret - info.args, getClass(_item, arguments));
+			setStackElement(m_stackHeight + _item.deposit(), getClass(_item, arguments));
 		}
-		m_stackHeight += info.ret - info.args;
+		m_stackHeight += _item.deposit();
 	}
 }
 
@@ -202,33 +202,33 @@ EquivalenceClassId CommonSubexpressionEliminator::getClass(
 				args.end(),
 				[this](EquivalenceClassId eqc) { return m_equivalenceClasses.at(eqc).first->match(Push); }))
 	{
-		auto signextend = [](u256 a, u256 b) -> u256
+		auto signextend = [](u256 const& _a, u256 const& _b) -> u256
 		{
-			if (a >= 31)
-				return b;
-			unsigned testBit = unsigned(a) * 8 + 7;
+			if (_a >= 31)
+				return _b;
+			unsigned testBit = unsigned(_a) * 8 + 7;
 			u256 mask = (u256(1) << testBit) - 1;
-			return boost::multiprecision::bit_test(b, testBit) ? b | ~mask : b & mask;
+			return boost::multiprecision::bit_test(_b, testBit) ? _b | ~mask : _b & mask;
 		};
-		map<Instruction, function<u256(u256, u256)>> const arithmetics =
+		map<Instruction, function<u256(u256 const&, u256 const&)>> const arithmetics =
 		{
-			{ Instruction::SUB, [](u256 a, u256 b) -> u256 {return a - b; } },
-			{ Instruction::DIV, [](u256 a, u256 b) -> u256 {return b == 0 ? 0 : a / b; } },
-			{ Instruction::SDIV, [](u256 a, u256 b) -> u256 { return b == 0 ? 0 : s2u(u2s(a) / u2s(b)); } },
-			{ Instruction::MOD, [](u256 a, u256 b) -> u256 { return b == 0 ? 0 : a % b; } },
-			{ Instruction::SMOD, [](u256 a, u256 b) -> u256 { return b == 0 ? 0 : s2u(u2s(a) % u2s(b)); } },
-			{ Instruction::EXP, [](u256 a, u256 b) -> u256 { return (u256)boost::multiprecision::powm(bigint(a), bigint(b), bigint(1) << 256); } },
+			{ Instruction::SUB, [](u256 const& _a, u256 const& _b) -> u256 {return _a - _b; } },
+			{ Instruction::DIV, [](u256 const& _a, u256 const& _b) -> u256 {return _b == 0 ? 0 : _a / _b; } },
+			{ Instruction::SDIV, [](u256 const& _a, u256 const& _b) -> u256 { return _b == 0 ? 0 : s2u(u2s(_a) / u2s(_b)); } },
+			{ Instruction::MOD, [](u256 const& _a, u256 const& _b) -> u256 { return _b == 0 ? 0 : _a % _b; } },
+			{ Instruction::SMOD, [](u256 const& _a, u256 const& _b) -> u256 { return _b == 0 ? 0 : s2u(u2s(_a) % u2s(_b)); } },
+			{ Instruction::EXP, [](u256 const& _a, u256 const& _b) -> u256 { return (u256)boost::multiprecision::powm(bigint(_a), bigint(_b), bigint(1) << 256); } },
 			{ Instruction::SIGNEXTEND, signextend },
-			{ Instruction::LT, [](u256 a, u256 b) -> u256 { return a < b ? 1 : 0; } },
-			{ Instruction::GT, [](u256 a, u256 b) -> u256 { return a > b ? 1 : 0; } },
-			{ Instruction::SLT, [](u256 a, u256 b) -> u256 { return u2s(a) < u2s(b) ? 1 : 0; } },
-			{ Instruction::SGT, [](u256 a, u256 b) -> u256 { return u2s(a) > u2s(b) ? 1 : 0; } },
-			{ Instruction::EQ, [](u256 a, u256 b) -> u256 { return a == b ? 1 : 0; } },
-			{ Instruction::ADD, [](u256 a, u256 b) -> u256 { return a + b; } },
-			{ Instruction::MUL, [](u256 a, u256 b) -> u256 { return a * b; } },
-			{ Instruction::AND, [](u256 a, u256 b) -> u256 { return a & b; } },
-			{ Instruction::OR, [](u256 a, u256 b) -> u256 { return a | b; } },
-			{ Instruction::XOR, [](u256 a, u256 b) -> u256 { return a ^ b; } },
+			{ Instruction::LT, [](u256 const& _a, u256 const& _b) -> u256 { return _a < _b ? 1 : 0; } },
+			{ Instruction::GT, [](u256 const& _a, u256 const& _b) -> u256 { return _a > _b ? 1 : 0; } },
+			{ Instruction::SLT, [](u256 const& _a, u256 const& _b) -> u256 { return u2s(_a) < u2s(_b) ? 1 : 0; } },
+			{ Instruction::SGT, [](u256 const& _a, u256 const& _b) -> u256 { return u2s(_a) > u2s(_b) ? 1 : 0; } },
+			{ Instruction::EQ, [](u256 const& _a, u256 const& _b) -> u256 { return _a == _b ? 1 : 0; } },
+			{ Instruction::ADD, [](u256 const& _a, u256 const& _b) -> u256 { return _a + _b; } },
+			{ Instruction::MUL, [](u256 const& _a, u256 const& _b) -> u256 { return _a * _b; } },
+			{ Instruction::AND, [](u256 const& _a, u256 const& _b) -> u256 { return _a & _b; } },
+			{ Instruction::OR, [](u256 const& _a, u256 const& _b) -> u256 { return _a | _b; } },
+			{ Instruction::XOR, [](u256 const& _a, u256 const& _b) -> u256 { return _a ^ _b; } },
 		};
 		if (arithmetics.count(_item.instruction()))
 		{
@@ -260,6 +260,7 @@ bool SemanticInformation::breaksBasicBlock(AssemblyItem const& _item)
 {
 	switch (_item.type())
 	{
+	default:
 	case UndefinedItem:
 	case Tag:
 		return true;
@@ -275,6 +276,8 @@ bool SemanticInformation::breaksBasicBlock(AssemblyItem const& _item)
 	{
 		if (isSwapInstruction(_item) || isDupInstruction(_item))
 			return false;
+		if (_item.instruction() == Instruction::GAS || _item.instruction() == Instruction::PC)
+			return true; // GAS and PC assume a specific order of opcodes
 		InstructionInfo info = instructionInfo(_item.instruction());
 		// the second requirement will be lifted once it is implemented
 		return info.sideEffects || info.args > 2;
@@ -315,14 +318,14 @@ bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
-	map<int, EquivalenceClassId> const& _currentStack,
+	map<int, EquivalenceClassId> const& _initialStack,
 	map<int, EquivalenceClassId> const& _targetStackContents,
 	vector<pair<AssemblyItem const*, EquivalenceClassIds>> const& _equivalenceClasses
 )
 {
 	// reset
 	*this = move(CSECodeGenerator());
-	m_stack = _currentStack;
+	m_stack = _initialStack;
 	m_equivalenceClasses = _equivalenceClasses;
 	for (auto const& item: m_stack)
 		if (!m_classPositions.count(item.second))
@@ -348,8 +351,8 @@ AssemblyItems CSECodeGenerator::generateCode(
 			// it is already at its target, we need another copy
 			appendDup(position);
 		else
-			appendSwap(position);
-		appendSwap(targetItem.first);
+			appendSwapOrRemove(position);
+		appendSwapOrRemove(targetItem.first);
 	}
 
 	// remove surplus elements
@@ -361,10 +364,13 @@ AssemblyItems CSECodeGenerator::generateCode(
 	// check validity
 	int finalHeight = 0;
 	if (!_targetStackContents.empty())
+		// have target stack, so its height should be the final height
 		finalHeight = (--_targetStackContents.end())->first;
-	else if (!_currentStack.empty())
-		finalHeight = _currentStack.begin()->first - 1;
+	else if (!_initialStack.empty())
+		// no target stack, only erase the initial stack
+		finalHeight = _initialStack.begin()->first - 1;
 	else
+		// neither initial no target stack, no change in height
 		finalHeight = 0;
 	assertThrow(finalHeight == m_stackHeight, OptimizerException, "Incorrect final stack height.");
 
@@ -397,10 +403,14 @@ int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
 	for (EquivalenceClassId arg: boost::adaptors::reverse(arguments))
 		generateClassElement(arg);
 
+	// The arguments are somewhere on the stack now, so it remains to move them at the correct place.
+	// This is quite difficult as sometimes, the values also have to removed in this process
+	// (if canBeRemoved() returns true) and the two arguments can be equal. For now, this is
+	// implemented for every single case for combinations of up to two arguments manually.
 	if (arguments.size() == 1)
 	{
 		if (canBeRemoved(arguments[0], _c))
-			appendSwap(generateClassElement(arguments[0]));
+			appendSwapOrRemove(generateClassElement(arguments[0]));
 		else
 			appendDup(generateClassElement(arguments[0]));
 	}
@@ -408,13 +418,13 @@ int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
 	{
 		if (canBeRemoved(arguments[1], _c))
 		{
-			appendSwap(generateClassElement(arguments[1]));
+			appendSwapOrRemove(generateClassElement(arguments[1]));
 			if (arguments[0] == arguments[1])
 				appendDup(m_stackHeight);
 			else if (canBeRemoved(arguments[0], _c))
 			{
-				appendSwap(m_stackHeight - 1);
-				appendSwap(generateClassElement(arguments[0]));
+				appendSwapOrRemove(m_stackHeight - 1);
+				appendSwapOrRemove(generateClassElement(arguments[0]));
 			}
 			else
 				appendDup(generateClassElement(arguments[0]));
@@ -428,9 +438,9 @@ int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
 			}
 			else if (canBeRemoved(arguments[0], _c))
 			{
-				appendSwap(generateClassElement(arguments[0]));
+				appendSwapOrRemove(generateClassElement(arguments[0]));
 				appendDup(generateClassElement(arguments[1]));
-				appendSwap(m_stackHeight - 1);
+				appendSwapOrRemove(m_stackHeight - 1);
 			}
 			else
 			{
@@ -452,7 +462,8 @@ int CSECodeGenerator::generateClassElement(EquivalenceClassId _c)
 	while (SemanticInformation::isCommutativeOperation(item) &&
 			!m_generatedItems.empty() &&
 			m_generatedItems.back() == AssemblyItem(Instruction::SWAP1))
-		appendSwap(m_stackHeight - 1);
+		// this will not append a swap but remove the one that is already there
+		appendSwapOrRemove(m_stackHeight - 1);
 	for (auto arg: arguments)
 		if (canBeRemoved(arg, _c))
 			m_classPositions[arg] = c_invalidPosition;
@@ -500,14 +511,15 @@ void CSECodeGenerator::appendDup(int _fromPosition)
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
 }
 
-void CSECodeGenerator::appendSwap(int _fromPosition)
+void CSECodeGenerator::appendSwapOrRemove(int _fromPosition)
 {
 	if (_fromPosition == m_stackHeight)
 		return;
 	int nr = m_stackHeight - _fromPosition;
 	assertThrow(1 <= nr && nr <= 16, OptimizerException, "Stack too deep.");
 	m_generatedItems.push_back(AssemblyItem(swapInstruction(nr)));
-	// only update if they are the "canonical" positions
+	// The value of a class can be present in multiple locations on the stack. We only update the
+	// "canonical" one that is tracked by m_classPositions
 	if (m_classPositions[m_stack[m_stackHeight]] == m_stackHeight)
 		m_classPositions[m_stack[m_stackHeight]] = _fromPosition;
 	if (m_classPositions[m_stack[_fromPosition]] == _fromPosition)

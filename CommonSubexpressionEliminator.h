@@ -41,7 +41,7 @@ using EquivalenceClassId = unsigned;
 using EquivalenceClassIds = std::vector<EquivalenceClassId>;
 
 /**
- * Optimizer step that performs common subexpression elimination and stack reorginasation,
+ * Optimizer step that performs common subexpression elimination and stack reorganisation,
  * i.e. it tries to infer equality among expressions and compute the values of two expressions
  * known to be equal only once.
  *
@@ -122,11 +122,12 @@ class CSECodeGenerator
 {
 public:
 	/// @returns the assembly items generated from the given requirements
-	/// @param _currentStack current contents of the stack (up to stack height of zero)
+	/// @param _initialStack current contents of the stack (up to stack height of zero)
 	/// @param _targetStackContents final contents of the stack, by stack height relative to initial
 	/// @param _equivalenceClasses equivalence classes as expressions of how to compute them
+	/// @note resuts the state of the object for each call.
 	AssemblyItems generateCode(
-		std::map<int, EquivalenceClassId> const& _currentStack,
+		std::map<int, EquivalenceClassId> const& _initialStack,
 		std::map<int, EquivalenceClassId> const& _targetStackContents,
 		std::vector<std::pair<AssemblyItem const*, EquivalenceClassIds>> const& _equivalenceClasses
 	);
@@ -148,11 +149,12 @@ private:
 	/// Appends a dup instruction to m_generatedItems to retrieve the element at the given stack position.
 	void appendDup(int _fromPosition);
 	/// Appends a swap instruction to m_generatedItems to retrieve the element at the given stack position.
-	void appendSwap(int _fromPosition);
+	/// @note this might also remove the last item if it exactly the same swap instruction.
+	void appendSwapOrRemove(int _fromPosition);
 	/// Appends the given assembly item.
 	void appendItem(AssemblyItem const& _item);
 
-	static const int c_invalidPosition = std::numeric_limits<int>::min();
+	static const int c_invalidPosition = -0x7fffffff;
 
 	AssemblyItems m_generatedItems;
 	/// Current height of the stack relative to the start.
