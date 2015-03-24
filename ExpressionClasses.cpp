@@ -39,16 +39,22 @@ bool ExpressionClasses::Expression::operator<(ExpressionClasses::Expression cons
 {
 	auto type = item->type();
 	auto otherType = _other.item->type();
-	return std::tie(type, item->data(), arguments) <
-		std::tie(otherType, _other.item->data(), _other.arguments);
+	return std::tie(type, item->data(), arguments, sequenceNumber) <
+		std::tie(otherType, _other.item->data(), _other.arguments, _other.sequenceNumber);
 }
 
-ExpressionClasses::Id ExpressionClasses::find(AssemblyItem const& _item, Ids const& _arguments)
+ExpressionClasses::Id ExpressionClasses::find(
+	AssemblyItem const& _item,
+	Ids const& _arguments,
+	bool _copyItem,
+	unsigned _sequenceNumber
+)
 {
 	Expression exp;
 	exp.id = Id(-1);
 	exp.item = &_item;
 	exp.arguments = _arguments;
+	exp.sequenceNumber = _sequenceNumber;
 
 	if (SemanticInformation::isCommutativeOperation(_item))
 		sort(exp.arguments.begin(), exp.arguments.end());
@@ -58,9 +64,8 @@ ExpressionClasses::Id ExpressionClasses::find(AssemblyItem const& _item, Ids con
 		if (!(e < exp || exp < e))
 			return e.id;
 
-	if (SemanticInformation::isDupInstruction(_item))
+	if (_copyItem)
 	{
-		// Special item that refers to values pre-existing on the stack
 		m_spareAssemblyItem.push_back(make_shared<AssemblyItem>(_item));
 		exp.item = m_spareAssemblyItem.back().get();
 	}
@@ -72,6 +77,17 @@ ExpressionClasses::Id ExpressionClasses::find(AssemblyItem const& _item, Ids con
 	exp.id = m_representatives.size();
 	m_representatives.push_back(exp);
 	return exp.id;
+}
+
+bool ExpressionClasses::knownToBeDifferent(ExpressionClasses::Id _a, ExpressionClasses::Id _b)
+{
+	// Try to simplify "_a - _b" and return true iff the value is a non-zero constant.
+	//@todo we could try to cache this information
+	map<unsigned, Expression const*> matchGroups;
+	Pattern constant(Push);
+	constant.setMatchGroup(1, matchGroups);
+	Id difference = find(Instruction::SUB, {_a, _b});
+	return constant.matches(representative(difference), *this) && constant.d() != u256(0);
 }
 
 string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
@@ -189,27 +205,46 @@ Rules::Rules()
 		// Moving constants to the outside, order matters here!
 		// we need actions that return expressions (or patterns?) here, and we need also reversed rules
 		// (X+A)+B -> X+(A+B)
-		m_rules.push_back({
+		m_rules += vector<pair<Pattern, function<Pattern()>>>{{
 			{op, {{op, {X, A}}, B}},
 			[=]() -> Pattern { return {op, {X, fun(A.d(), B.d())}}; }
-		});
+		}, {
 		// X+(Y+A) -> (X+Y)+A
-		m_rules.push_back({
 			{op, {{op, {X, A}}, Y}},
 			[=]() -> Pattern { return {op, {{op, {X, Y}}, A}}; }
-		});
+		}, {
 		// For now, we still need explicit commutativity for the inner pattern
-		m_rules.push_back({
 			{op, {{op, {A, X}}, B}},
 			[=]() -> Pattern { return {op, {X, fun(A.d(), B.d())}}; }
-		});
-		m_rules.push_back({
+		}, {
 			{op, {{op, {A, X}}, Y}},
 			[=]() -> Pattern { return {op, {{op, {X, Y}}, A}}; }
-		});
+		}};
+	}
+	// move constants across subtractions
+	m_rules += vector<pair<Pattern, function<Pattern()>>>{
+		{
+			// X - A -> X + (-A)
+			{Instruction::SUB, {X, A}},
+			[=]() -> Pattern { return {Instruction::ADD, {X, 0 - A.d()}}; }
+		}, {
+			// (X + A) - Y -> (X - Y) + A
+			{Instruction::SUB, {{Instruction::ADD, {X, A}}, Y}},
+			[=]() -> Pattern { return {Instruction::ADD, {{Instruction::SUB, {X, Y}}, A}}; }
+		}, {
+			// (A + X) - Y -> (X - Y) + A
+			{Instruction::SUB, {{Instruction::ADD, {A, X}}, Y}},
+			[=]() -> Pattern { return {Instruction::ADD, {{Instruction::SUB, {X, Y}}, A}}; }
+		}, {
+			// X - (Y + A) -> (X - Y) + (-A)
+			{Instruction::SUB, {X, {Instruction::ADD, {Y, A}}}},
+			[=]() -> Pattern { return {Instruction::ADD, {{Instruction::SUB, {X, Y}}, 0 - A.d()}}; }
+		}, {
+			// X - (A + Y) -> (X - Y) + (-A)
+			{Instruction::SUB, {X, {Instruction::ADD, {A, Y}}}},
+			[=]() -> Pattern { return {Instruction::ADD, {{Instruction::SUB, {X, Y}}, 0 - A.d()}}; }
+		}
 	};
-
-	//@todo: (x+8)-3 and other things
 }
 
 ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, bool _secondRun)
@@ -231,7 +266,7 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, 
 			//cout << ")" << endl;
 			//cout << "with rule " << rule.first.toString() << endl;
 			//ExpressionTemplate t(rule.second());
-			//cout << "to" << rule.second().toString() << endl;
+			//cout << "to " << rule.second().toString() << endl;
 			return rebuildExpression(ExpressionTemplate(rule.second()));
 		}
 	}
@@ -254,8 +289,7 @@ ExpressionClasses::Id ExpressionClasses::rebuildExpression(ExpressionTemplate co
 	Ids arguments;
 	for (ExpressionTemplate const& t: _template.arguments)
 		arguments.push_back(rebuildExpression(t));
-	m_spareAssemblyItem.push_back(make_shared<AssemblyItem>(_template.item));
-	return find(*m_spareAssemblyItem.back(), arguments);
+	return find(_template.item, arguments);
 }
 
 

@@ -52,16 +52,24 @@ public:
 		Id id;
 		AssemblyItem const* item;
 		Ids arguments;
+		unsigned sequenceNumber; ///< Storage modification sequence, only used for SLOAD/SSTORE instructions.
 		bool operator<(Expression const& _other) const;
 	};
 
 	/// Retrieves the id of the expression equivalence class resulting from the given item applied to the
 	/// given classes, might also create a new one.
-	Id find(AssemblyItem const& _item, Ids const& _arguments = {});
+	/// @param _copyItem if true, copies the assembly item to an internal storage instead of just
+	/// keeping a pointer.
+	/// The @a _sequenceNumber indicates the current storage access sequence.
+	Id find(AssemblyItem const& _item, Ids const& _arguments = {}, bool _copyItem = true, unsigned _sequenceNumber = 0);
 	/// @returns the canonical representative of an expression class.
 	Expression const& representative(Id _id) const { return m_representatives.at(_id); }
 	/// @returns the number of classes.
 	Id size() const { return m_representatives.size(); }
+
+	/// @returns true if the values of the given classes are known to be different (on every input).
+	/// @note that this function might still return false for some different inputs.
+	bool knownToBeDifferent(Id _a, Id _b);
 
 	std::string fullDAGToString(Id _id) const;
 

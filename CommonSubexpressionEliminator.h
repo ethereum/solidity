@@ -25,6 +25,8 @@
 
 #include <vector>
 #include <map>
+#include <set>
+#include <tuple>
 #include <ostream>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
@@ -44,9 +46,9 @@ using AssemblyItems = std::vector<AssemblyItem>;
  * known to be equal only once.
  *
  * The general workings are that for each assembly item that is fed into the eliminator, an
- * equivalence class is derived from the operation and the equivalence class of its arguments and
- * it is assigned to the next sequence number of a stack item. DUPi, SWAPi and some arithmetic
- * instructions are used to infer equivalences while these classes are determined.
+ * equivalence class is derived from the operation and the equivalence class of its arguments.
+ * DUPi, SWAPi and some arithmetic instructions are used to infer equivalences while these
+ * classes are determined.
  *
  * When the list of optimized items is requested, they are generated in a bottom-up fashion,
  * adding code for equivalence classes that were not yet computed.
@@ -54,6 +56,23 @@ using AssemblyItems = std::vector<AssemblyItem>;
 class CommonSubexpressionEliminator
 {
 public:
+	struct StorageWriteOperation
+	{
+		StorageWriteOperation(
+			ExpressionClasses::Id _slot,
+			unsigned _sequenceNumber,
+			ExpressionClasses::Id _expression
+		): slot(_slot), sequenceNumber(_sequenceNumber), expression(_expression) {}
+		bool operator<(StorageWriteOperation const& _other) const
+		{
+			return std::tie(slot, sequenceNumber, expression) <
+					std::tie(_other.slot, _other.sequenceNumber, _other.expression);
+		}
+		ExpressionClasses::Id slot;
+		unsigned sequenceNumber;
+		ExpressionClasses::Id expression;
+	};
+
 	/// Feeds AssemblyItems into the eliminator and @returns the iterator pointing at the first
 	/// item that must be fed into a new instance of the eliminator.
 	template <class _AssemblyItemIterator>
@@ -65,7 +84,7 @@ public:
 	/// Streams debugging information to @a _out.
 	std::ostream& stream(
 		std::ostream& _out,
-		std::map<int, ExpressionClasses::Id> _currentStack = std::map<int, ExpressionClasses::Id>(),
+		std::map<int, ExpressionClasses::Id> _initialStack = std::map<int, ExpressionClasses::Id>(),
 		std::map<int, ExpressionClasses::Id> _targetStack = std::map<int, ExpressionClasses::Id>()
 	) const;
 
@@ -85,10 +104,23 @@ private:
 	/// (must not be positive).
 	ExpressionClasses::Id initialStackElement(int _stackHeight);
 
+	/// Increments the sequence number, deletes all storage information that might be overwritten
+	/// and stores the new value at the given slot.
+	void storeInStorage(ExpressionClasses::Id _slot, ExpressionClasses::Id _value);
+	/// Retrieves the current value at the given slot in storage or creates a new special sload class.
+	ExpressionClasses::Id loadFromStorage(ExpressionClasses::Id _slot);
+
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
 	/// Current stack layout, mapping stack height -> equivalence class
 	std::map<int, ExpressionClasses::Id> m_stackElements;
+	/// Current sequence number, this is incremented with each modification to storage.
+	unsigned m_sequenceNumber = 1;
+	/// Knowledge about storage content.
+	std::map<ExpressionClasses::Id, ExpressionClasses::Id> m_storageContent;
+	/// Keeps information about which storage slots were written to at which sequence number with
+	/// what SSTORE instruction.
+	std::set<StorageWriteOperation> m_storageWrites;
 	/// Structure containing the classes of equivalent expressions.
 	ExpressionClasses m_expressionClasses;
 };
@@ -114,14 +146,19 @@ struct SemanticInformation
 class CSECodeGenerator
 {
 public:
-	CSECodeGenerator(ExpressionClasses const& _expressionClasses):
-		m_expressionClasses(_expressionClasses)
+	using StorageWriteOperation = CommonSubexpressionEliminator::StorageWriteOperation;
+
+	CSECodeGenerator(
+		ExpressionClasses& _expressionClasses,
+		std::set<StorageWriteOperation> const& _storageWrites
+	):
+		m_expressionClasses(_expressionClasses),
+		m_storageWrites(_storageWrites)
 	{}
 
 	/// @returns the assembly items generated from the given requirements
 	/// @param _initialStack current contents of the stack (up to stack height of zero)
 	/// @param _targetStackContents final contents of the stack, by stack height relative to initial
-	/// @param _equivalenceClasses equivalence classes as expressions of how to compute them
 	/// @note should only be called once on each object.
 	AssemblyItems generateCode(
 		std::map<int, ExpressionClasses::Id> const& _initialStack,
@@ -133,8 +170,13 @@ private:
 	void addDependencies(ExpressionClasses::Id _c);
 
 	/// Produce code that generates the given element if it is not yet present.
-	/// @returns the stack position of the element.
-	int generateClassElement(ExpressionClasses::Id _c);
+	/// @returns the stack position of the element or c_invalidPosition if it does not actually
+	/// generate a value on the stack.
+	/// @param _allowSequenced indicates that sequence-constrained operations are allowed
+	int generateClassElement(ExpressionClasses::Id _c, bool _allowSequenced = false);
+	/// @returns the position of the representative of the given id on the stack.
+	/// @note throws an exception if it is not on the stack.
+	int classElementPosition(ExpressionClasses::Id _id) const;
 
 	/// @returns true if @a _element can be removed - in general or, if given, while computing @a _result.
 	bool canBeRemoved(ExpressionClasses::Id _element, ExpressionClasses::Id _result = ExpressionClasses::Id(-1));
@@ -146,7 +188,7 @@ private:
 	void appendDup(int _fromPosition);
 	/// Appends a swap instruction to m_generatedItems to retrieve the element at the given stack position.
 	/// @note this might also remove the last item if it exactly the same swap instruction.
-	void appendSwapOrRemove(int _fromPosition);
+	void appendOrRemoveSwap(int _fromPosition);
 	/// Appends the given assembly item.
 	void appendItem(AssemblyItem const& _item);
 
@@ -163,7 +205,10 @@ private:
 	std::map<ExpressionClasses::Id, int> m_classPositions;
 
 	/// The actual eqivalence class items and how to compute them.
-	ExpressionClasses const& m_expressionClasses;
+	ExpressionClasses& m_expressionClasses;
+	/// Keeps information about which storage slots were written to at which sequence number with
+	/// what SSTORE instruction.
+	std::set<StorageWriteOperation> const& m_storageWrites;
 	/// The set of equivalence classes that should be present on the stack at the end.
 	std::set<ExpressionClasses::Id> m_finalClasses;
 };
