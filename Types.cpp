@@ -1127,7 +1127,7 @@ MemberList const& FunctionType::getMembers() const
 	}
 }
 
-string FunctionType::externalTypes(std::string const& _name) const
+string FunctionType::externalSignature(std::string const& _name) const
 {
 	std::string funcName = _name;
 	if (_name == "")

@@ -550,10 +550,10 @@ public:
 	virtual MemberList const& getMembers() const override;
 
 	Location const& getLocation() const { return m_location; }
-	/// @returns the external type of this function type given the function name
+	/// @returns the external signature of this function type given the function name
 	/// If @a _name is not provided (empty string) then the @c m_declaration member of the
 	/// function type is used
-	std::string externalTypes(std::string const& _name = "") const;
+	std::string externalSignature(std::string const& _name = "") const;
 	Declaration const& getDeclaration() const
 	{
 		solAssert(m_declaration, "Requested declaration from a FunctionType that has none");

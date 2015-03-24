@@ -421,10 +421,10 @@ public:
 	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
 	void checkTypeRequirements();
 
-	/// @returns the canonical signature of the function
-	/// That consists of the name of the function followed by the types of the
+	/// @returns the external signature of the function
+	/// That consists of the name of the function followed by the external types of the
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
-	std::string externalTypes() const;
+	std::string externalSignature() const;
 
 private:
 	bool m_isConstructor;

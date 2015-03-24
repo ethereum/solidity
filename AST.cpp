@@ -88,7 +88,7 @@ void ContractDefinition::checkTypeRequirements()
 		if (hashes.count(hash))
 			BOOST_THROW_EXCEPTION(createTypeError(
 									  std::string("Function signature hash collision for ") +
-									  it.second->externalTypes()));
+									  it.second->externalSignature()));
 		hashes.insert(hash);
 	}
 }
@@ -192,7 +192,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 				if (functionsSeen.count(f->getName()) == 0 && f->isPartOfExternalInterface())
 				{
 					functionsSeen.insert(f->getName());
-					FixedHash<4> hash(dev::sha3(f->externalTypes()));
+					FixedHash<4> hash(dev::sha3(f->externalSignature()));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*f, false)));
 				}
 
@@ -202,7 +202,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 					FunctionType ftype(*v);
 					solAssert(v->getType().get(), "");
 					functionsSeen.insert(v->getName());
-					FixedHash<4> hash(dev::sha3(ftype.externalTypes(v->getName())));
+					FixedHash<4> hash(dev::sha3(ftype.externalSignature(v->getName())));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*v)));
 				}
 		}
@@ -320,9 +320,9 @@ void FunctionDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-string FunctionDefinition::externalTypes() const
+string FunctionDefinition::externalSignature() const
 {
-	return FunctionType(*this).externalTypes(getName());
+	return FunctionType(*this).externalSignature(getName());
 }
 
 bool VariableDeclaration::isLValue() const
@@ -430,7 +430,7 @@ void EventDefinition::checkTypeRequirements()
 			numIndexed++;
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
-		if (!var->getType()->externalType() && getVisibility() >= Visibility::Public)
+		if (!var->getType()->externalType())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for Events"));
 	}
 	if (numIndexed > 3)
