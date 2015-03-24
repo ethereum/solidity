@@ -310,6 +310,9 @@ namespace solidity
 	K(Throw, "throw", 0)                                               \
 	K(Try, "try", 0)                                                   \
 	K(Catch, "catch", 0)                                               \
+	K(Using, "using", 0)                                               \
+	K(Type, "type", 0)                                                 \
+	K(TypeOf, "typeof", 0)                                             \
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
