@@ -110,11 +110,13 @@ public:
 	void exportTest(bytes const& _output, eth::State const& _statePost);
 
 	eth::State m_statePre;
+	eth::State m_stateExpect;
 	eth::State m_statePost;
 	eth::ExtVMFace m_environment;
 	eth::Transaction m_transaction;
 
 private:
+	void checkFillTest(eth::State const& _statePost);
 	json_spirit::mObject& m_TestObject;
 };
 
