@@ -164,7 +164,7 @@ public:
 	bool vmtrace = false;	///< Create EVM execution tracer // TODO: Link with log verbosity?
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
-	bool statsFull = false; ///< Output full stats - execution times for every test
+	std::string statsOutFile; ///< Stats output file. "out" for standard output
 
 	/// Test selection
 	/// @{
@@ -191,10 +191,12 @@ class Listener
 public:
 	virtual ~Listener() = default;
 
+	virtual void suiteStarted(std::string const&) {}
 	virtual void testStarted(std::string const& _name) = 0;
 	virtual void testFinished() = 0;
 
 	static void registerListener(Listener& _listener);
+	static void notifySuiteStarted(std::string const& _name);
 	static void notifyTestStarted(std::string const& _name);
 	static void notifyTestFinished();
 

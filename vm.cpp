@@ -25,7 +25,6 @@
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
 #include "vm.h"
-#include "Stats.h"
 
 using namespace std;
 using namespace json_spirit;
@@ -311,9 +310,6 @@ namespace dev { namespace test {
 
 void doVMTests(json_spirit::mValue& v, bool _fillin)
 {
-	if (Options::get().stats)
-		Listener::registerListener(Stats::get());
-
 	for (auto& i: v.get_obj())
 	{
 		std::cout << "  " << i.first << "\n";
@@ -549,6 +545,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 			string s = asString(dev::contents(path.string()));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
+			test::Listener::notifySuiteStarted(path.filename().string());
 			doVMTests(v, false);
 		}
 		catch (Exception const& _e)
