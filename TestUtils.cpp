@@ -19,18 +19,12 @@
  * @date 2015
  */
 
-#include <ctime>
-#include <random>
 #include <thread>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <libtestutils/BlockChainLoader.h>
 #include <libtestutils/FixedClient.h>
 #include "TestUtils.h"
-
-// used methods from TestHelper:
-// getTestPath
-#include "TestHelper.h"
 
 using namespace std;
 using namespace dev;
@@ -73,19 +67,12 @@ std::string dev::test::getCommandLineArgument(string const& _name, bool _require
 	return "";
 }
 
-bool LoadTestFileFixture::m_loaded = false;
-Json::Value LoadTestFileFixture::m_json;
-
 LoadTestFileFixture::LoadTestFileFixture()
 {
-	if (!m_loaded)
-	{
-		m_json = loadJsonFromFile(toTestFilePath(getCommandLineArgument("--eth_testfile")));
-		m_loaded = true;
-	}
+	m_json = loadJsonFromFile(toTestFilePath(getCommandLineArgument("--eth_testfile")));
 }
 
-void ParallelFixture::enumerateThreads(std::function<void()> callback)
+void ParallelFixture::enumerateThreads(std::function<void()> callback) const
 {
 	size_t threadsCount = std::stoul(getCommandLineArgument("--eth_threads"), nullptr, 10);
 	
@@ -99,7 +86,7 @@ void ParallelFixture::enumerateThreads(std::function<void()> callback)
 	});
 }
 
-void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain&, State state)> callback)
+void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain const&, State state)> callback) const
 {
 	for (string const& name: m_json.getMemberNames())
 	{
@@ -108,16 +95,16 @@ void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value cons
 	}
 }
 
-void ClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback)
+void ClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const
 {
-	enumerateBlockchains([&callback](Json::Value const& _json, BlockChain& _bc, State _state) -> void
+	enumerateBlockchains([&callback](Json::Value const& _json, BlockChain const& _bc, State _state) -> void
 	{
 		FixedClient client(_bc, _state);
 		callback(_json, client);
 	});
 }
 
-void ParallelClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback)
+void ParallelClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const
 {
 	ClientBaseFixture::enumerateClients([this, &callback](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
 	{

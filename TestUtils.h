@@ -41,24 +41,24 @@ static SharedMutex x_boostTest;
 struct LoadTestFileFixture
 {
 	LoadTestFileFixture();
-	
-	static bool m_loaded;
-	static Json::Value m_json;
+
+protected:
+	Json::Value m_json;
 };
 
 struct ParallelFixture
 {
-	void enumerateThreads(std::function<void()> callback);
+	void enumerateThreads(std::function<void()> callback) const;
 };
 
 struct BlockChainFixture: public LoadTestFileFixture
 {
-	void enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain&, dev::eth::State state)> callback);
+	void enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain const&, dev::eth::State state)> callback) const;
 };
 
 struct ClientBaseFixture: public BlockChainFixture
 {
-	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback);
+	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const;
 };
 
 // important BOOST TEST do have problems with thread safety!!!
@@ -70,7 +70,7 @@ struct ClientBaseFixture: public BlockChainFixture
 // https://codecrafter.wordpress.com/2012/11/01/c-unit-test-framework-adapter-part-3/
 struct ParallelClientBaseFixture: public ClientBaseFixture, public ParallelFixture
 {
-	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback);
+	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback) const;
 };
 
 struct JsonRpcFixture: public ClientBaseFixture
