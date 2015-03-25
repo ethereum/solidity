@@ -1127,7 +1127,7 @@ MemberList const& FunctionType::getMembers() const
 	}
 }
 
-string FunctionType::externalSignature(std::string const& _name) const
+string FunctionType::externalSignature(bool isExternalCall, std::string const& _name) const
 {
 	std::string funcName = _name;
 	if (_name == "")
@@ -1139,8 +1139,9 @@ string FunctionType::externalSignature(std::string const& _name) const
 
 	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
 	{
-		solAssert(!!(*it)->externalType(), "Parameter should have external type");
-		ret += (*it)->externalType()->toString() + (it + 1 == m_parameterTypes.cend() ? "" : ",");
+		if (isExternalCall)
+			solAssert(!!(*it)->externalType(), "Parameter should have external type");
+		ret += (isExternalCall ? (*it)->externalType()->toString() : (*it)->toString()) + (it + 1 == m_parameterTypes.cend() ? "" : ",");
 	}
 	return ret + ")";
 }

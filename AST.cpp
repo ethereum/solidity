@@ -192,7 +192,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 				if (functionsSeen.count(f->getName()) == 0 && f->isPartOfExternalInterface())
 				{
 					functionsSeen.insert(f->getName());
-					FixedHash<4> hash(dev::sha3(f->externalSignature()));
+					FixedHash<4> hash(dev::sha3(f->externalSignature(true)));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*f, false)));
 				}
 
@@ -202,7 +202,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 					FunctionType ftype(*v);
 					solAssert(v->getType().get(), "");
 					functionsSeen.insert(v->getName());
-					FixedHash<4> hash(dev::sha3(ftype.externalSignature(v->getName())));
+					FixedHash<4> hash(dev::sha3(ftype.externalSignature(true, v->getName())));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*v)));
 				}
 		}
@@ -309,7 +309,7 @@ void FunctionDefinition::checkTypeRequirements()
 	{
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
-		if (!var->getType()->externalType() && getVisibility() >= Visibility::Public)
+		if (!(var->getType()->externalType()) && getVisibility() >= Visibility::Public)
 			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for function with external visibility"));
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
@@ -320,9 +320,9 @@ void FunctionDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-string FunctionDefinition::externalSignature() const
+string FunctionDefinition::externalSignature(bool isExternalCall) const
 {
-	return FunctionType(*this).externalSignature(getName());
+	return FunctionType(*this).externalSignature(isExternalCall, getName());
 }
 
 bool VariableDeclaration::isLValue() const
@@ -663,10 +663,6 @@ void MemberAccess::checkTypeRequirements()
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
 											  "visible in " + type.toString()));
-//	if (auto f = dynamic_cast<FunctionType const*>(m_expression->getType().get()))
-//		if (f->getLocation() == FunctionType::Location::External && !m_type->externalType())
-//			BOOST_THROW_EXCEPTION(createTypeError(*m_memberName + " member has an internal type."));
-
 	// This should probably move somewhere else.
 	if (type.getCategory() == Type::Category::Struct)
 		m_isLValue = true;
