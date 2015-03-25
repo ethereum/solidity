@@ -388,6 +388,16 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			if (!vmExceptionOccured)
 			{
 				o["post"] = mValue(fev.exportState());
+
+				if (o.count("expect") > 0)
+				{
+					State postState, expectState;
+					ImportTest::importState(o["post"].get_obj(), postState);
+					ImportTest::importState(o["expect"].get_obj(), expectState);
+					ImportTest::compareStates(expectState, postState);
+					o.erase(o.find("expect"));
+				}
+
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = "0x" + toHex(output);
 				fev.push(o, "gas", gas);

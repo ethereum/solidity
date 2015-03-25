@@ -25,6 +25,7 @@
 #include <chrono>
 
 #include <boost/filesystem/path.hpp>
+#include <boost/assign.hpp>
 
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
@@ -76,9 +77,7 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 	m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
-	importState(_o["pre"].get_obj(), m_statePre);	
-	if (_o.count("expect") > 0)
-		importState(_o["expect"].get_obj(), m_stateExpect);
+	importState(_o["pre"].get_obj(), m_statePre);
 	importTransaction(_o["transaction"].get_obj());
 
 	if (!isFiller)
@@ -178,62 +177,59 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	}
 }
 
-void ImportTest::checkFillTest(State const& _statePost)
+bool ImportTest::compareStates(State const& _stateExpect, State const& _statePost)
 {
 	//TestNet Addresses
-	static Addresses testNetAddressList;
-	testNetAddressList.push_back(Address("0000000000000000000000000000000000000001"));
-	testNetAddressList.push_back(Address("0000000000000000000000000000000000000002"));
-	testNetAddressList.push_back(Address("0000000000000000000000000000000000000003"));
-	testNetAddressList.push_back(Address("0000000000000000000000000000000000000004"));
-	testNetAddressList.push_back(Address("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));
-	testNetAddressList.push_back(Address("2ef47100e0787b915105fd5e3f4ff6752079d5cb"));
-	testNetAddressList.push_back(Address("6c386a4b26f73c802f34673f7248bb118f97424a"));
-	testNetAddressList.push_back(Address("b9c015918bdaba24b4ff057a92a3873d6eb201be"));
-	testNetAddressList.push_back(Address("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"));
-	testNetAddressList.push_back(Address("dbdbdb2cbd23b783741e8d7fcf51e459b497e4a6"));
-	testNetAddressList.push_back(Address("e4157b34ea9615cfbde6b4fda419828124b70c78"));
-	testNetAddressList.push_back(Address("e6716f9544a56c530d868e4bfbacb172315bdead"));
+	static Addresses testNetAddressList = boost::assign::list_of
+			(Address("0000000000000000000000000000000000000001"))
+			(Address("0000000000000000000000000000000000000002"))
+			(Address("0000000000000000000000000000000000000003"))
+			(Address("0000000000000000000000000000000000000004"))
+			(Address("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"))
+			(Address("2ef47100e0787b915105fd5e3f4ff6752079d5cb"))
+			(Address("6c386a4b26f73c802f34673f7248bb118f97424a"))
+			(Address("b9c015918bdaba24b4ff057a92a3873d6eb201be"))
+			(Address("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"))
+			(Address("dbdbdb2cbd23b783741e8d7fcf51e459b497e4a6"))
+			(Address("e4157b34ea9615cfbde6b4fda419828124b70c78"))
+			(Address("e6716f9544a56c530d868e4bfbacb172315bdead"));
 
-	if (m_TestObject.find("expect") != m_TestObject.end())
+	for (auto const& a: _stateExpect.addresses())
 	{
-		for (auto const& a: m_stateExpect.addresses())
+		bool bFound = false;  //do not count default addresses as it's not in addressInUse
+		for (auto const& it: testNetAddressList)
 		{
-			bool bFound = false;  //do not count default addresses as it's not in addressInUse
-			for (auto const& it: testNetAddressList)
+			if (it == a.first)
 			{
-				if (it == a.first)
-				{
-					bFound = true;
-					break;
-				}
-			}
-
-			if (bFound)
-				continue;
-
-			BOOST_CHECK_MESSAGE(_statePost.addressInUse(a.first), "Filling Test Error: " << a.first << " expected address not in use!");
-			if (_statePost.addressInUse(a.first))
-			{
-				BOOST_CHECK_MESSAGE(m_stateExpect.balance(a.first) == _statePost.balance(a.first),
-									"Filling Test Error: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << m_stateExpect.balance(a.first));
-				BOOST_CHECK_MESSAGE(m_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first),
-									"Filling Test Error: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << m_stateExpect.transactionsFrom(a.first));
-
-				map<u256, u256> stateStorage = _statePost.storage(a.first);
-				for (auto const& s: m_stateExpect.storage(a.first))
-				{
-					BOOST_CHECK_MESSAGE(stateStorage[s.first] == s.second,
-									"Filling Test Error: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
-				}
-
-				BOOST_CHECK_MESSAGE(m_stateExpect.code(a.first) == 	_statePost.code(a.first),
-									"Filling Test Error: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(m_stateExpect.code(a.first)) << "'");
+				bFound = true;
+				break;
 			}
 		}
 
-		m_TestObject.erase(m_TestObject.find("expect"));
+		if (bFound)
+			continue;
+
+		BOOST_CHECK_MESSAGE(_statePost.addressInUse(a.first), "Filling Test Error: " << a.first << " expected address not in use!");
+		if (_statePost.addressInUse(a.first))
+		{
+			BOOST_CHECK_MESSAGE(_stateExpect.balance(a.first) == _statePost.balance(a.first),
+								"Filling Test Error: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
+			BOOST_CHECK_MESSAGE(_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first),
+								"Filling Test Error: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
+
+			map<u256, u256> stateStorage = _statePost.storage(a.first);
+			for (auto const& s: _stateExpect.storage(a.first))
+			{
+				BOOST_CHECK_MESSAGE(stateStorage[s.first] == s.second,
+								"Filling Test Error: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
+			}
+
+			BOOST_CHECK_MESSAGE(_stateExpect.code(a.first) == 	_statePost.code(a.first),
+								"Filling Test Error: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
+		}
 	}
+
+	return true;
 }
 
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
@@ -245,7 +241,13 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
 
 	// compare expected state with post state
-	checkFillTest(_statePost);
+	if (m_TestObject.count("expect") > 0)
+	{
+		State expectState;
+		importState(m_TestObject["expect"].get_obj(), expectState);
+		compareStates(expectState, _statePost);
+		m_TestObject.erase(m_TestObject.find("expect"));
+	}
 
 	// export post state
 	m_TestObject["post"] = fillJsonWithState(_statePost);
