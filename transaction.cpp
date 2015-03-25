@@ -48,6 +48,13 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 			}
+			catch(Exception const& _e)
+			{
+				cnote << i.first;
+				cnote << "Transaction Exception: " << diagnostic_information(_e);
+				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transaction object should not be defined because the RLP is invalid!");
+				continue;
+			}
 			catch(...)
 			{
 				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transaction object should not be defined because the RLP is invalid!");
