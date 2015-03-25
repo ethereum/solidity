@@ -143,7 +143,6 @@ namespace solidity
 	\
 	/* Keywords */                                                     \
 	K(Break, "break", 0)                                               \
-	K(Case, "case", 0)                                                 \
 	K(Const, "constant", 0)                                            \
 	K(Anonymous, "anonymous", 0)                                       \
 	K(Continue, "continue", 0)                                         \
@@ -168,7 +167,6 @@ namespace solidity
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
 	K(Struct, "struct", 0)                                             \
-	K(Switch, "switch", 0)                                             \
 	K(Var, "var", 0)                                                   \
 	K(While, "while", 0)                                               \
 	K(Enum, "enum", 0)                                                 \
@@ -290,7 +288,6 @@ namespace solidity
 	K(Byte, "byte", 0)                                                 \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
-	K(StringType, "string", 0)                                         \
 	K(Real, "real", 0)                                                 \
 	K(UReal, "ureal", 0)                                               \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
@@ -306,6 +303,16 @@ namespace solidity
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(Identifier, NULL, 0)                                             \
 	\
+	/* Keywords reserved for future. use*/                             \
+	T(String, "string", 0)                                             \
+	K(Case, "case", 0)                                                 \
+	K(Switch, "switch", 0)                                             \
+	K(Throw, "throw", 0)                                               \
+	K(Try, "try", 0)                                                   \
+	K(Catch, "catch", 0)                                               \
+	K(Using, "using", 0)                                               \
+	K(Type, "type", 0)                                                 \
+	K(TypeOf, "typeof", 0)                                             \
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
