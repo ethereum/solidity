@@ -28,6 +28,7 @@
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Exceptions.h>
+#include <libsolidity/GlobalContext.h>
 #include "TestHelper.h"
 
 using namespace std;
@@ -48,15 +49,27 @@ ASTPointer<SourceUnit> parseTextAndResolveNames(std::string const& _source)
 	ASTPointer<SourceUnit> sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
 	NameAndTypeResolver resolver({});
 	resolver.registerDeclarations(*sourceUnit);
+	std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
+
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			globalContext->setCurrentContract(*contract);
+			resolver.updateDeclaration(*globalContext->getCurrentThis());
+			resolver.updateDeclaration(*globalContext->getCurrentSuper());
 			resolver.resolveNamesAndTypes(*contract);
+		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			globalContext->setCurrentContract(*contract);
+			resolver.updateDeclaration(*globalContext->getCurrentThis());
 			resolver.checkTypeRequirements(*contract);
+		}
 
 	return sourceUnit;
 }
+
 
 static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source, unsigned index)
 {
@@ -376,6 +389,8 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			auto functions = contract->getDefinedFunctions();
+			if (functions.empty())
+				continue;
 			BOOST_CHECK_EQUAL("boo(uint256,bytes32,address)", functions[0]->externalSignature());
 		}
 }
@@ -384,8 +399,11 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 {
 	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = R"(
+		contract C {
+			uint a;
+		}
 		contract Test {
-			function boo(uint arg2, bool arg3, bytes8 arg4, bool[2] pairs) public returns (uint ret) {
+			function boo(uint arg2, bool arg3, bytes8 arg4, bool[2] pairs, uint[] dynamic, C carg) external returns (uint ret) {
 			   ret = 5;
 			}
 		})";
@@ -394,40 +412,41 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			auto functions = contract->getDefinedFunctions();
-			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8)", functions[0]->externalSignature());
+			if (functions.empty())
+				continue;
+			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8,bool[2],uint256[],address)", functions[0]->externalSignature(true));
 		}
 }
 
-//BOOST_AUTO_TEST_CASE(function_external_types_throw)
-//{
-//	ASTPointer<SourceUnit> sourceUnit;
-//	char const* text = R"(
-//	contract ArrayContract {
-//	  bool[2][] m_pairsOfFlags;
-//	  function setAllFlagPairs(bool[2][] newPairs) {
-//		// assignment to array replaces the complete array
-//		m_pairsOfFlags = newPairs;
-//	  }
-//	})";
-//	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
-//	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
-//	if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-//	{
-//		auto functions = contract->getDefinedFunctions();
-//		BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8)", functions[0]->externalSigniture());
-//	}
-//todo should check arrays and contract. also event
-//BOOST_AUTO_TEST_CASE(function_external_types_throw)
-//{
-//	ASTPointer<SourceUnit> sourceUnit;
-//	char const* text = R"(
-//		contract Test {
-//			function boo(uint32[] arg5) returns (uint ret) {
-//			   ret = 5;
-//			}
-//		})";
-//	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
-//}
+BOOST_AUTO_TEST_CASE(function_external_call_conversion)
+{
+	char const* sourceCode = R"(
+		contract C {}
+		contract Test {
+			function externalCall()	{
+				address arg;
+				this.g(arg);
+			}
+			function g (C c) external {}
+	})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(function_internal_call_conversion)
+{
+	char const* text = R"(
+		contract C {
+			uint a;
+		}
+		contract Test {
+			address a;
+			function g (C c) {}
+			function internalCall() {
+				g(a);
+			}
+	})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
 
 BOOST_AUTO_TEST_CASE(hash_collision_in_interface)
 {
