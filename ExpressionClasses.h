@@ -53,6 +53,7 @@ public:
 		AssemblyItem const* item;
 		Ids arguments;
 		unsigned sequenceNumber; ///< Storage modification sequence, only used for SLOAD/SSTORE instructions.
+		/// Behaves as if this was a tuple of (item->type(), item->data(), arguments, sequenceNumber).
 		bool operator<(Expression const& _other) const;
 	};
 
@@ -86,6 +87,8 @@ private:
 
 	/// Expression equivalence class representatives - we only store one item of an equivalence.
 	std::vector<Expression> m_representatives;
+	/// All expression ever encountered.
+	std::set<Expression> m_expressions;
 	std::vector<std::shared_ptr<AssemblyItem>> m_spareAssemblyItem;
 };
 

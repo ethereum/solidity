@@ -59,10 +59,9 @@ ExpressionClasses::Id ExpressionClasses::find(
 	if (SemanticInformation::isCommutativeOperation(_item))
 		sort(exp.arguments.begin(), exp.arguments.end());
 
-	//@todo store all class members (not only the representatives) in an efficient data structure to search here
-	for (Expression const& e: m_representatives)
-		if (!(e < exp || exp < e))
-			return e.id;
+	auto it = m_expressions.find(exp);
+	if (it != m_expressions.end())
+		return it->id;
 
 	if (_copyItem)
 	{
@@ -72,17 +71,19 @@ ExpressionClasses::Id ExpressionClasses::find(
 
 	ExpressionClasses::Id id = tryToSimplify(exp);
 	if (id < m_representatives.size())
-		return id;
-
-	exp.id = m_representatives.size();
-	m_representatives.push_back(exp);
+		exp.id = id;
+	else
+	{
+		exp.id = m_representatives.size();
+		m_representatives.push_back(exp);
+	}
+	m_expressions.insert(exp);
 	return exp.id;
 }
 
 bool ExpressionClasses::knownToBeDifferent(ExpressionClasses::Id _a, ExpressionClasses::Id _b)
 {
 	// Try to simplify "_a - _b" and return true iff the value is a non-zero constant.
-	//@todo we could try to cache this information
 	map<unsigned, Expression const*> matchGroups;
 	Pattern constant(Push);
 	constant.setMatchGroup(1, matchGroups);
