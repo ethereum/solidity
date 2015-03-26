@@ -97,6 +97,17 @@ namespace test
 	}																	\
 	while (0)
 
+struct ImportStateOptions
+{
+	ImportStateOptions():m_bHasBalance(false), m_bHasNonce(false), m_bHasCode(false), m_bHasStorage(false)	{}
+	ImportStateOptions(bool _bSetAll):m_bHasBalance(_bSetAll), m_bHasNonce(_bSetAll), m_bHasCode(_bSetAll), m_bHasStorage(_bSetAll)	{}
+	bool isAllSet() {return m_bHasBalance && m_bHasNonce && m_bHasCode && m_bHasStorage;}
+	bool m_bHasBalance;
+	bool m_bHasNonce;
+	bool m_bHasCode;
+	bool m_bHasStorage;
+};
+typedef std::map<Address, ImportStateOptions> stateOptionsMap;
 
 class ImportTest
 {
@@ -106,9 +117,12 @@ public:
 	// imports
 	void importEnv(json_spirit::mObject& _o);
 	static void importState(json_spirit::mObject& _o, eth::State& _state);
+	static void importState(json_spirit::mObject& _o, eth::State& _state, stateOptionsMap& _stateOptionsMap);
 	void importTransaction(json_spirit::mObject& _o);
+
 	void exportTest(bytes const& _output, eth::State const& _statePost);
 	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, WhenError _throw = WhenError::Throw);
+	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, stateOptionsMap const& _expectedStateOptions, WhenError _throw = WhenError::Throw);
 
 	eth::State m_statePre;
 	eth::State m_statePost;

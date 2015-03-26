@@ -25,7 +25,6 @@
 #include <chrono>
 
 #include <boost/filesystem/path.hpp>
-#include <boost/assign.hpp>
 
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
@@ -107,41 +106,72 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	m_statePre.m_currentBlock = m_environment.currentBlock;
 }
 
-void ImportTest::importState(json_spirit::mObject& _o, State& _state)
+// import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
+
+void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptionsMap& _stateOptionsMap)
 {
 	for (auto& i: _o)
 	{
 		json_spirit::mObject o = i.second.get_obj();
 
-		assert(o.count("balance") > 0);
-		assert(o.count("nonce") > 0);
-		assert(o.count("storage") > 0);
-		assert(o.count("code") > 0);
+		ImportStateOptions stateOptions;
+		u256 iBalance = 0, iNonce = 0;
 
-		if (bigint(o["balance"].get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
-		if (bigint(o["nonce"].get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
+		if (o.count("balance") > 0)
+		{
+			stateOptions.m_bHasBalance = true;
+			if (bigint(o["balance"].get_str()) >= c_max256plus1)
+				BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
+			iBalance = toInt(o["balance"]);
+		}
+
+		if (o.count("nonce") > 0)
+		{
+			stateOptions.m_bHasNonce = true;
+			if (bigint(o["nonce"].get_str()) >= c_max256plus1)
+				BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
+			iNonce = toInt(o["nonce"]);
+		}
 
 		Address address = Address(i.first);
 
-		bytes code = importCode(o);
+		bytes code;
+		if (o.count("code") > 0)
+		{
+			code = importCode(o);
+			stateOptions.m_bHasCode = true;
+		}
 
 		if (code.size())
 		{
-			_state.m_cache[address] = Account(toInt(o["balance"]), Account::ContractConception);
+			_state.m_cache[address] = Account(iBalance, Account::ContractConception);
 			_state.m_cache[address].setCode(code);
 		}
 		else
-			_state.m_cache[address] = Account(toInt(o["balance"]), Account::NormalCreation);
+			_state.m_cache[address] = Account(iBalance, Account::NormalCreation);
 
-		for (auto const& j: o["storage"].get_obj())
-			_state.setStorage(address, toInt(j.first), toInt(j.second));
+		if (o.count("storage") > 0)
+		{
+			stateOptions.m_bHasStorage = true;
+			for (auto const& j: o["storage"].get_obj())
+				_state.setStorage(address, toInt(j.first), toInt(j.second));
+		}
 
-		for(int i=0; i<toInt(o["nonce"]); ++i)
+		for (int i=0; i<iNonce; ++i)
 			_state.noteSending(address);
 
 		_state.ensureCached(address, false, false);
+		_stateOptionsMap[address] = stateOptions;
+	}
+}
+
+void ImportTest::importState(json_spirit::mObject& _o, State& _state)
+{
+	stateOptionsMap importedMap;
+	importState(_o, _state, importedMap);
+	for (auto& stateOptionMap: importedMap)
+	{
+		assert(stateOptionMap.second.isAllSet());	//check that every parameter was declared in state object
 	}
 }
 
@@ -179,6 +209,12 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 
 void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, WhenError _throw)
 {
+	stateOptionsMap defaultMap;
+	checkExpectedState(_stateExpect, _statePost, defaultMap, _throw);
+}
+
+void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, stateOptionsMap const& _expectedStateOptions, WhenError _throw)
+{
 	#define CHECK(a,b) \
 		if (_throw == WhenError::Throw) \
 			BOOST_CHECK_MESSAGE(a,b);   \
@@ -190,20 +226,47 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 		CHECK(_statePost.addressInUse(a.first), "Filling Test: " << a.first << " missing expected address!");
 		if (_statePost.addressInUse(a.first))
 		{
-			CHECK(_stateExpect.balance(a.first) == _statePost.balance(a.first),
-					"Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
-			CHECK(_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first),
-					"Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
-
-			map<u256, u256> stateStorage = _statePost.storage(a.first);
-			for (auto const& s: _stateExpect.storage(a.first))
+			ImportStateOptions addressOptions(true);
+			if(_expectedStateOptions.size())
 			{
-				CHECK(stateStorage[s.first] == s.second,
-						"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
+				try
+				{
+					addressOptions = _expectedStateOptions.at(a.first);
+				}
+				catch(std::out_of_range)
+				{
+					BOOST_ERROR("expectedStateOptions map does not match expectedState in checkExpectedState!");
+					break;
+				}
 			}
 
-			CHECK(_stateExpect.code(a.first) == 	_statePost.code(a.first),
-					"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
+			if (addressOptions.m_bHasBalance)
+			{
+				CHECK(_stateExpect.balance(a.first) == _statePost.balance(a.first),
+						"Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
+			}
+
+			if (addressOptions.m_bHasNonce)
+			{
+				CHECK(_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first),
+						"Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
+			}
+
+			if (addressOptions.m_bHasStorage)
+			{
+				map<u256, u256> stateStorage = _statePost.storage(a.first);
+				for (auto const& s: _stateExpect.storage(a.first))
+				{
+					CHECK(stateStorage[s.first] == s.second,
+							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
+				}
+			}
+
+			if (addressOptions.m_bHasCode)
+			{
+				CHECK(_stateExpect.code(a.first) == 	_statePost.code(a.first),
+						"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
+			}
 		}
 	}
 }
@@ -219,9 +282,10 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	// compare expected state with post state
 	if (m_TestObject.count("expect") > 0)
 	{
-		State expectState(Address(), OverlayDB(), eth::BaseState::Empty);
-		importState(m_TestObject["expect"].get_obj(), expectState);
-		checkExpectedState(expectState, _statePost, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+		stateOptionsMap stateMap;
+		State expectState(Address(), OverlayDB(), eth::BaseState::Empty);		
+		importState(m_TestObject["expect"].get_obj(), expectState, stateMap);
+		checkExpectedState(expectState, _statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 		m_TestObject.erase(m_TestObject.find("expect"));
 	}
 
