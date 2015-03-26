@@ -145,7 +145,7 @@ public:
 	bool success = false;
 };
 
-BOOST_AUTO_TEST_CASE(badPingNodePacket)
+BOOST_AUTO_TEST_CASE(v2PingNodePacket)
 {
 	// test old versino of pingNode packet w/new
 	RLPStream s;
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(badPingNodePacket)
 
 	PingNode p((bi::udp::endpoint()));
 	BOOST_REQUIRE_NO_THROW(p = PingNode::fromBytesConstRef(bi::udp::endpoint(), bytesConstRef(&s.out())));
-	BOOST_REQUIRE(p.version == 0);
+	BOOST_REQUIRE(p.version == 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_neighbours_packet)
