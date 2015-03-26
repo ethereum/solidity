@@ -88,7 +88,10 @@ public:
 
 private:
 	/// Feeds the item into the system for analysis.
-	void feedItem(AssemblyItem const& _item);
+	void feedItem(AssemblyItem const& _item, bool _copyItem = false);
+
+	/// Tries to optimize the item that breaks the basic block at the end.
+	void optimizeBreakingItem();
 
 	/// Simplifies the given item using
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.
@@ -130,6 +133,10 @@ private:
 	std::vector<StoreOperation> m_storeOperations;
 	/// Structure containing the classes of equivalent expressions.
 	ExpressionClasses m_expressionClasses;
+
+	/// The item that breaks the basic block, can be nullptr.
+	/// It is usually appended to the block but can be optimized in some cases.
+	AssemblyItem const* m_breakingItem = nullptr;
 };
 
 /**
@@ -225,6 +232,8 @@ _AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 {
 	for (; _iterator != _end && !SemanticInformation::breaksBasicBlock(*_iterator); ++_iterator)
 		feedItem(*_iterator);
+	if (_iterator != _end)
+		m_breakingItem = &(*_iterator++);
 	return _iterator;
 }
 

@@ -32,6 +32,8 @@ using namespace dev::eth;
 
 vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {
+	optimizeBreakingItem();
+
 	map<int, ExpressionClasses::Id> initialStackContents;
 	map<int, ExpressionClasses::Id> targetStackContents;
 	int minHeight = m_stackHeight + 1;
@@ -45,10 +47,13 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	// Debug info:
 	//stream(cout, initialStackContents, targetStackContents);
 
-	return CSECodeGenerator(m_expressionClasses, m_storeOperations).generateCode(
+	AssemblyItems items = CSECodeGenerator(m_expressionClasses, m_storeOperations).generateCode(
 		initialStackContents,
 		targetStackContents
 	);
+	if (m_breakingItem)
+		items.push_back(*m_breakingItem);
+	return items;
 }
 
 ostream& CommonSubexpressionEliminator::stream(
@@ -91,12 +96,12 @@ ostream& CommonSubexpressionEliminator::stream(
 	return _out;
 }
 
-void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
+void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item, bool _copyItem)
 {
 	if (_item.type() != Operation)
 	{
 		assertThrow(_item.deposit() == 1, InvalidDeposit, "");
-		setStackElement(++m_stackHeight, m_expressionClasses.find(_item, {}, false));
+		setStackElement(++m_stackHeight, m_expressionClasses.find(_item, {}, _copyItem));
 	}
 	else
 	{
@@ -126,9 +131,35 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 			else if (_item.instruction() == Instruction::MLOAD)
 				setStackElement(m_stackHeight + _item.deposit(), loadFromMemory(arguments[0]));
 			else
-				setStackElement(m_stackHeight + _item.deposit(), m_expressionClasses.find(_item, arguments, false));
+				setStackElement(m_stackHeight + _item.deposit(), m_expressionClasses.find(_item, arguments, _copyItem));
 		}
 		m_stackHeight += _item.deposit();
+	}
+}
+
+void CommonSubexpressionEliminator::optimizeBreakingItem()
+{
+	if (!m_breakingItem || *m_breakingItem != AssemblyItem(Instruction::JUMPI))
+		return;
+
+	using Id = ExpressionClasses::Id;
+	static AssemblyItem s_jump = Instruction::JUMP;
+
+	Id condition = stackElement(m_stackHeight - 1);
+	Id zero = m_expressionClasses.find(u256(0));
+	if (m_expressionClasses.knownToBeDifferent(condition, zero))
+	{
+		feedItem(Instruction::SWAP1, true);
+		feedItem(Instruction::POP, true);
+		m_breakingItem = &s_jump;
+		return;
+	}
+	Id negatedCondition = m_expressionClasses.find(Instruction::ISZERO, {condition});
+	if (m_expressionClasses.knownToBeDifferent(negatedCondition, zero))
+	{
+		feedItem(Instruction::POP, true);
+		feedItem(Instruction::POP, true);
+		m_breakingItem = nullptr;
 	}
 }
 
