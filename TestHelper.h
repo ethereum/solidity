@@ -108,7 +108,7 @@ public:
 	static void importState(json_spirit::mObject& _o, eth::State& _state);
 	void importTransaction(json_spirit::mObject& _o);
 	void exportTest(bytes const& _output, eth::State const& _statePost);
-	static bool compareStates(eth::State const& _stateExpect, eth::State const& _statePost);
+	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, WhenError _throw = WhenError::Throw);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
@@ -166,6 +166,7 @@ public:
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
+	bool checkState = false;///< Throw error when checking test states
 
 	/// Test selection
 	/// @{

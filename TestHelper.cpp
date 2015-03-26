@@ -177,59 +177,35 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	}
 }
 
-bool ImportTest::compareStates(State const& _stateExpect, State const& _statePost)
+void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, WhenError _throw)
 {
-	//TestNet Addresses
-	static Addresses testNetAddressList = boost::assign::list_of
-			(Address("0000000000000000000000000000000000000001"))
-			(Address("0000000000000000000000000000000000000002"))
-			(Address("0000000000000000000000000000000000000003"))
-			(Address("0000000000000000000000000000000000000004"))
-			(Address("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"))
-			(Address("2ef47100e0787b915105fd5e3f4ff6752079d5cb"))
-			(Address("6c386a4b26f73c802f34673f7248bb118f97424a"))
-			(Address("b9c015918bdaba24b4ff057a92a3873d6eb201be"))
-			(Address("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"))
-			(Address("dbdbdb2cbd23b783741e8d7fcf51e459b497e4a6"))
-			(Address("e4157b34ea9615cfbde6b4fda419828124b70c78"))
-			(Address("e6716f9544a56c530d868e4bfbacb172315bdead"));
+	#define CHECK(a,b) \
+		if (_throw == WhenError::Throw) \
+			BOOST_CHECK_MESSAGE(a,b);   \
+		else							\
+			BOOST_WARN_MESSAGE(a,b);
 
 	for (auto const& a: _stateExpect.addresses())
 	{
-		bool bFound = false;  //do not count default addresses as it's not in addressInUse
-		for (auto const& it: testNetAddressList)
-		{
-			if (it == a.first)
-			{
-				bFound = true;
-				break;
-			}
-		}
-
-		if (bFound)
-			continue;
-
-		BOOST_CHECK_MESSAGE(_statePost.addressInUse(a.first), "Filling Test Error: " << a.first << " expected address not in use!");
+		CHECK(_statePost.addressInUse(a.first), "Filling Test: " << a.first << " missing expected address!");
 		if (_statePost.addressInUse(a.first))
 		{
-			BOOST_CHECK_MESSAGE(_stateExpect.balance(a.first) == _statePost.balance(a.first),
-								"Filling Test Error: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
-			BOOST_CHECK_MESSAGE(_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first),
-								"Filling Test Error: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
+			CHECK(_stateExpect.balance(a.first) == _statePost.balance(a.first),
+					"Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
+			CHECK(_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first),
+					"Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
 
 			map<u256, u256> stateStorage = _statePost.storage(a.first);
 			for (auto const& s: _stateExpect.storage(a.first))
 			{
-				BOOST_CHECK_MESSAGE(stateStorage[s.first] == s.second,
-								"Filling Test Error: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
+				CHECK(stateStorage[s.first] == s.second,
+						"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
 			}
 
-			BOOST_CHECK_MESSAGE(_stateExpect.code(a.first) == 	_statePost.code(a.first),
-								"Filling Test Error: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
+			CHECK(_stateExpect.code(a.first) == 	_statePost.code(a.first),
+					"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
-
-	return true;
 }
 
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
@@ -243,9 +219,9 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	// compare expected state with post state
 	if (m_TestObject.count("expect") > 0)
 	{
-		State expectState;
+		State expectState(Address(), OverlayDB(), eth::BaseState::Empty);
 		importState(m_TestObject["expect"].get_obj(), expectState);
-		compareStates(expectState, _statePost);
+		checkExpectedState(expectState, _statePost, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 		m_TestObject.erase(m_TestObject.find("expect"));
 	}
 
@@ -623,6 +599,8 @@ Options::Options()
 			inputLimits = true;
 		else if (arg == "--bigdata")
 			bigData = true;
+		else if (arg == "--checkstate")
+			checkState = true;
 		else if (arg == "--all")
 		{
 			performance = true;
@@ -630,6 +608,7 @@ Options::Options()
 			memory = true;
 			inputLimits = true;
 			bigData = true;
+			checkState = true;
 		}
 	}
 }
