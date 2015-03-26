@@ -58,11 +58,14 @@ class CommonSubexpressionEliminator
 public:
 	struct StoreOperation
 	{
+		enum Target { Memory, Storage };
 		StoreOperation(
+			Target _target,
 			ExpressionClasses::Id _slot,
 			unsigned _sequenceNumber,
 			ExpressionClasses::Id _expression
-		): slot(_slot), sequenceNumber(_sequenceNumber), expression(_expression) {}
+		): target(_target), slot(_slot), sequenceNumber(_sequenceNumber), expression(_expression) {}
+		Target target;
 		ExpressionClasses::Id slot;
 		unsigned sequenceNumber;
 		ExpressionClasses::Id expression;
@@ -104,6 +107,12 @@ private:
 	void storeInStorage(ExpressionClasses::Id _slot, ExpressionClasses::Id _value);
 	/// Retrieves the current value at the given slot in storage or creates a new special sload class.
 	ExpressionClasses::Id loadFromStorage(ExpressionClasses::Id _slot);
+	/// Increments the sequence number, deletes all memory information that might be overwritten
+	/// and stores the new value at the given slot.
+	void storeInMemory(ExpressionClasses::Id _slot, ExpressionClasses::Id _value);
+	/// Retrieves the current value at the given slot in memory or creates a new special mload class.
+	ExpressionClasses::Id loadFromMemory(ExpressionClasses::Id _slot);
+
 
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
@@ -113,6 +122,9 @@ private:
 	unsigned m_sequenceNumber = 1;
 	/// Knowledge about storage content.
 	std::map<ExpressionClasses::Id, ExpressionClasses::Id> m_storageContent;
+	/// Knowledge about memory content. Keys are memory addresses, note that the values overlap
+	/// and are not contained here if they are not completely known.
+	std::map<ExpressionClasses::Id, ExpressionClasses::Id> m_memoryContent;
 	/// Keeps information about which storage or memory slots were written to at which sequence
 	/// number with what instruction.
 	std::vector<StoreOperation> m_storeOperations;
@@ -200,7 +212,7 @@ private:
 	ExpressionClasses& m_expressionClasses;
 	/// Keeps information about which storage or memory slots were written to by which operations.
 	/// The operations are sorted ascendingly by sequence number.
-	std::map<ExpressionClasses::Id, StoreOperations> m_storeOperations;
+	std::map<std::pair<StoreOperation::Target, ExpressionClasses::Id>, StoreOperations> m_storeOperations;
 	/// The set of equivalence classes that should be present on the stack at the end.
 	std::set<ExpressionClasses::Id> m_finalClasses;
 };

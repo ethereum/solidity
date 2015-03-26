@@ -91,6 +91,19 @@ bool ExpressionClasses::knownToBeDifferent(ExpressionClasses::Id _a, ExpressionC
 	return constant.matches(representative(difference), *this) && constant.d() != u256(0);
 }
 
+bool ExpressionClasses::knownToBeDifferentBy32(ExpressionClasses::Id _a, ExpressionClasses::Id _b)
+{
+	// Try to simplify "_a - _b" and return true iff the value is at least 32 away from zero.
+	map<unsigned, Expression const*> matchGroups;
+	Pattern constant(Push);
+	constant.setMatchGroup(1, matchGroups);
+	Id difference = find(Instruction::SUB, {_a, _b});
+	if (!constant.matches(representative(difference), *this))
+		return false;
+	// forbidden interval is ["-31", 31]
+	return constant.d() + 31 > u256(62);
+}
+
 string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
 {
 	Expression const& expr = representative(_id);

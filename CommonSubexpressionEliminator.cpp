@@ -121,6 +121,10 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item)
 				storeInStorage(arguments[0], arguments[1]);
 			else if (_item.instruction() == Instruction::SLOAD)
 				setStackElement(m_stackHeight + _item.deposit(), loadFromStorage(arguments[0]));
+			else if (_item.instruction() == Instruction::MSTORE)
+				storeInMemory(arguments[0], arguments[1]);
+			else if (_item.instruction() == Instruction::MLOAD)
+				setStackElement(m_stackHeight + _item.deposit(), loadFromMemory(arguments[0]));
 			else
 				setStackElement(m_stackHeight + _item.deposit(), m_expressionClasses.find(_item, arguments, false));
 		}
@@ -172,7 +176,7 @@ void CommonSubexpressionEliminator::storeInStorage(ExpressionClasses::Id _slot, 
 			storageContents.insert(storageItem);
 	m_storageContent = move(storageContents);
 	ExpressionClasses::Id id = m_expressionClasses.find(Instruction::SSTORE, {_slot, _value}, true, m_sequenceNumber);
-	m_storeOperations.push_back(StoreOperation(_slot, m_sequenceNumber, id));
+	m_storeOperations.push_back(StoreOperation(StoreOperation::Storage, _slot, m_sequenceNumber, id));
 	m_storageContent[_slot] = _value;
 	// increment a second time so that we get unique sequence numbers for writes
 	m_sequenceNumber ++;
@@ -184,6 +188,33 @@ ExpressionClasses::Id CommonSubexpressionEliminator::loadFromStorage(ExpressionC
 		return m_storageContent.at(_slot);
 	else
 		return m_storageContent[_slot] = m_expressionClasses.find(Instruction::SLOAD, {_slot}, true, m_sequenceNumber);
+}
+
+void CommonSubexpressionEliminator::storeInMemory(ExpressionClasses::Id _slot, ExpressionClasses::Id _value)
+{
+	if (m_memoryContent.count(_slot) && m_memoryContent[_slot] == _value)
+		// do not execute the store if we know that the value is already there
+		return;
+	m_sequenceNumber ++;
+	decltype(m_memoryContent) memoryContents;
+	// copy over values at points where we know that they are different from _slot by at least 32
+	for (auto const& memoryItem: m_memoryContent)
+		if (m_expressionClasses.knownToBeDifferentBy32(memoryItem.first, _slot))
+			memoryContents.insert(memoryItem);
+	m_memoryContent = move(memoryContents);
+	ExpressionClasses::Id id = m_expressionClasses.find(Instruction::MSTORE, {_slot, _value}, true, m_sequenceNumber);
+	m_storeOperations.push_back(StoreOperation(StoreOperation::Memory, _slot, m_sequenceNumber, id));
+	m_memoryContent[_slot] = _value;
+	// increment a second time so that we get unique sequence numbers for writes
+	m_sequenceNumber ++;
+}
+
+ExpressionClasses::Id CommonSubexpressionEliminator::loadFromMemory(ExpressionClasses::Id _slot)
+{
+	if (m_memoryContent.count(_slot))
+		return m_memoryContent.at(_slot);
+	else
+		return m_memoryContent[_slot] = m_expressionClasses.find(Instruction::MLOAD, {_slot}, true, m_sequenceNumber);
 }
 
 bool SemanticInformation::breaksBasicBlock(AssemblyItem const& _item)
@@ -208,9 +239,19 @@ bool SemanticInformation::breaksBasicBlock(AssemblyItem const& _item)
 			return false;
 		if (_item.instruction() == Instruction::GAS || _item.instruction() == Instruction::PC)
 			return true; // GAS and PC assume a specific order of opcodes
+		if (_item.instruction() == Instruction::MSIZE)
+			return true; // msize is modified already by memory access, avoid that for now
+		if (_item.instruction() == Instruction::SHA3)
+			return true; //@todo: we have to compare sha3's not based on their memory addresses but on the memory content.
 		InstructionInfo info = instructionInfo(_item.instruction());
 		if (_item.instruction() == Instruction::SSTORE)
 			return false;
+		if (_item.instruction() == Instruction::MSTORE)
+			return false;
+		//@todo: We do not handle the following memory instructions for now:
+		// calldatacopy, codecopy, extcodecopy, mstore8,
+		// msize (not that msize also depends on memory read access)
+
 		// the second requirement will be lifted once it is implemented
 		return info.sideEffects || info.args > 2;
 	}
@@ -256,7 +297,7 @@ CSECodeGenerator::CSECodeGenerator(
 	m_expressionClasses(_expressionClasses)
 {
 	for (auto const& store: _storeOperations)
-		m_storeOperations[store.slot].push_back(store);
+		m_storeOperations[make_pair(store.target, store.slot)].push_back(store);
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
@@ -332,25 +373,34 @@ void CSECodeGenerator::addDependencies(ExpressionClasses::Id _c)
 {
 	if (m_neededBy.count(_c))
 		return; // we already computed the dependencies for _c
-	ExpressionClasses::Expression const& expr = m_expressionClasses.representative(_c);
+	ExpressionClasses::Expression expr = m_expressionClasses.representative(_c);
 	for (ExpressionClasses::Id argument: expr.arguments)
 	{
 		addDependencies(argument);
 		m_neededBy.insert(make_pair(argument, _c));
 	}
-	if (expr.item->type() == Operation && expr.item->instruction() == Instruction::SLOAD)
+	if (expr.item->type() == Operation && (
+		expr.item->instruction() == Instruction::SLOAD ||
+		expr.item->instruction() == Instruction::MLOAD
+	))
 	{
-		// this loads an unknown value from storage and thus, in addition to its arguments, depends
-		// on all store operations to addresses where we do not know that they are different that
-		// occur before this load
+		// this loads an unknown value from storage or memory and thus, in addition to its
+		// arguments, depends on all store operations to addresses where we do not know that
+		// they are different that occur before this load
+		StoreOperation::Target target = expr.item->instruction() == Instruction::SLOAD ?
+			StoreOperation::Storage : StoreOperation::Memory;
 		ExpressionClasses::Id slotToLoadFrom = expr.arguments.at(0);
 		for (auto const& p: m_storeOperations)
 		{
-			ExpressionClasses::Id slot = p.first;
+			if (p.first.first != target)
+				continue;
+			ExpressionClasses::Id slot = p.first.second;
 			StoreOperations const& storeOps = p.second;
+			if (storeOps.front().sequenceNumber > expr.sequenceNumber)
+				continue;
 			if (
-				m_expressionClasses.knownToBeDifferent(slot, slotToLoadFrom) ||
-				storeOps.front().sequenceNumber > expr.sequenceNumber
+				(target == StoreOperation::Memory && m_expressionClasses.knownToBeDifferentBy32(slot, slotToLoadFrom)) ||
+				(target == StoreOperation::Storage && m_expressionClasses.knownToBeDifferent(slot, slotToLoadFrom))
 			)
 				continue;
 			// note that store and load never have the same sequence number

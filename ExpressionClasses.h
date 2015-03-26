@@ -76,6 +76,8 @@ public:
 	/// @returns true if the values of the given classes are known to be different (on every input).
 	/// @note that this function might still return false for some different inputs.
 	bool knownToBeDifferent(Id _a, Id _b);
+	/// Similar to @a knownToBeDifferent but require that abs(_a - b) >= 32.
+	bool knownToBeDifferentBy32(Id _a, Id _b);
 
 	std::string fullDAGToString(Id _id) const;
 
