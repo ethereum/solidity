@@ -45,7 +45,7 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	// Debug info:
 	//stream(cout, initialStackContents, targetStackContents);
 
-	return CSECodeGenerator(m_expressionClasses, m_storageWrites).generateCode(
+	return CSECodeGenerator(m_expressionClasses, m_storeOperations).generateCode(
 		initialStackContents,
 		targetStackContents
 	);
@@ -172,7 +172,7 @@ void CommonSubexpressionEliminator::storeInStorage(ExpressionClasses::Id _slot, 
 			storageContents.insert(storageItem);
 	m_storageContent = move(storageContents);
 	ExpressionClasses::Id id = m_expressionClasses.find(Instruction::SSTORE, {_slot, _value}, true, m_sequenceNumber);
-	m_storageWrites.insert(StorageWriteOperation(_slot, m_sequenceNumber, id));
+	m_storeOperations.push_back(StoreOperation(_slot, m_sequenceNumber, id));
 	m_storageContent[_slot] = _value;
 	// increment a second time so that we get unique sequence numbers for writes
 	m_sequenceNumber ++;
@@ -249,6 +249,16 @@ bool SemanticInformation::isSwapInstruction(AssemblyItem const& _item)
 	return Instruction::SWAP1 <= _item.instruction() && _item.instruction() <= Instruction::SWAP16;
 }
 
+CSECodeGenerator::CSECodeGenerator(
+	ExpressionClasses& _expressionClasses,
+	vector<CSECodeGenerator::StoreOperation> const& _storeOperations
+):
+	m_expressionClasses(_expressionClasses)
+{
+	for (auto const& store: _storeOperations)
+		m_storeOperations[store.slot].push_back(store);
+}
+
 AssemblyItems CSECodeGenerator::generateCode(
 	map<int, ExpressionClasses::Id> const& _initialStack,
 	map<int, ExpressionClasses::Id> const& _targetStackContents
@@ -261,35 +271,26 @@ AssemblyItems CSECodeGenerator::generateCode(
 
 	// @todo: provide information about the positions of copies of class elements
 
-	// generate the dependency graph starting from final storage writes and target stack contents
-	for (auto it = m_storageWrites.begin(); it != m_storageWrites.end();)
-	{
-		auto next = it;
-		++next;
-		if (next == m_storageWrites.end() || next->slot != it->slot)
-			// last write to that storage slot
-			addDependencies(it->expression);
-		it = next;
-	}
+	// generate the dependency graph starting from final storage and memory writes and target stack contents
+	for (auto const& p: m_storeOperations)
+		addDependencies(p.second.back().expression);
 	for (auto const& targetItem: _targetStackContents)
 	{
 		m_finalClasses.insert(targetItem.second);
 		addDependencies(targetItem.second);
 	}
 
-	// Perform all operations on storage in order, if they are needed.
-	//@todo use better data structures to optimize these loops
-	unsigned maxSequenceNumber = 1;
-	for (StorageWriteOperation const& op: m_storageWrites)
-		maxSequenceNumber = max(maxSequenceNumber, op.sequenceNumber + 1);
-	for (unsigned sequenceNumber = 1; sequenceNumber <= maxSequenceNumber; ++sequenceNumber)
-		for (auto const& depPair: m_neededBy)
-			for (ExpressionClasses::Id const& id: {depPair.first, depPair.second})
-				if (
-					m_expressionClasses.representative(id).sequenceNumber == sequenceNumber &&
-					!m_classPositions.count(id)
-				)
-					generateClassElement(id, true);
+	// store all needed sequenced expressions
+	set<pair<unsigned, ExpressionClasses::Id>> sequencedExpressions;
+	for (auto const& p: m_neededBy)
+		for (auto id: {p.first, p.second})
+			if (unsigned seqNr = m_expressionClasses.representative(id).sequenceNumber)
+				sequencedExpressions.insert(make_pair(seqNr, id));
+
+	// Perform all operations on storage and memory in order, if they are needed.
+	for (auto const& seqAndId: sequencedExpressions)
+		if (!m_classPositions.count(seqAndId.second))
+			generateClassElement(seqAndId.second, true);
 
 	// generate the target stack elements
 	for (auto const& targetItem: _targetStackContents)
@@ -340,23 +341,25 @@ void CSECodeGenerator::addDependencies(ExpressionClasses::Id _c)
 	if (expr.item->type() == Operation && expr.item->instruction() == Instruction::SLOAD)
 	{
 		// this loads an unknown value from storage and thus, in addition to its arguments, depends
-		// on all SSTORE operations to addresses where we do not know that they are different that
-		// occur before this SLOAD
+		// on all store operations to addresses where we do not know that they are different that
+		// occur before this load
 		ExpressionClasses::Id slotToLoadFrom = expr.arguments.at(0);
-		for (auto it = m_storageWrites.begin(); it != m_storageWrites.end();)
+		for (auto const& p: m_storeOperations)
 		{
-			auto next = it;
-			++next;
-			// note that SSTORE and SLOAD never have the same sequence number
-			if (it->sequenceNumber < expr.sequenceNumber &&
-				!m_expressionClasses.knownToBeDifferent(it->slot, slotToLoadFrom) &&
-				(next == m_storageWrites.end() || next->sequenceNumber > expr.sequenceNumber)
+			ExpressionClasses::Id slot = p.first;
+			StoreOperations const& storeOps = p.second;
+			if (
+				m_expressionClasses.knownToBeDifferent(slot, slotToLoadFrom) ||
+				storeOps.front().sequenceNumber > expr.sequenceNumber
 			)
-			{
-				addDependencies(it->expression);
-				m_neededBy.insert(make_pair(it->expression, _c));
-			}
-			it = next;
+				continue;
+			// note that store and load never have the same sequence number
+			ExpressionClasses::Id latestStore = storeOps.front().expression;
+			for (auto it = ++storeOps.begin(); it != storeOps.end(); ++it)
+				if (it->sequenceNumber < expr.sequenceNumber)
+					latestStore = it->expression;
+			addDependencies(latestStore);
+			m_neededBy.insert(make_pair(latestStore, _c));
 		}
 	}
 }

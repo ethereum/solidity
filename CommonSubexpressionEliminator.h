@@ -56,18 +56,13 @@ using AssemblyItems = std::vector<AssemblyItem>;
 class CommonSubexpressionEliminator
 {
 public:
-	struct StorageWriteOperation
+	struct StoreOperation
 	{
-		StorageWriteOperation(
+		StoreOperation(
 			ExpressionClasses::Id _slot,
 			unsigned _sequenceNumber,
 			ExpressionClasses::Id _expression
 		): slot(_slot), sequenceNumber(_sequenceNumber), expression(_expression) {}
-		bool operator<(StorageWriteOperation const& _other) const
-		{
-			return std::tie(slot, sequenceNumber, expression) <
-					std::tie(_other.slot, _other.sequenceNumber, _other.expression);
-		}
 		ExpressionClasses::Id slot;
 		unsigned sequenceNumber;
 		ExpressionClasses::Id expression;
@@ -114,13 +109,13 @@ private:
 	int m_stackHeight = 0;
 	/// Current stack layout, mapping stack height -> equivalence class
 	std::map<int, ExpressionClasses::Id> m_stackElements;
-	/// Current sequence number, this is incremented with each modification to storage.
+	/// Current sequence number, this is incremented with each modification to storage or memory.
 	unsigned m_sequenceNumber = 1;
 	/// Knowledge about storage content.
 	std::map<ExpressionClasses::Id, ExpressionClasses::Id> m_storageContent;
-	/// Keeps information about which storage slots were written to at which sequence number with
-	/// what SSTORE instruction.
-	std::set<StorageWriteOperation> m_storageWrites;
+	/// Keeps information about which storage or memory slots were written to at which sequence
+	/// number with what instruction.
+	std::vector<StoreOperation> m_storeOperations;
 	/// Structure containing the classes of equivalent expressions.
 	ExpressionClasses m_expressionClasses;
 };
@@ -146,15 +141,12 @@ struct SemanticInformation
 class CSECodeGenerator
 {
 public:
-	using StorageWriteOperation = CommonSubexpressionEliminator::StorageWriteOperation;
+	using StoreOperation = CommonSubexpressionEliminator::StoreOperation;
+	using StoreOperations = std::vector<StoreOperation>;
 
-	CSECodeGenerator(
-		ExpressionClasses& _expressionClasses,
-		std::set<StorageWriteOperation> const& _storageWrites
-	):
-		m_expressionClasses(_expressionClasses),
-		m_storageWrites(_storageWrites)
-	{}
+	/// Initializes the code generator with the given classes and store operations.
+	/// The store operations have to be sorted ascendingly by sequence number.
+	CSECodeGenerator(ExpressionClasses& _expressionClasses, StoreOperations const& _storeOperations);
 
 	/// @returns the assembly items generated from the given requirements
 	/// @param _initialStack current contents of the stack (up to stack height of zero)
@@ -206,9 +198,9 @@ private:
 
 	/// The actual eqivalence class items and how to compute them.
 	ExpressionClasses& m_expressionClasses;
-	/// Keeps information about which storage slots were written to at which sequence number with
-	/// what SSTORE instruction.
-	std::set<StorageWriteOperation> const& m_storageWrites;
+	/// Keeps information about which storage or memory slots were written to by which operations.
+	/// The operations are sorted ascendingly by sequence number.
+	std::map<ExpressionClasses::Id, StoreOperations> m_storeOperations;
 	/// The set of equivalence classes that should be present on the stack at the end.
 	std::set<ExpressionClasses::Id> m_finalClasses;
 };

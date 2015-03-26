@@ -61,8 +61,13 @@ public:
 	/// given classes, might also create a new one.
 	/// @param _copyItem if true, copies the assembly item to an internal storage instead of just
 	/// keeping a pointer.
-	/// The @a _sequenceNumber indicates the current storage access sequence.
-	Id find(AssemblyItem const& _item, Ids const& _arguments = {}, bool _copyItem = true, unsigned _sequenceNumber = 0);
+	/// The @a _sequenceNumber indicates the current storage or memory access sequence.
+	Id find(
+		AssemblyItem const& _item,
+		Ids const& _arguments = {},
+		bool _copyItem = true,
+		unsigned _sequenceNumber = 0
+	);
 	/// @returns the canonical representative of an expression class.
 	Expression const& representative(Id _id) const { return m_representatives.at(_id); }
 	/// @returns the number of classes.
