@@ -431,7 +431,7 @@ void EventDefinition::checkTypeRequirements()
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
 		if (!var->getType()->externalType())
-			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for Events"));
+			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed as event parameter type."));
 	}
 	if (numIndexed > 3)
 		BOOST_THROW_EXCEPTION(createTypeError("More than 3 indexed arguments for event."));
