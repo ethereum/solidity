@@ -145,6 +145,40 @@ public:
 	bool success = false;
 };
 
+BOOST_AUTO_TEST_CASE(isIPAddressType)
+{
+	string wildcard = "0.0.0.0";
+	BOOST_REQUIRE(bi::address::from_string(wildcard).is_unspecified());
+	
+	string empty = "";
+	BOOST_REQUIRE_THROW(bi::address::from_string(empty).is_unspecified(), std::exception);
+
+	string publicAddress192 = "192.169.0.0";
+	BOOST_REQUIRE(isPublicAddress(publicAddress192));
+	BOOST_REQUIRE(!isPrivateAddress(publicAddress192));
+	BOOST_REQUIRE(!isLocalHostAddress(publicAddress192));
+	
+	string publicAddress172 = "172.32.0.0";
+	BOOST_REQUIRE(isPublicAddress(publicAddress172));
+	BOOST_REQUIRE(!isPrivateAddress(publicAddress172));
+	BOOST_REQUIRE(!isLocalHostAddress(publicAddress172));
+	
+	string privateAddress192 = "192.168.1.0";
+	BOOST_REQUIRE(isPrivateAddress(privateAddress192));
+	BOOST_REQUIRE(!isPublicAddress(privateAddress192));
+	BOOST_REQUIRE(!isLocalHostAddress(privateAddress192));
+	
+	string privateAddress172 = "172.16.0.0";
+	BOOST_REQUIRE(isPrivateAddress(privateAddress172));
+	BOOST_REQUIRE(!isPublicAddress(privateAddress172));
+	BOOST_REQUIRE(!isLocalHostAddress(privateAddress172));
+	
+	string privateAddress10 = "10.0.0.0";
+	BOOST_REQUIRE(isPrivateAddress(privateAddress10));
+	BOOST_REQUIRE(!isPublicAddress(privateAddress10));
+	BOOST_REQUIRE(!isLocalHostAddress(privateAddress10));
+}
+
 BOOST_AUTO_TEST_CASE(v2PingNodePacket)
 {
 	// test old versino of pingNode packet w/new
