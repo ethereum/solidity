@@ -1002,12 +1002,17 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				retParamNames.push_back(member.first);
 				retParams.push_back(member.second);
 			}
-	}
-	else
-	{
-		retParams.push_back(returnType);
-		retParamNames.push_back("");
-	}
+	} else
+		if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
+		{
+			params.push_back(make_shared<IntegerType>(256));
+			paramNames.push_back("");
+			returnType = arrayType->getBaseType();
+		} else
+		{
+			retParams.push_back(returnType);
+			retParamNames.push_back("");
+		}
 
 	swap(params, m_parameterTypes);
 	swap(paramNames, m_parameterNames);

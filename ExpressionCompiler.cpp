@@ -71,16 +71,20 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	m_context << location.first;
 
 	TypePointer returnType = _varDecl.getType();
-	for (TypePointer const& paramType: paramTypes)
+	if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
 	{
-		// move offset to memory
-		CompilerUtils(m_context).storeInMemory(length);
-		unsigned argLen = paramType->getCalldataEncodedSize();
-		length -= argLen;
-		m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
+		(void)arrayType;
+	} else
+		for (TypePointer const& paramType: paramTypes)
+		{
+			// move offset to memory
+			CompilerUtils(m_context).storeInMemory(length);
+			unsigned argLen = paramType->getCalldataEncodedSize();
+			length -= argLen;
+			m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
 
-		returnType = dynamic_cast<MappingType const&>(*returnType).getValueType();
-	}
+			returnType = dynamic_cast<MappingType const&>(*returnType).getValueType();
+		}
 
 	unsigned retSizeOnStack = 0;
 	solAssert(accessorType.getReturnParameterTypes().size() >= 1, "");
