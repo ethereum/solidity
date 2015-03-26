@@ -418,9 +418,23 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 		}
 }
 
-BOOST_AUTO_TEST_CASE(function_external_call_conversion)
+BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
-	char const* sourceCode = R"(
+	char const* text = R"(
+		contract C {}
+		contract Test {
+			function externalCall()	{
+				C arg;
+				this.g(arg);
+			}
+			function g (C c) external {}
+	})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_external_call_not_allowed_conversion)
+{
+	char const* text = R"(
 		contract C {}
 		contract Test {
 			function externalCall()	{
@@ -429,10 +443,26 @@ BOOST_AUTO_TEST_CASE(function_external_call_conversion)
 			}
 			function g (C c) external {}
 	})";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(function_internal_call_conversion)
+BOOST_AUTO_TEST_CASE(function_internal_allowed_conversion)
+{
+	char const* text = R"(
+		contract C {
+			uint a;
+		}
+		contract Test {
+			C a;
+			function g (C c) {}
+			function internalCall() {
+				g(a);
+			}
+	})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(function_internal_not_allowed_conversion)
 {
 	char const* text = R"(
 		contract C {
