@@ -536,6 +536,38 @@ BOOST_AUTO_TEST_CASE(cse_deep_stack)
 	});
 }
 
+BOOST_AUTO_TEST_CASE(cse_jumpi_no_jump)
+{
+	AssemblyItems input{
+		u256(0),
+		u256(1),
+		Instruction::DUP2,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	checkCSE(input, {
+		u256(0),
+		u256(1)
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_jumpi_jump)
+{
+	AssemblyItems input{
+		u256(1),
+		u256(1),
+		Instruction::DUP2,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	checkCSE(input, {
+		u256(1),
+		Instruction::DUP1,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP
+	});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
