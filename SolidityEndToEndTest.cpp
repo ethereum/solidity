@@ -966,6 +966,19 @@ BOOST_AUTO_TEST_CASE(simple_accessor)
 	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
 }
 
+BOOST_AUTO_TEST_CASE(array_accessor)
+{
+	char const* sourceCode = R"(
+		 contract test {
+		   uint[8] datas;
+		   function test() {
+			 datas[2] = 8;
+		   }
+		 })";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data(2)") == encodeArgs(8));
+}
+
 BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 {
 	char const* sourceCode = "contract test {\n"
