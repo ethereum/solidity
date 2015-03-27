@@ -742,6 +742,23 @@ string ArrayType::toString() const
 	return ret + "]";
 }
 
+TypePointer ArrayType::externalType() const
+{
+	if (m_location != Location::CallData)
+		return TypePointer();
+	if (m_isByteArray)
+		return shared_from_this();
+	if (!m_baseType->externalType())
+		return TypePointer();
+	if (m_baseType->getCategory() == Category::Array && m_baseType->isDynamicallySized())
+		return TypePointer();
+
+	if (isDynamicallySized())
+		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType());
+	else
+		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType(), m_length);
+}
+
 shared_ptr<ArrayType> ArrayType::copyForLocation(ArrayType::Location _location) const
 {
 	auto copy = make_shared<ArrayType>(_location);
@@ -1081,6 +1098,19 @@ unsigned FunctionType::getSizeOnStack() const
 	return size;
 }
 
+TypePointer FunctionType::externalType() const
+{
+	TypePointers paramTypes;
+	TypePointers retParamTypes;
+
+	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
+		paramTypes.push_back((*it)->externalType());
+	for (auto it = m_returnParameterTypes.cbegin(); it != m_returnParameterTypes.cend(); ++it)
+		retParamTypes.push_back((*it)->externalType());
+
+	return make_shared<FunctionType>(paramTypes, retParamTypes, m_location, m_arbitraryParameters);
+}
+
 MemberList const& FunctionType::getMembers() const
 {
 	switch (m_location)
@@ -1110,7 +1140,7 @@ MemberList const& FunctionType::getMembers() const
 	}
 }
 
-string FunctionType::getCanonicalSignature(std::string const& _name) const
+string FunctionType::externalSignature(std::string const& _name) const
 {
 	std::string funcName = _name;
 	if (_name == "")
@@ -1120,8 +1150,12 @@ string FunctionType::getCanonicalSignature(std::string const& _name) const
 	}
 	string ret = funcName + "(";
 
-	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
-		ret += (*it)->toString() + (it + 1 == m_parameterTypes.cend() ? "" : ",");
+	TypePointers externalParameterTypes = dynamic_cast<FunctionType const&>(*externalType()).getParameterTypes();
+	for (auto it = externalParameterTypes.cbegin(); it != externalParameterTypes.cend(); ++it)
+	{
+		solAssert(!!(*it), "Parameter should have external type");
+		ret += (*it)->toString() + (it + 1 == externalParameterTypes.cend() ? "" : ",");
+	}
 
 	return ret + ")";
 }
