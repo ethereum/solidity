@@ -27,7 +27,6 @@ endif()
 
 target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
 target_link_libraries(${EXECUTABLE} evmcore)
-target_link_libraries(${EXECUTABLE} devcore)
 target_link_libraries(${EXECUTABLE} devcrypto)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
