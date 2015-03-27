@@ -21,6 +21,7 @@
 
 #include "Instruction.h"
 
+#include <functional>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
@@ -294,27 +295,42 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::SUICIDE,		{ "SUICIDE",		0, 1, 0, true, ZeroTier } }
 };
 
+void dev::eth::eachInstruction(
+	bytes const& _mem,
+	function<void(Instruction,u256 const&)> const& _onInstruction
+)
+{
+	for (auto it = _mem.begin(); it != _mem.end(); ++it)
+	{
+		Instruction instr = Instruction(*it);
+		size_t additional = 0;
+		if (isValidInstruction(instr))
+			additional = instructionInfo(instr).additional;
+		u256 data;
+		for (size_t i = 0; i < additional; ++i)
+		{
+			data <<= 8;
+			if (it != _mem.end() && ++it != _mem.end())
+				data |= *it;
+		}
+		_onInstruction(instr, data);
+	}
+}
+
 string dev::eth::disassemble(bytes const& _mem)
 {
 	stringstream ret;
-	unsigned numerics = 0;
-	for (auto it = _mem.begin(); it != _mem.end(); ++it)
-	{
-		byte n = *it;
-		auto iit = c_instructionInfo.find((Instruction)n);
-		if (numerics || iit == c_instructionInfo.end() || (byte)iit->first != n)	// not an instruction or expecting an argument...
-		{
-			if (numerics)
-				numerics--;
-			ret << "0x" << hex << (int)n << " ";
-		}
+	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
+		if (!isValidInstruction(_instr))
+			ret << "0x" << hex << int(_instr) << " ";
 		else
 		{
-			auto const& ii = iit->second;
-			ret << ii.name << " ";
-			numerics = ii.additional;
+			InstructionInfo info = instructionInfo(_instr);
+			ret << info.name << " ";
+			if (info.additional)
+				ret << "0x" << hex << _data << " ";
 		}
-	}
+	});
 	return ret.str();
 }
 

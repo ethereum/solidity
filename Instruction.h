@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <functional>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libevmcore/Exceptions.h>
@@ -252,6 +253,9 @@ bool isValidInstruction(Instruction _inst);
 
 /// Convert from string mnemonic to Instruction type.
 extern const std::map<std::string, Instruction> c_instructions;
+
+/// Iterate through EVM code and call a function on each instruction.
+void eachInstruction(bytes const& _mem, std::function<void(Instruction,u256 const&)> const& _onInstruction);
 
 /// Convert from EVM code to simple EVM assembly language.
 std::string disassemble(bytes const& _mem);
