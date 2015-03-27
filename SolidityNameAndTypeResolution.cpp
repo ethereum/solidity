@@ -353,12 +353,54 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 		"  function functionName(bytes32 input) returns (bytes32 out);\n"
 		"}\n";
 	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
-	ContractDefinition* contract;
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
-		contract = dynamic_cast<ContractDefinition*>(node.get());
+	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->getNodes();
+	ContractDefinition* contract = dynamic_cast<ContractDefinition*>(nodes[0].get());
 	BOOST_CHECK(contract);
 	BOOST_CHECK(!contract->isFullyImplemented());
 	BOOST_CHECK(!contract->getDefinedFunctions()[0]->isFullyImplemented());
+}
+
+BOOST_AUTO_TEST_CASE(abstract_contract)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract base { function foo(); }
+		contract derived is base { function foo() {} }
+		)";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
+	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->getNodes();
+	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[0].get());
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	BOOST_CHECK(base);
+	BOOST_CHECK(!base->isFullyImplemented());
+	BOOST_CHECK(!base->getDefinedFunctions()[0]->isFullyImplemented());
+	BOOST_CHECK(derived);
+	BOOST_CHECK(derived->isFullyImplemented());
+	BOOST_CHECK(derived->getDefinedFunctions()[0]->isFullyImplemented());
+}
+
+BOOST_AUTO_TEST_CASE(create_abstract_contract)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract base { function foo(); }
+		contract derived { 
+			base b;
+            function foo() { b = new base();}
+        }
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract base { function foo(); }
+		contract derived is base { function foo() {} }
+		contract wrong is derived { function foo(); }
+		)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(function_canonical_signature)
