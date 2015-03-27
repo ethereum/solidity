@@ -116,7 +116,6 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docString;
-	bool contractFullyImplemented = true;
 	if (m_scanner->getCurrentCommentLiteral() != "")
 		docString = make_shared<ASTString>(m_scanner->getCurrentCommentLiteral());
 	expectToken(Token::Contract);
@@ -145,8 +144,6 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		{
 			ASTPointer<FunctionDefinition> func = parseFunctionDefinition(name.get());
 			functions.push_back(func);
-			if (!func->isFullyImplemented())
-				contractFullyImplemented = false;
 		}
 		else if (currentToken == Token::Struct)
 			structs.push_back(parseStructDefinition());
@@ -179,8 +176,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		stateVariables,
 		functions,
 		modifiers,
-		events,
-		contractFullyImplemented
+		events
 	);
 }
 

@@ -60,6 +60,7 @@ void ContractDefinition::checkTypeRequirements()
 
 	FunctionDefinition const* fallbackFunction = nullptr;
 	for (ASTPointer<FunctionDefinition> const& function: getDefinedFunctions())
+	{
 		if (function->getName().empty())
 		{
 			if (fallbackFunction)
@@ -71,6 +72,9 @@ void ContractDefinition::checkTypeRequirements()
 					BOOST_THROW_EXCEPTION(fallbackFunction->getParameterList().createTypeError("Fallback function cannot take parameters."));
 			}
 		}
+		if (!function->isFullyImplemented())
+			setFullyImplemented(false);
+	}
 	for (ASTPointer<ModifierDefinition> const& modifier: getFunctionModifiers())
 		modifier->checkTypeRequirements();
 

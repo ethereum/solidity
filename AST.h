@@ -206,6 +206,7 @@ public:
 
 	/// @return whether this node is fully implemented or not
 	bool isFullyImplemented() const { return m_implemented; }
+	void setFullyImplemented(bool _implemented) {  m_implemented = _implemented; }
 
 protected:
 	bool m_implemented;
@@ -231,12 +232,11 @@ public:
 		std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
 		std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
 		std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
-		std::vector<ASTPointer<EventDefinition>> const& _events,
-		bool _isFullyImplemented
+		std::vector<ASTPointer<EventDefinition>> const& _events
 	):
 		Declaration(_location, _name),
 		Documented(_documentation),
-		ImplementationOptional(_isFullyImplemented),
+		ImplementationOptional(true),
 		m_baseContracts(_baseContracts),
 		m_definedStructs(_definedStructs),
 		m_definedEnums(_definedEnums),
@@ -244,7 +244,7 @@ public:
 		m_definedFunctions(_definedFunctions),
 		m_functionModifiers(_functionModifiers),
 		m_events(_events)
-		{}
+	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -421,7 +421,7 @@ public:
 		m_functionModifiers(_modifiers),
 		m_returnParameters(_returnParameters),
 		m_body(_body)
-		{}
+	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
