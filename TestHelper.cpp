@@ -170,9 +170,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 	stateOptionsMap importedMap;
 	importState(_o, _state, importedMap);
 	for (auto& stateOptionMap: importedMap)
-	{
 		assert(stateOptionMap.second.isAllSet());	//check that every parameter was declared in state object
-	}
 }
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
@@ -256,10 +254,14 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 			{
 				map<u256, u256> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
-				{
 					CHECK(stateStorage[s.first] == s.second,
 							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
-				}
+
+				//Check for unexpected storage values
+				stateStorage = _stateExpect.storage(a.first);
+				for (auto const& s: _statePost.storage(a.first))
+					CHECK(stateStorage[s.first] == s.second,
+							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(s.second) << ", expected [" << s.first << "] = " << toHex(stateStorage[s.first]));
 			}
 
 			if (addressOptions.m_bHasCode)

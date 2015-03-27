@@ -12,28 +12,28 @@
         {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "100000",
-		"//" : "contract main														",
-		"//" : "{															",
-		"//" : "    function run() returns (bool)											",
-		"//" : "    {															",
-		"//" : "       return testCryptographicFunctions();										",
-		"//" : "    }															",
-		"//" : "   															",
-		"//" : "    function testCryptographicFunctions() returns (bool res)								",
-		"//" : "    {															",
-		"//" : "        res = true;													",
-		"//" : "        if (sha3('teststring') != 0x43c4b4524adb81e4e9a5c4648a98e9d320e3908ac5b6c889144b642cd08ae16d)			",
-		"//" : "            return false;												",
-		"//" : "        														",
-		"//" : "        if (sha256('teststring') != 0x3c8727e019a42b444667a587b6001251becadabbb36bfed8087a92c18882d111)			",
-		"//" : "            return false;												",
-		"//" : "            														",
-		"//" : "        if (ripemd160('teststring') != 0xcd566972b5e50104011a92b59fa8e0b1234851ae)					",
-		"//" : "            return false;												",
-		"//" : "        														",
-		"//" : "        //ecrecover													",
-		"//" : "    }															",
-		"//" : "}															",
+		"//" : "contract main													",
+		"//" : "{														",
+		"//" : "    function run() returns (bool)										",
+		"//" : "    {														",
+		"//" : "       return testCryptographicFunctions();									",
+		"//" : "    }														",
+		"//" : "   														",
+		"//" : "    function testCryptographicFunctions() returns (bool res)							",
+		"//" : "    {														",
+		"//" : "        res = true;												",
+		"//" : "        if (sha3('teststring') != 0x43c4b4524adb81e4e9a5c4648a98e9d320e3908ac5b6c889144b642cd08ae16d)		",
+		"//" : "            return false;											",
+		"//" : "        													",
+		"//" : "        if (sha256('teststring') != 0x3c8727e019a42b444667a587b6001251becadabbb36bfed8087a92c18882d111)		",
+		"//" : "            return false;											",
+		"//" : "            													",
+		"//" : "        if (ripemd160('teststring') != 0xcd566972b5e50104011a92b59fa8e0b1234851ae)				",
+		"//" : "            return false;											",
+		"//" : "        													",
+		"//" : "        //ecrecover												",
+		"//" : "    }														",
+		"//" : "}														",
                 "code" : "0x60003560e060020a90048063c040622614610021578063e0a9fd281461003357005b610029610045565b8060005260206000f35b61003b610054565b8060005260206000f35b600061004f610054565b905090565b60006001905060007f74657374737472696e67000000000000000000000000000000000000000000008152600a017f030d40000000000000000000000000000000000000000000000000000000000081526003016000207f43c4b4524adb81e4e9a5c4648a98e9d320e3908ac5b6c889144b642cd08ae16d14156100d7576100e0565b60009050610218565b60026020600060007f74657374737472696e67000000000000000000000000000000000000000000008152600a017f030d4000000000000000000000000000000000000000000000000000000000008152600301600060008560325a03f161014457005b506000517f3c8727e019a42b444667a587b6001251becadabbb36bfed8087a92c18882d11114156101745761017d565b60009050610218565b60036020600060007f74657374737472696e67000000000000000000000000000000000000000000008152600a017f030d4000000000000000000000000000000000000000000000000000000000008152600301600060008560325a03f16101e157005b50600051600160a060020a031673cd566972b5e50104011a92b59fa8e0b1234851ae141561020e57610217565b60009050610218565b5b9056",
                 "nonce" : "0",
                 "storage" : {
@@ -206,7 +206,7 @@
         },
         "transaction" :
         {
-	    "//" : "run()",
+	    "data" : "run()",
             "data" : "0xc0406226",
             "gasLimit" : "350000",
             "gasPrice" : "1",
@@ -272,7 +272,7 @@
         },
         "transaction" :
         {
-	    "//" : "run()",
+	    "data" : "run()",
             "data" : "0xc0406226",
             "gasLimit" : "350000",
             "gasPrice" : "1",
@@ -337,7 +337,7 @@
         },
         "transaction" :
         {
-	    "//" : "run()",
+	    "data" : "run()",
             "data" : "0xc0406226",
             "gasLimit" : "350000",
             "gasPrice" : "1",
@@ -416,7 +416,7 @@
         },
         "transaction" :
         {
-	    "//" : "run()",
+	    "data" : "run()",
             "data" : "0xc0406226",
             "gasLimit" : "350000",
             "gasPrice" : "1",
@@ -479,7 +479,7 @@
         },
         "transaction" :
         {
-	    "//" : "run()",
+	    "data" : "run()",
             "data" : "0xc0406226",
             "gasLimit" : "350000",
             "gasPrice" : "1",
@@ -543,7 +543,7 @@
         },
         "transaction" :
         {
-	    "//" : "run()",
+	    "data" : "run()",
             "data" : "0xc0406226",
             "gasLimit" : "350000",
             "gasPrice" : "1",
@@ -598,7 +598,7 @@
         },
         "transaction" :
         {
-	    "//" : "testRecursiveMethods()",
+	    "data" : "testRecursiveMethods()",
             "data" : "0x981a3165",
             "gasLimit" : "30000",
             "gasPrice" : "1",
@@ -653,7 +653,7 @@
         },
         "transaction" :
         {
-	    "//" : "testInfiniteLoop()",
+	    "data" : "testInfiniteLoop()",
             "data" : "0x296df0df",
             "gasLimit" : "300000",
             "gasPrice" : "1",
@@ -732,7 +732,7 @@
         },
         "transaction" :
         {
-	    "//" : "run(uint256)",
+	    "data" : "run(uint256)",
             "data" : "0xa444f5e90000000000000000000000000000000000000000000000000000000000000004",
             "gasLimit" : "300000",
             "gasPrice" : "1",
@@ -811,7 +811,7 @@
         },
         "transaction" :
         {
-	    "//" : "run(uint256)",
+	    "data" : "run(uint256)",
             "data" : "0xa444f5e90000000000000000000000000000000000000000000000000000000000000204",
             "gasLimit" : "300000",
             "gasPrice" : "1",
@@ -866,7 +866,7 @@
         },
         "transaction" :
         {
-	    "//" : "run()",
+	    "data" : "run()",
             "data" : "0xc0406226",
             "gasLimit" : "300000",
             "gasPrice" : "1",
