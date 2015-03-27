@@ -283,6 +283,7 @@ public:
 
 private:
 	void checkIllegalOverrides() const;
+	void checkAbstractFunctions();
 
 	std::vector<std::pair<FixedHash<4>, FunctionTypePointer>> const& getInterfaceFunctionList() const;
 

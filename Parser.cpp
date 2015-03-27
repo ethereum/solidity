@@ -141,10 +141,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		if (currentToken == Token::RBrace)
 			break;
 		else if (currentToken == Token::Function)
-		{
-			ASTPointer<FunctionDefinition> func = parseFunctionDefinition(name.get());
-			functions.push_back(func);
-		}
+			functions.push_back(parseFunctionDefinition(name.get()));
 		else if (currentToken == Token::Struct)
 			structs.push_back(parseStructDefinition());
 		else if (currentToken == Token::Enum)
