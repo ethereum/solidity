@@ -34,8 +34,8 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {
 	optimizeBreakingItem();
 
-	map<int, ExpressionClasses::Id> initialStackContents;
-	map<int, ExpressionClasses::Id> targetStackContents;
+	map<int, Id> initialStackContents;
+	map<int, Id> targetStackContents;
 	int minHeight = m_stackHeight + 1;
 	if (!m_stackElements.empty())
 		minHeight = min(minHeight, m_stackElements.begin()->first);
@@ -58,18 +58,18 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 
 ostream& CommonSubexpressionEliminator::stream(
 	ostream& _out,
-	map<int, ExpressionClasses::Id> _initialStack,
-	map<int, ExpressionClasses::Id> _targetStack
+	map<int, Id> _initialStack,
+	map<int, Id> _targetStack
 ) const
 {
-	auto streamExpressionClass = [this](ostream& _out, ExpressionClasses::Id _id)
+	auto streamExpressionClass = [this](ostream& _out, Id _id)
 	{
 		auto const& expr = m_expressionClasses.representative(_id);
 		_out << "  " << dec << _id << ": " << *expr.item;
 		if (expr.sequenceNumber)
 			_out << "@" << dec << expr.sequenceNumber;
 		_out << "(";
-		for (ExpressionClasses::Id arg: expr.arguments)
+		for (Id arg: expr.arguments)
 			_out << dec << arg << ",";
 		_out << ")" << endl;
 	};
@@ -77,7 +77,7 @@ ostream& CommonSubexpressionEliminator::stream(
 	_out << "Optimizer analysis:" << endl;
 	_out << "Final stack height: " << dec << m_stackHeight << endl;
 	_out << "Equivalence classes: " << endl;
-	for (ExpressionClasses::Id eqClass = 0; eqClass < m_expressionClasses.size(); ++eqClass)
+	for (Id eqClass = 0; eqClass < m_expressionClasses.size(); ++eqClass)
 		streamExpressionClass(_out, eqClass);
 
 	_out << "Initial stack: " << endl;
@@ -119,7 +119,7 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item, bool _co
 			);
 		else if (instruction != Instruction::POP)
 		{
-			vector<ExpressionClasses::Id> arguments(info.args);
+			vector<Id> arguments(info.args);
 			for (int i = 0; i < info.args; ++i)
 				arguments[i] = stackElement(m_stackHeight - i);
 			if (_item.instruction() == Instruction::SSTORE)
@@ -142,7 +142,6 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 	if (!m_breakingItem || *m_breakingItem != AssemblyItem(Instruction::JUMPI))
 		return;
 
-	using Id = ExpressionClasses::Id;
 	static AssemblyItem s_jump = Instruction::JUMP;
 
 	Id condition = stackElement(m_stackHeight - 1);
@@ -163,7 +162,7 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 	}
 }
 
-void CommonSubexpressionEliminator::setStackElement(int _stackHeight, ExpressionClasses::Id _class)
+void CommonSubexpressionEliminator::setStackElement(int _stackHeight, Id _class)
 {
 	m_stackElements[_stackHeight] = _class;
 }
@@ -194,7 +193,7 @@ ExpressionClasses::Id CommonSubexpressionEliminator::initialStackElement(int _st
 	return m_expressionClasses.find(AssemblyItem(dupInstruction(1 - _stackHeight)));
 }
 
-void CommonSubexpressionEliminator::storeInStorage(ExpressionClasses::Id _slot, ExpressionClasses::Id _value)
+void CommonSubexpressionEliminator::storeInStorage(Id _slot, Id _value)
 {
 	if (m_storageContent.count(_slot) && m_storageContent[_slot] == _value)
 		// do not execute the storage if we know that the value is already there
@@ -206,14 +205,14 @@ void CommonSubexpressionEliminator::storeInStorage(ExpressionClasses::Id _slot, 
 		if (m_expressionClasses.knownToBeDifferent(storageItem.first, _slot))
 			storageContents.insert(storageItem);
 	m_storageContent = move(storageContents);
-	ExpressionClasses::Id id = m_expressionClasses.find(Instruction::SSTORE, {_slot, _value}, true, m_sequenceNumber);
+	Id id = m_expressionClasses.find(Instruction::SSTORE, {_slot, _value}, true, m_sequenceNumber);
 	m_storeOperations.push_back(StoreOperation(StoreOperation::Storage, _slot, m_sequenceNumber, id));
 	m_storageContent[_slot] = _value;
 	// increment a second time so that we get unique sequence numbers for writes
 	m_sequenceNumber++;
 }
 
-ExpressionClasses::Id CommonSubexpressionEliminator::loadFromStorage(ExpressionClasses::Id _slot)
+ExpressionClasses::Id CommonSubexpressionEliminator::loadFromStorage(Id _slot)
 {
 	if (m_storageContent.count(_slot))
 		return m_storageContent.at(_slot);
@@ -221,7 +220,7 @@ ExpressionClasses::Id CommonSubexpressionEliminator::loadFromStorage(ExpressionC
 		return m_storageContent[_slot] = m_expressionClasses.find(Instruction::SLOAD, {_slot}, true, m_sequenceNumber);
 }
 
-void CommonSubexpressionEliminator::storeInMemory(ExpressionClasses::Id _slot, ExpressionClasses::Id _value)
+void CommonSubexpressionEliminator::storeInMemory(Id _slot, Id _value)
 {
 	if (m_memoryContent.count(_slot) && m_memoryContent[_slot] == _value)
 		// do not execute the store if we know that the value is already there
@@ -233,14 +232,14 @@ void CommonSubexpressionEliminator::storeInMemory(ExpressionClasses::Id _slot, E
 		if (m_expressionClasses.knownToBeDifferentBy32(memoryItem.first, _slot))
 			memoryContents.insert(memoryItem);
 	m_memoryContent = move(memoryContents);
-	ExpressionClasses::Id id = m_expressionClasses.find(Instruction::MSTORE, {_slot, _value}, true, m_sequenceNumber);
+	Id id = m_expressionClasses.find(Instruction::MSTORE, {_slot, _value}, true, m_sequenceNumber);
 	m_storeOperations.push_back(StoreOperation(StoreOperation::Memory, _slot, m_sequenceNumber, id));
 	m_memoryContent[_slot] = _value;
 	// increment a second time so that we get unique sequence numbers for writes
 	m_sequenceNumber++;
 }
 
-ExpressionClasses::Id CommonSubexpressionEliminator::loadFromMemory(ExpressionClasses::Id _slot)
+ExpressionClasses::Id CommonSubexpressionEliminator::loadFromMemory(Id _slot)
 {
 	if (m_memoryContent.count(_slot))
 		return m_memoryContent.at(_slot);
@@ -259,8 +258,8 @@ CSECodeGenerator::CSECodeGenerator(
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
-	map<int, ExpressionClasses::Id> const& _initialStack,
-	map<int, ExpressionClasses::Id> const& _targetStackContents
+	map<int, Id> const& _initialStack,
+	map<int, Id> const& _targetStackContents
 )
 {
 	m_stack = _initialStack;
@@ -280,7 +279,7 @@ AssemblyItems CSECodeGenerator::generateCode(
 	}
 
 	// store all needed sequenced expressions
-	set<pair<unsigned, ExpressionClasses::Id>> sequencedExpressions;
+	set<pair<unsigned, Id>> sequencedExpressions;
 	for (auto const& p: m_neededBy)
 		for (auto id: {p.first, p.second})
 			if (unsigned seqNr = m_expressionClasses.representative(id).sequenceNumber)
@@ -327,12 +326,12 @@ AssemblyItems CSECodeGenerator::generateCode(
 	return m_generatedItems;
 }
 
-void CSECodeGenerator::addDependencies(ExpressionClasses::Id _c)
+void CSECodeGenerator::addDependencies(Id _c)
 {
 	if (m_neededBy.count(_c))
 		return; // we already computed the dependencies for _c
 	ExpressionClasses::Expression expr = m_expressionClasses.representative(_c);
-	for (ExpressionClasses::Id argument: expr.arguments)
+	for (Id argument: expr.arguments)
 	{
 		addDependencies(argument);
 		m_neededBy.insert(make_pair(argument, _c));
@@ -347,12 +346,12 @@ void CSECodeGenerator::addDependencies(ExpressionClasses::Id _c)
 		// they are different that occur before this load
 		StoreOperation::Target target = expr.item->instruction() == Instruction::SLOAD ?
 			StoreOperation::Storage : StoreOperation::Memory;
-		ExpressionClasses::Id slotToLoadFrom = expr.arguments.at(0);
+		Id slotToLoadFrom = expr.arguments.at(0);
 		for (auto const& p: m_storeOperations)
 		{
 			if (p.first.first != target)
 				continue;
-			ExpressionClasses::Id slot = p.first.second;
+			Id slot = p.first.second;
 			StoreOperations const& storeOps = p.second;
 			if (storeOps.front().sequenceNumber > expr.sequenceNumber)
 				continue;
@@ -362,7 +361,7 @@ void CSECodeGenerator::addDependencies(ExpressionClasses::Id _c)
 			)
 				continue;
 			// note that store and load never have the same sequence number
-			ExpressionClasses::Id latestStore = storeOps.front().expression;
+			Id latestStore = storeOps.front().expression;
 			for (auto it = ++storeOps.begin(); it != storeOps.end(); ++it)
 				if (it->sequenceNumber < expr.sequenceNumber)
 					latestStore = it->expression;
@@ -372,7 +371,7 @@ void CSECodeGenerator::addDependencies(ExpressionClasses::Id _c)
 	}
 }
 
-int CSECodeGenerator::generateClassElement(ExpressionClasses::Id _c, bool _allowSequenced)
+int CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 {
 	// do some cleanup
 	removeStackTopIfPossible();
@@ -392,8 +391,8 @@ int CSECodeGenerator::generateClassElement(ExpressionClasses::Id _c, bool _allow
 		OptimizerException,
 		"Sequence constrained operation requested out of sequence."
 	);
-	ExpressionClasses::Ids const& arguments = expr.arguments;
-	for (ExpressionClasses::Id arg: boost::adaptors::reverse(arguments))
+	vector<Id> const& arguments = expr.arguments;
+	for (Id arg: boost::adaptors::reverse(arguments))
 		generateClassElement(arg);
 
 	// The arguments are somewhere on the stack now, so it remains to move them at the correct place.
@@ -478,7 +477,7 @@ int CSECodeGenerator::generateClassElement(ExpressionClasses::Id _c, bool _allow
 	}
 }
 
-int CSECodeGenerator::classElementPosition(ExpressionClasses::Id _id) const
+int CSECodeGenerator::classElementPosition(Id _id) const
 {
 	assertThrow(
 		m_classPositions.count(_id) && m_classPositions.at(_id) != c_invalidPosition,
@@ -488,7 +487,7 @@ int CSECodeGenerator::classElementPosition(ExpressionClasses::Id _id) const
 	return m_classPositions.at(_id);
 }
 
-bool CSECodeGenerator::canBeRemoved(ExpressionClasses::Id _element, ExpressionClasses::Id _result)
+bool CSECodeGenerator::canBeRemoved(Id _element, Id _result)
 {
 	// Returns false if _element is finally needed or is needed by a class that has not been
 	// computed yet. Note that m_classPositions also includes classes that were deleted in the meantime.
@@ -507,7 +506,7 @@ bool CSECodeGenerator::removeStackTopIfPossible()
 	if (m_stack.empty())
 		return false;
 	assertThrow(m_stack.count(m_stackHeight) > 0, OptimizerException, "");
-	ExpressionClasses::Id top = m_stack[m_stackHeight];
+	Id top = m_stack[m_stackHeight];
 	if (!canBeRemoved(top))
 		return false;
 	m_generatedItems.push_back(AssemblyItem(Instruction::POP));
