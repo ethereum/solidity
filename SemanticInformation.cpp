@@ -52,8 +52,6 @@ bool SemanticInformation::breaksCSEAnalysisBlock(AssemblyItem const& _item)
 			return true; // GAS and PC assume a specific order of opcodes
 		if (_item.instruction() == Instruction::MSIZE)
 			return true; // msize is modified already by memory access, avoid that for now
-		if (_item.instruction() == Instruction::SHA3)
-			return true; //@todo: we have to compare sha3's not based on their memory addresses but on the memory content.
 		InstructionInfo info = instructionInfo(_item.instruction());
 		if (_item.instruction() == Instruction::SSTORE)
 			return false;

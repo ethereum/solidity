@@ -117,6 +117,8 @@ private:
 	void storeInMemory(Id _slot, Id _value);
 	/// Retrieves the current value at the given slot in memory or creates a new special mload class.
 	Id loadFromMemory(Id _slot);
+	/// Finds or creates a new expression that applies the sha3 hash function to the contents in memory.
+	Id applySha3(Id _start, Id _length);
 
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
@@ -129,6 +131,8 @@ private:
 	/// Knowledge about memory content. Keys are memory addresses, note that the values overlap
 	/// and are not contained here if they are not completely known.
 	std::map<Id, Id> m_memoryContent;
+	/// Keeps record of all sha3 hashes that are computed.
+	std::map<std::vector<Id>, Id> m_knownSha3Hashes;
 	/// Keeps information about which storage or memory slots were written to at which sequence
 	/// number with what instruction.
 	std::vector<StoreOperation> m_storeOperations;

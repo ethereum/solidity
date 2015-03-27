@@ -23,6 +23,7 @@
 
 #include <functional>
 #include <boost/range/adaptor/reversed.hpp>
+#include <libdevcrypto/SHA3.h>
 #include <libevmcore/CommonSubexpressionEliminator.h>
 #include <libevmcore/AssemblyItem.h>
 
@@ -130,6 +131,8 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item, bool _co
 				storeInMemory(arguments[0], arguments[1]);
 			else if (_item.instruction() == Instruction::MLOAD)
 				setStackElement(m_stackHeight + _item.deposit(), loadFromMemory(arguments[0]));
+			else if (_item.instruction() == Instruction::SHA3)
+				setStackElement(m_stackHeight + _item.deposit(), applySha3(arguments.at(0), arguments.at(1)));
 			else
 				setStackElement(m_stackHeight + _item.deposit(), m_expressionClasses.find(_item, arguments, _copyItem));
 		}
@@ -200,9 +203,10 @@ void CommonSubexpressionEliminator::storeInStorage(Id _slot, Id _value)
 		return;
 	m_sequenceNumber++;
 	decltype(m_storageContent) storageContents;
-	// copy over values at points where we know that they are different from _slot
+	// copy over values at points where we know that they are different from _slot or that we know
+	// that the value is equal
 	for (auto const& storageItem: m_storageContent)
-		if (m_expressionClasses.knownToBeDifferent(storageItem.first, _slot))
+		if (m_expressionClasses.knownToBeDifferent(storageItem.first, _slot) || storageItem.second == _value)
 			storageContents.insert(storageItem);
 	m_storageContent = move(storageContents);
 	Id id = m_expressionClasses.find(Instruction::SSTORE, {_slot, _value}, true, m_sequenceNumber);
@@ -245,6 +249,37 @@ ExpressionClasses::Id CommonSubexpressionEliminator::loadFromMemory(Id _slot)
 		return m_memoryContent.at(_slot);
 	else
 		return m_memoryContent[_slot] = m_expressionClasses.find(Instruction::MLOAD, {_slot}, true, m_sequenceNumber);
+}
+
+CommonSubexpressionEliminator::Id CommonSubexpressionEliminator::applySha3(Id _start, Id _length)
+{
+	// Special logic if length is a short constant, otherwise we cannot tell.
+	u256 const* l = m_expressionClasses.knownConstant(_length);
+	// unknown or too large length
+	if (!l || *l > 128)
+		return m_expressionClasses.find(Instruction::SHA3, {_start, _length}, true, m_sequenceNumber);
+
+	vector<Id> arguments;
+	for (u256 i = 0; i < *l; i += 32)
+	{
+		Id slot = m_expressionClasses.find(Instruction::ADD, {_start, m_expressionClasses.find(i)});
+		arguments.push_back(loadFromMemory(slot));
+	}
+	if (m_knownSha3Hashes.count(arguments))
+		return m_knownSha3Hashes.at(arguments);
+	Id v;
+	// If all arguments are known constants, compute the sha3 here
+	if (all_of(arguments.begin(), arguments.end(), [this](Id _a) { return !!m_expressionClasses.knownConstant(_a); }))
+	{
+		bytes data;
+		for (Id a: arguments)
+			data += toBigEndian(*m_expressionClasses.knownConstant(a));
+		data.resize(size_t(*l));
+		v = m_expressionClasses.find(u256(sha3(data)));
+	}
+	else
+		v = m_expressionClasses.find(Instruction::SHA3, {_start, _length}, true, m_sequenceNumber);
+	return m_knownSha3Hashes[arguments] = v;
 }
 
 CSECodeGenerator::CSECodeGenerator(
@@ -338,7 +373,8 @@ void CSECodeGenerator::addDependencies(Id _c)
 	}
 	if (expr.item->type() == Operation && (
 		expr.item->instruction() == Instruction::SLOAD ||
-		expr.item->instruction() == Instruction::MLOAD
+		expr.item->instruction() == Instruction::MLOAD ||
+		expr.item->instruction() == Instruction::SHA3
 	))
 	{
 		// this loads an unknown value from storage or memory and thus, in addition to its
@@ -355,11 +391,41 @@ void CSECodeGenerator::addDependencies(Id _c)
 			StoreOperations const& storeOps = p.second;
 			if (storeOps.front().sequenceNumber > expr.sequenceNumber)
 				continue;
-			if (
-				(target == StoreOperation::Memory && m_expressionClasses.knownToBeDifferentBy32(slot, slotToLoadFrom)) ||
-				(target == StoreOperation::Storage && m_expressionClasses.knownToBeDifferent(slot, slotToLoadFrom))
-			)
+			bool knownToBeIndependent = false;
+			switch (expr.item->instruction())
+			{
+			case Instruction::SLOAD:
+				knownToBeIndependent = m_expressionClasses.knownToBeDifferent(slot, slotToLoadFrom);
+				break;
+			case Instruction::MLOAD:
+				knownToBeIndependent = m_expressionClasses.knownToBeDifferentBy32(slot, slotToLoadFrom);
+				break;
+			case Instruction::SHA3:
+			{
+				Id length = expr.arguments.at(1);
+				Id offsetToStart = m_expressionClasses.find(Instruction::SUB, {slot, slotToLoadFrom});
+				u256 const* o = m_expressionClasses.knownConstant(offsetToStart);
+				u256 const* l = m_expressionClasses.knownConstant(length);
+				if (l && *l == 0)
+					knownToBeIndependent = true;
+				else if (o)
+				{
+					// We could get problems here if both *o and *l are larger than 2**254
+					// but it is probably ok for the optimizer to produce wrong code for such cases
+					// which cannot be executed anyway because of the non-payable price.
+					if (u2s(*o) <= -32)
+						knownToBeIndependent = true;
+					else if (l && u2s(*o) >= 0 && *o >= *l)
+						knownToBeIndependent = true;
+				}
+				break;
+			}
+			default:
+				break;
+			}
+			if (knownToBeIndependent)
 				continue;
+
 			// note that store and load never have the same sequence number
 			Id latestStore = storeOps.front().expression;
 			for (auto it = ++storeOps.begin(); it != storeOps.end(); ++it)
