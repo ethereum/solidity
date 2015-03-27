@@ -192,7 +192,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 				if (functionsSeen.count(f->getName()) == 0 && f->isPartOfExternalInterface())
 				{
 					functionsSeen.insert(f->getName());
-					FixedHash<4> hash(dev::sha3(f->externalSignature(true)));
+					FixedHash<4> hash(dev::sha3(f->externalSignature()));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*f, false)));
 				}
 
@@ -202,7 +202,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 					FunctionType ftype(*v);
 					solAssert(v->getType().get(), "");
 					functionsSeen.insert(v->getName());
-					FixedHash<4> hash(dev::sha3(ftype.externalSignature(true, v->getName())));
+					FixedHash<4> hash(dev::sha3(ftype.externalSignature(v->getName())));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*v)));
 				}
 		}
@@ -320,9 +320,9 @@ void FunctionDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-string FunctionDefinition::externalSignature(bool isExternalCall) const
+string FunctionDefinition::externalSignature() const
 {
-	return FunctionType(*this).externalSignature(isExternalCall, getName());
+	return FunctionType(*this).externalSignature(getName());
 }
 
 bool VariableDeclaration::isLValue() const

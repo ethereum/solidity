@@ -511,6 +511,9 @@ public:
 						  Bare };
 
 	virtual Category getCategory() const override { return Category::Function; }
+
+	virtual TypePointer externalType() const override;
+
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	explicit FunctionType(EventDefinition const& _event);
@@ -553,8 +556,7 @@ public:
 	/// @returns the external signature of this function type given the function name
 	/// If @a _name is not provided (empty string) then the @c m_declaration member of the
 	/// function type is used
-	/// @a isExternalCall shows if it is external function call
-	std::string externalSignature(bool isExternalCall = false, std::string const& _name = "") const;
+	std::string externalSignature(std::string const& _name = "") const;
 	Declaration const& getDeclaration() const
 	{
 		solAssert(m_declaration, "Requested declaration from a FunctionType that has none");

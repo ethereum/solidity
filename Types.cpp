@@ -1098,6 +1098,19 @@ unsigned FunctionType::getSizeOnStack() const
 	return size;
 }
 
+TypePointer FunctionType::externalType() const
+{
+	TypePointers paramTypes;
+	TypePointers retParamTypes;
+
+	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
+		paramTypes.push_back((*it)->externalType());
+	for (auto it = m_returnParameterTypes.cbegin(); it != m_returnParameterTypes.cend(); ++it)
+		retParamTypes.push_back((*it)->externalType());
+
+	return make_shared<FunctionType>(paramTypes, retParamTypes, m_location, m_arbitraryParameters);
+}
+
 MemberList const& FunctionType::getMembers() const
 {
 	switch (m_location)
@@ -1127,7 +1140,7 @@ MemberList const& FunctionType::getMembers() const
 	}
 }
 
-string FunctionType::externalSignature(bool isExternalCall, std::string const& _name) const
+string FunctionType::externalSignature(std::string const& _name) const
 {
 	std::string funcName = _name;
 	if (_name == "")
@@ -1137,12 +1150,13 @@ string FunctionType::externalSignature(bool isExternalCall, std::string const& _
 	}
 	string ret = funcName + "(";
 
-	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
+	TypePointers externalParameterTypes = dynamic_cast<FunctionType const&>(*externalType()).getParameterTypes();
+	for (auto it = externalParameterTypes.cbegin(); it != externalParameterTypes.cend(); ++it)
 	{
-		if (isExternalCall)
-			solAssert(!!(*it)->externalType(), "Parameter should have external type");
-		ret += (isExternalCall ? (*it)->externalType()->toString() : (*it)->toString()) + (it + 1 == m_parameterTypes.cend() ? "" : ",");
+		solAssert(!!(*it), "Parameter should have external type");
+		ret += (*it)->toString() + (it + 1 == externalParameterTypes.cend() ? "" : ",");
 	}
+
 	return ret + ")";
 }
 

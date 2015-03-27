@@ -422,9 +422,9 @@ public:
 	void checkTypeRequirements();
 
 	/// @returns the external signature of the function
-	/// That consists of the name of the function followed by the types (external types if isExternalCall) of the
+	/// That consists of the name of the function followed by the types of the
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
-	std::string externalSignature(bool isExternalCall = false) const;
+	std::string externalSignature() const;
 
 private:
 	bool m_isConstructor;
