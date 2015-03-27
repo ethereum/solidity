@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			auto functions = contract->getDefinedFunctions();
 			if (functions.empty())
 				continue;
-			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8,bool[2],uint256[],address)", functions[0]->externalSignature(true));
+			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8,bool[2],uint256[],address)", functions[0]->externalSignature());
 		}
 }
 
