@@ -337,7 +337,7 @@ void FunctionDefinition::checkTypeRequirements()
 	{
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
-		if (!(var->getType()->externalType()) && getVisibility() >= Visibility::Public)
+		if (getVisibility() >= Visibility::Public && !(var->getType()->externalType()))
 			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for function with external visibility"));
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)

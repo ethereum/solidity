@@ -1103,11 +1103,16 @@ TypePointer FunctionType::externalType() const
 	TypePointers paramTypes;
 	TypePointers retParamTypes;
 
-	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
-		paramTypes.push_back((*it)->externalType());
-	for (auto it = m_returnParameterTypes.cbegin(); it != m_returnParameterTypes.cend(); ++it)
-		retParamTypes.push_back((*it)->externalType());
-
+	for(auto type: m_parameterTypes)
+	{
+		solAssert(!!type->externalType(), "To be included in external type of the function, the argument should have external type.");
+		paramTypes.push_back(type->externalType());
+	}
+	for(auto param: m_returnParameterTypes)
+	{
+		solAssert(!!param->externalType(), "To be included in external type of the function, the argument should have external type.");
+		retParamTypes.push_back(param->externalType());
+	}
 	return make_shared<FunctionType>(paramTypes, retParamTypes, m_location, m_arbitraryParameters);
 }
 
