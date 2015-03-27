@@ -35,7 +35,7 @@ using namespace dev;
 using namespace dev::eth;
 
 
-bool ExpressionClasses::Expression::operator<(const ExpressionClasses::Expression& _other) const
+bool ExpressionClasses::Expression::operator<(ExpressionClasses::Expression const& _other) const
 {
 	auto type = item->type();
 	auto otherType = _other.item->type();
@@ -74,7 +74,7 @@ ExpressionClasses::Id ExpressionClasses::find(AssemblyItem const& _item, Ids con
 	return exp.id;
 }
 
-string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id)
+string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
 {
 	Expression const& expr = representative(_id);
 	stringstream str;

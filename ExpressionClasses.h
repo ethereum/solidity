@@ -63,7 +63,7 @@ public:
 	/// @returns the number of classes.
 	Id size() const { return m_representatives.size(); }
 
-	std::string fullDAGToString(Id _id);
+	std::string fullDAGToString(Id _id) const;
 
 private:
 	/// Tries to simplify the given expression.
