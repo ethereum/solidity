@@ -28,6 +28,7 @@
 #include "JsonSpiritHeaders.h"
 #include <libethereum/State.h>
 #include <libevm/ExtVMFace.h>
+#include <libtestutils/Common.h>
 
 namespace dev
 {
@@ -138,7 +139,6 @@ void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
 
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
-std::string getTestPath();
 void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
