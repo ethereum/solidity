@@ -20,6 +20,7 @@
  * block test functions.
  */
 
+#include <boost/filesystem.hpp>
 #include <libdevcrypto/FileSystem.h>
 #include <libethereum/CanonBlockChain.h>
 #include "TestHelper.h"
@@ -35,8 +36,8 @@ bytes createBlockRLPFromFields(mObject& _tObj);
 void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj);
 BlockInfo constructBlock(mObject& _o);
 void updatePoW(BlockInfo& _bi);
-void writeBlockHeaderToJson(mObject& _o, const BlockInfo& _bi);
-RLPStream createFullBlockFromHeader(const BlockInfo& _bi, const bytes& _txs = RLPEmptyList, const bytes& _uncles = RLPEmptyList);
+void writeBlockHeaderToJson(mObject& _o, BlockInfo const& _bi);
+RLPStream createFullBlockFromHeader(BlockInfo const& _bi, bytes const& _txs = RLPEmptyList, bytes const& _uncles = RLPEmptyList);
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
@@ -75,7 +76,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		o["genesisRLP"] = "0x" + toHex(rlpGenesisBlock.out());
 
 		// construct blockchain
-		BlockChain bc(rlpGenesisBlock.out(), string(), true);
+		BlockChain bc(rlpGenesisBlock.out(), (boost::filesystem::temp_directory_path() / ("eth_test_" + toString(rand()))).string(), true);
 
 		if (_fillin)
 		{
@@ -241,6 +242,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				if (sha3(RLP(state.blockData())[2].data()) != sha3(RLP(block2.out())[2].data()))
 					cnote << "uncle list mismatch\n" << RLP(state.blockData())[2].data() << "\n" << RLP(block2.out())[2].data();
+
 				try
 				{
 					state.sync(bc);
@@ -292,7 +294,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					BOOST_CHECK(blObj.count("uncleHeaders") == 0);
 					continue;
 				}
-				catch(...)
+				catch (...)
 				{
 					cnote << "state sync or block import did throw an exception\n";
 					BOOST_CHECK(blObj.count("blockHeader") == 0);
@@ -388,7 +390,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 					BOOST_CHECK_MESSAGE(txsFromField[i] == txsFromRlp[i], "transactions from  rlp and transaction from field do not match");
 					BOOST_CHECK_MESSAGE(txsFromField[i].rlp() == txsFromRlp[i].rlp(), "transactions rlp do not match");
-
 				}
 
 				// check uncle list
@@ -488,12 +489,12 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	return rlpStream.out();
 }
 
-void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
+void overwriteBlockHeader(BlockInfo& _currentBlockHeader, mObject& _blObj)
 {
 	if (_blObj["blockHeader"].get_obj().size() != 14)
 	{
 
-		BlockInfo tmp = _current_BlockHeader;
+		BlockInfo tmp = _currentBlockHeader;
 
 		if (_blObj["blockHeader"].get_obj().count("parentHash"))
 			tmp.parentHash = h256(_blObj["blockHeader"].get_obj()["parentHash"].get_str());
@@ -539,16 +540,16 @@ void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
 
 		// find new valid nonce
 
-		if (tmp != _current_BlockHeader)
+		if (tmp != _currentBlockHeader)
 		{
-			_current_BlockHeader = tmp;
+			_currentBlockHeader = tmp;
 
 			ProofOfWork pow;
 			std::pair<MineInfo, Ethash::Proof> ret;
-			while (!ProofOfWork::verify(_current_BlockHeader))
+			while (!ProofOfWork::verify(_currentBlockHeader))
 			{
-				ret = pow.mine(_current_BlockHeader, 1000, true, true);
-				Ethash::assignResult(ret.second, _current_BlockHeader);
+				ret = pow.mine(_currentBlockHeader, 1000, true, true);
+				Ethash::assignResult(ret.second, _currentBlockHeader);
 			}
 		}
 	}
@@ -557,13 +558,12 @@ void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
 		// take the blockheader as is
 		const bytes c_blockRLP = createBlockRLPFromFields(_blObj["blockHeader"].get_obj());
 		const RLP c_bRLP(c_blockRLP);
-		_current_BlockHeader.populateFromHeader(c_bRLP, IgnoreNonce);
+		_currentBlockHeader.populateFromHeader(c_bRLP, IgnoreNonce);
 	}
 }
 
 BlockInfo constructBlock(mObject& _o)
 {
-
 	BlockInfo ret;
 	try
 	{
@@ -600,7 +600,7 @@ void updatePoW(BlockInfo& _bi)
 	_bi.hash = _bi.headerHash(WithNonce);
 }
 
-void writeBlockHeaderToJson(mObject& _o, const BlockInfo& _bi)
+void writeBlockHeaderToJson(mObject& _o, BlockInfo const& _bi)
 {
 	_o["parentHash"] = toString(_bi.parentHash);
 	_o["uncleHash"] = toString(_bi.sha3Uncles);
@@ -620,7 +620,7 @@ void writeBlockHeaderToJson(mObject& _o, const BlockInfo& _bi)
 	_o["hash"] = toString(_bi.hash);
 }
 
-RLPStream createFullBlockFromHeader(const BlockInfo& _bi,const bytes& _txs, const bytes& _uncles )
+RLPStream createFullBlockFromHeader(BlockInfo const& _bi, bytes const& _txs, bytes const& _uncles)
 {
 	RLPStream rlpStream;
 	_bi.streamRLP(rlpStream, WithNonce);
@@ -632,8 +632,8 @@ RLPStream createFullBlockFromHeader(const BlockInfo& _bi,const bytes& _txs, cons
 
 	return ret;
 }
-} }// Namespace Close
 
+} }// Namespace Close
 
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
