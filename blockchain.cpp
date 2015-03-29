@@ -22,6 +22,7 @@
 
 #include <boost/filesystem.hpp>
 #include <libdevcrypto/FileSystem.h>
+#include <libtestutils/TransientDirectory.h>
 #include <libethereum/CanonBlockChain.h>
 #include "TestHelper.h"
 
@@ -76,7 +77,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		o["genesisRLP"] = "0x" + toHex(rlpGenesisBlock.out());
 
 		// construct blockchain
-		BlockChain bc(rlpGenesisBlock.out(), (boost::filesystem::temp_directory_path() / ("eth_test_" + toString(rand()))).string(), true);
+		TransientDirectory td;
+		BlockChain bc(rlpGenesisBlock.out(), td.path(), true);
 
 		if (_fillin)
 		{
