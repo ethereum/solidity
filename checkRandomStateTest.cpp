@@ -83,12 +83,11 @@ bool doStateTest(mValue& _v)
 		ImportTest importer(o, false);
 
 		eth::State theState = importer.m_statePre;
-		bytes tx = importer.m_transaction.rlp();
 		bytes output;
 
 		try
 		{
-			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number), tx).output;
+			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number), importer.m_transaction).output;
 		}
 		catch (Exception const& _e)
 		{
