@@ -182,18 +182,17 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				Transactions txList;
 				for (auto const& txi: txs.transactions())
 				{
-					Transaction tx(txi.second, CheckSignature::Sender);
-					txList.push_back(tx);
+					txList.push_back(txi.second);
 					mObject txObject;
-					txObject["nonce"] = toString(tx.nonce());
-					txObject["data"] = "0x" + toHex(tx.data());
-					txObject["gasLimit"] = toString(tx.gas());
-					txObject["gasPrice"] = toString(tx.gasPrice());
-					txObject["r"] = "0x" + toString(tx.signature().r);
-					txObject["s"] = "0x" + toString(tx.signature().s);
-					txObject["v"] = to_string(tx.signature().v + 27);
-					txObject["to"] = tx.isCreation() ? "" : toString(tx.receiveAddress());
-					txObject["value"] = toString(tx.value());
+					txObject["nonce"] = toString(txi.second.nonce());
+					txObject["data"] = "0x" + toHex(txi.second.data());
+					txObject["gasLimit"] = toString(txi.second.gas());
+					txObject["gasPrice"] = toString(txi.second.gasPrice());
+					txObject["r"] = "0x" + toString(txi.second.signature().r);
+					txObject["s"] = "0x" + toString(txi.second.signature().s);
+					txObject["v"] = to_string(txi.second.signature().v + 27);
+					txObject["to"] = txi.second.isCreation() ? "" : toString(txi.second.receiveAddress());
+					txObject["value"] = toString(txi.second.value());
 
 					txArray.push_back(txObject);
 				}
