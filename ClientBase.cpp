@@ -34,34 +34,45 @@ BOOST_AUTO_TEST_CASE(blocks)
 {
 	enumerateClients([](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
 	{
-		for (string const& name: _json["postState"].getMemberNames())
+		auto compareState = [&_client](Json::Value const& _o, string const& _name, BlockNumber _blockNumber) -> void
 		{
-			Json::Value o = _json["postState"][name];
-			Address address(name);
+			Address address(_name);
 
 			// balanceAt
-			u256 expectedBalance = u256(o["balance"].asString());
-			u256 balance = _client.balanceAt(address);
+			u256 expectedBalance = u256(_o["balance"].asString());
+			u256 balance = _client.balanceAt(address, _blockNumber);
 			ETH_CHECK_EQUAL(expectedBalance, balance);
 
 			// countAt
-			u256 expectedCount = u256(o["nonce"].asString());
-			u256 count = _client.countAt(address);
+			u256 expectedCount = u256(_o["nonce"].asString());
+			u256 count = _client.countAt(address,  _blockNumber);
 			ETH_CHECK_EQUAL(expectedCount, count);
 
 			// stateAt
-			for (string const& pos: o["storage"].getMemberNames())
+			for (string const& pos: _o["storage"].getMemberNames())
 			{
-				u256 expectedState = u256(o["storage"][pos].asString());
-				u256 state = _client.stateAt(address, u256(pos));
+				u256 expectedState = u256(_o["storage"][pos].asString());
+				u256 state = _client.stateAt(address, u256(pos), _blockNumber);
 				ETH_CHECK_EQUAL(expectedState, state);
 			}
 
 			// codeAt
-			bytes expectedCode = fromHex(o["code"].asString());
-			bytes code = _client.codeAt(address);
+			bytes expectedCode = fromHex(_o["code"].asString());
+			bytes code = _client.codeAt(address, _blockNumber);
 			ETH_CHECK_EQUAL_COLLECTIONS(expectedCode.begin(), expectedCode.end(),
-										  code.begin(), code.end());
+										code.begin(), code.end());
+		};
+
+		for (string const& name: _json["postState"].getMemberNames())
+		{
+			Json::Value o = _json["postState"][name];
+			compareState(o, name, PendingBlock);
+		}
+
+		for (string const& name: _json["pre"].getMemberNames())
+		{
+			Json::Value o = _json["pre"][name];
+			compareState(o, name, 0);
 		}
 
 		// number
