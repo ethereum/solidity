@@ -136,34 +136,20 @@ void ContractDefinition::checkAbstractFunctions()
 
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(getLinearizedBaseContracts()))
-	{
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
 		{
 			string const& name = function->getName();
 			if (!function->isFullyImplemented() && functions.count(name) && functions[name])
 				BOOST_THROW_EXCEPTION(function->createTypeError("Redeclaring an already implemented function as abstract"));
-			// if (functions.count(name) && !functions[name] && function->isFullyImplemented())
-			// 	functions.insert(make_pair(name, true);
-
-			// if (functions.count(name) && !functions[name] && function->isFullyImplemented)
-			// 	functions.insert(make_pair(name, true));
-			
-			// functions.insert(make_pair(name, function->isFullyImplemented()));
 			functions[name] = function->isFullyImplemented();
-			
-			// if (function->isFullyImplemented())
-			// 	full_functions.insert(make_pair(name, function.get()));
-			// else
-			// 	abs_functions.insert(make_pair(name, function.get()));
 		}
-	}
+
 	for (auto const& it: functions)
 		if (!it.second)
 		{
 			setFullyImplemented(false);
 			break;
 		}
-
 }
 
 void ContractDefinition::checkIllegalOverrides() const
@@ -682,7 +668,7 @@ void NewExpression::checkTypeRequirements()
 	if (!m_contract)
 		BOOST_THROW_EXCEPTION(createTypeError("Identifier is not a contract."));
 	if (!m_contract->isFullyImplemented())
-		BOOST_THROW_EXCEPTION(m_contract->createTypeError("Trying to create an object of an abstract contract."));
+		BOOST_THROW_EXCEPTION(m_contract->createTypeError("Trying to create an instance of an abstract contract."));
 	shared_ptr<ContractType const> contractType = make_shared<ContractType>(*m_contract);
 	TypePointers const& parameterTypes = contractType->getConstructorType()->getParameterTypes();
 	m_type = make_shared<FunctionType>(parameterTypes, TypePointers{contractType},
