@@ -164,8 +164,17 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
-	return nodeFactory.createNode<ContractDefinition>(name, docString, baseContracts, structs, enums,
-													  stateVariables, functions, modifiers, events);
+	return nodeFactory.createNode<ContractDefinition>(
+		name,
+		docString,
+		baseContracts,
+		structs,
+		enums,
+		stateVariables,
+		functions,
+		modifiers,
+		events
+	);
 }
 
 ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
@@ -247,8 +256,15 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 	}
 	else
 		returnParameters = createEmptyParameterList();
-	ASTPointer<Block> block = parseBlock();
-	nodeFactory.setEndPositionFromNode(block);
+	ASTPointer<Block> block = ASTPointer<Block>();
+	nodeFactory.markEndPosition();
+	if (m_scanner->getCurrentToken() != Token::Semicolon)
+	{
+		block = parseBlock();
+		nodeFactory.setEndPositionFromNode(block);
+	}
+	else
+		m_scanner->next(); // just consume the ';'
 	bool const c_isConstructor = (_contractName && *name == *_contractName);
 	return nodeFactory.createNode<FunctionDefinition>(name, visibility, c_isConstructor, docstring,
 													  parameters, isDeclaredConst, modifiers,

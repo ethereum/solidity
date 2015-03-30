@@ -196,6 +196,22 @@ protected:
 	ASTPointer<ASTString> m_documentation;
 };
 
+/**
+ * Abstract class that is added to AST nodes that can be marked as not being fully implemented
+ */
+class ImplementationOptional
+{
+public:
+	explicit ImplementationOptional(bool _implemented): m_implemented(_implemented) {}
+
+	/// @return whether this node is fully implemented or not
+	bool isFullyImplemented() const { return m_implemented; }
+	void setFullyImplemented(bool _implemented) {  m_implemented = _implemented; }
+
+protected:
+	bool m_implemented;
+};
+
 /// @}
 
 /**
@@ -203,20 +219,24 @@ protected:
  * document order. It first visits all struct declarations, then all variable declarations and
  * finally all function declarations.
  */
-class ContractDefinition: public Declaration, public Documented
+class ContractDefinition: public Declaration, public Documented, public ImplementationOptional
 {
 public:
-	ContractDefinition(SourceLocation const& _location,
-					   ASTPointer<ASTString> const& _name,
-					   ASTPointer<ASTString> const& _documentation,
-					   std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
-					   std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
-					   std::vector<ASTPointer<EnumDefinition>> const& _definedEnums,
-					   std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
-					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
-					   std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
-					   std::vector<ASTPointer<EventDefinition>> const& _events):
-		Declaration(_location, _name), Documented(_documentation),
+	ContractDefinition(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<ASTString> const& _documentation,
+		std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
+		std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
+		std::vector<ASTPointer<EnumDefinition>> const& _definedEnums,
+		std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
+		std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
+		std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
+		std::vector<ASTPointer<EventDefinition>> const& _events
+	):
+		Declaration(_location, _name),
+		Documented(_documentation),
+		ImplementationOptional(true),
 		m_baseContracts(_baseContracts),
 		m_definedStructs(_definedStructs),
 		m_definedEnums(_definedEnums),
@@ -263,6 +283,7 @@ public:
 
 private:
 	void checkIllegalOverrides() const;
+	void checkAbstractFunctions();
 
 	std::vector<std::pair<FixedHash<4>, FunctionTypePointer>> const& getInterfaceFunctionList() const;
 
@@ -378,24 +399,29 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_parameters;
 };
 
-class FunctionDefinition: public Declaration, public VariableScope, public Documented
+class FunctionDefinition: public Declaration, public VariableScope, public Documented, public ImplementationOptional
 {
 public:
-	FunctionDefinition(SourceLocation const& _location, ASTPointer<ASTString> const& _name,
-					Declaration::Visibility _visibility, bool _isConstructor,
-					ASTPointer<ASTString> const& _documentation,
-					ASTPointer<ParameterList> const& _parameters,
-					bool _isDeclaredConst,
-					std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
-					ASTPointer<ParameterList> const& _returnParameters,
-					ASTPointer<Block> const& _body):
-	Declaration(_location, _name, _visibility), Documented(_documentation),
-	m_isConstructor(_isConstructor),
-	m_parameters(_parameters),
-	m_isDeclaredConst(_isDeclaredConst),
-	m_functionModifiers(_modifiers),
-	m_returnParameters(_returnParameters),
-	m_body(_body)
+	FunctionDefinition(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		Declaration::Visibility _visibility, bool _isConstructor,
+		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<ParameterList> const& _parameters,
+		bool _isDeclaredConst,
+		std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
+		ASTPointer<ParameterList> const& _returnParameters,
+		ASTPointer<Block> const& _body
+	):
+		Declaration(_location, _name, _visibility),
+		Documented(_documentation),
+		ImplementationOptional(_body != nullptr),
+		m_isConstructor(_isConstructor),
+		m_parameters(_parameters),
+		m_isDeclaredConst(_isDeclaredConst),
+		m_functionModifiers(_modifiers),
+		m_returnParameters(_returnParameters),
+		m_body(_body)
 	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
