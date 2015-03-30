@@ -175,8 +175,17 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 				method["author"] = m_author;
 
 			Json::Value params(Json::objectValue);
+			std::vector<std::string> paramNames = it.second->getParameterNames();
 			for (auto const& pair: m_params)
+			{
+				if (find(paramNames.begin(), paramNames.end(), pair.first) == paramNames.end())
+					// LTODO: mismatching parameter name, throw some form of warning and not just an exception
+					BOOST_THROW_EXCEPTION(
+						DocstringParsingError() <<
+						errinfo_comment("documented parameter \"" + pair.first + "\" not found found in the function")
+					);					
 				params[pair.first] = pair.second;
+			}
 
 			if (!m_params.empty())
 				method["params"] = params;
