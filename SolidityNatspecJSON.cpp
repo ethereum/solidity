@@ -176,7 +176,6 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	"}\n";
 
 	char const* devNatspec = "{\"methods\":{}}";
-
 	char const* userNatspec = "{\"methods\":{}}";
 
 	checkNatspec(sourceCode, devNatspec, false);
@@ -228,6 +227,18 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	"}}";
 
 	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter\n"
+	"  /// @param not_existing Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	BOOST_CHECK_THROW(checkNatspec(sourceCode, natspec, false), DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
