@@ -440,6 +440,110 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
 	}
 }
 
+void ArrayUtils::accessIndex(ArrayType const& _arrayType) const
+{
+	ArrayType::Location location = _arrayType.getLocation();
+	eth::Instruction load =
+		location == ArrayType::Location::Storage ? eth::Instruction::SLOAD :
+		location == ArrayType::Location::Memory ? eth::Instruction::MLOAD :
+		eth::Instruction::CALLDATALOAD;
+
+	// retrieve length
+	if (!_arrayType.isDynamicallySized())
+		m_context << _arrayType.getLength();
+	else if (location == ArrayType::Location::CallData)
+		// length is stored on the stack
+		m_context << eth::Instruction::SWAP1;
+	else
+		m_context << eth::Instruction::DUP2 << load;
+	// stack: <base_ref> <index> <length>
+	// check out-of-bounds access
+	m_context << eth::Instruction::DUP2 << eth::Instruction::LT;
+	eth::AssemblyItem legalAccess = m_context.appendConditionalJump();
+	// out-of-bounds access throws exception (just STOP for now)
+	m_context << eth::Instruction::STOP;
+
+	m_context << legalAccess;
+	// stack: <base_ref> <index>
+	if (_arrayType.isByteArray())
+		switch (location)
+		{
+		case ArrayType::Location::Storage:
+			// byte array index storage lvalue on stack (goal):
+			// <ref> <byte_number> = <base_ref + index / 32> <index % 32>
+			m_context << u256(32) << eth::Instruction::SWAP2;
+			CompilerUtils(m_context).computeHashStatic();
+			// stack: 32 index data_ref
+			m_context
+				<< eth::Instruction::DUP3 << eth::Instruction::DUP3
+				<< eth::Instruction::DIV << eth::Instruction::ADD
+			// stack: 32 index (data_ref + index / 32)
+				<< eth::Instruction::SWAP2 << eth::Instruction::SWAP1
+				<< eth::Instruction::MOD;
+			break;
+		case ArrayType::Location::CallData:
+			// no lvalue, just retrieve the value
+			m_context
+				<< eth::Instruction::ADD << eth::Instruction::CALLDATALOAD
+				<< ((u256(0xff) << (256 - 8)))  << eth::Instruction::AND;
+			break;
+		case ArrayType::Location::Memory:
+			solAssert(false, "Memory lvalues not yet implemented.");
+		}
+	else
+	{
+		// stack: <base_ref> <index>
+		m_context << eth::Instruction::SWAP1;
+		if (_arrayType.isDynamicallySized())
+		{
+			if (location == ArrayType::Location::Storage)
+				CompilerUtils(m_context).computeHashStatic();
+			else if (location == ArrayType::Location::Memory)
+				m_context << u256(32) << eth::Instruction::ADD;
+		}
+		// stack: <index> <data_ref>
+		switch (location)
+		{
+		case ArrayType::Location::CallData:
+			m_context
+				<< eth::Instruction::SWAP1 << _arrayType.getBaseType()->getCalldataEncodedSize()
+				<< eth::Instruction::MUL << eth::Instruction::ADD;
+			if (_arrayType.getBaseType()->isValueType())
+				CompilerUtils(m_context).loadFromMemoryDynamic(*_arrayType.getBaseType(), true, true, false);
+			break;
+		case ArrayType::Location::Storage:
+			m_context << eth::Instruction::SWAP1;
+			if (_arrayType.getBaseType()->getStorageBytes() <= 16)
+			{
+				// stack: <data_ref> <index>
+				// goal:
+				// <ref> <byte_number> = <base_ref + index / itemsPerSlot> <(index % itemsPerSlot) * byteSize>
+				unsigned byteSize = _arrayType.getBaseType()->getStorageBytes();
+				solAssert(byteSize != 0, "");
+				unsigned itemsPerSlot = 32 / byteSize;
+				m_context << u256(itemsPerSlot) << eth::Instruction::SWAP2;
+				// stack: itemsPerSlot index data_ref
+				m_context
+					<< eth::Instruction::DUP3 << eth::Instruction::DUP3
+					<< eth::Instruction::DIV << eth::Instruction::ADD
+				// stack: itemsPerSlot index (data_ref + index / itemsPerSlot)
+					<< eth::Instruction::SWAP2 << eth::Instruction::SWAP1
+					<< eth::Instruction::MOD
+					<< u256(byteSize) << eth::Instruction::MUL;
+			}
+			else
+			{
+				if (_arrayType.getBaseType()->getStorageSize() != 1)
+					m_context << _arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL;
+				m_context << eth::Instruction::ADD << u256(0);
+			}
+			break;
+		case ArrayType::Location::Memory:
+			solAssert(false, "Memory lvalues not yet implemented.");
+		}
+	}
+}
+
 void ArrayUtils::incrementByteOffset(unsigned _byteSize, unsigned _byteOffsetPosition, unsigned _storageOffsetPosition) const
 {
 	solAssert(_byteSize < 32, "");

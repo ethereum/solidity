@@ -70,6 +70,12 @@ public:
 	/// Stack pre: reference (excludes byte offset for dynamic storage arrays)
 	/// Stack post: reference length
 	void retrieveLength(ArrayType const& _arrayType) const;
+	/// Retrieves the value at a specific index. If the location is storage, only retrieves the
+	/// position.
+	/// Stack pre: reference [length] index
+	/// Stack post for storage: slot byte_offset
+	/// Stack post for calldata: value
+	void accessIndex(ArrayType const& _arrayType) const;
 
 private:
 	/// Adds the given number of bytes to a storage byte offset counter and also increments
