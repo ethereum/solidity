@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
 	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
 	"}\n";
 
-	BOOST_CHECK_THROW(checkNatspec(sourceCode, natspec, false), DocstringParsingError);
+	BOOST_CHECK_THROW(checkNatspec(sourceCode, "", false), DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
@@ -498,17 +498,7 @@ BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
 	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
 	"}\n";
 
-	char const* natspec = "{"
-	"    \"author\": \"Lefteris\","
-	"    \"title\": \"Just a test contract\","
-	"    \"methods\":{"
-	"        \"mul(uint256,uint256)\":{ \n"
-	"            \"details\": \"Mul function\"\n"
-	"        }\n"
-	"    }\n"
-	"}";
-
-	BOOST_CHECK_THROW(checkNatspec(sourceCode, natspec, false), DocstringParsingError);
+	BOOST_CHECK_THROW(checkNatspec(sourceCode, "", false), DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
