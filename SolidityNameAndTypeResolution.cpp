@@ -384,10 +384,10 @@ BOOST_AUTO_TEST_CASE(create_abstract_contract)
 	ASTPointer<SourceUnit> sourceUnit;
 	char const* text = R"(
 		contract base { function foo(); }
-		contract derived { 
+		contract derived {
 			base b;
-            function foo() { b = new base();}
-        }
+			function foo() { b = new base();}
+			}
 		)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
