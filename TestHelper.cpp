@@ -375,22 +375,6 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 	}
 }
 
-std::string getTestPath()
-{
-	string testPath;
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-
-	if (ptestPath == NULL)
-	{
-		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
-	}
-	else
-		testPath = ptestPath;
-
-	return testPath;
-}
-
 void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)

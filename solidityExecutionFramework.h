@@ -142,7 +142,8 @@ protected:
 		try
 		{
 			// this will throw since the transaction is invalid, but it should nevertheless store the transaction
-			executive.setup(&transactionRLP);
+			executive.initialize(&transactionRLP);
+			executive.execute();
 		}
 		catch (...) {}
 		if (_isCreation)

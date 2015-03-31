@@ -53,13 +53,12 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		ImportTest importer(o, _fillin);
 
 		State theState = importer.m_statePre;
-		bytes tx = importer.m_transaction.rlp();
 		bytes output;
 
 		try
 		{
 			Listener::ExecTimeGuard guard{i.first};
-			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number), tx).output;
+			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number), importer.m_transaction).output;
 		}
 		catch (Exception const& _e)
 		{
