@@ -969,14 +969,41 @@ BOOST_AUTO_TEST_CASE(simple_accessor)
 BOOST_AUTO_TEST_CASE(array_accessor)
 {
 	char const* sourceCode = R"(
-		 contract test {
-		   uint[8] datas;
-		   function test() {
-			 datas[2] = 8;
-		   }
-		 })";
+		contract test {
+			uint[8] data;
+			uint[] dynamicData;
+			function test() {
+				data[2] = 8;
+				dynamicData.length = 3;
+				dynamicData[2] = 8;
+			}
+		}
+	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("data(2)") == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("data(uint256)", 2) == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("data(uint256)", 8) == encodeArgs());
+	BOOST_CHECK(callContractFunction("dynamicData(uint256)", 2) == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("dynamicData(uint256)", 8) == encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(accessors_mapping_for_array)
+{
+	char const* sourceCode = R"(
+		 contract test {
+			mapping(uint => uint[8]) data;
+			mapping(uint => uint[]) dynamicData;
+			function test() {
+				data[2][2] = 8;
+				dynamicData[2].length = 3;
+				dynamicData[2][2] = 8;
+			}
+		 }
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data(uint256,uint256)", 2, 2) == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("data(uint256, 256)", 2, 8) == encodeArgs());
+	BOOST_CHECK(callContractFunction("dynamicData(uint256,uint256)", 2, 2) == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("dynamicData(uint256,uint256)", 2, 8) == encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
