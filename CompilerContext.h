@@ -83,6 +83,7 @@ public:
 	/// Converts an offset relative to the current stack height to a value that can be used later
 	/// with baseToCurrentStackOffset to point to the same stack element.
 	unsigned currentToBaseStackOffset(unsigned _offset) const;
+	/// @returns pair of slot and byte offset of the value inside this slot.
 	std::pair<u256, unsigned> getStorageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag

@@ -62,8 +62,19 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 
 	unsigned length = 0;
 	TypePointers const& paramTypes = accessorType.getParameterTypes();
-	// move arguments to memory
-	for (TypePointer const& paramType: boost::adaptors::reverse(paramTypes))
+
+	// to exclude the last key if it is an array
+	TypePointer finalMappingValueType = _varDecl.getType();
+	while (finalMappingValueType->getCategory() == Type::Category::Mapping)
+		finalMappingValueType = dynamic_cast<MappingType const&>(*finalMappingValueType).getValueType();
+
+	bool finalIsArrayType = finalMappingValueType->getCategory() == Type::Category::Array;
+	TypePointers mappingKeys(paramTypes);
+	if (finalIsArrayType)
+		mappingKeys.pop_back();
+
+	// move mapping arguments to memory
+	for (TypePointer const& paramType: boost::adaptors::reverse(mappingKeys))
 		length += CompilerUtils(m_context).storeInMemory(length, *paramType, true);
 
 	// retrieve the position of the variable
@@ -71,20 +82,21 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	m_context << location.first;
 
 	TypePointer returnType = _varDecl.getType();
-	if (ArrayType const* arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
-	{
-		(void)arrayType;
-	} else
-		for (TypePointer const& paramType: paramTypes)
-		{
-			// move offset to memory
-			CompilerUtils(m_context).storeInMemory(length);
-			unsigned argLen = paramType->getCalldataEncodedSize();
-			length -= argLen;
-			m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
 
-			returnType = dynamic_cast<MappingType const&>(*returnType).getValueType();
-		}
+	for (TypePointer const& paramType: mappingKeys)
+	{
+		// move offset to memory
+		CompilerUtils(m_context).storeInMemory(length);
+		unsigned argLen = paramType->getCalldataEncodedSize();
+		length -= argLen;
+		m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
+
+		returnType = dynamic_cast<MappingType const&>(*returnType).getValueType();
+	}
+	if (finalMappingValueType->isDynamicallySized())
+	{
+
+	}
 
 	unsigned retSizeOnStack = 0;
 	solAssert(accessorType.getReturnParameterTypes().size() >= 1, "");
@@ -100,7 +112,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			pair<u256, unsigned> const& offsets = structType->getStorageOffsetsOfMember(names[i]);
 			m_context << eth::Instruction::DUP1 << u256(offsets.first) << eth::Instruction::ADD << u256(offsets.second);
 			StorageItem(m_context, *types[i]).retrieveValue(SourceLocation(), true);
-			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
+			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 is not yet implemented.");
 			m_context << eth::Instruction::SWAP1;
 			retSizeOnStack += types[i]->getSizeOnStack();
 		}
@@ -114,7 +126,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
-	solAssert(retSizeOnStack <= 15, "Stack too deep.");
+	solAssert(retSizeOnStack <= 15, "Stack is too deep.");
 	m_context << eth::dupInstruction(retSizeOnStack + 1);
 	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 }
@@ -753,7 +765,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		appendTypeMoveToMemory(IntegerType(256));
 		m_context << u256(0) << eth::Instruction::SHA3;
 		m_context << u256(0);
-		setLValueToStorageItem( _indexAccess);
+		setLValueToStorageItem(_indexAccess);
 	}
 	else if (baseType.getCategory() == Type::Category::Array)
 	{
