@@ -199,7 +199,7 @@ void CommonSubexpressionEliminator::storeInStorage(ExpressionClasses::Id _slot, 
 	if (m_storageContent.count(_slot) && m_storageContent[_slot] == _value)
 		// do not execute the storage if we know that the value is already there
 		return;
-	m_sequenceNumber ++;
+	m_sequenceNumber++;
 	decltype(m_storageContent) storageContents;
 	// copy over values at points where we know that they are different from _slot
 	for (auto const& storageItem: m_storageContent)
@@ -210,7 +210,7 @@ void CommonSubexpressionEliminator::storeInStorage(ExpressionClasses::Id _slot, 
 	m_storeOperations.push_back(StoreOperation(StoreOperation::Storage, _slot, m_sequenceNumber, id));
 	m_storageContent[_slot] = _value;
 	// increment a second time so that we get unique sequence numbers for writes
-	m_sequenceNumber ++;
+	m_sequenceNumber++;
 }
 
 ExpressionClasses::Id CommonSubexpressionEliminator::loadFromStorage(ExpressionClasses::Id _slot)
@@ -226,7 +226,7 @@ void CommonSubexpressionEliminator::storeInMemory(ExpressionClasses::Id _slot, E
 	if (m_memoryContent.count(_slot) && m_memoryContent[_slot] == _value)
 		// do not execute the store if we know that the value is already there
 		return;
-	m_sequenceNumber ++;
+	m_sequenceNumber++;
 	decltype(m_memoryContent) memoryContents;
 	// copy over values at points where we know that they are different from _slot by at least 32
 	for (auto const& memoryItem: m_memoryContent)
@@ -237,7 +237,7 @@ void CommonSubexpressionEliminator::storeInMemory(ExpressionClasses::Id _slot, E
 	m_storeOperations.push_back(StoreOperation(StoreOperation::Memory, _slot, m_sequenceNumber, id));
 	m_memoryContent[_slot] = _value;
 	// increment a second time so that we get unique sequence numbers for writes
-	m_sequenceNumber ++;
+	m_sequenceNumber++;
 }
 
 ExpressionClasses::Id CommonSubexpressionEliminator::loadFromMemory(ExpressionClasses::Id _slot)
@@ -281,7 +281,7 @@ bool SemanticInformation::breaksBasicBlock(AssemblyItem const& _item)
 			return false;
 		//@todo: We do not handle the following memory instructions for now:
 		// calldatacopy, codecopy, extcodecopy, mstore8,
-		// msize (not that msize also depends on memory read access)
+		// msize (note that msize also depends on memory read access)
 
 		// the second requirement will be lifted once it is implemented
 		return info.sideEffects || info.args > 2;
@@ -592,10 +592,10 @@ bool CSECodeGenerator::removeStackTopIfPossible()
 void CSECodeGenerator::appendDup(int _fromPosition)
 {
 	assertThrow(_fromPosition != c_invalidPosition, OptimizerException, "");
-	int nr = 1 + m_stackHeight - _fromPosition;
-	assertThrow(nr <= 16, StackTooDeepException, "Stack too deep.");
-	assertThrow(1 <= nr, OptimizerException, "Invalid stack access.");
-	appendItem(AssemblyItem(dupInstruction(nr)));
+	int instructionNum = 1 + m_stackHeight - _fromPosition;
+	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep.");
+	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
+	appendItem(AssemblyItem(dupInstruction(instructionNum)));
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
 }
 
@@ -604,10 +604,10 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition)
 	assertThrow(_fromPosition != c_invalidPosition, OptimizerException, "");
 	if (_fromPosition == m_stackHeight)
 		return;
-	int nr = m_stackHeight - _fromPosition;
-	assertThrow(nr <= 16, StackTooDeepException, "Stack too deep.");
-	assertThrow(1 <= nr, OptimizerException, "Invalid stack access.");
-	appendItem(AssemblyItem(swapInstruction(nr)));
+	int instructionNum = m_stackHeight - _fromPosition;
+	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep.");
+	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
+	appendItem(AssemblyItem(swapInstruction(instructionNum)));
 	// The value of a class can be present in multiple locations on the stack. We only update the
 	// "canonical" one that is tracked by m_classPositions
 	if (m_classPositions[m_stack[m_stackHeight]] == m_stackHeight)

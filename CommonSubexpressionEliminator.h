@@ -164,7 +164,7 @@ public:
 	using StoreOperations = std::vector<StoreOperation>;
 
 	/// Initializes the code generator with the given classes and store operations.
-	/// The store operations have to be sorted ascendingly by sequence number.
+	/// The store operations have to be sorted by sequence number in ascending order.
 	CSECodeGenerator(ExpressionClasses& _expressionClasses, StoreOperations const& _storeOperations);
 
 	/// @returns the assembly items generated from the given requirements
