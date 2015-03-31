@@ -57,6 +57,15 @@ BOOST_AUTO_TEST_CASE(host)
 	g_logVerbosity = oldLogVerbosity;
 }
 
+BOOST_AUTO_TEST_CASE(networkConfig)
+{
+	Host save("Test", NetworkPreferences(false));
+	bytes store(save.saveNetwork());
+	
+	Host restore("Test", NetworkPreferences(false), bytesConstRef(&store));
+	BOOST_REQUIRE(save.id() == restore.id());
+}
+
 BOOST_AUTO_TEST_CASE(save_nodes)
 {
 	std::list<Host*> hosts;
