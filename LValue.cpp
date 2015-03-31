@@ -225,7 +225,8 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 	else if (m_dataType.getCategory() == Type::Category::Struct)
 	{
 		// stack layout: storage_key storage_offset
-		// @todo this can be improved for packed types
+		// @todo this can be improved: use StorageItem for non-value types, and just store 0 in
+		// all slots that contain value types later.
 		auto const& structType = dynamic_cast<StructType const&>(m_dataType);
 		for (auto const& member: structType.getMembers())
 		{
@@ -245,7 +246,6 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 	else
 	{
 		solAssert(m_dataType.isValueType(), "Clearing of unsupported type requested: " + m_dataType.toString());
-		// @todo actually use offset
 		if (!_removeReference)
 			CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
 		if (m_dataType.getStorageBytes() == 32)

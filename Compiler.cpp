@@ -254,7 +254,6 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 
 void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 {
-	//@todo this can be also done more efficiently
 	unsigned dataOffset = 0;
 	unsigned stackDepth = 0;
 	for (TypePointer const& type: _typeParameters)
@@ -303,9 +302,6 @@ bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
 bool Compiler::visit(FunctionDefinition const& _function)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _function);
-	//@todo to simplify this, the calling convention could by changed such that
-	// caller puts: [retarg0] ... [retargm] [return address] [arg0] ... [argn]
-	// although note that this reduces the size of the visible stack
 
 	m_context.startFunction(_function);
 
