@@ -303,6 +303,271 @@ BOOST_AUTO_TEST_CASE(cse_associativity2)
 	checkCSE(input, {Instruction::DUP2, Instruction::DUP2, Instruction::ADD, u256(5), Instruction::ADD});
 }
 
+BOOST_AUTO_TEST_CASE(cse_storage)
+{
+	AssemblyItems input{
+		u256(0),
+		Instruction::SLOAD,
+		u256(0),
+		Instruction::SLOAD,
+		Instruction::ADD,
+		u256(0),
+		Instruction::SSTORE
+	};
+	checkCSE(input, {
+		u256(0),
+		Instruction::DUP1,
+		Instruction::SLOAD,
+		Instruction::DUP1,
+		Instruction::ADD,
+		Instruction::SWAP1,
+		Instruction::SSTORE
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_noninterleaved_storage)
+{
+	// two stores to the same location should be replaced by only one store, even if we
+	// read in the meantime
+	AssemblyItems input{
+		u256(7),
+		Instruction::DUP2,
+		Instruction::SSTORE,
+		Instruction::DUP1,
+		Instruction::SLOAD,
+		u256(8),
+		Instruction::DUP3,
+		Instruction::SSTORE
+	};
+	checkCSE(input, {
+		u256(8),
+		Instruction::DUP2,
+		Instruction::SSTORE,
+		u256(7)
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_interleaved_storage)
+{
+	// stores and reads to/from two unknown locations, should not optimize away the first store
+	AssemblyItems input{
+		u256(7),
+		Instruction::DUP2,
+		Instruction::SSTORE, // store to "DUP1"
+		Instruction::DUP2,
+		Instruction::SLOAD, // read from "DUP2", might be equal to "DUP1"
+		u256(0),
+		Instruction::DUP3,
+		Instruction::SSTORE // store different value to "DUP1"
+	};
+	checkCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_interleaved_storage_same_value)
+{
+	// stores and reads to/from two unknown locations, should not optimize away the first store
+	// but it should optimize away the second, since we already know the value will be the same
+	AssemblyItems input{
+		u256(7),
+		Instruction::DUP2,
+		Instruction::SSTORE, // store to "DUP1"
+		Instruction::DUP2,
+		Instruction::SLOAD, // read from "DUP2", might be equal to "DUP1"
+		u256(6),
+		u256(1),
+		Instruction::ADD,
+		Instruction::DUP3,
+		Instruction::SSTORE // store same value to "DUP1"
+	};
+	checkCSE(input, {
+		u256(7),
+		Instruction::DUP2,
+		Instruction::SSTORE,
+		Instruction::DUP2,
+		Instruction::SLOAD
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_interleaved_storage_at_known_location)
+{
+	// stores and reads to/from two known locations, should optimize away the first store,
+	// because we know that the location is different
+	AssemblyItems input{
+		u256(0x70),
+		u256(1),
+		Instruction::SSTORE, // store to 1
+		u256(2),
+		Instruction::SLOAD, // read from 2, is different from 1
+		u256(0x90),
+		u256(1),
+		Instruction::SSTORE // store different value at 1
+	};
+	checkCSE(input, {
+		u256(2),
+		Instruction::SLOAD,
+		u256(0x90),
+		u256(1),
+		Instruction::SSTORE
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_interleaved_storage_at_known_location_offset)
+{
+	// stores and reads to/from two locations which are known to be different,
+	// should optimize away the first store, because we know that the location is different
+	AssemblyItems input{
+		u256(0x70),
+		Instruction::DUP2,
+		u256(1),
+		Instruction::ADD,
+		Instruction::SSTORE, // store to "DUP1"+1
+		Instruction::DUP1,
+		u256(2),
+		Instruction::ADD,
+		Instruction::SLOAD, // read from "DUP1"+2, is different from "DUP1"+1
+		u256(0x90),
+		Instruction::DUP3,
+		u256(1),
+		Instruction::ADD,
+		Instruction::SSTORE // store different value at "DUP1"+1
+	};
+	checkCSE(input, {
+		u256(2),
+		Instruction::DUP2,
+		Instruction::ADD,
+		Instruction::SLOAD,
+		u256(0x90),
+		u256(1),
+		Instruction::DUP4,
+		Instruction::ADD,
+		Instruction::SSTORE
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_interleaved_memory_at_known_location_offset)
+{
+	// stores and reads to/from two locations which are known to be different,
+	// should not optimize away the first store, because the location overlaps with the load,
+	// but it should optimize away the second, because we know that the location is different by 32
+	AssemblyItems input{
+		u256(0x50),
+		Instruction::DUP2,
+		u256(2),
+		Instruction::ADD,
+		Instruction::MSTORE, // ["DUP1"+2] = 0x50
+		u256(0x60),
+		Instruction::DUP2,
+		u256(32),
+		Instruction::ADD,
+		Instruction::MSTORE, // ["DUP1"+32] = 0x60
+		Instruction::DUP1,
+		Instruction::MLOAD, // read from "DUP1"
+		u256(0x70),
+		Instruction::DUP3,
+		u256(32),
+		Instruction::ADD,
+		Instruction::MSTORE, // ["DUP1"+32] = 0x70
+		u256(0x80),
+		Instruction::DUP3,
+		u256(2),
+		Instruction::ADD,
+		Instruction::MSTORE, // ["DUP1"+2] = 0x80
+	};
+	// If the actual code changes too much, we could also simply check that the output contains
+	// exactly 3 MSTORE and exactly 1 MLOAD instruction.
+	checkCSE(input, {
+		u256(0x50),
+		u256(2),
+		Instruction::DUP3,
+		Instruction::ADD,
+		Instruction::SWAP1,
+		Instruction::DUP2,
+		Instruction::MSTORE, // ["DUP1"+2] = 0x50
+		Instruction::DUP2,
+		Instruction::MLOAD, // read from "DUP1"
+		u256(0x70),
+		u256(32),
+		Instruction::DUP5,
+		Instruction::ADD,
+		Instruction::MSTORE, // ["DUP1"+32] = 0x70
+		u256(0x80),
+		Instruction::SWAP1,
+		Instruction::SWAP2,
+		Instruction::MSTORE // ["DUP1"+2] = 0x80
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_deep_stack)
+{
+	AssemblyItems input{
+		Instruction::ADD,
+		Instruction::SWAP1,
+		Instruction::POP,
+		Instruction::SWAP8,
+		Instruction::POP,
+		Instruction::SWAP8,
+		Instruction::POP,
+		Instruction::SWAP8,
+		Instruction::SWAP5,
+		Instruction::POP,
+		Instruction::POP,
+		Instruction::POP,
+		Instruction::POP,
+		Instruction::POP,
+	};
+	checkCSE(input, {
+		Instruction::SWAP4,
+		Instruction::SWAP12,
+		Instruction::SWAP3,
+		Instruction::SWAP11,
+		Instruction::POP,
+		Instruction::SWAP1,
+		Instruction::SWAP3,
+		Instruction::ADD,
+		Instruction::SWAP8,
+		Instruction::POP,
+		Instruction::SWAP6,
+		Instruction::POP,
+		Instruction::POP,
+		Instruction::POP,
+		Instruction::POP,
+		Instruction::POP,
+		Instruction::POP,
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_jumpi_no_jump)
+{
+	AssemblyItems input{
+		u256(0),
+		u256(1),
+		Instruction::DUP2,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	checkCSE(input, {
+		u256(0),
+		u256(1)
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_jumpi_jump)
+{
+	AssemblyItems input{
+		u256(1),
+		u256(1),
+		Instruction::DUP2,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMPI
+	};
+	checkCSE(input, {
+		u256(1),
+		Instruction::DUP1,
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP
+	});
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
