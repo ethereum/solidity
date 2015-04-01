@@ -40,8 +40,6 @@ class Assembly;
 
 class AssemblyItem
 {
-	friend class Assembly;
-
 public:
 	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
@@ -54,6 +52,9 @@ public:
 
 	AssemblyItemType type() const { return m_type; }
 	u256 const& data() const { return m_data; }
+	void setType(AssemblyItemType const _type) { m_type = _type; }
+	void setData(u256 const& _data) { m_data = _data; }
+
 	/// @returns the instruction of this item (only valid if type() == Operation)
 	Instruction instruction() const { return Instruction(byte(m_data)); }
 

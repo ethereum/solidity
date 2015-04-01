@@ -65,7 +65,7 @@ public:
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
 	AssemblyItems const& getItems() const { return m_items; }
 	AssemblyItem const& back() const { return m_items.back(); }
-	std::string backString() const { return m_items.size() && m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
+	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((h256)m_items.back().data()) : std::string(); }
 
 	void onePath() { if (asserts(!m_totalDeposit && !m_baseDeposit)) BOOST_THROW_EXCEPTION(InvalidDeposit()); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
 	void otherPath() { donePath(); m_totalDeposit = m_deposit; m_deposit = m_baseDeposit; }

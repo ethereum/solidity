@@ -34,9 +34,9 @@ void Assembly::append(Assembly const& _a)
 	for (AssemblyItem i: _a.m_items)
 	{
 		if (i.type() == Tag || i.type() == PushTag)
-			i.m_data += m_usedTags;
+			i.setData(i.data() + m_usedTags);
 		else if (i.type() == PushSub || i.type() == PushSubSize)
-			i.m_data += m_subs.size();
+			i.setData(i.data() + m_usedTags);
 		append(i);
 	}
 	m_deposit = newDeposit;
@@ -106,34 +106,34 @@ ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const&
 	for (AssemblyItem const& i: m_items)
 	{
 		_out << _prefix;
-		switch (i.m_type)
+		switch (i.type())
 		{
 		case Operation:
 			_out << "  " << instructionInfo(i.instruction()).name  << "\t" << i.getJumpTypeAsString();
 			break;
 		case Push:
-			_out << "  PUSH " << i.m_data;
+			_out << "  PUSH " << i.data();
 			break;
 		case PushString:
-			_out << "  PUSH \"" << m_strings.at((h256)i.m_data) << "\"";
+			_out << "  PUSH \"" << m_strings.at((h256)i.data()) << "\"";
 			break;
 		case PushTag:
-			_out << "  PUSH [tag" << i.m_data << "]";
+			_out << "  PUSH [tag" << i.data() << "]";
 			break;
 		case PushSub:
-			_out << "  PUSH [$" << h256(i.m_data).abridged() << "]";
+			_out << "  PUSH [$" << h256(i.data()).abridged() << "]";
 			break;
 		case PushSubSize:
-			_out << "  PUSH #[$" << h256(i.m_data).abridged() << "]";
+			_out << "  PUSH #[$" << h256(i.data()).abridged() << "]";
 			break;
 		case PushProgramSize:
 			_out << "  PUSHSIZE";
 			break;
 		case Tag:
-			_out << "tag" << i.m_data << ": " << endl << _prefix << "  JUMPDEST";
+			_out << "tag" << i.data() << ": " << endl << _prefix << "  JUMPDEST";
 			break;
 		case PushData:
-			_out << "  PUSH [" << hex << (unsigned)i.m_data << "]";
+			_out << "  PUSH [" << hex << (unsigned)i.data() << "]";
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
@@ -189,7 +189,7 @@ Assembly& Assembly::optimise(bool _enable)
 		return *this;
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules;
 	// jump to next instruction
-	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
+	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].data() == m[2].data()) return {m[2]}; else return m.toVector(); }});
 
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
@@ -331,16 +331,16 @@ bytes Assembly::assemble() const
 	// m_data must not change from here on
 
 	for (AssemblyItem const& i: m_items)
-		switch (i.m_type)
+		switch (i.type())
 		{
 		case Operation:
-			ret.push_back((byte)i.m_data);
+			ret.push_back((byte)i.data());
 			break;
 		case PushString:
 		{
 			ret.push_back((byte)Instruction::PUSH32);
 			unsigned ii = 0;
-			for (auto j: m_strings.at((h256)i.m_data))
+			for (auto j: m_strings.at((h256)i.data()))
 				if (++ii > 32)
 					break;
 				else
@@ -351,30 +351,30 @@ bytes Assembly::assemble() const
 		}
 		case Push:
 		{
-			byte b = max<unsigned>(1, dev::bytesRequired(i.m_data));
+			byte b = max<unsigned>(1, dev::bytesRequired(i.data()));
 			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
 			ret.resize(ret.size() + b);
 			bytesRef byr(&ret.back() + 1 - b, b);
-			toBigEndian(i.m_data, byr);
+			toBigEndian(i.data(), byr);
 			break;
 		}
 		case PushTag:
 		{
 			ret.push_back(tagPush);
-			tagRef[ret.size()] = (unsigned)i.m_data;
+			tagRef[ret.size()] = (unsigned)i.data();
 			ret.resize(ret.size() + bytesPerTag);
 			break;
 		}
 		case PushData: case PushSub:
 		{
 			ret.push_back(dataRefPush);
-			dataRef.insert(make_pair((h256)i.m_data, ret.size()));
+			dataRef.insert(make_pair((h256)i.data(), ret.size()));
 			ret.resize(ret.size() + bytesPerDataRef);
 			break;
 		}
 		case PushSubSize:
 		{
-			auto s = m_data[i.m_data].size();
+			auto s = m_data[i.data()].size();
 			byte b = max<unsigned>(1, dev::bytesRequired(s));
 			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
 			ret.resize(ret.size() + b);
@@ -390,7 +390,7 @@ bytes Assembly::assemble() const
 			break;
 		}
 		case Tag:
-			tagPos[(unsigned)i.m_data] = ret.size();
+			tagPos[(unsigned)i.data()] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
 			break;
 		default:
