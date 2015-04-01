@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			uint a;
 		}
 		contract Test {
-			function boo(uint arg2, bool arg3, bytes8 arg4, bool[2] pairs, uint[] dynamic, C carg) external returns (uint ret) {
+			function boo(uint arg2, bool arg3, bytes8 arg4, bool[2] pairs, uint[] dynamic, C carg, address[] addresses) external returns (uint ret) {
 			   ret = 5;
 			}
 		})";
@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			auto functions = contract->getDefinedFunctions();
 			if (functions.empty())
 				continue;
-			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8,bool[2],uint256[],address)", functions[0]->externalSignature());
+			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8,bool[2],uint256[],address,address[])", functions[0]->externalSignature());
 		}
 }
 
@@ -499,6 +499,16 @@ BOOST_AUTO_TEST_CASE(function_external_call_not_allowed_conversion)
 				this.g(arg);
 			}
 			function g (C c) external {}
+	})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+// todo delete when implemented
+BOOST_AUTO_TEST_CASE(arrays_in_internal_functions)
+{
+	char const* text = R"(
+		contract Test {
+			function foo(address[] addresses) {}
 	})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
