@@ -60,22 +60,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
-	unsigned length = 0;
 	TypePointers const& paramTypes = accessorType.getParameterTypes();
-
-	// to exclude the last key if it is an array
-	TypePointer finalMappingValueType = _varDecl.getType();
-	while (finalMappingValueType->getCategory() == Type::Category::Mapping)
-		finalMappingValueType = dynamic_cast<MappingType const&>(*finalMappingValueType).getValueType();
-
-	bool finalIsArrayType = finalMappingValueType->getCategory() == Type::Category::Array;
-	TypePointers mappingKeys(paramTypes);
-	if (finalIsArrayType)
-		mappingKeys.pop_back();
-
-	// move mapping arguments to memory
-	for (TypePointer const& paramType: boost::adaptors::reverse(mappingKeys))
-		length += CompilerUtils(m_context).storeInMemory(length, *paramType, true);
 
 	// retrieve the position of the variable
 	auto const& location = m_context.getStorageLocationOfVariable(_varDecl);
@@ -83,20 +68,29 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 
 	TypePointer returnType = _varDecl.getType();
 
-	for (TypePointer const& paramType: mappingKeys)
+	for (size_t i = 0; i < paramTypes.size(); ++i)
 	{
-		// move offset to memory
-		CompilerUtils(m_context).storeInMemory(length);
-		unsigned argLen = paramType->getCalldataEncodedSize();
-		length -= argLen;
-		m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
-
-		returnType = dynamic_cast<MappingType const&>(*returnType).getValueType();
+		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
+		{
+			// move storage offset to memory.
+			CompilerUtils(m_context).storeInMemory(32);
+			//move key to memory.
+			CompilerUtils(m_context).copyToStackTop(paramTypes.size() - i, 1);
+			CompilerUtils(m_context).storeInMemory(0);
+			m_context << u256(64) << u256(0) << eth::Instruction::SHA3;
+			returnType = mappingType->getValueType();
+		}
+		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
+		{
+			CompilerUtils(m_context).copyToStackTop(paramTypes.size() - i + 1, 1);
+			ArrayUtils(m_context).accessIndex(*arrayType);
+			returnType = arrayType->getBaseType();
+		}
+		else
+			solAssert(false, "Index access is allowed only for \"mapping\" and \"array\" types.");
 	}
-	if (finalMappingValueType->isDynamicallySized())
-	{
-
-	}
+	//remove index arguments.
+	CompilerUtils(m_context).popStackSlots(paramTypes.size());
 
 	unsigned retSizeOnStack = 0;
 	solAssert(accessorType.getReturnParameterTypes().size() >= 1, "");

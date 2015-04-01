@@ -985,11 +985,23 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	vector<string> paramNames;
 	auto returnType = _varDecl.getType();
 
-	while (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
+	while (true)
 	{
-		params.push_back(mappingType->getKeyType());
-		paramNames.push_back("");
-		returnType = mappingType->getValueType();
+		auto mappingType = dynamic_cast<MappingType const*>(returnType.get());
+		auto arrayType = dynamic_cast<ArrayType const*>(returnType.get());
+		if (mappingType)
+		{
+			params.push_back(mappingType->getKeyType());
+			paramNames.push_back("");
+			returnType = mappingType->getValueType();
+		}
+		else if (arrayType)
+		{
+			returnType = arrayType->getBaseType();
+			params.push_back(make_shared<IntegerType>(256));
+		}
+		else
+			break;
 	}
 
 	TypePointers retParams;
@@ -1002,11 +1014,6 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 				retParamNames.push_back(member.first);
 				retParams.push_back(member.second);
 			}
-	} else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
-	{
-		params.push_back(make_shared<IntegerType>(256));
-		paramNames.push_back("");
-		returnType = arrayType->getBaseType();
 	}
 	else
 	{
