@@ -1105,13 +1105,13 @@ TypePointer FunctionType::externalType() const
 
 	for (auto type: m_parameterTypes)
 	{
-		if(!type->externalType())
+		if (!type->externalType())
 			return TypePointer();
 		paramTypes.push_back(type->externalType());
 	}
 	for (auto type: m_returnParameterTypes)
 	{
-		if(!type->externalType())
+		if (!type->externalType())
 			return TypePointer();
 		retParamTypes.push_back(type->externalType());
 	}
