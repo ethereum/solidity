@@ -31,6 +31,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
 #include <libevmcore/ExpressionClasses.h>
+#include <libevmcore/SemanticInformation.h>
 
 namespace dev
 {
@@ -140,20 +141,6 @@ private:
 };
 
 /**
- * Helper functions to provide context-independent information about assembly items.
- */
-struct SemanticInformation
-{
-	/// @returns true if the given items starts a new basic block
-	static bool breaksBasicBlock(AssemblyItem const& _item);
-	/// @returns true if the item is a two-argument operation whose value does not depend on the
-	/// order of its arguments.
-	static bool isCommutativeOperation(AssemblyItem const& _item);
-	static bool isDupInstruction(AssemblyItem const& _item);
-	static bool isSwapInstruction(AssemblyItem const& _item);
-};
-
-/**
  * Unit that generates code from current stack layout, target stack layout and information about
  * the equivalence classes.
  */
@@ -230,7 +217,7 @@ _AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 	_AssemblyItemIterator _end
 )
 {
-	for (; _iterator != _end && !SemanticInformation::breaksBasicBlock(*_iterator); ++_iterator)
+	for (; _iterator != _end && !SemanticInformation::breaksCSEAnalysisBlock(*_iterator); ++_iterator)
 		feedItem(*_iterator);
 	if (_iterator != _end)
 		m_breakingItem = &(*_iterator++);
