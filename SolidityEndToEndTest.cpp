@@ -972,10 +972,13 @@ BOOST_AUTO_TEST_CASE(array_accessor)
 		contract test {
 			uint[8] public data;
 			uint[] public dynamicData;
+			uint24[] public smallTypeData;
 			function test() {
 				data[2] = 8;
 				dynamicData.length = 3;
 				dynamicData[2] = 8;
+				smallTypeData.length = 2;
+				smallTypeData[1] = 2;
 			}
 		}
 	)";
@@ -985,6 +988,8 @@ BOOST_AUTO_TEST_CASE(array_accessor)
 	BOOST_CHECK(callContractFunction("data(uint256)", 8) == encodeArgs());
 	BOOST_CHECK(callContractFunction("dynamicData(uint256)", 2) == encodeArgs(8));
 	BOOST_CHECK(callContractFunction("dynamicData(uint256)", 8) == encodeArgs());
+	BOOST_CHECK(callContractFunction("smallTypeData(uint256)", 1) == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("smallTypeData(uint256)", 8) == encodeArgs());
 }
 
 BOOST_AUTO_TEST_CASE(accessors_mapping_for_array)
