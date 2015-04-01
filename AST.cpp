@@ -386,11 +386,8 @@ void VariableDeclaration::checkTypeRequirements()
 		if (m_isStateVariable && !m_type->externalType() && getVisibility() >= Visibility::Public)
 			BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for state variables."));
 
-		auto sharedToExternalTypes = FunctionType(*this).externalType(); // do not destroy the shared pointer.
-		auto externalFunctionTypes = dynamic_cast<FunctionType const*>(sharedToExternalTypes.get());
-		for (auto parameter: externalFunctionTypes->getParameterTypes() + externalFunctionTypes->getReturnParameterTypes())
-			if (!parameter || !(parameter->externalType()))
-				BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
+		if (!FunctionType(*this).externalType())
+			BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
 	}
 	else
 	{
