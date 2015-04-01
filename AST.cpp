@@ -339,12 +339,11 @@ void FunctionDefinition::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
 		if (getVisibility() >= Visibility::Public && !(var->getType()->externalType()))
 		{
-			// todo delete when arrays as parameter type in internal functions will be implemented
-			ArrayType const* type = dynamic_cast<ArrayType const*>(var->getType().get());
-			if (getVisibility() == Visibility::Public && type)
+			// todo delete when will be implemented arrays as parameter type in internal functions
+			if (getVisibility() == Visibility::Public && var->getType()->getCategory() == Type::Category::Array)
 				BOOST_THROW_EXCEPTION(var->createTypeError("Array type is not allowed as parameter for internal functions."));
 			else
-				BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for function with external visibility."));
+				BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for public and external functions."));
 		}
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
@@ -389,12 +388,11 @@ void VariableDeclaration::checkTypeRequirements()
 
 		auto sharedToExternalTypes = FunctionType(*this).externalType(); // do not distroy the shared pointer.
 		auto externalFunctionTypes = dynamic_cast<FunctionType const*>(sharedToExternalTypes.get());
-		TypePointers retParamTypes = externalFunctionTypes->getReturnParameterTypes();
-		TypePointers parameterTypes = externalFunctionTypes->getParameterTypes();
-		for (auto parameter: parameterTypes + retParamTypes)
-		if (!parameter && !(parameter->externalType()))
-			BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for state variables."));
-	} else
+		for (auto parameter: externalFunctionTypes->getParameterTypes() + externalFunctionTypes->getReturnParameterTypes())
+			if (!parameter || !(parameter->externalType()))
+				BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
+	}
+	else
 	{
 		// no type declared and no previous assignment, infer the type
 		m_value->checkTypeRequirements();

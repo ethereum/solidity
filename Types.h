@@ -512,6 +512,8 @@ public:
 
 	virtual Category getCategory() const override { return Category::Function; }
 
+	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an appropriate external types of input/return parameters of current function.
+	/// Returns an empty shared pointer if one of input/return parameters does not have an externaltype.
 	virtual TypePointer externalType() const override;
 
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
