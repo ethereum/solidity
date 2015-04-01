@@ -341,7 +341,7 @@ void FunctionDefinition::checkTypeRequirements()
 		{
 			// todo delete when will be implemented arrays as parameter type in internal functions
 			if (getVisibility() == Visibility::Public && var->getType()->getCategory() == Type::Category::Array)
-				BOOST_THROW_EXCEPTION(var->createTypeError("Array type is not allowed as parameter for internal functions."));
+				BOOST_THROW_EXCEPTION(var->createTypeError("Arrays only implemented for external functions."));
 			else
 				BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for public and external functions."));
 		}
@@ -386,7 +386,7 @@ void VariableDeclaration::checkTypeRequirements()
 		if (m_isStateVariable && !m_type->externalType() && getVisibility() >= Visibility::Public)
 			BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for state variables."));
 
-		auto sharedToExternalTypes = FunctionType(*this).externalType(); // do not distroy the shared pointer.
+		auto sharedToExternalTypes = FunctionType(*this).externalType(); // do not destroy the shared pointer.
 		auto externalFunctionTypes = dynamic_cast<FunctionType const*>(sharedToExternalTypes.get());
 		for (auto parameter: externalFunctionTypes->getParameterTypes() + externalFunctionTypes->getReturnParameterTypes())
 			if (!parameter || !(parameter->externalType()))
