@@ -407,6 +407,20 @@ BOOST_AUTO_TEST_CASE(create_abstract_contract)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_optional)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract BaseBase { function BaseBase(uint j); }
+		contract base is BaseBase { function foo(); }
+		contract derived is base {
+			function derived(uint i) BaseBase(i){}
+			function foo() {}
+		}
+		)";
+	ETH_TEST_REQUIRE_NO_THROW(parseTextAndResolveNames(text), "Parsing and name resolving failed");
+}
+
 BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
 {
 	ASTPointer<SourceUnit> sourceUnit;
@@ -665,7 +679,7 @@ BOOST_AUTO_TEST_CASE(missing_base_constructor_arguments)
 		contract A { function A(uint a) { } }
 		contract B is A { }
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
@@ -674,7 +688,7 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
 		contract A { function A(uint a) { } }
 		contract B is A { }
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
