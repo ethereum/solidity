@@ -377,7 +377,7 @@ class EnumValue: public Declaration
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
-	TypePointer getType(ContractDefinition const* = nullptr) const override;
+	virtual TypePointer getType(ContractDefinition const* = nullptr) const override;
 };
 
 /**
