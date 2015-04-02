@@ -166,7 +166,7 @@ void ContractDefinition::checkAbstractConstructors()
 		if (constructor)
 		{
 			if (!constructor->getParameters().empty())
-				argumentsProvided.insert(constructor);
+				argumentsNeeded.insert(constructor);
 			for (auto const& modifier: constructor->getModifiers())
 			{
 				auto baseContract = dynamic_cast<ContractDefinition const*>(
@@ -174,8 +174,8 @@ void ContractDefinition::checkAbstractConstructors()
 				if (baseContract)
 				{
 					FunctionDefinition const* baseConstructor = baseContract->getConstructor();
-					if (argumentsProvided.count(baseConstructor) == 1)
-						argumentsNeeded.insert(baseConstructor);
+					if (argumentsNeeded.count(baseConstructor) == 1)
+						argumentsProvided.insert(baseConstructor);
 				}
 			}
 		}
@@ -186,10 +186,13 @@ void ContractDefinition::checkAbstractConstructors()
 				base->getName()->getReferencedDeclaration());
 			solAssert(baseContract, "");
 			FunctionDefinition const* baseConstructor = baseContract->getConstructor();
-			if (argumentsProvided.count(baseConstructor) == 1)
-				argumentsNeeded.insert(baseConstructor);
+			if (argumentsNeeded.count(baseConstructor) == 1)
+				argumentsProvided.insert(baseConstructor);
 		}
 	}
+	// add this contract's constructor to the provided too
+	if (getConstructor() && !getConstructor()->getParameters().empty())
+		argumentsProvided.insert(getConstructor());
 	if (argumentsProvided != argumentsNeeded)
 		setFullyImplemented(false);
 }
