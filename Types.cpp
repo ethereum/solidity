@@ -981,24 +981,23 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	m_location(Location::External), m_isConstant(true), m_declaration(&_varDecl)
 {
-	TypePointers params;
+	TypePointers paramTypes;
 	vector<string> paramNames;
 	auto returnType = _varDecl.getType();
 
 	while (true)
 	{
-		auto mappingType = dynamic_cast<MappingType const*>(returnType.get());
-		auto arrayType = dynamic_cast<ArrayType const*>(returnType.get());
-		if (mappingType)
+		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
 		{
-			params.push_back(mappingType->getKeyType());
+			paramTypes.push_back(mappingType->getKeyType());
 			paramNames.push_back("");
 			returnType = mappingType->getValueType();
 		}
-		else if (arrayType)
+		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
 		{
 			returnType = arrayType->getBaseType();
-			params.push_back(make_shared<IntegerType>(256));
+			paramNames.push_back("");
+			paramTypes.push_back(make_shared<IntegerType>(256));
 		}
 		else
 			break;
@@ -1009,7 +1008,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	if (auto structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		for (pair<string, TypePointer> const& member: structType->getMembers())
-			if (member.second->canLiveOutsideStorage())
+			if (member.second->getCategory() != Category::Mapping && member.second->getCategory() != Category::Array)
 			{
 				retParamNames.push_back(member.first);
 				retParams.push_back(member.second);
@@ -1021,7 +1020,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 		retParamNames.push_back("");
 	}
 
-	swap(params, m_parameterTypes);
+	swap(paramTypes, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
 	swap(retParams, m_returnParameterTypes);
 	swap(retParamNames, m_returnParameterNames);

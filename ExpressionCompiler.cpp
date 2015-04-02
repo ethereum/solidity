@@ -64,7 +64,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 
 	// retrieve the position of the variable
 	auto const& location = m_context.getStorageLocationOfVariable(_varDecl);
-	m_context << location.first;
+	m_context << location.first << u256(location.second);
 
 	TypePointer returnType = _varDecl.getType();
 
@@ -72,16 +72,22 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
 		{
+			// pop offset
+			m_context << eth::Instruction::POP;
 			// move storage offset to memory.
 			CompilerUtils(m_context).storeInMemory(32);
-			//move key to memory.
+			// move key to memory.
 			CompilerUtils(m_context).copyToStackTop(paramTypes.size() - i, 1);
 			CompilerUtils(m_context).storeInMemory(0);
 			m_context << u256(64) << u256(0) << eth::Instruction::SHA3;
+			// push offset
+			m_context << u256(0);
 			returnType = mappingType->getValueType();
 		}
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
 		{
+			// pop offset
+			m_context << eth::Instruction::POP;
 			CompilerUtils(m_context).copyToStackTop(paramTypes.size() - i + 1, 1);
 			ArrayUtils(m_context).accessIndex(*arrayType);
 			returnType = arrayType->getBaseType();
@@ -89,19 +95,28 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		else
 			solAssert(false, "Index access is allowed only for \"mapping\" and \"array\" types.");
 	}
-	//remove index arguments.
-	CompilerUtils(m_context).popStackSlots(paramTypes.size());
-
+	// remove index arguments.
+	if (paramTypes.size() == 1)
+		m_context << eth::Instruction::SWAP2 << eth::Instruction::POP << eth::Instruction::SWAP1;
+	else if (paramTypes.size() >= 2)
+	{
+		m_context << eth::swapInstruction(paramTypes.size());
+		m_context << eth::Instruction::POP;
+		m_context << eth::swapInstruction(paramTypes.size());
+		CompilerUtils(m_context).popStackSlots(paramTypes.size() - 1);
+	}
 	unsigned retSizeOnStack = 0;
 	solAssert(accessorType.getReturnParameterTypes().size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
+		// remove offset
+		m_context << eth::Instruction::POP;
 		auto const& names = accessorType.getReturnParameterNames();
 		auto const& types = accessorType.getReturnParameterTypes();
 		// struct
 		for (size_t i = 0; i < names.size(); ++i)
 		{
-			if (types[i]->getCategory() == Type::Category::Mapping)
+			if (types[i]->getCategory() == Type::Category::Mapping || types[i]->getCategory() == Type::Category::Array)
 				continue;
 			pair<u256, unsigned> const& offsets = structType->getStorageOffsetsOfMember(names[i]);
 			m_context << eth::Instruction::DUP1 << u256(offsets.first) << eth::Instruction::ADD << u256(offsets.second);
@@ -110,13 +125,13 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			m_context << eth::Instruction::SWAP1;
 			retSizeOnStack += types[i]->getSizeOnStack();
 		}
+		// remove slot
 		m_context << eth::Instruction::POP;
 	}
 	else
 	{
 		// simple value
 		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
-		m_context << u256(location.second);
 		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
