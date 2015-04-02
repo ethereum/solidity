@@ -205,13 +205,7 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	}
 }
 
-void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, WhenError _throw)
-{
-	stateOptionsMap defaultMap;
-	checkExpectedState(_stateExpect, _statePost, defaultMap, _throw);
-}
-
-void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, stateOptionsMap const& _expectedStateOptions, WhenError _throw)
+void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, stateOptionsMap const _expectedStateOptions, WhenError _throw)
 {
 	#define CHECK(a,b) \
 		if (_throw == WhenError::Throw) \
