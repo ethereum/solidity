@@ -54,6 +54,7 @@ void ContractDefinition::checkTypeRequirements()
 
 	checkIllegalOverrides();
 	checkAbstractFunctions();
+	checkAbstractConstructors();
 
 	FunctionDefinition const* constructor = getConstructor();
 	if (constructor && !constructor->getReturnParameters().empty())
@@ -150,6 +151,47 @@ void ContractDefinition::checkAbstractFunctions()
 			setFullyImplemented(false);
 			break;
 		}
+}
+
+void ContractDefinition::checkAbstractConstructors()
+{
+	set<FunctionDefinition const*> argumentsNeeded;
+	set<FunctionDefinition const*> argumentsProvided;
+	// check that we get arguments for all base constructors that need it.
+	// If not mark the contract as abstract (not fully implemented)
+	vector<ContractDefinition const*> const& bases = getLinearizedBaseContracts();
+	for (ContractDefinition const* contract: bases)
+	{
+		FunctionDefinition const* constructor = contract->getConstructor();
+		if (constructor)
+		{
+			if (!constructor->getParameters().empty())
+				argumentsProvided.insert(constructor);
+			for (auto const& modifier: constructor->getModifiers())
+			{
+				auto baseContract = dynamic_cast<ContractDefinition const*>(
+					modifier->getName()->getReferencedDeclaration());
+				if (baseContract)
+				{
+					FunctionDefinition const* baseConstructor = baseContract->getConstructor();
+					if (argumentsProvided.count(baseConstructor) == 1)
+						argumentsNeeded.insert(baseConstructor);
+				}
+			}
+		}
+
+		for (ASTPointer<InheritanceSpecifier> const& base: contract->getBaseContracts())
+		{
+			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
+				base->getName()->getReferencedDeclaration());
+			solAssert(baseContract, "");
+			FunctionDefinition const* baseConstructor = baseContract->getConstructor();
+			if (argumentsProvided.count(baseConstructor) == 1)
+				argumentsNeeded.insert(baseConstructor);
+		}
+	}
+	if (argumentsProvided != argumentsNeeded)
+		setFullyImplemented(false);
 }
 
 void ContractDefinition::checkIllegalOverrides() const

@@ -284,6 +284,7 @@ public:
 private:
 	void checkIllegalOverrides() const;
 	void checkAbstractFunctions();
+	void checkAbstractConstructors();
 
 	std::vector<std::pair<FixedHash<4>, FunctionTypePointer>> const& getInterfaceFunctionList() const;
 
@@ -376,7 +377,7 @@ class EnumValue: public Declaration
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
-	TypePointer getType(ContractDefinition const* = nullptr) const;
+	TypePointer getType(ContractDefinition const* = nullptr) const override;
 };
 
 /**
