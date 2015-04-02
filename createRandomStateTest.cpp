@@ -183,12 +183,11 @@ void doStateTests(json_spirit::mValue& _v)
 		test::ImportTest importer(o, true);
 
 		eth::State theState = importer.m_statePre;
-		bytes tx = importer.m_transaction.rlp();
 		bytes output;
 
 		try
 		{
-			output = theState.execute(test::lastHashes(importer.m_environment.currentBlock.number), tx).output;
+			output = theState.execute(test::lastHashes(importer.m_environment.currentBlock.number), importer.m_transaction).output;
 		}
 		catch (Exception const& _e)
 		{

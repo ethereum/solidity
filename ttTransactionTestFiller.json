@@ -571,6 +571,7 @@
             "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
         }
     },
+
     "unpadedRValue": {
         "transaction": {
             "nonce": "13",
@@ -584,7 +585,22 @@
             "value": ""
         }
     },
-    "dataTx_bcValidBlockTest": {
+
+    "libsecp256k1test": {
+        "transaction": {
+            "nonce": "",
+            "gasPrice": "0x09184e72a000",
+            "gasLimit": "0x1388",
+            "to": "",
+            "data": "",
+            "r": "44",
+            "s": "4",
+            "v": "27",
+            "value": ""
+        }
+    }
+
+	"dataTx_bcValidBlockTest": {
         "transaction": {
             "nonce": "0",
             "gasPrice": "50",
@@ -597,5 +613,4 @@
             "value": "0"
         }
     }
-
 }
