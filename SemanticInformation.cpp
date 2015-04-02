@@ -103,3 +103,22 @@ bool SemanticInformation::isJumpInstruction(AssemblyItem const& _item)
 {
 	return _item == AssemblyItem(Instruction::JUMP) || _item == AssemblyItem(Instruction::JUMPI);
 }
+
+bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
+{
+	if (_item.type() != Operation)
+		return false;
+	switch (_item.instruction())
+	{
+	// note that CALL, CALLCODE and CREATE do not really alter the control flow, because we
+	// continue on the next instruction (unless an exception happens which can always happen)
+	case Instruction::JUMP:
+	case Instruction::JUMPI:
+	case Instruction::RETURN:
+	case Instruction::SUICIDE:
+	case Instruction::STOP:
+		return true;
+	default:
+		return false;
+	}
+}

@@ -44,6 +44,7 @@ struct SemanticInformation
 	static bool isDupInstruction(AssemblyItem const& _item);
 	static bool isSwapInstruction(AssemblyItem const& _item);
 	static bool isJumpInstruction(AssemblyItem const& _item);
+	static bool altersControlFlow(AssemblyItem const& _item);
 };
 
 }

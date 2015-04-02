@@ -23,6 +23,7 @@
 #include <fstream>
 #include <libdevcore/Log.h>
 #include <libevmcore/CommonSubexpressionEliminator.h>
+#include <libevmcore/ControlFlowGraph.h>
 
 using namespace std;
 using namespace dev;
@@ -197,6 +198,18 @@ Assembly& Assembly::optimise(bool _enable)
 		copt << *this;
 		count = 0;
 
+		copt << "Performing control flow analysis...";
+		{
+			ControlFlowGraph cfg(m_items);
+			AssemblyItems optItems = cfg.optimisedItems();
+			if (optItems.size() < m_items.size())
+			{
+				copt << "Old size: " << m_items.size() << ", new size: " << optItems.size();
+				m_items = move(optItems);
+				count++;
+			}
+		}
+
 		copt << "Performing common subexpression elimination...";
 		for (auto iter = m_items.begin(); iter != m_items.end();)
 		{
@@ -224,80 +237,6 @@ Assembly& Assembly::optimise(bool _enable)
 					*orig = move(*moveIter);
 				iter = m_items.erase(orig, iter);
 			}
-		}
-
-		for (unsigned i = 0; i < m_items.size(); ++i)
-		{
-			for (auto const& r: rules)
-			{
-				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
-				if (matches(vr, &r.first))
-				{
-					auto rw = r.second(vr);
-					if (rw.size() < vr.size())
-					{
-						copt << "Rule " << vr << " matches " << AssemblyItemsConstRef(&r.first) << " becomes...";
-						copt << AssemblyItemsConstRef(&rw) << "\n";
-						if (rw.size() > vr.size())
-						{
-							// create hole in the vector
-							unsigned sizeIncrease = rw.size() - vr.size();
-							m_items.resize(m_items.size() + sizeIncrease, AssemblyItem(UndefinedItem));
-							move_backward(m_items.begin() + i, m_items.end() - sizeIncrease, m_items.end());
-						}
-						else
-							m_items.erase(m_items.begin() + i + rw.size(), m_items.begin() + i + vr.size());
-
-						copy(rw.begin(), rw.end(), m_items.begin() + i);
-
-						count++;
-						copt << "Now:" << m_items;
-					}
-				}
-			}
-			if (m_items[i].type() == Operation && m_items[i].instruction() == Instruction::JUMP)
-			{
-				bool o = false;
-				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
-				{
-					m_items.erase(m_items.begin() + i + 1);
-					o = true;
-				}
-				if (o)
-				{
-					copt << "Jump with no tag. Now:\n" << m_items;
-					++count;
-				}
-			}
-		}
-
-		map<u256, unsigned> tags;
-		for (unsigned i = 0; i < m_items.size(); ++i)
-			if (m_items[i].type() == Tag)
-				tags.insert(make_pair(m_items[i].data(), i));
-
-		for (auto const& i: m_items)
-			if (i.type() == PushTag)
-				tags.erase(i.data());
-
-		if (!tags.empty())
-		{
-			auto t = *tags.begin();
-			unsigned i = t.second;
-			if (i && m_items[i - 1].type() == Operation && m_items[i - 1].instruction() == Instruction::JUMP)
-				while (i < m_items.size() && (m_items[i].type() != Tag || tags.count(m_items[i].data())))
-				{
-					if (m_items[i].type() == Tag && tags.count(m_items[i].data()))
-						tags.erase(m_items[i].data());
-					m_items.erase(m_items.begin() + i);
-				}
-			else
-			{
-				m_items.erase(m_items.begin() + i);
-				tags.erase(t.first);
-			}
-			copt << "Unused tag. Now:\n" << m_items;
-			++count;
 		}
 	}
 
