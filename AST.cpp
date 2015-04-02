@@ -323,7 +323,7 @@ void InheritanceSpecifier::checkTypeRequirements()
 	ContractDefinition const* base = dynamic_cast<ContractDefinition const*>(m_baseName->getReferencedDeclaration());
 	solAssert(base, "Base contract not available.");
 	TypePointers parameterTypes = ContractType(*base).getConstructorType()->getParameterTypes();
-	if (m_arguments.size() != 0 && parameterTypes.size() != m_arguments.size())
+	if (!m_arguments.empty() && parameterTypes.size() != m_arguments.size())
 		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
