@@ -421,6 +421,25 @@ BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_optional)
 	ETH_TEST_REQUIRE_NO_THROW(parseTextAndResolveNames(text), "Parsing and name resolving failed");
 }
 
+BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_not_provided)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract BaseBase { function BaseBase(uint j); }
+		contract base is BaseBase { function foo(); }
+		contract derived is base {
+			function derived(uint i) {}
+			function foo() {}
+		}
+		)";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name resolving failed");
+	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->getNodes();
+	BOOST_CHECK_EQUAL(nodes.size(), 3);
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
+	BOOST_CHECK(derived);
+	BOOST_CHECK(!derived->isFullyImplemented());
+}
+
 BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
 {
 	ASTPointer<SourceUnit> sourceUnit;
