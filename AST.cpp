@@ -281,7 +281,7 @@ void InheritanceSpecifier::checkTypeRequirements()
 	ContractDefinition const* base = dynamic_cast<ContractDefinition const*>(m_baseName->getReferencedDeclaration());
 	solAssert(base, "Base contract not available.");
 	TypePointers parameterTypes = ContractType(*base).getConstructorType()->getParameterTypes();
-	if (parameterTypes.size() != m_arguments.size())
+	if (m_arguments.size() != 0 && parameterTypes.size() != m_arguments.size())
 		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
@@ -348,8 +348,8 @@ void FunctionDefinition::checkTypeRequirements()
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
 		modifier->checkTypeRequirements(isConstructor() ?
-			dynamic_cast<ContractDefinition const&>(*getScope()).getBaseContracts() :
-			vector<ASTPointer<InheritanceSpecifier>>());
+			dynamic_cast<ContractDefinition const&>(*getScope()).getLinearizedBaseContracts() :
+			vector<ContractDefinition const*>());
 	if (m_body)
 		m_body->checkTypeRequirements();
 }
@@ -426,7 +426,7 @@ void ModifierDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-void ModifierInvocation::checkTypeRequirements(vector<ASTPointer<InheritanceSpecifier>> const& _bases)
+void ModifierInvocation::checkTypeRequirements(vector<ContractDefinition const*> const& _bases)
 {
 	m_modifierName->checkTypeRequirements();
 	for (ASTPointer<Expression> const& argument: m_arguments)
@@ -439,10 +439,10 @@ void ModifierInvocation::checkTypeRequirements(vector<ASTPointer<InheritanceSpec
 		parameters = &modifier->getParameters();
 	else
 		// check parameters for Base constructors
-		for (auto const& base: _bases)
-			if (declaration == base->getName()->getReferencedDeclaration())
+		for (auto const* base: _bases)
+			if (declaration == base)
 			{
-				if (auto referencedConstructor = dynamic_cast<ContractDefinition const&>(*declaration).getConstructor())
+				if (auto referencedConstructor = base->getConstructor())
 					parameters = &referencedConstructor->getParameters();
 				else
 					parameters = &emptyParameterList;
