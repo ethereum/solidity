@@ -157,7 +157,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 				_state.setStorage(address, toInt(j.first), toInt(j.second));
 		}
 
-		for (int i=0; i<iNonce; ++i)
+		for (int i=0; i < iNonce; ++i)
 			_state.noteSending(address);
 
 		_state.ensureCached(address, false, false);
@@ -207,11 +207,13 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 
 void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, stateOptionsMap const _expectedStateOptions, WhenError _throw)
 {
-	#define CHECK(a,b) \
-		if (_throw == WhenError::Throw) \
-			BOOST_CHECK_MESSAGE(a,b);   \
-		else							\
-			BOOST_WARN_MESSAGE(a,b);
+	#define CHECK(a,b)						\
+		{									\
+			if (_throw == WhenError::Throw) \
+				BOOST_CHECK_MESSAGE(a,b);	\
+			else							\
+				BOOST_WARN_MESSAGE(a,b);	\
+		}
 
 	for (auto const& a: _stateExpect.addresses())
 	{
@@ -233,16 +235,12 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 			}
 
 			if (addressOptions.m_bHasBalance)
-			{
 				CHECK(_stateExpect.balance(a.first) == _statePost.balance(a.first),
 						"Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
-			}
 
 			if (addressOptions.m_bHasNonce)
-			{
 				CHECK(_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first),
 						"Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
-			}
 
 			if (addressOptions.m_bHasStorage)
 			{
@@ -259,10 +257,8 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 			}
 
 			if (addressOptions.m_bHasCode)
-			{
-				CHECK(_stateExpect.code(a.first) == 	_statePost.code(a.first),
+				CHECK(_stateExpect.code(a.first) == _statePost.code(a.first),
 						"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
-			}
 		}
 	}
 }
