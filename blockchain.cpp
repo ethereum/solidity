@@ -78,7 +78,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 		// construct blockchain
 		TransientDirectory td;
-		BlockChain bc(rlpGenesisBlock.out(), td.path(), true);
+		BlockChain bc(rlpGenesisBlock.out(), td.path(), WithExisting::Kill);
 
 		if (_fillin)
 		{
