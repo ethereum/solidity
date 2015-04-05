@@ -52,7 +52,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 		BOOST_REQUIRE(o.count("pre"));
 		ImportTest importer(o["pre"].get_obj());
-		State state(biGenesisBlock.coinbaseAddress, OverlayDB(), BaseState::Empty);
+		State state(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
 		importer.importState(o["pre"].get_obj(), state);
 		o["pre"] = fillJsonWithState(state);
 		state.commit();
@@ -599,7 +599,7 @@ void updatePoW(BlockInfo& _bi)
 		ret = pow.mine(_bi, 10000, true, true);
 		Ethash::assignResult(ret.second, _bi);
 	}
-	_bi.hash = _bi.headerHash(WithNonce);
+	_bi.noteDirty();
 }
 
 void writeBlockHeaderToJson(mObject& _o, BlockInfo const& _bi)
@@ -619,7 +619,7 @@ void writeBlockHeaderToJson(mObject& _o, BlockInfo const& _bi)
 	_o["extraData"] ="0x" + toHex(_bi.extraData);
 	_o["mixHash"] = toString(_bi.mixHash);
 	_o["nonce"] = toString(_bi.nonce);
-	_o["hash"] = toString(_bi.hash);
+	_o["hash"] = toString(_bi.hash());
 }
 
 RLPStream createFullBlockFromHeader(BlockInfo const& _bi, bytes const& _txs, bytes const& _uncles)
