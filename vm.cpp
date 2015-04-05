@@ -96,7 +96,7 @@ void FakeExtVM::push(mArray& a, u256 _v)
 mObject FakeExtVM::exportEnv()
 {
 	mObject ret;
-	ret["previousHash"] = toString(previousBlock.hash);
+	ret["previousHash"] = toString(currentBlock.parentHash);
 	push(ret, "currentDifficulty", currentBlock.difficulty);
 	push(ret, "currentTimestamp", currentBlock.timestamp);
 	ret["currentCoinbase"] = toString(currentBlock.coinbaseAddress);
@@ -115,7 +115,7 @@ void FakeExtVM::importEnv(mObject& _o)
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
 
-	previousBlock.hash = h256(_o["previousHash"].get_str());
+	currentBlock.parentHash = h256(_o["previousHash"].get_str());
 	currentBlock.number = toInt(_o["currentNumber"]);
 	lastHashes = test::lastHashes(currentBlock.number);
 	currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
