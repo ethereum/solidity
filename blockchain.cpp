@@ -98,7 +98,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					mObject tx = txObj.get_obj();
 					importer.importTransaction(tx);
-					if (!txs.attemptImport(importer.m_transaction.rlp()))
+					if (txs.import(importer.m_transaction.rlp()) != ImportResult::Success)
 						cnote << "failed importing transaction\n";
 				}
 
