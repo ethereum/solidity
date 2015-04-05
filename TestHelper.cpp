@@ -95,7 +95,7 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
 
-	m_environment.currentBlock.parentHash = h256(_o["parentHash"].get_str());
+	m_environment.currentBlock.parentHash = h256(_o["previousHash"].get_str());
 	m_environment.currentBlock.number = toInt(_o["currentNumber"]);
 	m_environment.currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
 	m_environment.currentBlock.difficulty = toInt(_o["currentDifficulty"]);
