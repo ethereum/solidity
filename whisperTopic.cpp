@@ -32,33 +32,27 @@ using namespace dev::shh;
 
 BOOST_AUTO_TEST_SUITE(whisper)
 
-#if ALEX_HASH_FIXED_NETWORKING
 BOOST_AUTO_TEST_CASE(topic)
 {
 	cnote << "Testing Whisper...";
 	auto oldLogVerbosity = g_logVerbosity;
-	g_logVerbosity = 0;
+	g_logVerbosity = 11;
 
-	Host host1("Test", NetworkPreferences(30303, "127.0.0.1", false, true));
+	Host host1("Test", NetworkPreferences("127.0.0.1", 30303, false));
+	host1.setIdealPeerCount(1);
 	auto whost1 = host1.registerCapability(new WhisperHost());
 	host1.start();
 
-	while (!host1.isStarted())
-		this_thread::sleep_for(chrono::milliseconds(2));
-
-	bool started = false;
+	bool host1Ready = false;
 	unsigned result = 0;
 	std::thread listener([&]()
 	{
 		setThreadName("other");
-		started = true;
-
+		
 		/// Only interested in odd packets
 		auto w = whost1->installWatch(BuildTopicMask("odd"));
-
-		started = true;
+		host1Ready = true;
 		set<unsigned> received;
-
 		for (int iterout = 0, last = 0; iterout < 200 && last < 81; ++iterout)
 		{
 			for (auto i: whost1->checkWatch(w))
@@ -76,21 +70,21 @@ BOOST_AUTO_TEST_CASE(topic)
 
 	});
 
-	Host host2("Test", NetworkPreferences(30300, "127.0.0.1", false, true));
+	Host host2("Test", NetworkPreferences("127.0.0.1", 30300, false));
+	host1.setIdealPeerCount(1);
 	auto whost2 = host2.registerCapability(new WhisperHost());
 	host2.start();
+	
+	while (!host1.haveNetwork())
+		this_thread::sleep_for(chrono::milliseconds(5));
+	host2.addNode(host1.id(), bi::address::from_string("127.0.0.1"), 30303, 30303);
 
-	while (!host2.isStarted())
-		this_thread::sleep_for(chrono::milliseconds(2));
-
-	this_thread::sleep_for(chrono::milliseconds(100));
-	host2.addNode(host1.id(), "127.0.0.1", 30303, 30303);
-
-	this_thread::sleep_for(chrono::milliseconds(500));
-
-	while (!started)
-		this_thread::sleep_for(chrono::milliseconds(2));
-
+	// wait for nodes to connect
+	this_thread::sleep_for(chrono::milliseconds(1000));
+	
+	while (!host1Ready)
+		this_thread::sleep_for(chrono::milliseconds(10));
+	
 	KeyPair us = KeyPair::create();
 	for (int i = 0; i < 10; ++i)
 	{
@@ -104,6 +98,7 @@ BOOST_AUTO_TEST_CASE(topic)
 	BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
 }
 
+#if ALEX_HASH_FIXED_NETWORKING
 BOOST_AUTO_TEST_CASE(forwarding)
 {
 	cnote << "Testing Whisper forwarding...";
@@ -111,11 +106,11 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	g_logVerbosity = 0;
 
 	// Host must be configured not to share peers.
-	Host host1("Listner", NetworkPreferences(30303, "", false, true));
+	Host host1("Listner", NetworkPreferences("127.0.0.1", 30303, false));
 	host1.setIdealPeerCount(0);
 	auto whost1 = host1.registerCapability(new WhisperHost());
 	host1.start();
-	while (!host1.isStarted())
+	while (!host1.haveNetwork())
 		this_thread::sleep_for(chrono::milliseconds(2));
 
 	unsigned result = 0;
@@ -146,11 +141,11 @@ BOOST_AUTO_TEST_CASE(forwarding)
 
 
 	// Host must be configured not to share peers.
-	Host host2("Forwarder", NetworkPreferences(30305, "", false, true));
+	Host host2("Forwarder", NetworkPreferences("127.0.0.1", 30305, false));
 	host2.setIdealPeerCount(1);
 	auto whost2 = host2.registerCapability(new WhisperHost());
 	host2.start();
-	while (!host2.isStarted())
+	while (!host2.haveNetwork())
 		this_thread::sleep_for(chrono::milliseconds(2));
 
 	Public fwderid;
@@ -163,7 +158,7 @@ BOOST_AUTO_TEST_CASE(forwarding)
 			this_thread::sleep_for(chrono::milliseconds(50));
 
 		this_thread::sleep_for(chrono::milliseconds(500));
-		host2.addNode(host1.id(), "127.0.0.1", 30303, 30303);
+		host2.addNode(host1.id(), bi::address::from_string("127.0.0.1"), 30303, 30303);
 
 		startedForwarder = true;
 
@@ -184,12 +179,12 @@ BOOST_AUTO_TEST_CASE(forwarding)
 	while (!startedForwarder)
 		this_thread::sleep_for(chrono::milliseconds(50));
 
-	Host ph("Sender", NetworkPreferences(30300, "", false, true));
+	Host ph("Sender", NetworkPreferences("127.0.0.1", 30300, false));
 	ph.setIdealPeerCount(1);
 	shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
 	ph.start();
-	ph.addNode(host2.id(), "127.0.0.1", 30305, 30305);
-	while (!ph.isStarted())
+	ph.addNode(host2.id(), bi::address::from_string("127.0.0.1"), 30305, 30305);
+	while (!ph.haveNetwork())
 		this_thread::sleep_for(chrono::milliseconds(10));
 
 	KeyPair us = KeyPair::create();
@@ -214,11 +209,11 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 	bool done = false;
 
 	// Host must be configured not to share peers.
-	Host host1("Forwarder", NetworkPreferences(30305, "", false, true));
+	Host host1("Forwarder", NetworkPreferences("127.0.0.1", 30305, false));
 	host1.setIdealPeerCount(1);
 	auto whost1 = host1.registerCapability(new WhisperHost());
 	host1.start();
-	while (!host1.isStarted())
+	while (!host1.haveNetwork())
 		this_thread::sleep_for(chrono::milliseconds(2));
 
 	bool startedForwarder = false;
@@ -249,13 +244,13 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 		this_thread::sleep_for(chrono::milliseconds(2));
 
 	{
-		Host host2("Sender", NetworkPreferences(30300, "", false, true));
+		Host host2("Sender", NetworkPreferences("127.0.0.1", 30300, false));
 		host2.setIdealPeerCount(1);
 		shared_ptr<WhisperHost> whost2 = host2.registerCapability(new WhisperHost());
 		host2.start();
-		while (!host2.isStarted())
+		while (!host2.haveNetwork())
 			this_thread::sleep_for(chrono::milliseconds(2));
-		host2.addNode(host1.id(), "127.0.0.1", 30305, 30305);
+		host2.addNode(host1.id(), bi::address::from_string("127.0.0.1"), 30305, 30305);
 
 		while (!host2.peerCount())
 			this_thread::sleep_for(chrono::milliseconds(5));
@@ -266,13 +261,13 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 	}
 
 	{
-		Host ph("Listener", NetworkPreferences(30300, "", false, true));
+		Host ph("Listener", NetworkPreferences("127.0.0.1", 30300, false));
 		ph.setIdealPeerCount(1);
 		shared_ptr<WhisperHost> wh = ph.registerCapability(new WhisperHost());
 		ph.start();
-		while (!ph.isStarted())
+		while (!ph.haveNetwork())
 			this_thread::sleep_for(chrono::milliseconds(2));
-		ph.addNode(host1.id(), "127.0.0.1", 30305, 30305);
+		ph.addNode(host1.id(), bi::address::from_string("127.0.0.1"), 30305, 30305);
 
 		/// Only interested in odd packets
 		auto w = wh->installWatch(BuildTopicMask("test"));
