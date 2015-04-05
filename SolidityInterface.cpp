@@ -20,6 +20,8 @@
  * Unit tests for generating source interfaces for Solidity contracts.
  */
 
+#if ETH_SOLIDITY
+
 #include "TestHelper.h"
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/AST.h>
@@ -147,3 +149,5 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 }
+
+#endif

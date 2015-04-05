@@ -19,6 +19,7 @@
  * @date 2014
  * Unit tests for the solidity compiler JSON Interface output.
  */
+#if ETH_SOLIDITY
 
 #include "TestHelper.h"
 #include <libsolidity/CompilerStack.h>
@@ -500,3 +501,5 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 }
+
+#endif
