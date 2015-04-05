@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(topic)
 {
 	cnote << "Testing Whisper...";
 	auto oldLogVerbosity = g_logVerbosity;
-	g_logVerbosity = 11;
+	g_logVerbosity = 0;
 
 	Host host1("Test", NetworkPreferences("127.0.0.1", 30303, false));
 	host1.setIdealPeerCount(1);
@@ -98,7 +98,6 @@ BOOST_AUTO_TEST_CASE(topic)
 	BOOST_REQUIRE_EQUAL(result, 1 + 9 + 25 + 49 + 81);
 }
 
-#if ALEX_HASH_FIXED_NETWORKING
 BOOST_AUTO_TEST_CASE(forwarding)
 {
 	cnote << "Testing Whisper forwarding...";
@@ -291,6 +290,5 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 
 	BOOST_REQUIRE_EQUAL(result, 1);
 }
-#endif
 
 BOOST_AUTO_TEST_SUITE_END()
