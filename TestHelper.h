@@ -101,7 +101,7 @@ namespace test
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o) : m_statePre(Address(), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o) {}
+	ImportTest(json_spirit::mObject& _o): m_TestObject(_o) {}
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
 	// imports
 	void importEnv(json_spirit::mObject& _o);
