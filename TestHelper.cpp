@@ -115,7 +115,8 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 		json_spirit::mObject o = i.second.get_obj();
 
 		ImportStateOptions stateOptions;
-		u256 balance = 0, nonce = 0;
+		u256 balance = 0;
+		u256 nonce = 0;
 
 		if (o.count("balance") > 0)
 		{
