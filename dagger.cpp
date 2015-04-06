@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 		unsigned cacheSize(o["cache_size"].get_int());
 		h256 cacheHash(o["cache_hash"].get_str());
 		BOOST_REQUIRE_EQUAL(Ethasher::get()->params(header).cache_size, cacheSize);
-		BOOST_REQUIRE_EQUAL(sha3(bytesConstRef((byte const*)Ethasher::get()->cache(header), cacheSize)), cacheHash);
+		BOOST_REQUIRE_EQUAL(sha3(bytesConstRef((byte const*)Ethasher::get()->light(header), cacheSize)), cacheHash);
 
 #if TEST_FULL
 		unsigned fullSize(o["full_size"].get_int());

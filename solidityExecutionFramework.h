@@ -1,4 +1,3 @@
-
 /*
 	This file is part of cpp-ethereum.
 

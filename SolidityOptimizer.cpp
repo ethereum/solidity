@@ -1,4 +1,3 @@
-
 /*
 	This file is part of cpp-ethereum.
 
@@ -20,6 +19,8 @@
  * @date 2014
  * Tests for the Solidity optimizer.
  */
+
+#if ETH_SOLIDITY
 
 #include <string>
 #include <tuple>
@@ -573,3 +574,5 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
+
+#endif

@@ -29,6 +29,7 @@
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
+#include "Stats.h"
 
 using namespace std;
 using namespace dev::eth;
@@ -69,7 +70,10 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller) : m_statePre(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o)
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
+	m_statePre(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
+	m_statePost(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
+	m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
@@ -91,7 +95,7 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
 
-	m_environment.previousBlock.hash = h256(_o["previousHash"].get_str());
+	m_environment.currentBlock.parentHash = h256(_o["previousHash"].get_str());
 	m_environment.currentBlock.number = toInt(_o["currentNumber"]);
 	m_environment.currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
 	m_environment.currentBlock.difficulty = toInt(_o["currentDifficulty"]);
@@ -431,6 +435,9 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	string testPath = getTestPath();
 	testPath += _testPathAppendix;
 
+	if (Options::get().stats)
+		Listener::registerListener(Stats::get());
+
 	if (Options::get().fillTests)
 	{
 		try
@@ -462,6 +469,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
+		Listener::notifySuiteStarted(_name);
 		doTests(v, false);
 	}
 	catch (Exception const& _e)
@@ -535,10 +543,12 @@ Options::Options()
 			vmtrace = true;
 		else if (arg == "--filltests")
 			fillTests = true;
-		else if (arg == "--stats")
+		else if (arg.compare(0, 7, "--stats") == 0)
+		{
 			stats = true;
-		else if (arg == "--stats=full")
-			stats = statsFull = true;
+			if (arg.size() > 7)
+				statsOutFile = arg.substr(8); // skip '=' char
+		}
 		else if (arg == "--performance")
 			performance = true;
 		else if (arg == "--quadratic")
@@ -584,6 +594,12 @@ namespace
 void Listener::registerListener(Listener& _listener)
 {
 	g_listener = &_listener;
+}
+
+void Listener::notifySuiteStarted(std::string const& _name)
+{
+	if (g_listener)
+		g_listener->suiteStarted(_name);
 }
 
 void Listener::notifyTestStarted(std::string const& _name)

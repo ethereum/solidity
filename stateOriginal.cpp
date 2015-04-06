@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(Complex)
 	CanonBlockChain bc;
 	cout << bc;
 
-	State s(myMiner.address(), stateDB);
+	State s(stateDB, BaseState::Empty, myMiner.address());
 	cout << s;
 
 	// Sync up - this won't do much until we use the last state.
