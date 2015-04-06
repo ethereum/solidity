@@ -159,7 +159,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 							uncleBlockFromFields.timestamp = toInt(uncleHeaderObj["timestamp"]);
 							uncleBlockFromFields.difficulty = uncleBlockFromFields.calculateDifficulty(vBiBlocks[(size_t)uncleBlockFromFields.number - 1]);
 						}
-
 					}
 
 					updatePoW(uncleBlockFromFields);
