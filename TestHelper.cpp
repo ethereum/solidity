@@ -170,7 +170,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 	stateOptionsMap importedMap;
 	importState(_o, _state, importedMap);
 	for (auto& stateOptionMap: importedMap)
-		assert(stateOptionMap.second.isAllSet());	//check that every parameter was declared in state object
+		BOOST_CHECK_MESSAGE(stateOptionMap.second.isAllSet(), "Import State[" << stateOptionMap.first << "]: State is not complete!");	//check that every parameter was declared in state object
 }
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
