@@ -347,7 +347,7 @@
         }
     },
 
-   "TransactionWithSvalueWrongSize" : {
+    "TransactionWithSvalueWrongSize" : {
         "transaction" :
         {
             "data" : "",
@@ -407,7 +407,7 @@
         }
     },
 
-   "TransactionWithHihghGasPrice" : {
+    "TransactionWithHihghGasPrice" : {
         "transaction" :
         {
             "data" : "",
@@ -422,7 +422,7 @@
         }
     },
 
-   "TransactionWithGasLimitxPriceOverflow" : {
+    "TransactionWithGasLimitxPriceOverflow" : {
         "transaction" :
         {
             "data" : "",
@@ -598,9 +598,9 @@
             "v": "27",
             "value": ""
         }
-    }
+    },
 
-	"dataTx_bcValidBlockTest": {
+    "dataTx_bcValidBlockTest": {
         "transaction": {
             "nonce": "0",
             "gasPrice": "50",
