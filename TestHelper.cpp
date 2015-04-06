@@ -115,14 +115,14 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 		json_spirit::mObject o = i.second.get_obj();
 
 		ImportStateOptions stateOptions;
-		u256 iBalance = 0, iNonce = 0;
+		u256 balance = 0, nonce = 0;
 
 		if (o.count("balance") > 0)
 		{
 			stateOptions.m_bHasBalance = true;
 			if (bigint(o["balance"].get_str()) >= c_max256plus1)
 				BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
-			iBalance = toInt(o["balance"]);
+			balance = toInt(o["balance"]);
 		}
 
 		if (o.count("nonce") > 0)
@@ -130,7 +130,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 			stateOptions.m_bHasNonce = true;
 			if (bigint(o["nonce"].get_str()) >= c_max256plus1)
 				BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
-			iNonce = toInt(o["nonce"]);
+			nonce = toInt(o["nonce"]);
 		}
 
 		Address address = Address(i.first);
@@ -144,11 +144,11 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 
 		if (code.size())
 		{
-			_state.m_cache[address] = Account(iBalance, Account::ContractConception);
+			_state.m_cache[address] = Account(balance, Account::ContractConception);
 			_state.m_cache[address].setCode(code);
 		}
 		else
-			_state.m_cache[address] = Account(iBalance, Account::NormalCreation);
+			_state.m_cache[address] = Account(balance, Account::NormalCreation);
 
 		if (o.count("storage") > 0)
 		{
@@ -157,7 +157,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 				_state.setStorage(address, toInt(j.first), toInt(j.second));
 		}
 
-		for (int i=0; i < iNonce; ++i)
+		for (int i = 0; i < nonce; ++i)
 			_state.noteSending(address);
 
 		_state.ensureCached(address, false, false);
@@ -275,7 +275,7 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	if (m_TestObject.count("expect") > 0)
 	{
 		stateOptionsMap stateMap;
-		State expectState(Address(), OverlayDB(), eth::BaseState::Empty);		
+		State expectState(OverlayDB(), eth::BaseState::Empty);
 		importState(m_TestObject["expect"].get_obj(), expectState, stateMap);
 		checkExpectedState(expectState, _statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 		m_TestObject.erase(m_TestObject.find("expect"));

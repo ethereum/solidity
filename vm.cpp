@@ -390,8 +390,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				if (o.count("expect") > 0)
 				{
-					State postState(Address(), OverlayDB(), eth::BaseState::Empty);
-					State expectState(Address(), OverlayDB(), eth::BaseState::Empty);
+					State postState(OverlayDB(), eth::BaseState::Empty);
+					State expectState(OverlayDB(), eth::BaseState::Empty);
 					stateOptionsMap expectStateMap;
 					ImportTest::importState(o["post"].get_obj(), postState);
 					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
