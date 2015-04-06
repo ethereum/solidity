@@ -149,13 +149,17 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 					if (overwrite != "false")
 					{
-						cout << "overwrite:" << overwrite << endl;
 						uncleBlockFromFields.difficulty = overwrite == "difficulty" ? toInt(uncleHeaderObj["difficulty"]) : uncleBlockFromFields.difficulty;
 						uncleBlockFromFields.gasLimit = overwrite == "gasLimit" ? toInt(uncleHeaderObj["gasLimit"]) : uncleBlockFromFields.gasLimit;
 						uncleBlockFromFields.gasUsed = overwrite == "gasUsed" ? toInt(uncleHeaderObj["gasUsed"]) : uncleBlockFromFields.gasUsed;
 						uncleBlockFromFields.parentHash = overwrite == "parentHash" ? h256(uncleHeaderObj["parentHash"].get_str()) : uncleBlockFromFields.parentHash;
 						uncleBlockFromFields.stateRoot = overwrite == "stateRoot" ? h256(uncleHeaderObj["stateRoot"].get_str()) : uncleBlockFromFields.stateRoot;
-						uncleBlockFromFields.timestamp = overwrite == "timestamp" ? toInt(uncleHeaderObj["timestamp"]) : uncleBlockFromFields.timestamp;
+						if (overwrite == "timestamp")
+						{
+							uncleBlockFromFields.timestamp = toInt(uncleHeaderObj["timestamp"]);
+							uncleBlockFromFields.difficulty = uncleBlockFromFields.calculateDifficulty(vBiBlocks[(size_t)uncleBlockFromFields.number - 1]);
+						}
+
 					}
 
 					updatePoW(uncleBlockFromFields);
@@ -173,7 +177,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					}
 					catch(...)
 					{
-						cout << "error in importing uncle" << endl;
+						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
 					}
 
 					uncleHeaderObj_pre = uncleHeaderObj;
