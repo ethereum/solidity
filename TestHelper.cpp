@@ -68,6 +68,8 @@ namespace test
 {
 
 struct ValueTooLarge: virtual Exception {};
+struct MissingFields : virtual Exception {};
+
 bigint const c_max256plus1 = bigint(1) << 256;
 
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
@@ -170,8 +172,12 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 {
 	stateOptionsMap importedMap;
 	importState(_o, _state, importedMap);
-	for (auto& stateOptionMap: importedMap)
-		BOOST_CHECK_MESSAGE(stateOptionMap.second.isAllSet(), "Import State[" << stateOptionMap.first << "]: State is not complete!");	//check that every parameter was declared in state object
+	for (auto& stateOptionMap : importedMap)
+	{
+		//check that every parameter was declared in state object
+		if (!stateOptionMap.second.isAllSet())
+			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));	
+	}
 }
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
