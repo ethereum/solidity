@@ -1414,8 +1414,6 @@ BOOST_AUTO_TEST_CASE(sha3)
 	testSolidityAgainstCpp("a(bytes32)", f, u256(-1));
 }
 
-#ifdef PRECOMPILED_CONTRACTS_GAS_FIXED_IN_SOLIDITY
-
 BOOST_AUTO_TEST_CASE(sha256)
 {
 	char const* sourceCode = "contract test {\n"
@@ -3631,5 +3629,3 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
-
-#endif
