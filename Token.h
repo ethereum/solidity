@@ -143,8 +143,8 @@ namespace solidity
 	\
 	/* Keywords */                                                     \
 	K(Break, "break", 0)                                               \
-	K(Case, "case", 0)                                                 \
 	K(Const, "constant", 0)                                            \
+	K(Anonymous, "anonymous", 0)                                       \
 	K(Continue, "continue", 0)                                         \
 	K(Contract, "contract", 0)                                         \
 	K(Default, "default", 0)                                           \
@@ -167,7 +167,6 @@ namespace solidity
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
 	K(Struct, "struct", 0)                                             \
-	K(Switch, "switch", 0)                                             \
 	K(Var, "var", 0)                                                   \
 	K(While, "while", 0)                                               \
 	K(Enum, "enum", 0)                                                 \
@@ -252,77 +251,43 @@ namespace solidity
 	K(UInt240, "uint240", 0)                                           \
 	K(UInt248, "uint248", 0)                                           \
 	K(UInt256, "uint256", 0)                                           \
-	K(Hash, "hash", 0)                                                 \
-	K(Hash8, "hash8", 0)                                               \
-	K(Hash16, "hash16", 0)                                             \
-	K(Hash24, "hash24", 0)                                             \
-	K(Hash32, "hash32", 0)                                             \
-	K(Hash40, "hash40", 0)                                             \
-	K(Hash48, "hash48", 0)                                             \
-	K(Hash56, "hash56", 0)                                             \
-	K(Hash64, "hash64", 0)                                             \
-	K(Hash72, "hash72", 0)                                             \
-	K(Hash80, "hash80", 0)                                             \
-	K(Hash88, "hash88", 0)                                             \
-	K(Hash96, "hash96", 0)                                             \
-	K(Hash104, "hash104", 0)                                           \
-	K(Hash112, "hash112", 0)                                           \
-	K(Hash120, "hash120", 0)                                           \
-	K(Hash128, "hash128", 0)                                           \
-	K(Hash136, "hash136", 0)                                           \
-	K(Hash144, "hash144", 0)                                           \
-	K(Hash152, "hash152", 0)                                           \
-	K(Hash160, "hash160", 0)                                           \
-	K(Hash168, "hash168", 0)                                           \
-	K(Hash176, "hash178", 0)                                           \
-	K(Hash184, "hash184", 0)                                           \
-	K(Hash192, "hash192", 0)                                           \
-	K(Hash200, "hash200", 0)                                           \
-	K(Hash208, "hash208", 0)                                           \
-	K(Hash216, "hash216", 0)                                           \
-	K(Hash224, "hash224", 0)                                           \
-	K(Hash232, "hash232", 0)                                           \
-	K(Hash240, "hash240", 0)                                           \
-	K(Hash248, "hash248", 0)                                           \
-	K(Hash256, "hash256", 0)                                           \
+	K(Bytes0, "bytes0", 0)                                             \
+	K(Bytes1, "bytes1", 0)                                             \
+	K(Bytes2, "bytes2", 0)                                             \
+	K(Bytes3, "bytes3", 0)                                             \
+	K(Bytes4, "bytes4", 0)                                             \
+	K(Bytes5, "bytes5", 0)                                             \
+	K(Bytes6, "bytes6", 0)                                             \
+	K(Bytes7, "bytes7", 0)                                             \
+	K(Bytes8, "bytes8", 0)                                             \
+	K(Bytes9, "bytes9", 0)                                             \
+	K(Bytes10, "bytes10", 0)                                           \
+	K(Bytes11, "bytes11", 0)                                           \
+	K(Bytes12, "bytes12", 0)                                           \
+	K(Bytes13, "bytes13", 0)                                           \
+	K(Bytes14, "bytes14", 0)                                           \
+	K(Bytes15, "bytes15", 0)                                           \
+	K(Bytes16, "bytes16", 0)                                           \
+	K(Bytes17, "bytes17", 0)                                           \
+	K(Bytes18, "bytes18", 0)                                           \
+	K(Bytes19, "bytes19", 0)                                           \
+	K(Bytes20, "bytes20", 0)                                           \
+	K(Bytes21, "bytes21", 0)                                           \
+	K(Bytes22, "bytes22", 0)                                           \
+	K(Bytes23, "bytes23", 0)                                           \
+	K(Bytes24, "bytes24", 0)                                           \
+	K(Bytes25, "bytes25", 0)                                           \
+	K(Bytes26, "bytes26", 0)                                           \
+	K(Bytes27, "bytes27", 0)                                           \
+	K(Bytes28, "bytes28", 0)                                           \
+	K(Bytes29, "bytes29", 0)                                           \
+	K(Bytes30, "bytes30", 0)                                           \
+	K(Bytes31, "bytes31", 0)                                           \
+	K(Bytes32, "bytes32", 0)                                           \
+	K(Bytes, "bytes", 0)                                               \
+	K(Byte, "byte", 0)                                                 \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
-	K(Bytes, "bytes", 0)                                               \
-	K(StringType, "string", 0)                                         \
-	K(String0, "string0", 0)                                           \
-	K(String1, "string1", 0)                                           \
-	K(String2, "string2", 0)                                           \
-	K(String3, "string3", 0)                                           \
-	K(String4, "string4", 0)                                           \
-	K(String5, "string5", 0)                                           \
-	K(String6, "string6", 0)                                           \
-	K(String7, "string7", 0)                                           \
-	K(String8, "string8", 0)                                           \
-	K(String9, "string9", 0)                                           \
-	K(String10, "string10", 0)                                         \
-	K(String11, "string11", 0)                                         \
-	K(String12, "string12", 0)                                         \
-	K(String13, "string13", 0)                                         \
-	K(String14, "string14", 0)                                         \
-	K(String15, "string15", 0)                                         \
-	K(String16, "string16", 0)                                         \
-	K(String17, "string17", 0)                                         \
-	K(String18, "string18", 0)                                         \
-	K(String19, "string19", 0)                                         \
-	K(String20, "string20", 0)                                         \
-	K(String21, "string21", 0)                                         \
-	K(String22, "string22", 0)                                         \
-	K(String23, "string23", 0)                                         \
-	K(String24, "string24", 0)                                         \
-	K(String25, "string25", 0)                                         \
-	K(String26, "string26", 0)                                         \
-	K(String27, "string27", 0)                                         \
-	K(String28, "string28", 0)                                         \
-	K(String29, "string29", 0)                                         \
-	K(String30, "string30", 0)                                         \
-	K(String31, "string31", 0)                                         \
-	K(String32, "string32", 0)                                         \
-	K(Text, "text", 0)                                                 \
 	K(Real, "real", 0)                                                 \
 	K(UReal, "ureal", 0)                                               \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
@@ -338,6 +303,16 @@ namespace solidity
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(Identifier, NULL, 0)                                             \
 	\
+	/* Keywords reserved for future. use*/                             \
+	T(String, "string", 0)                                             \
+	K(Case, "case", 0)                                                 \
+	K(Switch, "switch", 0)                                             \
+	K(Throw, "throw", 0)                                               \
+	K(Try, "try", 0)                                                   \
+	K(Catch, "catch", 0)                                               \
+	K(Using, "using", 0)                                               \
+	K(Type, "type", 0)                                                 \
+	K(TypeOf, "typeof", 0)                                             \
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\

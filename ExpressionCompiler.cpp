@@ -48,7 +48,7 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	if (!_varDecl.getValue())
 		return;
 	solAssert(!!_varDecl.getValue()->getType(), "Type information not available.");
-	CompilerContext::LocationSetter locationSetter(m_context, &_varDecl);
+	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.getValue()->accept(*this);
 	appendTypeConversion(*_varDecl.getValue()->getType(), *_varDecl.getType(), true);
 
@@ -57,7 +57,7 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_varDecl);
+	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
 	unsigned length = 0;
@@ -67,9 +67,10 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		length += CompilerUtils(m_context).storeInMemory(length, *paramType, true);
 
 	// retrieve the position of the variable
-	m_context << m_context.getStorageLocationOfVariable(_varDecl);
-	TypePointer returnType = _varDecl.getType();
+	auto const& location = m_context.getStorageLocationOfVariable(_varDecl);
+	m_context << location.first;
 
+	TypePointer returnType = _varDecl.getType();
 	for (TypePointer const& paramType: paramTypes)
 	{
 		// move offset to memory
@@ -90,9 +91,10 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		// struct
 		for (size_t i = 0; i < names.size(); ++i)
 		{
-			m_context << eth::Instruction::DUP1
-					  << structType->getStorageOffsetOfMember(names[i])
-					  << eth::Instruction::ADD;
+			if (types[i]->getCategory() == Type::Category::Mapping)
+				continue;
+			pair<u256, unsigned> const& offsets = structType->getStorageOffsetsOfMember(names[i]);
+			m_context << eth::Instruction::DUP1 << u256(offsets.first) << eth::Instruction::ADD << u256(offsets.second);
 			StorageItem(m_context, *types[i]).retrieveValue(SourceLocation(), true);
 			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
 			m_context << eth::Instruction::SWAP1;
@@ -104,11 +106,13 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	{
 		// simple value
 		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
+		m_context << u256(location.second);
 		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
 	solAssert(retSizeOnStack <= 15, "Stack too deep.");
-	m_context << eth::dupInstruction(retSizeOnStack + 1) << eth::Instruction::JUMP;
+	m_context << eth::dupInstruction(retSizeOnStack + 1);
+	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 }
 
 void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
@@ -122,23 +126,25 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 	Type::Category stackTypeCategory = _typeOnStack.getCategory();
 	Type::Category targetTypeCategory = _targetType.getCategory();
 
-	if (stackTypeCategory == Type::Category::String)
+	switch (stackTypeCategory)
 	{
-		StaticStringType const& typeOnStack = dynamic_cast<StaticStringType const&>(_typeOnStack);
+	case Type::Category::FixedBytes:
+	{
+		FixedBytesType const& typeOnStack = dynamic_cast<FixedBytesType const&>(_typeOnStack);
 		if (targetTypeCategory == Type::Category::Integer)
 		{
-			// conversion from string to hash. no need to clean the high bit
+			// conversion from bytes to integer. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			solAssert(targetIntegerType.isHash(), "Only conversion between String and Hash is allowed.");
-			solAssert(targetIntegerType.getNumBits() == typeOnStack.getNumBytes() * 8, "The size should be the same.");
 			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			if (targetIntegerType.getNumBits() < typeOnStack.getNumBytes() * 8)
+				appendTypeConversion(IntegerType(typeOnStack.getNumBytes() * 8), _targetType, _cleanupNeeded); 
 		}
 		else
 		{
-			// clear lower-order bytes for conversion to shorter strings - we always clean
-			solAssert(targetTypeCategory == Type::Category::String, "Invalid type conversion requested.");
-			StaticStringType const& targetType = dynamic_cast<StaticStringType const&>(_targetType);
+			// clear lower-order bytes for conversion to shorter bytes - we always clean
+			solAssert(targetTypeCategory == Type::Category::FixedBytes, "Invalid type conversion requested.");
+			FixedBytesType const& targetType = dynamic_cast<FixedBytesType const&>(_targetType);
 			if (targetType.getNumBytes() < typeOnStack.getNumBytes())
 			{
 				if (targetType.getNumBytes() == 0)
@@ -150,22 +156,24 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			}
 		}
 	}
-	else if (stackTypeCategory == Type::Category::Enum)
-		solAssert(targetTypeCategory == Type::Category::Integer ||
-			targetTypeCategory == Type::Category::Enum, "");
-	else if (stackTypeCategory == Type::Category::Integer ||
-		stackTypeCategory == Type::Category::Contract ||
-		stackTypeCategory == Type::Category::IntegerConstant)
-	{
-		if (targetTypeCategory == Type::Category::String && stackTypeCategory == Type::Category::Integer)
+		break;
+	case Type::Category::Enum:
+		solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Enum, "");
+		break;
+	case Type::Category::Integer:
+	case Type::Category::Contract:
+	case Type::Category::IntegerConstant:
+		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
-			// conversion from hash to string. no need to clean the high bit
+			solAssert(stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::IntegerConstant,
+				"Invalid conversion to FixedBytesType requested.");
+			// conversion from bytes to string. no need to clean the high bit
 			// only to shift left because of opposite alignment
-			StaticStringType const& targetStringType = dynamic_cast<StaticStringType const&>(_targetType);
-			IntegerType const& typeOnStack = dynamic_cast<IntegerType const&>(_typeOnStack);
-			solAssert(typeOnStack.isHash(), "Only conversion between String and Hash is allowed.");
-			solAssert(typeOnStack.getNumBits() == targetStringType.getNumBytes() * 8, "The size should be the same.");
-			m_context << (u256(1) << (256 - typeOnStack.getNumBits())) << eth::Instruction::MUL;
+			FixedBytesType const& targetBytesType = dynamic_cast<FixedBytesType const&>(_targetType);
+			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
+				if (targetBytesType.getNumBytes() * 8 > typeOnStack->getNumBits())
+					appendHighBitsCleanup(*typeOnStack);
+			m_context << (u256(1) << (256 - targetBytesType.getNumBytes() * 8)) << eth::Instruction::MUL;
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 			// just clean
@@ -175,7 +183,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract, "");
 			IntegerType addressType(0, IntegerType::Modifier::Address);
 			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
-											? dynamic_cast<IntegerType const&>(_targetType) : addressType;
+				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
 			if (stackTypeCategory == Type::Category::IntegerConstant)
 			{
 				IntegerConstantType const& constType = dynamic_cast<IntegerConstantType const&>(_typeOnStack);
@@ -187,7 +195,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			else
 			{
 				IntegerType const& typeOnStack = stackTypeCategory == Type::Category::Integer
-												? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
+					? dynamic_cast<IntegerType const&>(_typeOnStack) : addressType;
 				// Widening: clean up according to source type width
 				// Non-widening and force: clean up according to target type bits
 				if (targetType.getNumBits() > typeOnStack.getNumBits())
@@ -196,15 +204,17 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 					appendHighBitsCleanup(targetType);
 			}
 		}
-	}
-	else if (_typeOnStack != _targetType)
+		break;
+	default:
 		// All other types should not be convertible to non-equal types.
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid type conversion requested."));
+		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
+		break;
+	}
 }
 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_assignment);
+	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
 	_assignment.getRightHandSide().accept(*this);
 	if (_assignment.getType()->isValueType())
 		appendTypeConversion(*_assignment.getRightHandSide().getType(), *_assignment.getType());
@@ -226,9 +236,12 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		m_currentLValue->retrieveValue(_assignment.getLocation(), true);
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
 		if (lvalueSize > 0)
+		{
+			solAssert(itemSize + lvalueSize <= 16, "Stack too deep.");
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
 				m_context << eth::swapInstruction(itemSize + lvalueSize) << eth::Instruction::POP;
+		}
 	}
 	m_currentLValue->storeValue(*_assignment.getRightHandSide().getType(), _assignment.getLocation());
 	m_currentLValue.reset();
@@ -237,7 +250,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 
 bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_unaryOperation);
+	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
 	//@todo type checking and creating code for an operator should be in the same place:
 	// the operator should know how to convert itself and to which types it applies, so
 	// put this code together with "Type::acceptsBinary/UnaryOperator" into a class that
@@ -270,23 +283,24 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	case Token::Dec: // -- (pre- or postfix)
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
 		m_currentLValue->retrieveValue(_unaryOperation.getLocation());
-		solAssert(m_currentLValue->sizeOnStack() <= 1, "Not implemented.");
 		if (!_unaryOperation.isPrefixOperation())
 		{
-			if (m_currentLValue->sizeOnStack() == 1)
-				m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
-			else
-				m_context << eth::Instruction::DUP1;
+			// store value for later
+			solAssert(_unaryOperation.getType()->getSizeOnStack() == 1, "Stack size != 1 not implemented.");
+			m_context << eth::Instruction::DUP1;
+			if (m_currentLValue->sizeOnStack() > 0)
+				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
+					m_context << eth::swapInstruction(i);
 		}
 		m_context << u256(1);
 		if (_unaryOperation.getOperator() == Token::Inc)
 			m_context << eth::Instruction::ADD;
 		else
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::SUB; // @todo avoid the swap
-		// Stack for prefix: [ref] (*ref)+-1
-		// Stack for postfix: *ref [ref] (*ref)+-1
-		if (m_currentLValue->sizeOnStack() == 1)
-			m_context << eth::Instruction::SWAP1;
+			m_context << eth::Instruction::SWAP1 << eth::Instruction::SUB;
+		// Stack for prefix: [ref...] (*ref)+-1
+		// Stack for postfix: *ref [ref...] (*ref)+-1
+		for (unsigned i = m_currentLValue->sizeOnStack(); i > 0; --i)
+			m_context << eth::swapInstruction(i);
 		m_currentLValue->storeValue(
 			*_unaryOperation.getType(), _unaryOperation.getLocation(),
 			!_unaryOperation.isPrefixOperation());
@@ -307,7 +321,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 
 bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_binaryOperation);
+	CompilerContext::LocationSetter locationSetter(m_context, _binaryOperation);
 	Expression const& leftExpression = _binaryOperation.getLeftExpression();
 	Expression const& rightExpression = _binaryOperation.getRightExpression();
 	Type const& commonType = _binaryOperation.getCommonType();
@@ -354,7 +368,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_functionCall);
+	CompilerContext::LocationSetter locationSetter(m_context, _functionCall);
 	using Location = FunctionType::Location;
 	if (_functionCall.isTypeConversion())
 	{
@@ -405,7 +419,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			_functionCall.getExpression().accept(*this);
 
-			m_context.appendJump();
+			m_context.appendJump(eth::AssemblyItem::JumpType::IntoFunction);
 			m_context << returnLabel;
 
 			unsigned returnParametersSize = CompilerUtils::getSizeOnStack(function.getReturnParameterTypes());
@@ -528,8 +542,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					appendTypeConversion(*arguments[arg - 1]->getType(),
 										 *function.getParameterTypes()[arg - 1], true);
 				}
-			m_context << u256(h256::Arith(dev::sha3(function.getCanonicalSignature(event.getName()))));
-			++numIndexed;
+			if (!event.isAnonymous())
+			{
+				m_context << u256(h256::Arith(dev::sha3(function.externalSignature(event.getName()))));
+				++numIndexed;
+			}
 			solAssert(numIndexed <= 4, "Too many indexed arguments.");
 			// Copy all non-indexed arguments to memory (data)
 			m_context << u256(0);
@@ -550,10 +567,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case Location::SHA256:
 		case Location::RIPEMD160:
 		{
+			_functionCall.getExpression().accept(*this);
 			static const map<Location, u256> contractAddresses{{Location::ECRecover, 1},
 															   {Location::SHA256, 2},
 															   {Location::RIPEMD160, 3}};
 			m_context << contractAddresses.find(function.getLocation())->second;
+			for (unsigned i = function.getSizeOnStack(); i > 0; --i)
+				m_context << eth::swapInstruction(i);
 			appendExternalFunctionCall(function, arguments, true);
 			break;
 		}
@@ -572,7 +592,7 @@ bool ExpressionCompiler::visit(NewExpression const&)
 
 void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_memberAccess);
+	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
 	ASTString const& member = _memberAccess.getMemberName();
 	switch (_memberAccess.getExpression().getType()->getCategory())
 	{
@@ -639,13 +659,18 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			m_context << eth::Instruction::GASPRICE;
 		else if (member == "data")
 			m_context << u256(0) << eth::Instruction::CALLDATASIZE;
+		else if (member == "sig")
+			m_context << u256(0) << eth::Instruction::CALLDATALOAD
+				<< (u256(0xffffffff) << (256 - 32)) << eth::Instruction::AND;
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown magic member."));
 		break;
 	case Type::Category::Struct:
 	{
 		StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
-		m_context << type.getStorageOffsetOfMember(member) << eth::Instruction::ADD;
+		m_context << eth::Instruction::POP; // structs always align to new slot
+		pair<u256, unsigned> const& offsets = type.getStorageOffsetsOfMember(member);
+		m_context << offsets.first << eth::Instruction::ADD << u256(offsets.second);
 		setLValueToStorageItem(_memberAccess);
 		break;
 	}
@@ -707,110 +732,43 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 
 bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 {
-	CompilerContext::LocationSetter locationSetter(m_context, &_indexAccess);
+	CompilerContext::LocationSetter locationSetter(m_context, _indexAccess);
 	_indexAccess.getBaseExpression().accept(*this);
 
 	Type const& baseType = *_indexAccess.getBaseExpression().getType();
 	if (baseType.getCategory() == Type::Category::Mapping)
 	{
+		// storage byte offset is ignored for mappings, it should be zero.
+		m_context << eth::Instruction::POP;
+		// stack: storage_base_ref
 		Type const& keyType = *dynamic_cast<MappingType const&>(baseType).getKeyType();
-		m_context << u256(0);
+		m_context << u256(0); // memory position
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
 		appendExpressionCopyToMemory(keyType, *_indexAccess.getIndexExpression());
-		solAssert(baseType.getSizeOnStack() == 1,
-				  "Unexpected: Not exactly one stack slot taken by subscriptable expression.");
 		m_context << eth::Instruction::SWAP1;
 		appendTypeMoveToMemory(IntegerType(256));
 		m_context << u256(0) << eth::Instruction::SHA3;
+		m_context << u256(0);
 		setLValueToStorageItem( _indexAccess);
 	}
 	else if (baseType.getCategory() == Type::Category::Array)
 	{
-		// stack layout: <base_ref> [<length>] <index>
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
-		ArrayType::Location location = arrayType.getLocation();
-		eth::Instruction load =
-			location == ArrayType::Location::Storage ? eth::Instruction::SLOAD :
-			location == ArrayType::Location::Memory ? eth::Instruction::MLOAD :
-			eth::Instruction::CALLDATALOAD;
+
+		// remove storage byte offset
+		if (arrayType.getLocation() == ArrayType::Location::Storage)
+			m_context << eth::Instruction::POP;
 
 		_indexAccess.getIndexExpression()->accept(*this);
-		// retrieve length
-		if (!arrayType.isDynamicallySized())
-			m_context << arrayType.getLength();
-		else if (location == ArrayType::Location::CallData)
-			// length is stored on the stack
-			m_context << eth::Instruction::SWAP1;
-		else
-			m_context << eth::Instruction::DUP2 << load;
-		// stack: <base_ref> <index> <length>
-		// check out-of-bounds access
-		m_context << eth::Instruction::DUP2 << eth::Instruction::LT;
-		eth::AssemblyItem legalAccess = m_context.appendConditionalJump();
-		// out-of-bounds access throws exception (just STOP for now)
-		m_context << eth::Instruction::STOP;
-
-		m_context << legalAccess;
-		// stack: <base_ref> <index>
-		if (arrayType.isByteArray())
-			// byte array is packed differently, especially in storage
-			switch (location)
-			{
-			case ArrayType::Location::Storage:
-				// byte array index storage lvalue on stack (goal):
-				// <ref> <byte_number> = <base_ref + index / 32> <index % 32>
-				m_context << u256(32) << eth::Instruction::SWAP2;
-				CompilerUtils(m_context).computeHashStatic();
-				// stack: 32 index data_ref
-				m_context
-					<< eth::Instruction::DUP3 << eth::Instruction::DUP3
-					<< eth::Instruction::DIV << eth::Instruction::ADD
-				// stack: 32 index (data_ref + index / 32)
-					<< eth::Instruction::SWAP2 << eth::Instruction::SWAP1 << eth::Instruction::MOD;
-				setLValue<StorageByteArrayElement>(_indexAccess);
-				break;
-			case ArrayType::Location::CallData:
-				// no lvalue, just retrieve the value
-				m_context
-					<< eth::Instruction::ADD << eth::Instruction::CALLDATALOAD
-					<< u256(0) << eth::Instruction::BYTE;
-				break;
-			case ArrayType::Location::Memory:
-				solAssert(false, "Memory lvalues not yet implemented.");
-			}
-		else
+		// stack layout: <base_ref> [<length>] <index>
+		ArrayUtils(m_context).accessIndex(arrayType);
+		if (arrayType.getLocation() == ArrayType::Location::Storage)
 		{
-			u256 elementSize =
-				location == ArrayType::Location::Storage ?
-					arrayType.getBaseType()->getStorageSize() :
-					arrayType.getBaseType()->getCalldataEncodedSize();
-			solAssert(elementSize != 0, "Invalid element size.");
-			if (elementSize > 1)
-				m_context << elementSize << eth::Instruction::MUL;
-			if (arrayType.isDynamicallySized())
-			{
-				if (location == ArrayType::Location::Storage)
-				{
-					m_context << eth::Instruction::SWAP1;
-					CompilerUtils(m_context).computeHashStatic();
-				}
-				else if (location == ArrayType::Location::Memory)
-					m_context << u256(32) << eth::Instruction::ADD;
-			}
-			m_context << eth::Instruction::ADD;
-			switch (location)
-			{
-			case ArrayType::Location::CallData:
-				if (arrayType.getBaseType()->isValueType())
-					CompilerUtils(m_context).loadFromMemoryDynamic(*arrayType.getBaseType(), true, true, false);
-				break;
-			case ArrayType::Location::Storage:
+			if (arrayType.isByteArray())
+				setLValue<StorageByteArrayElement>(_indexAccess);
+			else
 				setLValueToStorageItem(_indexAccess);
-				break;
-			case ArrayType::Location::Memory:
-				solAssert(false, "Memory lvalues not yet implemented.");
-			}
 		}
 	}
 	else
@@ -821,18 +779,34 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 
 void ExpressionCompiler::endVisit(Identifier const& _identifier)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, _identifier);
 	Declaration const* declaration = _identifier.getReferencedDeclaration();
 	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
-		if (magicVar->getType()->getCategory() == Type::Category::Contract)
+		switch (magicVar->getType()->getCategory())
+		{
+		case Type::Category::Contract:
 			// "this" or "super"
 			if (!dynamic_cast<ContractType const&>(*magicVar->getType()).isSuper())
 				m_context << eth::Instruction::ADDRESS;
+			break;
+		case Type::Category::Integer:
+			// "now"
+			m_context << eth::Instruction::TIMESTAMP;
+			break;
+		default:
+			break;
+		}
 	}
 	else if (FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration))
 		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
-	else if (dynamic_cast<VariableDeclaration const*>(declaration))
-		setLValueFromDeclaration(*declaration, _identifier);
+	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
+	{
+		if (!variable->isConstant())
+			setLValueFromDeclaration(*declaration, _identifier);
+		else
+			variable->getValue()->accept(*this);
+	}
 	else if (dynamic_cast<ContractDefinition const*>(declaration))
 	{
 		// no-op
@@ -860,11 +834,12 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 
 void ExpressionCompiler::endVisit(Literal const& _literal)
 {
+	CompilerContext::LocationSetter locationSetter(m_context, _literal);
 	switch (_literal.getType()->getCategory())
 	{
 	case Type::Category::IntegerConstant:
 	case Type::Category::Bool:
-	case Type::Category::String:
+	case Type::Category::FixedBytes:
 		m_context << _literal.getType()->literalValue(&_literal);
 		break;
 	default:
@@ -1115,7 +1090,7 @@ void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaratio
 	if (m_context.isLocalVariable(&_declaration))
 		setLValue<StackVariable>(_expression, _declaration);
 	else if (m_context.isStateVariable(&_declaration))
-			setLValue<StorageItem>(_expression, _declaration);
+		setLValue<StorageItem>(_expression, _declaration);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError()
 			<< errinfo_sourceLocation(_expression.getLocation())

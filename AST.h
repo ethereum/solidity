@@ -156,6 +156,7 @@ public:
 	/// contract types.
 	virtual TypePointer getType(ContractDefinition const* m_currentContract = nullptr) const = 0;
 	virtual bool isLValue() const { return false; }
+	virtual bool isPartOfExternalInterface() const { return false; };
 
 protected:
 	virtual Visibility getDefaultVisibility() const { return Visibility::Public; }
@@ -195,6 +196,22 @@ protected:
 	ASTPointer<ASTString> m_documentation;
 };
 
+/**
+ * Abstract class that is added to AST nodes that can be marked as not being fully implemented
+ */
+class ImplementationOptional
+{
+public:
+	explicit ImplementationOptional(bool _implemented): m_implemented(_implemented) {}
+
+	/// @return whether this node is fully implemented or not
+	bool isFullyImplemented() const { return m_implemented; }
+	void setFullyImplemented(bool _implemented) {  m_implemented = _implemented; }
+
+protected:
+	bool m_implemented;
+};
+
 /// @}
 
 /**
@@ -202,20 +219,24 @@ protected:
  * document order. It first visits all struct declarations, then all variable declarations and
  * finally all function declarations.
  */
-class ContractDefinition: public Declaration, public Documented
+class ContractDefinition: public Declaration, public Documented, public ImplementationOptional
 {
 public:
-	ContractDefinition(SourceLocation const& _location,
-					   ASTPointer<ASTString> const& _name,
-					   ASTPointer<ASTString> const& _documentation,
-					   std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
-					   std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
-					   std::vector<ASTPointer<EnumDefinition>> const& _definedEnums,
-					   std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
-					   std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
-					   std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
-					   std::vector<ASTPointer<EventDefinition>> const& _events):
-		Declaration(_location, _name), Documented(_documentation),
+	ContractDefinition(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<ASTString> const& _documentation,
+		std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
+		std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
+		std::vector<ASTPointer<EnumDefinition>> const& _definedEnums,
+		std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
+		std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
+		std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
+		std::vector<ASTPointer<EventDefinition>> const& _events
+	):
+		Declaration(_location, _name),
+		Documented(_documentation),
+		ImplementationOptional(true),
 		m_baseContracts(_baseContracts),
 		m_definedStructs(_definedStructs),
 		m_definedEnums(_definedEnums),
@@ -262,6 +283,7 @@ public:
 
 private:
 	void checkIllegalOverrides() const;
+	void checkAbstractFunctions();
 
 	std::vector<std::pair<FixedHash<4>, FunctionTypePointer>> const& getInterfaceFunctionList() const;
 
@@ -377,24 +399,29 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_parameters;
 };
 
-class FunctionDefinition: public Declaration, public VariableScope, public Documented
+class FunctionDefinition: public Declaration, public VariableScope, public Documented, public ImplementationOptional
 {
 public:
-	FunctionDefinition(SourceLocation const& _location, ASTPointer<ASTString> const& _name,
-					Declaration::Visibility _visibility, bool _isConstructor,
-					ASTPointer<ASTString> const& _documentation,
-					ASTPointer<ParameterList> const& _parameters,
-					bool _isDeclaredConst,
-					std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
-					ASTPointer<ParameterList> const& _returnParameters,
-					ASTPointer<Block> const& _body):
-	Declaration(_location, _name, _visibility), Documented(_documentation),
-	m_isConstructor(_isConstructor),
-	m_parameters(_parameters),
-	m_isDeclaredConst(_isDeclaredConst),
-	m_functionModifiers(_modifiers),
-	m_returnParameters(_returnParameters),
-	m_body(_body)
+	FunctionDefinition(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		Declaration::Visibility _visibility, bool _isConstructor,
+		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<ParameterList> const& _parameters,
+		bool _isDeclaredConst,
+		std::vector<ASTPointer<ModifierInvocation>> const& _modifiers,
+		ASTPointer<ParameterList> const& _returnParameters,
+		ASTPointer<Block> const& _body
+	):
+		Declaration(_location, _name, _visibility),
+		Documented(_documentation),
+		ImplementationOptional(_body != nullptr),
+		m_isConstructor(_isConstructor),
+		m_parameters(_parameters),
+		m_isDeclaredConst(_isDeclaredConst),
+		m_functionModifiers(_modifiers),
+		m_returnParameters(_returnParameters),
+		m_body(_body)
 	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
@@ -415,14 +442,15 @@ public:
 			getVisibility() >= Visibility::Internal;
 	}
 	virtual TypePointer getType(ContractDefinition const*) const override;
+	virtual bool isPartOfExternalInterface() const override { return isPublic() && !m_isConstructor && !getName().empty(); }
 
 	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
 	void checkTypeRequirements();
 
-	/// @returns the canonical signature of the function
+	/// @returns the external signature of the function
 	/// That consists of the name of the function followed by the types of the
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
-	std::string getCanonicalSignature() const;
+	std::string externalSignature() const;
 
 private:
 	bool m_isConstructor;
@@ -440,13 +468,23 @@ private:
 class VariableDeclaration: public Declaration
 {
 public:
-	VariableDeclaration(SourceLocation const& _location, ASTPointer<TypeName> const& _type,
-							ASTPointer<ASTString> const& _name, ASTPointer<Expression> _value,
-							Visibility _visibility,
-							bool _isStateVar = false, bool _isIndexed = false):
-			Declaration(_location, _name, _visibility),
-			m_typeName(_type), m_value(_value),
-			m_isStateVariable(_isStateVar), m_isIndexed(_isIndexed) {}
+	VariableDeclaration(
+		SourceLocation const& _location,
+		ASTPointer<TypeName> const& _type,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<Expression> _value,
+		Visibility _visibility,
+		bool _isStateVar = false,
+		bool _isIndexed = false,
+		bool _isConstant = false
+	):
+		Declaration(_location, _name, _visibility),
+		m_typeName(_type),
+		m_value(_value),
+		m_isStateVariable(_isStateVar),
+		m_isIndexed(_isIndexed),
+		m_isConstant(_isConstant){}
+
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -459,21 +497,24 @@ public:
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
 
 	virtual bool isLValue() const override;
+	virtual bool isPartOfExternalInterface() const override { return isPublic() && !m_isConstant; }
 
 	void checkTypeRequirements();
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
 	bool isExternalFunctionParameter() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
+	bool isConstant() const { return m_isConstant; }
 
 protected:
 	Visibility getDefaultVisibility() const override { return Visibility::Internal; }
 
 private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
-	ASTPointer<Expression> m_value;		///< the assigned value, can be missing
+	ASTPointer<Expression> m_value;     ///< the assigned value, can be missing
 	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
 	bool m_isIndexed;                   ///< Whether this is an indexed variable (used by events).
+	bool m_isConstant;                  ///< Whether the variable is a compile-time constant.
 
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
@@ -538,17 +579,24 @@ private:
 class EventDefinition: public Declaration, public VariableScope, public Documented
 {
 public:
-	EventDefinition(SourceLocation const& _location,
-					ASTPointer<ASTString> const& _name,
-					ASTPointer<ASTString> const& _documentation,
-					ASTPointer<ParameterList> const& _parameters):
-		Declaration(_location, _name), Documented(_documentation), m_parameters(_parameters) {}
+	EventDefinition(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<ParameterList> const& _parameters,
+		bool _anonymous = false
+	):
+		Declaration(_location, _name),
+		Documented(_documentation),
+		m_parameters(_parameters),
+		m_anonymous(_anonymous){}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
 	ParameterList const& getParameterList() const { return *m_parameters; }
+	bool isAnonymous() const { return m_anonymous; }
 
 	virtual TypePointer getType(ContractDefinition const* = nullptr) const override
 	{
@@ -559,6 +607,7 @@ public:
 
 private:
 	ASTPointer<ParameterList> m_parameters;
+	bool m_anonymous = false;
 };
 
 /**

@@ -24,6 +24,7 @@
 
 #include <ostream>
 #include <stack>
+#include <utility>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Assembly.h>
 #include <libsolidity/ASTForward.h>
@@ -42,7 +43,7 @@ class CompilerContext
 {
 public:
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
-	void addStateVariable(VariableDeclaration const& _declaration);
+	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(VariableDeclaration const& _declaration);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
@@ -82,7 +83,7 @@ public:
 	/// Converts an offset relative to the current stack height to a value that can be used later
 	/// with baseToCurrentStackOffset to point to the same stack element.
 	unsigned currentToBaseStackOffset(unsigned _offset) const;
-	u256 getStorageLocationOfVariable(Declaration const& _declaration) const;
+	std::pair<u256, unsigned> getStorageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
 	eth::AssemblyItem appendConditionalJump() { return m_asm.appendJumpI().tag(); }
@@ -91,7 +92,7 @@ public:
 	/// Appends a JUMP to a new tag and @returns the tag
 	eth::AssemblyItem appendJumpToNew() { return m_asm.appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
-	CompilerContext&  appendJump() { return *this << eth::Instruction::JUMP; }
+	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.
@@ -108,19 +109,19 @@ public:
 	/// Resets the stack of visited nodes with a new stack having only @c _node
 	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
-	void popVisitedNodes() { m_visitedNodes.pop(); }
+	void popVisitedNodes() { m_visitedNodes.pop(); updateSourceLocation(); }
 	/// Pushes an ASTNode to the stack of visited nodes
-	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); }
+	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); updateSourceLocation(); }
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
-	CompilerContext& operator<<(eth::AssemblyItem const& _item);
-	CompilerContext& operator<<(eth::Instruction _instruction);
-	CompilerContext& operator<<(u256 const& _value);
-	CompilerContext& operator<<(bytes const& _data);
+	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
+	CompilerContext& operator<<(eth::Instruction _instruction) { m_asm.append(_instruction); return *this; }
+	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
+	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
 
 	eth::Assembly const& getAssembly() const { return m_asm; }
 	/// @arg _sourceCodes is the map of input files to source code strings
-	void streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const { m_asm.streamRLP(_stream, "", _sourceCodes); }
+	void streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const { m_asm.stream(_stream, "", _sourceCodes); }
 
 	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
 
@@ -130,22 +131,22 @@ public:
 	class LocationSetter: public ScopeGuard
 	{
 	public:
-		LocationSetter(CompilerContext& _compilerContext, ASTNode const* _node):
-			ScopeGuard(std::bind(&CompilerContext::popVisitedNodes, _compilerContext)) { _compilerContext.pushVisitedNodes(_node); }
+		LocationSetter(CompilerContext& _compilerContext, ASTNode const& _node):
+			ScopeGuard([&]{ _compilerContext.popVisitedNodes(); }) { _compilerContext.pushVisitedNodes(&_node); }
 	};
 
 private:
 	std::vector<ContractDefinition const*>::const_iterator getSuperContract(const ContractDefinition &_contract) const;
+	/// Updates source location set in the assembly.
+	void updateSourceLocation();
 
 	eth::Assembly m_asm;
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
 	/// Other already compiled contracts to be used in contract creation calls.
 	std::map<ContractDefinition const*, bytes const*> m_compiledContracts;
-	/// Size of the state variables, offset of next variable to be added.
-	u256 m_stateVariablesSize = 0;
 	/// Storage offsets of state variables
-	std::map<Declaration const*, u256> m_stateVariables;
+	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).
 	std::map<Declaration const*, unsigned> m_localVariables;
 	/// Labels pointing to the entry points of functions.

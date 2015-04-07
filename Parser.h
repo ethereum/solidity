@@ -34,6 +34,8 @@ class Scanner;
 class Parser
 {
 public:
+	Parser() {}
+
 	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
 	std::shared_ptr<std::string const> const& getSourceName() const;
 
@@ -64,8 +66,7 @@ private:
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
-	ASTPointer<VariableDeclaration> parseVariableDeclaration(
-		VarDeclParserOptions const& _options = VarDeclParserOptions(),
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(VarDeclParserOptions const& _options = VarDeclParserOptions(),
 		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>());
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<EventDefinition> parseEventDefinition();

@@ -37,15 +37,13 @@ void CompilerContext::addMagicGlobal(MagicVariableDeclaration const& _declaratio
 	m_magicGlobals.insert(&_declaration);
 }
 
-void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
+void CompilerContext::addStateVariable(
+	VariableDeclaration const& _declaration,
+	u256 const& _storageOffset,
+	unsigned _byteOffset
+)
 {
-	m_stateVariables[&_declaration] = m_stateVariablesSize;
-	bigint newSize = bigint(m_stateVariablesSize) + _declaration.getType()->getStorageSize();
-	if (newSize >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(TypeError()
-			<< errinfo_comment("State variable does not fit in storage.")
-			<< errinfo_sourceLocation(_declaration.getLocation()));
-	m_stateVariablesSize = u256(newSize);
+	m_stateVariables[&_declaration] = make_pair(_storageOffset, _byteOffset);
 }
 
 void CompilerContext::startFunction(Declaration const& _function)
@@ -69,7 +67,7 @@ void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
 
 void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
 {
-	LocationSetter locationSetter(*this, &_declaration);
+	LocationSetter locationSetter(*this, _declaration);
 	addVariable(_declaration);
 	int const size = _declaration.getType()->getSizeOnStack();
 	for (int i = 0; i < size; ++i)
@@ -174,11 +172,18 @@ unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 	return m_asm.deposit() - _offset - 1;
 }
 
-u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
+pair<u256, unsigned> CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
 {
 	auto it = m_stateVariables.find(&_declaration);
 	solAssert(it != m_stateVariables.end(), "Variable not found in storage.");
 	return it->second;
+}
+
+CompilerContext& CompilerContext::appendJump(eth::AssemblyItem::JumpType _jumpType)
+{
+	eth::AssemblyItem item(eth::Instruction::JUMP);
+	item.setJumpType(_jumpType);
+	return *this << item;
 }
 
 void CompilerContext::resetVisitedNodes(ASTNode const* _node)
@@ -186,34 +191,7 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 	stack<ASTNode const*> newStack;
 	newStack.push(_node);
 	std::swap(m_visitedNodes, newStack);
-}
-
-CompilerContext& CompilerContext::operator<<(eth::AssemblyItem const& _item)
-{
-	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
-	m_asm.append(_item, m_visitedNodes.top()->getLocation());
-	return *this;
-}
-
-CompilerContext& CompilerContext::operator<<(eth::Instruction _instruction)
-{
-	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
-	m_asm.append(_instruction, m_visitedNodes.top()->getLocation());
-	return *this;
-}
-
-CompilerContext& CompilerContext::operator<<(u256 const& _value)
-{
-	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
-	m_asm.append(_value, m_visitedNodes.top()->getLocation());
-	return *this;
-}
-
-CompilerContext& CompilerContext::operator<<(bytes const& _data)
-{
-	solAssert(!m_visitedNodes.empty(), "No node on the visited stack");
-	m_asm.append(_data, m_visitedNodes.top()->getLocation());
-	return *this;
+	updateSourceLocation();
 }
 
 vector<ContractDefinition const*>::const_iterator CompilerContext::getSuperContract(ContractDefinition const& _contract) const
@@ -222,6 +200,11 @@ vector<ContractDefinition const*>::const_iterator CompilerContext::getSuperContr
 	auto it = find(m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end(), &_contract);
 	solAssert(it != m_inheritanceHierarchy.end(), "Base not found in inheritance hierarchy.");
 	return ++it;
+}
+
+void CompilerContext::updateSourceLocation()
+{
+	m_asm.setSourceLocation(m_visitedNodes.empty() ? SourceLocation() : m_visitedNodes.top()->getLocation());
 }
 
 }

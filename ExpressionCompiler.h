@@ -42,7 +42,6 @@ class CompilerContext;
 class Type;
 class IntegerType;
 class ArrayType;
-class StaticStringType;
 
 /**
  * Compiler for expressions, i.e. converts an AST tree whose root is an Expression into a stream
@@ -140,7 +139,6 @@ void ExpressionCompiler::setLValue(Expression const& _expression, _Arguments con
 		m_currentLValue = move(lvalue);
 	else
 		lvalue->retrieveValue(_expression.getLocation(), true);
-
 }
 
 }

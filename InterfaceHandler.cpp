@@ -70,6 +70,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		Json::Value event;
 		event["type"] = "event";
 		event["name"] = it->getName();
+		event["anonymous"] = it->isAnonymous();
 		Json::Value params(Json::arrayValue);
 		for (auto const& p: it->getParameters())
 		{
@@ -128,7 +129,7 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefi
 			if (!m_notice.empty())
 			{// since @notice is the only user tag if missing function should not appear
 				user["notice"] = Json::Value(m_notice);
-				methods[it.second->getCanonicalSignature()] = user;
+				methods[it.second->externalSignature()] = user;
 			}
 		}
 	}
@@ -174,8 +175,17 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 				method["author"] = m_author;
 
 			Json::Value params(Json::objectValue);
+			std::vector<std::string> paramNames = it.second->getParameterNames();
 			for (auto const& pair: m_params)
+			{
+				if (find(paramNames.begin(), paramNames.end(), pair.first) == paramNames.end())
+					// LTODO: mismatching parameter name, throw some form of warning and not just an exception
+					BOOST_THROW_EXCEPTION(
+						DocstringParsingError() <<
+						errinfo_comment("documented parameter \"" + pair.first + "\" not found found in the function")
+					);					
 				params[pair.first] = pair.second;
+			}
 
 			if (!m_params.empty())
 				method["params"] = params;
@@ -184,7 +194,7 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 				method["return"] = m_return;
 
 			if (!method.empty()) // add the function, only if we have any documentation to add
-				methods[it.second->getCanonicalSignature()] = method;
+				methods[it.second->externalSignature()] = method;
 		}
 	}
 	doc["methods"] = methods;

@@ -175,7 +175,8 @@ void FunctionDefinition::accept(ASTVisitor& _visitor)
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);
 		listAccept(m_functionModifiers, _visitor);
-		m_body->accept(_visitor);
+		if (m_body)
+			m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }
@@ -188,7 +189,8 @@ void FunctionDefinition::accept(ASTConstVisitor& _visitor) const
 		if (m_returnParameters)
 			m_returnParameters->accept(_visitor);
 		listAccept(m_functionModifiers, _visitor);
-		m_body->accept(_visitor);
+		if (m_body)
+			m_body->accept(_visitor);
 	}
 	_visitor.endVisit(*this);
 }
