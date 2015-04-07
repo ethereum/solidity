@@ -506,7 +506,7 @@ bool CSECodeGenerator::removeStackTopIfPossible()
 {
 	if (m_stack.empty())
 		return false;
-	assertThrow(m_stack.count(m_stackHeight), OptimizerException, "");
+	assertThrow(m_stack.count(m_stackHeight) > 0, OptimizerException, "");
 	ExpressionClasses::Id top = m_stack[m_stackHeight];
 	if (!canBeRemoved(top))
 		return false;
