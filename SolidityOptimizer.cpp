@@ -715,15 +715,15 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_noninterfering_store_in_between
 		Instruction::DUP5,
 		Instruction::DUP2,
 		Instruction::MSTORE, // m[12] = DUP1
-				Instruction::DUP12,
-				u256(12 + 32),
-				Instruction::MSTORE, // does not destoy memory knowledge
-				Instruction::DUP13,
-				u256(128 - 32),
-				Instruction::MSTORE, // does not destoy memory knowledge
-				u256(0x20),
-				u256(12),
-				Instruction::SHA3 // sha3(m[12..(12+32)])
+		Instruction::DUP12,
+		u256(12 + 32),
+		Instruction::MSTORE, // does not destoy memory knowledge
+		Instruction::DUP13,
+		u256(128 - 32),
+		Instruction::MSTORE, // does not destoy memory knowledge
+		u256(0x20),
+		u256(12),
+		Instruction::SHA3 // sha3(m[12..(12+32)])
 	};
 	// if this changes too often, only count the number of SHA3 and MSTORE instructions
 	AssemblyItems output = getCSE(input);
