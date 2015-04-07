@@ -19,7 +19,7 @@
  * @date 2015
  */
 
-#if !ETH_HEADLESS
+#if ETH_GUI
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>

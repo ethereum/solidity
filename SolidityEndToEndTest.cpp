@@ -1414,6 +1414,8 @@ BOOST_AUTO_TEST_CASE(sha3)
 	testSolidityAgainstCpp("a(bytes32)", f, u256(-1));
 }
 
+#ifdef PRECOMPILED_CONTRACTS_GAS_FIXED_IN_SOLIDITY
+
 BOOST_AUTO_TEST_CASE(sha256)
 {
 	char const* sourceCode = "contract test {\n"
@@ -1467,6 +1469,8 @@ BOOST_AUTO_TEST_CASE(ecrecover)
 	u160 addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	BOOST_CHECK(callContractFunction("a(bytes32,uint8,bytes32,bytes32)", h, v, r, s) == encodeArgs(addr));
 }
+
+#endif
 
 BOOST_AUTO_TEST_CASE(inter_contract_calls)
 {
