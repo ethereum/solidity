@@ -203,8 +203,9 @@ void CommonSubexpressionEliminator::storeInStorage(Id _slot, Id _value)
 		return;
 	m_sequenceNumber++;
 	decltype(m_storageContent) storageContents;
-	// copy over values at points where we know that they are different from _slot or that we know
-	// that the value is equal
+	// Copy over all values (i.e. retain knowledge about them) where we know that this store
+	// operation will not destroy the knowledge. Specifically, we copy storage locations we know
+	// are different from _slot or locations where we know that the stored value is equal to _value.
 	for (auto const& storageItem: m_storageContent)
 		if (m_expressionClasses.knownToBeDifferent(storageItem.first, _slot) || storageItem.second == _value)
 			storageContents.insert(storageItem);

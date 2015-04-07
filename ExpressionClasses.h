@@ -79,10 +79,10 @@ public:
 	/// Similar to @a knownToBeDifferent but require that abs(_a - b) >= 32.
 	bool knownToBeDifferentBy32(Id _a, Id _b);
 	/// @returns true if the value of the given class is known to be zero.
-	/// @note that this is not the negariot of knownNonZero
+	/// @note that this is not the negation of knownNonZero
 	bool knownZero(Id _c);
 	/// @returns true if the value of the given class is known to be nonzero.
-	/// @note that this is not the negariot of knownZero
+	/// @note that this is not the negation of knownZero
 	bool knownNonZero(Id _c);
 	/// @returns a pointer to the value if the given class is known to be a constant,
 	/// and a nullptr otherwise.
