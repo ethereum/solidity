@@ -1,4 +1,3 @@
-
 /*
 	This file is part of cpp-ethereum.
 
@@ -20,6 +19,8 @@
  * @date 2014
  * Unit tests for the solidity expression compiler.
  */
+
+#if ETH_SOLIDITY
 
 #include <string>
 
@@ -493,3 +494,4 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 } // end namespaces
 
+#endif

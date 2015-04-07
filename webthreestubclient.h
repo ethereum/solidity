@@ -22,6 +22,56 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
+        std::string web3_clientVersion() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->CallMethod("web3_clientVersion",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string net_version() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->CallMethod("net_version",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string net_peerCount() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->CallMethod("net_peerCount",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        bool net_listening() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->CallMethod("net_listening",p);
+            if (result.isBool())
+                return result.asBool();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string eth_protocolVersion() throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p = Json::nullValue;
+            Json::Value result = this->CallMethod("eth_protocolVersion",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
         std::string eth_coinbase() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -32,51 +82,11 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_setCoinbase(const std::string& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_setCoinbase",p);
-            if (result.isBool())
-                return result.asBool();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        bool eth_listening() throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p = Json::nullValue;
-            Json::Value result = this->CallMethod("eth_listening",p);
-            if (result.isBool())
-                return result.asBool();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        bool eth_setListening(bool param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_setListening",p);
-            if (result.isBool())
-                return result.asBool();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
         bool eth_mining() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p = Json::nullValue;
             Json::Value result = this->CallMethod("eth_mining",p);
-            if (result.isBool())
-                return result.asBool();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        bool eth_setMining(bool param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_setMining",p);
             if (result.isBool())
                 return result.asBool();
             else
@@ -102,151 +112,116 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        int eth_peerCount() throw (jsonrpc::JsonRpcException)
+        std::string eth_blockNumber() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p = Json::nullValue;
-            Json::Value result = this->CallMethod("eth_peerCount",p);
-            if (result.isInt())
-                return result.asInt();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        int eth_defaultBlock() throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p = Json::nullValue;
-            Json::Value result = this->CallMethod("eth_defaultBlock",p);
-            if (result.isInt())
-                return result.asInt();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        bool eth_setDefaultBlock(int param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_setDefaultBlock",p);
-            if (result.isBool())
-                return result.asBool();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        int eth_number() throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p = Json::nullValue;
-            Json::Value result = this->CallMethod("eth_number",p);
-            if (result.isInt())
-                return result.asInt();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        std::string eth_balanceAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_balanceAt",p);
+            Json::Value result = this->CallMethod("eth_blockNumber",p);
             if (result.isString())
                 return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        std::string eth_stateAt(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        std::string eth_getBalance(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             p.append(param2);
-            Json::Value result = this->CallMethod("eth_stateAt",p);
+            Json::Value result = this->CallMethod("eth_getBalance",p);
             if (result.isString())
                 return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_storageAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_getStorageAt(const std::string& param1, const std::string& param2, const std::string& param3) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_storageAt",p);
-            if (result.isObject())
-                return result;
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        double eth_countAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_countAt",p);
-            if (result.isDouble())
-                return result.asDouble();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        double eth_transactionCountByHash(const std::string& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_transactionCountByHash",p);
-            if (result.isDouble())
-                return result.asDouble();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        double eth_transactionCountByNumber(int param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_transactionCountByNumber",p);
-            if (result.isDouble())
-                return result.asDouble();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        double eth_uncleCountByHash(const std::string& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_uncleCountByHash",p);
-            if (result.isDouble())
-                return result.asDouble();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        double eth_uncleCountByNumber(int param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_uncleCountByNumber",p);
-            if (result.isDouble())
-                return result.asDouble();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        std::string eth_codeAt(const std::string& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_codeAt",p);
+            p.append(param2);
+            p.append(param3);
+            Json::Value result = this->CallMethod("eth_getStorageAt",p);
             if (result.isString())
                 return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        std::string eth_transact(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_getTransactionCount(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_transact",p);
+            p.append(param2);
+            Json::Value result = this->CallMethod("eth_getTransactionCount",p);
             if (result.isString())
                 return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        std::string eth_call(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_getBlockTransactionCountByHash(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
+            Json::Value result = this->CallMethod("eth_getBlockTransactionCountByHash",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string eth_getBlockTransactionCountByNumber(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            Json::Value result = this->CallMethod("eth_getBlockTransactionCountByNumber",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string eth_getUncleCountByBlockHash(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            Json::Value result = this->CallMethod("eth_getUncleCountByBlockHash",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string eth_getUncleCountByBlockNumber(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            Json::Value result = this->CallMethod("eth_getUncleCountByBlockNumber",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string eth_getCode(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            Json::Value result = this->CallMethod("eth_getCode",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string eth_sendTransaction(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            Json::Value result = this->CallMethod("eth_sendTransaction",p);
+            if (result.isString())
+                return result.asString();
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        std::string eth_call(const Json::Value& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
             Json::Value result = this->CallMethod("eth_call",p);
             if (result.isString())
                 return result.asString();
@@ -263,131 +238,143 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_blockByHash(const std::string& param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_blockByHash",p);
-            if (result.isObject())
-                return result;
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        Json::Value eth_blockByNumber(int param1) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            Json::Value result = this->CallMethod("eth_blockByNumber",p);
-            if (result.isObject())
-                return result;
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        Json::Value eth_transactionByHash(const std::string& param1, int param2) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getBlockByHash(const std::string& param1, bool param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             p.append(param2);
-            Json::Value result = this->CallMethod("eth_transactionByHash",p);
+            Json::Value result = this->CallMethod("eth_getBlockByHash",p);
             if (result.isObject())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_transactionByNumber(int param1, int param2) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getBlockByNumber(const std::string& param1, bool param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             p.append(param2);
-            Json::Value result = this->CallMethod("eth_transactionByNumber",p);
+            Json::Value result = this->CallMethod("eth_getBlockByNumber",p);
             if (result.isObject())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_uncleByHash(const std::string& param1, int param2) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getTransactionByHash(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            Json::Value result = this->CallMethod("eth_getTransactionByHash",p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        Json::Value eth_getTransactionByBlockHashAndIndex(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             p.append(param2);
-            Json::Value result = this->CallMethod("eth_uncleByHash",p);
+            Json::Value result = this->CallMethod("eth_getTransactionByBlockHashAndIndex",p);
             if (result.isObject())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_uncleByNumber(int param1, int param2) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getTransactionByBlockNumberAndIndex(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             p.append(param2);
-            Json::Value result = this->CallMethod("eth_uncleByNumber",p);
+            Json::Value result = this->CallMethod("eth_getTransactionByBlockNumberAndIndex",p);
             if (result.isObject())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_compilers() throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getUncleByBlockHashAndIndex(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            Json::Value result = this->CallMethod("eth_getUncleByBlockHashAndIndex",p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        Json::Value eth_getUncleByBlockNumberAndIndex(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
+        {
+            Json::Value p;
+            p.append(param1);
+            p.append(param2);
+            Json::Value result = this->CallMethod("eth_getUncleByBlockNumberAndIndex",p);
+            if (result.isObject())
+                return result;
+            else
+                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
+        }
+        Json::Value eth_getCompilers() throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p = Json::nullValue;
-            Json::Value result = this->CallMethod("eth_compilers",p);
+            Json::Value result = this->CallMethod("eth_getCompilers",p);
             if (result.isArray())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        std::string eth_lll(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_compileLLL(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_lll",p);
+            Json::Value result = this->CallMethod("eth_compileLLL",p);
             if (result.isString())
                 return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        std::string eth_solidity(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_compileSerpent(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_solidity",p);
+            Json::Value result = this->CallMethod("eth_compileSerpent",p);
             if (result.isString())
                 return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        std::string eth_serpent(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_compileSolidity(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_serpent",p);
+            Json::Value result = this->CallMethod("eth_compileSolidity",p);
             if (result.isString())
                 return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        int eth_newFilter(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_newFilter(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             Json::Value result = this->CallMethod("eth_newFilter",p);
-            if (result.isInt())
-                return result.asInt();
+            if (result.isString())
+                return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        int eth_newFilterString(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_newBlockFilter(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_newFilterString",p);
-            if (result.isInt())
-                return result.asInt();
+            Json::Value result = this->CallMethod("eth_newBlockFilter",p);
+            if (result.isString())
+                return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_uninstallFilter(int param1) throw (jsonrpc::JsonRpcException)
+        bool eth_uninstallFilter(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -397,31 +384,31 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_changed(int param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getFilterChanges(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_changed",p);
+            Json::Value result = this->CallMethod("eth_getFilterChanges",p);
             if (result.isArray())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_filterLogs(int param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getFilterLogs(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_filterLogs",p);
+            Json::Value result = this->CallMethod("eth_getFilterLogs",p);
             if (result.isArray())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_logs(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_getLogs(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_logs",p);
+            Json::Value result = this->CallMethod("eth_getLogs",p);
             if (result.isArray())
                 return result;
             else
@@ -448,17 +435,17 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        int eth_register(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        std::string eth_register(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             Json::Value result = this->CallMethod("eth_register",p);
-            if (result.isInt())
-                return result.asInt();
+            if (result.isString())
+                return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool eth_unregister(int param1) throw (jsonrpc::JsonRpcException)
+        bool eth_unregister(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -468,11 +455,11 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value eth_queuedTransactions(int param1) throw (jsonrpc::JsonRpcException)
+        Json::Value eth_fetchQueuedTransactions(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("eth_queuedTransactions",p);
+            Json::Value result = this->CallMethod("eth_fetchQueuedTransactions",p);
             if (result.isArray())
                 return result;
             else
@@ -501,29 +488,6 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool db_putString(const std::string& param1, const std::string& param2, const std::string& param3) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            p.append(param2);
-            p.append(param3);
-            Json::Value result = this->CallMethod("db_putString",p);
-            if (result.isBool())
-                return result.asBool();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
-        std::string db_getString(const std::string& param1, const std::string& param2) throw (jsonrpc::JsonRpcException)
-        {
-            Json::Value p;
-            p.append(param1);
-            p.append(param2);
-            Json::Value result = this->CallMethod("db_getString",p);
-            if (result.isString())
-                return result.asString();
-            else
-                throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
-        }
         bool shh_post(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
@@ -544,11 +508,11 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool shh_haveIdentity(const std::string& param1) throw (jsonrpc::JsonRpcException)
+        bool shh_hasIdentity(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("shh_haveIdentity",p);
+            Json::Value result = this->CallMethod("shh_hasIdentity",p);
             if (result.isBool())
                 return result.asBool();
             else
@@ -576,17 +540,17 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        int shh_newFilter(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
+        std::string shh_newFilter(const Json::Value& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
             Json::Value result = this->CallMethod("shh_newFilter",p);
-            if (result.isInt())
-                return result.asInt();
+            if (result.isString())
+                return result.asString();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        bool shh_uninstallFilter(int param1) throw (jsonrpc::JsonRpcException)
+        bool shh_uninstallFilter(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
@@ -596,17 +560,17 @@ class WebThreeStubClient : public jsonrpc::Client
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value shh_changed(int param1) throw (jsonrpc::JsonRpcException)
+        Json::Value shh_getFilterChanges(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);
-            Json::Value result = this->CallMethod("shh_changed",p);
+            Json::Value result = this->CallMethod("shh_getFilterChanges",p);
             if (result.isArray())
                 return result;
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
         }
-        Json::Value shh_getMessages(int param1) throw (jsonrpc::JsonRpcException)
+        Json::Value shh_getMessages(const std::string& param1) throw (jsonrpc::JsonRpcException)
         {
             Json::Value p;
             p.append(param1);

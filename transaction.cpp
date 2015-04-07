@@ -48,6 +48,13 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 			}
+			catch(Exception const& _e)
+			{
+				cnote << i.first;
+				cnote << "Transaction Exception: " << diagnostic_information(_e);
+				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transaction object should not be defined because the RLP is invalid!");
+				continue;
+			}
 			catch(...)
 			{
 				BOOST_CHECK_MESSAGE(o.count("transaction") == 0, "A transaction object should not be defined because the RLP is invalid!");
@@ -116,21 +123,16 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 
 BOOST_AUTO_TEST_CASE(tt10mbDataField)
 {
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	if (test::Options::get().bigData)
 	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--bigdata" || arg == "--all")
-		{
-			auto start = chrono::steady_clock::now();
+		auto start = chrono::steady_clock::now();
 
-			dev::test::executeTests("tt10mbDataField", "/TransactionTests", dev::test::doTransactionTests);
+		dev::test::executeTests("tt10mbDataField", "/TransactionTests", dev::test::doTransactionTests);
 
-			auto end = chrono::steady_clock::now();
-			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-			cnote << "test duration: " << duration.count() << " milliseconds.\n";
-		}
+		auto end = chrono::steady_clock::now();
+		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
-
 }
 
 BOOST_AUTO_TEST_CASE(ttCreateTest)

@@ -29,6 +29,7 @@
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
+#include "Stats.h"
 
 using namespace std;
 using namespace dev::eth;
@@ -69,7 +70,10 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller) : m_statePre(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o)
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
+	m_statePre(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
+	m_statePost(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
+	m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
@@ -84,14 +88,14 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller) : m_statePre(Add
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
-	BOOST_REQUIRE(_o.count("previousHash") > 0);
-	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
-	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
-	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
-	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
-	BOOST_REQUIRE(_o.count("currentNumber") > 0);
+	assert(_o.count("previousHash") > 0);
+	assert(_o.count("currentGasLimit") > 0);
+	assert(_o.count("currentDifficulty") > 0);
+	assert(_o.count("currentTimestamp") > 0);
+	assert(_o.count("currentCoinbase") > 0);
+	assert(_o.count("currentNumber") > 0);
 
-	m_environment.previousBlock.hash = h256(_o["previousHash"].get_str());
+	m_environment.currentBlock.parentHash = h256(_o["previousHash"].get_str());
 	m_environment.currentBlock.number = toInt(_o["currentNumber"]);
 	m_environment.currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
 	m_environment.currentBlock.difficulty = toInt(_o["currentDifficulty"]);
@@ -108,10 +112,10 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 	{
 		json_spirit::mObject o = i.second.get_obj();
 
-		BOOST_REQUIRE(o.count("balance") > 0);
-		BOOST_REQUIRE(o.count("nonce") > 0);
-		BOOST_REQUIRE(o.count("storage") > 0);
-		BOOST_REQUIRE(o.count("code") > 0);
+		assert(o.count("balance") > 0);
+		assert(o.count("nonce") > 0);
+		assert(o.count("storage") > 0);
+		assert(o.count("code") > 0);
 
 		if (bigint(o["balance"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
@@ -144,12 +148,12 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 {	
 	if (_o.count("secretKey") > 0)
 	{
-		BOOST_REQUIRE(_o.count("nonce") > 0);
-		BOOST_REQUIRE(_o.count("gasPrice") > 0);
-		BOOST_REQUIRE(_o.count("gasLimit") > 0);
-		BOOST_REQUIRE(_o.count("to") > 0);
-		BOOST_REQUIRE(_o.count("value") > 0);
-		BOOST_REQUIRE(_o.count("data") > 0);
+		assert(_o.count("nonce") > 0);
+		assert(_o.count("gasPrice") > 0);
+		assert(_o.count("gasLimit") > 0);
+		assert(_o.count("to") > 0);
+		assert(_o.count("value") > 0);
+		assert(_o.count("data") > 0);
 
 		if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
@@ -181,46 +185,35 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
 
 	// export post state
-	json_spirit::mObject postState;
 
-	for (auto const& a: _statePost.addresses())
-	{
-		json_spirit::mObject o;
-		o["balance"] = toString(_statePost.balance(a.first));
-		o["nonce"] = toString(_statePost.transactionsFrom(a.first));
-		{
-			json_spirit::mObject store;
-			for (auto const& s: _statePost.storage(a.first))
-				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
-			o["storage"] = store;
-		}
-		o["code"] = "0x" + toHex(_statePost.code(a.first));
-
-		postState[toString(a.first)] = o;
-	}
-	m_TestObject["post"] = json_spirit::mValue(postState);
-
+	m_TestObject["post"] = fillJsonWithState(_statePost);
 	m_TestObject["postStateRoot"] = toHex(_statePost.rootHash().asBytes());
 
 	// export pre state
-	json_spirit::mObject preState;
+	m_TestObject["pre"] = fillJsonWithState(m_statePre);
+}
 
-	for (auto const& a: m_statePre.addresses())
+json_spirit::mObject fillJsonWithState(State _state)
+{
+	// export pre state
+	json_spirit::mObject oState;
+
+	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = toString(m_statePre.balance(a.first));
-		o["nonce"] = toString(m_statePre.transactionsFrom(a.first));
+		o["balance"] = toString(_state.balance(a.first));
+		o["nonce"] = toString(_state.transactionsFrom(a.first));
 		{
 			json_spirit::mObject store;
-			for (auto const& s: m_statePre.storage(a.first))
+			for (auto const& s: _state.storage(a.first))
 				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
 			o["storage"] = store;
 		}
-		o["code"] = "0x" + toHex(m_statePre.code(a.first));
+		o["code"] = "0x" + toHex(_state.code(a.first));
 
-		preState[toString(a.first)] = o;
+		oState[toString(a.first)] = o;
 	}
-	m_TestObject["pre"] = json_spirit::mValue(preState);
+	return oState;
 }
 
 u256 toInt(json_spirit::mValue const& _v)
@@ -251,7 +244,7 @@ byte toByte(json_spirit::mValue const& _v)
 
 bytes importByteArray(std::string const& _str)
 {
-	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, ThrowType::Throw);
+	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
 bytes importData(json_spirit::mObject& _o)
@@ -385,22 +378,6 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 	}
 }
 
-std::string getTestPath()
-{
-	string testPath;
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-
-	if (ptestPath == NULL)
-	{
-		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
-	}
-	else
-		testPath = ptestPath;
-
-	return testPath;
-}
-
 void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
@@ -450,8 +427,6 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 			}
 			g_logVerbosity = currentVerbosity;
 		}
-		else
-			continue;
 	}
 }
 
@@ -460,42 +435,41 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	string testPath = getTestPath();
 	testPath += _testPathAppendix;
 
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	if (Options::get().stats)
+		Listener::registerListener(Stats::get());
+
+	if (Options::get().fillTests)
 	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--filltests")
+		try
 		{
-			try
-			{
-				cnote << "Populating tests...";
-				json_spirit::mValue v;
-				boost::filesystem::path p(__FILE__);
-				boost::filesystem::path dir = p.parent_path();
-				string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
-				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
-				json_spirit::read_string(s, v);
-				doTests(v, true);
-				writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
-			}
-			catch (Exception const& _e)
-			{
-				BOOST_ERROR("Failed filling test with Exception: " << diagnostic_information(_e));
-			}
-			catch (std::exception const& _e)
-			{
-				BOOST_ERROR("Failed filling test with Exception: " << _e.what());
-			}
-			break;
+			cnote << "Populating tests...";
+			json_spirit::mValue v;
+			boost::filesystem::path p(__FILE__);
+			boost::filesystem::path dir = p.parent_path();
+			string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
+			json_spirit::read_string(s, v);
+			doTests(v, true);
+			writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+		}
+		catch (Exception const& _e)
+		{
+			BOOST_ERROR("Failed filling test with Exception: " << diagnostic_information(_e));
+		}
+		catch (std::exception const& _e)
+		{
+			BOOST_ERROR("Failed filling test with Exception: " << _e.what());
 		}
 	}
 
 	try
 	{
-		cnote << "Testing ..." << _name;
+		std::cout << "TEST " << _name << ":\n";
 		json_spirit::mValue v;
 		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
+		Listener::notifySuiteStarted(_name);
 		doTests(v, false);
 	}
 	catch (Exception const& _e)
@@ -552,20 +526,56 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 	return rlpStream;
 }
 
-void processCommandLineOptions()
+Options::Options()
 {
 	auto argc = boost::unit_test::framework::master_test_suite().argc;
 	auto argv = boost::unit_test::framework::master_test_suite().argv;
 
-	for (auto i =  0; i < argc; ++i)
+	for (auto i = 0; i < argc; ++i)
 	{
-		if (std::string(argv[i]) == "--jit")
+		auto arg = std::string{argv[i]};
+		if (arg == "--jit")
 		{
+			jit = true;
 			eth::VMFactory::setKind(eth::VMKind::JIT);
-			break;
+		}
+		else if (arg == "--vmtrace")
+			vmtrace = true;
+		else if (arg == "--filltests")
+			fillTests = true;
+		else if (arg.compare(0, 7, "--stats") == 0)
+		{
+			stats = true;
+			if (arg.size() > 7)
+				statsOutFile = arg.substr(8); // skip '=' char
+		}
+		else if (arg == "--performance")
+			performance = true;
+		else if (arg == "--quadratic")
+			quadratic = true;
+		else if (arg == "--memory")
+			memory = true;
+		else if (arg == "--inputlimits")
+			inputLimits = true;
+		else if (arg == "--bigdata")
+			bigData = true;
+		else if (arg == "--all")
+		{
+			performance = true;
+			quadratic = true;
+			memory = true;
+			inputLimits = true;
+			bigData = true;
 		}
 	}
 }
+
+Options const& Options::get()
+{
+	static Options instance;
+	return instance;
+}
+
 
 LastHashes lastHashes(u256 _currentBlockNumber)
 {
@@ -573,6 +583,35 @@ LastHashes lastHashes(u256 _currentBlockNumber)
 	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
 		ret.push_back(sha3(toString(_currentBlockNumber - i)));
 	return ret;
+}
+
+
+namespace
+{
+	Listener* g_listener;
+}
+
+void Listener::registerListener(Listener& _listener)
+{
+	g_listener = &_listener;
+}
+
+void Listener::notifySuiteStarted(std::string const& _name)
+{
+	if (g_listener)
+		g_listener->suiteStarted(_name);
+}
+
+void Listener::notifyTestStarted(std::string const& _name)
+{
+	if (g_listener)
+		g_listener->testStarted(_name);
+}
+
+void Listener::notifyTestFinished()
+{
+	if (g_listener)
+		g_listener->testFinished();
 }
 
 } } // namespaces

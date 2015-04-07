@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <libdevcore/Worker.h>
+#include <libdevcore/Assertions.h>
 #include <libdevcrypto/Common.h>
 #include <libp2p/UDP.h>
 #include <libp2p/NodeTable.h>
@@ -52,7 +53,7 @@ protected:
 struct TestNodeTable: public NodeTable
 {
 	/// Constructor
-	TestNodeTable(ba::io_service& _io, KeyPair _alias, uint16_t _port = 30300): NodeTable(_io, _alias, _port) {}
+	TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30300): NodeTable(_io, _alias, _addr, _port) {}
 
 	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(unsigned _count)
 	{
@@ -88,7 +89,16 @@ struct TestNodeTable: public NodeTable
 		bi::address ourIp = bi::address::from_string("127.0.0.1");
 		for (auto& n: _testNodes)
 			if (_count--)
+			{
+				// manually add node for test
+				{
+					Guard ln(x_nodes);
+					shared_ptr<NodeEntry> node(new NodeEntry(m_node, n.first.pub(), NodeIPEndpoint(bi::udp::endpoint(ourIp, n.second), bi::tcp::endpoint(ourIp, n.second))));
+					node->pending = false;
+					m_nodes[node->id] = node;
+				}
 				noteActiveNode(n.first.pub(), bi::udp::endpoint(ourIp, n.second));
+			}
 			else
 				break;
 	}
@@ -105,10 +115,10 @@ struct TestNodeTable: public NodeTable
  */
 struct TestNodeTableHost: public TestHost
 {
-	TestNodeTableHost(unsigned _count = 8): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias)), testNodes(TestNodeTable::createTestNodes(_count)) {};
+	TestNodeTableHost(unsigned _count = 8): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias, bi::address::from_string("127.0.0.1"))), testNodes(TestNodeTable::createTestNodes(_count)) {};
 	~TestNodeTableHost() { m_io.stop(); stopWorking(); }
 
-	void setup() { for (auto n: testNodes) nodeTables.push_back(make_shared<TestNodeTable>(m_io,n.first,n.second)); }
+	void setup() { for (auto n: testNodes) nodeTables.push_back(make_shared<TestNodeTable>(m_io,n.first, bi::address::from_string("127.0.0.1"),n.second)); }
 
 	void pingAll() { for (auto& t: nodeTables) t->pingTestNodes(testNodes); }
 
@@ -134,6 +144,51 @@ public:
 
 	bool success = false;
 };
+
+BOOST_AUTO_TEST_CASE(isIPAddressType)
+{
+	string wildcard = "0.0.0.0";
+	BOOST_REQUIRE(bi::address::from_string(wildcard).is_unspecified());
+	
+	string empty = "";
+	BOOST_REQUIRE_THROW(bi::address::from_string(empty).is_unspecified(), std::exception);
+
+	string publicAddress192 = "192.169.0.0";
+	BOOST_REQUIRE(isPublicAddress(publicAddress192));
+	BOOST_REQUIRE(!isPrivateAddress(publicAddress192));
+	BOOST_REQUIRE(!isLocalHostAddress(publicAddress192));
+	
+	string publicAddress172 = "172.32.0.0";
+	BOOST_REQUIRE(isPublicAddress(publicAddress172));
+	BOOST_REQUIRE(!isPrivateAddress(publicAddress172));
+	BOOST_REQUIRE(!isLocalHostAddress(publicAddress172));
+	
+	string privateAddress192 = "192.168.1.0";
+	BOOST_REQUIRE(isPrivateAddress(privateAddress192));
+	BOOST_REQUIRE(!isPublicAddress(privateAddress192));
+	BOOST_REQUIRE(!isLocalHostAddress(privateAddress192));
+	
+	string privateAddress172 = "172.16.0.0";
+	BOOST_REQUIRE(isPrivateAddress(privateAddress172));
+	BOOST_REQUIRE(!isPublicAddress(privateAddress172));
+	BOOST_REQUIRE(!isLocalHostAddress(privateAddress172));
+	
+	string privateAddress10 = "10.0.0.0";
+	BOOST_REQUIRE(isPrivateAddress(privateAddress10));
+	BOOST_REQUIRE(!isPublicAddress(privateAddress10));
+	BOOST_REQUIRE(!isLocalHostAddress(privateAddress10));
+}
+
+BOOST_AUTO_TEST_CASE(v2PingNodePacket)
+{
+	// test old versino of pingNode packet w/new
+	RLPStream s;
+	s.appendList(3); s << "1.1.1.1" << 30303 << std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now() + chrono::seconds(60)).time_since_epoch()).count();
+
+	PingNode p((bi::udp::endpoint()));
+	BOOST_REQUIRE_NO_THROW(p = PingNode::fromBytesConstRef(bi::udp::endpoint(), bytesConstRef(&s.out())));
+	BOOST_REQUIRE(p.version == 2);
+}
 
 BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 {

@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(Complex)
 	CanonBlockChain bc;
 	cout << bc;
 
-	State s(myMiner.address(), stateDB);
+	State s(stateDB, BaseState::Empty, myMiner.address());
 	cout << s;
 
 	// Sync up - this won't do much until we use the last state.
@@ -79,13 +79,9 @@ BOOST_AUTO_TEST_CASE(Complex)
 	cout << s;
 
 	// Inject a transaction to transfer funds from miner to me.
-	bytes tx;
-	{
-		Transaction t(1000, 10000, 10000, me.address(), bytes(), s.transactionsFrom(myMiner.address()), myMiner.secret());
-		assert(t.sender() == myMiner.address());
-		tx = t.rlp();
-	}
-	s.execute(bc, tx);
+	Transaction t(1000, 10000, 10000, me.address(), bytes(), s.transactionsFrom(myMiner.address()), myMiner.secret());
+	assert(t.sender() == myMiner.address());
+	s.execute(bc.lastHashes(), t);
 
 	cout << s;
 

@@ -32,8 +32,11 @@ BOOST_AUTO_TEST_SUITE(p2p)
 
 BOOST_AUTO_TEST_CASE(host)
 {
-	NetworkPreferences host1prefs(30301, "127.0.0.1", true, true);
-	NetworkPreferences host2prefs(30302, "127.0.0.1", true, true);
+	auto oldLogVerbosity = g_logVerbosity;
+	g_logVerbosity = 10;
+	
+	NetworkPreferences host1prefs("127.0.0.1", 30301, false);
+	NetworkPreferences host2prefs("127.0.0.1", 30302, false);
 	
 	Host host1("Test", host1prefs);
 	host1.start();
@@ -42,12 +45,25 @@ BOOST_AUTO_TEST_CASE(host)
 	auto node2 = host2.id();
 	host2.start();
 	
-	host1.addNode(node2, "127.0.0.1", host2prefs.listenPort, host2prefs.listenPort);
+	host1.addNode(node2, bi::address::from_string("127.0.0.1"), host2prefs.listenPort, host2prefs.listenPort);
 	
-	this_thread::sleep_for(chrono::seconds(1));
+	this_thread::sleep_for(chrono::seconds(3));
 	
-	BOOST_REQUIRE_EQUAL(host1.peerCount(), 1);
-	BOOST_REQUIRE_EQUAL(host2.peerCount(), host1.peerCount());
+	auto host1peerCount = host1.peerCount();
+	auto host2peerCount = host2.peerCount();
+	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
+	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
+	
+	g_logVerbosity = oldLogVerbosity;
+}
+
+BOOST_AUTO_TEST_CASE(networkConfig)
+{
+	Host save("Test", NetworkPreferences(false));
+	bytes store(save.saveNetwork());
+	
+	Host restore("Test", NetworkPreferences(false), bytesConstRef(&store));
+	BOOST_REQUIRE(save.id() == restore.id());
 }
 
 BOOST_AUTO_TEST_CASE(save_nodes)
@@ -55,7 +71,8 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	std::list<Host*> hosts;
 	for (auto i:{0,1,2,3,4,5})
 	{
-		Host* h = new Host("Test", NetworkPreferences(30300 + i, "127.0.0.1", true, true));
+		Host* h = new Host("Test", NetworkPreferences("127.0.0.1", 30300 + i, false));
+		h->setIdealPeerCount(10);
 		// starting host is required so listenport is available
 		h->start();
 		while (!h->isStarted())
@@ -65,13 +82,13 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	
 	Host& host = *hosts.front();
 	for (auto const& h: hosts)
-		host.addNode(h->id(), "127.0.0.1", h->listenPort(), h->listenPort());
+		host.addNode(h->id(), bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort());
 	
 	Host& host2 = *hosts.back();
 	for (auto const& h: hosts)
-		host2.addNode(h->id(), "127.0.0.1", h->listenPort(), h->listenPort());
+		host2.addNode(h->id(), bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort());
 
-	this_thread::sleep_for(chrono::milliseconds(1000));
+	this_thread::sleep_for(chrono::milliseconds(2000));
 	bytes firstHostNetwork(host.saveNetwork());
 	bytes secondHostNetwork(host.saveNetwork());
 	
@@ -82,7 +99,7 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	
 	RLP r(firstHostNetwork);
 	BOOST_REQUIRE(r.itemCount() == 3);
-	BOOST_REQUIRE(r[0].toInt<int>() == 1);
+	BOOST_REQUIRE(r[0].toInt<unsigned>() == dev::p2p::c_protocolVersion);
 	BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
 	BOOST_REQUIRE_EQUAL(r[2].itemCount(), 5);
 }
@@ -114,7 +131,7 @@ int peerTest(int argc, char** argv)
 	Host ph("Test", NetworkPreferences(listenPort));
 
 	if (!remoteHost.empty() && !remoteAlias)
-		ph.addNode(remoteAlias, remoteHost, remotePort, remotePort);
+		ph.addNode(remoteAlias, bi::address::from_string(remoteHost), remotePort, remotePort);
 
 	this_thread::sleep_for(chrono::milliseconds(200));
 

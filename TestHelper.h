@@ -28,6 +28,7 @@
 #include "JsonSpiritHeaders.h"
 #include <libethereum/State.h>
 #include <libevm/ExtVMFace.h>
+#include <libtestutils/Common.h>
 
 namespace dev
 {
@@ -46,45 +47,61 @@ namespace test
 
 /// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
 /// Our version of BOOST_REQUIRE_NO_THROW()
-/// @param _expression    The expression for which to make sure no exceptions are thrown
+/// @param _statenent    The statement for which to make sure no exceptions are thrown
 /// @param _message       A message to act as a prefix to the expression's error information
-#define ETH_TEST_REQUIRE_NO_THROW(_expression, _message)				\
+#define ETH_TEST_REQUIRE_NO_THROW(_statement, _message)				\
 	do																	\
 	{																	\
 		try															\
 		{																\
-			_expression;												\
+			BOOST_TEST_PASSPOINT();										\
+			_statement;												\
 		}																\
 		catch (boost::exception const& _e)								\
 		{																\
-			auto msg = std::string(_message"\n") + boost::diagnostic_information(_e); \
-			BOOST_FAIL(msg);											\
+			auto msg = std::string(_message " due to an exception thrown by " \
+				BOOST_STRINGIZE(_statement) "\n") + boost::diagnostic_information(_e); \
+			BOOST_CHECK_IMPL(false, msg, REQUIRE, CHECK_MSG);			\
 		}																\
-	} while (0)
+		catch (...)														\
+		{																\
+			BOOST_CHECK_IMPL(false, "Unknown exception thrown by "		\
+				BOOST_STRINGIZE(_statement), REQUIRE, CHECK_MSG);		\
+		}																\
+	}																	\
+	while (0)
 
 /// Check if an Exception is thrown during testing. If one is thrown show its info and continue the test
 /// Our version of BOOST_CHECK_NO_THROW()
-/// @param _expression    The expression for which to make sure no exceptions are thrown
+/// @param _statement    The statement for which to make sure no exceptions are thrown
 /// @param _message       A message to act as a prefix to the expression's error information
-#define ETH_TEST_CHECK_NO_THROW(_expression, _message)					\
+#define ETH_TEST_CHECK_NO_THROW(_statement, _message)					\
 	do																	\
 	{																	\
 		try															\
 		{																\
-			_expression;												\
+			BOOST_TEST_PASSPOINT();										\
+			_statement;												\
 		}																\
 		catch (boost::exception const& _e)								\
 		{																\
-			auto msg = std::string(_message"\n") + boost::diagnostic_information(_e); \
-			BOOST_MESSAGE(msg);										\
+			auto msg = std::string(_message " due to an exception thrown by " \
+				BOOST_STRINGIZE(_statement) "\n") + boost::diagnostic_information(_e); \
+			BOOST_CHECK_IMPL(false, msg, CHECK, CHECK_MSG);				\
 		}																\
-	} while (0)
+		catch (...)														\
+		{																\
+			BOOST_CHECK_IMPL(false, "Unknown exception thrown by "		\
+				BOOST_STRINGIZE(_statement), CHECK, CHECK_MSG );		\
+		}																\
+	}																	\
+	while (0)
 
 
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o) : m_statePre(Address(), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o) {}
+	ImportTest(json_spirit::mObject& _o): m_TestObject(_o) {}
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
 	// imports
 	void importEnv(json_spirit::mObject& _o);
@@ -101,6 +118,13 @@ private:
 	json_spirit::mObject& m_TestObject;
 };
 
+class ZeroGasPricer: public eth::GasPricer
+{
+protected:
+	u256 ask(eth::State const&) const override { return 0; }
+	u256 bid(eth::TransactionPriority = eth::TransactionPriority::Medium) const override { return 0; }
+};
+
 // helping functions
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
@@ -115,11 +139,10 @@ void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
 
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
-std::string getTestPath();
 void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
-void processCommandLineOptions();
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
+json_spirit::mObject fillJsonWithState(eth::State _state);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
@@ -133,6 +156,62 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 	}
 	BOOST_CHECK(_expectedAddrs == _resultAddrs);
 }
+
+class Options
+{
+public:
+	bool jit = false;		///< Use JIT
+	bool vmtrace = false;	///< Create EVM execution tracer // TODO: Link with log verbosity?
+	bool fillTests = false; ///< Create JSON test files from execution results
+	bool stats = false;		///< Execution time stats
+	std::string statsOutFile; ///< Stats output file. "out" for standard output
+
+	/// Test selection
+	/// @{
+	bool performance = false;
+	bool quadratic = false;
+	bool memory = false;
+	bool inputLimits = false;
+	bool bigData = false;
+	/// @}
+
+	/// Get reference to options
+	/// The first time used, options are parsed
+	static Options const& get();
+
+private:
+	Options();
+	Options(Options const&) = delete;
+};
+
+/// Allows observing test execution process.
+/// This class also provides methods for registering and notifying the listener
+class Listener
+{
+public:
+	virtual ~Listener() = default;
+
+	virtual void suiteStarted(std::string const&) {}
+	virtual void testStarted(std::string const& _name) = 0;
+	virtual void testFinished() = 0;
+
+	static void registerListener(Listener& _listener);
+	static void notifySuiteStarted(std::string const& _name);
+	static void notifyTestStarted(std::string const& _name);
+	static void notifyTestFinished();
+
+	/// Test started/finished notification RAII helper
+	class ExecTimeGuard
+	{
+	public:
+		ExecTimeGuard(std::string const& _testName) { notifyTestStarted(_testName);	}
+		~ExecTimeGuard() { notifyTestFinished(); }
+		ExecTimeGuard(ExecTimeGuard const&) = delete;
+		ExecTimeGuard& operator=(ExecTimeGuard) = delete;
+	};
+};
+
+
 
 }
 }

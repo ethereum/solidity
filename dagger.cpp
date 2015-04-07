@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 
 	testPath += "/PoWTests";
 
-	cnote << "Testing Secure Trie...";
+	cnote << "Testing Proof of Work...";
 	js::mValue v;
 	string s = asString(contents(testPath + "/ethash_tests.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'ethash_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(basic_test)
 
 		unsigned cacheSize(o["cache_size"].get_int());
 		h256 cacheHash(o["cache_hash"].get_str());
-		BOOST_REQUIRE_EQUAL(Ethasher::get()->cache(header).size(), cacheSize);
-		BOOST_REQUIRE_EQUAL(sha3(Ethasher::get()->cache(header)), cacheHash);
+		BOOST_REQUIRE_EQUAL(Ethasher::get()->params(header).cache_size, cacheSize);
+		BOOST_REQUIRE_EQUAL(sha3(bytesConstRef((byte const*)Ethasher::get()->light(header), cacheSize)), cacheHash);
 
 #if TEST_FULL
 		unsigned fullSize(o["full_size"].get_int());

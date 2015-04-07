@@ -21,6 +21,7 @@
  */
 
 #include <libdevcore/Common.h>
+#include <libdevcore/Assertions.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Log.h>
 #include <libevm/VMFactory.h>
@@ -32,7 +33,7 @@ using namespace json_spirit;
 using namespace dev::test;
 using namespace dev;
 
-bool doVMTest(mValue& v);
+bool doVMTest(mValue& _v);
 
 int main(int argc, char *argv[])
 {
@@ -66,11 +67,11 @@ int main(int argc, char *argv[])
 	return ret;
 }
 
-bool doVMTest(mValue& v)
+bool doVMTest(mValue& _v)
 {
 	eth::VMFactory::setKind(eth::VMKind::JIT);
 
-	for (auto& i: v.get_obj())
+	for (auto& i: _v.get_obj())
 	{
 		cnote << i.first;
 		mObject& o = i.second.get_obj();

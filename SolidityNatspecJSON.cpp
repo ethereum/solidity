@@ -20,6 +20,8 @@
  * Unit tests for the solidity compiler JSON Interface output.
  */
 
+#if ETH_SOLIDITY
+
 #include "TestHelper.h"
 #include <json/json.h>
 #include <libsolidity/CompilerStack.h>
@@ -176,7 +178,6 @@ BOOST_AUTO_TEST_CASE(dev_and_user_no_doc)
 	"}\n";
 
 	char const* devNatspec = "{\"methods\":{}}";
-
 	char const* userNatspec = "{\"methods\":{}}";
 
 	checkNatspec(sourceCode, devNatspec, false);
@@ -228,6 +229,18 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	"}}";
 
 	checkNatspec(sourceCode, natspec, false);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter\n"
+	"  /// @param not_existing Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	BOOST_CHECK_THROW(checkNatspec(sourceCode, "", false), DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
@@ -487,17 +500,7 @@ BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
 	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
 	"}\n";
 
-	char const* natspec = "{"
-	"    \"author\": \"Lefteris\","
-	"    \"title\": \"Just a test contract\","
-	"    \"methods\":{"
-	"        \"mul(uint256,uint256)\":{ \n"
-	"            \"details\": \"Mul function\"\n"
-	"        }\n"
-	"    }\n"
-	"}";
-
-	BOOST_CHECK_THROW(checkNatspec(sourceCode, natspec, false), DocstringParsingError);
+	BOOST_CHECK_THROW(checkNatspec(sourceCode, "", false), DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
@@ -536,3 +539,5 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 }
+
+#endif

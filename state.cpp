@@ -41,11 +41,9 @@ namespace dev {  namespace test {
 
 void doStateTests(json_spirit::mValue& v, bool _fillin)
 {
-	processCommandLineOptions();
-
 	for (auto& i: v.get_obj())
 	{
-		cerr << i.first << endl;
+		std::cout << "  " << i.first << "\n";
 		mObject& o = i.second.get_obj();
 
 		BOOST_REQUIRE(o.count("env") > 0);
@@ -55,21 +53,21 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		ImportTest importer(o, _fillin);
 
 		State theState = importer.m_statePre;
-		bytes tx = importer.m_transaction.rlp();
 		bytes output;
 
 		try
 		{
-			theState.execute(lastHashes(importer.m_environment.currentBlock.number), tx, &output);
+			Listener::ExecTimeGuard guard{i.first};
+			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number), importer.m_transaction).output;
 		}
 		catch (Exception const& _e)
 		{
-			cnote << "state execution did throw an exception: " << diagnostic_information(_e);
+			cnote << "Exception:\n" << diagnostic_information(_e);
 			theState.commit();
 		}
 		catch (std::exception const& _e)
 		{
-			cnote << "state execution did throw an exception: " << _e.what();
+			cnote << "state execution exception: " << _e.what();
 		}
 
 		if (_fillin)
@@ -130,6 +128,11 @@ BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
 	dev::test::executeTests("stSystemOperationsTest", "/StateTests", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest)
+{
+	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 {
 	dev::test::executeTests("stPreCompiledContracts", "/StateTests", dev::test::doStateTests);
@@ -172,48 +175,24 @@ BOOST_AUTO_TEST_CASE(stBlockHashTest)
 
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
 {
-	   for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	   {
-			   string arg = boost::unit_test::framework::master_test_suite().argv[i];
-			   if (arg == "--quadratic" || arg == "--all")
-			   {
-					   auto start = chrono::steady_clock::now();
-
-					   dev::test::executeTests("stQuadraticComplexityTest", "/StateTests", dev::test::doStateTests);
-
-					   auto end = chrono::steady_clock::now();
-					   auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-					   cnote << "test duration: " << duration.count() << " milliseconds.\n";
-			   }
-	   }
+	if (test::Options::get().quadratic)
+		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stMemoryStressTest)
 {
-	   for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	   {
-			   string arg = boost::unit_test::framework::master_test_suite().argv[i];
-			   if (arg == "--memory" || arg == "--all")
-			   {
-					   auto start = chrono::steady_clock::now();
-
-					   dev::test::executeTests("stMemoryStressTest", "/StateTests", dev::test::doStateTests);
-
-					   auto end = chrono::steady_clock::now();
-					   auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-					   cnote << "test duration: " << duration.count() << " milliseconds.\n";
-			   }
-	   }
+	if (test::Options::get().memory)
+		dev::test::executeTests("stMemoryStressTest", "/StateTests", dev::test::doStateTests);
 }
 
- BOOST_AUTO_TEST_CASE(stSolidityTest)
- {
-		dev::test::executeTests("stSolidityTest", "/StateTests", dev::test::doStateTests);
- }
+BOOST_AUTO_TEST_CASE(stSolidityTest)
+{
+	dev::test::executeTests("stSolidityTest", "/StateTests", dev::test::doStateTests);
+}
 
 BOOST_AUTO_TEST_CASE(stMemoryTest)
 {
-	   dev::test::executeTests("stMemoryTest", "/StateTests", dev::test::doStateTests);
+	dev::test::executeTests("stMemoryTest", "/StateTests", dev::test::doStateTests);
 }
 
 
@@ -247,6 +226,40 @@ BOOST_AUTO_TEST_CASE(stCreateTest)
 			{
 				BOOST_ERROR("Failed state test with Exception: " << _e.what());
 			}
+		}
+	}
+}
+
+BOOST_AUTO_TEST_CASE(stRandom)
+{
+	string testPath = dev::test::getTestPath();
+	testPath += "/StateTests/RandomTests";
+
+	vector<boost::filesystem::path> testFiles;
+	boost::filesystem::directory_iterator iterator(testPath);
+	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+			testFiles.push_back(iterator->path());
+
+	for (auto& path: testFiles)
+	{
+		try
+		{
+			cnote << "Testing ..." << path.filename();
+			json_spirit::mValue v;
+			string s = asString(dev::contents(path.string()));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+			json_spirit::read_string(s, v);
+			test::Listener::notifySuiteStarted(path.filename().string());
+			dev::test::doStateTests(v, false);
+		}
+		catch (Exception const& _e)
+		{
+			BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+		}
+		catch (std::exception const& _e)
+		{
+			BOOST_ERROR("Failed test with Exception: " << _e.what());
 		}
 	}
 }
