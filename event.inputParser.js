@@ -2,7 +2,7 @@ var assert = require('assert');
 var event = require('../lib/web3/event.js');
 var f = require('../lib/solidity/formatters.js');
 
-describe('event', function () {
+describe('lib/web3/event', function () {
     describe('inputParser', function () {
         it('should create basic filter input object', function () {
             
@@ -33,8 +33,6 @@ describe('event', function () {
             var options = {
                 fromBlock: 1,
                 toBlock: 2,
-                offset: 3,
-                limit: 4
             };
             var e = {
                 name: 'Event',
@@ -51,8 +49,6 @@ describe('event', function () {
             assert.equal(result.topics[0], signature);
             assert.equal(result.fromBlock, options.fromBlock);
             assert.equal(result.toBlock, options.toBlock);
-            assert.equal(result.offset, options.offset);
-            assert.equal(result.limit, options.limit);
         
         });
 
@@ -63,9 +59,7 @@ describe('event', function () {
             var signature = '0x987654';
             var options = {
                 fromBlock: 1,
-                toBlock: 2,
-                offset: 3,
-                limit: 4
+                toBlock: 2
             };
             var e = {
                 name: 'Event',
@@ -80,11 +74,9 @@ describe('event', function () {
             assert.equal(result.address, address);
             assert.equal(result.topics.length, 2);
             assert.equal(result.topics[0], signature);
-            assert.equal(result.topics[1], f.formatInputInt(4));
+            assert.equal(result.topics[1], '0x' + f.formatInputInt(4));
             assert.equal(result.fromBlock, options.fromBlock);
             assert.equal(result.toBlock, options.toBlock);
-            assert.equal(result.offset, options.offset);
-            assert.equal(result.limit, options.limit);
 
         });
 
@@ -94,10 +86,8 @@ describe('event', function () {
             var address = '0x012345';
             var signature = '0x987654';
             var options = {
-                earliest: 1,
-                latest: 2,
-                offset: 3,
-                max: 4
+                fromBlock: 1,
+                toBlock: 2,
             };
             var e = {
                 name: 'Event',
@@ -114,10 +104,8 @@ describe('event', function () {
             assert.equal(result.topics[0], signature);
             assert.equal(result.topics[1][0], f.formatInputInt(4));
             assert.equal(result.topics[1][1], f.formatInputInt(69));
-            assert.equal(result.earliest, options.earliest);
-            assert.equal(result.latest, options.latest);
-            assert.equal(result.offset, options.offset);
-            assert.equal(result.max, options.max);
+            assert.equal(result.fromBlock, options.fromBlock);
+            assert.equal(result.toBlock, options.toBlock);
 
         });
     });

@@ -1,5 +1,7 @@
-var assert = require('assert');
+var chai = require('chai');
+var assert = chai.assert; 
 var jsonrpc = require('../lib/web3/jsonrpc');
+jsonrpc = new jsonrpc();
 
 describe('jsonrpc', function () {
     describe('toPayload', function () {

@@ -10,7 +10,7 @@ var tests = [
     { value: new String('hello'), is: true}
 ];
 
-describe('utils', function () {
+describe('lib/utils/utils', function () {
     describe('isString', function () {
         tests.forEach(function (test) {
             it('shoud test if value ' + test.func + ' is string: ' + test.is, function () {

@@ -1,7 +1,7 @@
 var assert = require('assert');
 var utils = require('../lib/utils/utils.js');
 
-describe('utils', function() {
+describe('lib/utils/utils', function() {
     it('should filter functions and events from input array properly', function () {
 
         // given

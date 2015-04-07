@@ -1,7 +1,7 @@
 var assert = require('assert');
 var utils = require('../lib/utils/utils.js');
 
-describe('utils', function () {
+describe('lib/utils/utils', function () {
     describe('extractTypeName', function () {
         it('should extract type name from method with no params', function () {
             

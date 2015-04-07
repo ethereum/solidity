@@ -1,7 +1,7 @@
 var assert = require('assert');
 var event = require('../lib/web3/event.js');
 
-describe('event', function () {
+describe('lib/web3/event', function () {
     describe('outputParser', function () {
         it('should parse basic event output object', function () {
             
@@ -10,7 +10,7 @@ describe('event', function () {
                 "address":"0x78dfc5983baecf65f73e3de3a96cee24e6b7981e",
                 "data":"0x000000000000000000000000000000000000000000000000000000000000004b",
                 "number":2,
-                "topic":[
+                "topics":[
                     "0x6e61ef44ac2747ff8b84d353a908eb8bd5c3fb118334d57698c5cfc7041196ad",
                     "0x0000000000000000000000000000000000000000000000000000000000000001"
                 ]
@@ -43,7 +43,7 @@ describe('event', function () {
                     "000000000000000000000000000000000000000000000000000000000000004c" +
                     "0000000000000000000000000000000000000000000000000000000000000001",
                 "number":3,
-                "topic":[
+                "topics":[
                     "0x6e61ef44ac2747ff8b84d353a908eb8bd5c3fb118334d57698c5cfc7041196ad",
                     "0x0000000000000000000000000000000000000000000000000000000000000001",
                     "0x0000000000000000000000000000000000000000000000000000000000000005"

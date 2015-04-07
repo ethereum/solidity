@@ -27,14 +27,16 @@ var tests = [
     { value: {test: 'test'}, expected: '0x7b2274657374223a2274657374227d'},
     { value: '{"test": "test"}', expected: '0x7b2274657374223a202274657374227d'},
     { value: 'myString', expected: '0x6d79537472696e67'},
-    { value: new BigNumber(15), expected: '0xf'}
+    { value: new BigNumber(15), expected: '0xf'},
+    { value: true, expected: '0x1'},
+    { value: false, expected: '0x0'}
 ];
 
-describe('utils', function () {
+describe('lib/utils/utils', function () {
     describe('toHex', function () {
         tests.forEach(function (test) {
             it('should turn ' + test.value + ' to ' + test.expected, function () {
-                assert.equal(utils.toHex(test.value), test.expected);
+                assert.strictEqual(utils.toHex(test.value), test.expected);
             });
         });
     });

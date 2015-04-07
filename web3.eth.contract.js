@@ -1,7 +1,7 @@
 var assert = require('assert');
 var contract = require('../lib/web3/contract.js');
 
-describe('contract', function() {
+describe('web3.eth.contract', function() {
     it('should create simple contract with one method from abi with explicit type name', function () {
         
         // given

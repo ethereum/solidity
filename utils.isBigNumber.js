@@ -15,7 +15,7 @@ var tests = [
 
 ];
 
-describe('utils', function () {
+describe('lib/utils/utils', function () {
     describe('isBigNumber', function () {
         tests.forEach(function (test) {
             it('shoud test if value ' + test.func + ' is BigNumber: ' + test.is, function () {

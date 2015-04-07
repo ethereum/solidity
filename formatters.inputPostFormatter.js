@@ -1,6 +1,6 @@
 var chai = require('chai');
-var formatters = require('../lib/web3/formatters.js');
 var assert = chai.assert;
+var formatters = require('../lib/web3/formatters.js');
 
 describe('formatters', function () {
     describe('inputPostFormatter', function () {
@@ -26,3 +26,4 @@ describe('formatters', function () {
         });
     });
 });
+

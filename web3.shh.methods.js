@@ -1,9 +1,10 @@
-var assert = require('assert');
+var chai = require('chai');
+var assert = chai.assert; 
 var web3 = require('../index.js');
-var u = require('./test.utils.js');
+var u = require('./helpers/test.utils.js');
 
-describe('web3', function() {
-    describe('shh', function() {
+describe('web3.shh', function() {
+    describe('methods', function() {
         u.methodExists(web3.shh, 'post');
         u.methodExists(web3.shh, 'newIdentity');
         u.methodExists(web3.shh, 'hasIdentity');

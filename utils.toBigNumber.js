@@ -34,7 +34,7 @@ var tests = [
     { value: new BigNumber(0), expected: '0'}
 ];
 
-describe('utils', function () {
+describe('lib/utils/utils', function () {
     describe('toBigNumber', function () {
         tests.forEach(function (test) {
             it('should turn ' + test.value + ' to ' + test.expected, function () {

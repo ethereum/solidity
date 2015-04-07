@@ -31,7 +31,7 @@ var tests = [
     { value: '-0x0', expected: '0x0'}
 ];
 
-describe('utils', function () {
+describe('lib/utils/utils', function () {
     describe('fromDecimal', function () {
         tests.forEach(function (test) {
             it('should turn ' + test.value + ' to ' + test.expected, function () {

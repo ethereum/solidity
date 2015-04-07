@@ -19,7 +19,7 @@ var description =  [{
     ]
 }];
 
-describe('abi', function() {
+describe('lib/solidity/abi', function() {
     describe('outputParser', function() {
         it('should parse output fixed bytes type', function() {
 

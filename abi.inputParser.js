@@ -19,7 +19,7 @@ var description =  [{
     ]
 }];
 
-describe('abi', function() {
+describe('lib/solidity/abi', function() {
     describe('inputParser', function() {
         it('should parse input uint', function() {
 
