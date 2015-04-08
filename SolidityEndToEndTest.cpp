@@ -1522,8 +1522,6 @@ BOOST_AUTO_TEST_CASE(ecrecover)
 	BOOST_CHECK(callContractFunction("a(bytes32,uint8,bytes32,bytes32)", h, v, r, s) == encodeArgs(addr));
 }
 
-#endif
-
 BOOST_AUTO_TEST_CASE(inter_contract_calls)
 {
 	char const* sourceCode = R"(
@@ -3683,3 +3681,5 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
+
+#endif
