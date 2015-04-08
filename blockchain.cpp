@@ -383,7 +383,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 					try
 					{
-						Transaction t(createRLPStreamFromTransactionFields(tx).out(), CheckSignature::Sender);
+						Transaction t(createRLPStreamFromTransactionFields(tx).out(), CheckTransaction::Everything);
 						txsFromField.push_back(t);
 					}
 					catch (Exception const& _e)
@@ -400,7 +400,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				RLP root(blockRLP);
 				for (auto const& tr: root[1])
 				{
-					Transaction tx(tr.data(), CheckSignature::Sender);
+					Transaction tx(tr.data(), CheckTransaction::Everything);
 					txsFromRlp.push_back(tx);
 				}
 

@@ -172,7 +172,7 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	{
 		RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
 		RLP transactionRLP(transactionRLPStream.out());
-		m_transaction = Transaction(transactionRLP.data(), CheckSignature::Sender);
+		m_transaction = Transaction(transactionRLP.data(), CheckTransaction::Everything);
 	}
 }
 

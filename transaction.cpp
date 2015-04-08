@@ -44,7 +44,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			{
 				bytes stream = importByteArray(o["rlp"].get_str());
 				RLP rlp(stream);
-				txFromRlp = Transaction(rlp.data(), CheckSignature::Sender);
+				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 			}
@@ -64,7 +64,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_REQUIRE(o.count("transaction") > 0);
 
 			mObject tObj = o["transaction"].get_obj();
-			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckSignature::Sender);
+			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckTransaction::Everything);
 
 			//Check the fields restored from RLP to original fields
 			BOOST_CHECK_MESSAGE(txFromFields.data() == txFromRlp.data(), "Data in given RLP not matching the Transaction data!");
@@ -91,7 +91,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 			try
 			{
-				Transaction txFromFields(rlpStream.out(), CheckSignature::Sender);
+				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
 				if (!txFromFields.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 
