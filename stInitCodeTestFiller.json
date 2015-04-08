@@ -8,6 +8,15 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+	"expect" : {
+            "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
+                "balance" : "32599"
+              },
+	    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "67401",
+                 "nonce" : "1"
+              }
+	},
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
@@ -30,7 +39,6 @@
         }
     },
 
-
     "NotEnoughCashContractCreation" : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
@@ -40,6 +48,11 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+	"expect" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "22177"
+            }
+	},
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
@@ -71,6 +84,11 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+       "expect" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "1000000"
+            }
+        },
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
@@ -100,6 +118,15 @@
             "currentNumber" : "0",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+        "expect" : {
+            "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
+                "balance" : "40000"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000",
+                "nonce" : "1"
+            }
         },
         "pre" :
         {
@@ -132,6 +159,11 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+        "expect" : {
+            "0000000000000000000000000000000000000000" : {
+                "balance" : "15"
+            }
+        },
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
@@ -162,6 +194,14 @@
             "currentNumber" : "0",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+        "expect" : {
+            "6295ee1b4f6dd65047762f924ecd367c17eabf8f" : {
+                "balance" : "1"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            }
         },
         "pre" :
         {
@@ -194,6 +234,14 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+        "expect" : {
+            "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
+                "balance" : "23000"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            }
+        },
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
@@ -224,6 +272,22 @@
             "currentNumber" : "0",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "1",
+                "nonce" : "1"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            },
+            "d2571607e241ecf590ed94b12d87c94babe36db6" : {
+                "balance" : "0",
+                "code" : "0x",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
         },
         "pre" :
         {
@@ -263,6 +327,27 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+	"expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "1",
+                "nonce" : "41",
+                "storage" : {
+                    "0x02" : "0x095e7baea6a6c7c4c2dfeb977efac326af552d87"
+                }
+            },
+            "1a4c83e1a9834cdc7e4a905ff7f0cf44aed73180" : {
+                "nonce" : "1",
+                "storage" : {
+                    "0x02" : "0x1a4c83e1a9834cdc7e4a905ff7f0cf44aed73180"
+                }
+            },
+            "8e3411c91d5dd4081b4846fa2f93808f5ad19686" : {
+                "nonce" : "1",
+                "storage" : {
+                    "0x02" : "0x8e3411c91d5dd4081b4846fa2f93808f5ad19686"
+                }
+            }
+	},
         "pre" :
         {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
@@ -300,6 +385,24 @@
             "currentNumber" : "0",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "1",
+                "nonce" : "1"
+            },
+            "62c01474f089b07dae603491675dc5b5748f7049" : {
+                "nonce" : "0"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            },
+            "d2571607e241ecf590ed94b12d87c94babe36db6" : {
+                "nonce" : "1",
+                "storage" : {
+                    "0x" : "0x0c"
+                }
+            }
         },
         "pre" :
         {
@@ -339,6 +442,27 @@
             "currentNumber" : "0",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+       "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "nonce" : "1",
+                "storage" : {
+                    "0x" : "0xd2571607e241ecf590ed94b12d87c94babe36db6"
+                }
+            },
+            "62c01474f089b07dae603491675dc5b5748f7049" : {
+                "nonce" : "0"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            },
+            "d2571607e241ecf590ed94b12d87c94babe36db6" : {
+                "balance" : "2",
+                "nonce" : "1",
+                "storage" : {
+                    "0x" : "0x0c"
+                }
+            }
         },
         "pre" :
         {
@@ -380,6 +504,24 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "nonce" : "1",
+                "storage" : {
+                    "0x" : "0xd2571607e241ecf590ed94b12d87c94babe36db6"
+                }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            },
+            "d2571607e241ecf590ed94b12d87c94babe36db6" : {
+                "balance" : "1",
+                "nonce" : "0",
+                "storage" : {
+                    "0x" : "0x0c"
+                }
+            }
+        },
         "pre" :
         {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
@@ -420,6 +562,14 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+ 	"expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "nonce" : "0"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            }
+	},
         "pre" :
         {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
@@ -461,6 +611,24 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+	"expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "nonce" : "1",
+                "storage" : {
+                    "0x" : "0xd2571607e241ecf590ed94b12d87c94babe36db6"
+                }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            },
+            "d2571607e241ecf590ed94b12d87c94babe36db6" : {
+                "balance" : "1",
+                "nonce" : "0",
+                "storage" : {
+                    "0x" : "0x0c"
+                }
+            }
+        },
         "pre" :
         {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87": {
@@ -468,7 +636,7 @@
                 "nonce": "0",
                 "//": "(CREATE 0 64 32)",
                 "//": "{[[0]] 12 (MSTORE 32 0x602060406000f0)(RETURN 57 7)}",
-                "code": "{(MSTORE 0 0x600c60005566602060406000f060205260076039f3)[[0]](CREATE 1 11 21)(CALL 100000 (SLOAD 0) 1 0 0 0 0)}",
+                "code": "{(MSTORE 0 0x600c60005566602060406000f060205260076039f3)[[0]](CREATE 1 11 21)(CALL 1000 (SLOAD 0) 0 0 0 0 0)}",
                 "storage": {}
             },
 
@@ -483,7 +651,7 @@
         "transaction" :
         {
             "data" : "0x00",
-            "gasLimit" : "1000000",
+            "gasLimit" : "203000",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -500,6 +668,14 @@
             "currentNumber" : "0",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+       "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "nonce" : "0"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "1"
+            }
         },
         "pre" :
         {
@@ -541,11 +717,25 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+	"expect" : {
+            "194f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "storage" : {
+                    "0x" : "0x15"
+                }
+            }
+	},
         "pre" :
         {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "100000",
-                "code" : "{(CALL 2000 0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 30 1 31 1) (RETURN 30 2)}",
+ 	    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "1000000",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+            "194f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0",
+                "code" : "{(CALL 2000 0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 30 1 31 1) [[0]](MLOAD 0) (RETURN 30 2)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -562,12 +752,12 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "41000",
+            "gasLimit" : "300000",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
-            "value" : "1"
+            "to" : "194f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "0"
         }
     },
 
@@ -580,11 +770,26 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+        "expect" : {
+            "194f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "storage" : {
+                    "0x" : "0x15",
+                    "0x01" : "0x3f"
+                }
+            }
+	},
         "pre" :
         {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+	    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000000",
-                "code" : "{(MSTORE 0 0x15)(CALL 7000 0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 0 32 32 32) (RETURN 0 64)}",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+            "194f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0",
+                "code" : "{(MSTORE 0 0x15)(CALL 7000 0xb94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 0 32 32 32) [[0]](MLOAD 0) [[1]](MLOAD 32) (RETURN 0 64)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -605,8 +810,8 @@
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
-            "value" : "1"
+            "to" : "194f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "0"
         }
     }
 }
