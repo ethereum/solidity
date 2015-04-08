@@ -1054,7 +1054,7 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	else
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		m_context << u256(50 + (_functionType.valueSet() ? 9000 : 0)) << eth::Instruction::GAS << eth::Instruction::SUB;
+		m_context << u256(50 + (_functionType.valueSet() ? 9000 : 0) + 25000) << eth::Instruction::GAS << eth::Instruction::SUB;
 	m_context << eth::Instruction::CALL;
 	auto tag = m_context.appendConditionalJump();
 	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.
