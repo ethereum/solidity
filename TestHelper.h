@@ -121,6 +121,7 @@ public:
 	static void importState(json_spirit::mObject& _o, eth::State& _state);
 	static void importState(json_spirit::mObject& _o, eth::State& _state, stateOptionsMap& _stateOptionsMap);
 	void importTransaction(json_spirit::mObject& _o);
+	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
 	void exportTest(bytes const& _output, eth::State const& _statePost);
 	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, stateOptionsMap const _expectedStateOptions = stateOptionsMap(), WhenError _throw = WhenError::Throw);

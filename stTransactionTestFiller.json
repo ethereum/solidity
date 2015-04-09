@@ -5,7 +5,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -42,7 +42,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -85,7 +85,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -128,7 +128,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -167,7 +167,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -207,7 +207,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -280,7 +280,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1100",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -316,7 +316,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "22000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -370,7 +370,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "47766",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -424,7 +424,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "220000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -479,7 +479,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "21100",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -515,7 +515,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "21100",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -552,7 +552,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -609,7 +609,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -678,7 +678,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -761,7 +761,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -834,7 +834,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -925,7 +925,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1003,7 +1003,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1056,7 +1056,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1110,7 +1110,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1170,7 +1170,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1226,7 +1226,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1284,7 +1284,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1333,7 +1333,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"post" : {
@@ -1381,7 +1381,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1417,7 +1417,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1453,7 +1453,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1490,7 +1490,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1533,7 +1533,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1570,7 +1570,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1613,7 +1613,7 @@
             "currentGasLimit" : "(2**256)-1",
             "currentGasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1655,7 +1655,7 @@
             "currentGasLimit" : "(2**256)-1",
             "currentGasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1695,7 +1695,7 @@
             "currentGasLimit" : "(2**256)-1",
             "currentGasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1733,7 +1733,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1769,7 +1769,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1806,7 +1806,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1846,7 +1846,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
@@ -1894,7 +1894,7 @@
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
             "currentNumber" : "0",
-            "currentTimestamp" : 1,
+            "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {

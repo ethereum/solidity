@@ -40,6 +40,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);
 			mObject tObj = o["transaction"].get_obj();
+			o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
 
 			//Construct Rlp of the given transaction
 			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);

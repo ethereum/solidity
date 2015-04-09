@@ -102,7 +102,6 @@ struct ValueTooLarge: virtual Exception {};
 struct MissingFields : virtual Exception {};
 
 bigint const c_max256plus1 = bigint(1) << 256;
-
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 	m_statePre(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
 	m_statePost(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
@@ -117,6 +116,27 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 		importState(_o["post"].get_obj(), m_statePost);
 		m_environment.sub.logs = importLog(_o["logs"].get_array());
 	}
+}
+
+json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
+{
+	for (json_spirit::mObject::iterator it = _o.begin(); it != _o.end(); it++)
+	{
+		string key = (*it).first;
+		if (key == "to")
+			continue;
+
+		string str = (*it).second.get_str();
+		_o[key] = (str.substr(0, 2) == "0x" ||
+						   str.find("a") != string::npos ||
+						   str.find("b") != string::npos ||
+						   str.find("c") != string::npos ||
+						   str.find("d") != string::npos ||
+						   str.find("e") != string::npos ||
+						   str.find("f") != string::npos
+						   ) ? str : "0x" + toHex(toCompactBigEndian(toInt(str)));
+	}
+	return _o;
 }
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
@@ -325,6 +345,8 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 
 	// export pre state
 	m_TestObject["pre"] = fillJsonWithState(m_statePre);
+	m_TestObject["env"] = makeAllFieldsHex(m_TestObject["env"].get_obj());
+	m_TestObject["transaction"] = makeAllFieldsHex(m_TestObject["transaction"].get_obj());
 }
 
 json_spirit::mObject fillJsonWithState(State _state)
@@ -335,8 +357,8 @@ json_spirit::mObject fillJsonWithState(State _state)
 	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = toString(_state.balance(a.first));
-		o["nonce"] = toString(_state.transactionsFrom(a.first));
+		o["balance"] = "0x" + toHex(toCompactBigEndian(_state.balance(a.first)));
+		o["nonce"] = "0x" + toHex(toCompactBigEndian(_state.transactionsFrom(a.first)));
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
