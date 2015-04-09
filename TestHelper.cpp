@@ -102,6 +102,7 @@ struct ValueTooLarge: virtual Exception {};
 struct MissingFields : virtual Exception {};
 
 bigint const c_max256plus1 = bigint(1) << 256;
+
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 	m_statePre(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
 	m_statePost(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
