@@ -131,7 +131,11 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 		if (std::find(std::begin(hashes), std::end(hashes), key) != std::end(hashes))
 			continue;
 
+<<<<<<< HEAD
 		std::string str;
+=======
+		string str;
+>>>>>>> All Fields Hex: VMTests
 		json_spirit::mValue value = (*it).second;
 
 		if (value.type() == json_spirit::int_type)
@@ -140,7 +144,18 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = value.get_str();
 		else continue;
 
+<<<<<<< HEAD
 		_o[key] = (str.substr(0, 2) == "0x") ? str : "0x" + toHex(toCompactBigEndian(toInt(str)));
+=======
+		_o[key] = (str.substr(0, 2) == "0x" ||
+					str.find("a") != string::npos ||
+					str.find("b") != string::npos ||
+					str.find("c") != string::npos ||
+					str.find("d") != string::npos ||
+					str.find("e") != string::npos ||
+					str.find("f") != string::npos
+					) ? str : "0x" + toHex(toCompactBigEndian(toInt(str)));
+>>>>>>> All Fields Hex: VMTests
 	}
 	return _o;
 }
