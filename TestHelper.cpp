@@ -126,15 +126,23 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 		if (key == "to")
 			continue;
 
-		string str = (*it).second.get_str();
+		string str;
+		json_spirit::mValue value = (*it).second;
+
+		if (value.type() == json_spirit::int_type)
+			str = toString(value.get_int());
+		else if (value.type() == json_spirit::str_type)
+			str = value.get_str();
+		else continue;
+
 		_o[key] = (str.substr(0, 2) == "0x" ||
-						   str.find("a") != string::npos ||
-						   str.find("b") != string::npos ||
-						   str.find("c") != string::npos ||
-						   str.find("d") != string::npos ||
-						   str.find("e") != string::npos ||
-						   str.find("f") != string::npos
-						   ) ? str : "0x" + toHex(toCompactBigEndian(toInt(str)));
+					str.find("a") != string::npos ||
+					str.find("b") != string::npos ||
+					str.find("c") != string::npos ||
+					str.find("d") != string::npos ||
+					str.find("e") != string::npos ||
+					str.find("f") != string::npos
+					) ? str : "0x" + toHex(toCompactBigEndian(toInt(str)));
 	}
 	return _o;
 }
