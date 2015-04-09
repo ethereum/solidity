@@ -288,12 +288,24 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					blObj.erase(blObj.find("blockHeader"));
 					blObj.erase(blObj.find("uncleHeaders"));
 					blObj.erase(blObj.find("transactions"));
+					state = State(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+					importer.importState(o["pre"].get_obj(), state);
 				}
 				blArray.push_back(blObj);
 			}
+
+			if (o.count("expect") > 0)
+			{
+				stateOptionsMap expectStateMap;
+				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+				importer.importState(o["expect"].get_obj(), stateExpect, expectStateMap);
+				ImportTest::checkExpectedState(stateExpect, state, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+				o.erase(o.find("expect"));
+			}
+
 			o["blocks"] = blArray;
 			o["postState"] = fillJsonWithState(state);
-		}
+		}//_fillin
 
 		else
 		{
@@ -666,6 +678,11 @@ RLPStream createFullBlockFromHeader(BlockInfo const& _bi, bytes const& _txs, byt
 } }// Namespace Close
 
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
+
+BOOST_AUTO_TEST_CASE(bcForkBlockTest)
+{
+	dev::test::executeTests("bcForkBlockTest", "/BlockTests", dev::test::doBlockchainTests);
+}
 
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {

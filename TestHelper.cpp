@@ -671,7 +671,6 @@ Options::Options()
 			memory = true;
 			inputLimits = true;
 			bigData = true;
-			checkState = true;
 		}
 	}
 }

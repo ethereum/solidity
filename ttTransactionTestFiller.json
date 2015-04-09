@@ -347,7 +347,7 @@
         }
     },
 
-    "TransactionWithSvalueWrongSize" : {
+   "TransactionWithSvalueWrongSize" : {
         "transaction" :
         {
             "data" : "",
@@ -407,7 +407,7 @@
         }
     },
 
-    "TransactionWithHihghGasPrice" : {
+   "TransactionWithHihghGasPrice" : {
         "transaction" :
         {
             "data" : "",
@@ -422,7 +422,7 @@
         }
     },
 
-    "TransactionWithGasLimitxPriceOverflow" : {
+   "TransactionWithGasLimitxPriceOverflow" : {
         "transaction" :
         {
             "data" : "",
@@ -611,6 +611,21 @@
             "s" : "0xe221cbd70ec28c94a3b55ec771bcbc70778d6ee0b51ca7ea9514594c861b1884",
             "v": "28",
             "value": "0"
+        }
+    },
+
+    "RSsecp256k1" : {
+        "transaction" :
+        {
+            "data" : "0x5544",
+            "gasLimit" : "2000",
+            "gasPrice" : "1",
+            "nonce" : "3",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "10",
+            "v" : "28",
+            "r" : "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+            "s" : "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
         }
     }
 }
