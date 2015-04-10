@@ -118,19 +118,19 @@ var formattedBlockResultWithTx = {
 
 var tests = [{
     args: ['0x47d33b27bb249a2dbab4c0612bf9caf4c1950855', 2],
-    formattedArgs: ['0x47d33b27bb249a2dbab4c0612bf9caf4c1950855', '0x2', false],
+    formattedArgs: ['0x47d33b27bb249a2dbab4c0612bf9caf4c1950855', '0x2'],
     result: blockResult,
     formattedResult: formattedBlockResult,
     call: 'eth_getUncleByBlockHashAndIndex'
 },{
     args: [436, 1],
-    formattedArgs: ['0x1b4', '0x1', false],
+    formattedArgs: ['0x1b4', '0x1'],
     result: blockResult,
     formattedResult: formattedBlockResult,
     call: 'eth_getUncleByBlockNumberAndIndex'
 },{
     args: [436, 1, true],
-    formattedArgs: ['0x1b4', '0x1', true],
+    formattedArgs: ['0x1b4', '0x1'],
     result: blockResultWithTx,
     formattedResult: formattedBlockResultWithTx,
     call: 'eth_getUncleByBlockNumberAndIndex'

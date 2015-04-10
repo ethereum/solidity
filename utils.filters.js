@@ -1,5 +1,5 @@
 var assert = require('assert');
-var utils = require('../lib/utils/utils.js');
+var utils = require('../lib/solidity/utils');
 
 describe('lib/utils/utils', function() {
     it('should filter functions and events from input array properly', function () {

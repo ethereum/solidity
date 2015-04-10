@@ -1,6 +1,7 @@
-var assert = require('assert');
+var chai = require('chai');
+var assert = chai.assert; 
 var BigNumber = require('bignumber.js');
-var abi = require('../lib/solidity/abi.js');
+var abi = require('../lib/solidity/abi');
 var clone = function (object) { return JSON.parse(JSON.stringify(object)); };
 
 var description =  [{
@@ -19,9 +20,9 @@ var description =  [{
     ]
 }];
 
-describe('lib/solidity/abi', function() {
-    describe('inputParser', function() {
-        it('should parse input uint', function() {
+describe('lib/solidity/abi', function () {
+    describe('inputParser', function () {
+        it('should parse input uint', function () {
 
             // given
             var d = clone(description);
