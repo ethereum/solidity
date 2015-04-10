@@ -1,5 +1,6 @@
 {
     "RightVRSTest" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "0x5544",
@@ -15,6 +16,7 @@
     },
 
     "V_overflow32bit" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x5544",
@@ -30,6 +32,7 @@
     },
 
     "V_overflow32bitSigned" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x5544",
@@ -45,6 +48,7 @@
     },
 
     "V_overflow64bit" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x5544",
@@ -60,6 +64,7 @@
     },
 
     "V_overflow64bitSigned" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x5544",
@@ -75,6 +80,7 @@
     },
 
     "WrongVRSTestVEqual26" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -90,6 +96,7 @@
     },
 
     "WrongVRSTestVEqual29" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -105,6 +112,7 @@
     },
 
     "WrongVRSTestVEqual31" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -120,6 +128,7 @@
     },
 
     "WrongVRSTestVOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -135,6 +144,7 @@
     },
 
     "WrongVRSTestIncorrectSize" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -151,6 +161,7 @@
 
     "SenderTest" : {
         "//" : "sender a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -167,6 +178,7 @@
     },
 
     "DataTest" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "0x0358ac39584bc98a7c979f984b03",
@@ -183,6 +195,7 @@
     },
 
     "TransactionWithTooManyRLPElements" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -199,6 +212,7 @@
     },
 
     "TransactionWithTooFewRLPElements" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -212,6 +226,7 @@
     },
 
     "TransactionWithHihghValue" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -228,6 +243,7 @@
 
 
     "TransactionWithHihghValueOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -243,6 +259,7 @@
     },
 
     "TransactionWithSvalueHigh" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -258,6 +275,7 @@
     },
 
     "TransactionWithSvalueTooHigh" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -273,6 +291,7 @@
     },
 
     "TransactionWithSvalueOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -288,6 +307,7 @@
     },
 
     "TransactionWithRvalueOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -303,6 +323,7 @@
     },
 
     "TransactionWithRvalueHigh" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -318,6 +339,7 @@
     },
 
     "TransactionWithRvalueTooHigh" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -333,6 +355,7 @@
     },
 
     "TransactionWithRvalueWrongSize" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -348,6 +371,7 @@
     },
 
    "TransactionWithSvalueWrongSize" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -363,6 +387,7 @@
     },
 
     "TransactionWithHihghNonce" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -378,6 +403,7 @@
     },
 
     "TransactionWithNonceOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -393,6 +419,7 @@
     },
 
     "TransactionWithHihghGas" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -408,6 +435,7 @@
     },
 
    "TransactionWithHihghGasPrice" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -423,6 +451,7 @@
     },
 
    "TransactionWithGasLimitxPriceOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -438,6 +467,7 @@
     },
 
     "TransactionWithGasPriceOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -453,6 +483,7 @@
     },
 
     "TransactionWithGasLimitOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -468,6 +499,7 @@
     },
 
     "AddressMoreThan20PrefixedBy0" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x12",
@@ -483,14 +515,15 @@
     },
 
     "EmptyTransaction" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "",
-            "gasPrice" : "",
-            "nonce" : "",
+            "gasLimit" : "0",
+            "gasPrice" : "0",
+            "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-            "value" : "",
+            "value" : "0",
             "v" : "27",
             "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
             "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
@@ -498,6 +531,7 @@
     },
 
     "AddressMoreThan20" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -513,6 +547,7 @@
     },
 
     "AddressLessThan20" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -528,6 +563,7 @@
     },
 
     "AddressLessThan20Prefixed0" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -542,37 +578,8 @@
         }
     },
 
-    "ValuesAsHex" : {
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "0xadc053",
-            "gasPrice" : "1",
-            "nonce" : "0xffdc5",
-            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
-            "value" : "4294820140",
-            "v" : "28",
-            "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
-            "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
-        }
-    },
-
-    "ValuesAsDec" : {
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "11386963",
-            "gasPrice" : "1",
-            "nonce" : "1048005",
-            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
-            "value" : "4501151495864620",
-            "v" : "28",
-            "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
-            "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
-        }
-    },
-
     "unpadedRValue": {
+	"expect" : "valid",
         "transaction": {
             "nonce": "13",
             "gasPrice": "0x09184e72a000",
@@ -587,6 +594,7 @@
     },
 
     "libsecp256k1test": {
+	"expect" : "valid",
         "transaction": {
             "nonce": "",
             "gasPrice": "0x09184e72a000",
@@ -601,6 +609,7 @@
     },
 
     "dataTx_bcValidBlockTest": {
+	"expect" : "valid",
         "transaction": {
             "nonce": "0",
             "gasPrice": "50",
@@ -615,6 +624,7 @@
     },
 
     "RSsecp256k1" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "0x5544",

@@ -53,6 +53,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre"));
 		ImportTest importer(o["pre"].get_obj());
 		State state(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+		State stateTemp(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
 		importer.importState(o["pre"].get_obj(), state);
 		o["pre"] = fillJsonWithState(state);
 		state.commit();
@@ -89,7 +90,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			for (auto const& bl: o["blocks"].get_array())
 			{
 				mObject blObj = bl.get_obj();
-
+				stateTemp = state;
 				// get txs
 				TransactionQueue txs;
 				ZeroGasPricer gp;
@@ -180,7 +181,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					}
 
 					uncleHeaderObj_pre = uncleHeaderObj;
-				}
+				} //for blObj["uncleHeaders"].get_array()
 
 				blObj["uncleHeaders"] = aUncleList;
 				bc.sync(uncleBlockQueue, state.db(), 4);
@@ -288,11 +289,10 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					blObj.erase(blObj.find("blockHeader"));
 					blObj.erase(blObj.find("uncleHeaders"));
 					blObj.erase(blObj.find("transactions"));
-					state = State(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
-					importer.importState(o["pre"].get_obj(), state);
+					state = stateTemp; //revert state as if it was before executing this block
 				}
 				blArray.push_back(blObj);
-			}
+			} //for blocks
 
 			if (o.count("expect") > 0)
 			{
