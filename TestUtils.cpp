@@ -22,6 +22,7 @@
 #include <thread>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <libtestutils/Common.h>
 #include <libtestutils/BlockChainLoader.h>
 #include <libtestutils/FixedClient.h>
 #include "TestUtils.h"
