@@ -524,6 +524,8 @@ BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
 
 BOOST_AUTO_TEST_CASE(vmRandom)
 {
+	test::Options::get(); // parse command line options, e.g. to enable JIT
+
 	string testPath = getTestPath();
 	testPath += "/VMTests/RandomTests";
 

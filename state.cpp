@@ -218,6 +218,8 @@ BOOST_AUTO_TEST_CASE(stCreateTest)
 
 BOOST_AUTO_TEST_CASE(stRandom)
 {
+	test::Options::get(); // parse command line options, e.g. to enable JIT
+
 	string testPath = dev::test::getTestPath();
 	testPath += "/StateTests/RandomTests";
 
