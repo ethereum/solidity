@@ -575,7 +575,7 @@ void overwriteBlockHeader(BlockInfo& _currentBlockHeader, mObject& _blObj)
 			_currentBlockHeader = tmp;
 
 			ProofOfWork pow;
-			std::pair<MineInfo, Ethash::Proof> ret;
+			std::pair<MineInfo, Ethash::Solution> ret;
 			while (!ProofOfWork::verify(_currentBlockHeader))
 			{
 				ret = pow.mine(_currentBlockHeader, 1000, true);
@@ -621,7 +621,7 @@ BlockInfo constructBlock(mObject& _o)
 void updatePoW(BlockInfo& _bi)
 {
 	ProofOfWork pow;
-	std::pair<MineInfo, Ethash::Proof> ret;
+	std::pair<MineInfo, Ethash::Solution> ret;
 	while (!ProofOfWork::verify(_bi))
 	{
 		ret = pow.mine(_bi, 10000, true);
