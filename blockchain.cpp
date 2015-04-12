@@ -617,7 +617,7 @@ BlockInfo constructBlock(mObject& _o)
 	catch (Exception const& _e)
 	{
 		cnote << "block population did throw an exception: " << diagnostic_information(_e);
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
+		//BOOST_ERROR("Failed block population with Exception: " << _e.what());
 	}
 	catch (std::exception const& _e)
 	{
