@@ -192,7 +192,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					state.sync(bc, txs, gp);
 					state.commitToMine(bc);
 					MineInfo info;
-					for (info.completed = false; !info.completed; info = state.mine()) {}
+					ProofOfWork pow;
+					for (info.completed = false; !info.completed; info = state.mine(&pow)) {}
 					state.completeMine();
 				}
 				catch (Exception const& _e)
@@ -577,7 +578,7 @@ void overwriteBlockHeader(BlockInfo& _currentBlockHeader, mObject& _blObj)
 			std::pair<MineInfo, Ethash::Proof> ret;
 			while (!ProofOfWork::verify(_currentBlockHeader))
 			{
-				ret = pow.mine(_currentBlockHeader, 1000, true, true);
+				ret = pow.mine(_currentBlockHeader, 1000, true);
 				Ethash::assignResult(ret.second, _currentBlockHeader);
 			}
 		}
@@ -623,7 +624,7 @@ void updatePoW(BlockInfo& _bi)
 	std::pair<MineInfo, Ethash::Proof> ret;
 	while (!ProofOfWork::verify(_bi))
 	{
-		ret = pow.mine(_bi, 10000, true, true);
+		ret = pow.mine(_bi, 10000, true);
 		Ethash::assignResult(ret.second, _bi);
 	}
 	_bi.noteDirty();

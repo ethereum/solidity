@@ -68,7 +68,8 @@ BOOST_AUTO_TEST_CASE(Complex)
 
 	// Mine to get some ether!
 	s.commitToMine(bc);
-	while (!s.mine(100, true).completed) {}
+	ProofOfWork pow;
+	while (!s.mine(&pow).completed) {}
 	s.completeMine();
 	bc.attemptImport(s.blockData(), stateDB);
 
@@ -88,7 +89,7 @@ BOOST_AUTO_TEST_CASE(Complex)
 	// Mine to get some ether and set in stone.
 	s.commitToMine(bc);
 	s.commitToMine(bc);
-	while (!s.mine(100, true).completed) {}
+	while (!s.mine(&pow).completed) {}
 	s.completeMine();
 	bc.attemptImport(s.blockData(), stateDB);
 
