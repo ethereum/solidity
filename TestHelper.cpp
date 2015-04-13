@@ -123,7 +123,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 {
 	static const std::string hashes[] = {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
 									"stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
-									"previousHash", "to", "address", "caller", "origin"};
+									"previousHash", "to", "address", "caller", "origin", "secretKey"};
 
 	for (json_spirit::mObject::iterator it = _o.begin(); it != _o.end(); it++)
 	{

@@ -448,7 +448,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(VMTests)
 
-BOOST_AUTO_TEST_CASE(vm_tests)
+BOOST_AUTO_TEST_CASE(vmtests)
 {
 	dev::test::executeTests("vmtests", "/VMTests", dev::test::doVMTests);
 }
