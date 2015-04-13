@@ -62,6 +62,37 @@ void connectClients(Client& c1, Client& c2)
 	c2.connect("127.0.0.1", c1Port);
 #endif
 }
+
+void mine(State& s, BlockChain const& _bc)
+{
+	s.commitToMine(_bc);
+	GenericFarm<ProofOfWork> f;
+	bool completed = false;
+	f.onSolutionFound([&](ProofOfWork::Solution sol)
+	{
+		return completed = s.completeMine<ProofOfWork>(sol);
+	});
+	f.setWork(s.info());
+	f.startCPU();
+	while (!completed)
+		this_thread::sleep_for(chrono::milliseconds(20));
+}
+
+void mine(BlockInfo& _bi)
+{
+	GenericFarm<ProofOfWork> f;
+	bool completed = false;
+	f.onSolutionFound([&](ProofOfWork::Solution sol)
+	{
+		ProofOfWork::assignResult(sol, _bi);
+		return completed = true;
+	});
+	f.setWork(_bi);
+	f.startCPU();
+	while (!completed)
+		this_thread::sleep_for(chrono::milliseconds(20));
+}
+
 }
 
 namespace test
