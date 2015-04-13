@@ -90,7 +90,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			for (auto const& bl: o["blocks"].get_array())
 			{
 				mObject blObj = bl.get_obj();
-				stateTemp = state;
+
 				// get txs
 				TransactionQueue txs;
 				ZeroGasPricer gp;
@@ -222,6 +222,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					txObject["v"] = to_string(txi.second.signature().v + 27);
 					txObject["to"] = txi.second.isCreation() ? "" : toString(txi.second.receiveAddress());
 					txObject["value"] = toString(txi.second.value());
+					txObject = ImportTest::makeAllFieldsHex(txObject);
 
 					txArray.push_back(txObject);
 				}
@@ -301,6 +302,11 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 			o["blocks"] = blArray;
 			o["postState"] = fillJsonWithState(state);
+
+			//make all values hex
+			State prestate(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+			importer.importState(o["pre"].get_obj(), prestate);
+			o["pre"] = fillJsonWithState(prestate);
 		}//_fillin
 
 		else
@@ -619,11 +625,11 @@ void writeBlockHeaderToJson(mObject& _o, BlockInfo const& _bi)
 	_o["transactionsTrie"] = toString(_bi.transactionsRoot);
 	_o["receiptTrie"] = toString(_bi.receiptsRoot);
 	_o["bloom"] = toString(_bi.logBloom);
-	_o["difficulty"] = toString(_bi.difficulty);
-	_o["number"] = toString(_bi.number);
-	_o["gasLimit"] = toString(_bi.gasLimit);
-	_o["gasUsed"] = toString(_bi.gasUsed);
-	_o["timestamp"] = toString(_bi.timestamp);
+	_o["difficulty"] = "0x" + toHex(toCompactBigEndian(_bi.difficulty));
+	_o["number"] = "0x" + toHex(toCompactBigEndian(_bi.number));
+	_o["gasLimit"] = "0x" + toHex(toCompactBigEndian(_bi.gasLimit));
+	_o["gasUsed"] = "0x" + toHex(toCompactBigEndian(_bi.gasUsed));
+	_o["timestamp"] = "0x" + toHex(toCompactBigEndian(_bi.timestamp));
 	_o["extraData"] ="0x" + toHex(_bi.extraData);
 	_o["mixHash"] = toString(_bi.mixHash);
 	_o["nonce"] = toString(_bi.nonce);

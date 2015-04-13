@@ -120,13 +120,17 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 {
+	static const std::string hashes[] = {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
+									"stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
+									"previousHash", "to", "address", "caller", "origin"};
+
 	for (json_spirit::mObject::iterator it = _o.begin(); it != _o.end(); it++)
 	{
-		string key = (*it).first;
-		if (key == "to")
+		std::string key = (*it).first;
+		if (std::find(std::begin(hashes), std::end(hashes), key) != std::end(hashes))
 			continue;
 
-		string str;
+		std::string str;
 		json_spirit::mValue value = (*it).second;
 
 		if (value.type() == json_spirit::int_type)
@@ -135,14 +139,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = value.get_str();
 		else continue;
 
-		_o[key] = (str.substr(0, 2) == "0x" ||
-					str.find("a") != string::npos ||
-					str.find("b") != string::npos ||
-					str.find("c") != string::npos ||
-					str.find("d") != string::npos ||
-					str.find("e") != string::npos ||
-					str.find("f") != string::npos
-					) ? str : "0x" + toHex(toCompactBigEndian(toInt(str)));
+		_o[key] = (str.substr(0, 2) == "0x") ? str : "0x" + toHex(toCompactBigEndian(toInt(str)));
 	}
 	return _o;
 }
