@@ -216,8 +216,8 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 		case PushSub:
 		{
 			Json::Value pushSub;
-			pushSub["name"] = "PUSH [$]";
-			pushSub["value"] = h256(i.data()).abridged() ;
+			pushSub["name"] = "PUSH";
+			pushSub["value"] = "[$]" + string(h256(i.data()).abridged());
 			pushSub["locationX"] = boost::lexical_cast<std::string>(i.getLocation().start);
 			pushSub["locationY"] = boost::lexical_cast<std::string>(i.getLocation().end);
 			currentCollection.push_back(pushSub);
@@ -227,8 +227,8 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 		case PushSubSize:
 		{
 			Json::Value pushSubSize;
-			pushSubSize["name"] = "PUSH #[$]";
-			pushSubSize["value"] = h256(i.data()).abridged();
+			pushSubSize["name"] = "PUSH";
+			pushSubSize["value"] =  "#[$]" + string(h256(i.data()).abridged());
 			pushSubSize["locationX"] = boost::lexical_cast<std::string>(i.getLocation().start);
 			pushSubSize["locationY"] = boost::lexical_cast<std::string>(i.getLocation().end);
 			currentCollection.push_back(pushSubSize);
@@ -253,6 +253,9 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 			currentCollection.clear();
 			root[currentArrayName] = collection;
 			currentArrayName = "tag" + string(i.data());
+			Json::Value jumpdest;
+			jumpdest["name"] = "JUMDEST";
+			currentCollection.push_back(jumpdest);
 		}
 			//_out << "tag" << i.data() << ": " << endl << _prefix << "  JUMPDEST";
 			break;
@@ -292,19 +295,21 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 				data["value"] = hexStr.str();
 				dataCollection.append(data);
 			}
-		root[_prefix + ".data"] = collection;
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			std::stringstream hexStr;
 			hexStr << _prefix << hex << i << ": ";
 			//_out << _prefix << "  " << hex << i << ": " << endl;
-			//todo check recursion
+			//todo check recursion check order.
 			m_subs[i].stream(_out, _prefix + "  ", _sourceCodes, _inJsonFormat);
 		}
-	}
+		root[_prefix + ".data"] = collection;
+		_out << root;
 
-	_out << root;
+	} else
+		_out << root;
+
 	return _out;
 }
 
