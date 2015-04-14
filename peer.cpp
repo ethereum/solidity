@@ -28,7 +28,13 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-BOOST_AUTO_TEST_SUITE(p2p)
+struct P2PFixture
+{
+	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true;; }
+	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
+};
+
+BOOST_FIXTURE_TEST_SUITE(p2p, P2PFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
@@ -45,7 +51,7 @@ BOOST_AUTO_TEST_CASE(host)
 	auto node2 = host2.id();
 	host2.start();
 	
-	host1.addNode(node2, bi::address::from_string("127.0.0.1"), host2prefs.listenPort, host2prefs.listenPort);
+	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2prefs.listenPort, host2prefs.listenPort));
 	
 	this_thread::sleep_for(chrono::seconds(3));
 	
@@ -82,11 +88,11 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	
 	Host& host = *hosts.front();
 	for (auto const& h: hosts)
-		host.addNode(h->id(), bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort());
+		host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 	
 	Host& host2 = *hosts.back();
 	for (auto const& h: hosts)
-		host2.addNode(h->id(), bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort());
+		host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	bytes firstHostNetwork(host.saveNetwork());
@@ -131,7 +137,7 @@ int peerTest(int argc, char** argv)
 	Host ph("Test", NetworkPreferences(listenPort));
 
 	if (!remoteHost.empty() && !remoteAlias)
-		ph.addNode(remoteAlias, bi::address::from_string(remoteHost), remotePort, remotePort);
+		ph.addNode(remoteAlias, NodeIPEndpoint(bi::address::from_string(remoteHost), remotePort, remotePort));
 
 	this_thread::sleep_for(chrono::milliseconds(200));
 
