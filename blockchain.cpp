@@ -53,6 +53,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre"));
 		ImportTest importer(o["pre"].get_obj());
 		State state(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+		State stateTemp(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
 		importer.importState(o["pre"].get_obj(), state);
 		o["pre"] = fillJsonWithState(state);
 		state.commit();
@@ -89,7 +90,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			for (auto const& bl: o["blocks"].get_array())
 			{
 				mObject blObj = bl.get_obj();
-
+				stateTemp = state;
 				// get txs
 				TransactionQueue txs;
 				ZeroGasPricer gp;
@@ -180,7 +181,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					}
 
 					uncleHeaderObj_pre = uncleHeaderObj;
-				}
+				} //for blObj["uncleHeaders"].get_array()
 
 				blObj["uncleHeaders"] = aUncleList;
 				bc.sync(uncleBlockQueue, state.db(), 4);
@@ -288,12 +289,23 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					blObj.erase(blObj.find("blockHeader"));
 					blObj.erase(blObj.find("uncleHeaders"));
 					blObj.erase(blObj.find("transactions"));
+					state = stateTemp; //revert state as if it was before executing this block
 				}
 				blArray.push_back(blObj);
+			} //for blocks
+
+			if (o.count("expect") > 0)
+			{
+				stateOptionsMap expectStateMap;
+				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+				importer.importState(o["expect"].get_obj(), stateExpect, expectStateMap);
+				ImportTest::checkExpectedState(stateExpect, state, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+				o.erase(o.find("expect"));
 			}
+
 			o["blocks"] = blArray;
 			o["postState"] = fillJsonWithState(state);
-		}
+		}//_fillin
 
 		else
 		{
@@ -605,7 +617,6 @@ BlockInfo constructBlock(mObject& _o)
 	catch (Exception const& _e)
 	{
 		cnote << "block population did throw an exception: " << diagnostic_information(_e);
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
 	}
 	catch (std::exception const& _e)
 	{
@@ -666,6 +677,11 @@ RLPStream createFullBlockFromHeader(BlockInfo const& _bi, bytes const& _txs, byt
 } }// Namespace Close
 
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
+
+BOOST_AUTO_TEST_CASE(bcForkBlockTest)
+{
+	dev::test::executeTests("bcForkBlockTest", "/BlockTests", dev::test::doBlockchainTests);
+}
 
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {
