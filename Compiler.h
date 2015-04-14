@@ -42,7 +42,7 @@ public:
 	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(m_optimize); }
 	bytes getRuntimeBytecode() { return m_runtimeContext.getAssembledBytecode(m_optimize);}
 	/// @arg _sourceCodes is the map of input files to source code strings
-	/// @arg _inJsonFromat shows weather the out should be in Json format
+	/// @arg _inJsonFromat shows whether the out should be in Json format
 	void streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
 	{
 		m_context.streamAssembly(_stream, _sourceCodes, _inJsonFormat);
