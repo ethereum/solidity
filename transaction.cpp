@@ -36,8 +36,54 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		cerr << i.first << endl;
 		mObject& o = i.second.get_obj();
 
-		if (_fillin == false)
+		if (_fillin)
 		{
+			BOOST_REQUIRE(o.count("transaction") > 0);
+			mObject tObj = o["transaction"].get_obj();
+
+			//Construct Rlp of the given transaction
+			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
+			o["rlp"] = "0x" + toHex(rlpStream.out());
+
+			try
+			{
+				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
+				if (!txFromFields.signature().isValid())
+					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
+
+				o["sender"] = toString(txFromFields.sender());
+			}
+			catch(Exception const& _e)
+			{
+				//Transaction is InValid
+				cnote << "Transaction Exception: " << diagnostic_information(_e);
+				o.erase(o.find("transaction"));
+				if (o.count("expect") > 0)
+				{
+					bool expectInValid = (o["expect"].get_str() == "invalid");
+					if (Options::get().checkState)
+							BOOST_CHECK_MESSAGE(expectInValid, "Check state: Transaction '" << i.first << "' is expected to be valid!");
+						else
+							BOOST_WARN_MESSAGE(expectInValid, "Check state: Transaction '" << i.first << "' is expected to be valid!");
+
+					o.erase(o.find("expect"));
+				}
+			}
+
+			//Transaction is Valid
+			if (o.count("expect") > 0)
+			{
+				bool expectValid = (o["expect"].get_str() == "valid");
+				if (Options::get().checkState)
+						BOOST_CHECK_MESSAGE(expectValid, "Check state: Transaction '" << i.first << "' is expected to be invalid!");
+					else
+						BOOST_WARN_MESSAGE(expectValid, "Check state: Transaction '" << i.first << "' is expected to be invalid!");
+
+				o.erase(o.find("expect"));
+			}
+		}
+		else
+		{			
 			BOOST_REQUIRE(o.count("rlp") > 0);
 			Transaction txFromRlp;
 			try
@@ -79,29 +125,6 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 			Address addressReaded = Address(o["sender"].get_str());
 			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, "Signature address of sender does not match given sender address!");
-		}
-		else
-		{
-			BOOST_REQUIRE(o.count("transaction") > 0);
-			mObject tObj = o["transaction"].get_obj();
-
-			//Construct Rlp of the given transaction
-			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
-			o["rlp"] = "0x" + toHex(rlpStream.out());
-
-			try
-			{
-				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
-				if (!txFromFields.signature().isValid())
-					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
-
-				o["sender"] = toString(txFromFields.sender());
-			}
-			catch(Exception const& _e)
-			{
-				cnote << "Transaction Exception: " << diagnostic_information(_e);
-				o.erase(o.find("transaction"));
-			}
 		}
 	}//for
 }//doTransactionTests

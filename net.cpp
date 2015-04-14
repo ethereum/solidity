@@ -151,6 +151,39 @@ public:
 	bool success = false;
 };
 
+BOOST_AUTO_TEST_CASE(requestTimeout)
+{
+	using TimePoint = std::chrono::steady_clock::time_point;
+	using RequestTimeout = std::pair<NodeId, TimePoint>;
+	
+	std::chrono::milliseconds timeout(300);
+	std::list<RequestTimeout> timeouts;
+	
+	NodeId nodeA(sha3("a"));
+	NodeId nodeB(sha3("b"));
+	timeouts.push_back(make_pair(nodeA, chrono::steady_clock::now()));
+	this_thread::sleep_for(std::chrono::milliseconds(100));
+	timeouts.push_back(make_pair(nodeB, chrono::steady_clock::now()));
+	this_thread::sleep_for(std::chrono::milliseconds(210));
+	
+	bool nodeAtriggered = false;
+	bool nodeBtriggered = false;
+	timeouts.remove_if([&](RequestTimeout const& t)
+	{
+		auto now = chrono::steady_clock::now();
+		auto diff = now - t.second;
+		if (t.first == nodeA && diff < timeout)
+			nodeAtriggered = true;
+		if (t.first == nodeB && diff < timeout)
+			nodeBtriggered = true;
+		return (t.first == nodeA || t.first == nodeB);
+	});
+	
+	BOOST_REQUIRE(nodeAtriggered == false);
+	BOOST_REQUIRE(nodeBtriggered == true);
+	BOOST_REQUIRE(timeouts.size() == 0);
+}
+
 BOOST_AUTO_TEST_CASE(isIPAddressType)
 {
 	string wildcard = "0.0.0.0";

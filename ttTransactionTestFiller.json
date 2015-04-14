@@ -1,9 +1,26 @@
 {
     "RightVRSTest" : {
+	"expect" : "valid",
         "transaction" :
         {
-            "data" : "0x5544",
-            "gasLimit" : "2000",
+            "data" : "0x",
+            "gasLimit" : "21000",
+            "gasPrice" : "1",
+            "nonce" : "3",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "10",
+            "v" : "28",
+            "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
+            "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
+        }
+    },
+
+   "NotEnoughGasLimit" : {
+	"expect" : "invalid",
+        "transaction" :
+        {
+            "data" : "0x",
+            "gasLimit" : "20000",
             "gasPrice" : "1",
             "nonce" : "3",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -15,10 +32,11 @@
     },
 
     "V_overflow32bit" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x5544",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "3",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -30,10 +48,11 @@
     },
 
     "V_overflow32bitSigned" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x5544",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "3",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -45,10 +64,11 @@
     },
 
     "V_overflow64bit" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x5544",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "3",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -60,10 +80,11 @@
     },
 
     "V_overflow64bitSigned" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x5544",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "3",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -75,10 +96,11 @@
     },
 
     "WrongVRSTestVEqual26" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -90,10 +112,11 @@
     },
 
     "WrongVRSTestVEqual29" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -105,10 +128,11 @@
     },
 
     "WrongVRSTestVEqual31" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -120,10 +144,11 @@
     },
 
     "WrongVRSTestVOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -135,10 +160,11 @@
     },
 
     "WrongVRSTestIncorrectSize" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
@@ -150,11 +176,12 @@
     },
 
     "SenderTest" : {
-        "//" : "sender a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+        "//" : "sender 0f65fe9276bc9a24ae7083ae28e2660ef72df99e",
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -166,11 +193,29 @@
         }
     },
 
-    "DataTest" : {
+    "DataTestNotEnoughGAS" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x0358ac39584bc98a7c979f984b03",
-            "gasLimit" : "850",
+            "gasLimit" : "21020",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+            "value" : "10",
+            "v" : "27",
+            "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
+            "s" : "secretkey 45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
+        }
+    },
+
+    "DataTestEnoughGAS" : {
+	"expect" : "valid",
+        "transaction" :
+        {
+            "data" : "0x0358ac39584bc98a7c979f984b03",
+            "gasLimit" : "23000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -183,10 +228,11 @@
     },
 
     "TransactionWithTooManyRLPElements" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -199,6 +245,7 @@
     },
 
     "TransactionWithTooFewRLPElements" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -212,10 +259,11 @@
     },
 
     "TransactionWithHihghValue" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -227,11 +275,12 @@
     },
 
 
-    "TransactionWithHihghValueOverflow" : {
+    "TransactionWithHighValueOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -243,10 +292,11 @@
     },
 
     "TransactionWithSvalueHigh" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -258,10 +308,11 @@
     },
 
     "TransactionWithSvalueTooHigh" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -273,10 +324,11 @@
     },
 
     "TransactionWithSvalueOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -288,10 +340,11 @@
     },
 
     "TransactionWithRvalueOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -303,10 +356,11 @@
     },
 
     "TransactionWithRvalueHigh" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -318,10 +372,11 @@
     },
 
     "TransactionWithRvalueTooHigh" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -332,11 +387,12 @@
         }
     },
 
-    "TransactionWithRvalueWrongSize" : {
+    "TransactionWithRvaluePrefixed00" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -347,11 +403,12 @@
         }
     },
 
-    "TransactionWithSvalueWrongSize" : {
+   "TransactionWithSvaluePrefixed00" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -363,10 +420,11 @@
     },
 
     "TransactionWithHihghNonce" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -378,10 +436,11 @@
     },
 
     "TransactionWithNonceOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "115792089237316195423570985008687907853269984665640564039457584007913129639936",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -393,6 +452,7 @@
     },
 
     "TransactionWithHihghGas" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -407,11 +467,12 @@
         }
     },
 
-    "TransactionWithHihghGasPrice" : {
+   "TransactionWithHihghGasPrice" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "1000",
+            "gasLimit" : "21000",
             "gasPrice" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -422,7 +483,8 @@
         }
     },
 
-    "TransactionWithGasLimitxPriceOverflow" : {
+   "TransactionWithGasLimitxPriceOverflow" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
@@ -438,10 +500,11 @@
     },
 
     "TransactionWithGasPriceOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "850",
+            "gasLimit" : "21000",
             "gasPrice" : "115792089237316195423570985008687907853269984665640564039457584007913129639936",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -453,6 +516,7 @@
     },
 
     "TransactionWithGasLimitOverflow" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
@@ -468,10 +532,11 @@
     },
 
     "AddressMoreThan20PrefixedBy0" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "0x12",
-            "gasLimit" : "1000",
+            "gasLimit" : "21000",
             "gasPrice" : "123",
             "nonce" : "54",
             "to" : "0x0000000000000000095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -483,14 +548,15 @@
     },
 
     "EmptyTransaction" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "",
-            "gasPrice" : "",
-            "nonce" : "",
+            "gasLimit" : "0",
+            "gasPrice" : "0",
+            "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-            "value" : "",
+            "value" : "0",
             "v" : "27",
             "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
             "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
@@ -498,10 +564,11 @@
     },
 
     "AddressMoreThan20" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b1c",
@@ -513,10 +580,11 @@
     },
 
     "AddressLessThan20" : {
+	"expect" : "invalid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "b9331677e6ebf",
@@ -528,10 +596,11 @@
     },
 
     "AddressLessThan20Prefixed0" : {
+	"expect" : "valid",
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "2000",
+            "gasLimit" : "21000",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "0x000000000000000000000000000b9331677e6ebf",
@@ -542,41 +611,12 @@
         }
     },
 
-    "ValuesAsHex" : {
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "0xadc053",
-            "gasPrice" : "1",
-            "nonce" : "0xffdc5",
-            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
-            "value" : "4294820140",
-            "v" : "28",
-            "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
-            "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
-        }
-    },
-
-    "ValuesAsDec" : {
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "11386963",
-            "gasPrice" : "1",
-            "nonce" : "1048005",
-            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
-            "value" : "4501151495864620",
-            "v" : "28",
-            "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
-            "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3"
-        }
-    },
-
     "unpadedRValue": {
+	"expect" : "valid",
         "transaction": {
             "nonce": "13",
             "gasPrice": "0x09184e72a000",
-            "gasLimit": "0x2710",
+            "gasLimit": "0xf710",
             "to": "7c47ef93268a311f4cad0c750724299e9b72c268",
             "data": "0x379607f50000000000000000000000000000000000000000000000000000000000000005",
             "r": "0x006ab6dda9f4df56ea45583af36660329147f1753f3724ea5eb9ed83e812ca77",
@@ -587,20 +627,22 @@
     },
 
     "libsecp256k1test": {
+	"expect" : "valid",
         "transaction": {
-            "nonce": "",
+            "nonce": "0",
             "gasPrice": "0x09184e72a000",
-            "gasLimit": "0x1388",
+            "gasLimit": "0xf388",
             "to": "",
-            "data": "",
+            "data": "0x",
             "r": "44",
             "s": "4",
             "v": "27",
-            "value": ""
+            "value": "0"
         }
     },
 
     "dataTx_bcValidBlockTest": {
+	"expect" : "valid",
         "transaction": {
             "nonce": "0",
             "gasPrice": "50",
@@ -611,6 +653,21 @@
             "s" : "0xe221cbd70ec28c94a3b55ec771bcbc70778d6ee0b51ca7ea9514594c861b1884",
             "v": "28",
             "value": "0"
+        }
+    },
+
+    "RSsecp256k1" : {
+	"expect" : "invalid",
+	"transaction" : {
+            "data" : "0x",
+            "gasLimit" : "21000",
+            "gasPrice" : "1",
+            "nonce" : "3",
+            "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+            "value" : "10",
+            "v" : "28",
+            "r" : "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+            "s" : "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"
         }
     }
 }
