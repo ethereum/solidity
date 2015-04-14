@@ -86,7 +86,11 @@ public:
 
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
-	std::ostream& stream(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap(), bool _inJsonFormat = false) const;
+	std::ostream& stream(
+			std::ostream& _out,
+			std::string const& _prefix = "",
+			const StringMap &_sourceCodes = StringMap(),
+			bool _inJsonFormat = false) const;
 
 protected:
 	std::string getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
@@ -94,7 +98,11 @@ protected:
 	unsigned bytesRequired() const;
 
 private:
-	std::ostream& streamAsmJson(std::ostream& _out, const std::string &_prefix, const StringMap &_sourceCodes, bool _inJsonFormat) const;
+	std::ostream& streamAsmJson(
+			std::ostream& _out,
+			const std::string &_prefix,
+			const StringMap &_sourceCodes,
+			bool _inJsonFormat) const;
 	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
 protected:
 	unsigned m_usedTags = 0;

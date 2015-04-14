@@ -248,7 +248,7 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 		case Tag:
 		{
 			Json::Value collection(Json::arrayValue);
-			for(auto it: currentCollection)
+			for (auto it: currentCollection)
 				collection.append(it);
 			currentCollection.clear();
 			root[currentArrayName] = collection;
@@ -279,7 +279,7 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 
 	//todo check if the last was tag
 	Json::Value collection(Json::arrayValue);
-	for(auto it: currentCollection)
+	for (auto it: currentCollection)
 		collection.append(it);
 	root[currentArrayName] = collection;
 
@@ -295,6 +295,8 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 				data["value"] = hexStr.str();
 				dataCollection.append(data);
 			}
+		root[_prefix + ".data"] = collection;
+		_out << root;
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
@@ -304,9 +306,6 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 			//todo check recursion check order.
 			m_subs[i].stream(_out, _prefix + "  ", _sourceCodes, _inJsonFormat);
 		}
-		root[_prefix + ".data"] = collection;
-		_out << root;
-
 	} else
 		_out << root;
 
