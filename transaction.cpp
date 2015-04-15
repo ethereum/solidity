@@ -39,8 +39,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);
-			mObject tObj = o["transaction"].get_obj();
-			o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
+			mObject tObj = o["transaction"].get_obj();			
 
 			//Construct Rlp of the given transaction
 			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
@@ -52,7 +51,8 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				if (!txFromFields.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 
-				o["sender"] = toString(txFromFields.sender());
+				o["sender"] = toString(txFromFields.sender());				
+				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
 			}
 			catch(Exception const& _e)
 			{
@@ -82,6 +82,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 				o.erase(o.find("expect"));
 			}
+
 		}
 		else
 		{			
