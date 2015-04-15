@@ -430,7 +430,7 @@ void CommandLineInterface::actOnInput()
 
 			if (outputToFile(choice))
 			{
-				ofstream outFile(contract + ".evm");
+				ofstream outFile(contract + (m_args.count(g_argAsmJsonStr) ? "_evm.json" : ".evm"));
 				m_compiler->streamAssembly(outFile, contract, m_sourceCodes, m_args.count(g_argAsmJsonStr));
 				outFile.close();
 			}
