@@ -229,6 +229,33 @@ BOOST_AUTO_TEST_CASE(v2PingNodePacket)
 	BOOST_REQUIRE(p.version == 2);
 }
 
+BOOST_AUTO_TEST_CASE(neighboursPacketLength)
+{
+	KeyPair k = KeyPair::create();
+	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
+	bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
+	
+	// hash(32), signature(65), overhead: packet(2), type(1), nodeList(2), ts(9),
+	static unsigned const nlimit = (1280 - 111) / 87;
+	for (unsigned offset = 0; offset < testNodes.size(); offset += nlimit)
+	{
+		Neighbours out(to);
+		
+		auto limit = nlimit ? std::min(testNodes.size(), (size_t)(offset + nlimit)) : testNodes.size();
+		for (auto i = offset; i < limit; i++)
+		{
+			Neighbours::Node node;
+			node.ipAddress = boost::asio::ip::address::from_string("200.200.200.200").to_string();
+			node.port = testNodes[i].second;
+			node.node = testNodes[i].first.pub();
+			out.nodes.push_back(node);
+		}
+		
+		out.sign(k.sec());
+		BOOST_REQUIRE_LE(out.data.size(), 1280);
+	}
+}
+
 BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 {
 	KeyPair k = KeyPair::create();

@@ -25,7 +25,7 @@
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/CommonIO.h>
 #include <libethcore/ProofOfWork.h>
-#include <libethcore/Ethasher.h>
+#include <libethcore/EthashAux.h>
 #include <boost/test/unit_test.hpp>
 #include "TestHelper.h"
 
@@ -63,18 +63,18 @@ BOOST_AUTO_TEST_CASE(basic_test)
 
 		unsigned cacheSize(o["cache_size"].get_int());
 		h256 cacheHash(o["cache_hash"].get_str());
-		BOOST_REQUIRE_EQUAL(Ethasher::get()->params(header).cache_size, cacheSize);
-		BOOST_REQUIRE_EQUAL(sha3(bytesConstRef((byte const*)Ethasher::get()->light(header), cacheSize)), cacheHash);
+		BOOST_REQUIRE_EQUAL(EthashAux::get()->params(header).cache_size, cacheSize);
+		BOOST_REQUIRE_EQUAL(sha3(EthashAux::get()->light(header)->data()), cacheHash);
 
 #if TEST_FULL
 		unsigned fullSize(o["full_size"].get_int());
 		h256 fullHash(o["full_hash"].get_str());
-		BOOST_REQUIRE_EQUAL(Ethasher::get()->full(header).size(), fullSize);
-		BOOST_REQUIRE_EQUAL(sha3(Ethasher::get()->full(header)), fullHash);
+		BOOST_REQUIRE_EQUAL(EthashAux::get()->full(header).size(), fullSize);
+		BOOST_REQUIRE_EQUAL(sha3(EthashAux::get()->full(header)), fullHash);
 #endif
 
 		h256 result(o["result"].get_str());
-		Ethasher::Result r = Ethasher::eval(header);
+		Ethash::Result r = EthashAux::eval(header);
 		BOOST_REQUIRE_EQUAL(r.value, result);
 		BOOST_REQUIRE_EQUAL(r.mixHash, header.mixHash);
 	}

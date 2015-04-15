@@ -25,7 +25,9 @@
 #include <secp256k1/secp256k1.h>
 #include <libethereum/CanonBlockChain.h>
 #include <libethereum/State.h>
+#include <libethereum/Farm.h>
 #include <libethereum/Defaults.h>
+#include "TestHelper.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -67,10 +69,8 @@ BOOST_AUTO_TEST_CASE(Complex)
 	cout << s;
 
 	// Mine to get some ether!
-	s.commitToMine(bc);
-	ProofOfWork pow;
-	while (!s.mine(&pow).completed) {}
-	s.completeMine();
+	mine(s, bc);
+
 	bc.attemptImport(s.blockData(), stateDB);
 
 	cout << bc;
@@ -89,8 +89,7 @@ BOOST_AUTO_TEST_CASE(Complex)
 	// Mine to get some ether and set in stone.
 	s.commitToMine(bc);
 	s.commitToMine(bc);
-	while (!s.mine(&pow).completed) {}
-	s.completeMine();
+	mine(s, bc);
 	bc.attemptImport(s.blockData(), stateDB);
 
 	cout << bc;
