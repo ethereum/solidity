@@ -39,7 +39,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);
-			mObject tObj = o["transaction"].get_obj();			
+			mObject tObj = o["transaction"].get_obj();
 
 			//Construct Rlp of the given transaction
 			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);

@@ -121,18 +121,18 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 {
-	static const std::string hashes[] = {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
-									"stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
-									"previousHash", "to", "address", "caller", "origin", "secretKey"};
+	static const set<string> hashes {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
+									 "stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
+									 "previousHash", "to", "address", "caller", "origin", "secretKey"};
 
-	for (json_spirit::mObject::iterator it = _o.begin(); it != _o.end(); it++)
+	for (auto& i: _o)
 	{
-		std::string key = (*it).first;
-		if (std::find(std::begin(hashes), std::end(hashes), key) != std::end(hashes))
+		std::string key = i.first;
+		if (hashes.count(key))
 			continue;
 
 		std::string str;
-		json_spirit::mValue value = (*it).second;
+		json_spirit::mValue value = i.second;
 
 		if (value.type() == json_spirit::int_type)
 			str = toString(value.get_int());
