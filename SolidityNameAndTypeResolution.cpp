@@ -1637,7 +1637,7 @@ BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
 
 BOOST_AUTO_TEST_CASE(ambiguous_overloaded_function)
 {
-	// literal 1 can be both converted to uint8 and uint8, so it's ambiguous.
+	// literal 1 can be both converted to uint and uint8, so the call is ambiguous.
 	char const* sourceCode = R"(
 		contract test {
 			function f(uint8 a) returns(uint) { return a; }
@@ -1646,6 +1646,78 @@ BOOST_AUTO_TEST_CASE(ambiguous_overloaded_function)
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_of_nonoverloaded_function)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint) { return 2 * a; }
+			function g() returns(uint) { var x = f; return x(7); }
+		}
+	)";
+	ETH_TEST_REQUIRE_NO_THROW(parseTextAndResolveNames(sourceCode), "Type resolving failed");
+}
+
+BOOST_AUTO_TEST_CASE(assignment_of_overloaded_function)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint) { return 1; }
+			function f(uint a) returns(uint) { return 2 * a; }
+			function g() returns(uint) { var x = f; return x(7); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_types_clash)
+{
+	char const* sourceCode = R"(
+		contract base {
+			enum a { X }
+			function f(a) { }
+		}
+		contract test is base {
+			function f(uint8 a) { }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(override_changes_return_types)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f(uint a) returns (uint) { }
+		}
+		contract test is base {
+			function f(uint a) returns (uint8) { }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(multiple_constructors)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function test(uint a) { }
+			function test() {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(equal_overload)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function test(uint a) returns (uint b) { }
+			function test(uint a) external {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
