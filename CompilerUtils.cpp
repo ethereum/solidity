@@ -157,8 +157,12 @@ void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 
 void CompilerUtils::popStackElement(Type const& _type)
 {
-	unsigned const size = _type.getSizeOnStack();
-	for (unsigned i = 0; i < size; ++i)
+	popStackSlots(_type.getSizeOnStack());
+}
+
+void CompilerUtils::popStackSlots(size_t _amount)
+{
+	for (size_t i = 0; i < _amount; ++i)
 		m_context << eth::Instruction::POP;
 }
 

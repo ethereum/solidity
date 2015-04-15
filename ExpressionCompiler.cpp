@@ -60,57 +60,82 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
-	unsigned length = 0;
 	TypePointers const& paramTypes = accessorType.getParameterTypes();
-	// move arguments to memory
-	for (TypePointer const& paramType: boost::adaptors::reverse(paramTypes))
-		length += CompilerUtils(m_context).storeInMemory(length, *paramType, true);
 
 	// retrieve the position of the variable
 	auto const& location = m_context.getStorageLocationOfVariable(_varDecl);
-	m_context << location.first;
+	m_context << location.first << u256(location.second);
 
 	TypePointer returnType = _varDecl.getType();
-	for (TypePointer const& paramType: paramTypes)
+
+	for (size_t i = 0; i < paramTypes.size(); ++i)
 	{
-		// move offset to memory
-		CompilerUtils(m_context).storeInMemory(length);
-		unsigned argLen = paramType->getCalldataEncodedSize();
-		length -= argLen;
-		m_context << u256(argLen + 32) << u256(length) << eth::Instruction::SHA3;
-
-		returnType = dynamic_cast<MappingType const&>(*returnType).getValueType();
+		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
+		{
+			// pop offset
+			m_context << eth::Instruction::POP;
+			// move storage offset to memory.
+			CompilerUtils(m_context).storeInMemory(32);
+			// move key to memory.
+			CompilerUtils(m_context).copyToStackTop(paramTypes.size() - i, 1);
+			CompilerUtils(m_context).storeInMemory(0);
+			m_context << u256(64) << u256(0) << eth::Instruction::SHA3;
+			// push offset
+			m_context << u256(0);
+			returnType = mappingType->getValueType();
+		}
+		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
+		{
+			// pop offset
+			m_context << eth::Instruction::POP;
+			CompilerUtils(m_context).copyToStackTop(paramTypes.size() - i + 1, 1);
+			ArrayUtils(m_context).accessIndex(*arrayType);
+			returnType = arrayType->getBaseType();
+		}
+		else
+			solAssert(false, "Index access is allowed only for \"mapping\" and \"array\" types.");
 	}
-
+	// remove index arguments.
+	if (paramTypes.size() == 1)
+		m_context << eth::Instruction::SWAP2 << eth::Instruction::POP << eth::Instruction::SWAP1;
+	else if (paramTypes.size() >= 2)
+	{
+		m_context << eth::swapInstruction(paramTypes.size());
+		m_context << eth::Instruction::POP;
+		m_context << eth::swapInstruction(paramTypes.size());
+		CompilerUtils(m_context).popStackSlots(paramTypes.size() - 1);
+	}
 	unsigned retSizeOnStack = 0;
 	solAssert(accessorType.getReturnParameterTypes().size() >= 1, "");
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
+		// remove offset
+		m_context << eth::Instruction::POP;
 		auto const& names = accessorType.getReturnParameterNames();
 		auto const& types = accessorType.getReturnParameterTypes();
 		// struct
 		for (size_t i = 0; i < names.size(); ++i)
 		{
-			if (types[i]->getCategory() == Type::Category::Mapping)
+			if (types[i]->getCategory() == Type::Category::Mapping || types[i]->getCategory() == Type::Category::Array)
 				continue;
 			pair<u256, unsigned> const& offsets = structType->getStorageOffsetsOfMember(names[i]);
 			m_context << eth::Instruction::DUP1 << u256(offsets.first) << eth::Instruction::ADD << u256(offsets.second);
 			StorageItem(m_context, *types[i]).retrieveValue(SourceLocation(), true);
-			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 not yet implemented.");
+			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 is not yet implemented.");
 			m_context << eth::Instruction::SWAP1;
 			retSizeOnStack += types[i]->getSizeOnStack();
 		}
+		// remove slot
 		m_context << eth::Instruction::POP;
 	}
 	else
 	{
 		// simple value
 		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
-		m_context << u256(location.second);
 		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
 		retSizeOnStack = returnType->getSizeOnStack();
 	}
-	solAssert(retSizeOnStack <= 15, "Stack too deep.");
+	solAssert(retSizeOnStack <= 15, "Stack is too deep.");
 	m_context << eth::dupInstruction(retSizeOnStack + 1);
 	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 }
@@ -758,7 +783,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		appendTypeMoveToMemory(IntegerType(256));
 		m_context << u256(0) << eth::Instruction::SHA3;
 		m_context << u256(0);
-		setLValueToStorageItem( _indexAccess);
+		setLValueToStorageItem(_indexAccess);
 	}
 	else if (baseType.getCategory() == Type::Category::Array)
 	{
@@ -1038,7 +1063,7 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	else
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		m_context << u256(50 + (_functionType.valueSet() ? 9000 : 0)) << eth::Instruction::GAS << eth::Instruction::SUB;
+		m_context << u256(50 + (_functionType.valueSet() ? 9000 : 0) + 25000) << eth::Instruction::GAS << eth::Instruction::SUB;
 	m_context << eth::Instruction::CALL;
 	auto tag = m_context.appendConditionalJump();
 	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.

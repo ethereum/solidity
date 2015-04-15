@@ -79,6 +79,8 @@ public:
 	void copyToStackTop(unsigned _stackDepth, unsigned _itemSize);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);
+	/// Removes element from the top of the stack _amount times.
+	void popStackSlots(size_t _amount);
 
 	template <class T>
 	static unsigned getSizeOnStack(std::vector<T> const& _variables);
