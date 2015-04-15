@@ -25,12 +25,9 @@
 #include <libevmcore/CommonSubexpressionEliminator.h>
 #include <libevmcore/ControlFlowGraph.h>
 #include <json/json.h>
-
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-
-
 
 void Assembly::append(Assembly const& _a)
 {
@@ -170,7 +167,6 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 Json::Value Assembly::createJsonValue(string _name, int _locationX, int _locationY, string _value, string _jumpType) const
 {
 	Json::Value value;
-	assert(!_name.empty());
 	value["name"] = _name;
 	value["locationX"] = _locationX;
 	value["locationY"] = _locationY;
@@ -196,8 +192,12 @@ Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, String
 						createJsonValue(instructionInfo(i.instruction()).name, i.getLocation().start, i.getLocation().end, i.getJumpTypeAsString()));
 			break;
 		case Push:
+		{
+			std::stringstream hexStr;
+			hexStr << hex << (unsigned)i.data();
 			currentCollection.push_back(
-						createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string(i.data()), i.getJumpTypeAsString()));
+						createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, hexStr.str(), i.getJumpTypeAsString()));
+		}
 			break;
 		case PushString:
 			currentCollection.push_back(
@@ -220,26 +220,26 @@ Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, String
 						createJsonValue(string("PUSHSIZE"), i.getLocation().start, i.getLocation().end));
 			break;
 		case Tag:
-			{
-				Json::Value collection(Json::arrayValue);
-				for (auto it: currentCollection)
-					collection.append(it);
-				currentCollection.clear();
-				root[currentArrayName] = collection;
-				currentArrayName = "tag" + string(i.data());
-				Json::Value jumpdest;
-				jumpdest["name"] = "JUMDEST";
-				currentCollection.push_back(jumpdest);
-			}
+		{
+			Json::Value collection(Json::arrayValue);
+			for (auto it: currentCollection)
+				collection.append(it);
+			currentCollection.clear();
+			root[currentArrayName] = collection;
+			currentArrayName = "tag" + string(i.data());
+			Json::Value jumpdest;
+			jumpdest["name"] = "JUMDEST";
+			currentCollection.push_back(jumpdest);
+		}
 			break;
 		case PushData:
-			{
-				Json::Value pushData;
-				pushData["name"] = "PUSH hex";
-				std::stringstream hexStr;
-				hexStr << hex << (unsigned)i.data();
-				currentCollection.push_back(createJsonValue(string("PUSH hex"), i.getLocation().start, i.getLocation().end, hexStr.str()));
-			}
+		{
+			Json::Value pushData;
+			pushData["name"] = "PUSH hex";
+			std::stringstream hexStr;
+			hexStr << hex << (unsigned)i.data();
+			currentCollection.push_back(createJsonValue(string("PUSH hex"), i.getLocation().start, i.getLocation().end, hexStr.str()));
+		}
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());

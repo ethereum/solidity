@@ -123,16 +123,13 @@ protected:
 	int m_totalDeposit = 0;
 
 	SourceLocation m_currentSourceLocation;
-
 };
-
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
 {
 	_a.stream(_out);
 	return _out;
 }
-
 
 }
 }
