@@ -476,7 +476,8 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType) const
 	case ArrayType::Location::CallData:
 		if (!_arrayType.isByteArray())
 			m_context
-				<< eth::Instruction::SWAP1 << _arrayType.getBaseType()->getCalldataEncodedSize()
+				<< eth::Instruction::SWAP1
+				<< _arrayType.getBaseType()->getCalldataEncodedSize()
 				<< eth::Instruction::MUL;
 		m_context << eth::Instruction::ADD;
 		if (_arrayType.getBaseType()->isValueType())
