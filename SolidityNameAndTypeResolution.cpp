@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 {
 	char const* text = "contract test {\n"
 					   "  uint256 stateVariable1;\n"
-					   "  function fun(uint256 arg1) { var x; uint256 y; }"
+					   "  function fun(uint256 arg1) { uint256 y; }"
 					   "}\n";
 	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
@@ -1621,6 +1621,16 @@ BOOST_AUTO_TEST_CASE(bytes0_array)
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(uninitialized_var)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) { var x; return 2; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
