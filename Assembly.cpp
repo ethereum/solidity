@@ -168,8 +168,8 @@ Json::Value Assembly::createJsonValue(string _name, int _locationX, int _locatio
 {
 	Json::Value value;
 	value["name"] = _name;
-	value["locationX"] = _locationX;
-	value["locationY"] = _locationY;
+	value["begin"] = _locationX;
+	value["end"] = _locationY;
 	if (!_value.empty())
 		value["value"] = _value;
 	if (!_jumpType.empty())
