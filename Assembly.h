@@ -111,7 +111,7 @@ private:
 		bool _inJsonFormat
 	) const;
 	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
-	Json::Value createJsonValue(std::string _name, int _locationX, int _locationY, std::string _value = std::string(), std::string _jumpType = std::string()) const;
+	Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string()) const;
 
 protected:
 	unsigned m_usedTags = 0;
