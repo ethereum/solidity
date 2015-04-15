@@ -378,20 +378,16 @@ void VariableDeclaration::checkTypeRequirements()
 		if ((m_type && !m_type->isValueType()) || !m_value)
 			BOOST_THROW_EXCEPTION(createTypeError("Unitialized \"constant\" variable."));
 	}
-	if (!m_value)
-		return;
 	if (m_type)
 	{
-		m_value->expectType(*m_type);
-		if (m_isStateVariable && !m_type->externalType() && getVisibility() >= Visibility::Public)
-			BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for state variables."));
-
-		if (!FunctionType(*this).externalType())
-			BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
+		if (m_value)
+			m_value->expectType(*m_type);
 	}
 	else
 	{
-		// no type declared and no previous assignment, infer the type
+		if (!m_value)
+			// This feature might be extended in the future.
+			BOOST_THROW_EXCEPTION(createTypeError("Assignment necessary for type detection."));
 		m_value->checkTypeRequirements();
 		TypePointer type = m_value->getType();
 		if (type->getCategory() == Type::Category::IntegerConstant)
@@ -405,6 +401,8 @@ void VariableDeclaration::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Variable cannot have void type."));
 		m_type = type;
 	}
+	if (m_isStateVariable && getVisibility() >= Visibility::Public && !FunctionType(*this).externalType())
+		BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
 }
 
 bool VariableDeclaration::isExternalFunctionParameter() const
