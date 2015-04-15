@@ -174,7 +174,7 @@ Json::Value Assembly::createJsonValue(string _name, int _locationX, int _locatio
 		value["value"] = _value;
 	if (!_jumpType.empty())
 		value["jumpType"] = _jumpType;
-	return move(value);
+	return value;
 }
 
 Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
@@ -277,7 +277,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, String
 		_out << root;
 	}
 
-	return move(root);
+	return root;
 }
 
 Json::Value Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
