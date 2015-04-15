@@ -36,9 +36,12 @@ namespace eth
 {
 
 class Client;
+class State;
 
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
+void mine(State& _s, BlockChain const& _bc);
+void mine(BlockInfo& _bi);
 
 }
 
@@ -97,6 +100,16 @@ namespace test
 	}																	\
 	while (0)
 
+struct ImportStateOptions
+{
+	ImportStateOptions(bool _bSetAll = false):m_bHasBalance(_bSetAll), m_bHasNonce(_bSetAll), m_bHasCode(_bSetAll), m_bHasStorage(_bSetAll)	{}
+	bool isAllSet() {return m_bHasBalance && m_bHasNonce && m_bHasCode && m_bHasStorage;}
+	bool m_bHasBalance;
+	bool m_bHasNonce;
+	bool m_bHasCode;
+	bool m_bHasStorage;
+};
+typedef std::map<Address, ImportStateOptions> stateOptionsMap;
 
 class ImportTest
 {
@@ -105,9 +118,12 @@ public:
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
 	// imports
 	void importEnv(json_spirit::mObject& _o);
-	void importState(json_spirit::mObject& _o, eth::State& _state);
+	static void importState(json_spirit::mObject& _o, eth::State& _state);
+	static void importState(json_spirit::mObject& _o, eth::State& _state, stateOptionsMap& _stateOptionsMap);
 	void importTransaction(json_spirit::mObject& _o);
+
 	void exportTest(bytes const& _output, eth::State const& _statePost);
+	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, stateOptionsMap const _expectedStateOptions = stateOptionsMap(), WhenError _throw = WhenError::Throw);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
@@ -165,6 +181,7 @@ public:
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
+	bool checkState = false;///< Throw error when checking test states
 
 	/// Test selection
 	/// @{
@@ -210,8 +227,6 @@ public:
 		ExecTimeGuard& operator=(ExecTimeGuard) = delete;
 	};
 };
-
-
 
 }
 }

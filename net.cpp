@@ -145,6 +145,39 @@ public:
 	bool success = false;
 };
 
+BOOST_AUTO_TEST_CASE(requestTimeout)
+{
+	using TimePoint = std::chrono::steady_clock::time_point;
+	using RequestTimeout = std::pair<NodeId, TimePoint>;
+	
+	std::chrono::milliseconds timeout(300);
+	std::list<RequestTimeout> timeouts;
+	
+	NodeId nodeA(sha3("a"));
+	NodeId nodeB(sha3("b"));
+	timeouts.push_back(make_pair(nodeA, chrono::steady_clock::now()));
+	this_thread::sleep_for(std::chrono::milliseconds(100));
+	timeouts.push_back(make_pair(nodeB, chrono::steady_clock::now()));
+	this_thread::sleep_for(std::chrono::milliseconds(210));
+	
+	bool nodeAtriggered = false;
+	bool nodeBtriggered = false;
+	timeouts.remove_if([&](RequestTimeout const& t)
+	{
+		auto now = chrono::steady_clock::now();
+		auto diff = now - t.second;
+		if (t.first == nodeA && diff < timeout)
+			nodeAtriggered = true;
+		if (t.first == nodeB && diff < timeout)
+			nodeBtriggered = true;
+		return (t.first == nodeA || t.first == nodeB);
+	});
+	
+	BOOST_REQUIRE(nodeAtriggered == false);
+	BOOST_REQUIRE(nodeBtriggered == true);
+	BOOST_REQUIRE(timeouts.size() == 0);
+}
+
 BOOST_AUTO_TEST_CASE(isIPAddressType)
 {
 	string wildcard = "0.0.0.0";
@@ -188,6 +221,33 @@ BOOST_AUTO_TEST_CASE(v2PingNodePacket)
 	PingNode p((bi::udp::endpoint()));
 	BOOST_REQUIRE_NO_THROW(p = PingNode::fromBytesConstRef(bi::udp::endpoint(), bytesConstRef(&s.out())));
 	BOOST_REQUIRE(p.version == 2);
+}
+
+BOOST_AUTO_TEST_CASE(neighboursPacketLength)
+{
+	KeyPair k = KeyPair::create();
+	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
+	bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
+	
+	// hash(32), signature(65), overhead: packet(2), type(1), nodeList(2), ts(9),
+	static unsigned const nlimit = (1280 - 111) / 87;
+	for (unsigned offset = 0; offset < testNodes.size(); offset += nlimit)
+	{
+		Neighbours out(to);
+		
+		auto limit = nlimit ? std::min(testNodes.size(), (size_t)(offset + nlimit)) : testNodes.size();
+		for (auto i = offset; i < limit; i++)
+		{
+			Neighbours::Node node;
+			node.ipAddress = boost::asio::ip::address::from_string("200.200.200.200").to_string();
+			node.port = testNodes[i].second;
+			node.node = testNodes[i].first.pub();
+			out.nodes.push_back(node);
+		}
+		
+		out.sign(k.sec());
+		BOOST_REQUIRE_LE(out.data.size(), 1280);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(test_neighbours_packet)

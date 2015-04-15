@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 		h->setIdealPeerCount(10);
 		// starting host is required so listenport is available
 		h->start();
-		while (!h->isStarted())
+		while (!h->haveNetwork())
 			this_thread::sleep_for(chrono::milliseconds(2));
 		hosts.push_back(h);
 	}

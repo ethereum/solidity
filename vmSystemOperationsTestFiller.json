@@ -8,6 +8,13 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x945304eb96065b2a98b57a48a06ae28d285a71b5"
+                }
+            }
+        },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
@@ -35,6 +42,12 @@
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                }
+            }
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -120,6 +133,17 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x01"
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
+        },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
@@ -156,6 +180,13 @@
                 "currentTimestamp" : "2",
                 "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
             },
+	     "expect" : {
+	         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+	          	"storage" : {
+			    "0x0f4240" : "0x01"
+			}
+		    }
+	     },
             "exec" : {
                 "address" : "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6",
                 "caller" : "cd1722f3947def4cf144679da39c4c32bdc35681",
@@ -185,6 +216,17 @@
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x01"
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -222,6 +264,16 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "post" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
+        },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
@@ -258,6 +310,17 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "post" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x80"
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
+        },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
@@ -293,6 +356,17 @@
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x01"
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -548,6 +622,16 @@
              "currentTimestamp" : "1",
              "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
          },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
+        },
          "pre" : {
              "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                  "balance" : "20000000",
@@ -582,6 +666,14 @@
              "currentTimestamp" : "1",
              "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
          },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x01",
+                    "0x01" : "0x01"
+                }
+            }
+        },
          "pre" : {
              "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                  "balance" : "20000000",
@@ -610,6 +702,14 @@
              "currentTimestamp" : "1",
              "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
          },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x01",
+                    "0x01" : "0x01"
+                }
+            }
+        },
          "pre" : {
              "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                  "balance" : "20000000",
@@ -638,6 +738,14 @@
              "currentTimestamp" : "1",
              "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
          },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x01",
+                    "0x01" : "0x01"
+                }
+            }
+        },
          "pre" : {
              "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                  "balance" : "20000000",
@@ -665,6 +773,11 @@
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "expect" : {
+            "cd1722f3947def4cf144679da39c4c32bdc35681" : {
+                "balance" : "100000000000000000000023"
+            }
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -702,6 +815,11 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "aa1722f3947def4cf144679da39c4c32bdc35681" : {
+                "balance" : "100000000000000000000000"
+            }
+        },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
@@ -737,6 +855,11 @@
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "expect" : {
+            "cd1722f3947def4cf144679da39c4c32bdc35681" : {
+                "balance" : "23"
+            }
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -774,10 +897,17 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "cd1722f3947def4cf144679da39c4c32bdc35681" : {
+                "storage" : {
+ 		     "0x" : "0x3700000000000000000000000000000000000000000000000000000000000000"
+                }
+            }
+        },
         "pre" : {
            "cd1722f3947def4cf144679da39c4c32bdc35681" : {
                 "balance" : "23",
-                "code" : "{ (MSTORE8 0 55) (RETURN 0 1)}",
+                "code" : "{ (MSTORE8 0 55) [[0]](MLOAD 0) (RETURN 0 1)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -791,7 +921,7 @@
             "value" : "23",
             "data" : "0xaa",
             "gasPrice" : "100000000000000",
-            "gas" : "1000"
+            "gas" : "100000"
         }
     },
 
@@ -804,10 +934,17 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "cd1722f3947def4cf144679da39c4c32bdc35681" : {
+                "storage" : {
+                    "0x" : "0x3700000000000000000000000000000000000000000000000000000000000000"
+                }
+            }
+        },
         "pre" : {
            "cd1722f3947def4cf144679da39c4c32bdc35681" : {
                 "balance" : "23",
-                "code" : "{ (MSTORE8 0 55) (RETURN 0 2)}",
+                "code" : "{ (MSTORE8 0 55) [[0]](MLOAD 0) (RETURN 0 2)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -821,7 +958,7 @@
             "value" : "23",
             "data" : "0xaa",
             "gasPrice" : "100000000000000",
-            "gas" : "1000"
+            "gas" : "100000"
         }
     },
 
@@ -834,10 +971,17 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "cd1722f3947def4cf144679da39c4c32bdc35681" : {
+                "storage" : {
+                    "0x" : "0x3700000000000000000000000000000000000000000000000000000000000000"
+                }
+            }
+        },
         "pre" : {
            "cd1722f3947def4cf144679da39c4c32bdc35681" : {
                 "balance" : "23",
-                "code" : "{ (MSTORE8 0 55) (RETURN 0 33)}",
+                "code" : "{ (MSTORE8 0 55) [[0]](MLOAD 0) (RETURN 0 33)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -851,7 +995,7 @@
             "value" : "23",
             "data" : "0xaa",
             "gasPrice" : "100000000000000",
-            "gas" : "1000"
+            "gas" : "100000"
         }
     },
 
@@ -900,6 +1044,17 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x80"
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
+        },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
@@ -935,6 +1090,17 @@
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x" : "0x01"
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -972,6 +1138,13 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa" : "0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa"
+                }
+            }
+        },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
@@ -999,6 +1172,17 @@
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x23" : "0x01"
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "storage" : {
+                }
+            }
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
@@ -1144,6 +1328,11 @@
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
+        "expect" : {
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "balance" : "100000000000000000000023"
+            }
+        },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
@@ -1179,6 +1368,16 @@
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
+        },
+        "expect" : {
+            "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
+                "storage" : {
+                    "0x23" : "0x01"
+                }
+            },
+            "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
+                "balance" : "23"
+            }
         },
         "pre" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {

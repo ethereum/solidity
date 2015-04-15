@@ -91,23 +91,9 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 			// check addresses
 #if ETH_FATDB
+			ImportTest::checkExpectedState(importer.m_statePost, theState);
 			auto expectedAddrs = importer.m_statePost.addresses();
 			auto resultAddrs = theState.addresses();
-			for (auto& expectedPair : expectedAddrs)
-			{
-				auto& expectedAddr = expectedPair.first;
-				auto resultAddrIt = resultAddrs.find(expectedAddr);
-				if (resultAddrIt == resultAddrs.end())
-					BOOST_ERROR("Missing expected address " << expectedAddr);
-				else
-				{
-					BOOST_CHECK_MESSAGE(importer.m_statePost.balance(expectedAddr) ==  theState.balance(expectedAddr), expectedAddr << ": incorrect balance " << theState.balance(expectedAddr) << ", expected " << importer.m_statePost.balance(expectedAddr));
-					BOOST_CHECK_MESSAGE(importer.m_statePost.transactionsFrom(expectedAddr) ==  theState.transactionsFrom(expectedAddr), expectedAddr << ": incorrect txCount " << theState.transactionsFrom(expectedAddr) << ", expected " << importer.m_statePost.transactionsFrom(expectedAddr));
-					BOOST_CHECK_MESSAGE(importer.m_statePost.code(expectedAddr) == theState.code(expectedAddr), expectedAddr << ": incorrect code");
-
-					checkStorage(importer.m_statePost.storage(expectedAddr), theState.storage(expectedAddr), expectedAddr);
-				}
-			}
 			checkAddresses<map<Address, u256> >(expectedAddrs, resultAddrs);
 #endif
 			BOOST_CHECK_MESSAGE(theState.rootHash() == h256(o["postStateRoot"].get_str()), "wrong post state root");
@@ -232,6 +218,8 @@ BOOST_AUTO_TEST_CASE(stCreateTest)
 
 BOOST_AUTO_TEST_CASE(stRandom)
 {
+	test::Options::get(); // parse command line options, e.g. to enable JIT
+
 	string testPath = dev::test::getTestPath();
 	testPath += "/StateTests/RandomTests";
 

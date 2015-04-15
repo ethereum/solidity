@@ -965,6 +965,60 @@ BOOST_AUTO_TEST_CASE(simple_accessor)
 	BOOST_CHECK(callContractFunction("data()") == encodeArgs(8));
 }
 
+BOOST_AUTO_TEST_CASE(array_accessor)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint[8] public data;
+			uint[] public dynamicData;
+			uint24[] public smallTypeData;
+			struct st { uint a; uint[] finalArray; }
+			mapping(uint256 => mapping(uint256 => st[5])) public multiple_map;
+
+			function test() {
+				data[0] = 8;
+				dynamicData.length = 3;
+				dynamicData[2] = 8;
+				smallTypeData.length = 128;
+				smallTypeData[1] = 22;
+				smallTypeData[127] = 2;
+				multiple_map[2][1][2].a = 3;
+				multiple_map[2][1][2].finalArray.length = 4;
+				multiple_map[2][1][2].finalArray[3] = 5;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data(uint256)", 0) == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("data(uint256)", 8) == encodeArgs());
+	BOOST_CHECK(callContractFunction("dynamicData(uint256)", 2) == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("dynamicData(uint256)", 8) == encodeArgs());
+	BOOST_CHECK(callContractFunction("smallTypeData(uint256)", 1) == encodeArgs(22));
+	BOOST_CHECK(callContractFunction("smallTypeData(uint256)", 127) == encodeArgs(2));
+	BOOST_CHECK(callContractFunction("smallTypeData(uint256)", 128) == encodeArgs());
+	BOOST_CHECK(callContractFunction("multiple_map(uint256,uint256,uint256)", 2, 1, 2) == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(accessors_mapping_for_array)
+{
+	char const* sourceCode = R"(
+		 contract test {
+			mapping(uint => uint[8]) public data;
+			mapping(uint => uint[]) public dynamicData;
+			function test() {
+				data[2][2] = 8;
+				dynamicData[2].length = 3;
+				dynamicData[2][2] = 8;
+			}
+		 }
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("data(uint256,uint256)", 2, 2) == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("data(uint256, 256)", 2, 8) == encodeArgs());
+	BOOST_CHECK(callContractFunction("dynamicData(uint256,uint256)", 2, 2) == encodeArgs(8));
+	BOOST_CHECK(callContractFunction("dynamicData(uint256,uint256)", 2, 8) == encodeArgs());
+}
+
 BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 {
 	char const* sourceCode = "contract test {\n"
@@ -1393,8 +1447,6 @@ BOOST_AUTO_TEST_CASE(sha3)
 	testSolidityAgainstCpp("a(bytes32)", f, u256(-1));
 }
 
-#ifdef PRECOMPILED_CONTRACTS_GAS_FIXED_IN_SOLIDITY
-
 BOOST_AUTO_TEST_CASE(sha256)
 {
 	char const* sourceCode = "contract test {\n"
@@ -1448,8 +1500,6 @@ BOOST_AUTO_TEST_CASE(ecrecover)
 	u160 addr("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b");
 	BOOST_CHECK(callContractFunction("a(bytes32,uint8,bytes32,bytes32)", h, v, r, s) == encodeArgs(addr));
 }
-
-#endif
 
 BOOST_AUTO_TEST_CASE(inter_contract_calls)
 {

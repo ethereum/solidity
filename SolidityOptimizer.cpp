@@ -56,8 +56,16 @@ public:
 		m_nonOptimizedContract = m_contractAddress;
 		m_optimize = true;
 		bytes optimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
+		size_t nonOptimizedSize = 0;
+		eth::eachInstruction(nonOptimizedBytecode, [&](Instruction, u256 const&) {
+			nonOptimizedSize++;
+		});
+		size_t optimizedSize = 0;
+		eth::eachInstruction(optimizedBytecode, [&](Instruction, u256 const&) {
+			optimizedSize++;
+		});
 		BOOST_CHECK_MESSAGE(
-			nonOptimizedBytecode.size() > optimizedBytecode.size(),
+			nonOptimizedSize > optimizedSize,
 			"Optimizer did not reduce bytecode size."
 		);
 		m_optimizedContract = m_contractAddress;
@@ -75,11 +83,16 @@ public:
 							"\nOptimized:     " + toHex(optimizedOutput));
 	}
 
-	void checkCSE(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	AssemblyItems getCSE(AssemblyItems const& _input)
 	{
 		eth::CommonSubexpressionEliminator cse;
 		BOOST_REQUIRE(cse.feedItems(_input.begin(), _input.end()) == _input.end());
-		AssemblyItems output = cse.getOptimizedItems();
+		return cse.getOptimizedItems();
+	}
+
+	void checkCSE(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	{
+		AssemblyItems output = getCSE(_input);
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
@@ -567,6 +580,155 @@ BOOST_AUTO_TEST_CASE(cse_jumpi_jump)
 		AssemblyItem(PushTag, 1),
 		Instruction::JUMP
 	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_empty_sha3)
+{
+	AssemblyItems input{
+		u256(0),
+		Instruction::DUP2,
+		Instruction::SHA3
+	};
+	checkCSE(input, {
+		u256(sha3(bytesConstRef()))
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_partial_sha3)
+{
+	AssemblyItems input{
+		u256(0xabcd) << (256 - 16),
+		u256(0),
+		Instruction::MSTORE,
+		u256(2),
+		u256(0),
+		Instruction::SHA3
+	};
+	checkCSE(input, {
+		u256(0xabcd) << (256 - 16),
+		u256(0),
+		Instruction::MSTORE,
+		u256(sha3(bytes{0xab, 0xcd}))
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_location)
+{
+	// sha3 twice from same dynamic location
+	AssemblyItems input{
+		Instruction::DUP2,
+		Instruction::DUP1,
+		Instruction::MSTORE,
+		u256(64),
+		Instruction::DUP2,
+		Instruction::SHA3,
+		u256(64),
+		Instruction::DUP3,
+		Instruction::SHA3
+	};
+	checkCSE(input, {
+		Instruction::DUP2,
+		Instruction::DUP1,
+		Instruction::MSTORE,
+		u256(64),
+		Instruction::DUP2,
+		Instruction::SHA3,
+		Instruction::DUP1
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content)
+{
+	// sha3 twice from different dynamic location but with same content
+	AssemblyItems input{
+		Instruction::DUP1,
+		u256(0x80),
+		Instruction::MSTORE, // m[128] = DUP1
+		u256(0x20),
+		u256(0x80),
+		Instruction::SHA3, // sha3(m[128..(128+32)])
+		Instruction::DUP2,
+		u256(12),
+		Instruction::MSTORE, // m[12] = DUP1
+		u256(0x20),
+		u256(12),
+		Instruction::SHA3 // sha3(m[12..(12+32)])
+	};
+	checkCSE(input, {
+		u256(0x80),
+		Instruction::DUP2,
+		Instruction::DUP2,
+		Instruction::MSTORE,
+		u256(0x20),
+		Instruction::SWAP1,
+		Instruction::SHA3,
+		u256(12),
+		Instruction::DUP3,
+		Instruction::SWAP1,
+		Instruction::MSTORE,
+		Instruction::DUP1
+	});
+}
+
+BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_dynamic_store_in_between)
+{
+	// sha3 twice from different dynamic location but with same content,
+	// dynamic mstore in between, which forces us to re-calculate the sha3
+	AssemblyItems input{
+		u256(0x80),
+		Instruction::DUP2,
+		Instruction::DUP2,
+		Instruction::MSTORE, // m[128] = DUP1
+		u256(0x20),
+		Instruction::DUP1,
+		Instruction::DUP3,
+		Instruction::SHA3, // sha3(m[128..(128+32)])
+		u256(12),
+		Instruction::DUP5,
+		Instruction::DUP2,
+		Instruction::MSTORE, // m[12] = DUP1
+		Instruction::DUP12,
+		Instruction::DUP14,
+		Instruction::MSTORE, // destroys memory knowledge
+		Instruction::SWAP2,
+		Instruction::SWAP1,
+		Instruction::SWAP2,
+		Instruction::SHA3 // sha3(m[12..(12+32)])
+	};
+	checkCSE(input, input);
+}
+
+BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_noninterfering_store_in_between)
+{
+	// sha3 twice from different dynamic location but with same content,
+	// dynamic mstore in between, but does not force us to re-calculate the sha3
+	AssemblyItems input{
+		u256(0x80),
+		Instruction::DUP2,
+		Instruction::DUP2,
+		Instruction::MSTORE, // m[128] = DUP1
+		u256(0x20),
+		Instruction::DUP1,
+		Instruction::DUP3,
+		Instruction::SHA3, // sha3(m[128..(128+32)])
+		u256(12),
+		Instruction::DUP5,
+		Instruction::DUP2,
+		Instruction::MSTORE, // m[12] = DUP1
+		Instruction::DUP12,
+		u256(12 + 32),
+		Instruction::MSTORE, // does not destoy memory knowledge
+		Instruction::DUP13,
+		u256(128 - 32),
+		Instruction::MSTORE, // does not destoy memory knowledge
+		u256(0x20),
+		u256(12),
+		Instruction::SHA3 // sha3(m[12..(12+32)])
+	};
+	// if this changes too often, only count the number of SHA3 and MSTORE instructions
+	AssemblyItems output = getCSE(input);
+	BOOST_CHECK_EQUAL(4, count(output.begin(), output.end(), AssemblyItem(Instruction::MSTORE)));
+	BOOST_CHECK_EQUAL(1, count(output.begin(), output.end(), AssemblyItem(Instruction::SHA3)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
