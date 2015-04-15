@@ -805,7 +805,7 @@ BOOST_AUTO_TEST_CASE(control_flow_graph_do_not_remove_returned_to)
 		Instruction::JUMP,
 		AssemblyItem(Tag, 2),
 		Instruction::JUMP,
-		AssemblyItem(PushTag, 1),
+		AssemblyItem(Tag, 1),
 		u256(2)
 	};
 	checkCFG(input, {u256(2)});
