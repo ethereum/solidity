@@ -90,7 +90,7 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 			for (auto const& modifier: constructor->getModifiers())
 			{
 				auto baseContract = dynamic_cast<ContractDefinition const*>(
-					modifier->getName()->getReferencedDeclaration());
+					&modifier->getName()->getReferencedDeclaration());
 				if (baseContract)
 					if (m_baseArguments.count(baseContract->getConstructor()) == 0)
 						m_baseArguments[baseContract->getConstructor()] = &modifier->getArguments();
@@ -99,7 +99,7 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->getBaseContracts())
 		{
 			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
-						base->getName()->getReferencedDeclaration());
+						&base->getName()->getReferencedDeclaration());
 			solAssert(baseContract, "");
 
 			if (m_baseArguments.count(baseContract->getConstructor()) == 0)
@@ -545,7 +545,7 @@ void Compiler::appendModifierOrFunctionCode()
 		ASTPointer<ModifierInvocation> const& modifierInvocation = m_currentFunction->getModifiers()[m_modifierDepth];
 
 		// constructor call should be excluded
-		if (dynamic_cast<ContractDefinition const*>(modifierInvocation->getName()->getReferencedDeclaration()))
+		if (dynamic_cast<ContractDefinition const*>(&modifierInvocation->getName()->getReferencedDeclaration()))
 		{
 			++m_modifierDepth;
 			appendModifierOrFunctionCode();

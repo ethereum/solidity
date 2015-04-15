@@ -601,13 +601,25 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		bool alsoSearchInteger = false;
 		ContractType const& type = dynamic_cast<ContractType const&>(*_memberAccess.getExpression().getType());
 		if (type.isSuper())
-			m_context << m_context.getSuperFunctionEntryLabel(member, type.getContractDefinition()).pushTag();
+		{
+			solAssert(!!_memberAccess.referencedDeclaration(), "Referenced declaration not resolved.");
+			m_context << m_context.getSuperFunctionEntryLabel(
+				dynamic_cast<FunctionDefinition const&>(*_memberAccess.referencedDeclaration()),
+				type.getContractDefinition()
+			).pushTag();
+		}
 		else
 		{
 			// ordinary contract type
-			u256 identifier = type.getFunctionIdentifier(member);
-			if (identifier != Invalid256)
+			if (Declaration const* declaration = _memberAccess.referencedDeclaration())
 			{
+				u256 identifier;
+				if (auto const* variable = dynamic_cast<VariableDeclaration const*>(declaration))
+					identifier = FunctionType(*variable).externalIdentifier();
+				else if (auto const* function = dynamic_cast<FunctionDefinition const*>(declaration))
+					identifier = FunctionType(*function).externalIdentifier();
+				else
+					solAssert(false, "Contract member is neither variable nor function.");
 				appendTypeConversion(type, IntegerType(0, IntegerType::Modifier::Address), true);
 				m_context << identifier;
 			}
@@ -683,19 +695,16 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::TypeType:
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.getExpression().getType());
-		if (!type.getMembers().getMemberType(member))
-			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to " + type.toString()));
+		solAssert(
+			!type.getMembers().membersByName(_memberAccess.getMemberName()).empty(),
+			"Invalid member access to " + type.toString()
+		);
 
-		if (auto contractType = dynamic_cast<ContractType const*>(type.getActualType().get()))
+		if (dynamic_cast<ContractType const*>(type.getActualType().get()))
 		{
-			ContractDefinition const& contract = contractType->getContractDefinition();
-			for (ASTPointer<FunctionDefinition> const& function: contract.getDefinedFunctions())
-				if (function->getName() == member)
-				{
-					m_context << m_context.getFunctionEntryLabel(*function).pushTag();
-					return;
-				}
-			solAssert(false, "Function not found in member access.");
+			auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.referencedDeclaration());
+			solAssert(!!function, "Function not found in member access");
+			m_context << m_context.getFunctionEntryLabel(*function).pushTag();
 		}
 		else if (auto enumType = dynamic_cast<EnumType const*>(type.getActualType().get()))
 			m_context << enumType->getMemberValue(_memberAccess.getMemberName());
@@ -780,7 +789,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 void ExpressionCompiler::endVisit(Identifier const& _identifier)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _identifier);
-	Declaration const* declaration = _identifier.getReferencedDeclaration();
+	Declaration const* declaration = &_identifier.getReferencedDeclaration();
 	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
 		switch (magicVar->getType()->getCategory())
@@ -818,13 +827,6 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	else if (dynamic_cast<EnumDefinition const*>(declaration))
 	{
 		// no-op
-	}
-	else if (declaration == nullptr && _identifier.getOverloadedDeclarations().size() > 1)
-	{
-		// var x = f;
-		declaration = *_identifier.getOverloadedDeclarations().begin();
-		FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration);
-		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
 	}
 	else
 	{

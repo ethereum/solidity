@@ -102,27 +102,13 @@ eth::AssemblyItem CompilerContext::getFunctionEntryLabel(Declaration const& _dec
 eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(FunctionDefinition const& _function)
 {
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
-	for (ContractDefinition const* contract: m_inheritanceHierarchy)
-		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-		{
-			if (!function->isConstructor() &&
-				dynamic_cast<FunctionType const&>(*function->getType(contract)).getCanonicalSignature() ==
-				dynamic_cast<FunctionType const&>(*_function.getType(contract)).getCanonicalSignature())
-				return getFunctionEntryLabel(*function);
-		}
-	solAssert(false, "Virtual function " + _function.getName() + " not found.");
-	return m_asm.newTag(); // not reached
+	return getVirtualFunctionEntryLabel(_function, m_inheritanceHierarchy.begin());
 }
 
-eth::AssemblyItem CompilerContext::getSuperFunctionEntryLabel(string const& _name, ContractDefinition const& _base)
+eth::AssemblyItem CompilerContext::getSuperFunctionEntryLabel(FunctionDefinition const& _function, ContractDefinition const& _base)
 {
-	auto it = getSuperContract(_base);
-	for (; it != m_inheritanceHierarchy.end(); ++it)
-		for (ASTPointer<FunctionDefinition> const& function: (*it)->getDefinedFunctions())
-			if (!function->isConstructor() && function->getName() == _name)     // TODO: add a test case for this!
-				return getFunctionEntryLabel(*function);
-	solAssert(false, "Super function " + _name + " not found.");
-	return m_asm.newTag(); // not reached
+	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
+	return getVirtualFunctionEntryLabel(_function, getSuperContract(_base));
 }
 
 FunctionDefinition const* CompilerContext::getNextConstructor(ContractDefinition const& _contract) const
@@ -192,6 +178,26 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 	newStack.push(_node);
 	std::swap(m_visitedNodes, newStack);
 	updateSourceLocation();
+}
+
+eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(
+	FunctionDefinition const& _function,
+	vector<ContractDefinition const*>::const_iterator _searchStart
+)
+{
+	string name = _function.getName();
+	FunctionType functionType(_function);
+	auto it = _searchStart;
+	for (; it != m_inheritanceHierarchy.end(); ++it)
+		for (ASTPointer<FunctionDefinition> const& function: (*it)->getDefinedFunctions())
+			if (
+				function->getName() == name &&
+				!function->isConstructor() &&
+				FunctionType(*function).hasEqualArgumentTypes(functionType)
+			)
+				return getFunctionEntryLabel(*function);
+	solAssert(false, "Super function " + name + " not found.");
+	return m_asm.newTag(); // not reached
 }
 
 vector<ContractDefinition const*>::const_iterator CompilerContext::getSuperContract(ContractDefinition const& _contract) const

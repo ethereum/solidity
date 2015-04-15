@@ -35,30 +35,29 @@ bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, 
 	if (name.empty())
 		return true;
 
-	if (!_update)
+	if (_update)
+	{
+		solAssert(!dynamic_cast<FunctionDefinition const*>(&_declaration), "Attempt to update function definition.");
+		m_declarations[name].clear();
+		m_invisibleDeclarations[name].clear();
+	}
+	else
 	{
 		if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 		{
-			// other declarations must be FunctionDefinition, otherwise clash with other declarations.
-			for (auto&& declaration: m_declarations[_declaration.getName()])
-				if (dynamic_cast<FunctionDefinition const*>(declaration) == nullptr)
+			// check that all other declarations with the same name are functions
+			for (auto&& declaration: m_invisibleDeclarations[name] + m_declarations[name])
+				if (!dynamic_cast<FunctionDefinition const*>(declaration))
 					return false;
 		}
-		else if (m_declarations.count(_declaration.getName()) != 0)
-				return false;
-	}
-	else
-	{
-		// update declaration
-		solAssert(dynamic_cast<FunctionDefinition const*>(&_declaration) == nullptr, "cannot be FunctionDefinition");
-
-		m_declarations[_declaration.getName()].clear();
+		else if (m_declarations.count(name) > 0 || m_invisibleDeclarations.count(name) > 0)
+			return false;
 	}
 
 	if (_invisible)
-		m_invisibleDeclarations.insert(name);
+		m_invisibleDeclarations[name].insert(&_declaration);
 	else
-		m_declarations[_declaration.getName()].insert(&_declaration);
+		m_declarations[name].insert(&_declaration);
 
 	return true;
 }

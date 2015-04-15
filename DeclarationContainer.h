@@ -56,7 +56,7 @@ private:
 	Declaration const* m_enclosingDeclaration;
 	DeclarationContainer const* m_enclosingContainer;
 	std::map<ASTString, std::set<Declaration const*>> m_declarations;
-	std::set<ASTString> m_invisibleDeclarations;
+	std::map<ASTString, std::set<Declaration const*>> m_invisibleDeclarations;
 };
 
 }

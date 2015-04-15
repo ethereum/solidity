@@ -177,10 +177,10 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			for (auto const& member: structType.getMembers())
 			{
 				// assign each member that is not a mapping
-				TypePointer const& memberType = member.second;
+				TypePointer const& memberType = member.type;
 				if (memberType->getCategory() == Type::Category::Mapping)
 					continue;
-				pair<u256, unsigned> const& offsets = structType.getStorageOffsetsOfMember(member.first);
+				pair<u256, unsigned> const& offsets = structType.getStorageOffsetsOfMember(member.name);
 				m_context
 					<< offsets.first << u256(offsets.second)
 					<< eth::Instruction::DUP6 << eth::Instruction::DUP3
@@ -230,10 +230,10 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 		for (auto const& member: structType.getMembers())
 		{
 			// zero each member that is not a mapping
-			TypePointer const& memberType = member.second;
+			TypePointer const& memberType = member.type;
 			if (memberType->getCategory() == Type::Category::Mapping)
 				continue;
-			pair<u256, unsigned> const& offsets = structType.getStorageOffsetsOfMember(member.first);
+			pair<u256, unsigned> const& offsets = structType.getStorageOffsetsOfMember(member.name);
 			m_context
 				<< offsets.first << eth::Instruction::DUP3 << eth::Instruction::ADD
 				<< u256(offsets.second);

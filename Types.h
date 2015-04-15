@@ -69,17 +69,43 @@ private:
 class MemberList
 {
 public:
-	using MemberMap = std::vector<std::pair<std::string, TypePointer>>;
+	struct Member
+	{
+		Member(std::string const& _name, TypePointer const& _type, Declaration const* _declaration = nullptr):
+			name(_name),
+			type(_type),
+			declaration(_declaration)
+		{
+		}
+
+		std::string name;
+		TypePointer type;
+		Declaration const* declaration = nullptr;
+	};
+
+	using MemberMap = std::vector<Member>;
 
 	MemberList() {}
 	explicit MemberList(MemberMap const& _members): m_memberTypes(_members) {}
 	MemberList& operator=(MemberList&& _other);
 	TypePointer getMemberType(std::string const& _name) const
 	{
+		TypePointer type;
 		for (auto const& it: m_memberTypes)
-			if (it.first == _name)
-				return it.second;
-		return TypePointer();
+			if (it.name == _name)
+			{
+				solAssert(!type, "Requested member type by non-unique name.");
+				type = it.type;
+			}
+		return type;
+	}
+	MemberMap membersByName(std::string const& _name) const
+	{
+		MemberMap members;
+		for (auto const& it: m_memberTypes)
+			if (it.name == _name)
+				members.push_back(it);
+		return members;
 	}
 	/// @returns the offset of the given member in storage slots and bytes inside a slot or
 	/// a nullptr if the member is not part of storage.
@@ -104,7 +130,7 @@ public:
 	enum class Category
 	{
 		Integer, IntegerConstant, Bool, Real, Array,
-		FixedBytes, Contract, Struct, Function, OverloadedFunctions, Enum,
+		FixedBytes, Contract, Struct, Function, Enum,
 		Mapping, Void, TypeType, Modifier, Magic
 	};
 
@@ -554,11 +580,18 @@ public:
 	virtual unsigned getSizeOnStack() const override;
 	virtual MemberList const& getMembers() const override;
 
+	/// @returns true if this function can take the given argument types (possibly
+	/// after implicit conversion).
+	bool canTakeArguments(TypePointers const& _arguments) const;
+	bool hasEqualArgumentTypes(FunctionType const& _other) const;
+
 	Location const& getLocation() const { return m_location; }
 	/// @returns the external signature of this function type given the function name
 	/// If @a _name is not provided (empty string) then the @c m_declaration member of the
 	/// function type is used
 	std::string externalSignature(std::string const& _name = "") const;
+	/// @returns the external identifier of this function (the hash of the signature).
+	u256 externalIdentifier() const;
 	Declaration const& getDeclaration() const
 	{
 		solAssert(m_declaration, "Requested declaration from a FunctionType that has none");
@@ -595,20 +628,6 @@ private:
 	bool m_isConstant = false;
 	mutable std::unique_ptr<MemberList> m_members;
 	Declaration const* m_declaration = nullptr;
-};
-
-class OverloadedFunctionType: public Type
-{
-public:
-	explicit OverloadedFunctionType(Identifier* _identifier): m_identifier(_identifier) {}
-
-	virtual Category getCategory() const override { return Category::OverloadedFunctions; }
-	virtual std::string toString() const override { return "OverloadedFunctions"; }
-
-	Identifier* getIdentifier() const { return m_identifier; }
-
-private:
-	Identifier * m_identifier;
 };
 
 /**
