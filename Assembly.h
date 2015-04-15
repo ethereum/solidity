@@ -92,10 +92,11 @@ public:
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
 	Json::Value stream(
-			std::ostream& _out,
-			std::string const& _prefix = "",
-			const StringMap &_sourceCodes = StringMap(),
-			bool _inJsonFormat = false) const;
+		std::ostream& _out,
+		std::string const& _prefix = "",
+		const StringMap &_sourceCodes = StringMap(),
+		bool _inJsonFormat = false
+	) const;
 
 protected:
 	std::string getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
@@ -104,10 +105,11 @@ protected:
 
 private:
 	Json::Value streamAsmJson(
-			std::ostream& _out,
-			const std::string &_prefix,
-			const StringMap &_sourceCodes,
-			bool _inJsonFormat) const;
+		std::ostream& _out,
+		const std::string &_prefix,
+		const StringMap &_sourceCodes,
+		bool _inJsonFormat
+	) const;
 	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
 	Json::Value createJsonValue(std::string _name, int _locationX, int _locationY, std::string _value = std::string(), std::string _jumpType = std::string()) const;
 

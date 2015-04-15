@@ -189,35 +189,35 @@ Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, String
 		{
 		case Operation:
 			currentCollection.push_back(
-						createJsonValue(instructionInfo(i.instruction()).name, i.getLocation().start, i.getLocation().end, i.getJumpTypeAsString()));
+				createJsonValue(instructionInfo(i.instruction()).name, i.getLocation().start, i.getLocation().end, i.getJumpTypeAsString()));
 			break;
 		case Push:
 		{
 			std::stringstream hexStr;
-			hexStr << hex << (unsigned)i.data();
+			hexStr << hex << i.data();
 			currentCollection.push_back(
-						createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, hexStr.str(), i.getJumpTypeAsString()));
+				createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, hexStr.str(), i.getJumpTypeAsString()));
 		}
 			break;
 		case PushString:
 			currentCollection.push_back(
-						createJsonValue(string("PUSH tag"), i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
+				createJsonValue(string("PUSH tag"), i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
 			break;
 		case PushTag:
 			currentCollection.push_back(
-						createJsonValue(string("PUSH [tag]"), i.getLocation().start, i.getLocation().end, string(i.data())));
+				createJsonValue(string("PUSH [tag]"), i.getLocation().start, i.getLocation().end, string(i.data())));
 			break;
 		case PushSub:
 			currentCollection.push_back(
-						createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string("[$]" + string(h256(i.data()).abridged()))));
+				createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string("[$]" + dev::toString(h256(i.data())))));
 			break;
 		case PushSubSize:
 			currentCollection.push_back(
-						createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string("#[$]" + string(h256(i.data()).abridged()))));
+				createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string("#[$]" + dev::toString(h256(i.data())))));
 			break;
 		case PushProgramSize:
 			currentCollection.push_back(
-						createJsonValue(string("PUSHSIZE"), i.getLocation().start, i.getLocation().end));
+				createJsonValue(string("PUSHSIZE"), i.getLocation().start, i.getLocation().end));
 			break;
 		case Tag:
 		{
