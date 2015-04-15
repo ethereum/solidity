@@ -53,6 +53,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		BOOST_REQUIRE(o.count("pre"));
 		ImportTest importer(o["pre"].get_obj());
 		State state(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+		State stateTemp(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
 		importer.importState(o["pre"].get_obj(), state);
 		o["pre"] = fillJsonWithState(state);
 		state.commit();
@@ -89,7 +90,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			for (auto const& bl: o["blocks"].get_array())
 			{
 				mObject blObj = bl.get_obj();
-
+				stateTemp = state;
 				// get txs
 				TransactionQueue txs;
 				ZeroGasPricer gp;
@@ -180,7 +181,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					}
 
 					uncleHeaderObj_pre = uncleHeaderObj;
-				}
+				} //for blObj["uncleHeaders"].get_array()
 
 				blObj["uncleHeaders"] = aUncleList;
 				bc.sync(uncleBlockQueue, state.db(), 4);
@@ -190,10 +191,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					state.sync(bc);
 					state.sync(bc, txs, gp);
-					state.commitToMine(bc);
-					MineInfo info;
-					for (info.completed = false; !info.completed; info = state.mine()) {}
-					state.completeMine();
+					mine(state, bc);
 				}
 				catch (Exception const& _e)
 				{
@@ -287,12 +285,23 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					blObj.erase(blObj.find("blockHeader"));
 					blObj.erase(blObj.find("uncleHeaders"));
 					blObj.erase(blObj.find("transactions"));
+					state = stateTemp; //revert state as if it was before executing this block
 				}
 				blArray.push_back(blObj);
+			} //for blocks
+
+			if (o.count("expect") > 0)
+			{
+				stateOptionsMap expectStateMap;
+				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+				importer.importState(o["expect"].get_obj(), stateExpect, expectStateMap);
+				ImportTest::checkExpectedState(stateExpect, state, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+				o.erase(o.find("expect"));
 			}
+
 			o["blocks"] = blArray;
 			o["postState"] = fillJsonWithState(state);
-		}
+		}//_fillin
 
 		else
 		{
@@ -518,76 +527,55 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	return rlpStream.out();
 }
 
-void overwriteBlockHeader(BlockInfo& _currentBlockHeader, mObject& _blObj)
+void overwriteBlockHeader(BlockInfo& _header, mObject& _blObj)
 {
-	if (_blObj["blockHeader"].get_obj().size() != 14)
+	auto ho = _blObj["blockHeader"].get_obj();
+	if (ho.size() != 14)
 	{
-
-		BlockInfo tmp = _currentBlockHeader;
-
-		if (_blObj["blockHeader"].get_obj().count("parentHash"))
-			tmp.parentHash = h256(_blObj["blockHeader"].get_obj()["parentHash"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("uncleHash"))
-			tmp.sha3Uncles = h256(_blObj["blockHeader"].get_obj()["uncleHash"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("coinbase"))
-			tmp.coinbaseAddress = Address(_blObj["blockHeader"].get_obj()["coinbase"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("stateRoot"))
-			tmp.stateRoot = h256(_blObj["blockHeader"].get_obj()["stateRoot"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("transactionsTrie"))
-			tmp.transactionsRoot = h256(_blObj["blockHeader"].get_obj()["transactionsTrie"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("receiptTrie"))
-			tmp.receiptsRoot = h256(_blObj["blockHeader"].get_obj()["receiptTrie"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("bloom"))
-			tmp.logBloom = LogBloom(_blObj["blockHeader"].get_obj()["bloom"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("difficulty"))
-			tmp.difficulty = toInt(_blObj["blockHeader"].get_obj()["difficulty"]);
-
-		if (_blObj["blockHeader"].get_obj().count("number"))
-			tmp.number = toInt(_blObj["blockHeader"].get_obj()["number"]);
-
-		if (_blObj["blockHeader"].get_obj().count("gasLimit"))
-			tmp.gasLimit = toInt(_blObj["blockHeader"].get_obj()["gasLimit"]);
-
-		if (_blObj["blockHeader"].get_obj().count("gasUsed"))
-			tmp.gasUsed = toInt(_blObj["blockHeader"].get_obj()["gasUsed"]);
-
-		if (_blObj["blockHeader"].get_obj().count("timestamp"))
-			tmp.timestamp = toInt(_blObj["blockHeader"].get_obj()["timestamp"]);
-
-		if (_blObj["blockHeader"].get_obj().count("extraData"))
-			tmp.extraData = importByteArray(_blObj["blockHeader"].get_obj()["extraData"].get_str());
-
-		if (_blObj["blockHeader"].get_obj().count("mixHash"))
-			tmp.mixHash = h256(_blObj["blockHeader"].get_obj()["mixHash"].get_str());
+		BlockInfo tmp = _header;
+		if (ho.count("parentHash"))
+			tmp.parentHash = h256(ho["parentHash"].get_str());
+		if (ho.count("uncleHash"))
+			tmp.sha3Uncles = h256(ho["uncleHash"].get_str());
+		if (ho.count("coinbase"))
+			tmp.coinbaseAddress = Address(ho["coinbase"].get_str());
+		if (ho.count("stateRoot"))
+			tmp.stateRoot = h256(ho["stateRoot"].get_str());
+		if (ho.count("transactionsTrie"))
+			tmp.transactionsRoot = h256(ho["transactionsTrie"].get_str());
+		if (ho.count("receiptTrie"))
+			tmp.receiptsRoot = h256(ho["receiptTrie"].get_str());
+		if (ho.count("bloom"))
+			tmp.logBloom = LogBloom(ho["bloom"].get_str());
+		if (ho.count("difficulty"))
+			tmp.difficulty = toInt(ho["difficulty"]);
+		if (ho.count("number"))
+			tmp.number = toInt(ho["number"]);
+		if (ho.count("gasLimit"))
+			tmp.gasLimit = toInt(ho["gasLimit"]);
+		if (ho.count("gasUsed"))
+			tmp.gasUsed = toInt(ho["gasUsed"]);
+		if (ho.count("timestamp"))
+			tmp.timestamp = toInt(ho["timestamp"]);
+		if (ho.count("extraData"))
+			tmp.extraData = importByteArray(ho["extraData"].get_str());
+		if (ho.count("mixHash"))
+			tmp.mixHash = h256(ho["mixHash"].get_str());
+		tmp.noteDirty();
 
 		// find new valid nonce
-
-		if (tmp != _currentBlockHeader)
+		if (tmp != _header)
 		{
-			_currentBlockHeader = tmp;
-
-			ProofOfWork pow;
-			std::pair<MineInfo, Ethash::Proof> ret;
-			while (!ProofOfWork::verify(_currentBlockHeader))
-			{
-				ret = pow.mine(_currentBlockHeader, 1000, true, true);
-				Ethash::assignResult(ret.second, _currentBlockHeader);
-			}
+			mine(tmp);
+			_header = tmp;
 		}
 	}
 	else
 	{
 		// take the blockheader as is
-		const bytes c_blockRLP = createBlockRLPFromFields(_blObj["blockHeader"].get_obj());
+		const bytes c_blockRLP = createBlockRLPFromFields(ho);
 		const RLP c_bRLP(c_blockRLP);
-		_currentBlockHeader.populateFromHeader(c_bRLP, IgnoreNonce);
+		_header.populateFromHeader(c_bRLP, IgnoreNonce);
 	}
 }
 
@@ -604,7 +592,6 @@ BlockInfo constructBlock(mObject& _o)
 	catch (Exception const& _e)
 	{
 		cnote << "block population did throw an exception: " << diagnostic_information(_e);
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
 	}
 	catch (std::exception const& _e)
 	{
@@ -619,13 +606,7 @@ BlockInfo constructBlock(mObject& _o)
 
 void updatePoW(BlockInfo& _bi)
 {
-	ProofOfWork pow;
-	std::pair<MineInfo, Ethash::Proof> ret;
-	while (!ProofOfWork::verify(_bi))
-	{
-		ret = pow.mine(_bi, 10000, true, true);
-		Ethash::assignResult(ret.second, _bi);
-	}
+	mine(_bi);
 	_bi.noteDirty();
 }
 
@@ -665,6 +646,11 @@ RLPStream createFullBlockFromHeader(BlockInfo const& _bi, bytes const& _txs, byt
 } }// Namespace Close
 
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
+
+BOOST_AUTO_TEST_CASE(bcForkBlockTest)
+{
+	dev::test::executeTests("bcForkBlockTest", "/BlockTests", dev::test::doBlockchainTests);
+}
 
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {
