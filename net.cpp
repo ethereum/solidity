@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 		{
 			Neighbours::Node node;
 			node.ipAddress = boost::asio::ip::address::from_string("200.200.200.200").to_string();
-			node.port = testNodes[i].second;
+			node.udpPort = testNodes[i].second;
 			node.node = testNodes[i].first.pub();
 			out.nodes.push_back(node);
 		}
