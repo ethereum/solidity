@@ -495,6 +495,27 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(constructor_abi)
+{
+	char const* sourceCode = R"(
+		contract test {
+		function test() {
+		}
+	})";
+
+	char const* interface = R"("
+	[
+		{
+		  "constant" : false,
+		  "inputs" : [],
+		  "name" : "test",
+		  "outputs" : [],
+		  "type" : "constructor"
+		}
+	])";
+	checkInterface(sourceCode, interface);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
