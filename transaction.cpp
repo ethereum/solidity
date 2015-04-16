@@ -82,7 +82,6 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 				o.erase(o.find("expect"));
 			}
-
 		}
 		else
 		{			
