@@ -24,6 +24,7 @@
 #include <libdevcore/Log.h>
 #include <libevmcore/CommonSubexpressionEliminator.h>
 #include <libevmcore/ControlFlowGraph.h>
+#include <json/json.h>
 
 using namespace std;
 using namespace dev;
@@ -101,9 +102,8 @@ string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLoc
 	return move(cut);
 }
 
-ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
+ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
-	(void)_inJsonFormat;
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
 	{
@@ -156,6 +156,164 @@ ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const&
 		}
 	}
 	return _out;
+}
+
+ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
+{
+	Json::Value root;
+
+	string currentArrayName = ".code";
+	std::vector<Json::Value> currentCollection;
+	for (AssemblyItem const& i: m_items)
+	{
+		//todo check and remove where location.isEmpty()
+		switch (i.type())
+		{
+		case Operation:
+		{
+			Json::Value op;
+			op["name"] = instructionInfo(i.instruction()).name;
+			op["jumpType"] = i.getJumpTypeAsString();
+			op["locationX"] = i.getLocation().start;
+			op["locationY"] = i.getLocation().end;
+			currentCollection.push_back(op);
+			//_out << "  " << instructionInfo(i.instruction()).name  << "\t" << i.getJumpTypeAsString();
+		}
+			break;
+		case Push:
+		{
+			Json::Value pushitem;
+			pushitem["name"] = "PUSH";
+			pushitem["value"] = string(i.data());
+			pushitem["locationX"] = boost::lexical_cast<std::string>(i.getLocation().start);
+			pushitem["locationY"] = boost::lexical_cast<std::string>(i.getLocation().end);
+			currentCollection.push_back(pushitem);
+			//_out << "  PUSH " << i.data();
+		}
+			break;
+		case PushString:
+		{
+			Json::Value pushString;
+			pushString["name"] = "PUSH tag";
+			pushString["value"] = m_strings.at((h256)i.data());
+			pushString["locationX"] = i.getLocation().start;
+			pushString["locationY"] = i.getLocation().end;
+			currentCollection.push_back(pushString);
+			//_out << "  PUSH \"" << m_strings.at((h256)i.data()) << "\"";
+		}
+			break;
+		case PushTag:
+		{
+			Json::Value pushTag;
+			pushTag["name"] = "PUSH [tag]";
+			pushTag["value"] = string(i.data());
+			pushTag["locationX"] = boost::lexical_cast<std::string>(i.getLocation().start);
+			pushTag["locationY"] = boost::lexical_cast<std::string>(i.getLocation().end);
+			currentCollection.push_back(pushTag);
+		}
+			//_out << "  PUSH [tag" << i.data() << "]";
+			break;
+		case PushSub:
+		{
+			Json::Value pushSub;
+			pushSub["name"] = "PUSH [$]";
+			pushSub["value"] = h256(i.data()).abridged() ;
+			pushSub["locationX"] = boost::lexical_cast<std::string>(i.getLocation().start);
+			pushSub["locationY"] = boost::lexical_cast<std::string>(i.getLocation().end);
+			currentCollection.push_back(pushSub);
+		}
+			//_out << "  PUSH [$" << h256(i.data()).abridged() << "]";
+			break;
+		case PushSubSize:
+		{
+			Json::Value pushSubSize;
+			pushSubSize["name"] = "PUSH #[$]";
+			pushSubSize["value"] = h256(i.data()).abridged();
+			pushSubSize["locationX"] = boost::lexical_cast<std::string>(i.getLocation().start);
+			pushSubSize["locationY"] = boost::lexical_cast<std::string>(i.getLocation().end);
+			currentCollection.push_back(pushSubSize);
+		}
+			//_out << "  PUSH #[$" << h256(i.data()).abridged() << "]";
+			break;
+		case PushProgramSize:
+		{
+			Json::Value pushSize;
+			pushSize["name"] = "PUSHSIZE";
+			pushSize["locationX"] = boost::lexical_cast<std::string>(i.getLocation().start);
+			pushSize["locationY"] = boost::lexical_cast<std::string>(i.getLocation().end);
+			currentCollection.push_back(pushSize);
+		}
+			//_out << "  PUSHSIZE";
+			break;
+		case Tag:
+		{
+			Json::Value collection(Json::arrayValue);
+			for(auto it: currentCollection)
+				collection.append(it);
+			currentCollection.clear();
+			root[currentArrayName] = collection;
+			currentArrayName = "tag" + string(i.data());
+		}
+			//_out << "tag" << i.data() << ": " << endl << _prefix << "  JUMPDEST";
+			break;
+		case PushData:
+		{
+			Json::Value pushData;
+			pushData["name"] = "PUSH hex";
+			std::stringstream hexStr;
+			hexStr << hex << (unsigned)i.data();
+			pushData["value"] = hexStr.str();
+			pushData["locationX"] = boost::lexical_cast<std::string>(i.getLocation().start);
+			pushData["locationY"] = boost::lexical_cast<std::string>(i.getLocation().end);
+			currentCollection.push_back(pushData);
+		}
+			//_out << "  PUSH [" << hex << (unsigned)i.data() << "]";
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
+		}
+	}
+
+	//todo check if the last was tag
+	Json::Value collection(Json::arrayValue);
+	for(auto it: currentCollection)
+		collection.append(it);
+	root[currentArrayName] = collection;
+
+	if (!m_data.empty() || !m_subs.empty())
+	{
+		Json::Value dataCollection(Json::arrayValue);
+		for (auto const& i: m_data)
+			if (u256(i.first) >= m_subs.size())
+			{
+				std::stringstream hexStr;
+				hexStr << _prefix << hex << (unsigned)(u256)i.first << ": " << toHex(i.second);
+				Json::Value data;
+				data["value"] = hexStr.str();
+				dataCollection.append(data);
+			}
+		root[_prefix + ".data"] = collection;
+
+		for (size_t i = 0; i < m_subs.size(); ++i)
+		{
+			std::stringstream hexStr;
+			hexStr << _prefix << hex << i << ": ";
+			//_out << _prefix << "  " << hex << i << ": " << endl;
+			//todo check recursion
+			m_subs[i].stream(_out, _prefix + "  ", _sourceCodes, _inJsonFormat);
+		}
+	}
+
+	_out << root;
+	return _out;
+}
+
+ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
+{
+	if (!_inJsonFormat)
+		return streamAsm(_out, _prefix, _sourceCodes);
+	else
+		return streamAsmJson(_out, _prefix, _sourceCodes, _inJsonFormat);
 }
 
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)

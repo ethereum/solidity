@@ -93,6 +93,10 @@ protected:
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired() const;
 
+private:
+	std::ostream& streamAsmJson(std::ostream& _out, const std::string &_prefix, const StringMap &_sourceCodes, bool _inJsonFormat) const;
+	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
+protected:
 	unsigned m_usedTags = 0;
 	AssemblyItems m_items;
 	mutable std::map<h256, bytes> m_data;
@@ -104,7 +108,9 @@ protected:
 	int m_totalDeposit = 0;
 
 	SourceLocation m_currentSourceLocation;
+
 };
+
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
 {
