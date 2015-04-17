@@ -38,7 +38,17 @@ std::unique_ptr<std::string> InterfaceHandler::getDocumentation(ContractDefiniti
 std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 {
 	Json::Value abi(Json::arrayValue);
-	for (auto const& it: _contractDef.getInterfaceFunctions())
+	auto allFunctions = _contractDef.getInterfaceFunctions();
+
+	FunctionTypePointer functionTypePointer = nullptr;
+	if (_contractDef.getConstructor())
+	{
+		functionTypePointer = make_shared<FunctionType>(*_contractDef.getConstructor(), false);
+		allFunctions.insert(make_pair(_contractDef.getConstructorsInterface(), functionTypePointer));
+	}
+
+	//allFunctions.insert(_contractDef.getConstructor());
+	for (auto it: allFunctions)
 	{
 		auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
 		{
@@ -55,7 +65,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		};
 
 		Json::Value method;
-		method["type"] = "function";
+		method["type"] = (functionTypePointer == it.second ? "constructor" : "function");
 		method["name"] = it.second->getDeclaration().getName();
 		method["constant"] = it.second->isConstant();
 		method["inputs"] = populateParameters(it.second->getParameterNames(),
