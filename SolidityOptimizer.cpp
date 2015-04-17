@@ -28,6 +28,7 @@
 #include <boost/lexical_cast.hpp>
 #include <test/solidityExecutionFramework.h>
 #include <libevmcore/CommonSubexpressionEliminator.h>
+#include <libevmcore/ControlFlowGraph.h>
 #include <libevmcore/Assembly.h>
 
 using namespace std;
@@ -93,6 +94,18 @@ public:
 	void checkCSE(AssemblyItems const& _input, AssemblyItems const& _expectation)
 	{
 		AssemblyItems output = getCSE(_input);
+		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
+	}
+
+	void checkCFG(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	{
+		AssemblyItems output = _input;
+		// Running it four times should be enough for these tests.
+		for (unsigned i = 0; i < 4; ++i)
+		{
+			eth::ControlFlowGraph cfg(output);
+			output = cfg.optimisedItems();
+		}
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
@@ -729,6 +742,73 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_noninterfering_store_in_between
 	AssemblyItems output = getCSE(input);
 	BOOST_CHECK_EQUAL(4, count(output.begin(), output.end(), AssemblyItem(Instruction::MSTORE)));
 	BOOST_CHECK_EQUAL(1, count(output.begin(), output.end(), AssemblyItem(Instruction::SHA3)));
+}
+
+BOOST_AUTO_TEST_CASE(control_flow_graph_remove_unused)
+{
+	// remove parts of the code that are unused
+	AssemblyItems input{
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		u256(7),
+		AssemblyItem(Tag, 1),
+	};
+	checkCFG(input, {});
+}
+
+BOOST_AUTO_TEST_CASE(control_flow_graph_remove_unused_loop)
+{
+	AssemblyItems input{
+		AssemblyItem(PushTag, 3),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(7),
+		AssemblyItem(PushTag, 2),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(8),
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 3),
+		u256(11)
+	};
+	checkCFG(input, {u256(11)});
+}
+
+BOOST_AUTO_TEST_CASE(control_flow_graph_reconnect_single_jump_source)
+{
+	// move code that has only one unconditional jump source
+	AssemblyItems input{
+		u256(1),
+		AssemblyItem(PushTag, 1),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(2),
+		AssemblyItem(PushTag, 3),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(3),
+		AssemblyItem(PushTag, 2),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 3),
+		u256(4),
+	};
+	checkCFG(input, {u256(1), u256(3), u256(2), u256(4)});
+}
+
+BOOST_AUTO_TEST_CASE(control_flow_graph_do_not_remove_returned_to)
+{
+	// do not remove parts that are "returned to"
+	AssemblyItems input{
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 2),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(2)
+	};
+	checkCFG(input, {u256(2)});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
