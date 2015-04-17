@@ -55,6 +55,7 @@ namespace solidity
 static string const g_argAbiStr         = "json-abi";
 static string const g_argSolAbiStr      = "sol-abi";
 static string const g_argAsmStr         = "asm";
+static string const g_argAsmJsonStr     = "asm-json";
 static string const g_argAstStr         = "ast";
 static string const g_argAstJson        = "ast-json";
 static string const g_argBinaryStr      = "binary";
@@ -80,10 +81,15 @@ static bool needStdout(po::variables_map const& _args)
 {
 
 	return
-		argToStdout(_args, g_argAbiStr) || argToStdout(_args, g_argSolAbiStr) ||
-		argToStdout(_args, g_argNatspecUserStr) || argToStdout(_args, g_argAstJson) ||
-		argToStdout(_args, g_argNatspecDevStr) || argToStdout(_args, g_argAsmStr) ||
-		argToStdout(_args, g_argOpcodesStr) || argToStdout(_args, g_argBinaryStr);
+		argToStdout(_args, g_argAbiStr) ||
+		argToStdout(_args, g_argSolAbiStr) ||
+		argToStdout(_args, g_argNatspecUserStr) ||
+		argToStdout(_args, g_argAstJson) ||
+		argToStdout(_args, g_argNatspecDevStr) ||
+		argToStdout(_args, g_argAsmStr) ||
+		argToStdout(_args, g_argAsmJsonStr) ||
+		argToStdout(_args, g_argOpcodesStr) ||
+		argToStdout(_args, g_argBinaryStr);
 }
 
 static inline bool outputToFile(OutputType type)
@@ -215,23 +221,25 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 		("add-std", po::value<bool>()->default_value(false), "Add standard contracts")
 		("input-file", po::value<vector<string>>(), "input file")
 		(g_argAstStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the AST of the contract.")
+			"Request to output the AST of the contract.")
 		(g_argAstJson.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the AST of the contract in JSON format.")
+			"Request to output the AST of the contract in JSON format.")
 		(g_argAsmStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the EVM assembly of the contract.")
+			"Request to output the EVM assembly of the contract.")
+		(g_argAsmJsonStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+			"Request to output the EVM assembly of the contract in JSON format.")
 		(g_argOpcodesStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the Opcodes of the contract.")
+			"Request to output the Opcodes of the contract.")
 		(g_argBinaryStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the contract in binary (hexadecimal).")
+			"Request to output the contract in binary (hexadecimal).")
 		(g_argAbiStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the contract's JSON ABI interface.")
+			"Request to output the contract's JSON ABI interface.")
 		(g_argSolAbiStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the contract's Solidity ABI interface.")
+			"Request to output the contract's Solidity ABI interface.")
 		(g_argNatspecUserStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the contract's Natspec user documentation.")
+			"Request to output the contract's Natspec user documentation.")
 		(g_argNatspecDevStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-		 "Request to output the contract's Natspec developer documentation.");
+			"Request to output the contract's Natspec developer documentation.");
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description p;
@@ -417,13 +425,13 @@ void CommandLineInterface::actOnInput()
 			if (outputToStdout(choice))
 			{
 				cout << "EVM assembly:" << endl;
-				m_compiler->streamAssembly(cout, contract, m_sourceCodes);
+				m_compiler->streamAssembly(cout, contract, m_sourceCodes, m_args.count(g_argAsmJsonStr));
 			}
 
 			if (outputToFile(choice))
 			{
 				ofstream outFile(contract + ".evm");
-				m_compiler->streamAssembly(outFile, contract, m_sourceCodes);
+				m_compiler->streamAssembly(outFile, contract, m_sourceCodes, m_args.count(g_argAsmJsonStr));
 				outFile.close();
 			}
 		}
