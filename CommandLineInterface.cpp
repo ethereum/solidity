@@ -419,9 +419,9 @@ void CommandLineInterface::actOnInput()
 			cout << endl << "======= " << contract << " =======" << endl;
 
 		// do we need EVM assembly?
-		if (m_args.count(g_argAsmStr))
+		if (m_args.count(g_argAsmStr) || m_args.count(g_argAsmJsonStr))
 		{
-			auto choice = m_args[g_argAsmStr].as<OutputType>();
+			auto choice = m_args.count(g_argAsmStr) ? m_args[g_argAsmStr].as<OutputType>() : m_args[g_argAsmJsonStr].as<OutputType>();
 			if (outputToStdout(choice))
 			{
 				cout << "EVM assembly:" << endl;
