@@ -102,8 +102,9 @@ public:
 
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings
+	/// @arg _inJsonFromat shows weather the out should be in Json format
 	/// Prerequisite: Successful compilation.
-	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
+	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap(), bool _inJsonFormat = false) const;
 
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.

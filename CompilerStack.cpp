@@ -184,11 +184,11 @@ dev::h256 CompilerStack::getContractCodeHash(string const& _contractName) const
 	return dev::sha3(getRuntimeBytecode(_contractName));
 }
 
-void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes) const
+void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
 {
 	Contract const& contract = getContract(_contractName);
 	if (contract.compiler)
-		getContract(_contractName).compiler->streamAssembly(_outStream, _sourceCodes);
+		contract(_contractName).compiler->streamAssembly(_outStream, _sourceCodes, _inJsonFormat);
 	else
 		_outStream << "Contract not fully implemented" << endl;
 }
