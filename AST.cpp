@@ -155,45 +155,40 @@ void ContractDefinition::checkAbstractFunctions()
 
 void ContractDefinition::checkAbstractConstructors()
 {
-	set<FunctionDefinition const*> argumentsNeeded;
-	set<FunctionDefinition const*> argumentsProvided;
+	set<ContractDefinition const*> argumentsNeeded;
 	// check that we get arguments for all base constructors that need it.
 	// If not mark the contract as abstract (not fully implemented)
+
 	vector<ContractDefinition const*> const& bases = getLinearizedBaseContracts();
 	for (ContractDefinition const* contract: bases)
+		if (FunctionDefinition const* constructor = contract->getConstructor())
+			if (contract != this && !constructor->getParameters().empty())
+				argumentsNeeded.insert(contract);
+
+	for (ContractDefinition const* contract: bases)
 	{
-		FunctionDefinition const* constructor = contract->getConstructor();
-		if (constructor)
-		{
-			if (!constructor->getParameters().empty())
-				argumentsNeeded.insert(constructor);
+		if (FunctionDefinition const* constructor = contract->getConstructor())
 			for (auto const& modifier: constructor->getModifiers())
 			{
 				auto baseContract = dynamic_cast<ContractDefinition const*>(
-					modifier->getName()->getReferencedDeclaration());
+					modifier->getName()->getReferencedDeclaration()
+				);
 				if (baseContract)
-				{
-					FunctionDefinition const* baseConstructor = baseContract->getConstructor();
-					if (argumentsNeeded.count(baseConstructor) == 1)
-						argumentsProvided.insert(baseConstructor);
-				}
+					argumentsNeeded.erase(baseContract);
 			}
-		}
+
 
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->getBaseContracts())
 		{
-			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
-				base->getName()->getReferencedDeclaration());
+			auto baseContract = dynamic_cast<ContractDefinition const*>(
+				base->getName()->getReferencedDeclaration()
+			);
 			solAssert(baseContract, "");
-			FunctionDefinition const* baseConstructor = baseContract->getConstructor();
-			if (argumentsNeeded.count(baseConstructor) == 1)
-				argumentsProvided.insert(baseConstructor);
+			if (!base->getArguments().empty())
+				argumentsNeeded.erase(baseContract);
 		}
 	}
-	// add this contract's constructor to the provided too
-	if (getConstructor() && !getConstructor()->getParameters().empty())
-		argumentsProvided.insert(getConstructor());
-	if (argumentsProvided != argumentsNeeded)
+	if (!argumentsNeeded.empty())
 		setFullyImplemented(false);
 }
 
