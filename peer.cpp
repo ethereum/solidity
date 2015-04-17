@@ -30,7 +30,7 @@ using namespace dev::p2p;
 
 struct P2PFixture
 {
-	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true;; }
+	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 

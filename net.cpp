@@ -34,7 +34,7 @@ namespace bi = ba::ip;
 
 struct NetFixture
 {
-	NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true;; }
+	NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
