@@ -140,7 +140,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = value.get_str();
 		else continue;
 
-		_o[key] = (str.substr(0, 2) == "0x") ? str : "0x" + (toHex(toCompactBigEndian(toInt(str))).empty() ? "0" : toHex(toCompactBigEndian(toInt(str))));
+		_o[key] = (str.substr(0, 2) == "0x") ? str : "0x" + toHex(toCompactBigEndian(toInt(str), 1));
 	}
 	return _o;
 }
@@ -363,8 +363,8 @@ json_spirit::mObject fillJsonWithState(State _state)
 	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = "0x" + (toHex(toCompactBigEndian(_state.balance(a.first))).empty() ? "0" : toHex(toCompactBigEndian(_state.balance(a.first))));
-		o["nonce"] = "0x" + (toHex(toCompactBigEndian(_state.transactionsFrom(a.first))).empty() ? "0" : toHex(toCompactBigEndian(_state.transactionsFrom(a.first))));
+		o["balance"] = "0x" + toHex(toCompactBigEndian(_state.balance(a.first), 1));
+		o["nonce"] = "0x" + toHex(toCompactBigEndian(_state.transactionsFrom(a.first), 1));
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
