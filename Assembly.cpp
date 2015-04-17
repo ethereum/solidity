@@ -184,7 +184,7 @@ string toStringInHex(u256 _value)
 	return hexStr.str();
 }
 
-Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes, bool _inJsonFormat) const
+Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes) const
 {
 	Json::Value root;
 
@@ -254,7 +254,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i].stream(_out, "", _sourceCodes, _inJsonFormat);
+			data[hexStr.str()] = m_subs[i].stream(_out, "", _sourceCodes, true);
 		}
 		root[".data"] = data;
 		_out << root;
@@ -265,7 +265,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 Json::Value Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
 {
 	if (_inJsonFormat)
-		return streamAsmJson(_out, _sourceCodes, _inJsonFormat);
+		return streamAsmJson(_out, _sourceCodes);
 	else
 	{
 		streamAsm(_out, _prefix, _sourceCodes);
