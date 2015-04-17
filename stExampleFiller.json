@@ -1,5 +1,6 @@
 {
     "add11" : {
+	"env" : "Environment parameters for test execution",
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "256",
@@ -8,6 +9,32 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+	"expect" : "Expected post state result (may be not defined at all)",
+	"expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "1000000000000100000",
+                "code" : "0x6001600101600055",
+                "nonce" : "0",
+                "storage" : {
+                    "0x" : "0x02"
+                }
+            },
+            "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
+                "balance" : "41012",
+                "code" : "0x",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "999999999999858988",
+                "code" : "0x",
+                "nonce" : "1",
+                "storage" : {
+                }
+            }
+        },
+        "pre" : "Previous state before execution",
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
@@ -24,6 +51,7 @@
                 }
             }
         },
+        "transaction" : "could also be defiend via v,r,s instead of secretKey",
         "transaction" : {
             "data" : "",
             "gasLimit" : "400000",

@@ -380,7 +380,6 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			}
 		}
 
-
 		if (_fillin)
 		{
 			o["env"] = mValue(fev.exportEnv());
@@ -388,6 +387,18 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			if (!vmExceptionOccured)
 			{
 				o["post"] = mValue(fev.exportState());
+
+				if (o.count("expect") > 0)
+				{
+					State postState(OverlayDB(), eth::BaseState::Empty);
+					State expectState(OverlayDB(), eth::BaseState::Empty);
+					stateOptionsMap expectStateMap;
+					ImportTest::importState(o["post"].get_obj(), postState);
+					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
+					ImportTest::checkExpectedState(expectState, postState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+					o.erase(o.find("expect"));
+				}
+
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = "0x" + toHex(output);
 				fev.push(o, "gas", gas);
@@ -415,25 +426,11 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
 
-				auto& expectedAddrs = test.addresses;
-				auto& resultAddrs = fev.addresses;
-				for (auto&& expectedPair : expectedAddrs)
-				{
-					auto& expectedAddr = expectedPair.first;
-					auto resultAddrIt = resultAddrs.find(expectedAddr);
-					if (resultAddrIt == resultAddrs.end())
-						BOOST_ERROR("Missing expected address " << expectedAddr);
-					else
-					{
-						auto& expectedState = expectedPair.second;
-						auto& resultState = resultAddrIt->second;
-						BOOST_CHECK_MESSAGE(std::get<0>(expectedState) == std::get<0>(resultState), expectedAddr << ": incorrect balance " << std::get<0>(resultState) << ", expected " << std::get<0>(expectedState));
-						BOOST_CHECK_MESSAGE(std::get<1>(expectedState) == std::get<1>(resultState), expectedAddr << ": incorrect txCount " << std::get<1>(resultState) << ", expected " << std::get<1>(expectedState));
-						BOOST_CHECK_MESSAGE(std::get<3>(expectedState) == std::get<3>(resultState), expectedAddr << ": incorrect code");
-
-						checkStorage(std::get<2>(expectedState), std::get<2>(resultState), expectedAddr);
-					}
-				}
+				State postState, expectState;
+				mObject mPostState = fev.exportState();
+				ImportTest::importState(mPostState, postState);
+				ImportTest::importState(o["post"].get_obj(), expectState);
+				ImportTest::checkExpectedState(expectState, postState);
 
 				checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
 
@@ -527,6 +524,8 @@ BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
 
 BOOST_AUTO_TEST_CASE(vmRandom)
 {
+	test::Options::get(); // parse command line options, e.g. to enable JIT
+
 	string testPath = getTestPath();
 	testPath += "/VMTests/RandomTests";
 
