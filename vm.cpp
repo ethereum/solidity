@@ -85,7 +85,7 @@ void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _st
 
 void FakeExtVM::push(mObject& o, string const& _n, u256 _v)
 {
-	o[_n] = toString(_v);
+	o[_n] = "0x" + toHex(toCompactBigEndian(_v));
 }
 
 void FakeExtVM::push(mArray& a, u256 _v)
@@ -448,7 +448,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(VMTests)
 
-BOOST_AUTO_TEST_CASE(vm_tests)
+BOOST_AUTO_TEST_CASE(vmtests)
 {
 	dev::test::executeTests("vmtests", "/VMTests", dev::test::doVMTests);
 }
