@@ -51,7 +51,8 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				if (!txFromFields.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("transaction from RLP signature is invalid") );
 
-				o["sender"] = toString(txFromFields.sender());
+				o["sender"] = toString(txFromFields.sender());				
+				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
 			}
 			catch(Exception const& _e)
 			{

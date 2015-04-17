@@ -108,6 +108,12 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	BOOST_REQUIRE(r[0].toInt<unsigned>() == dev::p2p::c_protocolVersion);
 	BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
 	BOOST_REQUIRE_EQUAL(r[2].itemCount(), 5);
+	
+	for (auto i: r[2])
+	{
+		BOOST_REQUIRE(i.itemCount() == 3 || i.itemCount() == 10);
+		BOOST_REQUIRE(i[0].itemCount() == 4 || i[0].itemCount() == 16);
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
