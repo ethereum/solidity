@@ -119,6 +119,32 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 	}
 }
 
+json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
+{
+	static const set<string> hashes {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
+									 "stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
+									 "previousHash", "to", "address", "caller", "origin", "secretKey"};
+
+	for (auto& i: _o)
+	{
+		std::string key = i.first;
+		if (hashes.count(key))
+			continue;
+
+		std::string str;
+		json_spirit::mValue value = i.second;
+
+		if (value.type() == json_spirit::int_type)
+			str = toString(value.get_int());
+		else if (value.type() == json_spirit::str_type)
+			str = value.get_str();
+		else continue;
+
+		_o[key] = (str.substr(0, 2) == "0x") ? str : "0x" + toHex(toCompactBigEndian(toInt(str)));
+	}
+	return _o;
+}
+
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
 	assert(_o.count("previousHash") > 0);
@@ -325,6 +351,8 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 
 	// export pre state
 	m_TestObject["pre"] = fillJsonWithState(m_statePre);
+	m_TestObject["env"] = makeAllFieldsHex(m_TestObject["env"].get_obj());
+	m_TestObject["transaction"] = makeAllFieldsHex(m_TestObject["transaction"].get_obj());
 }
 
 json_spirit::mObject fillJsonWithState(State _state)
@@ -335,8 +363,8 @@ json_spirit::mObject fillJsonWithState(State _state)
 	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = toString(_state.balance(a.first));
-		o["nonce"] = toString(_state.transactionsFrom(a.first));
+		o["balance"] = "0x" + toHex(toCompactBigEndian(_state.balance(a.first)));
+		o["nonce"] = "0x" + toHex(toCompactBigEndian(_state.transactionsFrom(a.first)));
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))

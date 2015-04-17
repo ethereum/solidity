@@ -28,7 +28,13 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-BOOST_AUTO_TEST_SUITE(p2p)
+struct P2PFixture
+{
+	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
+	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
+};
+
+BOOST_FIXTURE_TEST_SUITE(p2p, P2PFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
@@ -45,7 +51,7 @@ BOOST_AUTO_TEST_CASE(host)
 	auto node2 = host2.id();
 	host2.start();
 	
-	host1.addNode(node2, bi::address::from_string("127.0.0.1"), host2prefs.listenPort, host2prefs.listenPort);
+	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2prefs.listenPort, host2prefs.listenPort));
 	
 	this_thread::sleep_for(chrono::seconds(3));
 	
@@ -82,11 +88,11 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	
 	Host& host = *hosts.front();
 	for (auto const& h: hosts)
-		host.addNode(h->id(), bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort());
+		host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 	
 	Host& host2 = *hosts.back();
 	for (auto const& h: hosts)
-		host2.addNode(h->id(), bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort());
+		host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	bytes firstHostNetwork(host.saveNetwork());
@@ -101,7 +107,36 @@ BOOST_AUTO_TEST_CASE(save_nodes)
 	BOOST_REQUIRE(r.itemCount() == 3);
 	BOOST_REQUIRE(r[0].toInt<unsigned>() == dev::p2p::c_protocolVersion);
 	BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
-	BOOST_REQUIRE_EQUAL(r[2].itemCount(), 5);
+	BOOST_REQUIRE(r[2].itemCount() >= 5);
+	
+	for (auto i: r[2])
+	{
+		BOOST_REQUIRE(i.itemCount() == 3 || i.itemCount() == 10);
+		BOOST_REQUIRE(i[0].itemCount() == 4 || i[0].itemCount() == 16);
+	}
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(peerTypes)
+
+BOOST_AUTO_TEST_CASE(emptySharedPeer)
+{
+	shared_ptr<Peer> p;
+	BOOST_REQUIRE(!p);
+	
+	std::map<NodeId, std::shared_ptr<Peer>> peers;
+	p = peers[NodeId()];
+	BOOST_REQUIRE(!p);
+	
+	p.reset(new Peer(UnspecifiedNode));
+	BOOST_REQUIRE(!p->id);
+	BOOST_REQUIRE(!*p);
+	
+	p.reset(new Peer(Node(NodeId(EmptySHA3), UnspecifiedNodeIPEndpoint)));
+	BOOST_REQUIRE(!(!*p));
+	BOOST_REQUIRE(*p);
+	BOOST_REQUIRE(p);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -131,7 +166,7 @@ int peerTest(int argc, char** argv)
 	Host ph("Test", NetworkPreferences(listenPort));
 
 	if (!remoteHost.empty() && !remoteAlias)
-		ph.addNode(remoteAlias, bi::address::from_string(remoteHost), remotePort, remotePort);
+		ph.addNode(remoteAlias, NodeIPEndpoint(bi::address::from_string(remoteHost), remotePort, remotePort));
 
 	this_thread::sleep_for(chrono::milliseconds(200));
 

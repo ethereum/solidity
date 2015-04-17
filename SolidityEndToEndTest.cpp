@@ -3743,6 +3743,29 @@ BOOST_AUTO_TEST_CASE(super_overload)
 	BOOST_CHECK(callContractFunction("h()") == encodeArgs(2));
 }
 
+BOOST_AUTO_TEST_CASE(packed_storage_signed)
+{
+	char const* sourceCode = R"(
+		contract C {
+			int8 a;
+			uint8 b;
+			int8 c;
+			uint8 d;
+			function test() returns (uint x1, uint x2, uint x3, uint x4) {
+				a = -2;
+				b = -uint8(a) * 2;
+				c = a * int8(120) * int8(121);
+				x1 = uint(a);
+				x2 = b;
+				x3 = uint(c);
+				x4 = d;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK( callContractFunction("test()") == encodeArgs(u256(-2), u256(4), u256(-112), u256(0)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

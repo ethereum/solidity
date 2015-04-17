@@ -866,6 +866,15 @@ BOOST_AUTO_TEST_CASE(constant_is_keyword)
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
+BOOST_AUTO_TEST_CASE(var_array)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() { var[] a; }
+	})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

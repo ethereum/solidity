@@ -32,7 +32,13 @@ using namespace dev::p2p;
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
-BOOST_AUTO_TEST_SUITE(net)
+struct NetFixture
+{
+	NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
+	~NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
+};
+
+BOOST_FIXTURE_TEST_SUITE(net, NetFixture)
 
 /**
  * Only used for testing. Not useful beyond tests.
@@ -53,7 +59,7 @@ protected:
 struct TestNodeTable: public NodeTable
 {
 	/// Constructor
-	TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30300): NodeTable(_io, _alias, _addr, _port) {}
+	TestNodeTable(ba::io_service& _io, KeyPair _alias, bi::address const& _addr, uint16_t _port = 30300): NodeTable(_io, _alias, NodeIPEndpoint(_addr, _port, _port)) {}
 
 	static std::vector<std::pair<KeyPair,unsigned>> createTestNodes(unsigned _count)
 	{
@@ -93,7 +99,7 @@ struct TestNodeTable: public NodeTable
 				// manually add node for test
 				{
 					Guard ln(x_nodes);
-					shared_ptr<NodeEntry> node(new NodeEntry(m_node, n.first.pub(), NodeIPEndpoint(bi::udp::endpoint(ourIp, n.second), bi::tcp::endpoint(ourIp, n.second))));
+					shared_ptr<NodeEntry> node(new NodeEntry(m_node, n.first.pub(), NodeIPEndpoint(ourIp, n.second, n.second)));
 					node->pending = false;
 					m_nodes[node->id] = node;
 				}
@@ -240,7 +246,7 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 		{
 			Neighbours::Node node;
 			node.ipAddress = boost::asio::ip::address::from_string("200.200.200.200").to_string();
-			node.port = testNodes[i].second;
+			node.udpPort = testNodes[i].second;
 			node.node = testNodes[i].first.pub();
 			out.nodes.push_back(node);
 		}
@@ -261,7 +267,7 @@ BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 	{
 		Neighbours::Node node;
 		node.ipAddress = boost::asio::ip::address::from_string("127.0.0.1").to_string();
-		node.port = n.second;
+		node.udpPort = n.second;
 		node.node = n.first.pub();
 		out.nodes.push_back(node);
 	}
@@ -273,7 +279,7 @@ BOOST_AUTO_TEST_CASE(test_neighbours_packet)
 	int count = 0;
 	for (auto n: in.nodes)
 	{
-		BOOST_REQUIRE_EQUAL(testNodes[count].second, n.port);
+		BOOST_REQUIRE_EQUAL(testNodes[count].second, n.udpPort);
 		BOOST_REQUIRE_EQUAL(testNodes[count].first.pub(), n.node);
 		BOOST_REQUIRE_EQUAL(sha3(testNodes[count].first.pub()), sha3(n.node));
 		count++;
@@ -333,6 +339,33 @@ BOOST_AUTO_TEST_CASE(test_udp_once)
 	a.m_socket->send(d);
 	this_thread::sleep_for(chrono::seconds(1));
 	BOOST_REQUIRE_EQUAL(true, a.success);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(netTypes)
+
+BOOST_AUTO_TEST_CASE(unspecifiedNode)
+{
+	Node n = UnspecifiedNode;
+	BOOST_REQUIRE(!n);
+	
+	Node node(Public(sha3("0")), NodeIPEndpoint(bi::address(), 0, 0));
+	BOOST_REQUIRE(node);
+	BOOST_REQUIRE(n != node);
+	
+	Node nodeEq(Public(sha3("0")), NodeIPEndpoint(bi::address(), 0, 0));
+	BOOST_REQUIRE_EQUAL(node, nodeEq);
+}
+
+BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
+{
+	ba::io_service io;
+	NodeTable t(io, KeyPair::create(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30303, 30303));
+	if (Node n = t.node(NodeId()))
+		BOOST_REQUIRE(false);
+	else
+		BOOST_REQUIRE(n == UnspecifiedNode);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
