@@ -157,14 +157,16 @@ bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 	return getBytecode();
 }
 
-eth::AssemblyItems const& CompilerStack::getAssemblyItems(string const& _contractName) const
+eth::AssemblyItems const* CompilerStack::getAssemblyItems(string const& _contractName) const
 {
-	return getContract(_contractName).compiler->getAssemblyItems();
+	Contract const& contract = getContract(_contractName);
+	return contract.compiler ? &getContract(_contractName).compiler->getAssemblyItems() : nullptr;
 }
 
-eth::AssemblyItems const& CompilerStack::getRuntimeAssemblyItems(string const& _contractName) const
+eth::AssemblyItems const* CompilerStack::getRuntimeAssemblyItems(string const& _contractName) const
 {
-	return getContract(_contractName).compiler->getRuntimeAssemblyItems();
+	Contract const& contract = getContract(_contractName);
+	return contract.compiler ? &getContract(_contractName).compiler->getRuntimeAssemblyItems() : nullptr;
 }
 
 bytes const& CompilerStack::getBytecode(string const& _contractName) const
@@ -184,7 +186,11 @@ dev::h256 CompilerStack::getContractCodeHash(string const& _contractName) const
 
 void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes) const
 {
-	getContract(_contractName).compiler->streamAssembly(_outStream, _sourceCodes);
+	Contract const& contract = getContract(_contractName);
+	if (contract.compiler)
+		getContract(_contractName).compiler->streamAssembly(_outStream, _sourceCodes);
+	else
+		_outStream << "Contract not fully implemented" << endl;
 }
 
 string const& CompilerStack::getInterface(string const& _contractName) const

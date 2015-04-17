@@ -136,6 +136,7 @@ void Compiler::appendBaseConstructor(FunctionDefinition const& _constructor)
 	FunctionType constructorType(_constructor);
 	if (!constructorType.getParameterTypes().empty())
 	{
+		solAssert(m_baseArguments.count(&_constructor), "");
 		std::vector<ASTPointer<Expression>> const* arguments = m_baseArguments[&_constructor];
 		solAssert(arguments, "");
 		for (unsigned i = 0; i < arguments->size(); ++i)
