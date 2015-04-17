@@ -30,6 +30,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+
+
 void Assembly::append(Assembly const& _a)
 {
 	auto newDeposit = m_deposit + _a.deposit();
@@ -64,6 +66,13 @@ void Assembly::append(Assembly const& _a, int _deposit)
 		while (_deposit++ < _a.m_deposit)
 			append(Instruction::POP);
 	}
+}
+
+string Assembly::out() const
+{
+	stringstream ret;
+	stream(ret);
+	return ret.str();
 }
 
 unsigned Assembly::bytesRequired() const
@@ -172,7 +181,7 @@ Json::Value Assembly::createJsonValue(string _name, int _locationX, int _locatio
 	return move(value);
 }
 
-ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
+Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
 {
 	Json::Value root;
 
@@ -183,25 +192,32 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 		switch (i.type())
 		{
 		case Operation:
-			currentCollection.push_back(createJsonValue(instructionInfo(i.instruction()).name, i.getLocation().start, i.getLocation().end, i.getJumpTypeAsString()));
+			currentCollection.push_back(
+						createJsonValue(instructionInfo(i.instruction()).name, i.getLocation().start, i.getLocation().end, i.getJumpTypeAsString()));
 			break;
 		case Push:
-			currentCollection.push_back(createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string(i.data()), i.getJumpTypeAsString()));
+			currentCollection.push_back(
+						createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string(i.data()), i.getJumpTypeAsString()));
 			break;
 		case PushString:
-			currentCollection.push_back(createJsonValue(string("PUSH tag"), i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
+			currentCollection.push_back(
+						createJsonValue(string("PUSH tag"), i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
 			break;
 		case PushTag:
-			currentCollection.push_back(createJsonValue(string("PUSH [tag]"), i.getLocation().start, i.getLocation().end, string(i.data())));
+			currentCollection.push_back(
+						createJsonValue(string("PUSH [tag]"), i.getLocation().start, i.getLocation().end, string(i.data())));
 			break;
 		case PushSub:
-			currentCollection.push_back(createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string("[$]" + string(h256(i.data()).abridged()))));
+			currentCollection.push_back(
+						createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string("[$]" + string(h256(i.data()).abridged()))));
 			break;
 		case PushSubSize:
-			currentCollection.push_back(createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string("#[$]" + string(h256(i.data()).abridged()))));
+			currentCollection.push_back(
+						createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, string("#[$]" + string(h256(i.data()).abridged()))));
 			break;
 		case PushProgramSize:
-			currentCollection.push_back(createJsonValue(string("PUSHSIZE"), i.getLocation().start, i.getLocation().end));
+			currentCollection.push_back(
+						createJsonValue(string("PUSHSIZE"), i.getLocation().start, i.getLocation().end));
 			break;
 		case Tag:
 			{
@@ -230,13 +246,11 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 		}
 	}
 
-	//todo check if the last was tag
 	Json::Value collection(Json::arrayValue);
 	for (auto it: currentCollection)
 		collection.append(it);
 	root[currentArrayName] = collection;
 
-	Json::Value rootData;
 	if (!m_data.empty() || !m_subs.empty())
 	{
 		Json::Value dataCollection(Json::arrayValue);
@@ -249,29 +263,32 @@ ostream& Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap
 				data["value"] = hexStr.str();
 				dataCollection.append(data);
 			}
-		rootData[_prefix + ".data"] = collection;
-		_out << root << rootData;
 
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			std::stringstream hexStr;
-			hexStr << _prefix << hex << i << ": ";
-			//_out << _prefix << "  " << hex << i << ": " << endl;
-			//todo check recursion check order.
-			m_subs[i].stream(_out, _prefix + "  ", _sourceCodes, _inJsonFormat);
+			hexStr << _prefix << hex << i;
+			Json::Value num;
+			num["sub assembly"] = hexStr.str();
+			dataCollection.append(num);
+			dataCollection.append(m_subs[i].stream(_out, _prefix + "  ", _sourceCodes, _inJsonFormat));
 		}
-	} else
+		root[_prefix + ".data"] = dataCollection;
 		_out << root;
+	}
 
-	return _out;
+	return move(root);
 }
 
-ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
+Json::Value Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
 {
 	if (_inJsonFormat)
 		return streamAsmJson(_out, _prefix, _sourceCodes, _inJsonFormat);
 	else
-		return streamAsm(_out, _prefix, _sourceCodes);
+	{
+		streamAsm(_out, _prefix, _sourceCodes);
+		return Json::Value();
+	}
 }
 
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)
