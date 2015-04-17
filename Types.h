@@ -371,7 +371,7 @@ public:
 	explicit ArrayType(Location _location):
 		m_location(_location),
 		m_isByteArray(true),
-		m_baseType(std::make_shared<FixedBytesType>(8))
+		m_baseType(std::make_shared<FixedBytesType>(1))
 	{}
 	/// Constructor for a dynamically sized array type ("type[]")
 	ArrayType(Location _location, const TypePointer &_baseType):

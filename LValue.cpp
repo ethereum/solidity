@@ -107,6 +107,11 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			<< u256(0x100) << eth::Instruction::EXP << eth::Instruction::SWAP1 << eth::Instruction::DIV;
 		if (m_dataType.getCategory() == Type::Category::FixedBytes)
 			m_context << (u256(0x1) << (256 - 8 * m_dataType.getStorageBytes())) << eth::Instruction::MUL;
+		else if (
+			m_dataType.getCategory() == Type::Category::Integer &&
+			dynamic_cast<IntegerType const&>(m_dataType).isSigned()
+		)
+			m_context << u256(m_dataType.getStorageBytes() - 1) << eth::Instruction::SIGNEXTEND;
 		else
 			m_context << ((u256(0x1) << (8 * m_dataType.getStorageBytes())) - 1) << eth::Instruction::AND;
 	}
@@ -148,6 +153,17 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(m_dataType).getNumBytes()))
 					<< eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			else if (
+				m_dataType.getCategory() == Type::Category::Integer &&
+				dynamic_cast<IntegerType const&>(m_dataType).isSigned()
+			)
+				// remove the higher order bits
+				m_context
+					<< (u256(1) << (8 * (32 - m_dataType.getStorageBytes())))
+					<< eth::Instruction::SWAP1
+					<< eth::Instruction::DUP2
+					<< eth::Instruction::MUL
+					<< eth::Instruction::DIV;
 			m_context  << eth::Instruction::MUL << eth::Instruction::OR;
 			// stack: value storage_ref updated_value
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
@@ -225,7 +241,8 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 	else if (m_dataType.getCategory() == Type::Category::Struct)
 	{
 		// stack layout: storage_key storage_offset
-		// @todo this can be improved for packed types
+		// @todo this can be improved: use StorageItem for non-value types, and just store 0 in
+		// all slots that contain value types later.
 		auto const& structType = dynamic_cast<StructType const&>(m_dataType);
 		for (auto const& member: structType.getMembers())
 		{
@@ -245,7 +262,6 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 	else
 	{
 		solAssert(m_dataType.isValueType(), "Clearing of unsupported type requested: " + m_dataType.toString());
-		// @todo actually use offset
 		if (!_removeReference)
 			CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
 		if (m_dataType.getStorageBytes() == 32)
