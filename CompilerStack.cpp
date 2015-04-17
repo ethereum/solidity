@@ -188,7 +188,7 @@ void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractN
 {
 	Contract const& contract = getContract(_contractName);
 	if (contract.compiler)
-		contract(_contractName).compiler->streamAssembly(_outStream, _sourceCodes, _inJsonFormat);
+		contract.compiler->streamAssembly(_outStream, _sourceCodes, _inJsonFormat);
 	else
 		_outStream << "Contract not fully implemented" << endl;
 }
