@@ -104,9 +104,7 @@ protected:
 	unsigned bytesRequired() const;
 
 private:
-	Json::Value streamAsmJson(
-		std::ostream& _out,
-		const std::string &_prefix,
+	Json::Value streamAsmJson(std::ostream& _out,
 		const StringMap &_sourceCodes,
 		bool _inJsonFormat
 	) const;

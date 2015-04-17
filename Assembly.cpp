@@ -184,57 +184,56 @@ string toStringInHex(u256 _value)
 	return hexStr.str();
 }
 
-Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
+Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes, bool _inJsonFormat) const
 {
 	Json::Value root;
 
-	string currentArrayName = ".code";
-	std::vector<Json::Value> currentCollection;
+	Json::Value collection(Json::arrayValue);
 	for (AssemblyItem const& i: m_items)
 	{
 		switch (i.type())
 		{
 		case Operation:
-			currentCollection.push_back(
+			collection.append(
 				createJsonValue(instructionInfo(i.instruction()).name, i.getLocation().start, i.getLocation().end, i.getJumpTypeAsString()));
 			break;
 		case Push:
-			currentCollection.push_back(
-				createJsonValue(string("PUSH"), i.getLocation().start, i.getLocation().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
+			collection.append(
+				createJsonValue("PUSH", i.getLocation().start, i.getLocation().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
 			break;
 		case PushString:
-			currentCollection.push_back(
-				createJsonValue(string("PUSH tag"), i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
+			collection.append(
+				createJsonValue("PUSH tag", i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
 			break;
 		case PushTag:
-			currentCollection.push_back(
-				createJsonValue(string("PUSH [tag]"), i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
+			collection.append(
+				createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
 			break;
 		case PushSub:
-			currentCollection.push_back(
-				createJsonValue(string("PUSH [$]"), i.getLocation().start, i.getLocation().end, dev::toString(h256(i.data()))));
+			collection.append(
+				createJsonValue("PUSH [$]", i.getLocation().start, i.getLocation().end, dev::toString(h256(i.data()))));
 			break;
 		case PushSubSize:
-			currentCollection.push_back(
-				createJsonValue(string("PUSH #[$]"), i.getLocation().start, i.getLocation().end, dev::toString(h256(i.data()))));
+			collection.append(
+				createJsonValue("PUSH #[$]", i.getLocation().start, i.getLocation().end, dev::toString(h256(i.data()))));
 			break;
 		case PushProgramSize:
-			currentCollection.push_back(
-				createJsonValue(string("PUSHSIZE"), i.getLocation().start, i.getLocation().end));
+			collection.append(
+				createJsonValue("PUSHSIZE", i.getLocation().start, i.getLocation().end));
 			break;
 		case Tag:
 		{
-			currentCollection.push_back(
-				createJsonValue(string("tag"), i.getLocation().start, i.getLocation().end, string(i.data())));
-			currentCollection.push_back(
-				createJsonValue(string("JUMDEST"), -1, -1));
+			collection.append(
+				createJsonValue("tag", i.getLocation().start, i.getLocation().end, string(i.data())));
+			collection.append(
+				createJsonValue("JUMDEST", i.getLocation().start, i.getLocation().end));
 		}
 			break;
 		case PushData:
 		{
 			Json::Value pushData;
 			pushData["name"] = "PUSH hex";
-			currentCollection.push_back(createJsonValue(string("PUSH hex"), i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
+			collection.append(createJsonValue("PUSH hex", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
 		}
 			break;
 		default:
@@ -242,10 +241,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, String
 		}
 	}
 
-	Json::Value collection(Json::arrayValue);
-	for (auto it: currentCollection)
-		collection.append(it);
-	root[currentArrayName] = collection;
+	root[".code"] = collection;
 
 	if (!m_data.empty() || !m_subs.empty())
 	{
@@ -258,7 +254,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, String
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i].stream(_out, _prefix + "  ", _sourceCodes, _inJsonFormat);
+			data[hexStr.str()] = m_subs[i].stream(_out, "", _sourceCodes, _inJsonFormat);
 		}
 		root[".data"] = data;
 		_out << root;
@@ -269,7 +265,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, string const& _prefix, String
 Json::Value Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
 {
 	if (_inJsonFormat)
-		return streamAsmJson(_out, _prefix, _sourceCodes, _inJsonFormat);
+		return streamAsmJson(_out, _sourceCodes, _inJsonFormat);
 	else
 	{
 		streamAsm(_out, _prefix, _sourceCodes);
