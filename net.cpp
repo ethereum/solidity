@@ -343,3 +343,30 @@ BOOST_AUTO_TEST_CASE(test_udp_once)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(netTypes)
+
+BOOST_AUTO_TEST_CASE(unspecifiedNode)
+{
+	Node n = UnspecifiedNode;
+	BOOST_REQUIRE(!n);
+	
+	Node node(Public(sha3("0")), NodeIPEndpoint(bi::address(), 0, 0));
+	BOOST_REQUIRE(node);
+	BOOST_REQUIRE(n != node);
+	
+	Node nodeEq(Public(sha3("0")), NodeIPEndpoint(bi::address(), 0, 0));
+	BOOST_REQUIRE_EQUAL(node, nodeEq);
+}
+
+BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
+{
+	ba::io_service io;
+	NodeTable t(io, KeyPair::create(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30303, 30303));
+	if (Node n = t.node(NodeId()))
+		BOOST_REQUIRE(false);
+	else
+		BOOST_REQUIRE(n == UnspecifiedNode);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
