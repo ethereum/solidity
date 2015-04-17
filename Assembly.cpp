@@ -101,8 +101,9 @@ string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLoc
 	return move(cut);
 }
 
-ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
+ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
 {
+	(void)_inJsonFormat;
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
 	{

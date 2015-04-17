@@ -86,7 +86,7 @@ public:
 
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
-	std::ostream& stream(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap()) const;
+	std::ostream& stream(std::ostream& _out, std::string const& _prefix = "", const StringMap &_sourceCodes = StringMap(), bool _inJsonFormat = false) const;
 
 protected:
 	std::string getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
