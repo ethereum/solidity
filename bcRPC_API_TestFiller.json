@@ -226,7 +226,7 @@
                 "transactions" : [
                     {
                         "data" : "setInt8",
-                        "data" : "0x9a19a953000000000000000000000000000000000000000000000000fffffffffffffffa",
+                        "data" : "0x9a19a953fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa",
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
                         "nonce" : "10",
