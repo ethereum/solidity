@@ -289,7 +289,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					state = stateTemp; //revert state as if it was before executing this block
 				}
 				blArray.push_back(blObj);
-				sleep(1);
+				this_thread::sleep_for(chrono::seconds(1));
 			} //for blocks
 
 			if (o.count("expect") > 0)
