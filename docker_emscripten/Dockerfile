@@ -43,7 +43,14 @@ RUN sed -i 's/$(archiver\[1\])/\/home\/user\/emsdk_portable\/emscripten\/master\
 RUN sed -i 's/$(ranlib\[1\])/\/home\/user\/emsdk_portable\/emscripten\/master\/emranlib/g' ./tools/build/src/tools/gcc.jam
 RUN ./b2 link=static variant=release threading=single runtime-link=static thread system regex
 
-# Build soljs
+# Json-CPP
+WORKDIR /home/user
+RUN git clone https://github.com/open-source-parsers/jsoncpp.git
+WORKDIR /home/user/jsoncpp
+RUN emcmake cmake -DJSONCPP_LIB_BUILD_STATIC=ON -DJSONCPP_LIB_BUILD_SHARED=OFF -DJSONCPP_WITH_TESTS=OFF -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF -G "Unix Makefiles" .
+RUN emmake make
+
+## Build soljs
 WORKDIR /home/user
 ADD https://api.github.com/repos/ethereum/cpp-ethereum/git/refs/heads/develop unused.txt
 RUN git clone --depth=1 https://github.com/ethereum/cpp-ethereum
@@ -55,8 +62,10 @@ RUN git remote add -f solidityjs https://github.com/chriseth/cpp-ethereum
 # TODO this should be a proper merge but somehow causes problems
 # NOTE that we only get the latest commit of that branch
 RUN git cherry-pick solidityjs/solidity-js
-RUN emcmake cmake -DETH_STATIC=1 -DONLY_SOLIDITY=1 -DHEADLESS=1 -DCMAKE_CXX_COMPILER=/home/user/emsdk_portable/emscripten/master/em++ -DCMAKE_C_COMPILER=/home/user/emsdk_portable/emscripten/master/emcc
+RUN emcmake cmake -DETH_STATIC=1 -DSOLIDITY=ON -DGUI=0 -DCMAKE_CXX_COMPILER=/home/user/emsdk_portable/emscripten/master/em++ -DCMAKE_C_COMPILER=/home/user/emsdk_portable/emscripten/master/emcc
 RUN emmake make -j 6 soljs
 
-ENTRYPOINT cat soljs/soljs.js
+WORKDIR /home/user/cpp-ethereum/soljs
+# somehow it does not work to pipe out both files
+#ENTRYPOINT tar -c soljs.js soljs.js.mem | base64
 
