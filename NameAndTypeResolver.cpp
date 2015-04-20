@@ -31,7 +31,7 @@ namespace dev
 namespace solidity
 {
 
-NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration const*> const& _globals)
+NameAndTypeResolver::NameAndTypeResolver(vector<Declaration const*> const& _globals)
 {
 	for (Declaration const* declaration: _globals)
 		m_scopes[nullptr].registerDeclaration(*declaration);
@@ -119,7 +119,7 @@ set<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name,
 {
 	auto iterator = m_scopes.find(_scope);
 	if (iterator == end(m_scopes))
-		return std::set<Declaration const*>({});
+		return set<Declaration const*>({});
 	return iterator->second.resolveName(_name, false);
 }
 
@@ -415,11 +415,17 @@ bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 {
 	auto declarations = m_resolver.getNameFromCurrentScope(_typeName.getName());
 	if (declarations.empty())
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
-												 << errinfo_comment("Undeclared identifier."));
+		BOOST_THROW_EXCEPTION(
+			DeclarationError() <<
+			errinfo_sourceLocation(_typeName.getLocation()) <<
+			errinfo_comment("Undeclared identifier.")
+		);
 	else if (declarations.size() > 1)
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
-												 << errinfo_comment("Duplicate identifier."));
+		BOOST_THROW_EXCEPTION(
+			DeclarationError() <<
+			errinfo_sourceLocation(_typeName.getLocation()) <<
+			errinfo_comment("Duplicate identifier.")
+		);
 	else
 		_typeName.setReferencedDeclaration(**declarations.begin());
 	return false;

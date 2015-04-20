@@ -24,10 +24,9 @@
 #include <libsolidity/AST.h>
 #include <libsolidity/Types.h>
 
-namespace dev
-{
-namespace solidity
-{
+using namespace std;
+using namespace dev;
+using namespace dev::solidity;
 
 bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, bool _invisible, bool _update)
 {
@@ -62,7 +61,7 @@ bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, 
 	return true;
 }
 
-std::set<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
+set<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	auto result = m_declarations.find(_name);
@@ -70,8 +69,5 @@ std::set<Declaration const*> DeclarationContainer::resolveName(ASTString const& 
 		return result->second;
 	if (_recursive && m_enclosingContainer)
 		return m_enclosingContainer->resolveName(_name, true);
-	return std::set<Declaration const*>({});
-}
-
-}
+	return set<Declaration const*>({});
 }
