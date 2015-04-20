@@ -261,8 +261,8 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 		for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
 			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
 
-		dev::LogOutputStream<eth::VMTraceChannel, false>(true) << o.str();
-		dev::LogOutputStream<eth::VMTraceChannel, false>(false) << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
+		dev::LogOutputStream<eth::VMTraceChannel, false>() << o.str();
+		dev::LogOutputStream<eth::VMTraceChannel, false>() << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
 
 		/*creates json stack trace*/
 		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
