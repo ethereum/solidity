@@ -1499,7 +1499,7 @@ BOOST_AUTO_TEST_CASE(ripemd)
 	{
 		h256 ret;
 		dev::ripemd160(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
-		return u256(ret) >> (256 - 160);
+		return u256(ret);
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -1814,7 +1814,7 @@ BOOST_AUTO_TEST_CASE(gas_for_builtin)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test(uint256)", 500) == bytes());
-	BOOST_CHECK(callContractFunction("test(uint256)", 800) == encodeArgs(u256("0x8eb208f7e05d987a9b044a8e98c6b087f15a0bfc"), true));
+	BOOST_CHECK(callContractFunction("test(uint256)", 800) == encodeArgs(u256("0x8eb208f7e05d987a9b044a8e98c6b087f15a0bfc000000000000000000000000"), true));
 }
 
 BOOST_AUTO_TEST_CASE(value_complex)
