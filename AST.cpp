@@ -55,6 +55,7 @@ void ContractDefinition::checkTypeRequirements()
 	checkDuplicateFunctions();
 	checkIllegalOverrides();
 	checkAbstractFunctions();
+	checkAbstractConstructors();
 
 	FunctionDefinition const* constructor = getConstructor();
 	if (constructor && !constructor->getReturnParameters().empty())
@@ -179,6 +180,45 @@ void ContractDefinition::checkAbstractFunctions()
 			setFullyImplemented(false);
 			break;
 		}
+}
+
+void ContractDefinition::checkAbstractConstructors()
+{
+	set<ContractDefinition const*> argumentsNeeded;
+	// check that we get arguments for all base constructors that need it.
+	// If not mark the contract as abstract (not fully implemented)
+
+	vector<ContractDefinition const*> const& bases = getLinearizedBaseContracts();
+	for (ContractDefinition const* contract: bases)
+		if (FunctionDefinition const* constructor = contract->getConstructor())
+			if (contract != this && !constructor->getParameters().empty())
+				argumentsNeeded.insert(contract);
+
+	for (ContractDefinition const* contract: bases)
+	{
+		if (FunctionDefinition const* constructor = contract->getConstructor())
+			for (auto const& modifier: constructor->getModifiers())
+			{
+				auto baseContract = dynamic_cast<ContractDefinition const*>(
+					&modifier->getName()->getReferencedDeclaration()
+				);
+				if (baseContract)
+					argumentsNeeded.erase(baseContract);
+			}
+
+
+		for (ASTPointer<InheritanceSpecifier> const& base: contract->getBaseContracts())
+		{
+			auto baseContract = dynamic_cast<ContractDefinition const*>(
+				&base->getName()->getReferencedDeclaration()
+			);
+			solAssert(baseContract, "");
+			if (!base->getArguments().empty())
+				argumentsNeeded.erase(baseContract);
+		}
+	}
+	if (!argumentsNeeded.empty())
+		setFullyImplemented(false);
 }
 
 void ContractDefinition::checkIllegalOverrides() const
@@ -354,7 +394,7 @@ void InheritanceSpecifier::checkTypeRequirements()
 	ContractDefinition const* base = dynamic_cast<ContractDefinition const*>(&m_baseName->getReferencedDeclaration());
 	solAssert(base, "Base contract not available.");
 	TypePointers parameterTypes = ContractType(*base).getConstructorType()->getParameterTypes();
-	if (parameterTypes.size() != m_arguments.size())
+	if (!m_arguments.empty() && parameterTypes.size() != m_arguments.size())
 		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
@@ -421,8 +461,8 @@ void FunctionDefinition::checkTypeRequirements()
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
 		modifier->checkTypeRequirements(isConstructor() ?
-			dynamic_cast<ContractDefinition const&>(*getScope()).getBaseContracts() :
-			vector<ASTPointer<InheritanceSpecifier>>());
+			dynamic_cast<ContractDefinition const&>(*getScope()).getLinearizedBaseContracts() :
+			vector<ContractDefinition const*>());
 	if (m_body)
 		m_body->checkTypeRequirements();
 }
@@ -500,7 +540,7 @@ void ModifierDefinition::checkTypeRequirements()
 	m_body->checkTypeRequirements();
 }
 
-void ModifierInvocation::checkTypeRequirements(vector<ASTPointer<InheritanceSpecifier>> const& _bases)
+void ModifierInvocation::checkTypeRequirements(vector<ContractDefinition const*> const& _bases)
 {
 	TypePointers argumentTypes;
 	for (ASTPointer<Expression> const& argument: m_arguments)
@@ -517,10 +557,10 @@ void ModifierInvocation::checkTypeRequirements(vector<ASTPointer<InheritanceSpec
 		parameters = &modifier->getParameters();
 	else
 		// check parameters for Base constructors
-		for (auto const& base: _bases)
-			if (declaration == &base->getName()->getReferencedDeclaration())
+		for (ContractDefinition const* base: _bases)
+			if (declaration == base)
 			{
-				if (auto referencedConstructor = dynamic_cast<ContractDefinition const&>(*declaration).getConstructor())
+				if (auto referencedConstructor = base->getConstructor())
 					parameters = &referencedConstructor->getParameters();
 				else
 					parameters = &emptyParameterList;
@@ -777,7 +817,7 @@ void NewExpression::checkTypeRequirements(TypePointers const*)
 	if (!m_contract)
 		BOOST_THROW_EXCEPTION(createTypeError("Identifier is not a contract."));
 	if (!m_contract->isFullyImplemented())
-		BOOST_THROW_EXCEPTION(m_contract->createTypeError("Trying to create an instance of an abstract contract."));
+		BOOST_THROW_EXCEPTION(createTypeError("Trying to create an instance of an abstract contract."));
 	shared_ptr<ContractType const> contractType = make_shared<ContractType>(*m_contract);
 	TypePointers const& parameterTypes = contractType->getConstructorType()->getParameterTypes();
 	m_type = make_shared<FunctionType>(parameterTypes, TypePointers{contractType},

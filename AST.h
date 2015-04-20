@@ -287,6 +287,7 @@ private:
 	void checkDuplicateFunctions() const;
 	void checkIllegalOverrides() const;
 	void checkAbstractFunctions();
+	void checkAbstractConstructors();
 	/// Checks that different functions with external visibility end up having different
 	/// external argument types (i.e. different signature).
 	void checkExternalTypeClashes() const;
@@ -382,7 +383,7 @@ class EnumValue: public Declaration
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
-	TypePointer getType(ContractDefinition const* = nullptr) const;
+	virtual TypePointer getType(ContractDefinition const* = nullptr) const override;
 };
 
 /**
@@ -572,7 +573,7 @@ public:
 	std::vector<ASTPointer<Expression>> const& getArguments() const { return m_arguments; }
 
 	/// @param _bases is the list of base contracts for base constructor calls. For modifiers an empty vector should be passed.
-	void checkTypeRequirements(std::vector<ASTPointer<InheritanceSpecifier>> const& _bases);
+	void checkTypeRequirements(std::vector<ContractDefinition const*> const& _bases);
 
 private:
 	ASTPointer<Identifier> m_modifierName;

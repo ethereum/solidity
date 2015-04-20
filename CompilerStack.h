@@ -94,16 +94,17 @@ public:
 	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
 	/// @returns normal contract assembly items
-	eth::AssemblyItems const& getAssemblyItems(std::string const& _contractName = "") const;
+	eth::AssemblyItems const* getAssemblyItems(std::string const& _contractName = "") const;
 	/// @returns runtime contract assembly items
-	eth::AssemblyItems const& getRuntimeAssemblyItems(std::string const& _contractName = "") const;
+	eth::AssemblyItems const* getRuntimeAssemblyItems(std::string const& _contractName = "") const;
 	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings
+	/// @arg _inJsonFromat shows whether the out should be in Json format
 	/// Prerequisite: Successful compilation.
-	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
+	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap(), bool _inJsonFormat = false) const;
 
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
