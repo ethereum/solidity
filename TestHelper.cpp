@@ -602,10 +602,8 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 		try
 		{
 			cnote << "Populating tests...";
-			cout << "boost::filesystem::current_path(): " << boost::filesystem::current_path().string() << endl;
 			json_spirit::mValue v;
 			boost::filesystem::path p(__FILE__);
-			boost::filesystem::path dir = p.parent_path();
 			string s = asString(dev::contents(_pathToFiller.string() + "/" + _name + "Filler.json"));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + _name + "Filler.json is empty.");
 			json_spirit::read_string(s, v);
