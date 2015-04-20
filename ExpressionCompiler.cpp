@@ -1066,7 +1066,13 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		m_context << eth::Instruction::POP;
 	m_context << eth::Instruction::POP; // pop contract address
 
-	if (firstType)
+	if (_functionType.getLocation() == FunctionType::Location::RIPEMD160)
+	{
+		// fix: built-in contract returns right-aligned data
+		CompilerUtils(m_context).loadFromMemory(0, IntegerType(160), false, true);
+		appendTypeConversion(IntegerType(160), FixedBytesType(20));
+	}
+	else if (firstType)
 		CompilerUtils(m_context).loadFromMemory(0, *firstType, false, true);
 }
 
