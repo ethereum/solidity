@@ -542,6 +542,8 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 
 void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
+	Options::get(); // parse command line options, e.g. to enable JIT
+
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
