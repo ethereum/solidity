@@ -137,7 +137,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = value.get_str();
 		else continue;
 
-		_o[key] = (str.substr(0, 2) == "0x") ? str : "0x" + toHex(toCompactBigEndian(toInt(str), 1));
+		_o[key] = (str.substr(0, 2) == "0x") ? str : jsonHex(toInt(str));
 	}
 	return _o;
 }
@@ -327,7 +327,7 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
-	m_TestObject["out"] = "0x" + toHex(_output);
+	m_TestObject["out"] = jsonHex(_output);
 
 	// export logs
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
@@ -344,7 +344,7 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 
 	// export post state
 	m_TestObject["post"] = fillJsonWithState(_statePost);
-	m_TestObject["postStateRoot"] = toHex(_statePost.rootHash().asBytes());
+	m_TestObject["postStateRoot"] = jsonHex(_statePost.rootHash().asBytes());
 
 	// export pre state
 	m_TestObject["pre"] = fillJsonWithState(m_statePre);
@@ -352,27 +352,70 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	m_TestObject["transaction"] = makeAllFieldsHex(m_TestObject["transaction"].get_obj());
 }
 
+std::string jsonHash(h256 const& _value) { return toString(_value); }
+std::string jsonHash(Nonce const& _value) { return toString(_value); }
+std::string jsonHash(LogBloom const& _value) { return toString(_value); }
+std::string jsonHash(Address const& _value)	{ return toString(_value);	}
+std::string jsonHex(bytesConstRef _code)	{ return "0x" + toHex(_code);	}
+std::string jsonHex(bytes const& _code)	{ return "0x" + toHex(_code);	}
+std::string jsonHex(u256 const& _value, bool _nonempty)
+{
+	return "0x" + toHex(toCompactBigEndian(_value, _nonempty ? 1 : 0));
+}
+
+json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
+{
+	json_spirit::mObject txObject;
+	txObject["nonce"] = jsonHex(_txn.nonce());
+	txObject["data"] = jsonHex(_txn.data());
+	txObject["gasLimit"] = jsonHex(_txn.gas());
+	txObject["gasPrice"] = jsonHex(_txn.gasPrice());
+	txObject["r"] = jsonHex(_txn.signature().r);
+	txObject["s"] = jsonHex(_txn.signature().s);
+	txObject["v"] = jsonHex(_txn.signature().v + 27);
+	txObject["to"] = _txn.isCreation() ? "" : jsonHash(_txn.receiveAddress());
+	txObject["value"] = jsonHex(_txn.value());
+	return txObject;
+}
+
 json_spirit::mObject fillJsonWithState(State _state)
 {
-	// export pre state
 	json_spirit::mObject oState;
-
 	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = "0x" + toHex(toCompactBigEndian(_state.balance(a.first), 1));
-		o["nonce"] = "0x" + toHex(toCompactBigEndian(_state.transactionsFrom(a.first), 1));
+		o["balance"] = jsonHex(_state.balance(a.first));
+		o["nonce"] = jsonHex(_state.transactionsFrom(a.first));
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
-				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
+				store[jsonHex(s.first)] = jsonHex(s.second);
 			o["storage"] = store;
 		}
-		o["code"] = "0x" + toHex(_state.code(a.first));
+		o["code"] = jsonHex(_state.code(a.first));
 
 		oState[toString(a.first)] = o;
 	}
 	return oState;
+}
+
+json_spirit::mArray exportLog(eth::LogEntries _logs)
+{
+	json_spirit::mArray ret;
+	if (_logs.size() == 0) return ret;
+	for (LogEntry const& l: _logs)
+	{
+		json_spirit::mObject o;
+		o["address"] = jsonHash(l.address);
+		json_spirit::mArray topics;
+		for (auto const& t: l.topics)
+			topics.push_back(toString(t));
+		o["topics"] = topics;
+		o["data"] = jsonHex(l.data);
+		o["bloom"] = jsonHash(l.bloom());
+		ret.push_back(o);
+	}
+	return ret;
 }
 
 u256 toInt(json_spirit::mValue const& _v)
@@ -453,25 +496,6 @@ LogEntries importLog(json_spirit::mArray& _a)
 		logEntries.push_back(log);
 	}
 	return logEntries;
-}
-
-json_spirit::mArray exportLog(eth::LogEntries _logs)
-{
-	json_spirit::mArray ret;
-	if (_logs.size() == 0) return ret;
-	for (LogEntry const& l: _logs)
-	{
-		json_spirit::mObject o;
-		o["address"] = toString(l.address);
-		json_spirit::mArray topics;
-		for (auto const& t: l.topics)
-			topics.push_back(toString(t));
-		o["topics"] = topics;
-		o["data"] = "0x" + toHex(l.data);
-		o["bloom"] = toString(l.bloom());
-		ret.push_back(o);
-	}
-	return ret;
 }
 
 void checkOutput(bytes const& _output, json_spirit::mObject& _o)
