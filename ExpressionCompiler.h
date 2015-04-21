@@ -100,12 +100,18 @@ private:
 	/// Appends code to call a function of the given type with the given arguments.
 	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
 									bool bare = false);
-	/// Appends code that evaluates the given arguments and moves the result to memory. The memory offset is
-	/// expected to be on the stack and is updated by this call.
-	void appendArgumentsCopyToMemory(std::vector<ASTPointer<Expression const>> const& _arguments,
-									 TypePointers const& _types = {},
-									 bool _padToWordBoundaries = true,
-									 bool _padExceptionIfFourBytes = false);
+	/// Appends code that evaluates the given arguments and moves the result to memory encoded as
+	/// specified by the ABI. The memory offset is expected to be on the stack and is updated by
+	/// this call. If @a _padToWordBoundaries is set to false, all values are concatenated without
+	/// padding. If @a _copyDynamicDataInPlace is set, dynamic types is stored (without length)
+	/// together with fixed-length data.
+	void appendArgumentsCopyToMemory(
+		std::vector<ASTPointer<Expression const>> const& _arguments,
+		TypePointers const& _types = {},
+		bool _padToWordBoundaries = true,
+		bool _padExceptionIfFourBytes = false,
+		bool _copyDynamicDataInPlace = false
+	);
 	/// Appends code that moves a stack element of the given type to memory. The memory offset is
 	/// expected below the stack element and is updated by this call.
 	void appendTypeMoveToMemory(Type const& _type, bool _padToWordBoundaries = true);

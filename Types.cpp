@@ -745,8 +745,6 @@ string ArrayType::toString() const
 
 TypePointer ArrayType::externalType() const
 {
-	if (m_location != Location::CallData)
-		return TypePointer();
 	if (m_isByteArray)
 		return shared_from_this();
 	if (!m_baseType->externalType())
@@ -1218,7 +1216,9 @@ string FunctionType::externalSignature(std::string const& _name) const
 	}
 	string ret = funcName + "(";
 
-	TypePointers externalParameterTypes = externalFunctionType()->getParameterTypes();
+	FunctionTypePointer external = externalFunctionType();
+	solAssert(!!external, "External function type requested.");
+	TypePointers externalParameterTypes = external->getParameterTypes();
 	for (auto it = externalParameterTypes.cbegin(); it != externalParameterTypes.cend(); ++it)
 	{
 		solAssert(!!(*it), "Parameter should have external type");
