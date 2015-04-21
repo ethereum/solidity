@@ -1109,7 +1109,7 @@ unsigned FunctionType::getSizeOnStack() const
 	return size;
 }
 
-TypePointer FunctionType::externalType() const
+FunctionTypePointer FunctionType::externalFunctionType() const
 {
 	TypePointers paramTypes;
 	TypePointers retParamTypes;
@@ -1117,13 +1117,13 @@ TypePointer FunctionType::externalType() const
 	for (auto type: m_parameterTypes)
 	{
 		if (!type->externalType())
-			return TypePointer();
+			return FunctionTypePointer();
 		paramTypes.push_back(type->externalType());
 	}
 	for (auto type: m_returnParameterTypes)
 	{
 		if (!type->externalType())
-			return TypePointer();
+			return FunctionTypePointer();
 		retParamTypes.push_back(type->externalType());
 	}
 	return make_shared<FunctionType>(paramTypes, retParamTypes, m_location, m_arbitraryParameters);
@@ -1168,7 +1168,7 @@ string FunctionType::externalSignature(std::string const& _name) const
 	}
 	string ret = funcName + "(";
 
-	TypePointers externalParameterTypes = dynamic_cast<FunctionType const&>(*externalType()).getParameterTypes();
+	TypePointers externalParameterTypes = externalFunctionType()->getParameterTypes();
 	for (auto it = externalParameterTypes.cbegin(); it != externalParameterTypes.cend(); ++it)
 	{
 		solAssert(!!(*it), "Parameter should have external type");
