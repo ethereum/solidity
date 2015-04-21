@@ -2378,7 +2378,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
 	callContractFunction("deposit()");
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 4, 15) + asBytes("ABC"));
+	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 3, 15) + asBytes("ABC"));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(uint256,bytes,uint256)")));
 }
@@ -2469,6 +2469,24 @@ BOOST_AUTO_TEST_CASE(sha3_multiple_arguments_with_string_literals)
 						bytes{0x0, 0xc} +
 						bytes(1, 0x91) +
 						bytes{0x66, 0x6f, 0x6f})));
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_bytes)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function foo() returns (bool)
+			{
+				data.length = 3;
+				data[0] = "f";
+				data[1] = "o";
+				data[2] = "o";
+				return sha3(data) == sha3("foo");
+			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("foo()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(generic_call)
