@@ -20,8 +20,6 @@
  * Tests for the Solidity optimizer.
  */
 
-#if ETH_SOLIDITY
-
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
@@ -816,5 +814,3 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
-
-#endif

@@ -20,8 +20,6 @@
  * Unit tests for the name and type resolution of the solidity parser.
  */
 
-#if ETH_SOLIDITY
-
 #include <string>
 
 #include <libdevcore/Log.h>
@@ -1671,5 +1669,3 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
-
-#endif

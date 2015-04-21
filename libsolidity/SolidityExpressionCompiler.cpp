@@ -20,8 +20,6 @@
  * Unit tests for the solidity expression compiler.
  */
 
-#if ETH_SOLIDITY
-
 #include <string>
 
 #include <libdevcore/Log.h>
@@ -491,5 +489,3 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
-
-#endif
