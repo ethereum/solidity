@@ -23,9 +23,6 @@
 
 #include <thread>
 #include <chrono>
-
-#include <boost/filesystem/path.hpp>
-
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
@@ -117,6 +114,32 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 		importState(_o["post"].get_obj(), m_statePost);
 		m_environment.sub.logs = importLog(_o["logs"].get_array());
 	}
+}
+
+json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
+{
+	static const set<string> hashes {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
+									 "stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
+									 "previousHash", "to", "address", "caller", "origin", "secretKey", "data"};
+
+	for (auto& i: _o)
+	{
+		std::string key = i.first;
+		if (hashes.count(key))
+			continue;
+
+		std::string str;
+		json_spirit::mValue value = i.second;
+
+		if (value.type() == json_spirit::int_type)
+			str = toString(value.get_int());
+		else if (value.type() == json_spirit::str_type)
+			str = value.get_str();
+		else continue;
+
+		_o[key] = (str.substr(0, 2) == "0x") ? str : "0x" + toHex(toCompactBigEndian(toInt(str), 1));
+	}
+	return _o;
 }
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
@@ -325,6 +348,8 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 
 	// export pre state
 	m_TestObject["pre"] = fillJsonWithState(m_statePre);
+	m_TestObject["env"] = makeAllFieldsHex(m_TestObject["env"].get_obj());
+	m_TestObject["transaction"] = makeAllFieldsHex(m_TestObject["transaction"].get_obj());
 }
 
 json_spirit::mObject fillJsonWithState(State _state)
@@ -335,8 +360,8 @@ json_spirit::mObject fillJsonWithState(State _state)
 	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = toString(_state.balance(a.first));
-		o["nonce"] = toString(_state.transactionsFrom(a.first));
+		o["balance"] = "0x" + toHex(toCompactBigEndian(_state.balance(a.first), 1));
+		o["nonce"] = "0x" + toHex(toCompactBigEndian(_state.transactionsFrom(a.first), 1));
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
@@ -564,7 +589,7 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests)
+void executeTests(const string& _name, const string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	string testPath = getTestPath();
 	testPath += _testPathAppendix;
@@ -579,9 +604,8 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 			cnote << "Populating tests...";
 			json_spirit::mValue v;
 			boost::filesystem::path p(__FILE__);
-			boost::filesystem::path dir = p.parent_path();
-			string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
+			string s = asString(dev::contents(_pathToFiller.string() + "/" + _name + "Filler.json"));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + _name + "Filler.json is empty.");
 			json_spirit::read_string(s, v);
 			doTests(v, true);
 			writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
