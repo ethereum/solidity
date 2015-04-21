@@ -311,7 +311,7 @@ Assembly& Assembly::optimise(bool _enable)
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
 	{
-		copt << *this;
+		copt << toString(*this);
 		count = 0;
 
 		copt << "Performing control flow analysis...";
