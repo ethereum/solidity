@@ -430,12 +430,20 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual unsigned getCalldataEncodedSize(bool _padded = true) const override
+	{
+		return externalType()->getCalldataEncodedSize(_padded);
+	}
 	virtual unsigned getStorageBytes() const override { return 20; }
+	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual bool isValueType() const override { return true; }
 	virtual std::string toString() const override;
 
 	virtual MemberList const& getMembers() const override;
-	virtual TypePointer externalType() const override { return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address); }
+	virtual TypePointer externalType() const override
+	{
+		return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+	}
 
 	bool isSuper() const { return m_super; }
 	ContractDefinition const& getContractDefinition() const { return m_contract; }
@@ -498,13 +506,21 @@ public:
 	explicit EnumType(EnumDefinition const& _enum): m_enum(_enum) {}
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual unsigned getCalldataEncodedSize(bool _padded = true) const override
+	{
+		return externalType()->getCalldataEncodedSize(_padded);
+	}
 	virtual unsigned getSizeOnStack() const override { return 1; }
 	virtual unsigned getStorageBytes() const override;
+	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString() const override;
 	virtual bool isValueType() const override { return true; }
 
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
-	virtual TypePointer externalType() const override { return std::make_shared<IntegerType>(8 * int(getStorageBytes())); }
+	virtual TypePointer externalType() const override
+	{
+		return std::make_shared<IntegerType>(8 * int(getStorageBytes()));
+	}
 
 	EnumDefinition const& getEnumDefinition() const { return m_enum; }
 	/// @returns the value that the string has in the Enum
@@ -538,9 +554,12 @@ public:
 
 	virtual Category getCategory() const override { return Category::Function; }
 
-	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an appropriate external types of input/return parameters of current function.
-	/// Returns an empty shared pointer if one of the input/return parameters does not have an externaltype.
-	virtual TypePointer externalType() const override;
+	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
+	/// appropriate external types of input/return parameters of current function.
+	/// Returns an empty shared pointer if one of the input/return parameters does not have an
+	/// external type.
+	virtual FunctionTypePointer externalFunctionType() const;
+	virtual TypePointer externalType() const override { return externalFunctionType(); }
 
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	explicit FunctionType(VariableDeclaration const& _varDecl);

@@ -143,8 +143,8 @@ public:
 	ASTString const& getName() const { return *m_name; }
 	Visibility getVisibility() const { return m_visibility == Visibility::Default ? getDefaultVisibility() : m_visibility; }
 	bool isPublic() const { return getVisibility() >= Visibility::Public; }
-	bool isVisibleInContract() const { return getVisibility() != Visibility::External; }
-	virtual bool isVisibleInDerivedContracts() const { return isVisibleInContract() && getVisibility() >= Visibility::Internal; }
+	virtual bool isVisibleInContract() const { return getVisibility() != Visibility::External; }
+	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && getVisibility() >= Visibility::Internal; }
 
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
@@ -156,7 +156,7 @@ public:
 	/// contract types.
 	virtual TypePointer getType(ContractDefinition const* m_currentContract = nullptr) const = 0;
 	virtual bool isLValue() const { return false; }
-	virtual bool isPartOfExternalInterface() const { return false; };
+	virtual bool isPartOfExternalInterface() const { return false; }
 
 protected:
 	virtual Visibility getDefaultVisibility() const { return Visibility::Public; }
@@ -443,10 +443,9 @@ public:
 	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
 	Block const& getBody() const { return *m_body; }
 
-	virtual bool isVisibleInDerivedContracts() const override
+	virtual bool isVisibleInContract() const override
 	{
-		return !isConstructor() && !getName().empty() && isVisibleInContract() &&
-			getVisibility() >= Visibility::Internal;
+		return Declaration::isVisibleInContract() && !isConstructor() && !getName().empty();
 	}
 	virtual TypePointer getType(ContractDefinition const*) const override;
 	virtual bool isPartOfExternalInterface() const override { return isPublic() && !m_isConstructor && !getName().empty(); }
