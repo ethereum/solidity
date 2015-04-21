@@ -531,9 +531,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case Location::SHA3:
 		{
-			m_context << u256(0);
+			// we might compute a sha as part of argumentsAppendCopyToMemory, this is only a hack
+			// and should be removed once we have a real free memory pointer
+			m_context << u256(0x40);
 			appendArgumentsCopyToMemory(arguments, TypePointers(), function.padArguments(), false, true);
-			m_context << u256(0) << eth::Instruction::SHA3;
+			m_context << u256(0x40) << eth::Instruction::SWAP1 << eth::Instruction::SUB;
+			m_context << u256(0x40) << eth::Instruction::SHA3;
 			break;
 		}
 		case Location::Log0:
@@ -574,7 +577,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			}
 			solAssert(numIndexed <= 4, "Too many indexed arguments.");
 			// Copy all non-indexed arguments to memory (data)
-			m_context << u256(0);
+			// Memory position is only a hack and should be removed once we have free memory pointer.
+			m_context << u256(0x40);
 			vector<ASTPointer<Expression const>> nonIndexedArgs;
 			TypePointers nonIndexedTypes;
 			for (unsigned arg = 0; arg < arguments.size(); ++arg)
@@ -584,7 +588,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					nonIndexedTypes.push_back(function.getParameterTypes()[arg]);
 				}
 			appendArgumentsCopyToMemory(nonIndexedArgs, nonIndexedTypes);
-			m_context << u256(0) << eth::logInstruction(numIndexed);
+			m_context << u256(0x40) << eth::Instruction::SWAP1 << eth::Instruction::SUB;
+			m_context << u256(0x40) << eth::logInstruction(numIndexed);
 			break;
 		}
 		case Location::BlockHash:
