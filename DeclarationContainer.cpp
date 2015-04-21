@@ -37,19 +37,25 @@ bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, 
 	if (_update)
 	{
 		solAssert(!dynamic_cast<FunctionDefinition const*>(&_declaration), "Attempt to update function definition.");
-		m_declarations[name].clear();
-		m_invisibleDeclarations[name].clear();
+		m_declarations.erase(name);
+		m_invisibleDeclarations.erase(name);
 	}
 	else
 	{
+		vector<Declaration const*> declarations;
+		if (m_declarations.count(name))
+			declarations += m_declarations.at(name);
+		if (m_invisibleDeclarations.count(name))
+			declarations += m_invisibleDeclarations.at(name);
 		if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 		{
 			// check that all other declarations with the same name are functions
-			for (auto&& declaration: m_invisibleDeclarations[name] + m_declarations[name])
+
+			for (Declaration const* declaration: declarations)
 				if (!dynamic_cast<FunctionDefinition const*>(declaration))
 					return false;
 		}
-		else if (m_declarations.count(name) > 0 || m_invisibleDeclarations.count(name) > 0)
+		else if (!declarations.empty())
 			return false;
 	}
 
