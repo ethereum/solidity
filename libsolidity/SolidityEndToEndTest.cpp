@@ -3699,6 +3699,25 @@ BOOST_AUTO_TEST_CASE(packed_storage_signed)
 	BOOST_CHECK( callContractFunction("test()") == encodeArgs(u256(-2), u256(4), u256(-112), u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(external_types_in_calls)
+{
+	char const* sourceCode = R"(
+		contract C1 { C1 public bla; function C1(C1 x) { bla = x; } }
+		contract C {
+			function test() returns (C1 x, C1 y) {
+				C1 c = new C1(C1(9));
+				x = c.bla();
+				y = this.t1(C1(7));
+			}
+			function t1(C1 a) returns (C1) { return a; }
+			function() returns (C1) { return C1(9); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(9), u256(7)));
+	BOOST_CHECK(callContractFunction("nonexisting") == encodeArgs(u256(9)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
