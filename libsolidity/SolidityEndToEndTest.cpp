@@ -302,7 +302,6 @@ BOOST_AUTO_TEST_CASE(for_loop_simple_init_expr)
 
 BOOST_AUTO_TEST_CASE(calling_other_functions)
 {
-	// note that the index of a function is its index in the sorted sequence of functions
 	char const* sourceCode = "contract collatz {\n"
 							 "  function run(uint x) returns(uint y) {\n"
 							 "    while ((y = x) > 1) {\n"
@@ -1145,26 +1144,6 @@ BOOST_AUTO_TEST_CASE(now)
 							 "}\n";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("someInfo()") == encodeArgs(true));
-}
-
-BOOST_AUTO_TEST_CASE(function_types)
-{
-	char const* sourceCode = "contract test {\n"
-							 "  function a(bool selector) returns (uint b) {\n"
-							 "    var f = fun1;\n"
-							 "    if (selector) f = fun2;\n"
-							 "    return f(9);\n"
-							 "  }\n"
-							 "  function fun1(uint x) returns (uint b) {\n"
-							 "    return 11;\n"
-							 "  }\n"
-							 "  function fun2(uint x) returns (uint b) {\n"
-							 "    return 12;\n"
-							 "  }\n"
-							 "}\n";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("a(bool)", false) == encodeArgs(11));
-	BOOST_CHECK(callContractFunction("a(bool)", true) == encodeArgs(12));
 }
 
 BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
@@ -3672,6 +3651,94 @@ BOOST_AUTO_TEST_CASE(packed_storage_structs_with_bytes0)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_call_resolve_to_first)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint k) returns(uint d) { return k; }
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function g() returns(uint d) { return f(3); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_call_resolve_to_second)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function f(uint k) returns(uint d) { return k; }
+			function g() returns(uint d) { return f(3, 7); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_call_with_if_else)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function f(uint k) returns(uint d) { return k; }
+			function g(bool flag) returns(uint d) {
+				if (flag)
+					return f(3);
+				else
+					return f(3, 7);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(3));
+	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(derived_overload_base_function_direct)
+{
+	char const* sourceCode = R"(
+		contract B { function f() returns(uint) { return 10; } }
+		contract C is B {
+			function f(uint i) returns(uint) { return 2 * i; }
+			function g() returns(uint) { return f(1); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(derived_overload_base_function_indirect)
+{
+	char const* sourceCode = R"(
+		contract A { function f(uint a) returns(uint) { return 2 * a; } }
+		contract B { function f() returns(uint) { return 10; } }
+		contract C is A, B {
+			function g() returns(uint) { return f(); }
+			function h() returns(uint) { return f(1); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(super_overload)
+{
+	char const* sourceCode = R"(
+		contract A { function f(uint a) returns(uint) { return 2 * a; } }
+		contract B { function f(bool b) returns(uint) { return 10; } }
+		contract C is A, B {
+			function g() returns(uint) { return super.f(true); }
+			function h() returns(uint) { return super.f(1); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(2));
 }
 
 BOOST_AUTO_TEST_CASE(packed_storage_signed)
