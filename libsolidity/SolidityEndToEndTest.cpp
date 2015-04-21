@@ -2340,6 +2340,49 @@ BOOST_AUTO_TEST_CASE(event_lots_of_data)
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(address,bytes32,uint256,bool)")));
 }
 
+BOOST_AUTO_TEST_CASE(event_really_lots_of_data)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit(uint fixeda, bytes dynx, uint fixedb);
+			function deposit() {
+				Deposit(10, msg.data, 15);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("deposit()");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 4, 15) + FixedHash<4>(dev::sha3("deposit()")).asBytes());
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(uint256,bytes,uint256)")));
+}
+
+BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			bytes x;
+			event Deposit(uint fixeda, bytes dynx, uint fixedb);
+			function deposit() {
+				x.length = 3;
+				x[0] = "A";
+				x[1] = "B";
+				x[2] = "C";
+				Deposit(10, x, 15);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("deposit()");
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 4, 15) + asBytes("ABC"));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(uint256,bytes,uint256)")));
+}
+
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 {
 	char const* sourceCode = R"(
