@@ -817,8 +817,11 @@ void NewExpression::checkTypeRequirements(TypePointers const*)
 		BOOST_THROW_EXCEPTION(createTypeError("Trying to create an instance of an abstract contract."));
 	shared_ptr<ContractType const> contractType = make_shared<ContractType>(*m_contract);
 	TypePointers const& parameterTypes = contractType->getConstructorType()->getParameterTypes();
-	m_type = make_shared<FunctionType>(parameterTypes, TypePointers{contractType},
-									   FunctionType::Location::Creation);
+	m_type = make_shared<FunctionType>(
+		parameterTypes,
+		TypePointers{contractType},
+		strings(),
+		FunctionType::Location::Creation);
 }
 
 void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)

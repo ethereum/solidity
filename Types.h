@@ -564,24 +564,36 @@ public:
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	explicit FunctionType(EventDefinition const& _event);
-	FunctionType(strings const& _parameterTypes, strings const& _returnParameterTypes,
-				 Location _location = Location::Internal, bool _arbitraryParameters = false):
-		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),
-					 _location, _arbitraryParameters) {}
 	FunctionType(
-		TypePointers const&	_parameterTypes,
-		TypePointers const&	_returnParameterTypes,
-		Location			_location = Location::Internal,
-		bool				_arbitraryParameters = false,
-		bool				_gasSet = false,
-		bool				_valueSet = false
+		strings const& _parameterTypes,
+		strings const& _returnParameterTypes,
+		Location _location = Location::Internal,
+		bool _arbitraryParameters = false
+	): FunctionType(
+		parseElementaryTypeVector(_parameterTypes),
+		parseElementaryTypeVector(_returnParameterTypes),
+		strings(),
+		_location,
+		_arbitraryParameters
+	)
+	{
+	}
+	FunctionType(
+		TypePointers const& _parameterTypes,
+		TypePointers const& _returnParameterTypes,
+		strings _parameterNames = strings(),
+		Location _location = Location::Internal,
+		bool _arbitraryParameters = false,
+		bool _gasSet = false,
+		bool _valueSet = false
 	):
-		m_parameterTypes		(_parameterTypes),
-		m_returnParameterTypes	(_returnParameterTypes),
-		m_location				(_location),
-		m_arbitraryParameters	(_arbitraryParameters),
-		m_gasSet				(_gasSet),
-		m_valueSet				(_valueSet)
+		m_parameterTypes (_parameterTypes),
+		m_returnParameterTypes (_returnParameterTypes),
+		m_parameterNames (_parameterNames),
+		m_location (_location),
+		m_arbitraryParameters (_arbitraryParameters),
+		m_gasSet (_gasSet),
+		m_valueSet (_valueSet)
 	{}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }

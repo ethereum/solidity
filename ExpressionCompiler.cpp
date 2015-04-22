@@ -521,8 +521,19 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(),
 								 *function.getParameterTypes().front(), true);
-			appendExternalFunctionCall(FunctionType(TypePointers{}, TypePointers{},
-													Location::External, false, true, true), {}, true);
+			appendExternalFunctionCall(
+				FunctionType(
+					TypePointers{},
+					TypePointers{},
+					strings(),
+					Location::External,
+					false,
+					true,
+					true
+				),
+				{},
+				true
+			);
 			break;
 		case Location::Suicide:
 			arguments.front()->accept(*this);

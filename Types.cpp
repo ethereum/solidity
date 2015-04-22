@@ -1143,7 +1143,7 @@ FunctionTypePointer FunctionType::externalFunctionType() const
 			return FunctionTypePointer();
 		retParamTypes.push_back(type->externalType());
 	}
-	return make_shared<FunctionType>(paramTypes, retParamTypes, m_location, m_arbitraryParameters);
+	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_location, m_arbitraryParameters);
 }
 
 MemberList const& FunctionType::getMembers() const
@@ -1159,14 +1159,34 @@ MemberList const& FunctionType::getMembers() const
 		if (!m_members)
 		{
 			MemberList::MemberMap members{
-				{"value", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
-													TypePointers{copyAndSetGasOrValue(false, true)},
-													Location::SetValue, false, m_gasSet, m_valueSet)}};
+				{
+					"value",
+					make_shared<FunctionType>(
+						parseElementaryTypeVector({"uint"}),
+						TypePointers{copyAndSetGasOrValue(false, true)},
+						strings(),
+						Location::SetValue,
+						false,
+						m_gasSet,
+						m_valueSet
+					)
+				}
+			};
 			if (m_location != Location::Creation)
-				members.push_back(MemberList::Member("gas", make_shared<FunctionType>(
-												parseElementaryTypeVector({"uint"}),
-												TypePointers{copyAndSetGasOrValue(true, false)},
-												Location::SetGas, false, m_gasSet, m_valueSet)));
+				members.push_back(
+					MemberList::Member(
+						"gas",
+						make_shared<FunctionType>(
+							parseElementaryTypeVector({"uint"}),
+							TypePointers{copyAndSetGasOrValue(true, false)},
+							strings(),
+							Location::SetGas,
+							false,
+							m_gasSet,
+							m_valueSet
+						)
+					)
+				);
 			m_members.reset(new MemberList(members));
 		}
 		return *m_members;
@@ -1244,9 +1264,15 @@ TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 
 TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) const
 {
-	return make_shared<FunctionType>(m_parameterTypes, m_returnParameterTypes, m_location,
-									 m_arbitraryParameters,
-									 m_gasSet || _setGas, m_valueSet || _setValue);
+	return make_shared<FunctionType>(
+		m_parameterTypes,
+		m_returnParameterTypes,
+		strings(),
+		m_location,
+		m_arbitraryParameters,
+		m_gasSet || _setGas,
+		m_valueSet || _setValue
+	);
 }
 
 vector<string> const FunctionType::getParameterTypeNames() const
