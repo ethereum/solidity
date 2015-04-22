@@ -137,7 +137,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = value.get_str();
 		else continue;
 
-		_o[key] = (str.substr(0, 2) == "0x") ? str : jsonHex(toInt(str));
+		_o[key] = (str.substr(0, 2) == "0x") ? str : toHex(toInt(str), HexPrefix::Add);
 	}
 	return _o;
 }
@@ -327,7 +327,7 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
-	m_TestObject["out"] = jsonHex(_output);
+	m_TestObject["out"] = "0x" + toString(_output);
 
 	// export logs
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
@@ -344,7 +344,7 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 
 	// export post state
 	m_TestObject["post"] = fillJsonWithState(_statePost);
-	m_TestObject["postStateRoot"] = jsonHex(_statePost.rootHash().asBytes());
+	m_TestObject["postStateRoot"] = toString(_statePost.rootHash().asBytes());
 
 	// export pre state
 	m_TestObject["pre"] = fillJsonWithState(m_statePre);
@@ -352,29 +352,18 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	m_TestObject["transaction"] = makeAllFieldsHex(m_TestObject["transaction"].get_obj());
 }
 
-std::string jsonHash(h256 const& _value) { return toString(_value); }
-std::string jsonHash(Nonce const& _value) { return toString(_value); }
-std::string jsonHash(LogBloom const& _value) { return toString(_value); }
-std::string jsonHash(Address const& _value)	{ return toString(_value);	}
-std::string jsonHex(bytesConstRef _code)	{ return "0x" + toHex(_code);	}
-std::string jsonHex(bytes const& _code)	{ return "0x" + toHex(_code);	}
-std::string jsonHex(u256 const& _value, bool _nonempty)
-{
-	return "0x" + toHex(toCompactBigEndian(_value, _nonempty ? 1 : 0));
-}
-
 json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
 {
 	json_spirit::mObject txObject;
-	txObject["nonce"] = jsonHex(_txn.nonce());
-	txObject["data"] = jsonHex(_txn.data());
-	txObject["gasLimit"] = jsonHex(_txn.gas());
-	txObject["gasPrice"] = jsonHex(_txn.gasPrice());
-	txObject["r"] = jsonHex(_txn.signature().r);
-	txObject["s"] = jsonHex(_txn.signature().s);
-	txObject["v"] = jsonHex(_txn.signature().v + 27);
-	txObject["to"] = _txn.isCreation() ? "" : jsonHash(_txn.receiveAddress());
-	txObject["value"] = jsonHex(_txn.value());
+	txObject["nonce"] = toCompactHex(_txn.nonce(), HexPrefix::Add);
+	txObject["data"] = "0x"+toString(_txn.data());
+	txObject["gasLimit"] = toCompactHex(_txn.gas(), HexPrefix::Add);
+	txObject["gasPrice"] = toCompactHex(_txn.gasPrice(), HexPrefix::Add);
+	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add);
+	txObject["s"] = toCompactHex(_txn.signature().s, HexPrefix::Add);
+	txObject["v"] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add);
+	txObject["to"] = _txn.isCreation() ? "" : toString(_txn.receiveAddress());
+	txObject["value"] = toCompactHex(_txn.value(), HexPrefix::Add);
 	return txObject;
 }
 
@@ -384,16 +373,15 @@ json_spirit::mObject fillJsonWithState(State _state)
 	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = jsonHex(_state.balance(a.first));
-		o["nonce"] = jsonHex(_state.transactionsFrom(a.first));
+		o["balance"] = toCompactHex(_state.balance(a.first), HexPrefix::Add);
+		o["nonce"] = toCompactHex(_state.transactionsFrom(a.first), HexPrefix::Add);
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
-				store[jsonHex(s.first)] = jsonHex(s.second);
+				store[toCompactHex(s.first, HexPrefix::Add)] = toCompactHex(s.second, HexPrefix::Add);
 			o["storage"] = store;
 		}
-		o["code"] = jsonHex(_state.code(a.first));
-
+		o["code"] = "0x" + toString(_state.code(a.first));
 		oState[toString(a.first)] = o;
 	}
 	return oState;
@@ -406,13 +394,13 @@ json_spirit::mArray exportLog(eth::LogEntries _logs)
 	for (LogEntry const& l: _logs)
 	{
 		json_spirit::mObject o;
-		o["address"] = jsonHash(l.address);
+		o["address"] = toString(l.address);
 		json_spirit::mArray topics;
 		for (auto const& t: l.topics)
 			topics.push_back(toString(t));
 		o["topics"] = topics;
-		o["data"] = jsonHex(l.data);
-		o["bloom"] = jsonHash(l.bloom());
+		o["data"] = "0x" + toString(l.data);
+		o["bloom"] = toString(l.bloom());
 		ret.push_back(o);
 	}
 	return ret;

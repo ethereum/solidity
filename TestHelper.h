@@ -162,13 +162,6 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
-std::string jsonHash(dev::eth::LogBloom const& _value);
-std::string jsonHash(Address const& _value);
-std::string jsonHash(dev::eth::Nonce const& _value);
-std::string jsonHash(h256 const& _value);
-std::string jsonHex(u256 const& _value, bool _nonempty = true);
-std::string jsonHex(bytesConstRef _code);
-std::string jsonHex(bytes const& _code);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
