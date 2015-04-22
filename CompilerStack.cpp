@@ -267,7 +267,7 @@ void CompilerStack::reset(bool _keepSources)
 	{
 		m_sources.clear();
 		if (m_addStandardSources)
-			addSources(StandardSources);
+			addSources(StandardSources, true);
 	}
 	m_globalContext.reset();
 	m_sourceOrder.clear();
