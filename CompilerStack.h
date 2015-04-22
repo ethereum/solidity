@@ -140,7 +140,7 @@ private:
 		std::shared_ptr<SourceUnit> ast;
 		std::string interface;
 		bool isLibrary = false;
-		void reset() { scanner.reset(); ast.reset(); interface.clear(); isLibrary = false;}
+		void reset() { scanner.reset(); ast.reset(); interface.clear(); }
 	};
 
 	struct Contract
