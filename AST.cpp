@@ -124,11 +124,6 @@ FunctionDefinition const* ContractDefinition::getConstructor() const
 	return nullptr;
 }
 
-FixedHash<4> ContractDefinition::getConstructorsInterface() const
-{
-	return FixedHash<4>(dev::sha3(getConstructor()->externalSignature()));
-}
-
 FunctionDefinition const* ContractDefinition::getFallbackFunction() const
 {
 	for (ContractDefinition const* contract: getLinearizedBaseContracts())

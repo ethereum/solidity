@@ -281,9 +281,6 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* getFallbackFunction() const;
 
-	///@returns hash of the constructor
-	FixedHash<4> getConstructorsInterface() const;
-
 private:
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
