@@ -101,7 +101,7 @@ string compile(string _input, bool _optimize)
 		contractData["bytecode"] = toHex(compiler.getBytecode(contractName));
 		contractData["opcodes"] = eth::disassemble(compiler.getBytecode(contractName));
 		ostringstream unused;
-		contractData["assembly"] = compiler.streamAssembly(unused, contractName, sources);
+		contractData["assembly"] = compiler.streamAssembly(unused, contractName, sources, true);
 		output["contracts"][contractName] = contractData;
 	}
 
