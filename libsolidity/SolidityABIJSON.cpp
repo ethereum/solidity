@@ -505,11 +505,8 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 
 	char const* interface = R"([
 	{
-		"constant" : false,
-		"inputs" : [],
-		"name" : "test",
-		"outputs" : [],
-		"type" : "constructor"
+	   "inputs" : [],
+	   "type" : "constructor"
 	}
 	])";
 	checkInterface(sourceCode, interface);
