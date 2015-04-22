@@ -450,14 +450,11 @@ void FunctionDefinition::checkTypeRequirements()
 	{
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
+		// todo delete when will be implemented arrays as parameter type in internal functions
+		if (getVisibility() == Visibility::Public && var->getType()->getCategory() == Type::Category::Array)
+			BOOST_THROW_EXCEPTION(var->createTypeError("Arrays only implemented for external functions."));
 		if (getVisibility() >= Visibility::Public && !(var->getType()->externalType()))
-		{
-			// todo delete when will be implemented arrays as parameter type in internal functions
-			if (getVisibility() == Visibility::Public && var->getType()->getCategory() == Type::Category::Array)
-				BOOST_THROW_EXCEPTION(var->createTypeError("Arrays only implemented for external functions."));
-			else
-				BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for public and external functions."));
-		}
+			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for public and external functions."));
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: m_functionModifiers)
 		modifier->checkTypeRequirements(isConstructor() ?

@@ -155,6 +155,13 @@ void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 		m_context << eth::dupInstruction(_stackDepth);
 }
 
+void CompilerUtils::moveToStackTop(unsigned _stackDepth)
+{
+	solAssert(_stackDepth <= 15, "Stack too deep.");
+	for (unsigned i = 0; i < _stackDepth; ++i)
+		m_context << eth::swapInstruction(1 + i);
+}
+
 void CompilerUtils::popStackElement(Type const& _type)
 {
 	popStackSlots(_type.getSizeOnStack());

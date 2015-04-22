@@ -77,6 +77,8 @@ public:
 	/// Copies an item that occupies @a _itemSize stack slots from a stack depth of @a _stackDepth
 	/// to the top of the stack.
 	void copyToStackTop(unsigned _stackDepth, unsigned _itemSize);
+	/// Moves a single stack element (with _stackDepth items on top of it) to the top of the stack.
+	void moveToStackTop(unsigned _stackDepth);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);
 	/// Removes element from the top of the stack _amount times.

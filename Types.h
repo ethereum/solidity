@@ -430,7 +430,7 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
-	virtual unsigned getCalldataEncodedSize(bool _padded = true) const override
+	virtual unsigned getCalldataEncodedSize(bool _padded ) const override
 	{
 		return externalType()->getCalldataEncodedSize(_padded);
 	}
@@ -506,7 +506,7 @@ public:
 	explicit EnumType(EnumDefinition const& _enum): m_enum(_enum) {}
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
-	virtual unsigned getCalldataEncodedSize(bool _padded = true) const override
+	virtual unsigned getCalldataEncodedSize(bool _padded) const override
 	{
 		return externalType()->getCalldataEncodedSize(_padded);
 	}
@@ -558,7 +558,7 @@ public:
 	/// appropriate external types of input/return parameters of current function.
 	/// Returns an empty shared pointer if one of the input/return parameters does not have an
 	/// external type.
-	virtual FunctionTypePointer externalFunctionType() const;
+	FunctionTypePointer externalFunctionType() const;
 	virtual TypePointer externalType() const override { return externalFunctionType(); }
 
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
