@@ -21,8 +21,6 @@
  * Unit tests for the solidity expression compiler, testing the behaviour of the code.
  */
 
-#if ETH_SOLIDITY
-
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
@@ -304,7 +302,6 @@ BOOST_AUTO_TEST_CASE(for_loop_simple_init_expr)
 
 BOOST_AUTO_TEST_CASE(calling_other_functions)
 {
-	// note that the index of a function is its index in the sorted sequence of functions
 	char const* sourceCode = "contract collatz {\n"
 							 "  function run(uint x) returns(uint y) {\n"
 							 "    while ((y = x) > 1) {\n"
@@ -1149,26 +1146,6 @@ BOOST_AUTO_TEST_CASE(now)
 	BOOST_CHECK(callContractFunction("someInfo()") == encodeArgs(true));
 }
 
-BOOST_AUTO_TEST_CASE(function_types)
-{
-	char const* sourceCode = "contract test {\n"
-							 "  function a(bool selector) returns (uint b) {\n"
-							 "    var f = fun1;\n"
-							 "    if (selector) f = fun2;\n"
-							 "    return f(9);\n"
-							 "  }\n"
-							 "  function fun1(uint x) returns (uint b) {\n"
-							 "    return 11;\n"
-							 "  }\n"
-							 "  function fun2(uint x) returns (uint b) {\n"
-							 "    return 12;\n"
-							 "  }\n"
-							 "}\n";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("a(bool)", false) == encodeArgs(11));
-	BOOST_CHECK(callContractFunction("a(bool)", true) == encodeArgs(12));
-}
-
 BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
 {
 	// 22-byte integer converted to a contract (i.e. address, 20 bytes), converted to a 32 byte
@@ -1499,7 +1476,7 @@ BOOST_AUTO_TEST_CASE(ripemd)
 	{
 		h256 ret;
 		dev::ripemd160(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
-		return u256(ret) >> (256 - 160);
+		return u256(ret);
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -1814,7 +1791,7 @@ BOOST_AUTO_TEST_CASE(gas_for_builtin)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test(uint256)", 500) == bytes());
-	BOOST_CHECK(callContractFunction("test(uint256)", 800) == encodeArgs(u256("0x8eb208f7e05d987a9b044a8e98c6b087f15a0bfc"), true));
+	BOOST_CHECK(callContractFunction("test(uint256)", 800) == encodeArgs(u256("0x8eb208f7e05d987a9b044a8e98c6b087f15a0bfc000000000000000000000000"), true));
 }
 
 BOOST_AUTO_TEST_CASE(value_complex)
@@ -3676,6 +3653,94 @@ BOOST_AUTO_TEST_CASE(packed_storage_structs_with_bytes0)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(overloaded_function_call_resolve_to_first)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint k) returns(uint d) { return k; }
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function g() returns(uint d) { return f(3); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_call_resolve_to_second)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function f(uint k) returns(uint d) { return k; }
+			function g() returns(uint d) { return f(3, 7); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_call_with_if_else)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function f(uint k) returns(uint d) { return k; }
+			function g(bool flag) returns(uint d) {
+				if (flag)
+					return f(3);
+				else
+					return f(3, 7);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(3));
+	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(derived_overload_base_function_direct)
+{
+	char const* sourceCode = R"(
+		contract B { function f() returns(uint) { return 10; } }
+		contract C is B {
+			function f(uint i) returns(uint) { return 2 * i; }
+			function g() returns(uint) { return f(1); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(derived_overload_base_function_indirect)
+{
+	char const* sourceCode = R"(
+		contract A { function f(uint a) returns(uint) { return 2 * a; } }
+		contract B { function f() returns(uint) { return 10; } }
+		contract C is A, B {
+			function g() returns(uint) { return f(); }
+			function h() returns(uint) { return f(1); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(super_overload)
+{
+	char const* sourceCode = R"(
+		contract A { function f(uint a) returns(uint) { return 2 * a; } }
+		contract B { function f(bool b) returns(uint) { return 10; } }
+		contract C is A, B {
+			function g() returns(uint) { return super.f(true); }
+			function h() returns(uint) { return super.f(1); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(2));
+}
+
 BOOST_AUTO_TEST_CASE(packed_storage_signed)
 {
 	char const* sourceCode = R"(
@@ -3699,10 +3764,27 @@ BOOST_AUTO_TEST_CASE(packed_storage_signed)
 	BOOST_CHECK( callContractFunction("test()") == encodeArgs(u256(-2), u256(4), u256(-112), u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(external_types_in_calls)
+{
+	char const* sourceCode = R"(
+		contract C1 { C1 public bla; function C1(C1 x) { bla = x; } }
+		contract C {
+			function test() returns (C1 x, C1 y) {
+				C1 c = new C1(C1(9));
+				x = c.bla();
+				y = this.t1(C1(7));
+			}
+			function t1(C1 a) returns (C1) { return a; }
+			function() returns (C1) { return C1(9); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(9), u256(7)));
+	BOOST_CHECK(callContractFunction("nonexisting") == encodeArgs(u256(9)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
 }
 } // end namespaces
-
-#endif

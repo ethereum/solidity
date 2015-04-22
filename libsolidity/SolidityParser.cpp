@@ -20,8 +20,6 @@
  * Unit tests for the solidity parser.
  */
 
-#if ETH_SOLIDITY
-
 #include <string>
 #include <memory>
 #include <libdevcore/Log.h>
@@ -134,6 +132,31 @@ BOOST_AUTO_TEST_CASE(missing_argument_in_named_args)
 					   "  function b() returns (uint r) { r = a({a: , b: , c: }); }\n"
 					   "}\n";
 	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(two_exact_functions)
+{
+	char const* text = R"(
+		contract test {
+			function fun(uint a) returns(uint r) { return a; }
+			function fun(uint a) returns(uint r) { return a; }
+		}
+	)";
+	// with support of overloaded functions, during parsing,
+	// we can't determine whether they match exactly, however
+	// it will throw DeclarationError in following stage.
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_functions)
+{
+	char const* text = R"(
+		contract test {
+			function fun(uint a) returns(uint r) { return a; }
+			function fun(uint a, uint b) returns(uint r) { return a + b; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
 BOOST_AUTO_TEST_CASE(function_natspec_documentation)
@@ -855,5 +878,3 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
-
-#endif

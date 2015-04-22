@@ -20,8 +20,6 @@
  * Unit tests for the name and type resolution of the solidity parser.
  */
 
-#if ETH_SOLIDITY
-
 #include <string>
 
 #include <libdevcore/Log.h>
@@ -625,23 +623,23 @@ BOOST_AUTO_TEST_CASE(cyclic_inheritance)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_direct)
+BOOST_AUTO_TEST_CASE(legal_override_direct)
 {
 	char const* text = R"(
 		contract B { function f() {} }
 		contract C is B { function f(uint i) {} }
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_indirect)
+BOOST_AUTO_TEST_CASE(legal_override_indirect)
 {
 	char const* text = R"(
 		contract A { function f(uint a) {} }
 		contract B { function f() {} }
 		contract C is A, B { }
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(illegal_override_visibility)
@@ -1656,6 +1654,103 @@ BOOST_AUTO_TEST_CASE(bytes0_array)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint) { return 1; }
+			function f(uint a) returns(uint) { return a; }
+			function g() returns(uint) { return f(3, 5); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(ambiguous_overloaded_function)
+{
+	// literal 1 can be both converted to uint and uint8, so the call is ambiguous.
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint8 a) returns(uint) { return a; }
+			function f(uint a) returns(uint) { return 2*a; }
+			function g() returns(uint) { return f(1); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_of_nonoverloaded_function)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a) returns(uint) { return 2 * a; }
+			function g() returns(uint) { var x = f; return x(7); }
+		}
+	)";
+	ETH_TEST_REQUIRE_NO_THROW(parseTextAndResolveNames(sourceCode), "Type resolving failed");
+}
+
+BOOST_AUTO_TEST_CASE(assignment_of_overloaded_function)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint) { return 1; }
+			function f(uint a) returns(uint) { return 2 * a; }
+			function g() returns(uint) { var x = f; return x(7); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(external_types_clash)
+{
+	char const* sourceCode = R"(
+		contract base {
+			enum a { X }
+			function f(a) { }
+		}
+		contract test is base {
+			function f(uint8 a) { }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(override_changes_return_types)
+{
+	char const* sourceCode = R"(
+		contract base {
+			function f(uint a) returns (uint) { }
+		}
+		contract test is base {
+			function f(uint a) returns (uint8) { }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(multiple_constructors)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function test(uint a) { }
+			function test() {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(equal_overload)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function test(uint a) returns (uint b) { }
+			function test(uint a) external {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), DeclarationError);
+}
+
 BOOST_AUTO_TEST_CASE(uninitialized_var)
 {
 	char const* sourceCode = R"(
@@ -1671,5 +1766,3 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
-
-#endif

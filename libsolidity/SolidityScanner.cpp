@@ -20,8 +20,6 @@
  * Unit tests for the solidity scanner.
  */
 
-#if ETH_SOLIDITY
-
 #include <libsolidity/Scanner.h>
 #include <boost/test/unit_test.hpp>
 
@@ -288,5 +286,3 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 } // end namespaces
-
-#endif
