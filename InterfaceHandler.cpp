@@ -47,7 +47,6 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		allFunctions.insert(make_pair(_contractDef.getConstructorsInterface(), functionTypePointer));
 	}
 
-	//allFunctions.insert(_contractDef.getConstructor());
 	for (auto it: allFunctions)
 	{
 		auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)

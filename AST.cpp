@@ -127,7 +127,6 @@ FunctionDefinition const* ContractDefinition::getConstructor() const
 FixedHash<4> ContractDefinition::getConstructorsInterface() const
 {
 	return FixedHash<4>(dev::sha3(getConstructor()->externalSignature()));
-	//return hash;
 }
 
 FunctionDefinition const* ContractDefinition::getFallbackFunction() const
