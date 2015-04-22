@@ -499,14 +499,27 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 {
 	char const* sourceCode = R"(
 		contract test {
-			function test() {
+			function test(uint param1, test param2, bool param3) {}
 		}
-	})";
+	)";
 
 	char const* interface = R"([
 	{
-	   "inputs" : [],
-	   "type" : "constructor"
+		"inputs": [
+			{
+				"name": "param1",
+				"type": "uint256"
+			},
+			{
+				"name": "param2",
+				"type": "address"
+			},
+			{
+				"name": "param3",
+				"type": "bool"
+			}
+		],
+		"type": "constructor"
 	}
 	])";
 	checkInterface(sourceCode, interface);
