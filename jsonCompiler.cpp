@@ -50,7 +50,7 @@ string formatError(Exception const& _exception, string const& _name, CompilerSta
 	return Json::FastWriter().write(output);
 }
 
-string compile(string _input, bool optimize)
+string compile(string _input, bool _optimize)
 {
 	StringMap sources;
 	sources[""] = _input;
@@ -59,7 +59,7 @@ string compile(string _input, bool optimize)
 	CompilerStack compiler;
 	try
 	{
-		compiler.compile(_input, optimize);
+		compiler.compile(_input, _optimize);
 	}
 	catch (ParserError const& exception)
 	{
@@ -116,9 +116,9 @@ static string outputBuffer;
 
 extern "C"
 {
-extern char const* compileJSON(char const* _input, bool optimize)
+extern char const* compileJSON(char const* _input, bool _optimize)
 {
-	outputBuffer = compile(_input, optimize);
+	outputBuffer = compile(_input, _optimize);
 	return outputBuffer.c_str();
 }
 }
