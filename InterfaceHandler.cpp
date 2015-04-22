@@ -38,39 +38,44 @@ std::unique_ptr<std::string> InterfaceHandler::getDocumentation(ContractDefiniti
 std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 {
 	Json::Value abi(Json::arrayValue);
-	auto allFunctions = _contractDef.getInterfaceFunctions();
 
-	FunctionTypePointer functionTypePointer = nullptr;
-	if (_contractDef.getConstructor())
+	auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
 	{
-		functionTypePointer = make_shared<FunctionType>(*_contractDef.getConstructor(), false);
-		allFunctions.insert(make_pair(_contractDef.getConstructorsInterface(), functionTypePointer));
-	}
-
-	for (auto it: allFunctions)
-	{
-		auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
+		Json::Value params(Json::arrayValue);
+		solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
+		for (unsigned i = 0; i < _paramNames.size(); ++i)
 		{
-			Json::Value params(Json::arrayValue);
-			solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
-			for (unsigned i = 0; i < _paramNames.size(); ++i)
-			{
-				Json::Value param;
-				param["name"] = _paramNames[i];
-				param["type"] = _paramTypes[i];
-				params.append(param);
-			}
-			return params;
-		};
+			Json::Value param;
+			param["name"] = _paramNames[i];
+			param["type"] = _paramTypes[i];
+			params.append(param);
+		}
+		return params;
+	};
+
+	for (auto it: _contractDef.getInterfaceFunctions())
+	{
 
 		Json::Value method;
-		method["type"] = (functionTypePointer == it.second ? "constructor" : "function");
+		method["type"] = "function";
 		method["name"] = it.second->getDeclaration().getName();
 		method["constant"] = it.second->isConstant();
 		method["inputs"] = populateParameters(it.second->getParameterNames(),
 											  it.second->getParameterTypeNames());
 		method["outputs"] = populateParameters(it.second->getReturnParameterNames(),
 											   it.second->getReturnParameterTypeNames());
+		abi.append(method);
+	}
+	if (_contractDef.getConstructor())
+	{
+		Json::Value method;
+		method["type"] = "constructor";
+		auto externalFunction = FunctionType(*_contractDef.getConstructor()).externalFunctionType();
+		solAssert(!!externalFunction, "");
+		method["inputs"] = populateParameters(
+			externalFunction->getParameterNames(),
+			externalFunction->getParameterTypeNames()
+		);
 		abi.append(method);
 	}
 
