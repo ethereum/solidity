@@ -137,7 +137,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = value.get_str();
 		else continue;
 
-		_o[key] = (str.substr(0, 2) == "0x") ? str : toHex(toInt(str), HexPrefix::Add);
+		_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add);
 	}
 	return _o;
 }
