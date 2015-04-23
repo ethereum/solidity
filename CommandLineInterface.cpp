@@ -270,7 +270,7 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 	}
 	catch (po::error const& _exception)
 	{
-		cout << _exception.what() << endl;
+		cerr << _exception.what() << endl;
 		return false;
 	}
 	if (m_args.count("combined-json"))
@@ -279,7 +279,7 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 		for (string const& item: boost::split(requests, m_args["combined-json"].as<string>(), boost::is_any_of(",")))
 			if (!g_combinedJsonArgs.count(item))
 			{
-				cout << "Invalid option to --combined-json: " << item << endl;
+				cerr << "Invalid option to --combined-json: " << item << endl;
 				return false;
 			}
 	}
@@ -317,13 +317,13 @@ bool CommandLineInterface::processInput()
 			auto path = boost::filesystem::path(infile);
 			if (!boost::filesystem::exists(path))
 			{
-				cout << "Skipping non existant input file \"" << infile << "\"" << endl;
+				cerr << "Skipping non existant input file \"" << infile << "\"" << endl;
 				continue;
 			}
 
 			if (!boost::filesystem::is_regular_file(path))
 			{
-				cout << "\"" << infile << "\" is not a valid file. Skipping" << endl;
+				cerr << "\"" << infile << "\" is not a valid file. Skipping" << endl;
 				continue;
 			}
 
