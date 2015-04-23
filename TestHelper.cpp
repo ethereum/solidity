@@ -327,7 +327,7 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
-	m_TestObject["out"] = "0x" + toString(_output);
+	m_TestObject["out"] = toHex(_output, 2, HexPrefix::Add);
 
 	// export logs
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
@@ -356,7 +356,7 @@ json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
 {
 	json_spirit::mObject txObject;
 	txObject["nonce"] = toCompactHex(_txn.nonce(), HexPrefix::Add);
-	txObject["data"] = "0x"+toString(_txn.data());
+	txObject["data"] = toHex(_txn.data(), 2, HexPrefix::Add);
 	txObject["gasLimit"] = toCompactHex(_txn.gas(), HexPrefix::Add);
 	txObject["gasPrice"] = toCompactHex(_txn.gasPrice(), HexPrefix::Add);
 	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add);
@@ -381,7 +381,7 @@ json_spirit::mObject fillJsonWithState(State _state)
 				store[toCompactHex(s.first, HexPrefix::Add)] = toCompactHex(s.second, HexPrefix::Add);
 			o["storage"] = store;
 		}
-		o["code"] = "0x" + toString(_state.code(a.first));
+		o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);
 		oState[toString(a.first)] = o;
 	}
 	return oState;
@@ -399,7 +399,7 @@ json_spirit::mArray exportLog(eth::LogEntries _logs)
 		for (auto const& t: l.topics)
 			topics.push_back(toString(t));
 		o["topics"] = topics;
-		o["data"] = "0x" + toString(l.data);
+		o["data"] = toHex(l.data, 2, HexPrefix::Add);
 		o["bloom"] = toString(l.bloom());
 		ret.push_back(o);
 	}
