@@ -20,8 +20,6 @@
  * Unit tests for the type system of Solidity.
  */
 
-#if ETH_SOLIDITY
-
 #include <libsolidity/Types.h>
 #include <boost/test/unit_test.hpp>
 
@@ -93,5 +91,3 @@ BOOST_AUTO_TEST_SUITE_END()
 }
 }
 }
-
-#endif
