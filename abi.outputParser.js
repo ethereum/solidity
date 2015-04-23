@@ -35,13 +35,13 @@ describe('lib/solidity/abi', function() {
             
             // then
             assert.equal(
-                parser.test("0x" + 
+                parser.test(
                     "0000000000000000000000000000000000000000000000000000000000000005" +
                     "68656c6c6f000000000000000000000000000000000000000000000000000000")[0],
                 'hello'
                 );
             assert.equal(
-                parser.test("0x" + 
+                parser.test(
                     "0000000000000000000000000000000000000000000000000000000000000005" +
                     "776f726c64000000000000000000000000000000000000000000000000000000")[0], 
                 'world'
@@ -62,14 +62,14 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
-            assert.equal(parser.test("0x000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
+            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.test("000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
             assert.equal(
-                parser.test("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0].toString(10), 
+                parser.test("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0].toString(10), 
                 new BigNumber("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16).toString(10)
                 );
             assert.equal(
-                parser.test("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0].toString(10), 
+                parser.test("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0].toString(10), 
                 new BigNumber("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0", 16).toString(10)
                 );
         });
@@ -87,14 +87,14 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
-            assert.equal(parser.test("0x000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
+            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.test("000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
             assert.equal(
-                parser.test("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0].toString(10), 
+                parser.test("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0].toString(10), 
                 new BigNumber("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16).toString(10)
                 );
             assert.equal(
-                parser.test("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0].toString(10), 
+                parser.test("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0].toString(10), 
                 new BigNumber("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0", 16).toString(10)
                 );
         });
@@ -112,14 +112,14 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
-            assert.equal(parser.test("0x000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
+            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.test("000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
             assert.equal(
-                parser.test("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0].toString(10), 
+                parser.test("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0].toString(10), 
                 new BigNumber("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16).toString(10)
                 );
             assert.equal(
-                parser.test("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0].toString(10), 
+                parser.test("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0].toString(10), 
                 new BigNumber("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0", 16).toString(10)
                 );
         });
@@ -137,10 +137,10 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
-            assert.equal(parser.test("0x000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
-            assert.equal(parser.test("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0], -1);
-            assert.equal(parser.test("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0], -16);
+            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.test("000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
+            assert.equal(parser.test("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0], -1);
+            assert.equal(parser.test("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0], -16);
         });
         
         it('should parse output int256', function() {
@@ -156,10 +156,10 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
-            assert.equal(parser.test("0x000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
-            assert.equal(parser.test("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0], -1);
-            assert.equal(parser.test("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0], -16);
+            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.test("000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
+            assert.equal(parser.test("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0], -1);
+            assert.equal(parser.test("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0], -16);
         });
 
         it('should parse output int128', function() {
@@ -175,10 +175,10 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
-            assert.equal(parser.test("0x000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
-            assert.equal(parser.test("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0], -1);
-            assert.equal(parser.test("0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0], -16);
+            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.test("000000000000000000000000000000000000000000000000000000000000000a")[0], 10);
+            assert.equal(parser.test("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")[0], -1);
+            assert.equal(parser.test("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0")[0], -16);
         });
 
         it('should parse output address', function() {
@@ -195,7 +195,7 @@ describe('lib/solidity/abi', function() {
 
             // then
             assert.equal(
-                parser.test("0x000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1")[0],
+                parser.test("000000000000000000000000407d73d8a49eeb85d32cf465507dd71d507100c1")[0],
                 "0x407d73d8a49eeb85d32cf465507dd71d507100c1"
                 );
         });
@@ -213,8 +213,8 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000000000000000000000000000000000001")[0], true);
-            assert.equal(parser.test("0x0000000000000000000000000000000000000000000000000000000000000000")[0], false);
+            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000001")[0], true);
+            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000000")[0], false);
             
 
         });
@@ -232,10 +232,10 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000100000000000000000000000000000000")[0], 1);
-            assert.equal(parser.test("0x0000000000000000000000000000000220000000000000000000000000000000")[0], 2.125); 
-            assert.equal(parser.test("0x0000000000000000000000000000000880000000000000000000000000000000")[0], 8.5); 
-            assert.equal(parser.test("0xffffffffffffffffffffffffffffffff00000000000000000000000000000000")[0], -1); 
+            assert.equal(parser.test("0000000000000000000000000000000100000000000000000000000000000000")[0], 1);
+            assert.equal(parser.test("0000000000000000000000000000000220000000000000000000000000000000")[0], 2.125); 
+            assert.equal(parser.test("0000000000000000000000000000000880000000000000000000000000000000")[0], 8.5); 
+            assert.equal(parser.test("ffffffffffffffffffffffffffffffff00000000000000000000000000000000")[0], -1); 
             
         });
 
@@ -252,9 +252,9 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x0000000000000000000000000000000100000000000000000000000000000000")[0], 1);
-            assert.equal(parser.test("0x0000000000000000000000000000000220000000000000000000000000000000")[0], 2.125); 
-            assert.equal(parser.test("0x0000000000000000000000000000000880000000000000000000000000000000")[0], 8.5); 
+            assert.equal(parser.test("0000000000000000000000000000000100000000000000000000000000000000")[0], 1);
+            assert.equal(parser.test("0000000000000000000000000000000220000000000000000000000000000000")[0], 2.125); 
+            assert.equal(parser.test("0000000000000000000000000000000880000000000000000000000000000000")[0], 8.5); 
 
         });
         
@@ -274,7 +274,7 @@ describe('lib/solidity/abi', function() {
 
             // then
             assert.equal(
-                parser.test("0x" +
+                parser.test(
                     "0000000000000000000000000000000000000000000000000000000000000005" +
                     "0000000000000000000000000000000000000000000000000000000000000005" +
                     "68656c6c6f000000000000000000000000000000000000000000000000000000" + 
@@ -282,7 +282,7 @@ describe('lib/solidity/abi', function() {
                 'hello'
                 );
             assert.equal(
-                parser.test("0x" +
+                parser.test(
                     "0000000000000000000000000000000000000000000000000000000000000005" +
                     "0000000000000000000000000000000000000000000000000000000000000005" +
                     "68656c6c6f000000000000000000000000000000000000000000000000000000" + 
@@ -305,8 +305,8 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.helloworld("0x0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
-            assert.equal(parser.helloworld['int']("0x0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.helloworld("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.helloworld['int']("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
 
         });
 
@@ -330,8 +330,8 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             //then
-            assert.equal(parser.test("0000000000000000000000000000000000000000000000000000000000000001")[0], 1);
-            assert.equal(parser.test2("0x" + 
+            assert.equal(parser.test("00000000000000000000000000000000000000000000000000000000000001")[0], 1);
+            assert.equal(parser.test2(
                     "0000000000000000000000000000000000000000000000000000000000000005" +
                     "68656c6c6f000000000000000000000000000000000000000000000000000000")[0],
                 "hello"
@@ -351,13 +351,13 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x" +
+            assert.equal(parser.test(
                     "0000000000000000000000000000000000000000000000000000000000000002" + 
                     "0000000000000000000000000000000000000000000000000000000000000005" + 
                     "0000000000000000000000000000000000000000000000000000000000000006")[0][0],
                 5
                 );
-            assert.equal(parser.test("0x" +
+            assert.equal(parser.test(
                     "0000000000000000000000000000000000000000000000000000000000000002" + 
                     "0000000000000000000000000000000000000000000000000000000000000005" + 
                     "0000000000000000000000000000000000000000000000000000000000000006")[0][1],
@@ -366,7 +366,7 @@ describe('lib/solidity/abi', function() {
 
         });
 
-        it('should parse 0x value', function () {
+        it('should parse 0x0 value', function () {
         
             // given
             var d = clone(description);
@@ -378,11 +378,11 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x")[0], 0);
+            assert.equal(parser.test("0x0")[0], 0);
 
         });
         
-        it('should parse 0x value', function () {
+        it('should parse 0x0 value', function () {
         
             // given
             var d = clone(description);
@@ -394,7 +394,7 @@ describe('lib/solidity/abi', function() {
             var parser = abi.outputParser(d);
 
             // then
-            assert.equal(parser.test("0x")[0], 0);
+            assert.equal(parser.test("0x0")[0], 0);
 
         });
 

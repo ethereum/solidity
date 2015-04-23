@@ -234,7 +234,7 @@ describe('web3.eth.contract', function() {
         });
         
         var Con = contract(description);
-        var myCon = new Con(code, 2);
+        var myCon = new Con({data: code}, 2);
     });
 });
 

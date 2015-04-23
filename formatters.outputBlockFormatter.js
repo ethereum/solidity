@@ -1,4 +1,5 @@
-var assert = require('assert');
+var chai = require('chai');
+var assert = chai.assert; 
 var formatters = require('../lib/web3/formatters.js');
 var BigNumber = require('bignumber.js');
 
@@ -16,7 +17,6 @@ describe('formatters', function () {
                 difficulty: '0x3e8',
                 totalDifficulty: '0x3e8',
                 number: '0x3e8',
-                minGasPrice: '0x3e8',
                 gasLimit: '0x3e8',
                 gasUsed: '0x3e8',
                 timestamp: '0x3e8',
@@ -34,7 +34,6 @@ describe('formatters', function () {
                 difficulty: new BigNumber(1000),
                 totalDifficulty: new BigNumber(1000),
                 number: 1000,
-                minGasPrice: new BigNumber(1000),
                 gasLimit: 1000,
                 gasUsed: 1000,
                 timestamp: 1000,

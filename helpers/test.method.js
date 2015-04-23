@@ -2,6 +2,7 @@ var chai = require('chai');
 var assert = chai.assert;
 var web3 = require('../../index');
 var FakeHttpProvider = require('./FakeHttpProvider');
+var clone = function (object) { return JSON.parse(JSON.stringify(object)); };
 
 var runTests = function (obj, method, tests) {
 
@@ -22,10 +23,18 @@ var runTests = function (obj, method, tests) {
                         assert.deepEqual(payload.params, test.formattedArgs);
                     });
 
+                    var args = clone(test.args)
+
                     // when
-                    var result = (obj)
-                        ? web3[obj][method].apply(null, test.args.slice(0))
-                        : web3[method].apply(null, test.args.slice(0));
+                    if (obj) {
+                        var result = web3[obj][method].apply(null, args);
+                    } else {
+                        var result = web3[method].apply(null, args);
+                    }
+                    // when
+                    //var result = (obj)
+                        //? web3[obj][method].apply(null, test.args.slice(0))
+                        //: web3[method].apply(null, test.args.slice(0));
                     
                     // then 
                     assert.deepEqual(test.formattedResult, result);
@@ -43,7 +52,8 @@ var runTests = function (obj, method, tests) {
                         assert.deepEqual(payload.params, test.formattedArgs);
                     });
 
-                    var args = test.args.slice(0);
+                    var args = clone(test.args);
+                   
                     // add callback
                     args.push(function (err, result) {
                         assert.deepEqual(test.formattedResult, result);
@@ -51,10 +61,11 @@ var runTests = function (obj, method, tests) {
                     });
 
                     // when
-                    if(obj)
+                    if (obj) {
                         web3[obj][method].apply(null, args);
-                    else
+                    } else {
                         web3[method].apply(null, args);
+                    }
                 });
             });
         });

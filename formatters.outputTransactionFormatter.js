@@ -13,6 +13,7 @@ describe('formatters', function () {
                 value: '0x3e8',
                 gas: '0x3e8',
                 gasPrice: '0x3e8',
+                nonce: '0xb',
                 transactionIndex: '0x1',
                 blockNumber: '0x3e8',
                 blockHash: '0x34234bf23bf4234'
@@ -23,6 +24,7 @@ describe('formatters', function () {
                 value: new BigNumber(1000),
                 gas: 1000,
                 gasPrice: new BigNumber(1000),
+                nonce: 11,
                 blockNumber: 1000,
                 blockHash: '0x34234bf23bf4234',
                 transactionIndex: 1
