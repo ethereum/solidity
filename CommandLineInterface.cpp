@@ -51,7 +51,6 @@ namespace dev
 namespace solidity
 {
 
-
 // LTODO: Maybe some argument class pairing names with
 // extensions and other attributes would be a better choice here?
 static string const g_argAbiStr         = "json-abi";
