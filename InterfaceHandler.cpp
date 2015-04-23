@@ -107,7 +107,7 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 			ret += "returns" + populateParameters(it.second->getReturnParameterNames(), it.second->getReturnParameterTypeNames());
 		else if (ret.back() == ' ')
 			ret.pop_back();
-		ret += "{}";
+		ret += ";";
 	}
 
 	return unique_ptr<string>(new string(ret + "}"));
