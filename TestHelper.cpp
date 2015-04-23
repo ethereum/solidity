@@ -344,7 +344,7 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 
 	// export post state
 	m_TestObject["post"] = fillJsonWithState(_statePost);
-	m_TestObject["postStateRoot"] = toString(_statePost.rootHash().asBytes());
+	m_TestObject["postStateRoot"] = toHex(_statePost.rootHash().asBytes());
 
 	// export pre state
 	m_TestObject["pre"] = fillJsonWithState(m_statePre);
