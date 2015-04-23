@@ -53,6 +53,7 @@ public:
 	void actOnInput();
 
 private:
+	void handleCombinedJSON();
 	void handleAst(std::string const& _argStr);
 	void handleBinary(std::string const& _contract);
 	void handleOpcode(std::string const& _contract);
