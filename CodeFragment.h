@@ -23,7 +23,7 @@
 
 #include <libdevcore/Common.h>
 #include <libevmcore/Instruction.h>
-#include <libevmcore/Assembly.h>
+#include <libevmasm/Assembly.h>
 #include "Exceptions.h"
 
 namespace boost { namespace spirit { class utree; } }
