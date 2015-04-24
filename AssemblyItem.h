@@ -43,9 +43,16 @@ class AssemblyItem
 public:
 	enum class JumpType { Ordinary, IntoFunction, OutOfFunction };
 
-	AssemblyItem(u256 _push): m_type(Push), m_data(_push) {}
-	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
-	AssemblyItem(AssemblyItemType _type, u256 _data = 0): m_type(_type), m_data(_data) {}
+	AssemblyItem(u256 _push, SourceLocation const& _location = SourceLocation()):
+		AssemblyItem(Push, _push, _location) { }
+	AssemblyItem(Instruction _i, SourceLocation const& _location = SourceLocation()):
+		AssemblyItem(Operation, byte(_i), _location) { }
+	AssemblyItem(AssemblyItemType _type, u256 _data = 0, SourceLocation const& _location = SourceLocation()):
+		m_type(_type),
+		m_data(_data),
+		m_location(_location)
+	{
+	}
 
 	AssemblyItem tag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(Tag, m_data); }
 	AssemblyItem pushTag() const { assertThrow(m_type == PushTag || m_type == Tag, Exception, ""); return AssemblyItem(PushTag, m_data); }

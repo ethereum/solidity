@@ -99,26 +99,26 @@ private:
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.
 	void setStackElement(int _stackHeight, Id _class);
 	/// Swaps the given stack elements in their next sequence number.
-	void swapStackElements(int _stackHeightA, int _stackHeightB);
+	void swapStackElements(int _stackHeightA, int _stackHeightB, SourceLocation const& _location);
 	/// Retrieves the current equivalence class fo the given stack element (or generates a new
 	/// one if it does not exist yet).
-	Id stackElement(int _stackHeight);
+	Id stackElement(int _stackHeight, SourceLocation const& _location);
 	/// @returns the equivalence class id of the special initial stack element at the given height
 	/// (must not be positive).
-	Id initialStackElement(int _stackHeight);
+	Id initialStackElement(int _stackHeight, SourceLocation const& _location);
 
 	/// Increments the sequence number, deletes all storage information that might be overwritten
 	/// and stores the new value at the given slot.
-	void storeInStorage(Id _slot, Id _value);
+	void storeInStorage(Id _slot, Id _value, SourceLocation const& _location);
 	/// Retrieves the current value at the given slot in storage or creates a new special sload class.
-	Id loadFromStorage(Id _slot);
+	Id loadFromStorage(Id _slot, SourceLocation const& _location);
 	/// Increments the sequence number, deletes all memory information that might be overwritten
 	/// and stores the new value at the given slot.
-	void storeInMemory(Id _slot, Id _value);
+	void storeInMemory(Id _slot, Id _value, SourceLocation const& _location);
 	/// Retrieves the current value at the given slot in memory or creates a new special mload class.
-	Id loadFromMemory(Id _slot);
+	Id loadFromMemory(Id _slot, SourceLocation const& _location);
 	/// Finds or creates a new expression that applies the sha3 hash function to the contents in memory.
-	Id applySha3(Id _start, Id _length);
+	Id applySha3(Id _start, Id _length, SourceLocation const& _location);
 
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
@@ -188,10 +188,10 @@ private:
 	bool removeStackTopIfPossible();
 
 	/// Appends a dup instruction to m_generatedItems to retrieve the element at the given stack position.
-	void appendDup(int _fromPosition);
+	void appendDup(int _fromPosition, SourceLocation const& _location);
 	/// Appends a swap instruction to m_generatedItems to retrieve the element at the given stack position.
 	/// @note this might also remove the last item if it exactly the same swap instruction.
-	void appendOrRemoveSwap(int _fromPosition);
+	void appendOrRemoveSwap(int _fromPosition, SourceLocation const& _location);
 	/// Appends the given assembly item.
 	void appendItem(AssemblyItem const& _item);
 

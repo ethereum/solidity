@@ -64,10 +64,7 @@ ExpressionClasses::Id ExpressionClasses::find(
 		return it->id;
 
 	if (_copyItem)
-	{
-		m_spareAssemblyItem.push_back(make_shared<AssemblyItem>(_item));
-		exp.item = m_spareAssemblyItem.back().get();
-	}
+		exp.item = storeItem(_item);
 
 	ExpressionClasses::Id id = tryToSimplify(exp);
 	if (id < m_representatives.size())
@@ -113,6 +110,12 @@ u256 const* ExpressionClasses::knownConstant(Id _c)
 	if (!constant.matches(representative(_c), *this))
 		return nullptr;
 	return &constant.d();
+}
+
+AssemblyItem const* ExpressionClasses::storeItem(AssemblyItem const& _item)
+{
+	m_spareAssemblyItems.push_back(make_shared<AssemblyItem>(_item));
+	return m_spareAssemblyItems.back().get();
 }
 
 string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
@@ -292,7 +295,7 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, 
 			//cout << "with rule " << rule.first.toString() << endl;
 			//ExpressionTemplate t(rule.second());
 			//cout << "to " << rule.second().toString() << endl;
-			return rebuildExpression(ExpressionTemplate(rule.second()));
+			return rebuildExpression(ExpressionTemplate(rule.second(), _expr.item->getLocation()));
 		}
 	}
 
@@ -350,6 +353,11 @@ bool Pattern::matches(Expression const& _expr, ExpressionClasses const& _classes
 	return true;
 }
 
+AssemblyItem Pattern::toAssemblyItem(SourceLocation const& _location) const
+{
+	return AssemblyItem(m_type, m_data, _location);
+}
+
 string Pattern::toString() const
 {
 	stringstream s;
@@ -399,7 +407,7 @@ Pattern::Expression const& Pattern::matchGroupValue() const
 }
 
 
-ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern)
+ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern, SourceLocation const& _location)
 {
 	if (_pattern.matchGroup())
 	{
@@ -409,10 +417,10 @@ ExpressionTemplate::ExpressionTemplate(Pattern const& _pattern)
 	else
 	{
 		hasId = false;
-		item = _pattern.toAssemblyItem();
+		item = _pattern.toAssemblyItem(_location);
 	}
 	for (auto const& arg: _pattern.arguments())
-		arguments.push_back(ExpressionTemplate(arg));
+		arguments.push_back(ExpressionTemplate(arg, _location));
 }
 
 string ExpressionTemplate::toString() const
