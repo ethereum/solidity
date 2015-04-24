@@ -63,9 +63,9 @@ RUN git remote add -f solidityjs https://github.com/chriseth/cpp-ethereum
 # NOTE that we only get the latest commit of that branch
 RUN git cherry-pick solidityjs/solidity-js
 RUN emcmake cmake -DETH_STATIC=1 -DSOLIDITY=ON -DGUI=0 -DCMAKE_CXX_COMPILER=/home/user/emsdk_portable/emscripten/master/em++ -DCMAKE_C_COMPILER=/home/user/emsdk_portable/emscripten/master/emcc
-RUN emmake make -j 6 soljs
+RUN emmake make -j 6 soljson
 
-WORKDIR /home/user/cpp-ethereum/soljs
+WORKDIR /home/user/cpp-ethereum/solc
 # somehow it does not work to pipe out both files
-#ENTRYPOINT tar -c soljs.js soljs.js.mem | base64
+#ENTRYPOINT tar -c soljson.js soljson.js.mem | base64
 
