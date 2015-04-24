@@ -380,6 +380,9 @@ bool CommandLineInterface::processInput()
 
 void CommandLineInterface::handleCombinedJSON()
 {
+	if (!m_args.count("combined-json"))
+		return;
+
 	Json::Value output(Json::objectValue);
 
 	set<string> requests;
