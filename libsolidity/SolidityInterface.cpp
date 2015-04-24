@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(single_function)
 		"}\n");
 	BOOST_REQUIRE_EQUAL(1, contract.getDefinedFunctions().size());
 	BOOST_CHECK_EQUAL(getSourcePart(*contract.getDefinedFunctions().front()),
-					  "function f(uint256 a)returns(uint256 d){}");
+					  "function f(uint256 a)returns(uint256 d);");
 }
 
 BOOST_AUTO_TEST_CASE(single_constant_function)
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(single_constant_function)
 			"contract test { function f(uint a) constant returns(bytes1 x) { 1==2; } }");
 	BOOST_REQUIRE_EQUAL(1, contract.getDefinedFunctions().size());
 	BOOST_CHECK_EQUAL(getSourcePart(*contract.getDefinedFunctions().front()),
-					  "function f(uint256 a)constant returns(bytes1 x){}");
+					  "function f(uint256 a)constant returns(bytes1 x);");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_functions)
@@ -97,8 +97,8 @@ BOOST_AUTO_TEST_CASE(multiple_functions)
 	"  function g(uint b) returns(uint e) { return b * 8; }\n"
 	"}\n";
 	ContractDefinition const& contract = checkInterface(sourceCode);
-	set<string> expectation({"function f(uint256 a)returns(uint256 d){}",
-							 "function g(uint256 b)returns(uint256 e){}"});
+	set<string> expectation({"function f(uint256 a)returns(uint256 d);",
+							 "function g(uint256 b)returns(uint256 e);"});
 	BOOST_REQUIRE_EQUAL(2, contract.getDefinedFunctions().size());
 	BOOST_CHECK(expectation == set<string>({getSourcePart(*contract.getDefinedFunctions().at(0)),
 											getSourcePart(*contract.getDefinedFunctions().at(1))}));
@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(inheritance)
 	"		event derivedEvent(uint indexed evtArgDerived); \n"
 	"	}";
 	ContractDefinition const& contract = checkInterface(sourceCode);
-	set<string> expectedFunctions({"function baseFunction(uint256 p)returns(uint256 i){}",
-								   "function derivedFunction(bytes32 p)returns(bytes32 i){}"});
+	set<string> expectedFunctions({"function baseFunction(uint256 p)returns(uint256 i);",
+								   "function derivedFunction(bytes32 p)returns(bytes32 i);"});
 	BOOST_REQUIRE_EQUAL(2, contract.getDefinedFunctions().size());
 	BOOST_CHECK(expectedFunctions == set<string>({getSourcePart(*contract.getDefinedFunctions().at(0)),
 												  getSourcePart(*contract.getDefinedFunctions().at(1))}));
