@@ -27,7 +27,7 @@
 #include <vector>
 #include <memory>
 #include <boost/noncopyable.hpp>
-#include <libevmcore/SourceLocation.h>
+#include <libevmasm/SourceLocation.h>
 #include <libsolidity/Utils.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Token.h>

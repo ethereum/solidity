@@ -25,7 +25,7 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
-#include <libevmcore/SourceLocation.h>
+#include <libevmasm/SourceLocation.h>
 #include <libsolidity/Utils.h>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/LValue.h>
