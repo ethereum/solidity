@@ -26,7 +26,7 @@ FakeHttpProvider.prototype.send = function (payload) {
         // imitate plain json object
         this.validation(JSON.parse(JSON.stringify(payload)));
     }
-    return this.response;
+    return this.getResponse();
 };
 
 FakeHttpProvider.prototype.sendAsync = function (payload, callback) {
@@ -36,7 +36,7 @@ FakeHttpProvider.prototype.sendAsync = function (payload, callback) {
         // imitate plain json object
         this.validation(JSON.parse(JSON.stringify(payload)), callback);
     }
-    callback(this.error, this.response);
+    callback(this.error, this.getResponse());
 };
 
 FakeHttpProvider.prototype.injectResponse = function (response) {
@@ -54,6 +54,10 @@ FakeHttpProvider.prototype.injectBatchResults = function (results) {
         response.result = r;
         return response;
     }); 
+};
+
+FakeHttpProvider.prototype.getResponse = function () {
+    return this.response;
 };
 
 FakeHttpProvider.prototype.injectError = function (error) {

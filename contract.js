@@ -2,7 +2,9 @@ var chai = require('chai');
 var assert = chai.assert;
 var web3 = require('../index');
 var FakeHttpProvider = require('./helpers/FakeHttpProvider');
+var FakeHttpProvider2 = require('./helpers/FakeHttpProvider2');
 var utils = require('../lib/utils/utils');
+var BigNumber = require('bignumber.js');
 
 var desc = [{
     "name": "balance(address)",
@@ -27,6 +29,18 @@ var desc = [{
         "type": "uint256"
     }],
     "outputs": []
+}, {
+    "name": "testArr(int[])",
+    "type": "function",
+    "inputs": [{
+        "name": "value",
+        "type": "int[]"
+    }],
+    "constant": true,
+    "outputs": [{
+        "name": "d",
+        "type": "int"
+    }]
 }, {
     "name":"Changed",
     "type":"event",
@@ -312,6 +326,41 @@ describe('web3.eth.contract', function () {
             var contract = new Contract(address);
 
             contract.send.sendTransaction(address, 17, {from: address, gas: 50000, gasPrice: 3000, value: 10000});
+        });
+
+        it('should call testArr method and properly parse result', function () {
+            var provider = new FakeHttpProvider2();
+            web3.setProvider(provider);
+            web3.reset();
+            var sha3 = '0x5131231231231231231231';
+            var address = '0x1234567890123456789012345678901234567890';
+            provider.injectResultList([{
+                result: sha3
+            }, {
+                result: '0x0000000000000000000000000000000000000000000000000000000000000005'
+            }]);
+            var step = 0;
+            provider.injectValidation(function (payload) {
+                if (step === 1) { // getting sha3 is first
+                    assert.equal(payload.method, 'eth_call');
+                    assert.deepEqual(payload.params, [{
+                        data: sha3.slice(0, 10) + 
+                            '0000000000000000000000000000000000000000000000000000000000000001' + 
+                            '0000000000000000000000000000000000000000000000000000000000000003',
+                        to: address
+                    },
+                        'latest'
+                    ]);
+                }
+                step++;
+            });
+
+            var Contract = web3.eth.contract(desc);
+            var contract = new Contract(address);
+
+            var result = contract.testArr([3]);
+
+            assert.deepEqual(new BigNumber(5), result);
         });
     });
 });
