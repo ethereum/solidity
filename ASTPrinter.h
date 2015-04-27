@@ -59,11 +59,9 @@ public:
 	bool visit(UserDefinedTypeName const& _node) override;
 	bool visit(Mapping const& _node) override;
 	bool visit(ArrayTypeName const& _node) override;
-	bool visit(Statement const& _node) override;
 	bool visit(Block const& _node) override;
 	bool visit(PlaceholderStatement const& _node) override;
 	bool visit(IfStatement const& _node) override;
-	bool visit(BreakableStatement const& _node) override;
 	bool visit(WhileStatement const& _node) override;
 	bool visit(ForStatement const& _node) override;
 	bool visit(Continue const& _node) override;
@@ -71,7 +69,6 @@ public:
 	bool visit(Return const& _node) override;
 	bool visit(VariableDeclarationStatement const& _node) override;
 	bool visit(ExpressionStatement const& _node) override;
-	bool visit(Expression const& _node) override;
 	bool visit(Assignment const& _node) override;
 	bool visit(UnaryOperation const& _node) override;
 	bool visit(BinaryOperation const& _node) override;
@@ -79,7 +76,6 @@ public:
 	bool visit(NewExpression const& _node) override;
 	bool visit(MemberAccess const& _node) override;
 	bool visit(IndexAccess const& _node) override;
-	bool visit(PrimaryExpression const& _node) override;
 	bool visit(Identifier const& _node) override;
 	bool visit(ElementaryTypeNameExpression const& _node) override;
 	bool visit(Literal const& _node) override;
@@ -101,11 +97,9 @@ public:
 	void endVisit(UserDefinedTypeName const&) override;
 	void endVisit(Mapping const&) override;
 	void endVisit(ArrayTypeName const&) override;
-	void endVisit(Statement const&) override;
 	void endVisit(Block const&) override;
 	void endVisit(PlaceholderStatement const&) override;
 	void endVisit(IfStatement const&) override;
-	void endVisit(BreakableStatement const&) override;
 	void endVisit(WhileStatement const&) override;
 	void endVisit(ForStatement const&) override;
 	void endVisit(Continue const&) override;
@@ -113,7 +107,6 @@ public:
 	void endVisit(Return const&) override;
 	void endVisit(VariableDeclarationStatement const&) override;
 	void endVisit(ExpressionStatement const&) override;
-	void endVisit(Expression const&) override;
 	void endVisit(Assignment const&) override;
 	void endVisit(UnaryOperation const&) override;
 	void endVisit(BinaryOperation const&) override;
@@ -121,7 +114,6 @@ public:
 	void endVisit(NewExpression const&) override;
 	void endVisit(MemberAccess const&) override;
 	void endVisit(IndexAccess const&) override;
-	void endVisit(PrimaryExpression const&) override;
 	void endVisit(Identifier const&) override;
 	void endVisit(ElementaryTypeNameExpression const&) override;
 	void endVisit(Literal const&) override;

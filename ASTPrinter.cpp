@@ -162,13 +162,6 @@ bool ASTPrinter::visit(ArrayTypeName const& _node)
 	return goDeeper();
 }
 
-bool ASTPrinter::visit(Statement const& _node)
-{
-	writeLine("Statement");
-	printSourcePart(_node);
-	return goDeeper();
-}
-
 bool ASTPrinter::visit(Block const& _node)
 {
 	writeLine("Block");
@@ -186,13 +179,6 @@ bool ASTPrinter::visit(PlaceholderStatement const& _node)
 bool ASTPrinter::visit(IfStatement const& _node)
 {
 	writeLine("IfStatement");
-	printSourcePart(_node);
-	return goDeeper();
-}
-
-bool ASTPrinter::visit(BreakableStatement const& _node)
-{
-	writeLine("BreakableStatement");
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -242,14 +228,6 @@ bool ASTPrinter::visit(VariableDeclarationStatement const& _node)
 bool ASTPrinter::visit(ExpressionStatement const& _node)
 {
 	writeLine("ExpressionStatement");
-	printSourcePart(_node);
-	return goDeeper();
-}
-
-bool ASTPrinter::visit(Expression const& _node)
-{
-	writeLine("Expression");
-	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -306,14 +284,6 @@ bool ASTPrinter::visit(MemberAccess const& _node)
 bool ASTPrinter::visit(IndexAccess const& _node)
 {
 	writeLine("IndexAccess");
-	printType(_node);
-	printSourcePart(_node);
-	return goDeeper();
-}
-
-bool ASTPrinter::visit(PrimaryExpression const& _node)
-{
-	writeLine("PrimaryExpression");
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -431,11 +401,6 @@ void ASTPrinter::endVisit(ArrayTypeName const&)
 	m_indentation--;
 }
 
-void ASTPrinter::endVisit(Statement const&)
-{
-	m_indentation--;
-}
-
 void ASTPrinter::endVisit(Block const&)
 {
 	m_indentation--;
@@ -447,11 +412,6 @@ void ASTPrinter::endVisit(PlaceholderStatement const&)
 }
 
 void ASTPrinter::endVisit(IfStatement const&)
-{
-	m_indentation--;
-}
-
-void ASTPrinter::endVisit(BreakableStatement const&)
 {
 	m_indentation--;
 }
@@ -491,11 +451,6 @@ void ASTPrinter::endVisit(ExpressionStatement const&)
 	m_indentation--;
 }
 
-void ASTPrinter::endVisit(Expression const&)
-{
-	m_indentation--;
-}
-
 void ASTPrinter::endVisit(Assignment const&)
 {
 	m_indentation--;
@@ -527,11 +482,6 @@ void ASTPrinter::endVisit(MemberAccess const&)
 }
 
 void ASTPrinter::endVisit(IndexAccess const&)
-{
-	m_indentation--;
-}
-
-void ASTPrinter::endVisit(PrimaryExpression const&)
 {
 	m_indentation--;
 }

@@ -151,12 +151,6 @@ bool ASTJsonConverter::visit(Mapping const&)
 	return true;
 }
 
-bool ASTJsonConverter::visit(Statement const&)
-{
-	addJsonNode("Statement", {}, true);
-	return true;
-}
-
 bool ASTJsonConverter::visit(Block const&)
 {
 	addJsonNode("Block", {}, true);
@@ -166,11 +160,6 @@ bool ASTJsonConverter::visit(Block const&)
 bool ASTJsonConverter::visit(IfStatement const&)
 {
 	addJsonNode("IfStatement", {}, true);
-	return true;
-}
-
-bool ASTJsonConverter::visit(BreakableStatement const&)
-{
 	return true;
 }
 
@@ -213,17 +202,6 @@ bool ASTJsonConverter::visit(VariableDeclarationStatement const&)
 bool ASTJsonConverter::visit(ExpressionStatement const&)
 {
 	addJsonNode("ExpressionStatement", {}, true);
-	return true;
-}
-
-bool ASTJsonConverter::visit(Expression const& _node)
-{
-	addJsonNode(
-		"Expression",
-		{ make_pair("type", getType(_node)),
-			make_pair("lvalue", boost::lexical_cast<std::string>(_node.isLValue())) },
-		true
-	);
 	return true;
 }
 
@@ -282,11 +260,6 @@ bool ASTJsonConverter::visit(MemberAccess const& _node)
 bool ASTJsonConverter::visit(IndexAccess const& _node)
 {
 	addJsonNode("IndexAccess", { make_pair("type", getType(_node)) }, true);
-	return true;
-}
-
-bool ASTJsonConverter::visit(PrimaryExpression const&)
-{
 	return true;
 }
 
@@ -358,11 +331,6 @@ void ASTJsonConverter::endVisit(Mapping const&)
 {
 }
 
-void ASTJsonConverter::endVisit(Statement const&)
-{
-	goUp();
-}
-
 void ASTJsonConverter::endVisit(Block const&)
 {
 	goUp();
@@ -371,10 +339,6 @@ void ASTJsonConverter::endVisit(Block const&)
 void ASTJsonConverter::endVisit(IfStatement const&)
 {
 	goUp();
-}
-
-void ASTJsonConverter::endVisit(BreakableStatement const&)
-{
 }
 
 void ASTJsonConverter::endVisit(WhileStatement const&)
@@ -406,11 +370,6 @@ void ASTJsonConverter::endVisit(VariableDeclarationStatement const&)
 }
 
 void ASTJsonConverter::endVisit(ExpressionStatement const&)
-{
-	goUp();
-}
-
-void ASTJsonConverter::endVisit(Expression const&)
 {
 	goUp();
 }
@@ -448,10 +407,6 @@ void ASTJsonConverter::endVisit(MemberAccess const&)
 void ASTJsonConverter::endVisit(IndexAccess const&)
 {
 	goUp();
-}
-
-void ASTJsonConverter::endVisit(PrimaryExpression const&)
-{
 }
 
 void ASTJsonConverter::endVisit(Identifier const&)

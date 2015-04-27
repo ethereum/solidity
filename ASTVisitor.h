@@ -41,7 +41,6 @@ namespace solidity
 class ASTVisitor
 {
 public:
-	virtual bool visit(ASTNode&) { return true; }
 	virtual bool visit(SourceUnit&) { return true; }
 	virtual bool visit(ImportDirective&) { return true; }
 	virtual bool visit(ContractDefinition&) { return true; }
@@ -60,11 +59,9 @@ public:
 	virtual bool visit(UserDefinedTypeName&) { return true; }
 	virtual bool visit(Mapping&) { return true; }
 	virtual bool visit(ArrayTypeName&) { return true; }
-	virtual bool visit(Statement&) { return true; }
 	virtual bool visit(Block&) { return true; }
 	virtual bool visit(PlaceholderStatement&) { return true; }
 	virtual bool visit(IfStatement&) { return true; }
-	virtual bool visit(BreakableStatement&) { return true; }
 	virtual bool visit(WhileStatement&) { return true; }
 	virtual bool visit(ForStatement&) { return true; }
 	virtual bool visit(Continue&) { return true; }
@@ -72,7 +69,6 @@ public:
 	virtual bool visit(Return&) { return true; }
 	virtual bool visit(VariableDeclarationStatement&) { return true; }
 	virtual bool visit(ExpressionStatement&) { return true; }
-	virtual bool visit(Expression&) { return true; }
 	virtual bool visit(Assignment&) { return true; }
 	virtual bool visit(UnaryOperation&) { return true; }
 	virtual bool visit(BinaryOperation&) { return true; }
@@ -80,12 +76,10 @@ public:
 	virtual bool visit(NewExpression&) { return true; }
 	virtual bool visit(MemberAccess&) { return true; }
 	virtual bool visit(IndexAccess&) { return true; }
-	virtual bool visit(PrimaryExpression&) { return true; }
 	virtual bool visit(Identifier&) { return true; }
 	virtual bool visit(ElementaryTypeNameExpression&) { return true; }
 	virtual bool visit(Literal&) { return true; }
 
-	virtual void endVisit(ASTNode&) { }
 	virtual void endVisit(SourceUnit&) { }
 	virtual void endVisit(ImportDirective&) { }
 	virtual void endVisit(ContractDefinition&) { }
@@ -104,11 +98,9 @@ public:
 	virtual void endVisit(UserDefinedTypeName&) { }
 	virtual void endVisit(Mapping&) { }
 	virtual void endVisit(ArrayTypeName&) { }
-	virtual void endVisit(Statement&) { }
 	virtual void endVisit(Block&) { }
 	virtual void endVisit(PlaceholderStatement&) { }
 	virtual void endVisit(IfStatement&) { }
-	virtual void endVisit(BreakableStatement&) { }
 	virtual void endVisit(WhileStatement&) { }
 	virtual void endVisit(ForStatement&) { }
 	virtual void endVisit(Continue&) { }
@@ -116,7 +108,6 @@ public:
 	virtual void endVisit(Return&) { }
 	virtual void endVisit(VariableDeclarationStatement&) { }
 	virtual void endVisit(ExpressionStatement&) { }
-	virtual void endVisit(Expression&) { }
 	virtual void endVisit(Assignment&) { }
 	virtual void endVisit(UnaryOperation&) { }
 	virtual void endVisit(BinaryOperation&) { }
@@ -124,7 +115,6 @@ public:
 	virtual void endVisit(NewExpression&) { }
 	virtual void endVisit(MemberAccess&) { }
 	virtual void endVisit(IndexAccess&) { }
-	virtual void endVisit(PrimaryExpression&) { }
 	virtual void endVisit(Identifier&) { }
 	virtual void endVisit(ElementaryTypeNameExpression&) { }
 	virtual void endVisit(Literal&) { }
@@ -133,7 +123,6 @@ public:
 class ASTConstVisitor
 {
 public:
-	virtual bool visit(ASTNode const&) { return true; }
 	virtual bool visit(SourceUnit const&) { return true; }
 	virtual bool visit(ImportDirective const&) { return true; }
 	virtual bool visit(ContractDefinition const&) { return true; }
@@ -152,11 +141,9 @@ public:
 	virtual bool visit(UserDefinedTypeName const&) { return true; }
 	virtual bool visit(Mapping const&) { return true; }
 	virtual bool visit(ArrayTypeName const&) { return true; }
-	virtual bool visit(Statement const&) { return true; }
 	virtual bool visit(Block const&) { return true; }
 	virtual bool visit(PlaceholderStatement const&) { return true; }
 	virtual bool visit(IfStatement const&) { return true; }
-	virtual bool visit(BreakableStatement const&) { return true; }
 	virtual bool visit(WhileStatement const&) { return true; }
 	virtual bool visit(ForStatement const&) { return true; }
 	virtual bool visit(Continue const&) { return true; }
@@ -164,7 +151,6 @@ public:
 	virtual bool visit(Return const&) { return true; }
 	virtual bool visit(VariableDeclarationStatement const&) { return true; }
 	virtual bool visit(ExpressionStatement const&) { return true; }
-	virtual bool visit(Expression const&) { return true; }
 	virtual bool visit(Assignment const&) { return true; }
 	virtual bool visit(UnaryOperation const&) { return true; }
 	virtual bool visit(BinaryOperation const&) { return true; }
@@ -172,12 +158,10 @@ public:
 	virtual bool visit(NewExpression const&) { return true; }
 	virtual bool visit(MemberAccess const&) { return true; }
 	virtual bool visit(IndexAccess const&) { return true; }
-	virtual bool visit(PrimaryExpression const&) { return true; }
 	virtual bool visit(Identifier const&) { return true; }
 	virtual bool visit(ElementaryTypeNameExpression const&) { return true; }
 	virtual bool visit(Literal const&) { return true; }
 
-	virtual void endVisit(ASTNode const&) { }
 	virtual void endVisit(SourceUnit const&) { }
 	virtual void endVisit(ImportDirective const&) { }
 	virtual void endVisit(ContractDefinition const&) { }
@@ -196,11 +180,9 @@ public:
 	virtual void endVisit(UserDefinedTypeName const&) { }
 	virtual void endVisit(Mapping const&) { }
 	virtual void endVisit(ArrayTypeName const&) { }
-	virtual void endVisit(Statement const&) { }
 	virtual void endVisit(Block const&) { }
 	virtual void endVisit(PlaceholderStatement const&) { }
 	virtual void endVisit(IfStatement const&) { }
-	virtual void endVisit(BreakableStatement const&) { }
 	virtual void endVisit(WhileStatement const&) { }
 	virtual void endVisit(ForStatement const&) { }
 	virtual void endVisit(Continue const&) { }
@@ -208,7 +190,6 @@ public:
 	virtual void endVisit(Return const&) { }
 	virtual void endVisit(VariableDeclarationStatement const&) { }
 	virtual void endVisit(ExpressionStatement const&) { }
-	virtual void endVisit(Expression const&) { }
 	virtual void endVisit(Assignment const&) { }
 	virtual void endVisit(UnaryOperation const&) { }
 	virtual void endVisit(BinaryOperation const&) { }
@@ -216,7 +197,6 @@ public:
 	virtual void endVisit(NewExpression const&) { }
 	virtual void endVisit(MemberAccess const&) { }
 	virtual void endVisit(IndexAccess const&) { }
-	virtual void endVisit(PrimaryExpression const&) { }
 	virtual void endVisit(Identifier const&) { }
 	virtual void endVisit(ElementaryTypeNameExpression const&) { }
 	virtual void endVisit(Literal const&) { }
