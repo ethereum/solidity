@@ -573,6 +573,7 @@ public:
 		parseElementaryTypeVector(_parameterTypes),
 		parseElementaryTypeVector(_returnParameterTypes),
 		strings(),
+		strings(),
 		_location,
 		_arbitraryParameters
 	)
@@ -582,6 +583,7 @@ public:
 		TypePointers const& _parameterTypes,
 		TypePointers const& _returnParameterTypes,
 		strings _parameterNames = strings(),
+		strings _returnParameterNames = strings(),
 		Location _location = Location::Internal,
 		bool _arbitraryParameters = false,
 		bool _gasSet = false,
@@ -590,6 +592,7 @@ public:
 		m_parameterTypes (_parameterTypes),
 		m_returnParameterTypes (_returnParameterTypes),
 		m_parameterNames (_parameterNames),
+		m_returnParameterNames (_returnParameterNames),
 		m_location (_location),
 		m_arbitraryParameters (_arbitraryParameters),
 		m_gasSet (_gasSet),

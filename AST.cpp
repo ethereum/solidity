@@ -821,6 +821,7 @@ void NewExpression::checkTypeRequirements(TypePointers const*)
 		parameterTypes,
 		TypePointers{contractType},
 		strings(),
+		strings(),
 		FunctionType::Location::Creation);
 }
 

@@ -526,6 +526,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					TypePointers{},
 					TypePointers{},
 					strings(),
+					strings(),
 					Location::External,
 					false,
 					true,

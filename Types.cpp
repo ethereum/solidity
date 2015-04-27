@@ -1143,7 +1143,7 @@ FunctionTypePointer FunctionType::externalFunctionType() const
 			return FunctionTypePointer();
 		retParamTypes.push_back(type->externalType());
 	}
-	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_location, m_arbitraryParameters);
+	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_returnParameterNames, m_location, m_arbitraryParameters);
 }
 
 MemberList const& FunctionType::getMembers() const
@@ -1165,6 +1165,7 @@ MemberList const& FunctionType::getMembers() const
 						parseElementaryTypeVector({"uint"}),
 						TypePointers{copyAndSetGasOrValue(false, true)},
 						strings(),
+						strings(),
 						Location::SetValue,
 						false,
 						m_gasSet,
@@ -1179,6 +1180,7 @@ MemberList const& FunctionType::getMembers() const
 						make_shared<FunctionType>(
 							parseElementaryTypeVector({"uint"}),
 							TypePointers{copyAndSetGasOrValue(true, false)},
+							strings(),
 							strings(),
 							Location::SetGas,
 							false,
@@ -1267,7 +1269,8 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 	return make_shared<FunctionType>(
 		m_parameterTypes,
 		m_returnParameterTypes,
-		strings(),
+		m_parameterNames,
+		m_returnParameterNames,
 		m_location,
 		m_arbitraryParameters,
 		m_gasSet || _setGas,
