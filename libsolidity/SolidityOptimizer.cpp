@@ -22,6 +22,7 @@
 
 #include <string>
 #include <tuple>
+#include <memory>
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
 #include <test/libsolidity/solidityExecutionFramework.h>
@@ -84,9 +85,20 @@ public:
 
 	AssemblyItems getCSE(AssemblyItems const& _input)
 	{
+		// add dummy locations to each item so that we can check that they are not deleted
+		AssemblyItems input = _input;
+		for (AssemblyItem& item: input)
+			item.setLocation(SourceLocation(1, 3, make_shared<string>("")));
+
 		eth::CommonSubexpressionEliminator cse;
-		BOOST_REQUIRE(cse.feedItems(_input.begin(), _input.end()) == _input.end());
-		return cse.getOptimizedItems();
+		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
+		AssemblyItems output = cse.getOptimizedItems();
+
+		for (AssemblyItem const& item: output)
+		{
+			BOOST_CHECK(item == Instruction::POP || !item.getLocation().isEmpty());
+		}
+		return output;
 	}
 
 	void checkCSE(AssemblyItems const& _input, AssemblyItems const& _expectation)
