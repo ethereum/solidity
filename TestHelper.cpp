@@ -137,7 +137,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 			str = value.get_str();
 		else continue;
 
-		_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add);
+		_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
 	}
 	return _o;
 }
@@ -355,15 +355,15 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
 {
 	json_spirit::mObject txObject;
-	txObject["nonce"] = toCompactHex(_txn.nonce(), HexPrefix::Add);
+	txObject["nonce"] = toCompactHex(_txn.nonce(), HexPrefix::Add, 1);
 	txObject["data"] = toHex(_txn.data(), 2, HexPrefix::Add);
-	txObject["gasLimit"] = toCompactHex(_txn.gas(), HexPrefix::Add);
-	txObject["gasPrice"] = toCompactHex(_txn.gasPrice(), HexPrefix::Add);
-	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add);
-	txObject["s"] = toCompactHex(_txn.signature().s, HexPrefix::Add);
-	txObject["v"] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add);
+	txObject["gasLimit"] = toCompactHex(_txn.gas(), HexPrefix::Add, 1);
+	txObject["gasPrice"] = toCompactHex(_txn.gasPrice(), HexPrefix::Add, 1);
+	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add, 1);
+	txObject["s"] = toCompactHex(_txn.signature().s, HexPrefix::Add, 1);
+	txObject["v"] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add, 1);
 	txObject["to"] = _txn.isCreation() ? "" : toString(_txn.receiveAddress());
-	txObject["value"] = toCompactHex(_txn.value(), HexPrefix::Add);
+	txObject["value"] = toCompactHex(_txn.value(), HexPrefix::Add, 1);
 	return txObject;
 }
 
@@ -373,12 +373,12 @@ json_spirit::mObject fillJsonWithState(State _state)
 	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = toCompactHex(_state.balance(a.first), HexPrefix::Add);
-		o["nonce"] = toCompactHex(_state.transactionsFrom(a.first), HexPrefix::Add);
+		o["balance"] = toCompactHex(_state.balance(a.first), HexPrefix::Add, 1);
+		o["nonce"] = toCompactHex(_state.transactionsFrom(a.first), HexPrefix::Add, 1);
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
-				store[toCompactHex(s.first, HexPrefix::Add)] = toCompactHex(s.second, HexPrefix::Add);
+				store[toCompactHex(s.first, HexPrefix::Add, 1)] = toCompactHex(s.second, HexPrefix::Add, 1);
 			o["storage"] = store;
 		}
 		o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);
