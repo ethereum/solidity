@@ -19,9 +19,5 @@ target_link_libraries(${EXECUTABLE} solidity)
 
 install( TARGETS ${EXECUTABLE} DESTINATION bin )
 
-if (ETH_STATIC)
-	add_library(soljson STATIC jsonCompiler.cpp ${HEADERS})
-else()
-	add_library(soljson SHARED jsonCompiler.cpp ${HEADERS})
-endif()
+add_library(soljson jsonCompiler.cpp ${HEADERS})
 target_link_libraries(soljson solidity)
