@@ -32,6 +32,7 @@
 #include <libdevcore/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/SemanticInformation.h>
+#include <libevmasm/KnownState.h>
 
 namespace dev
 {
@@ -58,20 +59,9 @@ class CommonSubexpressionEliminator
 {
 public:
 	using Id = ExpressionClasses::Id;
-	struct StoreOperation
-	{
-		enum Target { Memory, Storage };
-		StoreOperation(
-			Target _target,
-			Id _slot,
-			unsigned _sequenceNumber,
-			Id _expression
-		): target(_target), slot(_slot), sequenceNumber(_sequenceNumber), expression(_expression) {}
-		Target target;
-		Id slot;
-		unsigned sequenceNumber;
-		Id expression;
-	};
+	using StoreOperation = KnownState::StoreOperation;
+
+	CommonSubexpressionEliminator(KnownState const& _state): m_state(_state) {}
 
 	/// Feeds AssemblyItems into the eliminator and @returns the iterator pointing at the first
 	/// item that must be fed into a new instance of the eliminator.
@@ -95,49 +85,10 @@ private:
 	/// Tries to optimize the item that breaks the basic block at the end.
 	void optimizeBreakingItem();
 
-	/// Simplifies the given item using
-	/// Assigns a new equivalence class to the next sequence number of the given stack element.
-	void setStackElement(int _stackHeight, Id _class);
-	/// Swaps the given stack elements in their next sequence number.
-	void swapStackElements(int _stackHeightA, int _stackHeightB, SourceLocation const& _location);
-	/// Retrieves the current equivalence class fo the given stack element (or generates a new
-	/// one if it does not exist yet).
-	Id stackElement(int _stackHeight, SourceLocation const& _location);
-	/// @returns the equivalence class id of the special initial stack element at the given height
-	/// (must not be positive).
-	Id initialStackElement(int _stackHeight, SourceLocation const& _location);
-
-	/// Increments the sequence number, deletes all storage information that might be overwritten
-	/// and stores the new value at the given slot.
-	void storeInStorage(Id _slot, Id _value, SourceLocation const& _location);
-	/// Retrieves the current value at the given slot in storage or creates a new special sload class.
-	Id loadFromStorage(Id _slot, SourceLocation const& _location);
-	/// Increments the sequence number, deletes all memory information that might be overwritten
-	/// and stores the new value at the given slot.
-	void storeInMemory(Id _slot, Id _value, SourceLocation const& _location);
-	/// Retrieves the current value at the given slot in memory or creates a new special mload class.
-	Id loadFromMemory(Id _slot, SourceLocation const& _location);
-	/// Finds or creates a new expression that applies the sha3 hash function to the contents in memory.
-	Id applySha3(Id _start, Id _length, SourceLocation const& _location);
-
-	/// Current stack height, can be negative.
-	int m_stackHeight = 0;
-	/// Current stack layout, mapping stack height -> equivalence class
-	std::map<int, Id> m_stackElements;
-	/// Current sequence number, this is incremented with each modification to storage or memory.
-	unsigned m_sequenceNumber = 1;
-	/// Knowledge about storage content.
-	std::map<Id, Id> m_storageContent;
-	/// Knowledge about memory content. Keys are memory addresses, note that the values overlap
-	/// and are not contained here if they are not completely known.
-	std::map<Id, Id> m_memoryContent;
-	/// Keeps record of all sha3 hashes that are computed.
-	std::map<std::vector<Id>, Id> m_knownSha3Hashes;
+	KnownState m_state;
 	/// Keeps information about which storage or memory slots were written to at which sequence
 	/// number with what instruction.
 	std::vector<StoreOperation> m_storeOperations;
-	/// Structure containing the classes of equivalent expressions.
-	ExpressionClasses m_expressionClasses;
 
 	/// The item that breaks the basic block, can be nullptr.
 	/// It is usually appended to the block but can be optimized in some cases.

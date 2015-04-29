@@ -329,7 +329,8 @@ Assembly& Assembly::optimise(bool _enable)
 		copt << "Performing common subexpression elimination...";
 		for (auto iter = m_items.begin(); iter != m_items.end();)
 		{
-			CommonSubexpressionEliminator eliminator;
+			KnownState state;
+			CommonSubexpressionEliminator eliminator(state);
 			auto orig = iter;
 			iter = eliminator.feedItems(iter, m_items.end());
 			AssemblyItems optItems;
