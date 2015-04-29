@@ -90,7 +90,8 @@ public:
 		for (AssemblyItem& item: input)
 			item.setLocation(SourceLocation(1, 3, make_shared<string>("")));
 
-		eth::CommonSubexpressionEliminator cse;
+		eth::KnownState state;
+		eth::CommonSubexpressionEliminator cse(state);
 		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();
 
@@ -231,7 +232,8 @@ BOOST_AUTO_TEST_CASE(function_calls)
 
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
-	eth::CommonSubexpressionEliminator cse;
+	eth::KnownState state;
+	eth::CommonSubexpressionEliminator cse(state);
 	AssemblyItems input{
 		Instruction::SWAP1, Instruction::POP, Instruction::ADD, u256(0), Instruction::SWAP1,
 		Instruction::SLOAD, Instruction::SWAP1, u256(100), Instruction::EXP, Instruction::SWAP1,
