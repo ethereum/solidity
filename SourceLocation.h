@@ -67,7 +67,7 @@ inline std::ostream& operator<<(std::ostream& _out, SourceLocation const& _locat
 
 bool SourceLocation::operator<(SourceLocation const& _other) const
 {
-	if (!!sourceName != !!_other.sourceName)
+	if (!sourceName || !_other.sourceName)
 		return int(!!sourceName) < int(!!_other.sourceName);
 	return make_tuple(*sourceName, start, end) < make_tuple(*_other.sourceName, _other.start, _other.end);
 }
