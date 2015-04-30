@@ -25,7 +25,10 @@ add_subdirectory(libethereum)
 add_subdirectory(libevm)
 add_subdirectory(libnatspec)
 add_subdirectory(libp2p)
-add_subdirectory(libjsengine)
+
+if (JSCONSOLE)
+	add_subdirectory(libjsengine)
+endif()
 
 if (SOLIDITY)
 	add_subdirectory(libsolidity)
@@ -42,7 +45,10 @@ include_directories(BEFORE ..)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CRYPTOPP_INCLUDE_DIRS})
 include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
-include_directories(${V8_INCLUDE_DIRS})
+
+if (JSCONSOLE)
+	include_directories(${V8_INCLUDE_DIRS})
+endif()
 
 # search for test names and create ctest tests
 enable_testing()
@@ -68,15 +74,22 @@ target_link_libraries(testeth ${CURL_LIBRARIES})
 target_link_libraries(testeth ethereum)
 target_link_libraries(testeth ethcore)
 target_link_libraries(testeth secp256k1)
-target_link_libraries(testeth jsengine)
+
+if (JSCONSOLE)
+	target_link_libraries(testeth jsengine)
+endif()
+
 if (SOLIDITY)
 	target_link_libraries(testeth solidity)
 endif ()
+
 target_link_libraries(testeth testutils)
+
 if (GUI AND NOT JUSTTESTS)
 	target_link_libraries(testeth webthree)
 	target_link_libraries(testeth natspec)
 endif()
+
 if (JSONRPC)
 	target_link_libraries(testeth web3jsonrpc)
 	target_link_libraries(testeth ${JSON_RPC_CPP_CLIENT_LIBRARIES})
