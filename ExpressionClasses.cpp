@@ -57,12 +57,15 @@ ExpressionClasses::Id ExpressionClasses::find(
 	exp.arguments = _arguments;
 	exp.sequenceNumber = _sequenceNumber;
 
-	if (SemanticInformation::isCommutativeOperation(_item))
-		sort(exp.arguments.begin(), exp.arguments.end());
+	if (SemanticInformation::isDeterministic(_item))
+	{
+		if (SemanticInformation::isCommutativeOperation(_item))
+			sort(exp.arguments.begin(), exp.arguments.end());
 
-	auto it = m_expressions.find(exp);
-	if (it != m_expressions.end())
-		return it->id;
+		auto it = m_expressions.find(exp);
+		if (it != m_expressions.end())
+			return it->id;
+	}
 
 	if (_copyItem)
 		exp.item = storeItem(_item);
@@ -286,7 +289,11 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, 
 {
 	static Rules rules;
 
-	if (!_expr.item || _expr.item->type() != Operation)
+	if (
+		!_expr.item ||
+		_expr.item->type() != Operation ||
+		!SemanticInformation::isDeterministic(*_expr.item)
+	)
 		return -1;
 
 	for (auto const& rule: rules.rules())

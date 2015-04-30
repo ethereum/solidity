@@ -101,6 +101,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 			vector<Id> arguments(info.args);
 			for (int i = 0; i < info.args; ++i)
 				arguments[i] = stackElement(m_stackHeight - i, _item.getLocation());
+
 			if (_item.instruction() == Instruction::SSTORE)
 				op = storeInStorage(arguments[0], arguments[1], _item.getLocation());
 			else if (_item.instruction() == Instruction::SLOAD)
@@ -121,10 +122,16 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 					applySha3(arguments.at(0), arguments.at(1), _item.getLocation())
 				);
 			else
+			{
+				if (SemanticInformation::invalidatesMemory(_item.instruction()))
+					resetMemory();
+				if (SemanticInformation::invalidatesStorage(_item.instruction()))
+					resetStorage();
 				setStackElement(
 					m_stackHeight + _item.deposit(),
 					m_expressionClasses->find(_item, arguments, _copyItem)
 				);
+			}
 		}
 		m_stackHeight += _item.deposit();
 	}
