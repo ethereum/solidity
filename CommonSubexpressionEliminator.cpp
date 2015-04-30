@@ -40,9 +40,8 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	int minHeight = m_state.stackHeight() + 1;
 	if (!m_state.stackElements().empty())
 		minHeight = min(minHeight, m_state.stackElements().begin()->first);
-	for (int height = minHeight; height <= 0; ++height)
-		//@todo this is not nice as it is here - should be "unknownStackElement" - but is it really unknown?
-		initialStackContents[height] = m_state.initialStackElement(height, SourceLocation());
+	for (int height = minHeight; height <= m_initialState.stackHeight(); ++height)
+		initialStackContents[height] = m_initialState.stackElement(height, SourceLocation());
 	for (int height = minHeight; height <= m_state.stackHeight(); ++height)
 		targetStackContents[height] = m_state.stackElement(height, SourceLocation());
 
@@ -50,6 +49,7 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	//stream(cout, initialStackContents, targetStackContents);
 
 	AssemblyItems items = CSECodeGenerator(m_state.expressionClasses(), m_storeOperations).generateCode(
+		m_initialState.stackHeight(),
 		initialStackContents,
 		targetStackContents
 	);
@@ -106,10 +106,12 @@ CSECodeGenerator::CSECodeGenerator(
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
+	int _initialStackHeight,
 	map<int, Id> const& _initialStack,
 	map<int, Id> const& _targetStackContents
 )
 {
+	m_stackHeight = _initialStackHeight;
 	m_stack = _initialStack;
 	for (auto const& item: m_stack)
 		if (!m_classPositions.count(item.second))

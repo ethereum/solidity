@@ -79,15 +79,6 @@ ExpressionClasses::Id ExpressionClasses::find(
 	return exp.id;
 }
 
-ExpressionClasses::Id ExpressionClasses::newId()
-{
-	// Note that we cannot insert it in m_expressions because this requires item to be set.
-	Expression exp;
-	exp.id = m_representatives.size();
-	m_representatives.push_back(exp);
-	return exp.id;
-}
-
 bool ExpressionClasses::knownToBeDifferent(ExpressionClasses::Id _a, ExpressionClasses::Id _b)
 {
 	// Try to simplify "_a - _b" and return true iff the value is a non-zero constant.

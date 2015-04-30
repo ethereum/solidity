@@ -61,7 +61,7 @@ public:
 	using Id = ExpressionClasses::Id;
 	using StoreOperation = KnownState::StoreOperation;
 
-	CommonSubexpressionEliminator(KnownState const& _state): m_state(_state) {}
+	CommonSubexpressionEliminator(KnownState const& _state): m_initialState(_state), m_state(_state) {}
 
 	/// Feeds AssemblyItems into the eliminator and @returns the iterator pointing at the first
 	/// item that must be fed into a new instance of the eliminator.
@@ -85,6 +85,7 @@ private:
 	/// Tries to optimize the item that breaks the basic block at the end.
 	void optimizeBreakingItem();
 
+	KnownState m_initialState;
 	KnownState m_state;
 	/// Keeps information about which storage or memory slots were written to at which sequence
 	/// number with what instruction.
@@ -115,6 +116,7 @@ public:
 	/// @param _targetStackContents final contents of the stack, by stack height relative to initial
 	/// @note should only be called once on each object.
 	AssemblyItems generateCode(
+		int _initialStackHeight,
 		std::map<int, Id> const& _initialStack,
 		std::map<int, Id> const& _targetStackContents
 	);
@@ -150,7 +152,7 @@ private:
 
 	AssemblyItems m_generatedItems;
 	/// Current height of the stack relative to the start.
-	int m_stackHeight = 0;
+	int m_stackHeight;
 	/// If (b, a) is in m_requests then b is needed to compute a.
 	std::multimap<Id, Id> m_neededBy;
 	/// Current content of the stack.

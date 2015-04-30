@@ -135,8 +135,10 @@ ExpressionClasses::Id KnownState::stackElement(int _stackHeight, SourceLocation 
 {
 	if (m_stackElements.count(_stackHeight))
 		return m_stackElements.at(_stackHeight);
-	// Stack element not found (not assigned yet), create new equivalence class.
-	return m_stackElements[_stackHeight] = m_expressionClasses->newId();
+	// Stack element not found (not assigned yet), create new unknown equivalence class.
+	//@todo check that we do not infer incorrect equivalences when the stack is cleared partially
+	//in between.
+	return m_stackElements[_stackHeight] = initialStackElement(_stackHeight, _location);
 }
 
 ExpressionClasses::Id KnownState::initialStackElement(
@@ -144,10 +146,8 @@ ExpressionClasses::Id KnownState::initialStackElement(
 	SourceLocation const& _location
 )
 {
-	assertThrow(_stackHeight <= 0, OptimizerException, "Initial stack element of positive height requested.");
-	assertThrow(_stackHeight > -16, StackTooDeepException, "");
 	// This is a special assembly item that refers to elements pre-existing on the initial stack.
-	return m_expressionClasses->find(AssemblyItem(dupInstruction(1 - _stackHeight), _location));
+	return m_expressionClasses->find(AssemblyItem(UndefinedItem, u256(_stackHeight), _location));
 }
 
 void KnownState::setStackElement(int _stackHeight, Id _class)

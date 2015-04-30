@@ -68,10 +68,6 @@ public:
 		bool _copyItem = true,
 		unsigned _sequenceNumber = 0
 	);
-	/// @returns a new unique class id which does not and will never have a representative containing
-	/// an AssemblyItem, i.e. its value cannot be generated, instead it has to be assumed to be
-	/// already present.
-	Id newId();
 	/// @returns the canonical representative of an expression class.
 	Expression const& representative(Id _id) const { return m_representatives.at(_id); }
 	/// @returns the number of classes.
