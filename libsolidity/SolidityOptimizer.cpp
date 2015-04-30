@@ -83,15 +83,28 @@ public:
 							"\nOptimized:     " + toHex(optimizedOutput));
 	}
 
-	AssemblyItems getCSE(AssemblyItems const& _input)
+	AssemblyItems addDummyLocations(AssemblyItems const& _input)
 	{
 		// add dummy locations to each item so that we can check that they are not deleted
 		AssemblyItems input = _input;
 		for (AssemblyItem& item: input)
 			item.setLocation(SourceLocation(1, 3, make_shared<string>("")));
+		return input;
+	}
 
+	eth::KnownState createInitialState(AssemblyItems const& _input)
+	{
 		eth::KnownState state;
-		eth::CommonSubexpressionEliminator cse(state);
+		for (auto const& item: addDummyLocations(_input))
+			state.feedItem(item);
+		return state;
+	}
+
+	AssemblyItems getCSE(AssemblyItems const& _input, eth::KnownState const& _state = eth::KnownState())
+	{
+		AssemblyItems input = addDummyLocations(_input);
+
+		eth::CommonSubexpressionEliminator cse(_state);
 		BOOST_REQUIRE(cse.feedItems(input.begin(), input.end()) == input.end());
 		AssemblyItems output = cse.getOptimizedItems();
 
@@ -102,9 +115,13 @@ public:
 		return output;
 	}
 
-	void checkCSE(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	void checkCSE(
+		AssemblyItems const& _input,
+		AssemblyItems const& _expectation,
+		KnownState const& _state = eth::KnownState()
+	)
 	{
-		AssemblyItems output = getCSE(_input);
+		AssemblyItems output = getCSE(_input, _state);
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
@@ -754,6 +771,30 @@ BOOST_AUTO_TEST_CASE(cse_sha3_twice_same_content_noninterfering_store_in_between
 	AssemblyItems output = getCSE(input);
 	BOOST_CHECK_EQUAL(4, count(output.begin(), output.end(), AssemblyItem(Instruction::MSTORE)));
 	BOOST_CHECK_EQUAL(1, count(output.begin(), output.end(), AssemblyItem(Instruction::SHA3)));
+}
+
+BOOST_AUTO_TEST_CASE(cse_with_initially_known_stack)
+{
+	eth::KnownState state = createInitialState(AssemblyItems{
+		u256(0x12),
+		u256(0x20),
+		Instruction::ADD
+	});
+	AssemblyItems input{
+		u256(0x12 + 0x20)
+	};
+	checkCSE(input, AssemblyItems{Instruction::DUP1}, state);
+}
+
+BOOST_AUTO_TEST_CASE(cse_equality_on_initially_known_stack)
+{
+	eth::KnownState state = createInitialState(AssemblyItems{Instruction::DUP1});
+	AssemblyItems input{
+		Instruction::EQ
+	};
+	AssemblyItems output = getCSE(input, state);
+	// check that it directly pushes 1 (true)
+	BOOST_CHECK(find(output.begin(), output.end(), AssemblyItem(u256(1))) != output.end());
 }
 
 BOOST_AUTO_TEST_CASE(control_flow_graph_remove_unused)
