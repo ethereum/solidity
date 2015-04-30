@@ -50,7 +50,7 @@ public:
 	struct Expression
 	{
 		Id id;
-		AssemblyItem const* item;
+		AssemblyItem const* item = nullptr;
 		Ids arguments;
 		unsigned sequenceNumber; ///< Storage modification sequence, only used for SLOAD/SSTORE instructions.
 		/// Behaves as if this was a tuple of (item->type(), item->data(), arguments, sequenceNumber).
@@ -68,6 +68,10 @@ public:
 		bool _copyItem = true,
 		unsigned _sequenceNumber = 0
 	);
+	/// @returns a new unique class id which does not and will never have a representative containing
+	/// an AssemblyItem, i.e. its value cannot be generated, instead it has to be assumed to be
+	/// already present.
+	Id newId();
 	/// @returns the canonical representative of an expression class.
 	Expression const& representative(Id _id) const { return m_representatives.at(_id); }
 	/// @returns the number of classes.
@@ -149,7 +153,7 @@ public:
 	std::string toString() const;
 
 private:
-	bool matchesBaseItem(AssemblyItem const& _item) const;
+	bool matchesBaseItem(AssemblyItem const* _item) const;
 	Expression const& matchGroupValue() const;
 
 	AssemblyItemType m_type;

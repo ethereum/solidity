@@ -136,7 +136,7 @@ ExpressionClasses::Id KnownState::stackElement(int _stackHeight, SourceLocation 
 	if (m_stackElements.count(_stackHeight))
 		return m_stackElements.at(_stackHeight);
 	// Stack element not found (not assigned yet), create new equivalence class.
-	return m_stackElements[_stackHeight] = initialStackElement(_stackHeight, _location);
+	return m_stackElements[_stackHeight] = m_expressionClasses->newId();
 }
 
 ExpressionClasses::Id KnownState::initialStackElement(
