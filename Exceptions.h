@@ -23,6 +23,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <libdevcore/Exceptions.h>
 #include <libevmcore/SourceLocation.h>
 
@@ -38,7 +39,23 @@ struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
 struct DocstringParsingError: virtual Exception {};
 
+using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
+
+class SecondarySourceLocation
+{
+public:
+	//SecondarySourceLocation(){}
+	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
+	{
+		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
+		return *this;
+	}
+
+	std::vector<errorSourceLocationInfo> infos;
+};
+
 using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
+using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
 
 }
 }

@@ -42,6 +42,8 @@ public:
 	static void printSourceLocation(std::ostream& _stream, SourceLocation const& _location, Scanner const& _scanner);
 	static void printExceptionInformation(std::ostream& _stream, Exception const& _exception,
 										  std::string const& _name, CompilerStack const& _compiler);
+private:
+	static void printSourceName(std::ostream& _stream, SourceLocation const& _location, Scanner const& _scanner);
 };
 
 }

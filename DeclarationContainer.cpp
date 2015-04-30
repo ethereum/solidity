@@ -28,6 +28,28 @@ using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 
+Declaration const* DeclarationContainer::conflictingDeclaration(Declaration const& _declaration) const
+{
+	ASTString const& name(_declaration.getName());
+	solAssert(!name.empty(), "");
+	vector<Declaration const*> declarations;
+	if (m_declarations.count(name))
+		declarations += m_declarations.at(name);
+	if (m_invisibleDeclarations.count(name))
+		declarations += m_invisibleDeclarations.at(name);
+	if (dynamic_cast<FunctionDefinition const*>(&_declaration))
+	{
+		// check that all other declarations with the same name are functions
+		for (Declaration const* declaration: declarations)
+			if (!dynamic_cast<FunctionDefinition const*>(declaration))
+				return declaration;
+	}
+	else if (!declarations.empty())
+		return declarations.front();
+
+	return nullptr;
+}
+
 bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, bool _invisible, bool _update)
 {
 	ASTString const& name(_declaration.getName());
@@ -40,24 +62,8 @@ bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, 
 		m_declarations.erase(name);
 		m_invisibleDeclarations.erase(name);
 	}
-	else
-	{
-		vector<Declaration const*> declarations;
-		if (m_declarations.count(name))
-			declarations += m_declarations.at(name);
-		if (m_invisibleDeclarations.count(name))
-			declarations += m_invisibleDeclarations.at(name);
-		if (dynamic_cast<FunctionDefinition const*>(&_declaration))
-		{
-			// check that all other declarations with the same name are functions
-
-			for (Declaration const* declaration: declarations)
-				if (!dynamic_cast<FunctionDefinition const*>(declaration))
-					return false;
-		}
-		else if (!declarations.empty())
-			return false;
-	}
+	else if (conflictingDeclaration(_declaration))
+		return false;
 
 	if (_invisible)
 		m_invisibleDeclarations[name].insert(&_declaration);

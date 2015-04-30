@@ -64,28 +64,53 @@ void SourceReferenceFormatter::printSourceLocation(ostream& _stream,
 				<< "Spanning multiple lines.\n";
 }
 
+void SourceReferenceFormatter::printSourceName(ostream& _stream,
+											   SourceLocation const& _location,
+											   Scanner const& _scanner)
+{
+	int startLine;
+	int startColumn;
+	tie(startLine, startColumn) = _scanner.translatePositionToLineColumn(_location.start);
+	_stream << *_location.sourceName << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
+}
+
 void SourceReferenceFormatter::printExceptionInformation(ostream& _stream,
 														 Exception const& _exception,
 														 string const& _name,
 														 CompilerStack const& _compiler)
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
+	auto secondarylocation = boost::get_error_info<errinfo_secondarySourceLocation>(_exception);
 	Scanner const* scanner;
 
 	if (location)
 	{
 		scanner = &_compiler.getScanner(*location->sourceName);
-		int startLine;
-		int startColumn;
-		tie(startLine, startColumn) = scanner->translatePositionToLineColumn(location->start);
-		_stream << *location->sourceName << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
+		printSourceName(_stream, *location, *scanner);
 	}
+
 	_stream << _name;
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		_stream << ": " << *description << endl;
 
 	if (location)
+	{
+		solAssert(scanner, "");
 		printSourceLocation(_stream, *location, *scanner);
+	}
+
+	if (secondarylocation && !secondarylocation->infos.empty())
+	{
+		for(auto info: secondarylocation->infos)
+		{
+			scanner = &_compiler.getScanner(*info.second.sourceName);
+			_stream << info.first << " ";
+			printSourceName(_stream, info.second, *scanner);
+			_stream << endl;
+			printSourceLocation(_stream, info.second, *scanner);
+		}
+		_stream << endl;
+	}
 }
 
 }

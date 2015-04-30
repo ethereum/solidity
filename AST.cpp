@@ -140,12 +140,22 @@ void ContractDefinition::checkDuplicateFunctions() const
 	map<string, vector<FunctionDefinition const*>> functions;
 	for (ASTPointer<FunctionDefinition> const& function: getDefinedFunctions())
 		functions[function->getName()].push_back(function.get());
+
 	if (functions[getName()].size() > 1)
+	{
+		SecondarySourceLocation ssl;
+		auto it = functions[getName()].begin();
+		++it;
+		for(; it != functions[getName()].end(); ++it)
+			ssl.append("Another declaration is here:", (*it)->getLocation());
+
 		BOOST_THROW_EXCEPTION(
 			DeclarationError() <<
-			errinfo_sourceLocation(getLocation()) <<
-			errinfo_comment("More than one constructor defined.")
+			errinfo_sourceLocation(getConstructor()->getLocation()) <<
+			errinfo_comment("More than one constructor defined.") <<
+			errinfo_secondarySourceLocation(ssl)
 		);
+	}
 	for (auto const& it: functions)
 	{
 		vector<FunctionDefinition const*> const& overloads = it.second;
@@ -155,7 +165,9 @@ void ContractDefinition::checkDuplicateFunctions() const
 					BOOST_THROW_EXCEPTION(
 						DeclarationError() <<
 						errinfo_sourceLocation(overloads[j]->getLocation()) <<
-						errinfo_comment("Function with same name and arguments already defined.")
+						errinfo_comment("Function with same name and arguments already defined.") <<
+						errinfo_secondarySourceLocation(SecondarySourceLocation().append(
+							"The previous declaration is here:", overloads[i]->getLocation()))
 					);
 	}
 }

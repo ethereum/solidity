@@ -34,7 +34,7 @@ namespace solidity
 {
 
 /**
- * Container that stores mappings betwee names and declarations. It also contains a link to the
+ * Container that stores mappings between names and declarations. It also contains a link to the
  * enclosing scope.
  */
 class DeclarationContainer
@@ -51,6 +51,8 @@ public:
 	std::set<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false) const;
 	Declaration const* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
 	std::map<ASTString, std::set<Declaration const*>> const& getDeclarations() const { return m_declarations; }
+	/// @returns weather declaration is valid, and if not also returns previous declaration.
+	Declaration const* conflictingDeclaration(Declaration const& _declaration) const;
 
 private:
 	Declaration const* m_enclosingDeclaration;
