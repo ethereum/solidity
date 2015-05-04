@@ -51,20 +51,18 @@ namespace dev
 namespace solidity
 {
 
-// LTODO: Maybe some argument class pairing names with
-// extensions and other attributes would be a better choice here?
-static string const g_argAbiStr         = "json-abi";
-static string const g_argSolAbiStr      = "sol-abi";
+static string const g_argAbiStr = "json-abi";
+static string const g_argSolAbiStr = "sol-abi";
 static string const g_argSignatureHashes = "hashes";
-static string const g_argAsmStr         = "asm";
-static string const g_argAsmJsonStr     = "asm-json";
-static string const g_argAstStr         = "ast";
-static string const g_argAstJson        = "ast-json";
-static string const g_argBinaryStr      = "binary";
-static string const g_argOpcodesStr     = "opcodes";
-static string const g_argNatspecDevStr  = "natspec-dev";
+static string const g_argAsmStr = "asm";
+static string const g_argAsmJsonStr = "asm-json";
+static string const g_argAstStr = "ast";
+static string const g_argAstJson = "ast-json";
+static string const g_argBinaryStr = "binary";
+static string const g_argOpcodesStr = "opcodes";
+static string const g_argNatspecDevStr = "natspec-dev";
 static string const g_argNatspecUserStr = "natspec-user";
-static string const g_argAddStandard    = "add-std";
+static string const g_argAddStandard = "add-std";
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
