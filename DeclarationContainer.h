@@ -51,7 +51,7 @@ public:
 	std::set<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false) const;
 	Declaration const* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
 	std::map<ASTString, std::set<Declaration const*>> const& getDeclarations() const { return m_declarations; }
-	/// @returns weather declaration is valid, and if not also returns previous declaration.
+	/// @returns whether declaration is valid, and if not also returns previous declaration.
 	Declaration const* conflictingDeclaration(Declaration const& _declaration) const;
 
 private:

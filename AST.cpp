@@ -151,7 +151,7 @@ void ContractDefinition::checkDuplicateFunctions() const
 
 		BOOST_THROW_EXCEPTION(
 			DeclarationError() <<
-			errinfo_sourceLocation(getConstructor()->getLocation()) <<
+			errinfo_sourceLocation(functions[getName()].front()->getLocation()) <<
 			errinfo_comment("More than one constructor defined.") <<
 			errinfo_secondarySourceLocation(ssl)
 		);
@@ -165,9 +165,9 @@ void ContractDefinition::checkDuplicateFunctions() const
 					BOOST_THROW_EXCEPTION(
 						DeclarationError() <<
 						errinfo_sourceLocation(overloads[j]->getLocation()) <<
-						errinfo_comment("Function with same name and arguments already defined.") <<
+						errinfo_comment("Function with same name and arguments defined twice.") <<
 						errinfo_secondarySourceLocation(SecondarySourceLocation().append(
-							"The previous declaration is here:", overloads[i]->getLocation()))
+							"Other declaration is here:", overloads[i]->getLocation()))
 					);
 	}
 }

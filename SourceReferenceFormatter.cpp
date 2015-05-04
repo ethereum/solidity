@@ -32,9 +32,11 @@ namespace dev
 namespace solidity
 {
 
-void SourceReferenceFormatter::printSourceLocation(ostream& _stream,
-												   SourceLocation const& _location,
-												   Scanner const& _scanner)
+void SourceReferenceFormatter::printSourceLocation(
+	ostream& _stream,
+	SourceLocation const& _location,
+	Scanner const& _scanner
+)
 {
 	int startLine;
 	int startColumn;
@@ -64,9 +66,11 @@ void SourceReferenceFormatter::printSourceLocation(ostream& _stream,
 				<< "Spanning multiple lines.\n";
 }
 
-void SourceReferenceFormatter::printSourceName(ostream& _stream,
-											   SourceLocation const& _location,
-											   Scanner const& _scanner)
+void SourceReferenceFormatter::printSourceName(
+	ostream& _stream,
+	SourceLocation const& _location,
+	Scanner const& _scanner
+)
 {
 	int startLine;
 	int startColumn;
@@ -74,14 +78,16 @@ void SourceReferenceFormatter::printSourceName(ostream& _stream,
 	_stream << *_location.sourceName << ":" << (startLine + 1) << ":" << (startColumn + 1) << ": ";
 }
 
-void SourceReferenceFormatter::printExceptionInformation(ostream& _stream,
-														 Exception const& _exception,
-														 string const& _name,
-														 CompilerStack const& _compiler)
+void SourceReferenceFormatter::printExceptionInformation(
+	ostream& _stream,
+	Exception const& _exception,
+	string const& _name,
+	CompilerStack const& _compiler
+)
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
 	auto secondarylocation = boost::get_error_info<errinfo_secondarySourceLocation>(_exception);
-	Scanner const* scanner;
+	Scanner const* scanner = nullptr;
 
 	if (location)
 	{
@@ -101,7 +107,7 @@ void SourceReferenceFormatter::printExceptionInformation(ostream& _stream,
 
 	if (secondarylocation && !secondarylocation->infos.empty())
 	{
-		for(auto info: secondarylocation->infos)
+		for (auto info: secondarylocation->infos)
 		{
 			scanner = &_compiler.getScanner(*info.second.sourceName);
 			_stream << info.first << " ";

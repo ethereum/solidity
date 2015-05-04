@@ -357,25 +357,26 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 	{
 		SourceLocation firstDeclarationLocation;
 		SourceLocation secondDeclarationLocation;
+		Declaration const* conflictingDeclaration = m_scopes[m_currentScope].conflictingDeclaration(_declaration);
+		solAssert(conflictingDeclaration, "");
 
-		if (_declaration.getLocation().start < m_scopes[m_currentScope].conflictingDeclaration(_declaration)->getLocation().start)
+		if (_declaration.getLocation().start < conflictingDeclaration->getLocation().start)
 		{
 			firstDeclarationLocation = _declaration.getLocation();
-			secondDeclarationLocation = m_scopes[m_currentScope].conflictingDeclaration(_declaration)->getLocation();
+			secondDeclarationLocation = conflictingDeclaration->getLocation();
 		}
 		else
 		{
-			firstDeclarationLocation = m_scopes[m_currentScope].conflictingDeclaration(_declaration)->getLocation();
+			firstDeclarationLocation = conflictingDeclaration->getLocation();
 			secondDeclarationLocation = _declaration.getLocation();
 		}
-		solAssert(m_scopes[m_currentScope].conflictingDeclaration(_declaration), "");
-		BOOST_THROW_EXCEPTION(DeclarationError()
-			<< errinfo_sourceLocation(secondDeclarationLocation)
-			<< errinfo_comment("Identifier already declared.")
-			<< errinfo_secondarySourceLocation(SecondarySourceLocation().append(
-				"The previous declaration is here:",
-				firstDeclarationLocation
-			)));
+
+		BOOST_THROW_EXCEPTION(
+			DeclarationError() <<
+			errinfo_sourceLocation(secondDeclarationLocation) <<
+			errinfo_comment("Identifier already declared.") <<
+			errinfo_secondarySourceLocation(
+				SecondarySourceLocation().append("The previous declaration is here:", firstDeclarationLocation)));
 	}
 
 	_declaration.setScope(m_currentScope);
@@ -456,8 +457,11 @@ bool ReferencesResolver::visit(Identifier& _identifier)
 {
 	auto declarations = m_resolver.getNameFromCurrentScope(_identifier.getName());
 	if (declarations.empty())
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_identifier.getLocation())
-												 << errinfo_comment("Undeclared identifier."));
+		BOOST_THROW_EXCEPTION(
+			DeclarationError() <<
+			errinfo_sourceLocation(_identifier.getLocation()) <<
+			errinfo_comment("Undeclared identifier.")
+		);
 	else if (declarations.size() == 1)
 		_identifier.setReferencedDeclaration(**declarations.begin(), m_currentContract);
 	else

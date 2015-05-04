@@ -44,7 +44,6 @@ using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
 class SecondarySourceLocation
 {
 public:
-	//SecondarySourceLocation(){}
 	SecondarySourceLocation& append(std::string const& _errMsg, SourceLocation const& _sourceLocation)
 	{
 		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
