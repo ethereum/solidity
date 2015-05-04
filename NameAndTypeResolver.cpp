@@ -376,7 +376,9 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 			errinfo_sourceLocation(secondDeclarationLocation) <<
 			errinfo_comment("Identifier already declared.") <<
 			errinfo_secondarySourceLocation(
-				SecondarySourceLocation().append("The previous declaration is here:", firstDeclarationLocation)));
+				SecondarySourceLocation().append("The previous declaration is here:", firstDeclarationLocation)
+			)
+		);
 	}
 
 	_declaration.setScope(m_currentScope);
