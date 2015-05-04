@@ -355,16 +355,29 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 {
 	if (!m_scopes[m_currentScope].registerDeclaration(_declaration, !_declaration.isVisibleInContract()))
 	{
+		SourceLocation firstDeclarationLocation;
+		SourceLocation secondDeclarationLocation;
+
+		if (_declaration.getLocation().start < m_scopes[m_currentScope].conflictingDeclaration(_declaration)->getLocation().start)
+		{
+			firstDeclarationLocation = _declaration.getLocation();
+			secondDeclarationLocation = m_scopes[m_currentScope].conflictingDeclaration(_declaration)->getLocation();
+		}
+		else
+		{
+			firstDeclarationLocation = m_scopes[m_currentScope].conflictingDeclaration(_declaration)->getLocation();
+			secondDeclarationLocation = _declaration.getLocation();
+		}
 		solAssert(m_scopes[m_currentScope].conflictingDeclaration(_declaration), "");
 		BOOST_THROW_EXCEPTION(DeclarationError()
-			<< errinfo_sourceLocation(_declaration.getLocation())
+			<< errinfo_sourceLocation(secondDeclarationLocation)
 			<< errinfo_comment("Identifier already declared.")
 			<< errinfo_secondarySourceLocation(SecondarySourceLocation().append(
 				"The previous declaration is here:",
-				m_scopes[m_currentScope].conflictingDeclaration(_declaration)->getLocation())));
+				firstDeclarationLocation
+			)));
 	}
 
-	//@todo the exception should also contain the location of the first declaration
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)
 		enterNewSubScope(_declaration);
