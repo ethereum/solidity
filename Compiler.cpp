@@ -431,7 +431,8 @@ bool Compiler::visit(ForStatement const& _forStatement)
 	CompilerContext::LocationSetter locationSetter(m_context, _forStatement);
 	eth::AssemblyItem loopStart = m_context.newTag();
 	eth::AssemblyItem loopEnd = m_context.newTag();
-	m_continueTags.push_back(loopStart);
+	eth::AssemblyItem loopNext = m_context.newTag();
+	m_continueTags.push_back(loopNext);
 	m_breakTags.push_back(loopEnd);
 
 	if (_forStatement.getInitializationExpression())
@@ -448,6 +449,8 @@ bool Compiler::visit(ForStatement const& _forStatement)
 	}
 
 	_forStatement.getBody().accept(*this);
+
+	m_context << loopNext;
 
 	// for's loop expression if existing
 	if (_forStatement.getLoopExpression())
