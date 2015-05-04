@@ -147,7 +147,7 @@ void ContractDefinition::checkDuplicateFunctions() const
 		SecondarySourceLocation ssl;
 		auto it = functions[getName()].begin();
 		++it;
-		for(; it != functions[getName()].end(); ++it)
+		for (; it != functions[getName()].end(); ++it)
 			ssl.append("Another declaration is here:", (*it)->getLocation());
 
 		BOOST_THROW_EXCEPTION(
