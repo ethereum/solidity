@@ -95,7 +95,7 @@ void SourceReferenceFormatter::printExceptionInformation(ostream& _stream,
 
 	if (location)
 	{
-		solAssert(scanner, "");
+		scanner = &_compiler.getScanner(*location->sourceName);
 		printSourceLocation(_stream, *location, *scanner);
 	}
 
