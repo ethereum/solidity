@@ -55,6 +55,7 @@ namespace solidity
 // extensions and other attributes would be a better choice here?
 static string const g_argAbiStr         = "json-abi";
 static string const g_argSolAbiStr      = "sol-abi";
+static string const g_argSignatureHashes = "hashes";
 static string const g_argAsmStr         = "asm";
 static string const g_argAsmJsonStr     = "asm-json";
 static string const g_argAstStr         = "ast";
@@ -96,6 +97,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	return
 		humanTargetedStdout(_args, g_argAbiStr) ||
 		humanTargetedStdout(_args, g_argSolAbiStr) ||
+		humanTargetedStdout(_args, g_argSignatureHashes) ||
 		humanTargetedStdout(_args, g_argNatspecUserStr) ||
 		humanTargetedStdout(_args, g_argAstJson) ||
 		humanTargetedStdout(_args, g_argNatspecDevStr) ||
@@ -171,6 +173,24 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 		handleOpcode(_contract);
 	if (m_args.count(g_argBinaryStr))
 		handleBinary(_contract);
+}
+
+void CommandLineInterface::handleSignatureHashes(string const& _contract)
+{
+	string out;
+	for (auto const& it: m_compiler->getContractDefinition(_contract).getInterfaceFunctions())
+		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
+
+	auto choice = m_args[g_argSignatureHashes].as<OutputType>();
+	if (outputToStdout(choice))
+		cout << "Function signatures: " << endl << out;
+
+	if (outputToFile(choice))
+	{
+		ofstream outFile(_contract + ".signatures");
+		outFile << out;
+		outFile.close();
+	}
 }
 
 void CommandLineInterface::handleMeta(DocumentationType _type, string const& _contract)
@@ -254,6 +274,8 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 			"Request to output the contract's JSON ABI interface.")
 		(g_argSolAbiStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
 			"Request to output the contract's Solidity ABI interface.")
+		(g_argSignatureHashes.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+			"Request to output the contract's functions' signature hashes.")
 		(g_argNatspecUserStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
 			"Request to output the contract's Natspec user documentation.")
 		(g_argNatspecDevStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
@@ -516,6 +538,7 @@ void CommandLineInterface::actOnInput()
 		}
 
 		handleBytecode(contract);
+		handleSignatureHashes(contract);
 		handleMeta(DocumentationType::ABIInterface, contract);
 		handleMeta(DocumentationType::ABISolidityInterface, contract);
 		handleMeta(DocumentationType::NatspecDev, contract);

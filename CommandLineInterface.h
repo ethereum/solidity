@@ -58,6 +58,7 @@ private:
 	void handleBinary(std::string const& _contract);
 	void handleOpcode(std::string const& _contract);
 	void handleBytecode(std::string const& _contract);
+	void handleSignatureHashes(std::string const& _contract);
 	void handleMeta(DocumentationType _type,
 					std::string const& _contract);
 
