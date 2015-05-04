@@ -95,10 +95,9 @@ void ContractDefinition::checkTypeRequirements()
 	{
 		FixedHash<4> const& hash = it.first;
 		if (hashes.count(hash))
-			BOOST_THROW_EXCEPTION(
-				createTypeError(
-				string("Function signature hash collision for ") + it.second->externalSignature())
-			);
+			BOOST_THROW_EXCEPTION(createTypeError(
+				string("Function signature hash collision for ") + it.second->externalSignature()
+			));
 		hashes.insert(hash);
 	}
 }
