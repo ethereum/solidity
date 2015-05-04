@@ -48,11 +48,11 @@ void SourceReferenceFormatter::printSourceLocation(
 	{
 		string line = _scanner.getLineAtPosition(_location.start);
 		_stream << line << endl;
-		std::for_each(line.cbegin(), line.cbegin() + startColumn,
-			[&_stream](char const& ch)
-			{
-				_stream << (ch == '\t' ? '\t' : ' ');
-			});
+		for_each(
+			line.cbegin(),
+			line.cbegin() + startColumn,
+			[&_stream](char const& ch) { _stream << (ch == '\t' ? '\t' : ' '); }
+		);
 		_stream << "^";
 		if (endColumn > startColumn + 2)
 			_stream << string(endColumn - startColumn - 2, '-');
@@ -61,9 +61,12 @@ void SourceReferenceFormatter::printSourceLocation(
 		_stream << endl;
 	}
 	else
-		_stream << _scanner.getLineAtPosition(_location.start) << endl
-				<< string(startColumn, ' ') << "^\n"
-				<< "Spanning multiple lines.\n";
+		_stream <<
+			_scanner.getLineAtPosition(_location.start) <<
+			endl <<
+			string(startColumn, ' ') <<
+			"^\n" <<
+			"Spanning multiple lines.\n";
 }
 
 void SourceReferenceFormatter::printSourceName(

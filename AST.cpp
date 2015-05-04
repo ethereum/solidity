@@ -95,9 +95,10 @@ void ContractDefinition::checkTypeRequirements()
 	{
 		FixedHash<4> const& hash = it.first;
 		if (hashes.count(hash))
-			BOOST_THROW_EXCEPTION(createTypeError(
-									  std::string("Function signature hash collision for ") +
-									  it.second->externalSignature()));
+			BOOST_THROW_EXCEPTION(
+				createTypeError(
+				string("Function signature hash collision for ") + it.second->externalSignature())
+			);
 		hashes.insert(hash);
 	}
 }
@@ -311,12 +312,12 @@ void ContractDefinition::checkExternalTypeClashes() const
 					));
 }
 
-std::vector<ASTPointer<EventDefinition>> const& ContractDefinition::getInterfaceEvents() const
+vector<ASTPointer<EventDefinition>> const& ContractDefinition::getInterfaceEvents() const
 {
 	if (!m_interfaceEvents)
 	{
 		set<string> eventsSeen;
-		m_interfaceEvents.reset(new std::vector<ASTPointer<EventDefinition>>());
+		m_interfaceEvents.reset(new vector<ASTPointer<EventDefinition>>());
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
 			for (ASTPointer<EventDefinition> const& e: contract->getEvents())
 				if (eventsSeen.count(e->getName()) == 0)
@@ -956,7 +957,7 @@ void Identifier::overloadResolution(TypePointers const& _argumentTypes)
 	solAssert(!m_referencedDeclaration, "Referenced declaration should be null before overload resolution.");
 	solAssert(!m_overloadedDeclarations.empty(), "No candidates for overload resolution found.");
 
-	std::vector<Declaration const*> possibles;
+	vector<Declaration const*> possibles;
 	if (m_overloadedDeclarations.size() == 1)
 		m_referencedDeclaration = *m_overloadedDeclarations.begin();
 
