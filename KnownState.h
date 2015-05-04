@@ -27,6 +27,7 @@
 #include <map>
 #include <set>
 #include <tuple>
+#include <memory>
 #include <ostream>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
@@ -70,14 +71,14 @@ public:
 		Id expression;
 	};
 
-	KnownState(): m_expressionClasses(std::make_shared<ExpressionClasses>()) {}
+	explicit KnownState(
+		std::shared_ptr<ExpressionClasses> _expressionClasses = std::make_shared<ExpressionClasses>()
+	): m_expressionClasses(_expressionClasses)
+	{
+	}
 
 	/// Streams debugging information to @a _out.
-	std::ostream& stream(
-		std::ostream& _out,
-		std::map<int, Id> _initialStack = std::map<int, Id>(),
-		std::map<int, Id> _targetStack = std::map<int, Id>()
-	) const;
+	std::ostream& stream(std::ostream& _out) const;
 
 	/// Feeds the item into the system for analysis.
 	/// @returns a possible store operation
@@ -92,6 +93,20 @@ public:
 	/// Resets any knowledge.
 	void reset() { resetStorage(); resetMemory(); resetStack(); }
 
+	/// Manually increments the storage and memory sequence number.
+	void incrementSequenceNumber() { m_sequenceNumber += 2; }
+
+	/// Replaces the state by the intersection with _other, i.e. only equal knowledge is retained.
+	/// If the stack heighht is different, the smaller one is used and the stack is compared
+	/// relatively.
+	void reduceToCommonKnowledge(KnownState const& _other);
+
+	/// @returns a shared pointer to a copy of this state.
+	std::shared_ptr<KnownState> copy() const { return std::make_shared<KnownState>(*this); }
+
+	/// @returns true if the knowledge about the state of both objects is (known to be) equal.
+	bool operator==(KnownState const& _other) const;
+
 	///@todo the sequence numbers in two copies of this class should never be the same.
 	/// might be doable using two-dimensional sequence numbers, where the first value is incremented
 	/// for each copy
@@ -99,8 +114,7 @@ public:
 	/// Retrieves the current equivalence class fo the given stack element (or generates a new
 	/// one if it does not exist yet).
 	Id stackElement(int _stackHeight, SourceLocation const& _location);
-	/// @returns the equivalence class id of the special initial stack element at the given height
-	/// (must not be positive).
+	/// @returns the equivalence class id of the special initial stack element at the given height.
 	Id initialStackElement(int _stackHeight, SourceLocation const& _location);
 
 	int stackHeight() const { return m_stackHeight; }

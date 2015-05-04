@@ -128,7 +128,6 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 {
 	if (_item.type() != Operation)
 		return true;
-	assertThrow(!altersControlFlow(_item), OptimizerException, "");
 
 	switch (_item.instruction())
 	{

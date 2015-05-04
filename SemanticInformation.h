@@ -48,7 +48,6 @@ struct SemanticInformation
 	static bool altersControlFlow(AssemblyItem const& _item);
 	/// @returns false if the value put on the stack by _item depends on anything else than
 	/// the information in the current block header, memory, storage or stack.
-	/// @note should not be called for instructions that alter the control flow.
 	static bool isDeterministic(AssemblyItem const& _item);
 	/// @returns true if the given instruction modifies memory.
 	static bool invalidatesMemory(Instruction _instruction);

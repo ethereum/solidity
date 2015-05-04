@@ -24,16 +24,17 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
+#include <libevmasm/ExpressionClasses.h>
 
 namespace dev
 {
 namespace eth
 {
 
-class AssemblyItem;
-using AssemblyItems = std::vector<AssemblyItem>;
+class KnownState;
 
 /**
  * Identifier for a block, coincides with the tag number of an AssemblyItem but adds a special
@@ -69,14 +70,20 @@ struct BasicBlock
 	unsigned end = 0;
 	/// Tags pushed inside this block, with multiplicity.
 	std::vector<BlockId> pushedTags;
-	/// ID of the block that always follows this one (either JUMP or flow into new block),
-	/// or BlockId::invalid() otherwise
+	/// ID of the block that always follows this one (either non-branching part of JUMPI or flow
+	/// into new block), or BlockId::invalid() otherwise
 	BlockId next = BlockId::invalid();
-	/// ID of the block that has to precede this one.
+	/// ID of the block that has to precede this one (because control flows into it).
 	BlockId prev = BlockId::invalid();
 
 	enum class EndType { JUMP, JUMPI, STOP, HANDOVER };
 	EndType endType = EndType::HANDOVER;
+
+	/// Knowledge about the state when this block is entered. Intersection of all possible ways
+	/// to enter this block.
+	std::shared_ptr<KnownState> startState;
+	/// Knowledge about the state at the end of this block.
+	std::shared_ptr<KnownState> endState;
 };
 
 class ControlFlowGraph
@@ -93,8 +100,13 @@ private:
 	void splitBlocks();
 	void resolveNextLinks();
 	void removeUnusedBlocks();
+	void gatherKnowledge();
 	void setPrevLinks();
 	AssemblyItems rebuildCode();
+
+	/// @returns the corresponding BlockId if _id is a pushed jump tag,
+	/// and an invalid BlockId otherwise.
+	BlockId expressionClassToBlockId(ExpressionClasses::Id _id, ExpressionClasses& _exprClasses);
 
 	BlockId generateNewId();
 

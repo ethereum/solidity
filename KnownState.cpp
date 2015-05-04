@@ -30,16 +30,18 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-ostream& KnownState::stream(
-	ostream& _out,
-	map<int, Id> _initialStack,
-	map<int, Id> _targetStack
-) const
+ostream& KnownState::stream(ostream& _out) const
 {
 	auto streamExpressionClass = [this](ostream& _out, Id _id)
 	{
 		auto const& expr = m_expressionClasses->representative(_id);
-		_out << "  " << dec << _id << ": " << *expr.item;
+		_out << "  " << dec << _id << ": ";
+		if (!expr.item)
+			_out << " no item";
+		else if (expr.item->type() == UndefinedItem)
+			_out << " unknown " << int(expr.item->data());
+		else
+			_out << *expr.item;
 		if (expr.sequenceNumber)
 			_out << "@" << dec << expr.sequenceNumber;
 		_out << "(";
@@ -48,22 +50,32 @@ ostream& KnownState::stream(
 		_out << ")" << endl;
 	};
 
-	_out << "Optimizer analysis:" << endl;
-	_out << "Final stack height: " << dec << m_stackHeight << endl;
+	_out << "=== State ===" << endl;
+	_out << "Stack height: " << dec << m_stackHeight << endl;
 	_out << "Equivalence classes: " << endl;
 	for (Id eqClass = 0; eqClass < m_expressionClasses->size(); ++eqClass)
 		streamExpressionClass(_out, eqClass);
 
-	_out << "Initial stack: " << endl;
-	for (auto const& it: _initialStack)
+	_out << "Stack: " << endl;
+	for (auto const& it: m_stackElements)
 	{
 		_out << "  " << dec << it.first << ": ";
 		streamExpressionClass(_out, it.second);
 	}
-	_out << "Target stack: " << endl;
-	for (auto const& it: _targetStack)
+	_out << "Storage: " << endl;
+	for (auto const& it: m_storageContent)
 	{
-		_out << "  " << dec << it.first << ": ";
+		_out << "  ";
+		streamExpressionClass(_out, it.first);
+		_out << ": ";
+		streamExpressionClass(_out, it.second);
+	}
+	_out << "Memory: " << endl;
+	for (auto const& it: m_memoryContent)
+	{
+		_out << "  ";
+		streamExpressionClass(_out, it.first);
+		_out << ": ";
 		streamExpressionClass(_out, it.second);
 	}
 
@@ -73,7 +85,11 @@ ostream& KnownState::stream(
 KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool _copyItem)
 {
 	StoreOperation op;
-	if (_item.type() != Operation)
+	if (_item.type() == Tag)
+	{
+		// can be ignored
+	}
+	else if (_item.type() != Operation)
 	{
 		assertThrow(_item.deposit() == 1, InvalidDeposit, "");
 		setStackElement(++m_stackHeight, m_expressionClasses->find(_item, {}, _copyItem));
@@ -127,15 +143,38 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 					resetMemory();
 				if (SemanticInformation::invalidatesStorage(_item.instruction()))
 					resetStorage();
-				setStackElement(
-					m_stackHeight + _item.deposit(),
-					m_expressionClasses->find(_item, arguments, _copyItem)
-				);
+				assertThrow(info.ret <= 1, InvalidDeposit, "");
+				if (info.ret == 1)
+					setStackElement(
+						m_stackHeight + _item.deposit(),
+						m_expressionClasses->find(_item, arguments, _copyItem)
+					);
 			}
 		}
+		for (int p = m_stackHeight; p > m_stackHeight + _item.deposit(); --p)
+			m_stackElements.erase(p);
 		m_stackHeight += _item.deposit();
 	}
 	return op;
+}
+
+void KnownState::reduceToCommonKnowledge(KnownState const& /*_other*/)
+{
+	//@todo
+	*this = KnownState(m_expressionClasses);
+}
+
+bool KnownState::operator==(const KnownState& _other) const
+{
+	//@todo
+	return (
+		m_stackElements.empty() &&
+		_other.m_stackElements.empty() &&
+		m_storageContent.empty() &&
+		_other.m_storageContent.empty() &&
+		m_memoryContent.empty() &&
+		_other.m_memoryContent.empty()
+	);
 }
 
 ExpressionClasses::Id KnownState::stackElement(int _stackHeight, SourceLocation const& _location)
