@@ -304,9 +304,6 @@ Assembly& Assembly::optimise(bool _enable)
 {
 	if (!_enable)
 		return *this;
-	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules;
-	// jump to next instruction
-	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].data() == m[2].data()) return {m[2]}; else return m.toVector(); }});
 
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
