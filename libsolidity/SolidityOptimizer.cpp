@@ -26,9 +26,9 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
 #include <test/libsolidity/solidityExecutionFramework.h>
-#include <libevmcore/CommonSubexpressionEliminator.h>
-#include <libevmcore/ControlFlowGraph.h>
-#include <libevmcore/Assembly.h>
+#include <libevmasm/CommonSubexpressionEliminator.h>
+#include <libevmasm/ControlFlowGraph.h>
+#include <libevmasm/Assembly.h>
 
 using namespace std;
 using namespace dev::eth;
