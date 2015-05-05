@@ -715,11 +715,10 @@ Options::Options()
 			vmtrace = true;
 		else if (arg == "--filltests")
 			fillTests = true;
-		else if (arg.compare(0, 7, "--stats") == 0)
+		else if (arg == "--stats" && i + 1 < argc)
 		{
 			stats = true;
-			if (arg.size() > 7)
-				statsOutFile = arg.substr(8); // skip '=' char
+			statsOutFile = argv[i + 1];
 		}
 		else if (arg == "--performance")
 			performance = true;
@@ -741,11 +740,10 @@ Options::Options()
 			inputLimits = true;
 			bigData = true;
 		}
-		else if (arg.compare(0, 12, "--singletest") == 0)
+		else if (arg == "--singletest" && i + 1 < argc)
 		{
-			singletest = true;
-			if (arg.size() > 12)
-				singletestName = arg.substr(13); // skip '=' char
+			singleTest = true;
+			singleTestName = argv[i + 1];
 		}
 	}
 }
