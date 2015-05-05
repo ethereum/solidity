@@ -131,8 +131,12 @@ public:
 		// Running it four times should be enough for these tests.
 		for (unsigned i = 0; i < 4; ++i)
 		{
-			eth::ControlFlowGraph cfg(output);
-			output = cfg.optimisedItems();
+			ControlFlowGraph cfg(output);
+			AssemblyItems optItems;
+			for (BasicBlock const& block: cfg.optimisedBlocks())
+				copy(output.begin() + block.begin, output.begin() + block.end,
+					 back_inserter(optItems));
+			output = move(optItems);
 		}
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
