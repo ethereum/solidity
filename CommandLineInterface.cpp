@@ -175,6 +175,9 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 
 void CommandLineInterface::handleSignatureHashes(string const& _contract)
 {
+	if (!m_args.count(g_argSignatureHashes))
+		return;
+
 	string out;
 	for (auto const& it: m_compiler->getContractDefinition(_contract).getInterfaceFunctions())
 		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
