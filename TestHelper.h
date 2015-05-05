@@ -188,6 +188,8 @@ public:
 
 	/// Test selection
 	/// @{
+	bool singletest = false;
+	std::string singletestName;
 	bool performance = false;
 	bool quadratic = false;
 	bool memory = false;

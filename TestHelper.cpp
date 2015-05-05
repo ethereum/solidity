@@ -741,6 +741,12 @@ Options::Options()
 			inputLimits = true;
 			bigData = true;
 		}
+		else if (arg.compare(0, 12, "--singletest") == 0)
+		{
+			singletest = true;
+			if (arg.size() > 12)
+				singletestName = arg.substr(13); // skip '=' char
+		}
 	}
 }
 
