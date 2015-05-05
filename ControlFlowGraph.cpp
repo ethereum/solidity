@@ -38,10 +38,10 @@ BlockId::BlockId(u256 const& _id): m_id(_id)
 	assertThrow( _id < initial().m_id, OptimizerException, "Tag number too large.");
 }
 
-AssemblyItems ControlFlowGraph::optimisedItems()
+BasicBlocks ControlFlowGraph::optimisedBlocks()
 {
 	if (m_items.empty())
-		return m_items;
+		return BasicBlocks();
 
 	findLargestTag();
 	splitBlocks();
@@ -216,17 +216,17 @@ void ControlFlowGraph::gatherKnowledge()
 {
 	// @todo actually we know that memory is filled with zeros at the beginning,
 	// we could make use of that.
-	shared_ptr<KnownState> emptyState = make_shared<KnownState>();
+	KnownStatePointer emptyState = make_shared<KnownState>();
 	ExpressionClasses& expr = emptyState->expressionClasses();
 	bool unknownJumpEncountered = false;
 
-	vector<pair<BlockId, shared_ptr<KnownState>>> workQueue({make_pair(BlockId::initial(), emptyState->copy())});
+	vector<pair<BlockId, KnownStatePointer>> workQueue({make_pair(BlockId::initial(), emptyState->copy())});
 	while (!workQueue.empty())
 	{
 		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
 		assertThrow(!!workQueue.back().first, OptimizerException, "");
 		BasicBlock& block = m_blocks.at(workQueue.back().first);
-		shared_ptr<KnownState> state = workQueue.back().second;
+		KnownStatePointer state = workQueue.back().second;
 		workQueue.pop_back();
 		if (block.startState)
 		{
@@ -283,7 +283,7 @@ void ControlFlowGraph::gatherKnowledge()
 	}
 }
 
-AssemblyItems ControlFlowGraph::rebuildCode()
+BasicBlocks ControlFlowGraph::rebuildCode()
 {
 	map<BlockId, unsigned> pushes;
 	for (auto& idAndBlock: m_blocks)
@@ -294,7 +294,7 @@ AssemblyItems ControlFlowGraph::rebuildCode()
 	for (auto it: m_blocks)
 		blocksToAdd.insert(it.first);
 	set<BlockId> blocksAdded;
-	AssemblyItems code;
+	BasicBlocks blocks;
 
 	for (
 		BlockId blockId = BlockId::initial();
@@ -311,22 +311,18 @@ AssemblyItems ControlFlowGraph::rebuildCode()
 			blocksToAdd.erase(blockId);
 			blocksAdded.insert(blockId);
 
-			auto begin = m_items.begin() + block.begin;
-			auto end = m_items.begin() + block.end;
-			if (begin == end)
+			if (block.begin == block.end)
 				continue;
 			// If block starts with unused tag, skip it.
-			if (previousHandedOver && !pushes[blockId] && begin->type() == Tag)
-			{
-				++begin;
+			if (previousHandedOver && !pushes[blockId] && m_items[block.begin].type() == Tag)
 				++block.begin;
-			}
+			if (block.begin < block.end)
+				blocks.push_back(block);
 			previousHandedOver = (block.endType == BasicBlock::EndType::HANDOVER);
-			copy(begin, end, back_inserter(code));
 		}
 	}
 
-	return code;
+	return blocks;
 }
 
 BlockId ControlFlowGraph::expressionClassToBlockId(

@@ -35,6 +35,7 @@ namespace eth
 {
 
 class KnownState;
+using KnownStatePointer = std::shared_ptr<KnownState>;
 
 /**
  * Identifier for a block, coincides with the tag number of an AssemblyItem but adds a special
@@ -81,10 +82,12 @@ struct BasicBlock
 
 	/// Knowledge about the state when this block is entered. Intersection of all possible ways
 	/// to enter this block.
-	std::shared_ptr<KnownState> startState;
+	KnownStatePointer startState;
 	/// Knowledge about the state at the end of this block.
-	std::shared_ptr<KnownState> endState;
+	KnownStatePointer endState;
 };
+
+using BasicBlocks = std::vector<BasicBlock>;
 
 class ControlFlowGraph
 {
@@ -92,8 +95,9 @@ public:
 	/// Initializes the control flow graph.
 	/// @a _items has to persist across the usage of this class.
 	ControlFlowGraph(AssemblyItems const& _items): m_items(_items) {}
-	/// @returns the collection of optimised items, should be called only once.
-	AssemblyItems optimisedItems();
+	/// @returns vector of basic blocks in the order they should be used in the final code.
+	/// Should be called only once.
+	BasicBlocks optimisedBlocks();
 
 private:
 	void findLargestTag();
@@ -102,7 +106,7 @@ private:
 	void removeUnusedBlocks();
 	void gatherKnowledge();
 	void setPrevLinks();
-	AssemblyItems rebuildCode();
+	BasicBlocks rebuildCode();
 
 	/// @returns the corresponding BlockId if _id is a pushed jump tag,
 	/// and an invalid BlockId otherwise.

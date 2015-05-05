@@ -318,7 +318,10 @@ Assembly& Assembly::optimise(bool _enable)
 		copt << "Performing control flow analysis...";
 		{
 			ControlFlowGraph cfg(m_items);
-			AssemblyItems optItems = cfg.optimisedItems();
+			AssemblyItems optItems;
+			for (BasicBlock const& block: cfg.optimisedBlocks())
+				copy(m_items.begin() + block.begin, m_items.begin() + block.end,
+					 back_inserter(optItems));
 			if (optItems.size() < m_items.size())
 			{
 				copt << "Old size: " << m_items.size() << ", new size: " << optItems.size();
