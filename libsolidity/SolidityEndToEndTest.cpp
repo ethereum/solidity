@@ -300,6 +300,52 @@ BOOST_AUTO_TEST_CASE(for_loop_simple_init_expr)
 	testSolidityAgainstCppOnRange("f(uint256)", for_loop_simple_init_expr_cpp, 0, 5);
 }
 
+BOOST_AUTO_TEST_CASE(for_loop_break_continue)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint n) returns (uint r)
+			{
+				uint i = 1;
+				uint k = 0;
+				for (i *= 5; k < n; i *= 7)
+				{
+					k++;
+					i += 4;
+					if (n % 3 == 0)
+						break;
+					i += 9;
+					if (n % 2 == 0)
+						continue;
+					i += 19;
+				}
+				return i;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+
+	auto breakContinue = [](u256 const& n) -> u256
+	{
+		u256 i = 1;
+		u256 k = 0;
+		for (i *= 5; k < n; i *= 7)
+		{
+			k++;
+			i += 4;
+			if (n % 3 == 0)
+				break;
+			i += 9;
+			if (n % 2 == 0)
+				continue;
+			i += 19;
+		}
+		return i;
+	};
+
+	testSolidityAgainstCppOnRange("f(uint256)", breakContinue, 0, 10);
+}
+
 BOOST_AUTO_TEST_CASE(calling_other_functions)
 {
 	char const* sourceCode = "contract collatz {\n"
