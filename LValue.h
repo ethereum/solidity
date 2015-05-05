@@ -23,7 +23,7 @@
 #pragma once
 
 #include <memory>
-#include <libevmcore/SourceLocation.h>
+#include <libevmasm/SourceLocation.h>
 #include <libsolidity/ArrayUtils.h>
 
 namespace dev

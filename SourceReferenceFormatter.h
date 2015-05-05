@@ -23,7 +23,7 @@
 #pragma once
 
 #include <ostream>
-#include <libevmcore/SourceLocation.h>
+#include <libevmasm/SourceLocation.h>
 
 namespace dev
 {

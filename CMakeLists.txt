@@ -22,7 +22,7 @@ file(GLOB HEADERS "*.h")
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
-target_link_libraries(${EXECUTABLE} evmcore)
+target_link_libraries(${EXECUTABLE} evmasm)
 target_link_libraries(${EXECUTABLE} devcrypto)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )

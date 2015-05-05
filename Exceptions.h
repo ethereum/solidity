@@ -25,7 +25,7 @@
 #include <string>
 #include <utility>
 #include <libdevcore/Exceptions.h>
-#include <libevmcore/SourceLocation.h>
+#include <libevmasm/SourceLocation.h>
 
 namespace dev
 {

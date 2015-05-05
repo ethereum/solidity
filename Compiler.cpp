@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libevmcore/Instruction.h>
-#include <libevmcore/Assembly.h>
+#include <libevmasm/Assembly.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/CompilerUtils.h>

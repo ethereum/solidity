@@ -22,7 +22,7 @@
 
 #include <vector>
 #include <libdevcore/Log.h>
-#include <libevmcore/SourceLocation.h>
+#include <libevmasm/SourceLocation.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Exceptions.h>

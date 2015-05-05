@@ -26,7 +26,7 @@
 #include <functional>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/CompilerContext.h>
-#include <libevmcore/Assembly.h>
+#include <libevmasm/Assembly.h>
 
 namespace dev {
 namespace solidity {
