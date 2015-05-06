@@ -71,13 +71,6 @@ public:
 	/// @returns the resulting items after optimization.
 	AssemblyItems getOptimizedItems();
 
-	/// Streams debugging information to @a _out.
-	std::ostream& stream(
-		std::ostream& _out,
-		std::map<int, Id> _initialStack = std::map<int, Id>(),
-		std::map<int, Id> _targetStack = std::map<int, Id>()
-	) const;
-
 private:
 	/// Feeds the item into the system for analysis.
 	void feedItem(AssemblyItem const& _item, bool _copyItem = false);
@@ -134,8 +127,9 @@ private:
 	/// @note throws an exception if it is not on the stack.
 	int classElementPosition(Id _id) const;
 
-	/// @returns true if @a _element can be removed - in general or, if given, while computing @a _result.
-	bool canBeRemoved(Id _element, Id _result = Id(-1));
+	/// @returns true if the copy of @a _element can be removed from stack position _fromPosition
+	/// - in general or, if given, while computing @a _result.
+	bool canBeRemoved(Id _element, Id _result = Id(-1), int _fromPosition = c_invalidPosition);
 
 	/// Appends code to remove the topmost stack element if it can be removed.
 	bool removeStackTopIfPossible();
@@ -167,6 +161,7 @@ private:
 	std::map<std::pair<StoreOperation::Target, Id>, StoreOperations> m_storeOperations;
 	/// The set of equivalence classes that should be present on the stack at the end.
 	std::set<Id> m_finalClasses;
+	std::map<int, Id> m_targetStack;
 };
 
 template <class _AssemblyItemIterator>
@@ -175,6 +170,7 @@ _AssemblyItemIterator CommonSubexpressionEliminator::feedItems(
 	_AssemblyItemIterator _end
 )
 {
+	assertThrow(!m_breakingItem, OptimizerException, "Invalid use of CommonSubexpressionEliminator.");
 	for (; _iterator != _end && !SemanticInformation::breaksCSEAnalysisBlock(*_iterator); ++_iterator)
 		feedItem(*_iterator);
 	if (_iterator != _end)

@@ -142,7 +142,7 @@ void ControlFlowGraph::removeUnusedBlocks()
 		BasicBlock const& block = m_blocks.at(blocksToProcess.back());
 		blocksToProcess.pop_back();
 		for (BlockId tag: block.pushedTags)
-			if (!neededBlocks.count(tag))
+			if (!neededBlocks.count(tag) && m_blocks.count(tag))
 			{
 				neededBlocks.insert(tag);
 				blocksToProcess.push_back(tag);
@@ -191,12 +191,12 @@ void ControlFlowGraph::setPrevLinks()
 		if (push.type() != PushTag)
 			continue;
 		BlockId nextId(push.data());
-		if (m_blocks.at(nextId).prev)
+		if (m_blocks.count(nextId) && m_blocks.at(nextId).prev)
 			continue;
 		bool hasLoop = false;
-		for (BlockId id = nextId; id && !hasLoop; id = m_blocks.at(id).next)
+		for (BlockId id = nextId; id && m_blocks.count(id) && !hasLoop; id = m_blocks.at(id).next)
 			hasLoop = (id == blockId);
-		if (hasLoop)
+		if (hasLoop || !m_blocks.count(nextId))
 			continue;
 
 		m_blocks[nextId].prev = blockId;
@@ -225,6 +225,8 @@ void ControlFlowGraph::gatherKnowledge()
 	{
 		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
 		assertThrow(!!workQueue.back().first, OptimizerException, "");
+		if (!m_blocks.count(workQueue.back().first))
+			continue; // too bad, we do not know the tag, probably an invalid jump
 		BasicBlock& block = m_blocks.at(workQueue.back().first);
 		KnownStatePointer state = workQueue.back().second;
 		workQueue.pop_back();
@@ -281,6 +283,15 @@ void ControlFlowGraph::gatherKnowledge()
 		)
 			workQueue.push_back(make_pair(block.next, state->copy()));
 	}
+
+	// Remove all blocks we never visited here. This might happen because a tag is pushed but
+	// never used for a JUMP.
+	// Note that this invalidates some contents of pushedTags
+	for (auto it = m_blocks.begin(); it != m_blocks.end();)
+		if (!it->second.startState)
+			m_blocks.erase(it++);
+		else
+			it++;
 }
 
 BasicBlocks ControlFlowGraph::rebuildCode()
@@ -288,7 +299,8 @@ BasicBlocks ControlFlowGraph::rebuildCode()
 	map<BlockId, unsigned> pushes;
 	for (auto& idAndBlock: m_blocks)
 		for (BlockId ref: idAndBlock.second.pushedTags)
-			pushes[ref]++;
+			if (m_blocks.count(ref))
+				pushes[ref]++;
 
 	set<BlockId> blocksToAdd;
 	for (auto it: m_blocks)

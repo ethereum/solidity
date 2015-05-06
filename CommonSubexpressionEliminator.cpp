@@ -45,16 +45,22 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	for (int height = minHeight; height <= m_state.stackHeight(); ++height)
 		targetStackContents[height] = m_state.stackElement(height, SourceLocation());
 
-	// Debug info:
-	//stream(cout, initialStackContents, targetStackContents);
-
 	AssemblyItems items = CSECodeGenerator(m_state.expressionClasses(), m_storeOperations).generateCode(
 		m_initialState.stackHeight(),
 		initialStackContents,
 		targetStackContents
 	);
 	if (m_breakingItem)
+	{
 		items.push_back(*m_breakingItem);
+		m_state.feedItem(*m_breakingItem);
+	}
+
+	// cleanup
+	m_initialState = m_state;
+	m_breakingItem = nullptr;
+	m_storeOperations.clear();
+
 	return items;
 }
 
@@ -113,6 +119,7 @@ AssemblyItems CSECodeGenerator::generateCode(
 {
 	m_stackHeight = _initialStackHeight;
 	m_stack = _initialStack;
+	m_targetStack = _targetStackContents;
 	for (auto const& item: m_stack)
 		if (!m_classPositions.count(item.second))
 			m_classPositions[item.second] = item.first;
@@ -122,7 +129,7 @@ AssemblyItems CSECodeGenerator::generateCode(
 	// generate the dependency graph starting from final storage and memory writes and target stack contents
 	for (auto const& p: m_storeOperations)
 		addDependencies(p.second.back().expression);
-	for (auto const& targetItem: _targetStackContents)
+	for (auto const& targetItem: m_targetStack)
 	{
 		m_finalClasses.insert(targetItem.second);
 		addDependencies(targetItem.second);
@@ -141,8 +148,10 @@ AssemblyItems CSECodeGenerator::generateCode(
 			generateClassElement(seqAndId.second, true);
 
 	// generate the target stack elements
-	for (auto const& targetItem: _targetStackContents)
+	for (auto const& targetItem: m_targetStack)
 	{
+		if (m_stack.count(targetItem.first) && m_stack.at(targetItem.first) == targetItem.second)
+			continue; // already there
 		int position = generateClassElement(targetItem.second);
 		assertThrow(position != c_invalidPosition, OptimizerException, "");
 		if (position == targetItem.first)
@@ -164,21 +173,24 @@ AssemblyItems CSECodeGenerator::generateCode(
 
 	// check validity
 	int finalHeight = 0;
-	if (!_targetStackContents.empty())
+	if (!m_targetStack.empty())
 		// have target stack, so its height should be the final height
-		finalHeight = (--_targetStackContents.end())->first;
+		finalHeight = (--m_targetStack.end())->first;
 	else if (!_initialStack.empty())
 		// no target stack, only erase the initial stack
 		finalHeight = _initialStack.begin()->first - 1;
 	else
 		// neither initial no target stack, no change in height
-		finalHeight = 0;
+		finalHeight = _initialStackHeight;
 	assertThrow(finalHeight == m_stackHeight, OptimizerException, "Incorrect final stack height.");
+
 	return m_generatedItems;
 }
 
 void CSECodeGenerator::addDependencies(Id _c)
 {
+	if (m_classPositions.count(_c))
+		return; // it is already on the stack
 	if (m_neededBy.count(_c))
 		return; // we already computed the dependencies for _c
 	ExpressionClasses::Expression expr = m_expressionClasses.representative(_c);
@@ -340,7 +352,7 @@ int CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 		// this will not append a swap but remove the one that is already there
 		appendOrRemoveSwap(m_stackHeight - 1, location);
 	for (auto arg: arguments)
-		if (canBeRemoved(arg, _c))
+		if (m_classPositions[arg] != c_invalidPosition && canBeRemoved(arg, _c))
 			m_classPositions[arg] = c_invalidPosition;
 	for (size_t i = 0; i < arguments.size(); ++i)
 		m_stack.erase(m_stackHeight - i);
@@ -371,13 +383,22 @@ int CSECodeGenerator::classElementPosition(Id _id) const
 	return m_classPositions.at(_id);
 }
 
-bool CSECodeGenerator::canBeRemoved(Id _element, Id _result)
+bool CSECodeGenerator::canBeRemoved(Id _element, Id _result, int _fromPosition)
 {
-	// Returns false if _element is finally needed or is needed by a class that has not been
-	// computed yet. Note that m_classPositions also includes classes that were deleted in the meantime.
-	if (m_finalClasses.count(_element))
-		return false;
+	// Default for _fromPosition is the canonical position of the element.
+	if (_fromPosition == c_invalidPosition)
+		_fromPosition = classElementPosition(_element);
 
+	bool isCopy = _fromPosition != classElementPosition(_element);
+	if (m_finalClasses.count(_element))
+		// It is part of the target stack. It can be removed if it is a copy that is not in the target position.
+		return isCopy && (!m_targetStack.count(_fromPosition) || m_targetStack[_fromPosition] != _element);
+	else if (isCopy)
+		// It is only a copy, can be removed.
+		return true;
+
+	// Can be removed unless it is needed by a class that has not been computed yet.
+	// Note that m_classPositions also includes classes that were deleted in the meantime.
 	auto range = m_neededBy.equal_range(_element);
 	for (auto it = range.first; it != range.second; ++it)
 		if (it->second != _result && !m_classPositions.count(it->second))
@@ -391,7 +412,7 @@ bool CSECodeGenerator::removeStackTopIfPossible()
 		return false;
 	assertThrow(m_stack.count(m_stackHeight) > 0, OptimizerException, "");
 	Id top = m_stack[m_stackHeight];
-	if (!canBeRemoved(top))
+	if (!canBeRemoved(top, Id(-1), m_stackHeight))
 		return false;
 	m_generatedItems.push_back(AssemblyItem(Instruction::POP));
 	m_stack.erase(m_stackHeight);
