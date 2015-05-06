@@ -288,7 +288,7 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 				{
 					addressOptions = _expectedStateOptions.at(a.first);
 				}
-				catch(std::out_of_range)
+				catch(std::out_of_range const&)
 				{
 					BOOST_ERROR("expectedStateOptions map does not match expectedState in checkExpectedState!");
 					break;
@@ -707,10 +707,9 @@ Options::Options()
 	{
 		auto arg = std::string{argv[i]};
 		if (arg == "--jit")
-		{
-			jit = true;
 			eth::VMFactory::setKind(eth::VMKind::JIT);
-		}
+		else if (arg == "--vm=smart")
+			eth::VMFactory::setKind(eth::VMKind::Smart);
 		else if (arg == "--vmtrace")
 			vmtrace = true;
 		else if (arg == "--filltests")
