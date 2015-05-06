@@ -23,6 +23,8 @@
 #pragma once
 
 #include <string>
+#include <functional>
+#include <vector>
 #include <libsolidity/AST.h>
 
 namespace dev
@@ -216,6 +218,48 @@ protected:
 	/// Generic function called by default for each node, to be overridden by derived classes
 	/// if behaviour unspecific to a node type is desired.
 	virtual void endVisitNode(ASTNode const&) { }
+};
+
+/**
+ * Utility class that visits the AST in depth-first order and calls a function on each node and each edge.
+ * Child nodes are only visited if the node callback of the parent returns true.
+ * The node callback of a parent is called before any edge or node callback involving the children.
+ * The edge callbacks of all children are called before the edge callback of the parent.
+ * This way, the node callback can be used as an initializing callback and the edge callbacks can be
+ * used to compute a "reduce" function.
+ */
+class ASTReduce: public ASTConstVisitor
+{
+public:
+	/**
+	 * Constructs a new ASTReduce object with the given callback functions.
+	 * @param _onNode called for each node, before its child edges and nodes, should return true to descend deeper
+	 * @param _onEdge called for each edge with (parent, child)
+	 */
+	ASTReduce(
+		std::function<bool(ASTNode const&)> _onNode,
+		std::function<void(ASTNode const&, ASTNode const&)> _onEdge
+	): m_onNode(_onNode), m_onEdge(_onEdge)
+	{
+	}
+
+protected:
+	bool visitNode(ASTNode const& _node) override
+	{
+		m_parents.push_back(&_node);
+		return m_onNode(_node);
+	}
+	void endVisitNode(ASTNode const& _node) override
+	{
+		m_parents.pop_back();
+		if (!m_parents.empty())
+			m_onEdge(*m_parents.back(), _node);
+	}
+
+private:
+	std::vector<ASTNode const*> m_parents;
+	std::function<bool(ASTNode const&)> m_onNode;
+	std::function<void(ASTNode const&, ASTNode const&)> m_onEdge;
 };
 
 }
