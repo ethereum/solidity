@@ -17,7 +17,7 @@ target_link_libraries(${EXECUTABLE} ${Boost_FILESYSTEM_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${Boost_PROGRAM_OPTIONS_LIBRARIES})
 target_link_libraries(${EXECUTABLE} solidity)
 
-install( TARGETS ${EXECUTABLE} DESTINATION bin )
+eth_install_executable(${EXECUTABLE})
 
 add_library(soljson jsonCompiler.cpp ${HEADERS})
 target_link_libraries(soljson solidity)
