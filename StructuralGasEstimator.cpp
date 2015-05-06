@@ -31,7 +31,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::solidity;
 
-map<ASTNode const*, GasMeter::GasConsumption[2]> StructuralGasEstimator::performEstimation(
+StructuralGasEstimator::ASTGasConsumptionSelfAccumulated StructuralGasEstimator::performEstimation(
 	AssemblyItems const& _items,
 	vector<ASTNode const*> const& _ast
 )
@@ -42,7 +42,7 @@ map<ASTNode const*, GasMeter::GasConsumption[2]> StructuralGasEstimator::perform
 	for (auto const& item: _items)
 		particularCosts[item.getLocation()] += meter.estimateMax(item);
 
-	map<ASTNode const*, GasMeter::GasConsumption[2]> gasCosts;
+	ASTGasConsumptionSelfAccumulated gasCosts;
 	auto onNode = [&](ASTNode const& _node)
 	{
 		gasCosts[&_node][0] = gasCosts[&_node][1] = particularCosts[_node.getLocation()];
@@ -60,7 +60,7 @@ map<ASTNode const*, GasMeter::GasConsumption[2]> StructuralGasEstimator::perform
 }
 
 map<ASTNode const*, GasMeter::GasConsumption> StructuralGasEstimator::breakToStatementLevel(
-	map<ASTNode const*, GasMeter::GasConsumption[2]> const& _gasCosts,
+	ASTGasConsumptionSelfAccumulated const& _gasCosts,
 	vector<ASTNode const*> const& _roots
 )
 {

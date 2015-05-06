@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <map>
+#include <array>
 #include <libsolidity/ASTForward.h>
 #include <libevmasm/GasMeter.h>
 #include <libevmasm/Assembly.h>
@@ -37,11 +38,13 @@ class StructuralGasEstimator
 {
 public:
 	using ASTGasConsumption = std::map<ASTNode const*, eth::GasMeter::GasConsumption>;
+	using ASTGasConsumptionSelfAccumulated =
+		std::map<ASTNode const*, std::array<eth::GasMeter::GasConsumption, 2>>;
 
 	/// Estimates the gas consumption for every assembly item in the given assembly and stores
 	/// it by source location.
 	/// @returns a mapping from each AST node to a pair of its particular and syntactically accumulated gas costs.
-	std::map<ASTNode const*, eth::GasMeter::GasConsumption[2]> performEstimation(
+	ASTGasConsumptionSelfAccumulated performEstimation(
 		eth::AssemblyItems const& _items,
 		std::vector<ASTNode const*> const& _ast
 	);
@@ -50,7 +53,7 @@ public:
 	/// 1. source locations of statements that do not contain other statements
 	/// 2. maximal source locations that do not overlap locations coming from the first rule
 	ASTGasConsumption breakToStatementLevel(
-		std::map<ASTNode const*, eth::GasMeter::GasConsumption[2]> const& _gasCosts,
+		ASTGasConsumptionSelfAccumulated const& _gasCosts,
 		std::vector<ASTNode const*> const& _roots
 	);
 };
