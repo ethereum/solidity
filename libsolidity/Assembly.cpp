@@ -17,20 +17,20 @@
 /**
  * @author Lefteris Karapetsas <lefteris@ethdev.com>
  * @date 2015
- * Unit tests for Assembly Items from evmcore/Assembly.h
+ * Unit tests for Assembly Items from evmasm/Assembly.h
  */
 
 #include <string>
 #include <iostream>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
-#include <libevmcore/SourceLocation.h>
+#include <libevmasm/SourceLocation.h>
+#include <libevmasm/Assembly.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/AST.h>
-#include <libevmcore/Assembly.h>
 
 using namespace std;
 using namespace dev::eth;
