@@ -23,9 +23,6 @@
 
 #include <thread>
 #include <chrono>
-
-#include <boost/filesystem/path.hpp>
-
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
@@ -117,6 +114,32 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 		importState(_o["post"].get_obj(), m_statePost);
 		m_environment.sub.logs = importLog(_o["logs"].get_array());
 	}
+}
+
+json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
+{
+	static const set<string> hashes {"bloom" , "coinbase", "hash", "mixHash", "parentHash", "receiptTrie",
+									 "stateRoot", "transactionsTrie", "uncleHash", "currentCoinbase",
+									 "previousHash", "to", "address", "caller", "origin", "secretKey", "data"};
+
+	for (auto& i: _o)
+	{
+		std::string key = i.first;
+		if (hashes.count(key))
+			continue;
+
+		std::string str;
+		json_spirit::mValue value = i.second;
+
+		if (value.type() == json_spirit::int_type)
+			str = toString(value.get_int());
+		else if (value.type() == json_spirit::str_type)
+			str = value.get_str();
+		else continue;
+
+		_o[key] = (str.substr(0, 2) == "0x") ? str : toCompactHex(toInt(str), HexPrefix::Add, 1);
+	}
+	return _o;
 }
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
@@ -304,7 +327,7 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
-	m_TestObject["out"] = "0x" + toHex(_output);
+	m_TestObject["out"] = toHex(_output, 2, HexPrefix::Add);
 
 	// export logs
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
@@ -325,29 +348,62 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 
 	// export pre state
 	m_TestObject["pre"] = fillJsonWithState(m_statePre);
+	m_TestObject["env"] = makeAllFieldsHex(m_TestObject["env"].get_obj());
+	m_TestObject["transaction"] = makeAllFieldsHex(m_TestObject["transaction"].get_obj());
+}
+
+json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
+{
+	json_spirit::mObject txObject;
+	txObject["nonce"] = toCompactHex(_txn.nonce(), HexPrefix::Add, 1);
+	txObject["data"] = toHex(_txn.data(), 2, HexPrefix::Add);
+	txObject["gasLimit"] = toCompactHex(_txn.gas(), HexPrefix::Add, 1);
+	txObject["gasPrice"] = toCompactHex(_txn.gasPrice(), HexPrefix::Add, 1);
+	txObject["r"] = toCompactHex(_txn.signature().r, HexPrefix::Add, 1);
+	txObject["s"] = toCompactHex(_txn.signature().s, HexPrefix::Add, 1);
+	txObject["v"] = toCompactHex(_txn.signature().v + 27, HexPrefix::Add, 1);
+	txObject["to"] = _txn.isCreation() ? "" : toString(_txn.receiveAddress());
+	txObject["value"] = toCompactHex(_txn.value(), HexPrefix::Add, 1);
+	return txObject;
 }
 
 json_spirit::mObject fillJsonWithState(State _state)
 {
-	// export pre state
 	json_spirit::mObject oState;
-
 	for (auto const& a: _state.addresses())
 	{
 		json_spirit::mObject o;
-		o["balance"] = toString(_state.balance(a.first));
-		o["nonce"] = toString(_state.transactionsFrom(a.first));
+		o["balance"] = toCompactHex(_state.balance(a.first), HexPrefix::Add, 1);
+		o["nonce"] = toCompactHex(_state.transactionsFrom(a.first), HexPrefix::Add, 1);
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
-				store["0x"+toHex(toCompactBigEndian(s.first))] = "0x"+toHex(toCompactBigEndian(s.second));
+				store[toCompactHex(s.first, HexPrefix::Add, 1)] = toCompactHex(s.second, HexPrefix::Add, 1);
 			o["storage"] = store;
 		}
-		o["code"] = "0x" + toHex(_state.code(a.first));
-
+		o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);
 		oState[toString(a.first)] = o;
 	}
 	return oState;
+}
+
+json_spirit::mArray exportLog(eth::LogEntries _logs)
+{
+	json_spirit::mArray ret;
+	if (_logs.size() == 0) return ret;
+	for (LogEntry const& l: _logs)
+	{
+		json_spirit::mObject o;
+		o["address"] = toString(l.address);
+		json_spirit::mArray topics;
+		for (auto const& t: l.topics)
+			topics.push_back(toString(t));
+		o["topics"] = topics;
+		o["data"] = toHex(l.data, 2, HexPrefix::Add);
+		o["bloom"] = toString(l.bloom());
+		ret.push_back(o);
+	}
+	return ret;
 }
 
 u256 toInt(json_spirit::mValue const& _v)
@@ -430,25 +486,6 @@ LogEntries importLog(json_spirit::mArray& _a)
 	return logEntries;
 }
 
-json_spirit::mArray exportLog(eth::LogEntries _logs)
-{
-	json_spirit::mArray ret;
-	if (_logs.size() == 0) return ret;
-	for (LogEntry const& l: _logs)
-	{
-		json_spirit::mObject o;
-		o["address"] = toString(l.address);
-		json_spirit::mArray topics;
-		for (auto const& t: l.topics)
-			topics.push_back(toString(t));
-		o["topics"] = topics;
-		o["data"] = "0x" + toHex(l.data);
-		o["bloom"] = toString(l.bloom());
-		ret.push_back(o);
-	}
-	return ret;
-}
-
 void checkOutput(bytes const& _output, json_spirit::mObject& _o)
 {
 	int j = 0;
@@ -514,6 +551,8 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 
 void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
+	Options::get(); // parse command line options, e.g. to enable JIT
+
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
@@ -564,7 +603,7 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests)
+void executeTests(const string& _name, const string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	string testPath = getTestPath();
 	testPath += _testPathAppendix;
@@ -579,9 +618,8 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 			cnote << "Populating tests...";
 			json_spirit::mValue v;
 			boost::filesystem::path p(__FILE__);
-			boost::filesystem::path dir = p.parent_path();
-			string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
+			string s = asString(dev::contents(_pathToFiller.string() + "/" + _name + "Filler.json"));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + _name + "Filler.json is empty.");
 			json_spirit::read_string(s, v);
 			doTests(v, true);
 			writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
@@ -677,11 +715,10 @@ Options::Options()
 			vmtrace = true;
 		else if (arg == "--filltests")
 			fillTests = true;
-		else if (arg.compare(0, 7, "--stats") == 0)
+		else if (arg == "--stats" && i + 1 < argc)
 		{
 			stats = true;
-			if (arg.size() > 7)
-				statsOutFile = arg.substr(8); // skip '=' char
+			statsOutFile = argv[i + 1];
 		}
 		else if (arg == "--performance")
 			performance = true;
@@ -702,6 +739,11 @@ Options::Options()
 			memory = true;
 			inputLimits = true;
 			bigData = true;
+		}
+		else if (arg == "--singletest" && i + 1 < argc)
+		{
+			singleTest = true;
+			singleTestName = argv[i + 1];
 		}
 	}
 }
