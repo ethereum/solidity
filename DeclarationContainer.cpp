@@ -37,6 +37,7 @@ Declaration const* DeclarationContainer::conflictingDeclaration(Declaration cons
 		declarations += m_declarations.at(name);
 	if (m_invisibleDeclarations.count(name))
 		declarations += m_invisibleDeclarations.at(name);
+
 	if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 	{
 		// check that all other declarations with the same name are functions
@@ -66,14 +67,13 @@ bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, 
 		return false;
 
 	if (_invisible)
-		m_invisibleDeclarations[name].insert(&_declaration);
+		m_invisibleDeclarations[name].push_back(&_declaration);
 	else
-		m_declarations[name].insert(&_declaration);
-
+		m_declarations[name].push_back(&_declaration);
 	return true;
 }
 
-set<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
+std::vector<const Declaration *> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	auto result = m_declarations.find(_name);
@@ -81,5 +81,5 @@ set<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name
 		return result->second;
 	if (_recursive && m_enclosingContainer)
 		return m_enclosingContainer->resolveName(_name, true);
-	return set<Declaration const*>({});
+	return vector<Declaration const*>({});
 }

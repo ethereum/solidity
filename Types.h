@@ -617,6 +617,7 @@ public:
 	/// @returns true if this function can take the given argument types (possibly
 	/// after implicit conversion).
 	bool canTakeArguments(TypePointers const& _arguments) const;
+	/// @returns true if the types of parameters are equal(does't check return parameter types)
 	bool hasEqualArgumentTypes(FunctionType const& _other) const;
 
 	Location const& getLocation() const { return m_location; }

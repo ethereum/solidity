@@ -48,17 +48,17 @@ public:
 	/// @param _update if true, replaces a potential declaration that is already present
 	/// @returns false if the name was already declared.
 	bool registerDeclaration(Declaration const& _declaration, bool _invisible = false, bool _update = false);
-	std::set<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false) const;
+	std::vector<Declaration const*> resolveName(ASTString const& _name, bool _recursive = false) const;
 	Declaration const* getEnclosingDeclaration() const { return m_enclosingDeclaration; }
-	std::map<ASTString, std::set<Declaration const*>> const& getDeclarations() const { return m_declarations; }
+	std::map<ASTString, std::vector<Declaration const*>> const& getDeclarations() const { return m_declarations; }
 	/// @returns whether declaration is valid, and if not also returns previous declaration.
 	Declaration const* conflictingDeclaration(Declaration const& _declaration) const;
 
 private:
 	Declaration const* m_enclosingDeclaration;
 	DeclarationContainer const* m_enclosingContainer;
-	std::map<ASTString, std::set<Declaration const*>> m_declarations;
-	std::map<ASTString, std::set<Declaration const*>> m_invisibleDeclarations;
+	std::map<ASTString, std::vector<Declaration const*>> m_declarations;
+	std::map<ASTString, std::vector<Declaration const*>> m_invisibleDeclarations;
 };
 
 }

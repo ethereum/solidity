@@ -53,9 +53,13 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	m_currentScope = &m_scopes[&_contract];
 
 	linearizeBaseContracts(_contract);
-	// we first import non-functions only as we do not yet know the argument types
-	for (ContractDefinition const* base: _contract.getLinearizedBaseContracts())
-		importInheritedScope(*base, false); // import non-functions
+	std::vector<ContractDefinition const*> realBases(
+		++_contract.getLinearizedBaseContracts().begin(),
+		_contract.getLinearizedBaseContracts().end()
+	);
+
+	for (ContractDefinition const* base: realBases)
+		importInheritedScope(*base);
 
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
 		ReferencesResolver resolver(*structDef, *this, &_contract, nullptr);
@@ -80,8 +84,6 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	}
 
 	m_currentScope = &m_scopes[&_contract];
-	for (ContractDefinition const* base: _contract.getLinearizedBaseContracts())
-		importInheritedScope(*base, true); // import functions
 
 	// now resolve references inside the code
 	for (ASTPointer<ModifierDefinition> const& modifier: _contract.getFunctionModifiers())
@@ -115,20 +117,41 @@ void NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 	solAssert(_declaration.getScope() == nullptr, "Updated declaration outside global scope.");
 }
 
-set<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
+vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
 {
 	auto iterator = m_scopes.find(_scope);
 	if (iterator == end(m_scopes))
-		return set<Declaration const*>({});
+		return vector<Declaration const*>({});
 	return iterator->second.resolveName(_name, false);
 }
 
-set<Declaration const*> NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
+vector<Declaration const*> NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
 {
 	return m_currentScope->resolveName(_name, _recursive);
 }
 
-void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base, bool _importFunctions)
+vector<Declaration const*> NameAndTypeResolver::cleanupedDeclarations(Identifier const& _identifier)
+{
+	vector<Declaration const*> result;
+	for (auto declaration : m_currentScope->resolveName(_identifier.getName()))
+	{
+		solAssert(declaration, "");
+		// the declaration is functionDefinition while declarations > 1
+		FunctionDefinition const& functionDefinition = dynamic_cast<FunctionDefinition const&>(*declaration);
+		FunctionType functionType(functionDefinition);
+		for(auto parameter: functionType.getParameterTypes() + functionType.getReturnParameterTypes())
+			if (!parameter)
+				BOOST_THROW_EXCEPTION(
+					DeclarationError() <<
+					errinfo_sourceLocation(_identifier.getLocation()) <<
+					errinfo_comment("Function type can not be used in this context")
+				);
+		//////////delete repitations. check by hasequalparameter types of function type
+	}
+	return result;
+}
+
+void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
 {
 	auto iterator = m_scopes.find(&_base);
 	solAssert(iterator != end(m_scopes), "");
@@ -136,30 +159,7 @@ void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base, 
 		for (auto const& declaration: nameAndDeclaration.second)
 			// Import if it was declared in the base, is not the constructor and is visible in derived classes
 			if (declaration->getScope() == &_base && declaration->isVisibleInDerivedContracts())
-			{
-				auto function = dynamic_cast<FunctionDefinition const*>(declaration);
-				if ((function == nullptr) == _importFunctions)
-					continue;
-				if (!!function)
-				{
-					FunctionType functionType(*function);
-					// only import if a function with the same arguments does not exist yet
-					bool functionWithEqualArgumentsFound = false;
-					for (auto knownDeclaration: m_currentScope->resolveName(nameAndDeclaration.first))
-					{
-						auto knownFunction = dynamic_cast<FunctionDefinition const*>(knownDeclaration);
-						if (!knownFunction)
-							continue; // this is not legal, but will be caught later
-						if (!FunctionType(*knownFunction).hasEqualArgumentTypes(functionType))
-							continue;
-						functionWithEqualArgumentsFound = true;
-						break;
-					}
-					if (functionWithEqualArgumentsFound)
-						continue;
-				}
 				m_currentScope->registerDeclaration(*declaration);
-			}
 }
 
 void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract) const
@@ -465,10 +465,9 @@ bool ReferencesResolver::visit(Identifier& _identifier)
 			errinfo_comment("Undeclared identifier.")
 		);
 	else if (declarations.size() == 1)
-		_identifier.setReferencedDeclaration(**declarations.begin(), m_currentContract);
+		_identifier.setReferencedDeclaration(*declarations.front(), m_currentContract);
 	else
-		// Duplicate declaration will be checked in checkTypeRequirements()
-		_identifier.setOverloadedDeclarations(declarations);
+		_identifier.setOverloadedDeclarations(m_resolver.cleanupedDeclarations(_identifier));
 	return false;
 }
 

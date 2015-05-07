@@ -1217,10 +1217,10 @@ public:
 	}
 	Declaration const& getReferencedDeclaration() const;
 
-	/// Stores a set of possible declarations referenced by this identifier. Has to be resolved
+	/// Stores a possible declarations referenced by this identifier. Has to be resolved
 	/// providing argument types using overloadResolution before the referenced declaration
 	/// is accessed.
-	void setOverloadedDeclarations(std::set<Declaration const*> const& _declarations)
+	void setOverloadedDeclarations(std::vector<Declaration const*> const& _declarations)
 	{
 		m_overloadedDeclarations = _declarations;
 	}
@@ -1237,8 +1237,8 @@ private:
 	/// Stores a reference to the current contract. This is needed because types of base contracts
 	/// change depending on the context.
 	ContractDefinition const* m_currentContract = nullptr;
-	/// A set of overloaded declarations, right now only FunctionDefinition has overloaded declarations.
-	std::set<Declaration const*> m_overloadedDeclarations;
+	/// A vector of overloaded declarations, right now only FunctionDefinition has overloaded declarations.
+	std::vector<Declaration const*> m_overloadedDeclarations;
 };
 
 /**
