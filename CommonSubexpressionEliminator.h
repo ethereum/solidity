@@ -119,10 +119,8 @@ private:
 	void addDependencies(Id _c);
 
 	/// Produce code that generates the given element if it is not yet present.
-	/// @returns the stack position of the element or c_invalidPosition if it does not actually
-	/// generate a value on the stack.
 	/// @param _allowSequenced indicates that sequence-constrained operations are allowed
-	int generateClassElement(Id _c, bool _allowSequenced = false);
+	void generateClassElement(Id _c, bool _allowSequenced = false);
 	/// @returns the position of the representative of the given id on the stack.
 	/// @note throws an exception if it is not on the stack.
 	int classElementPosition(Id _id) const;
@@ -151,8 +149,8 @@ private:
 	std::multimap<Id, Id> m_neededBy;
 	/// Current content of the stack.
 	std::map<int, Id> m_stack;
-	/// Current positions of equivalence classes, equal to c_invalidPosition if already deleted.
-	std::map<Id, int> m_classPositions;
+	/// Current positions of equivalence classes, equal to the empty set if already deleted.
+	std::map<Id, std::set<int>> m_classPositions;
 
 	/// The actual eqivalence class items and how to compute them.
 	ExpressionClasses& m_expressionClasses;
