@@ -130,12 +130,14 @@ vector<Declaration const*> NameAndTypeResolver::getNameFromCurrentScope(ASTStrin
 	return m_currentScope->resolveName(_name, _recursive);
 }
 
-vector<Declaration const*> NameAndTypeResolver::cleanupedDeclarations(Identifier const& _identifier)
+vector<Declaration const*> NameAndTypeResolver::cleanupedDeclarations(
+		Identifier const& _identifier,
+		vector<Declaration const*> const& _declarations
+)
 {
 	vector<Declaration const*> uniqueFunctions;
 
-	auto declarations = m_currentScope->resolveName(_identifier.getName());
-	for (auto it = declarations.begin(); it != declarations.end(); ++it)
+	for (auto it = _declarations.begin(); it != _declarations.end(); ++it)
 	{
 		solAssert(*it, "");
 		// the declaration is functionDefinition while declarations > 1
@@ -480,7 +482,7 @@ bool ReferencesResolver::visit(Identifier& _identifier)
 	else if (declarations.size() == 1)
 		_identifier.setReferencedDeclaration(*declarations.front(), m_currentContract);
 	else
-		_identifier.setOverloadedDeclarations(m_resolver.cleanupedDeclarations(_identifier));
+		_identifier.setOverloadedDeclarations(m_resolver.cleanupedDeclarations(_identifier, declarations));
 	return false;
 }
 

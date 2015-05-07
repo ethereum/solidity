@@ -62,7 +62,7 @@ public:
 	/// resolving phase.
 	std::vector<Declaration const*> getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
-	std::vector<Declaration const*> cleanupedDeclarations(Identifier const& _identifier);
+	std::vector<Declaration const*> cleanupedDeclarations(Identifier const& _identifier, std::vector<Declaration const*> const& _declarations);
 
 private:
 	void reset();
