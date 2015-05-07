@@ -3910,6 +3910,35 @@ BOOST_AUTO_TEST_CASE(external_types_in_calls)
 	BOOST_CHECK(callContractFunction("nonexisting") == encodeArgs(u256(9)));
 }
 
+BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
+{
+	// bug #1798
+	char const* sourceCode = R"(
+		contract init {
+			function isOk() returns (bool) { return false; }
+			bool public ok = false;
+		}
+		contract fix {
+			function isOk() returns (bool) { return true; }
+			bool public ok = true;
+		}
+
+		contract init_fix is init, fix {
+			function checkOk() returns (bool) { return ok; }
+		}
+		contract fix_init is fix, init {
+			function checkOk() returns (bool) { return ok; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "init_fix");
+	BOOST_CHECK(callContractFunction("isOk()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(true));
+
+	compileAndRun(sourceCode, 0, "fix_init");
+	BOOST_CHECK(callContractFunction("isOk()") == encodeArgs(false));
+	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(false));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

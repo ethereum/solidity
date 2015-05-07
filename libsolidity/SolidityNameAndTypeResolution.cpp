@@ -1761,25 +1761,6 @@ BOOST_AUTO_TEST_CASE(uninitialized_var)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(deny_overwriting_of_attributes_when_deriving)
-{
-	// bug #1798
-	char const* sourceCode = R"(
-		contract owned {
-			address owner;
-		}
-
-		contract reg {
-			function owner(bytes32 x) returns (address) {}
-		}
-
-		contract x is owned, reg {
-		}
-	)";
-	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode), "Parsing and Name Resolving Failed");
-	//BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }
