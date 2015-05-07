@@ -36,6 +36,7 @@ StructuralGasEstimator::ASTGasConsumptionSelfAccumulated StructuralGasEstimator:
 	vector<ASTNode const*> const& _ast
 )
 {
+	solAssert(std::count(_ast.begin(), _ast.end(), nullptr) == 0, "");
 	map<SourceLocation, GasMeter::GasConsumption> particularCosts;
 	GasMeter meter;
 
@@ -64,6 +65,7 @@ map<ASTNode const*, GasMeter::GasConsumption> StructuralGasEstimator::breakToSta
 	vector<ASTNode const*> const& _roots
 )
 {
+	solAssert(std::count(_roots.begin(), _roots.end(), nullptr) == 0, "");
 	// first pass: statementDepth[node] is the distance from the deepend statement to node
 	// in direction of the tree root (or undefined if not possible)
 	map<ASTNode const*, int> statementDepth;
