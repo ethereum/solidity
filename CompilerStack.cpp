@@ -257,6 +257,15 @@ bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimiz
 	return stack.compile(_sourceCode, _optimize);
 }
 
+pair<int, int> CompilerStack::positionFromSourceLocation(SourceLocation const& _sourceLocation) const
+{
+	int initLine;
+	int initColumn;
+	tie(initLine, initColumn) = getScanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.start);
+
+	return make_pair(++initLine, ++initColumn);
+}
+
 void CompilerStack::reset(bool _keepSources)
 {
 	m_parseSuccessful = false;
