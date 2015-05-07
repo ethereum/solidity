@@ -132,12 +132,14 @@ vector<Declaration const*> NameAndTypeResolver::getNameFromCurrentScope(ASTStrin
 
 vector<Declaration const*> NameAndTypeResolver::cleanupedDeclarations(Identifier const& _identifier)
 {
-	vector<Declaration const*> result;
-	for (auto declaration : m_currentScope->resolveName(_identifier.getName()))
+	vector<Declaration const*> uniqueFunctions;
+
+	auto declarations = m_currentScope->resolveName(_identifier.getName());
+	for (auto it = declarations.begin(); it != declarations.end(); ++it)
 	{
-		solAssert(declaration, "");
+		solAssert(*it, "");
 		// the declaration is functionDefinition while declarations > 1
-		FunctionDefinition const& functionDefinition = dynamic_cast<FunctionDefinition const&>(*declaration);
+		FunctionDefinition const& functionDefinition = dynamic_cast<FunctionDefinition const&>(**it);
 		FunctionType functionType(functionDefinition);
 		for(auto parameter: functionType.getParameterTypes() + functionType.getReturnParameterTypes())
 			if (!parameter)
@@ -146,9 +148,20 @@ vector<Declaration const*> NameAndTypeResolver::cleanupedDeclarations(Identifier
 					errinfo_sourceLocation(_identifier.getLocation()) <<
 					errinfo_comment("Function type can not be used in this context")
 				);
-		//////////delete repitations. check by hasequalparameter types of function type
+		if (uniqueFunctions.end() == find_if(
+			uniqueFunctions.begin(),
+			uniqueFunctions.end(),
+			[&](Declaration const* d)
+			{
+				FunctionDefinition const& newFunctionDefinition = dynamic_cast<FunctionDefinition const&>(*d);
+				FunctionType newFunctionType(newFunctionDefinition);
+
+				return functionType.hasEqualArgumentTypes(newFunctionType);
+			}
+		))
+			uniqueFunctions.push_back(*it);
 	}
-	return result;
+	return uniqueFunctions;
 }
 
 void NameAndTypeResolver::importInheritedScope(ContractDefinition const& _base)
