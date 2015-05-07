@@ -257,13 +257,16 @@ bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimiz
 	return stack.compile(_sourceCode, _optimize);
 }
 
-pair<int, int> CompilerStack::positionFromSourceLocation(SourceLocation const& _sourceLocation) const
+tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocation const& _sourceLocation) const
 {
-	int initLine;
-	int initColumn;
-	tie(initLine, initColumn) = getScanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.start);
+	int startLine;
+	int startColumn;
+	int endLine;
+	int endColumn;
+	tie(startLine, startColumn) = getScanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.start);
+	tie(endLine, endColumn) = getScanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.end);
 
-	return make_pair(++initLine, ++initColumn);
+	return make_tuple(++startLine, ++startColumn, ++endLine, ++endColumn);
 }
 
 void CompilerStack::reset(bool _keepSources)
