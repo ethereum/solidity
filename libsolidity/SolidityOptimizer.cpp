@@ -251,6 +251,27 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	compareVersions("f(uint256)", 36);
 }
 
+BOOST_AUTO_TEST_CASE(storage_write_in_loops)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint d;
+			function f(uint a) returns (uint r) {
+				var x = d;
+				for (uint i = 1; i < a * a; i++) {
+					r = d;
+					d = i;
+				}
+
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(uint256)", 0);
+	compareVersions("f(uint256)", 10);
+	compareVersions("f(uint256)", 36);
+}
+
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
 	eth::KnownState state;
