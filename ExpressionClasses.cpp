@@ -37,6 +37,7 @@ using namespace dev::eth;
 
 bool ExpressionClasses::Expression::operator<(ExpressionClasses::Expression const& _other) const
 {
+	assertThrow(!!item && !!_other.item, OptimizerException, "");
 	auto type = item->type();
 	auto otherType = _other.item->type();
 	return std::tie(type, item->data(), arguments, sequenceNumber) <
@@ -56,12 +57,15 @@ ExpressionClasses::Id ExpressionClasses::find(
 	exp.arguments = _arguments;
 	exp.sequenceNumber = _sequenceNumber;
 
-	if (SemanticInformation::isCommutativeOperation(_item))
-		sort(exp.arguments.begin(), exp.arguments.end());
+	if (SemanticInformation::isDeterministic(_item))
+	{
+		if (SemanticInformation::isCommutativeOperation(_item))
+			sort(exp.arguments.begin(), exp.arguments.end());
 
-	auto it = m_expressions.find(exp);
-	if (it != m_expressions.end())
-		return it->id;
+		auto it = m_expressions.find(exp);
+		if (it != m_expressions.end())
+			return it->id;
+	}
 
 	if (_copyItem)
 		exp.item = storeItem(_item);
@@ -122,10 +126,16 @@ string ExpressionClasses::fullDAGToString(ExpressionClasses::Id _id) const
 {
 	Expression const& expr = representative(_id);
 	stringstream str;
-	str << dec << expr.id << ":" << *expr.item << "(";
-	for (Id arg: expr.arguments)
-		str << fullDAGToString(arg) << ",";
-	str << ")";
+	str << dec << expr.id << ":";
+	if (expr.item)
+	{
+		str << *expr.item << "(";
+		for (Id arg: expr.arguments)
+			str << fullDAGToString(arg) << ",";
+		str << ")";
+	}
+	else
+		str << " UNIQUE";
 	return str.str();
 }
 
@@ -279,7 +289,11 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, 
 {
 	static Rules rules;
 
-	if (_expr.item->type() != Operation)
+	if (
+		!_expr.item ||
+		_expr.item->type() != Operation ||
+		!SemanticInformation::isDeterministic(*_expr.item)
+	)
 		return -1;
 
 	for (auto const& rule: rules.rules())
@@ -337,7 +351,7 @@ void Pattern::setMatchGroup(unsigned _group, map<unsigned, Expression const*>& _
 
 bool Pattern::matches(Expression const& _expr, ExpressionClasses const& _classes) const
 {
-	if (!matchesBaseItem(*_expr.item))
+	if (!matchesBaseItem(_expr.item))
 		return false;
 	if (m_matchGroup)
 	{
@@ -387,13 +401,15 @@ string Pattern::toString() const
 	return s.str();
 }
 
-bool Pattern::matchesBaseItem(AssemblyItem const& _item) const
+bool Pattern::matchesBaseItem(AssemblyItem const* _item) const
 {
 	if (m_type == UndefinedItem)
 		return true;
-	if (m_type != _item.type())
+	if (!_item)
 		return false;
-	if (m_requireDataMatch && m_data != _item.data())
+	if (m_type != _item->type())
+		return false;
+	if (m_requireDataMatch && m_data != _item->data())
 		return false;
 	return true;
 }

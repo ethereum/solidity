@@ -23,9 +23,11 @@
 
 #include <libevmasm/ControlFlowGraph.h>
 #include <map>
+#include <memory>
 #include <libevmasm/Exceptions.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/SemanticInformation.h>
+#include <libevmasm/KnownState.h>
 
 using namespace std;
 using namespace dev;
@@ -36,16 +38,17 @@ BlockId::BlockId(u256 const& _id): m_id(_id)
 	assertThrow( _id < initial().m_id, OptimizerException, "Tag number too large.");
 }
 
-AssemblyItems ControlFlowGraph::optimisedItems()
+BasicBlocks ControlFlowGraph::optimisedBlocks()
 {
 	if (m_items.empty())
-		return m_items;
+		return BasicBlocks();
 
 	findLargestTag();
 	splitBlocks();
 	resolveNextLinks();
 	removeUnusedBlocks();
 	setPrevLinks();
+	gatherKnowledge();
 
 	return rebuildCode();
 }
@@ -209,7 +212,78 @@ void ControlFlowGraph::setPrevLinks()
 	}
 }
 
-AssemblyItems ControlFlowGraph::rebuildCode()
+void ControlFlowGraph::gatherKnowledge()
+{
+	// @todo actually we know that memory is filled with zeros at the beginning,
+	// we could make use of that.
+	KnownStatePointer emptyState = make_shared<KnownState>();
+	ExpressionClasses& expr = emptyState->expressionClasses();
+	bool unknownJumpEncountered = false;
+
+	vector<pair<BlockId, KnownStatePointer>> workQueue({make_pair(BlockId::initial(), emptyState->copy())});
+	while (!workQueue.empty())
+	{
+		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
+		assertThrow(!!workQueue.back().first, OptimizerException, "");
+		BasicBlock& block = m_blocks.at(workQueue.back().first);
+		KnownStatePointer state = workQueue.back().second;
+		workQueue.pop_back();
+		if (block.startState)
+		{
+			state->reduceToCommonKnowledge(*block.startState);
+			if (*state == *block.startState)
+				continue;
+		}
+
+		block.startState = state->copy();
+		//@todo we might know the return address for the first pass, but not anymore for the second,
+		// -> store knowledge about tags as a union.
+
+		// Feed all items except for the final jump yet because it will erase the target tag.
+		unsigned pc = block.begin;
+		while (pc < block.end && !SemanticInformation::altersControlFlow(m_items.at(pc)))
+			state->feedItem(m_items.at(pc++));
+
+		if (
+			block.endType == BasicBlock::EndType::JUMP ||
+			block.endType == BasicBlock::EndType::JUMPI
+		)
+		{
+			assertThrow(block.begin <= pc && pc == block.end - 1, OptimizerException, "");
+			//@todo in the case of JUMPI, add knowledge about the condition to the state
+			// (for both values of the condition)
+			BlockId nextBlock = expressionClassToBlockId(
+				state->stackElement(state->stackHeight(), SourceLocation()),
+				expr
+			);
+			state->feedItem(m_items.at(pc++));
+			if (nextBlock)
+				workQueue.push_back(make_pair(nextBlock, state->copy()));
+			else if (!unknownJumpEncountered)
+			{
+				// We do not know where this jump goes, so we have to reset the states of all
+				// JUMPDESTs.
+				unknownJumpEncountered = true;
+				for (auto const& it: m_blocks)
+					if (it.second.begin < it.second.end && m_items[it.second.begin].type() == Tag)
+						workQueue.push_back(make_pair(it.first, emptyState->copy()));
+			}
+		}
+		else if (block.begin <= pc && pc < block.end)
+			state->feedItem(m_items.at(pc++));
+		assertThrow(block.end <= block.begin || pc == block.end, OptimizerException, "");
+
+		block.endState = state;
+
+		if (
+			block.endType == BasicBlock::EndType::HANDOVER ||
+			block.endType == BasicBlock::EndType::JUMPI
+		)
+			workQueue.push_back(make_pair(block.next, state->copy()));
+	}
+}
+
+BasicBlocks ControlFlowGraph::rebuildCode()
 {
 	map<BlockId, unsigned> pushes;
 	for (auto& idAndBlock: m_blocks)
@@ -220,7 +294,7 @@ AssemblyItems ControlFlowGraph::rebuildCode()
 	for (auto it: m_blocks)
 		blocksToAdd.insert(it.first);
 	set<BlockId> blocksAdded;
-	AssemblyItems code;
+	BasicBlocks blocks;
 
 	for (
 		BlockId blockId = BlockId::initial();
@@ -233,23 +307,34 @@ AssemblyItems ControlFlowGraph::rebuildCode()
 			blockId = m_blocks.at(blockId).prev;
 		for (; blockId; blockId = m_blocks.at(blockId).next)
 		{
-			BasicBlock const& block = m_blocks.at(blockId);
+			BasicBlock& block = m_blocks.at(blockId);
 			blocksToAdd.erase(blockId);
 			blocksAdded.insert(blockId);
 
-			auto begin = m_items.begin() + block.begin;
-			auto end = m_items.begin() + block.end;
-			if (begin == end)
+			if (block.begin == block.end)
 				continue;
 			// If block starts with unused tag, skip it.
-			if (previousHandedOver && !pushes[blockId] && begin->type() == Tag)
-				++begin;
+			if (previousHandedOver && !pushes[blockId] && m_items[block.begin].type() == Tag)
+				++block.begin;
+			if (block.begin < block.end)
+				blocks.push_back(block);
 			previousHandedOver = (block.endType == BasicBlock::EndType::HANDOVER);
-			copy(begin, end, back_inserter(code));
 		}
 	}
 
-	return code;
+	return blocks;
+}
+
+BlockId ControlFlowGraph::expressionClassToBlockId(
+	ExpressionClasses::Id _id,
+	ExpressionClasses& _exprClasses
+)
+{
+	ExpressionClasses::Expression expr = _exprClasses.representative(_id);
+	if (expr.item && expr.item->type() == PushTag)
+		return BlockId(expr.item->data());
+	else
+		return BlockId::invalid();
 }
 
 BlockId ControlFlowGraph::generateNewId()

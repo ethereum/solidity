@@ -24,16 +24,18 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
+#include <libevmasm/ExpressionClasses.h>
 
 namespace dev
 {
 namespace eth
 {
 
-class AssemblyItem;
-using AssemblyItems = std::vector<AssemblyItem>;
+class KnownState;
+using KnownStatePointer = std::shared_ptr<KnownState>;
 
 /**
  * Identifier for a block, coincides with the tag number of an AssemblyItem but adds a special
@@ -69,15 +71,23 @@ struct BasicBlock
 	unsigned end = 0;
 	/// Tags pushed inside this block, with multiplicity.
 	std::vector<BlockId> pushedTags;
-	/// ID of the block that always follows this one (either JUMP or flow into new block),
-	/// or BlockId::invalid() otherwise
+	/// ID of the block that always follows this one (either non-branching part of JUMPI or flow
+	/// into new block), or BlockId::invalid() otherwise
 	BlockId next = BlockId::invalid();
-	/// ID of the block that has to precede this one.
+	/// ID of the block that has to precede this one (because control flows into it).
 	BlockId prev = BlockId::invalid();
 
 	enum class EndType { JUMP, JUMPI, STOP, HANDOVER };
 	EndType endType = EndType::HANDOVER;
+
+	/// Knowledge about the state when this block is entered. Intersection of all possible ways
+	/// to enter this block.
+	KnownStatePointer startState;
+	/// Knowledge about the state at the end of this block.
+	KnownStatePointer endState;
 };
+
+using BasicBlocks = std::vector<BasicBlock>;
 
 class ControlFlowGraph
 {
@@ -85,16 +95,22 @@ public:
 	/// Initializes the control flow graph.
 	/// @a _items has to persist across the usage of this class.
 	ControlFlowGraph(AssemblyItems const& _items): m_items(_items) {}
-	/// @returns the collection of optimised items, should be called only once.
-	AssemblyItems optimisedItems();
+	/// @returns vector of basic blocks in the order they should be used in the final code.
+	/// Should be called only once.
+	BasicBlocks optimisedBlocks();
 
 private:
 	void findLargestTag();
 	void splitBlocks();
 	void resolveNextLinks();
 	void removeUnusedBlocks();
+	void gatherKnowledge();
 	void setPrevLinks();
-	AssemblyItems rebuildCode();
+	BasicBlocks rebuildCode();
+
+	/// @returns the corresponding BlockId if _id is a pushed jump tag,
+	/// and an invalid BlockId otherwise.
+	BlockId expressionClassToBlockId(ExpressionClasses::Id _id, ExpressionClasses& _exprClasses);
 
 	BlockId generateNewId();
 

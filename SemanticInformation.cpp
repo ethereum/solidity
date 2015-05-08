@@ -122,3 +122,56 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 		return false;
 	}
 }
+
+
+bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
+{
+	if (_item.type() != Operation)
+		return true;
+
+	switch (_item.instruction())
+	{
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::CREATE:
+	case Instruction::GAS:
+	case Instruction::PC:
+	case Instruction::MSIZE: // depends on previous writes and reads, not only on content
+	case Instruction::BALANCE: // depends on previous calls
+	case Instruction::EXTCODESIZE:
+		return false;
+	default:
+		return true;
+	}
+}
+
+bool SemanticInformation::invalidatesMemory(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::CALLDATACOPY:
+	case Instruction::CODECOPY:
+	case Instruction::EXTCODECOPY:
+	case Instruction::MSTORE:
+	case Instruction::MSTORE8:
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+		return true;
+	default:
+		return false;
+	}
+}
+
+bool SemanticInformation::invalidatesStorage(Instruction _instruction)
+{
+	switch (_instruction)
+	{
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::CREATE:
+	case Instruction::SSTORE:
+		return true;
+	default:
+		return false;
+	}
+}

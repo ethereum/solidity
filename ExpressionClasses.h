@@ -50,7 +50,7 @@ public:
 	struct Expression
 	{
 		Id id;
-		AssemblyItem const* item;
+		AssemblyItem const* item = nullptr;
 		Ids arguments;
 		unsigned sequenceNumber; ///< Storage modification sequence, only used for SLOAD/SSTORE instructions.
 		/// Behaves as if this was a tuple of (item->type(), item->data(), arguments, sequenceNumber).
@@ -149,7 +149,7 @@ public:
 	std::string toString() const;
 
 private:
-	bool matchesBaseItem(AssemblyItem const& _item) const;
+	bool matchesBaseItem(AssemblyItem const* _item) const;
 	Expression const& matchGroupValue() const;
 
 	AssemblyItemType m_type;

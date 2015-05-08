@@ -37,18 +37,19 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 
 	map<int, Id> initialStackContents;
 	map<int, Id> targetStackContents;
-	int minHeight = m_stackHeight + 1;
-	if (!m_stackElements.empty())
-		minHeight = min(minHeight, m_stackElements.begin()->first);
-	for (int height = minHeight; height <= 0; ++height)
-		initialStackContents[height] = initialStackElement(height, SourceLocation());
-	for (int height = minHeight; height <= m_stackHeight; ++height)
-		targetStackContents[height] = stackElement(height, SourceLocation());
+	int minHeight = m_state.stackHeight() + 1;
+	if (!m_state.stackElements().empty())
+		minHeight = min(minHeight, m_state.stackElements().begin()->first);
+	for (int height = minHeight; height <= m_initialState.stackHeight(); ++height)
+		initialStackContents[height] = m_initialState.stackElement(height, SourceLocation());
+	for (int height = minHeight; height <= m_state.stackHeight(); ++height)
+		targetStackContents[height] = m_state.stackElement(height, SourceLocation());
 
 	// Debug info:
 	//stream(cout, initialStackContents, targetStackContents);
 
-	AssemblyItems items = CSECodeGenerator(m_expressionClasses, m_storeOperations).generateCode(
+	AssemblyItems items = CSECodeGenerator(m_state.expressionClasses(), m_storeOperations).generateCode(
+		m_initialState.stackHeight(),
 		initialStackContents,
 		targetStackContents
 	);
@@ -57,103 +58,11 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 	return items;
 }
 
-ostream& CommonSubexpressionEliminator::stream(
-	ostream& _out,
-	map<int, Id> _initialStack,
-	map<int, Id> _targetStack
-) const
-{
-	auto streamExpressionClass = [this](ostream& _out, Id _id)
-	{
-		auto const& expr = m_expressionClasses.representative(_id);
-		_out << "  " << dec << _id << ": " << *expr.item;
-		if (expr.sequenceNumber)
-			_out << "@" << dec << expr.sequenceNumber;
-		_out << "(";
-		for (Id arg: expr.arguments)
-			_out << dec << arg << ",";
-		_out << ")" << endl;
-	};
-
-	_out << "Optimizer analysis:" << endl;
-	_out << "Final stack height: " << dec << m_stackHeight << endl;
-	_out << "Equivalence classes: " << endl;
-	for (Id eqClass = 0; eqClass < m_expressionClasses.size(); ++eqClass)
-		streamExpressionClass(_out, eqClass);
-
-	_out << "Initial stack: " << endl;
-	for (auto const& it: _initialStack)
-	{
-		_out << "  " << dec << it.first << ": ";
-		streamExpressionClass(_out, it.second);
-	}
-	_out << "Target stack: " << endl;
-	for (auto const& it: _targetStack)
-	{
-		_out << "  " << dec << it.first << ": ";
-		streamExpressionClass(_out, it.second);
-	}
-
-	return _out;
-}
-
 void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item, bool _copyItem)
 {
-	if (_item.type() != Operation)
-	{
-		assertThrow(_item.deposit() == 1, InvalidDeposit, "");
-		setStackElement(++m_stackHeight, m_expressionClasses.find(_item, {}, _copyItem));
-	}
-	else
-	{
-		Instruction instruction = _item.instruction();
-		InstructionInfo info = instructionInfo(instruction);
-		if (SemanticInformation::isDupInstruction(_item))
-			setStackElement(
-				m_stackHeight + 1,
-				stackElement(
-					m_stackHeight - int(instruction) + int(Instruction::DUP1),
-					_item.getLocation()
-				)
-			);
-		else if (SemanticInformation::isSwapInstruction(_item))
-			swapStackElements(
-				m_stackHeight,
-				m_stackHeight - 1 - int(instruction) + int(Instruction::SWAP1),
-				_item.getLocation()
-			);
-		else if (instruction != Instruction::POP)
-		{
-			vector<Id> arguments(info.args);
-			for (int i = 0; i < info.args; ++i)
-				arguments[i] = stackElement(m_stackHeight - i, _item.getLocation());
-			if (_item.instruction() == Instruction::SSTORE)
-				storeInStorage(arguments[0], arguments[1], _item.getLocation());
-			else if (_item.instruction() == Instruction::SLOAD)
-				setStackElement(
-					m_stackHeight + _item.deposit(),
-					loadFromStorage(arguments[0], _item.getLocation())
-				);
-			else if (_item.instruction() == Instruction::MSTORE)
-				storeInMemory(arguments[0], arguments[1], _item.getLocation());
-			else if (_item.instruction() == Instruction::MLOAD)
-				setStackElement(
-					m_stackHeight + _item.deposit(),
-					loadFromMemory(arguments[0], _item.getLocation())
-				);
-			else if (_item.instruction() == Instruction::SHA3)
-				setStackElement(
-					m_stackHeight + _item.deposit(),
-					applySha3(arguments.at(0), arguments.at(1), _item.getLocation())
-				);
-			else
-				setStackElement(
-					m_stackHeight + _item.deposit(),
-					m_expressionClasses.find(_item, arguments, _copyItem)
-				);
-		}
-		m_stackHeight += _item.deposit();
-	}
+	StoreOperation op = m_state.feedItem(_item, _copyItem);
+	if (op.isValid())
+		m_storeOperations.push_back(op);
 }
 
 void CommonSubexpressionEliminator::optimizeBreakingItem()
@@ -164,168 +73,26 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 	SourceLocation const& location = m_breakingItem->getLocation();
 	AssemblyItem::JumpType jumpType = m_breakingItem->getJumpType();
 
-	Id condition = stackElement(m_stackHeight - 1, location);
-	Id zero = m_expressionClasses.find(u256(0));
-	if (m_expressionClasses.knownToBeDifferent(condition, zero))
+	Id condition = m_state.stackElement(m_state.stackHeight() - 1, location);
+	Id zero = m_state.expressionClasses().find(u256(0));
+	if (m_state.expressionClasses().knownToBeDifferent(condition, zero))
 	{
 		feedItem(AssemblyItem(Instruction::SWAP1, location), true);
 		feedItem(AssemblyItem(Instruction::POP, location), true);
 
 		AssemblyItem item(Instruction::JUMP, location);
 		item.setJumpType(jumpType);
-		m_breakingItem = m_expressionClasses.storeItem(item);
+		m_breakingItem = m_state.expressionClasses().storeItem(item);
 		return;
 	}
-	Id negatedCondition = m_expressionClasses.find(Instruction::ISZERO, {condition});
-	if (m_expressionClasses.knownToBeDifferent(negatedCondition, zero))
+	Id negatedCondition = m_state.expressionClasses().find(Instruction::ISZERO, {condition});
+	if (m_state.expressionClasses().knownToBeDifferent(negatedCondition, zero))
 	{
 		AssemblyItem it(Instruction::POP, location);
 		feedItem(it, true);
 		feedItem(it, true);
 		m_breakingItem = nullptr;
 	}
-}
-
-void CommonSubexpressionEliminator::setStackElement(int _stackHeight, Id _class)
-{
-	m_stackElements[_stackHeight] = _class;
-}
-
-void CommonSubexpressionEliminator::swapStackElements(
-	int _stackHeightA,
-	int _stackHeightB,
-	SourceLocation const& _location
-)
-{
-	assertThrow(_stackHeightA != _stackHeightB, OptimizerException, "Swap on same stack elements.");
-	// ensure they are created
-	stackElement(_stackHeightA, _location);
-	stackElement(_stackHeightB, _location);
-
-	swap(m_stackElements[_stackHeightA], m_stackElements[_stackHeightB]);
-}
-
-ExpressionClasses::Id CommonSubexpressionEliminator::stackElement(
-	int _stackHeight,
-	SourceLocation const& _location
-)
-{
-	if (m_stackElements.count(_stackHeight))
-		return m_stackElements.at(_stackHeight);
-	// Stack element not found (not assigned yet), create new equivalence class.
-	return m_stackElements[_stackHeight] = initialStackElement(_stackHeight, _location);
-}
-
-ExpressionClasses::Id CommonSubexpressionEliminator::initialStackElement(
-	int _stackHeight,
-	SourceLocation const& _location
-)
-{
-	assertThrow(_stackHeight <= 0, OptimizerException, "Initial stack element of positive height requested.");
-	assertThrow(_stackHeight > -16, StackTooDeepException, "");
-	// This is a special assembly item that refers to elements pre-existing on the initial stack.
-	return m_expressionClasses.find(AssemblyItem(dupInstruction(1 - _stackHeight), _location));
-}
-
-void CommonSubexpressionEliminator::storeInStorage(Id _slot, Id _value, SourceLocation const& _location)
-{
-	if (m_storageContent.count(_slot) && m_storageContent[_slot] == _value)
-		// do not execute the storage if we know that the value is already there
-		return;
-	m_sequenceNumber++;
-	decltype(m_storageContent) storageContents;
-	// Copy over all values (i.e. retain knowledge about them) where we know that this store
-	// operation will not destroy the knowledge. Specifically, we copy storage locations we know
-	// are different from _slot or locations where we know that the stored value is equal to _value.
-	for (auto const& storageItem: m_storageContent)
-		if (m_expressionClasses.knownToBeDifferent(storageItem.first, _slot) || storageItem.second == _value)
-			storageContents.insert(storageItem);
-	m_storageContent = move(storageContents);
-
-	AssemblyItem item(Instruction::SSTORE, _location);
-	Id id = m_expressionClasses.find(item, {_slot, _value}, true, m_sequenceNumber);
-	m_storeOperations.push_back(StoreOperation(StoreOperation::Storage, _slot, m_sequenceNumber, id));
-	m_storageContent[_slot] = _value;
-	// increment a second time so that we get unique sequence numbers for writes
-	m_sequenceNumber++;
-}
-
-ExpressionClasses::Id CommonSubexpressionEliminator::loadFromStorage(Id _slot, SourceLocation const& _location)
-{
-	if (m_storageContent.count(_slot))
-		return m_storageContent.at(_slot);
-
-	AssemblyItem item(Instruction::SLOAD, _location);
-	return m_storageContent[_slot] = m_expressionClasses.find(item, {_slot}, true, m_sequenceNumber);
-}
-
-void CommonSubexpressionEliminator::storeInMemory(Id _slot, Id _value, SourceLocation const& _location)
-{
-	if (m_memoryContent.count(_slot) && m_memoryContent[_slot] == _value)
-		// do not execute the store if we know that the value is already there
-		return;
-	m_sequenceNumber++;
-	decltype(m_memoryContent) memoryContents;
-	// copy over values at points where we know that they are different from _slot by at least 32
-	for (auto const& memoryItem: m_memoryContent)
-		if (m_expressionClasses.knownToBeDifferentBy32(memoryItem.first, _slot))
-			memoryContents.insert(memoryItem);
-	m_memoryContent = move(memoryContents);
-
-	AssemblyItem item(Instruction::MSTORE, _location);
-	Id id = m_expressionClasses.find(item, {_slot, _value}, true, m_sequenceNumber);
-	m_storeOperations.push_back(StoreOperation(StoreOperation::Memory, _slot, m_sequenceNumber, id));
-	m_memoryContent[_slot] = _value;
-	// increment a second time so that we get unique sequence numbers for writes
-	m_sequenceNumber++;
-}
-
-ExpressionClasses::Id CommonSubexpressionEliminator::loadFromMemory(Id _slot, SourceLocation const& _location)
-{
-	if (m_memoryContent.count(_slot))
-		return m_memoryContent.at(_slot);
-
-	AssemblyItem item(Instruction::MLOAD, _location);
-	return m_memoryContent[_slot] = m_expressionClasses.find(item, {_slot}, true, m_sequenceNumber);
-}
-
-CommonSubexpressionEliminator::Id CommonSubexpressionEliminator::applySha3(
-	Id _start,
-	Id _length,
-	SourceLocation const& _location
-)
-{
-	AssemblyItem sha3Item(Instruction::SHA3, _location);
-	// Special logic if length is a short constant, otherwise we cannot tell.
-	u256 const* l = m_expressionClasses.knownConstant(_length);
-	// unknown or too large length
-	if (!l || *l > 128)
-		return m_expressionClasses.find(sha3Item, {_start, _length}, true, m_sequenceNumber);
-
-	vector<Id> arguments;
-	for (u256 i = 0; i < *l; i += 32)
-	{
-		Id slot = m_expressionClasses.find(
-			AssemblyItem(Instruction::ADD, _location),
-			{_start, m_expressionClasses.find(i)}
-		);
-		arguments.push_back(loadFromMemory(slot, _location));
-	}
-	if (m_knownSha3Hashes.count(arguments))
-		return m_knownSha3Hashes.at(arguments);
-	Id v;
-	// If all arguments are known constants, compute the sha3 here
-	if (all_of(arguments.begin(), arguments.end(), [this](Id _a) { return !!m_expressionClasses.knownConstant(_a); }))
-	{
-		bytes data;
-		for (Id a: arguments)
-			data += toBigEndian(*m_expressionClasses.knownConstant(a));
-		data.resize(size_t(*l));
-		v = m_expressionClasses.find(AssemblyItem(u256(sha3(data)), _location));
-	}
-	else
-		v = m_expressionClasses.find(sha3Item, {_start, _length}, true, m_sequenceNumber);
-	return m_knownSha3Hashes[arguments] = v;
 }
 
 CSECodeGenerator::CSECodeGenerator(
@@ -339,10 +106,12 @@ CSECodeGenerator::CSECodeGenerator(
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
+	int _initialStackHeight,
 	map<int, Id> const& _initialStack,
 	map<int, Id> const& _targetStackContents
 )
 {
+	m_stackHeight = _initialStackHeight;
 	m_stack = _initialStack;
 	for (auto const& item: m_stack)
 		if (!m_classPositions.count(item.second))
