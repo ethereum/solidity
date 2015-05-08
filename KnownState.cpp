@@ -151,8 +151,10 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 					);
 			}
 		}
-		for (int p = m_stackHeight; p > m_stackHeight + _item.deposit(); --p)
-			m_stackElements.erase(p);
+		m_stackElements.erase(
+			m_stackElements.upper_bound(m_stackHeight + _item.deposit()),
+			m_stackElements.end()
+		);
 		m_stackHeight += _item.deposit();
 	}
 	return op;
