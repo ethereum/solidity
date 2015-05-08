@@ -2962,12 +2962,13 @@ BOOST_AUTO_TEST_CASE(bytes_in_arguments)
 		}
 	)";
 	compileAndRun(sourceCode);
+
 	string innercalldata1 = asString(FixedHash<4>(dev::sha3("f(uint256,uint256)")).asBytes() + encodeArgs(8, 9));
-	bytes calldata1 = encodeArgs(u256(innercalldata1.length()), 12, innercalldata1, 13);
 	string innercalldata2 = asString(FixedHash<4>(dev::sha3("g(uint256)")).asBytes() + encodeArgs(3));
 	bytes calldata = encodeArgs(
-		12, u256(innercalldata1.length()), u256(innercalldata2.length()), 13,
-		innercalldata1, innercalldata2);
+		12, 32 * 4, u256(32 * 4 + 32 + (innercalldata1.length() + 31) / 32 * 32), 13,
+		u256(innercalldata1.length()), innercalldata1,
+		u256(innercalldata2.length()), innercalldata2);
 	BOOST_CHECK(callContractFunction("test(uint256,bytes,bytes,uint256)", calldata)
 		== encodeArgs(12, (8 + 9) * 3, 13, u256(innercalldata1.length())));
 }
@@ -3383,9 +3384,10 @@ BOOST_AUTO_TEST_CASE(external_array_args)
 	compileAndRun(sourceCode);
 	bytes params = encodeArgs(
 		1, 2, 3, 4, 5, 6, 7, 8, // a
-		3, // b.length
+		32 * (8 + 1 + 5 + 1 + 1 + 1), // offset to b
 		21, 22, 23, 24, 25, // c
 		0, 1, 2, // (a,b,c)_index
+		3, // b.length
 		11, 12, 13 // b
 		);
 	BOOST_CHECK(callContractFunction("test(uint256[8],uint256[],uint256[5],uint256,uint256,uint256)", params) == encodeArgs(1, 12, 23));
@@ -3422,8 +3424,8 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 		20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 		30, 31, 32, 33};
-	BOOST_CHECK(callContractFunction("direct(bytes,uint256)", u256(array.length()), 32, array) == encodeArgs(32));
-	BOOST_CHECK(callContractFunction("storageCopyRead(bytes,uint256)", u256(array.length()), 32, array) == encodeArgs(32));
+	BOOST_CHECK(callContractFunction("direct(bytes,uint256)", 64, 33, u256(array.length()), array) == encodeArgs(33));
+	BOOST_CHECK(callContractFunction("storageCopyRead(bytes,uint256)", 64, 33, u256(array.length()), array) == encodeArgs(33));
 	BOOST_CHECK(callContractFunction("storageWrite()") == encodeArgs(0x193));
 }
 
@@ -3474,6 +3476,7 @@ BOOST_AUTO_TEST_CASE(array_copy_calldata_storage)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("store(uint256[9],uint8[3][])", encodeArgs(
 		21, 22, 23, 24, 25, 26, 27, 28, 29, // a
+		u256(32 * (9 + 1)),
 		4, // size of b
 		1, 2, 3, // b[0]
 		11, 12, 13, // b[1]
@@ -3502,7 +3505,7 @@ BOOST_AUTO_TEST_CASE(array_copy_nested_array)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test(uint256[2][])", encodeArgs(
-		3,
+		32, 3,
 		7, 8,
 		9, 10,
 		11, 12
