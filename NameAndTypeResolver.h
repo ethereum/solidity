@@ -56,13 +56,17 @@ public:
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
 	/// the global scope is used (i.e. the one containing only the contract).
 	/// @returns a pointer to the declaration on success or nullptr on failure.
-	std::vector<const Declaration *> resolveName(ASTString const& _name, Declaration const* _scope = nullptr) const;
+	std::vector<Declaration const*> resolveName(ASTString const& _name, Declaration const* _scope = nullptr) const;
 
 	/// Resolves a name in the "current" scope. Should only be called during the initial
 	/// resolving phase.
 	std::vector<Declaration const*> getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
-	std::vector<Declaration const*> cleanupedDeclarations(Identifier const& _identifier, std::vector<Declaration const*> const& _declarations);
+	/// returns the vector of declarations without repetitions
+	static std::vector<Declaration const*> cleanedDeclarations(
+		Identifier const& _identifier,
+		std::vector<Declaration const*> const& _declarations
+	);
 
 private:
 	void reset();

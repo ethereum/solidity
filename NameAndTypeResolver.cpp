@@ -53,12 +53,12 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	m_currentScope = &m_scopes[&_contract];
 
 	linearizeBaseContracts(_contract);
-	std::vector<ContractDefinition const*> realBases(
+	std::vector<ContractDefinition const*> properBases(
 		++_contract.getLinearizedBaseContracts().begin(),
 		_contract.getLinearizedBaseContracts().end()
 	);
 
-	for (ContractDefinition const* base: realBases)
+	for (ContractDefinition const* base: properBases)
 		importInheritedScope(*base);
 
 	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
@@ -130,11 +130,12 @@ vector<Declaration const*> NameAndTypeResolver::getNameFromCurrentScope(ASTStrin
 	return m_currentScope->resolveName(_name, _recursive);
 }
 
-vector<Declaration const*> NameAndTypeResolver::cleanupedDeclarations(
+vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 		Identifier const& _identifier,
 		vector<Declaration const*> const& _declarations
 )
 {
+	solAssert(_declarations.size() > 1, "");
 	vector<Declaration const*> uniqueFunctions;
 
 	for (auto it = _declarations.begin(); it != _declarations.end(); ++it)
@@ -143,7 +144,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanupedDeclarations(
 		// the declaration is functionDefinition while declarations > 1
 		FunctionDefinition const& functionDefinition = dynamic_cast<FunctionDefinition const&>(**it);
 		FunctionType functionType(functionDefinition);
-		for(auto parameter: functionType.getParameterTypes() + functionType.getReturnParameterTypes())
+		for (auto parameter: functionType.getParameterTypes() + functionType.getReturnParameterTypes())
 			if (!parameter)
 				BOOST_THROW_EXCEPTION(
 					DeclarationError() <<
@@ -155,9 +156,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanupedDeclarations(
 			uniqueFunctions.end(),
 			[&](Declaration const* d)
 			{
-				FunctionDefinition const& newFunctionDefinition = dynamic_cast<FunctionDefinition const&>(*d);
-				FunctionType newFunctionType(newFunctionDefinition);
-
+				FunctionType newFunctionType(dynamic_cast<FunctionDefinition const&>(*d));
 				return functionType.hasEqualArgumentTypes(newFunctionType);
 			}
 		))
@@ -482,7 +481,7 @@ bool ReferencesResolver::visit(Identifier& _identifier)
 	else if (declarations.size() == 1)
 		_identifier.setReferencedDeclaration(*declarations.front(), m_currentContract);
 	else
-		_identifier.setOverloadedDeclarations(m_resolver.cleanupedDeclarations(_identifier, declarations));
+		_identifier.setOverloadedDeclarations(m_resolver.cleanedDeclarations(_identifier, declarations));
 	return false;
 }
 

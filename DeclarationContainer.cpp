@@ -73,7 +73,7 @@ bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, 
 	return true;
 }
 
-std::vector<const Declaration *> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
+std::vector<Declaration const*> DeclarationContainer::resolveName(ASTString const& _name, bool _recursive) const
 {
 	solAssert(!_name.empty(), "Attempt to resolve empty name.");
 	auto result = m_declarations.find(_name);

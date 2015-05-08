@@ -1217,7 +1217,7 @@ public:
 	}
 	Declaration const& getReferencedDeclaration() const;
 
-	/// Stores a possible declarations referenced by this identifier. Has to be resolved
+	/// Stores a set of possible declarations referenced by this identifier. Has to be resolved
 	/// providing argument types using overloadResolution before the referenced declaration
 	/// is accessed.
 	void setOverloadedDeclarations(std::vector<Declaration const*> const& _declarations)

@@ -954,9 +954,6 @@ Declaration const& Identifier::getReferencedDeclaration() const
 void Identifier::overloadResolution(TypePointers const& _argumentTypes)
 {
 	solAssert(!m_referencedDeclaration, "Referenced declaration should be null before overload resolution.");
-	//to delete
-	if (m_overloadedDeclarations.empty())
-	//--------------------------->
 	solAssert(!m_overloadedDeclarations.empty(), "No candidates for overload resolution found.");
 
 	vector<Declaration const*> possibles;
