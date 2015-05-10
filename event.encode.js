@@ -131,6 +131,32 @@ var tests = [{
         a: 1
     },
     options: {
+        fromBlock: 'latest',
+        toBlock: 'pending'
+    },
+    expected: {
+        address: address,
+        fromBlock: 'latest',
+        toBlock: 'pending',
+        topics: [
+            signature,
+            '0x0000000000000000000000000000000000000000000000000000000000000001'
+        ]
+    }
+},
+{
+    abi: {
+        name: 'event1',
+        inputs: [{
+            type: 'int',
+            name: 'a',
+            indexed: true
+        }]
+    },
+    indexed: {
+        a: 1
+    },
+    options: {
         fromBlock: 4,
         toBlock: 10
     },

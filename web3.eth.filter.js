@@ -22,6 +22,21 @@ var tests = [{
     formattedResult: '0xf',
     call: 'eth_newFilter'
 },{
+    args: [{
+        fromBlock: 'latest',
+        toBlock: 'latest',
+        address: '0x47d33b27bb249a2dbab4c0612bf9caf4c1950855'
+    }],
+    formattedArgs: [{
+        fromBlock: 'latest',
+        toBlock: 'latest',
+        address: '0x47d33b27bb249a2dbab4c0612bf9caf4c1950855',
+        topics: []
+    }],
+    result: '0xf',
+    formattedResult: '0xf',
+    call: 'eth_newFilter'
+},{
     args: ['pending'],
     formattedArgs: ['pending'],
     result: '0xf',

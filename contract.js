@@ -345,6 +345,7 @@ describe('web3.eth.contract', function () {
                     assert.equal(payload.method, 'eth_call');
                     assert.deepEqual(payload.params, [{
                         data: sha3.slice(0, 10) + 
+                            '0000000000000000000000000000000000000000000000000000000000000020' + 
                             '0000000000000000000000000000000000000000000000000000000000000001' + 
                             '0000000000000000000000000000000000000000000000000000000000000003',
                         to: address
