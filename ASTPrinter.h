@@ -42,7 +42,7 @@ public:
 	ASTPrinter(
 		ASTNode const& _ast,
 		std::string const& _source = std::string(),
-		StructuralGasEstimator::ASTGasConsumption const& _gasCosts = {}
+		StructuralGasEstimator::ASTGasConsumption const& _gasCosts = StructuralGasEstimator::ASTGasConsumption()
 	);
 	/// Output the string representation of the AST to _stream.
 	void print(std::ostream& _stream);
