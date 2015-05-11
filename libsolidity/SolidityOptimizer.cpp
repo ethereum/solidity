@@ -272,6 +272,42 @@ BOOST_AUTO_TEST_CASE(storage_write_in_loops)
 	compareVersions("f(uint256)", 36);
 }
 
+BOOST_AUTO_TEST_CASE(retain_information_in_branches)
+{
+	// This tests that the optimizer knows that we already have "z == sha3(y)" inside both branches.
+	char const* sourceCode = R"(
+		contract c {
+			bytes32 d;
+			uint a;
+			function f(uint x, bytes32 y) returns (uint r_a, bytes32 r_d) {
+				bytes32 z = sha3(y);
+				if (x > 8) {
+					z = sha3(y);
+					a = x;
+				} else {
+					z = sha3(y);
+					a = x;
+				}
+				r_a = a;
+				r_d = d;
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(uint256,bytes32)", 0, "abc");
+	compareVersions("f(uint256,bytes32)", 8, "def");
+	compareVersions("f(uint256,bytes32)", 10, "ghi");
+
+	m_optimize = true;
+	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "c");
+	size_t numSHA3s = 0;
+	eth::eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
+		if (_instr == eth::Instruction::SHA3)
+			numSHA3s++;
+	});
+	BOOST_CHECK_EQUAL(1, numSHA3s);
+}
+
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
 	eth::KnownState state;
