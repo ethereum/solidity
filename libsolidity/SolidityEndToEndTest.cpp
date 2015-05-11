@@ -3910,6 +3910,90 @@ BOOST_AUTO_TEST_CASE(external_types_in_calls)
 	BOOST_CHECK(callContractFunction("nonexisting") == encodeArgs(u256(9)));
 }
 
+BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
+{
+	// bug #1798
+	char const* sourceCode = R"(
+		contract init {
+			function isOk() returns (bool) { return false; }
+			bool public ok = false;
+		}
+		contract fix {
+			function isOk() returns (bool) { return true; }
+			bool public ok = true;
+		}
+
+		contract init_fix is init, fix {
+			function checkOk() returns (bool) { return ok; }
+		}
+		contract fix_init is fix, init {
+			function checkOk() returns (bool) { return ok; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "init_fix");
+	BOOST_CHECK(callContractFunction("isOk()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(true));
+
+	compileAndRun(sourceCode, 0, "fix_init");
+	BOOST_CHECK(callContractFunction("isOk()") == encodeArgs(false));
+	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(proper_overwriting_accessor_by_function)
+{
+	// bug #1798
+	char const* sourceCode = R"(
+		contract attribute {
+			bool ok = false;
+		}
+		contract func {
+			function ok() returns (bool) { return true; }
+		}
+
+		contract attr_func is attribute, func {
+			function checkOk() returns (bool) { return ok(); }
+		}
+		contract func_attr is func, attribute {
+			function checkOk() returns (bool) { return ok; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "attr_func");
+	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(true));
+	compileAndRun(sourceCode, 0, "func_attr");
+	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(false));
+}
+
+
+BOOST_AUTO_TEST_CASE(overwriting_inheritance)
+{
+	// bug #1798
+	char const* sourceCode = R"(
+		contract A {
+			function ok() returns (uint) { return 1; }
+		}
+		contract B {
+			function ok() returns (uint) { return 2; }
+		}
+		contract C {
+			uint ok = 6;
+		}
+		contract AB is A, B {
+			function ok() returns (uint) { return 4; }
+		}
+		contract reversedE is C, AB {
+			function checkOk() returns (uint) { return ok(); }
+		}
+		contract E is AB, C {
+			function checkOk() returns (uint) { return ok; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "reversedE");
+	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(4));
+	compileAndRun(sourceCode, 0, "E");
+	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(6));
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
