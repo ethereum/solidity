@@ -499,8 +499,7 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 {
 	char const* sourceCode = R"(
 		contract test {
-			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
-			function test(uint param1, test param2, bool param3, ActionChoices param4) {}
+			function test(uint param1, test param2, bool param3) {}
 		}
 	)";
 
@@ -518,10 +517,6 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 			{
 				"name": "param3",
 				"type": "bool"
-			},
-			{
-				"name": "param4",
-				"type": "uint8"
 			}
 		],
 		"type": "constructor"
@@ -545,29 +540,31 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 		}
 	)";
 
-	char const* interface = R"([
-	{
-		 "constant" : false,
-		 "inputs" : [],
-		 "name" : "ret",
-		 "outputs" : [
-			{
-			   "name" : "",
-			   "type" : "uint8"
-			}
-		 ],
-		 "type" : "function"
-	},
-	{
-		"inputs": [
-			{
-				"name": "param",
-				"type": "uint8"
-			}
-		],
-		"type": "constructor"
-	}
-	])";
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"inputs" : [],
+			"name" : "ret",
+			"outputs" :	[
+				{
+					"name" : "",
+					"type" : "uint8"
+				}
+			],
+			"type" : "function"
+		},
+		{
+			"inputs": [
+				{
+					"name": "param",
+					"type": "uint8"
+				}
+			],
+			"type": "constructor"
+		}
+	]
+	)";
 	checkInterface(sourceCode, interface);
 }
 

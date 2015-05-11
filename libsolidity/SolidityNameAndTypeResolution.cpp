@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 		contract Test {
 			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
 			function boo(ActionChoices enumArg) external returns (uint ret) {
-			   ret = 5;
+				ret = 5;
 			}
 		})";
 	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
