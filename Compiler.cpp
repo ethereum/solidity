@@ -206,16 +206,9 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 
 void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory)
 {
-	// We do not check the calldata size, everything is zero-padded.
-	unsigned offset(CompilerUtils::dataStartOffset);
+	// We do not check the calldata size, everything is zero-paddedd
 
-	bigint parameterHeadEnd = offset;
-	for (TypePointer const& type: _typeParameters)
-		parameterHeadEnd += type->isDynamicallySized() ? 32 : type->getCalldataEncodedSize();
-	solAssert(parameterHeadEnd <= numeric_limits<unsigned>::max(), "Arguments too large.");
-
-	unsigned stackHeightOfPreviousDynamicArgument = 0;
-	ArrayType const* previousDynamicType = nullptr;
+	m_context << u256(CompilerUtils::dataStartOffset);
 	for (TypePointer const& type: _typeParameters)
 	{
 		switch (type->getCategory())
@@ -223,34 +216,31 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 		case Type::Category::Array:
 			if (type->isDynamicallySized())
 			{
-				// put on stack: data_offset length
-				unsigned newStackHeight = m_context.getStackHeight();
-				if (previousDynamicType)
-				{
-					// Retrieve data start offset by adding length to start offset of previous dynamic type
-					unsigned stackDepth = m_context.getStackHeight() - stackHeightOfPreviousDynamicArgument;
-					solAssert(stackDepth <= 16, "Stack too deep.");
-					m_context << eth::dupInstruction(stackDepth) << eth::dupInstruction(stackDepth);
-					ArrayUtils(m_context).convertLengthToSize(*previousDynamicType, true);
-					m_context << eth::Instruction::ADD;
-				}
-				else
-					m_context << u256(parameterHeadEnd);
-				stackHeightOfPreviousDynamicArgument = newStackHeight;
-				previousDynamicType = &dynamic_cast<ArrayType const&>(*type);
-				offset += CompilerUtils(m_context).loadFromMemory(offset, IntegerType(256), !_fromMemory);
+				// put on stack: data_pointer length
+				CompilerUtils(m_context).loadFromMemoryDynamic(IntegerType(256), !_fromMemory);
+				// stack: data_offset next_pointer
+				//@todo once we support nested arrays, this offset needs to be dynamic.
+				m_context << eth::Instruction::SWAP1 << u256(CompilerUtils::dataStartOffset);
+				m_context << eth::Instruction::ADD;
+				// stack: next_pointer data_pointer
+				// retrieve length
+				CompilerUtils(m_context).loadFromMemoryDynamic(IntegerType(256), !_fromMemory, true);
+				// stack: next_pointer length data_pointer
+				m_context << eth::Instruction::SWAP2;
 			}
 			else
 			{
-				m_context << u256(offset);
-				offset += type->getCalldataEncodedSize();
+				// leave the pointer on the stack
+				m_context << eth::Instruction::DUP1;
+				m_context << u256(type->getCalldataEncodedSize()) << eth::Instruction::ADD;
 			}
 			break;
 		default:
 			solAssert(!type->isDynamicallySized(), "Unknown dynamically sized type: " + type->toString());
-			offset += CompilerUtils(m_context).loadFromMemory(offset, *type, !_fromMemory, true);
+			CompilerUtils(m_context).loadFromMemoryDynamic(*type, !_fromMemory, true);
 		}
 	}
+	m_context << eth::Instruction::POP;
 }
 
 void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
