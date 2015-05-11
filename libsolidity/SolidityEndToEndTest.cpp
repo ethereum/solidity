@@ -2962,12 +2962,13 @@ BOOST_AUTO_TEST_CASE(bytes_in_arguments)
 		}
 	)";
 	compileAndRun(sourceCode);
+
 	string innercalldata1 = asString(FixedHash<4>(dev::sha3("f(uint256,uint256)")).asBytes() + encodeArgs(8, 9));
-	bytes calldata1 = encodeArgs(u256(innercalldata1.length()), 12, innercalldata1, 13);
 	string innercalldata2 = asString(FixedHash<4>(dev::sha3("g(uint256)")).asBytes() + encodeArgs(3));
 	bytes calldata = encodeArgs(
-		12, u256(innercalldata1.length()), u256(innercalldata2.length()), 13,
-		innercalldata1, innercalldata2);
+		12, 32 * 4, u256(32 * 4 + 32 + (innercalldata1.length() + 31) / 32 * 32), 13,
+		u256(innercalldata1.length()), innercalldata1,
+		u256(innercalldata2.length()), innercalldata2);
 	BOOST_CHECK(callContractFunction("test(uint256,bytes,bytes,uint256)", calldata)
 		== encodeArgs(12, (8 + 9) * 3, 13, u256(innercalldata1.length())));
 }
@@ -3383,9 +3384,10 @@ BOOST_AUTO_TEST_CASE(external_array_args)
 	compileAndRun(sourceCode);
 	bytes params = encodeArgs(
 		1, 2, 3, 4, 5, 6, 7, 8, // a
-		3, // b.length
+		32 * (8 + 1 + 5 + 1 + 1 + 1), // offset to b
 		21, 22, 23, 24, 25, // c
 		0, 1, 2, // (a,b,c)_index
+		3, // b.length
 		11, 12, 13 // b
 		);
 	BOOST_CHECK(callContractFunction("test(uint256[8],uint256[],uint256[5],uint256,uint256,uint256)", params) == encodeArgs(1, 12, 23));
@@ -3422,8 +3424,8 @@ BOOST_AUTO_TEST_CASE(bytes_index_access)
 		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
 		20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
 		30, 31, 32, 33};
-	BOOST_CHECK(callContractFunction("direct(bytes,uint256)", u256(array.length()), 32, array) == encodeArgs(32));
-	BOOST_CHECK(callContractFunction("storageCopyRead(bytes,uint256)", u256(array.length()), 32, array) == encodeArgs(32));
+	BOOST_CHECK(callContractFunction("direct(bytes,uint256)", 64, 33, u256(array.length()), array) == encodeArgs(33));
+	BOOST_CHECK(callContractFunction("storageCopyRead(bytes,uint256)", 64, 33, u256(array.length()), array) == encodeArgs(33));
 	BOOST_CHECK(callContractFunction("storageWrite()") == encodeArgs(0x193));
 }
 
@@ -3474,6 +3476,7 @@ BOOST_AUTO_TEST_CASE(array_copy_calldata_storage)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("store(uint256[9],uint8[3][])", encodeArgs(
 		21, 22, 23, 24, 25, 26, 27, 28, 29, // a
+		u256(32 * (9 + 1)),
 		4, // size of b
 		1, 2, 3, // b[0]
 		11, 12, 13, // b[1]
@@ -3502,7 +3505,7 @@ BOOST_AUTO_TEST_CASE(array_copy_nested_array)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test(uint256[2][])", encodeArgs(
-		3,
+		32, 3,
 		7, 8,
 		9, 10,
 		11, 12
@@ -3909,6 +3912,90 @@ BOOST_AUTO_TEST_CASE(external_types_in_calls)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(9), u256(7)));
 	BOOST_CHECK(callContractFunction("nonexisting") == encodeArgs(u256(9)));
 }
+
+BOOST_AUTO_TEST_CASE(proper_order_of_overwriting_of_attributes)
+{
+	// bug #1798
+	char const* sourceCode = R"(
+		contract init {
+			function isOk() returns (bool) { return false; }
+			bool public ok = false;
+		}
+		contract fix {
+			function isOk() returns (bool) { return true; }
+			bool public ok = true;
+		}
+
+		contract init_fix is init, fix {
+			function checkOk() returns (bool) { return ok; }
+		}
+		contract fix_init is fix, init {
+			function checkOk() returns (bool) { return ok; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "init_fix");
+	BOOST_CHECK(callContractFunction("isOk()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(true));
+
+	compileAndRun(sourceCode, 0, "fix_init");
+	BOOST_CHECK(callContractFunction("isOk()") == encodeArgs(false));
+	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(proper_overwriting_accessor_by_function)
+{
+	// bug #1798
+	char const* sourceCode = R"(
+		contract attribute {
+			bool ok = false;
+		}
+		contract func {
+			function ok() returns (bool) { return true; }
+		}
+
+		contract attr_func is attribute, func {
+			function checkOk() returns (bool) { return ok(); }
+		}
+		contract func_attr is func, attribute {
+			function checkOk() returns (bool) { return ok; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "attr_func");
+	BOOST_CHECK(callContractFunction("ok()") == encodeArgs(true));
+	compileAndRun(sourceCode, 0, "func_attr");
+	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(false));
+}
+
+
+BOOST_AUTO_TEST_CASE(overwriting_inheritance)
+{
+	// bug #1798
+	char const* sourceCode = R"(
+		contract A {
+			function ok() returns (uint) { return 1; }
+		}
+		contract B {
+			function ok() returns (uint) { return 2; }
+		}
+		contract C {
+			uint ok = 6;
+		}
+		contract AB is A, B {
+			function ok() returns (uint) { return 4; }
+		}
+		contract reversedE is C, AB {
+			function checkOk() returns (uint) { return ok(); }
+		}
+		contract E is AB, C {
+			function checkOk() returns (uint) { return ok; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "reversedE");
+	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(4));
+	compileAndRun(sourceCode, 0, "E");
+	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(6));
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
