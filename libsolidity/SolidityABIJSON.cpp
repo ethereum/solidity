@@ -525,6 +525,49 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 	checkInterface(sourceCode, interface);
 }
 
+
+BOOST_AUTO_TEST_CASE(return_param_in_abi)
+{
+	// bug #1801
+	char const* sourceCode = R"(
+		contract test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			function test(ActionChoices param) {}
+			function ret() returns(ActionChoices){
+				ActionChoices action = ActionChoices.GoLeft;
+				return action;
+			}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"inputs" : [],
+			"name" : "ret",
+			"outputs" : [
+				{
+					"name" : "",
+					"type" : "uint8"
+				}
+			],
+			"type" : "function"
+		},
+		{
+			"inputs": [
+				{
+					"name": "param",
+					"type": "uint8"
+				}
+			],
+			"type": "constructor"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
