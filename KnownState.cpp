@@ -160,23 +160,46 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 	return op;
 }
 
-void KnownState::reduceToCommonKnowledge(KnownState const& /*_other*/)
+/// Helper function for KnownState::reduceToCommonKnowledge, removes everything from
+/// _this which is not in or not equal to the value in _other.
+template <class _Mapping, class _KeyType = ExpressionClasses::Id> void intersect(
+	_Mapping& _this,
+	_Mapping const& _other,
+	function<_KeyType(_KeyType)> const& _keyTrans = [](_KeyType _k) { return _k; }
+)
 {
-	//@todo
-	*this = KnownState(m_expressionClasses);
+	for (auto it = _this.begin(); it != _this.end();)
+		if (_other.count(_keyTrans(it->first)) && _other.at(_keyTrans(it->first)) == it->second)
+			++it;
+		else
+			it = _this.erase(it);
+}
+
+void KnownState::reduceToCommonKnowledge(KnownState const& _other)
+{
+	int stackDiff = m_stackHeight - _other.m_stackHeight;
+	function<int(int)> stackKeyTransform = [=](int _key) -> int { return _key - stackDiff; };
+	intersect(m_stackElements, _other.m_stackElements, stackKeyTransform);
+	// Use the smaller stack height. Essential to terminate in case of loops.
+	if (m_stackHeight > _other.m_stackHeight)
+	{
+		map<int, Id> shiftedStack;
+		for (auto const& stackElement: m_stackElements)
+			shiftedStack[stackElement.first - stackDiff] = stackElement.second;
+		m_stackElements = move(shiftedStack);
+		m_stackHeight = _other.m_stackHeight;
+	}
+
+	intersect(m_storageContent, _other.m_storageContent);
+	intersect(m_memoryContent, _other.m_memoryContent);
 }
 
 bool KnownState::operator==(const KnownState& _other) const
 {
-	//@todo
-	return (
-		m_stackElements.empty() &&
-		_other.m_stackElements.empty() &&
-		m_storageContent.empty() &&
-		_other.m_storageContent.empty() &&
-		m_memoryContent.empty() &&
-		_other.m_memoryContent.empty()
-	);
+	return m_storageContent == _other.m_storageContent &&
+		m_memoryContent == _other.m_memoryContent &&
+		m_stackHeight == _other.m_stackHeight &&
+		m_stackElements == _other.m_stackElements;
 }
 
 ExpressionClasses::Id KnownState::stackElement(int _stackHeight, SourceLocation const& _location)
