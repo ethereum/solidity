@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 			"constant" : false,
 			"inputs" : [],
 			"name" : "ret",
-			"outputs" :	[
+			"outputs" : [
 				{
 					"name" : "",
 					"type" : "uint8"
