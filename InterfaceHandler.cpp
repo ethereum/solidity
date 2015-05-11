@@ -55,15 +55,15 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 
 	for (auto it: _contractDef.getInterfaceFunctions())
 	{
-
+		auto externalFunctionType = it.second->externalFunctionType();
 		Json::Value method;
 		method["type"] = "function";
 		method["name"] = it.second->getDeclaration().getName();
 		method["constant"] = it.second->isConstant();
-		method["inputs"] = populateParameters(it.second->getParameterNames(),
-											  it.second->getParameterTypeNames());
-		method["outputs"] = populateParameters(it.second->getReturnParameterNames(),
-											   it.second->getReturnParameterTypeNames());
+		method["inputs"] = populateParameters(externalFunctionType->getParameterNames(),
+											  externalFunctionType->getParameterTypeNames());
+		method["outputs"] = populateParameters(externalFunctionType->getReturnParameterNames(),
+											   externalFunctionType->getReturnParameterTypeNames());
 		abi.append(method);
 	}
 	if (_contractDef.getConstructor())
