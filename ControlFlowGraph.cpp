@@ -289,7 +289,7 @@ void ControlFlowGraph::gatherKnowledge()
 	// Note that this invalidates some contents of pushedTags
 	for (auto it = m_blocks.begin(); it != m_blocks.end();)
 		if (!it->second.startState)
-			m_blocks.erase(it++);
+			it = m_blocks.erase(it);
 		else
 			it++;
 }
