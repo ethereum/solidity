@@ -552,6 +552,9 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	if (!Options::get().singleTest)
+		return;
+
+	if (Options::get().singleTestFile.empty() || Options::get().singleTestName.empty())
 	{
 		cnote << "Missing user test specification\nUsage: testeth --singletest <filename> <testname>\n";
 		return;
@@ -732,11 +735,23 @@ Options::Options()
 			inputLimits = true;
 			bigData = true;
 		}
-		else if (arg == "--singletest" && i + 2 < argc)
+		else if (arg == "--singletest" && i + 1 < argc)
 		{
 			singleTest = true;
-			singleTestFile = argv[i + 1];
-			singleTestName = argv[i + 2];
+			auto name1 = std::string{argv[i + 1]};
+			if (i + 1 < argc) // two params
+			{
+				auto name2 = std::string{argv[i + 2]};
+				if (name2[0] == '-') // not param, another option
+					singleTestName = std::move(name1);
+				else
+				{
+					singleTestFile = std::move(name1);
+					singleTestName = std::move(name2);
+				}
+			}
+			else
+				singleTestName = std::move(name1);
 		}
 	}
 }
