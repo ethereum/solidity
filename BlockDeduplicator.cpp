@@ -26,8 +26,6 @@
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/SemanticInformation.h>
 
-#include <libdevcore/CommonIO.h>
-
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
