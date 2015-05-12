@@ -68,6 +68,8 @@ public:
 	/// @returns true iff the type and data of the items are equal.
 	bool operator==(AssemblyItem const& _other) const { return m_type == _other.m_type && m_data == _other.m_data; }
 	bool operator!=(AssemblyItem const& _other) const { return !operator==(_other); }
+	/// Less-than operator compatible with operator==.
+	bool operator<(AssemblyItem const& _other) const { return std::tie(m_type, m_data) < std::tie(_other.m_type, _other.m_data); }
 
 	/// @returns an upper bound for the number of bytes required by this item, assuming that
 	/// the value of a jump tag takes @a _addressLength bytes.

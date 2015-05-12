@@ -24,6 +24,7 @@
 #include <libdevcore/Log.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
+#include <libevmasm/BlockDeduplicator.h>
 #include <json/json.h>
 using namespace std;
 using namespace dev;
@@ -348,8 +349,17 @@ Assembly& Assembly::optimise(bool _enable)
 						copy(orig, iter, back_inserter(optimisedItems));
 				}
 			}
+
 			if (optimisedItems.size() < m_items.size())
+			{
 				m_items = move(optimisedItems);
+				count++;
+			}
+
+			// This only modifies PushTags, we have to run again to actually remove code.
+			BlockDeduplicator dedup(m_items);
+			if (dedup.deduplicate())
+				count++;
 		}
 	}
 
