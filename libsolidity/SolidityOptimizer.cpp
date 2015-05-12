@@ -29,6 +29,7 @@
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/Assembly.h>
+#include <libevmasm/BlockDeduplicator.h>
 
 using namespace std;
 using namespace dev::eth;
@@ -125,7 +126,7 @@ public:
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
-	void checkCFG(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	AssemblyItems getCFG(AssemblyItems const& _input)
 	{
 		AssemblyItems output = _input;
 		// Running it four times should be enough for these tests.
@@ -138,6 +139,12 @@ public:
 					 back_inserter(optItems));
 			output = move(optItems);
 		}
+		return output;
+	}
+
+	void checkCFG(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	{
+		AssemblyItems output = getCFG(_input);
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
@@ -923,6 +930,35 @@ BOOST_AUTO_TEST_CASE(control_flow_graph_do_not_remove_returned_to)
 		u256(2)
 	};
 	checkCFG(input, {u256(2)});
+}
+
+BOOST_AUTO_TEST_CASE(block_deduplicator)
+{
+	AssemblyItems input{
+		AssemblyItem(PushTag, 2),
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 3),
+		u256(6),
+		eth::Instruction::SWAP3,
+		eth::Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(6),
+		eth::Instruction::SWAP3,
+		eth::Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(6),
+		eth::Instruction::SWAP3,
+		eth::Instruction::JUMP,
+		AssemblyItem(Tag, 3)
+	};
+	BlockDeduplicator dedup(input);
+	dedup.deduplicate();
+
+	set<u256> pushTags;
+	for (AssemblyItem const& item: input)
+		if (item.type() == PushTag)
+			pushTags.insert(item.data());
+	BOOST_CHECK_EQUAL(pushTags.size(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
