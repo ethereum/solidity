@@ -549,58 +549,53 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 	}
 }
 
-void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
+void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 {
-	Options::get(); // parse command line options, e.g. to enable JIT
+	if (!Options::get().singleTest)
+		return;
 
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+	if (Options::get().singleTestFile.empty() || Options::get().singleTestName.empty())
 	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == testTypeFlag)
-		{
-			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
-			{
-				cnote << "Missing filename\nUsage: testeth " << testTypeFlag << " <filename> <testname>\n";
-				return;
-			}
-			string filename = boost::unit_test::framework::master_test_suite().argv[i + 1];
-			string testname = boost::unit_test::framework::master_test_suite().argv[i + 2];
-			int currentVerbosity = g_logVerbosity;
-			g_logVerbosity = 12;
-			try
-			{
-				cnote << "Testing user defined test: " << filename;
-				json_spirit::mValue v;
-				string s = asString(contents(filename));
-				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
-				json_spirit::read_string(s, v);
-				json_spirit::mObject oSingleTest;
-
-				json_spirit::mObject::const_iterator pos = v.get_obj().find(testname);
-				if (pos == v.get_obj().end())
-				{
-					cnote << "Could not find test: " << testname << " in " << filename << "\n";
-					return;
-				}
-				else
-					oSingleTest[pos->first] = pos->second;
-
-				json_spirit::mValue v_singleTest(oSingleTest);
-				doTests(v_singleTest, false);
-			}
-			catch (Exception const& _e)
-			{
-				BOOST_ERROR("Failed Test with Exception: " << diagnostic_information(_e));
-				g_logVerbosity = currentVerbosity;
-			}
-			catch (std::exception const& _e)
-			{
-				BOOST_ERROR("Failed Test with Exception: " << _e.what());
-				g_logVerbosity = currentVerbosity;
-			}
-			g_logVerbosity = currentVerbosity;
-		}
+		cnote << "Missing user test specification\nUsage: testeth --singletest <filename> <testname>\n";
+		return;
 	}
+
+	auto& filename = Options::get().singleTestFile;
+	auto& testname = Options::get().singleTestName;
+	int currentVerbosity = g_logVerbosity;
+	g_logVerbosity = 12;
+	try
+	{
+		cnote << "Testing user defined test: " << filename;
+		json_spirit::mValue v;
+		string s = asString(contents(filename));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
+		json_spirit::read_string(s, v);
+		json_spirit::mObject oSingleTest;
+
+		json_spirit::mObject::const_iterator pos = v.get_obj().find(testname);
+		if (pos == v.get_obj().end())
+		{
+			cnote << "Could not find test: " << testname << " in " << filename << "\n";
+			return;
+		}
+		else
+			oSingleTest[pos->first] = pos->second;
+
+		json_spirit::mValue v_singleTest(oSingleTest);
+		doTests(v_singleTest, false);
+	}
+	catch (Exception const& _e)
+	{
+		BOOST_ERROR("Failed Test with Exception: " << diagnostic_information(_e));
+		g_logVerbosity = currentVerbosity;
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed Test with Exception: " << _e.what());
+		g_logVerbosity = currentVerbosity;
+	}
+	g_logVerbosity = currentVerbosity;
 }
 
 void executeTests(const string& _name, const string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests)
@@ -742,7 +737,20 @@ Options::Options()
 		else if (arg == "--singletest" && i + 1 < argc)
 		{
 			singleTest = true;
-			singleTestName = argv[i + 1];
+			auto name1 = std::string{argv[i + 1]};
+			if (i + 1 < argc) // two params
+			{
+				auto name2 = std::string{argv[i + 2]};
+				if (name2[0] == '-') // not param, another option
+					singleTestName = std::move(name1);
+				else
+				{
+					singleTestFile = std::move(name1);
+					singleTestName = std::move(name2);
+				}
+			}
+			else
+				singleTestName = std::move(name1);
 		}
 	}
 }
