@@ -377,12 +377,16 @@ bool Compiler::visit(IfStatement const& _ifStatement)
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _ifStatement);
 	compileExpression(_ifStatement.getCondition());
-	eth::AssemblyItem trueTag = m_context.appendConditionalJump();
-	if (_ifStatement.getFalseStatement())
-		_ifStatement.getFalseStatement()->accept(*this);
-	eth::AssemblyItem endTag = m_context.appendJumpToNew();
-	m_context << trueTag;
+	m_context << eth::Instruction::ISZERO;
+	eth::AssemblyItem falseTag = m_context.appendConditionalJump();
+	eth::AssemblyItem endTag = falseTag;
 	_ifStatement.getTrueStatement().accept(*this);
+	if (_ifStatement.getFalseStatement())
+	{
+		endTag = m_context.appendJumpToNew();
+		m_context << falseTag;
+		_ifStatement.getFalseStatement()->accept(*this);
+	}
 	m_context << endTag;
 
 	checker.check();
