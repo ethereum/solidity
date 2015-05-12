@@ -305,7 +305,7 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 
 			if (addressOptions.m_bHasStorage)
 			{
-				map<u256, u256> stateStorage = _statePost.storage(a.first);
+				unordered_map<u256, u256> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK(stateStorage[s.first] == s.second,
 							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));

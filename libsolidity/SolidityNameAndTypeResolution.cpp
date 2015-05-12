@@ -508,6 +508,28 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 		}
 }
 
+BOOST_AUTO_TEST_CASE(enum_external_type)
+{
+	// bug #1801
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract Test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			function boo(ActionChoices enumArg) external returns (uint ret) {
+				ret = 5;
+			}
+		})";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->getDefinedFunctions();
+			if (functions.empty())
+				continue;
+			BOOST_CHECK_EQUAL("boo(uint8)", functions[0]->externalSignature());
+		}
+}
+
 BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 {
 	char const* text = R"(
