@@ -162,7 +162,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 
 /// Helper function for KnownState::reduceToCommonKnowledge, removes everything from
 /// _this which is not in or not equal to the value in _other.
-template <class _Mapping, class _KeyType = ExpressionClasses::Id> void intersect(
+template <class _Mapping, class _KeyType> void intersect(
 	_Mapping& _this,
 	_Mapping const& _other,
 	function<_KeyType(_KeyType)> const& _keyTrans = [](_KeyType _k) { return _k; }
@@ -173,6 +173,11 @@ template <class _Mapping, class _KeyType = ExpressionClasses::Id> void intersect
 			++it;
 		else
 			it = _this.erase(it);
+}
+
+template <class _Mapping> void intersect(_Mapping& _this, _Mapping const& _other)
+{
+	intersect<_Mapping, ExpressionClasses::Id>(_this, _other, [](ExpressionClasses::Id _k) { return _k; });
 }
 
 void KnownState::reduceToCommonKnowledge(KnownState const& _other)
