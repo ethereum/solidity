@@ -179,7 +179,6 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 class Options
 {
 public:
-	bool jit = false;		///< Use JIT
 	bool vmtrace = false;	///< Create EVM execution tracer // TODO: Link with log verbosity?
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
