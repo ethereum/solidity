@@ -315,6 +315,49 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 	BOOST_CHECK_EQUAL(1, numSHA3s);
 }
 
+BOOST_AUTO_TEST_CASE(store_tags_as_unions)
+{
+	// This calls the same function from two sources and both calls have a certain sha3 on
+	// the stack at the same position.
+	// Without storing tags as unions, the return from the shared function would not know where to
+	// jump and thus all jumpdests are forced to clear their state and we do not know about the
+	// sha3 anymore.
+	// Note that, for now, this only works if the functions have the same number of return
+	// parameters since otherwise, the return jump addresses are at different stack positions
+	// which triggers the "unknown jump target" situation.
+	char const* sourceCode = R"(
+		contract test {
+			bytes32 data;
+			function f(uint x, bytes32 y) external returns (uint r_a, bytes32 r_d) {
+				r_d = sha3(y);
+				shared(y);
+				r_d = sha3(y);
+				r_a = 5;
+			}
+			function g(uint x, bytes32 y) external returns (uint r_a, bytes32 r_d) {
+				r_d = sha3(y);
+				shared(y);
+				r_d = bytes32(uint(sha3(y)) + 2);
+				r_a = 7;
+			}
+			function shared(bytes32 y) internal {
+				data = sha3(y);
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f()", 7, "abc");
+
+	m_optimize = true;
+	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "test");
+	size_t numSHA3s = 0;
+	eth::eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
+		if (_instr == eth::Instruction::SHA3)
+			numSHA3s++;
+	});
+	BOOST_CHECK_EQUAL(2, numSHA3s);
+}
+
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
 	eth::KnownState state;
