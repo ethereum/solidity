@@ -52,7 +52,8 @@ public:
 		Id id;
 		AssemblyItem const* item = nullptr;
 		Ids arguments;
-		unsigned sequenceNumber; ///< Storage modification sequence, only used for SLOAD/SSTORE instructions.
+		/// Storage modification sequence, only used for storage and memory operations.
+		unsigned sequenceNumber = 0;
 		/// Behaves as if this was a tuple of (item->type(), item->data(), arguments, sequenceNumber).
 		bool operator<(Expression const& _other) const;
 	};
@@ -72,6 +73,9 @@ public:
 	Expression const& representative(Id _id) const { return m_representatives.at(_id); }
 	/// @returns the number of classes.
 	Id size() const { return m_representatives.size(); }
+
+	/// @returns the id of a new class which is different to all other classes.
+	Id newClass(SourceLocation const& _location);
 
 	/// @returns true if the values of the given classes are known to be different (on every input).
 	/// @note that this function might still return false for some different inputs.

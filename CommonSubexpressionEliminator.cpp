@@ -153,7 +153,9 @@ AssemblyItems CSECodeGenerator::generateCode(
 		assertThrow(!m_classPositions[targetItem.second].empty(), OptimizerException, "");
 		if (m_classPositions[targetItem.second].count(targetItem.first))
 			continue;
-		SourceLocation const& location = m_expressionClasses.representative(targetItem.second).item->getLocation();
+		SourceLocation location;
+		if (m_expressionClasses.representative(targetItem.second).item)
+			location = m_expressionClasses.representative(targetItem.second).item->getLocation();
 		int position = classElementPosition(targetItem.second);
 		if (position < targetItem.first)
 			// it is already at its target, we need another copy
@@ -197,7 +199,9 @@ void CSECodeGenerator::addDependencies(Id _c)
 		addDependencies(argument);
 		m_neededBy.insert(make_pair(argument, _c));
 	}
-	if (expr.item->type() == Operation && (
+	if (
+		expr.item &&
+		expr.item->type() == Operation && (
 		expr.item->instruction() == Instruction::SLOAD ||
 		expr.item->instruction() == Instruction::MLOAD ||
 		expr.item->instruction() == Instruction::SHA3
@@ -288,6 +292,7 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 		OptimizerException,
 		"Sequence constrained operation requested out of sequence."
 	);
+	assertThrow(expr.item, OptimizerException, "Non-generated expression without item.");
 	vector<Id> const& arguments = expr.arguments;
 	for (Id arg: boost::adaptors::reverse(arguments))
 		generateClassElement(arg);

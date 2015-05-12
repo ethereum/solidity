@@ -29,6 +29,7 @@
 #include <tuple>
 #include <memory>
 #include <ostream>
+#include <boost/bimap.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>
@@ -107,15 +108,16 @@ public:
 	/// @returns true if the knowledge about the state of both objects is (known to be) equal.
 	bool operator==(KnownState const& _other) const;
 
-	///@todo the sequence numbers in two copies of this class should never be the same.
-	/// might be doable using two-dimensional sequence numbers, where the first value is incremented
-	/// for each copy
-
 	/// Retrieves the current equivalence class fo the given stack element (or generates a new
 	/// one if it does not exist yet).
 	Id stackElement(int _stackHeight, SourceLocation const& _location);
-	/// @returns the equivalence class id of the special initial stack element at the given height.
-	Id initialStackElement(int _stackHeight, SourceLocation const& _location);
+
+	/// @returns its set of tags if the given expression class is a known tag union; returns a set
+	/// containing the tag if it is a PushTag expression and the empty set otherwise.
+	std::set<u256> tagsInExpression(Id _expressionId);
+	/// During analysis, different tags on the stack are partially treated as the same class.
+	/// This removes such classes not to confuse later analyzers.
+	void clearTagUnions();
 
 	int stackHeight() const { return m_stackHeight; }
 	std::map<int, Id> const& stackElements() const { return m_stackElements; }
@@ -142,6 +144,9 @@ private:
 	/// Finds or creates a new expression that applies the sha3 hash function to the contents in memory.
 	Id applySha3(Id _start, Id _length, SourceLocation const& _location);
 
+	/// @returns a new or already used Id representing the given set of tags.
+	Id tagUnion(std::set<u256> _tags);
+
 	/// Current stack height, can be negative.
 	int m_stackHeight = 0;
 	/// Current stack layout, mapping stack height -> equivalence class
@@ -157,6 +162,8 @@ private:
 	std::map<std::vector<Id>, Id> m_knownSha3Hashes;
 	/// Structure containing the classes of equivalent expressions.
 	std::shared_ptr<ExpressionClasses> m_expressionClasses;
+	/// Container for unions of tags stored on the stack.
+	boost::bimap<Id, std::set<u256>> m_tagUnions;
 };
 
 }

@@ -82,6 +82,16 @@ ExpressionClasses::Id ExpressionClasses::find(
 	return exp.id;
 }
 
+ExpressionClasses::Id ExpressionClasses::newClass(SourceLocation const& _location)
+{
+	Expression exp;
+	exp.id = m_representatives.size();
+	exp.item = storeItem(AssemblyItem(UndefinedItem, (u256(1) << 255) + exp.id, _location));
+	m_representatives.push_back(exp);
+	m_expressions.insert(exp);
+	return exp.id;
+}
+
 bool ExpressionClasses::knownToBeDifferent(ExpressionClasses::Id _a, ExpressionClasses::Id _b)
 {
 	// Try to simplify "_a - _b" and return true iff the value is a non-zero constant.

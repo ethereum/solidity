@@ -108,10 +108,6 @@ private:
 	void setPrevLinks();
 	BasicBlocks rebuildCode();
 
-	/// @returns the corresponding BlockId if _id is a pushed jump tag,
-	/// and an invalid BlockId otherwise.
-	BlockId expressionClassToBlockId(ExpressionClasses::Id _id, ExpressionClasses& _exprClasses);
-
 	BlockId generateNewId();
 
 	unsigned m_lastUsedId = 0;
