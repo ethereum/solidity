@@ -29,6 +29,7 @@
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/Assembly.h>
+#include <libevmasm/BlockDeduplicator.h>
 
 using namespace std;
 using namespace dev::eth;
@@ -125,7 +126,7 @@ public:
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
-	void checkCFG(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	AssemblyItems getCFG(AssemblyItems const& _input)
 	{
 		AssemblyItems output = _input;
 		// Running it four times should be enough for these tests.
@@ -138,6 +139,12 @@ public:
 					 back_inserter(optItems));
 			output = move(optItems);
 		}
+		return output;
+	}
+
+	void checkCFG(AssemblyItems const& _input, AssemblyItems const& _expectation)
+	{
+		AssemblyItems output = getCFG(_input);
 		BOOST_CHECK_EQUAL_COLLECTIONS(_expectation.begin(), _expectation.end(), output.begin(), output.end());
 	}
 
@@ -249,6 +256,63 @@ BOOST_AUTO_TEST_CASE(function_calls)
 	compareVersions("f(uint256)", 0);
 	compareVersions("f(uint256)", 10);
 	compareVersions("f(uint256)", 36);
+}
+
+BOOST_AUTO_TEST_CASE(storage_write_in_loops)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint d;
+			function f(uint a) returns (uint r) {
+				var x = d;
+				for (uint i = 1; i < a * a; i++) {
+					r = d;
+					d = i;
+				}
+
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(uint256)", 0);
+	compareVersions("f(uint256)", 10);
+	compareVersions("f(uint256)", 36);
+}
+
+BOOST_AUTO_TEST_CASE(retain_information_in_branches)
+{
+	// This tests that the optimizer knows that we already have "z == sha3(y)" inside both branches.
+	char const* sourceCode = R"(
+		contract c {
+			bytes32 d;
+			uint a;
+			function f(uint x, bytes32 y) returns (uint r_a, bytes32 r_d) {
+				bytes32 z = sha3(y);
+				if (x > 8) {
+					z = sha3(y);
+					a = x;
+				} else {
+					z = sha3(y);
+					a = x;
+				}
+				r_a = a;
+				r_d = d;
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(uint256,bytes32)", 0, "abc");
+	compareVersions("f(uint256,bytes32)", 8, "def");
+	compareVersions("f(uint256,bytes32)", 10, "ghi");
+
+	m_optimize = true;
+	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "c");
+	size_t numSHA3s = 0;
+	eth::eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
+		if (_instr == eth::Instruction::SHA3)
+			numSHA3s++;
+	});
+	BOOST_CHECK_EQUAL(1, numSHA3s);
 }
 
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
@@ -866,6 +930,35 @@ BOOST_AUTO_TEST_CASE(control_flow_graph_do_not_remove_returned_to)
 		u256(2)
 	};
 	checkCFG(input, {u256(2)});
+}
+
+BOOST_AUTO_TEST_CASE(block_deduplicator)
+{
+	AssemblyItems input{
+		AssemblyItem(PushTag, 2),
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 3),
+		u256(6),
+		eth::Instruction::SWAP3,
+		eth::Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(6),
+		eth::Instruction::SWAP3,
+		eth::Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(6),
+		eth::Instruction::SWAP3,
+		eth::Instruction::JUMP,
+		AssemblyItem(Tag, 3)
+	};
+	BlockDeduplicator dedup(input);
+	dedup.deduplicate();
+
+	set<u256> pushTags;
+	for (AssemblyItem const& item: input)
+		if (item.type() == PushTag)
+			pushTags.insert(item.data());
+	BOOST_CHECK_EQUAL(pushTags.size(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
