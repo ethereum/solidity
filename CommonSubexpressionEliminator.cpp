@@ -199,9 +199,7 @@ void CSECodeGenerator::addDependencies(Id _c)
 		addDependencies(argument);
 		m_neededBy.insert(make_pair(argument, _c));
 	}
-	if (
-		expr.item &&
-		expr.item->type() == Operation && (
+	if (expr.item && expr.item->type() == Operation && (
 		expr.item->instruction() == Instruction::SLOAD ||
 		expr.item->instruction() == Instruction::MLOAD ||
 		expr.item->instruction() == Instruction::SHA3

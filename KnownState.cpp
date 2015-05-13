@@ -230,7 +230,7 @@ ExpressionClasses::Id KnownState::stackElement(int _stackHeight, SourceLocation 
 		return m_stackElements.at(_stackHeight);
 	// Stack element not found (not assigned yet), create new unknown equivalence class.
 	return m_stackElements[_stackHeight] =
-			m_expressionClasses->find(AssemblyItem(UndefinedItem, _stackHeight, _location));
+		m_expressionClasses->find(AssemblyItem(UndefinedItem, _stackHeight, _location));
 }
 
 void KnownState::clearTagUnions()
