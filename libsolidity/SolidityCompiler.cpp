@@ -116,36 +116,35 @@ BOOST_AUTO_TEST_CASE(ifStatement)
 	bytes code = compileContract(sourceCode);
 	unsigned shift = 60;
 	unsigned boilerplateSize = 73;
-	bytes expectation({byte(Instruction::JUMPDEST),
-					   byte(Instruction::PUSH1), 0x0,
-					   byte(Instruction::DUP1),
-					   byte(Instruction::PUSH1), byte(0x1b + shift), // "true" target
-					   byte(Instruction::JUMPI),
-					   // new check "else if" condition
-					   byte(Instruction::DUP1),
-					   byte(Instruction::ISZERO),
-					   byte(Instruction::PUSH1), byte(0x13 + shift),
-					   byte(Instruction::JUMPI),
-					   // "else" body
-					   byte(Instruction::PUSH1), 0x4f,
-					   byte(Instruction::POP),
-					   byte(Instruction::PUSH1), byte(0x17 + shift), // exit path of second part
-					   byte(Instruction::JUMP),
-					   // "else if" body
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::PUSH1), 0x4e,
-					   byte(Instruction::POP),
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::PUSH1), byte(0x1f + shift),
-					   byte(Instruction::JUMP),
-					   // "if" body
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::PUSH1), 0x4d,
-					   byte(Instruction::POP),
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::POP),
-					   byte(Instruction::JUMP)});
+	bytes expectation({
+		byte(Instruction::JUMPDEST),
+		byte(Instruction::PUSH1), 0x0,
+		byte(Instruction::DUP1),
+		byte(Instruction::ISZERO),
+		byte(Instruction::PUSH1), byte(0x0f + shift), // "false" target
+		byte(Instruction::JUMPI),
+		// "if" body
+		byte(Instruction::PUSH1), 0x4d,
+		byte(Instruction::POP),
+		byte(Instruction::PUSH1), byte(0x21 + shift),
+		byte(Instruction::JUMP),
+		// new check "else if" condition
+		byte(Instruction::JUMPDEST),
+		byte(Instruction::DUP1),
+		byte(Instruction::ISZERO),
+		byte(Instruction::ISZERO),
+		byte(Instruction::PUSH1), byte(0x1c + shift),
+		byte(Instruction::JUMPI),
+		// "else if" body
+		byte(Instruction::PUSH1), 0x4e,
+		byte(Instruction::POP),
+		byte(Instruction::PUSH1), byte(0x20 + shift),
+		byte(Instruction::JUMP),
+		// "else" body
+		byte(Instruction::JUMPDEST),
+		byte(Instruction::PUSH1), 0x4f,
+		byte(Instruction::POP),
+	});
 	checkCodePresentAt(code, expectation, boilerplateSize);
 }
 

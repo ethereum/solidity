@@ -157,7 +157,7 @@ void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
 
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests);
-void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
+void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
@@ -179,7 +179,6 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 class Options
 {
 public:
-	bool jit = false;		///< Use JIT
 	bool vmtrace = false;	///< Create EVM execution tracer // TODO: Link with log verbosity?
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
@@ -189,6 +188,7 @@ public:
 	/// Test selection
 	/// @{
 	bool singleTest = false;
+	std::string singleTestFile;
 	std::string singleTestName;
 	bool performance = false;
 	bool quadratic = false;
