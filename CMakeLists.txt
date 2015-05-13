@@ -95,12 +95,6 @@ if (JSONRPC)
 	target_link_libraries(testeth ${JSON_RPC_CPP_CLIENT_LIBRARIES})
 endif()
 
-if (UNIX) # Create symlink to old testeth location to make bildbot happy
-	add_custom_command(TARGET testeth POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_BINARY_DIR}/bin/testeth ${CMAKE_BINARY_DIR}/test/testeth
-	)
-endif()
-
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
 
@@ -116,6 +110,7 @@ eth_add_test(ClientBase
 )
 
 eth_add_test(JsonRpc
-	ARGS --eth_testfile=BlockTests/bcJS_API_Test
+	ARGS --eth_testfile=BlockTests/bcJS_API_Test 
 	ARGS --eth_testfile=BlockTests/bcValidBlockTest
 )
+
