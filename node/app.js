@@ -1,4 +1,4 @@
-var web3 = require('ethereum.js');
+var web3 = require('web3');
 
 console.log(web3.version.api);
 

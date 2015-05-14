@@ -6,15 +6,26 @@ var utils = require('../lib/utils/utils');
 
 var tests = [{
     protocol: 'eth',
-    args: ['pending'],
+    args: ['latest'],
     firstResult: 1,
     firstPayload: {
         method: "eth_newBlockFilter",
-        params: [
-            "pending"
-        ]
+        params: []
     },
-    secondResult: [null],
+    secondResult: ['0x1234'],
+    secondPayload: {
+        method: "eth_getFilterChanges"
+    }
+},
+{
+    protocol: 'eth',
+    args: ['pending'],
+    firstResult: 1,
+    firstPayload: {
+        method: "eth_newPendingTransactionFilter",
+        params: []
+    },
+    secondResult: ['0x1234'],
     secondPayload: {
         method: "eth_getFilterChanges"
     }

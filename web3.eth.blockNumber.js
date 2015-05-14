@@ -32,6 +32,26 @@ describe('web3.eth', function () {
                 // then
                 assert.strictEqual(test.formattedResult, result);
             });
+            
+            it('async get property test: ' + index, function (done) {
+                
+                // given
+                var provider = new FakeHttpProvider();
+                web3.setProvider(provider);
+                provider.injectResult(test.result);
+                provider.injectValidation(function (payload) {
+                    assert.equal(payload.jsonrpc, '2.0');
+                    assert.equal(payload.method, test.call);
+                    assert.deepEqual(payload.params, []);
+                });
+
+                // when 
+                web3.eth.getBlockNumber(function (err, result) {
+                    assert.strictEqual(test.formattedResult, result);
+                    done();
+                });
+                
+            });
         });
     });
 });

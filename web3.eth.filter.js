@@ -37,11 +37,17 @@ var tests = [{
     formattedResult: '0xf',
     call: 'eth_newFilter'
 },{
-    args: ['pending'],
-    formattedArgs: ['pending'],
+    args: ['latest'],
+    formattedArgs: [],
     result: '0xf',
     formattedResult: '0xf',
     call: 'eth_newBlockFilter'
+},{
+    args: ['pending'],
+    formattedArgs: [],
+    result: '0xf',
+    formattedResult: '0xf',
+    call: 'eth_newPendingTransactionFilter'
 }];
 
 describe('web3.eth', function () {

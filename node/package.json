@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ethereum.js": "ethereum/ethereum.js#master"
+    "web3": "ethereum/web3.js#master"
   }
 }
