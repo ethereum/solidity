@@ -226,7 +226,10 @@ void ControlFlowGraph::gatherKnowledge()
 		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
 		assertThrow(!!workQueue.back().first, OptimizerException, "");
 		if (!m_blocks.count(workQueue.back().first))
+		{
+			workQueue.pop_back();
 			continue; // too bad, we do not know the tag, probably an invalid jump
+		}
 		BasicBlock& block = m_blocks.at(workQueue.back().first);
 		KnownStatePointer state = workQueue.back().second;
 		workQueue.pop_back();
@@ -257,10 +260,7 @@ void ControlFlowGraph::gatherKnowledge()
 			);
 			state->feedItem(m_items.at(pc++));
 
-			if (tags.empty() || std::any_of(tags.begin(), tags.end(), [&](u256 const& _tag)
-			{
-				return !m_blocks.count(BlockId(_tag));
-			}))
+			if (tags.empty())
 			{
 				if (!unknownJumpEncountered)
 				{
