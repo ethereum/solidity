@@ -121,13 +121,13 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 			_out << "  " << instructionInfo(i.instruction()).name  << "\t" << i.getJumpTypeAsString();
 			break;
 		case Push:
-			_out << "  PUSH " << i.data();
+			_out << "  PUSH " << hex << i.data();
 			break;
 		case PushString:
 			_out << "  PUSH \"" << m_strings.at((h256)i.data()) << "\"";
 			break;
 		case PushTag:
-			_out << "  PUSH [tag" << i.data() << "]";
+			_out << "  PUSH [tag" << dec << i.data() << "]";
 			break;
 		case PushSub:
 			_out << "  PUSH [$" << h256(i.data()).abridged() << "]";
@@ -139,7 +139,7 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 			_out << "  PUSHSIZE";
 			break;
 		case Tag:
-			_out << "tag" << i.data() << ": " << endl << _prefix << "  JUMPDEST";
+			_out << "tag" << dec << i.data() << ": " << endl << _prefix << "  JUMPDEST";
 			break;
 		case PushData:
 			_out << "  PUSH [" << hex << (unsigned)i.data() << "]";
@@ -208,7 +208,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 			break;
 		case PushTag:
 			collection.append(
-				createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
+				createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, string(i.data())));
 			break;
 		case PushSub:
 			collection.append(
@@ -223,19 +223,13 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 				createJsonValue("PUSHSIZE", i.getLocation().start, i.getLocation().end));
 			break;
 		case Tag:
-		{
 			collection.append(
 				createJsonValue("tag", i.getLocation().start, i.getLocation().end, string(i.data())));
 			collection.append(
 				createJsonValue("JUMDEST", i.getLocation().start, i.getLocation().end));
-		}
 			break;
 		case PushData:
-		{
-			Json::Value pushData;
-			pushData["name"] = "PUSH hex";
-			collection.append(createJsonValue("PUSH hex", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
-		}
+			collection.append(createJsonValue("PUSH data", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
