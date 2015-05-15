@@ -50,6 +50,14 @@ string formatError(Exception const& _exception, string const& _name, CompilerSta
 	return Json::FastWriter().write(output);
 }
 
+Json::Value functionHashes(ContractDefinition const& _contract)
+{
+	Json::Value functionHashes(Json::objectValue);
+	for (auto const& it: _contract.getInterfaceFunctions())
+		functionHashes[it.second->externalSignature()] = toHex(it.first.ref());
+	return functionHashes;
+}
+
 string compile(string _input, bool _optimize)
 {
 	StringMap sources;
@@ -100,6 +108,7 @@ string compile(string _input, bool _optimize)
 		contractData["interface"] = compiler.getInterface(contractName);
 		contractData["bytecode"] = toHex(compiler.getBytecode(contractName));
 		contractData["opcodes"] = eth::disassemble(compiler.getBytecode(contractName));
+		contractData["functionHashes"] = functionHashes(compiler.getContractDefinition(contractName));
 		ostringstream unused;
 		contractData["assembly"] = compiler.streamAssembly(unused, contractName, sources, true);
 		output["contracts"][contractName] = contractData;
