@@ -98,8 +98,10 @@ private:
 	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
 
 	/// Appends code to call a function of the given type with the given arguments.
-	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments,
-									bool bare = false);
+	void appendExternalFunctionCall(
+		FunctionType const& _functionType,
+		std::vector<ASTPointer<Expression const>> const& _arguments
+	);
 	/// Appends code that evaluates the given arguments and moves the result to memory encoded as
 	/// specified by the ABI. The memory offset is expected to be on the stack and is updated by
 	/// this call. If @a _padToWordBoundaries is set to false, all values are concatenated without

@@ -316,6 +316,7 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 const MemberList IntegerType::AddressMemberList({
 	{"balance", make_shared<IntegerType >(256)},
 	{"call", make_shared<FunctionType>(strings(), strings(), FunctionType::Location::Bare, true)},
+	{"callcode", make_shared<FunctionType>(strings(), strings(), FunctionType::Location::BareCallCode, true)},
 	{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::Send)}
 });
 
@@ -1115,9 +1116,11 @@ unsigned FunctionType::getSizeOnStack() const
 	}
 
 	unsigned size = 0;
-	if (location == Location::External)
+	if (location == Location::External || location == Location::CallCode)
 		size = 2;
-	else if (location == Location::Internal || location == Location::Bare)
+	else if (location == Location::Bare || location == Location::BareCallCode)
+		size = 1;
+	else if (location == Location::Internal)
 		size = 1;
 	if (m_gasSet)
 		size++;
@@ -1156,6 +1159,7 @@ MemberList const& FunctionType::getMembers() const
 	case Location::SHA256:
 	case Location::RIPEMD160:
 	case Location::Bare:
+	case Location::BareCallCode:
 		if (!m_members)
 		{
 			MemberList::MemberMap members{
@@ -1226,6 +1230,21 @@ bool FunctionType::hasEqualArgumentTypes(FunctionType const& _other) const
 		_other.m_parameterTypes.cbegin(),
 		[](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; }
 	);
+}
+
+bool FunctionType::isBareCall() const
+{
+	switch (m_location)
+	{
+	case Location::Bare:
+	case Location::BareCallCode:
+	case Location::ECRecover:
+	case Location::SHA256:
+	case Location::RIPEMD160:
+		return true;
+	default:
+		return false;
+	}
 }
 
 string FunctionType::externalSignature(std::string const& _name) const
