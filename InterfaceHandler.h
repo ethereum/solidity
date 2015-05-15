@@ -108,8 +108,6 @@ private:
 											std::string const& _tag,
 											CommentOwner _owner);
 
-	Json::StyledWriter m_writer;
-
 	// internal state
 	DocTagType m_lastTag;
 	std::string m_notice;

@@ -101,7 +101,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 		event["inputs"] = params;
 		abi.append(event);
 	}
-	return std::unique_ptr<std::string>(new std::string(m_writer.write(abi)));
+	return std::unique_ptr<std::string>(new std::string(Json::FastWriter().write(abi)));
 }
 
 unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
@@ -153,7 +153,7 @@ std::unique_ptr<std::string> InterfaceHandler::getUserDocumentation(ContractDefi
 	}
 	doc["methods"] = methods;
 
-	return std::unique_ptr<std::string>(new std::string(m_writer.write(doc)));
+	return std::unique_ptr<std::string>(new std::string(Json::FastWriter().write(doc)));
 }
 
 std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefinition const& _contractDef)
@@ -217,7 +217,7 @@ std::unique_ptr<std::string> InterfaceHandler::getDevDocumentation(ContractDefin
 	}
 	doc["methods"] = methods;
 
-	return std::unique_ptr<std::string>(new std::string(m_writer.write(doc)));
+	return std::unique_ptr<std::string>(new std::string(Json::FastWriter().write(doc)));
 }
 
 /* -- private -- */
