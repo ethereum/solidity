@@ -458,9 +458,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		}
 		case Location::External:
+		case Location::CallCode:
 		case Location::Bare:
+		case Location::BareCallCode:
 			_functionCall.getExpression().accept(*this);
-			appendExternalFunctionCall(function, arguments, function.getLocation() == Location::Bare);
+			appendExternalFunctionCall(function, arguments);
 			break;
 		case Location::Creation:
 		{
@@ -527,13 +529,12 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					TypePointers{},
 					strings(),
 					strings(),
-					Location::External,
+					Location::Bare,
 					false,
 					true,
 					true
 				),
-				{},
-				true
+				{}
 			);
 			break;
 		case Location::Suicide:
@@ -622,7 +623,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << contractAddresses.find(function.getLocation())->second;
 			for (unsigned i = function.getSizeOnStack(); i > 0; --i)
 				m_context << eth::swapInstruction(i);
-			appendExternalFunctionCall(function, arguments, true);
+			appendExternalFunctionCall(function, arguments);
 			break;
 		}
 		default:
@@ -685,7 +686,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 								 IntegerType(0, IntegerType::Modifier::Address), true);
 			m_context << eth::Instruction::BALANCE;
 		}
-		else if (member == "send" || member.substr(0, min<size_t>(member.size(), 4)) == "call")
+		else if ((set<string>{"send", "call", "callcode"}).count(member))
 			appendTypeConversion(*_memberAccess.getExpression().getType(),
 								 IntegerType(0, IntegerType::Modifier::Address), true);
 		else
@@ -1031,9 +1032,10 @@ void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
 		m_context << ((u256(1) << _typeOnStack.getNumBits()) - 1) << eth::Instruction::AND;
 }
 
-void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functionType,
-													vector<ASTPointer<Expression const>> const& _arguments,
-													bool bare)
+void ExpressionCompiler::appendExternalFunctionCall(
+	FunctionType const& _functionType,
+	vector<ASTPointer<Expression const>> const& _arguments
+)
 {
 	solAssert(_functionType.takesArbitraryParameters() ||
 			  _arguments.size() == _functionType.getParameterTypes().size(), "");
@@ -1047,7 +1049,7 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 
 	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
 
-	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + (bare ? 0 : 1));
+	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + (_functionType.isBareCall() ? 0 : 1));
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
 
@@ -1057,7 +1059,7 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 	unsigned retSize = firstType ? firstType->getCalldataEncodedSize() : 0;
 	m_context << u256(retSize) << u256(0);
 
-	if (bare)
+	if (_functionType.isBareCall())
 		m_context << u256(0);
 	else
 	{
@@ -1074,7 +1076,8 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		_arguments,
 		_functionType.getParameterTypes(),
 		_functionType.padArguments(),
-		bare,
+		_functionType.getLocation() == FunctionType::Location::Bare ||
+			_functionType.getLocation() == FunctionType::Location::BareCallCode,
 		_functionType.takesArbitraryParameters()
 	);
 
@@ -1093,14 +1096,20 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
 		m_context << u256(50 + (_functionType.valueSet() ? 9000 : 0) + 25000) << eth::Instruction::GAS << eth::Instruction::SUB;
-	m_context << eth::Instruction::CALL;
+	if (
+		_functionType.getLocation() == FunctionType::Location::CallCode ||
+		_functionType.getLocation() == FunctionType::Location::BareCallCode
+	)
+		m_context << eth::Instruction::CALLCODE;
+	else
+		m_context << eth::Instruction::CALL;
 	auto tag = m_context.appendConditionalJump();
 	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.
 	if (_functionType.valueSet())
 		m_context << eth::Instruction::POP;
 	if (_functionType.gasSet())
 		m_context << eth::Instruction::POP;
-	if (!bare)
+	if (!_functionType.isBareCall())
 		m_context << eth::Instruction::POP;
 	m_context << eth::Instruction::POP; // pop contract address
 

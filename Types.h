@@ -540,17 +540,32 @@ private:
 class FunctionType: public Type
 {
 public:
-	/// The meaning of the value(s) on the stack referencing the function:
-	/// INTERNAL: jump tag, EXTERNAL: contract address + function identifier,
-	/// BARE: contract address (non-abi contract call)
-	/// OTHERS: special virtual function, nothing on the stack
+	/// How this function is invoked on the EVM.
 	/// @todo This documentation is outdated, and Location should rather be named "Type"
-	enum class Location { Internal, External, Creation, Send,
-						  SHA3, Suicide,
-						  ECRecover, SHA256, RIPEMD160,
-						  Log0, Log1, Log2, Log3, Log4, Event,
-						  SetGas, SetValue, BlockHash,
-						  Bare };
+	enum class Location
+	{
+		Internal, ///< stack-call using plain JUMP
+		External, ///< external call using CALL
+		CallCode, ///< extercnal call using CALLCODE, i.e. not exchanging the storage
+		Bare, ///< CALL without function hash
+		BareCallCode, ///< CALLCODE without function hash
+		Creation, ///< external call using CREATE
+		Send, ///< CALL, but without data and gas
+		SHA3, ///< SHA3
+		Suicide, ///< SUICIDE
+		ECRecover, ///< CALL to special contract for ecrecover
+		SHA256, ///< CALL to special contract for sha256
+		RIPEMD160, ///< CALL to special contract for ripemd160
+		Log0,
+		Log1,
+		Log2,
+		Log3,
+		Log4,
+		Event, ///< syntactic sugar for LOG*
+		SetGas, ///< modify the default gas value for the function call
+		SetValue, ///< modify the default value transfer for the function call
+		BlockHash ///< BLOCKHASH
+	};
 
 	virtual Category getCategory() const override { return Category::Function; }
 
@@ -620,6 +635,8 @@ public:
 	/// @returns true if the types of parameters are equal (does't check return parameter types)
 	bool hasEqualArgumentTypes(FunctionType const& _other) const;
 
+	/// @returns true if the ABI is used for this call (only meaningful for external calls)
+	bool isBareCall() const;
 	Location const& getLocation() const { return m_location; }
 	/// @returns the external signature of this function type given the function name
 	/// If @a _name is not provided (empty string) then the @c m_declaration member of the
