@@ -67,7 +67,7 @@ public:
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
 	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMPI); return ret; }
-	AssemblyItem errorTag() { return AssemblyItem(PushTag,  0); }
+	AssemblyItem errorTag() { return AssemblyItem(PushTag, 0); }
 
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
 	AssemblyItems const& getItems() const { return m_items; }
