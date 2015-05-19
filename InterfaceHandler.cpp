@@ -107,17 +107,25 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
 {
 	string ret = "contract " + _contractDef.getName() + "{";
+
+	auto populateParameters = [](vector<string> const& _paramNames,
+			vector<string> const& _paramTypes)
+	{
+		string r = "";
+		solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
+		for (unsigned i = 0; i < _paramNames.size(); ++i)
+			r += (r.size() ? "," : "(") + _paramTypes[i] + " " + _paramNames[i];
+		return r.size() ? r + ")" : "()";
+	};
+	if (_contractDef.getConstructor())
+	{
+		auto externalFunction = FunctionType(*_contractDef.getConstructor()).externalFunctionType();
+		solAssert(!!externalFunction, "");
+		ret += "function " + _contractDef.getName() +
+			populateParameters(externalFunction->getParameterNames(), externalFunction->getParameterTypeNames());
+	}
 	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
-		auto populateParameters = [](vector<string> const& _paramNames,
-									 vector<string> const& _paramTypes)
-		{
-			string r = "";
-			solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
-			for (unsigned i = 0; i < _paramNames.size(); ++i)
-				r += (r.size() ? "," : "(") + _paramTypes[i] + " " + _paramNames[i];
-			return r.size() ? r + ")" : "()";
-		};
 		ret += "function " + it.second->getDeclaration().getName() +
 			populateParameters(it.second->getParameterNames(), it.second->getParameterTypeNames()) +
 			(it.second->isConstant() ? "constant " : "");
