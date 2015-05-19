@@ -195,6 +195,7 @@ public:
 	bool memory = false;
 	bool inputLimits = false;
 	bool bigData = false;
+	bool wallet = false;
 	/// @}
 
 	/// Get reference to options

@@ -2558,6 +2558,37 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
 }
 
+BOOST_AUTO_TEST_CASE(generic_callcode)
+{
+	char const* sourceCode = R"**(
+			contract receiver {
+				uint public received;
+				function receive(uint256 x) { received = x; }
+			}
+			contract sender {
+				uint public received;
+				function doSend(address rec) returns (uint d)
+				{
+					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
+					rec.callcode.value(2)(signature, 23);
+					return receiver(rec).received();
+				}
+			}
+	)**";
+	compileAndRun(sourceCode, 0, "receiver");
+	u160 const c_receiverAddress = m_contractAddress;
+	compileAndRun(sourceCode, 50, "sender");
+	u160 const c_senderAddress = m_contractAddress;
+	BOOST_CHECK(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("received()") == encodeArgs(23));
+	m_contractAddress = c_receiverAddress;
+	BOOST_CHECK(callContractFunction("received()") == encodeArgs(0));
+	BOOST_CHECK(m_state.storage(c_receiverAddress).empty());
+	BOOST_CHECK(!m_state.storage(c_senderAddress).empty());
+	BOOST_CHECK_EQUAL(m_state.balance(c_receiverAddress), 0);
+	BOOST_CHECK_EQUAL(m_state.balance(c_senderAddress), 50);
+}
+
 BOOST_AUTO_TEST_CASE(store_bytes)
 {
 	// this test just checks that the copy loop does not mess up the stack
