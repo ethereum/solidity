@@ -23,7 +23,7 @@
 #include <string>
 
 #include <libdevcore/Log.h>
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/SHA3.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>

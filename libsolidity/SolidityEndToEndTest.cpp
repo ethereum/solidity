@@ -24,7 +24,7 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libdevcrypto/Hash.h>
+#include <libdevcore/Hash.h>
 #include <test/libsolidity/solidityExecutionFramework.h>
 
 using namespace std;
