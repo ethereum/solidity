@@ -98,7 +98,7 @@ public:
 	eth::AssemblyItem appendJumpToNew() { return m_asm.appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
 	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
-	/// Appends a JUMP to an "ErrorTag"
+	/// Returns an "ErrorTag"
 	eth::AssemblyItem errorTag() { return m_asm.errorTag(); }
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJump(_tag); return *this; }
