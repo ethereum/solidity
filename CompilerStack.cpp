@@ -31,7 +31,7 @@
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/InterfaceHandler.h>
 
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/SHA3.h>
 
 using namespace std;
 

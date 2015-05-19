@@ -24,7 +24,7 @@
 #include <numeric>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libdevcore/Common.h>
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/SHA3.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/CompilerContext.h>
