@@ -121,8 +121,11 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 	{
 		auto externalFunction = FunctionType(*_contractDef.getConstructor()).externalFunctionType();
 		solAssert(!!externalFunction, "");
-		ret += "function " + _contractDef.getName() +
-			populateParameters(externalFunction->getParameterNames(), externalFunction->getParameterTypeNames());
+		ret +=
+			"function " +
+			_contractDef.getName() +
+			populateParameters(externalFunction->getParameterNames(), externalFunction->getParameterTypeNames()) +
+			";";
 	}
 	for (auto const& it: _contractDef.getInterfaceFunctions())
 	{
