@@ -4111,6 +4111,30 @@ BOOST_AUTO_TEST_CASE(struct_delete_struct_in_mapping)
 	BOOST_CHECK(callContractFunction("deleteIt()") == encodeArgs(0));
 }
 
+BOOST_AUTO_TEST_CASE(evm_exceptions)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint[3] arr;
+			bool public test = false;
+			function getElement(uint i) returns (uint)
+			{
+				return arr[i];
+			}
+			function testIt() returns (bool)
+			{
+				uint i = this.getElement(5);
+				test = true;
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "A");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(false));
+	BOOST_CHECK(callContractFunction("testIt()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(false));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
