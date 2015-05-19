@@ -1102,10 +1102,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	)
 		m_context << eth::Instruction::CALLCODE;
 	else
-	{
-		m_context << eth::Instruction::CALL << eth::Instruction::ISZERO;
-		auto tag = m_context.appendConditionalJumpTo(m_context.errorTag());// if CALL leaves 0.
-	}
+		m_context << eth::Instruction::CALL;
+
+	m_context << eth::Instruction::ISZERO;
+	auto tag = m_context.appendConditionalJumpTo(m_context.errorTag());// if CALL leaves 0.
+
 	if (_functionType.valueSet())
 		m_context << eth::Instruction::POP;
 	if (_functionType.gasSet())
