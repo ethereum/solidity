@@ -55,10 +55,27 @@ const map<string, string> StandardSources = map<string, string>{
 };
 
 CompilerStack::CompilerStack(bool _addStandardSources):
-	m_addStandardSources(_addStandardSources), m_parseSuccessful(false)
+	m_parseSuccessful(false)
 {
-	if (m_addStandardSources)
+	if (_addStandardSources)
 		addSources(StandardSources, true); // add them as libraries
+}
+
+void CompilerStack::reset(bool _keepSources, bool _addStandardSources)
+{
+	m_parseSuccessful = false;
+	if (_keepSources)
+		for (auto sourcePair: m_sources)
+			sourcePair.second.reset();
+	else
+	{
+		m_sources.clear();
+		if (_addStandardSources)
+			addSources(StandardSources, true);
+	}
+	m_globalContext.reset();
+	m_sourceOrder.clear();
+	m_contracts.clear();
 }
 
 bool CompilerStack::addSource(string const& _name, string const& _content, bool _isLibrary)
@@ -267,23 +284,6 @@ tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocati
 	tie(endLine, endColumn) = getScanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.end);
 
 	return make_tuple(++startLine, ++startColumn, ++endLine, ++endColumn);
-}
-
-void CompilerStack::reset(bool _keepSources)
-{
-	m_parseSuccessful = false;
-	if (_keepSources)
-		for (auto sourcePair: m_sources)
-			sourcePair.second.reset();
-	else
-	{
-		m_sources.clear();
-		if (m_addStandardSources)
-			addSources(StandardSources, true);
-	}
-	m_globalContext.reset();
-	m_sourceOrder.clear();
-	m_contracts.clear();
 }
 
 void CompilerStack::resolveImports()

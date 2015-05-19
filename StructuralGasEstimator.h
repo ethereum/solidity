@@ -56,6 +56,10 @@ public:
 		ASTGasConsumptionSelfAccumulated const& _gasCosts,
 		std::vector<ASTNode const*> const& _roots
 	);
+
+private:
+	/// @returns the set of AST nodes which are the finest nodes at their location.
+	std::set<ASTNode const*> finestNodesAtLocation(std::vector<ASTNode const*> const& _roots);
 };
 
 }

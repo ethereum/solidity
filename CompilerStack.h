@@ -72,6 +72,9 @@ public:
 	/// Creates a new compiler stack. Adds standard sources if @a _addStandardSources.
 	explicit CompilerStack(bool _addStandardSources = true);
 
+	/// Resets the compiler to a state where the sources are not parsed or even removed.
+	void reset(bool _keepSources = false, bool _addStandardSources = true);
+
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
 	void addSources(StringMap const& _nameContents, bool _isLibrary = false) { for (auto const& i: _nameContents) addSource(i.first, i.second, _isLibrary); }
@@ -165,13 +168,11 @@ private:
 		Contract();
 	};
 
-	void reset(bool _keepSources = false);
 	void resolveImports();
 
 	Contract const& getContract(std::string const& _contractName = "") const;
 	Source const& getSource(std::string const& _sourceName = "") const;
 
-	bool m_addStandardSources; ///< If true, standard sources are added.
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;

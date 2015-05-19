@@ -23,6 +23,9 @@
 #include "StructuralGasEstimator.h"
 #include <map>
 #include <functional>
+#include <memory>
+#include <libevmasm/ControlFlowGraph.h>
+#include <libevmasm/KnownState.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/ASTVisitor.h>
 
@@ -38,14 +41,23 @@ StructuralGasEstimator::ASTGasConsumptionSelfAccumulated StructuralGasEstimator:
 {
 	solAssert(std::count(_ast.begin(), _ast.end(), nullptr) == 0, "");
 	map<SourceLocation, GasMeter::GasConsumption> particularCosts;
-	GasMeter meter;
 
-	for (auto const& item: _items)
-		particularCosts[item.getLocation()] += meter.estimateMax(item);
+	ControlFlowGraph cfg(_items);
+	for (BasicBlock const& block: cfg.optimisedBlocks())
+	{
+		assertThrow(!!block.startState, OptimizerException, "");
+		GasMeter meter(block.startState->copy());
+		auto const end = _items.begin() + block.end;
+		for (auto iter = _items.begin() + block.begin; iter != end; ++iter)
+			particularCosts[iter->getLocation()] += meter.estimateMax(*iter);
+	}
 
+	set<ASTNode const*> finestNodes = finestNodesAtLocation(_ast);
 	ASTGasConsumptionSelfAccumulated gasCosts;
 	auto onNode = [&](ASTNode const& _node)
 	{
+		if (!finestNodes.count(&_node))
+			return true;
 		gasCosts[&_node][0] = gasCosts[&_node][1] = particularCosts[_node.getLocation()];
 		return true;
 	};
@@ -108,3 +120,24 @@ map<ASTNode const*, GasMeter::GasConsumption> StructuralGasEstimator::breakToSta
 	// gasCosts should only contain non-overlapping locations
 	return gasCosts;
 }
+
+set<ASTNode const*> StructuralGasEstimator::finestNodesAtLocation(
+	vector<ASTNode const*> const& _roots
+)
+{
+	map<SourceLocation, ASTNode const*> locations;
+	set<ASTNode const*> nodes;
+	SimpleASTVisitor visitor(function<bool(ASTNode const&)>(), [&](ASTNode const& _n)
+	{
+		if (!locations.count(_n.getLocation()))
+		{
+			locations[_n.getLocation()] = &_n;
+			nodes.insert(&_n);
+		}
+	});
+
+	for (ASTNode const* root: _roots)
+		root->accept(visitor);
+	return nodes;
+}
+

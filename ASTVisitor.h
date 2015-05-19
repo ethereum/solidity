@@ -221,6 +221,26 @@ protected:
 };
 
 /**
+ * Utility class that accepts std::functions and calls them for visitNode and endVisitNode.
+ */
+class SimpleASTVisitor: public ASTConstVisitor
+{
+public:
+	SimpleASTVisitor(
+		std::function<bool(ASTNode const&)> _onVisit,
+		std::function<void(ASTNode const&)> _onEndVisit
+	): m_onVisit(_onVisit), m_onEndVisit(_onEndVisit) {}
+
+protected:
+	virtual bool visitNode(ASTNode const& _n) override { return m_onVisit ? m_onVisit(_n) : true; }
+	virtual void endVisitNode(ASTNode const& _n) override { m_onEndVisit(_n); }
+
+private:
+	std::function<bool(ASTNode const&)> m_onVisit;
+	std::function<void(ASTNode const&)> m_onEndVisit;
+};
+
+/**
  * Utility class that visits the AST in depth-first order and calls a function on each node and each edge.
  * Child nodes are only visited if the node callback of the parent returns true.
  * The node callback of a parent is called before any edge or node callback involving the children.
