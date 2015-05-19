@@ -22,6 +22,7 @@
 #pragma once
 
 #include <ostream>
+#include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/AssemblyItem.h>
 
 namespace dev
@@ -29,8 +30,13 @@ namespace dev
 namespace eth
 {
 
+class KnownState;
+
 /**
  * Class that helps computing the maximum gas consumption for instructions.
+ * Has to be initialized with a certain known state that will be automatically updated for
+ * each call to estimateMax. These calls have to supply strictly subsequent AssemblyItems.
+ * A new gas meter has to be constructed (with a new state) for control flow changes.
  */
 class GasMeter
 {
@@ -47,11 +53,28 @@ public:
 		bool isInfinite;
 	};
 
-	/// Returns an upper bound on the gas consumed by the given instruction.
+	/// Constructs a new gas meter given the current state.
+	GasMeter(std::shared_ptr<KnownState> const& _state): m_state(_state) {}
+
+	/// @returns an upper bound on the gas consumed by the given instruction and updates
+	/// the state.
 	GasConsumption estimateMax(AssemblyItem const& _item);
 
 private:
+	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.
+	GasConsumption wordGas(u256 const& _multiplier, ExpressionClasses::Id _value);
+	/// @returns the gas needed to access the given memory position.
+	/// @todo this assumes that memory was never accessed before and thus over-estimates gas usage.
+	GasConsumption memoryGas(ExpressionClasses::Id _position);
+	/// @returns the memory gas for accessing the memory at a specific offset for a number of bytes
+	/// given as values on the stack at the given relative positions.
+	GasConsumption memoryGas(int _stackPosOffset, int _stackPosSize);
+
 	static GasConsumption runGas(Instruction _instruction);
+
+	std::shared_ptr<KnownState> m_state;
+	/// Largest point where memory was accessed since the creation of this object.
+	u256 m_largestMemoryAccess;
 };
 
 inline std::ostream& operator<<(std::ostream& _str, GasMeter::GasConsumption const& _consumption)
@@ -59,7 +82,7 @@ inline std::ostream& operator<<(std::ostream& _str, GasMeter::GasConsumption con
 	if (_consumption.isInfinite)
 		return _str << "inf";
 	else
-		return _str << _consumption.value;
+		return _str << std::dec << _consumption.value;
 }
 
 

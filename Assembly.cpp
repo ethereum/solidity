@@ -431,6 +431,7 @@ bytes Assembly::assemble() const
 		case PushSubSize:
 		{
 			auto s = m_data[i.data()].size();
+			i.setPushedValue(u256(s));
 			byte b = max<unsigned>(1, dev::bytesRequired(s));
 			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
 			ret.resize(ret.size() + b);

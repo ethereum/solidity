@@ -92,7 +92,11 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 	else if (_item.type() != Operation)
 	{
 		assertThrow(_item.deposit() == 1, InvalidDeposit, "");
-		setStackElement(++m_stackHeight, m_expressionClasses->find(_item, {}, _copyItem));
+		if (_item.pushedValue())
+			// only available after assembly stage, should not be used for optimisation
+			setStackElement(++m_stackHeight, m_expressionClasses->find(*_item.pushedValue()));
+		else
+			setStackElement(++m_stackHeight, m_expressionClasses->find(_item, {}, _copyItem));
 	}
 	else
 	{
@@ -230,7 +234,12 @@ ExpressionClasses::Id KnownState::stackElement(int _stackHeight, SourceLocation 
 		return m_stackElements.at(_stackHeight);
 	// Stack element not found (not assigned yet), create new unknown equivalence class.
 	return m_stackElements[_stackHeight] =
-		m_expressionClasses->find(AssemblyItem(UndefinedItem, _stackHeight, _location));
+			m_expressionClasses->find(AssemblyItem(UndefinedItem, _stackHeight, _location));
+}
+
+KnownState::Id KnownState::relativeStackElement(int _stackOffset, SourceLocation const& _location)
+{
+	return stackElement(m_stackHeight + _stackOffset, _location);
 }
 
 void KnownState::clearTagUnions()

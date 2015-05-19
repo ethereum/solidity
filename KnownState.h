@@ -111,6 +111,8 @@ public:
 	/// Retrieves the current equivalence class fo the given stack element (or generates a new
 	/// one if it does not exist yet).
 	Id stackElement(int _stackHeight, SourceLocation const& _location);
+	/// @returns the stackElement relative to the current stack height.
+	Id relativeStackElement(int _stackOffset, SourceLocation const& _location = SourceLocation());
 
 	/// @returns its set of tags if the given expression class is a known tag union; returns a set
 	/// containing the tag if it is a PushTag expression and the empty set otherwise.
@@ -122,6 +124,8 @@ public:
 	int stackHeight() const { return m_stackHeight; }
 	std::map<int, Id> const& stackElements() const { return m_stackElements; }
 	ExpressionClasses& expressionClasses() const { return *m_expressionClasses; }
+
+	std::map<Id, Id> const& storageContent() const { return m_storageContent; }
 
 private:
 	/// Assigns a new equivalence class to the next sequence number of the given stack element.

@@ -84,11 +84,17 @@ public:
 	JumpType getJumpType() const { return m_jumpType; }
 	std::string getJumpTypeAsString() const;
 
+	void setPushedValue(u256 const& _value) const { m_pushedValue = std::make_shared<u256>(_value); }
+	u256 const* pushedValue() const { return m_pushedValue.get(); }
+
 private:
 	AssemblyItemType m_type;
 	u256 m_data;
 	SourceLocation m_location;
 	JumpType m_jumpType = JumpType::Ordinary;
+	/// Pushed value for operations with data to be determined during assembly stage,
+	/// e.g. PushSubSize, PushTag, PushSub, etc.
+	mutable std::shared_ptr<u256> m_pushedValue;
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
