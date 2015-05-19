@@ -44,11 +44,11 @@ public:
 
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
-		dev::solidity::CompilerStack compiler(m_addStandardSources);
-		compiler.addSource("", _sourceCode);
-		ETH_TEST_REQUIRE_NO_THROW(compiler.compile(m_optimize), "Compiling contract failed");
+		m_compiler.reset(false, m_addStandardSources);
+		m_compiler.addSource("", _sourceCode);
+		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize), "Compiling contract failed");
 
-		bytes code = compiler.getBytecode(_contractName);
+		bytes code = m_compiler.getBytecode(_contractName);
 		sendMessage(code, true, _value);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
@@ -160,12 +160,14 @@ protected:
 		BOOST_REQUIRE(executive.go());
 		m_state.noteSending(m_sender);
 		executive.finalize();
+		m_gasUsed = executive.gasUsed();
 		m_output = executive.out().toVector();
 		m_logs = executive.logs();
 	}
 
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
+	dev::solidity::CompilerStack m_compiler;
 	Address m_sender;
 	Address m_contractAddress;
 	eth::State m_state;
@@ -173,6 +175,7 @@ protected:
 	u256 const m_gas = 100000000;
 	bytes m_output;
 	eth::LogEntries m_logs;
+	u256 m_gasUsed;
 };
 
 }
