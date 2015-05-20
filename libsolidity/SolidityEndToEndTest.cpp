@@ -4049,7 +4049,7 @@ BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
 				x.m_value = 3;
 				data3 = x; //should copy the data. data3.m_value == 3
 				ret_global3 = data3.m_value; // = 3
-				ret_global1 = data1.m_value; // = 3
+				ret_global1 = data1.m_value; // = 3. Changed due to the assignment to x.m_value
 			}
 		}
 	)";
