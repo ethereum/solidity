@@ -24,7 +24,7 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/Hash.h>
 #include <test/libsolidity/solidityExecutionFramework.h>
 
 using namespace std;
@@ -1501,9 +1501,7 @@ BOOST_AUTO_TEST_CASE(sha256)
 	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _input) -> u256
 	{
-		h256 ret;
-		dev::sha256(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
-		return ret;
+		return dev::sha256(dev::ref(toBigEndian(_input)));
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -1520,9 +1518,7 @@ BOOST_AUTO_TEST_CASE(ripemd)
 	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _input) -> u256
 	{
-		h256 ret;
-		dev::ripemd160(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
-		return u256(ret);
+		return h256(dev::ripemd160(h256(_input).ref()), h256::AlignLeft);	// This should be aligned right. i guess it's fixed elsewhere?
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
