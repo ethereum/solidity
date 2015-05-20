@@ -213,9 +213,9 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 			if (i.data() == 0)
 				collection.append(
 					createJsonValue("PUSH [ErrorTag]", i.getLocation().start, i.getLocation().end, ""));
-
-			collection.append(
-				createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, string(i.data())));
+			else
+				collection.append(
+					createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, string(i.data())));
 			break;
 		case PushSub:
 			collection.append(
