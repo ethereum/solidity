@@ -4040,7 +4040,7 @@ BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
 			}
 			function assign() returns (uint ret_local, uint ret_global, uint ret_global3, uint ret_global1)
 			{
-				testStruct x = data1; //x is a reference data1..m_value == 2 as well as x.m_value = 2
+				testStruct x = data1; //x is a reference data1.m_value == 2 as well as x.m_value = 2
 				data2 = data1; // should copy data. data2.m_value == 2
 
 				ret_local = x.m_value; // = 2
@@ -4049,7 +4049,7 @@ BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
 				x.m_value = 3;
 				data3 = x; //should copy the data. data3.m_value == 3
 				ret_global3 = data3.m_value; // = 3
-				ret_global1 = data1.m_value; // =3
+				ret_global1 = data1.m_value; // = 3
 			}
 		}
 	)";
