@@ -24,7 +24,7 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/Hash.h>
 #include <test/libsolidity/solidityExecutionFramework.h>
 
 using namespace std;
@@ -1501,9 +1501,7 @@ BOOST_AUTO_TEST_CASE(sha256)
 	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _input) -> u256
 	{
-		h256 ret;
-		dev::sha256(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
-		return ret;
+		return dev::sha256(dev::ref(toBigEndian(_input)));
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -1520,9 +1518,7 @@ BOOST_AUTO_TEST_CASE(ripemd)
 	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _input) -> u256
 	{
-		h256 ret;
-		dev::ripemd160(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
-		return u256(ret);
+		return h256(dev::ripemd160(h256(_input).ref()), h256::AlignLeft);	// This should be aligned right. i guess it's fixed elsewhere?
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -2556,6 +2552,37 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	compileAndRun(sourceCode, 50, "sender");
 	BOOST_REQUIRE(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(23));
 	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
+}
+
+BOOST_AUTO_TEST_CASE(generic_callcode)
+{
+	char const* sourceCode = R"**(
+			contract receiver {
+				uint public received;
+				function receive(uint256 x) { received = x; }
+			}
+			contract sender {
+				uint public received;
+				function doSend(address rec) returns (uint d)
+				{
+					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
+					rec.callcode.value(2)(signature, 23);
+					return receiver(rec).received();
+				}
+			}
+	)**";
+	compileAndRun(sourceCode, 0, "receiver");
+	u160 const c_receiverAddress = m_contractAddress;
+	compileAndRun(sourceCode, 50, "sender");
+	u160 const c_senderAddress = m_contractAddress;
+	BOOST_CHECK(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("received()") == encodeArgs(23));
+	m_contractAddress = c_receiverAddress;
+	BOOST_CHECK(callContractFunction("received()") == encodeArgs(0));
+	BOOST_CHECK(m_state.storage(c_receiverAddress).empty());
+	BOOST_CHECK(!m_state.storage(c_senderAddress).empty());
+	BOOST_CHECK_EQUAL(m_state.balance(c_receiverAddress), 0);
+	BOOST_CHECK_EQUAL(m_state.balance(c_senderAddress), 50);
 }
 
 BOOST_AUTO_TEST_CASE(store_bytes)
