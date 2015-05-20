@@ -108,8 +108,7 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 {
 	string ret = "contract " + _contractDef.getName() + "{";
 
-	auto populateParameters = [](vector<string> const& _paramNames,
-			vector<string> const& _paramTypes)
+	auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
 	{
 		string r = "";
 		solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
