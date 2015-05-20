@@ -4075,7 +4075,7 @@ BOOST_AUTO_TEST_CASE(struct_delete_member)
 				testStruct x = data1; //should not copy the data. data1.m_value == 2 but x.m_value = 0
 				x.m_value = 4;
 				delete x.m_value;
-				ret_value = x.m_value;
+				ret_value = data1.m_value;
 			}
 		}
 	)";
