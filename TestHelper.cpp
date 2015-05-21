@@ -327,7 +327,8 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
-	m_TestObject["out"] = toHex(_output, 2, HexPrefix::Add);
+
+	m_TestObject["out"] = _output.size() > 4096 ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
 	// export logs
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
@@ -489,7 +490,11 @@ LogEntries importLog(json_spirit::mArray& _a)
 void checkOutput(bytes const& _output, json_spirit::mObject& _o)
 {
 	int j = 0;
-	if (_o["out"].type() == json_spirit::array_type)
+
+	if (_o["out"].get_str().find("#") == 0)
+		BOOST_CHECK((u256)_output.size() == toInt(_o["out"].get_str().substr(1)));
+
+	else if (_o["out"].type() == json_spirit::array_type)
 		for (auto const& d: _o["out"].get_array())
 		{
 			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
