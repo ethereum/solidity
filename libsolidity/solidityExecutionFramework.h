@@ -155,7 +155,7 @@ protected:
 		else
 		{
 			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-			BOOST_REQUIRE(!executive.call(m_contractAddress, m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas, m_sender));
+			BOOST_REQUIRE(!executive.call(m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas));
 		}
 		BOOST_REQUIRE(executive.go());
 		m_state.noteSending(m_sender);
