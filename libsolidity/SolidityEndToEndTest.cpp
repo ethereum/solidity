@@ -4161,6 +4161,23 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_when_calling_non_existing_function)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(0));
 }
 
+BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint public test = 0;
+			function A()
+			{
+				this.call("123");
+				test = 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "A");
+
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
