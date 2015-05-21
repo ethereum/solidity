@@ -21,6 +21,8 @@
  */
 
 #include <test/libsolidity/solidityExecutionFramework.h>
+#include <libevmasm/GasMeter.h>
+#include <libevmasm/KnownState.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/StructuralGasEstimator.h>
 #include <libsolidity/SourceReferenceFormatter.h>
@@ -55,8 +57,21 @@ public:
 		);
 	}
 
+	void testCreationTimeGas(string const& _sourceCode, string const& _contractName = "")
+	{
+		compileAndRun(_sourceCode);
+		auto state = make_shared<KnownState>();
+		GasMeter meter(state);
+		GasMeter::GasConsumption gas;
+		for (AssemblyItem const& item: *m_compiler.getAssemblyItems(_contractName))
+			gas += meter.estimateMax(item);
+		u256 bytecodeSize(m_compiler.getRuntimeBytecode(_contractName).size());
+		gas += bytecodeSize * c_createDataGas;
+		BOOST_REQUIRE(!gas.isInfinite);
+		BOOST_CHECK(gas.value == m_gasUsed);
+	}
+
 protected:
-	dev::solidity::CompilerStack m_compiler;
 	map<ASTNode const*, eth::GasMeter::GasConsumption> m_gasCosts;
 };
 
@@ -89,6 +104,49 @@ BOOST_AUTO_TEST_CASE(non_overlapping_filtered_costs)
 				SourceReferenceFormatter::printSourceLocation(cout, second->first->getLocation(), m_compiler.getScanner());
 			}
 	}
+}
+
+BOOST_AUTO_TEST_CASE(simple_contract)
+{
+	// Tests a simple "deploy contract" code without constructor. The actual contract is not relevant.
+	char const* sourceCode = R"(
+		contract test {
+			bytes32 public shaValue;
+			function f(uint a) {
+				shaValue = sha3(a);
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(store_sha3)
+{
+	char const* sourceCode = R"(
+		contract test {
+			bytes32 public shaValue;
+			function test(uint a) {
+				shaValue = sha3(a);
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(updating_store)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint data;
+			uint data2;
+			function test() {
+				data = 1;
+				data = 2;
+				data2 = 0;
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
