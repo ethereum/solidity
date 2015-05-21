@@ -4161,7 +4161,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_when_calling_non_existing_function)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(0));
 }
 
-BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor)
+BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_call_fail)
 {
 	char const* sourceCode = R"(
 		contract A {
@@ -4169,7 +4169,25 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor)
 			function A()
 			{
 				this.call("123");
-				test = 1;
+				++test;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "A");
+
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_band)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint public test = 0;
+			uint[3] arr;
+			function A()
+			{
+				test = arr[5];
+				++test;
 			}
 		}
 	)";
