@@ -42,7 +42,7 @@
 #include <libsolidity/Exceptions.h>
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/SourceReferenceFormatter.h>
-#include <libsolidity/StructuralGasEstimator.h>
+#include <libsolidity/GasEstimator.h>
 
 using namespace std;
 namespace po = boost::program_options;
@@ -465,14 +465,13 @@ void CommandLineInterface::handleAst(string const& _argStr)
 	// do we need AST output?
 	if (m_args.count(_argStr))
 	{
-		StructuralGasEstimator gasEstimator;
 		vector<ASTNode const*> asts;
 		for (auto const& sourceCode: m_sourceCodes)
 			asts.push_back(&m_compiler->getAST(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
 		if (m_compiler->getRuntimeAssemblyItems())
-			gasCosts = gasEstimator.breakToStatementLevel(
-				gasEstimator.performEstimation(*m_compiler->getRuntimeAssemblyItems(), asts),
+			gasCosts = GasEstimator::breakToStatementLevel(
+				GasEstimator::structuralEstimation(*m_compiler->getRuntimeAssemblyItems(), asts),
 				asts
 			);
 
