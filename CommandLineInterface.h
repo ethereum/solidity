@@ -61,6 +61,7 @@ private:
 	void handleSignatureHashes(std::string const& _contract);
 	void handleMeta(DocumentationType _type,
 					std::string const& _contract);
+	void handleGasEstimation(std::string const& _contract);
 
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;

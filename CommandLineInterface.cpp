@@ -34,6 +34,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libevmcore/Instruction.h>
+#include <libevmcore/Params.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/ASTPrinter.h>
@@ -55,6 +56,7 @@ namespace solidity
 static string const g_argAbiStr = "json-abi";
 static string const g_argSolAbiStr = "sol-abi";
 static string const g_argSignatureHashes = "hashes";
+static string const g_argGas = "gas";
 static string const g_argAsmStr = "asm";
 static string const g_argAsmJsonStr = "asm-json";
 static string const g_argAstStr = "ast";
@@ -94,6 +96,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 {
 
 	return
+		_args.count(g_argGas) ||
 		humanTargetedStdout(_args, g_argAbiStr) ||
 		humanTargetedStdout(_args, g_argSolAbiStr) ||
 		humanTargetedStdout(_args, g_argSignatureHashes) ||
@@ -245,6 +248,30 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 	}
 }
 
+void CommandLineInterface::handleGasEstimation(string const& _contract)
+{
+	using Gas = GasEstimator::GasConsumption;
+	if (!m_compiler->getAssemblyItems(_contract) && !m_compiler->getRuntimeAssemblyItems(_contract))
+		return;
+	cout << "Gas estimation:" << endl;
+	if (eth::AssemblyItems const* items = m_compiler->getAssemblyItems(_contract))
+	{
+		Gas gas = GasEstimator::functionalEstimation(*items);
+		u256 bytecodeSize(m_compiler->getRuntimeBytecode(_contract).size());
+		cout << "[construction]:\t";
+		cout << gas << " + " << (bytecodeSize * eth::c_createDataGas) << " = ";
+		gas += bytecodeSize * eth::c_createDataGas;
+		cout << gas << endl;
+	}
+	if (eth::AssemblyItems const* items = m_compiler->getRuntimeAssemblyItems(_contract))
+		for (auto it: m_compiler->getContractDefinition(_contract).getInterfaceFunctions())
+		{
+			string sig = it.second->externalSignature();
+			GasEstimator::GasConsumption gas = GasEstimator::functionalEstimation(*items, sig);
+			cout << sig << ":\t" << gas << endl;
+		}
+}
+
 bool CommandLineInterface::parseArguments(int argc, char** argv)
 {
 	// Declare the supported options.
@@ -278,6 +305,8 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 			"Request to output the contract's Solidity ABI interface.")
 		(g_argSignatureHashes.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
 			"Request to output the contract's functions' signature hashes.")
+		(g_argGas.c_str(),
+			"Request to output an estimate for each function's maximal gas usage.")
 		(g_argNatspecUserStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
 			"Request to output the contract's Natspec user documentation.")
 		(g_argNatspecDevStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
@@ -552,6 +581,9 @@ void CommandLineInterface::actOnInput()
 				outFile.close();
 			}
 		}
+
+		if (m_args.count(g_argGas))
+			handleGasEstimation(contract);
 
 		handleBytecode(contract);
 		handleSignatureHashes(contract);
