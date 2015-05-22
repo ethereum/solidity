@@ -29,12 +29,13 @@ using namespace dev::eth;
 
 GasMeter::GasConsumption& GasMeter::GasConsumption::operator+=(GasConsumption const& _other)
 {
-	isInfinite = isInfinite || _other.isInfinite;
+	if (_other.isInfinite && !isInfinite)
+		*this = infinite();
 	if (isInfinite)
 		return *this;
 	bigint v = bigint(value) + _other.value;
 	if (v > std::numeric_limits<u256>::max())
-		isInfinite = true;
+		*this = infinite();
 	else
 		value = u256(v);
 	return *this;

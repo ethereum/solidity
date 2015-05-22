@@ -111,7 +111,7 @@ bool SemanticInformation::altersControlFlow(AssemblyItem const& _item)
 	switch (_item.instruction())
 	{
 	// note that CALL, CALLCODE and CREATE do not really alter the control flow, because we
-	// continue on the next instruction (unless an exception happens which can always happen)
+	// continue on the next instruction
 	case Instruction::JUMP:
 	case Instruction::JUMPI:
 	case Instruction::RETURN:

@@ -22,6 +22,7 @@
 #pragma once
 
 #include <ostream>
+#include <tuple>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/AssemblyItem.h>
 
@@ -46,19 +47,24 @@ public:
 		GasConsumption(u256 _value = 0, bool _infinite = false): value(_value), isInfinite(_infinite) {}
 		static GasConsumption infinite() { return GasConsumption(0, true); }
 
-		GasConsumption& operator+=(GasConsumption const& _otherS);
-		std::ostream& operator<<(std::ostream& _str) const;
+		GasConsumption& operator+=(GasConsumption const& _other);
+		bool operator<(GasConsumption const& _other) const { return this->tuple() < _other.tuple(); }
+
+		std::tuple<bool const&, u256 const&> tuple() const { return std::tie(isInfinite, value); }
 
 		u256 value;
 		bool isInfinite;
 	};
 
 	/// Constructs a new gas meter given the current state.
-	GasMeter(std::shared_ptr<KnownState> const& _state): m_state(_state) {}
+	explicit GasMeter(std::shared_ptr<KnownState> const& _state, u256 const& _largestMemoryAccess = 0):
+		m_state(_state), m_largestMemoryAccess(_largestMemoryAccess) {}
 
 	/// @returns an upper bound on the gas consumed by the given instruction and updates
 	/// the state.
 	GasConsumption estimateMax(AssemblyItem const& _item);
+
+	u256 const& largestMemoryAccess() const { return m_largestMemoryAccess; }
 
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.
