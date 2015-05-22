@@ -74,6 +74,11 @@ public:
 	/// @returns the number of classes.
 	Id size() const { return m_representatives.size(); }
 
+	/// Forces the given @a _item with @a _arguments to the class @a _id. This can be used to
+	/// add prior knowledge e.g. about CALLDATA, but has to be used with caution. Will not work as
+	/// expected if @a _item applied to @a _arguments already exists.
+	void forceEqual(Id _id, AssemblyItem const& _item, Ids const& _arguments, bool _copyItem = true);
+
 	/// @returns the id of a new class which is different to all other classes.
 	Id newClass(SourceLocation const& _location);
 
