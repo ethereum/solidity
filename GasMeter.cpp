@@ -148,7 +148,7 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item)
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(-1)))
 				gas += c_expByteGas * (32 - (h256(*value).firstBitSet() / 8));
 			else
-				gas = GasConsumption::infinite();
+				gas += c_expByteGas * 32;
 			break;
 		default:
 			break;
