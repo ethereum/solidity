@@ -86,7 +86,7 @@ private:
 inline std::ostream& operator<<(std::ostream& _str, GasMeter::GasConsumption const& _consumption)
 {
 	if (_consumption.isInfinite)
-		return _str << "inf";
+		return _str << "[???]";
 	else
 		return _str << std::dec << _consumption.value;
 }
