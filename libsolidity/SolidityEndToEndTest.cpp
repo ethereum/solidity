@@ -1784,7 +1784,6 @@ BOOST_AUTO_TEST_CASE(contracts_as_addresses)
 		}
 	)";
 	compileAndRun(sourceCode, 20);
-	auto res = callContractFunction("getBalance()");
 	BOOST_REQUIRE(callContractFunction("getBalance()") == encodeArgs(u256(20 - 5), u256(5)));
 }
 
