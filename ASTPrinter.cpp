@@ -33,7 +33,7 @@ namespace solidity
 ASTPrinter::ASTPrinter(
 	ASTNode const& _ast,
 	string const& _source,
-	StructuralGasEstimator::ASTGasConsumption const& _gasCosts
+	GasEstimator::ASTGasConsumption const& _gasCosts
 ): m_indentation(0), m_source(_source), m_ast(&_ast), m_gasCosts(_gasCosts)
 {
 }

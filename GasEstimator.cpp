@@ -20,12 +20,14 @@
  * Gas consumption estimator working alongside the AST.
  */
 
-#include "StructuralGasEstimator.h"
+#include "GasEstimator.h"
 #include <map>
 #include <functional>
 #include <memory>
+#include <libdevcore/SHA3.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/KnownState.h>
+#include <libevmasm/PathGasMeter.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/ASTVisitor.h>
 
@@ -34,13 +36,13 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::solidity;
 
-StructuralGasEstimator::ASTGasConsumptionSelfAccumulated StructuralGasEstimator::performEstimation(
+GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimation(
 	AssemblyItems const& _items,
 	vector<ASTNode const*> const& _ast
 )
 {
 	solAssert(std::count(_ast.begin(), _ast.end(), nullptr) == 0, "");
-	map<SourceLocation, GasMeter::GasConsumption> particularCosts;
+	map<SourceLocation, GasConsumption> particularCosts;
 
 	ControlFlowGraph cfg(_items);
 	for (BasicBlock const& block: cfg.optimisedBlocks())
@@ -72,7 +74,7 @@ StructuralGasEstimator::ASTGasConsumptionSelfAccumulated StructuralGasEstimator:
 	return gasCosts;
 }
 
-map<ASTNode const*, GasMeter::GasConsumption> StructuralGasEstimator::breakToStatementLevel(
+map<ASTNode const*, GasMeter::GasConsumption> GasEstimator::breakToStatementLevel(
 	ASTGasConsumptionSelfAccumulated const& _gasCosts,
 	vector<ASTNode const*> const& _roots
 )
@@ -99,7 +101,7 @@ map<ASTNode const*, GasMeter::GasConsumption> StructuralGasEstimator::breakToSta
 	// we use the location of a node if
 	//  - its statement depth is 0 or
 	//  - its statement depth is undefined but the parent's statement depth is at least 1
-	map<ASTNode const*, GasMeter::GasConsumption> gasCosts;
+	map<ASTNode const*, GasConsumption> gasCosts;
 	auto onNodeSecondPass = [&](ASTNode const& _node)
 	{
 		return statementDepth.count(&_node);
@@ -121,7 +123,28 @@ map<ASTNode const*, GasMeter::GasConsumption> StructuralGasEstimator::breakToSta
 	return gasCosts;
 }
 
-set<ASTNode const*> StructuralGasEstimator::finestNodesAtLocation(
+GasEstimator::GasConsumption GasEstimator::functionalEstimation(
+	AssemblyItems const& _items,
+	string const& _signature
+)
+{
+	auto state = make_shared<KnownState>();
+
+	ExpressionClasses& classes = state->expressionClasses();
+	using Id = ExpressionClasses::Id;
+	using Ids = vector<Id>;
+	Id hashValue = classes.find(u256(FixedHash<4>::Arith(FixedHash<4>(dev::sha3(_signature)))));
+	Id calldata = classes.find(eth::Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
+	classes.forceEqual(hashValue, eth::Instruction::DIV, Ids{
+		calldata,
+		classes.find(u256(1) << (8 * 28))
+	});
+
+	PathGasMeter meter(_items);
+	return meter.estimateMax(0, state);
+}
+
+set<ASTNode const*> GasEstimator::finestNodesAtLocation(
 	vector<ASTNode const*> const& _roots
 )
 {
@@ -140,4 +163,3 @@ set<ASTNode const*> StructuralGasEstimator::finestNodesAtLocation(
 		root->accept(visitor);
 	return nodes;
 }
-

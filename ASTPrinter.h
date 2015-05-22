@@ -24,7 +24,7 @@
 
 #include <ostream>
 #include <libsolidity/ASTVisitor.h>
-#include <libsolidity/StructuralGasEstimator.h>
+#include <libsolidity/GasEstimator.h>
 
 namespace dev
 {
@@ -42,7 +42,7 @@ public:
 	ASTPrinter(
 		ASTNode const& _ast,
 		std::string const& _source = std::string(),
-		StructuralGasEstimator::ASTGasConsumption const& _gasCosts = StructuralGasEstimator::ASTGasConsumption()
+		GasEstimator::ASTGasConsumption const& _gasCosts = GasEstimator::ASTGasConsumption()
 	);
 	/// Output the string representation of the AST to _stream.
 	void print(std::ostream& _stream);
@@ -133,7 +133,7 @@ private:
 	int m_indentation;
 	std::string m_source;
 	ASTNode const* m_ast;
-	StructuralGasEstimator::ASTGasConsumption m_gasCosts;
+	GasEstimator::ASTGasConsumption m_gasCosts;
 	std::ostream* m_ostream;
 };
 
