@@ -34,7 +34,7 @@ GasMeter::GasConsumption& GasMeter::GasConsumption::operator+=(GasConsumption co
 	if (isInfinite)
 		return *this;
 	bigint v = bigint(value) + _other.value;
-	if (v > std::numeric_limits<u256>::max())
+	if (v > numeric_limits<u256>::max())
 		*this = infinite();
 	else
 		value = u256(v);
