@@ -4167,7 +4167,6 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_call_fail)
 			function A()
 			{
 				this.call("123");
-
 			}
 		}
 		contract B {
