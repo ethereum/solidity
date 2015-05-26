@@ -69,7 +69,7 @@ endforeach(file)
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 
-if((WIN32)
+if(WIN32)
 	target_link_libraries(testeth Iphlpapi)
 endif()
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
