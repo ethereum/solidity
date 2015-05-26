@@ -328,7 +328,7 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
 
-	m_TestObject["out"] = _output.size() > 4096 ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
+	m_TestObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
 	// export logs
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
@@ -760,6 +760,8 @@ Options::Options()
 			else
 				singleTestName = std::move(name1);
 		}
+		else if (arg == "--fulloutput")
+			fulloutput = true;
 	}
 }
 
