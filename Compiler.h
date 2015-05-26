@@ -52,6 +52,10 @@ public:
 	/// @returns Assembly items of the runtime compiler context
 	eth::AssemblyItems const& getRuntimeAssemblyItems() const { return m_runtimeContext.getAssembly().getItems(); }
 
+	/// @returns the entry label of the given function. Might return an AssemblyItem of type
+	/// UndefinedItem if it does not exist yet.
+	eth::AssemblyItem getFunctionEntryLabel(FunctionDefinition const& _function) const;
+
 private:
 	/// Registers the non-function objects inside the contract with the context.
 	void initializeContext(ContractDefinition const& _contract,

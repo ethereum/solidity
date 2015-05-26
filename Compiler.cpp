@@ -71,6 +71,11 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 	packIntoContractCreator(_contract, m_runtimeContext);
 }
 
+eth::AssemblyItem Compiler::getFunctionEntryLabel(FunctionDefinition const& _function) const
+{
+	return m_runtimeContext.getFunctionEntryLabelIfExists(_function);
+}
+
 void Compiler::initializeContext(ContractDefinition const& _contract,
 								 map<ContractDefinition const*, bytes const*> const& _contracts)
 {
