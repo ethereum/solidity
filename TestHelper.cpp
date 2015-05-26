@@ -771,7 +771,6 @@ Options const& Options::get()
 	return instance;
 }
 
-
 LastHashes lastHashes(u256 _currentBlockNumber)
 {
 	LastHashes ret;
