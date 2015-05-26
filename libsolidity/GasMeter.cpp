@@ -71,7 +71,7 @@ public:
 
 	/// Compares the gas computed by PathGasMeter for the given signature (but unknown arguments)
 	/// against the actual gas usage computed by the VM on the given set of argument variants.
-	void testRunTimeGas(std::string const& _sig, vector<bytes> _argumentVariants)
+	void testRunTimeGas(string const& _sig, vector<bytes> _argumentVariants)
 	{
 		u256 gasUsed = 0;
 		FixedHash<4> hash(dev::sha3(_sig));
