@@ -258,18 +258,38 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	{
 		Gas gas = GasEstimator::functionalEstimation(*items);
 		u256 bytecodeSize(m_compiler->getRuntimeBytecode(_contract).size());
-		cout << "[construction]:\t";
-		cout << gas << " + " << (bytecodeSize * eth::c_createDataGas) << " = ";
+		cout << "construction:" << endl;
+		cout << "   " << gas << " + " << (bytecodeSize * eth::c_createDataGas) << " = ";
 		gas += bytecodeSize * eth::c_createDataGas;
 		cout << gas << endl;
 	}
 	if (eth::AssemblyItems const* items = m_compiler->getRuntimeAssemblyItems(_contract))
-		for (auto it: m_compiler->getContractDefinition(_contract).getInterfaceFunctions())
+	{
+		ContractDefinition const& contract = m_compiler->getContractDefinition(_contract);
+		cout << "external:" << endl;
+		for (auto it: contract.getInterfaceFunctions())
 		{
 			string sig = it.second->externalSignature();
 			GasEstimator::GasConsumption gas = GasEstimator::functionalEstimation(*items, sig);
-			cout << sig << ":\t" << gas << endl;
+			cout << "   " << sig << ":\t" << gas << endl;
 		}
+		cout << "internal:" << endl;
+		for (auto const& it: contract.getDefinedFunctions())
+		{
+			if (it->isPartOfExternalInterface() || it->isConstructor())
+				continue;
+			size_t entry = m_compiler->getFunctionEntryPoint(_contract, *it);
+			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
+			if (entry > 0)
+				gas = GasEstimator::functionalEstimation(*items, entry, *it);
+			FunctionType type(*it);
+			cout << "   " << it->getName() << "(";
+			auto end = type.getParameterTypes().end();
+			for (auto it = type.getParameterTypes().begin(); it != end; ++it)
+				cout << (*it)->toString() << (it + 1 == end ? "" : ",");
+			cout << "):\t" << gas << endl;
+		}
+	}
 }
 
 bool CommandLineInterface::parseArguments(int argc, char** argv)
