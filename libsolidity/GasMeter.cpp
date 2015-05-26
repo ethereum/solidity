@@ -23,8 +23,9 @@
 #include <test/libsolidity/solidityExecutionFramework.h>
 #include <libevmasm/GasMeter.h>
 #include <libevmasm/KnownState.h>
+#include <libevmasm/PathGasMeter.h>
 #include <libsolidity/AST.h>
-#include <libsolidity/StructuralGasEstimator.h>
+#include <libsolidity/GasEstimator.h>
 #include <libsolidity/SourceReferenceFormatter.h>
 
 using namespace std;
@@ -47,26 +48,43 @@ public:
 		m_compiler.setSource(_sourceCode);
 		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(), "Compiling contract failed");
 
-		StructuralGasEstimator estimator;
 		AssemblyItems const* items = m_compiler.getRuntimeAssemblyItems("");
 		ASTNode const& sourceUnit = m_compiler.getAST();
 		BOOST_REQUIRE(items != nullptr);
-		m_gasCosts = estimator.breakToStatementLevel(
-			estimator.performEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
+		m_gasCosts = GasEstimator::breakToStatementLevel(
+			GasEstimator::structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
 			{&sourceUnit}
 		);
 	}
 
-	void testCreationTimeGas(string const& _sourceCode, string const& _contractName = "")
+	void testCreationTimeGas(string const& _sourceCode)
 	{
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();
-		GasMeter meter(state);
-		GasMeter::GasConsumption gas;
-		for (AssemblyItem const& item: *m_compiler.getAssemblyItems(_contractName))
-			gas += meter.estimateMax(item);
-		u256 bytecodeSize(m_compiler.getRuntimeBytecode(_contractName).size());
+		PathGasMeter meter(*m_compiler.getAssemblyItems());
+		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
+		u256 bytecodeSize(m_compiler.getRuntimeBytecode().size());
 		gas += bytecodeSize * c_createDataGas;
+		BOOST_REQUIRE(!gas.isInfinite);
+		BOOST_CHECK(gas.value == m_gasUsed);
+	}
+
+	/// Compares the gas computed by PathGasMeter for the given signature (but unknown arguments)
+	/// against the actual gas usage computed by the VM on the given set of argument variants.
+	void testRunTimeGas(string const& _sig, vector<bytes> _argumentVariants)
+	{
+		u256 gasUsed = 0;
+		FixedHash<4> hash(dev::sha3(_sig));
+		for (bytes const& arguments: _argumentVariants)
+		{
+			sendMessage(hash.asBytes() + arguments, false, 0);
+			gasUsed = max(gasUsed, m_gasUsed);
+		}
+
+		GasMeter::GasConsumption gas = GasEstimator::functionalEstimation(
+			*m_compiler.getRuntimeAssemblyItems(),
+			_sig
+		);
 		BOOST_REQUIRE(!gas.isInfinite);
 		BOOST_CHECK(gas.value == m_gasUsed);
 	}
@@ -147,6 +165,67 @@ BOOST_AUTO_TEST_CASE(updating_store)
 		}
 	)";
 	testCreationTimeGas(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(branches)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint data;
+			uint data2;
+			function f(uint x) {
+				if (x > 7)
+					data2 = 1;
+				else
+					data = 1;
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+}
+
+BOOST_AUTO_TEST_CASE(function_calls)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint data;
+			uint data2;
+			function f(uint x) {
+				if (x > 7)
+					data2 = g(x**8) + 1;
+				else
+					data = 1;
+			}
+			function g(uint x) internal returns (uint) {
+				return data2;
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+}
+
+BOOST_AUTO_TEST_CASE(multiple_external_functions)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint data;
+			uint data2;
+			function f(uint x) {
+				if (x > 7)
+					data2 = g(x**8) + 1;
+				else
+					data = 1;
+			}
+			function g(uint x) returns (uint) {
+				return data2;
+			}
+		}
+	)";
+	testCreationTimeGas(sourceCode);
+	testRunTimeGas("f(uint256)", vector<bytes>{encodeArgs(2), encodeArgs(8)});
+	testRunTimeGas("g(uint256)", vector<bytes>{encodeArgs(2)});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
