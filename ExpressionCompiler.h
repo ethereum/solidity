@@ -100,7 +100,8 @@ private:
 	/// Appends code to call a function of the given type with the given arguments.
 	void appendExternalFunctionCall(
 		FunctionType const& _functionType,
-		std::vector<ASTPointer<Expression const>> const& _arguments
+		std::vector<ASTPointer<Expression const>> const& _arguments,
+		bool isSend = false
 	);
 	/// Appends code that evaluates the given arguments and moves the result to memory encoded as
 	/// specified by the ABI. The memory offset is expected to be on the stack and is updated by
