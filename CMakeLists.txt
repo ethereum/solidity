@@ -69,6 +69,7 @@ endforeach(file)
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 
+target_link_libraries(testeth Iphlpapi)
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 target_link_libraries(testeth ${CURL_LIBRARIES})
 target_link_libraries(testeth ethereum)
