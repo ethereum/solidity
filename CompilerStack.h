@@ -48,6 +48,7 @@ namespace solidity
 // forward declarations
 class Scanner;
 class ContractDefinition;
+class FunctionDefinition;
 class SourceUnit;
 class Compiler;
 class GlobalContext;
@@ -130,6 +131,13 @@ public:
 	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
 	/// does not exist.
 	ContractDefinition const& getContractDefinition(std::string const& _contractName) const;
+
+	/// @returns the offset of the entry point of the given function into the list of assembly items
+	/// or zero if it is not found or does not exist.
+	size_t getFunctionEntryPoint(
+		std::string const& _contractName,
+		FunctionDefinition const& _function
+	) const;
 
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.

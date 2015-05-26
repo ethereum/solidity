@@ -59,7 +59,11 @@ public:
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
+	/// @returns the entry label of the given function and creates it if it does not exist yet.
 	eth::AssemblyItem getFunctionEntryLabel(Declaration const& _declaration);
+	/// @returns the entry label of the given function. Might return an AssemblyItem of type
+	/// UndefinedItem if it does not exist yet.
+	eth::AssemblyItem getFunctionEntryLabelIfExists(Declaration const& _declaration) const;
 	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
 	/// @returns the entry label of the given function and takes overrides into account.
 	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function);

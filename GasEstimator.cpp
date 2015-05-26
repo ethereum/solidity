@@ -30,6 +30,7 @@
 #include <libevmasm/PathGasMeter.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/ASTVisitor.h>
+#include <libsolidity/CompilerUtils.h>
 
 using namespace std;
 using namespace dev;
@@ -130,18 +131,43 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 {
 	auto state = make_shared<KnownState>();
 
-	ExpressionClasses& classes = state->expressionClasses();
-	using Id = ExpressionClasses::Id;
-	using Ids = vector<Id>;
-	Id hashValue = classes.find(u256(FixedHash<4>::Arith(FixedHash<4>(dev::sha3(_signature)))));
-	Id calldata = classes.find(eth::Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
-	classes.forceEqual(hashValue, eth::Instruction::DIV, Ids{
-		calldata,
-		classes.find(u256(1) << (8 * 28))
-	});
+	if (!_signature.empty())
+	{
+		ExpressionClasses& classes = state->expressionClasses();
+		using Id = ExpressionClasses::Id;
+		using Ids = vector<Id>;
+		Id hashValue = classes.find(u256(FixedHash<4>::Arith(FixedHash<4>(dev::sha3(_signature)))));
+		Id calldata = classes.find(eth::Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
+		classes.forceEqual(hashValue, eth::Instruction::DIV, Ids{
+			calldata,
+			classes.find(u256(1) << (8 * 28))
+		});
+	}
 
 	PathGasMeter meter(_items);
 	return meter.estimateMax(0, state);
+}
+
+GasEstimator::GasConsumption GasEstimator::functionalEstimation(
+	AssemblyItems const& _items,
+	size_t const& _offset,
+	FunctionDefinition const& _function
+)
+{
+	auto state = make_shared<KnownState>();
+
+	unsigned parametersSize = CompilerUtils::getSizeOnStack(_function.getParameters());
+	if (parametersSize > 16)
+		return GasConsumption::infinite();
+
+	// Store an invalid return value on the stack, so that the path estimator breaks upon reaching
+	// the return jump.
+	AssemblyItem invalidTag(PushTag, u256(-0x10));
+	state->feedItem(invalidTag, true);
+	if (parametersSize > 0)
+		state->feedItem(eth::swapInstruction(parametersSize));
+
+	return PathGasMeter(_items).estimateMax(_offset, state);
 }
 
 set<ASTNode const*> GasEstimator::finestNodesAtLocation(

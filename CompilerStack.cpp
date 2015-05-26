@@ -268,6 +268,24 @@ ContractDefinition const& CompilerStack::getContractDefinition(string const& _co
 	return *getContract(_contractName).contract;
 }
 
+size_t CompilerStack::getFunctionEntryPoint(
+	std::string const& _contractName,
+	FunctionDefinition const& _function
+) const
+{
+	shared_ptr<Compiler> const& compiler = getContract(_contractName).compiler;
+	if (!compiler)
+		return 0;
+	eth::AssemblyItem tag = compiler->getFunctionEntryLabel(_function);
+	if (tag.type() == eth::UndefinedItem)
+		return 0;
+	eth::AssemblyItems const& items = compiler->getRuntimeAssemblyItems();
+	for (size_t i = 0; i < items.size(); ++i)
+		if (items.at(i).type() == eth::Tag && items.at(i).data() == tag.data())
+			return i;
+	return 0;
+}
+
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
 {
 	CompilerStack stack;

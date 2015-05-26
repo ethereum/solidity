@@ -65,6 +65,15 @@ public:
 		std::string const& _signature = ""
 	);
 
+	/// @returns the estimated gas consumption by the given function which starts at the given
+	/// offset into the list of assembly items.
+	/// @note this does not work correctly for recursive functions.
+	static GasConsumption functionalEstimation(
+		eth::AssemblyItems const& _items,
+		size_t const& _offset,
+		FunctionDefinition const& _function
+	);
+
 private:
 	/// @returns the set of AST nodes which are the finest nodes at their location.
 	static std::set<ASTNode const*> finestNodesAtLocation(std::vector<ASTNode const*> const& _roots);
