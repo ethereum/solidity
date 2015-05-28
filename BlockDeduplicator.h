@@ -47,19 +47,27 @@ public:
 	bool deduplicate();
 
 private:
-	/// Iterator that skips tags skips to the end if (all branches of) the control
+	/// Iterator that skips tags and skips to the end if (all branches of) the control
 	/// flow does not continue to the next instruction.
+	/// If the arguments are supplied to the constructor, replaces items on the fly.
 	struct BlockIterator: std::iterator<std::forward_iterator_tag, AssemblyItem const>
 	{
 	public:
-		BlockIterator(AssemblyItems::const_iterator _it, AssemblyItems::const_iterator _end):
-			it(_it), end(_end) { }
+		BlockIterator(
+			AssemblyItems::const_iterator _it,
+			AssemblyItems::const_iterator _end,
+			AssemblyItem const* _replaceItem = nullptr,
+			AssemblyItem const* _replaceWith = nullptr
+		):
+			it(_it), end(_end), replaceItem(_replaceItem), replaceWith(_replaceWith) {}
 		BlockIterator& operator++();
 		bool operator==(BlockIterator const& _other) const { return it == _other.it; }
 		bool operator!=(BlockIterator const& _other) const { return it != _other.it; }
-		AssemblyItem const& operator*() const { return *it; }
+		AssemblyItem const& operator*() const;
 		AssemblyItems::const_iterator it;
 		AssemblyItems::const_iterator end;
+		AssemblyItem const* replaceItem;
+		AssemblyItem const* replaceWith;
 	};
 
 	AssemblyItems& m_items;

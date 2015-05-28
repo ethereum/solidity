@@ -307,6 +307,11 @@ Assembly& Assembly::optimise(bool _enable)
 		count = 0;
 
 		copt << "Performing optimisation...";
+		// This only modifies PushTags, we have to run again to actually remove code.
+		BlockDeduplicator dedup(m_items);
+		if (dedup.deduplicate())
+			count++;
+
 		{
 			ControlFlowGraph cfg(m_items);
 			AssemblyItems optimisedItems;
@@ -349,11 +354,6 @@ Assembly& Assembly::optimise(bool _enable)
 				m_items = move(optimisedItems);
 				count++;
 			}
-
-			// This only modifies PushTags, we have to run again to actually remove code.
-			BlockDeduplicator dedup(m_items);
-			if (dedup.deduplicate())
-				count++;
 		}
 	}
 
