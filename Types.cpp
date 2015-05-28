@@ -145,6 +145,8 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 		return make_shared<BoolType>();
 	else if (_typeToken == Token::Bytes)
 		return make_shared<ArrayType>(ArrayType::Location::Storage);
+	else if (_typeToken == Token::String)
+		return make_shared<ArrayType>(ArrayType::Location::Storage, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -663,7 +665,7 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	// let us not allow assignment to memory arrays for now
 	if (convertTo.getLocation() != Location::Storage)
 		return false;
-	if (convertTo.isByteArray() != isByteArray())
+	if (convertTo.isByteArray() != isByteArray() || convertTo.isString() != isString())
 		return false;
 	if (!getBaseType()->isImplicitlyConvertibleTo(*convertTo.getBaseType()))
 		return false;
@@ -684,8 +686,12 @@ bool ArrayType::operator==(Type const& _other) const
 	if (_other.getCategory() != getCategory())
 		return false;
 	ArrayType const& other = dynamic_cast<ArrayType const&>(_other);
-	if (other.m_location != m_location || other.isByteArray() != isByteArray() ||
-			other.isDynamicallySized() != isDynamicallySized())
+	if (
+		other.m_location != m_location ||
+		other.isByteArray() != isByteArray() ||
+		other.isString() != isString() ||
+		other.isDynamicallySized() != isDynamicallySized()
+	)
 		return false;
 	return isDynamicallySized() || getLength()  == other.getLength();
 }
@@ -736,7 +742,9 @@ unsigned ArrayType::getSizeOnStack() const
 
 string ArrayType::toString() const
 {
-	if (isByteArray())
+	if (isString())
+		return "string";
+	else if (isByteArray())
 		return "bytes";
 	string ret = getBaseType()->toString() + "[";
 	if (!isDynamicallySized())
@@ -746,7 +754,7 @@ string ArrayType::toString() const
 
 TypePointer ArrayType::externalType() const
 {
-	if (m_isByteArray)
+	if (m_arrayKind != ArrayKind::Ordinary)
 		return shared_from_this();
 	if (!m_baseType->externalType())
 		return TypePointer();
@@ -762,7 +770,7 @@ TypePointer ArrayType::externalType() const
 shared_ptr<ArrayType> ArrayType::copyForLocation(ArrayType::Location _location) const
 {
 	auto copy = make_shared<ArrayType>(_location);
-	copy->m_isByteArray = m_isByteArray;
+	copy->m_arrayKind = m_arrayKind;
 	if (m_baseType->getCategory() == Type::Category::Array)
 		copy->m_baseType = dynamic_cast<ArrayType const&>(*m_baseType).copyForLocation(_location);
 	else

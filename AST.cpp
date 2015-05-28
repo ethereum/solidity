@@ -890,6 +890,8 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 		ArrayType const& type = dynamic_cast<ArrayType const&>(*m_base->getType());
 		if (!m_index)
 			BOOST_THROW_EXCEPTION(createTypeError("Index expression cannot be omitted."));
+		if (type.isString())
+			BOOST_THROW_EXCEPTION(createTypeError("Index access for string is not possible."));
 		m_index->expectType(IntegerType(256));
 		if (type.isByteArray())
 			m_type = make_shared<FixedBytesType>(1);

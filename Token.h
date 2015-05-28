@@ -286,6 +286,7 @@ namespace solidity
 	K(Bytes32, "bytes32", 0)                                           \
 	K(Bytes, "bytes", 0)                                               \
 	K(Byte, "byte", 0)                                                 \
+	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(Real, "real", 0)                                                 \
@@ -312,7 +313,6 @@ namespace solidity
 	K(Match, "match", 0)                                               \
 	K(Of, "of", 0)                                                     \
 	K(Relocatable, "relocatable", 0)                                   \
-	T(String, "string", 0)                                             \
 	K(Switch, "switch", 0)                                             \
 	K(Throw, "throw", 0)                                               \
 	K(Try, "try", 0)                                                   \
