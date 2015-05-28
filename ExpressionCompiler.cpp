@@ -534,8 +534,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					true,
 					true
 				),
-				{},
-				true
+				{}
 			);
 			break;
 		case Location::Suicide:
@@ -1035,8 +1034,8 @@ void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
 
 void ExpressionCompiler::appendExternalFunctionCall(
 	FunctionType const& _functionType,
-	vector<ASTPointer<Expression const>> const& _arguments,
-	bool isSend)
+	vector<ASTPointer<Expression const>> const& _arguments
+	)
 {
 	solAssert(_functionType.takesArbitraryParameters() ||
 			  _arguments.size() == _functionType.getParameterTypes().size(), "");
@@ -1106,15 +1105,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << eth::Instruction::CALL;
 
 	//Propagate error condition (if CALL pushes 0 on stack).
-	if (!isSend)
-	{
-		m_context << eth::Instruction::ISZERO;
-		m_context.appendConditionalJumpTo(m_context.errorTag());
-	} else
-	{
-		auto tag = m_context.appendConditionalJump();
-		m_context << eth::Instruction::STOP << tag;
-	}
+	auto tag = m_context.appendConditionalJump();
+	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.//	}
 
 	if (_functionType.valueSet())
 		m_context << eth::Instruction::POP;
