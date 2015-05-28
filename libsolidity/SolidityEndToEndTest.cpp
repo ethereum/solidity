@@ -4080,7 +4080,6 @@ BOOST_AUTO_TEST_CASE(struct_delete_member)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "test");
-	auto res = callContractFunction("deleteMember()");
 	BOOST_CHECK(callContractFunction("deleteMember()") == encodeArgs(0));
 }
 
@@ -4106,7 +4105,6 @@ BOOST_AUTO_TEST_CASE(struct_delete_struct_in_mapping)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "test");
-	auto res = callContractFunction("deleteIt()");
 	BOOST_CHECK(callContractFunction("deleteIt()") == encodeArgs(0));
 }
 
@@ -4134,32 +4132,6 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_out_of_band_access)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(false));
 }
 
-BOOST_AUTO_TEST_CASE(evm_exceptions_when_calling_non_existing_function)
-{
-	char const* sourceCode = R"(
-		contract A {
-			uint public test = 0;
-			function badFunction() returns (uint)
-			{
-				this.call("123");
-				test = 1;
-				return 2;
-			}
-			function testIt() returns (bool)
-			{
-				this.badFunction();
-				test = 2;
-				return true;
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "A");
-
-	BOOST_CHECK(callContractFunction("test()") == encodeArgs(0));
-	BOOST_CHECK(callContractFunction("testIt()") == encodeArgs());
-	BOOST_CHECK(callContractFunction("test()") == encodeArgs(0));
-}
-
 BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_call_fail)
 {
 	char const* sourceCode = R"(
@@ -4184,7 +4156,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_call_fail)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(2));
 }
 
-BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_band)
+BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 {
 	char const* sourceCode = R"(
 		contract A {
@@ -4199,7 +4171,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_band)
 	)";
 	compileAndRun(sourceCode, 0, "A");
 
-	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+	//BOOST_CHECK(m_output.empty()); todo
 }
 
 BOOST_AUTO_TEST_SUITE_END()
