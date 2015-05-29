@@ -588,7 +588,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 			oSingleTest[pos->first] = pos->second;
 
 		json_spirit::mValue v_singleTest(oSingleTest);
-		doTests(v_singleTest, false);
+		doTests(v_singleTest, test::Options::get().fillTests);
 	}
 	catch (Exception const& _e)
 	{
