@@ -1035,7 +1035,7 @@ void ExpressionCompiler::appendHighBitsCleanup(IntegerType const& _typeOnStack)
 void ExpressionCompiler::appendExternalFunctionCall(
 	FunctionType const& _functionType,
 	vector<ASTPointer<Expression const>> const& _arguments
-	)
+)
 {
 	solAssert(_functionType.takesArbitraryParameters() ||
 			  _arguments.size() == _functionType.getParameterTypes().size(), "");
@@ -1106,7 +1106,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	//Propagate error condition (if CALL pushes 0 on stack).
 	auto tag = m_context.appendConditionalJump();
-	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.//	}
+	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.
 
 	if (_functionType.valueSet())
 		m_context << eth::Instruction::POP;
