@@ -4145,7 +4145,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_call_fail)
 			uint public test = 1;
 			function testIt()
 			{
-				A a;
+				A a = new A();
 				++test;
 			}
 		}
