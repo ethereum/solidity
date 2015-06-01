@@ -90,7 +90,7 @@ public:
 	std::string defaultContractName() const;
 
 	/// Compiles the source units that were previously added and parsed.
-	void compile(bool _optimize = false);
+	void compile(bool _optimize = false, unsigned _runs = 200);
 	/// Parses and compiles the given source code.
 	/// @returns the compiled bytecode
 	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);

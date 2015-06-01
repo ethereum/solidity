@@ -145,7 +145,7 @@ vector<string> CompilerStack::getContractNames() const
 }
 
 
-void CompilerStack::compile(bool _optimize)
+void CompilerStack::compile(bool _optimize, unsigned _runs)
 {
 	if (!m_parseSuccessful)
 		parse();
@@ -157,9 +157,9 @@ void CompilerStack::compile(bool _optimize)
 			{
 				if (!contract->isFullyImplemented())
 					continue;
-				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize);
+				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs);
 				compiler->compileContract(*contract, contractBytecode);
-				Contract& compiledContract = m_contracts[contract->getName()];
+				Contract& compiledContract = m_contracts.at(contract->getName());
 				compiledContract.bytecode = compiler->getAssembledBytecode();
 				compiledContract.runtimeBytecode = compiler->getRuntimeBytecode();
 				compiledContract.compiler = move(compiler);
