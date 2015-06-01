@@ -27,6 +27,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libevmcore/Instruction.h>
+#include <libevmcore/Params.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/ASTPrinter.h>
@@ -56,6 +57,61 @@ Json::Value functionHashes(ContractDefinition const& _contract)
 	for (auto const& it: _contract.getInterfaceFunctions())
 		functionHashes[it.second->externalSignature()] = toHex(it.first.ref());
 	return functionHashes;
+}
+
+Json::Value gasToJson(GasEstimator::GasConsumption const& _gas)
+{
+	if (_gas.isInfinite || _gas.value > std::numeric_limits<Json::LargestUInt>::max())
+		return Json::Value(Json::nullValue);
+	else
+		return Json::Value(Json::LargestUInt(_gas.value));
+}
+
+Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
+{
+	Json::Value gasEstimates(Json::objectValue);
+	using Gas = GasEstimator::GasConsumption;
+	if (!_compiler.getAssemblyItems(_contract) && !_compiler.getRuntimeAssemblyItems(_contract))
+		return gasEstimates;
+	if (eth::AssemblyItems const* items = _compiler.getAssemblyItems(_contract))
+	{
+		Gas gas = GasEstimator::functionalEstimation(*items);
+		u256 bytecodeSize(_compiler.getRuntimeBytecode(_contract).size());
+		Json::Value creationGas(Json::arrayValue);
+		creationGas[0] = gasToJson(gas);
+		creationGas[1] = gasToJson(bytecodeSize * eth::c_createDataGas);
+		gasEstimates["creation"] = creationGas;
+	}
+	if (eth::AssemblyItems const* items = _compiler.getRuntimeAssemblyItems(_contract))
+	{
+		ContractDefinition const& contract = _compiler.getContractDefinition(_contract);
+		Json::Value externalFunctions(Json::objectValue);
+		for (auto it: contract.getInterfaceFunctions())
+		{
+			string sig = it.second->externalSignature();
+			externalFunctions[sig] = gasToJson(GasEstimator::functionalEstimation(*items, sig));
+		}
+		gasEstimates["external"] = externalFunctions;
+		Json::Value internalFunctions(Json::objectValue);
+		for (auto const& it: contract.getDefinedFunctions())
+		{
+			if (it->isPartOfExternalInterface() || it->isConstructor())
+				continue;
+			size_t entry = _compiler.getFunctionEntryPoint(_contract, *it);
+			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
+			if (entry > 0)
+				gas = GasEstimator::functionalEstimation(*items, entry, *it);
+			FunctionType type(*it);
+			string sig = it->getName() + "(";
+			auto end = type.getParameterTypes().end();
+			for (auto it = type.getParameterTypes().begin(); it != end; ++it)
+				sig += (*it)->toString() + (it + 1 == end ? "" : ",");
+			sig += ")";
+			internalFunctions[sig] = gasToJson(gas);
+		}
+		gasEstimates["internal"] = internalFunctions;
+	}
+	return gasEstimates;
 }
 
 string compile(string _input, bool _optimize)
@@ -109,6 +165,7 @@ string compile(string _input, bool _optimize)
 		contractData["bytecode"] = toHex(compiler.getBytecode(contractName));
 		contractData["opcodes"] = eth::disassemble(compiler.getBytecode(contractName));
 		contractData["functionHashes"] = functionHashes(compiler.getContractDefinition(contractName));
+		contractData["gasEstimates"] = estimateGas(compiler, contractName);
 		ostringstream unused;
 		contractData["assembly"] = compiler.streamAssembly(unused, contractName, sources, true);
 		output["contracts"][contractName] = contractData;
