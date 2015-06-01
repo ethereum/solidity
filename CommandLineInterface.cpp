@@ -299,7 +299,8 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 	desc.add_options()
 		("help", "Show help message and exit")
 		("version", "Show version and exit")
-		("optimize", po::value<bool>()->default_value(false), "Optimize bytecode for size")
+		("optimize", po::value<bool>()->default_value(false), "Optimize bytecode")
+		("optimize-runs", po::value<unsigned>()->default_value(200), "Estimated number of contract runs for optimizer.")
 		("add-std", po::value<bool>()->default_value(false), "Add standard contracts")
 		("input-file", po::value<vector<string>>(), "input file")
 		(
@@ -409,7 +410,11 @@ bool CommandLineInterface::processInput()
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		// TODO: Perhaps we should not compile unless requested
-		m_compiler->compile(m_args["optimize"].as<bool>());
+		bool optimize = m_args["optimize"].as<bool>();
+		unsigned runs = m_args["optimize-runs"].as<unsigned>();
+		if (m_args.count("optimize-runs"))
+			optimize = true;
+		m_compiler->compile(optimize, runs);
 	}
 	catch (ParserError const& _exception)
 	{
