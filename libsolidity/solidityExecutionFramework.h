@@ -40,7 +40,7 @@ namespace test
 class ExecutionFramework
 {
 public:
-ExecutionFramework() { g_logVerbosity = 0; }
+	ExecutionFramework() { g_logVerbosity = 0; }
 
 	bytes const& execute(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
