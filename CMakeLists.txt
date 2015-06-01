@@ -19,6 +19,7 @@ endmacro()
 
 add_subdirectory(fuzzTesting)
 add_subdirectory(libdevcore)
+add_subdirectory(libdevcore/external_dependencies)
 add_subdirectory(libdevcrypto)
 add_subdirectory(libethcore)
 add_subdirectory(libethereum)
