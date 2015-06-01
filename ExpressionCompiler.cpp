@@ -1106,8 +1106,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << eth::Instruction::CALLCODE;
 	else
 		m_context << eth::Instruction::CALL;
-	auto tag = m_context.appendConditionalJump();
-	m_context << eth::Instruction::STOP << tag;	// STOP if CALL leaves 0.
+
+	//Propagate error condition (if CALL pushes 0 on stack).
+	m_context << eth::Instruction::ISZERO;
+	m_context.appendConditionalJumpTo(m_context.errorTag());
+
 	if (_functionType.valueSet())
 		m_context << eth::Instruction::POP;
 	if (_functionType.gasSet())
