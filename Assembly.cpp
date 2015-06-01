@@ -127,7 +127,10 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 			_out << "  PUSH \"" << m_strings.at((h256)i.data()) << "\"";
 			break;
 		case PushTag:
-			_out << "  PUSH [tag" << dec << i.data() << "]";
+			if (i.data() == 0)
+				_out << "  PUSH [ErrorTag]";
+			else
+				_out << "  PUSH [tag" << dec << i.data() << "]";
 			break;
 		case PushSub:
 			_out << "  PUSH [$" << h256(i.data()).abridged() << "]";
@@ -207,8 +210,12 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 				createJsonValue("PUSH tag", i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
 			break;
 		case PushTag:
-			collection.append(
-				createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, string(i.data())));
+			if (i.data() == 0)
+				collection.append(
+					createJsonValue("PUSH [ErrorTag]", i.getLocation().start, i.getLocation().end, ""));
+			else
+				collection.append(
+					createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, string(i.data())));
 			break;
 		case PushSub:
 			collection.append(
@@ -226,7 +233,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 			collection.append(
 				createJsonValue("tag", i.getLocation().start, i.getLocation().end, string(i.data())));
 			collection.append(
-				createJsonValue("JUMDEST", i.getLocation().start, i.getLocation().end));
+				createJsonValue("JUMPDEST", i.getLocation().start, i.getLocation().end));
 			break;
 		case PushData:
 			collection.append(createJsonValue("PUSH data", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
@@ -387,6 +394,11 @@ bytes Assembly::assemble() const
 	// m_data must not change from here on
 
 	for (AssemblyItem const& i: m_items)
+	{
+		// store position of the invalid jump destination
+		if (i.type() != Tag && tagPos[0] == 0)
+			tagPos[0] = ret.size();
+
 		switch (i.type())
 		{
 		case Operation:
@@ -448,17 +460,23 @@ bytes Assembly::assemble() const
 		}
 		case Tag:
 			tagPos[(unsigned)i.data()] = ret.size();
+			assertThrow(i.data() != 0, AssemblyException, "");
 			ret.push_back((byte)Instruction::JUMPDEST);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
-
+	}
 	for (auto const& i: tagRef)
 	{
 		bytesRef r(ret.data() + i.first, bytesPerTag);
-		//@todo in the failure case, we could use the position of the invalid jumpdest
-		toBigEndian(i.second < tagPos.size() ? tagPos[i.second] : (1 << (8 * bytesPerTag)) - 1, r);
+		auto tag = i.second;
+		if (tag >= tagPos.size())
+			tag = 0;
+		if (tag == 0)
+			assertThrow(tagPos[tag] != 0, AssemblyException, "");
+
+		toBigEndian(tagPos[tag], r);
 	}
 
 	if (!m_data.empty())
