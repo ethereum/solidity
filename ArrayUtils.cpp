@@ -364,7 +364,13 @@ void ArrayUtils::clearStorageLoop(Type const& _type) const
 		return;
 	}
 	// stack: end_pos pos
-	eth::AssemblyItem loopStart = m_context.newTag();
+
+	// jump to and return from the loop to allow for duplicate code removal
+	eth::AssemblyItem returnTag = m_context.pushNewTag();
+	m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
+
+	// stack: <return tag> end_pos pos
+	eth::AssemblyItem loopStart = m_context.appendJumpToNew();
 	m_context << loopStart;
 	// check for loop condition
 	m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3
@@ -380,7 +386,11 @@ void ArrayUtils::clearStorageLoop(Type const& _type) const
 	m_context.appendJumpTo(loopStart);
 	// cleanup
 	m_context << zeroLoopEnd;
-	m_context << eth::Instruction::POP;
+	m_context << eth::Instruction::POP << eth::Instruction::SWAP1;
+	// "return"
+	m_context << eth::Instruction::JUMP;
+
+	m_context << returnTag;
 	solAssert(m_context.getStackHeight() == stackHeightStart - 1, "");
 }
 
