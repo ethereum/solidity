@@ -22,9 +22,12 @@
 #include "Assembly.h"
 #include <fstream>
 #include <libdevcore/Log.h>
+#include <libevmcore/Params.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/BlockDeduplicator.h>
+#include <libevmasm/ConstantOptimiser.h>
+#include <libevmasm/GasMeter.h>
 #include <json/json.h>
 using namespace std;
 using namespace dev;
@@ -302,7 +305,7 @@ inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
 #define copt dev::LogOutputStream<OptimiserChannel, true>()
 
-Assembly& Assembly::optimise(bool _enable)
+Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
 	if (!_enable)
 		return *this;
@@ -364,10 +367,17 @@ Assembly& Assembly::optimise(bool _enable)
 		}
 	}
 
+	total += ConstantOptimisationMethod::optimiseConstants(
+		_isCreation,
+		_isCreation ? 1 : _runs,
+		*this,
+		m_items
+	);
+
 	copt << total << " optimisations done.";
 
 	for (auto& sub: m_subs)
-	  sub.optimise(true);
+	  sub.optimise(true, false, _runs);
 
 	return *this;
 }

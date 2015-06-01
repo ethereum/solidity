@@ -66,6 +66,8 @@ public:
 
 	u256 const& largestMemoryAccess() const { return m_largestMemoryAccess; }
 
+	static u256 runGas(Instruction _instruction);
+
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.
 	GasConsumption wordGas(u256 const& _multiplier, ExpressionClasses::Id _value);
@@ -75,8 +77,6 @@ private:
 	/// @returns the memory gas for accessing the memory at a specific offset for a number of bytes
 	/// given as values on the stack at the given relative positions.
 	GasConsumption memoryGas(int _stackPosOffset, int _stackPosSize);
-
-	static GasConsumption runGas(Instruction _instruction);
 
 	std::shared_ptr<KnownState> m_state;
 	/// Largest point where memory was accessed since the creation of this object.

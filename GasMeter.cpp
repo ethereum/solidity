@@ -201,13 +201,14 @@ GasMeter::GasConsumption GasMeter::memoryGas(int _stackPosOffset, int _stackPosS
 		}));
 }
 
-GasMeter::GasConsumption GasMeter::runGas(Instruction _instruction)
+u256 GasMeter::runGas(Instruction _instruction)
 {
 	if (_instruction == Instruction::JUMPDEST)
-		return GasConsumption(1);
+		return 1;
 
 	int tier = instructionInfo(_instruction).gasPriceTier;
-	return tier == InvalidTier ? GasConsumption::infinite() : c_tierStepGas[tier];
+	assertThrow(tier != InvalidTier, OptimizerException, "Invalid gas tier.");
+	return c_tierStepGas[tier];
 }
 
 
