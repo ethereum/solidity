@@ -288,7 +288,6 @@ bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
 	m_breakTags.clear();
 	m_continueTags.clear();
 
-	m_context << m_context.getFunctionEntryLabel(_variableDeclaration);
 	ExpressionCompiler(m_context, m_optimize).appendStateVariableAccessor(_variableDeclaration);
 
 	return false;
