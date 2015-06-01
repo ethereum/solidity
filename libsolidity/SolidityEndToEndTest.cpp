@@ -4169,7 +4169,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 			}
 		}
 	)";
-	BOOST_CHECK(execute(sourceCode, 0, "A").empty());
+	BOOST_CHECK(compileAndRunWthoutCheck(sourceCode, 0, "A").empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

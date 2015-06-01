@@ -42,7 +42,7 @@ class ExecutionFramework
 public:
 	ExecutionFramework() { g_logVerbosity = 0; }
 
-	bytes const& execute(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
+	bytes const& compileAndRunWthoutCheck(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
@@ -54,7 +54,7 @@ public:
 
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
-		execute(_sourceCode, _value, _contractName);
+		compileAndRunWthoutCheck(_sourceCode, _value, _contractName);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
