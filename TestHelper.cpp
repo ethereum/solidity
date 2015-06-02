@@ -328,7 +328,7 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
 
-	m_TestObject["out"] = _output.size() > 4096 ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
+	m_TestObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
 	// export logs
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
@@ -588,7 +588,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 			oSingleTest[pos->first] = pos->second;
 
 		json_spirit::mValue v_singleTest(oSingleTest);
-		doTests(v_singleTest, false);
+		doTests(v_singleTest, test::Options::get().fillTests);
 	}
 	catch (Exception const& _e)
 	{
@@ -760,6 +760,8 @@ Options::Options()
 			else
 				singleTestName = std::move(name1);
 		}
+		else if (arg == "--fulloutput")
+			fulloutput = true;
 	}
 }
 
@@ -768,7 +770,6 @@ Options const& Options::get()
 	static Options instance;
 	return instance;
 }
-
 
 LastHashes lastHashes(u256 _currentBlockNumber)
 {

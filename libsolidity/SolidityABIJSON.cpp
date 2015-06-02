@@ -568,6 +568,33 @@ BOOST_AUTO_TEST_CASE(return_param_in_abi)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(strings_and_arrays)
+{
+	// bug #1801
+	char const* sourceCode = R"(
+		contract test {
+			function f(string a, bytes b, uint[] c) external {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"name": "f",
+			"inputs": [
+				{ "name": "a", "type": "string" },
+				{ "name": "b", "type": "bytes" },
+				{ "name": "c", "type": "uint256[]" }
+			],
+			"outputs": [],
+			"type" : "function"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

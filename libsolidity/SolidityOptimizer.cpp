@@ -1004,6 +1004,38 @@ BOOST_AUTO_TEST_CASE(block_deduplicator)
 	BOOST_CHECK_EQUAL(pushTags.size(), 2);
 }
 
+BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
+{
+	AssemblyItems input{
+		u256(0),
+		eth::Instruction::SLOAD,
+		AssemblyItem(PushTag, 1),
+		AssemblyItem(PushTag, 2),
+		eth::Instruction::JUMPI,
+		eth::Instruction::JUMP,
+		AssemblyItem(Tag, 1),
+		u256(5),
+		u256(6),
+		eth::Instruction::SSTORE,
+		AssemblyItem(PushTag, 1),
+		eth::Instruction::JUMP,
+		AssemblyItem(Tag, 2),
+		u256(5),
+		u256(6),
+		eth::Instruction::SSTORE,
+		AssemblyItem(PushTag, 2),
+		eth::Instruction::JUMP,
+	};
+	BlockDeduplicator dedup(input);
+	dedup.deduplicate();
+
+	set<u256> pushTags;
+	for (AssemblyItem const& item: input)
+		if (item.type() == PushTag)
+			pushTags.insert(item.data());
+	BOOST_CHECK_EQUAL(pushTags.size(), 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
