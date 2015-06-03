@@ -23,6 +23,7 @@
 #include <utility>
 #include <numeric>
 #include <boost/range/adaptor/reversed.hpp>
+#include <libevmcore/Params.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/SHA3.h>
 #include <libsolidity/AST.h>
@@ -497,6 +498,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		{
 			// stack layout: contract_address function_id [gas] [value]
 			_functionCall.getExpression().accept(*this);
+
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(), IntegerType(256), true);
 			// Note that function is not the original function, but the ".gas" function.
@@ -519,7 +521,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case Location::Send:
 			_functionCall.getExpression().accept(*this);
-			m_context << u256(0); // 0 gas, we do not want to execute code
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(),
 								 *function.getParameterTypes().front(), true);
@@ -531,7 +532,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					strings(),
 					Location::Bare,
 					false,
-					true,
+					false,
 					true
 				),
 				{}
@@ -1098,7 +1099,10 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	else
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		m_context << u256(50 + (_functionType.valueSet() ? 9000 : 0) + 25000) << eth::Instruction::GAS << eth::Instruction::SUB;
+		m_context <<
+			u256(eth::c_callGas + 10 + (_functionType.valueSet() ? eth::c_callValueTransferGas : 0) + eth::c_callNewAccountGas) <<
+			eth::Instruction::GAS <<
+			eth::Instruction::SUB;
 	if (
 		_functionType.getLocation() == FunctionType::Location::CallCode ||
 		_functionType.getLocation() == FunctionType::Location::BareCallCode
