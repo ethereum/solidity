@@ -33,10 +33,10 @@
 
 #define DONTUSE_BOOST_MACROS
 #ifdef DONTUSE_BOOST_MACROS
-	#define TBOOST_THROW_EXCEPTION(arg) throw;
-	#define TBOOST_REQUIRE(arg) if(arg == false) throw;
-	#define TBOOST_CHECK_MESSAGE(arg1, arg2) if(arg1 == false) throw;
-	#define TBOOST_WARN_MESSAGE(arg1, arg2) throw;
+	#define TBOOST_THROW_EXCEPTION(arg) throw dev::Exception();
+	#define TBOOST_REQUIRE(arg) if(arg == false) throw dev::Exception();
+	#define TBOOST_CHECK_MESSAGE(arg1, arg2) if(arg1 == false) throw dev::Exception();
+	#define TBOOST_WARN_MESSAGE(arg1, arg2) throw dev::Exception();
 #else
 	#define TBOOST_THROW_EXCEPTION(arg) BOOST_THROW_EXCEPTION(arg)
 	#define TBOOST_REQUIRE(arg) BOOST_REQUIRE(arg)
