@@ -184,6 +184,7 @@ public:
 	bool stats = false;		///< Execution time stats
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool checkState = false;///< Throw error when checking test states
+	bool fulloutput = false;///< Replace large output to just it's length
 
 	/// Test selection
 	/// @{

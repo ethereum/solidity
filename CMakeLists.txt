@@ -25,6 +25,7 @@ add_subdirectory(libethereum)
 add_subdirectory(libevm)
 add_subdirectory(libnatspec)
 add_subdirectory(libp2p)
+add_subdirectory(external-dependencies)
 
 if (JSCONSOLE)
 	add_subdirectory(libjsengine)

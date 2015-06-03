@@ -1783,6 +1783,39 @@ BOOST_AUTO_TEST_CASE(uninitialized_var)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(string)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f(string x) external { s = x; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(string_index)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f() { var a = s[2]; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(string_length)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f() { var a = s.length; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
