@@ -31,6 +31,19 @@
 #include <libevm/ExtVMFace.h>
 #include <libtestutils/Common.h>
 
+#define DONTUSE_BOOST_MACROS
+#ifdef DONTUSE_BOOST_MACROS
+	#define TBOOST_THROW_EXCEPTION(arg) throw;
+	#define TBOOST_REQUIRE(arg) if(arg == false) throw;
+	#define TBOOST_CHECK_MESSAGE(arg1, arg2) if(arg1 == false) throw;
+	#define TBOOST_WARN_MESSAGE(arg1, arg2) throw;
+#else
+	#define TBOOST_THROW_EXCEPTION(arg) BOOST_THROW_EXCEPTION(arg)
+	#define TBOOST_REQUIRE(arg) BOOST_REQUIRE(arg)
+	#define TBOOST_CHECK_MESSAGE(arg1, arg2) BOOST_CHECK_MESSAGE(arg1, arg2)
+	#define TBOOST_WARN_MESSAGE(arg1, arg2) BOOST_WARN_MESSAGE(arg1, arg2)
+#endif
+
 namespace dev
 {
 namespace eth
@@ -162,6 +175,9 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
+
+//Fill Test Functions
+void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
