@@ -127,8 +127,9 @@ bigint LiteralMethod::gasNeeded()
 }
 
 CodeCopyMethod::CodeCopyMethod(Params const& _params, u256 const& _value):
-	ConstantOptimisationMethod(_params, _value),
-	m_copyRoutine{
+	ConstantOptimisationMethod(_params, _value)
+{
+	m_copyRoutine = AssemblyItems{
 		u256(0),
 		eth::Instruction::DUP1,
 		eth::Instruction::MLOAD, // back up memory
@@ -140,8 +141,7 @@ CodeCopyMethod::CodeCopyMethod(Params const& _params, u256 const& _value):
 		eth::Instruction::MLOAD,
 		eth::Instruction::SWAP2,
 		eth::Instruction::MSTORE
-	}
-{
+	};
 }
 
 bigint CodeCopyMethod::gasNeeded()
