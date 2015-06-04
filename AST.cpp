@@ -686,14 +686,13 @@ void Expression::expectType(Type const& _expectedType)
 	checkTypeRequirements(nullptr);
 	Type const& type = *getType();
 	if (!type.isImplicitlyConvertibleTo(_expectedType))
-		BOOST_THROW_EXCEPTION(
-			createTypeError(
-				"Type " +
-				type.toString() +
-				" is not implicitly convertible to expected type " +
-				_expectedType.toString() +
-				"."
-			)
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Type " +
+			type.toString() +
+			" is not implicitly convertible to expected type " +
+			_expectedType.toString() +
+			"."
+		)
 		);
 }
 

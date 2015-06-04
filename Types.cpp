@@ -361,22 +361,21 @@ IntegerConstantType::IntegerConstantType(Literal const& _literal)
 
 bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (IntegerType const* integerType = dynamic_cast<IntegerType const*>(&_convertTo))
+	if (auto targetType = dynamic_cast<IntegerType const*>(&_convertTo))
 	{
 		if (m_value == 0)
 			return true;
-		int forSignBit = (integerType->isSigned() ? 1 : 0);
+		int forSignBit = (targetType->isSigned() ? 1 : 0);
 		if (m_value > 0)
 		{
-			if (m_value <= (u256(-1) >> (256 - integerType->getNumBits() + forSignBit)))
+			if (m_value <= (u256(-1) >> (256 - targetType->getNumBits() + forSignBit)))
 				return true;
 		}
-		else if (-m_value <= (u256(1) << (integerType->getNumBits() - forSignBit)))
+		else if (-m_value <= (u256(1) << (targetType->getNumBits() - forSignBit)))
 			return true;
 		return false;
 	}
-	else
-		if (_convertTo.getCategory() == Category::FixedBytes)
+	else if (_convertTo.getCategory() == Category::FixedBytes)
 		{
 			FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
 			return fixedBytes.getNumBytes() * 8 >= getIntegerType()->getNumBits();
