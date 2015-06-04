@@ -1866,6 +1866,16 @@ BOOST_AUTO_TEST_CASE(negative_integers_to_unsigned)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(positive_integers_to_unsigned_out_of_bound)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint8 public x = 700;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
