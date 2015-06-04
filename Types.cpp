@@ -371,7 +371,7 @@ bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) cons
 			if (m_value <= (u256(-1) >> (256 - targetType->getNumBits() + forSignBit)))
 				return true;
 		}
-		else if (-m_value <= (u256(1) << (targetType->getNumBits() - forSignBit)))
+		else if (targetType->isSigned() && -m_value <= (u256(1) << (targetType->getNumBits() - forSignBit)))
 			return true;
 		return false;
 	}
