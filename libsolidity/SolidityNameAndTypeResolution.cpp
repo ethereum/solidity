@@ -23,7 +23,7 @@
 #include <string>
 
 #include <libdevcore/Log.h>
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/SHA3.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
@@ -505,6 +505,28 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			if (functions.empty())
 				continue;
 			BOOST_CHECK_EQUAL("boo(uint256,bool,bytes8,bool[2],uint256[],address,address[])", functions[0]->externalSignature());
+		}
+}
+
+BOOST_AUTO_TEST_CASE(enum_external_type)
+{
+	// bug #1801
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract Test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			function boo(ActionChoices enumArg) external returns (uint ret) {
+				ret = 5;
+			}
+		})";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
+	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+		{
+			auto functions = contract->getDefinedFunctions();
+			if (functions.empty())
+				continue;
+			BOOST_CHECK_EQUAL("boo(uint8)", functions[0]->externalSignature());
 		}
 }
 
@@ -1756,6 +1778,39 @@ BOOST_AUTO_TEST_CASE(uninitialized_var)
 	char const* sourceCode = R"(
 		contract C {
 			function f() returns (uint) { var x; return 2; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(string)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f(string x) external { s = x; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(string_index)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f() { var a = s[2]; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(string_length)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f() { var a = s.length; }
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);

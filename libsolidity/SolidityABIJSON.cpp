@@ -525,6 +525,76 @@ BOOST_AUTO_TEST_CASE(constructor_abi)
 	checkInterface(sourceCode, interface);
 }
 
+
+BOOST_AUTO_TEST_CASE(return_param_in_abi)
+{
+	// bug #1801
+	char const* sourceCode = R"(
+		contract test {
+			enum ActionChoices { GoLeft, GoRight, GoStraight, Sit }
+			function test(ActionChoices param) {}
+			function ret() returns(ActionChoices){
+				ActionChoices action = ActionChoices.GoLeft;
+				return action;
+			}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"inputs" : [],
+			"name" : "ret",
+			"outputs" : [
+				{
+					"name" : "",
+					"type" : "uint8"
+				}
+			],
+			"type" : "function"
+		},
+		{
+			"inputs": [
+				{
+					"name": "param",
+					"type": "uint8"
+				}
+			],
+			"type": "constructor"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(strings_and_arrays)
+{
+	// bug #1801
+	char const* sourceCode = R"(
+		contract test {
+			function f(string a, bytes b, uint[] c) external {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"name": "f",
+			"inputs": [
+				{ "name": "a", "type": "string" },
+				{ "name": "b", "type": "bytes" },
+				{ "name": "c", "type": "uint256[]" }
+			],
+			"outputs": [],
+			"type" : "function"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

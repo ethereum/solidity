@@ -24,7 +24,7 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/Hash.h>
 #include <test/libsolidity/solidityExecutionFramework.h>
 
 using namespace std;
@@ -1501,9 +1501,7 @@ BOOST_AUTO_TEST_CASE(sha256)
 	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _input) -> u256
 	{
-		h256 ret;
-		dev::sha256(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
-		return ret;
+		return dev::sha256(dev::ref(toBigEndian(_input)));
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -1520,9 +1518,7 @@ BOOST_AUTO_TEST_CASE(ripemd)
 	compileAndRun(sourceCode);
 	auto f = [&](u256 const& _input) -> u256
 	{
-		h256 ret;
-		dev::ripemd160(dev::ref(toBigEndian(_input)), bytesRef(&ret[0], 32));
-		return u256(ret);
+		return h256(dev::ripemd160(h256(_input).ref()), h256::AlignLeft);	// This should be aligned right. i guess it's fixed elsewhere?
 	};
 	testSolidityAgainstCpp("a(bytes32)", f, u256(4));
 	testSolidityAgainstCpp("a(bytes32)", f, u256(5));
@@ -2556,6 +2552,37 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	compileAndRun(sourceCode, 50, "sender");
 	BOOST_REQUIRE(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(23));
 	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
+}
+
+BOOST_AUTO_TEST_CASE(generic_callcode)
+{
+	char const* sourceCode = R"**(
+			contract receiver {
+				uint public received;
+				function receive(uint256 x) { received = x; }
+			}
+			contract sender {
+				uint public received;
+				function doSend(address rec) returns (uint d)
+				{
+					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
+					rec.callcode.value(2)(signature, 23);
+					return receiver(rec).received();
+				}
+			}
+	)**";
+	compileAndRun(sourceCode, 0, "receiver");
+	u160 const c_receiverAddress = m_contractAddress;
+	compileAndRun(sourceCode, 50, "sender");
+	u160 const c_senderAddress = m_contractAddress;
+	BOOST_CHECK(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("received()") == encodeArgs(23));
+	m_contractAddress = c_receiverAddress;
+	BOOST_CHECK(callContractFunction("received()") == encodeArgs(0));
+	BOOST_CHECK(m_state.storage(c_receiverAddress).empty());
+	BOOST_CHECK(!m_state.storage(c_senderAddress).empty());
+	BOOST_CHECK_EQUAL(m_state.balance(c_receiverAddress), 0);
+	BOOST_CHECK_EQUAL(m_state.balance(c_senderAddress), 50);
 }
 
 BOOST_AUTO_TEST_CASE(store_bytes)
@@ -3996,6 +4023,154 @@ BOOST_AUTO_TEST_CASE(overwriting_inheritance)
 	BOOST_CHECK(callContractFunction("checkOk()") == encodeArgs(6));
 }
 
+BOOST_AUTO_TEST_CASE(struct_assign_reference_to_struct)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct testStruct
+			{
+				uint m_value;
+			}
+			testStruct data1;
+			testStruct data2;
+			testStruct data3;
+			function test()
+			{
+				data1.m_value = 2;
+			}
+			function assign() returns (uint ret_local, uint ret_global, uint ret_global3, uint ret_global1)
+			{
+				testStruct x = data1; //x is a reference data1.m_value == 2 as well as x.m_value = 2
+				data2 = data1; // should copy data. data2.m_value == 2
+
+				ret_local = x.m_value; // = 2
+				ret_global = data2.m_value; // = 2
+
+				x.m_value = 3;
+				data3 = x; //should copy the data. data3.m_value == 3
+				ret_global3 = data3.m_value; // = 3
+				ret_global1 = data1.m_value; // = 3. Changed due to the assignment to x.m_value
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	BOOST_CHECK(callContractFunction("assign()") == encodeArgs(2, 2, 3, 3));
+}
+
+BOOST_AUTO_TEST_CASE(struct_delete_member)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct testStruct
+			{
+				uint m_value;
+			}
+			testStruct data1;
+			function test()
+			{
+				data1.m_value = 2;
+			}
+			function deleteMember() returns (uint ret_value)
+			{
+				testStruct x = data1; //should not copy the data. data1.m_value == 2 but x.m_value = 0
+				x.m_value = 4;
+				delete x.m_value;
+				ret_value = data1.m_value;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	BOOST_CHECK(callContractFunction("deleteMember()") == encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(struct_delete_struct_in_mapping)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct testStruct
+			{
+				uint m_value;
+			}
+			mapping (uint => testStruct) campaigns;
+
+			function test()
+			{
+				campaigns[0].m_value = 2;
+			}
+			function deleteIt() returns (uint)
+			{
+				delete campaigns[0];
+				return campaigns[0].m_value;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "test");
+	BOOST_CHECK(callContractFunction("deleteIt()") == encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(evm_exceptions_out_of_band_access)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint[3] arr;
+			bool public test = false;
+			function getElement(uint i) returns (uint)
+			{
+				return arr[i];
+			}
+			function testIt() returns (bool)
+			{
+				uint i = this.getElement(5);
+				test = true;
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "A");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(false));
+	BOOST_CHECK(callContractFunction("testIt()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(false));
+}
+
+BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_call_fail)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function A()
+			{
+				this.call("123");
+			}
+		}
+		contract B {
+			uint public test = 1;
+			function testIt()
+			{
+				A a = new A();
+				++test;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "B");
+
+	BOOST_CHECK(callContractFunction("testIt()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint public test = 1;
+			uint[3] arr;
+			function A()
+			{
+				test = arr[5];
+				++test;
+			}
+		}
+	)";
+	BOOST_CHECK(compileAndRunWthoutCheck(sourceCode, 0, "A").empty());
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
