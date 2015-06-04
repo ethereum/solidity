@@ -376,12 +376,12 @@ bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) cons
 		return false;
 	}
 	else if (_convertTo.getCategory() == Category::FixedBytes)
-		{
-			FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-			return fixedBytes.getNumBytes() * 8 >= getIntegerType()->getNumBits();
-		}
-		else
-			return false;
+	{
+		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
+		return fixedBytes.getNumBytes() * 8 >= getIntegerType()->getNumBits();
+	}
+	else
+		return false;
 }
 
 bool IntegerConstantType::isExplicitlyConvertibleTo(Type const& _convertTo) const
