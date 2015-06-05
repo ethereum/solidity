@@ -524,11 +524,11 @@ protected:
 	Visibility getDefaultVisibility() const override { return Visibility::Internal; }
 
 private:
-	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
-	ASTPointer<Expression> m_value;     ///< the assigned value, can be missing
-	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
-	bool m_isIndexed;                   ///< Whether this is an indexed variable (used by events).
-	bool m_isConstant;                  ///< Whether the variable is a compile-time constant.
+	ASTPointer<TypeName> m_typeName; ///< can be empty ("var")
+	ASTPointer<Expression> m_value; ///< the assigned value, can be missing
+	bool m_isStateVariable; ///< Whether or not this is a contract state variable
+	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
+	bool m_isConstant; ///< Whether the variable is a compile-time constant.
 	Location m_location; ///< Location of the variable if it is of reference type.
 
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty

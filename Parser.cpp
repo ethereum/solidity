@@ -394,9 +394,16 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			nodeFactory.setEndPositionFromNode(value);
 		}
 	}
-	return nodeFactory.createNode<VariableDeclaration>(type, identifier, value,
-									visibility, _options.isStateVariable,
-									isIndexed, isDeclaredConst, location);
+	return nodeFactory.createNode<VariableDeclaration>(
+		type,
+		identifier,
+		value,
+		visibility,
+		_options.isStateVariable,
+		isIndexed,
+		isDeclaredConst,
+		location
+	);
 }
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
