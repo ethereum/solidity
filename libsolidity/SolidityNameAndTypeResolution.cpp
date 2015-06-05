@@ -1816,6 +1816,66 @@ BOOST_AUTO_TEST_CASE(string_length)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(negative_integers_to_signed_out_of_bound)
+{
+	char const* sourceCode = R"(
+		contract test {
+			int8 public i = -129;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(negative_integers_to_signed_min)
+{
+	char const* sourceCode = R"(
+		contract test {
+			int8 public i = -128;
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(positive_integers_to_signed_out_of_bound)
+{
+	char const* sourceCode = R"(
+		contract test {
+			int8 public j = 128;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(positive_integers_to_signed_out_of_bound_max)
+{
+	char const* sourceCode = R"(
+		contract test {
+			int8 public j = 127;
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(negative_integers_to_unsigned)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint8 public x = -1;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(positive_integers_to_unsigned_out_of_bound)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint8 public x = 700;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
