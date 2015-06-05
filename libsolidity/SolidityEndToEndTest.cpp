@@ -4187,6 +4187,28 @@ BOOST_AUTO_TEST_CASE(positive_integers_to_signed)
 	BOOST_CHECK(callContractFunction("q()") == encodeArgs(250));
 }
 
+BOOST_AUTO_TEST_CASE(failing_send)
+{
+	char const* sourceCode = R"(
+		contract Helper {
+			uint[] data;
+			function () {
+				data[9]; // trigger exception
+			}
+		}
+		contract Main {
+			function callHelper(address _a) returns (bool r, uint bal) {
+				r = !_a.send(5);
+				bal = this.balance;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Helper");
+	u160 const c_helperAddress = m_contractAddress;
+	compileAndRun(sourceCode, 20, "Main");
+	BOOST_REQUIRE(callContractFunction("callHelper(address)", c_helperAddress) == encodeArgs(true, 20));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
