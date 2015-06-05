@@ -521,6 +521,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case Location::Send:
 			_functionCall.getExpression().accept(*this);
+			m_context << u256(0); // do not send gas (there still is the stipend)
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(),
 								 *function.getParameterTypes().front(), true);
@@ -532,7 +533,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					strings(),
 					Location::Bare,
 					false,
-					false,
+					true,
 					true
 				),
 				{}
@@ -1057,10 +1058,15 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
 
+	bool returnSuccessCondition =
+		_functionType.getLocation() == FunctionType::Location::Bare ||
+		_functionType.getLocation() == FunctionType::Location::BareCallCode;
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
 							_functionType.getReturnParameterTypes().front().get();
 	unsigned retSize = firstType ? firstType->getCalldataEncodedSize() : 0;
+	if (returnSuccessCondition)
+		retSize = 0; // return value actually is success condition
 	m_context << u256(retSize) << u256(0);
 
 	if (_functionType.isBareCall())
@@ -1111,19 +1117,28 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	else
 		m_context << eth::Instruction::CALL;
 
-	//Propagate error condition (if CALL pushes 0 on stack).
-	m_context << eth::Instruction::ISZERO;
-	m_context.appendConditionalJumpTo(m_context.errorTag());
+	unsigned remainsSize =
+		1 + // contract address
+		_functionType.valueSet() +
+		_functionType.gasSet() +
+		!_functionType.isBareCall();
 
-	if (_functionType.valueSet())
-		m_context << eth::Instruction::POP;
-	if (_functionType.gasSet())
-		m_context << eth::Instruction::POP;
-	if (!_functionType.isBareCall())
-		m_context << eth::Instruction::POP;
-	m_context << eth::Instruction::POP; // pop contract address
+	if (returnSuccessCondition)
+		m_context << eth::swapInstruction(remainsSize);
+	else
+	{
+		//Propagate error condition (if CALL pushes 0 on stack).
+		m_context << eth::Instruction::ISZERO;
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+	}
 
-	if (_functionType.getLocation() == FunctionType::Location::RIPEMD160)
+	CompilerUtils(m_context).popStackSlots(remainsSize);
+
+	if (returnSuccessCondition)
+	{
+		// already there
+	}
+	else if (_functionType.getLocation() == FunctionType::Location::RIPEMD160)
 	{
 		// fix: built-in contract returns right-aligned data
 		CompilerUtils(m_context).loadFromMemory(0, IntegerType(160), false, true);
