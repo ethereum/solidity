@@ -873,6 +873,47 @@ BOOST_AUTO_TEST_CASE(var_array)
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
+BOOST_AUTO_TEST_CASE(location_specifiers_for_params)
+{
+	char const* text = R"(
+		contract Foo {
+			function f(uint[] storage constant x, uint[] memory y) { }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(location_specifiers_for_locals)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				uint[] storage x;
+				uint[] memory y;
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
+BOOST_AUTO_TEST_CASE(location_specifiers_for_state)
+{
+	char const* text = R"(
+		contract Foo {
+			uint[] memory x;
+	})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
+BOOST_AUTO_TEST_CASE(location_specifiers_with_var)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() { var memory x; }
+	})";
+	BOOST_CHECK_THROW(parseText(text), ParserError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
