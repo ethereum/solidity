@@ -41,6 +41,8 @@ public:
 	void fetchFreeMemoryPointer();
 	/// Stores the free memory pointer from the stack.
 	void storeFreeMemoryPointer();
+	/// Appends code that transforms memptr to (memptr - free_memptr) memptr
+	void toSizeAfterFreeMemoryPointer();
 
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
@@ -74,7 +76,7 @@ public:
 		bool _padToWordBoundaries = false
 	);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
-	/// and also updates that.
+	/// and also updates that. For arrays, only copies the data part.
 	/// Stack pre: memory_offset value...
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries = true);

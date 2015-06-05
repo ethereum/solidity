@@ -50,6 +50,13 @@ void CompilerUtils::storeFreeMemoryPointer()
 	m_context << u256(freeMemoryPointer) << eth::Instruction::MSTORE;
 }
 
+void CompilerUtils::toSizeAfterFreeMemoryPointer()
+{
+	fetchFreeMemoryPointer();
+	m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2 << eth::Instruction::SUB;
+	m_context << eth::Instruction::SWAP1;
+}
+
 unsigned CompilerUtils::loadFromMemory(
 	unsigned _offset,
 	Type const& _type,
@@ -204,6 +211,7 @@ unsigned CompilerUtils::getSizeOnStack(vector<shared_ptr<Type const>> const& _va
 void CompilerUtils::computeHashStatic(Type const& _type, bool _padToWordBoundaries)
 {
 	unsigned length = storeInMemory(0, _type, _padToWordBoundaries);
+	solAssert(length <= CompilerUtils::freeMemoryPointer, "");
 	m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
 }
 
