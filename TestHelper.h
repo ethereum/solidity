@@ -35,13 +35,21 @@
 #ifdef DONTUSE_BOOST_MACROS
 	#define TBOOST_THROW_EXCEPTION(arg) throw dev::Exception();
 	#define TBOOST_REQUIRE(arg) if(arg == false) throw dev::Exception();
+	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
+	#define TBOOST_CHECK_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
+	#define TBOOST_CHECK(arg) if(arg == false) throw dev::Exception();
 	#define TBOOST_CHECK_MESSAGE(arg1, arg2) if(arg1 == false) throw dev::Exception();
 	#define TBOOST_WARN_MESSAGE(arg1, arg2) throw dev::Exception();
+	#define TBOOST_ERROR(arg) throw dev::Exception();
 #else
 	#define TBOOST_THROW_EXCEPTION(arg) BOOST_THROW_EXCEPTION(arg)
 	#define TBOOST_REQUIRE(arg) BOOST_REQUIRE(arg)
+	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) BOOST_REQUIRE_EQUAL(arg1, arg2)
+	#define TBOOST_CHECK(arg) BOOOST_CHECK(arg)
+	#define TBOOST_CHECK_EQUAL(arg1, arg2) BOOST_CHECK_EQUAL(arg1, arg2)
 	#define TBOOST_CHECK_MESSAGE(arg1, arg2) BOOST_CHECK_MESSAGE(arg1, arg2)
 	#define TBOOST_WARN_MESSAGE(arg1, arg2) BOOST_WARN_MESSAGE(arg1, arg2)
+	#define TBOOST_ERROR(arg) BOOST_ERROR(arg)
 #endif
 
 namespace dev
@@ -179,6 +187,7 @@ json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
 //Fill Test Functions
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
 void doStateTests(json_spirit::mValue& v, bool _fillin);
+void doVMTests(json_spirit::mValue& v, bool _fillin);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
@@ -188,9 +197,9 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 		auto& resultAddr = resultPair.first;
 		auto expectedAddrIt = _expectedAddrs.find(resultAddr);
 		if (expectedAddrIt == _expectedAddrs.end())
-			BOOST_ERROR("Missing result address " << resultAddr);
+			TBOOST_ERROR("Missing result address " << resultAddr);
 	}
-	BOOST_CHECK(_expectedAddrs == _resultAddrs);
+	TBOOST_CHECK((_expectedAddrs == _resultAddrs));
 }
 
 class Options

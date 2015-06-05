@@ -285,9 +285,9 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 	#define CHECK(a,b)						\
 		{									\
 			if (_throw == WhenError::Throw) \
-				BOOST_CHECK_MESSAGE(a,b);	\
+				{TBOOST_CHECK_MESSAGE(a,b);}\
 			else							\
-				BOOST_WARN_MESSAGE(a,b);	\
+				{TBOOST_WARN_MESSAGE(a,b);}	\
 		}
 
 	for (auto const& a: _stateExpect.addresses())
@@ -304,35 +304,35 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 				}
 				catch(std::out_of_range const&)
 				{
-					BOOST_ERROR("expectedStateOptions map does not match expectedState in checkExpectedState!");
+					TBOOST_ERROR("expectedStateOptions map does not match expectedState in checkExpectedState!");
 					break;
 				}
 			}
 
 			if (addressOptions.m_bHasBalance)
-				CHECK(_stateExpect.balance(a.first) == _statePost.balance(a.first),
+				CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),
 						"Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
 
 			if (addressOptions.m_bHasNonce)
-				CHECK(_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first),
+				CHECK((_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first)),
 						"Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
 
 			if (addressOptions.m_bHasStorage)
 			{
 				unordered_map<u256, u256> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
-					CHECK(stateStorage[s.first] == s.second,
+					CHECK((stateStorage[s.first] == s.second),
 							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
 
 				//Check for unexpected storage values
 				stateStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
-					CHECK(stateStorage[s.first] == s.second,
+					CHECK((stateStorage[s.first] == s.second),
 							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(s.second) << ", expected [" << s.first << "] = " << toHex(stateStorage[s.first]));
 			}
 
 			if (addressOptions.m_bHasCode)
-				CHECK(_stateExpect.code(a.first) == _statePost.code(a.first),
+				CHECK((_stateExpect.code(a.first) == _statePost.code(a.first)),
 						"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
@@ -518,18 +518,17 @@ void checkOutput(bytes const& _output, json_spirit::mObject& _o)
 	int j = 0;
 
 	if (_o["out"].get_str().find("#") == 0)
-		BOOST_CHECK((u256)_output.size() == toInt(_o["out"].get_str().substr(1)));
-
+		{TBOOST_CHECK(((u256)_output.size() == toInt(_o["out"].get_str().substr(1))));}
 	else if (_o["out"].type() == json_spirit::array_type)
 		for (auto const& d: _o["out"].get_array())
 		{
-			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
+			TBOOST_CHECK_MESSAGE((_output[j] == toInt(d)), "Output byte [" << j << "] different!");
 			++j;
 		}
 	else if (_o["out"].get_str().find("0x") == 0)
-		BOOST_CHECK(_output == fromHex(_o["out"].get_str().substr(2)));
+		{TBOOST_CHECK((_output == fromHex(_o["out"].get_str().substr(2))));}
 	else
-		BOOST_CHECK(_output == fromHex(_o["out"].get_str()));
+		TBOOST_CHECK((_output == fromHex(_o["out"].get_str())));
 }
 
 void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, Address _expectedAddr)
@@ -557,13 +556,13 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 
 void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
 {
-	BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
+	TBOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
 
 	for (size_t i = 0; i < _resultLogs.size(); ++i)
 	{
-		BOOST_CHECK_EQUAL(_resultLogs[i].address, _expectedLogs[i].address);
-		BOOST_CHECK_EQUAL(_resultLogs[i].topics, _expectedLogs[i].topics);
-		BOOST_CHECK(_resultLogs[i].data == _expectedLogs[i].data);
+		TBOOST_CHECK_EQUAL(_resultLogs[i].address, _expectedLogs[i].address);
+		TBOOST_CHECK_EQUAL(_resultLogs[i].topics, _expectedLogs[i].topics);
+		TBOOST_CHECK((_resultLogs[i].data == _expectedLogs[i].data));
 	}
 }
 
