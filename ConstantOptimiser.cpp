@@ -73,7 +73,7 @@ bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
 	bigint gas = 0;
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
-			gas += GasMeter::runGas(eth::Instruction::PUSH1);
+			gas += GasMeter::runGas(Instruction::PUSH1);
 		else if (item.type() == Operation)
 			gas += GasMeter::runGas(item.instruction());
 	return gas;
@@ -119,7 +119,7 @@ void ConstantOptimisationMethod::replaceConstants(
 bigint LiteralMethod::gasNeeded()
 {
 	return combineGas(
-		simpleRunGas({eth::Instruction::PUSH1}),
+		simpleRunGas({Instruction::PUSH1}),
 		// PUSHX plus data
 		(m_params.isCreation ? c_txDataNonZeroGas : c_createDataGas) + dataGas(),
 		0
@@ -131,16 +131,16 @@ CodeCopyMethod::CodeCopyMethod(Params const& _params, u256 const& _value):
 {
 	m_copyRoutine = AssemblyItems{
 		u256(0),
-		eth::Instruction::DUP1,
-		eth::Instruction::MLOAD, // back up memory
+		Instruction::DUP1,
+		Instruction::MLOAD, // back up memory
 		u256(32),
 		AssemblyItem(PushData, u256(1) << 16), // has to be replaced
-		eth::Instruction::DUP4,
-		eth::Instruction::CODECOPY,
-		eth::Instruction::DUP2,
-		eth::Instruction::MLOAD,
-		eth::Instruction::SWAP2,
-		eth::Instruction::MSTORE
+		Instruction::DUP4,
+		Instruction::CODECOPY,
+		Instruction::DUP2,
+		Instruction::MLOAD,
+		Instruction::SWAP2,
+		Instruction::MSTORE
 	};
 }
 
@@ -200,7 +200,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 			if (lowerPart > 0)
 				newRoutine += AssemblyItems{Instruction::ADD};
 			else if (lowerPart < 0)
-				newRoutine.push_back(eth::Instruction::SUB);
+				newRoutine.push_back(Instruction::SUB);
 
 			bigint newGas = gasNeeded(newRoutine);
 			if (newGas < bestGas)
@@ -215,7 +215,7 @@ AssemblyItems ComputeMethod::findRepresentation(u256 const& _value)
 
 bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine)
 {
-	size_t numExps = count(_routine.begin(), _routine.end(), eth::Instruction::EXP);
+	size_t numExps = count(_routine.begin(), _routine.end(), Instruction::EXP);
 	return combineGas(
 		simpleRunGas(_routine) + numExps * (c_expGas + c_expByteGas),
 		// Data gas for routine: Some bytes are zero, but we ignore them.
