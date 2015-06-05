@@ -1036,6 +1036,51 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 	BOOST_CHECK_EQUAL(pushTags.size(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(computing_constants)
+{
+	char const* sourceCode = R"(
+		contract c {
+			uint a;
+			uint b;
+			uint c;
+			function set() returns (uint a, uint b, uint c) {
+				a = 0x77abc0000000000000000000000000000000000000000000000000000000001;
+				b = 0x817416927846239487123469187231298734162934871263941234127518276;
+				g();
+			}
+			function g() {
+				b = 0x817416927846239487123469187231298734162934871263941234127518276;
+				c = 0x817416927846239487123469187231298734162934871263941234127518276;
+			}
+			function get() returns (uint ra, uint rb, uint rc) {
+				ra = a;
+				rb = b;
+				rc = c ;
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("set()");
+	compareVersions("get()");
+
+	m_optimize = true;
+	m_optimizeRuns = 1;
+	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "c");
+	bytes complicatedConstant = toBigEndian(u256("0x817416927846239487123469187231298734162934871263941234127518276"));
+	unsigned occurrences = 0;
+	for (auto iter = optimizedBytecode.cbegin(); iter < optimizedBytecode.cend(); ++occurrences)
+		iter = search(iter, optimizedBytecode.cend(), complicatedConstant.cbegin(), complicatedConstant.cend()) + 1;
+	BOOST_CHECK_EQUAL(2, occurrences);
+
+	bytes constantWithZeros = toBigEndian(u256("0x77abc0000000000000000000000000000000000000000000000000000000001"));
+	BOOST_CHECK(search(
+		optimizedBytecode.cbegin(),
+		optimizedBytecode.cend(),
+		constantWithZeros.cbegin(),
+		constantWithZeros.cend()
+	) == optimizedBytecode.cend());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
