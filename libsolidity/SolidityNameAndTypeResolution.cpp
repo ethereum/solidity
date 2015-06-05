@@ -558,16 +558,6 @@ BOOST_AUTO_TEST_CASE(function_external_call_not_allowed_conversion)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
-// todo delete when implemented
-BOOST_AUTO_TEST_CASE(arrays_in_internal_functions)
-{
-	char const* text = R"(
-		contract Test {
-			function foo(address[] addresses) {}
-	})";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
-}
-
 BOOST_AUTO_TEST_CASE(function_internal_allowed_conversion)
 {
 	char const* text = R"(

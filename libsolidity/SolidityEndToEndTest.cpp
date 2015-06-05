@@ -2396,7 +2396,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data)
 	callContractFunction("deposit()");
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 4, 15) + FixedHash<4>(dev::sha3("deposit()")).asBytes());
+	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 4) + FixedHash<4>(dev::sha3("deposit()")).asBytes());
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(uint256,bytes,uint256)")));
 }
@@ -2420,7 +2420,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
 	callContractFunction("deposit()");
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 3, 15) + asBytes("ABC"));
+	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 3) + asBytes("ABC"));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(uint256,bytes,uint256)")));
 }
@@ -2529,6 +2529,27 @@ BOOST_AUTO_TEST_CASE(sha3_with_bytes)
 		})";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("foo()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(iterated_sha3_with_bytes)
+{
+	char const* sourceCode = R"(
+		contract c {
+			bytes data;
+			function foo() returns (bytes32)
+			{
+				data.length = 3;
+				data[0] = "x";
+				data[1] = "y";
+				data[2] = "z";
+				return sha3("b", sha3(data), "a");
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("foo()") == encodeArgs(
+		u256(dev::sha3(bytes{'b'} + dev::sha3("xyz").asBytes() + bytes{'a'}))
+	));
 }
 
 BOOST_AUTO_TEST_CASE(generic_call)
@@ -4207,6 +4228,32 @@ BOOST_AUTO_TEST_CASE(failing_send)
 	u160 const c_helperAddress = m_contractAddress;
 	compileAndRun(sourceCode, 20, "Main");
 	BOOST_REQUIRE(callContractFunction("callHelper(address)", c_helperAddress) == encodeArgs(true, 20));
+}
+
+BOOST_AUTO_TEST_CASE(reusing_memory)
+{
+	// Invoke some features that use memory and test that they do not interfere with each other.
+	char const* sourceCode = R"(
+		contract Helper {
+			uint public flag;
+			function Helper(uint x) {
+				flag = x;
+			}
+		}
+		contract Main {
+			mapping(uint => uint) map;
+			function f(uint x) returns (uint) {
+				map[x] = x;
+				return (new Helper(uint(sha3(this.g(map[x]))))).flag();
+			}
+			function g(uint a) returns (uint)
+			{
+				return map[a];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main");
+	BOOST_REQUIRE(callContractFunction("f(uint256)", 0x34) == encodeArgs(dev::sha3(dev::toBigEndian(u256(0x34)))));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
