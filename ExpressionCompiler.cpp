@@ -521,6 +521,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		case Location::Send:
 			_functionCall.getExpression().accept(*this);
+			m_context << u256(0); // do not send gas (there still is the stipend)
 			arguments.front()->accept(*this);
 			appendTypeConversion(*arguments.front()->getType(),
 								 *function.getParameterTypes().front(), true);
@@ -532,7 +533,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					strings(),
 					Location::Bare,
 					false,
-					false,
+					true,
 					true
 				),
 				{}
