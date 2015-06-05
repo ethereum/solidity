@@ -317,9 +317,9 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 
 const MemberList IntegerType::AddressMemberList({
 	{"balance", make_shared<IntegerType >(256)},
-	{"call", make_shared<FunctionType>(strings(), strings(), FunctionType::Location::Bare, true)},
-	{"callcode", make_shared<FunctionType>(strings(), strings(), FunctionType::Location::BareCallCode, true)},
-	{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::Send)}
+	{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true)},
+	{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true)},
+	{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
 });
 
 IntegerConstantType::IntegerConstantType(Literal const& _literal)
