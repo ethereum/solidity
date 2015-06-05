@@ -1061,22 +1061,32 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	bool returnSuccessCondition =
 		_functionType.getLocation() == FunctionType::Location::Bare ||
 		_functionType.getLocation() == FunctionType::Location::BareCallCode;
+
+	// Output data will be at FreeMemPtr, replacing input data.
+
 	//@todo only return the first return value for now
 	Type const* firstType = _functionType.getReturnParameterTypes().empty() ? nullptr :
 							_functionType.getReturnParameterTypes().front().get();
 	unsigned retSize = firstType ? firstType->getCalldataEncodedSize() : 0;
 	if (returnSuccessCondition)
 		retSize = 0; // return value actually is success condition
-	m_context << u256(retSize) << u256(0);
+	// put on stack: <size of output> <memory pos of output>
+	m_context << u256(retSize);
+	CompilerUtils(m_context).fetchFreeMemoryPointer();
 
-	if (_functionType.isBareCall())
-		m_context << u256(0);
-	else
+	//@TODO CHECK ALL CALLS OF appendTypeMoveToMemory
+
+	// copy arguments to memory and
+	// put on stack: <size of input> <memory pos of input>
+	m_context << eth::Instruction::DUP1 << eth::Instruction::DUP1;
+	if (!_functionType.isBareCall())
 	{
 		// copy function identifier
 		m_context << eth::dupInstruction(gasValueSize + 3);
-		CompilerUtils(m_context).storeInMemory(0, IntegerType(CompilerUtils::dataStartOffset * 8));
-		m_context << u256(CompilerUtils::dataStartOffset);
+		CompilerUtils(m_context).storeInMemoryDynamic(
+			IntegerType(CompilerUtils::dataStartOffset * 8),
+			false
+		);
 	}
 
 	// For bare call, activate "4 byte pad exception": If the first argument has exactly 4 bytes,
@@ -1090,10 +1100,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			_functionType.getLocation() == FunctionType::Location::BareCallCode,
 		_functionType.takesArbitraryParameters()
 	);
+	// now on stack: ... <pos of output = pos of input> <pos of input> <end of input>
+	m_context << eth::Instruction::SUB << eth::Instruction::DUP2;
 
-	// CALL arguments: outSize, outOff, inSize, (already present up to here)
-	// inOff, value, addr, gas (stack top)
-	m_context << u256(0);
+	// CALL arguments: outSize, outOff, inSize, inOff (already present up to here)
+	// value, addr, gas (stack top)
 	if (_functionType.valueSet())
 		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
 	else
@@ -1141,11 +1152,15 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	else if (_functionType.getLocation() == FunctionType::Location::RIPEMD160)
 	{
 		// fix: built-in contract returns right-aligned data
-		CompilerUtils(m_context).loadFromMemory(0, IntegerType(160), false, true);
+		CompilerUtils(m_context).fetchFreeMemoryPointer();
+		CompilerUtils(m_context).loadFromMemoryDynamic(IntegerType(160), false, true, false);
 		appendTypeConversion(IntegerType(160), FixedBytesType(20));
 	}
 	else if (firstType)
-		CompilerUtils(m_context).loadFromMemory(0, *firstType, false, true);
+	{
+		CompilerUtils(m_context).fetchFreeMemoryPointer();
+		CompilerUtils(m_context).loadFromMemoryDynamic(*firstType, false, true, false);
+	}
 }
 
 void ExpressionCompiler::appendArgumentsCopyToMemory(

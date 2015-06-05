@@ -31,7 +31,24 @@ namespace dev
 namespace solidity
 {
 
-const unsigned int CompilerUtils::dataStartOffset = 4;
+const unsigned CompilerUtils::dataStartOffset = 4;
+const size_t CompilerUtils::freeMemoryPointer = 64;
+
+void CompilerUtils::initialiseFreeMemoryPointer()
+{
+	m_context << u256(freeMemoryPointer + 32);
+	storeFreeMemoryPointer();
+}
+
+void CompilerUtils::fetchFreeMemoryPointer()
+{
+	m_context << u256(freeMemoryPointer) << eth::Instruction::MLOAD;
+}
+
+void CompilerUtils::storeFreeMemoryPointer()
+{
+	m_context << u256(freeMemoryPointer) << eth::Instruction::MSTORE;
+}
 
 unsigned CompilerUtils::loadFromMemory(
 	unsigned _offset,
