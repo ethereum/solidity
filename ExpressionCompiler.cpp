@@ -1117,10 +1117,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	else
 		m_context << eth::Instruction::CALL;
 
-	unsigned remainsSize = 1 + // contract address
-			_functionType.valueSet() +
-			_functionType.gasSet() +
-			!_functionType.isBareCall();
+	unsigned remainsSize =
+		1 + // contract address
+		_functionType.valueSet() +
+		_functionType.gasSet() +
+		!_functionType.isBareCall();
 
 	if (returnSuccessCondition)
 		m_context << eth::swapInstruction(remainsSize);
