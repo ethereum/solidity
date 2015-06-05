@@ -47,13 +47,15 @@ private:
 	/// End position of the current token
 	int getEndPosition() const;
 
-	struct VarDeclParserOptions {
+	struct VarDeclParserOptions
+	{
 		VarDeclParserOptions() {}
 		bool allowVar = false;
 		bool isStateVariable = false;
 		bool allowIndexed = false;
 		bool allowEmptyName = false;
 		bool allowInitialValue = false;
+		bool allowLocationSpecifier = false;
 	};
 
 	///@{
@@ -74,7 +76,10 @@ private:
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<TypeName> parseTypeName(bool _allowVar);
 	ASTPointer<Mapping> parseMapping();
-	ASTPointer<ParameterList> parseParameterList(bool _allowEmpty = true, bool _allowIndexed = false);
+	ASTPointer<ParameterList> parseParameterList(
+		VarDeclParserOptions const& _options,
+		bool _allowEmpty = true
+	);
 	ASTPointer<Block> parseBlock();
 	ASTPointer<Statement> parseStatement();
 	ASTPointer<IfStatement> parseIfStatement();

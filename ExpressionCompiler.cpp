@@ -770,12 +770,12 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			m_context << type.getLength();
 		}
 		else
-			switch (type.getLocation())
+			switch (type.location())
 			{
-			case ArrayType::Location::CallData:
+			case ReferenceType::Location::CallData:
 				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 				break;
-			case ArrayType::Location::Storage:
+			case ReferenceType::Location::Storage:
 				setLValue<StorageArrayLength>(_memberAccess, type);
 				break;
 			default:
@@ -816,13 +816,13 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
 
 		// remove storage byte offset
-		if (arrayType.getLocation() == ArrayType::Location::Storage)
+		if (arrayType.location() == ReferenceType::Location::Storage)
 			m_context << eth::Instruction::POP;
 
 		_indexAccess.getIndexExpression()->accept(*this);
 		// stack layout: <base_ref> [<length>] <index>
 		ArrayUtils(m_context).accessIndex(arrayType);
-		if (arrayType.getLocation() == ArrayType::Location::Storage)
+		if (arrayType.location() == ReferenceType::Location::Storage)
 		{
 			if (arrayType.isByteArray())
 			{
@@ -1169,13 +1169,13 @@ void ExpressionCompiler::appendArgumentsCopyToMemory(
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*_arguments[i]->getType());
 			// move memory reference to top of stack
 			CompilerUtils(m_context).moveToStackTop(arrayType.getSizeOnStack());
-			if (arrayType.getLocation() == ArrayType::Location::CallData)
+			if (arrayType.location() == ReferenceType::Location::CallData)
 				m_context << eth::Instruction::DUP2; // length is on stack
-			else if (arrayType.getLocation() == ArrayType::Location::Storage)
+			else if (arrayType.location() == ReferenceType::Location::Storage)
 				m_context << eth::Instruction::DUP3 << eth::Instruction::SLOAD;
 			else
 			{
-				solAssert(arrayType.getLocation() == ArrayType::Location::Memory, "");
+				solAssert(arrayType.location() == ReferenceType::Location::Memory, "");
 				m_context << eth::Instruction::DUP2 << eth::Instruction::MLOAD;
 			}
 			appendTypeMoveToMemory(IntegerType(256), true);

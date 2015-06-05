@@ -161,12 +161,14 @@ namespace solidity
 	K(Import, "import", 0)                                             \
 	K(Is, "is", 0)                                                     \
 	K(Mapping, "mapping", 0)                                           \
+	K(Memory, "memory", 0)                                             \
 	K(Modifier, "modifier", 0)                                         \
 	K(New, "new", 0)                                                   \
 	K(Public, "public", 0)                                             \
 	K(Private, "private", 0)                                           \
 	K(Return, "return", 0)                                             \
 	K(Returns, "returns", 0)                                           \
+	K(Storage, "storage", 0)                                           \
 	K(Struct, "struct", 0)                                             \
 	K(Var, "var", 0)                                                   \
 	K(While, "while", 0)                                               \
@@ -370,6 +372,7 @@ public:
 	static bool isShiftOp(Value op) { return (SHL <= op) && (op <= SHR); }
 	static bool isVisibilitySpecifier(Value op) { return isVariableVisibilitySpecifier(op) || op == External; }
 	static bool isVariableVisibilitySpecifier(Value op) { return op == Public || op == Private || op == Internal; }
+	static bool isLocationSpecifier(Value op) { return op == Memory || op == Storage; }
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
 

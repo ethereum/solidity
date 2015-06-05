@@ -144,9 +144,9 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 	else if (_typeToken == Token::Bool)
 		return make_shared<BoolType>();
 	else if (_typeToken == Token::Bytes)
-		return make_shared<ArrayType>(ArrayType::Location::Storage);
+		return make_shared<ArrayType>(ReferenceType::Location::Storage);
 	else if (_typeToken == Token::String)
-		return make_shared<ArrayType>(ArrayType::Location::Storage, true);
+		return make_shared<ArrayType>(ReferenceType::Location::Storage, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -196,10 +196,10 @@ TypePointer Type::fromArrayTypeName(TypeName& _baseTypeName, Expression* _length
 		auto const* length = dynamic_cast<IntegerConstantType const*>(_length->getType().get());
 		if (!length)
 			BOOST_THROW_EXCEPTION(_length->createTypeError("Invalid array length."));
-		return make_shared<ArrayType>(ArrayType::Location::Storage, baseType, length->literalValue(nullptr));
+		return make_shared<ArrayType>(ReferenceType::Location::Storage, baseType, length->literalValue(nullptr));
 	}
 	else
-		return make_shared<ArrayType>(ArrayType::Location::Storage, baseType);
+		return make_shared<ArrayType>(ReferenceType::Location::Storage, baseType);
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -674,7 +674,7 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 		return false;
 	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
 	// let us not allow assignment to memory arrays for now
-	if (convertTo.getLocation() != Location::Storage)
+	if (convertTo.location() != Location::Storage)
 		return false;
 	if (convertTo.isByteArray() != isByteArray() || convertTo.isString() != isString())
 		return false;
@@ -778,12 +778,12 @@ TypePointer ArrayType::externalType() const
 		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType(), m_length);
 }
 
-shared_ptr<ArrayType> ArrayType::copyForLocation(ArrayType::Location _location) const
+TypePointer ArrayType::copyForLocation(ReferenceType::Location _location) const
 {
 	auto copy = make_shared<ArrayType>(_location);
 	copy->m_arrayKind = m_arrayKind;
-	if (m_baseType->getCategory() == Type::Category::Array)
-		copy->m_baseType = dynamic_cast<ArrayType const&>(*m_baseType).copyForLocation(_location);
+	if (auto ref = dynamic_cast<ReferenceType const*>(m_baseType.get()))
+		copy->m_baseType = ref->copyForLocation(_location);
 	else
 		copy->m_baseType = m_baseType;
 	copy->m_hasDynamicLength = m_hasDynamicLength;
@@ -932,6 +932,13 @@ MemberList const& StructType::getMembers() const
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
+}
+
+TypePointer StructType::copyForLocation(ReferenceType::Location _location) const
+{
+	auto copy = make_shared<StructType>(m_struct);
+	copy->m_location = _location;
+	return copy;
 }
 
 pair<u256, unsigned> const& StructType::getStorageOffsetsOfMember(string const& _name) const
@@ -1466,7 +1473,7 @@ MagicType::MagicType(MagicType::Kind _kind):
 			{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
-			{"data", make_shared<ArrayType>(ArrayType::Location::CallData)},
+			{"data", make_shared<ArrayType>(ReferenceType::Location::CallData)},
 			{"sig", make_shared<FixedBytesType>(4)}
 		}));
 		break;

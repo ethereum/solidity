@@ -81,7 +81,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		auto const& type = dynamic_cast<ArrayType const&>(_type);
 		solAssert(type.isByteArray(), "Non byte arrays not yet implemented here.");
 
-		if (type.getLocation() == ArrayType::Location::CallData)
+		if (type.location() == ReferenceType::Location::CallData)
 		{
 			// stack: target source_offset source_len
 			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::DUP5
@@ -92,7 +92,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		}
 		else
 		{
-			solAssert(type.getLocation() == ArrayType::Location::Storage, "Memory arrays not yet implemented.");
+			solAssert(type.location() == ReferenceType::Location::Storage, "Memory arrays not yet implemented.");
 			m_context << eth::Instruction::POP; // remove offset, arrays always start new slot
 			m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
 			// stack here: memory_offset storage_offset length_bytes

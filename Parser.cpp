@@ -224,7 +224,9 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 		name = make_shared<ASTString>(); // anonymous function
 	else
 		name = expectIdentifierToken();
-	ASTPointer<ParameterList> parameters(parseParameterList());
+	VarDeclParserOptions options;
+	options.allowLocationSpecifier = true;
+	ASTPointer<ParameterList> parameters(parseParameterList(options));
 	bool isDeclaredConst = false;
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
 	vector<ASTPointer<ModifierInvocation>> modifiers;
@@ -252,7 +254,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 	{
 		bool const permitEmptyParameterList = false;
 		m_scanner->next();
-		returnParameters = parseParameterList(permitEmptyParameterList);
+		returnParameters = parseParameterList(options, permitEmptyParameterList);
 	}
 	else
 		returnParameters = createEmptyParameterList();
@@ -319,7 +321,9 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 }
 
 ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
-	VarDeclParserOptions const& _options, ASTPointer<TypeName> const& _lookAheadArrayType)
+	VarDeclParserOptions const& _options,
+	ASTPointer<TypeName> const& _lookAheadArrayType
+)
 {
 	ASTNodeFactory nodeFactory = _lookAheadArrayType ?
 		ASTNodeFactory(*this, _lookAheadArrayType) : ASTNodeFactory(*this);
@@ -334,20 +338,41 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	}
 	bool isIndexed = false;
 	bool isDeclaredConst = false;
-	ASTPointer<ASTString> identifier;
-	Token::Value token = m_scanner->getCurrentToken();
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
-	if (_options.isStateVariable && Token::isVariableVisibilitySpecifier(token))
-		visibility = parseVisibilitySpecifier(token);
-	if (_options.allowIndexed && token == Token::Indexed)
+	VariableDeclaration::Location location = VariableDeclaration::Location::Default;
+	ASTPointer<ASTString> identifier;
+
+	while (true)
 	{
-		isIndexed = true;
-		m_scanner->next();
-	}
-	if (token == Token::Const)
-	{
-		isDeclaredConst = true;
-		m_scanner->next();
+		Token::Value token = m_scanner->getCurrentToken();
+		if (_options.isStateVariable && Token::isVariableVisibilitySpecifier(token))
+		{
+			if (visibility != Declaration::Visibility::Default)
+				BOOST_THROW_EXCEPTION(createParserError("Visibility already specified."));
+			visibility = parseVisibilitySpecifier(token);
+		}
+		else
+		{
+			if (_options.allowIndexed && token == Token::Indexed)
+				isIndexed = true;
+			else if (token == Token::Const)
+				isDeclaredConst = true;
+			else if (_options.allowLocationSpecifier && Token::isLocationSpecifier(token))
+			{
+				if (location != VariableDeclaration::Location::Default)
+					BOOST_THROW_EXCEPTION(createParserError("Location already specified."));
+				if (!type)
+					BOOST_THROW_EXCEPTION(createParserError("Location specifier needs explicit type name."));
+				location = (
+					token == Token::Memory ?
+					VariableDeclaration::Location::Memory :
+					VariableDeclaration::Location::Storage
+				);
+			}
+			else
+				break;
+			m_scanner->next();
+		}
 	}
 	nodeFactory.markEndPosition();
 
@@ -371,7 +396,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 	}
 	return nodeFactory.createNode<VariableDeclaration>(type, identifier, value,
 									visibility, _options.isStateVariable,
-									isIndexed, isDeclaredConst);
+									isIndexed, isDeclaredConst, location);
 }
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
@@ -388,7 +413,12 @@ ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
 	ASTPointer<ASTString> name(expectIdentifierToken());
 	ASTPointer<ParameterList> parameters;
 	if (m_scanner->getCurrentToken() == Token::LParen)
-		parameters = parseParameterList();
+	{
+		VarDeclParserOptions options;
+		options.allowIndexed = true;
+		options.allowLocationSpecifier = true;
+		parameters = parseParameterList(options);
+	}
 	else
 		parameters = createEmptyParameterList();
 	ASTPointer<Block> block = parseBlock();
@@ -407,7 +437,11 @@ ASTPointer<EventDefinition> Parser::parseEventDefinition()
 	ASTPointer<ASTString> name(expectIdentifierToken());
 	ASTPointer<ParameterList> parameters;
 	if (m_scanner->getCurrentToken() == Token::LParen)
-		parameters = parseParameterList(true, true);
+	{
+		VarDeclParserOptions options;
+		options.allowIndexed = true;
+		parameters = parseParameterList(options);
+	}
 	else
 		parameters = createEmptyParameterList();
 	bool anonymous = false;
@@ -505,12 +539,14 @@ ASTPointer<Mapping> Parser::parseMapping()
 	return nodeFactory.createNode<Mapping>(keyType, valueType);
 }
 
-ASTPointer<ParameterList> Parser::parseParameterList(bool _allowEmpty, bool _allowIndexed)
+ASTPointer<ParameterList> Parser::parseParameterList(
+	VarDeclParserOptions const& _options,
+	bool _allowEmpty
+)
 {
 	ASTNodeFactory nodeFactory(*this);
 	vector<ASTPointer<VariableDeclaration>> parameters;
-	VarDeclParserOptions options;
-	options.allowIndexed = _allowIndexed;
+	VarDeclParserOptions options(_options);
 	options.allowEmptyName = true;
 	expectToken(Token::LParen);
 	if (!_allowEmpty || m_scanner->getCurrentToken() != Token::RParen)
@@ -691,7 +727,7 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 	}
 	while (m_scanner->getCurrentToken() == Token::LBrack);
 
-	if (m_scanner->getCurrentToken() == Token::Identifier)
+	if (m_scanner->getCurrentToken() == Token::Identifier || Token::isLocationSpecifier(m_scanner->getCurrentToken()))
 		return parseVariableDeclarationStatement(typeNameIndexAccessStructure(primary, indices));
 	else
 		return parseExpressionStatement(expressionFromIndexAccessStructure(primary, indices));
@@ -703,6 +739,7 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 	VarDeclParserOptions options;
 	options.allowVar = true;
 	options.allowInitialValue = true;
+	options.allowLocationSpecifier = true;
 	ASTPointer<VariableDeclaration> variable = parseVariableDeclaration(options, _lookAheadArrayType);
 	ASTNodeFactory nodeFactory(*this, variable);
 	return nodeFactory.createNode<VariableDeclarationStatement>(variable);
@@ -944,11 +981,16 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	Token::Value token(m_scanner->getCurrentToken());
 	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
 
-	if (token == Token::Mapping || token == Token::Var ||
-			(mightBeTypeName && m_scanner->peekNextToken() == Token::Identifier))
+	if (token == Token::Mapping || token == Token::Var)
 		return LookAheadInfo::VariableDeclarationStatement;
-	if (mightBeTypeName && m_scanner->peekNextToken() == Token::LBrack)
-		return LookAheadInfo::IndexAccessStructure;
+	if (mightBeTypeName)
+	{
+		Token::Value next = m_scanner->peekNextToken();
+		if (next == Token::Identifier || Token::isLocationSpecifier(next))
+			return LookAheadInfo::VariableDeclarationStatement;
+		if (m_scanner->peekNextToken() == Token::LBrack)
+			return LookAheadInfo::IndexAccessStructure;
+	}
 	return LookAheadInfo::ExpressionStatement;
 }
 

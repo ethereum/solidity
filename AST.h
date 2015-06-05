@@ -474,22 +474,26 @@ private:
 class VariableDeclaration: public Declaration
 {
 public:
+	enum Location { Default, Storage, Memory };
+
 	VariableDeclaration(
-		SourceLocation const& _location,
+		SourceLocation const& _sourceLocation,
 		ASTPointer<TypeName> const& _type,
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<Expression> _value,
 		Visibility _visibility,
 		bool _isStateVar = false,
 		bool _isIndexed = false,
-		bool _isConstant = false
+		bool _isConstant = false,
+		Location _referenceLocation = Location::Default
 	):
-		Declaration(_location, _name, _visibility),
+		Declaration(_sourceLocation, _name, _visibility),
 		m_typeName(_type),
 		m_value(_value),
 		m_isStateVariable(_isStateVar),
 		m_isIndexed(_isIndexed),
-		m_isConstant(_isConstant){}
+		m_isConstant(_isConstant),
+		m_location(_referenceLocation) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -507,10 +511,14 @@ public:
 
 	void checkTypeRequirements();
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
+	/// @returns true if this variable is a parameter or return parameter of a function.
+	bool isFunctionParameter() const;
+	/// @returns true if this variable is a parameter (not return parameter) of an external function.
 	bool isExternalFunctionParameter() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
+	Location referenceLocation() const { return m_location; }
 
 protected:
 	Visibility getDefaultVisibility() const override { return Visibility::Internal; }
@@ -521,6 +529,7 @@ private:
 	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
 	bool m_isIndexed;                   ///< Whether this is an indexed variable (used by events).
 	bool m_isConstant;                  ///< Whether the variable is a compile-time constant.
+	Location m_location; ///< Location of the variable if it is of reference type.
 
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
