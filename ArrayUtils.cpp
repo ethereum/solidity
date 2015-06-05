@@ -168,7 +168,10 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 		else
 			solAssert(false, "Copying of unknown type requested: " + sourceBaseType->toString());
 		// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset] <source_value>...
-		solAssert(2 + byteOffsetSize + sourceBaseType->getSizeOnStack() <= 16, "Stack too deep.");
+		solAssert(
+			2 + byteOffsetSize + sourceBaseType->getSizeOnStack() <= 16,
+			"Stack too deep, try removing local variables."
+		);
 		// fetch target storage reference
 		m_context << eth::dupInstruction(2 + byteOffsetSize + sourceBaseType->getSizeOnStack());
 		if (haveByteOffsetTarget)

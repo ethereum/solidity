@@ -263,7 +263,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.getType());
 		if (lvalueSize > 0)
 		{
-			solAssert(itemSize + lvalueSize <= 16, "Stack too deep.");
+			solAssert(itemSize + lvalueSize <= 16, "Stack too deep, try removing local variables.");
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
 				m_context << eth::swapInstruction(itemSize + lvalueSize) << eth::Instruction::POP;
