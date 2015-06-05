@@ -361,17 +361,27 @@ IntegerConstantType::IntegerConstantType(Literal const& _literal)
 
 bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	shared_ptr<IntegerType const> integerType = getIntegerType();
-	if (!integerType)
-		return false;
-
-	if (_convertTo.getCategory() == Category::FixedBytes)
+	if (auto targetType = dynamic_cast<IntegerType const*>(&_convertTo))
 	{
-		FixedBytesType const& convertTo = dynamic_cast<FixedBytesType const&>(_convertTo);
-		return convertTo.getNumBytes() * 8 >= integerType->getNumBits();
+		if (m_value == 0)
+			return true;
+		int forSignBit = (targetType->isSigned() ? 1 : 0);
+		if (m_value > 0)
+		{
+			if (m_value <= (u256(-1) >> (256 - targetType->getNumBits() + forSignBit)))
+				return true;
+		}
+		else if (targetType->isSigned() && -m_value <= (u256(1) << (targetType->getNumBits() - forSignBit)))
+			return true;
+		return false;
 	}
-
-	return integerType->isImplicitlyConvertibleTo(_convertTo);
+	else if (_convertTo.getCategory() == Category::FixedBytes)
+	{
+		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
+		return fixedBytes.getNumBytes() * 8 >= getIntegerType()->getNumBits();
+	}
+	else
+		return false;
 }
 
 bool IntegerConstantType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -514,9 +524,10 @@ shared_ptr<IntegerType const> IntegerConstantType::getIntegerType() const
 	if (value > u256(-1))
 		return shared_ptr<IntegerType const>();
 	else
-		return make_shared<IntegerType>(max(bytesRequired(value), 1u) * 8,
-										negative ? IntegerType::Modifier::Signed
-												 : IntegerType::Modifier::Unsigned);
+		return make_shared<IntegerType>(
+			max(bytesRequired(value), 1u) * 8,
+			negative ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
+		);
 }
 
 shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)
