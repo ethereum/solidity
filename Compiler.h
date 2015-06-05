@@ -34,13 +34,18 @@ namespace solidity {
 class Compiler: private ASTConstVisitor
 {
 public:
-	explicit Compiler(bool _optimize = false): m_optimize(_optimize), m_context(),
-		m_returnTag(m_context.newTag()) {}
+	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
+		m_optimize(_optimize),
+		m_optimizeRuns(_runs),
+		m_context(),
+		m_returnTag(m_context.newTag())
+	{
+	}
 
 	void compileContract(ContractDefinition const& _contract,
 						 std::map<ContractDefinition const*, bytes const*> const& _contracts);
-	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(m_optimize); }
-	bytes getRuntimeBytecode() { return m_runtimeContext.getAssembledBytecode(m_optimize);}
+	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(); }
+	bytes getRuntimeBytecode() { return m_context.getAssembledRuntimeBytecode(m_runtimeSub); }
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFromat shows whether the out should be in Json format
 	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
@@ -50,7 +55,7 @@ public:
 	/// @returns Assembly items of the normal compiler context
 	eth::AssemblyItems const& getAssemblyItems() const { return m_context.getAssembly().getItems(); }
 	/// @returns Assembly items of the runtime compiler context
-	eth::AssemblyItems const& getRuntimeAssemblyItems() const { return m_runtimeContext.getAssembly().getItems(); }
+	eth::AssemblyItems const& getRuntimeAssemblyItems() const { return m_context.getAssembly().getSub(m_runtimeSub).getItems(); }
 
 	/// @returns the entry label of the given function. Might return an AssemblyItem of type
 	/// UndefinedItem if it does not exist yet.
@@ -93,7 +98,9 @@ private:
 	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
 
 	bool const m_optimize;
+	unsigned const m_optimizeRuns;
 	CompilerContext m_context;
+	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly
 	CompilerContext m_runtimeContext;
 	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
 	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement

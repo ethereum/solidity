@@ -69,6 +69,8 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 	swap(m_context, m_runtimeContext);
 	initializeContext(_contract, _contracts);
 	packIntoContractCreator(_contract, m_runtimeContext);
+	if (m_optimize)
+		m_context.optimise(m_optimizeRuns);
 }
 
 eth::AssemblyItem Compiler::getFunctionEntryLabel(FunctionDefinition const& _function) const
@@ -120,9 +122,11 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 	else if (auto c = m_context.getNextConstructor(_contract))
 		appendBaseConstructor(*c);
 
-	eth::AssemblyItem sub = m_context.addSubroutine(_runtimeContext.getAssembly());
+	eth::AssemblyItem runtimeSub = m_context.addSubroutine(_runtimeContext.getAssembly());
+	solAssert(runtimeSub.data() < numeric_limits<size_t>::max(), "");
+	m_runtimeSub = size_t(runtimeSub.data());
 	// stack contains sub size
-	m_context << eth::Instruction::DUP1 << sub << u256(0) << eth::Instruction::CODECOPY;
+	m_context << eth::Instruction::DUP1 << runtimeSub << u256(0) << eth::Instruction::CODECOPY;
 	m_context << u256(0) << eth::Instruction::RETURN;
 
 	// note that we have to include the functions again because of absolute jump labels
