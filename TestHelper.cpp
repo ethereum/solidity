@@ -178,7 +178,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 		{
 			stateOptions.m_bHasBalance = true;
 			if (bigint(o["balance"].get_str()) >= c_max256plus1)
-				BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
+				TBOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
 			balance = toInt(o["balance"]);
 		}
 
@@ -186,7 +186,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 		{
 			stateOptions.m_bHasNonce = true;
 			if (bigint(o["nonce"].get_str()) >= c_max256plus1)
-				BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
+				TBOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
 			nonce = toInt(o["nonce"]);
 		}
 
@@ -230,7 +230,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 	{
 		//check that every parameter was declared in state object
 		if (!stateOptionMap.second.isAllSet())
-			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));	
+			TBOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
 	}
 }
 
@@ -246,13 +246,13 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 		assert(_o.count("data") > 0);
 
 		if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
+			TBOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
 		if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
+			TBOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
 		if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
+			TBOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
 		if (bigint(_o["value"].get_str()) >= c_max256plus1)
-			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
+			TBOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
 		m_transaction = _o["to"].get_str().empty() ?
 			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
