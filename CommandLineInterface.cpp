@@ -412,8 +412,6 @@ bool CommandLineInterface::processInput()
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args["optimize"].as<bool>();
 		unsigned runs = m_args["optimize-runs"].as<unsigned>();
-		if (m_args.count("optimize-runs"))
-			optimize = true;
 		m_compiler->compile(optimize, runs);
 	}
 	catch (ParserError const& _exception)
