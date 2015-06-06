@@ -94,6 +94,7 @@ public:
 	/// Resets any knowledge.
 	void reset() { resetStorage(); resetMemory(); resetStack(); }
 
+	unsigned sequenceNumber() const { return m_sequenceNumber; }
 	/// Manually increments the storage and memory sequence number.
 	void incrementSequenceNumber() { m_sequenceNumber += 2; }
 

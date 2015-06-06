@@ -105,10 +105,13 @@ public:
 	CSECodeGenerator(ExpressionClasses& _expressionClasses, StoreOperations const& _storeOperations);
 
 	/// @returns the assembly items generated from the given requirements
+	/// @param _initialSequenceNumber starting sequence number, do not generate sequenced operations
+	/// before this number.
 	/// @param _initialStack current contents of the stack (up to stack height of zero)
 	/// @param _targetStackContents final contents of the stack, by stack height relative to initial
 	/// @note should only be called once on each object.
 	AssemblyItems generateCode(
+		unsigned _initialSequenceNumber,
 		int _initialStackHeight,
 		std::map<int, Id> const& _initialStack,
 		std::map<int, Id> const& _targetStackContents
