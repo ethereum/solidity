@@ -260,6 +260,22 @@ Rules::Rules()
 
 		{{Instruction::NOT, {{Instruction::NOT, {X}}}}, [=]{ return X; }},
 	};
+	// Double negation of opcodes with binary result
+	for (auto const& op: vector<Instruction>{
+		Instruction::EQ,
+		Instruction::LT,
+		Instruction::SLT,
+		Instruction::GT,
+		Instruction::SGT
+	})
+		m_rules.push_back({
+			{Instruction::ISZERO, {{Instruction::ISZERO, {{op, {X, Y}}}}}},
+			[=]() -> Pattern { return {op, {X, Y}}; }
+		});
+	m_rules.push_back({
+		{Instruction::ISZERO, {{Instruction::ISZERO, {{Instruction::ISZERO, {X}}}}}},
+		[=]() -> Pattern { return {Instruction::ISZERO, {X}}; }
+	});
 	// Associative operations
 	for (auto const& opFun: vector<pair<Instruction,function<u256(u256 const&,u256 const&)>>>{
 		{Instruction::ADD, plus<u256>()},
