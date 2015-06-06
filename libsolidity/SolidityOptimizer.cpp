@@ -908,6 +908,31 @@ BOOST_AUTO_TEST_CASE(cse_equality_on_initially_known_stack)
 	BOOST_CHECK(find(output.begin(), output.end(), AssemblyItem(u256(1))) != output.end());
 }
 
+BOOST_AUTO_TEST_CASE(cse_access_previous_sequence)
+{
+	// Tests that the code generator detects whether it tries to access SLOAD instructions
+	// from a sequenced expression which is not in its scope.
+	eth::KnownState state = createInitialState(AssemblyItems{
+		u256(0),
+		Instruction::SLOAD,
+		u256(1),
+		Instruction::ADD,
+		u256(0),
+		Instruction::SSTORE
+	});
+	// now stored: val_1 + 1 (value at sequence 1)
+	// if in the following instructions, the SLOAD cresolves to "val_1 + 1",
+	// this cannot be generated because we cannot load from sequence 1 anymore.
+	AssemblyItems input{
+		u256(0),
+		Instruction::SLOAD,
+	};
+	BOOST_CHECK_THROW(getCSE(input, state), StackTooDeepException);
+	// @todo for now, this throws an exception, but it should recover to the following
+	// (or an even better version) at some point:
+	// 0, SLOAD, 1, ADD, SSTORE, 0 SLOAD
+}
+
 BOOST_AUTO_TEST_CASE(control_flow_graph_remove_unused)
 {
 	// remove parts of the code that are unused
