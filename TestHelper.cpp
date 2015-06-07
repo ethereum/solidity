@@ -262,7 +262,21 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	{
 		RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
 		RLP transactionRLP(transactionRLPStream.out());
-		m_transaction = Transaction(transactionRLP.data(), CheckTransaction::Everything);
+		try
+		{
+			m_transaction = Transaction(transactionRLP.data(), CheckTransaction::Everything);
+		}
+		catch (InvalidSignature)
+		{
+			// create unsigned transaction
+			m_transaction = _o["to"].get_str().empty() ?
+				Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"])) :
+				Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]));
+		}
+		catch (Exception& _e)
+		{
+			cnote << "invalid transaction" << boost::diagnostic_information(_e);
+		}
 	}
 }
 

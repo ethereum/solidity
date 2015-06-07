@@ -46,7 +46,7 @@ public:
 	{
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
-		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize), "Compiling contract failed");
+		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
 		bytes code = m_compiler.getBytecode(_contractName);
 		sendMessage(code, true, _value);
 		return m_output;
@@ -180,6 +180,7 @@ protected:
 		m_logs = executive.logs();
 	}
 
+	size_t m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
 	dev::solidity::CompilerStack m_compiler;

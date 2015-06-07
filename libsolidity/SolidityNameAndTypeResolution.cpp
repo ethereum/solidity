@@ -1876,6 +1876,40 @@ BOOST_AUTO_TEST_CASE(positive_integers_to_unsigned_out_of_bound)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(overwrite_memory_location_external)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint[] memory a) external {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(overwrite_storage_location_external)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint[] storage a) external {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(storage_location_local_variables)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				uint[] storage x;
+				uint[] memory y;
+				uint[] memory z;
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
