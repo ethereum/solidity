@@ -440,6 +440,16 @@ BOOST_AUTO_TEST_CASE(cse_double_negation)
 	checkCSE({Instruction::DUP5, Instruction::NOT, Instruction::NOT}, {Instruction::DUP5});
 }
 
+BOOST_AUTO_TEST_CASE(cse_double_iszero)
+{
+	checkCSE({Instruction::GT, Instruction::ISZERO, Instruction::ISZERO}, {Instruction::GT});
+	checkCSE({Instruction::GT, Instruction::ISZERO}, {Instruction::GT, Instruction::ISZERO});
+	checkCSE(
+		{Instruction::ISZERO, Instruction::ISZERO, Instruction::ISZERO},
+		{Instruction::ISZERO}
+	);
+}
+
 BOOST_AUTO_TEST_CASE(cse_associativity)
 {
 	AssemblyItems input{
