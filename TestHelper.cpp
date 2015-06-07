@@ -567,8 +567,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 
 	auto& filename = Options::get().singleTestFile;
 	auto& testname = Options::get().singleTestName;
-	int currentVerbosity = g_logVerbosity;
-	g_logVerbosity = 12;
+	VerbosityHolder sentinel(12);
 	try
 	{
 		cnote << "Testing user defined test: " << filename;
@@ -593,14 +592,11 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	catch (Exception const& _e)
 	{
 		BOOST_ERROR("Failed Test with Exception: " << diagnostic_information(_e));
-		g_logVerbosity = currentVerbosity;
 	}
 	catch (std::exception const& _e)
 	{
 		BOOST_ERROR("Failed Test with Exception: " << _e.what());
-		g_logVerbosity = currentVerbosity;
 	}
-	g_logVerbosity = currentVerbosity;
 }
 
 void executeTests(const string& _name, const string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests)
