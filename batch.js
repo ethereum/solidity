@@ -58,10 +58,6 @@ describe('lib/web3/batch', function () {
             var address = '0x0000000000000000000000000000000000000000';
             var result = '0x126';
             var result2 = '0x0000000000000000000000000000000000000000000000000000000000000123';
-            var signature = '0x001122334455';
-
-            // TODO: fix this, maybe in browser sha3?
-            provider.injectResult(signature);
 
             var counter = 0;
             var callback = function (err, r) {

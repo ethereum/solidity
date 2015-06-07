@@ -19,6 +19,14 @@ describe('lib/utils/utils', function () {
             assert.equal(utils.toWei(1, 'gether'), '1000000000000000000000000000');
             assert.equal(utils.toWei(1, 'tether'), '1000000000000000000000000000000');
 
+            assert.equal(utils.toWei(1, 'kwei'),    utils.toWei(1, 'femtoether'));
+            assert.equal(utils.toWei(1, 'babbage'), utils.toWei(1, 'picoether'));
+            assert.equal(utils.toWei(1, 'shannon'), utils.toWei(1, 'nanoether'));
+            assert.equal(utils.toWei(1, 'szabo'),   utils.toWei(1, 'microether'));
+            assert.equal(utils.toWei(1, 'finney'),  utils.toWei(1, 'milliether'));
+            assert.equal(utils.toWei(1, 'milli'),    utils.toWei(1, 'milliether'));
+            assert.equal(utils.toWei(1, 'milli'),    utils.toWei(1000, 'micro'));
+
             assert.throws(function () {utils.toWei(1, 'wei1');}, Error);
         });
     });
