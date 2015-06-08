@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(strings)
 BOOST_AUTO_TEST_CASE(empty_string_on_stack)
 {
 	char const* sourceCode = "contract test {\n"
-							 "  function run(bytes0 empty, uint8 inp) returns(uint16 a, bytes0 b, bytes4 c) {\n"
+							 "  function run(string empty, uint8 inp) external returns(uint16 a, string b, bytes4 c) {\n"
 							 "    var x = \"abc\";\n"
 							 "    var y = \"\";\n"
 							 "    var z = inp;\n"
@@ -3786,25 +3786,25 @@ BOOST_AUTO_TEST_CASE(packed_storage_structs_delete)
 	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
 }
 
-BOOST_AUTO_TEST_CASE(packed_storage_structs_with_bytes0)
+BOOST_AUTO_TEST_CASE(packed_storage_structs_with_empty_string)
 {
 	char const* sourceCode = R"(
-		contract C {
-			struct str { uint8 a; bytes0 b; uint8 c; }
-			uint8 a;
-			bytes0 x;
-			uint8 b;
-			str data;
-			function test() returns (bool) {
-				a = 2;
-				b = 3;
-				data.a = 4;
-				data.c = 5;
-				delete x;
-				delete data.b;
-				return a == 2 && b == 3 && data.a == 4 && data.c == 5;
-			}
+	contract C {
+		struct str { uint8 a; string b; uint8 c; }
+		uint8 a;
+		uint8 b;
+		str data;
+		function test() returns (bool) {
+			a = 2;
+			b = 3;
+			var x = "";
+			data.a = 4;
+			data.c = 5;
+			delete x;
+			delete data.b;
+			return a == 2 && b == 3 && data.a == 4 && data.c == 5;
 		}
+	}
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
@@ -4170,6 +4170,23 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 		}
 	)";
 	BOOST_CHECK(compileAndRunWthoutCheck(sourceCode, 0, "A").empty());
+}
+
+BOOST_AUTO_TEST_CASE(empty_string)
+{
+	char const* sourceCode = R"(
+		contract Foo {
+			var sEmpty = "";
+			string sStateVar = "text";
+			function Foo()
+			{
+				var sLocal = "";
+				sEmpty = sLocal;
+				sLocal = s;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Foo");
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed)
