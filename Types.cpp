@@ -121,7 +121,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 	{
 		int offset = _typeToken - Token::Int;
 		int bytes = offset % 33;
-		if (bytes == 0 && _typeToken != Token::Bytes0)
+		if (bytes == 0 && _typeToken != Token::Bytes1)
 			bytes = 32;
 		int modifier = offset / 33;
 		switch(modifier)
@@ -131,7 +131,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 		case 1:
 			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Unsigned);
 		case 2:
-			return make_shared<FixedBytesType>(bytes);
+			return make_shared<FixedBytesType>(bytes + 1);
 		default:
 			solAssert(false, "Unexpected modifier value. Should never happen");
 			return TypePointer();

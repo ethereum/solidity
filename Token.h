@@ -304,8 +304,6 @@ namespace solidity
 	\
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(Identifier, NULL, 0)                                             \
-	/*  Bytes0 token is used for empty string. */                      \
-	T(Bytes0, NULL, 0)                                                 \
 	\
 	/* Keywords reserved for future. use. */                           \
 	K(As, "as", 0)                                                     \
