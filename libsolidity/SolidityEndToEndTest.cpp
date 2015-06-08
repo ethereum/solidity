@@ -564,20 +564,6 @@ BOOST_AUTO_TEST_CASE(strings)
 	BOOST_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true) == encodeArgs(string("\0\x2", 2), true));
 }
 
-BOOST_AUTO_TEST_CASE(empty_string_on_stack)
-{
-	char const* sourceCode = "contract test {\n"
-							 "  function run(string empty, uint8 inp) external returns(uint16 a, string b, bytes4 c) {\n"
-							 "    var x = \"abc\";\n"
-							 "    var y = \"\";\n"
-							 "    var z = inp;\n"
-							 "    a = z; b = y; c = x;"
-							 "  }\n"
-							 "}\n";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("run(bytes0,uint8)", string(), byte(0x02)) == encodeArgs(0x2, string(""), string("abc\0")));
-}
-
 BOOST_AUTO_TEST_CASE(inc_dec_operators)
 {
 	char const* sourceCode = R"(
@@ -4170,23 +4156,6 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 		}
 	)";
 	BOOST_CHECK(compileAndRunWthoutCheck(sourceCode, 0, "A").empty());
-}
-
-BOOST_AUTO_TEST_CASE(empty_string)
-{
-	char const* sourceCode = R"(
-		contract Foo {
-			var sEmpty = "";
-			string sStateVar = "text";
-			function Foo()
-			{
-				var sLocal = "";
-				sEmpty = sLocal;
-				sLocal = s;
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "Foo");
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed)
