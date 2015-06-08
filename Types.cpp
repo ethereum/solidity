@@ -1459,29 +1459,29 @@ MagicType::MagicType(MagicType::Kind _kind):
 	switch (m_kind)
 	{
 	case Kind::Block:
-		m_members = move(MemberList({
+		m_members = MemberList({
 			{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 			{"timestamp", make_shared<IntegerType>(256)},
 			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Location::BlockHash)},
 			{"difficulty", make_shared<IntegerType>(256)},
 			{"number", make_shared<IntegerType>(256)},
 			{"gaslimit", make_shared<IntegerType>(256)}
-		}));
+		});
 		break;
 	case Kind::Message:
-		m_members = move(MemberList({
+		m_members = MemberList({
 			{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
 			{"data", make_shared<ArrayType>(ReferenceType::Location::CallData)},
 			{"sig", make_shared<FixedBytesType>(4)}
-		}));
+		});
 		break;
 	case Kind::Transaction:
-		m_members = move(MemberList({
+		m_members = MemberList({
 			{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 			{"gasprice", make_shared<IntegerType>(256)}
-		}));
+		});
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));

@@ -133,7 +133,7 @@ set<Declaration const*> CompilerContext::getFunctionsWithoutCode()
 	for (auto const& it: m_functionEntryLabels)
 		if (m_functionsWithCode.count(it.first) == 0)
 			functions.insert(it.first);
-	return move(functions);
+	return functions;
 }
 
 ModifierDefinition const& CompilerContext::getFunctionModifier(string const& _name) const
