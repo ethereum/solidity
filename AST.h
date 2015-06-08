@@ -503,7 +503,7 @@ public:
 
 	/// Returns the declared or inferred type. Can be an empty pointer if no type was explicitly
 	/// declared and there is no assignment to the variable that fixes the type.
-	TypePointer getType(ContractDefinition const* = nullptr) const { return m_type; }
+	TypePointer getType(ContractDefinition const* = nullptr) const override { return m_type; }
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
 
 	virtual bool isLValue() const override;

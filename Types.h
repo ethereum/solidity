@@ -407,7 +407,7 @@ public:
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
-	virtual bool isDynamicallySized() const { return m_hasDynamicLength; }
+	virtual bool isDynamicallySized() const override { return m_hasDynamicLength; }
 	virtual u256 getStorageSize() const override;
 	virtual unsigned getSizeOnStack() const override;
 	virtual std::string toString() const override;
@@ -820,7 +820,7 @@ public:
 		return TypePointer();
 	}
 
-	virtual bool operator==(Type const& _other) const;
+	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual unsigned getSizeOnStack() const override { return 0; }
