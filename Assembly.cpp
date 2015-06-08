@@ -109,7 +109,7 @@ string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLoc
 	if (newLinePos != string::npos)
 		cut = cut.substr(0, newLinePos) + "...";
 
-	return move(cut);
+	return cut;
 }
 
 ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
