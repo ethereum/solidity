@@ -564,6 +564,20 @@ BOOST_AUTO_TEST_CASE(strings)
 	BOOST_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true) == encodeArgs(string("\0\x2", 2), true));
 }
 
+BOOST_AUTO_TEST_CASE(empty_string_on_stack)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function run() external returns(bytes2 ret) {
+				var y = "";
+				ret = y;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("run()") == encodeArgs(byte(0x00)));
+}
+
 BOOST_AUTO_TEST_CASE(inc_dec_operators)
 {
 	char const* sourceCode = R"(
@@ -3770,30 +3784,6 @@ BOOST_AUTO_TEST_CASE(packed_storage_structs_delete)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
 	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
-}
-
-BOOST_AUTO_TEST_CASE(packed_storage_structs_with_empty_string)
-{
-	char const* sourceCode = R"(
-	contract C {
-		struct str { uint8 a; string b; uint8 c; }
-		uint8 a;
-		uint8 b;
-		str data;
-		function test() returns (bool) {
-			a = 2;
-			b = 3;
-			var x = "";
-			data.a = 4;
-			data.c = 5;
-			delete x;
-			delete data.b;
-			return a == 2 && b == 3 && data.a == 4 && data.c == 5;
-		}
-	}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(overloaded_function_call_resolve_to_first)
