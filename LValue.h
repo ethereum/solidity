@@ -109,7 +109,7 @@ public:
 	StorageItem(CompilerContext& _compilerContext, Declaration const& _declaration);
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageItem(CompilerContext& _compilerContext, Type const& _type);
-	virtual unsigned sizeOnStack() const { return 2; }
+	virtual unsigned sizeOnStack() const override { return 2; }
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
