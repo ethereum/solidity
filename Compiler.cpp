@@ -170,11 +170,17 @@ void Compiler::appendConstructor(FunctionDefinition const& _constructor)
 
 	if (argumentSize > 0)
 	{
-		m_context << u256(argumentSize);
+		CompilerUtils(m_context).fetchFreeMemoryPointer();
+		m_context << u256(argumentSize) << eth::Instruction::DUP1;
 		m_context.appendProgramSize();
-		m_context << u256(CompilerUtils::dataStartOffset); // copy it to byte four as expected for ABI calls
-		m_context << eth::Instruction::CODECOPY;
-		appendCalldataUnpacker(FunctionType(_constructor).getParameterTypes(), true);
+		m_context << eth::Instruction::DUP4 << eth::Instruction::CODECOPY;
+		m_context << eth::Instruction::ADD;
+		CompilerUtils(m_context).storeFreeMemoryPointer();
+		appendCalldataUnpacker(
+			FunctionType(_constructor).getParameterTypes(),
+			true,
+			CompilerUtils::freeMemoryPointer + 0x20
+		);
 	}
 	_constructor.accept(*this);
 }
@@ -232,26 +238,35 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	}
 }
 
-void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory)
+void Compiler::appendCalldataUnpacker(
+	TypePointers const& _typeParameters,
+	bool _fromMemory,
+	u256 _startOffset
+)
 {
 	// We do not check the calldata size, everything is zero-paddedd
 
-	m_context << u256(CompilerUtils::dataStartOffset);
+	if (_startOffset == u256(-1))
+		_startOffset = u256(CompilerUtils::dataStartOffset);
+
+	m_context << _startOffset;
 	for (TypePointer const& type: _typeParameters)
 	{
-		if (type->getCategory() == Type::Category::Array)
+		switch (type->getCategory())
+		{
+		case Type::Category::Array:
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
 			if (arrayType.location() == ReferenceType::Location::CallData)
 			{
+				solAssert(!_fromMemory, "");
 				if (type->isDynamicallySized())
 				{
 					// put on stack: data_pointer length
 					CompilerUtils(m_context).loadFromMemoryDynamic(IntegerType(256), !_fromMemory);
 					// stack: data_offset next_pointer
 					//@todo once we support nested arrays, this offset needs to be dynamic.
-					m_context << eth::Instruction::SWAP1 << u256(CompilerUtils::dataStartOffset);
-					m_context << eth::Instruction::ADD;
+					m_context << eth::Instruction::SWAP1 << _startOffset << eth::Instruction::ADD;
 					// stack: next_pointer data_pointer
 					// retrieve length
 					CompilerUtils(m_context).loadFromMemoryDynamic(IntegerType(256), !_fromMemory, true);
@@ -268,13 +283,15 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 			else
 			{
 				solAssert(arrayType.location() == ReferenceType::Location::Memory, "");
-				CompilerUtils(m_context).fetchFreeMemoryPointer();
-				CompilerUtils(m_context).storeInMemoryDynamic(*type);
-				CompilerUtils(m_context).storeFreeMemoryPointer();
+				// compute data pointer
+				m_context << eth::Instruction::DUP1 << _startOffset << eth::Instruction::ADD;
+				if (!_fromMemory)
+					solAssert(false, "Not yet implemented.");
+				m_context << eth::Instruction::SWAP1 << u256(0x20) << eth::Instruction::ADD;
 			}
+			break;
 		}
-		else
-		{
+		default:
 			solAssert(!type->isDynamicallySized(), "Unknown dynamically sized type: " + type->toString());
 			CompilerUtils(m_context).loadFromMemoryDynamic(*type, !_fromMemory, true);
 		}

@@ -431,7 +431,7 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 		// They default to memory for function parameters and storage for local variables.
 		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
 		{
-			if (_variable.isExternalFunctionParameter())
+			if (_variable.isExternalCallableParameter())
 			{
 				// force location of external function parameters (not return) to calldata
 				if (loc != Location::Default)
@@ -439,9 +439,9 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 						"Location has to be calldata for external functions "
 						"(remove the \"memory\" or \"storage\" keyword)."
 					));
-				type = ref->copyForLocation(ReferenceType::Location::CallData);
+				type = ref->copyForLocation(ReferenceType::Location::CallData, true);
 			}
-			else if (_variable.isFunctionParameter() && _variable.getScope()->isPublic())
+			else if (_variable.isCallableParameter() && _variable.getScope()->isPublic())
 			{
 				// force locations of public or external function (return) parameters to memory
 				if (loc == VariableDeclaration::Location::Storage)
@@ -449,16 +449,18 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 						"Location has to be memory for publicly visible functions "
 						"(remove the \"storage\" keyword)."
 					));
-				type = ref->copyForLocation(ReferenceType::Location::Memory);
+				type = ref->copyForLocation(ReferenceType::Location::Memory, true);
 			}
 			else
 			{
 				if (loc == Location::Default)
-					loc = _variable.isFunctionParameter() ? Location::Memory : Location::Storage;
+					loc = _variable.isCallableParameter() ? Location::Memory : Location::Storage;
+				bool isPointer = !_variable.isStateVariable();
 				type = ref->copyForLocation(
 					loc == Location::Memory ?
 					ReferenceType::Location::Memory :
-					ReferenceType::Location::Storage
+					ReferenceType::Location::Storage,
+					isPointer
 				);
 			}
 		}

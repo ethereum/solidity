@@ -198,7 +198,11 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack layout: source_ref source_offset target_ref target_offset
 			// note that we have structs, so offsets should be zero and are ignored
 			auto const& structType = dynamic_cast<StructType const&>(m_dataType);
-			solAssert(structType == _sourceType, "Struct assignment with conversion.");
+			solAssert(
+				structType.structDefinition() ==
+					dynamic_cast<StructType const&>(_sourceType).structDefinition(),
+				"Struct assignment with conversion."
+			);
 			for (auto const& member: structType.getMembers())
 			{
 				// assign each member that is not a mapping

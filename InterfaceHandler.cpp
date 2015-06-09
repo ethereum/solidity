@@ -96,7 +96,7 @@ unique_ptr<string> InterfaceHandler::getABIInterface(ContractDefinition const& _
 		{
 			Json::Value input;
 			input["name"] = p->getName();
-			input["type"] = p->getType()->toString();
+			input["type"] = p->getType()->toString(true);
 			input["indexed"] = p->isIndexed();
 			params.append(input);
 		}

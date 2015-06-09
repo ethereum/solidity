@@ -488,7 +488,7 @@ string FunctionDefinition::externalSignature() const
 bool VariableDeclaration::isLValue() const
 {
 	// External function parameters and constant declared variables are Read-Only
-	return !isExternalFunctionParameter() && !m_isConstant;
+	return !isExternalCallableParameter() && !m_isConstant;
 }
 
 void VariableDeclaration::checkTypeRequirements()
@@ -516,39 +516,41 @@ void VariableDeclaration::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Assignment necessary for type detection."));
 		m_value->checkTypeRequirements(nullptr);
 
-		TypePointer type = m_value->getType();
-		if (type->getCategory() == Type::Category::IntegerConstant)
-		{
-			auto intType = dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType();
-			if (!intType)
-				BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString() + "."));
-			type = intType;
-		}
+		TypePointer const& type = m_value->getType();
+		if (
+			type->getCategory() == Type::Category::IntegerConstant &&
+			!dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType()
+		)
+			BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString() + "."));
 		else if (type->getCategory() == Type::Category::Void)
 			BOOST_THROW_EXCEPTION(createTypeError("Variable cannot have void type."));
-		m_type = type;
+		m_type = type->mobileType();
 	}
 	if (m_isStateVariable && getVisibility() >= Visibility::Public && !FunctionType(*this).externalType())
 		BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
 }
 
-bool VariableDeclaration::isFunctionParameter() const
+bool VariableDeclaration::isCallableParameter() const
 {
-	auto const* function = dynamic_cast<FunctionDefinition const*>(getScope());
-	if (!function)
+	auto const* callable = dynamic_cast<CallableDeclaration const*>(getScope());
+	if (!callable)
 		return false;
-	for (auto const& variable: function->getParameters() + function->getReturnParameters())
+	for (auto const& variable: callable->getParameters())
 		if (variable.get() == this)
 			return true;
+	if (callable->getReturnParameterList())
+		for (auto const& variable: callable->getReturnParameterList()->getParameters())
+			if (variable.get() == this)
+				return true;
 	return false;
 }
 
-bool VariableDeclaration::isExternalFunctionParameter() const
+bool VariableDeclaration::isExternalCallableParameter() const
 {
-	auto const* function = dynamic_cast<FunctionDefinition const*>(getScope());
-	if (!function || function->getVisibility() != Declaration::Visibility::External)
+	auto const* callable = dynamic_cast<CallableDeclaration const*>(getScope());
+	if (!callable || callable->getVisibility() != Declaration::Visibility::External)
 		return false;
-	for (auto const& variable: function->getParameters())
+	for (auto const& variable: callable->getParameters())
 		if (variable.get() == this)
 			return true;
 	return false;

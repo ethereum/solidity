@@ -204,7 +204,7 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 			// just clean
-			appendTypeConversion(_typeOnStack, *_typeOnStack.getRealType(), true);
+			appendTypeConversion(_typeOnStack, *_typeOnStack.mobileType(), true);
 		else
 		{
 			solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Contract, "");
@@ -232,6 +232,25 @@ void ExpressionCompiler::appendTypeConversion(Type const& _typeOnStack, Type con
 			}
 		}
 		break;
+	case Type::Category::Array:
+		//@TODO
+		break;
+	case Type::Category::Struct:
+	{
+		solAssert(targetTypeCategory == stackTypeCategory, "");
+		auto& targetType = dynamic_cast<StructType const&>(_targetType);
+		auto& stackType = dynamic_cast<StructType const&>(_typeOnStack);
+		solAssert(
+			targetType.location() == ReferenceType::Location::Storage &&
+				stackType.location() == ReferenceType::Location::Storage,
+			"Non-storage structs not yet implemented."
+		);
+		solAssert(
+			targetType.isPointer(),
+			"Type conversion to non-pointer struct requested."
+		);
+		break;
+	}
 	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
@@ -771,7 +790,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.getExpression().getType());
 		solAssert(
 			!type.getMembers().membersByName(_memberAccess.getMemberName()).empty(),
-			"Invalid member access to " + type.toString()
+			"Invalid member access to " + type.toString(false)
 		);
 
 		if (dynamic_cast<ContractType const*>(type.getActualType().get()))
@@ -1101,7 +1120,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	bool manualFunctionId =
 		(funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode) &&
 		!_arguments.empty() &&
-		_arguments.front()->getType()->getRealType()->getCalldataEncodedSize(false) ==
+		_arguments.front()->getType()->mobileType()->getCalldataEncodedSize(false) ==
 			CompilerUtils::dataStartOffset;
 	if (manualFunctionId)
 	{
@@ -1225,7 +1244,7 @@ void ExpressionCompiler::encodeToMemory(
 	TypePointers targetTypes = _targetTypes.empty() ? _givenTypes : _targetTypes;
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
 	for (TypePointer& t: targetTypes)
-		t = t->getRealType()->externalType();
+		t = t->mobileType()->externalType();
 
 	// Stack during operation:
 	// <v1> <v2> ... <vn> <mem_start> <dyn_head_1> ... <dyn_head_r> <end_of_mem>
@@ -1325,7 +1344,7 @@ void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
 		appendTypeMoveToMemory(_expectedType);
 	}
 	else
-		appendTypeMoveToMemory(*_expression.getType()->getRealType());
+		appendTypeMoveToMemory(*_expression.getType()->mobileType());
 }
 
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)
