@@ -246,8 +246,10 @@ void InterfaceHandler::resetDev()
 	m_params.clear();
 }
 
-static inline string::const_iterator skipLineOrEOS(string::const_iterator _nlPos,
-														string::const_iterator _end)
+static inline string::const_iterator skipLineOrEOS(
+	string::const_iterator _nlPos,
+	string::const_iterator _end
+)
 {
 	return (_nlPos == _end) ? _end : ++_nlPos;
 }

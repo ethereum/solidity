@@ -67,8 +67,10 @@ public:
 	///                     types provided by @c DocumentationType
 	/// @return             A unique pointer contained string with the json
 	///                     representation of provided type
-	std::unique_ptr<std::string> getDocumentation(ContractDefinition const& _contractDef,
-												  DocumentationType _type);
+	std::unique_ptr<std::string> getDocumentation(
+		ContractDefinition const& _contractDef,
+		DocumentationType _type
+	);
 	/// Get the ABI Interface of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json
@@ -90,23 +92,33 @@ private:
 	void resetUser();
 	void resetDev();
 
-	std::string::const_iterator parseDocTagLine(std::string::const_iterator _pos,
-												std::string::const_iterator _end,
-												std::string& _tagString,
-												DocTagType _tagType,
-												bool _appending);
-	std::string::const_iterator parseDocTagParam(std::string::const_iterator _pos,
-												 std::string::const_iterator _end);
-	std::string::const_iterator appendDocTagParam(std::string::const_iterator _pos,
-												  std::string::const_iterator _end);
+	std::string::const_iterator parseDocTagLine(
+		std::string::const_iterator _pos,
+		std::string::const_iterator _end,
+		std::string& _tagString,
+		DocTagType _tagType,
+		bool _appending
+	);
+	std::string::const_iterator parseDocTagParam(
+		std::string::const_iterator _pos,
+		std::string::const_iterator _end
+	);
+	std::string::const_iterator appendDocTagParam(
+		std::string::const_iterator _pos,
+		std::string::const_iterator _end
+	);
 	void parseDocString(std::string const& _string, CommentOwner _owner);
-	std::string::const_iterator appendDocTag(std::string::const_iterator _pos,
-											 std::string::const_iterator _end,
-											 CommentOwner _owner);
-	std::string::const_iterator parseDocTag(std::string::const_iterator _pos,
-											std::string::const_iterator _end,
-											std::string const& _tag,
-											CommentOwner _owner);
+	std::string::const_iterator appendDocTag(
+		std::string::const_iterator _pos,
+		std::string::const_iterator _end,
+		CommentOwner _owner
+	);
+	std::string::const_iterator parseDocTag(
+		std::string::const_iterator _pos,
+		std::string::const_iterator _end,
+		std::string const& _tag,
+		CommentOwner _owner
+	);
 
 	// internal state
 	DocTagType m_lastTag;
