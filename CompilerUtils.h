@@ -35,6 +35,15 @@ class CompilerUtils
 public:
 	CompilerUtils(CompilerContext& _context): m_context(_context) {}
 
+	/// Stores the initial value of the free-memory-pointer at its position;
+	void initialiseFreeMemoryPointer();
+	/// Copies the free memory pointer to the stack.
+	void fetchFreeMemoryPointer();
+	/// Stores the free memory pointer from the stack.
+	void storeFreeMemoryPointer();
+	/// Appends code that transforms memptr to (memptr - free_memptr) memptr
+	void toSizeAfterFreeMemoryPointer();
+
 	/// Loads data from memory to the stack.
 	/// @param _offset offset in memory (or calldata)
 	/// @param _type data type to load
@@ -67,7 +76,7 @@ public:
 		bool _padToWordBoundaries = false
 	);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
-	/// and also updates that.
+	/// and also updates that. For arrays, only copies the data part.
 	/// Stack pre: memory_offset value...
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries = true);
@@ -95,7 +104,10 @@ public:
 
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
-	static const unsigned int dataStartOffset;
+	static const unsigned dataStartOffset;
+
+	/// Position of the free-memory-pointer in memory;
+	static const size_t freeMemoryPointer;
 
 private:
 	/// Prepares the given type for storing in memory by shifting it if necessary.

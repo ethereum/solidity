@@ -98,21 +98,28 @@ private:
 	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
 
 	/// Appends code to call a function of the given type with the given arguments.
-	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments);
-	/// Appends code that evaluates the given arguments and moves the result to memory encoded as
-	/// specified by the ABI. The memory offset is expected to be on the stack and is updated by
-	/// this call. If @a _padToWordBoundaries is set to false, all values are concatenated without
-	/// padding. If @a _copyDynamicDataInPlace is set, dynamic types is stored (without length)
+	void appendExternalFunctionCall(
+		FunctionType const& _functionType,
+		std::vector<ASTPointer<Expression const>> const& _arguments
+	);
+	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
+	/// at the stack top, encoding them according to the ABI as the given types @a _targetTypes.
+	/// Removes the values from the stack and leaves the updated memory pointer.
+	/// Stack pre: <v1> <v2> ... <vn> <memptr>
+	/// Stack post: <memptr_updated>
+	/// Does not touch the memory-free pointer.
+	/// @param _padToWordBoundaries if false, all values are concatenated without padding.
+	/// @param _copyDynamicDataInPlace if true, dynamic types is stored (without length)
 	/// together with fixed-length data.
-	void appendArgumentsCopyToMemory(
-		std::vector<ASTPointer<Expression const>> const& _arguments,
-		TypePointers const& _types = {},
+	void encodeToMemory(
+		TypePointers const& _givenTypes = {},
+		TypePointers const& _targetTypes = {},
 		bool _padToWordBoundaries = true,
-		bool _padExceptionIfFourBytes = false,
 		bool _copyDynamicDataInPlace = false
 	);
 	/// Appends code that moves a stack element of the given type to memory. The memory offset is
 	/// expected below the stack element and is updated by this call.
+	/// For arrays, this only copies the data part.
 	void appendTypeMoveToMemory(Type const& _type, bool _padToWordBoundaries = true);
 	/// Appends code that evaluates a single expression and moves the result to memory. The memory offset is
 	/// expected to be on the stack and is updated by this call.
