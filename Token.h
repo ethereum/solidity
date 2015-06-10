@@ -253,7 +253,6 @@ namespace solidity
 	K(UInt240, "uint240", 0)                                           \
 	K(UInt248, "uint248", 0)                                           \
 	K(UInt256, "uint256", 0)                                           \
-	K(Bytes0, "bytes0", 0)                                             \
 	K(Bytes1, "bytes1", 0)                                             \
 	K(Bytes2, "bytes2", 0)                                             \
 	K(Bytes3, "bytes3", 0)                                             \
@@ -306,7 +305,7 @@ namespace solidity
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(Identifier, NULL, 0)                                             \
 	\
-	/* Keywords reserved for future. use*/                             \
+	/* Keywords reserved for future. use. */                           \
 	K(As, "as", 0)                                                     \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
