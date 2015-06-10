@@ -1579,7 +1579,6 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt256) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
 
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Byte) == *make_shared<FixedBytesType>(1));
-	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes0) == *make_shared<FixedBytesType>(0));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes1) == *make_shared<FixedBytesType>(1));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes2) == *make_shared<FixedBytesType>(2));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes3) == *make_shared<FixedBytesType>(3));
@@ -1664,16 +1663,6 @@ BOOST_AUTO_TEST_CASE(local_const_variable)
 			}
 	})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), ParserError);
-}
-
-BOOST_AUTO_TEST_CASE(bytes0_array)
-{
-	char const* text = R"(
-		contract Foo {
-			bytes0[] illegalArray;
-		}
-	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
