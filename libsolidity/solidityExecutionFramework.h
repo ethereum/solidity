@@ -42,21 +42,25 @@ class ExecutionFramework
 public:
 	ExecutionFramework() { g_logVerbosity = 0; }
 
-	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
+	bytes const& compileAndRunWthoutCheck(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
-		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize), "Compiling contract failed");
-
+		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
 		bytes code = m_compiler.getBytecode(_contractName);
 		sendMessage(code, true, _value);
+		return m_output;
+	}
+
+	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
+	{
+		compileAndRunWthoutCheck(_sourceCode, _value, _contractName);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
 
 	template <class... Args>
-	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value,
-											   Args const&... _arguments)
+	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value, Args const&... _arguments)
 	{
 		FixedHash<4> hash(dev::sha3(_sig));
 		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
@@ -74,21 +78,30 @@ public:
 	{
 		bytes solidityResult = callContractFunction(_sig, _arguments...);
 		bytes cppResult = callCppAndEncodeResult(_cppFunction, _arguments...);
-		BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
-							"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult));
+		BOOST_CHECK_MESSAGE(
+			solidityResult == cppResult,
+			"Computed values do not match.\nSolidity: " +
+				toHex(solidityResult) +
+				"\nC++:      " +
+				toHex(cppResult));
 	}
 
 	template <class CppFunction, class... Args>
-	void testSolidityAgainstCppOnRange(std::string _sig, CppFunction const& _cppFunction,
-									   u256 const& _rangeStart, u256 const& _rangeEnd)
+	void testSolidityAgainstCppOnRange(std::string _sig, CppFunction const& _cppFunction, u256 const& _rangeStart, u256 const& _rangeEnd)
 	{
 		for (u256 argument = _rangeStart; argument < _rangeEnd; ++argument)
 		{
 			bytes solidityResult = callContractFunction(_sig, argument);
 			bytes cppResult = callCppAndEncodeResult(_cppFunction, argument);
-			BOOST_CHECK_MESSAGE(solidityResult == cppResult, "Computed values do not match."
-								"\nSolidity: " + toHex(solidityResult) + "\nC++:      " + toHex(cppResult) +
-								"\nArgument: " + toHex(encode(argument)));
+			BOOST_CHECK_MESSAGE(
+				solidityResult == cppResult,
+				"Computed values do not match.\nSolidity: " +
+					toHex(solidityResult) +
+					"\nC++:      " +
+					toHex(cppResult) +
+					"\nArgument: " +
+					toHex(encode(argument))
+			);
 		}
 	}
 
@@ -135,8 +148,12 @@ protected:
 	{
 		m_state.addBalance(m_sender, _value); // just in case
 		eth::Executive executive(m_state, eth::LastHashes(), 0);
-		eth::Transaction t = _isCreation ? eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec())
-										 : eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
+		eth::ExecutionResult res;
+		executive.setResultRecipient(res);
+		eth::Transaction t =
+			_isCreation ?
+				eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec()) :
+				eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
 		bytes transactionRLP = t.rlp();
 		try
 		{
@@ -155,16 +172,17 @@ protected:
 		else
 		{
 			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-			BOOST_REQUIRE(!executive.call(m_contractAddress, m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas, m_sender));
+			BOOST_REQUIRE(!executive.call(m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas));
 		}
 		BOOST_REQUIRE(executive.go());
 		m_state.noteSending(m_sender);
 		executive.finalize();
 		m_gasUsed = executive.gasUsed();
-		m_output = executive.out().toVector();
+		m_output = std::move(res.output); // FIXME: Looks like Framework needs ExecutiveResult embedded
 		m_logs = executive.logs();
 	}
 
+	size_t m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
 	dev::solidity::CompilerStack m_compiler;

@@ -77,13 +77,13 @@ BOOST_AUTO_TEST_CASE(storage_layout_mapping)
 
 BOOST_AUTO_TEST_CASE(storage_layout_arrays)
 {
-	BOOST_CHECK(ArrayType(ArrayType::Location::Storage, make_shared<FixedBytesType>(1), 32).getStorageSize() == 1);
-	BOOST_CHECK(ArrayType(ArrayType::Location::Storage, make_shared<FixedBytesType>(1), 33).getStorageSize() == 2);
-	BOOST_CHECK(ArrayType(ArrayType::Location::Storage, make_shared<FixedBytesType>(2), 31).getStorageSize() == 2);
-	BOOST_CHECK(ArrayType(ArrayType::Location::Storage, make_shared<FixedBytesType>(7), 8).getStorageSize() == 2);
-	BOOST_CHECK(ArrayType(ArrayType::Location::Storage, make_shared<FixedBytesType>(7), 9).getStorageSize() == 3);
-	BOOST_CHECK(ArrayType(ArrayType::Location::Storage, make_shared<FixedBytesType>(31), 9).getStorageSize() == 9);
-	BOOST_CHECK(ArrayType(ArrayType::Location::Storage, make_shared<FixedBytesType>(32), 9).getStorageSize() == 9);
+	BOOST_CHECK(ArrayType(ReferenceType::Location::Storage, make_shared<FixedBytesType>(1), 32).getStorageSize() == 1);
+	BOOST_CHECK(ArrayType(ReferenceType::Location::Storage, make_shared<FixedBytesType>(1), 33).getStorageSize() == 2);
+	BOOST_CHECK(ArrayType(ReferenceType::Location::Storage, make_shared<FixedBytesType>(2), 31).getStorageSize() == 2);
+	BOOST_CHECK(ArrayType(ReferenceType::Location::Storage, make_shared<FixedBytesType>(7), 8).getStorageSize() == 2);
+	BOOST_CHECK(ArrayType(ReferenceType::Location::Storage, make_shared<FixedBytesType>(7), 9).getStorageSize() == 3);
+	BOOST_CHECK(ArrayType(ReferenceType::Location::Storage, make_shared<FixedBytesType>(31), 9).getStorageSize() == 9);
+	BOOST_CHECK(ArrayType(ReferenceType::Location::Storage, make_shared<FixedBytesType>(32), 9).getStorageSize() == 9);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
