@@ -35,6 +35,19 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {
 	optimizeBreakingItem();
 
+	KnownState nextInitialState = m_state;
+	if (m_breakingItem)
+		nextInitialState.feedItem(*m_breakingItem);
+	KnownState nextState = nextInitialState;
+
+	ScopeGuard reset([&]()
+	{
+		m_breakingItem = nullptr;
+		m_storeOperations.clear();
+		m_initialState = move(nextInitialState);
+		m_state = move(nextState);
+	});
+
 	map<int, Id> initialStackContents;
 	map<int, Id> targetStackContents;
 	int minHeight = m_state.stackHeight() + 1;
@@ -52,15 +65,7 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 		targetStackContents
 	);
 	if (m_breakingItem)
-	{
 		items.push_back(*m_breakingItem);
-		m_state.feedItem(*m_breakingItem);
-	}
-
-	// cleanup
-	m_initialState = m_state;
-	m_breakingItem = nullptr;
-	m_storeOperations.clear();
 
 	return items;
 }
