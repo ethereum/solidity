@@ -52,22 +52,26 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 							   map<ContractDefinition const*, bytes const*> const& _contracts)
 {
 	m_context = CompilerContext(); // clear it just in case
-	CompilerUtils(m_context).initialiseFreeMemoryPointer();
-	initializeContext(_contract, _contracts);
-	appendFunctionSelector(_contract);
-	set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
-	while (!functions.empty())
 	{
-		for (Declaration const* function: functions)
+		CompilerContext::LocationSetter locationSetterRunTime(m_context, _contract);
+		CompilerUtils(m_context).initialiseFreeMemoryPointer();
+		initializeContext(_contract, _contracts);
+		appendFunctionSelector(_contract);
+		set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
+		while (!functions.empty())
 		{
-			m_context.setStackOffset(0);
-			function->accept(*this);
+			for (Declaration const* function: functions)
+			{
+				m_context.setStackOffset(0);
+				function->accept(*this);
+			}
+			functions = m_context.getFunctionsWithoutCode();
 		}
-		functions = m_context.getFunctionsWithoutCode();
 	}
 
 	// Swap the runtime context with the creation-time context
 	swap(m_context, m_runtimeContext);
+	CompilerContext::LocationSetter locationSetterCreationTime(m_context, _contract);
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	initializeContext(_contract, _contracts);
 	packIntoContractCreator(_contract, m_runtimeContext);
