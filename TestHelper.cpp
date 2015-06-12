@@ -344,6 +344,18 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 
 	m_TestObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
+	// compare expected output with post output
+	if (m_TestObject.count("expectOut") > 0)
+	{
+		std::string warning = "Check State: Error! Unexpected output: " + m_TestObject["out"].get_str() + " Expected: " + m_TestObject["expectOut"].get_str();
+		if (Options::get().checkState)
+			BOOST_CHECK_MESSAGE((m_TestObject["out"].get_str() == m_TestObject["expectOut"].get_str()), warning);
+		else
+			BOOST_WARN_MESSAGE((m_TestObject["out"].get_str() == m_TestObject["expectOut"].get_str()), warning);
+
+		m_TestObject.erase(m_TestObject.find("expectOut"));
+	}
+
 	// export logs
 	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
 
