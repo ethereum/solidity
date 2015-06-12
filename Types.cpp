@@ -693,6 +693,8 @@ string ReferenceType::stringForReferencePart() const
 	case Location::Memory:
 		return "memory";
 	}
+	solAssert(false, "");
+	return "";
 }
 
 bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
