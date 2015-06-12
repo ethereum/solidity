@@ -298,7 +298,10 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 		stackDepth -= type->getSizeOnStack();
 	}
 	// note that the stack is not cleaned up here
-	m_context << u256(dataOffset) << u256(0) << eth::Instruction::RETURN;
+	if (dataOffset == 0)
+		m_context << eth::Instruction::STOP;
+	else
+		m_context << u256(dataOffset) << u256(0) << eth::Instruction::RETURN;
 }
 
 void Compiler::registerStateVariables(ContractDefinition const& _contract)
