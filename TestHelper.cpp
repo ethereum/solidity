@@ -352,6 +352,8 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 			BOOST_CHECK_MESSAGE((m_TestObject["out"].get_str() == m_TestObject["expectOut"].get_str()), warning);
 		else
 			BOOST_WARN_MESSAGE((m_TestObject["out"].get_str() == m_TestObject["expectOut"].get_str()), warning);
+
+		m_TestObject.erase(m_TestObject.find("expectOut"));
 	}
 
 	// export logs
