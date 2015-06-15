@@ -30,9 +30,8 @@
 #include <libsolidity/CompilerUtils.h>
 
 using namespace std;
-
-namespace dev {
-namespace solidity {
+using namespace dev;
+using namespace dev::solidity;
 
 /**
  * Simple helper class to ensure that the stack height is the same at certain places in the code.
@@ -301,24 +300,18 @@ void Compiler::appendCalldataUnpacker(
 
 void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 {
-	unsigned dataOffset = 0;
-	unsigned stackDepth = 0;
-	for (TypePointer const& type: _typeParameters)
-		stackDepth += type->getSizeOnStack();
-
-	for (TypePointer const& type: _typeParameters)
-	{
-		CompilerUtils(m_context).copyToStackTop(stackDepth, type->getSizeOnStack());
-		ExpressionCompiler(m_context, m_optimize).appendTypeConversion(*type, *type, true);
-		bool const c_padToWords = true;
-		dataOffset += CompilerUtils(m_context).storeInMemory(dataOffset, *type, c_padToWords);
-		stackDepth -= type->getSizeOnStack();
-	}
-	// note that the stack is not cleaned up here
-	if (dataOffset == 0)
+	CompilerUtils utils(m_context);
+	if (_typeParameters.empty())
 		m_context << eth::Instruction::STOP;
 	else
-		m_context << u256(dataOffset) << u256(0) << eth::Instruction::RETURN;
+	{
+		utils.fetchFreeMemoryPointer();
+		//@todo optimization: if we return a single memory array, there should be enough space before
+		// its data to add the needed parts and we avoid a memory copy.
+		utils.encodeToMemory(_typeParameters, _typeParameters);
+		utils.toSizeAfterFreeMemoryPointer();
+		m_context << eth::Instruction::RETURN;
+	}
 }
 
 void Compiler::registerStateVariables(ContractDefinition const& _contract)
@@ -634,8 +627,5 @@ void Compiler::compileExpression(Expression const& _expression, TypePointer cons
 	ExpressionCompiler expressionCompiler(m_context, m_optimize);
 	expressionCompiler.compile(_expression);
 	if (_targetType)
-		expressionCompiler.appendTypeConversion(*_expression.getType(), *_targetType);
-}
-
-}
+		CompilerUtils(m_context).convertType(*_expression.getType(), *_targetType);
 }

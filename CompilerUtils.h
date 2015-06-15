@@ -81,6 +81,30 @@ public:
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries = true);
 
+	/// Copies values (of types @a _givenTypes) given on the stack to a location in memory given
+	/// at the stack top, encoding them according to the ABI as the given types @a _targetTypes.
+	/// Removes the values from the stack and leaves the updated memory pointer.
+	/// Stack pre: <v1> <v2> ... <vn> <memptr>
+	/// Stack post: <memptr_updated>
+	/// Does not touch the memory-free pointer.
+	/// @param _padToWordBoundaries if false, all values are concatenated without padding.
+	/// @param _copyDynamicDataInPlace if true, dynamic types is stored (without length)
+	/// together with fixed-length data.
+	/// @note the locations of target reference types are ignored, because it will always be
+	/// memory.
+	void encodeToMemory(
+		TypePointers const& _givenTypes = {},
+		TypePointers const& _targetTypes = {},
+		bool _padToWordBoundaries = true,
+		bool _copyDynamicDataInPlace = false
+	);
+
+	/// Appends code for an implicit or explicit type conversion. For now this comprises only erasing
+	/// higher-order bits (@see appendHighBitCleanup) when widening integer.
+	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
+	/// necessary.
+	void convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
+
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);
 	/// Copies an item that occupies @a _itemSize stack slots from a stack depth of @a _stackDepth
@@ -88,6 +112,8 @@ public:
 	void copyToStackTop(unsigned _stackDepth, unsigned _itemSize);
 	/// Moves a single stack element (with _stackDepth items on top of it) to the top of the stack.
 	void moveToStackTop(unsigned _stackDepth);
+	/// Moves a single stack element past @a _stackDepth other stack elements
+	void moveIntoStack(unsigned _stackDepth);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);
 	/// Removes element from the top of the stack _amount times.
@@ -110,6 +136,12 @@ public:
 	static const size_t freeMemoryPointer;
 
 private:
+	/// Address of the precompiled identity contract.
+	static const unsigned identityContractAddress;
+
+	//// Appends code that cleans higher-order bits for integer types.
+	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
+
 	/// Prepares the given type for storing in memory by shifting it if necessary.
 	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const;
 	/// Loads type from memory assuming memory offset is on stack top.
