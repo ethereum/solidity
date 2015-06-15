@@ -563,7 +563,8 @@ private:
 class ModifierDefinition: public CallableDeclaration, public Documented
 {
 public:
-	ModifierDefinition(SourceLocation const& _location,
+	ModifierDefinition(
+		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
