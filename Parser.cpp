@@ -26,6 +26,8 @@
 #include <libsolidity/Parser.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Exceptions.h>
+#include <libsolidity/InterfaceHandler.h>
+
 
 using namespace std;
 

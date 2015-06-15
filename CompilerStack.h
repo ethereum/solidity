@@ -148,6 +148,9 @@ public:
 	/// start line, start column, end line, end column
 	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
 
+	/// Parses Natspec documentations. Throws exceptions in case of wrong documented contract
+	void parseNatspecDocumentation(dev::solidity::ContractDefinition& _contract);
+
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.

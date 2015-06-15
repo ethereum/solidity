@@ -281,6 +281,12 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* getFallbackFunction() const;
 
+	std::unique_ptr<std::string> userDocumentation() const;
+	void setUserDocumentation(std::string const& _userDocumentation);
+
+	std::unique_ptr<std::string> devDocumentation() const;
+	void setDevDocumentation(std::string const& _devDocumentation);
+
 private:
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
@@ -301,6 +307,10 @@ private:
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
 	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
 	std::vector<ASTPointer<EventDefinition>> m_events;
+
+	// parsed Natspec documentation of the contract.
+	std::string m_userDocumentation;
+	std::string m_devDocumentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;

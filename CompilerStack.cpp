@@ -124,8 +124,16 @@ void CompilerStack::parse()
 				resolver.updateDeclaration(*m_globalContext->getCurrentThis());
 				resolver.checkTypeRequirements(*contract);
 				m_contracts[contract->getName()].contract = contract;
+				parseNatspecDocumentation(*contract);
 			}
 	m_parseSuccessful = true;
+}
+
+void CompilerStack::parseNatspecDocumentation(ContractDefinition& _contract)
+{
+	InterfaceHandler interfaceHandler;
+	interfaceHandler.generateDevDocumentation(_contract);
+	interfaceHandler.generateUserDocumentation(_contract);
 }
 
 void CompilerStack::parse(string const& _sourceCode)

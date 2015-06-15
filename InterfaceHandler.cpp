@@ -24,9 +24,9 @@ unique_ptr<string> InterfaceHandler::getDocumentation(
 	switch(_type)
 	{
 	case DocumentationType::NatspecUser:
-		return getUserDocumentation(_contractDef);
+		return userDocumentation(_contractDef);
 	case DocumentationType::NatspecDev:
-		return getDevDocumentation(_contractDef);
+		return devDocumentation(_contractDef);
 	case DocumentationType::ABIInterface:
 		return getABIInterface(_contractDef);
 	case DocumentationType::ABISolidityInterface:
@@ -143,7 +143,7 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 	return unique_ptr<string>(new string(ret + "}"));
 }
 
-unique_ptr<string> InterfaceHandler::getUserDocumentation(ContractDefinition const& _contractDef)
+void InterfaceHandler::generateUserDocumentation(ContractDefinition& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
@@ -165,10 +165,20 @@ unique_ptr<string> InterfaceHandler::getUserDocumentation(ContractDefinition con
 	}
 	doc["methods"] = methods;
 
-	return unique_ptr<string>(new string(Json::FastWriter().write(doc)));
+	_contractDef.setUserDocumentation(string(Json::FastWriter().write(doc)));
 }
 
-unique_ptr<string> InterfaceHandler::getDevDocumentation(ContractDefinition const& _contractDef)
+unique_ptr<string> InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
+{
+	return _contractDef.userDocumentation();
+}
+
+unique_ptr<string> InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
+{
+	return _contractDef.devDocumentation();
+}
+
+void InterfaceHandler::generateDevDocumentation(ContractDefinition& _contractDef)
 {
 	// LTODO: Somewhere in this function warnings for mismatch of param names
 	// should be thrown
@@ -212,7 +222,7 @@ unique_ptr<string> InterfaceHandler::getDevDocumentation(ContractDefinition cons
 					// LTODO: mismatching parameter name, throw some form of warning and not just an exception
 					BOOST_THROW_EXCEPTION(
 						DocstringParsingError() <<
-						errinfo_comment("documented parameter \"" + pair.first + "\" not found found in the function")
+						errinfo_comment("documented parameter \"" + pair.first + "\" not found in the parameter list of the function.")
 					);					
 				params[pair.first] = pair.second;
 			}
@@ -229,7 +239,7 @@ unique_ptr<string> InterfaceHandler::getDevDocumentation(ContractDefinition cons
 	}
 	doc["methods"] = methods;
 
-	return unique_ptr<string>(new string(Json::FastWriter().write(doc)));
+	_contractDef.setDevDocumentation(string(Json::FastWriter().write(doc)));
 }
 
 /* -- private -- */
