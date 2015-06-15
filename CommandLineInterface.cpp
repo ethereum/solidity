@@ -449,6 +449,11 @@ bool CommandLineInterface::processInput()
 			 << boost::diagnostic_information(_exception);
 		return false;
 	}
+	catch (DocstringParsingError const& _exception)
+	{
+		cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_exception) << endl;
+		return false;
+	}
 	catch (Exception const& _exception)
 	{
 		cerr << "Exception during compilation: " << boost::diagnostic_information(_exception) << endl;

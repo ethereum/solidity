@@ -147,6 +147,10 @@ string compile(string _input, bool _optimize)
 	{
 		return formatError(exception, "Internal compiler error", compiler);
 	}
+	catch (DocstringParsingError const& exception)
+	{
+		return formatError(exception, "Documentation parsing error", compiler);
+	}
 	catch (Exception const& exception)
 	{
 		output["error"] = "Exception during compilation: " + boost::diagnostic_information(exception);
