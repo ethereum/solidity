@@ -174,11 +174,11 @@ protected:
 			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
 			BOOST_REQUIRE(!executive.call(m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas));
 		}
-		BOOST_REQUIRE(executive.go());
+		BOOST_REQUIRE(executive.go(/* DEBUG eth::Executive::simpleTrace() */));
 		m_state.noteSending(m_sender);
 		executive.finalize();
-		m_gasUsed = executive.gasUsed();
-		m_output = std::move(res.output); // FIXME: Looks like Framework needs ExecutiveResult embedded
+		m_gasUsed = res.gasUsed;
+		m_output = std::move(res.output);
 		m_logs = executive.logs();
 	}
 

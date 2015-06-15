@@ -2420,7 +2420,7 @@ BOOST_AUTO_TEST_CASE(event_really_lots_of_data_from_storage)
 	callContractFunction("deposit()");
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 3) + asBytes("ABC"));
+	BOOST_CHECK(m_logs[0].data == encodeArgs(10, 0x60, 15, 3, string("ABC")));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(uint256,bytes,uint256)")));
 }
@@ -4230,6 +4230,31 @@ BOOST_AUTO_TEST_CASE(reusing_memory)
 	)";
 	compileAndRun(sourceCode, 0, "Main");
 	BOOST_REQUIRE(callContractFunction("f(uint256)", 0x34) == encodeArgs(dev::sha3(dev::toBigEndian(u256(0x34)))));
+}
+
+BOOST_AUTO_TEST_CASE(return_string)
+{
+	char const* sourceCode = R"(
+		contract Main {
+			string public s;
+			function set(string _s) external {
+				s = _s;
+			}
+			function get1() returns (string r) {
+				return s;
+			}
+//			function get2() returns (string r) {
+//				r = s;
+//			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main");
+	string s("Julia");
+	bytes args = encodeArgs(u256(0x20), u256(s.length()), s);
+	BOOST_REQUIRE(callContractFunction("set(string)", asString(args)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("get1()") == args);
+//	BOOST_CHECK(callContractFunction("get2()") == args);
+//	BOOST_CHECK(callContractFunction("s()") == args);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
