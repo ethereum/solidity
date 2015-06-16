@@ -98,11 +98,14 @@ private:
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
-using AssemblyItemsConstRef = vector_ref<AssemblyItem const>;
 
 std::ostream& operator<<(std::ostream& _out, AssemblyItem const& _item);
-std::ostream& operator<<(std::ostream& _out, AssemblyItemsConstRef _i);
-inline std::ostream& operator<<(std::ostream& _out, AssemblyItems const& _i) { return operator<<(_out, AssemblyItemsConstRef(&_i)); }
+inline std::ostream& operator<<(std::ostream& _out, AssemblyItems const& _items)
+{
+	for (AssemblyItem const& item: _items)
+		_out << item;
+	return _out;
+}
 
 }
 }

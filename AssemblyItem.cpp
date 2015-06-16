@@ -126,10 +126,3 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 	}
 	return _out;
 }
-
-ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
-{
-	for (AssemblyItem const& i: _i)
-		_out << i;
-	return _out;
-}

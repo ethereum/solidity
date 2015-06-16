@@ -292,16 +292,6 @@ void Assembly::injectStart(AssemblyItem const& _i)
 	m_items.insert(m_items.begin(), _i);
 }
 
-inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
-{
-	if (_a.size() != _b.size())
-		return false;
-	for (unsigned i = 0; i < _a.size(); ++i)
-		if (!_a[i].match(_b[i]))
-			return false;
-	return true;
-}
-
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
 #define copt dev::LogOutputStream<OptimiserChannel, true>()
 
