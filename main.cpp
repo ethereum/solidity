@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 		}
 	}
 	else
-		src = asString(contents(infile));
+		src = contentsString(infile);
 
 	vector<string> errors;
 	if (src.empty())
