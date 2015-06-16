@@ -598,7 +598,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	{
 		cnote << "Testing user defined test: " << filename;
 		json_spirit::mValue v;
-		string s = asString(contents(filename));
+		string s = contentsString(filename);
 		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + filename + " is empty. ");
 		json_spirit::read_string(s, v);
 		json_spirit::mObject oSingleTest;
