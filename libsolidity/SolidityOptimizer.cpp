@@ -944,6 +944,14 @@ BOOST_AUTO_TEST_CASE(cse_access_previous_sequence)
 	// 0, SLOAD, 1, ADD, SSTORE, 0 SLOAD
 }
 
+BOOST_AUTO_TEST_CASE(cse_optimise_return)
+{
+	checkCSE(
+		AssemblyItems{u256(0), u256(7), Instruction::RETURN},
+		AssemblyItems{Instruction::STOP}
+	);
+}
+
 BOOST_AUTO_TEST_CASE(control_flow_graph_remove_unused)
 {
 	// remove parts of the code that are unused
