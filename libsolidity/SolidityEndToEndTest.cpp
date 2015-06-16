@@ -4243,9 +4243,9 @@ BOOST_AUTO_TEST_CASE(return_string)
 			function get1() returns (string r) {
 				return s;
 			}
-//			function get2() returns (string r) {
-//				r = s;
-//			}
+			function get2() returns (string r) {
+				r = s;
+			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Main");
@@ -4253,8 +4253,8 @@ BOOST_AUTO_TEST_CASE(return_string)
 	bytes args = encodeArgs(u256(0x20), u256(s.length()), s);
 	BOOST_REQUIRE(callContractFunction("set(string)", asString(args)) == encodeArgs());
 	BOOST_CHECK(callContractFunction("get1()") == args);
-//	BOOST_CHECK(callContractFunction("get2()") == args);
-//	BOOST_CHECK(callContractFunction("s()") == args);
+	BOOST_CHECK(callContractFunction("get2()") == args);
+	BOOST_CHECK(callContractFunction("s()") == args);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
