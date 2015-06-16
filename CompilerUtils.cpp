@@ -110,11 +110,11 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		if (type.location() == ReferenceType::Location::CallData)
 		{
 			// stack: target source_offset source_len
-			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::DUP5
+			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::DUP5;
 				// stack: target source_offset source_len source_len source_offset target
-				<< eth::Instruction::CALLDATACOPY
-				<< eth::Instruction::DUP3 << eth::Instruction::ADD
-				<< eth::Instruction::SWAP2 << eth::Instruction::POP << eth::Instruction::POP;
+			m_context << eth::Instruction::CALLDATACOPY;
+			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
+			m_context << eth::Instruction::SWAP2 << eth::Instruction::POP << eth::Instruction::POP;
 		}
 		else if (type.location() == ReferenceType::Location::Memory)
 		{
@@ -200,16 +200,16 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 
 			// stack here: memory_end_offset storage_data_offset memory_offset
 			eth::AssemblyItem loopStart = m_context.newTag();
-			m_context << loopStart
-					  // load and store
-					  << eth::Instruction::DUP2 << eth::Instruction::SLOAD
-					  << eth::Instruction::DUP2 << eth::Instruction::MSTORE
-					  // increment storage_data_offset by 1
-					  << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD
-					  // increment memory offset by 32
-					  << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD
-					  // check for loop condition
-					  << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::GT;
+			m_context << loopStart;
+			// load and store
+			m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
+			m_context << eth::Instruction::DUP2 << eth::Instruction::MSTORE;
+			// increment storage_data_offset by 1
+			m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD;
+			// increment memory offset by 32
+			m_context << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD;
+			// check for loop condition
+			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::GT;
 			m_context.appendConditionalJumpTo(loopStart);
 			// stack here: memory_end_offset storage_data_offset memory_offset
 			if (_padToWordBoundaries)
@@ -368,9 +368,11 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				if (targetType.getNumBytes() == 0)
 					m_context << eth::Instruction::DUP1 << eth::Instruction::XOR;
 				else
-					m_context << (u256(1) << (256 - targetType.getNumBytes() * 8))
-							  << eth::Instruction::DUP1 << eth::Instruction::SWAP2
-							  << eth::Instruction::DIV << eth::Instruction::MUL;
+				{
+					m_context << (u256(1) << (256 - targetType.getNumBytes() * 8));
+					m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2;
+					m_context << eth::Instruction::DIV << eth::Instruction::MUL;
+				}
 			}
 		}
 	}

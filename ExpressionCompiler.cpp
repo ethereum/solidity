@@ -436,8 +436,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.getExpression().accept(*this);
 			m_context << u256(0); // do not send gas (there still is the stipend)
 			arguments.front()->accept(*this);
-			utils().convertType(*arguments.front()->getType(),
-								 *function.getParameterTypes().front(), true);
+			utils().convertType(
+				*arguments.front()->getType(),
+				*function.getParameterTypes().front(), true
+			);
 			appendExternalFunctionCall(
 				FunctionType(
 					TypePointers{},
@@ -612,13 +614,19 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::Integer:
 		if (member == "balance")
 		{
-			utils().convertType(*_memberAccess.getExpression().getType(),
-								 IntegerType(0, IntegerType::Modifier::Address), true);
+			utils().convertType(
+				*_memberAccess.getExpression().getType(),
+				IntegerType(0, IntegerType::Modifier::Address),
+				true
+			);
 			m_context << eth::Instruction::BALANCE;
 		}
 		else if ((set<string>{"send", "call", "callcode"}).count(member))
-			utils().convertType(*_memberAccess.getExpression().getType(),
-								 IntegerType(0, IntegerType::Modifier::Address), true);
+			utils().convertType(
+				*_memberAccess.getExpression().getType(),
+				IntegerType(0, IntegerType::Modifier::Address),
+				true
+			);
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid member access to integer."));
 		break;
