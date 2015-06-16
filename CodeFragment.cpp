@@ -196,7 +196,7 @@ void CodeFragment::constructOperation(sp::utree const& _t, CompilerState& _s)
 		{
 			if (_t.size() != 2)
 				error<IncorrectParameterCount>();
-			m_asm.append(CodeFragment::compile(asString(contents(firstAsString())), _s).m_asm);
+			m_asm.append(CodeFragment::compile(contentsString(firstAsString()), _s).m_asm);
 		}
 		else if (us == "SET")
 		{
