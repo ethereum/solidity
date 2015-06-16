@@ -401,7 +401,7 @@ bool CommandLineInterface::processInput()
 				continue;
 			}
 
-			m_sourceCodes[infile] = asString(dev::contents(infile));
+			m_sourceCodes[infile] = dev::contentsString(infile);
 		}
 
 	m_compiler.reset(new CompilerStack(m_args["add-std"].as<bool>()));
