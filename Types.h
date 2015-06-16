@@ -202,6 +202,8 @@ public:
 	/// This returns the corresponding integer type for IntegerConstantTypes and the pointer type
 	/// for storage reference types.
 	virtual TypePointer mobileType() const { return shared_from_this(); }
+	/// @returns true if this type is a storage pointer or reference.
+	virtual bool isInStorage() const { return false; }
 
 	/// Returns the list of all members of this type. Default implementation: no members.
 	virtual MemberList const& getMembers() const { return EmptyMemberList; }
@@ -374,6 +376,7 @@ public:
 	virtual TypePointer copyForLocation(Location _location, bool _isPointer) const = 0;
 
 	virtual TypePointer mobileType() const override { return copyForLocation(m_location, true); }
+	virtual bool isInStorage() const override { return m_location == Location::Storage; }
 
 	/// Storage references can be pointers or bound references. In general, local variables are of
 	/// pointer type, state variables are bound references. Assignments to pointers or deleting

@@ -146,10 +146,13 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
 	_assignment.getRightHandSide().accept(*this);
-	if (_assignment.getType()->isValueType())
-		utils().convertType(*_assignment.getRightHandSide().getType(), *_assignment.getType());
-	// We need this conversion mostly in the case of compound assignments. For non-value types
-	// the conversion is done in LValue::storeValue.
+	TypePointer type = _assignment.getRightHandSide().getType();
+	if (!_assignment.getType()->isInStorage())
+	{
+		utils().convertType(*type, *_assignment.getType());
+		type = _assignment.getType();
+	}
+
 	_assignment.getLeftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
 
@@ -175,7 +178,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 				m_context << eth::swapInstruction(itemSize + lvalueSize) << eth::Instruction::POP;
 		}
 	}
-	m_currentLValue->storeValue(*_assignment.getRightHandSide().getType(), _assignment.getLocation());
+	m_currentLValue->storeValue(*type, _assignment.getLocation());
 	m_currentLValue.reset();
 	return false;
 }
@@ -1119,14 +1122,10 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression)
 {
+	solAssert(_expectedType.isValueType(), "Not implemented for non-value types.");
 	_expression.accept(*this);
-	if (_expectedType.isValueType())
-	{
-		utils().convertType(*_expression.getType(), _expectedType, true);
-		utils().storeInMemoryDynamic(_expectedType);
-	}
-	else
-		utils().storeInMemoryDynamic(*_expression.getType()->mobileType());
+	utils().convertType(*_expression.getType(), _expectedType, true);
+	utils().storeInMemoryDynamic(_expectedType);
 }
 
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)

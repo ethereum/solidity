@@ -274,10 +274,13 @@ void CompilerUtils::encodeToMemory(
 		else
 		{
 			copyToStackTop(argSize - stackPos + dynPointers + 2, _givenTypes[i]->getSizeOnStack());
-			if (targetType->isValueType())
-				convertType(*_givenTypes[i], *targetType, true);
 			solAssert(!!targetType, "Externalable type expected.");
-			storeInMemoryDynamic(*targetType, _padToWordBoundaries);
+			TypePointer type = targetType;
+			if (_givenTypes[i]->isInStorage())
+				type = _givenTypes[i]; // delay conversion
+			else
+				convertType(*_givenTypes[i], *targetType, true);
+			storeInMemoryDynamic(*type, _padToWordBoundaries);
 		}
 		stackPos += _givenTypes[i]->getSizeOnStack();
 	}
