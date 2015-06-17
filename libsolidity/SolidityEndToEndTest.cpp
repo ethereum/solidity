@@ -25,6 +25,7 @@
 #include <tuple>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Hash.h>
+#include <libsolidity/Exceptions.h>
 #include <test/libsolidity/solidityExecutionFramework.h>
 
 using namespace std;
@@ -4656,6 +4657,32 @@ BOOST_AUTO_TEST_CASE(bytes_memory_index_access)
 			data
 	) == encodeArgs(u256(data.size()), string("d")));
 }
+
+BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
+{
+	char const* sourceCode = " /// @author Lefteris\n"
+	" /// @title Just a test contract\n"
+	"contract test {\n"
+	"  /// @dev Mul function\n"
+	"  /// @title I really should not be here\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	compileRequireThrow(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter\n"
+	"  /// @param not_existing Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	compileRequireThrow(sourceCode);
+}
+
 
 BOOST_AUTO_TEST_CASE(storage_array_ref)
 {

@@ -28,6 +28,7 @@
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
+#include <libsolidity/Exceptions.h>
 
 namespace dev
 {
@@ -55,6 +56,13 @@ public:
 		bytes code = m_compiler.getBytecode(_contractName);
 		sendMessage(code + _arguments, true, _value);
 		return m_output;
+	}
+
+	void compileRequireThrow(std::string const& _sourceCode)
+	{
+		m_compiler.reset(false, m_addStandardSources);
+		m_compiler.addSource("", _sourceCode);
+		BOOST_REQUIRE_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), DocstringParsingError);
 	}
 
 	bytes const& compileAndRun(

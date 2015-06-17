@@ -38,9 +38,11 @@ class DocumentationChecker
 public:
 	DocumentationChecker(): m_compilerStack(false) {}
 
-	void checkNatspec(std::string const& _code,
-					  std::string const& _expectedDocumentationString,
-					  bool _userDocumentation)
+	void checkNatspec(
+		std::string const& _code,
+		std::string const& _expectedDocumentationString,
+		bool _userDocumentation
+	)
 	{
 		std::string generatedDocumentationString;
 		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse(_code), "Parsing failed");
@@ -53,9 +55,11 @@ public:
 		m_reader.parse(generatedDocumentationString, generatedDocumentation);
 		Json::Value expectedDocumentation;
 		m_reader.parse(_expectedDocumentationString, expectedDocumentation);
-		BOOST_CHECK_MESSAGE(expectedDocumentation == generatedDocumentation,
-							"Expected " << _expectedDocumentationString <<
-							"\n but got:\n" << generatedDocumentationString);
+		BOOST_CHECK_MESSAGE(
+			expectedDocumentation == generatedDocumentation,
+			"Expected " << _expectedDocumentationString <<
+			"\n but got:\n" << generatedDocumentationString
+		);
 	}
 
 private:
@@ -227,18 +231,6 @@ BOOST_AUTO_TEST_CASE(dev_multiple_params)
 	"}}";
 
 	checkNatspec(sourceCode, natspec, false);
-}
-
-BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
-{
-	char const* sourceCode = "contract test {\n"
-	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
-	"  /// @param a Documentation for the first parameter\n"
-	"  /// @param not_existing Documentation for the second parameter\n"
-	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
-	"}\n";
-
-	BOOST_CHECK_THROW(checkNatspec(sourceCode, "", false), DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_CASE(dev_mutiline_param_description)
@@ -486,19 +478,6 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 	"}";
 
 	checkNatspec(sourceCode, natspec, false);
-}
-
-BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
-{
-	char const* sourceCode = " /// @author Lefteris\n"
-	" /// @title Just a test contract\n"
-	"contract test {\n"
-	"  /// @dev Mul function\n"
-	"  /// @title I really should not be here\n"
-	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
-	"}\n";
-
-	BOOST_CHECK_THROW(checkNatspec(sourceCode, "", false), DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
