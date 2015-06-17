@@ -31,8 +31,7 @@
 #include <libevm/ExtVMFace.h>
 #include <libtestutils/Common.h>
 
-#define DONTUSE_BOOST_MACROS
-#ifdef DONTUSE_BOOST_MACROS
+#ifdef NOBOOST
 	#define TBOOST_THROW_EXCEPTION(arg) throw dev::Exception();
 	#define TBOOST_REQUIRE(arg) if(arg == false) throw dev::Exception();
 	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
