@@ -149,7 +149,7 @@ public:
 	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
 
 	/// Parses Natspec documentations. Throws exceptions in case of wrong documented contract
-	void parseNatspecDocumentation(dev::solidity::ContractDefinition& _contract);
+	void parseNatspecDocumentation(ContractDefinition& _contract);
 
 private:
 	/**
