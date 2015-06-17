@@ -439,7 +439,7 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 						"Location has to be calldata for external functions "
 						"(remove the \"memory\" or \"storage\" keyword)."
 					));
-				type = ref->copyForLocation(ReferenceType::Location::CallData, true);
+				type = ref->copyForLocation(DataLocation::CallData, true);
 			}
 			else if (_variable.isCallableParameter() && _variable.getScope()->isPublic())
 			{
@@ -449,7 +449,7 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 						"Location has to be memory for publicly visible functions "
 						"(remove the \"storage\" keyword)."
 					));
-				type = ref->copyForLocation(ReferenceType::Location::Memory, true);
+				type = ref->copyForLocation(DataLocation::Memory, true);
 			}
 			else
 			{
@@ -458,8 +458,8 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 				bool isPointer = !_variable.isStateVariable();
 				type = ref->copyForLocation(
 					loc == Location::Memory ?
-					ReferenceType::Location::Memory :
-					ReferenceType::Location::Storage,
+					DataLocation::Memory :
+					DataLocation::Storage,
 					isPointer
 				);
 			}

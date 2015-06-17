@@ -107,16 +107,18 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		auto const& type = dynamic_cast<ArrayType const&>(_type);
 		solAssert(type.isByteArray(), "Non byte arrays not yet implemented here.");
 
-		if (type.location() == ReferenceType::Location::CallData)
+		if (type.location() == DataLocation::CallData)
 		{
+			if (!type.isDynamicallySized())
+				m_context << type.getLength();
 			// stack: target source_offset source_len
 			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::DUP5;
-				// stack: target source_offset source_len source_len source_offset target
+			// stack: target source_offset source_len source_len source_offset target
 			m_context << eth::Instruction::CALLDATACOPY;
 			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
 			m_context << eth::Instruction::SWAP2 << eth::Instruction::POP << eth::Instruction::POP;
 		}
-		else if (type.location() == ReferenceType::Location::Memory)
+		else if (type.location() == DataLocation::Memory)
 		{
 			// memcpy using the built-in contract
 			ArrayUtils(m_context).retrieveLength(type);
@@ -183,7 +185,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		}
 		else
 		{
-			solAssert(type.location() == ReferenceType::Location::Storage, "");
+			solAssert(type.location() == DataLocation::Storage, "");
 			m_context << eth::Instruction::POP; // remove offset, arrays always start new slot
 			m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
 			// stack here: memory_offset storage_offset length_bytes
@@ -276,7 +278,10 @@ void CompilerUtils::encodeToMemory(
 			copyToStackTop(argSize - stackPos + dynPointers + 2, _givenTypes[i]->getSizeOnStack());
 			solAssert(!!targetType, "Externalable type expected.");
 			TypePointer type = targetType;
-			if (_givenTypes[i]->isInStorage())
+			if (
+				_givenTypes[i]->dataStoredIn(DataLocation::Storage) ||
+				_givenTypes[i]->dataStoredIn(DataLocation::CallData)
+			)
 				type = _givenTypes[i]; // delay conversion
 			else
 				convertType(*_givenTypes[i], *targetType, true);
@@ -307,13 +312,13 @@ void CompilerUtils::encodeToMemory(
 			// stack: ... <end_of_mem> <value...>
 			// copy length to memory
 			m_context << eth::dupInstruction(1 + arrayType.getSizeOnStack());
-			if (arrayType.location() == ReferenceType::Location::CallData)
+			if (arrayType.location() == DataLocation::CallData)
 				m_context << eth::Instruction::DUP2; // length is on stack
-			else if (arrayType.location() == ReferenceType::Location::Storage)
+			else if (arrayType.location() == DataLocation::Storage)
 				m_context << eth::Instruction::DUP3 << eth::Instruction::SLOAD;
 			else
 			{
-				solAssert(arrayType.location() == ReferenceType::Location::Memory, "");
+				solAssert(arrayType.location() == DataLocation::Memory, "");
 				m_context << eth::Instruction::DUP2 << eth::Instruction::MLOAD;
 			}
 			// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
@@ -435,18 +440,18 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		ArrayType const& targetType = dynamic_cast<ArrayType const&>(_targetType);
 		switch (targetType.location())
 		{
-		case ReferenceType::Location::Storage:
+		case DataLocation::Storage:
 			// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
 			solAssert(
 				targetType.isPointer() &&
-				typeOnStack.location() == ReferenceType::Location::Storage,
+				typeOnStack.location() == DataLocation::Storage,
 				"Invalid conversion to storage type."
 			);
 			break;
-		case ReferenceType::Location::Memory:
+		case DataLocation::Memory:
 		{
 			// Copy the array to a free position in memory, unless it is already in memory.
-			if (typeOnStack.location() != ReferenceType::Location::Memory)
+			if (typeOnStack.location() != DataLocation::Memory)
 			{
 				// stack: <source ref> (variably sized)
 				unsigned stackSize = typeOnStack.getSizeOnStack();
@@ -455,7 +460,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				// stack: <mem start> <source ref> (variably sized)
 				if (targetType.isDynamicallySized())
 				{
-					bool fromStorage = (typeOnStack.location() == ReferenceType::Location::Storage);
+					bool fromStorage = (typeOnStack.location() == DataLocation::Storage);
 					// store length
 					if (fromStorage)
 					{
@@ -486,11 +491,25 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				// Stack <mem start> <mem end>
 				storeFreeMemoryPointer();
 			}
-			else if (typeOnStack.location() == ReferenceType::Location::CallData)
+			else if (typeOnStack.location() == DataLocation::CallData)
 			{
-				// Stack: <offset> <length>
-				//@todo
-				solAssert(false, "Not yet implemented.");
+				// Stack: <offset> [<length>]
+				// length is present if dynamically sized
+				fetchFreeMemoryPointer();
+				moveIntoStack(typeOnStack.getSizeOnStack());
+				// stack: memptr calldataoffset [<length>]
+				if (typeOnStack.isDynamicallySized())
+				{
+					solAssert(targetType.isDynamicallySized(), "");
+					m_context << eth::Instruction::DUP3 << eth::Instruction::DUP2;
+					storeInMemoryDynamic(IntegerType(256));
+					moveIntoStack(typeOnStack.getSizeOnStack());
+				}
+				else
+					m_context << eth::Instruction::DUP2 << eth::Instruction::SWAP1;
+				// stack: mem_ptr mem_data_ptr calldataoffset [<length>]
+				storeInMemoryDynamic(typeOnStack);
+				storeFreeMemoryPointer();
 			}
 			// nothing to do for memory to memory
 			break;
@@ -507,8 +526,8 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		auto& targetType = dynamic_cast<StructType const&>(_targetType);
 		auto& stackType = dynamic_cast<StructType const&>(_typeOnStack);
 		solAssert(
-			targetType.location() == ReferenceType::Location::Storage &&
-				stackType.location() == ReferenceType::Location::Storage,
+			targetType.location() == DataLocation::Storage &&
+				stackType.location() == DataLocation::Storage,
 			"Non-storage structs not yet implemented."
 		);
 		solAssert(

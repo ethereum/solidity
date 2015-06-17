@@ -44,6 +44,8 @@ using FunctionTypePointer = std::shared_ptr<FunctionType const>;
 using TypePointers = std::vector<TypePointer>;
 
 
+enum class DataLocation { Storage, CallData, Memory };
+
 /**
  * Helper class to compute storage offsets of members of structs and contracts.
  */
@@ -202,8 +204,9 @@ public:
 	/// This returns the corresponding integer type for IntegerConstantTypes and the pointer type
 	/// for storage reference types.
 	virtual TypePointer mobileType() const { return shared_from_this(); }
-	/// @returns true if this type is a storage pointer or reference.
-	virtual bool isInStorage() const { return false; }
+	/// @returns true if this is a non-value type and the data of this type is stored at the
+	/// given location.
+	virtual bool dataStoredIn(DataLocation) const { return false; }
 
 	/// Returns the list of all members of this type. Default implementation: no members.
 	virtual MemberList const& getMembers() const { return EmptyMemberList; }
@@ -367,16 +370,15 @@ public:
 class ReferenceType: public Type
 {
 public:
-	enum class Location { Storage, CallData, Memory };
-	explicit ReferenceType(Location _location): m_location(_location) {}
-	Location location() const { return m_location; }
+	explicit ReferenceType(DataLocation _location): m_location(_location) {}
+	DataLocation location() const { return m_location; }
 
 	/// @returns a copy of this type with location (recursively) changed to @a _location,
 	/// whereas isPointer is only shallowly changed - the deep copy is always a bound reference.
-	virtual TypePointer copyForLocation(Location _location, bool _isPointer) const = 0;
+	virtual TypePointer copyForLocation(DataLocation _location, bool _isPointer) const = 0;
 
 	virtual TypePointer mobileType() const override { return copyForLocation(m_location, true); }
-	virtual bool isInStorage() const override { return m_location == Location::Storage; }
+	virtual bool dataStoredIn(DataLocation _location) const override { return m_location == _location; }
 
 	/// Storage references can be pointers or bound references. In general, local variables are of
 	/// pointer type, state variables are bound references. Assignments to pointers or deleting
@@ -392,14 +394,14 @@ public:
 	/// @returns a copy of @a _type having the same location as this (and is not a pointer type)
 	/// if _type is a reference type and an unmodified copy of _type otherwise.
 	/// This function is mostly useful to modify inner types appropriately.
-	static TypePointer copyForLocationIfReference(Location _location, TypePointer const& _type);
+	static TypePointer copyForLocationIfReference(DataLocation _location, TypePointer const& _type);
 
 protected:
 	TypePointer copyForLocationIfReference(TypePointer const& _type) const;
 	/// @returns a human-readable description of the reference part of the type.
 	std::string stringForReferencePart() const;
 
-	Location m_location = Location::Storage;
+	DataLocation m_location = DataLocation::Storage;
 	bool m_isPointer = true;
 };
 
@@ -416,20 +418,20 @@ public:
 	virtual Category getCategory() const override { return Category::Array; }
 
 	/// Constructor for a byte array ("bytes") and string.
-	explicit ArrayType(Location _location, bool _isString = false):
+	explicit ArrayType(DataLocation _location, bool _isString = false):
 		ReferenceType(_location),
 		m_arrayKind(_isString ? ArrayKind::String : ArrayKind::Bytes),
 		m_baseType(std::make_shared<FixedBytesType>(1))
 	{
 	}
 	/// Constructor for a dynamically sized array type ("type[]")
-	ArrayType(Location _location, TypePointer const& _baseType):
+	ArrayType(DataLocation _location, TypePointer const& _baseType):
 		ReferenceType(_location),
 		m_baseType(copyForLocationIfReference(_baseType))
 	{
 	}
 	/// Constructor for a fixed-size array type ("type[20]")
-	ArrayType(Location _location, TypePointer const& _baseType, u256 const& _length):
+	ArrayType(DataLocation _location, TypePointer const& _baseType, u256 const& _length):
 		ReferenceType(_location),
 		m_baseType(copyForLocationIfReference(_baseType)),
 		m_hasDynamicLength(false),
@@ -457,7 +459,7 @@ public:
 	TypePointer const& getBaseType() const { solAssert(!!m_baseType, ""); return m_baseType;}
 	u256 const& getLength() const { return m_length; }
 
-	TypePointer copyForLocation(Location _location, bool _isPointer) const override;
+	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 private:
 	/// String is interpreted as a subtype of Bytes.
@@ -536,7 +538,7 @@ public:
 	virtual Category getCategory() const override { return Category::Struct; }
 	explicit StructType(StructDefinition const& _struct):
 		//@todo only storage until we have non-storage structs
-		ReferenceType(Location::Storage), m_struct(_struct) {}
+		ReferenceType(DataLocation::Storage), m_struct(_struct) {}
 	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
@@ -547,7 +549,7 @@ public:
 
 	virtual MemberList const& getMembers() const override;
 
-	TypePointer copyForLocation(Location _location, bool _isPointer) const override;
+	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 	std::pair<u256, unsigned> const& getStorageOffsetsOfMember(std::string const& _name) const;
 
@@ -639,8 +641,11 @@ public:
 	FunctionTypePointer externalFunctionType() const;
 	virtual TypePointer externalType() const override { return externalFunctionType(); }
 
+	/// Creates the type of a function.
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
+	/// Creates the accessor function type of a state variable.
 	explicit FunctionType(VariableDeclaration const& _varDecl);
+	/// Creates the function type of an event.
 	explicit FunctionType(EventDefinition const& _event);
 	FunctionType(
 		strings const& _parameterTypes,

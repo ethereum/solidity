@@ -144,12 +144,13 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 	else if (_typeToken == Token::Bool)
 		return make_shared<BoolType>();
 	else if (_typeToken == Token::Bytes)
-		return make_shared<ArrayType>(ReferenceType::Location::Storage);
+		return make_shared<ArrayType>(DataLocation::Storage);
 	else if (_typeToken == Token::String)
-		return make_shared<ArrayType>(ReferenceType::Location::Storage, true);
+		return make_shared<ArrayType>(DataLocation::Storage, true);
 	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
-																		 std::string(Token::toString(_typeToken)) + " to type."));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
+			"Unable to convert elementary typename " + std::string(Token::toString(_typeToken)) + " to type."
+		));
 }
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
@@ -180,7 +181,7 @@ TypePointer Type::fromMapping(ElementaryTypeName& _keyType, TypeName& _valueType
 	if (!valueType)
 		BOOST_THROW_EXCEPTION(_valueType.createTypeError("Invalid type name."));
 	// Convert value type to storage reference.
-	valueType = ReferenceType::copyForLocationIfReference(ReferenceType::Location::Storage, valueType);
+	valueType = ReferenceType::copyForLocationIfReference(DataLocation::Storage, valueType);
 	return make_shared<MappingType>(keyType, valueType);
 }
 
@@ -198,10 +199,10 @@ TypePointer Type::fromArrayTypeName(TypeName& _baseTypeName, Expression* _length
 		auto const* length = dynamic_cast<IntegerConstantType const*>(_length->getType().get());
 		if (!length)
 			BOOST_THROW_EXCEPTION(_length->createTypeError("Invalid array length."));
-		return make_shared<ArrayType>(ReferenceType::Location::Storage, baseType, length->literalValue(nullptr));
+		return make_shared<ArrayType>(DataLocation::Storage, baseType, length->literalValue(nullptr));
 	}
 	else
-		return make_shared<ArrayType>(ReferenceType::Location::Storage, baseType);
+		return make_shared<ArrayType>(DataLocation::Storage, baseType);
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -670,7 +671,7 @@ TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
 }
 
-TypePointer ReferenceType::copyForLocationIfReference(Location _location, TypePointer const& _type)
+TypePointer ReferenceType::copyForLocationIfReference(DataLocation _location, TypePointer const& _type)
 {
 	if (auto type = dynamic_cast<ReferenceType const*>(_type.get()))
 		return type->copyForLocation(_location, false);
@@ -686,11 +687,11 @@ string ReferenceType::stringForReferencePart() const
 {
 	switch (m_location)
 	{
-	case Location::Storage:
+	case DataLocation::Storage:
 		return string("storage ") + (m_isPointer ? "pointer" : "ref");
-	case Location::CallData:
+	case DataLocation::CallData:
 		return "calldata";
-	case Location::Memory:
+	case DataLocation::Memory:
 		return "memory";
 	}
 	solAssert(false, "");
@@ -705,11 +706,11 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	if (convertTo.isByteArray() != isByteArray() || convertTo.isString() != isString())
 		return false;
 	// memory/calldata to storage can be converted, but only to a direct storage reference
-	if (convertTo.location() == Location::Storage && location() != Location::Storage && convertTo.isPointer())
+	if (convertTo.location() == DataLocation::Storage && location() != DataLocation::Storage && convertTo.isPointer())
 		return false;
-	if (convertTo.location() == Location::CallData && location() != convertTo.location())
+	if (convertTo.location() == DataLocation::CallData && location() != convertTo.location())
 		return false;
-	if (convertTo.location() == Location::Storage && !convertTo.isPointer())
+	if (convertTo.location() == DataLocation::Storage && !convertTo.isPointer())
 	{
 		// Less restrictive conversion, since we need to copy anyway.
 		if (!getBaseType()->isImplicitlyConvertibleTo(*convertTo.getBaseType()))
@@ -788,10 +789,10 @@ u256 ArrayType::getStorageSize() const
 
 unsigned ArrayType::getSizeOnStack() const
 {
-	if (m_location == Location::CallData)
+	if (m_location == DataLocation::CallData)
 		// offset [length] (stack top)
 		return 1 + (isDynamicallySized() ? 1 : 0);
-	else if (m_location == Location::Storage)
+	else if (m_location == DataLocation::Storage)
 		// storage_key storage_offset
 		return 2;
 	else
@@ -828,12 +829,12 @@ TypePointer ArrayType::externalType() const
 		return TypePointer();
 
 	if (isDynamicallySized())
-		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType());
+		return std::make_shared<ArrayType>(DataLocation::CallData, m_baseType->externalType());
 	else
-		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType(), m_length);
+		return std::make_shared<ArrayType>(DataLocation::CallData, m_baseType->externalType(), m_length);
 }
 
-TypePointer ArrayType::copyForLocation(ReferenceType::Location _location, bool _isPointer) const
+TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) const
 {
 	auto copy = make_shared<ArrayType>(_location);
 	copy->m_isPointer = _isPointer;
@@ -949,9 +950,9 @@ bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 		return false;
 	auto& convertTo = dynamic_cast<StructType const&>(_convertTo);
 	// memory/calldata to storage can be converted, but only to a direct storage reference
-	if (convertTo.location() == Location::Storage && location() != Location::Storage && convertTo.isPointer())
+	if (convertTo.location() == DataLocation::Storage && location() != DataLocation::Storage && convertTo.isPointer())
 		return false;
-	if (convertTo.location() == Location::CallData && location() != convertTo.location())
+	if (convertTo.location() == DataLocation::CallData && location() != convertTo.location())
 		return false;
 	return this->m_struct == convertTo.m_struct;
 }
@@ -1009,7 +1010,7 @@ MemberList const& StructType::getMembers() const
 	return *m_members;
 }
 
-TypePointer StructType::copyForLocation(ReferenceType::Location _location, bool _isPointer) const
+TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer) const
 {
 	auto copy = make_shared<StructType>(m_struct);
 	copy->m_location = _location;
@@ -1115,6 +1116,9 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 		}
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
 		{
+			if (arrayType->isByteArray())
+				// Return byte arrays as as whole.
+				break;
 			returnType = arrayType->getBaseType();
 			paramNames.push_back("");
 			paramTypes.push_back(make_shared<IntegerType>(256));
@@ -1128,15 +1132,21 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	if (auto structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		for (auto const& member: structType->getMembers())
-			if (member.type->getCategory() != Category::Mapping && member.type->getCategory() != Category::Array)
+			if (member.type->getCategory() != Category::Mapping)
 			{
-				retParamNames.push_back(member.name);
+				if (auto arrayType = dynamic_cast<ArrayType const*>(member.type.get()))
+					if (!arrayType->isByteArray())
+						continue;
 				retParams.push_back(member.type);
+				retParamNames.push_back(member.name);
 			}
 	}
 	else
 	{
-		retParams.push_back(returnType);
+		retParams.push_back(ReferenceType::copyForLocationIfReference(
+			DataLocation::Memory,
+			returnType
+		));
 		retParamNames.push_back("");
 	}
 
@@ -1549,7 +1559,7 @@ MagicType::MagicType(MagicType::Kind _kind):
 			{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
 			{"gas", make_shared<IntegerType>(256)},
 			{"value", make_shared<IntegerType>(256)},
-			{"data", make_shared<ArrayType>(ReferenceType::Location::CallData)},
+			{"data", make_shared<ArrayType>(DataLocation::CallData)},
 			{"sig", make_shared<FixedBytesType>(4)}
 		});
 		break;

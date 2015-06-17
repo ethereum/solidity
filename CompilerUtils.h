@@ -99,8 +99,9 @@ public:
 		bool _copyDynamicDataInPlace = false
 	);
 
-	/// Appends code for an implicit or explicit type conversion. For now this comprises only erasing
-	/// higher-order bits (@see appendHighBitCleanup) when widening integer.
+	/// Appends code for an implicit or explicit type conversion. This includes erasing higher
+	/// order bits (@see appendHighBitCleanup) when widening integer but also copy to memory
+	/// if a reference type is converted from calldata or storage to memory.
 	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
 	/// necessary.
 	void convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);

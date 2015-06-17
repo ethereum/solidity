@@ -109,34 +109,40 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	}
 	unsigned retSizeOnStack = 0;
 	solAssert(accessorType.getReturnParameterTypes().size() >= 1, "");
+	auto const& returnTypes = accessorType.getReturnParameterTypes();
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		// remove offset
 		m_context << eth::Instruction::POP;
 		auto const& names = accessorType.getReturnParameterNames();
-		auto const& types = accessorType.getReturnParameterTypes();
 		// struct
 		for (size_t i = 0; i < names.size(); ++i)
 		{
-			if (types[i]->getCategory() == Type::Category::Mapping || types[i]->getCategory() == Type::Category::Array)
+			if (returnTypes[i]->getCategory() == Type::Category::Mapping)
 				continue;
+			if (auto arrayType = dynamic_cast<ArrayType const*>(returnTypes[i].get()))
+				if (!arrayType->isByteArray())
+					continue;
 			pair<u256, unsigned> const& offsets = structType->getStorageOffsetsOfMember(names[i]);
 			m_context << eth::Instruction::DUP1 << u256(offsets.first) << eth::Instruction::ADD << u256(offsets.second);
-			StorageItem(m_context, *types[i]).retrieveValue(SourceLocation(), true);
-			solAssert(types[i]->getSizeOnStack() == 1, "Returning struct elements with stack size != 1 is not yet implemented.");
-			m_context << eth::Instruction::SWAP1;
-			retSizeOnStack += types[i]->getSizeOnStack();
+			TypePointer memberType = structType->getMemberType(names[i]);
+			StorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true);
+			utils().convertType(*memberType, *returnTypes[i]);
+			utils().moveToStackTop(returnTypes[i]->getSizeOnStack());
+			retSizeOnStack += returnTypes[i]->getSizeOnStack();
 		}
 		// remove slot
 		m_context << eth::Instruction::POP;
 	}
 	else
 	{
-		// simple value
-		solAssert(accessorType.getReturnParameterTypes().size() == 1, "");
+		// simple value or array
+		solAssert(returnTypes.size() == 1, "");
 		StorageItem(m_context, *returnType).retrieveValue(SourceLocation(), true);
-		retSizeOnStack = returnType->getSizeOnStack();
+		utils().convertType(*returnType, *returnTypes.front());
+		retSizeOnStack = returnTypes.front()->getSizeOnStack();
 	}
+	solAssert(retSizeOnStack == utils().getSizeOnStack(returnTypes), "");
 	solAssert(retSizeOnStack <= 15, "Stack is too deep.");
 	m_context << eth::dupInstruction(retSizeOnStack + 1);
 	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
@@ -147,7 +153,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
 	_assignment.getRightHandSide().accept(*this);
 	TypePointer type = _assignment.getRightHandSide().getType();
-	if (!_assignment.getType()->isInStorage())
+	if (!_assignment.getType()->dataStoredIn(DataLocation::Storage))
 	{
 		utils().convertType(*type, *_assignment.getType());
 		type = _assignment.getType();
@@ -712,10 +718,10 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		else
 			switch (type.location())
 			{
-			case ReferenceType::Location::CallData:
+			case DataLocation::CallData:
 				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 				break;
-			case ReferenceType::Location::Storage:
+			case DataLocation::Storage:
 				setLValue<StorageArrayLength>(_memberAccess, type);
 				break;
 			default:
@@ -758,13 +764,13 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
 
 		// remove storage byte offset
-		if (arrayType.location() == ReferenceType::Location::Storage)
+		if (arrayType.location() == DataLocation::Storage)
 			m_context << eth::Instruction::POP;
 
 		_indexAccess.getIndexExpression()->accept(*this);
 		// stack layout: <base_ref> [<length>] <index>
 		ArrayUtils(m_context).accessIndex(arrayType);
-		if (arrayType.location() == ReferenceType::Location::Storage)
+		if (arrayType.location() == DataLocation::Storage)
 		{
 			if (arrayType.isByteArray())
 			{

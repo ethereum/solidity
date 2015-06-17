@@ -919,7 +919,7 @@ void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
 	{
 		auto const& arrayType(dynamic_cast<ArrayType const&>(type));
 		m_isLValue = (*m_memberName == "length" &&
-			arrayType.location() != ReferenceType::Location::CallData && arrayType.isDynamicallySized());
+			arrayType.location() != DataLocation::CallData && arrayType.isDynamicallySized());
 	}
 	else
 		m_isLValue = false;
@@ -942,7 +942,7 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 			m_type = make_shared<FixedBytesType>(1);
 		else
 			m_type = type.getBaseType();
-		m_isLValue = type.location() != ReferenceType::Location::CallData;
+		m_isLValue = type.location() != DataLocation::CallData;
 		break;
 	}
 	case Type::Category::Mapping:
@@ -959,7 +959,7 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*m_base->getType());
 		if (!m_index)
-			m_type = make_shared<TypeType>(make_shared<ArrayType>(ReferenceType::Location::Memory, type.getActualType()));
+			m_type = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, type.getActualType()));
 		else
 		{
 			m_index->checkTypeRequirements(nullptr);
@@ -967,7 +967,9 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 			if (!length)
 				BOOST_THROW_EXCEPTION(m_index->createTypeError("Integer constant expected."));
 			m_type = make_shared<TypeType>(make_shared<ArrayType>(
-				ReferenceType::Location::Memory, type.getActualType(), length->literalValue(nullptr)));
+				DataLocation::Memory, type.getActualType(),
+				length->literalValue(nullptr)
+			));
 		}
 		break;
 	}

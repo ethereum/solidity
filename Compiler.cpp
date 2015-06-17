@@ -245,21 +245,35 @@ void Compiler::appendCalldataUnpacker(
 {
 	// We do not check the calldata size, everything is zero-paddedd
 
+	//@todo this does not yet support nested arrays
+
 	if (_startOffset == u256(-1))
 		_startOffset = u256(CompilerUtils::dataStartOffset);
 
 	m_context << _startOffset;
 	for (TypePointer const& type: _typeParameters)
 	{
+		// stack: v1 v2 ... v(k-1) mem_offset
 		switch (type->getCategory())
 		{
 		case Type::Category::Array:
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
-			if (arrayType.location() == ReferenceType::Location::CallData)
+			solAssert(arrayType.location() != DataLocation::Storage, "");
+			solAssert(!arrayType.getBaseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
+			if (_fromMemory)
 			{
-				solAssert(!_fromMemory, "");
-				if (type->isDynamicallySized())
+				solAssert(arrayType.location() == DataLocation::Memory, "");
+				// compute data pointer
+				//@todo once we support nested arrays, this offset needs to be dynamic.
+				m_context << eth::Instruction::DUP1 << _startOffset << eth::Instruction::ADD;
+				m_context << eth::Instruction::SWAP1 << u256(0x20) << eth::Instruction::ADD;
+			}
+			else
+			{
+				// first load from calldata and potentially convert to memory if arrayType is memory
+				TypePointer calldataType = arrayType.copyForLocation(DataLocation::CallData, false);
+				if (calldataType->isDynamicallySized())
 				{
 					// put on stack: data_pointer length
 					CompilerUtils(m_context).loadFromMemoryDynamic(IntegerType(256), !_fromMemory);
@@ -276,17 +290,17 @@ void Compiler::appendCalldataUnpacker(
 				{
 					// leave the pointer on the stack
 					m_context << eth::Instruction::DUP1;
-					m_context << u256(type->getCalldataEncodedSize()) << eth::Instruction::ADD;
+					m_context << u256(calldataType->getCalldataEncodedSize()) << eth::Instruction::ADD;
 				}
-			}
-			else
-			{
-				solAssert(arrayType.location() == ReferenceType::Location::Memory, "");
-				// compute data pointer
-				m_context << eth::Instruction::DUP1 << _startOffset << eth::Instruction::ADD;
-				if (!_fromMemory)
-					solAssert(false, "Not yet implemented.");
-				m_context << eth::Instruction::SWAP1 << u256(0x20) << eth::Instruction::ADD;
+				if (arrayType.location() == DataLocation::Memory)
+				{
+					// copy to memory
+					// move calldata type up again
+					CompilerUtils(m_context).moveIntoStack(calldataType->getSizeOnStack());
+					CompilerUtils(m_context).convertType(*calldataType, arrayType);
+					// fetch next pointer again
+					CompilerUtils(m_context).moveToStackTop(arrayType.getSizeOnStack());
+				}
 			}
 			break;
 		}
