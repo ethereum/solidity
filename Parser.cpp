@@ -28,7 +28,6 @@
 #include <libsolidity/Exceptions.h>
 #include <libsolidity/InterfaceHandler.h>
 
-
 using namespace std;
 
 namespace dev
