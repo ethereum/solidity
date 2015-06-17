@@ -4257,6 +4257,59 @@ BOOST_AUTO_TEST_CASE(return_string)
 //	BOOST_CHECK(callContractFunction("s()") == args);
 }
 
+BOOST_AUTO_TEST_CASE(storage_array_ref)
+{
+	char const* sourceCode = R"(
+		contract BinarySearch {
+		  /// Finds the position of _value in the sorted list _data.
+		  /// Note that "internal" is important here, because storage references only work for internal or private functions
+		  function find(uint[] storage _data, uint _value) internal returns (uint o_position) {
+			return find(_data, 0, _data.length, _value);
+		  }
+		  function find(uint[] storage _data, uint _begin, uint _len, uint _value) private returns (uint o_position) {
+			if (_len == 0 || (_len == 1 && _data[_begin] != _value))
+			  return uint(-1); // failure
+			uint halfLen = _len / 2;
+			uint v = _data[_begin + halfLen];
+			if (_value < v)
+			  return find(_data, _begin, halfLen, _value);
+			else if (_value > v)
+			  return find(_data, _begin + halfLen + 1, halfLen - 1, _value);
+			else
+			  return _begin + halfLen;
+		  }
+		}
+
+		contract Store is BinarySearch {
+			uint[] data;
+			function add(uint v) {
+				data.length++;
+				data[data.length - 1] = v;
+			}
+			function find(uint v) returns (uint) {
+				return find(data, v);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Store");
+	BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(-1)));
+	BOOST_REQUIRE(callContractFunction("add(uint256)", u256(7)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(11)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(17)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(27)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(31)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(32)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(66)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(177)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(27)) == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(32)) == encodeArgs(u256(5)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(176)) == encodeArgs(u256(-1)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(0)) == encodeArgs(u256(-1)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(400)) == encodeArgs(u256(-1)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
