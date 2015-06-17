@@ -58,11 +58,12 @@ public:
 		return m_output;
 	}
 
+	template <class Exceptiontype>
 	void compileRequireThrow(std::string const& _sourceCode)
 	{
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
-		BOOST_REQUIRE_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), DocstringParsingError);
+		BOOST_REQUIRE_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), Exceptiontype);
 	}
 
 	bytes const& compileAndRun(
