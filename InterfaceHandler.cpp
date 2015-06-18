@@ -165,7 +165,7 @@ void InterfaceHandler::generateUserDocumentation(ContractDefinition& _contractDe
 	}
 	doc["methods"] = methods;
 
-	_contractDef.setUserDocumentation(Json::FastWriter().write(doc));
+	_contractDef.setUserDocumentation(Json::StyledWriter().write(doc));
 }
 
 unique_ptr<string> InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
@@ -239,7 +239,7 @@ void InterfaceHandler::generateDevDocumentation(ContractDefinition& _contractDef
 	}
 	doc["methods"] = methods;
 
-	_contractDef.setDevDocumentation(Json::FastWriter().write(doc));
+	_contractDef.setDevDocumentation(Json::StyledWriter().write(doc));
 }
 
 /* -- private -- */
