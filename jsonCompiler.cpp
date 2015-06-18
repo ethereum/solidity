@@ -91,6 +91,8 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 			string sig = it.second->externalSignature();
 			externalFunctions[sig] = gasToJson(GasEstimator::functionalEstimation(*items, sig));
 		}
+		if (contract.getFallbackFunction())
+			externalFunctions[""] = gasToJson(GasEstimator::functionalEstimation(*items, "INVALID"));
 		gasEstimates["external"] = externalFunctions;
 		Json::Value internalFunctions(Json::objectValue);
 		for (auto const& it: contract.getDefinedFunctions())
