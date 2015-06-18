@@ -21,6 +21,7 @@
  */
 
 #include "../TestHelper.h"
+#include <string>
 #include <json/json.h>
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/Exceptions.h>
@@ -482,31 +483,47 @@ BOOST_AUTO_TEST_CASE(dev_author_at_function)
 
 BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 {
-	char const* sourceCode = "contract test {\n"
-	"  /// I do something awesome\n"
-	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			/// I do something awesome
+			function mul(uint a) returns(uint d) { return a * 7; }
+		}
+	)";
 
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256)\":{ \"notice\": \"I do something awesome\"}"
-	"}}";
+
+	char const* natspec = R"ABCDEF(
+	{
+	   "methods" : {
+		  "mul(uint256)" : {
+			 "notice" : " I do something awesome"
+		  }
+	   }
+	}
+	)ABCDEF";
 
 	checkNatspec(sourceCode, natspec, true);
 }
 
 BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 {
-	char const* sourceCode = "contract test {\n"
-	"  /// I do something awesome\n"
-	"  /// which requires two lines to explain\n"
-	"  function mul(uint a) returns(uint d) { return a * 7; }\n"
-	"}\n";
+	char const* sourceCode = R"(
+		contract test {
+			/// I do something awesome
+			/// which requires two lines to explain
+			function mul(uint a) returns(uint d) { return a * 7; }
+		}
+	)";
 
-	char const* natspec = "{"
-	"\"methods\":{"
-	"    \"mul(uint256)\":{ \"notice\": \"I do something awesome which requires two lines to explain\"}"
-	"}}";
+	char const* natspec = R"ABCDEF(
+	{
+	   "methods" : {
+		  "mul(uint256)" : {
+			 "notice" : " I do something awesome which requires two lines to explain"
+		  }
+	   }
+	}
+
+	)ABCDEF";
 
 	checkNatspec(sourceCode, natspec, true);
 }
