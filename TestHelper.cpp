@@ -754,6 +754,8 @@ Options::Options()
 			checkState = true;
 		else if (arg == "--wallet")
 			wallet = true;
+		else if (arg == "--network")
+			network = true;
 		else if (arg == "--all")
 		{
 			performance = true;
@@ -761,7 +763,8 @@ Options::Options()
 			memory = true;
 			inputLimits = true;
 			bigData = true;
-			wallet= true;
+			wallet = true;
+			network = true;
 		}
 		else if (arg == "--singletest" && i + 1 < argc)
 		{

@@ -223,6 +223,7 @@ public:
 	bool inputLimits = false;
 	bool bigData = false;
 	bool wallet = false;
+	bool network = false;
 	/// @}
 
 	/// Get reference to options
