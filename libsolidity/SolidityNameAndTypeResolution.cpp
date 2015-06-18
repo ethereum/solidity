@@ -190,6 +190,17 @@ BOOST_AUTO_TEST_CASE(struct_definition_indirectly_recursive)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), ParserError);
 }
 
+BOOST_AUTO_TEST_CASE(struct_definition_not_really_recursive)
+{
+	char const* text = R"(
+		contract test {
+			struct s1 { uint a; }
+			struct s2 { s1 x; s1 y; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
 BOOST_AUTO_TEST_CASE(struct_definition_recursion_via_mapping)
 {
 	char const* text = "contract test {\n"
