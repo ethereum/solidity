@@ -1726,7 +1726,7 @@ BOOST_AUTO_TEST_CASE(fixed_bytes_in_calls)
 	BOOST_CHECK(callContractFunction("callHelper(bytes2,bool)", string("\0a", 2), true) == encodeArgs(string("\0a\0\0\0", 5)));
 }
 
-BOOST_AUTO_TEST_CASE(constructor_arguments)
+BOOST_AUTO_TEST_CASE(constructor_arguments_internal)
 {
 	char const* sourceCode = R"(
 		contract Helper {
@@ -1749,8 +1749,28 @@ BOOST_AUTO_TEST_CASE(constructor_arguments)
 			function getName() returns (bytes3 ret) { return h.getName(); }
 		})";
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("getFlag()") == encodeArgs(true));
-	BOOST_REQUIRE(callContractFunction("getName()") == encodeArgs("abc"));
+	BOOST_CHECK(callContractFunction("getFlag()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getName()") == encodeArgs("abc"));
+}
+
+BOOST_AUTO_TEST_CASE(constructor_arguments_external)
+{
+	char const* sourceCode = R"(
+		contract Main {
+			bytes3 name;
+			bool flag;
+
+			function Main(bytes3 x, bool f) {
+				name = x;
+				flag = f;
+			}
+			function getName() returns (bytes3 ret) { return name; }
+			function getFlag() returns (bool ret) { return flag; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main", encodeArgs("abc", true));
+	BOOST_CHECK(callContractFunction("getFlag()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getName()") == encodeArgs("abc"));
 }
 
 BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
@@ -4166,7 +4186,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 			}
 		}
 	)";
-	BOOST_CHECK(compileAndRunWthoutCheck(sourceCode, 0, "A").empty());
+	BOOST_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "A").empty());
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed)
