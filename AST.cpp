@@ -382,19 +382,19 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	return *m_interfaceFunctionList;
 }
 
-unique_ptr<string> ContractDefinition::devDocumentation() const
+string const& ContractDefinition::devDocumentation() const
 {
-	return unique_ptr<string>(new string(m_devDocumentation));
+	return m_devDocumentation;
+}
+
+string const& ContractDefinition::userDocumentation() const
+{
+	return m_userDocumentation;
 }
 
 void ContractDefinition::setDevDocumentation(string const& _devDocumentation)
 {
 	m_devDocumentation = _devDocumentation;
-}
-
-std::unique_ptr<string> ContractDefinition::userDocumentation() const
-{
-	return unique_ptr<string>(new string(m_userDocumentation));
 }
 
 void ContractDefinition::setUserDocumentation(string const& _userDocumentation)

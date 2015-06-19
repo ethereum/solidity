@@ -16,7 +16,7 @@ InterfaceHandler::InterfaceHandler()
 	m_lastTag = DocTagType::None;
 }
 
-unique_ptr<string> InterfaceHandler::getDocumentation(
+string InterfaceHandler::getDocumentation(
 	ContractDefinition const& _contractDef,
 	DocumentationType _type
 )
@@ -34,10 +34,10 @@ unique_ptr<string> InterfaceHandler::getDocumentation(
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
-	return nullptr;
+	return "";
 }
 
-unique_ptr<string> InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
+string InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 {
 	Json::Value abi(Json::arrayValue);
 
@@ -103,10 +103,10 @@ unique_ptr<string> InterfaceHandler::getABIInterface(ContractDefinition const& _
 		event["inputs"] = params;
 		abi.append(event);
 	}
-	return unique_ptr<string>(new string(Json::FastWriter().write(abi)));
+	return Json::FastWriter().write(abi);
 }
 
-unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
+string InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
 {
 	string ret = "contract " + _contractDef.getName() + "{";
 
@@ -140,10 +140,10 @@ unique_ptr<string> InterfaceHandler::getABISolidityInterface(ContractDefinition 
 		ret += ";";
 	}
 
-	return unique_ptr<string>(new string(ret + "}"));
+	return ret + "}";
 }
 
-void InterfaceHandler::generateUserDocumentation(ContractDefinition& _contractDef)
+string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
 {
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
@@ -165,20 +165,10 @@ void InterfaceHandler::generateUserDocumentation(ContractDefinition& _contractDe
 	}
 	doc["methods"] = methods;
 
-	_contractDef.setUserDocumentation(Json::StyledWriter().write(doc));
+	return Json::StyledWriter().write(doc);
 }
 
-unique_ptr<string> InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
-{
-	return _contractDef.userDocumentation();
-}
-
-unique_ptr<string> InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
-{
-	return _contractDef.devDocumentation();
-}
-
-void InterfaceHandler::generateDevDocumentation(ContractDefinition& _contractDef)
+string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
 {
 	// LTODO: Somewhere in this function warnings for mismatch of param names
 	// should be thrown
@@ -239,7 +229,7 @@ void InterfaceHandler::generateDevDocumentation(ContractDefinition& _contractDef
 	}
 	doc["methods"] = methods;
 
-	_contractDef.setDevDocumentation(Json::StyledWriter().write(doc));
+	return Json::StyledWriter().write(doc);
 }
 
 /* -- private -- */

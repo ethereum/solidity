@@ -281,10 +281,10 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* getFallbackFunction() const;
 
-	std::unique_ptr<std::string> userDocumentation() const;
+	std::string const& userDocumentation() const;
 	void setUserDocumentation(std::string const& _userDocumentation);
 
-	std::unique_ptr<std::string> devDocumentation() const;
+	std::string const& devDocumentation() const;
 	void setDevDocumentation(std::string const& _devDocumentation);
 
 private:

@@ -129,11 +129,12 @@ void CompilerStack::parse()
 	m_parseSuccessful = true;
 }
 
-void CompilerStack::parseNatspecDocumentation(ContractDefinition& _contract)
+void CompilerStack::parseNatspecDocumentation(ContractDefinition const& _contract)
 {
 	InterfaceHandler interfaceHandler;
-	interfaceHandler.generateDevDocumentation(_contract);
-	interfaceHandler.generateUserDocumentation(_contract);
+	string devDoc =_contract.devDocumentation();
+	devDoc = interfaceHandler.devDocumentation(_contract);
+	//interfaceHandler.generateUserDocumentation(_contract);
 }
 
 void CompilerStack::parse(string const& _sourceCode)
@@ -256,8 +257,11 @@ string const& CompilerStack::getMetadata(string const& _contractName, Documentat
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 	}
+	auto resPtr =  ((*doc) ? *(*doc) : contract.interfaceHandler->getDocumentation(*contract.contract, _type));
+
 	if (!*doc)
-		*doc = contract.interfaceHandler->getDocumentation(*contract.contract, _type);
+		*doc = (unique_ptr<string>(new string(contract.interfaceHandler->getDocumentation(*contract.contract, _type))));
+
 	return *(*doc);
 }
 

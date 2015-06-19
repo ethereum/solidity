@@ -65,9 +65,8 @@ public:
 	/// @param _contractDef The contract definition
 	/// @param _type        The type of the documentation. Can be one of the
 	///                     types provided by @c DocumentationType
-	/// @return             A unique pointer contained string with the json
-	///                     representation of provided type
-	std::unique_ptr<std::string> getDocumentation(
+	/// @return             A string with the json representation of provided type
+	std::string getDocumentation(
 		ContractDefinition const& _contractDef,
 		DocumentationType _type
 	);
@@ -75,24 +74,18 @@ public:
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json
 	///                     representation of the contract's ABI Interface
-	std::unique_ptr<std::string> getABIInterface(ContractDefinition const& _contractDef);
-	std::unique_ptr<std::string> getABISolidityInterface(ContractDefinition const& _contractDef);
-	/// Generate the User documentation of the contract
-	/// @param _contractDef The contract definition
-	void generateUserDocumentation(ContractDefinition& _contractDef);
+	std::string getABIInterface(ContractDefinition const& _contractDef);
+	std::string getABISolidityInterface(ContractDefinition const& _contractDef);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json
 	///                     representation of the contract's user documentation
-	std::unique_ptr<std::string> userDocumentation(ContractDefinition const& _contractDef);
-	/// Genereates the Developer's documentation of the contract
-	/// @param _contractDef The contract definition
-	void generateDevDocumentation(ContractDefinition& _contractDef);
+	std::string userDocumentation(ContractDefinition const& _contractDef);
 	/// Genereates the Developer's documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A unique pointer contained string with the json
 	///                     representation of the contract's developer documentation
-	std::unique_ptr<std::string> devDocumentation(ContractDefinition const& _contractDef);
+	std::string devDocumentation(ContractDefinition const& _contractDef);
 
 private:
 	void resetUser();
