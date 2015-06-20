@@ -24,6 +24,7 @@
 #include <functional>
 #include <string>
 #include <json/json.h>
+#include <libdevcore/TransientDirectory.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/ClientBase.h>
 
@@ -76,6 +77,14 @@ struct ParallelClientBaseFixture: public ClientBaseFixture, public ParallelFixtu
 struct JsonRpcFixture: public ClientBaseFixture
 {
 	
+};
+
+struct MoveNonceToTempDir
+{
+	MoveNonceToTempDir();
+	~MoveNonceToTempDir();
+private:
+	TransientDirectory m_dir;
 };
 
 }

@@ -1726,7 +1726,7 @@ BOOST_AUTO_TEST_CASE(fixed_bytes_in_calls)
 	BOOST_CHECK(callContractFunction("callHelper(bytes2,bool)", string("\0a", 2), true) == encodeArgs(string("\0a\0\0\0", 5)));
 }
 
-BOOST_AUTO_TEST_CASE(constructor_arguments)
+BOOST_AUTO_TEST_CASE(constructor_arguments_internal)
 {
 	char const* sourceCode = R"(
 		contract Helper {
@@ -1749,8 +1749,28 @@ BOOST_AUTO_TEST_CASE(constructor_arguments)
 			function getName() returns (bytes3 ret) { return h.getName(); }
 		})";
 	compileAndRun(sourceCode, 0, "Main");
-	BOOST_REQUIRE(callContractFunction("getFlag()") == encodeArgs(true));
-	BOOST_REQUIRE(callContractFunction("getName()") == encodeArgs("abc"));
+	BOOST_CHECK(callContractFunction("getFlag()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getName()") == encodeArgs("abc"));
+}
+
+BOOST_AUTO_TEST_CASE(constructor_arguments_external)
+{
+	char const* sourceCode = R"(
+		contract Main {
+			bytes3 name;
+			bool flag;
+
+			function Main(bytes3 x, bool f) {
+				name = x;
+				flag = f;
+			}
+			function getName() returns (bytes3 ret) { return name; }
+			function getFlag() returns (bool ret) { return flag; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main", encodeArgs("abc", true));
+	BOOST_CHECK(callContractFunction("getFlag()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("getName()") == encodeArgs("abc"));
 }
 
 BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
@@ -4166,7 +4186,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 			}
 		}
 	)";
-	BOOST_CHECK(compileAndRunWthoutCheck(sourceCode, 0, "A").empty());
+	BOOST_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "A").empty());
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed)
@@ -4243,9 +4263,9 @@ BOOST_AUTO_TEST_CASE(return_string)
 			function get1() returns (string r) {
 				return s;
 			}
-//			function get2() returns (string r) {
-//				r = s;
-//			}
+			function get2() returns (string r) {
+				r = s;
+			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Main");
@@ -4253,8 +4273,139 @@ BOOST_AUTO_TEST_CASE(return_string)
 	bytes args = encodeArgs(u256(0x20), u256(s.length()), s);
 	BOOST_REQUIRE(callContractFunction("set(string)", asString(args)) == encodeArgs());
 	BOOST_CHECK(callContractFunction("get1()") == args);
-//	BOOST_CHECK(callContractFunction("get2()") == args);
-//	BOOST_CHECK(callContractFunction("s()") == args);
+	BOOST_CHECK(callContractFunction("get2()") == args);
+	BOOST_CHECK(callContractFunction("s()") == args);
+}
+
+BOOST_AUTO_TEST_CASE(return_multiple_strings_of_various_sizes)
+{
+	char const* sourceCode = R"(
+		contract Main {
+			string public s1;
+			string public s2;
+			function set(string _s1, uint x, string _s2) external returns (uint) {
+				s1 = _s1;
+				s2 = _s2;
+				return x;
+			}
+			function get() returns (string r1, string r2) {
+				r1 = s1;
+				r2 = s2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main");
+	string s1(
+		"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+		"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+		"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+		"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+	);
+	string s2(
+		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
+		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
+		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
+		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
+		"ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ"
+	);
+	vector<size_t> lengthes{0, 30, 32, 63, 64, 65, 210, 300};
+	for (auto l1: lengthes)
+		for (auto l2: lengthes)
+		{
+			bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
+			bytes dyn2 = encodeArgs(u256(l2), s2.substr(0, l2));
+			bytes args = encodeArgs(u256(0x60), u256(l1), u256(0x60 + dyn1.size())) + dyn1 + dyn2;
+			BOOST_REQUIRE(
+				callContractFunction("set(string,uint256,string)", asString(args)) ==
+				encodeArgs(u256(l1))
+			);
+			bytes result = encodeArgs(u256(0x40), u256(0x40 + dyn1.size())) + dyn1 + dyn2;
+			BOOST_CHECK(callContractFunction("get()") == result);
+			BOOST_CHECK(callContractFunction("s1()") == encodeArgs(0x20) + dyn1);
+			BOOST_CHECK(callContractFunction("s2()") == encodeArgs(0x20) + dyn2);
+		}
+}
+
+BOOST_AUTO_TEST_CASE(accessor_involving_strings)
+{
+	char const* sourceCode = R"(
+		contract Main {
+			struct stringData { string a; uint b; string c; }
+			mapping(uint => stringData[]) public data;
+			function set(uint x, uint y, string a, uint b, string c) external returns (bool) {
+				data[x].length = y + 1;
+				data[x][y].a = a;
+				data[x][y].b = b;
+				data[x][y].c = c;
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main");
+	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+	string s2("ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ");
+	bytes s1Data = encodeArgs(u256(s1.length()), s1);
+	bytes s2Data = encodeArgs(u256(s2.length()), s2);
+	u256 b = 765;
+	u256 x = 7;
+	u256 y = 123;
+	bytes args = encodeArgs(x, y, u256(0xa0), b, u256(0xa0 + s1Data.size()), s1Data, s2Data);
+	bytes result = encodeArgs(u256(0x60), b, u256(0x60 + s1Data.size()), s1Data, s2Data);
+	BOOST_REQUIRE(callContractFunction("set(uint256,uint256,string,uint256,string)", asString(args)) == encodeArgs(true));
+	BOOST_REQUIRE(callContractFunction("data(uint256,uint256)", x, y) == result);
+}
+
+BOOST_AUTO_TEST_CASE(storage_array_ref)
+{
+	char const* sourceCode = R"(
+		contract BinarySearch {
+		  /// Finds the position of _value in the sorted list _data.
+		  /// Note that "internal" is important here, because storage references only work for internal or private functions
+		  function find(uint[] storage _data, uint _value) internal returns (uint o_position) {
+			return find(_data, 0, _data.length, _value);
+		  }
+		  function find(uint[] storage _data, uint _begin, uint _len, uint _value) private returns (uint o_position) {
+			if (_len == 0 || (_len == 1 && _data[_begin] != _value))
+			  return uint(-1); // failure
+			uint halfLen = _len / 2;
+			uint v = _data[_begin + halfLen];
+			if (_value < v)
+			  return find(_data, _begin, halfLen, _value);
+			else if (_value > v)
+			  return find(_data, _begin + halfLen + 1, halfLen - 1, _value);
+			else
+			  return _begin + halfLen;
+		  }
+		}
+
+		contract Store is BinarySearch {
+			uint[] data;
+			function add(uint v) {
+				data.length++;
+				data[data.length - 1] = v;
+			}
+			function find(uint v) returns (uint) {
+				return find(data, v);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Store");
+	BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(-1)));
+	BOOST_REQUIRE(callContractFunction("add(uint256)", u256(7)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(11)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(17)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(27)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(31)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(32)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(66)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("add(uint256)", u256(177)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(7)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(27)) == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(32)) == encodeArgs(u256(5)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(176)) == encodeArgs(u256(-1)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(0)) == encodeArgs(u256(-1)));
+	BOOST_CHECK(callContractFunction("find(uint256)", u256(400)) == encodeArgs(u256(-1)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
