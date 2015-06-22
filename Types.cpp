@@ -822,16 +822,16 @@ string ArrayType::toString(bool _short) const
 TypePointer ArrayType::externalType() const
 {
 	if (m_arrayKind != ArrayKind::Ordinary)
-		return shared_from_this();
+		return this->copyForLocation(DataLocation::Memory, true);
 	if (!m_baseType->externalType())
 		return TypePointer();
 	if (m_baseType->getCategory() == Category::Array && m_baseType->isDynamicallySized())
 		return TypePointer();
 
 	if (isDynamicallySized())
-		return std::make_shared<ArrayType>(DataLocation::CallData, m_baseType->externalType());
+		return std::make_shared<ArrayType>(DataLocation::Memory, m_baseType->externalType());
 	else
-		return std::make_shared<ArrayType>(DataLocation::CallData, m_baseType->externalType(), m_length);
+		return std::make_shared<ArrayType>(DataLocation::Memory, m_baseType->externalType(), m_length);
 }
 
 TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -903,7 +903,7 @@ MemberList const& ContractType::getMembers() const
 			for (auto const& it: m_contract.getInterfaceFunctions())
 				members.push_back(MemberList::Member(
 					it.second->getDeclaration().getName(),
-					it.second,
+					it.second->removeDynamicReturnTypes(),
 					&it.second->getDeclaration()
 				));
 		m_members.reset(new MemberList(members));
@@ -1084,7 +1084,11 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{
 		paramNames.push_back(var->getName());
-		params.push_back(var->getType());
+		if (_isInternal)
+			params.push_back(var->getType());
+		else
+			params.push_back(var->getType()->externalType());
+		solAssert(!!params.back(), "Function argument type not valid in this context.");
 	}
 	retParams.reserve(_function.getReturnParameters().size());
 	retParamNames.reserve(_function.getReturnParameters().size());
@@ -1284,6 +1288,7 @@ MemberList const& FunctionType::getMembers() const
 						strings(),
 						Location::SetValue,
 						false,
+						nullptr,
 						m_gasSet,
 						m_valueSet
 					)
@@ -1300,6 +1305,7 @@ MemberList const& FunctionType::getMembers() const
 							strings(),
 							Location::SetGas,
 							false,
+							nullptr,
 							m_gasSet,
 							m_valueSet
 						)
@@ -1404,8 +1410,32 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_returnParameterNames,
 		m_location,
 		m_arbitraryParameters,
+		m_declaration,
 		m_gasSet || _setGas,
 		m_valueSet || _setValue
+	);
+}
+
+FunctionTypePointer FunctionType::removeDynamicReturnTypes() const
+{
+	//@todo make this more intelligent once we support destructuring assignments
+	TypePointers returnParameterTypes;
+	vector<string> returnParameterNames;
+	if (!m_returnParameterTypes.empty() && m_returnParameterTypes.front()->getCalldataEncodedSize() > 0)
+	{
+		returnParameterTypes.push_back(m_returnParameterTypes.front());
+		returnParameterNames.push_back(m_returnParameterNames.front());
+	}
+	return make_shared<FunctionType>(
+		m_parameterTypes,
+		returnParameterTypes,
+		m_parameterNames,
+		returnParameterNames,
+		m_location,
+		m_arbitraryParameters,
+		m_declaration,
+		m_gasSet,
+		m_valueSet
 	);
 }
 

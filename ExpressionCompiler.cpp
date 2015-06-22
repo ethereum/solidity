@@ -457,6 +457,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					strings(),
 					Location::Bare,
 					false,
+					nullptr,
 					true,
 					true
 				),
@@ -1004,9 +1005,14 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		_functionType.getReturnParameterTypes().empty() ?
 		nullptr :
 		_functionType.getReturnParameterTypes().front().get();
-	unsigned retSize = firstReturnType ? firstReturnType->getCalldataEncodedSize() : 0;
+	unsigned retSize = 0;
 	if (returnSuccessCondition)
 		retSize = 0; // return value actually is success condition
+	else if (firstReturnType)
+	{
+		retSize = firstReturnType->getCalldataEncodedSize();
+		solAssert(retSize > 0, "Unable to return dynamic type from external call.");
+	}
 
 	// Evaluate arguments.
 	TypePointers argumentTypes;
@@ -1123,6 +1129,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		//@todo manually update free memory pointer if we accept returning memory-stored objects
 		utils().fetchFreeMemoryPointer();
 		utils().loadFromMemoryDynamic(*firstReturnType, false, true, false);
+
 	}
 }
 

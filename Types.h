@@ -669,17 +669,19 @@ public:
 		strings _returnParameterNames = strings(),
 		Location _location = Location::Internal,
 		bool _arbitraryParameters = false,
+		Declaration const* _declaration = nullptr,
 		bool _gasSet = false,
 		bool _valueSet = false
 	):
-		m_parameterTypes (_parameterTypes),
-		m_returnParameterTypes (_returnParameterTypes),
-		m_parameterNames (_parameterNames),
-		m_returnParameterNames (_returnParameterNames),
-		m_location (_location),
-		m_arbitraryParameters (_arbitraryParameters),
-		m_gasSet (_gasSet),
-		m_valueSet (_valueSet)
+		m_parameterTypes(_parameterTypes),
+		m_returnParameterTypes(_returnParameterTypes),
+		m_parameterNames(_parameterNames),
+		m_returnParameterNames(_returnParameterNames),
+		m_location(_location),
+		m_arbitraryParameters(_arbitraryParameters),
+		m_gasSet(_gasSet),
+		m_valueSet(_valueSet),
+		m_declaration(_declaration)
 	{}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
@@ -732,6 +734,11 @@ public:
 	/// @returns a copy of this type, where gas or value are set manually. This will never set one
 	/// of the parameters to fals.
 	TypePointer copyAndSetGasOrValue(bool _setGas, bool _setValue) const;
+
+	/// @returns a copy of this function type where all return parameters of dynamic size are removed.
+	/// This is needed if external functions are called internally, as they cannot return dynamic
+	/// values.
+	FunctionTypePointer removeDynamicReturnTypes() const;
 
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
