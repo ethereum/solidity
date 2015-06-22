@@ -4401,38 +4401,6 @@ BOOST_AUTO_TEST_CASE(bytes_in_function_calls)
 		}
 }
 
-BOOST_AUTO_TEST_CASE(return_bytes_external)
-{
-	char const* sourceCode = R"(
-		contract Main {
-			bytes s1;
-			function set(bytes _s1) external returns (uint _r, bytes _r1) {
-				_r = _s1.length;
-				s1 = this.setStageTwo(_s1);
-				_r1 = s1;
-			}
-			function setStageTwo(bytes _s1) returns (bytes) {
-				return this.setStageThree(_s1);
-			}
-			function setStageThree(bytes _s1) external returns (bytes) {
-				return _s1;
-			}
-		}
-	)";
-	compileAndRun(sourceCode, 0, "Main");
-	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
-	vector<size_t> lengthes{0, 31, 64, 65};
-	for (auto l1: lengthes)
-	{
-		bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
-		bytes args1 = encodeArgs(u256(0x20)) + dyn1;
-		BOOST_REQUIRE(
-			callContractFunction("set(bytes)", asString(args1)) ==
-			encodeArgs(u256(l1), u256(0x40)) + dyn1
-		);
-	}
-}
-
 BOOST_AUTO_TEST_CASE(return_bytes_internal)
 {
 	char const* sourceCode = R"(
