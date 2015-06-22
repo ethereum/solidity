@@ -42,19 +42,29 @@ class ExecutionFramework
 public:
 	ExecutionFramework() { g_logVerbosity = 0; }
 
-	bytes const& compileAndRunWthoutCheck(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
+	bytes const& compileAndRunWithoutCheck(
+		std::string const& _sourceCode,
+		u256 const& _value = 0,
+		std::string const& _contractName = "",
+		bytes const& _arguments = bytes()
+	)
 	{
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
 		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
 		bytes code = m_compiler.getBytecode(_contractName);
-		sendMessage(code, true, _value);
+		sendMessage(code + _arguments, true, _value);
 		return m_output;
 	}
 
-	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
+	bytes const& compileAndRun(
+		std::string const& _sourceCode,
+		u256 const& _value = 0,
+		std::string const& _contractName = "",
+		bytes const& _arguments = bytes()
+	)
 	{
-		compileAndRunWthoutCheck(_sourceCode, _value, _contractName);
+		compileAndRunWithoutCheck(_sourceCode, _value, _contractName, _arguments);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
