@@ -822,16 +822,16 @@ string ArrayType::toString(bool _short) const
 TypePointer ArrayType::externalType() const
 {
 	if (m_arrayKind != ArrayKind::Ordinary)
-		return this->copyForLocation(DataLocation::Memory, true);
+		return this->copyForLocation(DataLocation::CallData, true);
 	if (!m_baseType->externalType())
 		return TypePointer();
 	if (m_baseType->getCategory() == Category::Array && m_baseType->isDynamicallySized())
 		return TypePointer();
 
 	if (isDynamicallySized())
-		return std::make_shared<ArrayType>(DataLocation::Memory, m_baseType->externalType());
+		return std::make_shared<ArrayType>(DataLocation::CallData, m_baseType->externalType());
 	else
-		return std::make_shared<ArrayType>(DataLocation::Memory, m_baseType->externalType(), m_length);
+		return std::make_shared<ArrayType>(DataLocation::CallData, m_baseType->externalType(), m_length);
 }
 
 TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -903,7 +903,7 @@ MemberList const& ContractType::getMembers() const
 			for (auto const& it: m_contract.getInterfaceFunctions())
 				members.push_back(MemberList::Member(
 					it.second->getDeclaration().getName(),
-					it.second->removeDynamicReturnTypes(),
+					it.second->asMemberFunction(),
 					&it.second->getDeclaration()
 				));
 		m_members.reset(new MemberList(members));
@@ -1084,11 +1084,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 	for (ASTPointer<VariableDeclaration> const& var: _function.getParameters())
 	{
 		paramNames.push_back(var->getName());
-		if (_isInternal)
-			params.push_back(var->getType());
-		else
-			params.push_back(var->getType()->externalType());
-		solAssert(!!params.back(), "Function argument type not valid in this context.");
+		params.push_back(var->getType());
 	}
 	retParams.reserve(_function.getReturnParameters().size());
 	retParamNames.reserve(_function.getReturnParameters().size());
@@ -1416,8 +1412,18 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 	);
 }
 
-FunctionTypePointer FunctionType::removeDynamicReturnTypes() const
+FunctionTypePointer FunctionType::asMemberFunction() const
 {
+	TypePointers parameterTypes;
+	for (auto const& t: m_parameterTypes)
+	{
+		auto refType = dynamic_cast<ReferenceType const*>(t.get());
+		if (refType && refType->location() == DataLocation::CallData)
+			parameterTypes.push_back(refType->copyForLocation(DataLocation::Memory, false));
+		else
+			parameterTypes.push_back(t);
+	}
+
 	//@todo make this more intelligent once we support destructuring assignments
 	TypePointers returnParameterTypes;
 	vector<string> returnParameterNames;
@@ -1427,7 +1433,7 @@ FunctionTypePointer FunctionType::removeDynamicReturnTypes() const
 		returnParameterNames.push_back(m_returnParameterNames.front());
 	}
 	return make_shared<FunctionType>(
-		m_parameterTypes,
+		parameterTypes,
 		returnParameterTypes,
 		m_parameterNames,
 		returnParameterNames,

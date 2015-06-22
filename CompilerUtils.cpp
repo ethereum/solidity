@@ -135,7 +135,7 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 			m_context << u256(0) << u256(identityContractAddress);
 			//@TODO do not use ::CALL if less than 32 bytes?
 			//@todo in production, we should not have to pair c_callNewAccountGas.
-			m_context << u256(eth::c_callGas + 10 + eth::c_callNewAccountGas) << eth::Instruction::GAS;
+			m_context << u256(eth::c_callGas + 15 + eth::c_callNewAccountGas) << eth::Instruction::GAS;
 			m_context << eth::Instruction::SUB << eth::Instruction::CALL;
 			m_context << eth::Instruction::POP; // ignore return value
 

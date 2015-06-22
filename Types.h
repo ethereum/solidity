@@ -735,10 +735,11 @@ public:
 	/// of the parameters to fals.
 	TypePointer copyAndSetGasOrValue(bool _setGas, bool _setValue) const;
 
-	/// @returns a copy of this function type where all return parameters of dynamic size are removed.
-	/// This is needed if external functions are called internally, as they cannot return dynamic
-	/// values.
-	FunctionTypePointer removeDynamicReturnTypes() const;
+	/// @returns a copy of this function type where all return parameters of dynamic size are
+	/// removed and the location of reference types is changed from CallData to Memory.
+	/// This is needed if external functions are called on other contracts, as they cannot return
+	/// dynamic values.
+	FunctionTypePointer asMemberFunction() const;
 
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);

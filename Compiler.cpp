@@ -163,14 +163,14 @@ void Compiler::appendConstructor(FunctionDefinition const& _constructor)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _constructor);
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
-	unsigned argumentSize = 0;
-	for (ASTPointer<VariableDeclaration> const& var: _constructor.getParameters())
-		argumentSize += var->getType()->getCalldataEncodedSize();
-
-	if (argumentSize > 0)
+	if (!_constructor.getParameters().empty())
 	{
 		CompilerUtils(m_context).fetchFreeMemoryPointer();
-		m_context << u256(argumentSize) << eth::Instruction::DUP1;
+		m_context.appendProgramSize(); // program itself
+		// CODESIZE is program plus manually added arguments
+		m_context << eth::Instruction::CODESIZE << eth::Instruction::SUB;
+		// stack: <memptr> <argument size>
+		m_context << eth::Instruction::DUP1;
 		m_context.appendProgramSize();
 		m_context << eth::Instruction::DUP4 << eth::Instruction::CODECOPY;
 		m_context << eth::Instruction::ADD;
@@ -265,8 +265,9 @@ void Compiler::appendCalldataUnpacker(
 			{
 				solAssert(arrayType.location() == DataLocation::Memory, "");
 				// compute data pointer
+				m_context << eth::Instruction::DUP1 << eth::Instruction::MLOAD;
 				//@todo once we support nested arrays, this offset needs to be dynamic.
-				m_context << eth::Instruction::DUP1 << _startOffset << eth::Instruction::ADD;
+				m_context << _startOffset << eth::Instruction::ADD;
 				m_context << eth::Instruction::SWAP1 << u256(0x20) << eth::Instruction::ADD;
 			}
 			else
