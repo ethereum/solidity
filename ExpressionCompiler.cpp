@@ -724,8 +724,8 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			case DataLocation::Storage:
 				setLValue<StorageArrayLength>(_memberAccess, type);
 				break;
-			default:
-				solAssert(false, "Unsupported array location.");
+			case DataLocation::Memory:
+				m_context << eth::Instruction::MLOAD;
 				break;
 			}
 		break;
