@@ -4355,6 +4355,168 @@ BOOST_AUTO_TEST_CASE(accessor_involving_strings)
 	BOOST_REQUIRE(callContractFunction("data(uint256,uint256)", x, y) == result);
 }
 
+BOOST_AUTO_TEST_CASE(bytes_in_function_calls)
+{
+	char const* sourceCode = R"(
+		contract Main {
+			string public s1;
+			string public s2;
+			function set(string _s1, uint x, string _s2) returns (uint) {
+				s1 = _s1;
+				s2 = _s2;
+				return x;
+			}
+			function setIndirectFromMemory(string _s1, uint x, string _s2) returns (uint) {
+				return this.set(_s1, x, _s2);
+			}
+			function setIndirectFromCalldata(string _s1, uint x, string _s2) external returns (uint) {
+				return this.set(_s1, x, _s2);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main");
+	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+	string s2("ABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZABCDEFGHIJKLMNOPQRSTUVXYZ");
+	vector<size_t> lengthes{0, 31, 64, 65};
+	for (auto l1: lengthes)
+		for (auto l2: lengthes)
+		{
+			bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
+			bytes dyn2 = encodeArgs(u256(l2), s2.substr(0, l2));
+			bytes args1 = encodeArgs(u256(0x60), u256(l1), u256(0x60 + dyn1.size())) + dyn1 + dyn2;
+			BOOST_REQUIRE(
+				callContractFunction("setIndirectFromMemory(string,uint256,string)", asString(args1)) ==
+				encodeArgs(u256(l1))
+			);
+			BOOST_CHECK(callContractFunction("s1()") == encodeArgs(0x20) + dyn1);
+			BOOST_CHECK(callContractFunction("s2()") == encodeArgs(0x20) + dyn2);
+			// swapped
+			bytes args2 = encodeArgs(u256(0x60), u256(l1), u256(0x60 + dyn2.size())) + dyn2 + dyn1;
+			BOOST_REQUIRE(
+				callContractFunction("setIndirectFromCalldata(string,uint256,string)", asString(args2)) ==
+				encodeArgs(u256(l1))
+			);
+			BOOST_CHECK(callContractFunction("s1()") == encodeArgs(0x20) + dyn2);
+			BOOST_CHECK(callContractFunction("s2()") == encodeArgs(0x20) + dyn1);
+		}
+}
+
+BOOST_AUTO_TEST_CASE(return_bytes_internal)
+{
+	char const* sourceCode = R"(
+		contract Main {
+			bytes s1;
+			function doSet(bytes _s1) returns (bytes _r1) {
+				s1 = _s1;
+				_r1 = s1;
+			}
+			function set(bytes _s1) external returns (uint _r, bytes _r1) {
+				_r1 = doSet(_s1);
+				_r = _r1.length;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main");
+	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+	vector<size_t> lengthes{0, 31, 64, 65};
+	for (auto l1: lengthes)
+	{
+		bytes dyn1 = encodeArgs(u256(l1), s1.substr(0, l1));
+		bytes args1 = encodeArgs(u256(0x20)) + dyn1;
+		BOOST_REQUIRE(
+			callContractFunction("set(bytes)", asString(args1)) ==
+			encodeArgs(u256(l1), u256(0x40)) + dyn1
+		);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(bytes_index_access_memory)
+{
+	char const* sourceCode = R"(
+		contract Main {
+			function f(bytes _s1, uint i1, uint i2, uint i3) returns (byte c1, byte c2, byte c3) {
+				c1 = _s1[i1];
+				c2 = intern(_s1, i2);
+				c3 = internIndirect(_s1)[i3];
+			}
+			function intern(bytes _s1, uint i) returns (byte c) {
+				return _s1[i];
+			}
+			function internIndirect(bytes _s1) returns (bytes) {
+				return _s1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Main");
+	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+	bytes dyn1 = encodeArgs(u256(s1.length()), s1);
+	bytes args1 = encodeArgs(u256(0x80), u256(3), u256(4), u256(5)) + dyn1;
+	BOOST_REQUIRE(
+		callContractFunction("f(bytes,uint256,uint256,uint256)", asString(args1)) ==
+		encodeArgs(string{s1[3]}, string{s1[4]}, string{s1[5]})
+	);
+}
+
+BOOST_AUTO_TEST_CASE(bytes_in_constructors_unpacker)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			uint public m_x;
+			bytes public m_s;
+			function Test(uint x, bytes s) {
+				m_x = x;
+				m_s = s;
+			}
+		}
+	)";
+	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+	bytes dyn1 = encodeArgs(u256(s1.length()), s1);
+	u256 x = 7;
+	bytes args1 = encodeArgs(x, u256(0x40)) + dyn1;
+	compileAndRun(sourceCode, 0, "Test", args1);
+	BOOST_REQUIRE(callContractFunction("m_x()") == encodeArgs(x));
+	BOOST_REQUIRE(callContractFunction("m_s()") == encodeArgs(u256(0x20)) + dyn1);
+}
+
+BOOST_AUTO_TEST_CASE(bytes_in_constructors_packer)
+{
+	char const* sourceCode = R"(
+		contract Base {
+			uint public m_x;
+			bytes m_s;
+			function Base(uint x, bytes s) {
+				m_x = x;
+				m_s = s;
+			}
+			function part(uint i) returns (byte) {
+				return m_s[i];
+			}
+		}
+		contract Main is Base {
+			function Main(bytes s, uint x) Base(x, s){}//f(s)) {}
+			function f(bytes s) returns (bytes) {
+				return s;
+			}
+		}
+		contract Creator {
+			function f(uint x, bytes s) returns (uint r, byte ch) {
+				var c = new Main(s, x);
+				r = c.m_x();
+				ch = c.part(x);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Creator");
+	string s1("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz");
+	bytes dyn1 = encodeArgs(u256(s1.length()), s1);
+	u256 x = 7;
+	bytes args1 = encodeArgs(x, u256(0x40)) + dyn1;
+	BOOST_REQUIRE(
+		callContractFunction("f(uint256,bytes)", asString(args1)) ==
+		encodeArgs(x, string{s1[unsigned(x)]})
+	);
+}
+
 BOOST_AUTO_TEST_CASE(storage_array_ref)
 {
 	char const* sourceCode = R"(
