@@ -4517,6 +4517,105 @@ BOOST_AUTO_TEST_CASE(bytes_in_constructors_packer)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(arrays_from_and_to_storage)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			uint24[] public data;
+			function set(uint24[] _data) returns (uint) {
+				data = _data;
+				return data.length;
+			}
+			function get() returns (uint24[]) {
+				return data;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	vector<u256> data{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+	BOOST_REQUIRE(
+		callContractFunction("set(uint24[])", u256(0x20), u256(data.size()), data) ==
+		encodeArgs(u256(data.size()))
+	);
+	BOOST_CHECK(callContractFunction("data(uint256)", u256(7)) == encodeArgs(u256(8)));
+	BOOST_CHECK(callContractFunction("data(uint256)", u256(15)) == encodeArgs(u256(16)));
+	BOOST_CHECK(callContractFunction("data(uint256)", u256(18)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(0x20), u256(data.size()), data));
+}
+
+BOOST_AUTO_TEST_CASE(arrays_complex_from_and_to_storage)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			uint24[3][] public data;
+			function set(uint24[3][] _data) returns (uint) {
+				data = _data;
+				return data.length;
+			}
+			function get() returns (uint24[3][]) {
+				return data;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	vector<u256> data{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+	BOOST_REQUIRE(
+		callContractFunction("set(uint24[3][])", u256(0x20), u256(data.size() / 3), data) ==
+		encodeArgs(u256(data.size() / 3))
+	);
+	BOOST_CHECK(callContractFunction("data(uint256,uint256)", u256(2), u256(2)) == encodeArgs(u256(9)));
+	BOOST_CHECK(callContractFunction("data(uint256,uint256)", u256(5), u256(1)) == encodeArgs(u256(17)));
+	BOOST_CHECK(callContractFunction("data(uint256,uint256)", u256(6), u256(0)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("get()") == encodeArgs(u256(0x20), u256(data.size() / 3), data));
+}
+
+BOOST_AUTO_TEST_CASE(arrays_complex_memory_index_access)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function set(uint24[3][] _data, uint a, uint b) returns (uint l, uint e) {
+				l = _data.length;
+				e = _data[a][b];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	vector<u256> data{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+	BOOST_REQUIRE(callContractFunction(
+			"set(uint24[3][],uint256,uint256)",
+			u256(0x60),
+			u256(3),
+			u256(2),
+			u256(data.size() / 3),
+			data
+	) == encodeArgs(u256(data.size() / 3), u256(data[3 * 3 + 2])));
+}
+
+BOOST_AUTO_TEST_CASE(bytes_memory_index_access)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function set(bytes _data, uint i) returns (uint l, byte c) {
+				l = _data.length;
+				c = _data[i];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	string data("abcdefgh");
+	BOOST_REQUIRE(callContractFunction(
+			"set(bytes,uint256)",
+			u256(0x40),
+			u256(3),
+			u256(data.size()),
+			data
+	) == encodeArgs(u256(data.size()), string("d")));
+}
+
 BOOST_AUTO_TEST_CASE(storage_array_ref)
 {
 	char const* sourceCode = R"(
