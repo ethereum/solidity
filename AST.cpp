@@ -175,24 +175,40 @@ void ContractDefinition::checkDuplicateFunctions() const
 
 void ContractDefinition::checkAbstractFunctions()
 {
-	map<string, bool> functions;
+	// Mapping from name to function definition (exactly one per argument type equality class) and
+	// flag to indicate whether it is fully implemented.
+	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
+	map<string, vector<FunTypeAndFlag>> functions;
 
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(getLinearizedBaseContracts()))
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
 		{
-			string const& name = function->getName();
-			if (!function->isFullyImplemented() && functions.count(name) && functions[name])
-				BOOST_THROW_EXCEPTION(function->createTypeError("Redeclaring an already implemented function as abstract"));
-			functions[name] = function->isFullyImplemented();
+			auto& overloads = functions[function->getName()];
+			FunctionTypePointer funType = make_shared<FunctionType>(*function);
+			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
+			{
+				return funType->hasEqualArgumentTypes(*_funAndFlag.first);
+			});
+			if (it == overloads.end())
+				overloads.push_back(make_pair(funType, function->isFullyImplemented()));
+			else if (it->second)
+			{
+				if (!function->isFullyImplemented())
+					BOOST_THROW_EXCEPTION(function->createTypeError("Redeclaring an already implemented function as abstract"));
+			}
+			else if (function->isFullyImplemented())
+				it->second = true;
 		}
 
+	// Set to not fully implemented if at least one flag is false.
 	for (auto const& it: functions)
-		if (!it.second)
-		{
-			setFullyImplemented(false);
-			break;
-		}
+		for (auto const& funAndFlag: it.second)
+			if (!funAndFlag.second)
+			{
+				setFullyImplemented(false);
+				return;
+			}
 }
 
 void ContractDefinition::checkAbstractConstructors()
