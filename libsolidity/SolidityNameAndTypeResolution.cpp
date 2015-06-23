@@ -403,6 +403,23 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 	BOOST_CHECK(derived->getDefinedFunctions()[0]->isFullyImplemented());
 }
 
+BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract base { function foo(bool); }
+		contract derived is base { function foo(uint) {} }
+		)";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
+	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->getNodes();
+	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[0].get());
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	BOOST_REQUIRE(base);
+	BOOST_CHECK(!base->isFullyImplemented());
+	BOOST_REQUIRE(derived);
+	BOOST_CHECK(!derived->isFullyImplemented());
+}
+
 BOOST_AUTO_TEST_CASE(create_abstract_contract)
 {
 	ASTPointer<SourceUnit> sourceUnit;
