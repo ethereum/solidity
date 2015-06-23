@@ -15,11 +15,21 @@ FakeHttpProvider2.prototype.injectResultList = function (list) {
 FakeHttpProvider2.prototype.getResponse = function () {
     var result = this.resultList[this.counter];
     this.counter++;
+
+    // add fallback result value
+    if(!result)
+        result = {
+            result: undefined
+        };
+
     if (result.type === 'batch') {
         this.injectBatchResults(result.result);
     } else {
         this.injectResult(result.result);
     }
+
+    this.counter = 0;
+
     return this.response;
 };
 

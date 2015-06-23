@@ -6,6 +6,9 @@ var FakeXMLHttpRequest = function () {
     this.readyState = 4;
     this.onreadystatechange = null;
     this.async = false;
+    this.headers = {
+        'Content-Type': 'text/plain'
+    };
 };
 
 FakeXMLHttpRequest.prototype.open = function (method, host, async) {
@@ -13,6 +16,10 @@ FakeXMLHttpRequest.prototype.open = function (method, host, async) {
     assert.notEqual(host, null);
     assert.equal(async === false || async === true, true);
     this.async = async;
+};
+
+FakeXMLHttpRequest.prototype.setRequestHeader = function(name, value) {
+    this.headers[name] = value;
 };
 
 FakeXMLHttpRequest.prototype.send = function (payload) {
