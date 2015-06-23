@@ -44,6 +44,10 @@ public:
 	/// Stack pre: source_reference [source_byte_offset/source_length] target_reference target_byte_offset
 	/// Stack post: target_reference target_byte_offset
 	void copyArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const;
+	/// Copies an array (which cannot be dynamically nested) from anywhere to memory.
+	/// Stack pre: memory_offset source_item
+	/// Stack post: memory_offest + length(padded)
+	void copyArrayToMemory(ArrayType const& _sourceType, bool _padToWordBoundaries = true) const;
 	/// Clears the given dynamic or static array.
 	/// Stack pre: storage_ref storage_byte_offset
 	/// Stack post:

@@ -721,9 +721,13 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	}
 	else
 	{
-		// Require that the base type is the same, not only convertible.
-		// This disallows assignment of nested arrays from storage to memory for now.
-		if (*getBaseType() != *convertTo.getBaseType())
+		// Conversion to storage pointer or to memory, we de not copy element-for-element here, so
+		// require that the base type is the same, not only convertible.
+		// This disallows assignment of nested dynamic arrays from storage to memory for now.
+		if (
+			*copyForLocationIfReference(location(), getBaseType()) !=
+			*copyForLocationIfReference(location(), convertTo.getBaseType())
+		)
 			return false;
 		if (isDynamicallySized() != convertTo.isDynamicallySized())
 			return false;
