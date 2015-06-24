@@ -674,6 +674,8 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType) const
 			m_context << _arrayType.getBaseType()->getCalldataEncodedSize() << eth::Instruction::MUL;
 		}
 		m_context << eth::Instruction::ADD;
+		//@todo we should also load if it is a reference type of dynamic length
+		// but we should apply special logic if we load from calldata.
 		if (_arrayType.getBaseType()->isValueType())
 			CompilerUtils(m_context).loadFromMemoryDynamic(
 				*_arrayType.getBaseType(),

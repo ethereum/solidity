@@ -46,7 +46,6 @@ public:
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(VariableDeclaration const& _declaration);
-	void addAndInitializeVariable(VariableDeclaration const& _declaration);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
 	bytes const& getCompiledContract(ContractDefinition const& _contract) const;

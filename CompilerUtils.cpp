@@ -411,7 +411,13 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			break;
 		}
 		default:
-			solAssert(false, "Invalid type conversion requested.");
+			solAssert(false,
+				"Invalid type conversion " +
+				_typeOnStack.toString(false) +
+				" to " +
+				_targetType.toString(false) +
+				" requested."
+			);
 		}
 		break;
 	}
