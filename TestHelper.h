@@ -32,21 +32,21 @@
 #include <libtestutils/Common.h>
 
 #ifdef NOBOOST
-	#define TBOOST_THROW_EXCEPTION(arg) throw dev::Exception();
 	#define TBOOST_REQUIRE(arg) if(arg == false) throw dev::Exception();
 	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
 	#define TBOOST_CHECK_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
 	#define TBOOST_CHECK(arg) if(arg == false) throw dev::Exception();
+	#define TBOOST_REQUIRE_MESSAGE(arg1, arg2) if(arg1 == false) throw dev::Exception();
 	#define TBOOST_CHECK_MESSAGE(arg1, arg2) if(arg1 == false) throw dev::Exception();
 	#define TBOOST_WARN_MESSAGE(arg1, arg2) throw dev::Exception();
 	#define TBOOST_ERROR(arg) throw dev::Exception();
 #else
-	#define TBOOST_THROW_EXCEPTION(arg) BOOST_THROW_EXCEPTION(arg)
 	#define TBOOST_REQUIRE(arg) BOOST_REQUIRE(arg)
 	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) BOOST_REQUIRE_EQUAL(arg1, arg2)
 	#define TBOOST_CHECK(arg) BOOST_CHECK(arg)
 	#define TBOOST_CHECK_EQUAL(arg1, arg2) BOOST_CHECK_EQUAL(arg1, arg2)
 	#define TBOOST_CHECK_MESSAGE(arg1, arg2) BOOST_CHECK_MESSAGE(arg1, arg2)
+	#define TBOOST_REQUIRE_MESSAGE(arg1, arg2) BOOST_REQUIRE_MESSAGE(arg1, arg2)
 	#define TBOOST_WARN_MESSAGE(arg1, arg2) BOOST_WARN_MESSAGE(arg1, arg2)
 	#define TBOOST_ERROR(arg) BOOST_ERROR(arg)
 #endif
