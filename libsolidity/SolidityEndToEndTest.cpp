@@ -4669,6 +4669,28 @@ BOOST_AUTO_TEST_CASE(storage_array_ref)
 	BOOST_CHECK(callContractFunction("find(uint256)", u256(400)) == encodeArgs(u256(-1)));
 }
 
+BOOST_AUTO_TEST_CASE(memory_types_initialisation)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			mapping(uint=>uint) data;
+			function stat() returns (uint[5])
+			{
+				data[2] = 3; // make sure to use some memory
+			}
+			function dyn() returns (uint[]) { stat(); }
+			function nested() returns (uint[3][]) { stat(); }
+			function nestedStat() returns (uint[3][7]) { stat(); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	BOOST_CHECK(callContractFunction("stat()") == encodeArgs(vector<u256>(5)));
+	BOOST_CHECK(callContractFunction("dyn()") == encodeArgs(u256(0x20), u256(0)));
+	BOOST_CHECK(callContractFunction("nested()") == encodeArgs(u256(0x20), u256(0)));
+	BOOST_CHECK(callContractFunction("nestedStat()") == encodeArgs(vector<u256>(3 * 7)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
