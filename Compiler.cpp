@@ -165,10 +165,26 @@ void Compiler::appendConstructor(FunctionDefinition const& _constructor)
 	// copy constructor arguments from code to memory and then to stack, they are supplied after the actual program
 	if (!_constructor.getParameters().empty())
 	{
+		unsigned argumentSize = 0;
+		for (ASTPointer<VariableDeclaration> const& var: _constructor.getParameters())
+			if (var->getType()->isDynamicallySized())
+			{
+				argumentSize = 0;
+				break;
+			}
+			else
+				argumentSize += var->getType()->getCalldataEncodedSize();
+
 		CompilerUtils(m_context).fetchFreeMemoryPointer();
-		m_context.appendProgramSize(); // program itself
-		// CODESIZE is program plus manually added arguments
-		m_context << eth::Instruction::CODESIZE << eth::Instruction::SUB;
+		if (argumentSize == 0)
+		{
+			// argument size is dynamic, use CODESIZE to determine it
+			m_context.appendProgramSize(); // program itself
+			// CODESIZE is program plus manually added arguments
+			m_context << eth::Instruction::CODESIZE << eth::Instruction::SUB;
+		}
+		else
+			m_context << u256(argumentSize);
 		// stack: <memptr> <argument size>
 		m_context << eth::Instruction::DUP1;
 		m_context.appendProgramSize();
