@@ -22,6 +22,7 @@
 #include <thread>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <libdevcrypto/Common.h>
 #include <libtestutils/Common.h>
 #include <libtestutils/BlockChainLoader.h>
 #include <libtestutils/FixedClient.h>
@@ -115,4 +116,14 @@ void ParallelClientBaseFixture::enumerateClients(std::function<void(Json::Value 
 			callback(_json, _client);
 		});
 	});
+}
+
+MoveNonceToTempDir::MoveNonceToTempDir()
+{
+	crypto::Nonce::setSeedFilePath(m_dir.path() + "/seed");
+}
+
+MoveNonceToTempDir::~MoveNonceToTempDir()
+{
+	crypto::Nonce::reset();
 }
