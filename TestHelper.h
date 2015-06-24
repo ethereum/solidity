@@ -224,7 +224,7 @@ public:
 	bool bigData = false;
 	bool wallet = false;
 	bool nonetwork = false;
-	bool nodag = false;
+	bool nodag = true;
 	/// @}
 
 	/// Get reference to options
