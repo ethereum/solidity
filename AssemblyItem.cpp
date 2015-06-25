@@ -110,10 +110,10 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		_out << " PushData " << hex << (unsigned)_item.data();
 		break;
 	case PushSub:
-		_out << " PushSub " << hex << h256(_item.data()).abridged();
+		_out << " PushSub " << hex << h256(_item.data()).abridgedMiddle();
 		break;
 	case PushSubSize:
-		_out << " PushSubSize " << hex << h256(_item.data()).abridged();
+		_out << " PushSubSize " << hex << h256(_item.data()).abridgedMiddle();
 		break;
 	case PushProgramSize:
 		_out << " PushProgramSize";

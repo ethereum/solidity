@@ -41,7 +41,7 @@ void Assembly::append(Assembly const& _a)
 		if (i.type() == Tag || i.type() == PushTag)
 			i.setData(i.data() + m_usedTags);
 		else if (i.type() == PushSub || i.type() == PushSubSize)
-			i.setData(i.data() + m_usedTags);
+			i.setData(i.data() + m_subs.size());
 		append(i);
 	}
 	m_deposit = newDeposit;
@@ -136,10 +136,10 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 				_out << "  PUSH [tag" << dec << i.data() << "]";
 			break;
 		case PushSub:
-			_out << "  PUSH [$" << h256(i.data()).abridged() << "]";
+			_out << "  PUSH [$" << h256(i.data()).abridgedMiddle() << "]";
 			break;
 		case PushSubSize:
-			_out << "  PUSH #[$" << h256(i.data()).abridged() << "]";
+			_out << "  PUSH #[$" << h256(i.data()).abridgedMiddle() << "]";
 			break;
 		case PushProgramSize:
 			_out << "  PUSHSIZE";
