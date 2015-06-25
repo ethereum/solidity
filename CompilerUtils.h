@@ -71,6 +71,8 @@ public:
 	void storeInMemory(unsigned _offset);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that. For arrays, only copies the data part.
+	/// @param _padToWordBoundaries if true, adds zeros to pad to multiple of 32 bytes. Array elements
+	/// are always padded (except for byte arrays), regardless of this parameter.
 	/// Stack pre: memory_offset value...
 	/// Stack post: (memory_offset+length)
 	void storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries = true);
@@ -92,6 +94,11 @@ public:
 		bool _padToWordBoundaries = true,
 		bool _copyDynamicDataInPlace = false
 	);
+
+	/// Uses a CALL to the identity contract to perform a memory-to-memory copy.
+	/// Stack pre: <size> <target> <source>
+	/// Stack post:
+	void memoryCopy();
 
 	/// Appends code for an implicit or explicit type conversion. This includes erasing higher
 	/// order bits (@see appendHighBitCleanup) when widening integer but also copy to memory

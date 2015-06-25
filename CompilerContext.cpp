@@ -65,15 +65,6 @@ void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
 	m_localVariables.erase(&_declaration);
 }
 
-void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
-{
-	LocationSetter locationSetter(*this, _declaration);
-	addVariable(_declaration);
-	int const size = _declaration.getType()->getSizeOnStack();
-	for (int i = 0; i < size; ++i)
-		*this << u256(0);
-}
-
 bytes const& CompilerContext::getCompiledContract(const ContractDefinition& _contract) const
 {
 	auto ret = m_compiledContracts.find(&_contract);

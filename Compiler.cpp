@@ -392,9 +392,9 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	}
 
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.getReturnParameters())
-		m_context.addAndInitializeVariable(*variable);
+		appendStackVariableInitialisation(*variable);
 	for (VariableDeclaration const* localVariable: _function.getLocalVariables())
-		m_context.addAndInitializeVariable(*localVariable);
+		appendStackVariableInitialisation(*localVariable);
 
 	if (_function.isConstructor())
 		if (auto c = m_context.getNextConstructor(dynamic_cast<ContractDefinition const&>(*_function.getScope())))
@@ -639,7 +639,7 @@ void Compiler::appendModifierOrFunctionCode()
 							  modifier.getParameters()[i]->getType());
 		}
 		for (VariableDeclaration const* localVariable: modifier.getLocalVariables())
-			m_context.addAndInitializeVariable(*localVariable);
+			appendStackVariableInitialisation(*localVariable);
 
 		unsigned const c_stackSurplus = CompilerUtils::getSizeOnStack(modifier.getParameters()) +
 										CompilerUtils::getSizeOnStack(modifier.getLocalVariables());
@@ -651,6 +651,13 @@ void Compiler::appendModifierOrFunctionCode()
 			m_context << eth::Instruction::POP;
 		m_stackCleanupForReturn -= c_stackSurplus;
 	}
+}
+
+void Compiler::appendStackVariableInitialisation(VariableDeclaration const& _variable)
+{
+	CompilerContext::LocationSetter location(m_context, _variable);
+	m_context.addVariable(_variable);
+	ExpressionCompiler(m_context).appendStackVariableInitialisation(*_variable.getType());
 }
 
 void Compiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)

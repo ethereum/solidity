@@ -721,9 +721,13 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	}
 	else
 	{
-		// Require that the base type is the same, not only convertible.
-		// This disallows assignment of nested arrays from storage to memory for now.
-		if (*getBaseType() != *convertTo.getBaseType())
+		// Conversion to storage pointer or to memory, we de not copy element-for-element here, so
+		// require that the base type is the same, not only convertible.
+		// This disallows assignment of nested dynamic arrays from storage to memory for now.
+		if (
+			*copyForLocationIfReference(location(), getBaseType()) !=
+			*copyForLocationIfReference(location(), convertTo.getBaseType())
+		)
 			return false;
 		if (isDynamicallySized() != convertTo.isDynamicallySized())
 			return false;
@@ -822,16 +826,16 @@ string ArrayType::toString(bool _short) const
 TypePointer ArrayType::externalType() const
 {
 	if (m_arrayKind != ArrayKind::Ordinary)
-		return this->copyForLocation(DataLocation::CallData, true);
+		return this->copyForLocation(DataLocation::Memory, true);
 	if (!m_baseType->externalType())
 		return TypePointer();
 	if (m_baseType->getCategory() == Category::Array && m_baseType->isDynamicallySized())
 		return TypePointer();
 
 	if (isDynamicallySized())
-		return std::make_shared<ArrayType>(DataLocation::CallData, m_baseType->externalType());
+		return std::make_shared<ArrayType>(DataLocation::Memory, m_baseType->externalType());
 	else
-		return std::make_shared<ArrayType>(DataLocation::CallData, m_baseType->externalType(), m_length);
+		return std::make_shared<ArrayType>(DataLocation::Memory, m_baseType->externalType(), m_length);
 }
 
 TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -968,6 +972,22 @@ bool StructType::operator==(Type const& _other) const
 		return false;
 	StructType const& other = dynamic_cast<StructType const&>(_other);
 	return ReferenceType::operator==(other) && other.m_struct == m_struct;
+}
+
+unsigned StructType::getCalldataEncodedSize(bool _padded) const
+{
+	unsigned size = 0;
+	for (auto const& member: getMembers())
+		if (!member.type->canLiveOutsideStorage())
+			return 0;
+		else
+		{
+			unsigned memberSize = member.type->getCalldataEncodedSize(_padded);
+			if (memberSize == 0)
+				return 0;
+			size += memberSize;
+		}
+	return size;
 }
 
 u256 StructType::getStorageSize() const

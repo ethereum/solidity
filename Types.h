@@ -542,6 +542,7 @@ public:
 	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override;
 	virtual unsigned getSizeOnStack() const override { return 2; }

@@ -25,6 +25,7 @@
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Params.h>
 #include <libsolidity/ArrayUtils.h>
+#include <libsolidity/LValue.h>
 
 using namespace std;
 
@@ -101,130 +102,10 @@ void CompilerUtils::storeInMemory(unsigned _offset)
 void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
 {
 	if (_type.getCategory() == Type::Category::Array)
-	{
-		auto const& type = dynamic_cast<ArrayType const&>(_type);
-		solAssert(type.isByteArray(), "Non byte arrays not yet implemented here.");
-
-		if (type.location() == DataLocation::CallData)
-		{
-			if (!type.isDynamicallySized())
-				m_context << type.getLength();
-			// stack: target source_offset source_len
-			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::DUP5;
-			// stack: target source_offset source_len source_len source_offset target
-			m_context << eth::Instruction::CALLDATACOPY;
-			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
-			m_context << eth::Instruction::SWAP2 << eth::Instruction::POP << eth::Instruction::POP;
-		}
-		else if (type.location() == DataLocation::Memory)
-		{
-			// memcpy using the built-in contract
-			ArrayUtils(m_context).retrieveLength(type);
-			if (type.isDynamicallySized())
-			{
-				// change pointer to data part
-				m_context << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD;
-				m_context << eth::Instruction::SWAP1;
-			}
-			// stack: <target> <source> <length>
-			// stack for call: outsize target size source value contract gas
-			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4;
-			m_context << eth::Instruction::DUP2 << eth::Instruction::DUP5;
-			m_context << u256(0) << u256(identityContractAddress);
-			//@TODO do not use ::CALL if less than 32 bytes?
-			//@todo in production, we should not have to pair c_callNewAccountGas.
-			m_context << u256(eth::c_callGas + 15 + eth::c_callNewAccountGas) << eth::Instruction::GAS;
-			m_context << eth::Instruction::SUB << eth::Instruction::CALL;
-			m_context << eth::Instruction::POP; // ignore return value
-
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
-			// stack: <target> <length>
-
-			if (_padToWordBoundaries && (type.isDynamicallySized() || (type.getLength()) % 32 != 0))
-			{
-				// stack: <target> <length>
-				m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2 << eth::Instruction::ADD;
-				// stack: <length> <target + length>
-				m_context << eth::Instruction::SWAP1 << u256(31) << eth::Instruction::AND;
-				// stack: <target + length> <remainder = length % 32>
-				eth::AssemblyItem skip = m_context.newTag();
-				if (type.isDynamicallySized())
-				{
-					m_context << eth::Instruction::DUP1 << eth::Instruction::ISZERO;
-					m_context.appendConditionalJumpTo(skip);
-				}
-				// round off, load from there.
-				// stack <target + length> <remainder = length % 32>
-				m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3;
-				m_context << eth::Instruction::SUB;
-				// stack: target+length remainder <target + length - remainder>
-				m_context << eth::Instruction::DUP1 << eth::Instruction::MLOAD;
-				// Now we AND it with ~(2**(8 * (32 - remainder)) - 1)
-				m_context << u256(1);
-				m_context << eth::Instruction::DUP4 << u256(32) << eth::Instruction::SUB;
-				// stack: ...<v> 1 <32 - remainder>
-				m_context << u256(0x100) << eth::Instruction::EXP << eth::Instruction::SUB;
-				m_context << eth::Instruction::NOT << eth::Instruction::AND;
-				// stack: target+length remainder target+length-remainder <v & ...>
-				m_context << eth::Instruction::DUP2 << eth::Instruction::MSTORE;
-				// stack: target+length remainder target+length-remainder
-				m_context << u256(32) << eth::Instruction::ADD;
-				// stack: target+length remainder <new_padded_end>
-				m_context << eth::Instruction::SWAP2 << eth::Instruction::POP;
-
-				if (type.isDynamicallySized())
-					m_context << skip.tag();
-				// stack <target + "length"> <remainder = length % 32>
-				m_context << eth::Instruction::POP;
-			}
-			else
-				// stack: <target> <length>
-				m_context << eth::Instruction::ADD;
-		}
-		else
-		{
-			solAssert(type.location() == DataLocation::Storage, "");
-			m_context << eth::Instruction::POP; // remove offset, arrays always start new slot
-			m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
-			// stack here: memory_offset storage_offset length_bytes
-			// jump to end if length is zero
-			m_context << eth::Instruction::DUP1 << eth::Instruction::ISZERO;
-			eth::AssemblyItem loopEnd = m_context.newTag();
-			m_context.appendConditionalJumpTo(loopEnd);
-			// compute memory end offset
-			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD << eth::Instruction::SWAP2;
-			// actual array data is stored at SHA3(storage_offset)
-			m_context << eth::Instruction::SWAP1;
-			CompilerUtils(m_context).computeHashStatic();
-			m_context << eth::Instruction::SWAP1;
-
-			// stack here: memory_end_offset storage_data_offset memory_offset
-			eth::AssemblyItem loopStart = m_context.newTag();
-			m_context << loopStart;
-			// load and store
-			m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
-			m_context << eth::Instruction::DUP2 << eth::Instruction::MSTORE;
-			// increment storage_data_offset by 1
-			m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD;
-			// increment memory offset by 32
-			m_context << eth::Instruction::SWAP1 << u256(32) << eth::Instruction::ADD;
-			// check for loop condition
-			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::GT;
-			m_context.appendConditionalJumpTo(loopStart);
-			// stack here: memory_end_offset storage_data_offset memory_offset
-			if (_padToWordBoundaries)
-			{
-				// memory_end_offset - start is the actual length (we want to compute the ceil of).
-				// memory_offset - start is its next multiple of 32, but it might be off by 32.
-				// so we compute: memory_end_offset += (memory_offset - memory_end_offest) & 31
-				m_context << eth::Instruction::DUP3 << eth::Instruction::SWAP1 << eth::Instruction::SUB;
-				m_context << u256(31) << eth::Instruction::AND;
-				m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
-				m_context << eth::Instruction::SWAP2;
-			}
-			m_context << loopEnd << eth::Instruction::POP << eth::Instruction::POP;
-		}
-	}
+		ArrayUtils(m_context).copyArrayToMemory(
+			dynamic_cast<ArrayType const&>(_type),
+			_padToWordBoundaries
+		);
 	else
 	{
 		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
@@ -337,6 +218,21 @@ void CompilerUtils::encodeToMemory(
 	// remove unneeded stack elements (and retain memory pointer)
 	m_context << eth::swapInstruction(argSize + dynPointers + 1);
 	popStackSlots(argSize + dynPointers + 1);
+}
+
+void CompilerUtils::memoryCopy()
+{
+	// Stack here: size target source
+	// stack for call: outsize target size source value contract gas
+	//@TODO do not use ::CALL if less than 32 bytes?
+	m_context << eth::Instruction::DUP3 << eth::Instruction::SWAP1;
+	m_context << u256(0) << u256(identityContractAddress);
+	// compute gas costs
+	m_context << u256(32) << eth::Instruction::DUP5 << u256(31) << eth::Instruction::ADD;
+	m_context << eth::Instruction::DIV << u256(eth::c_identityWordGas) << eth::Instruction::MUL;
+	m_context << u256(eth::c_identityGas) << eth::Instruction::ADD;
+	m_context << eth::Instruction::CALL;
+	m_context << eth::Instruction::POP; // ignore return value
 }
 
 void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
@@ -513,7 +409,14 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			break;
 		}
 		default:
-			solAssert(false, "Invalid type conversion requested.");
+			solAssert(
+				false,
+				"Invalid type conversion " +
+				_typeOnStack.toString(false) +
+				" to " +
+				_targetType.toString(false) +
+				" requested."
+			);
 		}
 		break;
 	}
