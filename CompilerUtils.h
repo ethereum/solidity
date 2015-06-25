@@ -65,16 +65,10 @@ public:
 		bool _padToWordBoundaries = true,
 		bool _keepUpdatedMemoryOffset = true
 	);
-	/// Stores data from stack in memory.
+	/// Stores a 256 bit integer from stack in memory.
 	/// @param _offset offset in memory
 	/// @param _type type of the data on the stack
-	/// @param _padToWordBoundaries if true, pad the data to word (32 byte) boundaries
-	/// @returns the number of bytes written to memory (can be different from _bytes if
-	///          _padToWordBoundaries is true)
-	unsigned storeInMemory(unsigned _offset,
-		Type const& _type = IntegerType(256),
-		bool _padToWordBoundaries = false
-	);
+	void storeInMemory(unsigned _offset);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
 	/// and also updates that. For arrays, only copies the data part.
 	/// Stack pre: memory_offset value...
@@ -124,10 +118,8 @@ public:
 	static unsigned getSizeOnStack(std::vector<T> const& _variables);
 	static unsigned getSizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
 
-	/// Appends code that computes tha SHA3 hash of the topmost stack element of type @a _type.
-	/// If @a _pad is set, padds the type to muliples of 32 bytes.
-	/// @note Only works for types of fixed size.
-	void computeHashStatic(Type const& _type = IntegerType(256), bool _padToWordBoundaries = false);
+	/// Appends code that computes tha SHA3 hash of the topmost stack element of 32 byte type.
+	void computeHashStatic();
 
 	/// Bytes we need to the start of call data.
 	///  - The size in bytes of the function (hash) identifier.
