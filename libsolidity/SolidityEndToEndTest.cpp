@@ -4691,6 +4691,53 @@ BOOST_AUTO_TEST_CASE(memory_types_initialisation)
 	BOOST_CHECK(callContractFunction("nestedStat()") == encodeArgs(vector<u256>(3 * 7)));
 }
 
+BOOST_AUTO_TEST_CASE(memory_arrays_index_access_write)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function set(uint24[3][4] x) {
+				x[2][2] = 1;
+				x[3][2] = 7;
+			}
+			function f() returns (uint24[3][4]){
+				uint24[3][4] memory data;
+				set(data);
+				return data;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	vector<u256> data(3 * 4);
+	data[3 * 2 + 2] = 1;
+	data[3 * 3 + 2] = 7;
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(data));
+}
+
+BOOST_AUTO_TEST_CASE(memory_arrays_dynamic_index_access_write)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			uint24[3][][4] data;
+			function set(uint24[3][][4] x) internal returns (uint24[3][][4]) {
+				x[1][2][2] = 1;
+				x[1][3][2] = 7;
+				return x;
+			}
+			function f() returns (uint24[3][]) {
+				data[1].length = 4;
+				return set(data)[1];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	vector<u256> data(3 * 4);
+	data[3 * 2 + 2] = 1;
+	data[3 * 3 + 2] = 7;
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x20), u256(4), data));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
