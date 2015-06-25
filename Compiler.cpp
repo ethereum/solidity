@@ -657,7 +657,7 @@ void Compiler::appendStackVariableInitialisation(VariableDeclaration const& _var
 {
 	CompilerContext::LocationSetter location(m_context, _variable);
 	m_context.addVariable(_variable);
-	ExpressionCompiler(m_context).appendStackVariableInitialisation(*_variable.getType());
+	CompilerUtils(m_context).pushZeroValue(*_variable.getType());
 }
 
 void Compiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)

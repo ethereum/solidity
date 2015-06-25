@@ -64,13 +64,6 @@ public:
 	/// Appends code to set a state variable to its initial value/expression.
 	void appendStateVariableInitialization(VariableDeclaration const& _varDecl);
 
-	/// Appends code to initialise a local variable.
-	/// If @a _toMemory is false, leaves the value on the stack. For memory references, this
-	/// allocates new memory.
-	/// If @a _toMemory is true, directly stores the data in the memory pos on the stack and
-	/// updates it.
-	void appendStackVariableInitialisation(Type const& _type, bool _toMemory = false);
-
 	/// Appends code for a State Variable accessor function
 	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);
 

@@ -39,6 +39,11 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 
 	// stack layout: [source_ref] [source_byte_off] [source length] target_ref target_byte_off (top)
 	solAssert(_targetType.location() == DataLocation::Storage, "");
+	if (_sourceType.location() == DataLocation::Memory)
+		solAssert(
+			_sourceType.getBaseType()->isValueType(),
+			"Copying arrays of non-value-types to storage not yet implemented."
+		);
 
 	IntegerType uint256(256);
 	Type const* targetBaseType = _targetType.isByteArray() ? &uint256 : &(*_targetType.getBaseType());
@@ -235,8 +240,9 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 {
 	solAssert(
 		_sourceType.getBaseType()->getCalldataEncodedSize() > 0,
-		"Nested arrays not yet implemented here."
+		"Nested dynamic arrays not implemented here."
 	);
+	CompilerUtils utils(m_context);
 	unsigned baseSize = 1;
 	if (!_sourceType.isByteArray())
 		// We always pad the elements, regardless of _padToWordBoundaries.
@@ -246,7 +252,7 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 	{
 		if (!_sourceType.isDynamicallySized())
 			m_context << _sourceType.getLength();
-		if (_sourceType.getBaseType()->getCalldataEncodedSize() > 1)
+		if (baseSize > 1)
 			m_context << u256(baseSize) << eth::Instruction::MUL;
 		// stack: target source_offset source_len
 		m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::DUP5;
@@ -257,8 +263,36 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 	}
 	else if (_sourceType.location() == DataLocation::Memory)
 	{
-		// memcpy using the built-in contract
 		retrieveLength(_sourceType);
+		// stack: target source length
+		if (!_sourceType.getBaseType()->isValueType())
+		{
+			// copy using a loop
+			m_context << u256(0) << eth::Instruction::SWAP3;
+			// stack: counter source length target
+			auto repeat = m_context.newTag();
+			m_context << repeat;
+			m_context << eth::Instruction::DUP2 << eth::Instruction::DUP5;
+			m_context << eth::Instruction::LT << eth::Instruction::ISZERO;
+			auto loopEnd = m_context.appendConditionalJump();
+			m_context << eth::Instruction::DUP3 << eth::Instruction::DUP5;
+			accessIndex(_sourceType, false);
+			MemoryItem(m_context, *_sourceType.getBaseType(), true).retrieveValue(SourceLocation(), true);
+			if (auto baseArray = dynamic_cast<ArrayType const*>(_sourceType.getBaseType().get()))
+				copyArrayToMemory(*baseArray, _padToWordBoundaries);
+			else
+				utils.storeInMemoryDynamic(*_sourceType.getBaseType());
+			m_context << eth::Instruction::SWAP3 << u256(1) << eth::Instruction::ADD;
+			m_context << eth::Instruction::SWAP3;
+			m_context.appendJumpTo(repeat);
+			m_context << loopEnd;
+			m_context << eth::Instruction::SWAP3;
+			utils.popStackSlots(3);
+			// stack: updated_target_pos
+			return;
+		}
+
+		// memcpy using the built-in contract
 		if (_sourceType.isDynamicallySized())
 		{
 			// change pointer to data part
@@ -271,7 +305,7 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 		// stack: <target> <source> <size>
 		//@TODO do not use ::CALL if less than 32 bytes?
 		m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::DUP4;
-		CompilerUtils(m_context).memoryCopy();
+		utils.memoryCopy();
 
 		m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 		// stack: <target> <size>
@@ -345,7 +379,7 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 		{
 			// actual array data is stored at SHA3(storage_offset)
 			m_context << eth::Instruction::SWAP1;
-			CompilerUtils(m_context).computeHashStatic();
+			utils.computeHashStatic();
 			m_context << eth::Instruction::SWAP1;
 		}
 
@@ -375,7 +409,10 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 			else
 				m_context << eth::Instruction::DUP2 << u256(0);
 			StorageItem(m_context, *_sourceType.getBaseType()).retrieveValue(SourceLocation(), true);
-			CompilerUtils(m_context).storeInMemoryDynamic(*_sourceType.getBaseType());
+			if (auto baseArray = dynamic_cast<ArrayType const*>(_sourceType.getBaseType().get()))
+				copyArrayToMemory(*baseArray, _padToWordBoundaries);
+			else
+				utils.storeInMemoryDynamic(*_sourceType.getBaseType());
 			// increment storage_data_offset and byte offset
 			if (haveByteOffset)
 				incrementByteOffset(storageBytes, 2, 3);
@@ -387,7 +424,8 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 			}
 		}
 		// check for loop condition
-		m_context << eth::Instruction::DUP1 << eth::dupInstruction(haveByteOffset ? 5 : 4) << eth::Instruction::GT;
+		m_context << eth::Instruction::DUP1 << eth::dupInstruction(haveByteOffset ? 5 : 4);
+		m_context << eth::Instruction::GT;
 		m_context.appendConditionalJumpTo(loopStart);
 		// stack here: memory_end_offset storage_data_offset [storage_byte_offset] memory_offset
 		if (haveByteOffset)
@@ -597,12 +635,14 @@ void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) con
 	}
 	else
 	{
-		solAssert(
-			_arrayType.getBaseType()->getCalldataEncodedSize() > 0,
-			"Copying nested dynamic arrays not yet implemented."
-		);
 		if (!_arrayType.isByteArray())
-			m_context << _arrayType.getBaseType()->getCalldataEncodedSize() << eth::Instruction::MUL;
+		{
+			if (_arrayType.location() == DataLocation::Memory)
+				m_context << _arrayType.getBaseType()->memoryHeadSize();
+			else
+				m_context << _arrayType.getBaseType()->getCalldataEncodedSize();
+			m_context << eth::Instruction::MUL;
+		}
 		else if (_pad)
 			m_context << u256(31) << eth::Instruction::ADD
 				<< u256(32) << eth::Instruction::DUP1
@@ -632,7 +672,7 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
 	}
 }
 
-void ArrayUtils::accessIndex(ArrayType const& _arrayType) const
+void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) const
 {
 	DataLocation location = _arrayType.location();
 	eth::Instruction load =
@@ -640,19 +680,22 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType) const
 		location == DataLocation::Memory ? eth::Instruction::MLOAD :
 		eth::Instruction::CALLDATALOAD;
 
-	// retrieve length
-	if (!_arrayType.isDynamicallySized())
-		m_context << _arrayType.getLength();
-	else if (location == DataLocation::CallData)
-		// length is stored on the stack
-		m_context << eth::Instruction::SWAP1;
-	else
-		m_context << eth::Instruction::DUP2 << load;
-	// stack: <base_ref> <index> <length>
-	// check out-of-bounds access
-	m_context << eth::Instruction::DUP2 << eth::Instruction::LT << eth::Instruction::ISZERO;
-	// out-of-bounds access throws exception
-	m_context.appendConditionalJumpTo(m_context.errorTag());
+	if (_doBoundsCheck)
+	{
+		// retrieve length
+		if (!_arrayType.isDynamicallySized())
+			m_context << _arrayType.getLength();
+		else if (location == DataLocation::CallData)
+			// length is stored on the stack
+			m_context << eth::Instruction::SWAP1;
+		else
+			m_context << eth::Instruction::DUP2 << load;
+		// stack: <base_ref> <index> <length>
+		// check out-of-bounds access
+		m_context << eth::Instruction::DUP2 << eth::Instruction::LT << eth::Instruction::ISZERO;
+		// out-of-bounds access throws exception
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+	}
 
 	// stack: <base_ref> <index>
 	m_context << eth::Instruction::SWAP1;
@@ -671,18 +714,13 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType) const
 		if (!_arrayType.isByteArray())
 		{
 			m_context << eth::Instruction::SWAP1;
-			m_context << _arrayType.getBaseType()->getCalldataEncodedSize() << eth::Instruction::MUL;
+			if (location == DataLocation::CallData)
+				m_context << _arrayType.getBaseType()->getCalldataEncodedSize();
+			else
+				m_context << u256(_arrayType.memoryHeadSize());
+			m_context << eth::Instruction::MUL;
 		}
 		m_context << eth::Instruction::ADD;
-		//@todo we should also load if it is a reference type of dynamic length
-		// but we should apply special logic if we load from calldata.
-		if (_arrayType.getBaseType()->isValueType())
-			CompilerUtils(m_context).loadFromMemoryDynamic(
-				*_arrayType.getBaseType(),
-				location == DataLocation::CallData,
-				!_arrayType.isByteArray(),
-				false
-			);
 		break;
 	case DataLocation::Storage:
 		m_context << eth::Instruction::SWAP1;

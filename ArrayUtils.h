@@ -44,7 +44,11 @@ public:
 	/// Stack pre: source_reference [source_byte_offset/source_length] target_reference target_byte_offset
 	/// Stack post: target_reference target_byte_offset
 	void copyArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const;
-	/// Copies an array (which cannot be dynamically nested) from anywhere to memory.
+	/// Copies the data part of an array (which cannot be dynamically nested) from anywhere
+	/// to a given position in memory.
+	/// This always copies contained data as is (i.e. structs and fixed-size arrays are copied in
+	/// place as required by the ABI encoding). Use CompilerUtils::convertType if you want real
+	/// memory copies of nested arrays.
 	/// Stack pre: memory_offset source_item
 	/// Stack post: memory_offest + length(padded)
 	void copyArrayToMemory(ArrayType const& _sourceType, bool _padToWordBoundaries = true) const;
@@ -74,12 +78,11 @@ public:
 	/// Stack pre: reference (excludes byte offset for dynamic storage arrays)
 	/// Stack post: reference length
 	void retrieveLength(ArrayType const& _arrayType) const;
-	/// Retrieves the value at a specific index. If the location is storage, only retrieves the
-	/// position.
+	/// Performs bounds checking and returns a reference on the stack.
 	/// Stack pre: reference [length] index
-	/// Stack post for storage: slot byte_offset
-	/// Stack post for calldata: value
-	void accessIndex(ArrayType const& _arrayType) const;
+	/// Stack post (storage): storage_slot byte_offset
+	/// Stack post: memory/calldata_offset
+	void accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck = true) const;
 
 private:
 	/// Adds the given number of bytes to a storage byte offset counter and also increments

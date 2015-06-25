@@ -41,6 +41,10 @@ public:
 	void fetchFreeMemoryPointer();
 	/// Stores the free memory pointer from the stack.
 	void storeFreeMemoryPointer();
+	/// Allocates a number of bytes in memory as given on the stack.
+	/// Stack pre: <size>
+	/// Stack post: <mem_start>
+	void allocateMemory();
 	/// Appends code that transforms memptr to (memptr - free_memptr) memptr
 	void toSizeAfterFreeMemoryPointer();
 
@@ -70,7 +74,8 @@ public:
 	/// @param _type type of the data on the stack
 	void storeInMemory(unsigned _offset);
 	/// Dynamic version of @see storeInMemory, expects the memory offset below the value on the stack
-	/// and also updates that. For arrays, only copies the data part.
+	/// and also updates that. For reference types, only copies the data pointer. Fails for
+	/// non-memory-references.
 	/// @param _padToWordBoundaries if true, adds zeros to pad to multiple of 32 bytes. Array elements
 	/// are always padded (except for byte arrays), regardless of this parameter.
 	/// Stack pre: memory_offset value...
@@ -106,6 +111,10 @@ public:
 	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
 	/// necessary.
 	void convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
+
+	/// Creates a zero-value for the given type and puts it onto the stack. This might allocate
+	/// memory for memory references.
+	void pushZeroValue(Type const& _type);
 
 	/// Moves the value that is at the top of the stack to a stack variable.
 	void moveToStackVariable(VariableDeclaration const& _variable);

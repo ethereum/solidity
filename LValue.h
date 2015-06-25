@@ -98,6 +98,29 @@ private:
 };
 
 /**
+ * Reference to some item in memory.
+ */
+class MemoryItem: public LValue
+{
+public:
+	MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded);
+	virtual unsigned sizeOnStack() const override { return 1; }
+	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	virtual void storeValue(
+		Type const& _sourceType,
+		SourceLocation const& _location = SourceLocation(),
+		bool _move = false
+	) const override;
+	virtual void setToZero(
+		SourceLocation const& _location = SourceLocation(),
+		bool _removeReference = true
+	) const override;
+private:
+	/// Special flag to deal with byte array elements.
+	bool m_padded = false;
+};
+
+/**
  * Reference to some item in storage. On the stack this is <storage key> <offset_inside_value>,
  * where 0 <= offset_inside_value < 32 and an offset of i means that the value is multiplied
  * by 2**i before storing it.

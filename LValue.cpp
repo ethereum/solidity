@@ -82,6 +82,62 @@ void StackVariable::setToZero(SourceLocation const& _location, bool) const
 			<< eth::Instruction::POP;
 }
 
+MemoryItem::MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded):
+	LValue(_compilerContext, _type),
+	m_padded(_padded)
+{
+}
+
+void MemoryItem::retrieveValue(SourceLocation const&, bool _remove) const
+{
+	if (m_dataType.isValueType())
+	{
+		if (!_remove)
+			m_context << eth::Instruction::DUP1;
+		CompilerUtils(m_context).loadFromMemoryDynamic(m_dataType, false, m_padded, false);
+	}
+	else
+		m_context << eth::Instruction::MLOAD;
+}
+
+void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool _move) const
+{
+	CompilerUtils utils(m_context);
+	if (m_dataType.isValueType())
+	{
+		solAssert(_sourceType.isValueType(), "");
+		utils.moveIntoStack(_sourceType.getSizeOnStack());
+		utils.convertType(_sourceType, m_dataType, true);
+		if (!_move)
+		{
+			utils.moveToStackTop(m_dataType.getSizeOnStack());
+			utils.copyToStackTop(2, m_dataType.getSizeOnStack());
+		}
+		utils.storeInMemoryDynamic(m_dataType, m_padded);
+		m_context << eth::Instruction::POP;
+	}
+	else
+	{
+		solAssert(_sourceType == m_dataType, "Conversion not implemented for assignment to memory.");
+
+		solAssert(m_dataType.getSizeOnStack() == 1, "");
+		if (!_move)
+			m_context << eth::Instruction::DUP2 << eth::Instruction::SWAP1;
+		// stack: [value] value lvalue
+		// only store the reference
+		m_context << eth::Instruction::MSTORE;
+	}
+}
+
+void MemoryItem::setToZero(SourceLocation const&, bool _removeReference) const
+{
+	CompilerUtils utils(m_context);
+	if (!_removeReference)
+		m_context << eth::Instruction::DUP1;
+	utils.pushZeroValue(m_dataType);
+	utils.storeInMemoryDynamic(m_dataType, m_padded);
+	m_context << eth::Instruction::POP;
+}
 
 StorageItem::StorageItem(CompilerContext& _compilerContext, Declaration const& _declaration):
 	StorageItem(_compilerContext, *_declaration.getType())

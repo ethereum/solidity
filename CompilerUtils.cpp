@@ -54,6 +54,13 @@ void CompilerUtils::storeFreeMemoryPointer()
 	m_context << u256(freeMemoryPointer) << eth::Instruction::MSTORE;
 }
 
+void CompilerUtils::allocateMemory()
+{
+	fetchFreeMemoryPointer();
+	m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2 << eth::Instruction::ADD;
+	storeFreeMemoryPointer();
+}
+
 void CompilerUtils::toSizeAfterFreeMemoryPointer()
 {
 	fetchFreeMemoryPointer();
@@ -101,17 +108,20 @@ void CompilerUtils::storeInMemory(unsigned _offset)
 
 void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
 {
-	if (_type.getCategory() == Type::Category::Array)
-		ArrayUtils(m_context).copyArrayToMemory(
-			dynamic_cast<ArrayType const&>(_type),
-			_padToWordBoundaries
-		);
+	if (auto ref = dynamic_cast<ReferenceType const*>(&_type))
+	{
+		solAssert(ref->location() == DataLocation::Memory, "");
+		storeInMemoryDynamic(IntegerType(256), _padToWordBoundaries);
+	}
 	else
 	{
 		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
 		if (numBytes > 0)
 		{
-			solAssert(_type.getSizeOnStack() == 1, "Memory store of types with stack size != 1 not implemented.");
+			solAssert(
+				_type.getSizeOnStack() == 1,
+				"Memory store of types with stack size != 1 not implemented."
+			);
 			m_context << eth::Instruction::DUP2 << eth::Instruction::MSTORE;
 			m_context << u256(numBytes) << eth::Instruction::ADD;
 		}
@@ -164,7 +174,10 @@ void CompilerUtils::encodeToMemory(
 				type = _givenTypes[i]; // delay conversion
 			else
 				convertType(*_givenTypes[i], *targetType, true);
-			storeInMemoryDynamic(*type, _padToWordBoundaries);
+			if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
+				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
+			else
+				storeInMemoryDynamic(*type, _padToWordBoundaries);
 		}
 		stackPos += _givenTypes[i]->getSizeOnStack();
 	}
@@ -207,7 +220,7 @@ void CompilerUtils::encodeToMemory(
 			m_context << eth::swapInstruction(arrayType.getSizeOnStack() + 1) << eth::Instruction::POP;
 			// stack: ... <end_of_mem''> <value...>
 			// copy data part
-			storeInMemoryDynamic(arrayType, true);
+			ArrayUtils(m_context).copyArrayToMemory(arrayType, _padToWordBoundaries);
 			// stack: ... <end_of_mem'''>
 
 			thisDynPointer++;
@@ -349,63 +362,67 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			{
 				// stack: <source ref> (variably sized)
 				unsigned stackSize = typeOnStack.getSizeOnStack();
-				fetchFreeMemoryPointer();
-				moveIntoStack(stackSize);
-				// stack: <mem start> <source ref> (variably sized)
+				bool fromStorage = (typeOnStack.location() == DataLocation::Storage);
+				if (fromStorage)
+				{
+					stackSize--;
+					// remove storage offset, as requested by ArrayUtils::retrieveLength
+					m_context << eth::Instruction::POP;
+				}
+				ArrayUtils(m_context).retrieveLength(typeOnStack);
+
+				// allocate memory
+				// stack: <source ref> (variably sized) <length>
+				m_context << eth::Instruction::DUP1;
+				ArrayUtils(m_context).convertLengthToSize(targetType, true);
+				// stack: <source ref> (variably sized) <length> <size>
+				if (targetType.isDynamicallySized())
+					m_context << u256(0x20) << eth::Instruction::ADD;
+				allocateMemory();
+				// stack: <source ref> (variably sized) <length> <mem start>
+				m_context << eth::Instruction::DUP1;
+				moveIntoStack(2 + stackSize);
 				if (targetType.isDynamicallySized())
 				{
-					bool fromStorage = (typeOnStack.location() == DataLocation::Storage);
-					// store length
-					if (fromStorage)
-					{
-						stackSize--;
-						// remove storage offset, as requested by ArrayUtils::retrieveLength
-						m_context << eth::Instruction::POP;
-					}
-					ArrayUtils(m_context).retrieveLength(typeOnStack);
-					// Stack: <mem start> <source ref> <length>
-					m_context << eth::dupInstruction(2 + stackSize) << eth::Instruction::MSTORE;
-					m_context << eth::dupInstruction(1 + stackSize) << u256(0x20);
-					m_context << eth::Instruction::ADD;
-					moveIntoStack(stackSize);
-					if (fromStorage)
-					{
-						m_context << u256(0);
-						stackSize++;
-					}
-				}
-				else
-				{
-					m_context << eth::dupInstruction(1 + stackSize);
-					moveIntoStack(stackSize);
-				}
-				// Stack: <mem start> <mem data start> <value>
-				// Store data part.
-				storeInMemoryDynamic(typeOnStack);
-				// Stack <mem start> <mem end>
-				storeFreeMemoryPointer();
-			}
-			else if (typeOnStack.location() == DataLocation::CallData)
-			{
-				// Stack: <offset> [<length>]
-				// length is present if dynamically sized
-				fetchFreeMemoryPointer();
-				moveIntoStack(typeOnStack.getSizeOnStack());
-				// stack: memptr calldataoffset [<length>]
-				if (typeOnStack.isDynamicallySized())
-				{
-					solAssert(targetType.isDynamicallySized(), "");
-					m_context << eth::Instruction::DUP3 << eth::Instruction::DUP2;
+					m_context << eth::Instruction::DUP2;
 					storeInMemoryDynamic(IntegerType(256));
-					moveIntoStack(typeOnStack.getSizeOnStack());
+				}
+				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos>
+				if (targetType.getBaseType()->isValueType())
+				{
+					copyToStackTop(2 + stackSize, stackSize);
+					if (fromStorage)
+						m_context << u256(0); // add byte offset again
+					ArrayUtils(m_context).copyArrayToMemory(typeOnStack);
 				}
 				else
-					m_context << eth::Instruction::DUP2 << eth::Instruction::SWAP1;
-				// stack: mem_ptr mem_data_ptr calldataoffset [<length>]
-				storeInMemoryDynamic(typeOnStack);
-				storeFreeMemoryPointer();
+				{
+					m_context << u256(0) << eth::Instruction::SWAP1;
+					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
+					auto repeat = m_context.newTag();
+					m_context << repeat;
+					m_context << eth::Instruction::DUP3 << eth::Instruction::DUP3;
+					m_context << eth::Instruction::LT << eth::Instruction::ISZERO;
+					auto loopEnd = m_context.appendConditionalJump();
+					copyToStackTop(3 + stackSize, stackSize);
+					copyToStackTop(2 + stackSize, 1);
+					ArrayUtils(m_context).accessIndex(typeOnStack);
+					MemoryItem(m_context, *typeOnStack.getBaseType(), true).retrieveValue(
+						SourceLocation(),
+						true
+					);
+					convertType(*typeOnStack.getBaseType(), *targetType.getBaseType(), _cleanupNeeded);
+					storeInMemoryDynamic(*targetType.getBaseType(), true);
+					m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD;
+					m_context << eth::Instruction::SWAP1;
+					m_context.appendJumpTo(repeat);
+					m_context << loopEnd;
+					m_context << eth::Instruction::POP;
+				}
+				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos updated>
+				popStackSlots(2 + stackSize);
+				// Stack: <mem start>
 			}
-			// nothing to do for memory to memory
 			break;
 		}
 		default:
@@ -442,6 +459,57 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
 		break;
 	}
+}
+
+void CompilerUtils::pushZeroValue(const Type& _type)
+{
+	auto const* referenceType = dynamic_cast<ReferenceType const*>(&_type);
+	if (!referenceType || referenceType->location() == DataLocation::Storage)
+	{
+		for (size_t i = 0; i < _type.getSizeOnStack(); ++i)
+			m_context << u256(0);
+		return;
+	}
+	solAssert(referenceType->location() == DataLocation::Memory, "");
+
+	m_context << u256(max(32u, _type.getCalldataEncodedSize()));
+	allocateMemory();
+	m_context << eth::Instruction::DUP1;
+
+	if (auto structType = dynamic_cast<StructType const*>(&_type))
+		for (auto const& member: structType->getMembers())
+		{
+			pushZeroValue(*member.type);
+			storeInMemoryDynamic(*member.type);
+		}
+	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
+	{
+		if (arrayType->isDynamicallySized())
+		{
+			// zero length
+			m_context << u256(0);
+			storeInMemoryDynamic(IntegerType(256));
+		}
+		else if (arrayType->getLength() > 0)
+		{
+			m_context << arrayType->getLength() << eth::Instruction::SWAP1;
+			// stack: items_to_do memory_pos
+			auto repeat = m_context.newTag();
+			m_context << repeat;
+			pushZeroValue(*arrayType->getBaseType());
+			storeInMemoryDynamic(*arrayType->getBaseType());
+			m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::SWAP1;
+			m_context << eth::Instruction::SUB << eth::Instruction::SWAP1;
+			m_context << eth::Instruction::DUP2;
+			m_context.appendConditionalJumpTo(repeat);
+			m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+		}
+	}
+	else
+		solAssert(false, "Requested initialisation for unknown type: " + _type.toString());
+
+	// remove the updated memory pointer
+	m_context << eth::Instruction::POP;
 }
 
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
