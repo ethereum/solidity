@@ -91,13 +91,11 @@ void CompilerUtils::loadFromMemoryDynamic(
 	}
 }
 
-unsigned CompilerUtils::storeInMemory(unsigned _offset, Type const& _type, bool _padToWordBoundaries)
+void CompilerUtils::storeInMemory(unsigned _offset)
 {
-	solAssert(_type.getCategory() != Type::Category::Array, "Unable to statically store dynamic type.");
-	unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
+	unsigned numBytes = prepareMemoryStore(IntegerType(256), true);
 	if (numBytes > 0)
 		m_context << u256(_offset) << eth::Instruction::MSTORE;
-	return numBytes;
 }
 
 void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
@@ -599,11 +597,10 @@ unsigned CompilerUtils::getSizeOnStack(vector<shared_ptr<Type const>> const& _va
 	return size;
 }
 
-void CompilerUtils::computeHashStatic(Type const& _type, bool _padToWordBoundaries)
+void CompilerUtils::computeHashStatic()
 {
-	unsigned length = storeInMemory(0, _type, _padToWordBoundaries);
-	solAssert(length <= CompilerUtils::freeMemoryPointer, "");
-	m_context << u256(length) << u256(0) << eth::Instruction::SHA3;
+	storeInMemory(0);
+	m_context << u256(32) << u256(0) << eth::Instruction::SHA3;
 }
 
 unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)
