@@ -449,6 +449,7 @@ public:
 	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
 	virtual bool isDynamicallySized() const override { return m_hasDynamicLength; }
 	virtual u256 getStorageSize() const override;
+	virtual bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
 	virtual unsigned getSizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
 	virtual MemberList const& getMembers() const override
