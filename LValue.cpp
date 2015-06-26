@@ -69,17 +69,8 @@ void StackVariable::storeValue(Type const&, SourceLocation const& _location, boo
 
 void StackVariable::setToZero(SourceLocation const& _location, bool) const
 {
-	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset);
-	if (stackDiff > 16)
-		BOOST_THROW_EXCEPTION(
-			CompilerError() <<
-			errinfo_sourceLocation(_location) <<
-			errinfo_comment("Stack too deep, try removing local variables.")
-		);
-	solAssert(stackDiff >= m_size - 1, "");
-	for (unsigned i = 0; i < m_size; ++i)
-		m_context << u256(0) << eth::swapInstruction(stackDiff + 1 - i)
-			<< eth::Instruction::POP;
+	CompilerUtils(m_context).pushZeroValue(m_dataType);
+	storeValue(m_dataType, _location, true);
 }
 
 MemoryItem::MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded):

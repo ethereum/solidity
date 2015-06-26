@@ -679,10 +679,24 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::Struct:
 	{
 		StructType const& type = dynamic_cast<StructType const&>(*_memberAccess.getExpression().getType());
-		m_context << eth::Instruction::POP; // structs always align to new slot
-		pair<u256, unsigned> const& offsets = type.getStorageOffsetsOfMember(member);
-		m_context << offsets.first << eth::Instruction::ADD << u256(offsets.second);
-		setLValueToStorageItem(_memberAccess);
+		switch (type.location())
+		{
+		case DataLocation::Storage:
+		{
+			m_context << eth::Instruction::POP; // structs always align to new slot
+			pair<u256, unsigned> const& offsets = type.getStorageOffsetsOfMember(member);
+			m_context << offsets.first << eth::Instruction::ADD << u256(offsets.second);
+			setLValueToStorageItem(_memberAccess);
+			break;
+		}
+		case DataLocation::Memory:
+		{
+			solAssert(false, "Member access for memory structs not yet implemented.");
+			break;
+		}
+		default:
+			solAssert(false, "Illegal data location for struct.");
+		}
 		break;
 	}
 	case Type::Category::Enum:
