@@ -671,6 +671,23 @@ TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
 }
 
+TypePointer ReferenceType::unaryOperatorResult(Token::Value _operator) const
+{
+	if (_operator != Token::Delete)
+		return TypePointer();
+	// delete can be used on everything except calldata references or storage pointers
+	// (storage references are ok)
+	switch (location())
+	{
+	case DataLocation::CallData:
+		return TypePointer();
+	case DataLocation::Memory:
+		return make_shared<VoidType>();
+	case DataLocation::Storage:
+		return m_isPointer ? TypePointer() : make_shared<VoidType>();
+	}
+}
+
 TypePointer ReferenceType::copyForLocationIfReference(DataLocation _location, TypePointer const& _type)
 {
 	if (auto type = dynamic_cast<ReferenceType const*>(_type.get()))
@@ -736,13 +753,6 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 			return false;
 		return true;
 	}
-}
-
-TypePointer ArrayType::unaryOperatorResult(Token::Value _operator) const
-{
-	if (_operator == Token::Delete)
-		return make_shared<VoidType>();
-	return TypePointer();
 }
 
 bool ArrayType::operator==(Type const& _other) const
@@ -960,11 +970,6 @@ bool StructType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	if (convertTo.location() == DataLocation::CallData && location() != convertTo.location())
 		return false;
 	return this->m_struct == convertTo.m_struct;
-}
-
-TypePointer StructType::unaryOperatorResult(Token::Value _operator) const
-{
-	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
 }
 
 bool StructType::operator==(Type const& _other) const
