@@ -685,6 +685,8 @@ TypePointer ReferenceType::unaryOperatorResult(Token::Value _operator) const
 		return make_shared<VoidType>();
 	case DataLocation::Storage:
 		return m_isPointer ? TypePointer() : make_shared<VoidType>();
+	default:
+		solAssert(false, "");
 	}
 }
 
