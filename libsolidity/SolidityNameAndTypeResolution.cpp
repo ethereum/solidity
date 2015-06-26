@@ -1900,6 +1900,18 @@ BOOST_AUTO_TEST_CASE(storage_location_local_variables)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
 }
 
+BOOST_AUTO_TEST_CASE(no_mappings_in_memory_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				mapping(uint=>uint)[] memory x;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(assignment_mem_to_local_storage_variable)
 {
 	char const* sourceCode = R"(
@@ -1925,6 +1937,20 @@ BOOST_AUTO_TEST_CASE(storage_assign_to_different_local_variable)
 				uint[] storage y = data;
 				y = x;
 				// note that data = otherData works
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint[] data;
+			function f() {
+				var x = data;
+				delete x;
 			}
 		}
 	)";
