@@ -340,8 +340,10 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
 			{
+				if (!f->isPartOfExternalInterface())
+					continue;
 				string functionSignature = f->externalSignature();
-				if (f->isPartOfExternalInterface() && signaturesSeen.count(functionSignature) == 0)
+				if (signaturesSeen.count(functionSignature) == 0)
 				{
 					functionsSeen.insert(f->getName());
 					signaturesSeen.insert(functionSignature);

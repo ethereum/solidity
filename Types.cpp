@@ -827,15 +827,16 @@ TypePointer ArrayType::externalType() const
 {
 	if (m_arrayKind != ArrayKind::Ordinary)
 		return this->copyForLocation(DataLocation::Memory, true);
-	if (!m_baseType->externalType())
+	TypePointer baseExt = m_baseType->externalType();
+	if (!baseExt)
 		return TypePointer();
 	if (m_baseType->getCategory() == Category::Array && m_baseType->isDynamicallySized())
 		return TypePointer();
 
 	if (isDynamicallySized())
-		return std::make_shared<ArrayType>(DataLocation::Memory, m_baseType->externalType());
+		return std::make_shared<ArrayType>(DataLocation::Memory, baseExt);
 	else
-		return std::make_shared<ArrayType>(DataLocation::Memory, m_baseType->externalType(), m_length);
+		return std::make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
 }
 
 TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -1268,15 +1269,17 @@ FunctionTypePointer FunctionType::externalFunctionType() const
 
 	for (auto type: m_parameterTypes)
 	{
-		if (!type->externalType())
+		if (auto ext = type->externalType())
+			paramTypes.push_back(ext);
+		else
 			return FunctionTypePointer();
-		paramTypes.push_back(type->externalType());
 	}
 	for (auto type: m_returnParameterTypes)
 	{
-		if (!type->externalType())
+		if (auto ext = type->externalType())
+			retParamTypes.push_back(ext);
+		else
 			return FunctionTypePointer();
-		retParamTypes.push_back(type->externalType());
 	}
 	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_returnParameterNames, m_location, m_arbitraryParameters);
 }
