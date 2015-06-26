@@ -261,7 +261,7 @@ void Compiler::appendCalldataUnpacker(
 {
 	// We do not check the calldata size, everything is zero-paddedd
 
-	//@todo this does not yet support nested arrays
+	//@todo this does not yet support nested dynamic arrays
 
 	if (_startOffset == u256(-1))
 		_startOffset = u256(CompilerUtils::dataStartOffset);
@@ -279,6 +279,12 @@ void Compiler::appendCalldataUnpacker(
 			solAssert(!arrayType.getBaseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
 			if (_fromMemory)
 			{
+				solAssert(
+					arrayType.getBaseType()->isValueType(),
+					"Nested memory arrays not yet implemented here."
+				);
+				// @todo If base type is an array or struct, it is still calldata-style encoded, so
+				// we would have to convert it like below.
 				solAssert(arrayType.location() == DataLocation::Memory, "");
 				// compute data pointer
 				m_context << eth::Instruction::DUP1 << eth::Instruction::MLOAD;
@@ -311,6 +317,7 @@ void Compiler::appendCalldataUnpacker(
 				}
 				if (arrayType.location() == DataLocation::Memory)
 				{
+					// stack: calldata_ref [length] next_calldata
 					// copy to memory
 					// move calldata type up again
 					CompilerUtils(m_context).moveIntoStack(calldataType->getSizeOnStack());

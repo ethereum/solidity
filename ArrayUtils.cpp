@@ -39,11 +39,6 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 
 	// stack layout: [source_ref] [source_byte_off] [source length] target_ref target_byte_off (top)
 	solAssert(_targetType.location() == DataLocation::Storage, "");
-	if (_sourceType.location() == DataLocation::Memory)
-		solAssert(
-			_sourceType.getBaseType()->isValueType(),
-			"Copying arrays of non-value-types to storage not yet implemented."
-		);
 
 	IntegerType uint256(256);
 	Type const* targetBaseType = _targetType.isByteArray() ? &uint256 : &(*_targetType.getBaseType());
@@ -139,14 +134,14 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	if (sourceBaseType->getCategory() == Type::Category::Array)
 	{
 		solAssert(byteOffsetSize == 0, "Byte offset for array as base type.");
+		auto const& sourceBaseArrayType = dynamic_cast<ArrayType const&>(*sourceBaseType);
 		m_context << eth::Instruction::DUP3;
 		if (sourceIsStorage)
 			m_context << u256(0);
+		else if (sourceBaseArrayType.location() == DataLocation::Memory)
+			m_context << eth::Instruction::MLOAD;
 		m_context << eth::dupInstruction(sourceIsStorage ? 4 : 3) << u256(0);
-		copyArrayToStorage(
-			dynamic_cast<ArrayType const&>(*targetBaseType),
-			dynamic_cast<ArrayType const&>(*sourceBaseType)
-		);
+		copyArrayToStorage(dynamic_cast<ArrayType const&>(*targetBaseType), sourceBaseArrayType);
 		m_context << eth::Instruction::POP << eth::Instruction::POP;
 	}
 	else if (directCopy)
@@ -193,11 +188,18 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	if (haveByteOffsetSource)
 		incrementByteOffset(sourceBaseType->getStorageBytes(), 1, haveByteOffsetTarget ? 5 : 4);
 	else
+	{
+		m_context << eth::swapInstruction(2 + byteOffsetSize);
+		if (sourceIsStorage)
+			m_context << sourceBaseType->getStorageSize();
+		else if (_sourceType.location() == DataLocation::Memory)
+			m_context << sourceBaseType->memoryHeadSize();
+		else
+			m_context << sourceBaseType->getCalldataEncodedSize(true);
 		m_context
-			<< eth::swapInstruction(2 + byteOffsetSize)
-			<< (sourceIsStorage ? sourceBaseType->getStorageSize() : sourceBaseType->getCalldataEncodedSize())
 			<< eth::Instruction::ADD
 			<< eth::swapInstruction(2 + byteOffsetSize);
+	}
 	// increment target
 	if (haveByteOffsetTarget)
 		incrementByteOffset(targetBaseType->getStorageBytes(), byteOffsetSize, byteOffsetSize + 2);
@@ -696,6 +698,9 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 		// out-of-bounds access throws exception
 		m_context.appendConditionalJumpTo(m_context.errorTag());
 	}
+	else if (location == DataLocation::CallData && _arrayType.isDynamicallySized())
+		// remove length if present
+		m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 
 	// stack: <base_ref> <index>
 	m_context << eth::Instruction::SWAP1;

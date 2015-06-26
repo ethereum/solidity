@@ -390,6 +390,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos>
 				if (targetType.getBaseType()->isValueType())
 				{
+					solAssert(typeOnStack.getBaseType()->isValueType(), "");
 					copyToStackTop(2 + stackSize, stackSize);
 					if (fromStorage)
 						m_context << u256(0); // add byte offset again
@@ -406,11 +407,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 					auto loopEnd = m_context.appendConditionalJump();
 					copyToStackTop(3 + stackSize, stackSize);
 					copyToStackTop(2 + stackSize, 1);
-					ArrayUtils(m_context).accessIndex(typeOnStack);
-					MemoryItem(m_context, *typeOnStack.getBaseType(), true).retrieveValue(
-						SourceLocation(),
-						true
-					);
+					ArrayUtils(m_context).accessIndex(typeOnStack, false);
 					convertType(*typeOnStack.getBaseType(), *targetType.getBaseType(), _cleanupNeeded);
 					storeInMemoryDynamic(*targetType.getBaseType(), true);
 					m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD;
