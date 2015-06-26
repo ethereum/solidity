@@ -1987,6 +1987,19 @@ BOOST_AUTO_TEST_CASE(mem_array_assignment_changes_base_type)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint) returns (string);
+			function g() {
+				var x = this.f(2);
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
