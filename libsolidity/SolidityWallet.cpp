@@ -200,17 +200,17 @@ contract multiowned {
 	}
 
 	// the number of owners that must confirm the same operation before it is run.
-	uint m_required;
+	uint public m_required;
 	// pointer used to find a free slot in m_owners
-	uint m_numOwners;
+	uint public m_numOwners;
 	// list of owners
-	uint[256] m_owners;
+	uint[256] public m_owners;
 	uint constant c_maxOwners = 250;
 	// index on the list of owners to allow reverse lookup
-	mapping(uint => uint) m_ownerIndex;
+	mapping(uint => uint) public m_ownerIndex;
 	// the ongoing operations.
-	mapping(bytes32 => PendingState) m_pending;
-	bytes32[] m_pendingIndex;
+	mapping(bytes32 => PendingState) public m_pending;
+	bytes32[] public m_pendingIndex;
 }
 
 // inheritable "property" contract that enables methods to be protected by placing a linear limit (specifiable)
@@ -251,9 +251,9 @@ contract daylimit is multiowned {
 	}
 	// determines today's index.
 	function today() private constant returns (uint) { return now / 1 days; }
-	uint m_spentToday;
-	uint m_dailyLimit;
-	uint m_lastDay;
+	uint public m_spentToday;
+	uint public m_dailyLimit;
+	uint public m_lastDay;
 }
 // interface contract for multisig proxy contracts; see below for docs.
 contract multisig {
@@ -275,11 +275,14 @@ contract Wallet is multisig, multiowned, daylimit {
 		uint value;
 		bytes data;
 	}
+	/*
 	// logged events:
 	// Funds has arrived into the wallet (record how much).
 	event Deposit(address from, uint value);
 	// Single transaction going out of the wallet (record who signed for it, how much, and to whom it's going).
 	event SingleTransact(address owner, uint value, address to, bytes data);
+	// Multi-sig transaction going out of the wallet (record who signed for it last, the operation hash, how much, and to whom it's going).
+	event MultiTransact(address owner, bytes32 operation, uint value, address to, bytes data);*/
 	// constructor - just pass on the owner arra to the multiowned.
 	event Created();
 	function Wallet() {
@@ -299,7 +302,7 @@ contract Wallet is multisig, multiowned, daylimit {
 	// If not, goes into multisig process. We provide a hash on return to allow the sender to provide
 	// shortcuts for the other confirmations (allowing them to avoid replicating the _to, _value
 	// and _data arguments). They still get the option of using them if they want, anyways.
-	function execute(address _to, uint _value, bytes _data) onlyowner external returns (bytes32 _r) {
+	function execute(address _to, uint _value, bytes _data) external onlyowner returns (bytes32 _r) {
 		// first, take the opportunity to check that we're under the daily limit.
 		if (underLimit(_value)) {
 			SingleTransact(msg.sender, _value, _to, _data);
@@ -332,8 +335,14 @@ contract Wallet is multisig, multiowned, daylimit {
 			delete m_txs[m_pendingIndex[i]];
 		super.clearPending();
 	}
+	// // internally confirm transaction with all of the info. returns true iff confirmed good and executed.
+	// function confirmVerbose(bytes32 _h, address _to, uint _value, bytes _data) private onlymanyowners(_h) returns (bool) {
+	//     _to.call.value(_value)(_data);
+	//     MultiTransact("out", msg.sender, _h, _value, _to);
+	//     return true;
+	// }
 	// pending transactions we have at present.
-	mapping (bytes32 => Transaction) m_txs;
+	mapping (bytes32 => Transaction) public m_txs;
 }
 )DELIMITER";
 
