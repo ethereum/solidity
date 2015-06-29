@@ -936,8 +936,11 @@ void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
 	else if (type.getCategory() == Type::Category::Array)
 	{
 		auto const& arrayType(dynamic_cast<ArrayType const&>(type));
-		m_isLValue = (*m_memberName == "length" &&
-			arrayType.location() != DataLocation::CallData && arrayType.isDynamicallySized());
+		m_isLValue = (
+			*m_memberName == "length" &&
+			arrayType.location() == DataLocation::Storage &&
+			arrayType.isDynamicallySized()
+		);
 	}
 	else
 		m_isLValue = false;
