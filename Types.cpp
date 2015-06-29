@@ -688,6 +688,7 @@ TypePointer ReferenceType::unaryOperatorResult(Token::Value _operator) const
 	default:
 		solAssert(false, "");
 	}
+	return TypePointer();
 }
 
 TypePointer ReferenceType::copyForLocationIfReference(DataLocation _location, TypePointer const& _type)
