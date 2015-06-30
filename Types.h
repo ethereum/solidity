@@ -557,6 +557,10 @@ public:
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
+	/// @returns a function that peforms the type conversion between a list of struct members
+	/// and a memory struct of this type.
+	FunctionTypePointer constructorType() const;
+
 	std::pair<u256, unsigned> const& getStorageOffsetsOfMember(std::string const& _name) const;
 	u256 memoryOffsetOfMember(std::string const& _name) const;
 

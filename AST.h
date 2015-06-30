@@ -1136,9 +1136,11 @@ public:
 	std::vector<ASTPointer<Expression const>> getArguments() const { return {m_arguments.begin(), m_arguments.end()}; }
 	std::vector<ASTPointer<ASTString>> const& getNames() const { return m_names; }
 
-	/// Returns true if this is not an actual function call, but an explicit type conversion
-	/// or constructor call.
+	/// @returns true if this is not an actual function call, but an explicit type conversion.
+	/// Returns false for struct constructor calls.
 	bool isTypeConversion() const;
+	/// @return true if this is a constructor call for a struct, i.e. StructName(...).
+	bool isStructConstructorCall() const;
 
 private:
 	ASTPointer<Expression> m_expression;

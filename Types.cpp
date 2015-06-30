@@ -30,11 +30,8 @@
 #include <libsolidity/AST.h>
 
 using namespace std;
-
-namespace dev
-{
-namespace solidity
-{
+using namespace dev;
+using namespace dev::solidity;
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
 {
@@ -1067,6 +1064,26 @@ TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer)
 	return copy;
 }
 
+FunctionTypePointer StructType::constructorType() const
+{
+	TypePointers paramTypes;
+	strings paramNames;
+	for (auto const& member: getMembers())
+	{
+		if (!member.type->canLiveOutsideStorage())
+			continue;
+		paramNames.push_back(member.name);
+		paramTypes.push_back(copyForLocationIfReference(DataLocation::Memory, member.type));
+	}
+	return make_shared<FunctionType>(
+		paramTypes,
+		TypePointers{copyForLocation(DataLocation::Memory, false)},
+		paramNames,
+		strings(),
+		FunctionType::Location::Internal
+	);
+}
+
 pair<u256, unsigned> const& StructType::getStorageOffsetsOfMember(string const& _name) const
 {
 	auto const* offsets = getMembers().getMemberStorageOffset(_name);
@@ -1694,7 +1711,4 @@ string MagicType::toString(bool) const
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
 	}
-}
-
-}
 }
