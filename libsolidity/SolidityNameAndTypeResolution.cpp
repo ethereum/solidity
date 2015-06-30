@@ -2026,6 +2026,19 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(memory_arrays_not_resizeable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				uint[] memory x;
+				x.length = 2;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
