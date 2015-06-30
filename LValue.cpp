@@ -240,7 +240,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 						dynamic_cast<ArrayType const&>(m_dataType),
 						dynamic_cast<ArrayType const&>(_sourceType));
 			if (_move)
-				utils.popStackElement(_sourceType);
+				utils.popStackElement(m_dataType);
 		}
 		else if (m_dataType.getCategory() == Type::Category::Struct)
 		{
