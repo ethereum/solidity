@@ -4958,6 +4958,49 @@ BOOST_AUTO_TEST_CASE(memory_structs_nested_load)
 	BOOST_CHECK(callContractFunction("store()") == out);
 }
 
+BOOST_AUTO_TEST_CASE(struct_constructor_nested)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct X { uint x1; uint x2; }
+			struct S { uint s1; uint[3] s2; X s3; }
+			S s;
+			function C() {
+				uint[3] memory s2;
+				s2[1] = 9;
+				s = S(1, s2, X(4, 5));
+			}
+			function get() returns (uint s1, uint[3] s2, uint x1, uint x2)
+			{
+				s1 = s.s1;
+				s2 = s.s2;
+				x1 = s.s3.x1;
+				x2 = s.s3.x2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	auto out = encodeArgs(u256(1), u256(0), u256(9), u256(0), u256(4), u256(5));
+	BOOST_CHECK(callContractFunction("get()") == out);
+}
+
+BOOST_AUTO_TEST_CASE(struct_named_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			S public s;
+			function C() {
+				s = S({a: 1, x: true});
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	BOOST_CHECK(callContractFunction("s()") == encodeArgs(u256(1), true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
