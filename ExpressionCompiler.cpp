@@ -155,8 +155,6 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	TypePointer type = _assignment.getRightHandSide().getType();
 	if (!_assignment.getType()->dataStoredIn(DataLocation::Storage))
 	{
-		//@todo we should delay conversion here if RHS is not in memory, LHS is a MemoryItem
-		// and not dynamically-sized.
 		utils().convertType(*type, *_assignment.getType());
 		type = _assignment.getType();
 	}
@@ -691,7 +689,8 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		}
 		case DataLocation::Memory:
 		{
-			solAssert(false, "Member access for memory structs not yet implemented.");
+			m_context << type.memoryOffsetOfMember(member) << eth::Instruction::ADD;
+			setLValue<MemoryItem>(_memberAccess, *_memberAccess.getType());
 			break;
 		}
 		default:

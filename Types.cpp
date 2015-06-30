@@ -999,6 +999,15 @@ unsigned StructType::getCalldataEncodedSize(bool _padded) const
 	return size;
 }
 
+u256 StructType::memorySize() const
+{
+	u256 size;
+	for (auto const& member: getMembers())
+		if (member.type->canLiveOutsideStorage())
+			size += member.type->memoryHeadSize();
+	return size;
+}
+
 u256 StructType::getStorageSize() const
 {
 	return max<u256>(1, getMembers().getStorageSize());
@@ -1010,6 +1019,17 @@ bool StructType::canLiveOutsideStorage() const
 		if (!member.type->canLiveOutsideStorage())
 			return false;
 	return true;
+}
+
+unsigned StructType::getSizeOnStack() const
+{
+	switch (location())
+	{
+	case DataLocation::Storage:
+		return 2; // slot and offset
+	default:
+		return 1;
+	}
 }
 
 string StructType::toString(bool _short) const
@@ -1052,6 +1072,18 @@ pair<u256, unsigned> const& StructType::getStorageOffsetsOfMember(string const& 
 	auto const* offsets = getMembers().getMemberStorageOffset(_name);
 	solAssert(offsets, "Storage offset of non-existing member requested.");
 	return *offsets;
+}
+
+u256 StructType::memoryOffsetOfMember(string const& _name) const
+{
+	u256 offset;
+	for (auto const& member: getMembers())
+		if (member.name == _name)
+			return offset;
+		else
+			offset += member.type->memoryHeadSize();
+	solAssert(false, "Member not found in struct.");
+	return 0;
 }
 
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const

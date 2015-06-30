@@ -103,7 +103,7 @@ private:
 class MemoryItem: public LValue
 {
 public:
-	MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded);
+	MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded = true);
 	virtual unsigned sizeOnStack() const override { return 1; }
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(

@@ -543,14 +543,14 @@ class StructType: public ReferenceType
 public:
 	virtual Category getCategory() const override { return Category::Struct; }
 	explicit StructType(StructDefinition const& _struct):
-		//@todo only storage until we have non-storage structs
 		ReferenceType(DataLocation::Storage), m_struct(_struct) {}
 	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
+	u256 memorySize() const;
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override;
-	virtual unsigned getSizeOnStack() const override { return 2; }
+	virtual unsigned getSizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
 
 	virtual MemberList const& getMembers() const override;
@@ -558,6 +558,7 @@ public:
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 	std::pair<u256, unsigned> const& getStorageOffsetsOfMember(std::string const& _name) const;
+	u256 memoryOffsetOfMember(std::string const& _name) const;
 
 	StructDefinition const& structDefinition() const { return m_struct; }
 

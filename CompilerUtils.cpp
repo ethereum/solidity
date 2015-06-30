@@ -436,19 +436,54 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	}
 	case Type::Category::Struct:
 	{
-		//@todo we can probably use some of the code for arrays here.
 		solAssert(targetTypeCategory == stackTypeCategory, "");
 		auto& targetType = dynamic_cast<StructType const&>(_targetType);
-		auto& stackType = dynamic_cast<StructType const&>(_typeOnStack);
+		auto& typeOnStack = dynamic_cast<StructType const&>(_typeOnStack);
 		solAssert(
-			targetType.location() == DataLocation::Storage &&
-				stackType.location() == DataLocation::Storage,
-			"Non-storage structs not yet implemented."
-		);
-		solAssert(
-			targetType.isPointer(),
-			"Type conversion to non-pointer struct requested."
-		);
+			targetType.location() != DataLocation::CallData &&
+			typeOnStack.location() != DataLocation::CallData
+		, "");
+		switch (targetType.location())
+		{
+		case DataLocation::Storage:
+			// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
+			solAssert(
+				targetType.isPointer() &&
+				typeOnStack.location() == DataLocation::Storage,
+				"Invalid conversion to storage type."
+			);
+			break;
+		case DataLocation::Memory:
+			// Copy the array to a free position in memory, unless it is already in memory.
+			if (typeOnStack.location() != DataLocation::Memory)
+			{
+				solAssert(typeOnStack.location() == DataLocation::Storage, "");
+				// stack: <source ref> <source byte offset>
+				m_context << eth::Instruction::POP;
+				m_context << typeOnStack.memorySize();
+				allocateMemory();
+				m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
+				// stack: <memory ptr> <source ref> <memory ptr>
+				for (auto const& member: typeOnStack.getMembers())
+				{
+					if (!member.type->canLiveOutsideStorage())
+						continue;
+					pair<u256, unsigned> const& offsets = typeOnStack.getStorageOffsetsOfMember(member.name);
+					m_context << offsets.first << eth::Instruction::DUP3 << eth::Instruction::ADD;
+					m_context << u256(offsets.second);
+					StorageItem(m_context, *member.type).retrieveValue(SourceLocation(), true);
+					TypePointer targetMemberType = targetType.getMemberType(member.name);
+					solAssert(!!targetMemberType, "Member not found in target type.");
+					convertType(*member.type, *targetMemberType, true);
+					storeInMemoryDynamic(*targetMemberType, true);
+				}
+				m_context << eth::Instruction::POP << eth::Instruction::POP;
+			}
+			break;
+		case DataLocation::CallData:
+			solAssert(false, "");
+			break;
+		}
 		break;
 	}
 	default:
