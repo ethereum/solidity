@@ -14,6 +14,7 @@ var tests = [
     { value: '-0x1', expected: '-0x1'},
     { value: '-15', expected: '-0xf'},
     { value: '-0xf', expected: '-0xf'},
+    { value: '0x657468657265756d', expected: '0x657468657265756d'},
     { value: '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd', expected: '0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd'},
     { value: '-0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', expected: '-0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'},
     { value: '-0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd', expected: '-0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd'},

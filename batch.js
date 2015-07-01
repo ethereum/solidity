@@ -28,6 +28,16 @@ describe('lib/web3/batch', function () {
                 done();
             };
 
+            provider.injectValidation(function (payload) {
+                var first = payload[0];
+                var second = payload[1];
+
+                assert.equal(first.method, 'eth_getBalance');
+                assert.deepEqual(first.params, ['0x0000000000000000000000000000000000000000', 'latest']);
+                assert.equal(second.method, 'eth_getBalance');
+                assert.deepEqual(second.params, ['0x0000000000000000000000000000000000000005', 'latest']);
+            });
+
             var batch = web3.createBatch(); 
             batch.add(web3.eth.getBalance.request('0x0000000000000000000000000000000000000000', 'latest', callback));
             batch.add(web3.eth.getBalance.request('0x0000000000000000000000000000000000000005', 'latest', callback2));
@@ -55,7 +65,7 @@ describe('lib/web3/batch', function () {
             }];
 
             
-            var address = '0x0000000000000000000000000000000000000000';
+            var address = '0x1000000000000000000000000000000000000001';
             var result = '0x126';
             var result2 = '0x0000000000000000000000000000000000000000000000000000000000000123';
 
@@ -70,6 +80,19 @@ describe('lib/web3/batch', function () {
                 assert.deepEqual(new bn(result2), r);
                 done();
             };
+
+            provider.injectValidation(function (payload) {
+                var first = payload[0];
+                var second = payload[1];
+
+                assert.equal(first.method, 'eth_getBalance');
+                assert.deepEqual(first.params, ['0x0000000000000000000000000000000000000000', 'latest']);
+                assert.equal(second.method, 'eth_call');
+                assert.deepEqual(second.params, [{
+                    'to': '0x1000000000000000000000000000000000000001',
+                    'data': '0xe3d670d70000000000000000000000001000000000000000000000000000000000000001'
+                }]);
+            });
 
             var batch = web3.createBatch(); 
             batch.add(web3.eth.getBalance.request('0x0000000000000000000000000000000000000000', 'latest', callback));
