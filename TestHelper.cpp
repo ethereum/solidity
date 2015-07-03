@@ -235,7 +235,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 }
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
-{	
+{
 	if (_o.count("secretKey") > 0)
 	{
 		assert(_o.count("nonce") > 0);
@@ -728,7 +728,7 @@ Options::Options()
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
-		if (arg == "--jit")
+		if (arg == "--jit" || arg == "--vm=jit") // TODO: Remove deprecated option "--jit"
 			eth::VMFactory::setKind(eth::VMKind::JIT);
 		else if (arg == "--vm=smart")
 			eth::VMFactory::setKind(eth::VMKind::Smart);
