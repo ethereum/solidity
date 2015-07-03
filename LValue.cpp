@@ -294,7 +294,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			else if (sourceType.getSizeOnStack() >= 1)
 			{
 				// remove the source ref
-				solAssert(sourceStackSize <= 2, "");
+				solAssert(sourceStackSize <= 2, "Invalid stack size.");
 				m_context << eth::swapInstruction(sourceStackSize);
 				if (sourceStackSize == 2)
 					m_context << eth::Instruction::POP;

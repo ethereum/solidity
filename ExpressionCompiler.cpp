@@ -324,7 +324,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	FunctionTypePointer functionType;
 	if (_functionCall.isStructConstructorCall())
 	{
-		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.getExpression().getType());
+		auto const& type = dynamic_cast<TypeType const&>(*_functionCall.getExpression().getType());
 		auto const& structType = dynamic_cast<StructType const&>(*type.getActualType());
 		functionType = structType.constructorType();
 	}

@@ -481,7 +481,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			}
 			break;
 		case DataLocation::CallData:
-			solAssert(false, "");
+			solAssert(false, "Invalid type conversion target location CallData.");
 			break;
 		}
 		break;

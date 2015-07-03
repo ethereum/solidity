@@ -1020,13 +1020,10 @@ bool StructType::canLiveOutsideStorage() const
 
 unsigned StructType::getSizeOnStack() const
 {
-	switch (location())
-	{
-	case DataLocation::Storage:
+	if (location() == DataLocation::Storage)
 		return 2; // slot and offset
-	default:
+	else
 		return 1;
-	}
 }
 
 string StructType::toString(bool _short) const
