@@ -188,6 +188,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
 void doStateTests(json_spirit::mValue& v, bool _fillin);
 void doVMTests(json_spirit::mValue& v, bool _fillin);
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin);
+void doRlpTests(json_spirit::mValue& v, bool _fillin);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
