@@ -403,6 +403,23 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 	BOOST_CHECK(derived->getDefinedFunctions()[0]->isFullyImplemented());
 }
 
+BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract base { function foo(bool); }
+		contract derived is base { function foo(uint) {} }
+		)";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
+	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->getNodes();
+	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[0].get());
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	BOOST_REQUIRE(base);
+	BOOST_CHECK(!base->isFullyImplemented());
+	BOOST_REQUIRE(derived);
+	BOOST_CHECK(!derived->isFullyImplemented());
+}
+
 BOOST_AUTO_TEST_CASE(create_abstract_contract)
 {
 	ASTPointer<SourceUnit> sourceUnit;
@@ -1900,6 +1917,18 @@ BOOST_AUTO_TEST_CASE(storage_location_local_variables)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
 }
 
+BOOST_AUTO_TEST_CASE(no_mappings_in_memory_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				mapping(uint=>uint)[] memory x;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(assignment_mem_to_local_storage_variable)
 {
 	char const* sourceCode = R"(
@@ -1925,6 +1954,20 @@ BOOST_AUTO_TEST_CASE(storage_assign_to_different_local_variable)
 				uint[] storage y = data;
 				y = x;
 				// note that data = otherData works
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint[] data;
+			function f() {
+				var x = data;
+				delete x;
 			}
 		}
 	)";
@@ -1998,6 +2041,60 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(memory_arrays_not_resizeable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				uint[] memory x;
+				x.length = 2;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(struct_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			function f() {
+				S memory s = S(1, true);
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(struct_constructor_nested)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct X { uint x1; uint x2; }
+			struct S { uint s1; uint[3] s2; X s3; }
+			function f() {
+				uint[3] memory s2;
+				S memory s = S(1, s2, X(4, 5));
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(struct_named_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			function f() {
+				S memory s = S({a: 1, x: true});
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
