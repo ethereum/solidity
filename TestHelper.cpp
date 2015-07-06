@@ -199,10 +199,10 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 			stateOptions.m_bHasCode = true;
 		}
 
-		if (code.size())
+		if (!code.empty())
 		{
 			_state.m_cache[address] = Account(balance, Account::ContractConception);
-			_state.m_cache[address].setCode(code);
+			_state.m_cache[address].setCode(std::move(code));
 		}
 		else
 			_state.m_cache[address] = Account(balance, Account::NormalCreation);
