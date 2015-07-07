@@ -81,7 +81,7 @@ void mine(BlockInfo& _bi)
 	bool completed = false;
 	f.onSolutionFound([&](ProofOfWork::Solution sol)
 	{
-		ProofOfWork::assignResult(sol, _bi);
+		_bi.proof = sol;
 		return completed = true;
 	});
 	f.setWork(_bi);
