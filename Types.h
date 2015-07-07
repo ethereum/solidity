@@ -131,7 +131,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, Bool, Real, Array,
+		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
 		FixedBytes, Contract, Struct, Function, Enum,
 		Mapping, Void, TypeType, Modifier, Magic
 	};
@@ -312,6 +312,37 @@ private:
 };
 
 /**
+ * Literal string, can be converted to bytes, bytesX or string.
+ */
+class StringLiteralType: public Type
+{
+public:
+	virtual Category getCategory() const override { return Category::StringLiteral; }
+
+	explicit StringLiteralType(Literal const& _literal);
+
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override
+	{
+		return TypePointer();
+	}
+
+	virtual bool operator==(Type const& _other) const override;
+
+	virtual bool canBeStored() const override { return false; }
+	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned getSizeOnStack() const override { return 0; }
+
+	virtual std::string toString(bool) const override { return "literal_string \"" + m_value + "\""; }
+	virtual TypePointer mobileType() const override;
+
+	std::string const& value() const { return m_value; }
+
+private:
+	std::string m_value;
+};
+
+/**
  * Bytes type with fixed length of up to 32 bytes.
  */
 class FixedBytesType: public Type
@@ -336,10 +367,9 @@ public:
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
-	virtual u256 literalValue(Literal const* _literal) const override;
 	virtual TypePointer externalType() const override { return shared_from_this(); }
 
-	int getNumBytes() const { return m_bytes; }
+	int numBytes() const { return m_bytes; }
 
 private:
 	int m_bytes;

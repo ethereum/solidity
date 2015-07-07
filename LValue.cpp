@@ -209,7 +209,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack: value storage_ref cleared_value multiplier value
 			if (m_dataType.getCategory() == Type::Category::FixedBytes)
 				m_context
-					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(m_dataType).getNumBytes()))
+					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(m_dataType).numBytes()))
 					<< eth::Instruction::SWAP1 << eth::Instruction::DIV;
 			else if (
 				m_dataType.getCategory() == Type::Category::Integer &&

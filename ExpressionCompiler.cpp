@@ -158,6 +158,11 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		utils().convertType(*type, *_assignment.getType());
 		type = _assignment.getType();
 	}
+	else
+	{
+		utils().convertType(*type, *type->mobileType());
+		type = type->mobileType();
+	}
 
 	_assignment.getLeftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
@@ -898,13 +903,15 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _literal);
-	switch (_literal.getType()->getCategory())
+	TypePointer type = _literal.getType();
+	switch (type->getCategory())
 	{
 	case Type::Category::IntegerConstant:
 	case Type::Category::Bool:
-	case Type::Category::FixedBytes:
-		m_context << _literal.getType()->literalValue(&_literal);
+		m_context << type->literalValue(&_literal);
 		break;
+	case Type::Category::StringLiteral:
+		break; // will be done during conversion
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
 	}

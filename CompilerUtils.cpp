@@ -113,6 +113,16 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 		solAssert(ref->location() == DataLocation::Memory, "");
 		storeInMemoryDynamic(IntegerType(256), _padToWordBoundaries);
 	}
+	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
+	{
+		m_context << eth::Instruction::DUP1;
+		storeStringData(bytesConstRef(str->value()));
+		if (_padToWordBoundaries)
+			m_context << u256(((str->value().size() + 31) / 32) * 32);
+		else
+			m_context << u256(str->value().size());
+		m_context << eth::Instruction::ADD;
+	}
 	else
 	{
 		unsigned numBytes = prepareMemoryStore(_type, _padToWordBoundaries);
@@ -169,7 +179,8 @@ void CompilerUtils::encodeToMemory(
 			TypePointer type = targetType;
 			if (
 				_givenTypes[i]->dataStoredIn(DataLocation::Storage) ||
-				_givenTypes[i]->dataStoredIn(DataLocation::CallData)
+				_givenTypes[i]->dataStoredIn(DataLocation::CallData) ||
+				_givenTypes[i]->getCategory() == Type::Category::StringLiteral
 			)
 				type = _givenTypes[i]; // delay conversion
 			else
@@ -192,36 +203,48 @@ void CompilerUtils::encodeToMemory(
 		solAssert(!!targetType, "Externalable type expected.");
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
-			solAssert(_givenTypes[i]->getCategory() == Type::Category::Array, "Unknown dynamic type.");
-			auto const& arrayType = dynamic_cast<ArrayType const&>(*_givenTypes[i]);
 			// copy tail pointer (=mem_end - mem_start) to memory
 			m_context << eth::dupInstruction(2 + dynPointers) << eth::Instruction::DUP2;
 			m_context << eth::Instruction::SUB;
 			m_context << eth::dupInstruction(2 + dynPointers - thisDynPointer);
 			m_context << eth::Instruction::MSTORE;
-			// now copy the array
-			copyToStackTop(argSize - stackPos + dynPointers + 2, arrayType.getSizeOnStack());
-			// stack: ... <end_of_mem> <value...>
-			// copy length to memory
-			m_context << eth::dupInstruction(1 + arrayType.getSizeOnStack());
-			if (arrayType.location() == DataLocation::CallData)
-				m_context << eth::Instruction::DUP2; // length is on stack
-			else if (arrayType.location() == DataLocation::Storage)
-				m_context << eth::Instruction::DUP3 << eth::Instruction::SLOAD;
+			// stack: ... <end_of_mem>
+			if (_givenTypes[i]->getCategory() == Type::Category::StringLiteral)
+			{
+				auto const& strType = dynamic_cast<StringLiteralType const&>(*_givenTypes[i]);
+				m_context << u256(strType.value().size());
+				storeInMemoryDynamic(IntegerType(256), true);
+				// stack: ... <end_of_mem'>
+				storeInMemoryDynamic(strType, _padToWordBoundaries);
+			}
 			else
 			{
-				solAssert(arrayType.location() == DataLocation::Memory, "");
-				m_context << eth::Instruction::DUP2 << eth::Instruction::MLOAD;
+				solAssert(_givenTypes[i]->getCategory() == Type::Category::Array, "Unknown dynamic type.");
+				auto const& arrayType = dynamic_cast<ArrayType const&>(*_givenTypes[i]);
+				// now copy the array
+				copyToStackTop(argSize - stackPos + dynPointers + 2, arrayType.getSizeOnStack());
+				// stack: ... <end_of_mem> <value...>
+				// copy length to memory
+				m_context << eth::dupInstruction(1 + arrayType.getSizeOnStack());
+				if (arrayType.location() == DataLocation::CallData)
+					m_context << eth::Instruction::DUP2; // length is on stack
+				else if (arrayType.location() == DataLocation::Storage)
+					m_context << eth::Instruction::DUP3 << eth::Instruction::SLOAD;
+				else
+				{
+					solAssert(arrayType.location() == DataLocation::Memory, "");
+					m_context << eth::Instruction::DUP2 << eth::Instruction::MLOAD;
+				}
+				// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
+				storeInMemoryDynamic(IntegerType(256), true);
+				// stack: ... <end_of_mem> <value...> <end_of_mem''>
+				// copy the new memory pointer
+				m_context << eth::swapInstruction(arrayType.getSizeOnStack() + 1) << eth::Instruction::POP;
+				// stack: ... <end_of_mem''> <value...>
+				// copy data part
+				ArrayUtils(m_context).copyArrayToMemory(arrayType, _padToWordBoundaries);
+				// stack: ... <end_of_mem'''>
 			}
-			// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
-			storeInMemoryDynamic(IntegerType(256), true);
-			// stack: ... <end_of_mem> <value...> <end_of_mem''>
-			// copy the new memory pointer
-			m_context << eth::swapInstruction(arrayType.getSizeOnStack() + 1) << eth::Instruction::POP;
-			// stack: ... <end_of_mem''> <value...>
-			// copy data part
-			ArrayUtils(m_context).copyArrayToMemory(arrayType, _padToWordBoundaries);
-			// stack: ... <end_of_mem'''>
 
 			thisDynPointer++;
 		}
@@ -269,22 +292,22 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			// conversion from bytes to integer. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			m_context << (u256(1) << (256 - typeOnStack.getNumBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
-			if (targetIntegerType.getNumBits() < typeOnStack.getNumBytes() * 8)
-				convertType(IntegerType(typeOnStack.getNumBytes() * 8), _targetType, _cleanupNeeded);
+			m_context << (u256(1) << (256 - typeOnStack.numBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			if (targetIntegerType.getNumBits() < typeOnStack.numBytes() * 8)
+				convertType(IntegerType(typeOnStack.numBytes() * 8), _targetType, _cleanupNeeded);
 		}
 		else
 		{
 			// clear lower-order bytes for conversion to shorter bytes - we always clean
 			solAssert(targetTypeCategory == Type::Category::FixedBytes, "Invalid type conversion requested.");
 			FixedBytesType const& targetType = dynamic_cast<FixedBytesType const&>(_targetType);
-			if (targetType.getNumBytes() < typeOnStack.getNumBytes())
+			if (targetType.numBytes() < typeOnStack.numBytes())
 			{
-				if (targetType.getNumBytes() == 0)
+				if (targetType.numBytes() == 0)
 					m_context << eth::Instruction::DUP1 << eth::Instruction::XOR;
 				else
 				{
-					m_context << (u256(1) << (256 - targetType.getNumBytes() * 8));
+					m_context << (u256(1) << (256 - targetType.numBytes() * 8));
 					m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2;
 					m_context << eth::Instruction::DIV << eth::Instruction::MUL;
 				}
@@ -306,9 +329,9 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			// only to shift left because of opposite alignment
 			FixedBytesType const& targetBytesType = dynamic_cast<FixedBytesType const&>(_targetType);
 			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
-				if (targetBytesType.getNumBytes() * 8 > typeOnStack->getNumBits())
+				if (targetBytesType.numBytes() * 8 > typeOnStack->getNumBits())
 					cleanHigherOrderBits(*typeOnStack);
-			m_context << (u256(1) << (256 - targetBytesType.getNumBytes() * 8)) << eth::Instruction::MUL;
+			m_context << (u256(1) << (256 - targetBytesType.numBytes() * 8)) << eth::Instruction::MUL;
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 			// just clean
@@ -340,6 +363,37 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			}
 		}
 		break;
+	case Type::Category::StringLiteral:
+	{
+		auto const& literalType = dynamic_cast<StringLiteralType const&>(_typeOnStack);
+		string const& value = literalType.value();
+		bytesConstRef data(value);
+		if (targetTypeCategory == Type::Category::FixedBytes)
+		{
+			solAssert(data.size() <= 32, "");
+			m_context << h256::Arith(h256(data, h256::AlignLeft));
+		}
+		else if (targetTypeCategory == Type::Category::Array)
+		{
+			auto const& arrayType = dynamic_cast<ArrayType const&>(_targetType);
+			solAssert(arrayType.isByteArray(), "");
+			u256 storageSize(32 + ((data.size() + 31) / 32) * 32);
+			m_context << storageSize;
+			allocateMemory();
+			// stack: mempos
+			m_context << eth::Instruction::DUP1 << u256(data.size());
+			storeInMemoryDynamic(IntegerType(256));
+			// stack: mempos datapos
+			storeStringData(data);
+			break;
+		}
+		else
+			solAssert(
+				false,
+				"Invalid conversion from string literal to " + _targetType.toString(false) + " requested."
+			);
+		break;
+	}
 	case Type::Category::Array:
 	{
 		solAssert(targetTypeCategory == stackTypeCategory, "");
@@ -604,6 +658,28 @@ void CompilerUtils::computeHashStatic()
 {
 	storeInMemory(0);
 	m_context << u256(32) << u256(0) << eth::Instruction::SHA3;
+}
+
+void CompilerUtils::storeStringData(bytesConstRef _data)
+{
+	//@todo provide both alternatives to the optimiser
+	// stack: mempos
+	if (_data.size() <= 128)
+	{
+		for (unsigned i = 0; i < _data.size(); i += 32)
+		{
+			m_context << h256::Arith(h256(_data.cropped(i), h256::AlignLeft));
+			storeInMemoryDynamic(IntegerType(256));
+		}
+		m_context << eth::Instruction::POP;
+	}
+	else
+	{
+		// stack: mempos mempos_data
+		m_context.appendData(_data.toBytes());
+		m_context << u256(_data.size()) << eth::Instruction::SWAP2;
+		m_context << eth::Instruction::CODECOPY;
+	}
 }
 
 unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCalldata, bool _padToWordBoundaries)

@@ -148,7 +148,12 @@ private:
 	/// Address of the precompiled identity contract.
 	static const unsigned identityContractAddress;
 
-	//// Appends code that cleans higher-order bits for integer types.
+	/// Stores the given string in memory.
+	/// Stack pre: mempos
+	/// Stack post:
+	void storeStringData(bytesConstRef _data);
+
+	/// Appends code that cleans higher-order bits for integer types.
 	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
 
 	/// Prepares the given type for storing in memory by shifting it if necessary.
