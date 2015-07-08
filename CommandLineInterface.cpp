@@ -35,6 +35,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Params.h>
+#include <libsolidity/Version.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/ASTPrinter.h>
@@ -81,9 +82,12 @@ static set<string> const g_combinedJsonArgs{
 
 static void version()
 {
-	cout << "solc, the solidity compiler commandline interface " << dev::Version << endl
-		 << "  by Christian <c@ethdev.com> and Lefteris <lefteris@ethdev.com>, (c) 2014." << endl
-		 << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
+	cout <<
+		"solc, the solidity compiler commandline interface" <<
+		endl <<
+		"Version: " <<
+		dev::solidity::VersionString <<
+		endl;
 	exit(0);
 }
 
