@@ -199,10 +199,10 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptio
 			stateOptions.m_bHasCode = true;
 		}
 
-		if (code.size())
+		if (!code.empty())
 		{
 			_state.m_cache[address] = Account(balance, Account::ContractConception);
-			_state.m_cache[address].setCode(code);
+			_state.m_cache[address].setCode(std::move(code));
 		}
 		else
 			_state.m_cache[address] = Account(balance, Account::NormalCreation);
@@ -235,7 +235,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 }
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
-{	
+{
 	if (_o.count("secretKey") > 0)
 	{
 		assert(_o.count("nonce") > 0);
@@ -728,10 +728,20 @@ Options::Options()
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
-		if (arg == "--jit")
-			eth::VMFactory::setKind(eth::VMKind::JIT);
-		else if (arg == "--vm=smart")
-			eth::VMFactory::setKind(eth::VMKind::Smart);
+		if (arg == "--vm" && i + 1 < argc)
+		{
+			string vmKind = argv[++i];
+			if (vmKind == "interpreter")
+				VMFactory::setKind(VMKind::Interpreter);
+			else if (vmKind == "jit")
+				VMFactory::setKind(VMKind::JIT);
+			else if (vmKind == "smart")
+				VMFactory::setKind(VMKind::Smart);
+			else
+				cerr << "Unknown VM kind: " << vmKind << endl;
+		}
+		else if (arg == "--jit") // TODO: Remove deprecated option "--jit"
+			VMFactory::setKind(VMKind::JIT);
 		else if (arg == "--vmtrace")
 			vmtrace = true;
 		else if (arg == "--filltests")

@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(large_string_literal)
 	char const* text = "contract test {\n"
 					   "  function f() { var x = \"123456789012345678901234567890123\"; }"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(balance)
@@ -2054,6 +2054,60 @@ BOOST_AUTO_TEST_CASE(memory_arrays_not_resizeable)
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(struct_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			function f() {
+				S memory s = S(1, true);
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(struct_constructor_nested)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct X { uint x1; uint x2; }
+			struct S { uint s1; uint[3] s2; X s3; }
+			function f() {
+				uint[3] memory s2;
+				S memory s = S(1, s2, X(4, 5));
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(struct_named_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			function f() {
+				S memory s = S({a: 1, x: true});
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(literal_strings)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				string memory long = "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+				string memory short = "123";
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -564,20 +564,6 @@ BOOST_AUTO_TEST_CASE(strings)
 	BOOST_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true) == encodeArgs(string("\0\x2", 2), true));
 }
 
-BOOST_AUTO_TEST_CASE(empty_string_on_stack)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function run() external returns(bytes2 ret) {
-				var y = "";
-				ret = y;
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("run()") == encodeArgs(byte(0x00)));
-}
-
 BOOST_AUTO_TEST_CASE(inc_dec_operators)
 {
 	char const* sourceCode = R"(
@@ -4805,6 +4791,232 @@ BOOST_AUTO_TEST_CASE(memory_arrays_dynamic_index_access_write)
 	data[3 * 3 + 2] = 7;
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x20), u256(4), data));
 }
+
+BOOST_AUTO_TEST_CASE(memory_structs_read_write)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			struct S { uint8 x; uint16 y; uint z; uint8[2] a; }
+			S[5] data;
+			function testInit() returns (uint8 x, uint16 y, uint z, uint8 a, bool flag) {
+				S[2] memory d;
+				x = d[0].x;
+				y = d[0].y;
+				z = d[0].z;
+				a = d[0].a[1];
+				flag = true;
+			}
+			function testCopyRead() returns (uint8 x, uint16 y, uint z, uint8 a) {
+				data[2].x = 1;
+				data[2].y = 2;
+				data[2].z = 3;
+				data[2].a[1] = 4;
+				S memory s = data[2];
+				x = s.x;
+				y = s.y;
+				z = s.z;
+				a = s.a[1];
+			}
+			function testAssign() returns (uint8 x, uint16 y, uint z, uint8 a) {
+				S memory s;
+				s.x = 1;
+				s.y = 2;
+				s.z = 3;
+				s.a[1] = 4;
+				x = s.x;
+				y = s.y;
+				z = s.z;
+				a = s.a[1];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	BOOST_CHECK(callContractFunction("testInit()") == encodeArgs(u256(0), u256(0), u256(0), u256(0), true));
+	BOOST_CHECK(callContractFunction("testCopyRead()") == encodeArgs(u256(1), u256(2), u256(3), u256(4)));
+	BOOST_CHECK(callContractFunction("testAssign()") == encodeArgs(u256(1), u256(2), u256(3), u256(4)));
+}
+
+BOOST_AUTO_TEST_CASE(memory_structs_as_function_args)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			struct S { uint8 x; uint16 y; uint z; }
+			function test() returns (uint x, uint y, uint z) {
+				S memory data = combine(1, 2, 3);
+				x = extract(data, 0);
+				y = extract(data, 1);
+				z = extract(data, 2);
+			}
+			function extract(S s, uint which) internal returns (uint x) {
+				if (which == 0) return s.x;
+				else if (which == 1) return s.y;
+				else return s.z;
+			}
+			function combine(uint8 x, uint16 y, uint z) internal returns (S s) {
+				s.x = x;
+				s.y = y;
+				s.z = z;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(1), u256(2), u256(3)));
+}
+
+BOOST_AUTO_TEST_CASE(memory_structs_nested)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			struct S { uint8 x; uint16 y; uint z; }
+			struct X { uint8 x; S s; }
+			function test() returns (uint a, uint x, uint y, uint z) {
+				X memory d = combine(1, 2, 3, 4);
+				a = extract(d, 0);
+				x = extract(d, 1);
+				y = extract(d, 2);
+				z = extract(d, 3);
+			}
+			function extract(X s, uint which) internal returns (uint x) {
+				if (which == 0) return s.x;
+				else if (which == 1) return s.s.x;
+				else if (which == 2) return s.s.y;
+				else return s.s.z;
+			}
+			function combine(uint8 a, uint8 x, uint16 y, uint z) internal returns (X s) {
+				s.x = a;
+				s.s.x = x;
+				s.s.y = y;
+				s.s.z = z;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(1), u256(2), u256(3), u256(4)));
+}
+
+BOOST_AUTO_TEST_CASE(memory_structs_nested_load)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			struct S { uint8 x; uint16 y; uint z; }
+			struct X { uint8 x; S s; uint8[2] a; }
+			X m_x;
+			function load() returns (uint a, uint x, uint y, uint z, uint a1, uint a2) {
+				m_x.x = 1;
+				m_x.s.x = 2;
+				m_x.s.y = 3;
+				m_x.s.z = 4;
+				m_x.a[0] = 5;
+				m_x.a[1] = 6;
+				X memory d = m_x;
+				a = d.x;
+				x = d.s.x;
+				y = d.s.y;
+				z = d.s.z;
+				a1 = d.a[0];
+				a2 = d.a[1];
+			}
+			function store() returns (uint a, uint x, uint y, uint z, uint a1, uint a2) {
+				X memory d;
+				d.x = 1;
+				d.s.x = 2;
+				d.s.y = 3;
+				d.s.z = 4;
+				d.a[0] = 5;
+				d.a[1] = 6;
+				m_x = d;
+				a = m_x.x;
+				x = m_x.s.x;
+				y = m_x.s.y;
+				z = m_x.s.z;
+				a1 = m_x.a[0];
+				a2 = m_x.a[1];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	auto out = encodeArgs(u256(1), u256(2), u256(3), u256(4), u256(5), u256(6));
+	BOOST_CHECK(callContractFunction("load()") == out);
+	BOOST_CHECK(callContractFunction("store()") == out);
+}
+
+BOOST_AUTO_TEST_CASE(struct_constructor_nested)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct X { uint x1; uint x2; }
+			struct S { uint s1; uint[3] s2; X s3; }
+			S s;
+			function C() {
+				uint[3] memory s2;
+				s2[1] = 9;
+				s = S(1, s2, X(4, 5));
+			}
+			function get() returns (uint s1, uint[3] s2, uint x1, uint x2)
+			{
+				s1 = s.s1;
+				s2 = s.s2;
+				x1 = s.s3.x1;
+				x2 = s.s3.x2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	auto out = encodeArgs(u256(1), u256(0), u256(9), u256(0), u256(4), u256(5));
+	BOOST_CHECK(callContractFunction("get()") == out);
+}
+
+BOOST_AUTO_TEST_CASE(struct_named_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			S public s;
+			function C() {
+				s = S({a: 1, x: true});
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+
+	BOOST_CHECK(callContractFunction("s()") == encodeArgs(u256(1), true));
+}
+
+BOOST_AUTO_TEST_CASE(literal_strings)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			string public long;
+			string public medium;
+			string public short;
+			string public empty;
+			function f() returns (string) {
+				long = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+				medium = "01234567890123456789012345678901234567890123456789012345678901234567890123456789";
+				short = "123";
+				empty = "";
+				return "Hello, World!";
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	string longStr = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+	string medium = "01234567890123456789012345678901234567890123456789012345678901234567890123456789";
+	string shortStr = "123";
+	string hello = "Hello, World!";
+
+	BOOST_CHECK(callContractFunction("f()") == encodeDyn(hello));
+	BOOST_CHECK(callContractFunction("long()") == encodeDyn(longStr));
+	BOOST_CHECK(callContractFunction("medium()") == encodeDyn(medium));
+	BOOST_CHECK(callContractFunction("short()") == encodeDyn(shortStr));
+	BOOST_CHECK(callContractFunction("empty()") == encodeDyn(string()));
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -145,6 +145,12 @@ public:
 	{
 		return bytes();
 	}
+	//@todo might be extended in the future
+	template <class Arg>
+	static bytes encodeDyn(Arg const& _arg)
+	{
+		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
+	}
 
 private:
 	template <class CppFunction, class... Args>
