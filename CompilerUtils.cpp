@@ -229,7 +229,7 @@ void CompilerUtils::encodeToMemory(
 				if (arrayType.location() == DataLocation::CallData)
 					m_context << eth::Instruction::DUP2; // length is on stack
 				else if (arrayType.location() == DataLocation::Storage)
-					m_context << eth::Instruction::DUP3 << eth::Instruction::SLOAD;
+					m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
 				else
 				{
 					solAssert(arrayType.location() == DataLocation::Memory, "");
@@ -416,13 +416,6 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			{
 				// stack: <source ref> (variably sized)
 				unsigned stackSize = typeOnStack.getSizeOnStack();
-				bool fromStorage = (typeOnStack.location() == DataLocation::Storage);
-				if (fromStorage)
-				{
-					stackSize--;
-					// remove storage offset, as requested by ArrayUtils::retrieveLength
-					m_context << eth::Instruction::POP;
-				}
 				ArrayUtils(m_context).retrieveLength(typeOnStack);
 
 				// allocate memory
@@ -446,8 +439,6 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				{
 					solAssert(typeOnStack.getBaseType()->isValueType(), "");
 					copyToStackTop(2 + stackSize, stackSize);
-					if (fromStorage)
-						m_context << u256(0); // add byte offset again
 					ArrayUtils(m_context).copyArrayToMemory(typeOnStack);
 				}
 				else
@@ -462,6 +453,8 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 					copyToStackTop(3 + stackSize, stackSize);
 					copyToStackTop(2 + stackSize, 1);
 					ArrayUtils(m_context).accessIndex(typeOnStack, false);
+					if (typeOnStack.location() == DataLocation::Storage)
+						StorageItem(m_context, *typeOnStack.getBaseType()).retrieveValue(SourceLocation(), true);
 					convertType(*typeOnStack.getBaseType(), *targetType.getBaseType(), _cleanupNeeded);
 					storeInMemoryDynamic(*targetType.getBaseType(), true);
 					m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD;
@@ -512,8 +505,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			if (typeOnStack.location() != DataLocation::Memory)
 			{
 				solAssert(typeOnStack.location() == DataLocation::Storage, "");
-				// stack: <source ref> <source byte offset>
-				m_context << eth::Instruction::POP;
+				// stack: <source ref>
 				m_context << typeOnStack.memorySize();
 				allocateMemory();
 				m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;

@@ -37,7 +37,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// this copies source to target and also clears target if it was larger
 	// need to leave "target_ref target_byte_off" on the stack at the end
 
-	// stack layout: [source_ref] [source_byte_off] [source length] target_ref target_byte_off (top)
+	// stack layout: [source_ref] [source length] target_ref (top)
 	solAssert(_targetType.location() == DataLocation::Storage, "");
 
 	IntegerType uint256(256);
@@ -53,16 +53,11 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	bool haveByteOffsetTarget = !directCopy && targetBaseType->getStorageBytes() <= 16;
 	unsigned byteOffsetSize = (haveByteOffsetSource ? 1 : 0) + (haveByteOffsetTarget ? 1 : 0);
 
-	// stack: source_ref [source_byte_off] [source_length] target_ref target_byte_off
+	// stack: source_ref [source_length] target_ref
 	// store target_ref
-	// arrays always start at zero byte offset, pop offset
-	m_context << eth::Instruction::POP;
 	for (unsigned i = _sourceType.getSizeOnStack(); i > 0; --i)
 		m_context << eth::swapInstruction(i);
-	// stack: target_ref source_ref [source_byte_off] [source_length]
-	if (sourceIsStorage)
-		// arrays always start at zero byte offset, pop offset
-		m_context << eth::Instruction::POP;
+	// stack: target_ref source_ref [source_length]
 	// stack: target_ref source_ref [source_length]
 	// retrieve source length
 	if (_sourceType.location() != DataLocation::CallData || !_sourceType.isDynamicallySized())
@@ -90,7 +85,6 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 		m_context
 			<< eth::Instruction::POP << eth::Instruction::POP
 			<< eth::Instruction::POP << eth::Instruction::POP;
-		m_context << u256(0);
 		return;
 	}
 	// compute hashes (data positions)
@@ -136,13 +130,11 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 		solAssert(byteOffsetSize == 0, "Byte offset for array as base type.");
 		auto const& sourceBaseArrayType = dynamic_cast<ArrayType const&>(*sourceBaseType);
 		m_context << eth::Instruction::DUP3;
-		if (sourceIsStorage)
-			m_context << u256(0);
-		else if (sourceBaseArrayType.location() == DataLocation::Memory)
+		if (sourceBaseArrayType.location() == DataLocation::Memory)
 			m_context << eth::Instruction::MLOAD;
-		m_context << eth::dupInstruction(sourceIsStorage ? 4 : 3) << u256(0);
+		m_context << eth::Instruction::DUP3;
 		copyArrayToStorage(dynamic_cast<ArrayType const&>(*targetBaseType), sourceBaseArrayType);
-		m_context << eth::Instruction::POP << eth::Instruction::POP;
+		m_context << eth::Instruction::POP;
 	}
 	else if (directCopy)
 	{
@@ -235,7 +227,6 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// stack: target_ref target_data_end target_data_pos_updated
 	clearStorageLoop(*targetBaseType);
 	m_context << eth::Instruction::POP;
-	m_context << u256(0);
 }
 
 void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWordBoundaries) const
@@ -365,7 +356,6 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 		u256 storageSize = _sourceType.getBaseType()->getStorageSize();
 		solAssert(storageSize > 1 || (storageSize == 1 && storageBytes > 0), "");
 
-		m_context << eth::Instruction::POP; // remove offset, arrays always start new slot
 		retrieveLength(_sourceType);
 		// stack here: memory_offset storage_offset length
 		// jump to end if length is zero

@@ -152,7 +152,14 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 {
 	// stack: storage_key storage_offset
 	if (!m_dataType.isValueType())
-		return; // no distinction between value and reference for non-value types
+	{
+		solAssert(m_dataType.getSizeOnStack() == 1, "Invalid storage ref size.");
+		if (_remove)
+			m_context << eth::Instruction::POP; // remove byte offset
+		else
+			m_context << eth::Instruction::DUP2;
+		return;
+	}
 	if (!_remove)
 		CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
 	if (m_dataType.getStorageBytes() == 32)
@@ -236,16 +243,18 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			"Wrong type conversation for assignment.");
 		if (m_dataType.getCategory() == Type::Category::Array)
 		{
+			m_context << eth::Instruction::POP; // remove byte offset
 			ArrayUtils(m_context).copyArrayToStorage(
 						dynamic_cast<ArrayType const&>(m_dataType),
 						dynamic_cast<ArrayType const&>(_sourceType));
 			if (_move)
-				utils.popStackElement(m_dataType);
+				m_context << eth::Instruction::POP;
 		}
 		else if (m_dataType.getCategory() == Type::Category::Struct)
 		{
-			// stack layout: source_ref [source_offset] target_ref target_offset
-			// note that we have structs, so offsets should be zero and are ignored
+			// stack layout: source_ref target_ref target_offset
+			// note that we have structs, so offset should be zero and are ignored
+			m_context << eth::Instruction::POP;
 			auto const& structType = dynamic_cast<StructType const&>(m_dataType);
 			auto const& sourceType = dynamic_cast<StructType const&>(_sourceType);
 			solAssert(
@@ -262,44 +271,37 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				TypePointer sourceMemberType = sourceType.getMemberType(member.name);
 				if (sourceType.location() == DataLocation::Storage)
 				{
-					// stack layout: source_ref source_offset target_ref target_offset
+					// stack layout: source_ref target_ref
 					pair<u256, unsigned> const& offsets = sourceType.getStorageOffsetsOfMember(member.name);
-					m_context << offsets.first << eth::Instruction::DUP5 << eth::Instruction::ADD;
+					m_context << offsets.first << eth::Instruction::DUP3 << eth::Instruction::ADD;
 					m_context << u256(offsets.second);
-					// stack: source_ref source_off target_ref target_off source_member_ref source_member_off
+					// stack: source_ref target_ref source_member_ref source_member_off
 					StorageItem(m_context, *sourceMemberType).retrieveValue(_location, true);
-					// stack: source_ref source_off target_ref target_off source_value...
+					// stack: source_ref target_ref source_value...
 				}
 				else
 				{
 					solAssert(sourceType.location() == DataLocation::Memory, "");
-					// stack layout: source_ref target_ref target_offset
+					// stack layout: source_ref target_ref
 					TypePointer sourceMemberType = sourceType.getMemberType(member.name);
 					m_context << sourceType.memoryOffsetOfMember(member.name);
-					m_context << eth::Instruction::DUP4 << eth::Instruction::ADD;
+					m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
 					MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);
-					// stack layout: source_ref target_ref target_offset source_value...
+					// stack layout: source_ref target_ref source_value...
 				}
 				unsigned stackSize = sourceMemberType->getSizeOnStack();
 				pair<u256, unsigned> const& offsets = structType.getStorageOffsetsOfMember(member.name);
-				m_context << eth::dupInstruction(2 + stackSize) << offsets.first << eth::Instruction::ADD;
+				m_context << eth::dupInstruction(1 + stackSize) << offsets.first << eth::Instruction::ADD;
 				m_context << u256(offsets.second);
-				// stack: source_ref [source_off] target_ref target_off source_value... target_member_ref target_member_byte_off
+				// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
 				StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);
 			}
-			// stack layout: source_ref [source_offset] target_ref target_offset
-			unsigned sourceStackSize = sourceType.getSizeOnStack();
+			// stack layout: source_ref target_ref
+			solAssert(sourceType.getSizeOnStack() == 1, "Unexpected source size.");
 			if (_move)
-				utils.popStackSlots(2 + sourceType.getSizeOnStack());
-			else if (sourceType.getSizeOnStack() >= 1)
-			{
-				// remove the source ref
-				solAssert(sourceStackSize <= 2, "Invalid stack size.");
-				m_context << eth::swapInstruction(sourceStackSize);
-				if (sourceStackSize == 2)
-					m_context << eth::Instruction::POP;
-				m_context << eth::Instruction::SWAP2 << eth::Instruction::POP;
-			}
+				utils.popStackSlots(2);
+			else
+				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 		}
 		else
 			BOOST_THROW_EXCEPTION(
@@ -429,8 +431,6 @@ StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, const 
 	m_arrayType(_arrayType)
 {
 	solAssert(m_arrayType.isDynamicallySized(), "");
-	// storage byte offset must be zero
-	m_context << eth::Instruction::POP;
 }
 
 void StorageArrayLength::retrieveValue(SourceLocation const&, bool _remove) const

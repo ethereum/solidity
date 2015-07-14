@@ -41,8 +41,8 @@ public:
 
 	/// Copies an array to an array in storage. The arrays can be of different types only if
 	/// their storage representation is the same.
-	/// Stack pre: source_reference [source_byte_offset/source_length] target_reference target_byte_offset
-	/// Stack post: target_reference target_byte_offset
+	/// Stack pre: source_reference [source_length] target_reference
+	/// Stack post: target_reference
 	void copyArrayToStorage(ArrayType const& _targetType, ArrayType const& _sourceType) const;
 	/// Copies the data part of an array (which cannot be dynamically nested) from anywhere
 	/// to a given position in memory.

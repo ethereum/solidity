@@ -298,7 +298,6 @@ public:
 
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return false; }
-	virtual unsigned getSizeOnStack() const override { return 1; }
 
 	virtual std::string toString(bool _short) const override;
 	virtual u256 literalValue(Literal const* _literal) const override;
@@ -580,7 +579,6 @@ public:
 	u256 memorySize() const;
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override;
-	virtual unsigned getSizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
 
 	virtual MemberList const& getMembers() const override;
@@ -616,7 +614,6 @@ public:
 	{
 		return externalType()->getCalldataEncodedSize(_padded);
 	}
-	virtual unsigned getSizeOnStack() const override { return 1; }
 	virtual unsigned getStorageBytes() const override;
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString(bool _short) const override;
@@ -812,7 +809,6 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
-	virtual unsigned getSizeOnStack() const override { return 2; }
 	virtual bool canLiveOutsideStorage() const override { return false; }
 
 	TypePointer const& getKeyType() const { return m_keyType; }
