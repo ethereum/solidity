@@ -942,24 +942,27 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	}
 	else
 	{
-		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-		bool const c_isSigned = type.isSigned();
+		bool isSigned = false;
+		if (auto type = dynamic_cast<IntegerType const*>(&_type))
+			isSigned = type->isSigned();
 
 		switch (_operator)
 		{
 		case Token::GreaterThanOrEqual:
-			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT)
-					  << eth::Instruction::ISZERO;
+			m_context <<
+				(isSigned ? eth::Instruction::SLT : eth::Instruction::LT) <<
+				eth::Instruction::ISZERO;
 			break;
 		case Token::LessThanOrEqual:
-			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
-					  << eth::Instruction::ISZERO;
+			m_context <<
+				(isSigned ? eth::Instruction::SGT : eth::Instruction::GT) <<
+				eth::Instruction::ISZERO;
 			break;
 		case Token::GreaterThan:
-			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
+			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
 			break;
 		case Token::LessThan:
-			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
+			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
