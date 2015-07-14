@@ -286,6 +286,9 @@ class IntegerConstantType: public Type
 public:
 	virtual Category getCategory() const override { return Category::IntegerConstant; }
 
+	/// @returns true if the literal is a valid integer.
+	static bool isValidLiteral(Literal const& _literal);
+
 	explicit IntegerConstantType(Literal const& _literal);
 	explicit IntegerConstantType(bigint _value): m_value(_value) {}
 

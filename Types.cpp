@@ -210,6 +210,8 @@ TypePointer Type::forLiteral(Literal const& _literal)
 	case Token::FalseLiteral:
 		return make_shared<BoolType>();
 	case Token::Number:
+		if (!IntegerConstantType::isValidLiteral(_literal))
+			return TypePointer();
 		return make_shared<IntegerConstantType>(_literal);
 	case Token::StringLiteral:
 		return make_shared<StringLiteralType>(_literal);
@@ -320,6 +322,19 @@ const MemberList IntegerType::AddressMemberList({
 	{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true)},
 	{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
 });
+
+bool IntegerConstantType::isValidLiteral(const Literal& _literal)
+{
+	try
+	{
+		bigint x(_literal.getValue());
+	}
+	catch (...)
+	{
+		return false;
+	}
+	return true;
+}
 
 IntegerConstantType::IntegerConstantType(Literal const& _literal)
 {
