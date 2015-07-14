@@ -426,7 +426,14 @@ void InheritanceSpecifier::checkTypeRequirements()
 	solAssert(base, "Base contract not available.");
 	TypePointers parameterTypes = ContractType(*base).getConstructorType()->getParameterTypes();
 	if (!m_arguments.empty() && parameterTypes.size() != m_arguments.size())
-		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Wrong argument count for constructor call: " +
+			toString(m_arguments.size()) +
+			" arguments given but expected " +
+			toString(parameterTypes.size()) +
+			"."
+		));
+
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
 			BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
@@ -629,7 +636,13 @@ void ModifierInvocation::checkTypeRequirements(vector<ContractDefinition const*>
 	if (!parameters)
 		BOOST_THROW_EXCEPTION(createTypeError("Referenced declaration is neither modifier nor base class."));
 	if (parameters->size() != m_arguments.size())
-		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for modifier invocation."));
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Wrong argument count for modifier invocation: " +
+			toString(m_arguments.size()) +
+			" arguments given but expected " +
+			toString(parameters->size()) +
+			"."
+		));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*(*parameters)[i]->getType()))
 			BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
@@ -834,7 +847,13 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 	// function parameters
 	TypePointers const& parameterTypes = functionType->getParameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != m_arguments.size())
-		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Wrong argument count for function call: " +
+			toString(m_arguments.size()) +
+			" arguments given but expected " +
+			toString(parameterTypes.size()) +
+			"."
+		));
 
 	if (isPositionalCall)
 	{
