@@ -585,6 +585,22 @@ BOOST_AUTO_TEST_CASE(inc_dec_operators)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(0x53866));
 }
 
+BOOST_AUTO_TEST_CASE(bytes_comparison)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns (bool) {
+				bytes2 a = "a";
+				bytes2 x = "aa";
+				bytes2 b = "b";
+				return a < x && x < b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_CASE(state_smoke_test)
 {
 	char const* sourceCode = "contract test {\n"
