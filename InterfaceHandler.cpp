@@ -24,13 +24,13 @@ string InterfaceHandler::getDocumentation(
 	switch(_type)
 	{
 	case DocumentationType::NatspecUser:
-		return userDocumentation(_contractDef);
+		return move(userDocumentation(_contractDef));
 	case DocumentationType::NatspecDev:
-		return devDocumentation(_contractDef);
+		return move(devDocumentation(_contractDef));
 	case DocumentationType::ABIInterface:
-		return getABIInterface(_contractDef);
+		return move(getABIInterface(_contractDef));
 	case DocumentationType::ABISolidityInterface:
-		return getABISolidityInterface(_contractDef);
+		return move(getABISolidityInterface(_contractDef));
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
@@ -103,7 +103,7 @@ string InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 		event["inputs"] = params;
 		abi.append(event);
 	}
-	return Json::FastWriter().write(abi);
+	return move(Json::FastWriter().write(abi));
 }
 
 string InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
@@ -140,7 +140,7 @@ string InterfaceHandler::getABISolidityInterface(ContractDefinition const& _cont
 		ret += ";";
 	}
 
-	return ret + "}";
+	return move(ret + "}");
 }
 
 string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
@@ -165,7 +165,7 @@ string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDe
 	}
 	doc["methods"] = methods;
 
-	return Json::StyledWriter().write(doc);
+	return move(Json::StyledWriter().write(doc));
 }
 
 string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef)
@@ -229,7 +229,7 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 	}
 	doc["methods"] = methods;
 
-	return Json::StyledWriter().write(doc);
+	return move(Json::StyledWriter().write(doc));
 }
 
 /* -- private -- */
