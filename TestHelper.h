@@ -224,7 +224,7 @@ public:
 	bool inputLimits = false;
 	bool bigData = false;
 	bool wallet = false;
-	bool nonetwork = false;
+	bool nonetwork = true;
 	bool nodag = true;
 	/// @}
 
