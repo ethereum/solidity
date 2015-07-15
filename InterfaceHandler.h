@@ -82,7 +82,7 @@ public:
 	/// Genereates the Developer's documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A string with the json representation
-	///						of the contract's developer documentation
+	///                     of the contract's developer documentation
 	std::string devDocumentation(ContractDefinition const& _contractDef);
 
 private:

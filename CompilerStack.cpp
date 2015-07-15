@@ -116,6 +116,7 @@ void CompilerStack::parse()
 				resolver.resolveNamesAndTypes(*contract);
 				m_contracts[contract->getName()].contract = contract;
 			}
+	InterfaceHandler interfaceHandler;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->getNodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -123,18 +124,11 @@ void CompilerStack::parse()
 				m_globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*m_globalContext->getCurrentThis());
 				resolver.checkTypeRequirements(*contract);
+				contract->setDevDocumentation(interfaceHandler.devDocumentation(*contract));
+				contract->setUserDocumentation(interfaceHandler.userDocumentation(*contract));
 				m_contracts[contract->getName()].contract = contract;
-				parseNatspecDocumentation(*contract);
 			}
 	m_parseSuccessful = true;
-}
-
-void CompilerStack::parseNatspecDocumentation(ContractDefinition const& _contract)
-{
-	InterfaceHandler interfaceHandler;
-	string devDoc =_contract.devDocumentation();
-	devDoc = interfaceHandler.devDocumentation(_contract);
-	//interfaceHandler.generateUserDocumentation(_contract);
 }
 
 void CompilerStack::parse(string const& _sourceCode)
@@ -240,6 +234,8 @@ string const& CompilerStack::getMetadata(string const& _contractName, Documentat
 	Contract const& contract = getContract(_contractName);
 
 	std::unique_ptr<string const>* doc;
+
+	// checks wheather we already have the documentation
 	switch (_type)
 	{
 	case DocumentationType::NatspecUser:
@@ -257,10 +253,10 @@ string const& CompilerStack::getMetadata(string const& _contractName, Documentat
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 	}
-	auto resPtr =  ((*doc) ? *(*doc) : contract.interfaceHandler->getDocumentation(*contract.contract, _type));
 
+	// caches the result
 	if (!*doc)
-		*doc = (unique_ptr<string>(new string(contract.interfaceHandler->getDocumentation(*contract.contract, _type))));
+		doc->reset(new string(contract.interfaceHandler->getDocumentation(*contract.contract, _type)));
 
 	return *(*doc);
 }
