@@ -830,11 +830,14 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 		return;
 	}
 
+	/// For error message: Struct members that were removed during conversion to memory.
+	set<string> membersRemovedForStructConstructor;
 	if (isStructConstructorCall())
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*expressionType);
 		auto const& structType = dynamic_cast<StructType const&>(*type.getActualType());
 		functionType = structType.constructorType();
+		membersRemovedForStructConstructor = structType.membersMissingInMemory();
 	}
 	else
 		functionType = dynamic_pointer_cast<FunctionType const>(expressionType);
@@ -847,13 +850,22 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 	// function parameters
 	TypePointers const& parameterTypes = functionType->getParameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != m_arguments.size())
-		BOOST_THROW_EXCEPTION(createTypeError(
+	{
+		string msg =
 			"Wrong argument count for function call: " +
 			toString(m_arguments.size()) +
 			" arguments given but expected " +
 			toString(parameterTypes.size()) +
-			"."
-		));
+			".";
+		// Extend error message in case we try to construct a struct with mapping member.
+		if (isStructConstructorCall() && !membersRemovedForStructConstructor.empty())
+		{
+			msg += " Members that have to be skipped in memory:";
+			for (auto const& member: membersRemovedForStructConstructor)
+				msg += " " + member;
+		}
+		BOOST_THROW_EXCEPTION(createTypeError(msg));
+	}
 
 	if (isPositionalCall)
 	{
@@ -972,10 +984,22 @@ void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
 				++it;
 	}
 	if (possibleMembers.size() == 0)
+	{
+		auto storageType = ReferenceType::copyForLocationIfReference(
+			DataLocation::Storage,
+			m_expression->getType()
+		);
+		if (!storageType->getMembers().membersByName(*m_memberName).empty())
+			BOOST_THROW_EXCEPTION(createTypeError(
+				"Member \"" + *m_memberName + "\" is not available in " +
+				type.toString() +
+				" outside of storage."
+			));
 		BOOST_THROW_EXCEPTION(createTypeError(
 			"Member \"" + *m_memberName + "\" not found or not visible "
 			"after argument-dependent lookup in " + type.toString()
 		));
+	}
 	else if (possibleMembers.size() > 1)
 		BOOST_THROW_EXCEPTION(createTypeError(
 			"Member \"" + *m_memberName + "\" not unique "

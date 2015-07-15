@@ -574,14 +574,14 @@ class StructType: public ReferenceType
 {
 public:
 	virtual Category getCategory() const override { return Category::Struct; }
-	explicit StructType(StructDefinition const& _struct):
-		ReferenceType(DataLocation::Storage), m_struct(_struct) {}
+	explicit StructType(StructDefinition const& _struct, DataLocation _location = DataLocation::Storage):
+		ReferenceType(_location), m_struct(_struct) {}
 	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
 	u256 memorySize() const;
 	virtual u256 getStorageSize() const override;
-	virtual bool canLiveOutsideStorage() const override;
+	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString(bool _short) const override;
 
 	virtual MemberList const& getMembers() const override;
@@ -596,6 +596,9 @@ public:
 	u256 memoryOffsetOfMember(std::string const& _name) const;
 
 	StructDefinition const& structDefinition() const { return m_struct; }
+
+	/// @returns the set of all members that are removed in the memory version (typically mappings).
+	std::set<std::string> membersMissingInMemory() const;
 
 private:
 	StructDefinition const& m_struct;

@@ -1040,14 +1040,6 @@ u256 StructType::getStorageSize() const
 	return max<u256>(1, getMembers().getStorageSize());
 }
 
-bool StructType::canLiveOutsideStorage() const
-{
-	for (auto const& member: getMembers())
-		if (!member.type->canLiveOutsideStorage())
-			return false;
-	return true;
-}
-
 string StructType::toString(bool _short) const
 {
 	string ret = "struct " + m_struct.getName();
@@ -1064,9 +1056,13 @@ MemberList const& StructType::getMembers() const
 		MemberList::MemberMap members;
 		for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
 		{
+			TypePointer type = variable->getType();
+			// Skip all mapping members if we are not in storage.
+			if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
+				continue;
 			members.push_back(MemberList::Member(
 				variable->getName(),
-				copyForLocationIfReference(variable->getType()),
+				copyForLocationIfReference(type),
 				variable.get())
 			);
 		}
@@ -1077,8 +1073,7 @@ MemberList const& StructType::getMembers() const
 
 TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer) const
 {
-	auto copy = make_shared<StructType>(m_struct);
-	copy->m_location = _location;
+	auto copy = make_shared<StructType>(m_struct, _location);
 	copy->m_isPointer = _isPointer;
 	return copy;
 }
@@ -1120,6 +1115,15 @@ u256 StructType::memoryOffsetOfMember(string const& _name) const
 			offset += member.type->memoryHeadSize();
 	solAssert(false, "Member not found in struct.");
 	return 0;
+}
+
+set<string> StructType::membersMissingInMemory() const
+{
+	set<string> missing;
+	for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
+		if (!variable->getType()->canLiveOutsideStorage())
+			missing.insert(variable->getName());
+	return missing;
 }
 
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
