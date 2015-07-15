@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(natspec_notice_without_tag)
 	{
 	   "methods" : {
 		  "mul(uint256)" : {
-			 "notice" : " I do something awesome"
+			 "notice" : "I do something awesome"
 		  }
 	   }
 	}
@@ -518,11 +518,10 @@ BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 	{
 	   "methods" : {
 		  "mul(uint256)" : {
-			 "notice" : " I do something awesome which requires two lines to explain"
+			 "notice" : "I do something awesome which requires two lines to explain"
 		  }
 	   }
 	}
-
 	)ABCDEF";
 
 	checkNatspec(sourceCode, natspec, true);
