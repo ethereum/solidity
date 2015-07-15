@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(large_string_literal)
 	char const* text = "contract test {\n"
 					   "  function f() { var x = \"123456789012345678901234567890123\"; }"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(balance)
@@ -2095,6 +2095,43 @@ BOOST_AUTO_TEST_CASE(struct_named_constructor)
 		}
 	)";
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(literal_strings)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				string memory long = "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+				string memory short = "123";
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_integer_literal_fraction)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				var x = 1.20;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_integer_literal_exp)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				var x = 1e2;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

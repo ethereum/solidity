@@ -479,7 +479,7 @@ bytes importCode(json_spirit::mObject& _o)
 {
 	bytes code;
 	if (_o["code"].type() == json_spirit::str_type)
-		if (_o["code"].get_str().find_first_of("0x") != 0)
+		if (_o["code"].get_str().find("0x") != 0)
 			code = compileLLL(_o["code"].get_str(), false);
 		else
 			code = fromHex(_o["code"].get_str().substr(2));
@@ -767,6 +767,8 @@ Options::Options()
 			wallet = true;
 		else if (arg == "--nonetwork")
 			nonetwork = true;
+		else if (arg == "--network")
+			nonetwork = false;
 		else if (arg == "--nodag")
 			nodag = true;
 		else if (arg == "--all")

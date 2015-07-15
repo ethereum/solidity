@@ -564,20 +564,6 @@ BOOST_AUTO_TEST_CASE(strings)
 	BOOST_CHECK(callContractFunction("pipeThrough(bytes2,bool)", string("\0\x02", 2), true) == encodeArgs(string("\0\x2", 2), true));
 }
 
-BOOST_AUTO_TEST_CASE(empty_string_on_stack)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function run() external returns(bytes2 ret) {
-				var y = "";
-				ret = y;
-			}
-		}
-	)";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("run()") == encodeArgs(byte(0x00)));
-}
-
 BOOST_AUTO_TEST_CASE(inc_dec_operators)
 {
 	char const* sourceCode = R"(
@@ -597,6 +583,22 @@ BOOST_AUTO_TEST_CASE(inc_dec_operators)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(0x53866));
+}
+
+BOOST_AUTO_TEST_CASE(bytes_comparison)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns (bool) {
+				bytes2 a = "a";
+				bytes2 x = "aa";
+				bytes2 b = "b";
+				return a < x && x < b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(state_smoke_test)
@@ -5000,6 +5002,37 @@ BOOST_AUTO_TEST_CASE(struct_named_constructor)
 
 	BOOST_CHECK(callContractFunction("s()") == encodeArgs(u256(1), true));
 }
+
+BOOST_AUTO_TEST_CASE(literal_strings)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			string public long;
+			string public medium;
+			string public short;
+			string public empty;
+			function f() returns (string) {
+				long = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+				medium = "01234567890123456789012345678901234567890123456789012345678901234567890123456789";
+				short = "123";
+				empty = "";
+				return "Hello, World!";
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	string longStr = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+	string medium = "01234567890123456789012345678901234567890123456789012345678901234567890123456789";
+	string shortStr = "123";
+	string hello = "Hello, World!";
+
+	BOOST_CHECK(callContractFunction("f()") == encodeDyn(hello));
+	BOOST_CHECK(callContractFunction("long()") == encodeDyn(longStr));
+	BOOST_CHECK(callContractFunction("medium()") == encodeDyn(medium));
+	BOOST_CHECK(callContractFunction("short()") == encodeDyn(shortStr));
+	BOOST_CHECK(callContractFunction("empty()") == encodeDyn(string()));
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
