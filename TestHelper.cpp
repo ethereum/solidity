@@ -23,6 +23,7 @@
 
 #include <thread>
 #include <chrono>
+#include <libethcore/EthashAux.h>
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
@@ -63,11 +64,17 @@ void connectClients(Client& c1, Client& c2)
 void mine(State& s, BlockChain const& _bc)
 {
 	s.commitToMine(_bc);
-	GenericFarm<Ethash> f;
+	GenericFarm<EthashProofOfWork> f;
 	bool completed = false;
-	f.onSolutionFound([&](ProofOfWork::Solution sol)
+	Ethash::BlockHeader header(s.info);
+	f.onSolutionFound([&](EthashProofOfWork::Solution sol)
 	{
-		return completed = s.completeMine<ProofOfWork>(sol);
+			header.m_mixHash = sol.mixHash;
+			header.m_nonce = sol.nonce;
+			RLPStream ret;
+			header.streamRLP(ret);
+			s.sealBlock(ret);
+			return true;
 	});
 	f.setWork(s.info());
 	f.startCPU();
@@ -77,9 +84,9 @@ void mine(State& s, BlockChain const& _bc)
 
 void mine(BlockInfo& _bi)
 {
-	GenericFarm<ProofOfWork> f;
+	GenericFarm<EthashProofOfWork> f;
 	bool completed = false;
-	f.onSolutionFound([&](ProofOfWork::Solution sol)
+	f.onSolutionFound([&](EthashProofOfWork::Solution sol)
 	{
 		_bi.proof = sol;
 		return completed = true;
