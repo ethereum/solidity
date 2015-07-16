@@ -41,7 +41,7 @@ StackVariable::StackVariable(CompilerContext& _compilerContext, Declaration cons
 void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 {
 	unsigned stackPos = m_context.baseToCurrentStackOffset(m_baseStackOffset);
-	if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
+	if (stackPos + 1 > 16) //@todo correct this by fetching earlier or moving to memory
 		BOOST_THROW_EXCEPTION(
 			CompilerError() <<
 			errinfo_sourceLocation(_location) <<
