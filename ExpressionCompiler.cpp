@@ -48,12 +48,23 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 {
 	if (!_varDecl.getValue())
 		return;
-	solAssert(!!_varDecl.getValue()->getType(), "Type information not available.");
+	TypePointer type = _varDecl.getValue()->getType();
+	solAssert(!!type, "Type information not available.");
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.getValue()->accept(*this);
-	utils().convertType(*_varDecl.getValue()->getType(), *_varDecl.getType(), true);
 
-	StorageItem(m_context, _varDecl).storeValue(*_varDecl.getType(), _varDecl.getLocation(), true);
+	if (_varDecl.getType()->dataStoredIn(DataLocation::Storage))
+	{
+		// reference type, only convert value to mobile type and do final conversion in storeValue.
+		utils().convertType(*type, *type->mobileType());
+		type = type->mobileType();
+	}
+	else
+	{
+		utils().convertType(*type, *_varDecl.getType());
+		type = _varDecl.getType();
+	}
+	StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.getLocation(), true);
 }
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
