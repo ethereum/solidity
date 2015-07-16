@@ -767,6 +767,8 @@ Options::Options()
 			wallet = true;
 		else if (arg == "--nonetwork")
 			nonetwork = true;
+		else if (arg == "--network")
+			nonetwork = false;
 		else if (arg == "--nodag")
 			nodag = true;
 		else if (arg == "--all")
