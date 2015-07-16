@@ -63,7 +63,7 @@ void connectClients(Client& c1, Client& c2)
 void mine(State& s, BlockChain const& _bc)
 {
 	s.commitToMine(_bc);
-	GenericFarm<ProofOfWork> f;
+	GenericFarm<Ethash> f;
 	bool completed = false;
 	f.onSolutionFound([&](ProofOfWork::Solution sol)
 	{
