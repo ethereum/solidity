@@ -503,7 +503,7 @@ void StructDefinition::checkRecursion() const
 				);
 			}
 	};
-	check(this, {});
+	check(this, StructPointersSet{});
 }
 
 TypePointer EnumDefinition::getType(ContractDefinition const*) const
