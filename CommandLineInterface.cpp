@@ -335,8 +335,8 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
 			"Output a single json document containing the specified information, can be combined."
 		)
-		(g_argAstStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
-			"Request to output the AST of the contract.")
+		("output-dir,o", po::value<vector<string>>()->composing(), "Output directory path")
+		(g_argAstStr.c_str(), "Request to output the AST of the contract.")
 		(g_argAstJson.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
 			"Request to output the AST of the contract in JSON format.")
 		(g_argAsmStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
