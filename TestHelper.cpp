@@ -23,6 +23,7 @@
 
 #include <thread>
 #include <chrono>
+#include <libethcore/EthashAux.h>
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
@@ -63,11 +64,17 @@ void connectClients(Client& c1, Client& c2)
 void mine(State& s, BlockChain const& _bc)
 {
 	s.commitToMine(_bc);
-	GenericFarm<ProofOfWork> f;
+	GenericFarm<EthashProofOfWork> f;
 	bool completed = false;
-	f.onSolutionFound([&](ProofOfWork::Solution sol)
+	Ethash::BlockHeader header(s.info);
+	f.onSolutionFound([&](EthashProofOfWork::Solution sol)
 	{
-		return completed = s.completeMine<ProofOfWork>(sol);
+			header.m_mixHash = sol.mixHash;
+			header.m_nonce = sol.nonce;
+			RLPStream ret;
+			header.streamRLP(ret);
+			s.sealBlock(ret);
+			return true;
 	});
 	f.setWork(s.info());
 	f.startCPU();
@@ -77,11 +84,11 @@ void mine(State& s, BlockChain const& _bc)
 
 void mine(BlockInfo& _bi)
 {
-	GenericFarm<ProofOfWork> f;
+	GenericFarm<EthashProofOfWork> f;
 	bool completed = false;
-	f.onSolutionFound([&](ProofOfWork::Solution sol)
+	f.onSolutionFound([&](EthashProofOfWork::Solution sol)
 	{
-		ProofOfWork::assignResult(sol, _bi);
+		_bi.proof = sol;
 		return completed = true;
 	});
 	f.setWork(_bi);
@@ -151,12 +158,12 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
 
-	m_environment.currentBlock.parentHash = h256(_o["previousHash"].get_str());
+	m_environment.currentBlock.parentHash() = h256(_o["previousHash"].get_str());
 	m_environment.currentBlock.number = toInt(_o["currentNumber"]);
 	m_environment.currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
 	m_environment.currentBlock.difficulty = toInt(_o["currentDifficulty"]);
-	m_environment.currentBlock.timestamp = toInt(_o["currentTimestamp"]);
-	m_environment.currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
+	m_environment.currentBlock.timestamp() = toInt(_o["currentTimestamp"]);
+	m_environment.currentBlock.coinbaseAddress() = Address(_o["currentCoinbase"].get_str());
 
 	m_statePre.m_previousBlock = m_environment.previousBlock;
 	m_statePre.m_currentBlock = m_environment.currentBlock;

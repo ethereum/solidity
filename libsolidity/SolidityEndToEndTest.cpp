@@ -25,6 +25,7 @@
 #include <tuple>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Hash.h>
+#include <libsolidity/Exceptions.h>
 #include <test/libsolidity/solidityExecutionFramework.h>
 
 using namespace std;
@@ -1187,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(now)
 {
 	char const* sourceCode = "contract test {\n"
 							 "  function someInfo() returns (bool success) {\n"
-							 "    return block.timestamp == now && now > 0;\n"
+							 "    return block.timestamp() == now && now > 0;\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
@@ -4657,6 +4658,32 @@ BOOST_AUTO_TEST_CASE(bytes_memory_index_access)
 	) == encodeArgs(u256(data.size()), string("d")));
 }
 
+BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
+{
+	char const* sourceCode = " /// @author Lefteris\n"
+	" /// @title Just a test contract\n"
+	"contract test {\n"
+	"  /// @dev Mul function\n"
+	"  /// @title I really should not be here\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	compileRequireThrow<DocstringParsingError>(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter\n"
+	"  /// @param not_existing Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	compileRequireThrow<DocstringParsingError>(sourceCode);
+}
+
+
 BOOST_AUTO_TEST_CASE(storage_array_ref)
 {
 	char const* sourceCode = R"(
@@ -5033,6 +5060,44 @@ BOOST_AUTO_TEST_CASE(literal_strings)
 	BOOST_CHECK(callContractFunction("empty()") == encodeDyn(string()));
 }
 
+BOOST_AUTO_TEST_CASE(initialise_string_constant)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			string public short = "abcdef";
+			string public long = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	string longStr = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+	string shortStr = "abcdef";
+
+	BOOST_CHECK(callContractFunction("long()") == encodeDyn(longStr));
+	BOOST_CHECK(callContractFunction("short()") == encodeDyn(shortStr));
+}
+
+BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			struct S { uint8 a; mapping(uint => uint) b; uint8 c; }
+			S s;
+			function f() returns (uint) {
+				S memory x;
+				if (x.a != 0 || x.c != 0) return 1;
+				x.a = 4; x.c = 5;
+				s = x;
+				if (s.a != 4 || s.c != 5) return 2;
+				x = S(2, 3);
+				if (x.a != 2 || x.c != 3) return 3;
+				x = s;
+				if (s.a != 4 || s.c != 5) return 4;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
