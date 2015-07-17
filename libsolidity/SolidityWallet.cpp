@@ -89,11 +89,16 @@ contract multiowned {
 
 	// constructor is given number of sigs required to do protected "onlymanyowners" transactions
 	// as well as the selection of addresses capable of confirming them.
-	function multiowned() {
-		m_required = 1;
-		m_numOwners = 1;
-		m_owners[m_numOwners] = uint(msg.sender);
-		m_ownerIndex[uint(msg.sender)] = m_numOwners;
+	function multiowned(address[] _owners, uint _required) {
+		m_numOwners = _owners.length + 1;
+		m_owners[1] = uint(msg.sender);
+		m_ownerIndex[uint(msg.sender)] = 1;
+		for (uint i = 0; i < _owners.length; ++i)
+		{
+			m_owners[2 + i] = uint(_owners[i]);
+			m_ownerIndex[uint(_owners[i])] = 2 + i;
+		}
+		m_required = _required;
 	}
 
 	// Revokes a prior confirmation of the given operation
@@ -122,6 +127,7 @@ contract multiowned {
 		m_ownerIndex[uint(_to)] = ownerIndex;
 		OwnerChanged(_from, _to);
 	}
+
 	function addOwner(address _owner) onlymanyowners(sha3(msg.data, block.number)) external {
 		if (isOwner(_owner)) return;
 
@@ -346,15 +352,10 @@ contract Wallet is multisig, multiowned, daylimit {
 		bytes data;
 	}
 
-	// EVENTS
-
-	event Created(bytes32 indexed identifier);
-
 	// METHODS
 
-	// constructor - just pass on the owner arra to the multiowned.
-	function Wallet(bytes32 identifier) {
-		Created(identifier);
+	// constructor - just pass on the owner array to the multiowned.
+	function Wallet(address[] _owners, uint _required) multiowned(_owners, _required) {
 	}
 
 	// kills the contract sending everything to `_to`.
@@ -423,7 +424,7 @@ static unique_ptr<bytes> s_compiledWallet;
 class WalletTestFramework: public ExecutionFramework
 {
 protected:
-	void deployWallet(u256 const& _value = 0)
+	void deployWallet(u256 const& _value = 0, vector<u256> const& _owners = vector<u256>{}, u256 _required = 1)
 	{
 		if (!s_compiledWallet)
 		{
@@ -433,7 +434,8 @@ protected:
 			ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
 			s_compiledWallet.reset(new bytes(m_compiler.getBytecode("Wallet")));
 		}
-		sendMessage(*s_compiledWallet, true, _value);
+		bytes args = encodeArgs(u256(0x40), _required, u256(_owners.size()), _owners);
+		sendMessage(*s_compiledWallet + args, true, _value);
 		BOOST_REQUIRE(!m_output.empty());
 	}
 };
@@ -504,6 +506,17 @@ BOOST_AUTO_TEST_CASE(remove_owner)
 	// check everyone is there
 	for (unsigned i = 0; i < 10; ++i)
 		BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x12 + i)) == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(initial_owners)
+{
+	deployWallet(200, vector<u256>{5, 6, 7}, 2);
+	BOOST_CHECK(callContractFunction("m_numOwners()") == encodeArgs(u256(4)));
+	BOOST_CHECK(callContractFunction("isOwner(address)", h256(m_sender, h256::AlignRight)) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("isOwner(address)", u256(5)) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("isOwner(address)", u256(6)) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("isOwner(address)", u256(7)) == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("isOwner(address)", u256(8)) == encodeArgs(false));
 }
 
 BOOST_AUTO_TEST_CASE(multisig_value_transfer)
