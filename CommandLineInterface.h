@@ -37,7 +37,6 @@ enum class OutputType: uint8_t
 {
 	STDOUT,
 	FILE,
-	BOTH
 };
 
 class CommandLineInterface
