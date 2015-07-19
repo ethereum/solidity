@@ -41,7 +41,11 @@ namespace test
 class ExecutionFramework
 {
 public:
-	ExecutionFramework() { g_logVerbosity = 0; }
+	ExecutionFramework()
+	{
+		g_logVerbosity = 0;
+		m_state.resetCurrent();
+	}
 
 	bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,

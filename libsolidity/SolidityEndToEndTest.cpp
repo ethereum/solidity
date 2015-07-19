@@ -1188,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(now)
 {
 	char const* sourceCode = "contract test {\n"
 							 "  function someInfo() returns (bool success) {\n"
-							 "    return block.timestamp() == now && now > 0;\n"
+							 "    return block.timestamp == now && now > 0;\n"
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
