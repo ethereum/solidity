@@ -63,38 +63,23 @@ void connectClients(Client& c1, Client& c2)
 
 void mine(State& s, BlockChain const& _bc)
 {
+	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
 	s.commitToMine(_bc);
-	GenericFarm<EthashProofOfWork> f;
-	bool completed = false;
-	Ethash::BlockHeader header(s.info);
-	f.onSolutionFound([&](EthashProofOfWork::Solution sol)
-	{
-			header.m_mixHash = sol.mixHash;
-			header.m_nonce = sol.nonce;
-			RLPStream ret;
-			header.streamRLP(ret);
-			s.sealBlock(ret);
-			return true;
-	});
-	f.setWork(s.info());
-	f.startCPU();
-	while (!completed)
-		this_thread::sleep_for(chrono::milliseconds(20));
+	Notified<bytes> sealed;
+	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
+	sealer->generateSeal(s.info());
+	sealed.waitNot({});
+	s.sealBlock(sealed);
 }
 
-void mine(BlockInfo& _bi)
+void mine(Ethash::BlockHeader& _bi)
 {
-	GenericFarm<EthashProofOfWork> f;
-	bool completed = false;
-	f.onSolutionFound([&](EthashProofOfWork::Solution sol)
-	{
-		_bi.proof = sol;
-		return completed = true;
-	});
-	f.setWork(_bi);
-	f.startCPU();
-	while (!completed)
-		this_thread::sleep_for(chrono::milliseconds(20));
+	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
+	Notified<bytes> sealed;
+	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
+	sealer->generateSeal(_bi);
+	sealed.waitNot({});
+	_bi = Ethash::BlockHeader(sealed);
 }
 
 }
@@ -158,13 +143,24 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
 
-	m_environment.currentBlock.parentHash() = h256(_o["previousHash"].get_str());
-	m_environment.currentBlock.number = toInt(_o["currentNumber"]);
-	m_environment.currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
-	m_environment.currentBlock.difficulty = toInt(_o["currentDifficulty"]);
-	m_environment.currentBlock.timestamp() = toInt(_o["currentTimestamp"]);
-	m_environment.currentBlock.coinbaseAddress() = Address(_o["currentCoinbase"].get_str());
+	RLPStream rlpStream;
+	rlpStream.appendList(BlockInfo::BasicFields);
 
+	rlpStream << h256(_o["previousHash"].get_str());
+	rlpStream << EmptyListSHA3;
+	rlpStream << Address(_o["currentCoinbase"].get_str());
+	rlpStream << h256(); // stateRoot
+	rlpStream << EmptyTrie; // transactionTrie
+	rlpStream << EmptyTrie; // receiptTrie
+	rlpStream << LogBloom(); // bloom
+	rlpStream << toInt(_o["currentDifficulty"]);
+	rlpStream << toInt(_o["currentNumber"]);
+	rlpStream << toInt(_o["currentGasLimit"]);
+	rlpStream << 0; //gasUsed
+	rlpStream << toInt(_o["currentTimestamp"]);
+	rlpStream << std::string(); //extra data
+
+	m_environment.currentBlock = BlockInfo(rlpStream.out(), CheckEverything, h256{}, HeaderData);
 	m_statePre.m_previousBlock = m_environment.previousBlock;
 	m_statePre.m_currentBlock = m_environment.currentBlock;
 }
@@ -824,6 +820,43 @@ LastHashes lastHashes(u256 _currentBlockNumber)
 	return ret;
 }
 
+dev::eth::Ethash::BlockHeader constructHeader(
+	h256 const& _parentHash,
+	h256 const& _sha3Uncles,
+	Address const& _coinbaseAddress,
+	h256 const& _stateRoot,
+	h256 const& _transactionsRoot,
+	h256 const& _receiptsRoot,
+	dev::eth::LogBloom const& _logBloom,
+	u256 const& _difficulty,
+	u256 const& _number,
+	u256 const& _gasLimit,
+	u256 const& _gasUsed,
+	u256 const& _timestamp,
+	bytes const& _extraData)
+{
+	RLPStream rlpStream;
+	rlpStream.appendList(Ethash::BlockHeader::Fields);
+
+	rlpStream << _parentHash << _sha3Uncles << _coinbaseAddress << _stateRoot << _transactionsRoot << _receiptsRoot << _logBloom
+		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData << h256{} << Nonce{};
+
+	return Ethash::BlockHeader(rlpStream.out());
+}
+
+void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce)
+{
+	RLPStream source;
+	_header.streamRLP(source);
+	RLP sourceRlp(source.out());
+	RLPStream header;
+	header.appendList(Ethash::BlockHeader::Fields);
+	for (size_t i = 0; i < BlockInfo::BasicFields; i++)
+		header << sourceRlp[i];
+
+	header << _mixHash << _nonce;
+	_header = Ethash::BlockHeader(header.out());
+}
 
 namespace
 {
