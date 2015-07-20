@@ -45,7 +45,7 @@ public:
 	CommandLineInterface() {}
 
 	/// Parse command line arguments and return false if we should not continue
-	bool parseArguments(int argc, char** argv);
+	bool parseArguments(int _argc, char** _argv);
 	/// Parse the files and create source code objects
 	bool processInput();
 	/// Perform actions on the input depending on provided compiler arguments
@@ -61,6 +61,12 @@ private:
 	void handleMeta(DocumentationType _type,
 					std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
+
+
+	/// Create a file in the given directory
+	/// @arg _fileName the name of the file
+	/// @arg _data to be written
+	void createFile(std::string const& _fileName, std::string const& _data = "");
 
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;
