@@ -523,7 +523,9 @@ BOOST_AUTO_TEST_CASE(initial_owners)
 	BOOST_CHECK(callContractFunction("m_numOwners()") == encodeArgs(u256(8)));
 	BOOST_CHECK(callContractFunction("isOwner(address)", h256(m_sender, h256::AlignRight)) == encodeArgs(true));
 	for (u256 const& owner: owners)
+	{
 		BOOST_CHECK(callContractFunction("isOwner(address)", owner) == encodeArgs(true));
+	}
 }
 
 BOOST_AUTO_TEST_CASE(multisig_value_transfer)
