@@ -510,13 +510,20 @@ BOOST_AUTO_TEST_CASE(remove_owner)
 
 BOOST_AUTO_TEST_CASE(initial_owners)
 {
-	deployWallet(200, vector<u256>{5, 6, 7}, 2);
-	BOOST_CHECK(callContractFunction("m_numOwners()") == encodeArgs(u256(4)));
+	vector<u256> owners{
+		u256("0x00000000000000000000000042c56279432962a17176998a4747d1b4d6ed4367"),
+		u256("0x000000000000000000000000d4d4669f5ba9f4c27d38ef02a358c339b5560c47"),
+		u256("0x000000000000000000000000e6716f9544a56c530d868e4bfbacb172315bdead"),
+		u256("0x000000000000000000000000775e18be7a50a0abb8a4e82b1bd697d79f31fe04"),
+		u256("0x000000000000000000000000f4dd5c3794f1fd0cdc0327a83aa472609c806e99"),
+		u256("0x0000000000000000000000004c9113886af165b2de069d6e99430647e94a9fff"),
+		u256("0x0000000000000000000000003fb1cd2cd96c6d5c0b5eb3322d807b34482481d4")
+	};
+	deployWallet(0, owners, 4);
+	BOOST_CHECK(callContractFunction("m_numOwners()") == encodeArgs(u256(8)));
 	BOOST_CHECK(callContractFunction("isOwner(address)", h256(m_sender, h256::AlignRight)) == encodeArgs(true));
-	BOOST_CHECK(callContractFunction("isOwner(address)", u256(5)) == encodeArgs(true));
-	BOOST_CHECK(callContractFunction("isOwner(address)", u256(6)) == encodeArgs(true));
-	BOOST_CHECK(callContractFunction("isOwner(address)", u256(7)) == encodeArgs(true));
-	BOOST_CHECK(callContractFunction("isOwner(address)", u256(8)) == encodeArgs(false));
+	for (u256 const& owner: owners)
+		BOOST_CHECK(callContractFunction("isOwner(address)", owner) == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(multisig_value_transfer)
