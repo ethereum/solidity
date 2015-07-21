@@ -304,8 +304,7 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	fs::path p(m_args["output-dir"].as<string>());
 	fs::create_directories(p);
 	ofstream outFile(m_args["output-dir"].as<string>() + "/" + _fileName);
-	if (!_data.empty())
-		outFile << _data;
+	outFile << _data;
 	if (!outFile)
 		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _fileName));
 	outFile.close();

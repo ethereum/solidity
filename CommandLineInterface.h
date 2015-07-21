@@ -33,12 +33,6 @@ namespace solidity
 //forward declaration
 enum class DocumentationType: uint8_t;
 
-enum class OutputType: uint8_t
-{
-	STDOUT,
-	FILE,
-};
-
 class CommandLineInterface
 {
 public:
@@ -66,7 +60,7 @@ private:
 	/// Create a file in the given directory
 	/// @arg _fileName the name of the file
 	/// @arg _data to be written
-	void createFile(std::string const& _fileName, std::string const& _data = "");
+	void createFile(std::string const& _fileName, std::string const& _data);
 
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;
