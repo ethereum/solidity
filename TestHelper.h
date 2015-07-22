@@ -122,26 +122,16 @@ namespace test
 	}																	\
 	while (0)
 
-struct ImportStateOptions
-{
-	ImportStateOptions(bool _bSetAll = false):m_bHasBalance(_bSetAll), m_bHasNonce(_bSetAll), m_bHasCode(_bSetAll), m_bHasStorage(_bSetAll)	{}
-	bool isAllSet() {return m_bHasBalance && m_bHasNonce && m_bHasCode && m_bHasStorage;}
-	bool m_bHasBalance;
-	bool m_bHasNonce;
-	bool m_bHasCode;
-	bool m_bHasStorage;
-};
-typedef std::map<Address, ImportStateOptions> stateOptionsMap;
-
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o): m_TestObject(_o) {}
+	ImportTest(json_spirit::mObject& _o): m_environment(m_envInfo), m_testObject(_o) {}
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
+
 	// imports
 	void importEnv(json_spirit::mObject& _o);
 	static void importState(json_spirit::mObject& _o, eth::State& _state);
-	static void importState(json_spirit::mObject& _o, eth::State& _state, stateOptionsMap& _stateOptionsMap);
+	static void importState(json_spirit::mObject& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
 	void importTransaction(json_spirit::mObject& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
@@ -150,17 +140,18 @@ public:
 
 	eth::State m_statePre;
 	eth::State m_statePost;
+	eth::EnvInfo m_envInfo;
 	eth::ExtVMFace m_environment;
 	eth::Transaction m_transaction;
 
 private:
-	json_spirit::mObject& m_TestObject;
+	json_spirit::mObject& m_testObject;
 };
 
 class ZeroGasPricer: public eth::GasPricer
 {
 protected:
-	u256 ask(eth::State const&) const override { return 0; }
+	u256 ask(eth::Block const&) const override { return 0; }
 	u256 bid(eth::TransactionPriority = eth::TransactionPriority::Medium) const override { return 0; }
 };
 

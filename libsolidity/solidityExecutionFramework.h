@@ -185,7 +185,7 @@ protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, eth::LastHashes(), 0);
+		eth::Executive executive(m_state, eth::EnvInfo(), 0);
 		eth::ExecutionResult res;
 		executive.setResultRecipient(res);
 		eth::Transaction t =

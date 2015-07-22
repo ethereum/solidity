@@ -64,7 +64,7 @@ void connectClients(Client& c1, Client& c2)
 void mine(State& s, BlockChain const& _bc)
 {
 	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
-	s.commitToMine(_bc);
+	s.commitToSeal(_bc);
 	Notified<bytes> sealed;
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(s.info());
@@ -97,7 +97,8 @@ bigint const c_max256plus1 = bigint(1) << 256;
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 	m_statePre(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
 	m_statePost(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
-	m_TestObject(_o)
+	m_environment(m_envInfo),
+	m_testObject(_o)
 {
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
@@ -144,99 +145,28 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	assert(_o.count("currentTimestamp") > 0);
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
-
-	RLPStream rlpStream;
-	rlpStream.appendList(BlockInfo::BasicFields);
-
-	rlpStream << h256(_o["previousHash"].get_str());
-	rlpStream << EmptyListSHA3;
-	rlpStream << Address(_o["currentCoinbase"].get_str());
-	rlpStream << h256(); // stateRoot
-	rlpStream << EmptyTrie; // transactionTrie
-	rlpStream << EmptyTrie; // receiptTrie
-	rlpStream << LogBloom(); // bloom
-	rlpStream << toInt(_o["currentDifficulty"]);
-	rlpStream << toInt(_o["currentNumber"]);
-	rlpStream << toInt(_o["currentGasLimit"]);
-	rlpStream << 0; //gasUsed
-	rlpStream << toInt(_o["currentTimestamp"]);
-	rlpStream << std::string(); //extra data
-
-	m_environment.currentBlock = BlockInfo(rlpStream.out(), CheckEverything, h256{}, HeaderData);
-	m_statePre.m_previousBlock = m_environment.previousBlock;
-	m_statePre.m_currentBlock = m_environment.currentBlock;
+	m_envInfo.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
+	m_envInfo.setDifficulty(toInt(_o["currentDifficulty"]));
+	m_envInfo.setNumber(toInt(_o["currentNumber"]));
+	m_envInfo.setGasLimit(toInt(_o["currentGasLimit"]));
+	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
 
-void ImportTest::importState(json_spirit::mObject& _o, State& _state, stateOptionsMap& _stateOptionsMap)
+void ImportTest::importState(json_spirit::mObject& _o, State& _state, AccountMaskMap& o_mask)
 {
-	for (auto& i: _o)
-	{
-		json_spirit::mObject o = i.second.get_obj();
-
-		ImportStateOptions stateOptions;
-		u256 balance = 0;
-		u256 nonce = 0;
-
-		if (o.count("balance") > 0)
-		{
-			stateOptions.m_bHasBalance = true;
-			if (bigint(o["balance"].get_str()) >= c_max256plus1)
-				BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'balance' is equal or greater than 2**256") );
-			balance = toInt(o["balance"]);
-		}
-
-		if (o.count("nonce") > 0)
-		{
-			stateOptions.m_bHasNonce = true;
-			if (bigint(o["nonce"].get_str()) >= c_max256plus1)
-				BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("State 'nonce' is equal or greater than 2**256") );
-			nonce = toInt(o["nonce"]);
-		}
-
-		Address address = Address(i.first);
-
-		bytes code;
-		if (o.count("code") > 0)
-		{
-			code = importCode(o);
-			stateOptions.m_bHasCode = true;
-		}
-
-		if (!code.empty())
-		{
-			_state.m_cache[address] = Account(balance, Account::ContractConception);
-			_state.m_cache[address].setCode(std::move(code));
-		}
-		else
-			_state.m_cache[address] = Account(balance, Account::NormalCreation);
-
-		if (o.count("storage") > 0)
-		{
-			stateOptions.m_bHasStorage = true;
-			for (auto const& j: o["storage"].get_obj())
-				_state.setStorage(address, toInt(j.first), toInt(j.second));
-		}
-
-		for (int i = 0; i < nonce; ++i)
-			_state.noteSending(address);
-
-		_state.ensureCached(address, false, false);
-		_stateOptionsMap[address] = stateOptions;
-	}
+	_state.populateFrom(jsonToAccountMap(json_spirit::write_string(_o, false), &o_mask));
 }
 
 void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 {
-	stateOptionsMap importedMap;
-	importState(_o, _state, importedMap);
-	for (auto& stateOptionMap : importedMap)
-	{
+	AccountMaskMap mask;
+	importState(_o, _state, mask);
+	for (auto const& i: mask)
 		//check that every parameter was declared in state object
-		if (!stateOptionMap.second.isAllSet())
+		if (!i.second.allSet())
 			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
-	}
 }
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
@@ -347,41 +277,41 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
 
-	m_TestObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
+	m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
 	// compare expected output with post output
-	if (m_TestObject.count("expectOut") > 0)
+	if (m_testObject.count("expectOut") > 0)
 	{
-		std::string warning = "Check State: Error! Unexpected output: " + m_TestObject["out"].get_str() + " Expected: " + m_TestObject["expectOut"].get_str();
+		std::string warning = "Check State: Error! Unexpected output: " + m_testObject["out"].get_str() + " Expected: " + m_testObject["expectOut"].get_str();
 		if (Options::get().checkState)
-			{TBOOST_CHECK_MESSAGE((m_TestObject["out"].get_str() == m_TestObject["expectOut"].get_str()), warning);}
+			{TBOOST_CHECK_MESSAGE((m_testObject["out"].get_str() == m_testObject["expectOut"].get_str()), warning);}
 		else
-			TBOOST_WARN_MESSAGE((m_TestObject["out"].get_str() == m_TestObject["expectOut"].get_str()), warning);
+			TBOOST_WARN_MESSAGE((m_testObject["out"].get_str() == m_testObject["expectOut"].get_str()), warning);
 
-		m_TestObject.erase(m_TestObject.find("expectOut"));
+		m_testObject.erase(m_testObject.find("expectOut"));
 	}
 
 	// export logs
-	m_TestObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
+	m_testObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
 
 	// compare expected state with post state
-	if (m_TestObject.count("expect") > 0)
+	if (m_testObject.count("expect") > 0)
 	{
 		stateOptionsMap stateMap;
 		State expectState(OverlayDB(), eth::BaseState::Empty);
-		importState(m_TestObject["expect"].get_obj(), expectState, stateMap);
+		importState(m_testObject["expect"].get_obj(), expectState, stateMap);
 		checkExpectedState(expectState, _statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
-		m_TestObject.erase(m_TestObject.find("expect"));
+		m_testObject.erase(m_testObject.find("expect"));
 	}
 
 	// export post state
-	m_TestObject["post"] = fillJsonWithState(_statePost);
-	m_TestObject["postStateRoot"] = toHex(_statePost.rootHash().asBytes());
+	m_testObject["post"] = fillJsonWithState(_statePost);
+	m_testObject["postStateRoot"] = toHex(_statePost.rootHash().asBytes());
 
 	// export pre state
-	m_TestObject["pre"] = fillJsonWithState(m_statePre);
-	m_TestObject["env"] = makeAllFieldsHex(m_TestObject["env"].get_obj());
-	m_TestObject["transaction"] = makeAllFieldsHex(m_TestObject["transaction"].get_obj());
+	m_testObject["pre"] = fillJsonWithState(m_statePre);
+	m_testObject["env"] = makeAllFieldsHex(m_testObject["env"].get_obj());
+	m_testObject["transaction"] = makeAllFieldsHex(m_testObject["transaction"].get_obj());
 }
 
 json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
