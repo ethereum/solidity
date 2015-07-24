@@ -69,6 +69,7 @@ void mine(State& s, BlockChain const& _bc)
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(s.info());
 	sealed.waitNot({});
+	sealer.reset();
 	s.sealBlock(sealed);
 }
 
@@ -79,6 +80,7 @@ void mine(Ethash::BlockHeader& _bi)
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(_bi);
 	sealed.waitNot({});
+	sealer.reset();
 	_bi = Ethash::BlockHeader(sealed, IgnoreSeal, h256{}, HeaderData);
 }
 
