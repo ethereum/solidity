@@ -559,6 +559,62 @@ BOOST_AUTO_TEST_CASE(multisig_value_transfer)
 	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 100);
 }
 
+BOOST_AUTO_TEST_CASE(revoke_addOwner)
+{
+	deployWallet();
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x12)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x13)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x14)) == encodeArgs());
+	// 4 owners, set required to 3
+	BOOST_REQUIRE(callContractFunction("changeRequirement(uint256)", u256(3)) == encodeArgs());
+	// add a new owner
+	Address deployer = m_sender;
+	h256 opHash = sha3(FixedHash<4>(dev::sha3("addOwner(address)")).asBytes() + h256(0x33).asBytes());
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(false));
+	m_sender = Address(0x12);
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(false));
+	// revoke one confirmation
+	m_sender = deployer;
+	BOOST_REQUIRE(callContractFunction("revoke(bytes32)", opHash) == encodeArgs());
+	m_sender = Address(0x13);
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(false));
+	m_sender = Address(0x14);
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x33)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x33)) == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(revoke_transaction)
+{
+	deployWallet(200);
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x12)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x13)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x14)) == encodeArgs());
+	// 4 owners, set required to 3
+	BOOST_REQUIRE(callContractFunction("changeRequirement(uint256)", u256(3)) == encodeArgs());
+	// create a transaction
+	Address deployer = m_sender;
+	h256 opHash("8f27f478ebcfaf28b0c354f4809ace8087000d668b89c8bc3b1b608bfdbe6654");
+	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	m_sender = Address(0x12);
+	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
+	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	m_sender = Address(0x13);
+	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
+	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	m_sender = Address(0x12);
+	BOOST_REQUIRE(callContractFunction("revoke(bytes32)", opHash) == encodeArgs());
+	m_sender = deployer;
+	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
+	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	m_sender = Address(0x14);
+	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
+	// now it should go through
+	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 100);
+}
+
 BOOST_AUTO_TEST_CASE(daylimit)
 {
 	deployWallet(200);

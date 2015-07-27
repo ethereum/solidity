@@ -69,6 +69,7 @@ void mine(State& s, BlockChain const& _bc)
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(s.info());
 	sealed.waitNot({});
+	sealer.reset();
 	s.sealBlock(sealed);
 }
 
@@ -79,7 +80,8 @@ void mine(Ethash::BlockHeader& _bi)
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(_bi);
 	sealed.waitNot({});
-	_bi = Ethash::BlockHeader(sealed);
+	sealer.reset();
+	_bi = Ethash::BlockHeader(sealed, IgnoreSeal, h256{}, HeaderData);
 }
 
 }
@@ -841,7 +843,7 @@ dev::eth::Ethash::BlockHeader constructHeader(
 	rlpStream << _parentHash << _sha3Uncles << _coinbaseAddress << _stateRoot << _transactionsRoot << _receiptsRoot << _logBloom
 		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData << h256{} << Nonce{};
 
-	return Ethash::BlockHeader(rlpStream.out());
+	return Ethash::BlockHeader(rlpStream.out(), IgnoreSeal, h256{}, HeaderData);
 }
 
 void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce)
@@ -855,7 +857,7 @@ void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHa
 		header << sourceRlp[i];
 
 	header << _mixHash << _nonce;
-	_header = Ethash::BlockHeader(header.out());
+	_header = Ethash::BlockHeader(header.out(), IgnoreSeal, h256{}, HeaderData);
 }
 
 namespace
