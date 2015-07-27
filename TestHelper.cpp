@@ -258,7 +258,11 @@ void ImportTest::compareStates(State const& _stateExpect, State const& _statePos
 	#define CHECK(a,b)						\
 		{									\
 			if (_throw == WhenError::Throw) \
-				{TBOOST_CHECK_MESSAGE(a,b);}\
+			{								\
+				TBOOST_CHECK(a);			\
+				if (!a)						\
+					std::cerr << b << std::endl;\
+			}								\
 			else							\
 				{TBOOST_WARN_MESSAGE(a,b);}	\
 		}
@@ -773,7 +777,27 @@ Options::Options()
 		}
 		else if (arg == "--fulloutput")
 			fulloutput = true;
+		else if (arg == "--verbosity" && i + 1 < argc)
+		{
+			static std::ostringstream strCout;
+			std::string depthLevel = std::string{argv[i + 1]};
+			if (depthLevel == "0")
+			{
+				logVerbosity = Verbosity::None;
+				std::cout.rdbuf( strCout.rdbuf() );
+				std::cerr.rdbuf( strCout.rdbuf() );
+			}
+			else
+			if (depthLevel == "1")
+				logVerbosity = Verbosity::NiceReport;
+			else
+				logVerbosity = Verbosity::Full;
+		}
 	}
+
+	//Default option
+	if (logVerbosity == Verbosity::NiceReport)
+		g_logVerbosity = -1;	//disable cnote but not the cerr
 }
 
 Options const& Options::get()

@@ -218,6 +218,13 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 	TBOOST_CHECK((_expectedAddrs == _resultAddrs));
 }*/
 
+enum class Verbosity
+{
+	Full,
+	NiceReport,
+	None
+};
+
 class Options
 {
 public:
@@ -227,6 +234,7 @@ public:
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool checkState = false;///< Throw error when checking test states
 	bool fulloutput = false;///< Replace large output to just it's length
+	Verbosity logVerbosity = Verbosity::NiceReport;
 
 	/// Test selection
 	/// @{
