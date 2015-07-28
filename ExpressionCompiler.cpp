@@ -1072,6 +1072,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	using FunctionKind = FunctionType::Location;
 	FunctionKind funKind = _functionType.getLocation();
 	bool returnSuccessCondition = funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode;
+	bool isCallCode = funKind == FunctionKind::BareCallCode || funKind == FunctionKind::CallCode;
 
 	//@todo only return the first return value for now
 	Type const* firstReturnType =
@@ -1158,13 +1159,20 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	if (_functionType.gasSet())
 		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
+	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
+		u256 gasNeededByCaller = eth::c_callGas + 10;
+		if (_functionType.valueSet())
+			gasNeededByCaller += eth::c_callValueTransferGas;
+		if (!isCallCode)
+			gasNeededByCaller += eth::c_callNewAccountGas; // we never know
 		m_context <<
-			u256(eth::c_callGas + 10 + (_functionType.valueSet() ? eth::c_callValueTransferGas : 0) + eth::c_callNewAccountGas) <<
+			gasNeededByCaller <<
 			eth::Instruction::GAS <<
 			eth::Instruction::SUB;
-	if (funKind == FunctionKind::CallCode || funKind == FunctionKind::BareCallCode)
+	}
+	if (isCallCode)
 		m_context << eth::Instruction::CALLCODE;
 	else
 		m_context << eth::Instruction::CALL;
