@@ -44,7 +44,9 @@ class ExecutionFramework
 public:
 	ExecutionFramework()
 	{
-		g_logVerbosity = 0;
+		if (g_logVerbosity != -1)
+			g_logVerbosity = 0;
+		m_state.resetCurrent();
 	}
 
 	bytes const& compileAndRunWithoutCheck(
