@@ -63,6 +63,7 @@ static string const g_argAsmJsonStr = "asm-json";
 static string const g_argAstStr = "ast";
 static string const g_argAstJson = "ast-json";
 static string const g_argBinaryStr = "binary";
+static string const g_argCloneBinaryStr = "clone-binary";
 static string const g_argOpcodesStr = "opcodes";
 static string const g_argNatspecDevStr = "natspec-dev";
 static string const g_argNatspecUserStr = "natspec-user";
@@ -71,6 +72,7 @@ static string const g_argAddStandard = "add-std";
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
 	"binary",
+	"clone-binary",
 	"opcodes",
 	"json-abi",
 	"sol-abi",
@@ -110,7 +112,8 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		humanTargetedStdout(_args, g_argAsmStr) ||
 		humanTargetedStdout(_args, g_argAsmJsonStr) ||
 		humanTargetedStdout(_args, g_argOpcodesStr) ||
-		humanTargetedStdout(_args, g_argBinaryStr);
+		humanTargetedStdout(_args, g_argBinaryStr) ||
+		humanTargetedStdout(_args, g_argCloneBinaryStr);
 }
 
 static inline bool outputToFile(OutputType type)
@@ -140,18 +143,33 @@ static std::istream& operator>>(std::istream& _in, OutputType& io_output)
 
 void CommandLineInterface::handleBinary(string const& _contract)
 {
-	auto choice = m_args[g_argBinaryStr].as<OutputType>();
-	if (outputToStdout(choice))
+	if (m_args.count(g_argBinaryStr))
 	{
-		cout << "Binary: " << endl;
-		cout << toHex(m_compiler->getBytecode(_contract)) << endl;
+		if (outputToStdout(m_args[g_argBinaryStr].as<OutputType>()))
+		{
+			cout << "Binary: " << endl;
+			cout << toHex(m_compiler->getBytecode(_contract)) << endl;
+		}
+		if (outputToFile(m_args[g_argBinaryStr].as<OutputType>()))
+		{
+			ofstream outFile(_contract + ".binary");
+			outFile << toHex(m_compiler->getBytecode(_contract));
+			outFile.close();
+		}
 	}
-
-	if (outputToFile(choice))
+	if (m_args.count(g_argCloneBinaryStr))
 	{
-		ofstream outFile(_contract + ".binary");
-		outFile << toHex(m_compiler->getBytecode(_contract));
-		outFile.close();
+		if (outputToStdout(m_args[g_argCloneBinaryStr].as<OutputType>()))
+		{
+			cout << "Clone Binary: " << endl;
+			cout << toHex(m_compiler->getCloneBytecode(_contract)) << endl;
+		}
+		if (outputToFile(m_args[g_argCloneBinaryStr].as<OutputType>()))
+		{
+			ofstream outFile(_contract + ".clone_binary");
+			outFile << toHex(m_compiler->getCloneBytecode(_contract));
+			outFile.close();
+		}
 	}
 }
 
@@ -177,7 +195,7 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 {
 	if (m_args.count(g_argOpcodesStr))
 		handleOpcode(_contract);
-	if (m_args.count(g_argBinaryStr))
+	if (m_args.count(g_argBinaryStr) || m_args.count(g_argCloneBinaryStr))
 		handleBinary(_contract);
 }
 
@@ -329,6 +347,8 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 			"Request to output the Opcodes of the contract.")
 		(g_argBinaryStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
 			"Request to output the contract in binary (hexadecimal).")
+		(g_argCloneBinaryStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
+			"Request to output the clone contract in binary (hexadecimal).")
 		(g_argAbiStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
 			"Request to output the contract's JSON ABI interface.")
 		(g_argSolAbiStr.c_str(), po::value<OutputType>()->value_name("stdout|file|both"),
@@ -490,6 +510,8 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData["json-abi"] = m_compiler->getInterface(contractName);
 		if (requests.count("binary"))
 			contractData["binary"] = toHex(m_compiler->getBytecode(contractName));
+		if (requests.count("clone-binary"))
+			contractData["clone-binary"] = toHex(m_compiler->getCloneBytecode(contractName));
 		if (requests.count("opcodes"))
 			contractData["opcodes"] = eth::disassemble(m_compiler->getBytecode(contractName));
 		if (requests.count("asm"))
