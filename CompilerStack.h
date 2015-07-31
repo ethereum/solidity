@@ -99,6 +99,11 @@ public:
 	bytes const& getBytecode(std::string const& _contractName = "") const;
 	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
+	/// @returns the bytecode of a contract that uses an already deployed contract via CALLCODE.
+	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
+	/// substituted by the actual address. Note that this sequence starts end ends in three X
+	/// characters but can contain anything in between.
+	bytes const& getCloneBytecode(std::string const& _contractName = "") const;
 	/// @returns normal contract assembly items
 	eth::AssemblyItems const* getAssemblyItems(std::string const& _contractName = "") const;
 	/// @returns runtime contract assembly items
@@ -167,6 +172,7 @@ private:
 		std::shared_ptr<Compiler> compiler;
 		bytes bytecode;
 		bytes runtimeBytecode;
+		bytes cloneBytecode;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;
 		mutable std::unique_ptr<std::string const> interface;
 		mutable std::unique_ptr<std::string const> solidityInterface;

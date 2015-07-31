@@ -166,7 +166,13 @@ void CompilerStack::compile(bool _optimize, unsigned _runs)
 				compiledContract.bytecode = compiler->getAssembledBytecode();
 				compiledContract.runtimeBytecode = compiler->getRuntimeBytecode();
 				compiledContract.compiler = move(compiler);
+				compiler = make_shared<Compiler>(_optimize, _runs);
+				compiler->compileContract(*contract, contractBytecode);
 				contractBytecode[compiledContract.contract] = &compiledContract.bytecode;
+
+				Compiler cloneCompiler(_optimize, _runs);
+				cloneCompiler.compileClone(*contract, contractBytecode);
+				compiledContract.cloneBytecode = cloneCompiler.getAssembledBytecode();
 			}
 }
 
@@ -197,6 +203,11 @@ bytes const& CompilerStack::getBytecode(string const& _contractName) const
 bytes const& CompilerStack::getRuntimeBytecode(string const& _contractName) const
 {
 	return getContract(_contractName).runtimeBytecode;
+}
+
+bytes const& CompilerStack::getCloneBytecode(string const& _contractName) const
+{
+	return getContract(_contractName).cloneBytecode;
 }
 
 dev::h256 CompilerStack::getContractCodeHash(string const& _contractName) const
