@@ -5099,6 +5099,39 @@ BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(string_as_mapping_key)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			mapping(string => uint) data;
+			function set(string _s, uint _v) { data[_s] = _v; }
+			function get(string _s) returns (uint) { return data[_s]; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	vector<string> strings{
+		"Hello, World!",
+		"Hello,                            World!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1111",
+		"",
+		"1"
+	};
+	for (unsigned i = 0; i < strings.size(); i++)
+		BOOST_CHECK(callContractFunction(
+			"set(string,uint256)",
+			u256(0x40),
+			u256(7 + i),
+			u256(strings[i].size()),
+			strings[i]
+		) == encodeArgs());
+	for (unsigned i = 0; i < strings.size(); i++)
+		BOOST_CHECK(callContractFunction(
+			"get(string)",
+			u256(0x20),
+			u256(strings[i].size()),
+			strings[i]
+		) == encodeArgs(u256(7 + i)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
