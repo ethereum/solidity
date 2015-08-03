@@ -44,6 +44,12 @@ public:
 
 	void compileContract(ContractDefinition const& _contract,
 						 std::map<ContractDefinition const*, bytes const*> const& _contracts);
+	/// Compiles a contract that uses CALLCODE to call into a pre-deployed version of the given
+	/// contract at runtime, but contains the full creation-time code.
+	void compileClone(
+		ContractDefinition const& _contract,
+		std::map<ContractDefinition const*, bytes const*> const& _contracts
+	);
 	bytes getAssembledBytecode() { return m_context.getAssembledBytecode(); }
 	bytes getRuntimeBytecode() { return m_context.getAssembledRuntimeBytecode(m_runtimeSub); }
 	/// @arg _sourceCodes is the map of input files to source code strings
@@ -68,6 +74,8 @@ private:
 	/// Adds the code that is run at creation time. Should be run after exchanging the run-time context
 	/// with a new and initialized context. Adds the constructor code.
 	void packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext);
+	/// Appends state variable initialisation and constructor code.
+	void appendInitAndConstructorCode(ContractDefinition const& _contract);
 	void appendBaseConstructor(FunctionDefinition const& _constructor);
 	void appendConstructor(FunctionDefinition const& _constructor);
 	void appendFunctionSelector(ContractDefinition const& _contract);
@@ -103,12 +111,18 @@ private:
 	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
 	virtual bool visit(PlaceholderStatement const&) override;
 
+	/// Repeatedly visits all function which are referenced but which are not compiled yet.
+	void appendFunctionsWithoutCode();
+
 	/// Appends one layer of function modifier code of the current function, or the function
 	/// body itself if the last modifier was reached.
 	void appendModifierOrFunctionCode();
 
 	void appendStackVariableInitialisation(VariableDeclaration const& _variable);
 	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
+
+	/// @returns the runtime assembly for clone contracts.
+	static eth::Assembly getCloneRuntime();
 
 	bool const m_optimize;
 	unsigned const m_optimizeRuns;

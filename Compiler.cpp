@@ -25,6 +25,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <libevmcore/Instruction.h>
 #include <libevmasm/Assembly.h>
+#include <libevmcore/Params.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/CompilerUtils.h>
@@ -53,27 +54,41 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 	m_context = CompilerContext(); // clear it just in case
 	{
 		CompilerContext::LocationSetter locationSetterRunTime(m_context, _contract);
-		CompilerUtils(m_context).initialiseFreeMemoryPointer();
 		initializeContext(_contract, _contracts);
 		appendFunctionSelector(_contract);
-		set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
-		while (!functions.empty())
-		{
-			for (Declaration const* function: functions)
-			{
-				m_context.setStackOffset(0);
-				function->accept(*this);
-			}
-			functions = m_context.getFunctionsWithoutCode();
-		}
+		appendFunctionsWithoutCode();
 	}
 
 	// Swap the runtime context with the creation-time context
 	swap(m_context, m_runtimeContext);
 	CompilerContext::LocationSetter locationSetterCreationTime(m_context, _contract);
-	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	initializeContext(_contract, _contracts);
 	packIntoContractCreator(_contract, m_runtimeContext);
+	if (m_optimize)
+		m_context.optimise(m_optimizeRuns);
+}
+
+void Compiler::compileClone(
+	ContractDefinition const& _contract,
+	map<ContractDefinition const*, bytes const*> const& _contracts
+)
+{
+	m_context = CompilerContext(); // clear it just in case
+	initializeContext(_contract, _contracts);
+
+	appendInitAndConstructorCode(_contract);
+
+	//@todo determine largest return size of all runtime functions
+	eth::AssemblyItem runtimeSub = m_context.addSubroutine(getCloneRuntime());
+	solAssert(runtimeSub.data() < numeric_limits<size_t>::max(), "");
+	m_runtimeSub = size_t(runtimeSub.data());
+
+	// stack contains sub size
+	m_context << eth::Instruction::DUP1 << runtimeSub << u256(0) << eth::Instruction::CODECOPY;
+	m_context << u256(0) << eth::Instruction::RETURN;
+
+	appendFunctionsWithoutCode();
+
 	if (m_optimize)
 		m_context.optimise(m_optimizeRuns);
 }
@@ -86,13 +101,14 @@ eth::AssemblyItem Compiler::getFunctionEntryLabel(FunctionDefinition const& _fun
 void Compiler::initializeContext(ContractDefinition const& _contract,
 								 map<ContractDefinition const*, bytes const*> const& _contracts)
 {
+	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	m_context.setCompiledContracts(_contracts);
 	m_context.setInheritanceHierarchy(_contract.getLinearizedBaseContracts());
 	registerStateVariables(_contract);
 	m_context.resetVisitedNodes(&_contract);
 }
 
-void Compiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
+void Compiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
 {
 	// Determine the arguments that are used for the base constructors.
 	std::vector<ContractDefinition const*> const& bases = _contract.getLinearizedBaseContracts();
@@ -126,22 +142,22 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 		appendConstructor(*constructor);
 	else if (auto c = m_context.getNextConstructor(_contract))
 		appendBaseConstructor(*c);
+}
+
+void Compiler::packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext)
+{
+	appendInitAndConstructorCode(_contract);
 
 	eth::AssemblyItem runtimeSub = m_context.addSubroutine(_runtimeContext.getAssembly());
 	solAssert(runtimeSub.data() < numeric_limits<size_t>::max(), "");
 	m_runtimeSub = size_t(runtimeSub.data());
+
 	// stack contains sub size
 	m_context << eth::Instruction::DUP1 << runtimeSub << u256(0) << eth::Instruction::CODECOPY;
 	m_context << u256(0) << eth::Instruction::RETURN;
 
 	// note that we have to include the functions again because of absolute jump labels
-	set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
-	while (!functions.empty())
-	{
-		for (Declaration const* function: functions)
-			function->accept(*this);
-		functions = m_context.getFunctionsWithoutCode();
-	}
+	appendFunctionsWithoutCode();
 }
 
 void Compiler::appendBaseConstructor(FunctionDefinition const& _constructor)
@@ -618,6 +634,20 @@ bool Compiler::visit(PlaceholderStatement const& _placeholderStatement)
 	return true;
 }
 
+void Compiler::appendFunctionsWithoutCode()
+{
+	set<Declaration const*> functions = m_context.getFunctionsWithoutCode();
+	while (!functions.empty())
+	{
+		for (Declaration const* function: functions)
+		{
+			m_context.setStackOffset(0);
+			function->accept(*this);
+		}
+		functions = m_context.getFunctionsWithoutCode();
+	}
+}
+
 void Compiler::appendModifierOrFunctionCode()
 {
 	solAssert(m_currentFunction, "");
@@ -673,4 +703,22 @@ void Compiler::compileExpression(Expression const& _expression, TypePointer cons
 	expressionCompiler.compile(_expression);
 	if (_targetType)
 		CompilerUtils(m_context).convertType(*_expression.getType(), *_targetType);
+}
+
+eth::Assembly Compiler::getCloneRuntime()
+{
+	eth::Assembly a;
+	a << eth::Instruction::CALLDATASIZE;
+	a << u256(0) << eth::Instruction::DUP1 << eth::Instruction::CALLDATACOPY;
+	//@todo adjust for larger return values, make this dynamic.
+	a << u256(0x20) << u256(0) << eth::Instruction::CALLDATASIZE;
+	a << u256(0) << eth::Instruction::DUP1;
+	// this is the address which has to be substituted by the linker.
+	//@todo implement as special "marker" AssemblyItem.
+	a << u256("0xcafecafecafecafecafecafecafecafecafecafe");
+	a << u256(eth::c_callGas + 10) << eth::Instruction::GAS << eth::Instruction::SUB;
+	a << eth::Instruction::CALLCODE;
+	//@todo adjust for larger return values, make this dynamic.
+	a << u256(0x20) << u256(0) << eth::Instruction::RETURN;
+	return a;
 }
