@@ -784,8 +784,7 @@ void Expression::expectType(Type const& _expectedType)
 			" is not implicitly convertible to expected type " +
 			_expectedType.toString() +
 			"."
-		)
-		);
+		));
 }
 
 void Expression::requireLValue()

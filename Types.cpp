@@ -179,6 +179,8 @@ TypePointer Type::fromMapping(ElementaryTypeName& _keyType, TypeName& _valueType
 		BOOST_THROW_EXCEPTION(_valueType.createTypeError("Invalid type name."));
 	// Convert value type to storage reference.
 	valueType = ReferenceType::copyForLocationIfReference(DataLocation::Storage, valueType);
+	// Convert key type to memory.
+	keyType = ReferenceType::copyForLocationIfReference(DataLocation::Memory, keyType);
 	return make_shared<MappingType>(keyType, valueType);
 }
 
