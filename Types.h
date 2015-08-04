@@ -477,6 +477,7 @@ public:
 	{}
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
 	virtual bool isDynamicallySized() const override { return m_hasDynamicLength; }

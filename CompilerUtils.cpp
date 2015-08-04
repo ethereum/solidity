@@ -404,7 +404,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		case DataLocation::Storage:
 			// Other cases are done explicitly in LValue::storeValue, and only possible by assignment.
 			solAssert(
-				targetType.isPointer() &&
+				(targetType.isPointer() || (typeOnStack.isByteArray() && targetType.isByteArray())) &&
 				typeOnStack.location() == DataLocation::Storage,
 				"Invalid conversion to storage type."
 			);
@@ -469,6 +469,13 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			}
 			break;
 		}
+		case DataLocation::CallData:
+			solAssert(
+					targetType.isByteArray() &&
+					typeOnStack.isByteArray() &&
+					typeOnStack.location() == DataLocation::CallData,
+				"Invalid conversion to calldata type.");
+			break;
 		default:
 			solAssert(
 				false,

@@ -789,6 +789,21 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	}
 }
 
+bool ArrayType::isExplicitlyConvertibleTo(const Type& _convertTo) const
+{
+	if (isImplicitlyConvertibleTo(_convertTo))
+		return true;
+	// allow conversion bytes <-> string
+	if (_convertTo.getCategory() != getCategory())
+		return false;
+	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
+	if (convertTo.location() != location())
+		return false;
+	if (!isByteArray() || !convertTo.isByteArray())
+		return false;
+	return true;
+}
+
 bool ArrayType::operator==(Type const& _other) const
 {
 	if (_other.getCategory() != getCategory())
