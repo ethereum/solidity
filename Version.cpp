@@ -29,7 +29,7 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace std;
 
-char const* dev::solidity::VersionNumber = "0.1.0";
+char const* dev::solidity::VersionNumber = "0.1.1";
 extern string const dev::solidity::VersionString =
 	string(dev::solidity::VersionNumber) +
 	"-" +
