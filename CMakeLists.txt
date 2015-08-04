@@ -33,6 +33,7 @@ endif()
 
 if (SOLIDITY)
 	add_subdirectory(libsolidity)
+	add_subdirectory(contracts)
 endif ()
 if (JSONRPC)
 add_subdirectory(libweb3jsonrpc)
