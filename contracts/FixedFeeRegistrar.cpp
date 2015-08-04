@@ -35,6 +35,9 @@ namespace solidity
 namespace test
 {
 
+namespace
+{
+
 static char const* registrarCode = R"DELIMITER(
 //sol FixedFeeRegistrar
 // Simple global registrar with fixed-fee reservations.
@@ -129,6 +132,8 @@ protected:
 	}
 	u256 const m_fee = u256("69000000000000000000");
 };
+
+}
 
 /// This is a test suite that tests optimised code!
 BOOST_FIXTURE_TEST_SUITE(SolidityFixedFeeRegistrar, RegistrarTestFramework)
