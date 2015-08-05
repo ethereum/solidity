@@ -5099,6 +5099,31 @@ BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(string_bytes_conversion)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			string s;
+			bytes b;
+			function f(string _s, uint n) returns (byte) {
+				b = bytes(_s);
+				s = string(b);
+				return bytes(s)[n];
+			}
+			function l() returns (uint) { return bytes(s).length; }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	BOOST_CHECK(callContractFunction(
+		"f(string,uint256)",
+		u256(0x40),
+		u256(2),
+		u256(6),
+		string("abcdef")
+	) == encodeArgs("c"));
+	BOOST_CHECK(callContractFunction("l()") == encodeArgs(u256(6)));
+}
+
 BOOST_AUTO_TEST_CASE(string_as_mapping_key)
 {
 	char const* sourceCode = R"(
