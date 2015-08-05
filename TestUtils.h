@@ -82,7 +82,7 @@ struct JsonRpcFixture: public ClientBaseFixture
 struct MoveNonceToTempDir
 {
 	MoveNonceToTempDir();
-	~MoveNonceToTempDir();
+	~MoveNonceToTempDir() {}
 private:
 	TransientDirectory m_dir;
 };
