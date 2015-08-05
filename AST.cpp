@@ -844,9 +844,15 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 			BOOST_THROW_EXCEPTION(createTypeError("Exactly one argument expected for explicit type conversion."));
 		if (!isPositionalCall)
 			BOOST_THROW_EXCEPTION(createTypeError("Type conversion cannot allow named arguments."));
-		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type.getActualType()))
-			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
 		m_type = type.getActualType();
+		auto argType = m_arguments.front()->getType();
+		if (auto argRefType = dynamic_cast<ReferenceType const*>(argType.get()))
+			// do not change the data location when converting
+			// (data location cannot yet be specified for type conversions)
+			m_type = ReferenceType::copyForLocationIfReference(argRefType->location(), m_type);
+		if (!argType->isExplicitlyConvertibleTo(*m_type))
+			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
+
 		return;
 	}
 
