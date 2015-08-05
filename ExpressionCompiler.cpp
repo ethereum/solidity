@@ -807,16 +807,20 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	if (baseType.getCategory() == Type::Category::Mapping)
 	{
 		// stack: storage_base_ref
-		auto const& mapping = dynamic_cast<MappingType const&>(baseType);
-		Type const& keyType = *mapping.getKeyType();
+		TypePointer keyType = dynamic_cast<MappingType const&>(baseType).getKeyType();
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
-		if (keyType.isDynamicallySized())
+		if (keyType->isDynamicallySized())
 		{
 			_indexAccess.getIndexExpression()->accept(*this);
 			utils().fetchFreeMemoryPointer();
 			// stack: base index mem
 			// note: the following operations must not allocate memory!
-			utils().encodeToMemory(TypePointers{mapping.getKeyType()}, TypePointers(), false, true);
+			utils().encodeToMemory(
+				TypePointers{_indexAccess.getIndexExpression()->getType()},
+				TypePointers{keyType},
+				false,
+				true
+			);
 			m_context << eth::Instruction::SWAP1;
 			utils().storeInMemoryDynamic(IntegerType(256));
 			utils().toSizeAfterFreeMemoryPointer();
@@ -824,7 +828,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		else
 		{
 			m_context << u256(0); // memory position
-			appendExpressionCopyToMemory(keyType, *_indexAccess.getIndexExpression());
+			appendExpressionCopyToMemory(*keyType, *_indexAccess.getIndexExpression());
 			m_context << eth::Instruction::SWAP1;
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
 			utils().storeInMemoryDynamic(IntegerType(256));
