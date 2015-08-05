@@ -32,6 +32,7 @@
 #include <libevm/ExtVMFace.h>
 #include <libtestutils/Common.h>
 
+
 #ifdef NOBOOST
 	#define TBOOST_REQUIRE(arg) if(arg == false) throw dev::Exception();
 	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
@@ -62,7 +63,7 @@ class State;
 
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
-void mine(State& _s, BlockChain const& _bc);
+void mine(Block& _s, BlockChain const& _bc);
 void mine(Ethash::BlockHeader& _bi);
 
 }
@@ -122,11 +123,17 @@ namespace test
 	}																	\
 	while (0)
 
+enum class testType
+{
+	StateTests,
+	BlockChainTests,
+	Other
+};
+
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o): m_environment(m_envInfo), m_testObject(_o) {}
-	ImportTest(json_spirit::mObject& _o, bool isFiller);
+	ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate = testType::StateTests);
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);
@@ -135,14 +142,16 @@ public:
 	void importTransaction(json_spirit::mObject& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
-	void exportTest(bytes const& _output, eth::State const& _statePost);
-	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, stateOptionsMap const _expectedStateOptions = stateOptionsMap(), WhenError _throw = WhenError::Throw);
+	bytes executeTest();
+	void exportTest(bytes const& _output);
+	static void compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
 	eth::EnvInfo m_envInfo;
-	eth::ExtVMFace m_environment;
-	eth::Transaction m_transaction;
+	eth::Transaction m_transaction;	
+	eth::LogEntries m_logs;
+	eth::LogEntries m_logsExpected;
 
 private:
 	json_spirit::mObject& m_testObject;
@@ -196,7 +205,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin);
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin);
 void doRlpTests(json_spirit::mValue& v, bool _fillin);
 
-template<typename mapType>
+/*template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 {
 	for (auto& resultPair : _resultAddrs)
@@ -207,7 +216,7 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 			TBOOST_ERROR("Missing result address " << resultAddr);
 	}
 	TBOOST_CHECK((_expectedAddrs == _resultAddrs));
-}
+}*/
 
 class Options
 {

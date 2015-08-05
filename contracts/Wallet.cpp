@@ -545,7 +545,7 @@ BOOST_AUTO_TEST_CASE(multisig_value_transfer)
 	// 4 owners, set required to 3
 	BOOST_REQUIRE(callContractFunction("changeRequirement(uint256)", u256(3)) == encodeArgs());
 	// check that balance is and stays zero at destination address
-	h256 opHash("8f27f478ebcfaf28b0c354f4809ace8087000d668b89c8bc3b1b608bfdbe6654");
+	h256 opHash("6244b4fa93f73e09db0ae52750095ca0364a76b72bc01723c97011fcb876cc9e");
 	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
 	m_sender = Address(0x12);
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(revoke_transaction)
 	BOOST_REQUIRE(callContractFunction("changeRequirement(uint256)", u256(3)) == encodeArgs());
 	// create a transaction
 	Address deployer = m_sender;
-	h256 opHash("8f27f478ebcfaf28b0c354f4809ace8087000d668b89c8bc3b1b608bfdbe6654");
+	h256 opHash("6244b4fa93f73e09db0ae52750095ca0364a76b72bc01723c97011fcb876cc9e");
 	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
 	m_sender = Address(0x12);
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
