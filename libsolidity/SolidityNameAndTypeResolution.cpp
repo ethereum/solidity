@@ -1883,6 +1883,22 @@ BOOST_AUTO_TEST_CASE(positive_integers_to_unsigned_out_of_bound)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(integer_boolean_operators)
+{
+	char const* sourceCode1 = R"(
+		contract test { function() { uint x = 1; uint y = 2; x || y; } }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode1), TypeError);
+	char const* sourceCode2 = R"(
+		contract test { function() { uint x = 1; uint y = 2; x && y; } }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode2), TypeError);
+	char const* sourceCode3 = R"(
+		contract test { function() { uint x = 1; !x; } }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode3), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(overwrite_memory_location_external)
 {
 	char const* sourceCode = R"(
