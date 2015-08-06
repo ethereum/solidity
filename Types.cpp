@@ -311,6 +311,8 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	// All integer types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
+	if (Token::isBooleanOp(_operator))
+		return TypePointer();
 	// Nothing else can be done with addresses
 	if (commonType->isAddress())
 		return TypePointer();
