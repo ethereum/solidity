@@ -25,6 +25,7 @@
 #include <string>
 #include <tuple>
 #include "../TestHelper.h"
+#include <libethcore/ABI.h>
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
@@ -164,6 +165,69 @@ public:
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
+
+	class ContractInterface
+	{
+	public:
+		ContractInterface(ExecutionFramework& _framework): m_framework(_framework) {}
+
+	protected:
+		template <class... Args>
+		bytes const& call(std::string const& _sig, Args const&... _arguments)
+		{
+			auto const& ret = m_framework.callContractFunctionWithValue(_sig, m_nextValue, _arguments...);
+			m_nextValue = 0;
+			return ret;
+		}
+
+		void callString(std::string const& _name, std::string const& _arg)
+		{
+			BOOST_CHECK(call(_name + "(string)", u256(0x20), _arg.length(), _arg).empty());
+		}
+
+		void callStringAddress(std::string const& _name, std::string const& _arg1, u160 const& _arg2)
+		{
+			BOOST_CHECK(call(_name + "(string,address)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
+		}
+
+		void callStringAddressBool(std::string const& _name, std::string const& _arg1, u160 const& _arg2, bool _arg3)
+		{
+			BOOST_CHECK(call(_name + "(string,address,bool)", u256(0x60), _arg2, _arg3, _arg1.length(), _arg1).empty());
+		}
+
+		void callStringBytes32(std::string const& _name, std::string const& _arg1, h256 const& _arg2)
+		{
+			BOOST_CHECK(call(_name + "(string,bytes32)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
+		}
+
+		u160 callStringReturnsAddress(std::string const& _name, std::string const& _arg)
+		{
+			bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
+			BOOST_REQUIRE(ret.size() == 0x20);
+			BOOST_CHECK(std::count(ret.begin(), ret.begin() + 12, 0) == 12);
+			return eth::abiOut<u160>(ret);
+		}
+
+		std::string callAddressReturnsString(std::string const& _name, u160 const& _arg)
+		{
+			bytes const& ret = call(_name + "(address)", _arg);
+			BOOST_REQUIRE(ret.size() >= 0x20);
+			u256 len = eth::abiOut<u256>(ret);
+			BOOST_REQUIRE(ret.size() == (0x20 + len) / 32 * 32);
+			return std::string(ret.begin() + 0x20, ret.begin() + 0x20 + size_t(len));
+		}
+
+		h256 callStringReturnsBytes32(std::string const& _name, std::string const& _arg)
+		{
+			bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
+			BOOST_REQUIRE(ret.size() == 0x20);
+			return eth::abiOut<h256>(ret);
+		}
+
+	private:
+		u256 m_nextValue;
+		ExecutionFramework& m_framework;
+	};
 
 private:
 	template <class CppFunction, class... Args>
