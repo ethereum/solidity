@@ -122,10 +122,6 @@ void ParallelClientBaseFixture::enumerateClients(std::function<void(Json::Value 
 
 MoveNonceToTempDir::MoveNonceToTempDir()
 {
-	crypto::Nonce::setSeedFilePath(m_dir.path() + "/seed");
+	crypto::Nonce::seedFilePath(m_dir.path() + "/seed");
 }
 
-MoveNonceToTempDir::~MoveNonceToTempDir()
-{
-	crypto::Nonce::reset();
-}
