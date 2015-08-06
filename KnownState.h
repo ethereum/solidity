@@ -29,7 +29,12 @@
 #include <tuple>
 #include <memory>
 #include <ostream>
+#pragma warning(push)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wredeclared-class-member"
 #include <boost/bimap.hpp>
+#pragma warning(pop)
+#pragma GCC diagnostic pop
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Exceptions.h>
 #include <libevmasm/ExpressionClasses.h>
