@@ -171,6 +171,8 @@ public:
 	public:
 		ContractInterface(ExecutionFramework& _framework): m_framework(_framework) {}
 
+		void setNextValue(u256 const& _value) { m_nextValue = _value; }
+
 	protected:
 		template <class... Args>
 		bytes const& call(std::string const& _sig, Args const&... _arguments)
@@ -210,11 +212,13 @@ public:
 
 		std::string callAddressReturnsString(std::string const& _name, u160 const& _arg)
 		{
-			bytes const& ret = call(_name + "(address)", _arg);
+			bytesConstRef ret = ref(call(_name + "(address)", _arg));
 			BOOST_REQUIRE(ret.size() >= 0x20);
+			u256 offset = eth::abiOut<u256>(ret);
+			BOOST_REQUIRE_EQUAL(offset, 0x20);
 			u256 len = eth::abiOut<u256>(ret);
-			BOOST_REQUIRE(ret.size() == (0x20 + len) / 32 * 32);
-			return std::string(ret.begin() + 0x20, ret.begin() + 0x20 + size_t(len));
+			BOOST_REQUIRE_EQUAL(ret.size(), ((len + 0x1f) / 0x20) * 0x20);
+			return ret.cropped(0, size_t(len)).toString();
 		}
 
 		h256 callStringReturnsBytes32(std::string const& _name, std::string const& _arg)

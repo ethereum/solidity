@@ -289,6 +289,9 @@ protected:
 			return callString("disown", _name);
 		}
 	};
+
+	u256 const m_biddingTime = u256(7 * 24 * 3600);
+	u256 const m_renewalInterval = u256(365 * 24 * 3600);
 };
 
 }
@@ -393,6 +396,7 @@ BOOST_AUTO_TEST_CASE(disown)
 	registrar.setContent(name, h256(u256(123)));
 	registrar.setAddress(name, u160(124), true);
 	registrar.setSubRegistrar(name, u160(125));
+	BOOST_CHECK_EQUAL(registrar.name(u160(124)), name);
 
 	// someone else tries disowning
 	m_sender = Address(0x128);
@@ -405,11 +409,86 @@ BOOST_AUTO_TEST_CASE(disown)
 	BOOST_CHECK_EQUAL(registrar.addr(name), 0);
 	BOOST_CHECK_EQUAL(registrar.subRegistrar(name), 0);
 	BOOST_CHECK_EQUAL(registrar.content(name), h256());
+	BOOST_CHECK_EQUAL(registrar.name(u160(124)), "");
 }
 
-//@todo:
-// - reverse lookup
-// - actual auction
+BOOST_AUTO_TEST_CASE(auction_simple)
+{
+	deployRegistrar();
+	string name = "x";
+	m_sender = Address(0x123);
+	RegistrarInterface registrar(*this);
+	// initiate auction
+	registrar.setNextValue(8);
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
+	// "wait" until auction end
+	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_biddingTime + 10);
+	// trigger auction again
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
+}
+
+BOOST_AUTO_TEST_CASE(auction_bidding)
+{
+	deployRegistrar();
+	string name = "x";
+	m_sender = Address(0x123);
+	RegistrarInterface registrar(*this);
+	// initiate auction
+	registrar.setNextValue(8);
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
+	// overbid self
+	m_envInfo.setTimestamp(m_biddingTime - 10);
+	registrar.setNextValue(12);
+	registrar.reserve(name);
+	// another bid by someone else
+	m_sender = Address(0x124);
+	m_envInfo.setTimestamp(2 * m_biddingTime - 50);
+	registrar.setNextValue(13);
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
+	// end auction by first bidder (which is not highest) trying to overbid again (too late)
+	m_sender = Address(0x123);
+	m_envInfo.setTimestamp(4 * m_biddingTime);
+	registrar.setNextValue(20);
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0x124);
+}
+
+BOOST_AUTO_TEST_CASE(auction_renewal)
+{
+	deployRegistrar();
+	string name = "x";
+	RegistrarInterface registrar(*this);
+	// register name by auction
+	m_sender = Address(0x123);
+	registrar.setNextValue(8);
+	registrar.reserve(name);
+	m_envInfo.setTimestamp(4 * m_biddingTime);
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
+
+	// try to re-register before interval end
+	m_sender = Address(0x222);
+	registrar.setNextValue(80);
+	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_renewalInterval - 1);
+	registrar.reserve(name);
+	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_biddingTime);
+	// if there is a bug in the renewal logic, this would transfer the ownership to 0x222,
+	// but if there is no bug, this will initiate the auction, albeit with a zero bid
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
+
+	m_envInfo.setTimestamp(m_envInfo.timestamp() + 2);
+	registrar.setNextValue(80);
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
+	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_biddingTime + 2);
+	registrar.reserve(name);
+	BOOST_CHECK_EQUAL(registrar.owner(name), 0x222);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
