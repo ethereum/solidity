@@ -22,7 +22,12 @@
 #include "CodeFragment.h"
 
 #include <boost/algorithm/string.hpp>
+#pragma warning(push)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <boost/spirit/include/support_utree.hpp>
+#pragma warning(pop)
+#pragma GCC diagnostic pop
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
 #include <libevmcore/Instruction.h>
