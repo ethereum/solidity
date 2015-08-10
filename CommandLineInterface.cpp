@@ -118,13 +118,14 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 
 void CommandLineInterface::handleBinary(string const& _contract)
 {
+<<<<<<< HEAD
 	if (m_args.count(g_argBinaryStr))
 	{
 		if (m_args.count("output-dir"))
 		{
-			ofstream outFile(_contract + ".binary");
-			outFile << toHex(m_compiler->getBytecode(_contract));
-			outFile.close();
+			stringstream data;
+			data << toHex(m_compiler->getBytecode(_contract));
+			createFile(_contract + ".binary", data.str());
 		}
 		else
 		{
@@ -137,16 +138,15 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	{
 		if (outputToFile(m_args[g_argCloneBinaryStr].as<OutputType>()))
 		{
-			ofstream outFile(_contract + ".clone_binary");
-			outFile << toHex(m_compiler->getCloneBytecode(_contract));
-			outFile.close();
+			stringstream data;
+			data << toHex(m_compiler->getCloneBytecode(_contract));
+			createFile(_contract + ".clone_binary", data.str());
 		}
 		else
 		{
 			cout << "Clone Binary: " << endl;
 			cout << toHex(m_compiler->getCloneBytecode(_contract)) << endl;
 		}
-
 	}
 	else
 	{
@@ -158,12 +158,11 @@ void CommandLineInterface::handleBinary(string const& _contract)
 
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
-	//auto choice = m_args[g_argOpcodesStr].as<OutputType>();
 	if (m_args.count("output-dir"))
 	{
-		ofstream outFile(_contract + ".opcode");
-		outFile << eth::disassemble(m_compiler->getBytecode(_contract));
-		outFile.close();
+		stringstream data;
+		data << eth::disassemble(m_compiler->getBytecode(_contract));
+		createFile(_contract + ".opcode", data.str());
 	}
 	else
 	{
@@ -191,12 +190,11 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 	for (auto const& it: m_compiler->getContractDefinition(_contract).getInterfaceFunctions())
 		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
 
-	//auto choice = m_args[g_argSignatureHashes].as<OutputType>();
 	if (m_args.count("output-dir"))
 	{
-		ofstream outFile(_contract + ".signatures");
-		outFile << out;
-		outFile.close();
+		stringstream data;
+		data << out;
+		createFile(_contract + ".signatures", data.str());
 	}
 	else
 		cout << "Function signatures: " << endl << out;
@@ -236,12 +234,11 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 	if (m_args.count(argName))
 	{
-		//auto choice = m_args[argName].as<OutputType>();
 		if (m_args.count("output-dir"))
 		{
-			ofstream outFile(_contract + suffix);
-			outFile << m_compiler->getMetadata(_contract, _type);
-			outFile.close();
+			stringstream data;
+			data << m_compiler->getMetadata(_contract, _type);
+			createFile(_contract + suffix, data.str());
 		}
 		else
 		{
@@ -301,7 +298,21 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
-bool CommandLineInterface::parseArguments(int argc, char** argv)
+void CommandLineInterface::createFile(string const& _fileName, string const& _data)
+{
+	namespace fs = boost::filesystem;
+	// create directory if not existent
+	fs::path p(m_args["output-dir"].as<string>());
+	fs::create_directories(p);
+	ofstream outFile(m_args["output-dir"].as<string>() + "/" + _fileName);
+	if (!_data.empty())
+		outFile << _data;
+	if (!outFile)
+		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _fileName));
+	outFile.close();
+}
+
+bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 {
 	// Declare the supported options.
 	po::options_description desc("Allowed options");
@@ -317,7 +328,7 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
 			"Output a single json document containing the specified information, can be combined."
 		)
-		("o,output-dir", po::value<string>(), "Output directory path")
+		("output-dir,o", po::value<string>(), "Output directory path")
 		(g_argAstStr.c_str(), "Request to output the AST of the contract.")
 		(g_argAstJson.c_str(), "Request to output the AST of the contract in JSON format.")
 		(g_argAsmStr.c_str(), "Request to output the EVM assembly of the contract.")
@@ -333,13 +344,15 @@ bool CommandLineInterface::parseArguments(int argc, char** argv)
 		(g_argNatspecDevStr.c_str(), "Request to output the contract's Natspec developer documentation.");
 
 	// All positional options should be interpreted as input files
-	po::positional_options_description inputFileNamePosition;
-	inputFileNamePosition.add("input-file", -1);
+	po::positional_options_description filesPositions;
+	filesPositions.add("output-dir", 1);
+	filesPositions.add("input-file", -1);
 
 	// parse the compiler arguments
 	try
 	{
-		po::store(po::command_line_parser(argc, argv).options(desc).positional(inputFileNamePosition).allow_unregistered().run(), m_args);
+		po::store(po::command_line_parser(_argc, _argv).options(desc).positional(filesPositions).allow_unregistered().run(), m_args);
+
 	}
 	catch (po::error const& _exception)
 	{
@@ -534,25 +547,22 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				asts
 			);
 
-//		auto choice = m_args[_argStr].as<OutputType>();
-
 		if (m_args.count("output-dir"))
 		{
 			for (auto const& sourceCode: m_sourceCodes)
 			{
-				boost::filesystem::path p(sourceCode.first);
-				ofstream outFile(p.stem().string() + ".ast");
+				stringstream data;
 				if (_argStr == g_argAstStr)
 				{
 					ASTPrinter printer(m_compiler->getAST(sourceCode.first), sourceCode.second);
-					printer.print(outFile);
+					printer.print(data);
 				}
 				else
 				{
 					ASTJsonConverter converter(m_compiler->getAST(sourceCode.first));
-					converter.print(outFile);
+					converter.print(data);
 				}
-				outFile.close();
+				createFile(sourceCode.first + ".ast", data.str());
 			}
 		}
 		else
@@ -597,13 +607,11 @@ void CommandLineInterface::actOnInput()
 		// do we need EVM assembly?
 		if (m_args.count(g_argAsmStr) || m_args.count(g_argAsmJsonStr))
 		{
-			//auto choice = m_args.count(g_argAsmStr) ? m_args[g_argAsmStr].as<OutputType>() : m_args[g_argAsmJsonStr].as<OutputType>();
-
 			if (m_args.count("output-dir"))
 			{
-				ofstream outFile(contract + (m_args.count(g_argAsmJsonStr) ? "_evm.json" : ".evm"));
-				m_compiler->streamAssembly(outFile, contract, m_sourceCodes, m_args.count(g_argAsmJsonStr));
-				outFile.close();
+				stringstream data;
+				m_compiler->streamAssembly(data, contract, m_sourceCodes, m_args.count(g_argAsmJsonStr));
+				createFile(contract + (m_args.count(g_argAsmJsonStr) ? "_evm.json" : ".evm"), data.str());
 			}
 			else
 			{
