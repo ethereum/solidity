@@ -1906,7 +1906,7 @@ BOOST_AUTO_TEST_CASE(reference_compare_operators)
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode1), TypeError);
 	char const* sourceCode2 = R"(
-		contract test { struct s {uint a;}; s x; s y; function() { x == y; } }
+		contract test { struct s {uint a;} s x; s y; function() { x == y; } }
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode2), TypeError);
 }
