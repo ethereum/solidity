@@ -112,7 +112,7 @@ protected:
 	unsigned bytesRequired() const;
 
 private:
-	Json::Value streamAsmJson(std::ostream& _out, const StringMap &_sourceCodes) const;
+	Json::Value streamAsmJson(std::ostream& _out, StringMap const& _sourceCodes) const;
 	std::ostream& streamAsm(std::ostream& _out, std::string const& _prefix, StringMap const& _sourceCodes) const;
 	Json::Value createJsonValue(std::string _name, int _begin, int _end, std::string _value = std::string(), std::string _jumpType = std::string()) const;
 
