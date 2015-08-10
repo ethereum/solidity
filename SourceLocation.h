@@ -41,8 +41,21 @@ struct SourceLocation
 	SourceLocation(): start(-1), end(-1) { }
 
 	SourceLocation(SourceLocation const& _other):
-		start(_other.start), end(_other.end), sourceName(_other.sourceName) {}
-	SourceLocation& operator=(SourceLocation const& _other) { start = _other.start; end = _other.end; sourceName = _other.sourceName; return *this;}
+		start(_other.start),
+		end(_other.end),
+		sourceName(_other.sourceName)
+	{}
+
+	SourceLocation& operator=(SourceLocation const& _other)
+	{
+		if (&_other == this)
+			return *this;
+
+		start = _other.start;
+		end = _other.end;
+		sourceName = _other.sourceName;
+		return *this;
+	}
 
 	bool operator==(SourceLocation const& _other) const { return start == _other.start && end == _other.end;}
 	bool operator!=(SourceLocation const& _other) const { return !operator==(_other); }
