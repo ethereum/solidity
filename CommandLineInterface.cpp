@@ -55,7 +55,7 @@ namespace solidity
 {
 
 static string const g_argAbiStr = "abi";
-static string const g_argSolAbiStr = "interface";
+static string const g_argSolInterfaceStr = "interface";
 static string const g_argSignatureHashes = "hashes";
 static string const g_argGas = "gas";
 static string const g_argAsmStr = "asm";
@@ -104,7 +104,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 	return
 		_args.count(g_argGas) ||
 		humanTargetedStdout(_args, g_argAbiStr) ||
-		humanTargetedStdout(_args, g_argSolAbiStr) ||
+		humanTargetedStdout(_args, g_argSolInterfaceStr) ||
 		humanTargetedStdout(_args, g_argSignatureHashes) ||
 		humanTargetedStdout(_args, g_argNatspecUserStr) ||
 		humanTargetedStdout(_args, g_argAstJson) ||
@@ -212,7 +212,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 		title = "Contract JSON ABI";
 		break;
 	case DocumentationType::ABISolidityInterface:
-		argName = g_argSolAbiStr;
+		argName = g_argSolInterfaceStr;
 		suffix = "_interface.sol";
 		title = "Contract Solidity ABI";
 		break;
@@ -327,19 +327,19 @@ bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
 			"Output a single json document containing the specified information, can be combined."
 		)
-		(g_argAstStr.c_str(), "Request to output the AST of the contract.")
-		(g_argAstJson.c_str(), "Request to output the AST of the contract in JSON format.")
-		(g_argAsmStr.c_str(), "Request to output the EVM assembly of the contract.")
-		(g_argAsmJsonStr.c_str(), "Request to output the EVM assembly of the contract in JSON format.")
-		(g_argOpcodesStr.c_str(), "Request to output the Opcodes of the contract.")
-		(g_argBinaryStr.c_str(), "Request to output the contract in binary (hexadecimal).")
-		(g_argCloneBinaryStr.c_str(), "Request to output the clone contract in binary (hexadecimal).")
-		(g_argAbiStr.c_str(), "Request to output the contract's JSON ABI interface.")
-		(g_argSolAbiStr.c_str(), "Request to output the contract's Solidity ABI interface.")
-		(g_argSignatureHashes.c_str(), "Request to output the contract's functions' signature hashes.")
-		(g_argGas.c_str(), "Request to output an estimate for each function's maximal gas usage.")
-		(g_argNatspecUserStr.c_str(), "Request to output the contract's Natspec user documentation.")
-		(g_argNatspecDevStr.c_str(), "Request to output the contract's Natspec developer documentation.");
+		(g_argAstStr.c_str(), "Outputs the AST of the contract.")
+		(g_argAstJson.c_str(), "Outputs the AST of the contract in JSON format.")
+		(g_argAsmStr.c_str(), "Outputs the EVM assembly of the contract.")
+		(g_argAsmJsonStr.c_str(), "Outputs the EVM assembly of the contract in JSON format.")
+		(g_argOpcodesStr.c_str(), "Outputs the Opcodes of the contract.")
+		(g_argBinaryStr.c_str(), "Outputs the contract in binary (hexadecimal).")
+		(g_argCloneBinaryStr.c_str(), "Output the clone contract in binary (hexadecimal).")
+		(g_argAbiStr.c_str(), "Outputs the contract's JSON ABI interface.")
+		(g_argSolInterfaceStr.c_str(), "Outputs the contract's Solidity interface.")
+		(g_argSignatureHashes.c_str(), "Outputs the contract's functions' signature hashes.")
+		(g_argGas.c_str(), "Outputs an estimate for each function's maximal gas usage.")
+		(g_argNatspecUserStr.c_str(), "Outputs the contract's Natspec user documentation.")
+		(g_argNatspecDevStr.c_str(), "Outputs the contract's Natspec developer documentation.");
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description filesPositions;
