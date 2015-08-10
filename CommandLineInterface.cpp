@@ -307,7 +307,6 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 	outFile << _data;
 	if (!outFile)
 		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _fileName));
-	outFile.close();
 }
 
 bool CommandLineInterface::parseArguments(int _argc, char** _argv)
