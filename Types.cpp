@@ -79,6 +79,8 @@ pair<u256, unsigned> const* StorageOffsets::getOffset(size_t _index) const
 
 MemberList& MemberList::operator=(MemberList&& _other)
 {
+	assert(&_other != this);
+
 	m_memberTypes = std::move(_other.m_memberTypes);
 	m_storageOffsets = std::move(_other.m_storageOffsets);
 	return *this;
