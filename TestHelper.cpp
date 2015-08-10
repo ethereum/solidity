@@ -121,10 +121,21 @@ bytes ImportTest::executeTest()
 {
 	ExecutionResult res;
 	eth::State tmpState = m_statePre;
+	try
+	{
+		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, m_transaction);
+		res = execOut.first;
+		m_logs = execOut.second.log();
+	}
+	catch (Exception const& _e)
+	{
+		cnote << "Exception: " << diagnostic_information(_e);
+	}
+	catch (std::exception const& _e)
+	{
+		cnote << "state execution exception: " << _e.what();
+	}
 
-	std::pair<ExecutionResult, TransactionReceipt> execOut = m_statePre.execute(m_envInfo, m_transaction);
-	res = execOut.first;
-	m_logs = execOut.second.log();
 	m_statePre.commit();
 	m_statePost = m_statePre;
 	m_statePre = tmpState;
