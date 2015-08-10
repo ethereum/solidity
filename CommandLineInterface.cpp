@@ -135,7 +135,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	}
 	if (m_args.count(g_argCloneBinaryStr))
 	{
-		if (outputToFile(m_args[g_argCloneBinaryStr].as<OutputType>()))
+		if (m_args.count("output-dir"))
 		{
 			stringstream data;
 			data << toHex(m_compiler->getCloneBytecode(_contract));
