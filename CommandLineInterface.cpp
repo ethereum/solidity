@@ -54,32 +54,32 @@ namespace dev
 namespace solidity
 {
 
-static string const g_argAbiStr = "json-abi";
-static string const g_argSolAbiStr = "sol-abi";
+static string const g_argAbiStr = "abi";
+static string const g_argSolAbiStr = "interface";
 static string const g_argSignatureHashes = "hashes";
 static string const g_argGas = "gas";
 static string const g_argAsmStr = "asm";
 static string const g_argAsmJsonStr = "asm-json";
 static string const g_argAstStr = "ast";
 static string const g_argAstJson = "ast-json";
-static string const g_argBinaryStr = "binary";
-static string const g_argCloneBinaryStr = "clone-binary";
+static string const g_argBinaryStr = "bin";
+static string const g_argCloneBinaryStr = "clone-bin";
 static string const g_argOpcodesStr = "opcodes";
-static string const g_argNatspecDevStr = "natspec-dev";
-static string const g_argNatspecUserStr = "natspec-user";
+static string const g_argNatspecDevStr = "devdoc";
+static string const g_argNatspecUserStr = "userdoc";
 static string const g_argAddStandard = "add-std";
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
-	"binary",
-	"clone-binary",
+	"bin",
+	"clone-bin",
 	"opcodes",
-	"json-abi",
-	"sol-abi",
+	"abi",
+	"interface",
 	"asm",
 	"ast",
-	"natspec-user",
-	"natspec-dev"
+	"userdoc",
+	"devdoc"
 };
 
 static void version()
@@ -118,14 +118,13 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 
 void CommandLineInterface::handleBinary(string const& _contract)
 {
-<<<<<<< HEAD
 	if (m_args.count(g_argBinaryStr))
 	{
 		if (m_args.count("output-dir"))
 		{
 			stringstream data;
 			data << toHex(m_compiler->getBytecode(_contract));
-			createFile(_contract + ".binary", data.str());
+			createFile(_contract + ".bin", data.str());
 		}
 		else
 		{
@@ -140,7 +139,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 		{
 			stringstream data;
 			data << toHex(m_compiler->getCloneBytecode(_contract));
-			createFile(_contract + ".clone_binary", data.str());
+			createFile(_contract + ".clone_bin", data.str());
 		}
 		else
 		{
@@ -214,7 +213,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 		break;
 	case DocumentationType::ABISolidityInterface:
 		argName = g_argSolAbiStr;
-		suffix = ".sol";
+		suffix = "_interface.sol";
 		title = "Contract Solidity ABI";
 		break;
 	case DocumentationType::NatspecUser:
@@ -323,12 +322,12 @@ bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 		("optimize-runs", po::value<unsigned>()->default_value(200), "Estimated number of contract runs for optimizer.")
 		("add-std", po::value<bool>()->default_value(false), "Add standard contracts")
 		("input-file", po::value<vector<string>>(), "input file")
+		("output-dir,o", po::value<string>(), "Output directory path")
 		(
 			"combined-json",
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
 			"Output a single json document containing the specified information, can be combined."
 		)
-		("output-dir,o", po::value<string>(), "Output directory path")
 		(g_argAstStr.c_str(), "Request to output the AST of the contract.")
 		(g_argAstJson.c_str(), "Request to output the AST of the contract in JSON format.")
 		(g_argAsmStr.c_str(), "Request to output the EVM assembly of the contract.")
@@ -488,14 +487,14 @@ void CommandLineInterface::handleCombinedJSON()
 	for (string const& contractName: contracts)
 	{
 		Json::Value contractData(Json::objectValue);
-		if (requests.count("sol-abi"))
-			contractData["sol-abi"] = m_compiler->getSolidityInterface(contractName);
-		if (requests.count("json-abi"))
-			contractData["json-abi"] = m_compiler->getInterface(contractName);
-		if (requests.count("binary"))
-			contractData["binary"] = toHex(m_compiler->getBytecode(contractName));
-		if (requests.count("clone-binary"))
-			contractData["clone-binary"] = toHex(m_compiler->getCloneBytecode(contractName));
+		if (requests.count("interface"))
+			contractData["interface"] = m_compiler->getSolidityInterface(contractName);
+		if (requests.count("abi"))
+			contractData["abi"] = m_compiler->getInterface(contractName);
+		if (requests.count("bin"))
+			contractData["bin"] = toHex(m_compiler->getBytecode(contractName));
+		if (requests.count("clone-bin"))
+			contractData["clone-bin"] = toHex(m_compiler->getCloneBytecode(contractName));
 		if (requests.count("opcodes"))
 			contractData["opcodes"] = eth::disassemble(m_compiler->getBytecode(contractName));
 		if (requests.count("asm"))
@@ -503,10 +502,10 @@ void CommandLineInterface::handleCombinedJSON()
 			ostringstream unused;
 			contractData["asm"] = m_compiler->streamAssembly(unused, contractName, m_sourceCodes, true);
 		}
-		if (requests.count("natspec-dev"))
-			contractData["natspec-dev"] = m_compiler->getMetadata(contractName, DocumentationType::NatspecDev);
-		if (requests.count("natspec-user"))
-			contractData["natspec-user"] = m_compiler->getMetadata(contractName, DocumentationType::NatspecUser);
+		if (requests.count("devdoc"))
+			contractData["devdoc"] = m_compiler->getMetadata(contractName, DocumentationType::NatspecDev);
+		if (requests.count("userdoc"))
+			contractData["userdoc"] = m_compiler->getMetadata(contractName, DocumentationType::NatspecUser);
 		output["contracts"][contractName] = contractData;
 	}
 
@@ -552,6 +551,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 			for (auto const& sourceCode: m_sourceCodes)
 			{
 				stringstream data;
+				string postfix = "";
 				if (_argStr == g_argAstStr)
 				{
 					ASTPrinter printer(m_compiler->getAST(sourceCode.first), sourceCode.second);
@@ -561,8 +561,9 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				{
 					ASTJsonConverter converter(m_compiler->getAST(sourceCode.first));
 					converter.print(data);
+					postfix += "_json";
 				}
-				createFile(sourceCode.first + ".ast", data.str());
+				createFile(sourceCode.first + postfix + ".ast", data.str());
 			}
 		}
 		else
