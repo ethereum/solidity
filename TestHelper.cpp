@@ -320,7 +320,7 @@ int ImportTest::exportTest(bytes const& _output)
 {
 	int err = 0;
 	// export output	
-	m_TestObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
+	m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
 	// compare expected output with post output
 	if (m_testObject.count("expectOut") > 0)
