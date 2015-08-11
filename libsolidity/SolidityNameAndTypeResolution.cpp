@@ -1883,6 +1883,34 @@ BOOST_AUTO_TEST_CASE(positive_integers_to_unsigned_out_of_bound)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(integer_boolean_operators)
+{
+	char const* sourceCode1 = R"(
+		contract test { function() { uint x = 1; uint y = 2; x || y; } }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode1), TypeError);
+	char const* sourceCode2 = R"(
+		contract test { function() { uint x = 1; uint y = 2; x && y; } }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode2), TypeError);
+	char const* sourceCode3 = R"(
+		contract test { function() { uint x = 1; !x; } }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode3), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(reference_compare_operators)
+{
+	char const* sourceCode1 = R"(
+		contract test { bytes a; bytes b; function() { a == b; } }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode1), TypeError);
+	char const* sourceCode2 = R"(
+		contract test { struct s {uint a;} s x; s y; function() { x == y; } }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode2), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(overwrite_memory_location_external)
 {
 	char const* sourceCode = R"(
@@ -2147,6 +2175,23 @@ BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(string_bytes_conversion)
+{
+	char const* text = R"(
+		contract Test {
+			string s;
+			bytes b;
+			function h(string _s) external { bytes(_s).length; }
+			function i(string _s) internal { bytes(_s).length; }
+			function j() internal { bytes(s).length; }
+			function k(bytes _b) external { string(_b); }
+			function l(bytes _b) internal { string(_b); }
+			function m() internal { string(b); }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

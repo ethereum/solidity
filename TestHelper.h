@@ -32,6 +32,7 @@
 #include <libevm/ExtVMFace.h>
 #include <libtestutils/Common.h>
 
+
 #ifdef NOBOOST
 	#define TBOOST_REQUIRE(arg) if(arg == false) throw dev::Exception();
 	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
@@ -62,7 +63,7 @@ class State;
 
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
-void mine(State& _s, BlockChain const& _bc);
+void mine(Block& _s, BlockChain const& _bc);
 void mine(Ethash::BlockHeader& _bi);
 
 }
@@ -122,45 +123,44 @@ namespace test
 	}																	\
 	while (0)
 
-struct ImportStateOptions
+enum class testType
 {
-	ImportStateOptions(bool _bSetAll = false):m_bHasBalance(_bSetAll), m_bHasNonce(_bSetAll), m_bHasCode(_bSetAll), m_bHasStorage(_bSetAll)	{}
-	bool isAllSet() {return m_bHasBalance && m_bHasNonce && m_bHasCode && m_bHasStorage;}
-	bool m_bHasBalance;
-	bool m_bHasNonce;
-	bool m_bHasCode;
-	bool m_bHasStorage;
+	StateTests,
+	BlockChainTests,
+	Other
 };
-typedef std::map<Address, ImportStateOptions> stateOptionsMap;
 
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o): m_TestObject(_o) {}
-	ImportTest(json_spirit::mObject& _o, bool isFiller);
+	ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate = testType::StateTests);
+
 	// imports
 	void importEnv(json_spirit::mObject& _o);
 	static void importState(json_spirit::mObject& _o, eth::State& _state);
-	static void importState(json_spirit::mObject& _o, eth::State& _state, stateOptionsMap& _stateOptionsMap);
+	static void importState(json_spirit::mObject& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
 	void importTransaction(json_spirit::mObject& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
-	void exportTest(bytes const& _output, eth::State const& _statePost);
-	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, stateOptionsMap const _expectedStateOptions = stateOptionsMap(), WhenError _throw = WhenError::Throw);
+	bytes executeTest();
+	void exportTest(bytes const& _output);
+	static void compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
-	eth::ExtVMFace m_environment;
-	eth::Transaction m_transaction;
+	eth::EnvInfo m_envInfo;
+	eth::Transaction m_transaction;	
+	eth::LogEntries m_logs;
+	eth::LogEntries m_logsExpected;
 
 private:
-	json_spirit::mObject& m_TestObject;
+	json_spirit::mObject& m_testObject;
 };
 
 class ZeroGasPricer: public eth::GasPricer
 {
 protected:
-	u256 ask(eth::State const&) const override { return 0; }
+	u256 ask(eth::Block const&) const override { return 0; }
 	u256 bid(eth::TransactionPriority = eth::TransactionPriority::Medium) const override { return 0; }
 };
 
@@ -205,7 +205,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin);
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin);
 void doRlpTests(json_spirit::mValue& v, bool _fillin);
 
-template<typename mapType>
+/*template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 {
 	for (auto& resultPair : _resultAddrs)
@@ -216,7 +216,7 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 			TBOOST_ERROR("Missing result address " << resultAddr);
 	}
 	TBOOST_CHECK((_expectedAddrs == _resultAddrs));
-}
+}*/
 
 class Options
 {
@@ -239,7 +239,7 @@ public:
 	bool inputLimits = false;
 	bool bigData = false;
 	bool wallet = false;
-	bool nonetwork = false;
+	bool nonetwork = true;
 	bool nodag = true;
 	/// @}
 

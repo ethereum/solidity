@@ -25,6 +25,7 @@
 #include <string>
 #include <tuple>
 #include "../TestHelper.h"
+#include <libethcore/ABI.h>
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
@@ -44,7 +45,6 @@ public:
 	ExecutionFramework()
 	{
 		g_logVerbosity = 0;
-		m_state.resetCurrent();
 	}
 
 	bytes const& compileAndRunWithoutCheck(
@@ -130,6 +130,7 @@ public:
 
 	static bytes encode(bool _value) { return encode(byte(_value)); }
 	static bytes encode(int _value) { return encode(u256(_value)); }
+	static bytes encode(size_t _value) { return encode(u256(_value)); }
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
 	static bytes encode(byte _value) { return bytes(31, 0) + bytes{_value}; }
 	static bytes encode(u256 const& _value) { return toBigEndian(_value); }
@@ -165,6 +166,73 @@ public:
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
 
+	class ContractInterface
+	{
+	public:
+		ContractInterface(ExecutionFramework& _framework): m_framework(_framework) {}
+
+		void setNextValue(u256 const& _value) { m_nextValue = _value; }
+
+	protected:
+		template <class... Args>
+		bytes const& call(std::string const& _sig, Args const&... _arguments)
+		{
+			auto const& ret = m_framework.callContractFunctionWithValue(_sig, m_nextValue, _arguments...);
+			m_nextValue = 0;
+			return ret;
+		}
+
+		void callString(std::string const& _name, std::string const& _arg)
+		{
+			BOOST_CHECK(call(_name + "(string)", u256(0x20), _arg.length(), _arg).empty());
+		}
+
+		void callStringAddress(std::string const& _name, std::string const& _arg1, u160 const& _arg2)
+		{
+			BOOST_CHECK(call(_name + "(string,address)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
+		}
+
+		void callStringAddressBool(std::string const& _name, std::string const& _arg1, u160 const& _arg2, bool _arg3)
+		{
+			BOOST_CHECK(call(_name + "(string,address,bool)", u256(0x60), _arg2, _arg3, _arg1.length(), _arg1).empty());
+		}
+
+		void callStringBytes32(std::string const& _name, std::string const& _arg1, h256 const& _arg2)
+		{
+			BOOST_CHECK(call(_name + "(string,bytes32)", u256(0x40), _arg2, _arg1.length(), _arg1).empty());
+		}
+
+		u160 callStringReturnsAddress(std::string const& _name, std::string const& _arg)
+		{
+			bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
+			BOOST_REQUIRE(ret.size() == 0x20);
+			BOOST_CHECK(std::count(ret.begin(), ret.begin() + 12, 0) == 12);
+			return eth::abiOut<u160>(ret);
+		}
+
+		std::string callAddressReturnsString(std::string const& _name, u160 const& _arg)
+		{
+			bytesConstRef ret = ref(call(_name + "(address)", _arg));
+			BOOST_REQUIRE(ret.size() >= 0x20);
+			u256 offset = eth::abiOut<u256>(ret);
+			BOOST_REQUIRE_EQUAL(offset, 0x20);
+			u256 len = eth::abiOut<u256>(ret);
+			BOOST_REQUIRE_EQUAL(ret.size(), ((len + 0x1f) / 0x20) * 0x20);
+			return ret.cropped(0, size_t(len)).toString();
+		}
+
+		h256 callStringReturnsBytes32(std::string const& _name, std::string const& _arg)
+		{
+			bytes const& ret = call(_name + "(string)", u256(0x20), _arg.length(), _arg);
+			BOOST_REQUIRE(ret.size() == 0x20);
+			return eth::abiOut<h256>(ret);
+		}
+
+	private:
+		u256 m_nextValue;
+		ExecutionFramework& m_framework;
+	};
+
 private:
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
@@ -184,7 +252,7 @@ protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, eth::LastHashes(), 0);
+		eth::Executive executive(m_state, m_envInfo, 0);
 		eth::ExecutionResult res;
 		executive.setResultRecipient(res);
 		eth::Transaction t =
@@ -225,6 +293,7 @@ protected:
 	dev::solidity::CompilerStack m_compiler;
 	Address m_sender;
 	Address m_contractAddress;
+	eth::EnvInfo m_envInfo;
 	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 100000000;
