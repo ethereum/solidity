@@ -23,7 +23,7 @@
 #define BOOST_TEST_MODULE EthereumTests
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#define BOOST_DISABLE_WIN32 //disables SEH warning
+//#define BOOST_DISABLE_WIN32 //disables SEH warning
 #define BOOST_TEST_NO_MAIN
 #include <boost/test/included/unit_test.hpp>
 #pragma GCC diagnostic pop
