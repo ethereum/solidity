@@ -18,6 +18,7 @@
  * @author Marko Simovic <markobarko@gmail.com>
  * @date 2014
  * Stub for generating main boost.test module.
+ * Original code taken from boost sources.
  */
 
 #define BOOST_TEST_MODULE EthereumTests
@@ -45,10 +46,12 @@ test_suite* init_func( int argc, char* argv[] )
 //Custom Boost Unit Test Main
 int main( int argc, char* argv[] )
 {
-	try {
+	try
+	{
 		framework::init( init_func, argc, argv );
 
-		if( !runtime_config::test_to_run().is_empty() ) {
+		if( !runtime_config::test_to_run().is_empty() )
+		{
 			test_case_filter filter( runtime_config::test_to_run() );
 
 			traverse_test_tree( framework::master_test_suite().p_id, filter );
@@ -62,20 +65,24 @@ int main( int argc, char* argv[] )
 					? boost::exit_success
 					: results_collector.results( framework::master_test_suite().p_id ).result_code();
 	}
-	catch (framework::nothing_to_test const&) {
+	catch (framework::nothing_to_test const&)
+	{
 		return boost::exit_success;
 	}
-	catch (framework::internal_error const& ex) {
+	catch (framework::internal_error const& ex)
+	{
 		results_reporter::get_stream() << "Boost.Test framework internal error: " << ex.what() << std::endl;
 
 		return boost::exit_exception_failure;
 	}
-	catch (framework::setup_error const& ex) {
+	catch (framework::setup_error const& ex)
+	{
 		results_reporter::get_stream() << "Test setup error: " << ex.what() << std::endl;
 
 		return boost::exit_exception_failure;
 	}
-	catch (...) {
+	catch (...)
+	{
 		results_reporter::get_stream() << "Boost.Test framework internal error: unknown reason" << std::endl;
 
 		return boost::exit_exception_failure;
