@@ -22,7 +22,6 @@
 #pragma once
 
 #include <functional>
-
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 
@@ -143,8 +142,8 @@ public:
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
 	bytes executeTest();
-	void exportTest(bytes const& _output);
-	static void compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
+	int exportTest(bytes const& _output);
+	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
@@ -218,6 +217,13 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 	TBOOST_CHECK((_expectedAddrs == _resultAddrs));
 }*/
 
+enum class Verbosity
+{
+	Full,
+	NiceReport,
+	None
+};
+
 class Options
 {
 public:
@@ -227,6 +233,7 @@ public:
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool checkState = false;///< Throw error when checking test states
 	bool fulloutput = false;///< Replace large output to just it's length
+	Verbosity logVerbosity = Verbosity::NiceReport;
 
 	/// Test selection
 	/// @{
