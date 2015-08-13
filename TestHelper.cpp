@@ -319,7 +319,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 int ImportTest::exportTest(bytes const& _output)
 {
 	int err = 0;
-	// export output	
+	// export output
 	m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
 	// compare expected output with post output
@@ -797,8 +797,7 @@ Options::Options()
 				std::cout.rdbuf(strCout.rdbuf());
 				std::cerr.rdbuf(strCout.rdbuf());
 			}
-			else
-			if (indentLevel == "1")
+			else if (indentLevel == "1")
 				logVerbosity = Verbosity::NiceReport;
 			else
 				logVerbosity = Verbosity::Full;

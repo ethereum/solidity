@@ -62,20 +62,20 @@ int main( int argc, char* argv[] )
 					? boost::exit_success
 					: results_collector.results( framework::master_test_suite().p_id ).result_code();
 	}
-	catch( framework::nothing_to_test const& ) {
+	catch (framework::nothing_to_test const&) {
 		return boost::exit_success;
 	}
-	catch( framework::internal_error const& ex ) {
+	catch (framework::internal_error const& ex) {
 		results_reporter::get_stream() << "Boost.Test framework internal error: " << ex.what() << std::endl;
 
 		return boost::exit_exception_failure;
 	}
-	catch( framework::setup_error const& ex ) {
+	catch (framework::setup_error const& ex) {
 		results_reporter::get_stream() << "Test setup error: " << ex.what() << std::endl;
 
 		return boost::exit_exception_failure;
 	}
-	catch( ... ) {
+	catch (...) {
 		results_reporter::get_stream() << "Boost.Test framework internal error: unknown reason" << std::endl;
 
 		return boost::exit_exception_failure;
