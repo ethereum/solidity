@@ -253,12 +253,16 @@ void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 	importTransaction(o_tr, m_transaction);
 }
 
-void ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
+int ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
 {
 	#define CHECK(a,b)						\
 		{									\
 			if (_throw == WhenError::Throw) \
-				{TBOOST_CHECK_MESSAGE(a,b);}\
+			{								\
+				TBOOST_CHECK_MESSAGE(a, b);	\
+				if (!a)						\
+					return 1;				\
+			}								\
 			else							\
 				{TBOOST_WARN_MESSAGE(a,b);}	\
 		}
@@ -309,12 +313,13 @@ void ImportTest::compareStates(State const& _stateExpect, State const& _statePos
 						"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
+	return 0;
 }
 
-void ImportTest::exportTest(bytes const& _output)
+int ImportTest::exportTest(bytes const& _output)
 {
+	int err = 0;
 	// export output
-
 	m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
 	// compare expected output with post output
@@ -322,7 +327,12 @@ void ImportTest::exportTest(bytes const& _output)
 	{
 		std::string warning = "Check State: Error! Unexpected output: " + m_testObject["out"].get_str() + " Expected: " + m_testObject["expectOut"].get_str();
 		if (Options::get().checkState)
-			{TBOOST_CHECK_MESSAGE((m_testObject["out"].get_str() == m_testObject["expectOut"].get_str()), warning);}
+		{
+			bool statement = (m_testObject["out"].get_str() == m_testObject["expectOut"].get_str());
+			TBOOST_CHECK_MESSAGE(statement, warning);
+			if (!statement)
+				err = 1;
+		}
 		else
 			TBOOST_WARN_MESSAGE((m_testObject["out"].get_str() == m_testObject["expectOut"].get_str()), warning);
 
@@ -350,6 +360,7 @@ void ImportTest::exportTest(bytes const& _output)
 	m_testObject["pre"] = fillJsonWithState(m_statePre);
 	m_testObject["env"] = makeAllFieldsHex(m_testObject["env"].get_obj());
 	m_testObject["transaction"] = makeAllFieldsHex(m_testObject["transaction"].get_obj());
+	return err;
 }
 
 json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
@@ -566,7 +577,10 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 
 	auto& filename = Options::get().singleTestFile;
 	auto& testname = Options::get().singleTestName;
-	VerbosityHolder sentinel(12);
+
+	if (g_logVerbosity != -1)
+		VerbosityHolder sentinel(12);
+
 	try
 	{
 		cnote << "Testing user defined test: " << filename;
@@ -631,7 +645,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 
 	try
 	{
-		std::cout << "TEST " << _name << ":\n";
+		cnote << "TEST " << _name << ":";
 		json_spirit::mValue v;
 		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
 		TBOOST_REQUIRE_MESSAGE((s.length() > 0), "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
@@ -773,7 +787,26 @@ Options::Options()
 		}
 		else if (arg == "--fulloutput")
 			fulloutput = true;
+		else if (arg == "--verbosity" && i + 1 < argc)
+		{
+			static std::ostringstream strCout; //static string to redirect logs to
+			std::string indentLevel = std::string{argv[i + 1]};
+			if (indentLevel == "0")
+			{
+				logVerbosity = Verbosity::None;
+				std::cout.rdbuf(strCout.rdbuf());
+				std::cerr.rdbuf(strCout.rdbuf());
+			}
+			else if (indentLevel == "1")
+				logVerbosity = Verbosity::NiceReport;
+			else
+				logVerbosity = Verbosity::Full;
+		}
 	}
+
+	//Default option
+	if (logVerbosity == Verbosity::NiceReport)
+		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 
 Options const& Options::get()
