@@ -31,6 +31,7 @@ namespace eth
 struct AssemblyException: virtual Exception {};
 struct OptimizerException: virtual AssemblyException {};
 struct StackTooDeepException: virtual OptimizerException {};
+struct ItemNotAvailableException: virtual OptimizerException {};
 
 }
 }

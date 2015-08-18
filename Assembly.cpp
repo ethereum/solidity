@@ -337,6 +337,11 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 						// This might happen if the opcode reconstruction is not as efficient
 						// as the hand-crafted code.
 					}
+					catch (ItemNotAvailableException const&)
+					{
+						// This might happen if e.g. associativity and commutativity rules
+						// reorganise the expression tree, but not all leaves are available.
+					}
 
 					if (shouldReplace)
 					{

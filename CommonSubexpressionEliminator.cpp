@@ -220,6 +220,12 @@ void CSECodeGenerator::addDependencies(Id _c)
 	if (m_neededBy.count(_c))
 		return; // we already computed the dependencies for _c
 	ExpressionClasses::Expression expr = m_expressionClasses.representative(_c);
+	if (expr.item->type() == UndefinedItem)
+		BOOST_THROW_EXCEPTION(
+			// If this exception happens, we need to find a different way to generate the
+			// compound expression.
+			ItemNotAvailableException() << errinfo_comment("Undefined item requested but not available.")
+		);
 	for (Id argument: expr.arguments)
 	{
 		addDependencies(argument);
@@ -317,6 +323,11 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 		"Sequence constrained operation requested out of sequence."
 	);
 	assertThrow(expr.item, OptimizerException, "Non-generated expression without item.");
+	assertThrow(
+		expr.item->type() != UndefinedItem,
+		OptimizerException,
+		"Undefined item requested but not available."
+	);
 	vector<Id> const& arguments = expr.arguments;
 	for (Id arg: boost::adaptors::reverse(arguments))
 		generateClassElement(arg);
