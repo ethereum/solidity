@@ -20,7 +20,7 @@
  * Versioning.
  */
 
-#include <libsolidity/Version.h>
+#include <Version.h>
 #include <string>
 #include <BuildInfo.h>
 #include <libdevcore/Common.h>
