@@ -21,6 +21,10 @@
  */
 
 #include "CommandLineInterface.h"
+#include <iostream>
+#include <boost/exception/all.hpp>
+
+using namespace std;
 
 int main(int argc, char** argv)
 {
@@ -29,7 +33,15 @@ int main(int argc, char** argv)
 		return 1;
 	if (!cli.processInput())
 		return 1;
-	cli.actOnInput();
+	try
+	{
+		cli.actOnInput();
+	}
+	catch (boost::exception const& _exception)
+	{
+		cerr << "Exception during output generation: " << boost::diagnostic_information(_exception) << endl;
+		return 1;
+	}
 
 	return 0;
 }

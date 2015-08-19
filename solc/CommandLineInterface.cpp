@@ -121,48 +121,29 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-		{
-			stringstream data;
-			data << toHex(m_compiler->getBytecode(_contract));
-			createFile(_contract + ".bin", data.str());
-		}
+			createFile(_contract + ".bin", toHex(m_compiler->getBytecode(_contract)));
 		else
 		{
 			cout << "Binary: " << endl;
 			cout << toHex(m_compiler->getBytecode(_contract)) << endl;
 		}
-
 	}
 	if (m_args.count(g_argCloneBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-		{
-			stringstream data;
-			data << toHex(m_compiler->getCloneBytecode(_contract));
-			createFile(_contract + ".clone_bin", data.str());
-		}
+			createFile(_contract + ".clone_bin", toHex(m_compiler->getCloneBytecode(_contract)));
 		else
 		{
 			cout << "Clone Binary: " << endl;
 			cout << toHex(m_compiler->getCloneBytecode(_contract)) << endl;
 		}
 	}
-	else
-	{
-		cout << "Binary: " << endl;
-		cout << toHex(m_compiler->getBytecode(_contract)) << endl;
-	}
-
 }
 
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count("output-dir"))
-	{
-		stringstream data;
-		data << eth::disassemble(m_compiler->getBytecode(_contract));
-		createFile(_contract + ".opcode", data.str());
-	}
+		createFile(_contract + ".opcode", eth::disassemble(m_compiler->getBytecode(_contract)));
 	else
 	{
 		cout << "Opcodes: " << endl;
@@ -190,11 +171,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
 
 	if (m_args.count("output-dir"))
-	{
-		stringstream data;
-		data << out;
-		createFile(_contract + ".signatures", data.str());
-	}
+		createFile(_contract + ".signatures", out);
 	else
 		cout << "Function signatures: " << endl << out;
 }
@@ -234,11 +211,7 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 	if (m_args.count(argName))
 	{
 		if (m_args.count("output-dir"))
-		{
-			stringstream data;
-			data << m_compiler->getMetadata(_contract, _type);
-			createFile(_contract + suffix, data.str());
-		}
+			createFile(_contract + suffix, m_compiler->getMetadata(_contract, _type));
 		else
 		{
 			cout << title << endl;
@@ -301,59 +274,95 @@ void CommandLineInterface::createFile(string const& _fileName, string const& _da
 {
 	namespace fs = boost::filesystem;
 	// create directory if not existent
-	fs::path p(m_args["output-dir"].as<string>());
+	fs::path p(m_args.at("output-dir").as<string>());
 	fs::create_directories(p);
-	ofstream outFile((p / _fileName).string());
+	string pathName = (p / _fileName).string();
+	ofstream outFile(pathName);
 	outFile << _data;
 	if (!outFile)
-		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _fileName));
+		BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + pathName));
 }
 
 bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 {
 	// Declare the supported options.
-	po::options_description desc("Allowed options");
+	po::options_description desc(
+		R"(solc, the Solidity commandline compiler.
+Usage: solc [options] [input_file...]
+Compiles the given Solidity input files (or the standard input if none given) and
+outputs the components specified in the options at standard output or in files in
+the output directory, if specified.
+Example: solc --bin -o /tmp/solcoutput contract.sol
+
+Allowed options)",
+		po::options_description::m_default_line_length,
+		po::options_description::m_default_line_length - 23);
 	desc.add_options()
-		("help", "Show help message and exit")
-		("version", "Show version and exit")
-		("optimize", po::value<bool>()->default_value(false), "Optimize bytecode")
-		("optimize-runs", po::value<unsigned>()->default_value(200), "Estimated number of contract runs for optimizer.")
-		("add-std", po::value<bool>()->default_value(false), "Add standard contracts")
-		("input-file", po::value<vector<string>>(), "input file")
-		("output-dir,o", po::value<string>(), "Output directory path")
+		("help", "Show help message and exit.")
+		("version", "Show version and exit.")
+		("optimize", "Enable bytecode optimizer.")
+		(
+			"optimize-runs",
+			po::value<unsigned>()->value_name("n")->default_value(200),
+			"Estimated number of contract runs for optimizer tuning."
+		)
+		(g_argAddStandard.c_str(), "Add standard contracts.")
+		(
+			"output-dir,o",
+			po::value<string>()->value_name("path"),
+			"If given, creates one file per component and contract/file at the specified directory."
+		)
 		(
 			"combined-json",
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
-			"Output a single json document containing the specified information, can be combined."
+			"Output a single json document containing the specified information."
 		)
-		(g_argAstStr.c_str(), "Outputs the AST of the contract.")
-		(g_argAstJson.c_str(), "Outputs the AST of the contract in JSON format.")
-		(g_argAsmStr.c_str(), "Outputs the EVM assembly of the contract.")
-		(g_argAsmJsonStr.c_str(), "Outputs the EVM assembly of the contract in JSON format.")
-		(g_argOpcodesStr.c_str(), "Outputs the Opcodes of the contract.")
-		(g_argBinaryStr.c_str(), "Outputs the contract in binary (hexadecimal).")
-		(g_argCloneBinaryStr.c_str(), "Output the clone contract in binary (hexadecimal).")
-		(g_argAbiStr.c_str(), "Outputs the contract's JSON ABI interface.")
-		(g_argSolInterfaceStr.c_str(), "Outputs the contract's Solidity interface.")
-		(g_argSignatureHashes.c_str(), "Outputs the contract's functions' signature hashes.")
-		(g_argGas.c_str(), "Outputs an estimate for each function's maximal gas usage.")
-		(g_argNatspecUserStr.c_str(), "Outputs the contract's Natspec user documentation.")
-		(g_argNatspecDevStr.c_str(), "Outputs the contract's Natspec developer documentation.");
+		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.");
+	po::options_description outputComponents("Output Components");
+	outputComponents.add_options()
+		(g_argAstStr.c_str(), "AST of all source files.")
+		(g_argAstJson.c_str(), "AST of all source files in JSON format.")
+		(g_argAsmStr.c_str(), "EVM assembly of the contracts.")
+		(g_argAsmJsonStr.c_str(), "EVM assembly of the contracts in JSON format.")
+		(g_argOpcodesStr.c_str(), "Opcodes of the contracts.")
+		(g_argBinaryStr.c_str(), "Binary of the contracts in hex.")
+		(g_argCloneBinaryStr.c_str(), "Binary of the clone contracts in hex.")
+		(g_argAbiStr.c_str(), "ABI specification of the contracts.")
+		(g_argSolInterfaceStr.c_str(), "Solidity interface of the contracts.")
+		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
+		(g_argNatspecUserStr.c_str(), "Natspec user documentation of all contracts.")
+		(g_argNatspecDevStr.c_str(), "Natspec developer documentation of all contracts.");
+	desc.add(outputComponents);
+
+	po::options_description allOptions = desc;
+	allOptions.add_options()("input-file", po::value<vector<string>>(), "input file");
 
 	// All positional options should be interpreted as input files
 	po::positional_options_description filesPositions;
-	filesPositions.add("output-dir", 1);
 	filesPositions.add("input-file", -1);
 
 	// parse the compiler arguments
 	try
 	{
-		po::store(po::command_line_parser(_argc, _argv).options(desc).positional(filesPositions).allow_unregistered().run(), m_args);
-
+		po::command_line_parser cmdLineParser(_argc, _argv);
+		cmdLineParser.options(allOptions).positional(filesPositions).allow_unregistered();
+		po::store(cmdLineParser.run(), m_args);
 	}
 	catch (po::error const& _exception)
 	{
 		cerr << _exception.what() << endl;
+		return false;
+	}
+
+	if (m_args.count("help"))
+	{
+		cout << desc;
+		return false;
+	}
+
+	if (m_args.count("version"))
+	{
+		version();
 		return false;
 	}
 
@@ -368,18 +377,6 @@ bool CommandLineInterface::parseArguments(int _argc, char** _argv)
 			}
 	}
 	po::notify(m_args);
-
-	if (m_args.count("help"))
-	{
-		cout << desc;
-		return false;
-	}
-
-	if (m_args.count("version"))
-	{
-		version();
-		return false;
-	}
 
 	return true;
 }
@@ -414,13 +411,13 @@ bool CommandLineInterface::processInput()
 			m_sourceCodes[infile] = dev::contentsString(infile);
 		}
 
-	m_compiler.reset(new CompilerStack(m_args["add-std"].as<bool>()));
+	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0));
 	try
 	{
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		// TODO: Perhaps we should not compile unless requested
-		bool optimize = m_args["optimize"].as<bool>();
+		bool optimize = m_args.count("optimize") > 0;
 		unsigned runs = m_args["optimize-runs"].as<unsigned>();
 		m_compiler->compile(optimize, runs);
 	}
@@ -561,7 +558,8 @@ void CommandLineInterface::handleAst(string const& _argStr)
 					converter.print(data);
 					postfix += "_json";
 				}
-				createFile(sourceCode.first + postfix + ".ast", data.str());
+				boost::filesystem::path path(sourceCode.first);
+				createFile(path.filename().string() + postfix + ".ast", data.str());
 			}
 		}
 		else
