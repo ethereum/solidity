@@ -269,7 +269,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 	for (auto const& a: _stateExpect.addresses())
 	{
-		CHECK(_statePost.addressInUse(a.first), "Filling Test: " << a.first << " missing expected address!");
+		CHECK(_statePost.addressInUse(a.first), "Check State: " << a.first << " missing expected address!");
 		if (_statePost.addressInUse(a.first))
 		{
 			AccountMask addressOptions(true);
