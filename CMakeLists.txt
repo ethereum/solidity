@@ -20,31 +20,39 @@ else()
 endif()
 
 # Figure out environment.
-set(CPPETHEREUM_BUILD "${CMAKE_CURRENT_SOURCE_DIR}/../cpp-ethereum/${BUILD_DIR_NAME}" CACHE STRING "The absolute build directory of cpp-ethereum.")
 set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The the path to the cmake directory")
 set(ETH_DIR         "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum"         CACHE PATH "The path to the cpp-ethereum directory")
 set(BUILD_DIR_NAME  "build"                                            CACHE STRING "The name of the build directory in cpp-ethereum")
 set(ETH_BUILD_DIR   "${ETH_DIR}/${BUILD_DIR_NAME}")
 
+# A place where should we look for *.cmake files
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
+# A place where we should look for ethereum libraries 
+set(CMAKE_LIBRARY_PATH ${ETH_BUILD_DIR})
+
+# Let's find our dependencies
 include(EthDependencies)
-include(EthExecutableHelper)
+
+# Figure out what compiler and system are we using
 include(EthCompilerSettings)
 
-include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
-include_directories(BEFORE ..)
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(libsolidity)
+# Include helper macros
+include(EthExecutableHelper)
+
 # Include a directory with BuildInfo.h
 include_directories(${ETH_BUILD_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../cpp-ethereum)
+
+find_package(Eth)
+
+include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
+include_directories(BEFORE .)
+include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${ETH_DIR})
 include_directories(${CPPETHEREUM_BUILD})
 
-file(GLOB_RECURSE SRC_LIST "libsolidity/*.cpp")
-file(GLOB_RECURSE HEADERS "libsolidity/*.h")
-
-set(EXECUTABLE solidity)
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+add_subdirectory(libsolidity)
+add_subdirectory(solc)
+add_subdirectory(test)
 
 # TODO installation and packaging rules
