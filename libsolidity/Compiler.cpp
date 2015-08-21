@@ -720,6 +720,9 @@ eth::Assembly Compiler::getCloneRuntime()
 	a << u256("0xcafecafecafecafecafecafecafecafecafecafe");
 	a << u256(eth::c_callGas + eth::c_callValueTransferGas + 10) << eth::Instruction::GAS << eth::Instruction::SUB;
 	a << eth::Instruction::CALLCODE;
+	//Propagate error condition (if CALLCODE pushes 0 on stack).
+	a << eth::Instruction::ISZERO;
+	a.appendJumpI(a.errorTag());
 	//@todo adjust for larger return values, make this dynamic.
 	a << u256(0x20) << u256(0) << eth::Instruction::RETURN;
 	return a;
