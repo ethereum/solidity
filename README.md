@@ -1,6 +1,4 @@
-# solidity
-
-The Solidity Contract-Oriented Programming Langauge
+# The Solidity Contract-Oriented Programming Langauge
 
 ## Useful links
 
