@@ -390,7 +390,10 @@ bool Compiler::visit(VariableDeclaration const& _variableDeclaration)
 	m_breakTags.clear();
 	m_continueTags.clear();
 
-	ExpressionCompiler(m_context, m_optimize).appendStateVariableAccessor(_variableDeclaration);
+	if (_variableDeclaration.isConstant())
+		ExpressionCompiler(m_context, m_optimize).appendConstStateVariableAccessor(_variableDeclaration);
+	else
+		ExpressionCompiler(m_context, m_optimize).appendStateVariableAccessor(_variableDeclaration);
 
 	return false;
 }

@@ -67,6 +67,9 @@ public:
 	/// Appends code for a State Variable accessor function
 	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);
 
+	/// Appends code for a Constant State Variable accessor function
+	void appendConstStateVariableAccessor(const VariableDeclaration& _varDecl);
+
 private:
 	virtual bool visit(Assignment const& _assignment) override;
 	virtual bool visit(UnaryOperation const& _unaryOperation) override;
