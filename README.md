@@ -1,7 +1,9 @@
 # solidity
+
 The Solidity Contract-Oriented Programming Langauge
 
 ## Useful links
+
 To get started you can find a basic introduction to the language in [Solidity Tutorial]( https://github.com/ethereum/wiki/wiki/Solidity-Tutorial).
 
 Check out [Solidity Features](https://github.com/ethereum/wiki/wiki/Solidity-Features) page with the list of already completed Solidity features with explanations and demonstrations, it is being updated continuously. More technical information you can find in the [Pivotal Tracker](https://www.pivotaltracker.com/n/projects/1189488).
@@ -21,6 +23,7 @@ See the [Wiki](https://github.com/ethereum/cpp-ethereum/wiki) for build instruct
 ## Contributions
 
 ### External Contributors
+
 I hereby place all my contributions in this codebase under an MIT
 licence, as specified [here](http://opensource.org/licenses/MIT).
 - *Name Surname* (**email@domain**)
