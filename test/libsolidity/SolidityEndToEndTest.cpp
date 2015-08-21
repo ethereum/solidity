@@ -5161,6 +5161,27 @@ BOOST_AUTO_TEST_CASE(string_as_mapping_key)
 		) == encodeArgs(u256(7 + i)));
 }
 
+BOOST_AUTO_TEST_CASE(accessor_for_state_variable)
+{
+	char const* sourceCode = R"(
+		contract Lotto{
+			uint public ticketPrice = 500;
+		})";
+
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callContractFunction("ticketPrice()") == encodeArgs(u256(500)));
+}
+
+BOOST_AUTO_TEST_CASE(accessor_for_const_state_variable)
+{
+	char const* sourceCode = R"(
+		contract Lotto{
+			uint constant public ticketPrice = 555;
+		})";
+
+		compileAndRun(sourceCode);
+		BOOST_CHECK(callContractFunction("ticketPrice()") == encodeArgs(u256(555)));
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 }

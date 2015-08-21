@@ -540,7 +540,7 @@ public:
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
 
 	virtual bool isLValue() const override;
-	virtual bool isPartOfExternalInterface() const override { return isPublic() && !m_isConstant; }
+	virtual bool isPartOfExternalInterface() const override { return isPublic(); }
 
 	void checkTypeRequirements();
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }

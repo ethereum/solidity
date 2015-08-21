@@ -554,8 +554,11 @@ void VariableDeclaration::checkTypeRequirements()
 	{
 		if (!dynamic_cast<ContractDefinition const*>(getScope()))
 			BOOST_THROW_EXCEPTION(createTypeError("Illegal use of \"constant\" specifier."));
-		if ((m_type && !m_type->isValueType()) || !m_value)
-			BOOST_THROW_EXCEPTION(createTypeError("Unitialized \"constant\" variable."));
+		if (!m_value)
+			BOOST_THROW_EXCEPTION(createTypeError("Uninitialized \"constant\" variable."));
+		else if (!m_type->isValueType())
+			// TODO: const is implemented only for uint, bytesXX and enums types.
+			BOOST_THROW_EXCEPTION(createTypeError("Illegal use of \"constant\" specifier. \"constant\" is not implemented for this type yet."));
 	}
 	if (m_type)
 	{

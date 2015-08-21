@@ -67,8 +67,19 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 	StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.getLocation(), true);
 }
 
+void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration const& _varDecl)
+{
+	solAssert(_varDecl.isConstant(), "");
+	_varDecl.getValue()->accept(*this);
+
+	// append return
+	m_context << eth::dupInstruction(_varDecl.getType()->getSizeOnStack() + 1);
+	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
+}
+
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
 {
+	solAssert(!_varDecl.isConstant(), "");
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
