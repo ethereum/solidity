@@ -5161,6 +5161,23 @@ BOOST_AUTO_TEST_CASE(string_as_mapping_key)
 		) == encodeArgs(u256(7 + i)));
 }
 
+BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			mapping(string => uint) data;
+			string s;
+			function f() returns (uint) {
+				s = "0123456789012345678901234567890123456789012345678901234567890123";
+				data[s] = 2;
+				return data[s];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
