@@ -4,15 +4,15 @@ The Solidity Contract-Oriented Programming Langauge
 
 ## Useful links
 
-To get started you can find a basic introduction to the language in [Solidity Tutorial]( https://github.com/ethereum/wiki/wiki/Solidity-Tutorial).
+To get started you can find a basic introduction to the language in [Solidity Tutorial](https://github.com/ethereum/wiki/wiki/Solidity-Tutorial).
 
 You can start using [Solidity in your browser](https://chriseth.github.io/browser-solidity/) with no need to download or compile anything. This application only supports compilation - if you want to inject it into the blockchain, you have to use a client like [Geth](https://github.com/ethereum/go-ethereum/wiki) or [AlethZero](https://github.com/ethereum/cpp-ethereum/wiki/Using-AlethZero).
 
-Also check out more documentations for [Solidity ABI](https://github.com/ethereum/wiki/wiki/Solidity,-Docs-and-ABI) and a Crowdfunding [example contract](https://github.com/chriseth/cpp-ethereum/wiki/Crowdfunding-example-contract-in-Solidity) written in Solidity.
+Also check out more documentations for [Solidity ABI](https://github.com/ethereum/wiki/wiki/Solidity,-Docs-and-ABI) and a crowdfunding [example contract](https://github.com/chriseth/cpp-ethereum/wiki/Crowdfunding-example-contract-in-Solidity) written in Solidity.
 
-You can find the changelog [here](https://github.com/ethereum/wiki/wiki/Solidity-Changelog).
+[Changelog](https://github.com/ethereum/wiki/wiki/Solidity-Changelog)
 
-Check out [Solidity Features](https://github.com/ethereum/wiki/wiki/Solidity-Features) page with the list of already completed Solidity features with explanations and demonstrations, it is being updated continuously. More technical information you can find in the [Pivotal Tracker](https://www.pivotaltracker.com/n/projects/1189488).
+The [Solidity Features](https://github.com/ethereum/wiki/wiki/Solidity-Features) page contains a list of already completed Solidity feature stories with explanations and demonstrations, it is being updated continuously. More technical information you can find in the [Pivotal Tracker](https://www.pivotaltracker.com/n/projects/1189488).
 
 Solidity is still under development. So please do not hesitate and open an [issue in github](https://github.com/ethereum/solidity/issues) if you encounter anything strange.
 
@@ -20,7 +20,7 @@ Solidity is still under development. So please do not hesitate and open an [issu
 
 See the [Wiki](https://github.com/ethereum/cpp-ethereum/wiki) for build instructions, compatibility information and build tips. 
 
-## Contributions
+## How to Contribute
 
 ### External Contributors
 
