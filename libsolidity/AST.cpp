@@ -556,7 +556,7 @@ void VariableDeclaration::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Illegal use of \"constant\" specifier."));
 		if (!m_value)
 			BOOST_THROW_EXCEPTION(createTypeError("Uninitialized \"constant\" variable."));
-		else if (!m_type->isValueType())
+		else if (m_type && !m_type->isValueType())
 			// TODO: const is implemented only for uint, bytesXX and enums types.
 			BOOST_THROW_EXCEPTION(createTypeError("Illegal use of \"constant\" specifier. \"constant\" is not implemented for this type yet."));
 	}
