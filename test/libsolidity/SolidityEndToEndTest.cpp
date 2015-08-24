@@ -5182,6 +5182,22 @@ BOOST_AUTO_TEST_CASE(accessor_for_const_state_variable)
 		compileAndRun(sourceCode);
 		BOOST_CHECK(callContractFunction("ticketPrice()") == encodeArgs(u256(555)));
 }
+
+BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key_without_variable)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			mapping(string => uint) data;
+			function f() returns (uint) {
+				data["abc"] = 2;
+				return data["abc"];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
