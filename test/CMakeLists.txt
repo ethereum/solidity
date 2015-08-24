@@ -39,14 +39,17 @@ foreach(file ${SRC_LIST})
 endforeach(file)
 
 file(GLOB HEADERS "*.h")
-add_executable(test ${SRC_LIST} ${HEADERS})
+set(EXECUTABLE soltest)
+add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-target_link_libraries(test ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
-target_link_libraries(test ${ETH_ETHEREUM_LIBRARY})
-target_link_libraries(test ${ETH_ETHCORE_LIBRARY})
-target_link_libraries(test solidity)
+eth_use(${EXECUTABLE} REQUIRED EthCore)
+
+include_directories(BEFORE ..)
+include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
+target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${ETH_ETHEREUM_LIBRARY})
+target_link_libraries(${EXECUTABLE} ${ETH_ETHCORE_LIBRARY})
+target_link_libraries(${EXECUTABLE} solidity)
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
-
-include(EthUtils)
