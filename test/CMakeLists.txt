@@ -2,8 +2,10 @@ cmake_policy(SET CMP0015 NEW)
 
 aux_source_directory(. SRC_LIST)
 
+get_filename_component(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
+
 macro (add_sources)
-	file (RELATIVE_PATH _relPath "${CMAKE_SOURCE_DIR}/test" "${CMAKE_CURRENT_SOURCE_DIR}")
+	file (RELATIVE_PATH _relPath ${TESTS_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 	foreach (_src ${ARGN})
 		if (_relPath)
 			list (APPEND SRC "${_relPath}/${_src}")
