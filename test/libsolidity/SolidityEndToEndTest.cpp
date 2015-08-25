@@ -5262,6 +5262,23 @@ BOOST_AUTO_TEST_CASE(library_stray_values)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(33)) == encodeArgs(u256(42)));
 }
 
+BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
+{
+	char const* sourceCode = R"(
+	contract c {
+		uint[4] data;
+		function set(uint index) returns (bool) {
+			data[index] = 2;
+			return true;
+		}
+	}
+	)";
+//	compileAndRun(sourceCode, 0, "Test");
+//	BOOST_CHECK(callContractFunction("set()", u256(7)) == encodeArgs(false));
+//	BOOST_CHECK(callContractFunction("set()", u256(3)) == encodeArgs(true));
+	compileRequireThrow<CompilerError>(sourceCode);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
