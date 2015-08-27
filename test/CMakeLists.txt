@@ -44,14 +44,10 @@ file(GLOB HEADERS "*.h")
 set(EXECUTABLE soltest)
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED EthCore)
+eth_use(${EXECUTABLE} REQUIRED Solidity Eth::ethereum)
 
 include_directories(BEFORE ..)
-include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
 target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${ETH_ETHEREUM_LIBRARY})
-target_link_libraries(${EXECUTABLE} ${ETH_ETHCORE_LIBRARY})
-target_link_libraries(${EXECUTABLE} solidity)
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
