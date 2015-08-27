@@ -63,6 +63,7 @@ static string const g_argAsmJsonStr = "asm-json";
 static string const g_argAstStr = "ast";
 static string const g_argAstJson = "ast-json";
 static string const g_argBinaryStr = "bin";
+static string const g_argRuntimeBinaryStr = "bin-runtime";
 static string const g_argCloneBinaryStr = "clone-bin";
 static string const g_argOpcodesStr = "opcodes";
 static string const g_argNatspecDevStr = "devdoc";
@@ -113,6 +114,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		humanTargetedStdout(_args, g_argAsmJsonStr) ||
 		humanTargetedStdout(_args, g_argOpcodesStr) ||
 		humanTargetedStdout(_args, g_argBinaryStr) ||
+		humanTargetedStdout(_args, g_argRuntimeBinaryStr) ||
 		humanTargetedStdout(_args, g_argCloneBinaryStr);
 }
 
@@ -138,6 +140,16 @@ void CommandLineInterface::handleBinary(string const& _contract)
 			cout << toHex(m_compiler->getCloneBytecode(_contract)) << endl;
 		}
 	}
+	if (m_args.count(g_argRuntimeBinaryStr))
+	{
+		if (m_args.count("output-dir"))
+			createFile(_contract + ".bin", toHex(m_compiler->getRuntimeBytecode(_contract)));
+		else
+		{
+			cout << "Binary of the runtime part: " << endl;
+			cout << toHex(m_compiler->getRuntimeBytecode(_contract)) << endl;
+		}
+	}
 }
 
 void CommandLineInterface::handleOpcode(string const& _contract)
@@ -157,7 +169,7 @@ void CommandLineInterface::handleBytecode(string const& _contract)
 {
 	if (m_args.count(g_argOpcodesStr))
 		handleOpcode(_contract);
-	if (m_args.count(g_argBinaryStr) || m_args.count(g_argCloneBinaryStr))
+	if (m_args.count(g_argBinaryStr) || m_args.count(g_argCloneBinaryStr) || m_args.count(g_argRuntimeBinaryStr))
 		handleBinary(_contract);
 }
 
@@ -326,6 +338,7 @@ Allowed options)",
 		(g_argAsmJsonStr.c_str(), "EVM assembly of the contracts in JSON format.")
 		(g_argOpcodesStr.c_str(), "Opcodes of the contracts.")
 		(g_argBinaryStr.c_str(), "Binary of the contracts in hex.")
+		(g_argRuntimeBinaryStr.c_str(), "Binary of the runtime part of the contracts in hex.")
 		(g_argCloneBinaryStr.c_str(), "Binary of the clone contracts in hex.")
 		(g_argAbiStr.c_str(), "ABI specification of the contracts.")
 		(g_argSolInterfaceStr.c_str(), "Solidity interface of the contracts.")
