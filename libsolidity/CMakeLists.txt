@@ -10,12 +10,9 @@ set(EXECUTABLE solidity)
 file(GLOB HEADERS "*.h") 
 
 include_directories(BEFORE ..)
-include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED EthCore)
-
-target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
+eth_use(${EXECUTABLE} REQUIRED Eth::devcore Eth::evmasm)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
