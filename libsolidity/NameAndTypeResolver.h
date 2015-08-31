@@ -60,7 +60,7 @@ public:
 
 	/// Resolves a name in the "current" scope. Should only be called during the initial
 	/// resolving phase.
-	std::vector<Declaration const*> getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
+	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
 	/// returns the vector of declarations without repetitions
 	static std::vector<Declaration const*> cleanedDeclarations(

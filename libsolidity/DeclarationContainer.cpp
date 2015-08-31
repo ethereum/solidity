@@ -30,13 +30,13 @@ using namespace dev::solidity;
 
 Declaration const* DeclarationContainer::conflictingDeclaration(Declaration const& _declaration) const
 {
-	ASTString const& name(_declaration.getName());
-	solAssert(!name.empty(), "");
+	ASTString const& declarationName(_declaration.name());
+	solAssert(!declarationName.empty(), "");
 	vector<Declaration const*> declarations;
-	if (m_declarations.count(name))
-		declarations += m_declarations.at(name);
-	if (m_invisibleDeclarations.count(name))
-		declarations += m_invisibleDeclarations.at(name);
+	if (m_declarations.count(declarationName))
+		declarations += m_declarations.at(declarationName);
+	if (m_invisibleDeclarations.count(declarationName))
+		declarations += m_invisibleDeclarations.at(declarationName);
 
 	if (dynamic_cast<FunctionDefinition const*>(&_declaration))
 	{
@@ -53,23 +53,23 @@ Declaration const* DeclarationContainer::conflictingDeclaration(Declaration cons
 
 bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, bool _invisible, bool _update)
 {
-	ASTString const& name(_declaration.getName());
-	if (name.empty())
+	ASTString const& declarationName(_declaration.name());
+	if (declarationName.empty())
 		return true;
 
 	if (_update)
 	{
 		solAssert(!dynamic_cast<FunctionDefinition const*>(&_declaration), "Attempt to update function definition.");
-		m_declarations.erase(name);
-		m_invisibleDeclarations.erase(name);
+		m_declarations.erase(declarationName);
+		m_invisibleDeclarations.erase(declarationName);
 	}
 	else if (conflictingDeclaration(_declaration))
 		return false;
 
 	if (_invisible)
-		m_invisibleDeclarations[name].push_back(&_declaration);
+		m_invisibleDeclarations[declarationName].push_back(&_declaration);
 	else
-		m_declarations[name].push_back(&_declaration);
+		m_declarations[declarationName].push_back(&_declaration);
 	return true;
 }
 

@@ -49,9 +49,9 @@ public:
 		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse(_code), "Parsing failed");
 
 		if (_userDocumentation)
-			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NatspecUser);
+			generatedDocumentationString = m_compilerStack.metadata("", DocumentationType::NatspecUser);
 		else
-			generatedDocumentationString = m_compilerStack.getMetadata("", DocumentationType::NatspecDev);
+			generatedDocumentationString = m_compilerStack.metadata("", DocumentationType::NatspecDev);
 		Json::Value generatedDocumentation;
 		m_reader.parse(generatedDocumentationString, generatedDocumentation);
 		Json::Value expectedDocumentation;

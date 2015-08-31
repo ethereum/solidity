@@ -91,7 +91,7 @@ public:
 	) const override;
 
 private:
-	/// Base stack offset (@see CompilerContext::getBaseStackOffsetOfVariable) of the local variable.
+	/// Base stack offset (@see CompilerContext::baseStackOffsetOfVariable) of the local variable.
 	unsigned m_baseStackOffset;
 	/// Number of stack elements occupied by the value (not the reference).
 	unsigned m_size;

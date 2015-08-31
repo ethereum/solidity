@@ -52,23 +52,23 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
 	NameAndTypeResolver resolver({});
 	resolver.registerDeclarations(*sourceUnit);
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 		}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
 		}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			Compiler compiler;
 			compiler.compileContract(*contract, map<ContractDefinition const*, bytes const*>{});
 
-			return compiler.getRuntimeAssemblyItems();
+			return compiler.runtimeAssemblyItems();
 		}
 	BOOST_FAIL("No contract found in source.");
 	return AssemblyItems();

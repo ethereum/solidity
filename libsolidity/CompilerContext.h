@@ -48,46 +48,46 @@ public:
 	void removeVariable(VariableDeclaration const& _declaration);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
-	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
+	bytes const& compiledContract(ContractDefinition const& _contract) const;
 
 	void setStackOffset(int _offset) { m_asm.setDeposit(_offset); }
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
-	unsigned getStackHeight() const { solAssert(m_asm.deposit() >= 0, ""); return unsigned(m_asm.deposit()); }
+	unsigned stackHeight() const { solAssert(m_asm.deposit() >= 0, ""); return unsigned(m_asm.deposit()); }
 
 	bool isMagicGlobal(Declaration const* _declaration) const { return m_magicGlobals.count(_declaration) != 0; }
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
 	/// @returns the entry label of the given function and creates it if it does not exist yet.
-	eth::AssemblyItem getFunctionEntryLabel(Declaration const& _declaration);
+	eth::AssemblyItem functionEntryLabel(Declaration const& _declaration);
 	/// @returns the entry label of the given function. Might return an AssemblyItem of type
 	/// UndefinedItem if it does not exist yet.
-	eth::AssemblyItem getFunctionEntryLabelIfExists(Declaration const& _declaration) const;
+	eth::AssemblyItem functionEntryLabelIfExists(Declaration const& _declaration) const;
 	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
 	/// @returns the entry label of the given function and takes overrides into account.
-	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function);
+	eth::AssemblyItem virtualFunctionEntryLabel(FunctionDefinition const& _function);
 	/// @returns the entry label of a function that overrides the given declaration from the most derived class just
 	/// above _base in the current inheritance hierarchy.
-	eth::AssemblyItem getSuperFunctionEntryLabel(FunctionDefinition const& _function, ContractDefinition const& _base);
-	FunctionDefinition const* getNextConstructor(ContractDefinition const& _contract) const;
+	eth::AssemblyItem superFunctionEntryLabel(FunctionDefinition const& _function, ContractDefinition const& _base);
+	FunctionDefinition const* nextConstructor(ContractDefinition const& _contract) const;
 
 	/// @returns the set of functions for which we still need to generate code
-	std::set<Declaration const*> getFunctionsWithoutCode();
+	std::set<Declaration const*> functionsWithoutCode();
 	/// Resets function specific members, inserts the function entry label and marks the function
 	/// as "having code".
 	void startFunction(Declaration const& _function);
 
-	ModifierDefinition const& getFunctionModifier(std::string const& _name) const;
+	ModifierDefinition const& functionModifier(std::string const& _name) const;
 	/// Returns the distance of the given local variable from the bottom of the stack (of the current function).
-	unsigned getBaseStackOffsetOfVariable(Declaration const& _declaration) const;
-	/// If supplied by a value returned by @ref getBaseStackOffsetOfVariable(variable), returns
+	unsigned baseStackOffsetOfVariable(Declaration const& _declaration) const;
+	/// If supplied by a value returned by @ref baseStackOffsetOfVariable(variable), returns
 	/// the distance of that variable from the current top of the stack.
 	unsigned baseToCurrentStackOffset(unsigned _baseOffset) const;
 	/// Converts an offset relative to the current stack height to a value that can be used later
 	/// with baseToCurrentStackOffset to point to the same stack element.
 	unsigned currentToBaseStackOffset(unsigned _offset) const;
 	/// @returns pair of slot and byte offset of the value inside this slot.
-	std::pair<u256, unsigned> getStorageLocationOfVariable(Declaration const& _declaration) const;
+	std::pair<u256, unsigned> storageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
 	eth::AssemblyItem appendConditionalJump() { return m_asm.appendJumpI().tag(); }
@@ -127,7 +127,7 @@ public:
 
 	void optimise(unsigned _runs = 200) { m_asm.optimise(true, true, _runs); }
 
-	eth::Assembly const& getAssembly() const { return m_asm; }
+	eth::Assembly const& assembly() const { return m_asm; }
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFormat shows whether the out should be in Json format
 	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
@@ -135,8 +135,8 @@ public:
 		return m_asm.stream(_stream, "", _sourceCodes, _inJsonFormat);
 	}
 
-	bytes getAssembledBytecode() { return m_asm.assemble(); }
-	bytes getAssembledRuntimeBytecode(size_t _subIndex) { m_asm.assemble(); return m_asm.data(u256(_subIndex)); }
+	bytes assembledBytecode() { return m_asm.assemble(); }
+	bytes assembledRuntimeBytecode(size_t _subIndex) { m_asm.assemble(); return m_asm.data(u256(_subIndex)); }
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
@@ -151,12 +151,12 @@ public:
 private:
 	/// @returns the entry label of the given function - searches the inheritance hierarchy
 	/// startig from the given point towards the base.
-	eth::AssemblyItem getVirtualFunctionEntryLabel(
+	eth::AssemblyItem virtualFunctionEntryLabel(
 		FunctionDefinition const& _function,
 		std::vector<ContractDefinition const*>::const_iterator _searchStart
 	);
 	/// @returns an iterator to the contract directly above the given contract.
-	std::vector<ContractDefinition const*>::const_iterator getSuperContract(const ContractDefinition &_contract) const;
+	std::vector<ContractDefinition const*>::const_iterator superContract(const ContractDefinition &_contract) const;
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 

@@ -344,7 +344,7 @@ public:
 
 	// Returns a string corresponding to the C++ token name
 	// (e.g. "LT" for the token LT).
-	static char const* getName(Value tok)
+	static char const* name(Value tok)
 	{
 		solAssert(tok < NUM_TOKENS, "");
 		return m_name[tok];

@@ -43,7 +43,7 @@ ASTPointer<ContractDefinition> parseText(std::string const& _source)
 {
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ASTPointer<ContractDefinition> contract = dynamic_pointer_cast<ContractDefinition>(node))
 			return contract;
 	BOOST_FAIL("No contract found in source.");
@@ -53,7 +53,7 @@ ASTPointer<ContractDefinition> parseText(std::string const& _source)
 static void checkFunctionNatspec(ASTPointer<FunctionDefinition> _function,
 								 std::string const& _expectedDoc)
 {
-	auto doc = _function->getDocumentation();
+	auto doc = _function->documentation();
 	BOOST_CHECK_MESSAGE(doc != nullptr, "Function does not have Natspec Doc as expected");
 	BOOST_CHECK_EQUAL(*doc, _expectedDoc);
 }
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
-	auto functions = contract->getDefinedFunctions();
+	auto functions = contract->definedFunctions();
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is a test function");
 }
@@ -184,9 +184,9 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
-	auto functions = contract->getDefinedFunctions();
+	auto functions = contract->definedFunctions();
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
-	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
+	BOOST_CHECK_MESSAGE(function->documentation() == nullptr,
 						"Should not have gotten a Natspecc comment for this function");
 }
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 					   "  function functionName4(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
-	auto functions = contract->getDefinedFunctions();
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is test function 1");
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 	checkFunctionNatspec(function, "This is test function 2");
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(2), "Failed to retrieve function");
-	BOOST_CHECK_MESSAGE(function->getDocumentation() == nullptr,
+	BOOST_CHECK_MESSAGE(function->documentation() == nullptr,
 						"Should not have gotten natspec comment for functionName3()");
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(3), "Failed to retrieve function");
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 					   "  function functionName1(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
-	auto functions = contract->getDefinedFunctions();
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is a test function\n"
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 					   "  function fun(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
-	auto functions = contract->getDefinedFunctions();
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "fun1 description");
@@ -284,10 +284,10 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 					   "  }\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
-	auto functions = contract->getDefinedFunctions();
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
-	BOOST_CHECK_MESSAGE(!function->getDocumentation(),
+	BOOST_CHECK_MESSAGE(!function->documentation(),
 						"Shouldn't get natspec docstring for this function");
 }
 
@@ -307,10 +307,10 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 					   "  }\n"
 					   "}\n";
 	ETH_TEST_REQUIRE_NO_THROW(contract = parseText(text), "Parsing failed");
-	auto functions = contract->getDefinedFunctions();
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
-	BOOST_CHECK_MESSAGE(!function->getDocumentation(),
+	BOOST_CHECK_MESSAGE(!function->documentation(),
 						"Shouldn't get natspec docstring for this function");
 }
 

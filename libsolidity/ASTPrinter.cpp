@@ -48,41 +48,41 @@ void ASTPrinter::print(ostream& _stream)
 
 bool ASTPrinter::visit(ImportDirective const& _node)
 {
-	writeLine("ImportDirective \"" + _node.getIdentifier() + "\"");
+	writeLine("ImportDirective \"" + _node.identifier() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(ContractDefinition const& _node)
 {
-	writeLine("ContractDefinition \"" + _node.getName() + "\"");
+	writeLine("ContractDefinition \"" + _node.name() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(InheritanceSpecifier const& _node)
 {
-	writeLine("InheritanceSpecifier \"" + _node.getName()->getName() + "\"");
+	writeLine("InheritanceSpecifier \"" + _node.name()->name() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(StructDefinition const& _node)
 {
-	writeLine("StructDefinition \"" + _node.getName() + "\"");
+	writeLine("StructDefinition \"" + _node.name() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(EnumDefinition const& _node)
 {
-	writeLine("EnumDefinition \"" + _node.getName() + "\"");
+	writeLine("EnumDefinition \"" + _node.name() + "\"");
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(EnumValue const& _node)
 {
-	writeLine("EnumValue \"" + _node.getName() + "\"");
+	writeLine("EnumValue \"" + _node.name() + "\"");
 	return goDeeper();
 }
 
@@ -95,7 +95,7 @@ bool ASTPrinter::visit(ParameterList const& _node)
 
 bool ASTPrinter::visit(FunctionDefinition const& _node)
 {
-	writeLine("FunctionDefinition \"" + _node.getName() + "\"" +
+	writeLine("FunctionDefinition \"" + _node.name() + "\"" +
 			  (_node.isPublic() ? " - public" : "") +
 			  (_node.isDeclaredConst() ? " - const" : ""));
 	printSourcePart(_node);
@@ -104,28 +104,28 @@ bool ASTPrinter::visit(FunctionDefinition const& _node)
 
 bool ASTPrinter::visit(VariableDeclaration const& _node)
 {
-	writeLine("VariableDeclaration \"" + _node.getName() + "\"");
+	writeLine("VariableDeclaration \"" + _node.name() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(ModifierDefinition const& _node)
 {
-	writeLine("ModifierDefinition \"" + _node.getName() + "\"");
+	writeLine("ModifierDefinition \"" + _node.name() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(ModifierInvocation const& _node)
 {
-	writeLine("ModifierInvocation \"" + _node.getName()->getName() + "\"");
+	writeLine("ModifierInvocation \"" + _node.name()->name() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(EventDefinition const& _node)
 {
-	writeLine("EventDefinition \"" + _node.getName() + "\"");
+	writeLine("EventDefinition \"" + _node.name() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -139,14 +139,14 @@ bool ASTPrinter::visit(TypeName const& _node)
 
 bool ASTPrinter::visit(ElementaryTypeName const& _node)
 {
-	writeLine(string("ElementaryTypeName ") + Token::toString(_node.getTypeName()));
+	writeLine(string("ElementaryTypeName ") + Token::toString(_node.typeName()));
 	printSourcePart(_node);
 	return goDeeper();
 }
 
 bool ASTPrinter::visit(UserDefinedTypeName const& _node)
 {
-	writeLine("UserDefinedTypeName \"" + _node.getName() + "\"");
+	writeLine("UserDefinedTypeName \"" + _node.name() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -237,7 +237,7 @@ bool ASTPrinter::visit(ExpressionStatement const& _node)
 
 bool ASTPrinter::visit(Assignment const& _node)
 {
-	writeLine(string("Assignment using operator ") + Token::toString(_node.getAssignmentOperator()));
+	writeLine(string("Assignment using operator ") + Token::toString(_node.assignmentOperator()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -278,7 +278,7 @@ bool ASTPrinter::visit(NewExpression const& _node)
 
 bool ASTPrinter::visit(MemberAccess const& _node)
 {
-	writeLine("MemberAccess to member " + _node.getMemberName());
+	writeLine("MemberAccess to member " + _node.memberName());
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -294,7 +294,7 @@ bool ASTPrinter::visit(IndexAccess const& _node)
 
 bool ASTPrinter::visit(Identifier const& _node)
 {
-	writeLine(string("Identifier ") + _node.getName());
+	writeLine(string("Identifier ") + _node.name());
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -302,7 +302,7 @@ bool ASTPrinter::visit(Identifier const& _node)
 
 bool ASTPrinter::visit(ElementaryTypeNameExpression const& _node)
 {
-	writeLine(string("ElementaryTypeNameExpression ") + Token::toString(_node.getTypeToken()));
+	writeLine(string("ElementaryTypeNameExpression ") + Token::toString(_node.typeToken()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -310,10 +310,10 @@ bool ASTPrinter::visit(ElementaryTypeNameExpression const& _node)
 
 bool ASTPrinter::visit(Literal const& _node)
 {
-	char const* tokenString = Token::toString(_node.getToken());
+	char const* tokenString = Token::toString(_node.token());
 	if (!tokenString)
 		tokenString = "[no token]";
-	writeLine(string("Literal, token: ") + tokenString + " value: " + _node.getValue());
+	writeLine(string("Literal, token: ") + tokenString + " value: " + _node.value());
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
@@ -510,7 +510,7 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 		*m_ostream << getIndentation() << "   Gas costs: " << m_gasCosts.at(&_node) << endl;
 	if (!m_source.empty())
 	{
-		SourceLocation const& location(_node.getLocation());
+		SourceLocation const& location(_node.location());
 		*m_ostream << getIndentation() << "   Source: "
 				   << escaped(m_source.substr(location.start, location.end - location.start), false) << endl;
 	}
@@ -518,8 +518,8 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 
 void ASTPrinter::printType(Expression const& _expression)
 {
-	if (_expression.getType())
-		*m_ostream << getIndentation() << "   Type: " << _expression.getType()->toString() << "\n";
+	if (_expression.type())
+		*m_ostream << getIndentation() << "   Type: " << _expression.type()->toString() << "\n";
 	else
 		*m_ostream << getIndentation() << "   Type unknown.\n";
 }

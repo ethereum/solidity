@@ -108,18 +108,18 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			ETH_TEST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
 			inheritanceHierarchy = vector<ContractDefinition const*>(1, contract);
 		}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			ETH_TEST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract), "Checking type Requirements failed");
 		}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			FirstExpressionExtractor extractor(*contract);
@@ -137,8 +137,8 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 			ExpressionCompiler(context).compile(*extractor.getExpression());
 
 			for (vector<string> const& function: _functions)
-				context << context.getFunctionEntryLabel(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
-			bytes instructions = context.getAssembledBytecode();
+				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
+			bytes instructions = context.assembledBytecode();
 			// debug
 			// cout << eth::disassemble(instructions) << endl;
 			return instructions;

@@ -43,14 +43,14 @@ public:
 	{
 		m_code = _code;
 		ETH_TEST_REQUIRE_NO_THROW(m_compilerStack.parse(_code), "Parsing failed");
-		m_interface = m_compilerStack.getMetadata("", DocumentationType::ABISolidityInterface);
+		m_interface = m_compilerStack.metadata("", DocumentationType::ABISolidityInterface);
 		ETH_TEST_REQUIRE_NO_THROW(m_reCompiler.parse(m_interface), "Interface parsing failed");
-		return m_reCompiler.getContractDefinition(_contractName);
+		return m_reCompiler.contractDefinition(_contractName);
 	}
 
 	string getSourcePart(ASTNode const& _node) const
 	{
-		SourceLocation location = _node.getLocation();
+		SourceLocation location = _node.location();
 		BOOST_REQUIRE(!location.isEmpty());
 		return m_interface.substr(location.start, location.end - location.start);
 	}
@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(single_function)
 		"contract test {\n"
 		"  function f(uint a) returns(uint d) { return a * 7; }\n"
 		"}\n");
-	BOOST_REQUIRE_EQUAL(1, contract.getDefinedFunctions().size());
-	BOOST_CHECK_EQUAL(getSourcePart(*contract.getDefinedFunctions().front()),
+	BOOST_REQUIRE_EQUAL(1, contract.definedFunctions().size());
+	BOOST_CHECK_EQUAL(getSourcePart(*contract.definedFunctions().front()),
 					  "function f(uint256 a)returns(uint256 d);");
 }
 
@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(single_constant_function)
 {
 	ContractDefinition const& contract = checkInterface(
 			"contract test { function f(uint a) constant returns(bytes1 x) { 1==2; } }");
-	BOOST_REQUIRE_EQUAL(1, contract.getDefinedFunctions().size());
-	BOOST_CHECK_EQUAL(getSourcePart(*contract.getDefinedFunctions().front()),
+	BOOST_REQUIRE_EQUAL(1, contract.definedFunctions().size());
+	BOOST_CHECK_EQUAL(getSourcePart(*contract.definedFunctions().front()),
 					  "function f(uint256 a)constant returns(bytes1 x);");
 }
 
@@ -99,9 +99,9 @@ BOOST_AUTO_TEST_CASE(multiple_functions)
 	ContractDefinition const& contract = checkInterface(sourceCode);
 	set<string> expectation({"function f(uint256 a)returns(uint256 d);",
 							 "function g(uint256 b)returns(uint256 e);"});
-	BOOST_REQUIRE_EQUAL(2, contract.getDefinedFunctions().size());
-	BOOST_CHECK(expectation == set<string>({getSourcePart(*contract.getDefinedFunctions().at(0)),
-											getSourcePart(*contract.getDefinedFunctions().at(1))}));
+	BOOST_REQUIRE_EQUAL(2, contract.definedFunctions().size());
+	BOOST_CHECK(expectation == set<string>({getSourcePart(*contract.definedFunctions().at(0)),
+											getSourcePart(*contract.definedFunctions().at(1))}));
 }
 
 BOOST_AUTO_TEST_CASE(exclude_fallback_function)
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(events)
 	"}\n";
 	ContractDefinition const& contract = checkInterface(sourceCode);
 	// events should not appear in the Solidity Interface
-	BOOST_REQUIRE_EQUAL(0, contract.getEvents().size());
+	BOOST_REQUIRE_EQUAL(0, contract.events().size());
 }
 
 BOOST_AUTO_TEST_CASE(inheritance)
@@ -137,9 +137,9 @@ BOOST_AUTO_TEST_CASE(inheritance)
 	ContractDefinition const& contract = checkInterface(sourceCode);
 	set<string> expectedFunctions({"function baseFunction(uint256 p)returns(uint256 i);",
 								   "function derivedFunction(bytes32 p)returns(bytes32 i);"});
-	BOOST_REQUIRE_EQUAL(2, contract.getDefinedFunctions().size());
-	BOOST_CHECK(expectedFunctions == set<string>({getSourcePart(*contract.getDefinedFunctions().at(0)),
-												  getSourcePart(*contract.getDefinedFunctions().at(1))}));
+	BOOST_REQUIRE_EQUAL(2, contract.definedFunctions().size());
+	BOOST_CHECK(expectedFunctions == set<string>({getSourcePart(*contract.definedFunctions().at(0)),
+												  getSourcePart(*contract.definedFunctions().at(1))}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

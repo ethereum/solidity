@@ -86,7 +86,7 @@ public:
 	/// Sets the given source code as the only source unit apart from standard sources and parses it.
 	void parse(std::string const& _sourceCode);
 	/// Returns a list of the contract names in the sources.
-	std::vector<std::string> getContractNames() const;
+	std::vector<std::string> contractNames() const;
 	std::string defaultContractName() const;
 
 	/// Compiles the source units that were previously added and parsed.
@@ -96,20 +96,20 @@ public:
 	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);
 
 	/// @returns the assembled bytecode for a contract.
-	bytes const& getBytecode(std::string const& _contractName = "") const;
+	bytes const& bytecode(std::string const& _contractName = "") const;
 	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
-	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
+	bytes const& runtimeBytecode(std::string const& _contractName = "") const;
 	/// @returns the bytecode of a contract that uses an already deployed contract via CALLCODE.
 	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
 	/// substituted by the actual address. Note that this sequence starts end ends in three X
 	/// characters but can contain anything in between.
-	bytes const& getCloneBytecode(std::string const& _contractName = "") const;
+	bytes const& cloneBytecode(std::string const& _contractName = "") const;
 	/// @returns normal contract assembly items
-	eth::AssemblyItems const* getAssemblyItems(std::string const& _contractName = "") const;
+	eth::AssemblyItems const* assemblyItems(std::string const& _contractName = "") const;
 	/// @returns runtime contract assembly items
-	eth::AssemblyItems const* getRuntimeAssemblyItems(std::string const& _contractName = "") const;
+	eth::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName = "") const;
 	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
-	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
+	dev::h256 contractCodeHash(std::string const& _contractName = "") const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings
@@ -119,27 +119,27 @@ public:
 
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
-	std::string const& getInterface(std::string const& _contractName = "") const;
+	std::string const& interface(std::string const& _contractName = "") const;
 	/// Returns a string representing the contract interface in Solidity.
 	/// Prerequisite: Successful call to parse or compile.
-	std::string const& getSolidityInterface(std::string const& _contractName = "") const;
+	std::string const& solidityInterface(std::string const& _contractName = "") const;
 	/// Returns a string representing the contract's documentation in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
-	std::string const& getMetadata(std::string const& _contractName, DocumentationType _type) const;
+	std::string const& metadata(std::string const& _contractName, DocumentationType _type) const;
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
-	Scanner const& getScanner(std::string const& _sourceName = "") const;
+	Scanner const& scanner(std::string const& _sourceName = "") const;
 	/// @returns the parsed source unit with the supplied name.
-	SourceUnit const& getAST(std::string const& _sourceName = "") const;
+	SourceUnit const& AST(std::string const& _sourceName = "") const;
 	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
 	/// does not exist.
-	ContractDefinition const& getContractDefinition(std::string const& _contractName) const;
+	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
 
 	/// @returns the offset of the entry point of the given function into the list of assembly items
 	/// or zero if it is not found or does not exist.
-	size_t getFunctionEntryPoint(
+	size_t functionEntryPoint(
 		std::string const& _contractName,
 		FunctionDefinition const& _function
 	) const;
@@ -184,8 +184,8 @@ private:
 
 	void resolveImports();
 
-	Contract const& getContract(std::string const& _contractName = "") const;
-	Source const& getSource(std::string const& _sourceName = "") const;
+	Contract const& contract(std::string const& _contractName = "") const;
+	Source const& source(std::string const& _sourceName = "") const;
 
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;

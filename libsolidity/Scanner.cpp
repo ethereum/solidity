@@ -202,20 +202,20 @@ Token::Value Scanner::selectToken(char _next, Token::Value _then, Token::Value _
 
 bool Scanner::skipWhitespace()
 {
-	int const startPosition = getSourcePos();
+	int const startPosition = sourcePos();
 	while (isWhiteSpace(m_char))
 		advance();
 	// Return whether or not we skipped any characters.
-	return getSourcePos() != startPosition;
+	return sourcePos() != startPosition;
 }
 
 bool Scanner::skipWhitespaceExceptLF()
 {
-	int const startPosition = getSourcePos();
+	int const startPosition = sourcePos();
 	while (isWhiteSpace(m_char) && !isLineTerminator(m_char))
 		advance();
 	// Return whether or not we skipped any characters.
-	return getSourcePos() != startPosition;
+	return sourcePos() != startPosition;
 }
 
 Token::Value Scanner::skipSingleLineComment()
@@ -326,7 +326,7 @@ Token::Value Scanner::scanMultiLineDocComment()
 
 Token::Value Scanner::scanSlash()
 {
-	int firstSlashPosition = getSourcePos();
+	int firstSlashPosition = sourcePos();
 	advance();
 	if (m_char == '/')
 	{
@@ -338,7 +338,7 @@ Token::Value Scanner::scanSlash()
 			Token::Value comment;
 			m_nextSkippedComment.location.start = firstSlashPosition;
 			comment = scanSingleLineDocComment();
-			m_nextSkippedComment.location.end = getSourcePos();
+			m_nextSkippedComment.location.end = sourcePos();
 			m_nextSkippedComment.token = comment;
 			return Token::Whitespace;
 		}
@@ -363,7 +363,7 @@ Token::Value Scanner::scanSlash()
 				Token::Value comment;
 				m_nextSkippedComment.location.start = firstSlashPosition;
 				comment = scanMultiLineDocComment();
-				m_nextSkippedComment.location.end = getSourcePos();
+				m_nextSkippedComment.location.end = sourcePos();
 				m_nextSkippedComment.token = comment;
 			}
 			return Token::Whitespace;
@@ -385,7 +385,7 @@ void Scanner::scanToken()
 	do
 	{
 		// Remember the position of the next token
-		m_nextToken.location.start = getSourcePos();
+		m_nextToken.location.start = sourcePos();
 		switch (m_char)
 		{
 		case '\n': // fall-through
@@ -564,7 +564,7 @@ void Scanner::scanToken()
 		// whitespace.
 	}
 	while (token == Token::Whitespace);
-	m_nextToken.location.end = getSourcePos();
+	m_nextToken.location.end = sourcePos();
 	m_nextToken.token = token;
 }
 
@@ -719,20 +719,20 @@ char CharStream::advanceAndGet(size_t _chars)
 {
 	if (isPastEndOfInput())
 		return 0;
-	m_pos += _chars;
+	m_position += _chars;
 	if (isPastEndOfInput())
 		return 0;
-	return m_source[m_pos];
+	return m_source[m_position];
 }
 
 char CharStream::rollback(size_t _amount)
 {
-	solAssert(m_pos >= _amount, "");
-	m_pos -= _amount;
+	solAssert(m_position >= _amount, "");
+	m_position -= _amount;
 	return get();
 }
 
-string CharStream::getLineAtPosition(int _position) const
+string CharStream::lineAtPosition(int _position) const
 {
 	// if _position points to \n, it returns the line before the \n
 	using size_type = string::size_type;

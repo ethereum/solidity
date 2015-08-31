@@ -61,7 +61,7 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 	{
 		if (!finestNodes.count(&_node))
 			return true;
-		gasCosts[&_node][0] = gasCosts[&_node][1] = particularCosts[_node.getLocation()];
+		gasCosts[&_node][0] = gasCosts[&_node][1] = particularCosts[_node.location()];
 		return true;
 	};
 	auto onEdge = [&](ASTNode const& _parent, ASTNode const& _child)
@@ -156,7 +156,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 {
 	auto state = make_shared<KnownState>();
 
-	unsigned parametersSize = CompilerUtils::getSizeOnStack(_function.getParameters());
+	unsigned parametersSize = CompilerUtils::sizeOnStack(_function.parameters());
 	if (parametersSize > 16)
 		return GasConsumption::infinite();
 
@@ -178,9 +178,9 @@ set<ASTNode const*> GasEstimator::finestNodesAtLocation(
 	set<ASTNode const*> nodes;
 	SimpleASTVisitor visitor(function<bool(ASTNode const&)>(), [&](ASTNode const& _n)
 	{
-		if (!locations.count(_n.getLocation()))
+		if (!locations.count(_n.location()))
 		{
-			locations[_n.getLocation()] = &_n;
+			locations[_n.location()] = &_n;
 			nodes.insert(&_n);
 		}
 	});

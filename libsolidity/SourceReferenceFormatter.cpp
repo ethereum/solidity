@@ -46,7 +46,7 @@ void SourceReferenceFormatter::printSourceLocation(
 	tie(endLine, endColumn) = _scanner.translatePositionToLineColumn(_location.end);
 	if (startLine == endLine)
 	{
-		string line = _scanner.getLineAtPosition(_location.start);
+		string line = _scanner.lineAtPosition(_location.start);
 		_stream << line << endl;
 		for_each(
 			line.cbegin(),
@@ -62,7 +62,7 @@ void SourceReferenceFormatter::printSourceLocation(
 	}
 	else
 		_stream <<
-			_scanner.getLineAtPosition(_location.start) <<
+			_scanner.lineAtPosition(_location.start) <<
 			endl <<
 			string(startColumn, ' ') <<
 			"^\n" <<
@@ -90,12 +90,12 @@ void SourceReferenceFormatter::printExceptionInformation(
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
 	auto secondarylocation = boost::get_error_info<errinfo_secondarySourceLocation>(_exception);
-	Scanner const* scanner = nullptr;
+	Scanner const* scannerPtr = nullptr;
 
 	if (location)
 	{
-		scanner = &_compiler.getScanner(*location->sourceName);
-		printSourceName(_stream, *location, *scanner);
+		scannerPtr = &_compiler.scanner(*location->sourceName);
+		printSourceName(_stream, *location, *scannerPtr);
 	}
 
 	_stream << _name;
@@ -104,19 +104,19 @@ void SourceReferenceFormatter::printExceptionInformation(
 
 	if (location)
 	{
-		scanner = &_compiler.getScanner(*location->sourceName);
-		printSourceLocation(_stream, *location, *scanner);
+		scannerPtr = &_compiler.scanner(*location->sourceName);
+		printSourceLocation(_stream, *location, *scannerPtr);
 	}
 
 	if (secondarylocation && !secondarylocation->infos.empty())
 	{
 		for (auto info: secondarylocation->infos)
 		{
-			scanner = &_compiler.getScanner(*info.second.sourceName);
+			scannerPtr = &_compiler.scanner(*info.second.sourceName);
 			_stream << info.first << " ";
-			printSourceName(_stream, info.second, *scanner);
+			printSourceName(_stream, info.second, *scannerPtr);
 			_stream << endl;
-			printSourceLocation(_stream, info.second, *scanner);
+			printSourceLocation(_stream, info.second, *scannerPtr);
 		}
 		_stream << endl;
 	}

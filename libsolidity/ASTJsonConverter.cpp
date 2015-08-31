@@ -90,19 +90,19 @@ Json::Value const& ASTJsonConverter::json()
 
 bool ASTJsonConverter::visit(ImportDirective const& _node)
 {
-	addJsonNode("Import", { make_pair("file", _node.getIdentifier())});
+	addJsonNode("Import", { make_pair("file", _node.identifier())});
 	return true;
 }
 
 bool ASTJsonConverter::visit(ContractDefinition const& _node)
 {
-	addJsonNode("Contract", { make_pair("name", _node.getName()) }, true);
+	addJsonNode("Contract", { make_pair("name", _node.name()) }, true);
 	return true;
 }
 
 bool ASTJsonConverter::visit(StructDefinition const& _node)
 {
-	addJsonNode("Struct", { make_pair("name", _node.getName()) }, true);
+	addJsonNode("Struct", { make_pair("name", _node.name()) }, true);
 	return true;
 }
 
@@ -115,7 +115,7 @@ bool ASTJsonConverter::visit(ParameterList const&)
 bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 {
 	addJsonNode("Function",
-				{ make_pair("name", _node.getName()),
+				{ make_pair("name", _node.name()),
 					make_pair("public", boost::lexical_cast<std::string>(_node.isPublic())),
 					make_pair("const", boost::lexical_cast<std::string>(_node.isDeclaredConst())) },
 				true);
@@ -124,7 +124,7 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 
 bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 {
-	addJsonNode("VariableDeclaration", { make_pair("name", _node.getName()) }, true);
+	addJsonNode("VariableDeclaration", { make_pair("name", _node.name()) }, true);
 	return true;
 }
 
@@ -135,13 +135,13 @@ bool ASTJsonConverter::visit(TypeName const&)
 
 bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
 {
-	addJsonNode("ElementaryTypeName", { make_pair("name", Token::toString(_node.getTypeName())) });
+	addJsonNode("ElementaryTypeName", { make_pair("name", Token::toString(_node.typeName())) });
 	return true;
 }
 
 bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 {
-	addJsonNode("UserDefinedTypeName", { make_pair("name", _node.getName()) });
+	addJsonNode("UserDefinedTypeName", { make_pair("name", _node.name()) });
 	return true;
 }
 
@@ -208,7 +208,7 @@ bool ASTJsonConverter::visit(ExpressionStatement const&)
 bool ASTJsonConverter::visit(Assignment const& _node)
 {
 	addJsonNode("Assignment",
-				{ make_pair("operator", Token::toString(_node.getAssignmentOperator())),
+				{ make_pair("operator", Token::toString(_node.assignmentOperator())),
 					make_pair("type", getType(_node)) },
 				true);
 	return true;
@@ -251,7 +251,7 @@ bool ASTJsonConverter::visit(NewExpression const& _node)
 bool ASTJsonConverter::visit(MemberAccess const& _node)
 {
 	addJsonNode("MemberAccess",
-				{ make_pair("member_name", _node.getMemberName()),
+				{ make_pair("member_name", _node.memberName()),
 					make_pair("type", getType(_node)) },
 				true);
 	return true;
@@ -266,23 +266,23 @@ bool ASTJsonConverter::visit(IndexAccess const& _node)
 bool ASTJsonConverter::visit(Identifier const& _node)
 {
 	addJsonNode("Identifier",
-				{ make_pair("value", _node.getName()), make_pair("type", getType(_node)) });
+				{ make_pair("value", _node.name()), make_pair("type", getType(_node)) });
 	return true;
 }
 
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
 	addJsonNode("ElementaryTypenameExpression",
-				{ make_pair("value", Token::toString(_node.getTypeToken())), make_pair("type", getType(_node)) });
+				{ make_pair("value", Token::toString(_node.typeToken())), make_pair("type", getType(_node)) });
 	return true;
 }
 
 bool ASTJsonConverter::visit(Literal const& _node)
 {
-	char const* tokenString = Token::toString(_node.getToken());
+	char const* tokenString = Token::toString(_node.token());
 	addJsonNode("Literal",
 				{ make_pair("string", (tokenString) ? tokenString : "null"),
-					make_pair("value", _node.getValue()),
+					make_pair("value", _node.value()),
 					make_pair("type", getType(_node)) });
 	return true;
 }
@@ -430,7 +430,7 @@ void ASTJsonConverter::process()
 
 string ASTJsonConverter::getType(Expression const& _expression)
 {
-	return (_expression.getType()) ? _expression.getType()->toString() : "Unknown";
+	return (_expression.type()) ? _expression.type()->toString() : "Unknown";
 }
 
 }
