@@ -112,7 +112,7 @@ private:
 	void addJsonNode(std::string const& _nodeName,
 					 std::initializer_list<std::pair<std::string const, std::string const>> _list,
 					 bool _hasChildren);
-	std::string getType(Expression const& _expression);
+	std::string type(Expression const& _expression);
 	inline void goUp()
 	{
 		solAssert(!m_jsonNodePtrs.empty(), "Uneven json nodes stack. Internal error.");

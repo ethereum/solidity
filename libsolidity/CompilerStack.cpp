@@ -339,9 +339,11 @@ void CompilerStack::resolveImports()
 			{
 				string const& id = import->identifier();
 				if (!m_sources.count(id))
-					BOOST_THROW_EXCEPTION(ParserError()
-										  << errinfo_sourceLocation(import->location())
-										  << errinfo_comment("Source not found."));
+					BOOST_THROW_EXCEPTION(
+						ParserError()
+							  << errinfo_sourceLocation(import->location())
+							  << errinfo_comment("Source not found.")
+					);
 				toposort(&m_sources[id]);
 			}
 		sourceOrder.push_back(_source);

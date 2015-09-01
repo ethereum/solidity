@@ -59,9 +59,9 @@ public:
 		return m_context.streamAssembly(_stream, _sourceCodes, _inJsonFormat);
 	}
 	/// @returns Assembly items of the normal compiler context
-	eth::AssemblyItems const& assemblyItems() const { return m_context.assembly().getItems(); }
+	eth::AssemblyItems const& assemblyItems() const { return m_context.assembly().items(); }
 	/// @returns Assembly items of the runtime compiler context
-	eth::AssemblyItems const& runtimeAssemblyItems() const { return m_context.assembly().getSub(m_runtimeSub).getItems(); }
+	eth::AssemblyItems const& runtimeAssemblyItems() const { return m_context.assembly().sub(m_runtimeSub).items(); }
 
 	/// @returns the entry label of the given function. Might return an AssemblyItem of type
 	/// UndefinedItem if it does not exist yet.

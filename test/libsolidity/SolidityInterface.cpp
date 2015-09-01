@@ -48,7 +48,7 @@ public:
 		return m_reCompiler.contractDefinition(_contractName);
 	}
 
-	string getSourcePart(ASTNode const& _node) const
+	string sourcePart(ASTNode const& _node) const
 	{
 		SourceLocation location = _node.location();
 		BOOST_REQUIRE(!location.isEmpty());
@@ -67,7 +67,7 @@ BOOST_FIXTURE_TEST_SUITE(SolidityInterface, SolidityInterfaceChecker)
 BOOST_AUTO_TEST_CASE(empty_contract)
 {
 	ContractDefinition const& contract = checkInterface("contract test {}");
-	BOOST_CHECK_EQUAL(getSourcePart(contract), "contract test{}");
+	BOOST_CHECK_EQUAL(sourcePart(contract), "contract test{}");
 }
 
 BOOST_AUTO_TEST_CASE(single_function)
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(single_function)
 		"  function f(uint a) returns(uint d) { return a * 7; }\n"
 		"}\n");
 	BOOST_REQUIRE_EQUAL(1, contract.definedFunctions().size());
-	BOOST_CHECK_EQUAL(getSourcePart(*contract.definedFunctions().front()),
+	BOOST_CHECK_EQUAL(sourcePart(*contract.definedFunctions().front()),
 					  "function f(uint256 a)returns(uint256 d);");
 }
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(single_constant_function)
 	ContractDefinition const& contract = checkInterface(
 			"contract test { function f(uint a) constant returns(bytes1 x) { 1==2; } }");
 	BOOST_REQUIRE_EQUAL(1, contract.definedFunctions().size());
-	BOOST_CHECK_EQUAL(getSourcePart(*contract.definedFunctions().front()),
+	BOOST_CHECK_EQUAL(sourcePart(*contract.definedFunctions().front()),
 					  "function f(uint256 a)constant returns(bytes1 x);");
 }
 
@@ -100,15 +100,15 @@ BOOST_AUTO_TEST_CASE(multiple_functions)
 	set<string> expectation({"function f(uint256 a)returns(uint256 d);",
 							 "function g(uint256 b)returns(uint256 e);"});
 	BOOST_REQUIRE_EQUAL(2, contract.definedFunctions().size());
-	BOOST_CHECK(expectation == set<string>({getSourcePart(*contract.definedFunctions().at(0)),
-											getSourcePart(*contract.definedFunctions().at(1))}));
+	BOOST_CHECK(expectation == set<string>({sourcePart(*contract.definedFunctions().at(0)),
+											sourcePart(*contract.definedFunctions().at(1))}));
 }
 
 BOOST_AUTO_TEST_CASE(exclude_fallback_function)
 {
 	char const* sourceCode = "contract test { function() {} }";
 	ContractDefinition const& contract = checkInterface(sourceCode);
-	BOOST_CHECK_EQUAL(getSourcePart(contract), "contract test{}");
+	BOOST_CHECK_EQUAL(sourcePart(contract), "contract test{}");
 }
 
 BOOST_AUTO_TEST_CASE(events)
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(inheritance)
 	set<string> expectedFunctions({"function baseFunction(uint256 p)returns(uint256 i);",
 								   "function derivedFunction(bytes32 p)returns(bytes32 i);"});
 	BOOST_REQUIRE_EQUAL(2, contract.definedFunctions().size());
-	BOOST_CHECK(expectedFunctions == set<string>({getSourcePart(*contract.definedFunctions().at(0)),
-												  getSourcePart(*contract.definedFunctions().at(1))}));
+	BOOST_CHECK(expectedFunctions == set<string>({sourcePart(*contract.definedFunctions().at(0)),
+												  sourcePart(*contract.definedFunctions().at(1))}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

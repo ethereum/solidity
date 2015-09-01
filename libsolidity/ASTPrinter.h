@@ -126,7 +126,7 @@ public:
 private:
 	void printSourcePart(ASTNode const& _node);
 	void printType(Expression const& _expression);
-	std::string getIndentation() const;
+	std::string indentation() const;
 	void writeLine(std::string const& _line);
 	bool goDeeper() { m_indentation++; return true; }
 

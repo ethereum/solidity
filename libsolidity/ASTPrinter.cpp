@@ -507,11 +507,11 @@ void ASTPrinter::endVisit(Literal const&)
 void ASTPrinter::printSourcePart(ASTNode const& _node)
 {
 	if (m_gasCosts.count(&_node))
-		*m_ostream << getIndentation() << "   Gas costs: " << m_gasCosts.at(&_node) << endl;
+		*m_ostream << indentation() << "   Gas costs: " << m_gasCosts.at(&_node) << endl;
 	if (!m_source.empty())
 	{
 		SourceLocation const& location(_node.location());
-		*m_ostream << getIndentation() << "   Source: "
+		*m_ostream << indentation() << "   Source: "
 				   << escaped(m_source.substr(location.start, location.end - location.start), false) << endl;
 	}
 }
@@ -519,19 +519,19 @@ void ASTPrinter::printSourcePart(ASTNode const& _node)
 void ASTPrinter::printType(Expression const& _expression)
 {
 	if (_expression.type())
-		*m_ostream << getIndentation() << "   Type: " << _expression.type()->toString() << "\n";
+		*m_ostream << indentation() << "   Type: " << _expression.type()->toString() << "\n";
 	else
-		*m_ostream << getIndentation() << "   Type unknown.\n";
+		*m_ostream << indentation() << "   Type unknown.\n";
 }
 
-string ASTPrinter::getIndentation() const
+string ASTPrinter::indentation() const
 {
 	return string(m_indentation * 2, ' ');
 }
 
 void ASTPrinter::writeLine(string const& _line)
 {
-	*m_ostream << getIndentation() << _line << endl;
+	*m_ostream << indentation() << _line << endl;
 }
 
 }

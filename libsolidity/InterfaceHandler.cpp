@@ -393,7 +393,7 @@ string::const_iterator InterfaceHandler::appendDocTag(
 	}
 }
 
-static inline string::const_iterator getFirstSpaceOrNl(
+static inline string::const_iterator firstSpaceOrNl(
 	string::const_iterator _pos,
 	string::const_iterator _end
 )
@@ -416,7 +416,7 @@ void InterfaceHandler::parseDocString(string const& _string, CommentOwner _owner
 		if (tagPos != end && tagPos < nlPos)
 		{
 			// we found a tag
-			auto tagNameEndPos = getFirstSpaceOrNl(tagPos, end);
+			auto tagNameEndPos = firstSpaceOrNl(tagPos, end);
 			if (tagNameEndPos == end)
 				BOOST_THROW_EXCEPTION(
 					DocstringParsingError() <<

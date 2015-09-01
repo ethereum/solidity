@@ -450,8 +450,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				arg->accept(*this);
 				argumentTypes.push_back(arg->type());
 			}
-			ContractDefinition const& contract = dynamic_cast<ContractType const&>(
-							*function.returnParameterTypes().front()).contractDefinition();
+			ContractDefinition const& contract =
+				dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
 			// copy the contract's code into memory
 			bytes const& bytecode = m_context.compiledContract(contract);
 			utils().fetchFreeMemoryPointer();
@@ -1087,8 +1087,10 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	vector<ASTPointer<Expression const>> const& _arguments
 )
 {
-	solAssert(_functionType.takesArbitraryParameters() ||
-			  _arguments.size() == _functionType.parameterTypes().size(), "");
+	solAssert(
+		_functionType.takesArbitraryParameters() ||
+		_arguments.size() == _functionType.parameterTypes().size(), ""
+	);
 
 	// Assumed stack content here:
 	// <stack top>

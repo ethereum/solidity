@@ -817,10 +817,16 @@ void BinaryOperation::checkTypeRequirements(TypePointers const*)
 	m_right->checkTypeRequirements(nullptr);
 	m_commonType = m_left->type()->binaryOperatorResult(m_operator, m_right->type());
 	if (!m_commonType)
-		BOOST_THROW_EXCEPTION(createTypeError("Operator " + string(Token::toString(m_operator)) +
-											  " not compatible with types " +
-											  m_left->type()->toString() + " and " +
-											  m_right->type()->toString()));
+		BOOST_THROW_EXCEPTION(
+			createTypeError(
+				"Operator " +
+				string(Token::toString(m_operator)) +
+				" not compatible with types " +
+				m_left->type()->toString() +
+				" and " +
+				m_right->type()->toString()
+			)
+		);
 	m_type = Token::isCompareOp(m_operator) ? make_shared<BoolType>() : m_commonType;
 }
 

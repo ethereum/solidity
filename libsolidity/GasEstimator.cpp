@@ -52,7 +52,7 @@ GasEstimator::ASTGasConsumptionSelfAccumulated GasEstimator::structuralEstimatio
 		GasMeter meter(block.startState->copy());
 		auto const end = _items.begin() + block.end;
 		for (auto iter = _items.begin() + block.begin; iter != end; ++iter)
-			particularCosts[iter->getLocation()] += meter.estimateMax(*iter);
+			particularCosts[iter->location()] += meter.estimateMax(*iter);
 	}
 
 	set<ASTNode const*> finestNodes = finestNodesAtLocation(_ast);

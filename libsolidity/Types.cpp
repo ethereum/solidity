@@ -697,8 +697,10 @@ bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	return isImplicitlyConvertibleTo(_convertTo) || _convertTo.category() == Category::Integer ||
-			_convertTo.category() == Category::Contract;
+	return
+		isImplicitlyConvertibleTo(_convertTo) ||
+		_convertTo.category() == Category::Integer ||
+		_convertTo.category() == Category::Contract;
 }
 
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const

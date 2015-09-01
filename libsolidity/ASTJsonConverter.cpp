@@ -209,7 +209,7 @@ bool ASTJsonConverter::visit(Assignment const& _node)
 {
 	addJsonNode("Assignment",
 				{ make_pair("operator", Token::toString(_node.assignmentOperator())),
-					make_pair("type", getType(_node)) },
+					make_pair("type", type(_node)) },
 				true);
 	return true;
 }
@@ -219,7 +219,7 @@ bool ASTJsonConverter::visit(UnaryOperation const& _node)
 	addJsonNode("UnaryOperation",
 				{ make_pair("prefix", boost::lexical_cast<std::string>(_node.isPrefixOperation())),
 					make_pair("operator", Token::toString(_node.getOperator())),
-					make_pair("type", getType(_node)) },
+					make_pair("type", type(_node)) },
 				true);
 	return true;
 }
@@ -228,7 +228,7 @@ bool ASTJsonConverter::visit(BinaryOperation const& _node)
 {
 	addJsonNode("BinaryOperation",
 				{ make_pair("operator", Token::toString(_node.getOperator())),
-					make_pair("type", getType(_node))},
+					make_pair("type", type(_node))},
 				true);
 	return true;
 }
@@ -237,14 +237,14 @@ bool ASTJsonConverter::visit(FunctionCall const& _node)
 {
 	addJsonNode("FunctionCall",
 				{ make_pair("type_conversion", boost::lexical_cast<std::string>(_node.isTypeConversion())),
-					make_pair("type", getType(_node)) },
+					make_pair("type", type(_node)) },
 				true);
 	return true;
 }
 
 bool ASTJsonConverter::visit(NewExpression const& _node)
 {
-	addJsonNode("NewExpression", { make_pair("type", getType(_node)) }, true);
+	addJsonNode("NewExpression", { make_pair("type", type(_node)) }, true);
 	return true;
 }
 
@@ -252,28 +252,28 @@ bool ASTJsonConverter::visit(MemberAccess const& _node)
 {
 	addJsonNode("MemberAccess",
 				{ make_pair("member_name", _node.memberName()),
-					make_pair("type", getType(_node)) },
+					make_pair("type", type(_node)) },
 				true);
 	return true;
 }
 
 bool ASTJsonConverter::visit(IndexAccess const& _node)
 {
-	addJsonNode("IndexAccess", { make_pair("type", getType(_node)) }, true);
+	addJsonNode("IndexAccess", { make_pair("type", type(_node)) }, true);
 	return true;
 }
 
 bool ASTJsonConverter::visit(Identifier const& _node)
 {
 	addJsonNode("Identifier",
-				{ make_pair("value", _node.name()), make_pair("type", getType(_node)) });
+				{ make_pair("value", _node.name()), make_pair("type", type(_node)) });
 	return true;
 }
 
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
 	addJsonNode("ElementaryTypenameExpression",
-				{ make_pair("value", Token::toString(_node.typeToken())), make_pair("type", getType(_node)) });
+				{ make_pair("value", Token::toString(_node.typeToken())), make_pair("type", type(_node)) });
 	return true;
 }
 
@@ -283,7 +283,7 @@ bool ASTJsonConverter::visit(Literal const& _node)
 	addJsonNode("Literal",
 				{ make_pair("string", (tokenString) ? tokenString : "null"),
 					make_pair("value", _node.value()),
-					make_pair("type", getType(_node)) });
+					make_pair("type", type(_node)) });
 	return true;
 }
 
@@ -428,7 +428,7 @@ void ASTJsonConverter::process()
 	processed = true;
 }
 
-string ASTJsonConverter::getType(Expression const& _expression)
+string ASTJsonConverter::type(Expression const& _expression)
 {
 	return (_expression.type()) ? _expression.type()->toString() : "Unknown";
 }
