@@ -1,4 +1,4 @@
-# The Solidity Contract-Oriented Programming Langauge
+# The Solidity Contract-Oriented Programming Language
 
 ## Useful links
 
