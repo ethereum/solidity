@@ -5188,17 +5188,14 @@ BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key_without_variable)
 	char const* sourceCode = R"(
 		contract Test {
 			mapping(string => uint) data;
-			function f() returns (uint r, uint rl) {
-				mapping(string => uint) dataLocal;
-				dataLocal["abc"] = 2;
-				rl = dataLocal["abc"];
-				data["abc"] = 3;
-				r = data["abc"];
+			function f() returns (uint) {
+				data["abc"] = 2;
+				return data["abc"];
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Test");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(3), u256(2)));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
