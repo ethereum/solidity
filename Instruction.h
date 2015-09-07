@@ -24,7 +24,7 @@
 #include <functional>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
-#include <libevmcore/Exceptions.h>
+#include "Exceptions.h"
 
 namespace dev
 {
