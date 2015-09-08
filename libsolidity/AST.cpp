@@ -758,13 +758,22 @@ void Assignment::checkTypeRequirements(TypePointers const*)
 	{
 		// compound assignment
 		m_rightHandSide->checkTypeRequirements(nullptr);
-		TypePointer resultType = m_type->binaryOperatorResult(Token::AssignmentToBinaryOp(m_assigmentOperator),
-															  m_rightHandSide->getType());
+		TypePointer resultType =
+			m_type->binaryOperatorResult(
+				Token::AssignmentToBinaryOp(m_assigmentOperator),
+				m_rightHandSide->getType()
+			);
 		if (!resultType || *resultType != *m_type)
-			BOOST_THROW_EXCEPTION(createTypeError("Operator " + string(Token::toString(m_assigmentOperator)) +
-												  " not compatible with types " +
-												  m_type->toString() + " and " +
-												  m_rightHandSide->getType()->toString()));
+			BOOST_THROW_EXCEPTION(
+				createTypeError(
+					"Operator " +
+					string(Token::toString(m_assigmentOperator)) +
+					" not compatible with types " +
+					m_type->toString() +
+					" and " +
+					m_rightHandSide->getType()->toString()
+				)
+			);
 	}
 }
 
@@ -814,10 +823,16 @@ void BinaryOperation::checkTypeRequirements(TypePointers const*)
 	m_right->checkTypeRequirements(nullptr);
 	m_commonType = m_left->getType()->binaryOperatorResult(m_operator, m_right->getType());
 	if (!m_commonType)
-		BOOST_THROW_EXCEPTION(createTypeError("Operator " + string(Token::toString(m_operator)) +
-											  " not compatible with types " +
-											  m_left->getType()->toString() + " and " +
-											  m_right->getType()->toString()));
+		BOOST_THROW_EXCEPTION(
+			createTypeError(
+				"Operator " +
+				string(Token::toString(m_operator)) +
+				" not compatible with types " +
+				m_left->getType()->toString() +
+				" and " +
+				m_right->getType()->toString()
+			)
+		);
 	m_type = Token::isCompareOp(m_operator) ? make_shared<BoolType>() : m_commonType;
 }
 
@@ -904,14 +919,16 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 				!functionType->takesArbitraryParameters() &&
 				!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i])
 			)
-				BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
-					"Invalid type for argument in function call. "
-					"Invalid implicit conversion from " +
-					m_arguments[i]->getType()->toString() +
-					" to " +
-					parameterTypes[i]->toString() +
-					" requested."
-				));
+				BOOST_THROW_EXCEPTION(
+					m_arguments[i]->createTypeError(
+						"Invalid type for argument in function call. "
+						"Invalid implicit conversion from " +
+						m_arguments[i]->getType()->toString() +
+						" to " +
+						parameterTypes[i]->toString() +
+						" requested."
+					)
+				);
 	}
 	else
 	{
