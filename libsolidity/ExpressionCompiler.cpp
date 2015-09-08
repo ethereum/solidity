@@ -71,6 +71,7 @@ void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration co
 {
 	solAssert(_varDecl.isConstant(), "");
 	_varDecl.value()->accept(*this);
+	utils().convertType(*_varDecl.value()->type(), *_varDecl.type());
 
 	// append return
 	m_context << eth::dupInstruction(_varDecl.type()->sizeOnStack() + 1);
@@ -918,7 +919,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		if (!variable->isConstant())
 			setLValueFromDeclaration(*declaration, _identifier);
 		else
+		{
 			variable->value()->accept(*this);
+			utils().convertType(*variable->value()->type(), *variable->type());
+		}
 	}
 	else if (dynamic_cast<ContractDefinition const*>(declaration))
 	{

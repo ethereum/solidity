@@ -5183,6 +5183,38 @@ BOOST_AUTO_TEST_CASE(accessor_for_const_state_variable)
 		BOOST_CHECK(callContractFunction("ticketPrice()") == encodeArgs(u256(555)));
 }
 
+BOOST_AUTO_TEST_CASE(constant_string_literal)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			bytes32 constant public b = "abcdefghijklmnopq";
+			string constant public x = "abefghijklmnopqabcdefghijklmnopqabcdefghijklmnopqabca";
+
+			function Test() {
+				var xx = x;
+				var bb = b;
+			}
+			function getB() returns (bytes32) { return b; }
+			function getX() returns (string) { return x; }
+			function getX2() returns (string r) { r = x; }
+			function unused() returns (uint) {
+				"unusedunusedunusedunusedunusedunusedunusedunusedunusedunusedunusedunused";
+				return 2;
+			}
+		}
+	)";
+
+	compileAndRun(sourceCode);
+	string longStr = "abefghijklmnopqabcdefghijklmnopqabcdefghijklmnopqabca";
+	string shortStr = "abcdefghijklmnopq";
+	BOOST_CHECK(callContractFunction("b()") == encodeArgs(shortStr));
+	BOOST_CHECK(callContractFunction("x()") == encodeDyn(longStr));
+	BOOST_CHECK(callContractFunction("getB()") == encodeArgs(shortStr));
+	BOOST_CHECK(callContractFunction("getX()") == encodeDyn(longStr));
+	BOOST_CHECK(callContractFunction("getX2()") == encodeDyn(longStr));
+	BOOST_CHECK(callContractFunction("unused()") == encodeArgs(2));
+}
+
 BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key_without_variable)
 {
 	char const* sourceCode = R"(
