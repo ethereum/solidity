@@ -52,23 +52,23 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
 	NameAndTypeResolver resolver({});
 	resolver.registerDeclarations(*sourceUnit);
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
 		}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
 		}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			Compiler compiler;
 			compiler.compileContract(*contract, map<ContractDefinition const*, bytes const*>{});
 
-			return compiler.getRuntimeAssemblyItems();
+			return compiler.runtimeAssemblyItems();
 		}
 	BOOST_FAIL("No contract found in source.");
 	return AssemblyItems();
@@ -80,10 +80,10 @@ void checkAssemblyLocations(AssemblyItems const& _items, vector<SourceLocation> 
 	for (size_t i = 0; i < min(_items.size(), _locations.size()); ++i)
 	{
 		BOOST_CHECK_MESSAGE(
-			_items[i].getLocation() == _locations[i],
+			_items[i].location() == _locations[i],
 			"Location mismatch for assembly item " + to_string(i) + ". Found: " +
-					to_string(_items[i].getLocation().start) + "-" +
-					to_string(_items[i].getLocation().end) + ", expected: " +
+					to_string(_items[i].location().start) + "-" +
+					to_string(_items[i].location().end) + ", expected: " +
 					to_string(_locations[i].start) + "-" +
 					to_string(_locations[i].end));
 	}

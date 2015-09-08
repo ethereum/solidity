@@ -131,8 +131,8 @@ public:
 	void popStackSlots(size_t _amount);
 
 	template <class T>
-	static unsigned getSizeOnStack(std::vector<T> const& _variables);
-	static unsigned getSizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
+	static unsigned sizeOnStack(std::vector<T> const& _variables);
+	static unsigned sizeOnStack(std::vector<std::shared_ptr<Type const>> const& _variableTypes);
 
 	/// Appends code that computes tha SHA3 hash of the topmost stack element of 32 byte type.
 	void computeHashStatic();
@@ -166,11 +166,11 @@ private:
 
 
 template <class T>
-unsigned CompilerUtils::getSizeOnStack(std::vector<T> const& _variables)
+unsigned CompilerUtils::sizeOnStack(std::vector<T> const& _variables)
 {
 	unsigned size = 0;
 	for (T const& variable: _variables)
-		size += variable->getType()->getSizeOnStack();
+		size += variable->type()->sizeOnStack();
 	return size;
 }
 

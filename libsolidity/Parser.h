@@ -37,15 +37,15 @@ public:
 	Parser() {}
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
-	std::shared_ptr<std::string const> const& getSourceName() const;
+	std::shared_ptr<std::string const> const& sourceName() const;
 
 private:
 	class ASTNodeFactory;
 
 	/// Start position of the current token
-	int getPosition() const;
+	int position() const;
 	/// End position of the current token
-	int getEndPosition() const;
+	int endPosition() const;
 
 	struct VarDeclParserOptions
 	{

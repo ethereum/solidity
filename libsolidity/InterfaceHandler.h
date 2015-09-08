@@ -66,15 +66,15 @@ public:
 	/// @param _type        The type of the documentation. Can be one of the
 	///                     types provided by @c DocumentationType
 	/// @return             A string with the json representation of provided type
-	std::string getDocumentation(
+	std::string documentation(
 		ContractDefinition const& _contractDef,
 		DocumentationType _type
 	);
 	/// Get the ABI Interface of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A string with the json representation of the contract's ABI Interface
-	std::string getABIInterface(ContractDefinition const& _contractDef);
-	std::string getABISolidityInterface(ContractDefinition const& _contractDef);
+	std::string abiInterface(ContractDefinition const& _contractDef);
+	std::string ABISolidityInterface(ContractDefinition const& _contractDef);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A string with the json representation of the contract's user documentation

@@ -123,31 +123,31 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-			createFile(_contract + ".bin", toHex(m_compiler->getBytecode(_contract)));
+			createFile(_contract + ".bin", toHex(m_compiler->bytecode(_contract)));
 		else
 		{
 			cout << "Binary: " << endl;
-			cout << toHex(m_compiler->getBytecode(_contract)) << endl;
+			cout << toHex(m_compiler->bytecode(_contract)) << endl;
 		}
 	}
 	if (m_args.count(g_argCloneBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-			createFile(_contract + ".clone_bin", toHex(m_compiler->getCloneBytecode(_contract)));
+			createFile(_contract + ".clone_bin", toHex(m_compiler->cloneBytecode(_contract)));
 		else
 		{
 			cout << "Clone Binary: " << endl;
-			cout << toHex(m_compiler->getCloneBytecode(_contract)) << endl;
+			cout << toHex(m_compiler->cloneBytecode(_contract)) << endl;
 		}
 	}
 	if (m_args.count(g_argRuntimeBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-			createFile(_contract + ".bin", toHex(m_compiler->getRuntimeBytecode(_contract)));
+			createFile(_contract + ".bin", toHex(m_compiler->runtimeBytecode(_contract)));
 		else
 		{
 			cout << "Binary of the runtime part: " << endl;
-			cout << toHex(m_compiler->getRuntimeBytecode(_contract)) << endl;
+			cout << toHex(m_compiler->runtimeBytecode(_contract)) << endl;
 		}
 	}
 }
@@ -155,11 +155,11 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count("output-dir"))
-		createFile(_contract + ".opcode", eth::disassemble(m_compiler->getBytecode(_contract)));
+		createFile(_contract + ".opcode", eth::disassemble(m_compiler->bytecode(_contract)));
 	else
 	{
 		cout << "Opcodes: " << endl;
-		cout << eth::disassemble(m_compiler->getBytecode(_contract));
+		cout << eth::disassemble(m_compiler->bytecode(_contract));
 		cout << endl;
 	}
 
@@ -179,7 +179,7 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 		return;
 
 	string out;
-	for (auto const& it: m_compiler->getContractDefinition(_contract).getInterfaceFunctions())
+	for (auto const& it: m_compiler->contractDefinition(_contract).interfaceFunctions())
 		out += toHex(it.first.ref()) + ": " + it.second->externalSignature() + "\n";
 
 	if (m_args.count("output-dir"))
@@ -223,11 +223,11 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 	if (m_args.count(argName))
 	{
 		if (m_args.count("output-dir"))
-			createFile(_contract + suffix, m_compiler->getMetadata(_contract, _type));
+			createFile(_contract + suffix, m_compiler->metadata(_contract, _type));
 		else
 		{
 			cout << title << endl;
-			cout << m_compiler->getMetadata(_contract, _type) << endl;
+			cout << m_compiler->metadata(_contract, _type) << endl;
 		}
 
 	}
@@ -236,46 +236,46 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 void CommandLineInterface::handleGasEstimation(string const& _contract)
 {
 	using Gas = GasEstimator::GasConsumption;
-	if (!m_compiler->getAssemblyItems(_contract) && !m_compiler->getRuntimeAssemblyItems(_contract))
+	if (!m_compiler->assemblyItems(_contract) && !m_compiler->runtimeAssemblyItems(_contract))
 		return;
 	cout << "Gas estimation:" << endl;
-	if (eth::AssemblyItems const* items = m_compiler->getAssemblyItems(_contract))
+	if (eth::AssemblyItems const* items = m_compiler->assemblyItems(_contract))
 	{
 		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(m_compiler->getRuntimeBytecode(_contract).size());
+		u256 bytecodeSize(m_compiler->runtimeBytecode(_contract).size());
 		cout << "construction:" << endl;
 		cout << "   " << gas << " + " << (bytecodeSize * eth::c_createDataGas) << " = ";
 		gas += bytecodeSize * eth::c_createDataGas;
 		cout << gas << endl;
 	}
-	if (eth::AssemblyItems const* items = m_compiler->getRuntimeAssemblyItems(_contract))
+	if (eth::AssemblyItems const* items = m_compiler->runtimeAssemblyItems(_contract))
 	{
-		ContractDefinition const& contract = m_compiler->getContractDefinition(_contract);
+		ContractDefinition const& contract = m_compiler->contractDefinition(_contract);
 		cout << "external:" << endl;
-		for (auto it: contract.getInterfaceFunctions())
+		for (auto it: contract.interfaceFunctions())
 		{
 			string sig = it.second->externalSignature();
 			GasEstimator::GasConsumption gas = GasEstimator::functionalEstimation(*items, sig);
 			cout << "   " << sig << ":\t" << gas << endl;
 		}
-		if (contract.getFallbackFunction())
+		if (contract.fallbackFunction())
 		{
 			GasEstimator::GasConsumption gas = GasEstimator::functionalEstimation(*items, "INVALID");
 			cout << "   fallback:\t" << gas << endl;
 		}
 		cout << "internal:" << endl;
-		for (auto const& it: contract.getDefinedFunctions())
+		for (auto const& it: contract.definedFunctions())
 		{
 			if (it->isPartOfExternalInterface() || it->isConstructor())
 				continue;
-			size_t entry = m_compiler->getFunctionEntryPoint(_contract, *it);
+			size_t entry = m_compiler->functionEntryPoint(_contract, *it);
 			GasEstimator::GasConsumption gas = GasEstimator::GasConsumption::infinite();
 			if (entry > 0)
 				gas = GasEstimator::functionalEstimation(*items, entry, *it);
 			FunctionType type(*it);
-			cout << "   " << it->getName() << "(";
-			auto end = type.getParameterTypes().end();
-			for (auto it = type.getParameterTypes().begin(); it != end; ++it)
+			cout << "   " << it->name() << "(";
+			auto end = type.parameterTypes().end();
+			for (auto it = type.parameterTypes().begin(); it != end; ++it)
 				cout << (*it)->toString() << (it + 1 == end ? "" : ",");
 			cout << "):\t" << gas << endl;
 		}
@@ -488,7 +488,7 @@ void CommandLineInterface::handleCombinedJSON()
 
 	set<string> requests;
 	boost::split(requests, m_args["combined-json"].as<string>(), boost::is_any_of(","));
-	vector<string> contracts = m_compiler->getContractNames();
+	vector<string> contracts = m_compiler->contractNames();
 
 	if (!contracts.empty())
 		output["contracts"] = Json::Value(Json::objectValue);
@@ -496,24 +496,24 @@ void CommandLineInterface::handleCombinedJSON()
 	{
 		Json::Value contractData(Json::objectValue);
 		if (requests.count("interface"))
-			contractData["interface"] = m_compiler->getSolidityInterface(contractName);
+			contractData["interface"] = m_compiler->solidityInterface(contractName);
 		if (requests.count("abi"))
-			contractData["abi"] = m_compiler->getInterface(contractName);
+			contractData["abi"] = m_compiler->interface(contractName);
 		if (requests.count("bin"))
-			contractData["bin"] = toHex(m_compiler->getBytecode(contractName));
+			contractData["bin"] = toHex(m_compiler->bytecode(contractName));
 		if (requests.count("clone-bin"))
-			contractData["clone-bin"] = toHex(m_compiler->getCloneBytecode(contractName));
+			contractData["clone-bin"] = toHex(m_compiler->cloneBytecode(contractName));
 		if (requests.count("opcodes"))
-			contractData["opcodes"] = eth::disassemble(m_compiler->getBytecode(contractName));
+			contractData["opcodes"] = eth::disassemble(m_compiler->bytecode(contractName));
 		if (requests.count("asm"))
 		{
 			ostringstream unused;
 			contractData["asm"] = m_compiler->streamAssembly(unused, contractName, m_sourceCodes, true);
 		}
 		if (requests.count("devdoc"))
-			contractData["devdoc"] = m_compiler->getMetadata(contractName, DocumentationType::NatspecDev);
+			contractData["devdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);
 		if (requests.count("userdoc"))
-			contractData["userdoc"] = m_compiler->getMetadata(contractName, DocumentationType::NatspecUser);
+			contractData["userdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecUser);
 		output["contracts"][contractName] = contractData;
 	}
 
@@ -522,7 +522,7 @@ void CommandLineInterface::handleCombinedJSON()
 		output["sources"] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
 		{
-			ASTJsonConverter converter(m_compiler->getAST(sourceCode.first));
+			ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
 			output["sources"][sourceCode.first] = Json::Value(Json::objectValue);
 			output["sources"][sourceCode.first]["AST"] = converter.json();
 		}
@@ -546,11 +546,11 @@ void CommandLineInterface::handleAst(string const& _argStr)
 	{
 		vector<ASTNode const*> asts;
 		for (auto const& sourceCode: m_sourceCodes)
-			asts.push_back(&m_compiler->getAST(sourceCode.first));
+			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
-		if (m_compiler->getRuntimeAssemblyItems())
+		if (m_compiler->runtimeAssemblyItems())
 			gasCosts = GasEstimator::breakToStatementLevel(
-				GasEstimator::structuralEstimation(*m_compiler->getRuntimeAssemblyItems(), asts),
+				GasEstimator::structuralEstimation(*m_compiler->runtimeAssemblyItems(), asts),
 				asts
 			);
 
@@ -562,12 +562,12 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				string postfix = "";
 				if (_argStr == g_argAstStr)
 				{
-					ASTPrinter printer(m_compiler->getAST(sourceCode.first), sourceCode.second);
+					ASTPrinter printer(m_compiler->ast(sourceCode.first), sourceCode.second);
 					printer.print(data);
 				}
 				else
 				{
-					ASTJsonConverter converter(m_compiler->getAST(sourceCode.first));
+					ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
 					converter.print(data);
 					postfix += "_json";
 				}
@@ -584,7 +584,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				if (_argStr == g_argAstStr)
 				{
 					ASTPrinter printer(
-						m_compiler->getAST(sourceCode.first),
+						m_compiler->ast(sourceCode.first),
 						sourceCode.second,
 						gasCosts
 					);
@@ -592,7 +592,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				}
 				else
 				{
-					ASTJsonConverter converter(m_compiler->getAST(sourceCode.first));
+					ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
 					converter.print(cout);
 				}
 			}
@@ -608,7 +608,7 @@ void CommandLineInterface::actOnInput()
 	handleAst(g_argAstStr);
 	handleAst(g_argAstJson);
 
-	vector<string> contracts = m_compiler->getContractNames();
+	vector<string> contracts = m_compiler->contractNames();
 	for (string const& contract: contracts)
 	{
 		if (needsHumanTargetedStdout(m_args))

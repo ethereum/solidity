@@ -66,7 +66,7 @@ void GlobalContext::setCurrentContract(ContractDefinition const& _contract)
 	m_currentContract = &_contract;
 }
 
-vector<Declaration const*> GlobalContext::getDeclarations() const
+vector<Declaration const*> GlobalContext::declarations() const
 {
 	vector<Declaration const*> declarations;
 	declarations.reserve(m_magicVariables.size());
@@ -75,7 +75,7 @@ vector<Declaration const*> GlobalContext::getDeclarations() const
 	return declarations;
 }
 
-MagicVariableDeclaration const* GlobalContext::getCurrentThis() const
+MagicVariableDeclaration const* GlobalContext::currentThis() const
 {
 	if (!m_thisPointer[m_currentContract])
 		m_thisPointer[m_currentContract] = make_shared<MagicVariableDeclaration>(
@@ -84,7 +84,7 @@ MagicVariableDeclaration const* GlobalContext::getCurrentThis() const
 
 }
 
-MagicVariableDeclaration const* GlobalContext::getCurrentSuper() const
+MagicVariableDeclaration const* GlobalContext::currentSuper() const
 {
 	if (!m_superPointer[m_currentContract])
 		m_superPointer[m_currentContract] = make_shared<MagicVariableDeclaration>(

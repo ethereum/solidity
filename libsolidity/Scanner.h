@@ -71,27 +71,27 @@ class ParserRecorder;
 class CharStream
 {
 public:
-	CharStream(): m_pos(0) {}
-	explicit CharStream(std::string const& _source): m_source(_source), m_pos(0) {}
-	int getPos() const { return m_pos; }
-	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_pos + _charsForward) >= m_source.size(); }
-	char get(size_t _charsForward = 0) const { return m_source[m_pos + _charsForward]; }
+	CharStream(): m_position(0) {}
+	explicit CharStream(std::string const& _source): m_source(_source), m_position(0) {}
+	int position() const { return m_position; }
+	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_position + _charsForward) >= m_source.size(); }
+	char get(size_t _charsForward = 0) const { return m_source[m_position + _charsForward]; }
 	char advanceAndGet(size_t _chars=1);
 	char rollback(size_t _amount);
 
-	void reset() { m_pos = 0; }
+	void reset() { m_position = 0; }
 
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	std::string getLineAtPosition(int _position) const;
+	std::string lineAtPosition(int _position) const;
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
 	///@}
 
 private:
 	std::string m_source;
-	size_t m_pos;
+	size_t m_position;
 };
 
 
@@ -115,20 +115,20 @@ public:
 	///@name Information about the current token
 
 	/// Returns the current token
-	Token::Value getCurrentToken()
+	Token::Value currentToken()
 	{
 		return m_currentToken.token;
 	}
 
-	SourceLocation getCurrentLocation() const { return m_currentToken.location; }
-	std::string const& getCurrentLiteral() const { return m_currentToken.literal; }
+	SourceLocation currentLocation() const { return m_currentToken.location; }
+	std::string const& currentLiteral() const { return m_currentToken.literal; }
 	///@}
 
 	///@{
 	///@name Information about the current comment token
 
-	SourceLocation getCurrentCommentLocation() const { return m_skippedComment.location; }
-	std::string const& getCurrentCommentLiteral() const { return m_skippedComment.literal; }
+	SourceLocation currentCommentLocation() const { return m_skippedComment.location; }
+	std::string const& currentCommentLiteral() const { return m_skippedComment.literal; }
 	/// Called by the parser during FunctionDefinition parsing to clear the current comment
 	void clearCurrentCommentLiteral() { m_skippedComment.literal.clear(); }
 
@@ -143,13 +143,13 @@ public:
 	std::string const& peekLiteral() const { return m_nextToken.literal; }
 	///@}
 
-	std::shared_ptr<std::string const> const& getSourceName() const { return m_sourceName; }
+	std::shared_ptr<std::string const> const& sourceName() const { return m_sourceName; }
 
 	///@{
 	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	std::string getLineAtPosition(int _position) const { return m_source.getLineAtPosition(_position); }
+	std::string lineAtPosition(int _position) const { return m_source.lineAtPosition(_position); }
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source.translatePositionToLineColumn(_position); }
 	///@}
 
@@ -204,7 +204,7 @@ private:
 	bool scanEscape();
 
 	/// Return the current source position.
-	int getSourcePos() { return m_source.getPos(); }
+	int sourcePos() { return m_source.position(); }
 	bool isSourcePastEndOfInput() { return m_source.isPastEndOfInput(); }
 
 	TokenDesc m_skippedComment;  // desc for current skipped comment

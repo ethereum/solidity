@@ -48,7 +48,7 @@ class FirstExpressionExtractor: private ASTVisitor
 {
 public:
 	FirstExpressionExtractor(ASTNode& _node): m_expression(nullptr) { _node.accept(*this); }
-	Expression* getExpression() const { return m_expression; }
+	Expression* expression() const { return m_expression; }
 private:
 	virtual bool visit(Assignment& _expression) override { return checkExpression(_expression); }
 	virtual bool visit(UnaryOperation& _expression) override { return checkExpression(_expression); }
@@ -108,22 +108,22 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			ETH_TEST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract), "Resolving names failed");
 			inheritanceHierarchy = vector<ContractDefinition const*>(1, contract);
 		}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			ETH_TEST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract), "Checking type Requirements failed");
 		}
-	for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
+	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			FirstExpressionExtractor extractor(*contract);
-			BOOST_REQUIRE(extractor.getExpression() != nullptr);
+			BOOST_REQUIRE(extractor.expression() != nullptr);
 
 			CompilerContext context;
 			context.resetVisitedNodes(contract);
@@ -134,11 +134,11 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 				context.addVariable(dynamic_cast<VariableDeclaration const&>(resolveDeclaration(variable, resolver)),
 									parametersSize--);
 
-			ExpressionCompiler(context).compile(*extractor.getExpression());
+			ExpressionCompiler(context).compile(*extractor.expression());
 
 			for (vector<string> const& function: _functions)
-				context << context.getFunctionEntryLabel(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
-			bytes instructions = context.getAssembledBytecode();
+				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
+			bytes instructions = context.assembledBytecode();
 			// debug
 			// cout << eth::disassemble(instructions) << endl;
 			return instructions;

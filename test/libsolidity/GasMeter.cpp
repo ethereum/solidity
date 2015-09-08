@@ -48,8 +48,8 @@ public:
 		m_compiler.setSource(_sourceCode);
 		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(), "Compiling contract failed");
 
-		AssemblyItems const* items = m_compiler.getRuntimeAssemblyItems("");
-		ASTNode const& sourceUnit = m_compiler.getAST();
+		AssemblyItems const* items = m_compiler.runtimeAssemblyItems("");
+		ASTNode const& sourceUnit = m_compiler.ast();
 		BOOST_REQUIRE(items != nullptr);
 		m_gasCosts = GasEstimator::breakToStatementLevel(
 			GasEstimator::structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),
@@ -61,9 +61,9 @@ public:
 	{
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();
-		PathGasMeter meter(*m_compiler.getAssemblyItems());
+		PathGasMeter meter(*m_compiler.assemblyItems());
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
-		u256 bytecodeSize(m_compiler.getRuntimeBytecode().size());
+		u256 bytecodeSize(m_compiler.runtimeBytecode().size());
 		gas += bytecodeSize * c_createDataGas;
 		BOOST_REQUIRE(!gas.isInfinite);
 		BOOST_CHECK(gas.value == m_gasUsed);
@@ -82,7 +82,7 @@ public:
 		}
 
 		GasMeter::GasConsumption gas = GasEstimator::functionalEstimation(
-			*m_compiler.getRuntimeAssemblyItems(),
+			*m_compiler.runtimeAssemblyItems(),
 			_sig
 		);
 		BOOST_REQUIRE(!gas.isInfinite);
@@ -115,11 +115,11 @@ BOOST_AUTO_TEST_CASE(non_overlapping_filtered_costs)
 	{
 		auto second = first;
 		for (++second; second != m_gasCosts.cend(); ++second)
-			if (first->first->getLocation().intersects(second->first->getLocation()))
+			if (first->first->location().intersects(second->first->location()))
 			{
 				BOOST_CHECK_MESSAGE(false, "Source locations should not overlap!");
-				SourceReferenceFormatter::printSourceLocation(cout, first->first->getLocation(), m_compiler.getScanner());
-				SourceReferenceFormatter::printSourceLocation(cout, second->first->getLocation(), m_compiler.getScanner());
+				SourceReferenceFormatter::printSourceLocation(cout, first->first->location(), m_compiler.scanner());
+				SourceReferenceFormatter::printSourceLocation(cout, second->first->location(), m_compiler.scanner());
 			}
 	}
 }

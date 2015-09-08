@@ -39,7 +39,7 @@ ASTNode const* LocationFinder::leastUpperBound()
 
 bool LocationFinder::visitNode(const ASTNode& _node)
 {
-	if (_node.getLocation().contains(m_location))
+	if (_node.location().contains(m_location))
 	{
 		m_bestMatch = &_node;
 		return true;

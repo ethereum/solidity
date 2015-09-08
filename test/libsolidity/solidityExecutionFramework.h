@@ -59,7 +59,7 @@ public:
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
 		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
-		bytes code = m_compiler.getBytecode(_contractName);
+		bytes code = m_compiler.bytecode(_contractName);
 		sendMessage(code + _arguments, true, _value);
 		return m_output;
 	}

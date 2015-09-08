@@ -16,7 +16,7 @@ InterfaceHandler::InterfaceHandler()
 	m_lastTag = DocTagType::None;
 }
 
-string InterfaceHandler::getDocumentation(
+string InterfaceHandler::documentation(
 	ContractDefinition const& _contractDef,
 	DocumentationType _type
 )
@@ -28,16 +28,16 @@ string InterfaceHandler::getDocumentation(
 	case DocumentationType::NatspecDev:
 		return devDocumentation(_contractDef);
 	case DocumentationType::ABIInterface:
-		return getABIInterface(_contractDef);
+		return abiInterface(_contractDef);
 	case DocumentationType::ABISolidityInterface:
-		return getABISolidityInterface(_contractDef);
+		return ABISolidityInterface(_contractDef);
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
 	return "";
 }
 
-string InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
+string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 {
 	Json::Value abi(Json::arrayValue);
 
@@ -55,48 +55,48 @@ string InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 		return params;
 	};
 
-	for (auto it: _contractDef.getInterfaceFunctions())
+	for (auto it: _contractDef.interfaceFunctions())
 	{
 		auto externalFunctionType = it.second->externalFunctionType();
 		Json::Value method;
 		method["type"] = "function";
-		method["name"] = it.second->getDeclaration().getName();
+		method["name"] = it.second->declaration().name();
 		method["constant"] = it.second->isConstant();
 		method["inputs"] = populateParameters(
-			externalFunctionType->getParameterNames(),
-			externalFunctionType->getParameterTypeNames()
+			externalFunctionType->parameterNames(),
+			externalFunctionType->parameterTypeNames()
 		);
 		method["outputs"] = populateParameters(
-			externalFunctionType->getReturnParameterNames(),
-			externalFunctionType->getReturnParameterTypeNames()
+			externalFunctionType->returnParameterNames(),
+			externalFunctionType->returnParameterTypeNames()
 		);
 		abi.append(method);
 	}
-	if (_contractDef.getConstructor())
+	if (_contractDef.constructor())
 	{
 		Json::Value method;
 		method["type"] = "constructor";
-		auto externalFunction = FunctionType(*_contractDef.getConstructor()).externalFunctionType();
+		auto externalFunction = FunctionType(*_contractDef.constructor()).externalFunctionType();
 		solAssert(!!externalFunction, "");
 		method["inputs"] = populateParameters(
-			externalFunction->getParameterNames(),
-			externalFunction->getParameterTypeNames()
+			externalFunction->parameterNames(),
+			externalFunction->parameterTypeNames()
 		);
 		abi.append(method);
 	}
 
-	for (auto const& it: _contractDef.getInterfaceEvents())
+	for (auto const& it: _contractDef.interfaceEvents())
 	{
 		Json::Value event;
 		event["type"] = "event";
-		event["name"] = it->getName();
+		event["name"] = it->name();
 		event["anonymous"] = it->isAnonymous();
 		Json::Value params(Json::arrayValue);
-		for (auto const& p: it->getParameters())
+		for (auto const& p: it->parameters())
 		{
 			Json::Value input;
-			input["name"] = p->getName();
-			input["type"] = p->getType()->toString(true);
+			input["name"] = p->name();
+			input["type"] = p->type()->toString(true);
 			input["indexed"] = p->isIndexed();
 			params.append(input);
 		}
@@ -106,9 +106,9 @@ string InterfaceHandler::getABIInterface(ContractDefinition const& _contractDef)
 	return Json::FastWriter().write(abi);
 }
 
-string InterfaceHandler::getABISolidityInterface(ContractDefinition const& _contractDef)
+string InterfaceHandler::ABISolidityInterface(ContractDefinition const& _contractDef)
 {
-	string ret = "contract " + _contractDef.getName() + "{";
+	string ret = "contract " + _contractDef.name() + "{";
 
 	auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
 	{
@@ -118,23 +118,23 @@ string InterfaceHandler::getABISolidityInterface(ContractDefinition const& _cont
 			r += (r.size() ? "," : "(") + _paramTypes[i] + " " + _paramNames[i];
 		return r.size() ? r + ")" : "()";
 	};
-	if (_contractDef.getConstructor())
+	if (_contractDef.constructor())
 	{
-		auto externalFunction = FunctionType(*_contractDef.getConstructor()).externalFunctionType();
+		auto externalFunction = FunctionType(*_contractDef.constructor()).externalFunctionType();
 		solAssert(!!externalFunction, "");
 		ret +=
 			"function " +
-			_contractDef.getName() +
-			populateParameters(externalFunction->getParameterNames(), externalFunction->getParameterTypeNames()) +
+			_contractDef.name() +
+			populateParameters(externalFunction->parameterNames(), externalFunction->parameterTypeNames()) +
 			";";
 	}
-	for (auto const& it: _contractDef.getInterfaceFunctions())
+	for (auto const& it: _contractDef.interfaceFunctions())
 	{
-		ret += "function " + it.second->getDeclaration().getName() +
-			populateParameters(it.second->getParameterNames(), it.second->getParameterTypeNames()) +
+		ret += "function " + it.second->declaration().name() +
+			populateParameters(it.second->parameterNames(), it.second->parameterTypeNames()) +
 			(it.second->isConstant() ? "constant " : "");
-		if (it.second->getReturnParameterTypes().size())
-			ret += "returns" + populateParameters(it.second->getReturnParameterNames(), it.second->getReturnParameterTypeNames());
+		if (it.second->returnParameterTypes().size())
+			ret += "returns" + populateParameters(it.second->returnParameterNames(), it.second->returnParameterTypeNames());
 		else if (ret.back() == ' ')
 			ret.pop_back();
 		ret += ";";
@@ -148,10 +148,10 @@ string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDe
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
-	for (auto const& it: _contractDef.getInterfaceFunctions())
+	for (auto const& it: _contractDef.interfaceFunctions())
 	{
 		Json::Value user;
-		auto strPtr = it.second->getDocumentation();
+		auto strPtr = it.second->documentation();
 		if (strPtr)
 		{
 			resetUser();
@@ -175,7 +175,7 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 	Json::Value doc;
 	Json::Value methods(Json::objectValue);
 
-	auto contractDoc = _contractDef.getDocumentation();
+	auto contractDoc = _contractDef.documentation();
 	if (contractDoc)
 	{
 		m_contractAuthor.clear();
@@ -189,10 +189,10 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 			doc["title"] = m_title;
 	}
 
-	for (auto const& it: _contractDef.getInterfaceFunctions())
+	for (auto const& it: _contractDef.interfaceFunctions())
 	{
 		Json::Value method;
-		auto strPtr = it.second->getDocumentation();
+		auto strPtr = it.second->documentation();
 		if (strPtr)
 		{
 			resetDev();
@@ -205,7 +205,7 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 				method["author"] = m_author;
 
 			Json::Value params(Json::objectValue);
-			vector<string> paramNames = it.second->getParameterNames();
+			vector<string> paramNames = it.second->parameterNames();
 			for (auto const& pair: m_params)
 			{
 				if (find(paramNames.begin(), paramNames.end(), pair.first) == paramNames.end())
@@ -393,7 +393,7 @@ string::const_iterator InterfaceHandler::appendDocTag(
 	}
 }
 
-static inline string::const_iterator getFirstSpaceOrNl(
+static inline string::const_iterator firstSpaceOrNl(
 	string::const_iterator _pos,
 	string::const_iterator _end
 )
@@ -416,7 +416,7 @@ void InterfaceHandler::parseDocString(string const& _string, CommentOwner _owner
 		if (tagPos != end && tagPos < nlPos)
 		{
 			// we found a tag
-			auto tagNameEndPos = getFirstSpaceOrNl(tagPos, end);
+			auto tagNameEndPos = firstSpaceOrNl(tagPos, end);
 			if (tagNameEndPos == end)
 				BOOST_THROW_EXCEPTION(
 					DocstringParsingError() <<

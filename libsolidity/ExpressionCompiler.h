@@ -130,7 +130,7 @@ void ExpressionCompiler::setLValue(Expression const& _expression, _Arguments con
 	if (_expression.lvalueRequested())
 		m_currentLValue = move(lvalue);
 	else
-		lvalue->retrieveValue(_expression.getLocation(), true);
+		lvalue->retrieveValue(_expression.location(), true);
 }
 
 }
