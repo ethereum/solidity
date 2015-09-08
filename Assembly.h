@@ -49,7 +49,7 @@ public:
 	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
 	AssemblyItem newData(bytes const& _data) { h256 h = (u256)std::hash<std::string>()(asString(_data)); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	AssemblyItem newSub(Assembly const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
-	Assembly const& getSub(size_t _sub) const { return m_subs.at(_sub); }
+	Assembly const& sub(size_t _sub) const { return m_subs.at(_sub); }
 	AssemblyItem newPushString(std::string const& _data) { h256 h = (u256)std::hash<std::string>()(_data); m_strings[h] = _data; return AssemblyItem(PushString, h); }
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
 
@@ -71,7 +71,7 @@ public:
 	AssemblyItem errorTag() { return AssemblyItem(PushTag, 0); }
 
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
-	AssemblyItems const& getItems() const { return m_items; }
+	AssemblyItems const& items() const { return m_items; }
 	AssemblyItem const& back() const { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().type() == PushString ? m_strings.at((h256)m_items.back().data()) : std::string(); }
 
@@ -107,7 +107,7 @@ public:
 		bool _inJsonFormat = false
 	) const;
 protected:
-	std::string getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
+	std::string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired() const;
 

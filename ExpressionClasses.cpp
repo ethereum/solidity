@@ -356,7 +356,7 @@ ExpressionClasses::Id ExpressionClasses::tryToSimplify(Expression const& _expr, 
 			//cout << "with rule " << rule.first.toString() << endl;
 			//ExpressionTemplate t(rule.second());
 			//cout << "to " << rule.second().toString() << endl;
-			return rebuildExpression(ExpressionTemplate(rule.second(), _expr.item->getLocation()));
+			return rebuildExpression(ExpressionTemplate(rule.second(), _expr.item->location()));
 		}
 	}
 

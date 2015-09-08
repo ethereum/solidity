@@ -91,7 +91,7 @@ unsigned Assembly::bytesRequired() const
 	}
 }
 
-string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const
+string Assembly::locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const
 {
 	if (_location.isEmpty() || _sourceCodes.empty() || _location.start >= _location.end || _location.start < 0)
 		return "";
@@ -153,7 +153,7 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
-		_out << "\t\t" << getLocationFromSources(_sourceCodes, i.getLocation()) << endl;
+		_out << "\t\t" << locationFromSources(_sourceCodes, i.location()) << endl;
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -202,44 +202,44 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 		{
 		case Operation:
 			collection.append(
-				createJsonValue(instructionInfo(i.instruction()).name, i.getLocation().start, i.getLocation().end, i.getJumpTypeAsString()));
+				createJsonValue(instructionInfo(i.instruction()).name, i.location().start, i.location().end, i.getJumpTypeAsString()));
 			break;
 		case Push:
 			collection.append(
-				createJsonValue("PUSH", i.getLocation().start, i.getLocation().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
+				createJsonValue("PUSH", i.location().start, i.location().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
 			break;
 		case PushString:
 			collection.append(
-				createJsonValue("PUSH tag", i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
+				createJsonValue("PUSH tag", i.location().start, i.location().end, m_strings.at((h256)i.data())));
 			break;
 		case PushTag:
 			if (i.data() == 0)
 				collection.append(
-					createJsonValue("PUSH [ErrorTag]", i.getLocation().start, i.getLocation().end, ""));
+					createJsonValue("PUSH [ErrorTag]", i.location().start, i.location().end, ""));
 			else
 				collection.append(
-					createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, string(i.data())));
+					createJsonValue("PUSH [tag]", i.location().start, i.location().end, string(i.data())));
 			break;
 		case PushSub:
 			collection.append(
-				createJsonValue("PUSH [$]", i.getLocation().start, i.getLocation().end, dev::toString(h256(i.data()))));
+				createJsonValue("PUSH [$]", i.location().start, i.location().end, dev::toString(h256(i.data()))));
 			break;
 		case PushSubSize:
 			collection.append(
-				createJsonValue("PUSH #[$]", i.getLocation().start, i.getLocation().end, dev::toString(h256(i.data()))));
+				createJsonValue("PUSH #[$]", i.location().start, i.location().end, dev::toString(h256(i.data()))));
 			break;
 		case PushProgramSize:
 			collection.append(
-				createJsonValue("PUSHSIZE", i.getLocation().start, i.getLocation().end));
+				createJsonValue("PUSHSIZE", i.location().start, i.location().end));
 			break;
 		case Tag:
 			collection.append(
-				createJsonValue("tag", i.getLocation().start, i.getLocation().end, string(i.data())));
+				createJsonValue("tag", i.location().start, i.location().end, string(i.data())));
 			collection.append(
-				createJsonValue("JUMPDEST", i.getLocation().start, i.getLocation().end));
+				createJsonValue("JUMPDEST", i.location().start, i.location().end));
 			break;
 		case PushData:
-			collection.append(createJsonValue("PUSH data", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
+			collection.append(createJsonValue("PUSH data", i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
@@ -282,7 +282,7 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 {
 	m_deposit += _i.deposit();
 	m_items.push_back(_i);
-	if (m_items.back().getLocation().isEmpty() && !m_currentSourceLocation.isEmpty())
+	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
 		m_items.back().setLocation(m_currentSourceLocation);
 	return back();
 }

@@ -83,24 +83,24 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 		return;
 
 	ExpressionClasses& classes = m_state.expressionClasses();
-	SourceLocation const& location = m_breakingItem->getLocation();
+	SourceLocation const& itemLocation = m_breakingItem->location();
 	if (*m_breakingItem == AssemblyItem(Instruction::JUMPI))
 	{
 		AssemblyItem::JumpType jumpType = m_breakingItem->getJumpType();
 
-		Id condition = m_state.stackElement(m_state.stackHeight() - 1, location);
+		Id condition = m_state.stackElement(m_state.stackHeight() - 1, itemLocation);
 		if (classes.knownNonZero(condition))
 		{
-			feedItem(AssemblyItem(Instruction::SWAP1, location), true);
-			feedItem(AssemblyItem(Instruction::POP, location), true);
+			feedItem(AssemblyItem(Instruction::SWAP1, itemLocation), true);
+			feedItem(AssemblyItem(Instruction::POP, itemLocation), true);
 
-			AssemblyItem item(Instruction::JUMP, location);
+			AssemblyItem item(Instruction::JUMP, itemLocation);
 			item.setJumpType(jumpType);
 			m_breakingItem = classes.storeItem(item);
 		}
 		else if (classes.knownZero(condition))
 		{
-			AssemblyItem it(Instruction::POP, location);
+			AssemblyItem it(Instruction::POP, itemLocation);
 			feedItem(it, true);
 			feedItem(it, true);
 			m_breakingItem = nullptr;
@@ -108,12 +108,12 @@ void CommonSubexpressionEliminator::optimizeBreakingItem()
 	}
 	else if (*m_breakingItem == AssemblyItem(Instruction::RETURN))
 	{
-		Id size = m_state.stackElement(m_state.stackHeight() - 1, location);
+		Id size = m_state.stackElement(m_state.stackHeight() - 1, itemLocation);
 		if (classes.knownZero(size))
 		{
-			feedItem(AssemblyItem(Instruction::POP, location), true);
-			feedItem(AssemblyItem(Instruction::POP, location), true);
-			AssemblyItem item(Instruction::STOP, location);
+			feedItem(AssemblyItem(Instruction::POP, itemLocation), true);
+			feedItem(AssemblyItem(Instruction::POP, itemLocation), true);
+			AssemblyItem item(Instruction::STOP, itemLocation);
 			m_breakingItem = classes.storeItem(item);
 		}
 	}
@@ -179,16 +179,16 @@ AssemblyItems CSECodeGenerator::generateCode(
 		assertThrow(!m_classPositions[targetItem.second].empty(), OptimizerException, "");
 		if (m_classPositions[targetItem.second].count(targetItem.first))
 			continue;
-		SourceLocation location;
+		SourceLocation sourceLocation;
 		if (m_expressionClasses.representative(targetItem.second).item)
-			location = m_expressionClasses.representative(targetItem.second).item->getLocation();
+			sourceLocation = m_expressionClasses.representative(targetItem.second).item->location();
 		int position = classElementPosition(targetItem.second);
 		if (position < targetItem.first)
 			// it is already at its target, we need another copy
-			appendDup(position, location);
+			appendDup(position, sourceLocation);
 		else
-			appendOrRemoveSwap(position, location);
-		appendOrRemoveSwap(targetItem.first, location);
+			appendOrRemoveSwap(position, sourceLocation);
+		appendOrRemoveSwap(targetItem.first, sourceLocation);
 	}
 
 	// remove surplus elements
@@ -263,7 +263,7 @@ void CSECodeGenerator::addDependencies(Id _c)
 			case Instruction::SHA3:
 			{
 				Id length = expr.arguments.at(1);
-				AssemblyItem offsetInstr(Instruction::SUB, expr.item->getLocation());
+				AssemblyItem offsetInstr(Instruction::SUB, expr.item->location());
 				Id offsetToStart = m_expressionClasses.find(offsetInstr, {slot, slotToLoadFrom});
 				u256 const* o = m_expressionClasses.knownConstant(offsetToStart);
 				u256 const* l = m_expressionClasses.knownConstant(length);
@@ -332,7 +332,7 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 	for (Id arg: boost::adaptors::reverse(arguments))
 		generateClassElement(arg);
 
-	SourceLocation const& location = expr.item->getLocation();
+	SourceLocation const& itemLocation = expr.item->location();
 	// The arguments are somewhere on the stack now, so it remains to move them at the correct place.
 	// This is quite difficult as sometimes, the values also have to removed in this process
 	// (if canBeRemoved() returns true) and the two arguments can be equal. For now, this is
@@ -340,42 +340,42 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 	if (arguments.size() == 1)
 	{
 		if (canBeRemoved(arguments[0], _c))
-			appendOrRemoveSwap(classElementPosition(arguments[0]), location);
+			appendOrRemoveSwap(classElementPosition(arguments[0]), itemLocation);
 		else
-			appendDup(classElementPosition(arguments[0]), location);
+			appendDup(classElementPosition(arguments[0]), itemLocation);
 	}
 	else if (arguments.size() == 2)
 	{
 		if (canBeRemoved(arguments[1], _c))
 		{
-			appendOrRemoveSwap(classElementPosition(arguments[1]), location);
+			appendOrRemoveSwap(classElementPosition(arguments[1]), itemLocation);
 			if (arguments[0] == arguments[1])
-				appendDup(m_stackHeight, location);
+				appendDup(m_stackHeight, itemLocation);
 			else if (canBeRemoved(arguments[0], _c))
 			{
-				appendOrRemoveSwap(m_stackHeight - 1, location);
-				appendOrRemoveSwap(classElementPosition(arguments[0]), location);
+				appendOrRemoveSwap(m_stackHeight - 1, itemLocation);
+				appendOrRemoveSwap(classElementPosition(arguments[0]), itemLocation);
 			}
 			else
-				appendDup(classElementPosition(arguments[0]), location);
+				appendDup(classElementPosition(arguments[0]), itemLocation);
 		}
 		else
 		{
 			if (arguments[0] == arguments[1])
 			{
-				appendDup(classElementPosition(arguments[0]), location);
-				appendDup(m_stackHeight, location);
+				appendDup(classElementPosition(arguments[0]), itemLocation);
+				appendDup(m_stackHeight, itemLocation);
 			}
 			else if (canBeRemoved(arguments[0], _c))
 			{
-				appendOrRemoveSwap(classElementPosition(arguments[0]), location);
-				appendDup(classElementPosition(arguments[1]), location);
-				appendOrRemoveSwap(m_stackHeight - 1, location);
+				appendOrRemoveSwap(classElementPosition(arguments[0]), itemLocation);
+				appendDup(classElementPosition(arguments[1]), itemLocation);
+				appendOrRemoveSwap(m_stackHeight - 1, itemLocation);
 			}
 			else
 			{
-				appendDup(classElementPosition(arguments[1]), location);
-				appendDup(classElementPosition(arguments[0]), location);
+				appendDup(classElementPosition(arguments[1]), itemLocation);
+				appendDup(classElementPosition(arguments[0]), itemLocation);
 			}
 		}
 	}
@@ -392,7 +392,7 @@ void CSECodeGenerator::generateClassElement(Id _c, bool _allowSequenced)
 			!m_generatedItems.empty() &&
 			m_generatedItems.back() == AssemblyItem(Instruction::SWAP1))
 		// this will not append a swap but remove the one that is already there
-		appendOrRemoveSwap(m_stackHeight - 1, location);
+		appendOrRemoveSwap(m_stackHeight - 1, itemLocation);
 	for (size_t i = 0; i < arguments.size(); ++i)
 	{
 		m_classPositions[m_stack[m_stackHeight - i]].erase(m_stackHeight - i);

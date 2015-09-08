@@ -107,39 +107,39 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				m_stackHeight + 1,
 				stackElement(
 					m_stackHeight - int(instruction) + int(Instruction::DUP1),
-					_item.getLocation()
+					_item.location()
 				)
 			);
 		else if (SemanticInformation::isSwapInstruction(_item))
 			swapStackElements(
 				m_stackHeight,
 				m_stackHeight - 1 - int(instruction) + int(Instruction::SWAP1),
-				_item.getLocation()
+				_item.location()
 			);
 		else if (instruction != Instruction::POP)
 		{
 			vector<Id> arguments(info.args);
 			for (int i = 0; i < info.args; ++i)
-				arguments[i] = stackElement(m_stackHeight - i, _item.getLocation());
+				arguments[i] = stackElement(m_stackHeight - i, _item.location());
 
 			if (_item.instruction() == Instruction::SSTORE)
-				op = storeInStorage(arguments[0], arguments[1], _item.getLocation());
+				op = storeInStorage(arguments[0], arguments[1], _item.location());
 			else if (_item.instruction() == Instruction::SLOAD)
 				setStackElement(
 					m_stackHeight + _item.deposit(),
-					loadFromStorage(arguments[0], _item.getLocation())
+					loadFromStorage(arguments[0], _item.location())
 				);
 			else if (_item.instruction() == Instruction::MSTORE)
-				op = storeInMemory(arguments[0], arguments[1], _item.getLocation());
+				op = storeInMemory(arguments[0], arguments[1], _item.location());
 			else if (_item.instruction() == Instruction::MLOAD)
 				setStackElement(
 					m_stackHeight + _item.deposit(),
-					loadFromMemory(arguments[0], _item.getLocation())
+					loadFromMemory(arguments[0], _item.location())
 				);
 			else if (_item.instruction() == Instruction::SHA3)
 				setStackElement(
 					m_stackHeight + _item.deposit(),
-					applySha3(arguments.at(0), arguments.at(1), _item.getLocation())
+					applySha3(arguments.at(0), arguments.at(1), _item.location())
 				);
 			else
 			{

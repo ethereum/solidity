@@ -78,7 +78,7 @@ public:
 
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
 	void setLocation(SourceLocation const& _location) { m_location = _location; }
-	SourceLocation const& getLocation() const { return m_location; }
+	SourceLocation const& location() const { return m_location; }
 
 	void setJumpType(JumpType _jumpType) { m_jumpType = _jumpType; }
 	JumpType getJumpType() const { return m_jumpType; }
