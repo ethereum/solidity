@@ -112,8 +112,10 @@ map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() 
 	for (auto const& it: exportedFunctionList)
 		exportedFunctions.insert(it);
 
-	solAssert(exportedFunctionList.size() == exportedFunctions.size(),
-			  "Hash collision at Function Definition Hash calculation");
+	solAssert(
+		exportedFunctionList.size() == exportedFunctions.size(),
+		"Hash collision at Function Definition Hash calculation"
+	);
 
 	return exportedFunctions;
 }

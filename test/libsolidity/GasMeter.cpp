@@ -49,7 +49,7 @@ public:
 		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(), "Compiling contract failed");
 
 		AssemblyItems const* items = m_compiler.runtimeAssemblyItems("");
-		ASTNode const& sourceUnit = m_compiler.AST();
+		ASTNode const& sourceUnit = m_compiler.ast();
 		BOOST_REQUIRE(items != nullptr);
 		m_gasCosts = GasEstimator::breakToStatementLevel(
 			GasEstimator::structuralEstimation(*items, vector<ASTNode const*>({&sourceUnit})),

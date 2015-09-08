@@ -522,7 +522,7 @@ void CommandLineInterface::handleCombinedJSON()
 		output["sources"] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
 		{
-			ASTJsonConverter converter(m_compiler->AST(sourceCode.first));
+			ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
 			output["sources"][sourceCode.first] = Json::Value(Json::objectValue);
 			output["sources"][sourceCode.first]["AST"] = converter.json();
 		}
@@ -546,7 +546,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 	{
 		vector<ASTNode const*> asts;
 		for (auto const& sourceCode: m_sourceCodes)
-			asts.push_back(&m_compiler->AST(sourceCode.first));
+			asts.push_back(&m_compiler->ast(sourceCode.first));
 		map<ASTNode const*, eth::GasMeter::GasConsumption> gasCosts;
 		if (m_compiler->runtimeAssemblyItems())
 			gasCosts = GasEstimator::breakToStatementLevel(
@@ -562,12 +562,12 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				string postfix = "";
 				if (_argStr == g_argAstStr)
 				{
-					ASTPrinter printer(m_compiler->AST(sourceCode.first), sourceCode.second);
+					ASTPrinter printer(m_compiler->ast(sourceCode.first), sourceCode.second);
 					printer.print(data);
 				}
 				else
 				{
-					ASTJsonConverter converter(m_compiler->AST(sourceCode.first));
+					ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
 					converter.print(data);
 					postfix += "_json";
 				}
@@ -584,7 +584,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				if (_argStr == g_argAstStr)
 				{
 					ASTPrinter printer(
-						m_compiler->AST(sourceCode.first),
+						m_compiler->ast(sourceCode.first),
 						sourceCode.second,
 						gasCosts
 					);
@@ -592,7 +592,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 				}
 				else
 				{
-					ASTJsonConverter converter(m_compiler->AST(sourceCode.first));
+					ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
 					converter.print(cout);
 				}
 			}

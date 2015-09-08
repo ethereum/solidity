@@ -80,7 +80,9 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	{
 		m_currentScope = &m_scopes[function.get()];
 		ReferencesResolver referencesResolver(
-			*function, *this, &_contract,
+			*function,
+			*this,
+			&_contract,
 			function->returnParameterList().get()
 		);
 	}

@@ -277,7 +277,7 @@ Scanner const& CompilerStack::scanner(string const& _sourceName) const
 	return *source(_sourceName).scanner;
 }
 
-SourceUnit const& CompilerStack::AST(string const& _sourceName) const
+SourceUnit const& CompilerStack::ast(string const& _sourceName) const
 {
 	return *source(_sourceName).ast;
 }

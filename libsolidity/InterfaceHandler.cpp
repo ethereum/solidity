@@ -28,7 +28,7 @@ string InterfaceHandler::documentation(
 	case DocumentationType::NatspecDev:
 		return devDocumentation(_contractDef);
 	case DocumentationType::ABIInterface:
-		return ABIInterface(_contractDef);
+		return abiInterface(_contractDef);
 	case DocumentationType::ABISolidityInterface:
 		return ABISolidityInterface(_contractDef);
 	}
@@ -37,7 +37,7 @@ string InterfaceHandler::documentation(
 	return "";
 }
 
-string InterfaceHandler::ABIInterface(ContractDefinition const& _contractDef)
+string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 {
 	Json::Value abi(Json::arrayValue);
 

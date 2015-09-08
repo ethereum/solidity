@@ -179,7 +179,7 @@ string compile(string _input, bool _optimize)
 
 	output["sources"] = Json::Value(Json::objectValue);
 	output["sources"][""] = Json::Value(Json::objectValue);
-	output["sources"][""]["AST"] = ASTJsonConverter(compiler.AST("")).json();
+	output["sources"][""]["AST"] = ASTJsonConverter(compiler.ast("")).json();
 
 	return Json::FastWriter().write(output);
 }

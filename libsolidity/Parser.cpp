@@ -139,16 +139,19 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	while (true)
 	{
 		Token::Value currentTokenValue= m_scanner->currentToken();
-		if (currentTokenValue== Token::RBrace)
+		if (currentTokenValue == Token::RBrace)
 			break;
-		else if (currentTokenValue== Token::Function)
+		else if (currentTokenValue == Token::Function)
 			functions.push_back(parseFunctionDefinition(name.get()));
-		else if (currentTokenValue== Token::Struct)
+		else if (currentTokenValue == Token::Struct)
 			structs.push_back(parseStructDefinition());
-		else if (currentTokenValue== Token::Enum)
+		else if (currentTokenValue == Token::Enum)
 			enums.push_back(parseEnumDefinition());
-		else if (currentTokenValue== Token::Identifier || currentTokenValue== Token::Mapping ||
-				 Token::isElementaryTypeName(currentTokenValue))
+		else if (
+			currentTokenValue == Token::Identifier ||
+			currentTokenValue == Token::Mapping ||
+			Token::isElementaryTypeName(currentTokenValue)
+		)
 		{
 			VarDeclParserOptions options;
 			options.isStateVariable = true;
@@ -156,9 +159,9 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 			stateVariables.push_back(parseVariableDeclaration(options));
 			expectToken(Token::Semicolon);
 		}
-		else if (currentTokenValue== Token::Modifier)
+		else if (currentTokenValue == Token::Modifier)
 			modifiers.push_back(parseModifierDefinition());
-		else if (currentTokenValue== Token::Event)
+		else if (currentTokenValue == Token::Event)
 			events.push_back(parseEventDefinition());
 		else
 			BOOST_THROW_EXCEPTION(createParserError("Function, variable, struct or modifier declaration expected."));

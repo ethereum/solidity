@@ -132,7 +132,7 @@ public:
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& scanner(std::string const& _sourceName = "") const;
 	/// @returns the parsed source unit with the supplied name.
-	SourceUnit const& AST(std::string const& _sourceName = "") const;
+	SourceUnit const& ast(std::string const& _sourceName = "") const;
 	/// @returns the parsed contract with the supplied name. Throws an exception if the contract
 	/// does not exist.
 	ContractDefinition const& contractDefinition(std::string const& _contractName) const;
