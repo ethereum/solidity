@@ -2194,6 +2194,39 @@ BOOST_AUTO_TEST_CASE(string_bytes_conversion)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(inheriting_from_library)
+{
+	char const* text = R"(
+		library Lib {}
+		contract Test is Lib {}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(inheriting_library)
+{
+	char const* text = R"(
+		contract Test {}
+		library Lib is Test {}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(library_having_variables)
+{
+	char const* text = R"(
+		library Lib { uint x; }
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(valid_library)
+{
+	char const* text = R"(
+		library Lib { uint constant x = 9; }
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
 
 BOOST_AUTO_TEST_CASE(creating_contract_within_the_contract)
 {
