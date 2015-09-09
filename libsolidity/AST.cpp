@@ -81,14 +81,15 @@ void ContractDefinition::checkTypeRequirements()
 		if (!function->isFullyImplemented())
 			setFullyImplemented(false);
 	}
+
+	for (ASTPointer<VariableDeclaration> const& variable: m_stateVariables)
+		variable->checkTypeRequirements();
+
 	for (ASTPointer<ModifierDefinition> const& modifier: functionModifiers())
 		modifier->checkTypeRequirements();
 
 	for (ASTPointer<FunctionDefinition> const& function: definedFunctions())
 		function->checkTypeRequirements();
-
-	for (ASTPointer<VariableDeclaration> const& variable: m_stateVariables)
-		variable->checkTypeRequirements();
 
 	checkExternalTypeClashes();
 	// check for hash collisions in function signatures
@@ -559,9 +560,18 @@ void VariableDeclaration::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Illegal use of \"constant\" specifier."));
 		if (!m_value)
 			BOOST_THROW_EXCEPTION(createTypeError("Uninitialized \"constant\" variable."));
-		else if (m_type && !m_type->isValueType())
-			// TODO: const is implemented only for uint, bytesXX and enums types.
-			BOOST_THROW_EXCEPTION(createTypeError("Illegal use of \"constant\" specifier. \"constant\" is not implemented for this type yet."));
+		if (m_type && !m_type->isValueType())
+		{
+			// TODO: const is implemented only for uint, bytesXX, string and enums types.
+			bool constImplemented = false;
+			if (auto arrayType = dynamic_cast<ArrayType const*>(m_type.get()))
+				constImplemented = arrayType->isByteArray();
+			if (!constImplemented)
+				BOOST_THROW_EXCEPTION(createTypeError(
+					"Illegal use of \"constant\" specifier. \"constant\" "
+					"is not yet implemented for this type."
+				));
+		}
 	}
 	if (m_type)
 	{

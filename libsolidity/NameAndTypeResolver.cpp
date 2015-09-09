@@ -457,6 +457,14 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 			}
 			else
 			{
+				if (_variable.isConstant())
+				{
+					if (loc != Location::Default && loc != Location::Memory)
+						BOOST_THROW_EXCEPTION(_variable.createTypeError(
+							"Storage location has to be \"memory\" (or unspecified) for constants."
+						));
+					loc = Location::Memory;
+				}
 				if (loc == Location::Default)
 					loc = _variable.isCallableParameter() ? Location::Memory : Location::Storage;
 				bool isPointer = !_variable.isStateVariable();
