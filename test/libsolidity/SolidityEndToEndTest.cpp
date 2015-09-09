@@ -5259,7 +5259,7 @@ BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
 		}
 	}
 	)";
-	compileRequireThrow<CompilerError>(sourceCode);
+	compileRequireThrow<TypeError>(sourceCode);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
