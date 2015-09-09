@@ -867,7 +867,8 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		// check for dynamically sized arrays should be done after memberAccess visit to have length
 		if (
 			(indexType.category() == Type::Category::IntegerConstant) &&
-				((arrayType.isDynamicallySized() && arrayType.length()) || !arrayType.isDynamicallySized()))
+			((arrayType.isDynamicallySized() && arrayType.length()) || !arrayType.isDynamicallySized())
+		)
 		{
 			IntegerConstantType const& constant = dynamic_cast<IntegerConstantType const&>(indexType);
 			if (arrayType.length() < constant.literalValue(nullptr))
