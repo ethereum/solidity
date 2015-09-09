@@ -59,8 +59,8 @@ void ContractDefinition::checkTypeRequirements()
 	checkAbstractConstructors();
 
 	FunctionDefinition const* functionDefinition = constructor();
-	if (functionDefinition && !functionDefinition->getReturnParameters().empty())
-		BOOST_THROW_EXCEPTION(functionDefinition->getReturnParameterList()->createTypeError(
+	if (functionDefinition && !functionDefinition->returnParameters().empty())
+		BOOST_THROW_EXCEPTION(functionDefinition->returnParameterList()->createTypeError(
 			"Non-empty \"returns\" directive for constructor."
 		));
 
