@@ -58,11 +58,11 @@ void ContractDefinition::checkTypeRequirements()
 	checkAbstractFunctions();
 	checkAbstractConstructors();
 
-	FunctionDefinition const* function = constructor();
-	if (function && !function->returnParameters().empty())
-		BOOST_THROW_EXCEPTION(
-			function->returnParameterList()->createTypeError("Non-empty \"returns\" directive for constructor.")
-		);
+	FunctionDefinition const* functionDefinition = constructor();
+	if (functionDefinition && !functionDefinition->getReturnParameters().empty())
+		BOOST_THROW_EXCEPTION(functionDefinition->getReturnParameterList()->createTypeError(
+			"Non-empty \"returns\" directive for constructor."
+		));
 
 	FunctionDefinition const* fallbackFunction = nullptr;
 	for (ASTPointer<FunctionDefinition> const& function: definedFunctions())
@@ -119,8 +119,7 @@ map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() 
 	for (auto const& it: exportedFunctionList)
 		exportedFunctions.insert(it);
 
-	solAssert(
-		exportedFunctionList.size() == exportedFunctions.size(),
+	solAssert(exportedFunctionList.size() == exportedFunctions.size(),
 		"Hash collision at Function Definition Hash calculation"
 	);
 
@@ -178,7 +177,9 @@ void ContractDefinition::checkDuplicateFunctions() const
 						errinfo_sourceLocation(overloads[j]->location()) <<
 						errinfo_comment("Function with same name and arguments defined twice.") <<
 						errinfo_secondarySourceLocation(SecondarySourceLocation().append(
-							"Other declaration is here:", overloads[i]->location()))
+							"Other declaration is here:", overloads[i]->location())
+						)
+
 					);
 	}
 }
@@ -767,8 +768,10 @@ void Return::checkTypeRequirements()
 	if (!m_returnParameters)
 		BOOST_THROW_EXCEPTION(createTypeError("Return arguments not allowed."));
 	if (m_returnParameters->parameters().size() != 1)
-		BOOST_THROW_EXCEPTION(createTypeError("Different number of arguments in return statement "
-											  "than in returns declaration."));
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Different number of arguments in return statement "
+			"than in returns declaration."
+		));
 	// this could later be changed such that the paramaters type is an anonymous struct type,
 	// but for now, we only allow one return parameter
 	m_expression->expectType(*m_returnParameters->parameters().front()->type());
@@ -795,10 +798,14 @@ void Assignment::checkTypeRequirements(TypePointers const*)
 		TypePointer resultType = m_type->binaryOperatorResult(Token::AssignmentToBinaryOp(m_assigmentOperator),
 															  m_rightHandSide->type());
 		if (!resultType || *resultType != *m_type)
-			BOOST_THROW_EXCEPTION(createTypeError("Operator " + string(Token::toString(m_assigmentOperator)) +
-												  " not compatible with types " +
-												  m_type->toString() + " and " +
-												  m_rightHandSide->type()->toString()));
+			BOOST_THROW_EXCEPTION(createTypeError(
+				"Operator " +
+				string(Token::toString(m_assigmentOperator)) +
+				" not compatible with types " +
+				m_type->toString() +
+				" and " +
+				m_rightHandSide->type()->toString()
+			));
 	}
 }
 
@@ -850,16 +857,13 @@ void BinaryOperation::checkTypeRequirements(TypePointers const*)
 	m_right->checkTypeRequirements(nullptr);
 	m_commonType = m_left->type()->binaryOperatorResult(m_operator, m_right->type());
 	if (!m_commonType)
-		BOOST_THROW_EXCEPTION(
-			createTypeError(
-				"Operator " +
-				string(Token::toString(m_operator)) +
-				" not compatible with types " +
-				m_left->type()->toString() +
-				" and " +
-				m_right->type()->toString()
-			)
-		);
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Operator " + string(Token::toString(m_operator)) +
+			" not compatible with types " +
+			m_left->type()->toString() +
+			" and " +
+			m_right->type()->toString()
+		));
 	m_type = Token::isCompareOp(m_operator) ? make_shared<BoolType>() : m_commonType;
 }
 
@@ -1040,7 +1044,8 @@ void NewExpression::checkTypeRequirements(TypePointers const*)
 		TypePointers{contractType},
 		strings(),
 		strings(),
-		FunctionType::Location::Creation);
+		FunctionType::Location::Creation
+	);
 }
 
 void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
@@ -1069,19 +1074,25 @@ void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
 		);
 		if (!storageType->members().membersByName(*m_memberName).empty())
 			BOOST_THROW_EXCEPTION(createTypeError(
-				"Member \"" + *m_memberName + "\" is not available in " +
+				"Member \"" +
+				*m_memberName +
+				"\" is not available in " +
 				type.toString() +
 				" outside of storage."
 			));
 		BOOST_THROW_EXCEPTION(createTypeError(
-			"Member \"" + *m_memberName + "\" not found or not visible "
-			"after argument-dependent lookup in " + type.toString()
+			"Member \"" +
+			*m_memberName +
+			"\" not found or not visible after argument-dependent lookup in " +
+			type.toString()
 		));
 	}
 	else if (possibleMembers.size() > 1)
 		BOOST_THROW_EXCEPTION(createTypeError(
-			"Member \"" + *m_memberName + "\" not unique "
-			"after argument-dependent lookup in " + type.toString()
+			"Member \"" +
+			*m_memberName +
+			"\" not unique after argument-dependent lookup in " +
+			type.toString()
 		));
 
 	m_referencedDeclaration = possibleMembers.front().declaration;
@@ -1114,10 +1125,12 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 		if (type.isString())
 			BOOST_THROW_EXCEPTION(createTypeError("Index access for string is not possible."));
 		m_index->expectType(IntegerType(256));
-		if (type.isByteArray())
-			m_type = make_shared<FixedBytesType>(1);
-		else
-			m_type = type.baseType();
+
+		m_type = type.baseType();
+		if(IntegerConstantType const* integerType = dynamic_cast<IntegerConstantType const*>(m_index->type().get()))
+			if (!type.isDynamicallySized() && type.length() <= integerType->literalValue(nullptr))
+				BOOST_THROW_EXCEPTION(createTypeError("Out of bounds access."));
+
 		m_isLValue = type.location() != DataLocation::CallData;
 		break;
 	}
@@ -1143,7 +1156,8 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 			if (!length)
 				BOOST_THROW_EXCEPTION(m_index->createTypeError("Integer constant expected."));
 			m_type = make_shared<TypeType>(make_shared<ArrayType>(
-				DataLocation::Memory, type.actualType(),
+				DataLocation::Memory,
+				type.actualType(),
 				length->literalValue(nullptr)
 			));
 		}
@@ -1151,7 +1165,10 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 	}
 	default:
 		BOOST_THROW_EXCEPTION(m_base->createTypeError(
-			"Indexed expression has to be a type, mapping or array (is " + m_base->type()->toString() + ")"));
+			"Indexed expression has to be a type, mapping or array (is " +
+			m_base->type()->toString() +
+			")"
+		));
 	}
 }
 
