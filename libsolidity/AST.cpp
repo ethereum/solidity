@@ -569,7 +569,7 @@ void VariableDeclaration::checkTypeRequirements()
 			if (!constImplemented)
 				BOOST_THROW_EXCEPTION(createTypeError(
 					"Illegal use of \"constant\" specifier. \"constant\" "
-					" is not yet implemented for this type."
+					"is not yet implemented for this type."
 				));
 		}
 	}
