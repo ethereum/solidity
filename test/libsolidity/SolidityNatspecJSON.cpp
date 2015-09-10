@@ -527,6 +527,22 @@ BOOST_AUTO_TEST_CASE(natspec_multiline_notice_without_tag)
 	checkNatspec(sourceCode, natspec, true);
 }
 
+BOOST_AUTO_TEST_CASE(empty_comment)
+{
+	char const* sourceCode = R"(
+		//
+		contract test
+		{}
+	)";
+	char const* natspec = R"ABCDEF(
+	{
+	   "methods" : {}
+	}
+	)ABCDEF";
+
+	checkNatspec(sourceCode, natspec, true);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
