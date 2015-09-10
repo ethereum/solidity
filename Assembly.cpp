@@ -50,8 +50,9 @@ void Assembly::append(Assembly const& _a)
 		m_data.insert(i);
 	for (auto const& i: _a.m_strings)
 		m_strings.insert(i);
-	for (auto const& i: _a.m_subs)
-		m_subs.push_back(i);
+	m_subs += _a.m_subs;
+	for (auto const& lib: _a.m_libraries)
+		m_libraries.insert(lib);
 
 	assert(!_a.m_baseDeposit);
 	assert(!_a.m_totalDeposit);
@@ -144,6 +145,9 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		case PushProgramSize:
 			_out << "  PUSHSIZE";
 			break;
+		case PushLibraryAddress:
+			_out << "  PUSHLIB \"" << m_libraries.at(h256(i.data())) << "\"";
+			break;
 		case Tag:
 			_out << "tag" << dec << i.data() << ": " << endl << _prefix << "  JUMPDEST";
 			break;
@@ -161,7 +165,7 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		_out << _prefix << ".data:" << endl;
 		for (auto const& i: m_data)
 			if (u256(i.first) >= m_subs.size())
-				_out << _prefix << "  " << hex << (unsigned)(u256)i.first << ": " << toHex(i.second) << endl;
+				_out << _prefix << "  " << hex << (unsigned)(u256)i.first << ": " << dev::toHex(i.second) << endl;
 		for (size_t i = 0; i < m_subs.size(); ++i)
 		{
 			_out << _prefix << "  " << hex << i << ": " << endl;
@@ -232,6 +236,11 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 			collection.append(
 				createJsonValue("PUSHSIZE", i.location().start, i.location().end));
 			break;
+		case PushLibraryAddress:
+			collection.append(
+				createJsonValue("PUSHLIB", i.location().start, i.location().end, m_libraries.at(h256(i.data())))
+			);
+			break;
 		case Tag:
 			collection.append(
 				createJsonValue("tag", i.location().start, i.location().end, string(i.data())));
@@ -285,6 +294,13 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	if (m_items.back().location().isEmpty() && !m_currentSourceLocation.isEmpty())
 		m_items.back().setLocation(m_currentSourceLocation);
 	return back();
+}
+
+AssemblyItem Assembly::newPushLibraryAddress(string const& _identifier)
+{
+	h256 h(dev::sha3(_identifier));
+	m_libraries[h] = _identifier;
+	return AssemblyItem(PushLibraryAddress, h);
 }
 
 void Assembly::injectStart(AssemblyItem const& _i)
@@ -377,96 +393,107 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 	return *this;
 }
 
-bytes Assembly::assemble() const
+LinkerObject const& Assembly::assemble() const
 {
-	bytes ret;
+	if (!m_assembledObject.bytecode.empty())
+		return m_assembledObject;
+
+	LinkerObject& ret = m_assembledObject;
 
 	unsigned totalBytes = bytesRequired();
 	vector<unsigned> tagPos(m_usedTags);
 	map<unsigned, unsigned> tagRef;
 	multimap<h256, unsigned> dataRef;
+	multimap<size_t, size_t> subRef;
 	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = dev::bytesRequired(totalBytes);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
 
-	for (size_t i = 0; i < m_subs.size(); ++i)
-		m_data[u256(i)] = m_subs[i].assemble();
-
 	unsigned bytesRequiredIncludingData = bytesRequired();
+	for (auto const& sub: m_subs)
+		bytesRequiredIncludingData += sub.assemble().bytecode.size();
+
 	unsigned bytesPerDataRef = dev::bytesRequired(bytesRequiredIncludingData);
 	byte dataRefPush = (byte)Instruction::PUSH1 - 1 + bytesPerDataRef;
-	ret.reserve(bytesRequiredIncludingData);
-	// m_data must not change from here on
+	ret.bytecode.reserve(bytesRequiredIncludingData);
 
 	for (AssemblyItem const& i: m_items)
 	{
 		// store position of the invalid jump destination
 		if (i.type() != Tag && tagPos[0] == 0)
-			tagPos[0] = ret.size();
+			tagPos[0] = ret.bytecode.size();
 
 		switch (i.type())
 		{
 		case Operation:
-			ret.push_back((byte)i.data());
+			ret.bytecode.push_back((byte)i.data());
 			break;
 		case PushString:
 		{
-			ret.push_back((byte)Instruction::PUSH32);
+			ret.bytecode.push_back((byte)Instruction::PUSH32);
 			unsigned ii = 0;
 			for (auto j: m_strings.at((h256)i.data()))
 				if (++ii > 32)
 					break;
 				else
-					ret.push_back((byte)j);
+					ret.bytecode.push_back((byte)j);
 			while (ii++ < 32)
-				ret.push_back(0);
+				ret.bytecode.push_back(0);
 			break;
 		}
 		case Push:
 		{
 			byte b = max<unsigned>(1, dev::bytesRequired(i.data()));
-			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
-			ret.resize(ret.size() + b);
-			bytesRef byr(&ret.back() + 1 - b, b);
+			ret.bytecode.push_back((byte)Instruction::PUSH1 - 1 + b);
+			ret.bytecode.resize(ret.bytecode.size() + b);
+			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(i.data(), byr);
 			break;
 		}
 		case PushTag:
 		{
-			ret.push_back(tagPush);
-			tagRef[ret.size()] = (unsigned)i.data();
-			ret.resize(ret.size() + bytesPerTag);
+			ret.bytecode.push_back(tagPush);
+			tagRef[ret.bytecode.size()] = (unsigned)i.data();
+			ret.bytecode.resize(ret.bytecode.size() + bytesPerTag);
 			break;
 		}
-		case PushData: case PushSub:
-		{
-			ret.push_back(dataRefPush);
-			dataRef.insert(make_pair((h256)i.data(), ret.size()));
-			ret.resize(ret.size() + bytesPerDataRef);
+		case PushData:
+			ret.bytecode.push_back(dataRefPush);
+			dataRef.insert(make_pair((h256)i.data(), ret.bytecode.size()));
+			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
-		}
+		case PushSub:
+			ret.bytecode.push_back(dataRefPush);
+			subRef.insert(make_pair(size_t(i.data()), ret.bytecode.size()));
+			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
+			break;
 		case PushSubSize:
 		{
-			auto s = m_data[i.data()].size();
+			auto s = m_subs.at(size_t(i.data())).assemble().bytecode.size();
 			i.setPushedValue(u256(s));
 			byte b = max<unsigned>(1, dev::bytesRequired(s));
-			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
-			ret.resize(ret.size() + b);
-			bytesRef byr(&ret.back() + 1 - b, b);
+			ret.bytecode.push_back((byte)Instruction::PUSH1 - 1 + b);
+			ret.bytecode.resize(ret.bytecode.size() + b);
+			bytesRef byr(&ret.bytecode.back() + 1 - b, b);
 			toBigEndian(s, byr);
 			break;
 		}
 		case PushProgramSize:
 		{
-			ret.push_back(dataRefPush);
-			sizeRef.push_back(ret.size());
-			ret.resize(ret.size() + bytesPerDataRef);
+			ret.bytecode.push_back(dataRefPush);
+			sizeRef.push_back(ret.bytecode.size());
+			ret.bytecode.resize(ret.bytecode.size() + bytesPerDataRef);
 			break;
 		}
+		case PushLibraryAddress:
+			ret.bytecode.push_back(byte(Instruction::PUSH20));
+			ret.linkReferences[ret.bytecode.size()] = m_libraries.at(i.data());
+			ret.bytecode.resize(ret.bytecode.size() + 20);
+			break;
 		case Tag:
-			tagPos[(unsigned)i.data()] = ret.size();
+			tagPos[(unsigned)i.data()] = ret.bytecode.size();
 			assertThrow(i.data() != 0, AssemblyException, "");
-			ret.push_back((byte)Instruction::JUMPDEST);
+			ret.bytecode.push_back((byte)Instruction::JUMPDEST);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
@@ -474,7 +501,7 @@ bytes Assembly::assemble() const
 	}
 	for (auto const& i: tagRef)
 	{
-		bytesRef r(ret.data() + i.first, bytesPerTag);
+		bytesRef r(ret.bytecode.data() + i.first, bytesPerTag);
 		auto tag = i.second;
 		if (tag >= tagPos.size())
 			tag = 0;
@@ -484,28 +511,36 @@ bytes Assembly::assemble() const
 		toBigEndian(tagPos[tag], r);
 	}
 
-	if (!m_data.empty())
+	if (!dataRef.empty() && !subRef.empty())
+		ret.bytecode.push_back(0);
+	for (size_t i = 0; i < m_subs.size(); ++i)
 	{
-		ret.push_back(0);
-		for (auto const& i: m_data)
+		auto references = subRef.equal_range(i);
+		if (references.first == references.second)
+			continue;
+		for (auto ref = references.first; ref != references.second; ++ref)
 		{
-			auto its = dataRef.equal_range(i.first);
-			if (its.first != its.second)
-			{
-				for (auto it = its.first; it != its.second; ++it)
-				{
-					bytesRef r(ret.data() + it->second, bytesPerDataRef);
-					toBigEndian(ret.size(), r);
-				}
-				for (auto b: i.second)
-					ret.push_back(b);
-			}
+			bytesRef r(ret.bytecode.data() + ref->second, bytesPerDataRef);
+			toBigEndian(ret.bytecode.size(), r);
 		}
+		ret.append(m_subs[i].assemble());
+	}
+	for (auto const& dataItem: m_data)
+	{
+		auto references = dataRef.equal_range(dataItem.first);
+		if (references.first == references.second)
+			continue;
+		for (auto ref = references.first; ref != references.second; ++ref)
+		{
+			bytesRef r(ret.bytecode.data() + ref->second, bytesPerDataRef);
+			toBigEndian(ret.bytecode.size(), r);
+		}
+		ret.bytecode += dataItem.second;
 	}
 	for (unsigned pos: sizeRef)
 	{
-		bytesRef r(ret.data() + pos, bytesPerDataRef);
-		toBigEndian(ret.size(), r);
+		bytesRef r(ret.bytecode.data() + pos, bytesPerDataRef);
+		toBigEndian(ret.bytecode.size(), r);
 	}
 	return ret;
 }

@@ -44,6 +44,8 @@ unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
 	case PushData:
 	case PushSub:
 		return 1 + _addressLength;
+	case PushLibraryAddress:
+		return 21;
 	default:
 		break;
 	}
@@ -63,6 +65,7 @@ int AssemblyItem::deposit() const
 	case PushSub:
 	case PushSubSize:
 	case PushProgramSize:
+	case PushLibraryAddress:
 		return 1;
 	case Tag:
 		return 0;
@@ -117,6 +120,9 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 		break;
 	case PushProgramSize:
 		_out << " PushProgramSize";
+		break;
+	case PushLibraryAddress:
+		_out << " PushLibraryAddress " << hex << h256(_item.data()).abridgedMiddle();
 		break;
 	case UndefinedItem:
 		_out << " ???";

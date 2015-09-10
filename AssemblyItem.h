@@ -34,7 +34,19 @@ namespace dev
 namespace eth
 {
 
-enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, PushProgramSize, Tag, PushData };
+enum AssemblyItemType {
+	UndefinedItem,
+	Operation,
+	Push,
+	PushString,
+	PushTag,
+	PushSub,
+	PushSubSize,
+	PushProgramSize,
+	Tag,
+	PushData,
+	PushLibraryAddress ///< Push a currently unknown address of another (library) contract.
+};
 
 class Assembly;
 

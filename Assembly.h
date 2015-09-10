@@ -25,9 +25,11 @@
 #include <sstream>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
+#include <libdevcore/SHA3.h>
 #include <libevmcore/Instruction.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/AssemblyItem.h>
+#include <libevmasm/LinkerObject.h>
 #include "Exceptions.h"
 #include <json/json.h>
 
@@ -47,11 +49,12 @@ public:
 
 	AssemblyItem newTag() { return AssemblyItem(Tag, m_usedTags++); }
 	AssemblyItem newPushTag() { return AssemblyItem(PushTag, m_usedTags++); }
-	AssemblyItem newData(bytes const& _data) { h256 h = (u256)std::hash<std::string>()(asString(_data)); m_data[h] = _data; return AssemblyItem(PushData, h); }
+	AssemblyItem newData(bytes const& _data) { h256 h(sha3(asString(_data))); m_data[h] = _data; return AssemblyItem(PushData, h); }
 	AssemblyItem newSub(Assembly const& _sub) { m_subs.push_back(_sub); return AssemblyItem(PushSub, m_subs.size() - 1); }
 	Assembly const& sub(size_t _sub) const { return m_subs.at(_sub); }
-	AssemblyItem newPushString(std::string const& _data) { h256 h = (u256)std::hash<std::string>()(_data); m_strings[h] = _data; return AssemblyItem(PushString, h); }
+	AssemblyItem newPushString(std::string const& _data) { h256 h(sha3(_data)); m_strings[h] = _data; return AssemblyItem(PushString, h); }
 	AssemblyItem newPushSubSize(u256 const& _subId) { return AssemblyItem(PushSubSize, _subId); }
+	AssemblyItem newPushLibraryAddress(std::string const& _identifier);
 
 	AssemblyItem append() { return append(newTag()); }
 	void append(Assembly const& _a);
@@ -63,6 +66,7 @@ public:
 	/// Pushes the final size of the current assembly itself. Use this when the code is modified
 	/// after compilation and CODESIZE is not an option.
 	void appendProgramSize() { append(AssemblyItem(PushProgramSize)); }
+	void appendLibraryAddress(std::string const& _identifier) { append(newPushLibraryAddress(_identifier)); }
 
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
@@ -92,8 +96,9 @@ public:
 	/// Changes the source location used for each appended item.
 	void setSourceLocation(SourceLocation const& _location) { m_currentSourceLocation = _location; }
 
-	bytes assemble() const;
-	bytes const& data(h256 const& _i) const { return m_data[_i]; }
+	/// Assembles the assembly into bytecode. The assembly should not be modified after this call.
+	LinkerObject const& assemble() const;
+	bytes const& data(h256 const& _i) const { return m_data.at(_i); }
 
 	/// Modify (if @a _enable is set) and return the current assembly such that creation and
 	/// execution gas usage is optimised. @a _isCreation should be true for the top-level assembly.
@@ -106,6 +111,7 @@ public:
 		const StringMap &_sourceCodes = StringMap(),
 		bool _inJsonFormat = false
 	) const;
+
 protected:
 	std::string locationFromSources(StringMap const& _sourceCodes, SourceLocation const& _location) const;
 	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
@@ -120,9 +126,12 @@ protected:
 	// 0 is reserved for exception
 	unsigned m_usedTags = 1;
 	AssemblyItems m_items;
-	mutable std::map<h256, bytes> m_data;
+	std::map<h256, bytes> m_data;
 	std::vector<Assembly> m_subs;
 	std::map<h256, std::string> m_strings;
+	std::map<h256, std::string> m_libraries; ///< Identifiers of libraries to be linked.
+
+	mutable LinkerObject m_assembledObject;
 
 	int m_deposit = 0;
 	int m_baseDeposit = 0;
