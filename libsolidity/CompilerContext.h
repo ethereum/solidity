@@ -112,6 +112,8 @@ public:
 	void appendProgramSize() { return m_asm.appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
 	eth::AssemblyItem appendData(bytes const& _data) { return m_asm.append(_data); }
+	/// Appends the address (virtual, will be filled in by linker) of a library.
+	void appendLibraryAddress(std::string const& _identifier) { m_asm.appendLibraryAddress(_identifier); }
 	/// Resets the stack of visited nodes with a new stack having only @c _node
 	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
