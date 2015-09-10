@@ -4182,6 +4182,23 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_call_fail)
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(2));
 }
 
+BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
+{
+	char const* sourceCode = R"(
+		contract A {
+			uint public test = 1;
+			uint[3] arr;
+			function A()
+			{
+				uint index = 5;
+				test = arr[index];
+				++test;
+			}
+		}
+		)";
+	BOOST_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "A").empty());
+}
+
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed)
 {
 	char const* sourceCode = R"(
