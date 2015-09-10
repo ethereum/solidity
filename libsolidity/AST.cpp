@@ -119,7 +119,8 @@ map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() 
 	for (auto const& it: exportedFunctionList)
 		exportedFunctions.insert(it);
 
-	solAssert(exportedFunctionList.size() == exportedFunctions.size(),
+	solAssert(
+		exportedFunctionList.size() == exportedFunctions.size(),
 		"Hash collision at Function Definition Hash calculation"
 	);
 
@@ -1127,7 +1128,7 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 		m_index->expectType(IntegerType(256));
 
 		m_type = type.baseType();
-		if(IntegerConstantType const* integerType = dynamic_cast<IntegerConstantType const*>(m_index->type().get()))
+		if (auto integerType = dynamic_cast<IntegerConstantType const*>(m_index->type().get()))
 			if (!type.isDynamicallySized() && type.length() <= integerType->literalValue(nullptr))
 				BOOST_THROW_EXCEPTION(createTypeError("Out of bounds access."));
 
