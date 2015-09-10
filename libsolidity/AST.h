@@ -1257,7 +1257,7 @@ public:
 	)
 	{
 		m_referencedDeclaration = &_referencedDeclaration;
-		m_currentContract = _currentContract;
+		m_contractScope = _currentContract;
 	}
 	Declaration const& referencedDeclaration() const;
 
@@ -1273,6 +1273,8 @@ public:
 	/// argument types in a call context.
 	void overloadResolution(TypePointers const& _argumentTypes);
 
+	ContractDefinition const* contractScope() { return m_contractScope; }
+
 private:
 	ASTPointer<ASTString> m_name;
 
@@ -1280,7 +1282,7 @@ private:
 	Declaration const* m_referencedDeclaration = nullptr;
 	/// Stores a reference to the current contract. This is needed because types of base contracts
 	/// change depending on the context.
-	ContractDefinition const* m_currentContract = nullptr;
+	ContractDefinition const* m_contractScope = nullptr;
 	/// A vector of overloaded declarations, right now only FunctionDefinition has overloaded declarations.
 	std::vector<Declaration const*> m_overloadedDeclarations;
 };

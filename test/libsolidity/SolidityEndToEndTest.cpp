@@ -5230,17 +5230,6 @@ BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key_without_variable)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
 }
 
-BOOST_AUTO_TEST_CASE(string_as_mapping_key)
-{
-	char const* sourceCode = R"(
-		contract Test {
-			function f() { var x = new Test(); }
-	}
-	)";
-
-	compileAndRun(sourceCode, 0, "Test");
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }
