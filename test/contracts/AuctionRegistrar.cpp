@@ -233,7 +233,7 @@ protected:
 			m_compiler.reset(false, m_addStandardSources);
 			m_compiler.addSource("", registrarCode);
 			ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
-			s_compiledRegistrar.reset(new bytes(m_compiler.bytecode("GlobalRegistrar")));
+			s_compiledRegistrar.reset(new bytes(m_compiler.object("GlobalRegistrar").bytecode));
 		}
 		sendMessage(*s_compiledRegistrar, true);
 		BOOST_REQUIRE(!m_output.empty());

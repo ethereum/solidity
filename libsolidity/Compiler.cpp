@@ -48,8 +48,9 @@ private:
 	unsigned stackHeight;
 };
 
-void Compiler::compileContract(ContractDefinition const& _contract,
-							   map<ContractDefinition const*, bytes const*> const& _contracts)
+void Compiler::compileContract(
+	ContractDefinition const& _contract,
+	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts)
 {
 	m_context = CompilerContext(); // clear it just in case
 	{
@@ -70,7 +71,7 @@ void Compiler::compileContract(ContractDefinition const& _contract,
 
 void Compiler::compileClone(
 	ContractDefinition const& _contract,
-	map<ContractDefinition const*, bytes const*> const& _contracts
+	map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 )
 {
 	m_context = CompilerContext(); // clear it just in case
@@ -98,11 +99,13 @@ eth::AssemblyItem Compiler::functionEntryLabel(FunctionDefinition const& _functi
 	return m_runtimeContext.functionEntryLabelIfExists(_function);
 }
 
-void Compiler::initializeContext(ContractDefinition const& _contract,
-								 map<ContractDefinition const*, bytes const*> const& _contracts)
+void Compiler::initializeContext(
+	ContractDefinition const& _contract,
+	map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
+)
 {
 	CompilerUtils(m_context).initialiseFreeMemoryPointer();
-	m_context.setCompiledContracts(_contracts);
+	m_context.setCompiledContracts(_compiledContracts);
 	m_context.setInheritanceHierarchy(_contract.linearizedBaseContracts());
 	registerStateVariables(_contract);
 	m_context.resetVisitedNodes(&_contract);

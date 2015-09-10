@@ -138,7 +138,7 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 
 			for (vector<string> const& function: _functions)
 				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
-			bytes instructions = context.assembledBytecode();
+			bytes instructions = context.assembledObject().bytecode;
 			// debug
 			// cout << eth::disassemble(instructions) << endl;
 			return instructions;

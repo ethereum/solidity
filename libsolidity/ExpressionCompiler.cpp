@@ -454,12 +454,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			ContractDefinition const& contract =
 				dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
 			// copy the contract's code into memory
-			bytes const& bytecode = m_context.compiledContract(contract);
+			eth::Assembly const& assembly = m_context.compiledContract(contract);
 			utils().fetchFreeMemoryPointer();
-			m_context << u256(bytecode.size()) << eth::Instruction::DUP1;
-			//@todo could be done by actually appending the Assembly, but then we probably need to compile
-			// multiple times. Will revisit once external fuctions are inlined.
-			m_context.appendData(bytecode);
+			// pushes size
+			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly);
+			m_context << eth::Instruction::DUP1 << subroutine;
 			m_context << eth::Instruction::DUP4 << eth::Instruction::CODECOPY;
 
 			m_context << eth::Instruction::ADD;
