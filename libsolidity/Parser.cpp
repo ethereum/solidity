@@ -69,7 +69,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	m_scanner = _scanner;
 	ASTNodeFactory nodeFactory(*this);
 	vector<ASTPointer<ASTNode>> nodes;
-	while (_scanner->currentToken() != Token::EOS)
+	while (m_scanner->currentToken() != Token::EOS)
 	{
 		switch (m_scanner->currentToken())
 		{
@@ -1076,8 +1076,9 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 
 ParserError Parser::createParserError(string const& _description) const
 {
-	return ParserError() << errinfo_sourceLocation(SourceLocation(position(), position(), sourceName()))
-						 << errinfo_comment(_description);
+	return ParserError() <<
+		errinfo_sourceLocation(SourceLocation(position(), position(), sourceName())) <<
+		errinfo_comment(_description);
 }
 
 

@@ -914,6 +914,16 @@ BOOST_AUTO_TEST_CASE(location_specifiers_with_var)
 	BOOST_CHECK_THROW(parseText(text), ParserError);
 }
 
+BOOST_AUTO_TEST_CASE(empty_comment)
+{
+	char const* text = R"(
+		//
+		contract test
+		{}
+	)";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

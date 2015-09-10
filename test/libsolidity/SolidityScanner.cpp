@@ -281,6 +281,16 @@ BOOST_AUTO_TEST_CASE(time_after)
 	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::After);
 }
 
+BOOST_AUTO_TEST_CASE(empty_comment)
+{
+	Scanner scanner(CharStream("//\ncontract{}"));
+	BOOST_CHECK_EQUAL(scanner.currentCommentLiteral(), "");
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::Contract);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::RBrace);
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

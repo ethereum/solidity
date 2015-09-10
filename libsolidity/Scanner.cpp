@@ -224,7 +224,9 @@ Token::Value Scanner::skipSingleLineComment()
 	// to be part of the single-line comment; it is recognized
 	// separately by the lexical grammar and becomes part of the
 	// stream of input elements for the syntactic grammar
-	while (advance() && !isLineTerminator(m_char)) { };
+	while (!isLineTerminator(m_char))
+		if (!advance()) break;
+
 	return Token::Whitespace;
 }
 
