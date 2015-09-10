@@ -35,7 +35,7 @@ bytes dev::eth::compileLLL(string const& _src, bool _opt, vector<string>* _error
 		CompilerState cs;
 		cs.populateStandard();
 		auto f = CodeFragment::compile(_src, cs);
-		bytes ret = f.assembly(cs).optimise(_opt).assemble();
+		bytes ret = f.assembly(cs).optimise(_opt).assemble().bytecode;
 		for (auto i: cs.treesToKill)
 			killBigints(i);
 		return ret;
