@@ -821,7 +821,6 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	_indexAccess.baseExpression().accept(*this);
 
 	Type const& baseType = *_indexAccess.baseExpression().type();
-	Type const& indexType = *_indexAccess.indexExpression()->type();
 
 	if (baseType.category() == Type::Category::Mapping)
 	{
@@ -863,21 +862,8 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
 
 		_indexAccess.indexExpression()->accept(*this);
-
-		// check for dynamically sized arrays should be done after memberAccess visit to have length
-		if (
-			(indexType.category() == Type::Category::IntegerConstant) &&
-			((arrayType.isDynamicallySized() && arrayType.length()) || !arrayType.isDynamicallySized())
-		)
-		{
-			IntegerConstantType const& constant = dynamic_cast<IntegerConstantType const&>(indexType);
-			if (arrayType.length() < constant.literalValue(nullptr))
-				BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Out of bounds access."));
-		}
-
 		// stack layout: <base_ref> [<length>] <index>
 		ArrayUtils(m_context).accessIndex(arrayType);
-
 		switch (arrayType.location())
 		{
 		case DataLocation::Storage:
