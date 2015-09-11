@@ -5230,6 +5230,20 @@ BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key_without_variable)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
 }
 
+BOOST_AUTO_TEST_CASE(event_more_than_four_indexed_arguments)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit(uint indexed _var0, uint indexed _var1, uint indexed _var2, uint indexed _var3, uint indexed _var4, uint indexed _var5);
+			function deposit() {
+				Deposit(0, 1, 2, 3, 4, 5);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	compileRequireThrow<TypeError>(sourceCode);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
