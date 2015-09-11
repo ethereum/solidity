@@ -924,16 +924,6 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
-BOOST_AUTO_TEST_CASE(library_simple)
-{
-	char const* text = R"(
-		library Lib {
-			function f() { }
-		}
-	)";
-	BOOST_CHECK_NO_THROW(parseText(text));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }

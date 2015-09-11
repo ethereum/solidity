@@ -65,7 +65,7 @@ void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
 	m_localVariables.erase(&_declaration);
 }
 
-eth::Assembly const& CompilerContext::compiledContract(const ContractDefinition& _contract) const
+bytes const& CompilerContext::compiledContract(const ContractDefinition& _contract) const
 {
 	auto ret = m_compiledContracts.find(&_contract);
 	solAssert(ret != m_compiledContracts.end(), "Compiled contract not found.");

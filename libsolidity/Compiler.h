@@ -42,19 +42,16 @@ public:
 	{
 	}
 
-	void compileContract(
-		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
-	);
+	void compileContract(ContractDefinition const& _contract,
+						 std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	/// Compiles a contract that uses CALLCODE to call into a pre-deployed version of the given
 	/// contract at runtime, but contains the full creation-time code.
 	void compileClone(
 		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
+		std::map<ContractDefinition const*, bytes const*> const& _contracts
 	);
-	eth::Assembly const& assembly() { return m_context.assembly(); }
-	eth::LinkerObject assembledObject() { return m_context.assembledObject(); }
-	eth::LinkerObject runtimeObject() { return m_context.assembledRuntimeObject(m_runtimeSub); }
+	bytes assembledBytecode() { return m_context.assembledBytecode(); }
+	bytes runtimeBytecode() { return m_context.assembledRuntimeBytecode(m_runtimeSub); }
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFromat shows whether the out should be in Json format
 	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
@@ -72,10 +69,8 @@ public:
 
 private:
 	/// Registers the non-function objects inside the contract with the context.
-	void initializeContext(
-		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
-	);
+	void initializeContext(ContractDefinition const& _contract,
+						   std::map<ContractDefinition const*, bytes const*> const& _contracts);
 	/// Adds the code that is run at creation time. Should be run after exchanging the run-time context
 	/// with a new and initialized context. Adds the constructor code.
 	void packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext);

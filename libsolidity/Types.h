@@ -517,7 +517,7 @@ private:
 };
 
 /**
- * The type of a contract instance or library, there is one distinct type for each contract definition.
+ * The type of a contract instance, there is one distinct type for each contract definition.
  */
 class ContractType: public Type
 {
@@ -788,8 +788,7 @@ public:
 	/// removed and the location of reference types is changed from CallData to Memory.
 	/// This is needed if external functions are called on other contracts, as they cannot return
 	/// dynamic values.
-	/// @param _inLibrary if true, uses CallCode as location.
-	FunctionTypePointer asMemberFunction(bool _inLibrary) const;
+	FunctionTypePointer asMemberFunction() const;
 
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
@@ -852,7 +851,6 @@ public:
 /**
  * The type of a type reference. The type of "uint32" when used in "a = uint32(2)" is an example
  * of a TypeType.
- * For super contracts or libraries, this has members directly.
  */
 class TypeType: public Type
 {
@@ -867,7 +865,7 @@ public:
 	virtual bool canBeStored() const override { return false; }
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
-	virtual unsigned sizeOnStack() const override;
+	virtual unsigned sizeOnStack() const override { return 0; }
 	virtual std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
 	virtual MemberList const& members() const override;
 
