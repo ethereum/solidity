@@ -23,6 +23,10 @@ include(EthExecutableHelper)
 # Include utils
 include(EthUtils)
 
+include(EthOptions)
+configure_project()
+print_config()
+
 add_subdirectory(libsolidity)
 add_subdirectory(solc)
 add_subdirectory(test)
