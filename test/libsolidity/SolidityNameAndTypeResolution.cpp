@@ -2194,6 +2194,18 @@ BOOST_AUTO_TEST_CASE(string_bytes_conversion)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+
+BOOST_AUTO_TEST_CASE(creating_contract_within_the_contract)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function f() { var x = new Test(); }
+		}
+	)";
+
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

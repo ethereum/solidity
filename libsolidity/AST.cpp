@@ -1001,10 +1001,17 @@ void NewExpression::checkTypeRequirements(TypePointers const*)
 {
 	m_contractName->checkTypeRequirements(nullptr);
 	m_contract = dynamic_cast<ContractDefinition const*>(&m_contractName->referencedDeclaration());
+
 	if (!m_contract)
 		BOOST_THROW_EXCEPTION(createTypeError("Identifier is not a contract."));
 	if (!m_contract->isFullyImplemented())
 		BOOST_THROW_EXCEPTION(createTypeError("Trying to create an instance of an abstract contract."));
+
+	auto scopeContract = m_contractName->contractScope();
+	auto bases = m_contract->linearizedBaseContracts();
+	if (find(bases.begin(), bases.end(), scopeContract) != bases.end())
+		BOOST_THROW_EXCEPTION(createTypeError("Circular reference for contract creation: cannot create instance of derived or same contract."));
+
 	shared_ptr<ContractType const> contractType = make_shared<ContractType>(*m_contract);
 	TypePointers const& parameterTypes = contractType->constructorType()->parameterTypes();
 	m_type = make_shared<FunctionType>(
@@ -1137,7 +1144,7 @@ void Identifier::checkTypeRequirements(TypePointers const* _argumentTypes)
 	}
 	solAssert(!!m_referencedDeclaration, "Referenced declaration is null after overload resolution.");
 	m_isLValue = m_referencedDeclaration->isLValue();
-	m_type = m_referencedDeclaration->type(m_currentContract);
+	m_type = m_referencedDeclaration->type(m_contractScope);
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Declaration referenced before type could be determined."));
 }
