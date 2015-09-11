@@ -1050,7 +1050,6 @@ BOOST_AUTO_TEST_CASE(event_too_many_indexed)
 	char const* text = R"(
 		contract c {
 			event e(uint indexed a, bytes3 indexed b, bool indexed c, uint indexed d);
-			function f() { e(2, "abc", true); }
 		})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }

@@ -85,6 +85,9 @@ void ContractDefinition::checkTypeRequirements()
 	for (ASTPointer<VariableDeclaration> const& variable: m_stateVariables)
 		variable->checkTypeRequirements();
 
+	for (ASTPointer<EventDefinition> const& event: events())
+		event->checkTypeRequirements();
+
 	for (ASTPointer<ModifierDefinition> const& modifier: functionModifiers())
 		modifier->checkTypeRequirements();
 
@@ -699,13 +702,13 @@ void EventDefinition::checkTypeRequirements()
 	{
 		if (var->isIndexed())
 			numIndexed++;
+		if (numIndexed > 3)
+			BOOST_THROW_EXCEPTION(createTypeError("More than 3 indexed arguments for event."));
 		if (!var->type()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
 		if (!var->type()->externalType())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed as event parameter type."));
 	}
-	if (numIndexed > 3)
-		BOOST_THROW_EXCEPTION(createTypeError("More than 3 indexed arguments for event."));
 }
 
 void Block::checkTypeRequirements()
