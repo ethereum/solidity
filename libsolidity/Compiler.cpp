@@ -50,7 +50,8 @@ private:
 
 void Compiler::compileContract(
 	ContractDefinition const& _contract,
-	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts)
+	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
+)
 {
 	m_context = CompilerContext(); // clear it just in case
 	{
