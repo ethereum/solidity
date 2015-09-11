@@ -69,6 +69,7 @@ static string const g_argOpcodesStr = "opcodes";
 static string const g_argNatspecDevStr = "devdoc";
 static string const g_argNatspecUserStr = "userdoc";
 static string const g_argAddStandard = "add-std";
+static string const g_stdinFileName = "<stdin>";
 
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
@@ -282,6 +283,39 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
+bool CommandLineInterface::parseLibraryOption(string const& _input)
+{
+	namespace fs = boost::filesystem;
+	string data = fs::is_regular_file(_input) ? contentsString(_input) : _input;
+
+	vector<string> libraries;
+	boost::split(libraries, data, boost::is_space() || boost::is_any_of(","), boost::token_compress_on);
+	for (string const& lib: libraries)
+		if (!lib.empty())
+		{
+			auto colon = lib.find(':');
+			if (colon == string::npos)
+			{
+				cerr << "Colon separator missing in library address specifier \"" << lib << "\"" << endl;
+				return false;
+			}
+			string libName(lib.begin(), lib.begin() + colon);
+			string addrString(lib.begin() + colon + 1, lib.end());
+			boost::trim(libName);
+			boost::trim(addrString);
+			bytes binAddr = fromHex(addrString);
+			h160 address(binAddr, h160::AlignRight);
+			if (binAddr.size() > 20 || address == h160())
+			{
+				cerr << "Invalid address for library \"" << libName << "\": " << addrString << endl;
+				return false;
+			}
+			m_libraries[libName] = address;
+		}
+
+	return true;
+}
+
 void CommandLineInterface::createFile(string const& _fileName, string const& _data)
 {
 	namespace fs = boost::filesystem;
@@ -320,6 +354,13 @@ Allowed options)",
 		)
 		(g_argAddStandard.c_str(), "Add standard contracts.")
 		(
+			"libraries",
+			po::value<vector<string>>()->value_name("libs"),
+			"Direct string or file containing library addresses. Syntax: "
+			"<libraryName>: <address> [, or whitespace] ...\n"
+			"Address is interpreted as a hex string optionally prefixed by 0x."
+		)
+		(
 			"output-dir,o",
 			po::value<string>()->value_name("path"),
 			"If given, creates one file per component and contract/file at the specified directory."
@@ -329,7 +370,12 @@ Allowed options)",
 			po::value<string>()->value_name(boost::join(g_combinedJsonArgs, ",")),
 			"Output a single json document containing the specified information."
 		)
-		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.");
+		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.")
+		(
+			"link",
+			"Switch to linker mode, ignoring all options apart from --libraries "
+			"and modify binaries in place."
+		);
 	po::options_description outputComponents("Output Components");
 	outputComponents.add_options()
 		(g_argAstStr.c_str(), "AST of all source files.")
@@ -402,7 +448,7 @@ bool CommandLineInterface::processInput()
 		while (!cin.eof())
 		{
 			getline(cin, s);
-			m_sourceCodes["<stdin>"].append(s + '\n');
+			m_sourceCodes[g_stdinFileName].append(s + '\n');
 		}
 	}
 	else
@@ -424,6 +470,18 @@ bool CommandLineInterface::processInput()
 			m_sourceCodes[infile] = dev::contentsString(infile);
 		}
 
+	if (m_args.count("libraries"))
+		for (string const& library: m_args["libraries"].as<vector<string>>())
+			if (!parseLibraryOption(library))
+				return false;
+
+	if (m_args.count("link"))
+	{
+		// switch to linker mode
+		m_onlyLink = true;
+		return link();
+	}
+
 	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0));
 	try
 	{
@@ -433,6 +491,7 @@ bool CommandLineInterface::processInput()
 		bool optimize = m_args.count("optimize") > 0;
 		unsigned runs = m_args["optimize-runs"].as<unsigned>();
 		m_compiler->compile(optimize, runs);
+		m_compiler->link(m_libraries);
 	}
 	catch (ParserError const& _exception)
 	{
@@ -601,6 +660,61 @@ void CommandLineInterface::handleAst(string const& _argStr)
 }
 
 void CommandLineInterface::actOnInput()
+{
+	if (m_onlyLink)
+		writeLinkedFiles();
+	else
+		outputCompilationResults();
+}
+
+bool CommandLineInterface::link()
+{
+	for (auto& src: m_sourceCodes)
+	{
+		auto end = src.second.end();
+		for (auto it = src.second.begin(); it != end;)
+		{
+			while (it != end && *it != '_') ++it;
+			auto insertStart = it;
+			while (it != end && *it == '_') ++it;
+			auto nameStart = it;
+			while (it != end && *it != '_') ++it;
+			auto nameEnd = it;
+			while (it != end && *it == '_') ++it;
+			auto insertEnd = it;
+
+			if (insertStart == end)
+				break;
+
+			if (insertEnd - insertStart != 40)
+			{
+				cerr << "Error in binary object file " << src.first << " at position " << (insertStart - src.second.begin()) << endl;
+				return false;
+			}
+
+			string name(nameStart, nameEnd);
+			if (m_libraries.count(name))
+			{
+				string hexStr(toHex(m_libraries.at(name).asBytes()));
+				copy(hexStr.begin(), hexStr.end(), insertStart);
+			}
+			else
+				cerr << "Reference \"" << name << "\" in file \"" << src.first << "\" still unresolved." << endl;
+		}
+	}
+	return true;
+}
+
+void CommandLineInterface::writeLinkedFiles()
+{
+	for (auto const& src: m_sourceCodes)
+		if (src.first == g_stdinFileName)
+			cout << src.second << endl;
+		else
+			writeFile(src.first, src.second);
+}
+
+void CommandLineInterface::outputCompilationResults()
 {
 	handleCombinedJSON();
 
