@@ -123,31 +123,31 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-			createFile(_contract + ".bin", toHex(m_compiler->bytecode(_contract)));
+			createFile(_contract + ".bin", m_compiler->object(_contract).toHex());
 		else
 		{
 			cout << "Binary: " << endl;
-			cout << toHex(m_compiler->bytecode(_contract)) << endl;
+			cout << m_compiler->object(_contract).toHex() << endl;
 		}
 	}
 	if (m_args.count(g_argCloneBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-			createFile(_contract + ".clone_bin", toHex(m_compiler->cloneBytecode(_contract)));
+			createFile(_contract + ".clone_bin", m_compiler->cloneObject(_contract).toHex());
 		else
 		{
 			cout << "Clone Binary: " << endl;
-			cout << toHex(m_compiler->cloneBytecode(_contract)) << endl;
+			cout << m_compiler->cloneObject(_contract).toHex() << endl;
 		}
 	}
 	if (m_args.count(g_argRuntimeBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-			createFile(_contract + ".bin", toHex(m_compiler->runtimeBytecode(_contract)));
+			createFile(_contract + ".bin", m_compiler->runtimeObject(_contract).toHex());
 		else
 		{
 			cout << "Binary of the runtime part: " << endl;
-			cout << toHex(m_compiler->runtimeBytecode(_contract)) << endl;
+			cout << m_compiler->runtimeObject(_contract).toHex() << endl;
 		}
 	}
 }
@@ -155,11 +155,11 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count("output-dir"))
-		createFile(_contract + ".opcode", eth::disassemble(m_compiler->bytecode(_contract)));
+		createFile(_contract + ".opcode", eth::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
 		cout << "Opcodes: " << endl;
-		cout << eth::disassemble(m_compiler->bytecode(_contract));
+		cout << eth::disassemble(m_compiler->object(_contract).bytecode);
 		cout << endl;
 	}
 
@@ -242,7 +242,7 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	if (eth::AssemblyItems const* items = m_compiler->assemblyItems(_contract))
 	{
 		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(m_compiler->runtimeBytecode(_contract).size());
+		u256 bytecodeSize(m_compiler->runtimeObject(_contract).bytecode.size());
 		cout << "construction:" << endl;
 		cout << "   " << gas << " + " << (bytecodeSize * eth::c_createDataGas) << " = ";
 		gas += bytecodeSize * eth::c_createDataGas;
@@ -500,11 +500,11 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count("abi"))
 			contractData["abi"] = m_compiler->interface(contractName);
 		if (requests.count("bin"))
-			contractData["bin"] = toHex(m_compiler->bytecode(contractName));
+			contractData["bin"] = m_compiler->runtimeObject(contractName).toHex();
 		if (requests.count("clone-bin"))
-			contractData["clone-bin"] = toHex(m_compiler->cloneBytecode(contractName));
+			contractData["clone-bin"] = m_compiler->cloneObject(contractName).toHex();
 		if (requests.count("opcodes"))
-			contractData["opcodes"] = eth::disassemble(m_compiler->bytecode(contractName));
+			contractData["opcodes"] = eth::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count("asm"))
 		{
 			ostringstream unused;

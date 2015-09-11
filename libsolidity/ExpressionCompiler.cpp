@@ -454,12 +454,11 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			ContractDefinition const& contract =
 				dynamic_cast<ContractType const&>(*function.returnParameterTypes().front()).contractDefinition();
 			// copy the contract's code into memory
-			bytes const& bytecode = m_context.compiledContract(contract);
+			eth::Assembly const& assembly = m_context.compiledContract(contract);
 			utils().fetchFreeMemoryPointer();
-			m_context << u256(bytecode.size()) << eth::Instruction::DUP1;
-			//@todo could be done by actually appending the Assembly, but then we probably need to compile
-			// multiple times. Will revisit once external fuctions are inlined.
-			m_context.appendData(bytecode);
+			// pushes size
+			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly);
+			m_context << eth::Instruction::DUP1 << subroutine;
 			m_context << eth::Instruction::DUP4 << eth::Instruction::CODECOPY;
 
 			m_context << eth::Instruction::ADD;
@@ -773,9 +772,15 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 
 		if (dynamic_cast<ContractType const*>(type.actualType().get()))
 		{
-			auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.referencedDeclaration());
-			solAssert(!!function, "Function not found in member access");
-			m_context << m_context.functionEntryLabel(*function).pushTag();
+			auto const& funType = dynamic_cast<FunctionType const&>(*_memberAccess.type());
+			if (funType.location() != FunctionType::Location::Internal)
+				m_context << funType.externalIdentifier();
+			else
+			{
+				auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.referencedDeclaration());
+				solAssert(!!function, "Function not found in member access");
+				m_context << m_context.functionEntryLabel(*function).pushTag();
+			}
 		}
 		else if (auto enumType = dynamic_cast<EnumType const*>(type.actualType().get()))
 			m_context << enumType->memberValue(_memberAccess.memberName());
@@ -924,9 +929,11 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 			utils().convertType(*variable->value()->type(), *variable->type());
 		}
 	}
-	else if (dynamic_cast<ContractDefinition const*>(declaration))
+	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 	{
-		// no-op
+		if (contract->isLibrary())
+			//@todo name should be unique, change once we have module management
+			m_context.appendLibraryAddress(contract->name());
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))
 	{

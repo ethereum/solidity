@@ -47,8 +47,8 @@ public:
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(VariableDeclaration const& _declaration);
 
-	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
-	bytes const& compiledContract(ContractDefinition const& _contract) const;
+	void setCompiledContracts(std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts) { m_compiledContracts = _contracts; }
+	eth::Assembly const& compiledContract(ContractDefinition const& _contract) const;
 
 	void setStackOffset(int _offset) { m_asm.setDeposit(_offset); }
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
@@ -112,6 +112,8 @@ public:
 	void appendProgramSize() { return m_asm.appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
 	eth::AssemblyItem appendData(bytes const& _data) { return m_asm.append(_data); }
+	/// Appends the address (virtual, will be filled in by linker) of a library.
+	void appendLibraryAddress(std::string const& _identifier) { m_asm.appendLibraryAddress(_identifier); }
 	/// Resets the stack of visited nodes with a new stack having only @c _node
 	void resetVisitedNodes(ASTNode const* _node);
 	/// Pops the stack of visited nodes
@@ -135,8 +137,8 @@ public:
 		return m_asm.stream(_stream, "", _sourceCodes, _inJsonFormat);
 	}
 
-	bytes assembledBytecode() { return m_asm.assemble(); }
-	bytes assembledRuntimeBytecode(size_t _subIndex) { m_asm.assemble(); return m_asm.data(u256(_subIndex)); }
+	eth::LinkerObject const& assembledObject() { return m_asm.assemble(); }
+	eth::LinkerObject const& assembledRuntimeObject(size_t _subIndex) { return m_asm.sub(_subIndex).assemble(); }
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes
@@ -164,7 +166,7 @@ private:
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
 	/// Other already compiled contracts to be used in contract creation calls.
-	std::map<ContractDefinition const*, bytes const*> m_compiledContracts;
+	std::map<ContractDefinition const*, eth::Assembly const*> m_compiledContracts;
 	/// Storage offsets of state variables
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).

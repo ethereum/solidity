@@ -71,13 +71,14 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	vector<ASTPointer<ASTNode>> nodes;
 	while (m_scanner->currentToken() != Token::EOS)
 	{
-		switch (m_scanner->currentToken())
+		switch (auto token = m_scanner->currentToken())
 		{
 		case Token::Import:
 			nodes.push_back(parseImportDirective());
 			break;
 		case Token::Contract:
-			nodes.push_back(parseContractDefinition());
+		case Token::Library:
+			nodes.push_back(parseContractDefinition(token == Token::Library));
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(createParserError(std::string("Expected import directive or contract definition.")));
@@ -113,13 +114,13 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	return nodeFactory.createNode<ImportDirective>(url);
 }
 
-ASTPointer<ContractDefinition> Parser::parseContractDefinition()
+ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ASTString> docString;
 	if (m_scanner->currentCommentLiteral() != "")
 		docString = make_shared<ASTString>(m_scanner->currentCommentLiteral());
-	expectToken(Token::Contract);
+	expectToken(_isLibrary ? Token::Library : Token::Contract);
 	ASTPointer<ASTString> name = expectIdentifierToken();
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
 	vector<ASTPointer<StructDefinition>> structs;
@@ -177,7 +178,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 		stateVariables,
 		functions,
 		modifiers,
-		events
+		events,
+		_isLibrary
 	);
 }
 

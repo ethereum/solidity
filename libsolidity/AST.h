@@ -215,7 +215,7 @@ protected:
 /// @}
 
 /**
- * Definition of a contract. This is the only AST nodes where child nodes are not visited in
+ * Definition of a contract or library. This is the only AST nodes where child nodes are not visited in
  * document order. It first visits all struct declarations, then all variable declarations and
  * finally all function declarations.
  */
@@ -232,7 +232,8 @@ public:
 		std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
 		std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
 		std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
-		std::vector<ASTPointer<EventDefinition>> const& _events
+		std::vector<ASTPointer<EventDefinition>> const& _events,
+		bool _isLibrary
 	):
 		Declaration(_location, _name),
 		Documented(_documentation),
@@ -243,7 +244,8 @@ public:
 		m_stateVariables(_stateVariables),
 		m_definedFunctions(_definedFunctions),
 		m_functionModifiers(_functionModifiers),
-		m_events(_events)
+		m_events(_events),
+		m_isLibrary(_isLibrary)
 	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
@@ -257,6 +259,7 @@ public:
 	std::vector<ASTPointer<FunctionDefinition>> const& definedFunctions() const { return m_definedFunctions; }
 	std::vector<ASTPointer<EventDefinition>> const& events() const { return m_events; }
 	std::vector<ASTPointer<EventDefinition>> const& interfaceEvents() const;
+	bool isLibrary() const { return m_isLibrary; }
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
 
@@ -297,6 +300,8 @@ private:
 	/// Checks that different functions with external visibility end up having different
 	/// external argument types (i.e. different signature).
 	void checkExternalTypeClashes() const;
+	/// Checks that all requirements for a library are fulfilled if this is a library.
+	void checkLibraryRequirements() const;
 
 	std::vector<std::pair<FixedHash<4>, FunctionTypePointer>> const& interfaceFunctionList() const;
 
@@ -307,6 +312,7 @@ private:
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
 	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
 	std::vector<ASTPointer<EventDefinition>> m_events;
+	bool m_isLibrary;
 
 	// parsed Natspec documentation of the contract.
 	std::string m_userDocumentation;

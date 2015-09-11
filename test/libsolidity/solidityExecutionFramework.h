@@ -53,14 +53,17 @@ public:
 		std::string const& _sourceCode,
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
-		bytes const& _arguments = bytes()
+		bytes const& _arguments = bytes(),
+		std::map<std::string, Address> const& _libraryAddresses = std::map<std::string, Address>()
 	)
 	{
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
 		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
-		bytes code = m_compiler.bytecode(_contractName);
-		sendMessage(code + _arguments, true, _value);
+		eth::LinkerObject obj = m_compiler.object(_contractName);
+		obj.link(_libraryAddresses);
+		BOOST_REQUIRE(obj.linkReferences.empty());
+		sendMessage(obj.bytecode + _arguments, true, _value);
 		return m_output;
 	}
 
@@ -76,10 +79,11 @@ public:
 		std::string const& _sourceCode,
 		u256 const& _value = 0,
 		std::string const& _contractName = "",
-		bytes const& _arguments = bytes()
+		bytes const& _arguments = bytes(),
+		std::map<std::string, Address> const& _libraryAddresses = std::map<std::string, Address>()
 	)
 	{
-		compileAndRunWithoutCheck(_sourceCode, _value, _contractName, _arguments);
+		compileAndRunWithoutCheck(_sourceCode, _value, _contractName, _arguments, _libraryAddresses);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}

@@ -1,4 +1,4 @@
-ContractDefinition = 'contract' Identifier
+ContractDefinition = ( 'contract' | 'library' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
 ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition | FunctionDefinition | EnumDefinition

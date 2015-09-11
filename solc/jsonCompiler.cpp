@@ -76,7 +76,7 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 	if (eth::AssemblyItems const* items = _compiler.assemblyItems(_contract))
 	{
 		Gas gas = GasEstimator::functionalEstimation(*items);
-		u256 bytecodeSize(_compiler.runtimeBytecode(_contract).size());
+		u256 bytecodeSize(_compiler.runtimeObject(_contract).bytecode.size());
 		Json::Value creationGas(Json::arrayValue);
 		creationGas[0] = gasToJson(gas);
 		creationGas[1] = gasToJson(bytecodeSize * eth::c_createDataGas);
@@ -168,8 +168,8 @@ string compile(string _input, bool _optimize)
 		Json::Value contractData(Json::objectValue);
 		contractData["solidity_interface"] = compiler.solidityInterface(contractName);
 		contractData["interface"] = compiler.interface(contractName);
-		contractData["bytecode"] = toHex(compiler.bytecode(contractName));
-		contractData["opcodes"] = eth::disassemble(compiler.bytecode(contractName));
+		contractData["bytecode"] = compiler.object(contractName).toHex();
+		contractData["opcodes"] = eth::disassemble(compiler.object(contractName).bytecode);
 		contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
 		contractData["gasEstimates"] = estimateGas(compiler, contractName);
 		ostringstream unused;

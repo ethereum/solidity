@@ -106,6 +106,9 @@ void ContractDefinition::checkTypeRequirements()
 			));
 		hashes.insert(hash);
 	}
+
+	if (isLibrary())
+		checkLibraryRequirements();
 }
 
 map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
@@ -335,6 +338,17 @@ void ContractDefinition::checkExternalTypeClashes() const
 					));
 }
 
+void ContractDefinition::checkLibraryRequirements() const
+{
+	solAssert(m_isLibrary, "");
+	if (!m_baseContracts.empty())
+		BOOST_THROW_EXCEPTION(createTypeError("Library is not allowed to inherit."));
+
+	for (auto const& var: m_stateVariables)
+		if (!var->isConstant())
+			BOOST_THROW_EXCEPTION(var->createTypeError("Library cannot have non-constant state variables"));
+}
+
 vector<ASTPointer<EventDefinition>> const& ContractDefinition::interfaceEvents() const
 {
 	if (!m_interfaceEvents)
@@ -452,6 +466,10 @@ void InheritanceSpecifier::checkTypeRequirements()
 
 	ContractDefinition const* base = dynamic_cast<ContractDefinition const*>(&m_baseName->referencedDeclaration());
 	solAssert(base, "Base contract not available.");
+
+	if (base->isLibrary())
+		BOOST_THROW_EXCEPTION(createTypeError("Libraries cannot be inherited from."));
+
 	TypePointers parameterTypes = ContractType(*base).constructorType()->parameterTypes();
 	if (!m_arguments.empty() && parameterTypes.size() != m_arguments.size())
 		BOOST_THROW_EXCEPTION(createTypeError(

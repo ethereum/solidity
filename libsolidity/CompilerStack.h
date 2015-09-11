@@ -32,6 +32,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
 #include <libevmasm/SourceLocation.h>
+#include <libevmasm/LinkerObject.h>
 
 namespace dev
 {
@@ -92,23 +93,25 @@ public:
 	/// Compiles the source units that were previously added and parsed.
 	void compile(bool _optimize = false, unsigned _runs = 200);
 	/// Parses and compiles the given source code.
-	/// @returns the compiled bytecode
-	bytes const& compile(std::string const& _sourceCode, bool _optimize = false);
+	/// @returns the compiled linker object
+	eth::LinkerObject const& compile(std::string const& _sourceCode, bool _optimize = false);
 
-	/// @returns the assembled bytecode for a contract.
-	bytes const& bytecode(std::string const& _contractName = "") const;
-	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
-	bytes const& runtimeBytecode(std::string const& _contractName = "") const;
+	/// @returns the assembled bytecode for a contract (empty if it has to be linked or lacks implementation).
+	eth::LinkerObject const& object(std::string const& _contractName = "") const;
+	/// @returns the runtime bytecode for the contract (empty if it has to be linked or lacks implementation).
+	eth::LinkerObject const& runtimeObject(std::string const& _contractName = "") const;
 	/// @returns the bytecode of a contract that uses an already deployed contract via CALLCODE.
 	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
 	/// substituted by the actual address. Note that this sequence starts end ends in three X
 	/// characters but can contain anything in between.
-	bytes const& cloneBytecode(std::string const& _contractName = "") const;
+	eth::LinkerObject const& cloneObject(std::string const& _contractName = "") const;
 	/// @returns normal contract assembly items
 	eth::AssemblyItems const* assemblyItems(std::string const& _contractName = "") const;
 	/// @returns runtime contract assembly items
 	eth::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName = "") const;
-	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
+	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is
+	/// returned by the constructor or the zero-h256 if the contract still needs to be linked or
+	/// does not have runtime code.
 	dev::h256 contractCodeHash(std::string const& _contractName = "") const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
@@ -146,7 +149,7 @@ public:
 
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.
-	static bytes staticCompile(std::string const& _sourceCode, bool _optimize = false);
+	static eth::LinkerObject staticCompile(std::string const& _sourceCode, bool _optimize = false);
 
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
@@ -170,9 +173,9 @@ private:
 	{
 		ContractDefinition const* contract = nullptr;
 		std::shared_ptr<Compiler> compiler;
-		bytes bytecode;
-		bytes runtimeBytecode;
-		bytes cloneBytecode;
+		eth::LinkerObject object;
+		eth::LinkerObject runtimeObject;
+		eth::LinkerObject cloneObject;
 		std::shared_ptr<InterfaceHandler> interfaceHandler;
 		mutable std::unique_ptr<std::string const> interface;
 		mutable std::unique_ptr<std::string const> solidityInterface;
