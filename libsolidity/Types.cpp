@@ -971,7 +971,7 @@ MemberList const& ContractType::members() const
 			for (auto const& it: m_contract.interfaceFunctions())
 				members.push_back(MemberList::Member(
 					it.second->declaration().name(),
-					it.second->asMemberFunction(false),
+					it.second->asMemberFunction(),
 					&it.second->declaration()
 				));
 		m_members.reset(new MemberList(members));
@@ -1538,7 +1538,7 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 	);
 }
 
-FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary) const
+FunctionTypePointer FunctionType::asMemberFunction() const
 {
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
@@ -1563,7 +1563,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary) const
 		returnParameterTypes,
 		m_parameterNames,
 		returnParameterNames,
-		_inLibrary ? Location::CallCode : m_location,
+		m_location,
 		m_arbitraryParameters,
 		m_declaration,
 		m_gasSet,
@@ -1633,39 +1633,21 @@ u256 TypeType::storageSize() const
 			<< errinfo_comment("Storage size of non-storable type type requested."));
 }
 
-unsigned TypeType::sizeOnStack() const
-{
-	if (auto contractType = dynamic_cast<ContractType const*>(m_actualType.get()))
-		if (contractType->contractDefinition().isLibrary())
-			return 1;
-	return 0;
-}
-
 MemberList const& TypeType::members() const
 {
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
 	{
 		MemberList::MemberMap members;
-		if (m_actualType->category() == Category::Contract)
+		if (m_actualType->category() == Category::Contract && m_currentContract != nullptr)
 		{
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).contractDefinition();
-			if (contract.isLibrary())
-				for (auto const& it: contract.interfaceFunctions())
-					members.push_back(MemberList::Member(
-						it.second->declaration().name(),
-						it.second->asMemberFunction(true), // use callcode
-						&it.second->declaration()
-					));
-			else if (m_currentContract != nullptr)
-			{
-				vector<ContractDefinition const*> currentBases = m_currentContract->linearizedBaseContracts();
-				if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
-					// We are accessing the type of a base contract, so add all public and protected
-					// members. Note that this does not add inherited functions on purpose.
-					for (Declaration const* decl: contract.inheritableMembers())
-						members.push_back(MemberList::Member(decl->name(), decl->type(), decl));
-			}
+			vector<ContractDefinition const*> currentBases = m_currentContract->linearizedBaseContracts();
+			if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
+				// We are accessing the type of a base contract, so add all public and protected
+				// members. Note that this does not add inherited functions on purpose.
+				for (Declaration const* decl: contract.inheritableMembers())
+					members.push_back(MemberList::Member(decl->name(), decl->type(), decl));
 		}
 		else if (m_actualType->category() == Category::Enum)
 		{

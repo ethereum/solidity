@@ -153,7 +153,7 @@ void CompilerStack::compile(bool _optimize, unsigned _runs)
 	if (!m_parseSuccessful)
 		parse();
 
-	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
+	map<ContractDefinition const*, bytes const*> contractBytecode;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -161,24 +161,26 @@ void CompilerStack::compile(bool _optimize, unsigned _runs)
 				if (!contract->isFullyImplemented())
 					continue;
 				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs);
-				compiler->compileContract(*contract, compiledContracts);
+				compiler->compileContract(*contract, contractBytecode);
 				Contract& compiledContract = m_contracts.at(contract->name());
-				compiledContract.compiler = compiler;
-				compiledContract.object = compiler->assembledObject();
-				compiledContract.runtimeObject = compiler->runtimeObject();
-				compiledContracts[compiledContract.contract] = &compiler->assembly();
+				compiledContract.bytecode = compiler->assembledBytecode();
+				compiledContract.runtimeBytecode = compiler->runtimeBytecode();
+				compiledContract.compiler = move(compiler);
+				compiler = make_shared<Compiler>(_optimize, _runs);
+				compiler->compileContract(*contract, contractBytecode);
+				contractBytecode[compiledContract.contract] = &compiledContract.bytecode;
 
 				Compiler cloneCompiler(_optimize, _runs);
-				cloneCompiler.compileClone(*contract, compiledContracts);
-				compiledContract.cloneObject = cloneCompiler.assembledObject();
+				cloneCompiler.compileClone(*contract, contractBytecode);
+				compiledContract.cloneBytecode = cloneCompiler.assembledBytecode();
 			}
 }
 
-eth::LinkerObject const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
+bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 {
 	parse(_sourceCode);
 	compile(_optimize);
-	return object();
+	return bytecode();
 }
 
 eth::AssemblyItems const* CompilerStack::assemblyItems(string const& _contractName) const
@@ -193,28 +195,24 @@ eth::AssemblyItems const* CompilerStack::runtimeAssemblyItems(string const& _con
 	return currentContract.compiler ? &contract(_contractName).compiler->runtimeAssemblyItems() : nullptr;
 }
 
-eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
+bytes const& CompilerStack::bytecode(string const& _contractName) const
 {
-	return contract(_contractName).object;
+	return contract(_contractName).bytecode;
 }
 
-eth::LinkerObject const& CompilerStack::runtimeObject(string const& _contractName) const
+bytes const& CompilerStack::runtimeBytecode(string const& _contractName) const
 {
-	return contract(_contractName).runtimeObject;
+	return contract(_contractName).runtimeBytecode;
 }
 
-eth::LinkerObject const& CompilerStack::cloneObject(string const& _contractName) const
+bytes const& CompilerStack::cloneBytecode(string const& _contractName) const
 {
-	return contract(_contractName).cloneObject;
+	return contract(_contractName).cloneBytecode;
 }
 
 dev::h256 CompilerStack::contractCodeHash(string const& _contractName) const
 {
-	auto const& obj = runtimeObject(_contractName);
-	if (obj.bytecode.empty() || !obj.linkReferences.empty())
-		return dev::h256();
-	else
-		return dev::sha3(obj.bytecode);
+	return dev::sha3(runtimeBytecode(_contractName));
 }
 
 Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
@@ -307,7 +305,7 @@ size_t CompilerStack::functionEntryPoint(
 	return 0;
 }
 
-eth::LinkerObject CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
+bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
 {
 	CompilerStack stack;
 	return stack.compile(_sourceCode, _optimize);

@@ -160,7 +160,6 @@ namespace solidity
 	K(Internal, "internal", 0)                                         \
 	K(Import, "import", 0)                                             \
 	K(Is, "is", 0)                                                     \
-	K(Library, "library", 0)                                           \
 	K(Mapping, "mapping", 0)                                           \
 	K(Memory, "memory", 0)                                             \
 	K(Modifier, "modifier", 0)                                         \
@@ -306,7 +305,7 @@ namespace solidity
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(Identifier, NULL, 0)                                             \
 	\
-	/* Keywords reserved for future use. */                            \
+	/* Keywords reserved for future. use. */                           \
 	K(As, "as", 0)                                                     \
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
