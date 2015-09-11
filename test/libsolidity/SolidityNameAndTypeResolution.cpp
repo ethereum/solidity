@@ -2200,7 +2200,7 @@ BOOST_AUTO_TEST_CASE(creating_contract_within_the_contract)
 	char const* sourceCode = R"(
 		contract Test {
 			function f() { var x = new Test(); }
-	}
+		}
 	)";
 
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);

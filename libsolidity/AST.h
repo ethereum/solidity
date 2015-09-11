@@ -1273,7 +1273,7 @@ public:
 	/// argument types in a call context.
 	void overloadResolution(TypePointers const& _argumentTypes);
 
-	ContractDefinition const* contractScope() { return m_contractScope; }
+	ContractDefinition const* contractScope() const { return m_contractScope; }
 
 private:
 	ASTPointer<ASTString> m_name;
