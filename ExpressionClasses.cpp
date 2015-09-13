@@ -183,6 +183,16 @@ private:
 	vector<pair<Pattern, function<Pattern()>>> m_rules;
 };
 
+template <class S> S divWorkaround(S const& _a, S const& _b)
+{
+	return (S)(bigint(_a) / bigint(_b));
+}
+
+template <class S> S modWorkaround(S const& _a, S const& _b)
+{
+	return (S)(bigint(_a) % bigint(_b));
+}
+
 Rules::Rules()
 {
 	// Multiple occurences of one of these inside one rule must match the same equivalence class.
@@ -206,10 +216,10 @@ Rules::Rules()
 		{{Instruction::ADD, {A, B}}, [=]{ return A.d() + B.d(); }},
 		{{Instruction::MUL, {A, B}}, [=]{ return A.d() * B.d(); }},
 		{{Instruction::SUB, {A, B}}, [=]{ return A.d() - B.d(); }},
-		{{Instruction::DIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : A.d() / B.d(); }},
-		{{Instruction::SDIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(u2s(A.d()) / u2s(B.d())); }},
-		{{Instruction::MOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : A.d() % B.d(); }},
-		{{Instruction::SMOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(u2s(A.d()) % u2s(B.d())); }},
+		{{Instruction::DIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : divWorkaround(A.d(), B.d()); }},
+		{{Instruction::SDIV, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(divWorkaround(u2s(A.d()), u2s(B.d()))); }},
+		{{Instruction::MOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : modWorkaround(A.d(), B.d()); }},
+		{{Instruction::SMOD, {A, B}}, [=]{ return B.d() == 0 ? 0 : s2u(modWorkaround(u2s(A.d()), u2s(B.d()))); }},
 		{{Instruction::EXP, {A, B}}, [=]{ return u256(boost::multiprecision::powm(bigint(A.d()), bigint(B.d()), bigint(1) << 256)); }},
 		{{Instruction::NOT, {A}}, [=]{ return ~A.d(); }},
 		{{Instruction::LT, {A, B}}, [=]() { return A.d() < B.d() ? u256(1) : 0; }},
