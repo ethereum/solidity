@@ -29,6 +29,8 @@ print_config()
 
 add_subdirectory(libsolidity)
 add_subdirectory(solc)
-add_subdirectory(test)
+if (NOT EMSCRIPTEN)
+	add_subdirectory(test)
+endif()
 
 # TODO installation and packaging rules
