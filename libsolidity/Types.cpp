@@ -925,7 +925,10 @@ bool ContractType::operator==(Type const& _other) const
 
 string ContractType::toString(bool) const
 {
-	return "contract " + string(m_super ? "super " : "") + m_contract.name();
+	return
+		string(m_contract.isLibrary() ? "library " : "contract ") +
+		string(m_super ? "super " : "") +
+		m_contract.name();
 }
 
 MemberList const& ContractType::members() const
@@ -971,7 +974,7 @@ MemberList const& ContractType::members() const
 			for (auto const& it: m_contract.interfaceFunctions())
 				members.push_back(MemberList::Member(
 					it.second->declaration().name(),
-					it.second->asMemberFunction(false),
+					it.second->asMemberFunction(m_contract.isLibrary()),
 					&it.second->declaration()
 				));
 		m_members.reset(new MemberList(members));

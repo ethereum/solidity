@@ -46,6 +46,11 @@ public:
 	void actOnInput();
 
 private:
+	bool link();
+	void writeLinkedFiles();
+
+	void outputCompilationResults();
+
 	void handleCombinedJSON();
 	void handleAst(std::string const& _argStr);
 	void handleBinary(std::string const& _contract);
@@ -56,16 +61,23 @@ private:
 					std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
 
+	/// Tries to read from the file @a _input or interprets _input literally if that fails.
+	/// It then tries to parse the contents and appends to m_libraries.
+	bool parseLibraryOption(std::string const& _input);
 
 	/// Create a file in the given directory
 	/// @arg _fileName the name of the file
 	/// @arg _data to be written
 	void createFile(std::string const& _fileName, std::string const& _data);
 
+	bool m_onlyLink = false;
+
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;
 	/// map of input files to source code strings
 	std::map<std::string, std::string> m_sourceCodes;
+	/// map of library names to addresses
+	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
 };

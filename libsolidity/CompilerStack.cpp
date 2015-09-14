@@ -181,6 +181,16 @@ eth::LinkerObject const& CompilerStack::compile(string const& _sourceCode, bool 
 	return object();
 }
 
+void CompilerStack::link(const std::map<string, h160>& _libraries)
+{
+	for (auto& contract: m_contracts)
+	{
+		contract.second.object.link(_libraries);
+		contract.second.runtimeObject.link(_libraries);
+		contract.second.cloneObject.link(_libraries);
+	}
+}
+
 eth::AssemblyItems const* CompilerStack::assemblyItems(string const& _contractName) const
 {
 	Contract const& currentContract = contract(_contractName);

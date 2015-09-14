@@ -96,9 +96,12 @@ public:
 	/// @returns the compiled linker object
 	eth::LinkerObject const& compile(std::string const& _sourceCode, bool _optimize = false);
 
-	/// @returns the assembled bytecode for a contract (empty if it has to be linked or lacks implementation).
+	/// Inserts the given addresses into the linker objects of all compiled contracts.
+	void link(std::map<std::string, h160> const& _libraries);
+
+	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
-	/// @returns the runtime bytecode for the contract (empty if it has to be linked or lacks implementation).
+	/// @returns the runtime object for the contract.
 	eth::LinkerObject const& runtimeObject(std::string const& _contractName = "") const;
 	/// @returns the bytecode of a contract that uses an already deployed contract via CALLCODE.
 	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
