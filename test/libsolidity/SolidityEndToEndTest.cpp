@@ -5233,7 +5233,6 @@ BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key_without_variable)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
 }
 
-<<<<<<< HEAD
 BOOST_AUTO_TEST_CASE(library_call)
 {
 	char const* sourceCode = R"(
@@ -5266,22 +5265,6 @@ BOOST_AUTO_TEST_CASE(library_stray_values)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(33)) == encodeArgs(u256(42)));
 }
 
-BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
-{
-	char const* sourceCode = R"(
-	contract c {
-		uint[2] dataArray;
-		function set5th() returns (bool) {
-			dataArray[5] = 2;
-			return true;
-		}
-	}
-	)";
-	compileRequireThrow<TypeError>(sourceCode);
-}
-
-=======
->>>>>>> 6920415... moved the test
 BOOST_AUTO_TEST_SUITE_END()
 
 }
