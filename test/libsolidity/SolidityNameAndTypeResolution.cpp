@@ -2256,13 +2256,13 @@ BOOST_AUTO_TEST_CASE(creating_contract_within_the_contract)
 BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
 {
 	char const* text = R"(
-	contract c {
-		uint[2] dataArray;
-		function set5th() returns (bool) {
-			dataArray[5] = 2;
-			return true;
+		contract c {
+			uint[2] dataArray;
+			function set5th() returns (bool) {
+				dataArray[5] = 2;
+				return true;
+			}
 		}
-	}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }

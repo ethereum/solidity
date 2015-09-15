@@ -4195,7 +4195,7 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 				++test;
 			}
 		}
-		)";
+	)";
 	BOOST_CHECK(compileAndRunWithoutCheck(sourceCode, 0, "A").empty());
 }
 
