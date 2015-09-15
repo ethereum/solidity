@@ -5233,6 +5233,7 @@ BOOST_AUTO_TEST_CASE(storage_string_as_mapping_key_without_variable)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
 }
 
+<<<<<<< HEAD
 BOOST_AUTO_TEST_CASE(library_call)
 {
 	char const* sourceCode = R"(
@@ -5279,6 +5280,8 @@ BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
 	compileRequireThrow<TypeError>(sourceCode);
 }
 
+=======
+>>>>>>> 6920415... moved the test
 BOOST_AUTO_TEST_SUITE_END()
 
 }
