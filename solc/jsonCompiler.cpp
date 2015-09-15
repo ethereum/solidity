@@ -36,6 +36,7 @@
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/SourceReferenceFormatter.h>
 #include <libsolidity/ASTJsonConverter.h>
+#include <libsolidity/Version.h>
 
 using namespace std;
 using namespace dev;
@@ -169,6 +170,7 @@ string compile(string _input, bool _optimize)
 		contractData["solidity_interface"] = compiler.solidityInterface(contractName);
 		contractData["interface"] = compiler.interface(contractName);
 		contractData["bytecode"] = compiler.object(contractName).toHex();
+		contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
 		contractData["opcodes"] = eth::disassemble(compiler.object(contractName).bytecode);
 		contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
 		contractData["gasEstimates"] = estimateGas(compiler, contractName);
@@ -188,6 +190,10 @@ static string outputBuffer;
 
 extern "C"
 {
+extern char const* version()
+{
+	return VersionString.c_str();
+}
 extern char const* compileJSON(char const* _input, bool _optimize)
 {
 	outputBuffer = compile(_input, _optimize);
