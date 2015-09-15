@@ -622,6 +622,16 @@ ASTPointer<Statement> Parser::parseStatement()
 		statement = nodeFactory.createNode<Return>(expression);
 		break;
 	}
+	case Token::Throw:
+	{
+		ASTNodeFactory nodeFactory(*this);
+		ASTPointer<Expression> expression;
+		if (m_scanner->next() != Token::Semicolon)
+			BOOST_THROW_EXCEPTION(createParserError("Throw statement cannot have parameters."));
+
+		statement = nodeFactory.createNode<Throw>(/*expression*/);
+		break;
+	}
 	case Token::Identifier:
 		if (m_insideModifier && m_scanner->currentLiteral() == "_")
 		{

@@ -171,6 +171,7 @@ namespace solidity
 	K(Returns, "returns", 0)                                           \
 	K(Storage, "storage", 0)                                           \
 	K(Struct, "struct", 0)                                             \
+	K(Throw, "throw", 0)                                               \
 	K(Var, "var", 0)                                                   \
 	K(While, "while", 0)                                               \
 	\
@@ -316,7 +317,6 @@ namespace solidity
 	K(Of, "of", 0)                                                     \
 	K(Relocatable, "relocatable", 0)                                   \
 	K(Switch, "switch", 0)                                             \
-	K(Throw, "throw", 0)                                               \
 	K(Try, "try", 0)                                                   \
 	K(Type, "type", 0)                                                 \
 	K(TypeOf, "typeof", 0)                                             \

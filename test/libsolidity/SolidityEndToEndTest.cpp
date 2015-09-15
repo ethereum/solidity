@@ -5265,6 +5265,24 @@ BOOST_AUTO_TEST_CASE(library_stray_values)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(33)) == encodeArgs(u256(42)));
 }
 
+BOOST_AUTO_TEST_CASE(simple_throw)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function f(uint x) returns (uint) {
+				if (x > 10)
+					return x + 10;
+				else
+					throw;
+				return 2;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(11)) == encodeArgs(u256(21)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1)) == encodeArgs());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

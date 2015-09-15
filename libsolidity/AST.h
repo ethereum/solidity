@@ -969,6 +969,18 @@ private:
 };
 
 /**
+ * @brief The Throw statement to throw that triggers a solidity exception(jump to ErrorTag)
+ */
+class Throw: public Statement
+{
+public:
+	Throw(SourceLocation const& _location): Statement(_location) {}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+	virtual void checkTypeRequirements() override{};
+};
+
+/**
  * Definition of a variable as a statement inside a function. It requires a type name (which can
  * also be "var") but the actual assignment can be missing.
  * Examples: var a = 2; uint256 a;
