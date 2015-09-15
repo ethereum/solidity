@@ -1248,6 +1248,7 @@ BOOST_AUTO_TEST_CASE(convert_fixed_bytes_to_fixed_bytes_same_size)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("bytesToBytes(bytes4)", "abcd") == encodeArgs("abcd"));
 }
+
 // fixed bytes to uint conversion tests
 BOOST_AUTO_TEST_CASE(convert_fixed_bytes_to_uint_same_size)
 {
@@ -1300,6 +1301,7 @@ BOOST_AUTO_TEST_CASE(convert_fixed_bytes_to_uint_greater_size)
 	BOOST_CHECK(callContractFunction("bytesToUint(bytes4)", string("abcd")) ==
 		encodeArgs(u256("0x61626364")));
 }
+
 // uint fixed bytes conversion tests
 BOOST_AUTO_TEST_CASE(convert_uint_to_fixed_bytes_same_size)
 {
@@ -4188,7 +4190,8 @@ BOOST_AUTO_TEST_CASE(evm_exceptions_in_constructor_out_of_baund)
 			uint[3] arr;
 			function A()
 			{
-				test = arr[5];
+				uint index = 5;
+				test = arr[index];
 				++test;
 			}
 		}

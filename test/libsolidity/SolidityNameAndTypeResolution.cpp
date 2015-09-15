@@ -2250,8 +2250,21 @@ BOOST_AUTO_TEST_CASE(creating_contract_within_the_contract)
 			function f() { var x = new Test(); }
 		}
 	)";
-
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
+{
+	char const* text = R"(
+		contract c {
+			uint[2] dataArray;
+			function set5th() returns (bool) {
+				dataArray[5] = 2;
+				return true;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

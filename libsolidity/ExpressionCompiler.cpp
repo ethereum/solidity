@@ -821,6 +821,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	_indexAccess.baseExpression().accept(*this);
 
 	Type const& baseType = *_indexAccess.baseExpression().type();
+
 	if (baseType.category() == Type::Category::Mapping)
 	{
 		// stack: storage_base_ref
