@@ -624,12 +624,8 @@ ASTPointer<Statement> Parser::parseStatement()
 	}
 	case Token::Throw:
 	{
-		ASTNodeFactory nodeFactory(*this);
-		ASTPointer<Expression> expression;
-		if (m_scanner->next() != Token::Semicolon)
-			BOOST_THROW_EXCEPTION(createParserError("Expected semicolon."));
-
-		statement = nodeFactory.createNode<Throw>();
+		statement = ASTNodeFactory(*this).createNode<Throw>();
+		m_scanner->next();
 		break;
 	}
 	case Token::Identifier:
