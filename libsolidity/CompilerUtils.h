@@ -170,7 +170,7 @@ unsigned CompilerUtils::sizeOnStack(std::vector<T> const& _variables)
 {
 	unsigned size = 0;
 	for (T const& variable: _variables)
-		size += variable->type()->sizeOnStack();
+		size += variable->annotation().type->sizeOnStack();
 	return size;
 }
 

@@ -1999,7 +1999,7 @@ BOOST_AUTO_TEST_CASE(single_copy_with_multiple_inheritance)
 	BOOST_CHECK(callContractFunction("getViaB()") == encodeArgs(23));
 }
 
-BOOST_AUTO_TEST_CASE(explicit_base_cass)
+BOOST_AUTO_TEST_CASE(explicit_base_class)
 {
 	char const* sourceCode = R"(
 		contract BaseBase { function g() returns (uint r) { return 1; } }

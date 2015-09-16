@@ -27,6 +27,7 @@
 #include <libsolidity/Parser.h>
 #include <libsolidity/GlobalContext.h>
 #include <libsolidity/NameAndTypeResolver.h>
+#include <libsolidity/TypeChecker.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/InterfaceHandler.h>
@@ -123,7 +124,12 @@ void CompilerStack::parse()
 			{
 				m_globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*m_globalContext->currentThis());
-				resolver.checkTypeRequirements(*contract);
+				TypeChecker typeChecker;
+				bool typesFine = typeChecker.checkTypeRequirements(*contract);
+				if (!typesFine)
+					BOOST_THROW_EXCEPTION(*typeChecker.errors().front());
+				//@todo extract warnings and errors
+				// store whether we had an error
 				contract->setDevDocumentation(interfaceHandler.devDocumentation(*contract));
 				contract->setUserDocumentation(interfaceHandler.userDocumentation(*contract));
 				m_contracts[contract->name()].contract = contract;
@@ -153,12 +159,14 @@ void CompilerStack::compile(bool _optimize, unsigned _runs)
 	if (!m_parseSuccessful)
 		parse();
 
+	//@todo do not compile or error (also in other places)
+
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			{
-				if (!contract->isFullyImplemented())
+				if (!contract->annotation().isFullyImplemented)
 					continue;
 				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs);
 				compiler->compileContract(*contract, compiledContracts);

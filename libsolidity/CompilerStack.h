@@ -79,7 +79,9 @@ public:
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
-	void addSources(StringMap const& _nameContents, bool _isLibrary = false) { for (auto const& i: _nameContents) addSource(i.first, i.second, _isLibrary); }
+	void addSources(StringMap const& _nameContents, bool _isLibrary = false) {
+		for (auto const& i: _nameContents) addSource(i.first, i.second, _isLibrary);
+	}
 	bool addSource(std::string const& _name, std::string const& _content, bool _isLibrary = false);
 	void setSource(std::string const& _sourceCode);
 	/// Parses all source units that were added

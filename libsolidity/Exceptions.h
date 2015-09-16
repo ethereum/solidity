@@ -38,6 +38,7 @@ struct DeclarationError: virtual Exception {};
 struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
 struct DocstringParsingError: virtual Exception {};
+struct FatalError: virtual Exception {};
 
 using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
 

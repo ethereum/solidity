@@ -31,6 +31,7 @@
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Compiler.h>
 #include <libsolidity/AST.h>
+#include <libsolidity/TypeChecker.h>
 
 using namespace std;
 using namespace dev::eth;
@@ -60,7 +61,8 @@ eth::AssemblyItems compileContract(const string& _sourceCode)
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			BOOST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract));
+			TypeChecker checker;
+			BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*contract));
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))

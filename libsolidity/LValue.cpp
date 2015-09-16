@@ -32,7 +32,7 @@ using namespace solidity;
 
 
 StackVariable::StackVariable(CompilerContext& _compilerContext, Declaration const& _declaration):
-	LValue(_compilerContext, *_declaration.type()),
+	LValue(_compilerContext, *_declaration.annotation().type),
 	m_baseStackOffset(m_context.baseStackOffsetOfVariable(_declaration)),
 	m_size(m_dataType.sizeOnStack())
 {
@@ -132,7 +132,7 @@ void MemoryItem::setToZero(SourceLocation const&, bool _removeReference) const
 }
 
 StorageItem::StorageItem(CompilerContext& _compilerContext, Declaration const& _declaration):
-	StorageItem(_compilerContext, *_declaration.type())
+	StorageItem(_compilerContext, *_declaration.annotation().type)
 {
 	auto const& location = m_context.storageLocationOfVariable(_declaration);
 	m_context << location.first << u256(location.second);

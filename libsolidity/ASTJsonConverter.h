@@ -27,6 +27,7 @@
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/Exceptions.h>
 #include <libsolidity/Utils.h>
+#include <libsolidity/ASTAnnotations.h>
 #include <json/json.h>
 
 namespace dev
@@ -41,7 +42,7 @@ class ASTJsonConverter: public ASTConstVisitor
 {
 public:
 	/// Create a converter to JSON for the given abstract syntax tree.
-	ASTJsonConverter(ASTNode const& _ast);
+	explicit ASTJsonConverter(ASTNode const& _ast);
 	/// Output the json representation of the AST to _stream.
 	void print(std::ostream& _stream);
 	Json::Value const& json();
