@@ -34,6 +34,7 @@ ForStatement = 'for' '(' (VardefOrExprStmt)? ';' (Expression)? ';' (ExpressionSt
 Continue = 'continue' ';'
 Break = 'break' ';'
 Return = 'return' Expression? ';'
+Throw = 'throw' Expression? ';'
 VariableDefinition = VariableDeclaration ( = Expression )? ';'
 
 Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |

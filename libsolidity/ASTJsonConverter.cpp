@@ -193,6 +193,12 @@ bool ASTJsonConverter::visit(Return const&)
 	return true;
 }
 
+bool ASTJsonConverter::visit(Throw const&)
+{
+	addJsonNode("Throw", {}, true);;
+	return true;
+}
+
 bool ASTJsonConverter::visit(VariableDeclarationStatement const&)
 {
 	addJsonNode("VariableDefinition", {}, true);
@@ -360,6 +366,11 @@ void ASTJsonConverter::endVisit(Break const&)
 }
 
 void ASTJsonConverter::endVisit(Return const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(Throw const&)
 {
 	goUp();
 }

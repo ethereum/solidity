@@ -622,6 +622,12 @@ ASTPointer<Statement> Parser::parseStatement()
 		statement = nodeFactory.createNode<Return>(expression);
 		break;
 	}
+	case Token::Throw:
+	{
+		statement = ASTNodeFactory(*this).createNode<Throw>();
+		m_scanner->next();
+		break;
+	}
 	case Token::Identifier:
 		if (m_insideModifier && m_scanner->currentLiteral() == "_")
 		{

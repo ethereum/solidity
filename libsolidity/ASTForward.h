@@ -64,6 +64,7 @@ class ForStatement;
 class Continue;
 class Break;
 class Return;
+class Throw;
 class VariableDeclarationStatement;
 class ExpressionStatement;
 class Expression;

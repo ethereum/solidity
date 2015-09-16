@@ -221,6 +221,13 @@ bool ASTPrinter::visit(Return const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(Throw const& _node)
+{
+	writeLine("Throw");
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(VariableDeclarationStatement const& _node)
 {
 	writeLine("VariableDeclarationStatement");
@@ -440,6 +447,11 @@ void ASTPrinter::endVisit(Break const&)
 }
 
 void ASTPrinter::endVisit(Return const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(Throw const&)
 {
 	m_indentation--;
 }
