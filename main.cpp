@@ -26,7 +26,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libevmcore/Instruction.h>
-#include "BuildInfo.h"
+#include "ethereum/BuildInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
