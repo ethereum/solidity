@@ -627,9 +627,9 @@ ASTPointer<Statement> Parser::parseStatement()
 		ASTNodeFactory nodeFactory(*this);
 		ASTPointer<Expression> expression;
 		if (m_scanner->next() != Token::Semicolon)
-			BOOST_THROW_EXCEPTION(createParserError("Throw statement cannot have parameters."));
+			BOOST_THROW_EXCEPTION(createParserError("Expected semicolon."));
 
-		statement = nodeFactory.createNode<Throw>(/*expression*/);
+		statement = nodeFactory.createNode<Throw>();
 		break;
 	}
 	case Token::Identifier:

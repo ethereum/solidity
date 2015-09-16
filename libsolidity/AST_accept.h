@@ -493,13 +493,13 @@ void Return::accept(ASTConstVisitor& _visitor) const
 
 void Throw::accept(ASTVisitor& _visitor)
 {
-	if (_visitor.visit(*this))
+	_visitor.visit(*this);
 	_visitor.endVisit(*this);
 }
 
 void Throw::accept(ASTConstVisitor& _visitor) const
 {
-	if (_visitor.visit(*this))
+	_visitor.visit(*this);
 	_visitor.endVisit(*this);
 }
 

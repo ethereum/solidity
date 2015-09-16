@@ -977,7 +977,7 @@ public:
 	Throw(SourceLocation const& _location): Statement(_location) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
-	virtual void checkTypeRequirements() override{};
+	virtual void checkTypeRequirements() override {};
 };
 
 /**
