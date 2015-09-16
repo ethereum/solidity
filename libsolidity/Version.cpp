@@ -22,7 +22,7 @@
 
 #include <libsolidity/Version.h>
 #include <string>
-#include <BuildInfo.h>
+#include <solidity/BuildInfo.h>
 #include <libdevcore/Common.h>
 
 using namespace dev;
