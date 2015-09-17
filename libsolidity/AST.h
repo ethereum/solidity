@@ -347,10 +347,13 @@ private:
 class StructDefinition: public Declaration
 {
 public:
-	StructDefinition(SourceLocation const& _location,
-					 ASTPointer<ASTString> const& _name,
-					 std::vector<ASTPointer<VariableDeclaration>> const& _members):
+	StructDefinition(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		std::vector<ASTPointer<VariableDeclaration>> const& _members
+	):
 		Declaration(_location, _name), m_members(_members) {}
+
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 

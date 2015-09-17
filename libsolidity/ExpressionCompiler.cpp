@@ -390,7 +390,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.expression().type());
 		auto const& structType = dynamic_cast<StructType const&>(*type.actualType());
 
-		m_context << u256(max(32u, structType.calldataEncodedSize(true)));
+		m_context << max(u256(32u), structType.memorySize());
 		utils().allocateMemory();
 		m_context << eth::Instruction::DUP1;
 

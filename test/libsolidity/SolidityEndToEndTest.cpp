@@ -5297,7 +5297,10 @@ BOOST_AUTO_TEST_CASE(strings_in_struct)
 			}
 
 			function buggystruct(){
-				bug = Buggy(10, 20, 30, "a");
+				bug.first = 10;
+				bug.second = 20;
+				bug.third = 30;
+				bug.last = "asdfghjkl";
 			}
 			function getFirst() returns (uint)
 			{
@@ -5318,14 +5321,11 @@ BOOST_AUTO_TEST_CASE(strings_in_struct)
 		}
 		)";
 	compileAndRun(sourceCode);
-	auto first = callContractFunction("getFirst()");
+	string s = "asdfghjkl";
 	BOOST_CHECK(callContractFunction("getFirst()") == encodeArgs(u256(10)));
-		auto second = callContractFunction("getSecond()");
 	BOOST_CHECK(callContractFunction("getSecond()") == encodeArgs(u256(20)));
-		auto third = callContractFunction("getThird()");
 	BOOST_CHECK(callContractFunction("getThird()") == encodeArgs(u256(30)));
-		auto last = callContractFunction("getLast()");
-	BOOST_CHECK(callContractFunction("getLast()") == encodeArgs(string("a")));
+	BOOST_CHECK(callContractFunction("getLast()") == encodeDyn(s));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
