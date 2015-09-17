@@ -24,8 +24,7 @@ include(EthExecutableHelper)
 include(EthUtils)
 
 include(EthOptions)
-configure_project()
-print_config()
+configure_project(TESTS)
 
 add_subdirectory(libsolidity)
 add_subdirectory(solc)
