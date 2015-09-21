@@ -173,9 +173,9 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 	TypePointer type;
 	if (auto elemTypeName = dynamic_cast<ElementaryTypeName const*>(&_typeName))
 		type = Type::fromElementaryTypeName(elemTypeName->typeName());
-	else if (dynamic_cast<UserDefinedTypeName const*>(&_typeName))
+	else if (auto typeName = dynamic_cast<UserDefinedTypeName const*>(&_typeName))
 	{
-		Declaration const* declaration = _typeName.annotation().referencedDeclaration;
+		Declaration const* declaration = typeName->annotation().referencedDeclaration;
 		solAssert(!!declaration, "");
 
 		if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
@@ -185,7 +185,7 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 		else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 			type = make_shared<ContractType>(*contract);
 		else
-			BOOST_THROW_EXCEPTION(_typeName.createTypeError(
+			BOOST_THROW_EXCEPTION(typeName->createTypeError(
 				"Name has to refer to a struct, enum or contract."
 			));
 	}

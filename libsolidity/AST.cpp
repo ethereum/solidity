@@ -41,6 +41,14 @@ ASTNode::ASTNode(SourceLocation const& _location):
 
 ASTNode::~ASTNode()
 {
+	delete m_annotation;
+}
+
+ASTAnnotation& ASTNode::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new ASTAnnotation();
+	return *m_annotation;
 }
 
 TypeError ASTNode::createTypeError(string const& _description) const
@@ -188,6 +196,20 @@ TypePointer ContractDefinition::type(ContractDefinition const* m_currentContract
 	return make_shared<TypeType>(make_shared<ContractType>(*this), m_currentContract);
 }
 
+ContractDefinitionAnnotation& ContractDefinition::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new ContractDefinitionAnnotation();
+	return static_cast<ContractDefinitionAnnotation&>(*m_annotation);
+}
+
+TypeNameAnnotation& TypeName::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new TypeNameAnnotation();
+	return static_cast<TypeNameAnnotation&>(*m_annotation);
+}
+
 TypePointer StructDefinition::type(ContractDefinition const*) const
 {
 	return make_shared<TypeType>(make_shared<StructType>(*this));
@@ -223,6 +245,13 @@ TypePointer ModifierDefinition::type(ContractDefinition const*) const
 TypePointer EventDefinition::type(ContractDefinition const*) const
 {
 	return make_shared<FunctionType>(*this);
+}
+
+UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new UserDefinedTypeNameAnnotation();
+	return static_cast<UserDefinedTypeNameAnnotation&>(*m_annotation);
 }
 
 bool VariableDeclaration::isLValue() const
@@ -266,4 +295,53 @@ bool VariableDeclaration::canHaveAutoType() const
 TypePointer VariableDeclaration::type(ContractDefinition const*) const
 {
 	return annotation().type;
+}
+
+VariableDeclarationAnnotation& VariableDeclaration::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new VariableDeclarationAnnotation();
+	return static_cast<VariableDeclarationAnnotation&>(*m_annotation);
+}
+
+ReturnAnnotation& Return::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new ReturnAnnotation();
+	return static_cast<ReturnAnnotation&>(*m_annotation);
+}
+
+ExpressionAnnotation& Expression::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new ExpressionAnnotation();
+	return static_cast<ExpressionAnnotation&>(*m_annotation);
+}
+
+MemberAccessAnnotation& MemberAccess::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new MemberAccessAnnotation();
+	return static_cast<MemberAccessAnnotation&>(*m_annotation);
+}
+
+BinaryOperationAnnotation& BinaryOperation::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new BinaryOperationAnnotation();
+	return static_cast<BinaryOperationAnnotation&>(*m_annotation);
+}
+
+FunctionCallAnnotation& FunctionCall::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new FunctionCallAnnotation();
+	return static_cast<FunctionCallAnnotation&>(*m_annotation);
+}
+
+IdentifierAnnotation& Identifier::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new IdentifierAnnotation();
+	return static_cast<IdentifierAnnotation&>(*m_annotation);
 }

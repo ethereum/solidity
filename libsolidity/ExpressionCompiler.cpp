@@ -1274,9 +1274,9 @@ void ExpressionCompiler::appendExpressionCopyToMemory(Type const& _expectedType,
 void ExpressionCompiler::setLValueFromDeclaration(Declaration const& _declaration, Expression const& _expression)
 {
 	if (m_context.isLocalVariable(&_declaration))
-		setLValue<StackVariable>(_expression, _declaration);
+		setLValue<StackVariable>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
 	else if (m_context.isStateVariable(&_declaration))
-		setLValue<StorageItem>(_expression, _declaration);
+		setLValue<StorageItem>(_expression, dynamic_cast<VariableDeclaration const&>(_declaration));
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError()
 			<< errinfo_sourceLocation(_expression.location())

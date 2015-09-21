@@ -402,7 +402,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		visitManually(
 			*modifier,
 			_function.isConstructor() ?
-			_function.scope()->annotation().linearizedBaseContracts :
+			dynamic_cast<ContractDefinition const&>(*_function.scope()).annotation().linearizedBaseContracts :
 			vector<ContractDefinition const*>()
 		);
 	if (_function.isImplemented())
@@ -484,12 +484,8 @@ void TypeChecker::visitManually(
 )
 {
 	std::vector<ASTPointer<Expression>> const& arguments = _modifier.arguments();
-	_modifier.annotation().argumentTypes = make_shared<TypePointers>();
 	for (ASTPointer<Expression> const& argument: arguments)
-	{
 		argument->accept(*this);
-		_modifier.annotation().argumentTypes->push_back(type(*argument));
-	}
 	_modifier.name()->accept(*this);
 
 	auto const* declaration = &dereference(*_modifier.name());
@@ -1049,7 +1045,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 
 bool TypeChecker::visit(Identifier const& _identifier)
 {
-	ASTAnnotation& annotation = _identifier.annotation();
+	IdentifierAnnotation& annotation = _identifier.annotation();
 	if (!annotation.referencedDeclaration)
 	{
 		if (!annotation.argumentTypes)

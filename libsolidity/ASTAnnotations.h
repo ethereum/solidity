@@ -25,53 +25,98 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <libsolidity/ASTForward.h>
 
 namespace dev
 {
 namespace solidity
 {
 
-class ASTNode;
-class ContractDefinition;
-class Declaration;
-class ParameterList;
 class Type;
 using TypePointer = std::shared_ptr<Type const>;
 
 struct ASTAnnotation
 {
-	///@TODO save space here - we do not need all members for all types.
+	virtual ~ASTAnnotation() {}
+};
 
-	/// For expression: Inferred type. - For type declaration: Declared type. - For variable declaration: Type of variable.
-	TypePointer type;
-	/// For expression: Whether it is an LValue (i.e. something that can be assigned to).
-	bool isLValue = false;
-	/// For expression: Whether the expression is used in a context where the LValue is actually required.
-	bool lValueRequested = false;
-	/// For expressions: Types of arguments if the expression is a function that is called - used
-	/// for overload resolution.
-	std::shared_ptr<std::vector<TypePointer>> argumentTypes;
-	/// For contract: Whether all functions are implemented.
+struct ContractDefinitionAnnotation: ASTAnnotation
+{
+	/// Whether all functions are implemented.
 	bool isFullyImplemented = true;
-	/// For contract: List of all (direct and indirect) base contracts in order from derived to
+	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
 	std::vector<ContractDefinition const*> linearizedBaseContracts;
-	/// For member access and Identifer: Referenced declaration, set during overload resolution stage.
-	Declaration const* referencedDeclaration = nullptr;
-	/// For Identifier: List of possible declarations it could refer to.
-	std::vector<Declaration const*> overloadedDeclarations;
-	/// For function call: Whether this is an explicit type conversion.
-	bool isTypeConversion = false;
-	/// For function call: Whether this is a struct constructor call.
-	bool isStructConstructorCall = false;
-	/// For Return statement: Reference to the return parameters of the function.
+};
+
+struct VariableDeclarationAnnotation: ASTAnnotation
+{
+	/// Type of variable (type of identifier referencing this variable).
+	TypePointer type;
+};
+
+struct ReturnAnnotation: ASTAnnotation
+{
+	/// Reference to the return parameters of the function.
 	ParameterList const* functionReturnParameters = nullptr;
-	/// For Identifier: Stores a reference to the current contract.
+};
+
+struct TypeNameAnnotation: ASTAnnotation
+{
+	/// Type declared by this type name, i.e. type of a variable where this type name is used.
+	/// Set during reference resolution stage.
+	TypePointer type;
+};
+
+struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
+{
+	/// Referenced declaration, set during reference resolution stage.
+	Declaration const* referencedDeclaration = nullptr;
+};
+
+struct ExpressionAnnotation: ASTAnnotation
+{
+	/// Inferred type of the expression.
+	TypePointer type;
+	/// Whether it is an LValue (i.e. something that can be assigned to).
+	bool isLValue = false;
+	/// Whether the expression is used in a context where the LValue is actually required.
+	bool lValueRequested = false;
+	/// Types of arguments if the expression is a function that is called - used
+	/// for overload resolution.
+	std::shared_ptr<std::vector<TypePointer>> argumentTypes;
+};
+
+struct IdentifierAnnotation: ExpressionAnnotation
+{
+	/// Stores a reference to the current contract.
 	/// This is needed because types of base contracts change depending on the context.
 	ContractDefinition const* contractScope = nullptr;
-	/// For BinaryOperation: The common type that is used for the operation, not necessarily the result type (e.g. for
-	/// comparisons, this is always bool).
+	/// Referenced declaration, set at latest during overload resolution stage.
+	Declaration const* referencedDeclaration = nullptr;
+	/// List of possible declarations it could refer to.
+	std::vector<Declaration const*> overloadedDeclarations;
+};
+
+struct MemberAccessAnnotation: ExpressionAnnotation
+{
+	/// Referenced declaration, set at latest during overload resolution stage.
+	Declaration const* referencedDeclaration = nullptr;
+};
+
+struct BinaryOperationAnnotation: ExpressionAnnotation
+{
+	/// The common type that is used for the operation, not necessarily the result type (which
+	/// e.g. for comparisons is bool).
 	TypePointer commonType;
+};
+
+struct FunctionCallAnnotation: ExpressionAnnotation
+{
+	/// Whether this is an explicit type conversion.
+	bool isTypeConversion = false;
+	/// Whether this is a struct constructor call.
+	bool isStructConstructorCall = false;
 };
 
 }

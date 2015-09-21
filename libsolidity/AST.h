@@ -42,7 +42,6 @@ namespace solidity
 
 class ASTVisitor;
 class ASTConstVisitor;
-struct ASTAnnotation;
 
 
 /**
@@ -79,7 +78,7 @@ public:
 	TypeError createTypeError(std::string const& _description) const;
 
 	///@todo make this const-safe by providing a different way to access the annotation
-	ASTAnnotation& annotation() const { return const_cast<ASTAnnotation&>(m_annotation); }
+	virtual ASTAnnotation& annotation() const;
 
 	///@{
 	///@name equality operators
@@ -88,10 +87,12 @@ public:
 	bool operator!=(ASTNode const& _other) const { return !operator==(_other); }
 	///@}
 
+protected:
+	/// Annotation - is specialised in derived classes, is created upon request (because of polymorphism).
+	mutable ASTAnnotation* m_annotation = nullptr;
+
 private:
 	SourceLocation m_location;
-
-	ASTAnnotation m_annotation;
 };
 
 /**
@@ -287,6 +288,8 @@ public:
 	void setDevDocumentation(std::string const& _devDocumentation);
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+
+	virtual ContractDefinitionAnnotation& annotation() const override;
 
 private:
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
@@ -538,6 +541,8 @@ public:
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
 
+	virtual VariableDeclarationAnnotation& annotation() const override;
+
 protected:
 	Visibility defaultVisibility() const override { return Visibility::Internal; }
 
@@ -666,6 +671,8 @@ public:
 	explicit TypeName(SourceLocation const& _location): ASTNode(_location) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	virtual TypeNameAnnotation& annotation() const override;
 };
 
 /**
@@ -701,6 +708,8 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ASTString const& name() const { return *m_name; }
+
+	virtual UserDefinedTypeNameAnnotation& annotation() const override;
 
 private:
 	ASTPointer<ASTString> m_name;
@@ -904,6 +913,8 @@ public:
 
 	Expression const* expression() const { return m_expression.get(); }
 
+	virtual ReturnAnnotation& annotation() const override;
+
 private:
 	ASTPointer<Expression> m_expression; ///< value to return, optional
 };
@@ -970,6 +981,8 @@ class Expression: public ASTNode
 {
 public:
 	Expression(SourceLocation const& _location): ASTNode(_location) {}
+
+	ExpressionAnnotation& annotation() const override;
 };
 
 /// Assignment, can also be a compound assignment.
@@ -1050,6 +1063,8 @@ public:
 	Expression const& rightExpression() const { return *m_right; }
 	Token::Value getOperator() const { return m_operator; }
 
+	BinaryOperationAnnotation& annotation() const override;
+
 private:
 	ASTPointer<Expression> m_left;
 	Token::Value m_operator;
@@ -1071,6 +1086,8 @@ public:
 	Expression const& expression() const { return *m_expression; }
 	std::vector<ASTPointer<Expression const>> arguments() const { return {m_arguments.begin(), m_arguments.end()}; }
 	std::vector<ASTPointer<ASTString>> const& names() const { return m_names; }
+
+	virtual FunctionCallAnnotation& annotation() const override;
 
 private:
 	ASTPointer<Expression> m_expression;
@@ -1108,6 +1125,8 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 	Expression const& expression() const { return *m_expression; }
 	ASTString const& memberName() const { return *m_memberName; }
+
+	virtual MemberAccessAnnotation& annotation() const override;
 
 private:
 	ASTPointer<Expression> m_expression;
@@ -1156,6 +1175,8 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ASTString const& name() const { return *m_name; }
+
+	virtual IdentifierAnnotation& annotation() const override;
 
 private:
 	ASTPointer<ASTString> m_name;
