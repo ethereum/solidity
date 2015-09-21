@@ -505,7 +505,6 @@ public:
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
-
 private:
 	/// String is interpreted as a subtype of Bytes.
 	enum class ArrayKind { Ordinary, Bytes, String };
