@@ -77,6 +77,7 @@ void CompilerStack::reset(bool _keepSources, bool _addStandardSources)
 	m_globalContext.reset();
 	m_sourceOrder.clear();
 	m_contracts.clear();
+	m_errors.clear();
 }
 
 bool CompilerStack::addSource(string const& _name, string const& _content, bool _isLibrary)
@@ -94,8 +95,10 @@ void CompilerStack::setSource(string const& _sourceCode)
 	addSource("", _sourceCode);
 }
 
-void CompilerStack::parse()
+bool CompilerStack::parse()
 {
+	m_errors.clear();
+
 	for (auto& sourcePair: m_sources)
 	{
 		sourcePair.second.scanner->reset();
@@ -117,6 +120,7 @@ void CompilerStack::parse()
 				resolver.resolveNamesAndTypes(*contract);
 				m_contracts[contract->name()].contract = contract;
 			}
+
 	InterfaceHandler interfaceHandler;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
@@ -127,20 +131,19 @@ void CompilerStack::parse()
 				TypeChecker typeChecker;
 				bool typesFine = typeChecker.checkTypeRequirements(*contract);
 				if (!typesFine)
-					BOOST_THROW_EXCEPTION(*typeChecker.errors().front());
-				//@todo extract warnings and errors
-				// store whether we had an error
+					m_errors += typeChecker.errors();
 				contract->setDevDocumentation(interfaceHandler.devDocumentation(*contract));
 				contract->setUserDocumentation(interfaceHandler.userDocumentation(*contract));
 				m_contracts[contract->name()].contract = contract;
 			}
-	m_parseSuccessful = true;
+	m_parseSuccessful = m_errors.empty();
+	return m_parseSuccessful;
 }
 
-void CompilerStack::parse(string const& _sourceCode)
+bool CompilerStack::parse(string const& _sourceCode)
 {
 	setSource(_sourceCode);
-	parse();
+	return parse();
 }
 
 vector<string> CompilerStack::contractNames() const
@@ -154,12 +157,11 @@ vector<string> CompilerStack::contractNames() const
 }
 
 
-void CompilerStack::compile(bool _optimize, unsigned _runs)
+bool CompilerStack::compile(bool _optimize, unsigned _runs)
 {
 	if (!m_parseSuccessful)
-		parse();
-
-	//@todo do not compile or error (also in other places)
+		if (!parse())
+			return false;
 
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)
@@ -180,13 +182,12 @@ void CompilerStack::compile(bool _optimize, unsigned _runs)
 				cloneCompiler.compileClone(*contract, compiledContracts);
 				compiledContract.cloneObject = cloneCompiler.assembledObject();
 			}
+	return true;
 }
 
-eth::LinkerObject const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
+bool CompilerStack::compile(string const& _sourceCode, bool _optimize)
 {
-	parse(_sourceCode);
-	compile(_optimize);
-	return object();
+	return parse(_sourceCode) && compile(_optimize);
 }
 
 void CompilerStack::link(const std::map<string, h160>& _libraries)
@@ -323,12 +324,6 @@ size_t CompilerStack::functionEntryPoint(
 		if (items.at(i).type() == eth::Tag && items.at(i).data() == tag.data())
 			return i;
 	return 0;
-}
-
-eth::LinkerObject CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
-{
-	CompilerStack stack;
-	return stack.compile(_sourceCode, _optimize);
 }
 
 tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocation const& _sourceLocation) const

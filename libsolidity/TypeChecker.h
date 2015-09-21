@@ -47,7 +47,7 @@ public:
 	bool checkTypeRequirements(ContractDefinition const& _contract);
 
 	/// @returns the list of errors found during type checking.
-	std::vector<std::shared_ptr<Exception const>> const& errors() const { return m_errors; }
+	std::vector<std::shared_ptr<Error const>> const& errors() const { return m_errors; }
 
 	/// @returns the type of an expression and asserts that it is present.
 	TypePointer const& type(Expression const& _expression) const;
@@ -107,7 +107,7 @@ private:
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression);
 
-	std::vector<std::shared_ptr<Exception const>> m_errors;
+	std::vector<std::shared_ptr<Error const>> m_errors;
 };
 
 }

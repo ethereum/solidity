@@ -490,7 +490,12 @@ bool CommandLineInterface::processInput()
 		// TODO: Perhaps we should not compile unless requested
 		bool optimize = m_args.count("optimize") > 0;
 		unsigned runs = m_args["optimize-runs"].as<unsigned>();
-		m_compiler->compile(optimize, runs);
+		if (!m_compiler->compile(optimize, runs))
+		{
+			for (auto const& error: m_compiler->errors())
+				SourceReferenceFormatter::printExceptionInformation(cerr, *error, "Error", *m_compiler);
+			return false;
+		}
 		m_compiler->link(m_libraries);
 	}
 	catch (ParserError const& _exception)

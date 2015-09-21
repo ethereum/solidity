@@ -32,12 +32,15 @@ namespace dev
 namespace solidity
 {
 
-struct ParserError: virtual Exception {};
-struct TypeError: virtual Exception {};
-struct DeclarationError: virtual Exception {};
+struct Error: virtual Exception {};
+
+struct ParserError: virtual Error {};
+struct TypeError: virtual Error {};
+struct DeclarationError: virtual Error {};
+struct DocstringParsingError: virtual Error {};
+
 struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
-struct DocstringParsingError: virtual Exception {};
 struct FatalError: virtual Exception {};
 
 using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
