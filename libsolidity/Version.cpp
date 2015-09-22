@@ -22,6 +22,7 @@
 
 #include <libsolidity/Version.h>
 #include <string>
+#include <libevmasm/Version.h>
 #include <solidity/BuildInfo.h>
 #include <libdevcore/Common.h>
 
@@ -29,11 +30,12 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace std;
 
-char const* dev::solidity::VersionNumber = "0.1.2";
+char const* dev::solidity::VersionNumber = ETH_PROJECT_VERSION;
 extern string const dev::solidity::VersionString =
 	string(dev::solidity::VersionNumber) +
 	"-" +
 	string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) +
 	(ETH_CLEAN_REPO ? "" : "*") +
-	"/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
+	"/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM)
+	" linked to libethereum-" + eth::VersionStringLibEvmAsm;
 
