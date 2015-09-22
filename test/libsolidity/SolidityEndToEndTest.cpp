@@ -5297,10 +5297,7 @@ BOOST_AUTO_TEST_CASE(strings_in_struct)
 			}
 
 			function buggystruct(){
-				bug.first = 10;
-				bug.second = 20;
-				bug.third = 30;
-				bug.last = "asdfghjkl";
+				bug = Buggy(10, 20, 30, "asdfghjkl");
 			}
 			function getFirst() returns (uint)
 			{
