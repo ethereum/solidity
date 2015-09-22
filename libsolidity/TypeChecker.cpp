@@ -83,7 +83,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			{
 				auto err = make_shared<DeclarationError>();
 				*err << errinfo_comment("Only one fallback function is allowed.");
-				m_errors.push_back(move(err));
+				m_errors.push_back(err);
 			}
 			else
 			{
@@ -142,7 +142,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			errinfo_sourceLocation(functions[_contract.name()].front()->location()) <<
 			errinfo_comment("More than one constructor defined.") <<
 			errinfo_secondarySourceLocation(ssl);
-		m_errors.push_back(move(err));
+		m_errors.push_back(err);
 	}
 	for (auto const& it: functions)
 	{
@@ -157,7 +157,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 						errinfo_comment("Function with same name and arguments defined twice.") <<
 						errinfo_secondarySourceLocation(SecondarySourceLocation().append(
 							"Other declaration is here:", overloads[i]->location()));
-					m_errors.push_back(move(err));
+					m_errors.push_back(err);
 				}
 	}
 }
@@ -1133,7 +1133,7 @@ void TypeChecker::typeError(ASTNode const& _node, string const& _description)
 		errinfo_sourceLocation(_node.location()) <<
 		errinfo_comment(_description);
 
-	m_errors.push_back(move(err));
+	m_errors.push_back(err);
 }
 
 void TypeChecker::fatalTypeError(ASTNode const& _node, string const& _description)
