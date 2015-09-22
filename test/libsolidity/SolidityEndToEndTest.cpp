@@ -5283,6 +5283,48 @@ BOOST_AUTO_TEST_CASE(simple_throw)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(1)) == encodeArgs());
 }
 
+BOOST_AUTO_TEST_CASE(strings_in_struct)
+{
+	char const* sourceCode = R"(
+		contract buggystruct {
+			Buggy public bug;
+
+			struct Buggy {
+				uint first;
+				uint second;
+				uint third;
+				string last;
+			}
+
+			function buggystruct(){
+				bug = Buggy(10, 20, 30, "asdfghjkl");
+			}
+			function getFirst() returns (uint)
+			{
+				return bug.first;
+			}
+			function getSecond() returns (uint)
+			{
+				return bug.second;
+			}
+			function getThird() returns (uint)
+			{
+				return bug.third;
+			}
+			function getLast() returns (string)
+			{
+				return bug.last;
+			}
+		}
+		)";
+	compileAndRun(sourceCode);
+	string s = "asdfghjkl";
+	BOOST_CHECK(callContractFunction("getFirst()") == encodeArgs(u256(10)));
+	BOOST_CHECK(callContractFunction("getSecond()") == encodeArgs(u256(20)));
+	BOOST_CHECK(callContractFunction("getThird()") == encodeArgs(u256(30)));
+	BOOST_CHECK(callContractFunction("getLast()") == encodeDyn(s));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
