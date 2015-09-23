@@ -46,10 +46,7 @@ string formatError(Exception const& _exception, string const& _name, CompilerSta
 {
 	ostringstream errorOutput;
 	SourceReferenceFormatter::printExceptionInformation(errorOutput, _exception, _name, _compiler);
-
-	Json::Value output(Json::objectValue);
-	output["error"] = errorOutput.str();
-	return Json::FastWriter().write(output);
+	return errorOutput.str();
 }
 
 Json::Value functionHashes(ContractDefinition const& _contract)
@@ -123,43 +120,52 @@ string compile(string _input, bool _optimize)
 	sources[""] = _input;
 
 	Json::Value output(Json::objectValue);
+	Json::Value errors(Json::arrayValue);
 	CompilerStack compiler;
 	try
 	{
-		compiler.compile(_input, _optimize);
+		if (!compiler.compile(_input, _optimize))
+		{
+			for (auto const& error: compiler.errors())
+				errors.append(formatError(*error, "Error", compiler));
+		}
 	}
 	catch (ParserError const& exception)
 	{
-		return formatError(exception, "Parser error", compiler);
+		errors.append(formatError(exception, "Parser error", compiler));
 	}
 	catch (DeclarationError const& exception)
 	{
-		return formatError(exception, "Declaration error", compiler);
+		errors.append(formatError(exception, "Declaration error", compiler));
 	}
 	catch (TypeError const& exception)
 	{
-		return formatError(exception, "Type error", compiler);
+		errors.append(formatError(exception, "Type error", compiler));
 	}
 	catch (CompilerError const& exception)
 	{
-		return formatError(exception, "Compiler error", compiler);
+		errors.append(formatError(exception, "Compiler error", compiler));
 	}
 	catch (InternalCompilerError const& exception)
 	{
-		return formatError(exception, "Internal compiler error", compiler);
+		errors.append(formatError(exception, "Internal compiler error", compiler));
 	}
 	catch (DocstringParsingError const& exception)
 	{
-		return formatError(exception, "Documentation parsing error", compiler);
+		errors.append(formatError(exception, "Documentation parsing error", compiler));
 	}
 	catch (Exception const& exception)
 	{
-		output["error"] = "Exception during compilation: " + boost::diagnostic_information(exception);
-		return Json::FastWriter().write(output);
+		errors.append("Exception during compilation: " + boost::diagnostic_information(exception));
 	}
 	catch (...)
 	{
-		output["error"] = "Unknown exception during compilation.";
+		errors.append("Unknown exception during compilation.");
+	}
+
+	if (errors.size() > 0)
+	{
+		output["errors"] = errors;
 		return Json::FastWriter().write(output);
 	}
 

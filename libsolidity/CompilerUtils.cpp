@@ -600,7 +600,7 @@ void CompilerUtils::pushZeroValue(const Type& _type)
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 {
 	unsigned const stackPosition = m_context.baseToCurrentStackOffset(m_context.baseStackOffsetOfVariable(_variable));
-	unsigned const size = _variable.type()->sizeOnStack();
+	unsigned const size = _variable.annotation().type->sizeOnStack();
 	solAssert(stackPosition >= size, "Variable size and position mismatch.");
 	// move variable starting from its top end in the stack
 	if (stackPosition - size + 1 > 16)

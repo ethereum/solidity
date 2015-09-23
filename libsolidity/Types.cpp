@@ -157,55 +157,6 @@ TypePointer Type::fromElementaryTypeName(string const& _name)
 	return fromElementaryTypeName(Token::fromIdentifierOrKeyword(_name));
 }
 
-TypePointer Type::fromUserDefinedTypeName(UserDefinedTypeName const& _typeName)
-{
-	Declaration const* declaration = _typeName.referencedDeclaration();
-	if (StructDefinition const* structDef = dynamic_cast<StructDefinition const*>(declaration))
-		return make_shared<StructType>(*structDef);
-	else if (EnumDefinition const* enumDef = dynamic_cast<EnumDefinition const*>(declaration))
-		return make_shared<EnumType>(*enumDef);
-	else if (FunctionDefinition const* function = dynamic_cast<FunctionDefinition const*>(declaration))
-		return make_shared<FunctionType>(*function);
-	else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
-		return make_shared<ContractType>(*contract);
-	return TypePointer();
-}
-
-TypePointer Type::fromMapping(ElementaryTypeName& _keyType, TypeName& _valueType)
-{
-	TypePointer keyType = _keyType.toType();
-	if (!keyType)
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Error resolving type name."));
-	TypePointer valueType = _valueType.toType();
-	if (!valueType)
-		BOOST_THROW_EXCEPTION(_valueType.createTypeError("Invalid type name."));
-	// Convert value type to storage reference.
-	valueType = ReferenceType::copyForLocationIfReference(DataLocation::Storage, valueType);
-	// Convert key type to memory.
-	keyType = ReferenceType::copyForLocationIfReference(DataLocation::Memory, keyType);
-	return make_shared<MappingType>(keyType, valueType);
-}
-
-TypePointer Type::fromArrayTypeName(TypeName& _baseTypeName, Expression* _length)
-{
-	TypePointer baseType = _baseTypeName.toType();
-	if (!baseType)
-		BOOST_THROW_EXCEPTION(_baseTypeName.createTypeError("Invalid type name."));
-	if (baseType->storageBytes() == 0)
-		BOOST_THROW_EXCEPTION(_baseTypeName.createTypeError("Illegal base type of storage size zero for array."));
-	if (_length)
-	{
-		if (!_length->type())
-			_length->checkTypeRequirements(nullptr);
-		auto const* length = dynamic_cast<IntegerConstantType const*>(_length->type().get());
-		if (!length)
-			BOOST_THROW_EXCEPTION(_length->createTypeError("Invalid array length."));
-		return make_shared<ArrayType>(DataLocation::Storage, baseType, length->literalValue(nullptr));
-	}
-	else
-		return make_shared<ArrayType>(DataLocation::Storage, baseType);
-}
-
 TypePointer Type::forLiteral(Literal const& _literal)
 {
 	switch (_literal.token())
@@ -686,7 +637,7 @@ bool ContractType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		return dynamic_cast<IntegerType const&>(_convertTo).isAddress();
 	if (_convertTo.category() == Category::Contract)
 	{
-		auto const& bases = contractDefinition().linearizedBaseContracts();
+		auto const& bases = contractDefinition().annotation().linearizedBaseContracts;
 		if (m_super && bases.size() <= 1)
 			return false;
 		return find(m_super ? ++bases.begin() : bases.begin(), bases.end(),
@@ -944,7 +895,7 @@ MemberList const& ContractType::members() const
 		if (m_super)
 		{
 			// add the most derived of all functions which are visible in derived contracts
-			for (ContractDefinition const* base: m_contract.linearizedBaseContracts())
+			for (ContractDefinition const* base: m_contract.annotation().linearizedBaseContracts)
 				for (ASTPointer<FunctionDefinition> const& function: base->definedFunctions())
 				{
 					if (!function->isVisibleInDerivedContracts())
@@ -998,13 +949,13 @@ shared_ptr<FunctionType const> const& ContractType::constructorType() const
 vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVariables() const
 {
 	vector<VariableDeclaration const*> variables;
-	for (ContractDefinition const* contract: boost::adaptors::reverse(m_contract.linearizedBaseContracts()))
+	for (ContractDefinition const* contract: boost::adaptors::reverse(m_contract.annotation().linearizedBaseContracts))
 		for (ASTPointer<VariableDeclaration> const& variable: contract->stateVariables())
 			if (!variable->isConstant())
 				variables.push_back(variable.get());
 	TypePointers types;
 	for (auto variable: variables)
-		types.push_back(variable->type());
+		types.push_back(variable->annotation().type);
 	StorageOffsets offsets;
 	offsets.computeOffsets(types);
 
@@ -1082,7 +1033,7 @@ MemberList const& StructType::members() const
 		MemberList::MemberMap members;
 		for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
 		{
-			TypePointer type = variable->type();
+			TypePointer type = variable->annotation().type;
 			// Skip all mapping members if we are not in storage.
 			if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
 				continue;
@@ -1147,7 +1098,7 @@ set<string> StructType::membersMissingInMemory() const
 {
 	set<string> missing;
 	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
-		if (!variable->type()->canLiveOutsideStorage())
+		if (!variable->annotation().type->canLiveOutsideStorage())
 			missing.insert(variable->name());
 	return missing;
 }
@@ -1211,14 +1162,14 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
 		paramNames.push_back(var->name());
-		params.push_back(var->type());
+		params.push_back(var->annotation().type);
 	}
 	retParams.reserve(_function.returnParameters().size());
 	retParamNames.reserve(_function.returnParameters().size());
 	for (ASTPointer<VariableDeclaration> const& var: _function.returnParameters())
 	{
 		retParamNames.push_back(var->name());
-		retParams.push_back(var->type());
+		retParams.push_back(var->annotation().type);
 	}
 	swap(params, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
@@ -1231,7 +1182,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 {
 	TypePointers paramTypes;
 	vector<string> paramNames;
-	auto returnType = _varDecl.type();
+	auto returnType = _varDecl.annotation().type;
 
 	while (true)
 	{
@@ -1293,7 +1244,7 @@ FunctionType::FunctionType(const EventDefinition& _event):
 	for (ASTPointer<VariableDeclaration> const& var: _event.parameters())
 	{
 		paramNames.push_back(var->name());
-		params.push_back(var->type());
+		params.push_back(var->annotation().type);
 	}
 	swap(params, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
@@ -1662,7 +1613,7 @@ MemberList const& TypeType::members() const
 					));
 			else if (m_currentContract != nullptr)
 			{
-				vector<ContractDefinition const*> currentBases = m_currentContract->linearizedBaseContracts();
+				auto const& currentBases = m_currentContract->annotation().linearizedBaseContracts;
 				if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
 					// We are accessing the type of a base contract, so add all public and protected
 					// members. Note that this does not add inherited functions on purpose.
@@ -1687,7 +1638,7 @@ ModifierType::ModifierType(const ModifierDefinition& _modifier)
 	TypePointers params;
 	params.reserve(_modifier.parameters().size());
 	for (ASTPointer<VariableDeclaration> const& var: _modifier.parameters())
-		params.push_back(var->type());
+		params.push_back(var->annotation().type);
 	swap(params, m_parameterTypes);
 }
 

@@ -54,6 +54,7 @@ class SourceUnit;
 class Compiler;
 class GlobalContext;
 class InterfaceHandler;
+struct Error;
 
 enum class DocumentationType: uint8_t
 {
@@ -79,22 +80,28 @@ public:
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
-	void addSources(StringMap const& _nameContents, bool _isLibrary = false) { for (auto const& i: _nameContents) addSource(i.first, i.second, _isLibrary); }
+	void addSources(StringMap const& _nameContents, bool _isLibrary = false)
+	{
+		for (auto const& i: _nameContents) addSource(i.first, i.second, _isLibrary);
+	}
 	bool addSource(std::string const& _name, std::string const& _content, bool _isLibrary = false);
 	void setSource(std::string const& _sourceCode);
 	/// Parses all source units that were added
-	void parse();
+	/// @returns false on error.
+	bool parse();
 	/// Sets the given source code as the only source unit apart from standard sources and parses it.
-	void parse(std::string const& _sourceCode);
+	/// @returns false on error.
+	bool parse(std::string const& _sourceCode);
 	/// Returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 	std::string defaultContractName() const;
 
 	/// Compiles the source units that were previously added and parsed.
-	void compile(bool _optimize = false, unsigned _runs = 200);
+	/// @returns false on error.
+	bool compile(bool _optimize = false, unsigned _runs = 200);
 	/// Parses and compiles the given source code.
-	/// @returns the compiled linker object
-	eth::LinkerObject const& compile(std::string const& _sourceCode, bool _optimize = false);
+	/// @returns false on error.
+	bool compile(std::string const& _sourceCode, bool _optimize = false);
 
 	/// Inserts the given addresses into the linker objects of all compiled contracts.
 	void link(std::map<std::string, h160> const& _libraries);
@@ -150,14 +157,13 @@ public:
 		FunctionDefinition const& _function
 	) const;
 
-	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
-	/// scanning the source code - this is useful for printing exception information.
-	static eth::LinkerObject staticCompile(std::string const& _sourceCode, bool _optimize = false);
-
 	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
 	/// line and columns are numbered starting from 1 with following order:
 	/// start line, start column, end line, end column
 	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
+
+	/// @returns the list of errors that occured during parsing and type checking.
+	std::vector<std::shared_ptr<Error const>> const& errors() const { return m_errors; }
 
 private:
 	/**
@@ -198,6 +204,7 @@ private:
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
+	std::vector<std::shared_ptr<Error const>> m_errors;
 };
 
 }

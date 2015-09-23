@@ -53,7 +53,7 @@ void Compiler::compileContract(
 	std::map<const ContractDefinition*, eth::Assembly const*> const& _contracts
 )
 {
-	m_context = CompilerContext(); // clear it just in case
+	m_context = CompilerContext();
 	{
 		CompilerContext::LocationSetter locationSetterRunTime(m_context, _contract);
 		initializeContext(_contract, _contracts);
@@ -105,9 +105,9 @@ void Compiler::initializeContext(
 	map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
 )
 {
-	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	m_context.setCompiledContracts(_compiledContracts);
-	m_context.setInheritanceHierarchy(_contract.linearizedBaseContracts());
+	m_context.setInheritanceHierarchy(_contract.annotation().linearizedBaseContracts);
+	CompilerUtils(m_context).initialiseFreeMemoryPointer();
 	registerStateVariables(_contract);
 	m_context.resetVisitedNodes(&_contract);
 }
@@ -115,14 +115,14 @@ void Compiler::initializeContext(
 void Compiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
 {
 	// Determine the arguments that are used for the base constructors.
-	std::vector<ContractDefinition const*> const& bases = _contract.linearizedBaseContracts();
+	std::vector<ContractDefinition const*> const& bases = _contract.annotation().linearizedBaseContracts;
 	for (ContractDefinition const* contract: bases)
 	{
 		if (FunctionDefinition const* constructor = contract->constructor())
 			for (auto const& modifier: constructor->modifiers())
 			{
 				auto baseContract = dynamic_cast<ContractDefinition const*>(
-					&modifier->name()->referencedDeclaration());
+					modifier->name()->annotation().referencedDeclaration);
 				if (baseContract)
 					if (m_baseArguments.count(baseContract->constructor()) == 0)
 						m_baseArguments[baseContract->constructor()] = &modifier->arguments();
@@ -131,7 +131,8 @@ void Compiler::appendInitAndConstructorCode(ContractDefinition const& _contract)
 		for (ASTPointer<InheritanceSpecifier> const& base: contract->baseContracts())
 		{
 			ContractDefinition const* baseContract = dynamic_cast<ContractDefinition const*>(
-						&base->name()->referencedDeclaration());
+				base->name().annotation().referencedDeclaration
+			);
 			solAssert(baseContract, "");
 
 			if (m_baseArguments.count(baseContract->constructor()) == 0)
@@ -187,13 +188,13 @@ void Compiler::appendConstructor(FunctionDefinition const& _constructor)
 	{
 		unsigned argumentSize = 0;
 		for (ASTPointer<VariableDeclaration> const& var: _constructor.parameters())
-			if (var->type()->isDynamicallySized())
+			if (var->annotation().type->isDynamicallySized())
 			{
 				argumentSize = 0;
 				break;
 			}
 			else
-				argumentSize += var->type()->calldataEncodedSize();
+				argumentSize += var->annotation().type->calldataEncodedSize();
 
 		CompilerUtils(m_context).fetchFreeMemoryPointer();
 		if (argumentSize == 0)
@@ -418,7 +419,7 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.parameters())
 	{
 		m_context.addVariable(*variable, parametersSize);
-		parametersSize -= variable->type()->sizeOnStack();
+		parametersSize -= variable->annotation().type->sizeOnStack();
 	}
 
 	for (ASTPointer<VariableDeclaration const> const& variable: _function.returnParameters())
@@ -594,9 +595,9 @@ bool Compiler::visit(Return const& _return)
 	//@todo modifications are needed to make this work with functions returning multiple values
 	if (Expression const* expression = _return.expression())
 	{
-		solAssert(_return.functionReturnParameters(), "Invalid return parameters pointer.");
-		VariableDeclaration const& firstVariable = *_return.functionReturnParameters()->parameters().front();
-		compileExpression(*expression, firstVariable.type());
+		solAssert(_return.annotation().functionReturnParameters, "Invalid return parameters pointer.");
+		VariableDeclaration const& firstVariable = *_return.annotation().functionReturnParameters->parameters().front();
+		compileExpression(*expression, firstVariable.annotation().type);
 		CompilerUtils(m_context).moveToStackVariable(firstVariable);
 	}
 	for (unsigned i = 0; i < m_stackCleanupForReturn; ++i)
@@ -619,7 +620,7 @@ bool Compiler::visit(VariableDeclarationStatement const& _variableDeclarationSta
 	CompilerContext::LocationSetter locationSetter(m_context, _variableDeclarationStatement);
 	if (Expression const* expression = _variableDeclarationStatement.expression())
 	{
-		compileExpression(*expression, _variableDeclarationStatement.declaration().type());
+		compileExpression(*expression, _variableDeclarationStatement.declaration().annotation().type);
 		CompilerUtils(m_context).moveToStackVariable(_variableDeclarationStatement.declaration());
 	}
 	checker.check();
@@ -632,7 +633,7 @@ bool Compiler::visit(ExpressionStatement const& _expressionStatement)
 	CompilerContext::LocationSetter locationSetter(m_context, _expressionStatement);
 	Expression const& expression = _expressionStatement.expression();
 	compileExpression(expression);
-	CompilerUtils(m_context).popStackElement(*expression.type());
+	CompilerUtils(m_context).popStackElement(*expression.annotation().type);
 	checker.check();
 	return false;
 }
@@ -672,7 +673,7 @@ void Compiler::appendModifierOrFunctionCode()
 		ASTPointer<ModifierInvocation> const& modifierInvocation = m_currentFunction->modifiers()[m_modifierDepth];
 
 		// constructor call should be excluded
-		if (dynamic_cast<ContractDefinition const*>(&modifierInvocation->name()->referencedDeclaration()))
+		if (dynamic_cast<ContractDefinition const*>(modifierInvocation->name()->annotation().referencedDeclaration))
 		{
 			++m_modifierDepth;
 			appendModifierOrFunctionCode();
@@ -688,7 +689,7 @@ void Compiler::appendModifierOrFunctionCode()
 			m_context.addVariable(*modifier.parameters()[i]);
 			compileExpression(
 				*modifierInvocation->arguments()[i],
-				modifier.parameters()[i]->type()
+				modifier.parameters()[i]->annotation().type
 			);
 		}
 		for (VariableDeclaration const* localVariable: modifier.localVariables())
@@ -710,7 +711,7 @@ void Compiler::appendStackVariableInitialisation(VariableDeclaration const& _var
 {
 	CompilerContext::LocationSetter location(m_context, _variable);
 	m_context.addVariable(_variable);
-	CompilerUtils(m_context).pushZeroValue(*_variable.type());
+	CompilerUtils(m_context).pushZeroValue(*_variable.annotation().type);
 }
 
 void Compiler::compileExpression(Expression const& _expression, TypePointer const& _targetType)
@@ -718,7 +719,7 @@ void Compiler::compileExpression(Expression const& _expression, TypePointer cons
 	ExpressionCompiler expressionCompiler(m_context, m_optimize);
 	expressionCompiler.compile(_expression);
 	if (_targetType)
-		CompilerUtils(m_context).convertType(*_expression.type(), *_targetType);
+		CompilerUtils(m_context).convertType(*_expression.annotation().type, *_targetType);
 }
 
 eth::Assembly Compiler::cloneRuntime()

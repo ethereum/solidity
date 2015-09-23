@@ -22,6 +22,7 @@
 
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/AST.h>
+#include <libsolidity/TypeChecker.h>
 #include <libsolidity/Exceptions.h>
 
 using namespace std;
@@ -31,7 +32,9 @@ namespace dev
 namespace solidity
 {
 
-NameAndTypeResolver::NameAndTypeResolver(vector<Declaration const*> const& _globals)
+NameAndTypeResolver::NameAndTypeResolver(
+	vector<Declaration const*> const& _globals
+)
 {
 	for (Declaration const* declaration: _globals)
 		m_scopes[nullptr].registerDeclaration(*declaration);
@@ -54,8 +57,8 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 
 	linearizeBaseContracts(_contract);
 	std::vector<ContractDefinition const*> properBases(
-		++_contract.linearizedBaseContracts().begin(),
-		_contract.linearizedBaseContracts().end()
+		++_contract.annotation().linearizedBaseContracts.begin(),
+		_contract.annotation().linearizedBaseContracts.end()
 	);
 
 	for (ContractDefinition const* base: properBases)
@@ -106,13 +109,6 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			true
 		);
 	}
-}
-
-void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
-{
-	for (ASTPointer<StructDefinition> const& structDef: _contract.definedStructs())
-		structDef->checkValidityOfMembers();
-	_contract.checkTypeRequirements();
 }
 
 void NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
@@ -187,23 +183,23 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract) 
 	list<list<ContractDefinition const*>> input(1, {});
 	for (ASTPointer<InheritanceSpecifier> const& baseSpecifier: _contract.baseContracts())
 	{
-		ASTPointer<Identifier> baseName = baseSpecifier->name();
-		auto base = dynamic_cast<ContractDefinition const*>(&baseName->referencedDeclaration());
+		Identifier const& baseName = baseSpecifier->name();
+		auto base = dynamic_cast<ContractDefinition const*>(baseName.annotation().referencedDeclaration);
 		if (!base)
-			BOOST_THROW_EXCEPTION(baseName->createTypeError("Contract expected."));
+			BOOST_THROW_EXCEPTION(baseName.createTypeError("Contract expected."));
 		// "push_front" has the effect that bases mentioned later can overwrite members of bases
 		// mentioned earlier
 		input.back().push_front(base);
-		vector<ContractDefinition const*> const& basesBases = base->linearizedBaseContracts();
+		vector<ContractDefinition const*> const& basesBases = base->annotation().linearizedBaseContracts;
 		if (basesBases.empty())
-			BOOST_THROW_EXCEPTION(baseName->createTypeError("Definition of base has to precede definition of derived contract"));
+			BOOST_THROW_EXCEPTION(baseName.createTypeError("Definition of base has to precede definition of derived contract"));
 		input.push_front(list<ContractDefinition const*>(basesBases.begin(), basesBases.end()));
 	}
 	input.back().push_front(&_contract);
 	vector<ContractDefinition const*> result = cThreeMerge(input);
 	if (result.empty())
 		BOOST_THROW_EXCEPTION(_contract.createTypeError("Linearization of inheritance graph impossible"));
-	_contract.setLinearizedBaseContracts(result);
+	_contract.annotation().linearizedBaseContracts = result;
 }
 
 template <class _T>
@@ -402,140 +398,6 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)
 		enterNewSubScope(_declaration);
-}
-
-ReferencesResolver::ReferencesResolver(
-	ASTNode& _root,
-	NameAndTypeResolver& _resolver,
-	ContractDefinition const* _currentContract,
-	ParameterList const* _returnParameters,
-	bool _resolveInsideCode,
-	bool _allowLazyTypes
-):
-	m_resolver(_resolver),
-	m_currentContract(_currentContract),
-	m_returnParameters(_returnParameters),
-	m_resolveInsideCode(_resolveInsideCode),
-	m_allowLazyTypes(_allowLazyTypes)
-{
-	_root.accept(*this);
-}
-
-void ReferencesResolver::endVisit(VariableDeclaration& _variable)
-{
-	// endVisit because the internal type needs resolving if it is a user defined type
-	// or mapping
-	if (_variable.typeName())
-	{
-		TypePointer type = _variable.typeName()->toType();
-		using Location = VariableDeclaration::Location;
-		Location loc = _variable.referenceLocation();
-		// References are forced to calldata for external function parameters (not return)
-		// and memory for parameters (also return) of publicly visible functions.
-		// They default to memory for function parameters and storage for local variables.
-		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
-		{
-			if (_variable.isExternalCallableParameter())
-			{
-				// force location of external function parameters (not return) to calldata
-				if (loc != Location::Default)
-					BOOST_THROW_EXCEPTION(_variable.createTypeError(
-						"Location has to be calldata for external functions "
-						"(remove the \"memory\" or \"storage\" keyword)."
-					));
-				type = ref->copyForLocation(DataLocation::CallData, true);
-			}
-			else if (_variable.isCallableParameter() && _variable.scope()->isPublic())
-			{
-				// force locations of public or external function (return) parameters to memory
-				if (loc == VariableDeclaration::Location::Storage)
-					BOOST_THROW_EXCEPTION(_variable.createTypeError(
-						"Location has to be memory for publicly visible functions "
-						"(remove the \"storage\" keyword)."
-					));
-				type = ref->copyForLocation(DataLocation::Memory, true);
-			}
-			else
-			{
-				if (_variable.isConstant())
-				{
-					if (loc != Location::Default && loc != Location::Memory)
-						BOOST_THROW_EXCEPTION(_variable.createTypeError(
-							"Storage location has to be \"memory\" (or unspecified) for constants."
-						));
-					loc = Location::Memory;
-				}
-				if (loc == Location::Default)
-					loc = _variable.isCallableParameter() ? Location::Memory : Location::Storage;
-				bool isPointer = !_variable.isStateVariable();
-				type = ref->copyForLocation(
-					loc == Location::Memory ?
-					DataLocation::Memory :
-					DataLocation::Storage,
-					isPointer
-				);
-			}
-		}
-		else if (loc != Location::Default && !ref)
-			BOOST_THROW_EXCEPTION(_variable.createTypeError(
-				"Storage location can only be given for array or struct types."
-			));
-
-		_variable.setType(type);
-
-		if (!_variable.type())
-			BOOST_THROW_EXCEPTION(_variable.typeName()->createTypeError("Invalid type name"));
-	}
-	else if (!m_allowLazyTypes)
-		BOOST_THROW_EXCEPTION(_variable.createTypeError("Explicit type needed."));
-	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
-}
-
-bool ReferencesResolver::visit(Return& _return)
-{
-	_return.setFunctionReturnParameters(m_returnParameters);
-	return true;
-}
-
-bool ReferencesResolver::visit(Mapping&)
-{
-	return true;
-}
-
-bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
-{
-	auto declarations = m_resolver.nameFromCurrentScope(_typeName.name());
-	if (declarations.empty())
-		BOOST_THROW_EXCEPTION(
-			DeclarationError() <<
-			errinfo_sourceLocation(_typeName.location()) <<
-			errinfo_comment("Undeclared identifier.")
-		);
-	else if (declarations.size() > 1)
-		BOOST_THROW_EXCEPTION(
-			DeclarationError() <<
-			errinfo_sourceLocation(_typeName.location()) <<
-			errinfo_comment("Duplicate identifier.")
-		);
-	else
-		_typeName.setReferencedDeclaration(**declarations.begin());
-	return false;
-}
-
-bool ReferencesResolver::visit(Identifier& _identifier)
-{
-	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
-	if (declarations.empty())
-		BOOST_THROW_EXCEPTION(
-			DeclarationError() <<
-			errinfo_sourceLocation(_identifier.location()) <<
-			errinfo_comment("Undeclared identifier.")
-		);
-	else if (declarations.size() == 1)
-		_identifier.setReferencedDeclaration(*declarations.front(), m_currentContract);
-	else
-		_identifier.setOverloadedDeclarations(m_resolver.cleanedDeclarations(_identifier, declarations));
-	return false;
 }
 
 }

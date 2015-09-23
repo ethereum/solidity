@@ -96,7 +96,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		{
 			Json::Value input;
 			input["name"] = p->name();
-			input["type"] = p->type()->toString(true);
+			input["type"] = p->annotation().type->toString(true);
 			input["indexed"] = p->isIndexed();
 			params.append(input);
 		}

@@ -37,10 +37,8 @@ public:
 	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
 		m_optimize(_optimize),
 		m_optimizeRuns(_runs),
-		m_context(),
 		m_returnTag(m_context.newTag())
-	{
-	}
+	{ }
 
 	void compileContract(
 		ContractDefinition const& _contract,
@@ -71,7 +69,8 @@ public:
 	eth::AssemblyItem functionEntryLabel(FunctionDefinition const& _function) const;
 
 private:
-	/// Registers the non-function objects inside the contract with the context.
+	/// Registers the non-function objects inside the contract with the context and stores the basic
+	/// information about the contract like the AST annotations.
 	void initializeContext(
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts

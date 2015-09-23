@@ -35,6 +35,7 @@ class Declaration;
 class Type;
 class ArrayType;
 class CompilerContext;
+class VariableDeclaration;
 
 /**
  * Abstract class used to retrieve, delete and store data in lvalues/variables.
@@ -76,7 +77,7 @@ protected:
 class StackVariable: public LValue
 {
 public:
-	StackVariable(CompilerContext& _compilerContext, Declaration const& _declaration);
+	StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration);
 
 	virtual unsigned sizeOnStack() const override { return 0; }
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
@@ -129,7 +130,7 @@ class StorageItem: public LValue
 {
 public:
 	/// Constructs the LValue and pushes the location of @a _declaration onto the stack.
-	StorageItem(CompilerContext& _compilerContext, Declaration const& _declaration);
+	StorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration);
 	/// Constructs the LValue and assumes that the storage reference is already on the stack.
 	StorageItem(CompilerContext& _compilerContext, Type const& _type);
 	virtual unsigned sizeOnStack() const override { return 2; }

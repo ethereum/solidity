@@ -147,12 +147,6 @@ void StructDefinition::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
-void StructDefinition::checkValidityOfMembers() const
-{
-	checkMemberTypes();
-	checkRecursion();
-}
-
 void ParameterList::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

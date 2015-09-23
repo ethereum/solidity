@@ -29,6 +29,7 @@
 #include <libevmasm/Assembly.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Types.h>
+#include <libsolidity/ASTAnnotations.h>
 #include <libdevcore/Common.h>
 
 namespace dev {

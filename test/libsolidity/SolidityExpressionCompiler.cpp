@@ -29,6 +29,7 @@
 #include <libsolidity/CompilerContext.h>
 #include <libsolidity/ExpressionCompiler.h>
 #include <libsolidity/AST.h>
+#include <libsolidity/TypeChecker.h>
 #include "../TestHelper.h"
 
 using namespace std;
@@ -117,7 +118,8 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			ETH_TEST_REQUIRE_NO_THROW(resolver.checkTypeRequirements(*contract), "Checking type Requirements failed");
+			TypeChecker typeChecker;
+			BOOST_REQUIRE(typeChecker.checkTypeRequirements(*contract));
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))

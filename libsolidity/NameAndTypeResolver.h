@@ -25,9 +25,10 @@
 #include <map>
 #include <list>
 #include <boost/noncopyable.hpp>
-
 #include <libsolidity/DeclarationContainer.h>
+#include <libsolidity/ReferencesResolver.h>
 #include <libsolidity/ASTVisitor.h>
+#include <libsolidity/ASTAnnotations.h>
 
 namespace dev
 {
@@ -42,13 +43,11 @@ namespace solidity
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
-	explicit NameAndTypeResolver(std::vector<Declaration const*> const& _globals);
+	NameAndTypeResolver(std::vector<Declaration const*> const& _globals);
 	/// Registers all declarations found in the source unit.
 	void registerDeclarations(SourceUnit& _sourceUnit);
 	/// Resolves all names and types referenced from the given contract.
 	void resolveNamesAndTypes(ContractDefinition& _contract);
-	/// Check all type requirements in the given contract.
-	void checkTypeRequirements(ContractDefinition& _contract);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations
 	/// that create their own scope.
 	void updateDeclaration(Declaration const& _declaration);
@@ -123,37 +122,6 @@ private:
 	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
 	Declaration const* m_currentScope;
 	VariableScope* m_currentFunction;
-};
-
-/**
- * Resolves references to declarations (of variables and types) and also establishes the link
- * between a return statement and the return parameter list.
- */
-class ReferencesResolver: private ASTVisitor
-{
-public:
-	ReferencesResolver(
-		ASTNode& _root,
-		NameAndTypeResolver& _resolver,
-		ContractDefinition const* _currentContract,
-		ParameterList const* _returnParameters,
-		bool _resolveInsideCode = false,
-		bool _allowLazyTypes = true
-	);
-
-private:
-	virtual void endVisit(VariableDeclaration& _variable) override;
-	virtual bool visit(Block&) override { return m_resolveInsideCode; }
-	virtual bool visit(Identifier& _identifier) override;
-	virtual bool visit(UserDefinedTypeName& _typeName) override;
-	virtual bool visit(Mapping&) override;
-	virtual bool visit(Return& _return) override;
-
-	NameAndTypeResolver& m_resolver;
-	ContractDefinition const* m_currentContract;
-	ParameterList const* m_returnParameters;
-	bool m_resolveInsideCode;
-	bool m_allowLazyTypes;
 };
 
 }
