@@ -74,6 +74,7 @@ static string const g_stdinFileName = "<stdin>";
 /// Possible arguments to for --combined-json
 static set<string> const g_combinedJsonArgs{
 	"bin",
+	"bin-runtime",
 	"clone-bin",
 	"opcodes",
 	"abi",
@@ -144,7 +145,7 @@ void CommandLineInterface::handleBinary(string const& _contract)
 	if (m_args.count(g_argRuntimeBinaryStr))
 	{
 		if (m_args.count("output-dir"))
-			createFile(_contract + ".bin", m_compiler->runtimeObject(_contract).toHex());
+			createFile(_contract + ".bin-runtime", m_compiler->runtimeObject(_contract).toHex());
 		else
 		{
 			cout << "Binary of the runtime part: " << endl;
@@ -545,6 +546,7 @@ void CommandLineInterface::handleCombinedJSON()
 
 	Json::Value output(Json::objectValue);
 
+	output["version"] = ::dev::solidity::VersionString;
 	set<string> requests;
 	boost::split(requests, m_args["combined-json"].as<string>(), boost::is_any_of(","));
 	vector<string> contracts = m_compiler->contractNames();
@@ -559,7 +561,9 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count("abi"))
 			contractData["abi"] = m_compiler->interface(contractName);
 		if (requests.count("bin"))
-			contractData["bin"] = m_compiler->runtimeObject(contractName).toHex();
+			contractData["bin"] = m_compiler->object(contractName).toHex();
+		if (requests.count("bin-runtime"))
+			contractData["bin-runtime"] = m_compiler->runtimeObject(contractName).toHex();
 		if (requests.count("clone-bin"))
 			contractData["clone-bin"] = m_compiler->cloneObject(contractName).toHex();
 		if (requests.count("opcodes"))
