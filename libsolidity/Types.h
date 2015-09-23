@@ -501,6 +501,7 @@ public:
 	bool isString() const { return m_arrayKind == ArrayKind::String; }
 	TypePointer const& baseType() const { solAssert(!!m_baseType, ""); return m_baseType;}
 	u256 const& length() const { return m_length; }
+	u256 memorySize() const;
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
