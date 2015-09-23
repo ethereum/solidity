@@ -511,7 +511,9 @@ bool StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	if (auto fixedBytes = dynamic_cast<FixedBytesType const*>(&_convertTo))
 		return size_t(fixedBytes->numBytes()) >= m_value.size();
 	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
-		return arrayType->isByteArray();
+		return
+			arrayType->isByteArray() &&
+			!(arrayType->dataStoredIn(DataLocation::Storage) && arrayType->isPointer());
 	else
 		return false;
 }
