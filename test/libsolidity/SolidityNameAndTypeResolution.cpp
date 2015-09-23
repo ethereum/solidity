@@ -2308,6 +2308,16 @@ BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(literal_string_to_storage_pointer)
+{
+	char const* text = R"(
+		contract C {
+			function f() { string x = "abc"; }
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
