@@ -1256,10 +1256,14 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	}
 	else if (firstReturnType)
 	{
-		//@todo manually update free memory pointer if we accept returning memory-stored objects
 		utils().fetchFreeMemoryPointer();
-		utils().loadFromMemoryDynamic(*firstReturnType, false, true, false);
-
+		if (dynamic_cast<ReferenceType const*>(firstReturnType))
+		{
+			utils().loadFromMemoryDynamic(*firstReturnType, false, true, true);
+			utils().storeFreeMemoryPointer();
+		}
+		else
+			utils().loadFromMemoryDynamic(*firstReturnType, false, true, false);
 	}
 }
 

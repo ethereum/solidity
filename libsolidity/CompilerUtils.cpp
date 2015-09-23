@@ -86,16 +86,27 @@ void CompilerUtils::loadFromMemoryDynamic(
 	bool _padToWordBoundaries,
 	bool _keepUpdatedMemoryOffset
 )
-{
-	solAssert(_type.category() != Type::Category::Array, "Arrays not yet implemented.");
+{		
 	if (_keepUpdatedMemoryOffset)
 		m_context << eth::Instruction::DUP1;
-	unsigned numBytes = loadFromMemoryHelper(_type, _fromCalldata, _padToWordBoundaries);
-	if (_keepUpdatedMemoryOffset)
+
+	if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
 	{
-		// update memory counter
-		moveToStackTop(_type.sizeOnStack());
-		m_context << u256(numBytes) << eth::Instruction::ADD;
+		solAssert(!arrayType->isDynamicallySized(), "");
+		solAssert(!_fromCalldata, "");
+		solAssert(_padToWordBoundaries, "");
+		if (_keepUpdatedMemoryOffset)
+			m_context << arrayType->memorySize() << eth::Instruction::ADD;
+	}
+	else
+	{
+		unsigned numBytes = loadFromMemoryHelper(_type, _fromCalldata, _padToWordBoundaries);
+		if (_keepUpdatedMemoryOffset)
+		{
+			// update memory counter
+			moveToStackTop(_type.sizeOnStack());
+			m_context << u256(numBytes) << eth::Instruction::ADD;
+		}
 	}
 }
 

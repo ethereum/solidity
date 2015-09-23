@@ -5325,6 +5325,25 @@ BOOST_AUTO_TEST_CASE(strings_in_struct)
 	BOOST_CHECK(callContractFunction("getLast()") == encodeDyn(s));
 }
 
+BOOST_AUTO_TEST_CASE(fixed_arrays_as_return_type)
+{
+	char const* sourceCode = R"(
+		contract A {
+			function f() constant returns (uint16[5] arr)
+			{
+			}
+		}
+		contract B {
+			function f()
+			{
+				var a = new A();
+				uint16[5] memory res = a.f();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "B");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

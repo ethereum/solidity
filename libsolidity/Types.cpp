@@ -853,6 +853,14 @@ TypePointer ArrayType::externalType() const
 		return std::make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
 }
 
+u256 ArrayType::memorySize() const
+{
+	solAssert(!isDynamicallySized(), "");
+	solAssert(m_location == DataLocation::Memory, "");
+
+	return m_length * m_baseType->memoryHeadSize();
+}
+
 TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) const
 {
 	auto copy = make_shared<ArrayType>(_location);
