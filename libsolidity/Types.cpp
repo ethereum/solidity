@@ -859,9 +859,9 @@ u256 ArrayType::memorySize() const
 {
 	solAssert(!isDynamicallySized(), "");
 	solAssert(m_location == DataLocation::Memory, "");
-	u256 size =  m_length * m_baseType->memoryHeadSize();
-	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
-	return size;
+	bigint size = bigint(m_length) * m_baseType->memoryHeadSize();
+	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit u256.");
+	return u256(size);
 }
 
 TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) const
