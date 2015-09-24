@@ -2318,6 +2318,24 @@ BOOST_AUTO_TEST_CASE(literal_string_to_storage_pointer)
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(non_initialized_references)
+{
+	char const* text = R"(
+		contract c
+		{
+			struct s{
+				uint a;
+			}
+			function f()
+			{
+				s x;
+				x.a = 2;
+			}
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
