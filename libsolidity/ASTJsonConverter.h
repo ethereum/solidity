@@ -116,6 +116,7 @@ private:
 					 std::initializer_list<std::pair<std::string const, std::string const>> _list,
 					 bool _hasChildren);
 	std::string type(Expression const& _expression);
+	std::string type(VariableDeclaration const& _varDecl);
 	inline void goUp()
 	{
 		solAssert(!m_jsonNodePtrs.empty(), "Uneven json nodes stack. Internal error.");
