@@ -124,7 +124,10 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 
 bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 {
-	addJsonNode("VariableDeclaration", { make_pair("name", _node.name()) }, true);
+	addJsonNode("VariableDeclaration", {
+		make_pair("name", _node.name()),
+		make_pair("name", _node.name()),
+	}, true);
 	return true;
 }
 
@@ -442,6 +445,11 @@ void ASTJsonConverter::process()
 string ASTJsonConverter::type(Expression const& _expression)
 {
 	return _expression.annotation().type ? _expression.annotation().type->toString() : "Unknown";
+}
+
+string ASTJsonConverter::type(VariableDeclaration const& _varDecl)
+{
+	return _varDecl.annotation().type ? _varDecl.annotation().type->toString() : "Unknown";
 }
 
 }

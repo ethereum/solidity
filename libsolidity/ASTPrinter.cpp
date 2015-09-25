@@ -105,6 +105,11 @@ bool ASTPrinter::visit(FunctionDefinition const& _node)
 bool ASTPrinter::visit(VariableDeclaration const& _node)
 {
 	writeLine("VariableDeclaration \"" + _node.name() + "\"");
+	*m_ostream << indentation() << (
+		_node.annotation().type ?
+		string("   Type: ") + _node.annotation().type->toString() :
+		string("   Type unknown.")
+	) << "\n";
 	printSourcePart(_node);
 	return goDeeper();
 }
