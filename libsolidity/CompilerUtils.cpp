@@ -237,15 +237,7 @@ void CompilerUtils::encodeToMemory(
 				// stack: ... <end_of_mem> <value...>
 				// copy length to memory
 				m_context << eth::dupInstruction(1 + arrayType.sizeOnStack());
-				if (arrayType.location() == DataLocation::CallData)
-					m_context << eth::Instruction::DUP2; // length is on stack
-				else if (arrayType.location() == DataLocation::Storage)
-					m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
-				else
-				{
-					solAssert(arrayType.location() == DataLocation::Memory, "");
-					m_context << eth::Instruction::DUP2 << eth::Instruction::MLOAD;
-				}
+				ArrayUtils(m_context).retrieveLength(arrayType, 1);
 				// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
 				storeInMemoryDynamic(IntegerType(256), true);
 				// stack: ... <end_of_mem> <value...> <end_of_mem''>

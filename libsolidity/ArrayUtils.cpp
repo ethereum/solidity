@@ -76,7 +76,9 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// stack: target_ref source_ref source_length target_ref target_length
 	if (_targetType.isDynamicallySized())
 		// store new target length
-		m_context << eth::Instruction::DUP3 << eth::Instruction::DUP3 << eth::Instruction::SSTORE;
+		if (!_targetType.isByteArray())
+			// Otherwise, length will be stored below.
+			m_context << eth::Instruction::DUP3 << eth::Instruction::DUP3 << eth::Instruction::SSTORE;
 	if (sourceBaseType->category() == Type::Category::Mapping)
 	{
 		solAssert(targetBaseType->category() == Type::Category::Mapping, "");
@@ -87,6 +89,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 			<< eth::Instruction::POP << eth::Instruction::POP;
 		return;
 	}
+	// stack: target_ref source_ref source_length target_ref target_length
 	// compute hashes (data positions)
 	m_context << eth::Instruction::SWAP1;
 	if (_targetType.isDynamicallySized())
@@ -98,9 +101,46 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	// stack: target_ref source_ref source_length target_data_pos target_data_end
 	m_context << eth::Instruction::SWAP3;
 	// stack: target_ref target_data_end source_length target_data_pos source_ref
+
+	eth::AssemblyItem copyLoopEndWithoutByteOffset = m_context.newTag();
+
+	// special case for short byte arrays: Store them together with their length.
+	if (_targetType.isByteArray())
+	{
+		// stack: target_ref target_data_end source_length target_data_pos source_ref
+		m_context << eth::Instruction::DUP3 << u256(31) << eth::Instruction::LT;
+		eth::AssemblyItem longByteArray = m_context.appendConditionalJump();
+		// store the short byte array
+		solAssert(_sourceType.isByteArray(), "");
+		if (_sourceType.location() == DataLocation::Storage)
+		{
+			// just copy the slot, it contains length and data
+			m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
+			m_context << eth::Instruction::DUP6 << eth::Instruction::SSTORE;
+		}
+		else
+		{
+			m_context << eth::Instruction::DUP1;
+			CompilerUtils(m_context).loadFromMemoryDynamic(*sourceBaseType, fromCalldata, true, false);
+			// stack: target_ref target_data_end source_length target_data_pos source_ref value
+			// clear the lower-order byte - which will hold the length
+			m_context << u256(0xff) << eth::Instruction::NOT << eth::Instruction::AND;
+			// fetch the length and shift it left by one
+			m_context << eth::Instruction::DUP4 << eth::Instruction::DUP1 << eth::Instruction::ADD;
+			// combine value and length and store them
+			m_context << eth::Instruction::OR << eth::Instruction::DUP6 << eth::Instruction::SSTORE;
+		}
+		// end of special case, jump right into cleaning target data area
+		m_context.appendJumpTo(copyLoopEndWithoutByteOffset);
+		m_context << longByteArray;
+		// Store length (2*length+1)
+		m_context << eth::Instruction::DUP3 << eth::Instruction::DUP1 << eth::Instruction::ADD;
+		m_context << u256(1) << eth::Instruction::ADD;
+		m_context << eth::Instruction::DUP6 << eth::Instruction::SSTORE;
+	}
+
 	// skip copying if source length is zero
 	m_context << eth::Instruction::DUP3 << eth::Instruction::ISZERO;
-	eth::AssemblyItem copyLoopEndWithoutByteOffset = m_context.newTag();
 	m_context.appendConditionalJumpTo(copyLoopEndWithoutByteOffset);
 
 	if (_sourceType.location() == DataLocation::Storage && _sourceType.isDynamicallySized())
@@ -121,8 +161,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	m_context
 		<< eth::dupInstruction(3 + byteOffsetSize) << eth::dupInstruction(2 + byteOffsetSize)
 		<< eth::Instruction::GT << eth::Instruction::ISZERO;
-	eth::AssemblyItem copyLoopEnd = m_context.newTag();
-	m_context.appendConditionalJumpTo(copyLoopEnd);
+	eth::AssemblyItem copyLoopEnd = m_context.appendConditionalJump();
 	// stack: target_ref target_data_end source_data_pos target_data_pos source_data_end [target_byte_offset] [source_byte_offset]
 	// copy
 	if (sourceBaseType->category() == Type::Category::Array)
@@ -229,7 +268,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	m_context << eth::Instruction::POP;
 }
 
-void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWordBoundaries) const
+void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWordBoundaries) const
 {
 	solAssert(
 		_sourceType.baseType()->calldataEncodedSize() > 0,
@@ -360,8 +399,30 @@ void ArrayUtils::copyArrayToMemory(const ArrayType& _sourceType, bool _padToWord
 		// stack here: memory_offset storage_offset length
 		// jump to end if length is zero
 		m_context << eth::Instruction::DUP1 << eth::Instruction::ISZERO;
-		eth::AssemblyItem loopEnd = m_context.newTag();
-		m_context.appendConditionalJumpTo(loopEnd);
+		eth::AssemblyItem loopEnd = m_context.appendConditionalJump();
+		// Special case for tightly-stored byte arrays
+		if (_sourceType.isByteArray())
+		{
+			// stack here: memory_offset storage_offset length
+			m_context << eth::Instruction::DUP1 << u256(31) << eth::Instruction::LT;
+			eth::AssemblyItem longByteArray = m_context.appendConditionalJump();
+			// store the short byte array (discard lower-order byte)
+			m_context << u256(0x100) << eth::Instruction::DUP1;
+			m_context << eth::Instruction::DUP4 << eth::Instruction::SLOAD;
+			m_context << eth::Instruction::DIV << eth::Instruction::MUL;
+			m_context << eth::Instruction::DUP4 << eth::Instruction::MSTORE;
+			// stack here: memory_offset storage_offset length
+			// add 32 or length to memory offset
+			m_context << eth::Instruction::SWAP2;
+			if (_padToWordBoundaries)
+				m_context << u256(32);
+			else
+				m_context << eth::Instruction::DUP3;
+			m_context << eth::Instruction::ADD;
+			m_context << eth::Instruction::SWAP2;
+			m_context.appendJumpTo(loopEnd);
+			m_context << longByteArray;
+		}
 		// compute memory end offset
 		if (baseSize > 1)
 			// convert length to memory size
@@ -497,11 +558,22 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
 
-	unsigned stackHeightStart = m_context.stackHeight();
 	// fetch length
-	m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD;
+	retrieveLength(_type);
 	// set length to zero
 	m_context << u256(0) << eth::Instruction::DUP3 << eth::Instruction::SSTORE;
+	// Special case: short byte arrays are stored togeher with their length
+	eth::AssemblyItem endTag = m_context.newTag();
+	if (_type.isByteArray())
+	{
+		// stack: ref old_length
+		m_context << eth::Instruction::DUP1 << u256(31) << eth::Instruction::LT;
+		eth::AssemblyItem longByteArray = m_context.appendConditionalJump();
+		m_context << eth::Instruction::POP;
+		m_context.appendJumpTo(endTag);
+		m_context.adjustStackOffset(1); // needed because of jump
+		m_context << longByteArray;
+	}
 	// stack: ref old_length
 	convertLengthToSize(_type);
 	// compute data positions
@@ -516,11 +588,11 @@ void ArrayUtils::clearDynamicArray(ArrayType const& _type) const
 	else
 		clearStorageLoop(*_type.baseType());
 	// cleanup
+	m_context << endTag;
 	m_context << eth::Instruction::POP;
-	solAssert(m_context.stackHeight() == stackHeightStart - 1, "");
 }
 
-void ArrayUtils::resizeDynamicArray(const ArrayType& _type) const
+void ArrayUtils::resizeDynamicArray(ArrayType const& _type) const
 {
 	solAssert(_type.location() == DataLocation::Storage, "");
 	solAssert(_type.isDynamicallySized(), "");
@@ -532,10 +604,104 @@ void ArrayUtils::resizeDynamicArray(const ArrayType& _type) const
 
 	// stack: ref new_length
 	// fetch old length
-	m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
+	retrieveLength(_type, 1);
+	// stack: ref new_length old_length
+	solAssert(m_context.stackHeight() - stackHeightStart == 3 - 2, "2");
+
+	// Special case for short byte arrays, they are stored together with their length
+	if (_type.isByteArray())
+	{
+		eth::AssemblyItem regularPath = m_context.newTag();
+		// We start by a large case-distinction about the old and new length of the byte array.
+
+		m_context << eth::Instruction::DUP3 << eth::Instruction::SLOAD;
+		// stack: ref new_length current_length ref_value
+
+		solAssert(m_context.stackHeight() - stackHeightStart == 4 - 2, "3");
+		m_context << eth::Instruction::DUP2 << u256(31) << eth::Instruction::LT;
+		eth::AssemblyItem currentIsLong = m_context.appendConditionalJump();
+		m_context << eth::Instruction::DUP3 << u256(31) << eth::Instruction::LT;
+		eth::AssemblyItem newIsLong = m_context.appendConditionalJump();
+
+		// Here: short -> short
+
+		// Compute 1 << (256 - 8 * new_size)
+		eth::AssemblyItem shortToShort = m_context.newTag();
+		m_context << shortToShort;
+		m_context << eth::Instruction::DUP3 << u256(8) << eth::Instruction::MUL;
+		m_context << u256(0x100) << eth::Instruction::SUB;
+		m_context << u256(2) << eth::Instruction::EXP;
+		// Divide and multiply by that value, clearing bits.
+		m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2;
+		m_context << eth::Instruction::DIV << eth::Instruction::MUL;
+		// Insert 2*length.
+		m_context << eth::Instruction::DUP3 << eth::Instruction::DUP1 << eth::Instruction::ADD;
+		m_context << eth::Instruction::OR;
+		// Store.
+		m_context << eth::Instruction::DUP4 << eth::Instruction::SSTORE;
+		solAssert(m_context.stackHeight() - stackHeightStart == 3 - 2, "3");
+		m_context.appendJumpTo(resizeEnd);
+
+		m_context.adjustStackOffset(1); // we have to do that because of the jumps
+		// Here: short -> long
+
+		m_context << newIsLong;
+		// stack: ref new_length current_length ref_value
+		solAssert(m_context.stackHeight() - stackHeightStart == 4 - 2, "3");
+		// Zero out lower-order byte.
+		m_context << u256(0xff) << eth::Instruction::NOT << eth::Instruction::AND;
+		// Store at data location.
+		m_context << eth::Instruction::DUP4;
+		CompilerUtils(m_context).computeHashStatic();
+		m_context << eth::Instruction::SSTORE;
+		// stack: ref new_length current_length
+		// Store new length: Compule 2*length + 1 and store it.
+		m_context << eth::Instruction::DUP2 << eth::Instruction::DUP1 << eth::Instruction::ADD;
+		m_context << u256(1) << eth::Instruction::ADD;
+		// stack: ref new_length current_length 2*new_length+1
+		m_context << eth::Instruction::DUP4 << eth::Instruction::SSTORE;
+		solAssert(m_context.stackHeight() - stackHeightStart == 3 - 2, "3");
+		m_context.appendJumpTo(resizeEnd);
+
+		m_context.adjustStackOffset(1); // we have to do that because of the jumps
+
+		m_context << currentIsLong;
+		m_context << eth::Instruction::DUP3 << u256(31) << eth::Instruction::LT;
+		m_context.appendConditionalJumpTo(regularPath);
+
+		// Here: long -> short
+		// Read the first word of the data and store it on the stack. Clear the data location and
+		// then jump to the short -> short case.
+
+		// stack: ref new_length current_length ref_value
+		solAssert(m_context.stackHeight() - stackHeightStart == 4 - 2, "3");
+		m_context << eth::Instruction::POP << eth::Instruction::DUP3;
+		CompilerUtils(m_context).computeHashStatic();
+		m_context << eth::Instruction::DUP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP1;
+		// stack: ref new_length current_length first_word data_location
+		m_context << eth::Instruction::DUP3;
+		convertLengthToSize(_type);
+		m_context << eth::Instruction::DUP2 << eth::Instruction::ADD << eth::Instruction::SWAP1;
+		// stack: ref new_length current_length first_word data_location_end data_location
+		clearStorageLoop(IntegerType(256));
+		m_context << eth::Instruction::POP;
+		// stack: ref new_length current_length first_word
+		solAssert(m_context.stackHeight() - stackHeightStart == 4 - 2, "3");
+		m_context.appendJumpTo(shortToShort);
+
+		m_context << regularPath;
+		// stack: ref new_length current_length ref_value
+		m_context << eth::Instruction::POP;
+	}
+
+	// Change of length for a regular array (i.e. length at location, data at sha3(location)).
 	// stack: ref new_length old_length
 	// store new length
-	m_context << eth::Instruction::DUP2 << eth::Instruction::DUP4 << eth::Instruction::SSTORE;
+	m_context << eth::Instruction::DUP2;
+	if (_type.isByteArray())
+		// For a "long" byte array, store length as 2*length+1
+		m_context << eth::Instruction::DUP1 << eth::Instruction::ADD << u256(1) << eth::Instruction::ADD;
+	m_context<< eth::Instruction::DUP4 << eth::Instruction::SSTORE;
 	// skip if size is not reduced
 	m_context << eth::Instruction::DUP2 << eth::Instruction::DUP2
 		<< eth::Instruction::ISZERO << eth::Instruction::GT;
@@ -642,13 +808,13 @@ void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) con
 	}
 }
 
-void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
+void ArrayUtils::retrieveLength(ArrayType const& _arrayType, unsigned _stackDepth) const
 {
 	if (!_arrayType.isDynamicallySized())
 		m_context << _arrayType.length();
 	else
 	{
-		m_context << eth::Instruction::DUP1;
+		m_context << eth::dupInstruction(1 + _stackDepth);
 		switch (_arrayType.location())
 		{
 		case DataLocation::CallData:
@@ -659,6 +825,17 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
 			break;
 		case DataLocation::Storage:
 			m_context << eth::Instruction::SLOAD;
+			if (_arrayType.isByteArray())
+			{
+				// Retrieve length both for in-place strings and off-place strings:
+				// Computes (x & (0x100 * (ISZERO (x & 1)) - 1)) / 2
+				// i.e. for short strings (x & 1 == 0) it does (x & 0xff) / 2 and for long strings it
+				// computes (x & (-1)) / 2, which is equivalent to just x / 2.
+				m_context << u256(1) << eth::Instruction::DUP2 << u256(1) << eth::Instruction::AND;
+				m_context << eth::Instruction::ISZERO << u256(0x100) << eth::Instruction::MUL;
+				m_context << eth::Instruction::SUB << eth::Instruction::AND;
+				m_context << u256(2) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			}
 			break;
 		}
 	}
@@ -666,46 +843,33 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
 
 void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) const
 {
+	/// Stack: reference [length] index
 	DataLocation location = _arrayType.location();
-	eth::Instruction load =
-		location == DataLocation::Storage ? eth::Instruction::SLOAD :
-		location == DataLocation::Memory ? eth::Instruction::MLOAD :
-		eth::Instruction::CALLDATALOAD;
 
 	if (_doBoundsCheck)
 	{
 		// retrieve length
-		if (!_arrayType.isDynamicallySized())
-			m_context << _arrayType.length();
-		else if (location == DataLocation::CallData)
-			// length is stored on the stack
-			m_context << eth::Instruction::SWAP1;
-		else
-			m_context << eth::Instruction::DUP2 << load;
-		// stack: <base_ref> <index> <length>
+		ArrayUtils::retrieveLength(_arrayType, 1);
+		// Stack: ref [length] index length
 		// check out-of-bounds access
 		m_context << eth::Instruction::DUP2 << eth::Instruction::LT << eth::Instruction::ISZERO;
 		// out-of-bounds access throws exception
 		m_context.appendConditionalJumpTo(m_context.errorTag());
 	}
-	else if (location == DataLocation::CallData && _arrayType.isDynamicallySized())
+	if (location == DataLocation::CallData && _arrayType.isDynamicallySized())
 		// remove length if present
 		m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 
 	// stack: <base_ref> <index>
 	m_context << eth::Instruction::SWAP1;
-	if (_arrayType.isDynamicallySized())
-	{
-		if (location == DataLocation::Storage)
-			CompilerUtils(m_context).computeHashStatic();
-		else if (location == DataLocation::Memory)
-			m_context << u256(32) << eth::Instruction::ADD;
-	}
-	// stack: <index> <data_ref>
+	// stack: <index> <base_ref>
 	switch (location)
 	{
-	case DataLocation::CallData:
 	case DataLocation::Memory:
+		if (_arrayType.isDynamicallySized())
+			m_context << u256(32) << eth::Instruction::ADD;
+		// fall-through
+	case DataLocation::CallData:
 		if (!_arrayType.isByteArray())
 		{
 			m_context << eth::Instruction::SWAP1;
@@ -718,6 +882,20 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 		m_context << eth::Instruction::ADD;
 		break;
 	case DataLocation::Storage:
+	{
+		eth::AssemblyItem endTag = m_context.newTag();
+		if (_arrayType.isByteArray())
+		{
+			// Special case of short byte arrays.
+			m_context << eth::Instruction::SWAP1;
+			m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
+			m_context << u256(1) << eth::Instruction::AND << eth::Instruction::ISZERO;
+			// No action needed for short byte arrays.
+			m_context.appendConditionalJumpTo(endTag);
+			m_context << eth::Instruction::SWAP1;
+		}
+		if (_arrayType.isDynamicallySized())
+			CompilerUtils(m_context).computeHashStatic();
 		m_context << eth::Instruction::SWAP1;
 		if (_arrayType.baseType()->storageBytes() <= 16)
 		{
@@ -744,7 +922,11 @@ void ArrayUtils::accessIndex(ArrayType const& _arrayType, bool _doBoundsCheck) c
 				m_context << _arrayType.baseType()->storageSize() << eth::Instruction::MUL;
 			m_context << eth::Instruction::ADD << u256(0);
 		}
+		m_context << endTag;
 		break;
+	}
+	default:
+		solAssert(false, "");
 	}
 }
 
