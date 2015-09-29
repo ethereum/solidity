@@ -118,7 +118,7 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 
 	function() {
 		// prevent people from just sending funds to the registrar
-		__throw();
+		throw;
 	}
 
 	function onAuctionEnd(string _name) internal {
@@ -135,19 +135,19 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 
 	function reserve(string _name) external {
 		if (bytes(_name).length == 0)
-			__throw();
+			throw;
 		bool needAuction = requiresAuction(_name);
 		if (needAuction)
 		{
 			if (now < m_toRecord[_name].renewalDate)
-				__throw();
+				throw;
 			bid(_name, msg.sender, msg.value);
 		}
 		else
 		{
 			Record record = m_toRecord[_name];
 			if (record.owner != 0)
-				__throw();
+				throw;
 			m_toRecord[_name].owner = msg.sender;
 			Changed(_name);
 		}
@@ -209,11 +209,6 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 	function subRegistrar(string _name) constant returns (address) { return m_toRecord[_name].subRegistrar; }
 	function content(string _name) constant returns (bytes32) { return m_toRecord[_name].content; }
 	function name(address _addr) constant returns (string o_name) { return m_toName[_addr]; }
-
-	function __throw() internal {
-		// workaround until we have "throw"
-		uint[] x; x[1];
-	}
 
 	mapping (address => string) m_toName;
 	mapping (string => Record) m_toRecord;
