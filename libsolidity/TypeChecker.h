@@ -57,8 +57,6 @@ public:
 
 	/// Adds a new error to the list of errors.
 	void typeError(ASTNode const& _node, std::string const& _description);
-	/// Adds a new warning to the list of errors.
-	void typeWarning(ASTNode const& _node, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort type checking.
 	void fatalTypeError(ASTNode const& _node, std::string const& _description);
