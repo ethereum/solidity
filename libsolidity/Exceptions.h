@@ -31,13 +31,13 @@ namespace dev
 {
 namespace solidity
 {
-
 struct Error: virtual Exception {};
 
 struct ParserError: virtual Error {};
 struct TypeError: virtual Error {};
 struct DeclarationError: virtual Error {};
 struct DocstringParsingError: virtual Error {};
+struct Warning: virtual Error {};
 
 struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
@@ -53,7 +53,6 @@ public:
 		infos.push_back(std::make_pair(_errMsg, _sourceLocation));
 		return *this;
 	}
-
 	std::vector<errorSourceLocationInfo> infos;
 };
 

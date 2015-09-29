@@ -43,10 +43,10 @@ class TypeChecker: private ASTConstVisitor
 {
 public:
 	/// Performs type checking on the given contract and all of its sub-nodes.
-	/// @returns true iff all checks passed.
+	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
 	bool checkTypeRequirements(ContractDefinition const& _contract);
 
-	/// @returns the list of errors found during type checking.
+	/// @returns the list of errors and warnings found during type checking.
 	std::vector<std::shared_ptr<Error const>> const& errors() const { return m_errors; }
 
 	/// @returns the type of an expression and asserts that it is present.
@@ -57,6 +57,9 @@ public:
 
 	/// Adds a new error to the list of errors.
 	void typeError(ASTNode const& _node, std::string const& _description);
+	/// Adds a new warning to the list of errors.
+	void typeWarning(ASTNode const& _node, std::string const& _description);
+
 	/// Adds a new error to the list of errors and throws to abort type checking.
 	void fatalTypeError(ASTNode const& _node, std::string const& _description);
 
