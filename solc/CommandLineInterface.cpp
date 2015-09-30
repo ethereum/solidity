@@ -494,7 +494,11 @@ bool CommandLineInterface::processInput()
 		if (!m_compiler->compile(optimize, runs))
 		{
 			for (auto const& error: m_compiler->errors())
-				SourceReferenceFormatter::printExceptionInformation(cerr, *error, "Error", *m_compiler);
+				SourceReferenceFormatter::printExceptionInformation(
+					cerr,
+					*error,
+					(dynamic_pointer_cast<Warning const>(error)) ? "Warning" : "Error", *m_compiler
+				);
 			return false;
 		}
 		m_compiler->link(m_libraries);

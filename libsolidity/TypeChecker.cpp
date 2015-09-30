@@ -457,7 +457,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 					auto err = make_shared<Warning>();
 					*err <<
 						errinfo_sourceLocation(_variable.location()) <<
-						errinfo_comment("Uninitialized storage pointer. Did you mean '" + varType->toString(true) + " memory'?");
+						errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + _variable.name() + "'?");
 					m_errors.push_back(err);
 				}
 		}
