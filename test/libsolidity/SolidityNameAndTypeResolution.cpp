@@ -45,7 +45,7 @@ namespace
 {
 
 pair<ASTPointer<SourceUnit>, shared_ptr<Exception const>>
-parseAnalyseAndReturnError(string const& _source, bool _warning = false)
+parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 {
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
@@ -76,12 +76,12 @@ parseAnalyseAndReturnError(string const& _source, bool _warning = false)
 				{
 					for (auto const& firstError: typeChecker.errors())
 					{
-						if (!dynamic_pointer_cast<Warning const>(firstError))
+						if (_reportWarnings || !dynamic_pointer_cast<Warning const>(firstError))
 						{
 							err = firstError;
 							break;
 						}
-						else if (_warning)
+						else if (_reportWarnings)
 						{
 							err = firstError;
 							break;

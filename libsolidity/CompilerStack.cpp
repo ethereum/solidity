@@ -122,6 +122,7 @@ bool CompilerStack::parse()
 			}
 
 	InterfaceHandler interfaceHandler;
+	bool typesFine = true;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -129,14 +130,14 @@ bool CompilerStack::parse()
 				m_globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*m_globalContext->currentThis());
 				TypeChecker typeChecker;
-				bool typesFine = typeChecker.checkTypeRequirements(*contract);
-				if (!typesFine)
-					m_errors += typeChecker.errors();
+				if (!typeChecker.checkTypeRequirements(*contract))
+					typesFine = false;
+				m_errors += typeChecker.errors();
 				contract->setDevDocumentation(interfaceHandler.devDocumentation(*contract));
 				contract->setUserDocumentation(interfaceHandler.userDocumentation(*contract));
 				m_contracts[contract->name()].contract = contract;
 			}
-	m_parseSuccessful = m_errors.empty();
+	m_parseSuccessful = typesFine;
 	return m_parseSuccessful;
 }
 

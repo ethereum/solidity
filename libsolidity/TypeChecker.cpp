@@ -43,7 +43,7 @@ bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
 		if (m_errors.empty())
 			throw; // Something is weird here, rather throw again.
 	}
-	bool success = m_errors.empty();
+	bool success = true;
 	for (auto const& it: m_errors)
 		if (!dynamic_cast<Warning const*>(it.get()))
 		{
