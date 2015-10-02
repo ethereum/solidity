@@ -51,9 +51,9 @@ ASTAnnotation& ASTNode::annotation() const
 	return *m_annotation;
 }
 
-TypeError ASTNode::createTypeError(string const& _description) const
+Error ASTNode::createTypeError(string const& _description) const
 {
-	return TypeError() << errinfo_sourceLocation(location()) << errinfo_comment(_description);
+	return Error(Error::Type::TypeError) << errinfo_sourceLocation(location()) << errinfo_comment(_description);
 }
 
 map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const

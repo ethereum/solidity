@@ -147,7 +147,7 @@ private:
 
 	/// Creates a @ref ParserError exception and annotates it with the current position and the
 	/// given @a _description.
-	ParserError createParserError(std::string const& _description) const;
+	Error createParserError(std::string const& _description) const;
 
 	std::shared_ptr<Scanner> m_scanner;
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.

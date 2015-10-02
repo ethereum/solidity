@@ -67,6 +67,7 @@ TypePointer const& TypeChecker::type(VariableDeclaration const& _variable) const
 
 bool TypeChecker::visit(ContractDefinition const& _contract)
 {
+
 	// We force our own visiting order here.
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
@@ -87,7 +88,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 		{
 			if (fallbackFunction)
 			{
-				auto err = make_shared<DeclarationError>();
+				auto err = make_shared<Error>(Error::Type::DeclarationError);
 				*err << errinfo_comment("Only one fallback function is allowed.");
 				m_errors.push_back(err);
 			}
@@ -143,7 +144,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 		for (; it != functions[_contract.name()].end(); ++it)
 			ssl.append("Another declaration is here:", (*it)->location());
 
-		auto err = make_shared<DeclarationError>();
+		auto err = make_shared<Error>(Error(Error::Type::DeclarationError));
 		*err <<
 			errinfo_sourceLocation(functions[_contract.name()].front()->location()) <<
 			errinfo_comment("More than one constructor defined.") <<
@@ -157,7 +158,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			for (size_t j = i + 1; j < overloads.size(); ++j)
 				if (FunctionType(*overloads[i]).hasEqualArgumentTypes(FunctionType(*overloads[j])))
 				{
-					auto err = make_shared<DeclarationError>();
+					auto err = make_shared<Error>(Error(Error::Type::DeclarationError));
 					*err <<
 						errinfo_sourceLocation(overloads[j]->location()) <<
 						errinfo_comment("Function with same name and arguments defined twice.") <<
@@ -1251,7 +1252,7 @@ void TypeChecker::requireLValue(Expression const& _expression)
 
 void TypeChecker::typeError(ASTNode const& _node, string const& _description)
 {
-	auto err = make_shared<TypeError>();
+	auto err = make_shared<Error>(Error(Error::Type::TypeError));;
 	*err <<
 		errinfo_sourceLocation(_node.location()) <<
 		errinfo_comment(_description);

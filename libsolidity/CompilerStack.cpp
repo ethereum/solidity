@@ -107,7 +107,7 @@ bool CompilerStack::parse()
 	resolveImports();
 
 	m_globalContext = make_shared<GlobalContext>();
-	NameAndTypeResolver resolver(m_globalContext->declarations());
+	NameAndTypeResolver resolver(m_globalContext->declarations(), m_errors);
 	for (Source const* source: m_sourceOrder)
 		resolver.registerDeclarations(*source->ast);
 	for (Source const* source: m_sourceOrder)
@@ -345,7 +345,7 @@ void CompilerStack::resolveImports()
 				string const& id = import->identifier();
 				if (!m_sources.count(id))
 					BOOST_THROW_EXCEPTION(
-						ParserError()
+						Error(Error::Type::ParserError)
 							  << errinfo_sourceLocation(import->location())
 							  << errinfo_comment("Source not found.")
 					);

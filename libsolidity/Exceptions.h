@@ -31,13 +31,51 @@ namespace dev
 {
 namespace solidity
 {
-struct Error: virtual Exception {};
 
-struct ParserError: virtual Error {};
-struct TypeError: virtual Error {};
-struct DeclarationError: virtual Error {};
-struct DocstringParsingError: virtual Error {};
-struct Warning: virtual Error {};
+class Error: virtual public Exception
+{
+public:
+	enum class Type
+	{
+		DeclarationError,
+		DocstringParsingError,
+		ParserError,
+		TypeError,
+		Warning
+	};
+
+	Error(Type _type) :	m_type(_type)
+	{
+		switch(m_type)
+		{
+			case Type::DeclarationError:
+				m_typeName = "Declaration Error";
+				break;
+			case Type::DocstringParsingError:
+				m_typeName = "Docstring Parsing Error";
+				break;
+			case Type::ParserError:
+				m_typeName = "Parser Error";
+				break;
+			case Type::TypeError:
+				m_typeName = "Type Error";
+				break;
+			case Type::Warning:
+				m_typeName = "Warning";
+				break;
+			default:
+				m_typeName = "Error";
+				break;
+		}
+	}
+
+	Type type() { return m_type; }
+	std::string const& typeName() const { return m_typeName; }
+
+private:
+	Type m_type;
+	std::string m_typeName;
+};
 
 struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
@@ -56,6 +94,8 @@ public:
 	std::vector<errorSourceLocationInfo> infos;
 };
 
+
+using ErrorList = std::vector<std::shared_ptr<Error const>>;
 using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
 using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
 

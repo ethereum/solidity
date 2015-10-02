@@ -1156,9 +1156,9 @@ ASTPointer<ParameterList> Parser::createEmptyParameterList()
 	return nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
 }
 
-ParserError Parser::createParserError(string const& _description) const
+Error Parser::createParserError(string const& _description) const
 {
-	return ParserError() <<
+	return Error(Error::Type::ParserError) <<
 		errinfo_sourceLocation(SourceLocation(position(), position(), sourceName())) <<
 		errinfo_comment(_description);
 }

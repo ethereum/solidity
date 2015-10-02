@@ -42,7 +42,7 @@ namespace solidity
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
-	NameAndTypeResolver(std::vector<Declaration const*> const& _globals);
+	NameAndTypeResolver(std::vector<Declaration const*> const& _globals, ErrorList& _errors);
 	/// Registers all declarations found in the source unit.
 	void registerDeclarations(SourceUnit& _sourceUnit);
 	/// Resolves all names and types referenced from the given contract.
@@ -91,6 +91,7 @@ private:
 	std::map<ASTNode const*, DeclarationContainer> m_scopes;
 
 	DeclarationContainer* m_currentScope = nullptr;
+	ErrorList& m_errors;
 };
 
 /**

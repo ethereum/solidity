@@ -75,7 +75,7 @@ public:
 
 	/// Creates a @ref TypeError exception and decorates it with the location of the node and
 	/// the given description
-	TypeError createTypeError(std::string const& _description) const;
+	Error createTypeError(std::string const& _description) const;
 
 	///@todo make this const-safe by providing a different way to access the annotation
 	virtual ASTAnnotation& annotation() const;
@@ -660,10 +660,14 @@ class MagicVariableDeclaration: public Declaration
 public:
 	MagicVariableDeclaration(ASTString const& _name, std::shared_ptr<Type const> const& _type):
 		Declaration(SourceLocation(), std::make_shared<ASTString>(_name)), m_type(_type) {}
-	virtual void accept(ASTVisitor&) override { BOOST_THROW_EXCEPTION(InternalCompilerError()
-							<< errinfo_comment("MagicVariableDeclaration used inside real AST.")); }
-	virtual void accept(ASTConstVisitor&) const override { BOOST_THROW_EXCEPTION(InternalCompilerError()
-							<< errinfo_comment("MagicVariableDeclaration used inside real AST.")); }
+	virtual void accept(ASTVisitor&) override
+	{
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("MagicVariableDeclaration used inside real AST."));
+	}
+	virtual void accept(ASTConstVisitor&) const override
+	{
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("MagicVariableDeclaration used inside real AST."));
+	}
 
 	virtual TypePointer type(ContractDefinition const*) const override { return m_type; }
 

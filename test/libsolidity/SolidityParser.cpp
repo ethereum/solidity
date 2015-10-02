@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(missing_variable_name_in_declaration)
 	char const* text = "contract test {\n"
 					   "  uint256 ;\n"
 					   "}\n";
-	BOOST_CHECK_THROW(parseText(text), ParserError);
+	BOOST_CHECK_THROW(parseText(text), Error);
 }
 
 BOOST_AUTO_TEST_CASE(empty_function)

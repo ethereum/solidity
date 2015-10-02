@@ -33,8 +33,10 @@ namespace solidity
 {
 
 NameAndTypeResolver::NameAndTypeResolver(
-	vector<Declaration const*> const& _globals
-)
+	vector<Declaration const*> const& _globals,
+	ErrorList& _errors
+) :
+	m_errors(_errors)
 {
 	for (Declaration const* declaration: _globals)
 		m_scopes[nullptr].registerDeclaration(*declaration);
@@ -163,7 +165,7 @@ vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
 		for (auto parameter: functionType.parameterTypes() + functionType.returnParameterTypes())
 			if (!parameter)
 				BOOST_THROW_EXCEPTION(
-					DeclarationError() <<
+					Error(Error::Type::DeclarationError) <<
 					errinfo_sourceLocation(_identifier.location()) <<
 					errinfo_comment("Function type can not be used in this context")
 				);
@@ -408,7 +410,7 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 		}
 
 		BOOST_THROW_EXCEPTION(
-			DeclarationError() <<
+			Error(Error::Type::DeclarationError) <<
 			errinfo_sourceLocation(secondDeclarationLocation) <<
 			errinfo_comment("Identifier already declared.") <<
 			errinfo_secondarySourceLocation(

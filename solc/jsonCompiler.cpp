@@ -134,17 +134,9 @@ string compile(string _input, bool _optimize)
 			));
 		success = succ; // keep success false on exception
 	}
-	catch (ParserError const& exception)
+	catch (Error const& error)
 	{
-		errors.append(formatError(exception, "Parser error", compiler));
-	}
-	catch (DeclarationError const& exception)
-	{
-		errors.append(formatError(exception, "Declaration error", compiler));
-	}
-	catch (TypeError const& exception)
-	{
-		errors.append(formatError(exception, "Type error", compiler));
+		errors.append(formatError(error, error.typeName(), compiler));
 	}
 	catch (CompilerError const& exception)
 	{
@@ -153,10 +145,6 @@ string compile(string _input, bool _optimize)
 	catch (InternalCompilerError const& exception)
 	{
 		errors.append(formatError(exception, "Internal compiler error", compiler));
-	}
-	catch (DocstringParsingError const& exception)
-	{
-		errors.append(formatError(exception, "Documentation parsing error", compiler));
 	}
 	catch (Exception const& exception)
 	{

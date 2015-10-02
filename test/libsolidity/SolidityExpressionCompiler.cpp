@@ -85,9 +85,12 @@ Declaration const& resolveDeclaration(
 	return *declaration;
 }
 
-bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _functions = {},
-							 vector<vector<string>> _localVariables = {},
-							 vector<shared_ptr<MagicVariableDeclaration const>> _globalDeclarations = {})
+bytes compileFirstExpression(
+	const string& _sourceCode,
+	vector<vector<string>> _functions = {},
+	vector<vector<string>> _localVariables = {},
+	vector<shared_ptr<MagicVariableDeclaration const>> _globalDeclarations = {}
+)
 {
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
@@ -105,7 +108,9 @@ bytes compileFirstExpression(const string& _sourceCode, vector<vector<string>> _
 	declarations.reserve(_globalDeclarations.size() + 1);
 	for (ASTPointer<Declaration const> const& variable: _globalDeclarations)
 		declarations.push_back(variable.get());
-	NameAndTypeResolver resolver(declarations);
+	/// TODO:
+	ErrorList errorList;
+	NameAndTypeResolver resolver(declarations, errorList);
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
