@@ -280,15 +280,13 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 
 	// Retain the offset pointer as base_offset, the point from which the data offsets are computed.
 	m_context << eth::Instruction::DUP1;
-	for (TypePointer const& type: _typeParameters)
+	for (TypePointer const& parameterType: _typeParameters)
 	{
 		// stack: v1 v2 ... v(k-1) base_offset current_offset
-		switch (type->category())
-		{
-		case Type::Category::Array:
+		TypePointer type = parameterType->encodingType();
+		if (type->category() == Type::Category::Array)
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
-			solAssert(arrayType.location() != DataLocation::Storage, "");
 			solAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
 			if (_fromMemory)
 			{
@@ -344,7 +342,8 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 			}
 			break;
 		}
-		default:
+		else
+		{
 			solAssert(!type->isDynamicallySized(), "Unknown dynamically sized type: " + type->toString());
 			CompilerUtils(m_context).loadFromMemoryDynamic(*type, !_fromMemory, true);
 			CompilerUtils(m_context).moveToStackTop(1 + type->sizeOnStack());

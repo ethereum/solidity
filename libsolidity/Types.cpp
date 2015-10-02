@@ -839,11 +839,22 @@ string ArrayType::toString(bool _short) const
 	return ret;
 }
 
-TypePointer ArrayType::externalType() const
+TypePointer ArrayType::encodingType() const
 {
+	if (location() == DataLocation::Storage)
+		return make_shared<IntegerType>(256);
+	else
+		return this->copyForLocation(DataLocation::Memory, true);
+}
+
+TypePointer ArrayType::interfaceType(bool _inLibrary) const
+{
+	if (_inLibrary && location() == DataLocation::Storage)
+		return shared_from_this();
+
 	if (m_arrayKind != ArrayKind::Ordinary)
 		return this->copyForLocation(DataLocation::Memory, true);
-	TypePointer baseExt = m_baseType->externalType();
+	TypePointer baseExt = m_baseType->interfaceType(_inLibrary);
 	if (!baseExt)
 		return TypePointer();
 	if (m_baseType->category() == Category::Array && m_baseType->isDynamicallySized())
@@ -1057,6 +1068,14 @@ MemberList const& StructType::members() const
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
+}
+
+TypePointer StructType::interfaceType(bool _inLibrary) const
+{
+	if (_inLibrary && location() == DataLocation::Storage)
+		return shared_from_this();
+	else
+		return TypePointer();
 }
 
 TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer) const
@@ -1330,21 +1349,25 @@ unsigned FunctionType::sizeOnStack() const
 	return size;
 }
 
-FunctionTypePointer FunctionType::externalFunctionType() const
+FunctionTypePointer FunctionType::interfaceFunctionType() const
 {
+	// Note that m_declaration might also be a state variable!
+	solAssert(m_declaration, "Declaration needed to determine interface function type.");
+	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+
 	TypePointers paramTypes;
 	TypePointers retParamTypes;
 
 	for (auto type: m_parameterTypes)
 	{
-		if (auto ext = type->externalType())
+		if (auto ext = type->interfaceType(isLibraryFunction))
 			paramTypes.push_back(ext);
 		else
 			return FunctionTypePointer();
 	}
 	for (auto type: m_returnParameterTypes)
 	{
-		if (auto ext = type->externalType())
+		if (auto ext = type->interfaceType(isLibraryFunction))
 			retParamTypes.push_back(ext);
 		else
 			return FunctionTypePointer();
@@ -1462,7 +1485,7 @@ string FunctionType::externalSignature(std::string const& _name) const
 	}
 	string ret = funcName + "(";
 
-	FunctionTypePointer external = externalFunctionType();
+	FunctionTypePointer external = interfaceFunctionType();
 	solAssert(!!external, "External function type requested.");
 	TypePointers externalParameterTypes = external->parameterTypes();
 	for (auto it = externalParameterTypes.cbegin(); it != externalParameterTypes.cend(); ++it)

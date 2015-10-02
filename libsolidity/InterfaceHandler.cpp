@@ -57,7 +57,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 
 	for (auto it: _contractDef.interfaceFunctions())
 	{
-		auto externalFunctionType = it.second->externalFunctionType();
+		auto externalFunctionType = it.second->interfaceFunctionType();
 		Json::Value method;
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
@@ -76,7 +76,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 	{
 		Json::Value method;
 		method["type"] = "constructor";
-		auto externalFunction = FunctionType(*_contractDef.constructor()).externalFunctionType();
+		auto externalFunction = FunctionType(*_contractDef.constructor()).interfaceFunctionType();
 		solAssert(!!externalFunction, "");
 		method["inputs"] = populateParameters(
 			externalFunction->parameterNames(),
@@ -120,7 +120,7 @@ string InterfaceHandler::ABISolidityInterface(ContractDefinition const& _contrac
 	};
 	if (_contractDef.constructor())
 	{
-		auto externalFunction = FunctionType(*_contractDef.constructor()).externalFunctionType();
+		auto externalFunction = FunctionType(*_contractDef.constructor()).interfaceFunctionType();
 		solAssert(!!externalFunction, "");
 		ret +=
 			"function " +

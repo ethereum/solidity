@@ -397,11 +397,12 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
+	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*_function.scope()).isLibrary();
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
 		if (!type(*var)->canLiveOutsideStorage())
 			typeError(*var, "Type is required to live outside storage.");
-		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->externalType()))
+		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
 			typeError(*var, "Internal type is not allowed for public and external functions.");
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
@@ -490,7 +491,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	}
 	else if (
 		_variable.visibility() >= VariableDeclaration::Visibility::Public &&
-		!FunctionType(_variable).externalType()
+		!FunctionType(_variable).interfaceFunctionType()
 	)
 		typeError(_variable, "Internal type is not allowed for public state variables.");
 	return false;
@@ -557,7 +558,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 			typeError(_eventDef, "More than 3 indexed arguments for event.");
 		if (!type(*var)->canLiveOutsideStorage())
 			typeError(*var, "Type is required to live outside storage.");
-		if (!type(*var)->externalType())
+		if (!type(*var)->interfaceType(false))
 			typeError(*var, "Internal type is not allowed as event parameter type.");
 	}
 	return false;
