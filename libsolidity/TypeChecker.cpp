@@ -43,8 +43,14 @@ bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
 		if (m_errors.empty())
 			throw; // Something is weird here, rather throw again.
 	}
-
-	return m_errors.empty();
+	bool success = true;
+	for (auto const& it: m_errors)
+		if (!dynamic_cast<Warning const*>(it.get()))
+		{
+			success = false;
+			break;
+		}
+	return success;
 }
 
 TypePointer const& TypeChecker::type(Expression const& _expression) const
@@ -443,6 +449,18 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	{
 		if (_variable.value())
 			expectType(*_variable.value(), *varType);
+		else
+		{
+			if (auto ref = dynamic_cast<ReferenceType const *>(varType.get()))
+				if (ref->dataStoredIn(DataLocation::Storage) && _variable.isLocalVariable() && !_variable.isCallableParameter())
+				{
+					auto err = make_shared<Warning>();
+					*err <<
+						errinfo_sourceLocation(_variable.location()) <<
+						errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + _variable.name() + "'?");
+					m_errors.push_back(err);
+				}
+		}
 	}
 	else
 	{

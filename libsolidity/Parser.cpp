@@ -274,9 +274,17 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 	else
 		m_scanner->next(); // just consume the ';'
 	bool const c_isConstructor = (_contractName && *name == *_contractName);
-	return nodeFactory.createNode<FunctionDefinition>(name, visibility, c_isConstructor, docstring,
-													  parameters, isDeclaredConst, modifiers,
-													  returnParameters, block);
+	return nodeFactory.createNode<FunctionDefinition>(
+		name,
+		visibility,
+		c_isConstructor,
+		docstring,
+		parameters,
+		isDeclaredConst,
+		modifiers,
+		returnParameters,
+		block
+	);
 }
 
 ASTPointer<StructDefinition> Parser::parseStructDefinition()
@@ -753,7 +761,8 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 }
 
 ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStatement(
-	ASTPointer<TypeName> const& _lookAheadArrayType)
+	ASTPointer<TypeName> const& _lookAheadArrayType
+)
 {
 	VarDeclParserOptions options;
 	options.allowVar = true;
@@ -765,14 +774,16 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 }
 
 ASTPointer<ExpressionStatement> Parser::parseExpressionStatement(
-	ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
+)
 {
 	ASTPointer<Expression> expression = parseExpression(_lookAheadIndexAccessStructure);
 	return ASTNodeFactory(*this, expression).createNode<ExpressionStatement>(expression);
 }
 
 ASTPointer<Expression> Parser::parseExpression(
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
+)
 {
 	ASTPointer<Expression> expression = parseBinaryExpression(4, _lookAheadIndexAccessStructure);
 	if (!Token::isAssignmentOp(m_scanner->currentToken()))
@@ -784,8 +795,10 @@ ASTPointer<Expression> Parser::parseExpression(
 	return nodeFactory.createNode<Assignment>(expression, assignmentOperator, rightHandSide);
 }
 
-ASTPointer<Expression> Parser::parseBinaryExpression(int _minPrecedence,
-	ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
+ASTPointer<Expression> Parser::parseBinaryExpression(
+	int _minPrecedence,
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
+)
 {
 	ASTPointer<Expression> expression = parseUnaryExpression(_lookAheadIndexAccessStructure);
 	ASTNodeFactory nodeFactory(*this, expression);
@@ -803,7 +816,8 @@ ASTPointer<Expression> Parser::parseBinaryExpression(int _minPrecedence,
 }
 
 ASTPointer<Expression> Parser::parseUnaryExpression(
-	ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
+)
 {
 	ASTNodeFactory nodeFactory = _lookAheadIndexAccessStructure ?
 		ASTNodeFactory(*this, _lookAheadIndexAccessStructure) : ASTNodeFactory(*this);
@@ -830,7 +844,8 @@ ASTPointer<Expression> Parser::parseUnaryExpression(
 }
 
 ASTPointer<Expression> Parser::parseLeftHandSideExpression(
-	ASTPointer<Expression> const& _lookAheadIndexAccessStructure)
+	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
+)
 {
 	ASTNodeFactory nodeFactory = _lookAheadIndexAccessStructure ?
 		ASTNodeFactory(*this, _lookAheadIndexAccessStructure) : ASTNodeFactory(*this);
@@ -1014,7 +1029,9 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 }
 
 ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
-	ASTPointer<PrimaryExpression> const& _primary, vector<pair<ASTPointer<Expression>, SourceLocation>> const& _indices)
+	ASTPointer<PrimaryExpression> const& _primary,
+	vector<pair<ASTPointer<Expression>, SourceLocation>> const& _indices
+)
 {
 	ASTNodeFactory nodeFactory(*this, _primary);
 	ASTPointer<TypeName> type;
@@ -1033,7 +1050,9 @@ ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
 }
 
 ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
-	ASTPointer<PrimaryExpression> const& _primary, vector<pair<ASTPointer<Expression>, SourceLocation>> const& _indices)
+	ASTPointer<PrimaryExpression> const& _primary,
+	vector<pair<ASTPointer<Expression>, SourceLocation>> const& _indices
+)
 {
 	ASTNodeFactory nodeFactory(*this, _primary);
 	ASTPointer<Expression> expression(_primary);

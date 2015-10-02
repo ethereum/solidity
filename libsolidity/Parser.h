@@ -90,17 +90,23 @@ private:
 	/// A "simple statement" can be a variable declaration statement or an expression statement.
 	ASTPointer<Statement> parseSimpleStatement();
 	ASTPointer<VariableDeclarationStatement> parseVariableDeclarationStatement(
-		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>());
+		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>()
+	);
 	ASTPointer<ExpressionStatement> parseExpressionStatement(
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+	);
 	ASTPointer<Expression> parseExpression(
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+	);
 	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4,
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+	);
 	ASTPointer<Expression> parseUnaryExpression(
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+	);
 	ASTPointer<Expression> parseLeftHandSideExpression(
-		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>());
+		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
+	);
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallListArguments();
 	std::pair<std::vector<ASTPointer<Expression>>, std::vector<ASTPointer<ASTString>>> parseFunctionCallArguments();
@@ -122,11 +128,13 @@ private:
 	/// Returns a typename parsed in look-ahead fashion from something like "a[8][2**70]".
 	ASTPointer<TypeName> typeNameIndexAccessStructure(
 		ASTPointer<PrimaryExpression> const& _primary,
-		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices);
+		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
+	);
 	/// Returns an expression parsed in look-ahead fashion from something like "a[8][2**70]".
 	ASTPointer<Expression> expressionFromIndexAccessStructure(
 		ASTPointer<PrimaryExpression> const& _primary,
-		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices);
+		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
+	);
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
 	Token::Value expectAssignmentOperator();

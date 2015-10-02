@@ -45,7 +45,7 @@ namespace
 {
 
 pair<ASTPointer<SourceUnit>, shared_ptr<Exception const>>
-parseAnalyseAndReturnError(string const& _source)
+parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 {
 	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
@@ -74,7 +74,19 @@ parseAnalyseAndReturnError(string const& _source)
 				TypeChecker typeChecker;
 				if (!typeChecker.checkTypeRequirements(*contract))
 				{
-					err = typeChecker.errors().front();
+					for (auto const& firstError: typeChecker.errors())
+					{
+						if (_reportWarnings || !dynamic_pointer_cast<Warning const>(firstError))
+						{
+							err = firstError;
+							break;
+						}
+						else if (_reportWarnings)
+						{
+							err = firstError;
+							break;
+						}
+					}
 					break;
 				}
 			}
@@ -101,9 +113,9 @@ ASTPointer<SourceUnit> parseAndAnalyse(string const& _source)
 	return sourceAndError.first;
 }
 
-shared_ptr<Exception const> parseAndAnalyseReturnError(std::string const& _source)
+shared_ptr<Exception const> parseAndAnalyseReturnError(std::string const& _source, bool _warning = false)
 {
-	auto sourceAndError = parseAnalyseAndReturnError(_source);
+	auto sourceAndError = parseAnalyseAndReturnError(_source, _warning);
 	BOOST_REQUIRE(!!sourceAndError.second);
 	return sourceAndError.second;
 }
@@ -119,8 +131,10 @@ static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source
 	return nullptr;
 }
 
-static FunctionTypePointer const& retrieveFunctionBySignature(ContractDefinition const* _contract,
-															  std::string const& _signature)
+static FunctionTypePointer const& retrieveFunctionBySignature(
+	ContractDefinition const* _contract,
+	std::string const& _signature
+)
 {
 	FixedHash<4> hash(dev::sha3(_signature));
 	return _contract->interfaceFunctions()[hash];
@@ -155,8 +169,8 @@ BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
 BOOST_AUTO_TEST_CASE(double_function_declaration)
 {
 	char const* text = "contract test {\n"
-					   "  function fun() { var x; }\n"
-					   "  function fun() { var x; }\n"
+					   "  function fun() { uint x; }\n"
+					   "  function fun() { uint x; }\n"
 					   "}\n";
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), DeclarationError);
 }
@@ -2316,6 +2330,24 @@ BOOST_AUTO_TEST_CASE(literal_string_to_storage_pointer)
 		}
 	)";
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(non_initialized_references)
+{
+	char const* text = R"(
+		contract c
+		{
+			struct s{
+				uint a;
+			}
+			function f()
+			{
+				s x;
+				x.a = 2;
+			}
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text, true), Warning);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
