@@ -153,14 +153,15 @@ void CompilerUtils::encodeToMemory(
 	TypePointers const& _givenTypes,
 	TypePointers const& _targetTypes,
 	bool _padToWordBoundaries,
-	bool _copyDynamicDataInPlace
+	bool _copyDynamicDataInPlace,
+	bool _encodeAsLibraryTypes
 )
 {
 	// stack: <v1> <v2> ... <vn> <mem>
 	TypePointers targetTypes = _targetTypes.empty() ? _givenTypes : _targetTypes;
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
 	for (TypePointer& t: targetTypes)
-		t = t->mobileType()->encodingType();
+		t = t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
 
 	// Stack during operation:
 	// <v1> <v2> ... <vn> <mem_start> <dyn_head_1> ... <dyn_head_r> <end_of_mem>

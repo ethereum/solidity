@@ -230,6 +230,8 @@ public:
 	/// This for example returns address for contract types.
 	/// If there is no such type, returns an empty shared pointer.
 	virtual TypePointer encodingType() const { return TypePointer(); }
+	/// @returns a (simpler) type that is used when decoding this type in calldata.
+	virtual TypePointer decodingType() const { return encodingType(); }
 	/// @returns a type that will be used outside of Solidity for e.g. function signatures.
 	/// This for example returns address for contract types.
 	/// If there is no such type, returns an empty shared pointer.
@@ -504,6 +506,7 @@ public:
 		return isString() ? EmptyMemberList : s_arrayTypeMemberList;
 	}
 	virtual TypePointer encodingType() const override;
+	virtual TypePointer decodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
 
 	/// @returns true if this is a byte array or a string

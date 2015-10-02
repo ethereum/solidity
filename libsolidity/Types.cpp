@@ -847,6 +847,14 @@ TypePointer ArrayType::encodingType() const
 		return this->copyForLocation(DataLocation::Memory, true);
 }
 
+TypePointer ArrayType::decodingType() const
+{
+	if (location() == DataLocation::Storage)
+		return make_shared<IntegerType>(256);
+	else
+		return shared_from_this();
+}
+
 TypePointer ArrayType::interfaceType(bool _inLibrary) const
 {
 	if (_inLibrary && location() == DataLocation::Storage)

@@ -252,7 +252,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		fallback->accept(*this);
 		m_context << returnTag;
-		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes());
+		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes(), _contract.isLibrary());
 	}
 	else
 		m_context << eth::Instruction::STOP; // function not found
@@ -268,7 +268,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		appendCalldataUnpacker(functionType->parameterTypes());
 		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
 		m_context << returnTag;
-		appendReturnValuePacker(functionType->returnParameterTypes());
+		appendReturnValuePacker(functionType->returnParameterTypes(), _contract.isLibrary());
 	}
 }
 
@@ -283,7 +283,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 	for (TypePointer const& parameterType: _typeParameters)
 	{
 		// stack: v1 v2 ... v(k-1) base_offset current_offset
-		TypePointer type = parameterType->encodingType();
+		TypePointer type = parameterType->decodingType();
 		if (type->category() == Type::Category::Array)
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
@@ -340,7 +340,6 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 				CompilerUtils(m_context).moveToStackTop(1 + arrayType.sizeOnStack());
 				m_context << eth::Instruction::SWAP1;
 			}
-			break;
 		}
 		else
 		{
@@ -354,7 +353,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 	m_context << eth::Instruction::POP << eth::Instruction::POP;
 }
 
-void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
+void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary)
 {
 	CompilerUtils utils(m_context);
 	if (_typeParameters.empty())
@@ -364,7 +363,7 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 		utils.fetchFreeMemoryPointer();
 		//@todo optimization: if we return a single memory array, there should be enough space before
 		// its data to add the needed parts and we avoid a memory copy.
-		utils.encodeToMemory(_typeParameters, _typeParameters);
+		utils.encodeToMemory(_typeParameters, _typeParameters, true, false, _isLibrary);
 		utils.toSizeAfterFreeMemoryPointer();
 		m_context << eth::Instruction::RETURN;
 	}

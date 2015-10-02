@@ -109,42 +109,40 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		// As an exception, "storage" is allowed for library functions.
 		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
 		{
-			if (_variable.isCallableParameter())
+			if (_variable.isExternalCallableParameter())
 			{
 				auto const& contract = dynamic_cast<ContractDefinition const&>(*_variable.scope()->scope());
-				if (_variable.isExternalCallableParameter())
+				if (contract.isLibrary())
 				{
-					if (contract.isLibrary())
-					{
-						if (loc == Location::Memory)
-							BOOST_THROW_EXCEPTION(_variable.createTypeError(
-								"Location has to be calldata or storage for external "
-								"library functions (remove the \"memory\" keyword)."
-							));
-					}
-					else
-					{
-						// force location of external function parameters (not return) to calldata
-						if (loc != Location::Default)
-							BOOST_THROW_EXCEPTION(_variable.createTypeError(
-								"Location has to be calldata for external functions "
-								"(remove the \"memory\" or \"storage\" keyword)."
-							));
-					}
-					if (loc == Location::Default)
-						type = ref->copyForLocation(DataLocation::CallData, true);
-				}
-				else if (_variable.isCallableParameter() && _variable.scope()->isPublic())
-				{
-					// force locations of public or external function (return) parameters to memory
-					if (loc == Location::Storage && !contract.isLibrary())
+					if (loc == Location::Memory)
 						BOOST_THROW_EXCEPTION(_variable.createTypeError(
-							"Location has to be memory for publicly visible functions "
-							"(remove the \"storage\" keyword)."
+							"Location has to be calldata or storage for external "
+							"library functions (remove the \"memory\" keyword)."
 						));
-					if (loc == Location::Default)
-						type = ref->copyForLocation(DataLocation::Memory, true);
 				}
+				else
+				{
+					// force location of external function parameters (not return) to calldata
+					if (loc != Location::Default)
+						BOOST_THROW_EXCEPTION(_variable.createTypeError(
+							"Location has to be calldata for external functions "
+							"(remove the \"memory\" or \"storage\" keyword)."
+						));
+				}
+				if (loc == Location::Default)
+					type = ref->copyForLocation(DataLocation::CallData, true);
+			}
+			else if (_variable.isCallableParameter() && _variable.scope()->isPublic())
+			{
+				auto const& contract = dynamic_cast<ContractDefinition const&>(*_variable.scope()->scope());
+				// force locations of public or external function (return) parameters to memory
+				if (loc == Location::Storage && !contract.isLibrary())
+					BOOST_THROW_EXCEPTION(_variable.createTypeError(
+						"Location has to be memory for publicly visible functions "
+						"(remove the \"storage\" keyword)."
+					));
+				if (loc == Location::Default || !contract.isLibrary())
+					type = ref->copyForLocation(DataLocation::Memory, true);
 			}
 			else
 			{
