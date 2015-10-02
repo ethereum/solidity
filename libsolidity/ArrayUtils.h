@@ -75,9 +75,14 @@ public:
 	void convertLengthToSize(ArrayType const& _arrayType, bool _pad = false) const;
 	/// Retrieves the length (number of elements) of the array ref on the stack. This also
 	/// works for statically-sized arrays.
+	/// @param _stackDepth number of stack elements between top of stack and top (!) of reference
 	/// Stack pre: reference (excludes byte offset for dynamic storage arrays)
 	/// Stack post: reference length
-	void retrieveLength(ArrayType const& _arrayType) const;
+	void retrieveLength(ArrayType const& _arrayType, unsigned _stackDepth = 0) const;
+	/// Stores the length of an array of type @a _arrayType in storage. The length itself is stored
+	/// on the stack at position @a _stackDepthLength and the storage reference at @a _stackDepthRef.
+	/// If @a _arrayType is a byte array, takes tight coding into account.
+	void storeLength(ArrayType const& _arrayType, unsigned _stackDepthLength = 0, unsigned _stackDepthRef = 1) const;
 	/// Performs bounds checking and returns a reference on the stack.
 	/// Stack pre: reference [length] index
 	/// Stack post (storage): storage_slot byte_offset
