@@ -5354,6 +5354,25 @@ BOOST_AUTO_TEST_CASE(fixed_arrays_as_return_type)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(calldata_offset)
+{
+	// This tests a specific bug that was caused by not using the correct memory offset in the
+	// calldata unpacker.
+	char const* sourceCode = R"(
+			contract CB
+			{
+				address[] _arr;
+				string public last = "nd";
+				function CB(address[] guardians)
+				{
+					_arr = guardians;
+				}
+			}
+			)";
+	compileAndRun(sourceCode, 0, "CB", encodeArgs(u256(0x20)));
+	BOOST_CHECK(callContractFunction("last()", encodeArgs()) == encodeDyn(string("nd")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
