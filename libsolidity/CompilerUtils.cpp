@@ -189,7 +189,14 @@ void CompilerUtils::encodeToMemory(
 			copyToStackTop(argSize - stackPos + dynPointers + 2, _givenTypes[i]->sizeOnStack());
 			solAssert(!!targetType, "Externalable type expected.");
 			TypePointer type = targetType;
-			if (
+			if (_givenTypes[i]->dataStoredIn(DataLocation::Storage) && targetType->isValueType())
+			{
+				// special case: convert storage reference type to value type - this is only
+				// possible for library calls where we just forward the storage reference
+				solAssert(_encodeAsLibraryTypes, "");
+				solAssert(_givenTypes[i]->sizeOnStack() == 1, "");
+			}
+			else if (
 				_givenTypes[i]->dataStoredIn(DataLocation::Storage) ||
 				_givenTypes[i]->dataStoredIn(DataLocation::CallData) ||
 				_givenTypes[i]->category() == Type::Category::StringLiteral

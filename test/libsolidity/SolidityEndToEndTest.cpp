@@ -5383,6 +5383,32 @@ BOOST_AUTO_TEST_CASE(internal_types_in_library)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(4), u256(17)));
 }
 
+BOOST_AUTO_TEST_CASE(differentiate_storage_and_memory_in_libraries)
+{
+	char const* sourceCode = R"(
+		library Lib {
+			function f(uint[] storage x) returns (uint) { return 1; }
+			function f(uint[] memory x) returns (uint) { return 2; }
+		}
+		contract Test {
+			uint[] data;
+			function f() returns (uint a,)
+			{
+				uint[] memory d = data;
+				Lib.f(d)
+				data["abc"].length = 20;
+				data["abc"][4] = 9;
+				data["abc"][17] = 3;
+				a = Lib.find(data["abc"], 9);
+				b = Lib.find(data["abc"], 3);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(4), u256(17)));
+}
+
 BOOST_AUTO_TEST_CASE(short_strings)
 {
 	// This test verifies that the byte array encoding that combines length and data works

@@ -1179,7 +1179,8 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		argumentTypes,
 		_functionType.parameterTypes(),
 		_functionType.padArguments(),
-		_functionType.takesArbitraryParameters()
+		_functionType.takesArbitraryParameters(),
+		isCallCode
 	);
 
 	// Stack now:
