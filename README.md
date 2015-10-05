@@ -16,7 +16,7 @@ Solidity is still under development. So please do not hesitate and open an [issu
 
 ## Building
 
-See the [Wiki](https://github.com/ethereum/cpp-ethereum/wiki) for build instructions, compatibility information and build tips. 
+See the [Wiki](https://github.com/ethereum/webthree-umbrella/wiki) for build instructions, compatibility information and build tips. 
 
 ## How to Contribute
 
