@@ -119,6 +119,9 @@ private:
 	void closeCurrentScope();
 	void registerDeclaration(Declaration& _declaration, bool _opensScope);
 
+	/// @returns the canonical name of the current scope.
+	std::string currentCanonicalName() const;
+
 	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
 	Declaration const* m_currentScope;
 	VariableScope* m_currentFunction;

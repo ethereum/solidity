@@ -263,6 +263,7 @@ DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode const*,
 bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 {
 	registerDeclaration(_contract, true);
+	_contract.annotation().canonicalName = currentCanonicalName();
 	return true;
 }
 
@@ -274,6 +275,7 @@ void DeclarationRegistrationHelper::endVisit(ContractDefinition&)
 bool DeclarationRegistrationHelper::visit(StructDefinition& _struct)
 {
 	registerDeclaration(_struct, true);
+	_struct.annotation().canonicalName = currentCanonicalName();
 	return true;
 }
 
@@ -285,6 +287,7 @@ void DeclarationRegistrationHelper::endVisit(StructDefinition&)
 bool DeclarationRegistrationHelper::visit(EnumDefinition& _enum)
 {
 	registerDeclaration(_enum, true);
+	_enum.annotation().canonicalName = currentCanonicalName();
 	return true;
 }
 
@@ -398,6 +401,22 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)
 		enterNewSubScope(_declaration);
+}
+
+string DeclarationRegistrationHelper::currentCanonicalName() const
+{
+	string ret;
+	for (
+		Declaration const* scope = m_currentScope;
+		scope != nullptr;
+		scope = m_scopes[scope].enclosingDeclaration()
+	)
+	{
+		if (!ret.empty())
+			ret = "." + ret;
+		ret = scope->name() + ret;
+	}
+	return ret;
 }
 
 }

@@ -142,6 +142,21 @@ BOOST_AUTO_TEST_CASE(inheritance)
 												  sourcePart(*contract.definedFunctions().at(1))}));
 }
 
+BOOST_AUTO_TEST_CASE(libraries)
+{
+	char const* sourceCode = R"(
+		library Lib {
+			struct Str { uint a; }
+			enum E { E1, E2 }
+			function f(uint[] x,Str storage y,E z) external;
+		}
+	)";
+	ContractDefinition const& contract = checkInterface(sourceCode);
+	set<string> expectedFunctions({"function f(uint256[] x,Lib.Str y,Lib.E z);"});
+	BOOST_REQUIRE_EQUAL(1, contract.definedFunctions().size());
+	BOOST_CHECK(expectedFunctions == set<string>({sourcePart(*contract.definedFunctions().at(0))}));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

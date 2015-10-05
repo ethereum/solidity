@@ -64,11 +64,11 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		method["constant"] = it.second->isConstant();
 		method["inputs"] = populateParameters(
 			externalFunctionType->parameterNames(),
-			externalFunctionType->parameterTypeNames()
+			externalFunctionType->parameterTypeNames(_contractDef.isLibrary())
 		);
 		method["outputs"] = populateParameters(
 			externalFunctionType->returnParameterNames(),
-			externalFunctionType->returnParameterTypeNames()
+			externalFunctionType->returnParameterTypeNames(_contractDef.isLibrary())
 		);
 		abi.append(method);
 	}
@@ -80,7 +80,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		solAssert(!!externalFunction, "");
 		method["inputs"] = populateParameters(
 			externalFunction->parameterNames(),
-			externalFunction->parameterTypeNames()
+			externalFunction->parameterTypeNames(_contractDef.isLibrary())
 		);
 		abi.append(method);
 	}
@@ -96,7 +96,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		{
 			Json::Value input;
 			input["name"] = p->name();
-			input["type"] = p->annotation().type->toString(true);
+			input["type"] = p->annotation().type->canonicalName(false);
 			input["indexed"] = p->isIndexed();
 			params.append(input);
 		}
@@ -125,16 +125,24 @@ string InterfaceHandler::ABISolidityInterface(ContractDefinition const& _contrac
 		ret +=
 			"function " +
 			_contractDef.name() +
-			populateParameters(externalFunction->parameterNames(), externalFunction->parameterTypeNames()) +
+			populateParameters(
+				externalFunction->parameterNames(),
+				externalFunction->parameterTypeNames(_contractDef.isLibrary())
+			) +
 			";";
 	}
 	for (auto const& it: _contractDef.interfaceFunctions())
 	{
 		ret += "function " + it.second->declaration().name() +
-			populateParameters(it.second->parameterNames(), it.second->parameterTypeNames()) +
-			(it.second->isConstant() ? "constant " : "");
+			populateParameters(
+				it.second->parameterNames(),
+				it.second->parameterTypeNames(_contractDef.isLibrary())
+			) + (it.second->isConstant() ? "constant " : "");
 		if (it.second->returnParameterTypes().size())
-			ret += "returns" + populateParameters(it.second->returnParameterNames(), it.second->returnParameterTypeNames());
+			ret += "returns" + populateParameters(
+				it.second->returnParameterNames(),
+				it.second->returnParameterTypeNames(_contractDef.isLibrary())
+			);
 		else if (ret.back() == ' ')
 			ret.pop_back();
 		ret += ";";

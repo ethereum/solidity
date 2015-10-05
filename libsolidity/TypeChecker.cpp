@@ -299,7 +299,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 			if (f->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*f);
-				externalDeclarations[functionType->externalSignature(f->name())].push_back(
+				externalDeclarations[functionType->externalSignature()].push_back(
 					make_pair(f.get(), functionType)
 				);
 			}
@@ -307,7 +307,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 			if (v->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*v);
-				externalDeclarations[functionType->externalSignature(v->name())].push_back(
+				externalDeclarations[functionType->externalSignature()].push_back(
 					make_pair(v.get(), functionType)
 				);
 			}
@@ -403,7 +403,7 @@ bool TypeChecker::visit(FunctionDefinition const& _function)
 		if (!type(*var)->canLiveOutsideStorage())
 			typeError(*var, "Type is required to live outside storage.");
 		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
-			typeError(*var, "Internal type is not allowed for public and external functions.");
+			fatalTypeError(*var, "Internal type is not allowed for public or external functions.");
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
 		visitManually(

@@ -40,7 +40,13 @@ struct ASTAnnotation
 	virtual ~ASTAnnotation() {}
 };
 
-struct ContractDefinitionAnnotation: ASTAnnotation
+struct TypeDeclarationAnnotation: ASTAnnotation
+{
+	/// The name of this type, prefixed by proper namespaces if globally accessible.
+	std::string canonicalName;
+};
+
+struct ContractDefinitionAnnotation: TypeDeclarationAnnotation
 {
 	/// Whether all functions are implemented.
 	bool isFullyImplemented = true;

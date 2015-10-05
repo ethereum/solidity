@@ -218,6 +218,9 @@ public:
 
 	virtual std::string toString(bool _short) const = 0;
 	std::string toString() const { return toString(false); }
+	/// @returns the canonical name of this type for use in function signatures.
+	/// @param _addDataLocation if true, includes data location for reference types if it is "storage".
+	virtual std::string canonicalName(bool /*_addDataLocation*/) const { return toString(true); }
 	virtual u256 literalValue(Literal const*) const
 	{
 		BOOST_THROW_EXCEPTION(
@@ -501,6 +504,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
 	virtual unsigned sizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual MemberList const& members() const override
 	{
 		return isString() ? EmptyMemberList : s_arrayTypeMemberList;
@@ -554,6 +558,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual bool isValueType() const override { return true; }
 	virtual std::string toString(bool _short) const override;
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 
 	virtual MemberList const& members() const override;
 	virtual TypePointer encodingType() const override
@@ -617,6 +622,8 @@ public:
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
+	virtual std::string canonicalName(bool _addDataLocation) const override;
+
 	/// @returns a function that peforms the type conversion between a list of struct members
 	/// and a memory struct of this type.
 	FunctionTypePointer constructorType() const;
@@ -652,6 +659,7 @@ public:
 	virtual unsigned storageBytes() const override;
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString(bool _short) const override;
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual bool isValueType() const override { return true; }
 
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -756,10 +764,10 @@ public:
 
 	TypePointers const& parameterTypes() const { return m_parameterTypes; }
 	std::vector<std::string> const& parameterNames() const { return m_parameterNames; }
-	std::vector<std::string> const parameterTypeNames() const;
+	std::vector<std::string> const parameterTypeNames(bool _addDataLocation) const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
-	std::vector<std::string> const returnParameterTypeNames() const;
+	std::vector<std::string> const returnParameterTypeNames(bool _addDataLocation) const;
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
@@ -786,9 +794,7 @@ public:
 	bool isBareCall() const;
 	Location const& location() const { return m_location; }
 	/// @returns the external signature of this function type given the function name
-	/// If @a _name is not provided (empty string) then the @c m_declaration member of the
-	/// function type is used
-	std::string externalSignature(std::string const& _name = "") const;
+	std::string externalSignature() const;
 	/// @returns the external identifier of this function (the hash of the signature).
 	u256 externalIdentifier() const;
 	Declaration const& declaration() const
@@ -849,6 +855,7 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual TypePointer encodingType() const override
 	{

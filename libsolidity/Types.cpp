@@ -839,6 +839,25 @@ string ArrayType::toString(bool _short) const
 	return ret;
 }
 
+string ArrayType::canonicalName(bool _addDataLocation) const
+{
+	string ret;
+	if (isString())
+		ret = "string";
+	else if (isByteArray())
+		ret = "bytes";
+	else
+	{
+		ret = baseType()->canonicalName(false) + "[";
+		if (!isDynamicallySized())
+			ret += length().str();
+		ret += "]";
+	}
+	if (_addDataLocation && location() == DataLocation::Storage)
+		ret += " storage";
+	return ret;
+}
+
 TypePointer ArrayType::encodingType() const
 {
 	if (location() == DataLocation::Storage)
@@ -910,6 +929,11 @@ string ContractType::toString(bool) const
 		string(m_contract.isLibrary() ? "library " : "contract ") +
 		string(m_super ? "super " : "") +
 		m_contract.name();
+}
+
+string ContractType::canonicalName(bool) const
+{
+	return m_contract.annotation().canonicalName;
 }
 
 MemberList const& ContractType::members() const
@@ -1093,6 +1117,14 @@ TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer)
 	return copy;
 }
 
+string StructType::canonicalName(bool _addDataLocation) const
+{
+	string ret = m_struct.annotation().canonicalName;
+	if (_addDataLocation && location() == DataLocation::Storage)
+		ret += " storage";
+	return ret;
+}
+
 FunctionTypePointer StructType::constructorType() const
 {
 	TypePointers paramTypes;
@@ -1166,6 +1198,11 @@ unsigned EnumType::storageBytes() const
 string EnumType::toString(bool) const
 {
 	return string("enum ") + m_enum.name();
+}
+
+string EnumType::canonicalName(bool) const
+{
+	return m_enum.annotation().canonicalName;
 }
 
 bool EnumType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -1483,15 +1520,13 @@ bool FunctionType::isBareCall() const
 	}
 }
 
-string FunctionType::externalSignature(std::string const& _name) const
+string FunctionType::externalSignature() const
 {
-	std::string funcName = _name;
-	if (_name == "")
-	{
-		solAssert(m_declaration != nullptr, "Function type without name needs a declaration");
-		funcName = m_declaration->name();
-	}
-	string ret = funcName + "(";
+	solAssert(m_declaration != nullptr, "External signature of function needs declaration");
+
+	bool _inLibrary = dynamic_cast<ContractDefinition const&>(*m_declaration->scope()).isLibrary();
+
+	string ret = m_declaration->name() + "(";
 
 	FunctionTypePointer external = interfaceFunctionType();
 	solAssert(!!external, "External function type requested.");
@@ -1499,7 +1534,7 @@ string FunctionType::externalSignature(std::string const& _name) const
 	for (auto it = externalParameterTypes.cbegin(); it != externalParameterTypes.cend(); ++it)
 	{
 		solAssert(!!(*it), "Parameter should have external type");
-		ret += (*it)->toString(true) + (it + 1 == externalParameterTypes.cend() ? "" : ",");
+		ret += (*it)->canonicalName(_inLibrary) + (it + 1 == externalParameterTypes.cend() ? "" : ",");
 	}
 
 	return ret + ")";
@@ -1567,20 +1602,20 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary) const
 	);
 }
 
-vector<string> const FunctionType::parameterTypeNames() const
+vector<string> const FunctionType::parameterTypeNames(bool _addDataLocation) const
 {
 	vector<string> names;
 	for (TypePointer const& t: m_parameterTypes)
-		names.push_back(t->toString(true));
+		names.push_back(t->canonicalName(_addDataLocation));
 
 	return names;
 }
 
-vector<string> const FunctionType::returnParameterTypeNames() const
+vector<string> const FunctionType::returnParameterTypeNames(bool _addDataLocation) const
 {
 	vector<string> names;
 	for (TypePointer const& t: m_returnParameterTypes)
-		names.push_back(t->toString(true));
+		names.push_back(t->canonicalName(_addDataLocation));
 
 	return names;
 }
@@ -1605,6 +1640,11 @@ bool MappingType::operator==(Type const& _other) const
 string MappingType::toString(bool _short) const
 {
 	return "mapping(" + keyType()->toString(_short) + " => " + valueType()->toString(_short) + ")";
+}
+
+string MappingType::canonicalName(bool) const
+{
+	return "mapping(" + keyType()->canonicalName(false) + " => " + valueType()->canonicalName(false) + ")";
 }
 
 u256 VoidType::storageSize() const

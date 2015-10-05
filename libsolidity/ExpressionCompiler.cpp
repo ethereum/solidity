@@ -585,7 +585,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				}
 			if (!event.isAnonymous())
 			{
-				m_context << u256(h256::Arith(dev::sha3(function.externalSignature(event.name()))));
+				m_context << u256(h256::Arith(dev::sha3(function.externalSignature())));
 				++numIndexed;
 			}
 			solAssert(numIndexed <= 4, "Too many indexed arguments.");

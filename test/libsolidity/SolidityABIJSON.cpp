@@ -595,6 +595,36 @@ BOOST_AUTO_TEST_CASE(strings_and_arrays)
 	checkInterface(sourceCode, interface);
 }
 
+BOOST_AUTO_TEST_CASE(library_function)
+{
+	char const* sourceCode = R"(
+		library test {
+			struct StructType { uint a; }
+			function f(StructType storage b, uint[] storage c, test d) returns (uint[] e, StructType storage f){}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"name": "f",
+			"inputs": [
+				{ "name": "b", "type": "test.StructType storage" },
+				{ "name": "c", "type": "uint256[] storage" },
+				{ "name": "d", "type": "test" }
+			],
+			"outputs": [
+				{ "name": "e", "type": "uint256[]" },
+				{ "name": "f", "type": "test.StructType storage" }
+			],
+			"type" : "function"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

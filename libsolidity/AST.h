@@ -352,6 +352,8 @@ public:
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
 
+	virtual TypeDeclarationAnnotation& annotation() const override;
+
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
 };
@@ -371,6 +373,8 @@ public:
 	std::vector<ASTPointer<EnumValue>> const& members() const { return m_members; }
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+
+	virtual TypeDeclarationAnnotation& annotation() const override;
 
 private:
 	std::vector<ASTPointer<EnumValue>> m_members;
