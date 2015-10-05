@@ -32,4 +32,4 @@ Please add yourself in the `@author` doxygen  section of the file your are addin
 with the same wording as the one you listed yourself in the external contributors section above,
 only replacing the word **contribution** by **file**
 
-Please read [CodingStandards.txt](CodingStandards.txt) thoroughly before making alterations to the code base. Please do *NOT* use an editor that automatically reformats whitespace away from astylerc or the formatting guidelines as described in [CodingStandards.txt](CodingStandards.txt).
+Please read [CodingStandards.txt](https://github.com/ethereum/webthree-umbrella/blob/develop/CodingStandards.txt) thoroughly before making alterations to the code base. Please do *NOT* use an editor that automatically reformats whitespace away from astylerc or the formatting guidelines as described in [CodingStandards.txt](https://github.com/ethereum/webthree-umbrella/blob/develop/CodingStandards.txt).
