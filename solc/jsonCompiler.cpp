@@ -122,13 +122,17 @@ string compile(string _input, bool _optimize)
 	Json::Value output(Json::objectValue);
 	Json::Value errors(Json::arrayValue);
 	CompilerStack compiler;
+	bool success = false;
 	try
 	{
-		if (!compiler.compile(_input, _optimize))
-		{
-			for (auto const& error: compiler.errors())
-				errors.append(formatError(*error, "Error", compiler));
-		}
+		bool succ = compiler.compile(_input, _optimize);
+		for (auto const& error: compiler.errors())
+			errors.append(formatError(
+				*error,
+				(dynamic_pointer_cast<Warning const>(error)) ? "Warning" : "Error",
+				compiler
+			));
+		success = succ; // keep success false on exception
 	}
 	catch (ParserError const& exception)
 	{
@@ -164,30 +168,30 @@ string compile(string _input, bool _optimize)
 	}
 
 	if (errors.size() > 0)
-	{
 		output["errors"] = errors;
-		return Json::FastWriter().write(output);
-	}
 
-	output["contracts"] = Json::Value(Json::objectValue);
-	for (string const& contractName: compiler.contractNames())
+	if (success)
 	{
-		Json::Value contractData(Json::objectValue);
-		contractData["solidity_interface"] = compiler.solidityInterface(contractName);
-		contractData["interface"] = compiler.interface(contractName);
-		contractData["bytecode"] = compiler.object(contractName).toHex();
-		contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
-		contractData["opcodes"] = eth::disassemble(compiler.object(contractName).bytecode);
-		contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
-		contractData["gasEstimates"] = estimateGas(compiler, contractName);
-		ostringstream unused;
-		contractData["assembly"] = compiler.streamAssembly(unused, contractName, sources, true);
-		output["contracts"][contractName] = contractData;
-	}
+		output["contracts"] = Json::Value(Json::objectValue);
+		for (string const& contractName: compiler.contractNames())
+		{
+			Json::Value contractData(Json::objectValue);
+			contractData["solidity_interface"] = compiler.solidityInterface(contractName);
+			contractData["interface"] = compiler.interface(contractName);
+			contractData["bytecode"] = compiler.object(contractName).toHex();
+			contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
+			contractData["opcodes"] = eth::disassemble(compiler.object(contractName).bytecode);
+			contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
+			contractData["gasEstimates"] = estimateGas(compiler, contractName);
+			ostringstream unused;
+			contractData["assembly"] = compiler.streamAssembly(unused, contractName, sources, true);
+			output["contracts"][contractName] = contractData;
+		}
 
-	output["sources"] = Json::Value(Json::objectValue);
-	output["sources"][""] = Json::Value(Json::objectValue);
-	output["sources"][""]["AST"] = ASTJsonConverter(compiler.ast("")).json();
+		output["sources"] = Json::Value(Json::objectValue);
+		output["sources"][""] = Json::Value(Json::objectValue);
+		output["sources"][""]["AST"] = ASTJsonConverter(compiler.ast("")).json();
+	}
 
 	return Json::FastWriter().write(output);
 }
