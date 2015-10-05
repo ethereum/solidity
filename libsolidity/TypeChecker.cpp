@@ -45,11 +45,14 @@ bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
 	}
 	bool success = true;
 	for (auto const& it: m_errors)
-		if (!dynamic_cast<Warning const*>(it.get()))
+	{
+		Error const& e = dynamic_cast<Error const&>(it.get());
+		if (e.type() != Error::Type::Warning)
 		{
 			success = false;
 			break;
 		}
+	}
 	return success;
 }
 

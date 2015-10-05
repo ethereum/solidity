@@ -41,6 +41,7 @@ public:
 		DocstringParsingError,
 		ParserError,
 		TypeError,
+
 		Warning
 	};
 
@@ -69,7 +70,7 @@ public:
 		}
 	}
 
-	Type type() { return m_type; }
+	Type const type() { return m_type; } const
 	std::string const& typeName() const { return m_typeName; }
 
 private:
