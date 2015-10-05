@@ -72,22 +72,20 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 				globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*globalContext->currentThis());
 				TypeChecker typeChecker;
-				if (!typeChecker.checkTypeRequirements(*contract))
+				bool success = typeChecker.checkTypeRequirements(*contract);
+				BOOST_CHECK(success || !typeChecker.errors().empty());
+				for (auto const& firstError: typeChecker.errors())
 				{
-					for (auto const& firstError: typeChecker.errors())
+					if (_reportWarnings || !dynamic_pointer_cast<Warning const>(firstError))
 					{
-						if (_reportWarnings || !dynamic_pointer_cast<Warning const>(firstError))
-						{
-							err = firstError;
-							break;
-						}
-						else if (_reportWarnings)
-						{
-							err = firstError;
-							break;
-						}
+						err = firstError;
+						break;
 					}
-					break;
+					else if (_reportWarnings)
+					{
+						err = firstError;
+						break;
+					}
 				}
 			}
 	}
