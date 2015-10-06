@@ -68,6 +68,12 @@ void Compiler::compileContract(
 	packIntoContractCreator(_contract, m_runtimeContext);
 	if (m_optimize)
 		m_context.optimise(m_optimizeRuns);
+
+	if (_contract.isLibrary())
+	{
+		solAssert(m_runtimeSub != size_t(-1), "");
+		m_context.injectVersionStampIntoSub(m_runtimeSub);
+	}
 }
 
 void Compiler::compileClone(

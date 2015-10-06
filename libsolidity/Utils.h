@@ -23,6 +23,7 @@
 #pragma once
 
 #include <libdevcore/Assertions.h>
+#include <libsolidity/Exceptions.h>
 
 /// Assertion that throws an InternalCompilerError containing the given description if it is not met.
 #define solAssert(CONDITION, DESCRIPTION) \

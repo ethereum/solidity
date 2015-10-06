@@ -128,6 +128,9 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
 
+	/// Prepends "PUSH <compiler version number> POP"
+	void injectVersionStampIntoSub(size_t _subIndex);
+
 	void optimise(unsigned _runs = 200) { m_asm.optimise(true, true, _runs); }
 
 	eth::Assembly const& assembly() const { return m_asm; }

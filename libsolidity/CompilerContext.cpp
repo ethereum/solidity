@@ -20,10 +20,12 @@
  * Utilities for the solidity compiler.
  */
 
+#include <libsolidity/CompilerContext.h>
 #include <utility>
 #include <numeric>
 #include <libsolidity/AST.h>
 #include <libsolidity/Compiler.h>
+#include <libsolidity/Version.h>
 
 using namespace std;
 
@@ -175,6 +177,13 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 	newStack.push(_node);
 	std::swap(m_visitedNodes, newStack);
 	updateSourceLocation();
+}
+
+void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
+{
+	eth::Assembly& sub = m_asm.sub(_subIndex);
+	sub.injectStart(eth::Instruction::POP);
+	sub.injectStart(fromBigEndian<u256>(binaryVersion()));
 }
 
 eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(
