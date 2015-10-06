@@ -218,6 +218,9 @@ public:
 
 	virtual std::string toString(bool _short) const = 0;
 	std::string toString() const { return toString(false); }
+	/// @returns the canonical name of this type for use in function signatures.
+	/// @param _addDataLocation if true, includes data location for reference types if it is "storage".
+	virtual std::string canonicalName(bool /*_addDataLocation*/) const { return toString(true); }
 	virtual u256 literalValue(Literal const*) const
 	{
 		BOOST_THROW_EXCEPTION(
@@ -226,9 +229,18 @@ public:
 		);
 	}
 
-	/// @returns a type suitable for outside of Solidity, i.e. for contract types it returns address.
+	/// @returns a (simpler) type that is encoded in the same way for external function calls.
+	/// This for example returns address for contract types.
 	/// If there is no such type, returns an empty shared pointer.
-	virtual TypePointer externalType() const { return TypePointer(); }
+	virtual TypePointer encodingType() const { return TypePointer(); }
+	/// @returns a (simpler) type that is used when decoding this type in calldata.
+	virtual TypePointer decodingType() const { return encodingType(); }
+	/// @returns a type that will be used outside of Solidity for e.g. function signatures.
+	/// This for example returns address for contract types.
+	/// If there is no such type, returns an empty shared pointer.
+	/// @param _inLibrary if set, returns types as used in a library, e.g. struct and contract types
+	/// are returned without modification.
+	virtual TypePointer interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
 
 protected:
 	/// Convenience object used when returning an empty member list.
@@ -264,7 +276,8 @@ public:
 
 	virtual std::string toString(bool _short) const override;
 
-	virtual TypePointer externalType() const override { return shared_from_this(); }
+	virtual TypePointer encodingType() const override { return shared_from_this(); }
+	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
 	int numBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
@@ -369,7 +382,8 @@ public:
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
-	virtual TypePointer externalType() const override { return shared_from_this(); }
+	virtual TypePointer encodingType() const override { return shared_from_this(); }
+	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 
 	int numBytes() const { return m_bytes; }
 
@@ -395,7 +409,8 @@ public:
 
 	virtual std::string toString(bool) const override { return "bool"; }
 	virtual u256 literalValue(Literal const* _literal) const override;
-	virtual TypePointer externalType() const override { return shared_from_this(); }
+	virtual TypePointer encodingType() const override { return shared_from_this(); }
+	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
 };
 
 /**
@@ -489,11 +504,14 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
 	virtual unsigned sizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual MemberList const& members() const override
 	{
 		return isString() ? EmptyMemberList : s_arrayTypeMemberList;
 	}
-	virtual TypePointer externalType() const override;
+	virtual TypePointer encodingType() const override;
+	virtual TypePointer decodingType() const override;
+	virtual TypePointer interfaceType(bool _inLibrary) const override;
 
 	/// @returns true if this is a byte array or a string
 	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
@@ -534,17 +552,22 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded ) const override
 	{
-		return externalType()->calldataEncodedSize(_padded);
+		return encodingType()->calldataEncodedSize(_padded);
 	}
 	virtual unsigned storageBytes() const override { return 20; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual bool isValueType() const override { return true; }
 	virtual std::string toString(bool _short) const override;
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 
 	virtual MemberList const& members() const override;
-	virtual TypePointer externalType() const override
+	virtual TypePointer encodingType() const override
 	{
 		return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+	}
+	virtual TypePointer interfaceType(bool _inLibrary) const override
+	{
+		return _inLibrary ? shared_from_this() : encodingType();
 	}
 
 	bool isSuper() const { return m_super; }
@@ -566,7 +589,7 @@ private:
 	ContractDefinition const& m_contract;
 	/// If true, it is the "super" type of the current contract, i.e. it contains only inherited
 	/// members.
-	bool m_super;
+	bool m_super = false;
 	/// Type of the constructor, @see constructorType. Lazily initialized.
 	mutable FunctionTypePointer m_constructorType;
 	/// List of member types, will be lazy-initialized because of recursive references.
@@ -591,8 +614,15 @@ public:
 	virtual std::string toString(bool _short) const override;
 
 	virtual MemberList const& members() const override;
+	virtual TypePointer encodingType() const override
+	{
+		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : TypePointer();
+	}
+	virtual TypePointer interfaceType(bool _inLibrary) const override;
 
 	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
+
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 
 	/// @returns a function that peforms the type conversion between a list of struct members
 	/// and a memory struct of this type.
@@ -624,17 +654,22 @@ public:
 	virtual bool operator==(Type const& _other) const override;
 	virtual unsigned calldataEncodedSize(bool _padded) const override
 	{
-		return externalType()->calldataEncodedSize(_padded);
+		return encodingType()->calldataEncodedSize(_padded);
 	}
 	virtual unsigned storageBytes() const override;
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString(bool _short) const override;
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual bool isValueType() const override { return true; }
 
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
-	virtual TypePointer externalType() const override
+	virtual TypePointer encodingType() const override
 	{
 		return std::make_shared<IntegerType>(8 * int(storageBytes()));
+	}
+	virtual TypePointer interfaceType(bool _inLibrary) const override
+	{
+		return _inLibrary ? shared_from_this() : encodingType();
 	}
 
 	EnumDefinition const& enumDefinition() const { return m_enum; }
@@ -684,13 +719,6 @@ public:
 
 	virtual Category category() const override { return Category::Function; }
 
-	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
-	/// appropriate external types of input/return parameters of current function.
-	/// Returns an empty shared pointer if one of the input/return parameters does not have an
-	/// external type.
-	FunctionTypePointer externalFunctionType() const;
-	virtual TypePointer externalType() const override { return externalFunctionType(); }
-
 	/// Creates the type of a function.
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	/// Creates the accessor function type of a state variable.
@@ -736,10 +764,10 @@ public:
 
 	TypePointers const& parameterTypes() const { return m_parameterTypes; }
 	std::vector<std::string> const& parameterNames() const { return m_parameterNames; }
-	std::vector<std::string> const parameterTypeNames() const;
+	std::vector<std::string> const parameterTypeNames(bool _addDataLocation) const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
-	std::vector<std::string> const returnParameterTypeNames() const;
+	std::vector<std::string> const returnParameterTypeNames(bool _addDataLocation) const;
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
@@ -748,6 +776,13 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
 	virtual MemberList const& members() const override;
+
+	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
+	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
+	/// current function.
+	/// Returns an empty shared pointer if one of the input/return parameters does not have an
+	/// external type.
+	FunctionTypePointer interfaceFunctionType() const;
 
 	/// @returns true if this function can take the given argument types (possibly
 	/// after implicit conversion).
@@ -759,9 +794,7 @@ public:
 	bool isBareCall() const;
 	Location const& location() const { return m_location; }
 	/// @returns the external signature of this function type given the function name
-	/// If @a _name is not provided (empty string) then the @c m_declaration member of the
-	/// function type is used
-	std::string externalSignature(std::string const& _name = "") const;
+	std::string externalSignature() const;
 	/// @returns the external identifier of this function (the hash of the signature).
 	u256 externalIdentifier() const;
 	Declaration const& declaration() const
@@ -822,7 +855,16 @@ public:
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
+	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual TypePointer encodingType() const override
+	{
+		return std::make_shared<IntegerType>(256);
+	}
+	virtual TypePointer interfaceType(bool _inLibrary) const override
+	{
+		return _inLibrary ? shared_from_this() : TypePointer();
+	}
 
 	TypePointer const& keyType() const { return m_keyType; }
 	TypePointer const& valueType() const { return m_valueType; }

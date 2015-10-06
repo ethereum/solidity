@@ -91,13 +91,16 @@ public:
 	/// @param _padToWordBoundaries if false, all values are concatenated without padding.
 	/// @param _copyDynamicDataInPlace if true, dynamic types is stored (without length)
 	/// together with fixed-length data.
+	/// @param _encodeAsLibraryTypes if true, encodes for a library function, e.g. does not
+	/// convert storage pointer types to memory types.
 	/// @note the locations of target reference types are ignored, because it will always be
 	/// memory.
 	void encodeToMemory(
 		TypePointers const& _givenTypes = {},
 		TypePointers const& _targetTypes = {},
 		bool _padToWordBoundaries = true,
-		bool _copyDynamicDataInPlace = false
+		bool _copyDynamicDataInPlace = false,
+		bool _encodeAsLibraryTypes = false
 	);
 
 	/// Uses a CALL to the identity contract to perform a memory-to-memory copy.

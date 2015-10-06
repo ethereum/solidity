@@ -125,9 +125,25 @@ vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _na
 	return iterator->second.resolveName(_name, false);
 }
 
-vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _recursive)
+vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _recursive) const
 {
 	return m_currentScope->resolveName(_name, _recursive);
+}
+
+Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path, bool _recursive) const
+{
+	solAssert(!_path.empty(), "");
+	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), _recursive);
+	for (size_t i = 1; i < _path.size() && candidates.size() == 1; i++)
+	{
+		if (!m_scopes.count(candidates.front()))
+			return nullptr;
+		candidates = m_scopes.at(candidates.front()).resolveName(_path[i], false);
+	}
+	if (candidates.size() == 1)
+		return candidates.front();
+	else
+		return nullptr;
 }
 
 vector<Declaration const*> NameAndTypeResolver::cleanedDeclarations(
@@ -263,6 +279,7 @@ DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode const*,
 bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
 {
 	registerDeclaration(_contract, true);
+	_contract.annotation().canonicalName = currentCanonicalName();
 	return true;
 }
 
@@ -274,6 +291,7 @@ void DeclarationRegistrationHelper::endVisit(ContractDefinition&)
 bool DeclarationRegistrationHelper::visit(StructDefinition& _struct)
 {
 	registerDeclaration(_struct, true);
+	_struct.annotation().canonicalName = currentCanonicalName();
 	return true;
 }
 
@@ -285,6 +303,7 @@ void DeclarationRegistrationHelper::endVisit(StructDefinition&)
 bool DeclarationRegistrationHelper::visit(EnumDefinition& _enum)
 {
 	registerDeclaration(_enum, true);
+	_enum.annotation().canonicalName = currentCanonicalName();
 	return true;
 }
 
@@ -398,6 +417,22 @@ void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaratio
 	_declaration.setScope(m_currentScope);
 	if (_opensScope)
 		enterNewSubScope(_declaration);
+}
+
+string DeclarationRegistrationHelper::currentCanonicalName() const
+{
+	string ret;
+	for (
+		Declaration const* scope = m_currentScope;
+		scope != nullptr;
+		scope = m_scopes[scope].enclosingDeclaration()
+	)
+	{
+		if (!ret.empty())
+			ret = "." + ret;
+		ret = scope->name() + ret;
+	}
+	return ret;
 }
 
 }

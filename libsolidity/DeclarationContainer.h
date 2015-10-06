@@ -40,8 +40,10 @@ namespace solidity
 class DeclarationContainer
 {
 public:
-	explicit DeclarationContainer(Declaration const* _enclosingDeclaration = nullptr,
-								  DeclarationContainer const* _enclosingContainer = nullptr):
+	explicit DeclarationContainer(
+		Declaration const* _enclosingDeclaration = nullptr,
+		DeclarationContainer const* _enclosingContainer = nullptr
+	):
 		m_enclosingDeclaration(_enclosingDeclaration), m_enclosingContainer(_enclosingContainer) {}
 	/// Registers the declaration in the scope unless its name is already declared or the name is empty.
 	/// @param _invisible if true, registers the declaration, reports name clashes but does not return it in @a resolveName

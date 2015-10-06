@@ -5382,6 +5382,62 @@ BOOST_AUTO_TEST_CASE(fixed_arrays_as_return_type)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(internal_types_in_library)
+{
+	char const* sourceCode = R"(
+		library Lib {
+			function find(uint16[] storage _haystack, uint16 _needle) constant returns (uint)
+			{
+				for (uint i = 0; i < _haystack.length; ++i)
+					if (_haystack[i] == _needle)
+						return i;
+				return uint(-1);
+			}
+		}
+		contract Test {
+			mapping(string => uint16[]) data;
+			function f() returns (uint a, uint b)
+			{
+				data["abc"].length = 20;
+				data["abc"][4] = 9;
+				data["abc"][17] = 3;
+				a = Lib.find(data["abc"], 9);
+				b = Lib.find(data["abc"], 3);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(4), u256(17)));
+}
+
+BOOST_AUTO_TEST_CASE(using_library_structs)
+{
+	char const* sourceCode = R"(
+		library Lib {
+			struct Data { uint a; uint[] b; }
+			function set(Data storage _s)
+			{
+				_s.a = 7;
+				_s.b.length = 20;
+				_s.b[19] = 8;
+			}
+		}
+		contract Test {
+			mapping(string => Lib.Data) data;
+			function f() returns (uint a, uint b)
+			{
+				Lib.set(data["abc"]);
+				a = data["abc"].a;
+				b = data["abc"].b[19];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7), u256(8)));
+}
+
 BOOST_AUTO_TEST_CASE(short_strings)
 {
 	// This test verifies that the byte array encoding that combines length and data works
@@ -5509,6 +5565,17 @@ BOOST_AUTO_TEST_CASE(calldata_offset)
 			)";
 	compileAndRun(sourceCode, 0, "CB", encodeArgs(u256(0x20)));
 	BOOST_CHECK(callContractFunction("last()", encodeArgs()) == encodeDyn(string("nd")));
+}
+
+BOOST_AUTO_TEST_CASE(version_stamp_for_libraries)
+{
+	char const* sourceCode = "library lib {}";
+	m_optimize = true;
+	bytes runtimeCode = compileAndRun(sourceCode, 0, "lib");
+	BOOST_CHECK(runtimeCode.size() >= 8);
+	BOOST_CHECK_EQUAL(runtimeCode[0], int(eth::Instruction::PUSH6)); // might change once we switch to 1.x.x
+	BOOST_CHECK_EQUAL(runtimeCode[1], 1); // might change once we switch away from x.1.x
+	BOOST_CHECK_EQUAL(runtimeCode[7], int(eth::Instruction::POP));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

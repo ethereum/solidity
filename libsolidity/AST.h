@@ -352,6 +352,8 @@ public:
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
 
+	virtual TypeDeclarationAnnotation& annotation() const override;
+
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_members;
 };
@@ -371,6 +373,8 @@ public:
 	std::vector<ASTPointer<EnumValue>> const& members() const { return m_members; }
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+
+	virtual TypeDeclarationAnnotation& annotation() const override;
 
 private:
 	std::vector<ASTPointer<EnumValue>> m_members;
@@ -708,17 +712,17 @@ private:
 class UserDefinedTypeName: public TypeName
 {
 public:
-	UserDefinedTypeName(SourceLocation const& _location, ASTPointer<ASTString> const& _name):
-		TypeName(_location), m_name(_name) {}
+	UserDefinedTypeName(SourceLocation const& _location, std::vector<ASTString> const& _namePath):
+		TypeName(_location), m_namePath(_namePath) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	ASTString const& name() const { return *m_name; }
+	std::vector<ASTString> const& namePath() const { return m_namePath; }
 
 	virtual UserDefinedTypeNameAnnotation& annotation() const override;
 
 private:
-	ASTPointer<ASTString> m_name;
+	std::vector<ASTString> m_namePath;
 };
 
 /**

@@ -87,7 +87,7 @@ private:
 	/// From memory if @a _fromMemory is true, otherwise from call data.
 	/// Expects source offset on the stack, which is removed.
 	void appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory = false);
-	void appendReturnValuePacker(TypePointers const& _typeParameters);
+	void appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary);
 
 	void registerStateVariables(ContractDefinition const& _contract);
 	void initializeStateVariables(ContractDefinition const& _contract);

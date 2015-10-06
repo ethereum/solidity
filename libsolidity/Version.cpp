@@ -22,20 +22,52 @@
 
 #include <libsolidity/Version.h>
 #include <string>
-#include <libevmasm/Version.h>
-#include <solidity/BuildInfo.h>
+#include <libdevcore/CommonData.h>
 #include <libdevcore/Common.h>
+#include <libevmasm/Version.h>
+#include <libsolidity/Utils.h>
+#include <solidity/BuildInfo.h>
 
 using namespace dev;
 using namespace dev::solidity;
 using namespace std;
 
 char const* dev::solidity::VersionNumber = ETH_PROJECT_VERSION;
-extern string const dev::solidity::VersionString =
+
+string const dev::solidity::VersionString =
 	string(dev::solidity::VersionNumber) +
 	"-" +
 	string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) +
 	(ETH_CLEAN_REPO ? "" : "*") +
 	"/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM)
 	" linked to libethereum-" + eth::VersionStringLibEvmAsm;
+
+
+bytes dev::solidity::binaryVersion()
+{
+	bytes ret{0};
+	size_t i = 0;
+	auto parseDecimal = [&]()
+	{
+		size_t ret = 0;
+		solAssert('0' <= VersionString[i] && VersionString[i] <= '9', "");
+		for (; i < VersionString.size() && '0' <= VersionString[i] && VersionString[i] <= '9'; ++i)
+			ret = ret * 10 + (VersionString[i] - '0');
+		return ret;
+	};
+	ret.push_back(byte(parseDecimal()));
+	solAssert(i < VersionString.size() && VersionString[i] == '.', "");
+	++i;
+	ret.push_back(byte(parseDecimal()));
+	solAssert(i < VersionString.size() && VersionString[i] == '.', "");
+	++i;
+	ret.push_back(byte(parseDecimal()));
+	solAssert(i < VersionString.size() && VersionString[i] == '-', "");
+	++i;
+	solAssert(i + 7 < VersionString.size(), "");
+	ret += fromHex(VersionString.substr(i, 8));
+	solAssert(ret.size() == 1 + 3 + 4, "");
+
+	return ret;
+}
 

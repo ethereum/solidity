@@ -1,5 +1,8 @@
 
 #include <libsolidity/InterfaceHandler.h>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/irange.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <libsolidity/AST.h>
 #include <libsolidity/CompilerStack.h>
 using namespace std;
@@ -57,18 +60,18 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 
 	for (auto it: _contractDef.interfaceFunctions())
 	{
-		auto externalFunctionType = it.second->externalFunctionType();
+		auto externalFunctionType = it.second->interfaceFunctionType();
 		Json::Value method;
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
 		method["constant"] = it.second->isConstant();
 		method["inputs"] = populateParameters(
 			externalFunctionType->parameterNames(),
-			externalFunctionType->parameterTypeNames()
+			externalFunctionType->parameterTypeNames(_contractDef.isLibrary())
 		);
 		method["outputs"] = populateParameters(
 			externalFunctionType->returnParameterNames(),
-			externalFunctionType->returnParameterTypeNames()
+			externalFunctionType->returnParameterTypeNames(_contractDef.isLibrary())
 		);
 		abi.append(method);
 	}
@@ -76,11 +79,11 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 	{
 		Json::Value method;
 		method["type"] = "constructor";
-		auto externalFunction = FunctionType(*_contractDef.constructor()).externalFunctionType();
+		auto externalFunction = FunctionType(*_contractDef.constructor()).interfaceFunctionType();
 		solAssert(!!externalFunction, "");
 		method["inputs"] = populateParameters(
 			externalFunction->parameterNames(),
-			externalFunction->parameterTypeNames()
+			externalFunction->parameterTypeNames(_contractDef.isLibrary())
 		);
 		abi.append(method);
 	}
@@ -96,7 +99,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		{
 			Json::Value input;
 			input["name"] = p->name();
-			input["type"] = p->annotation().type->toString(true);
+			input["type"] = p->annotation().type->canonicalName(false);
 			input["indexed"] = p->isIndexed();
 			params.append(input);
 		}
@@ -108,33 +111,61 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 
 string InterfaceHandler::ABISolidityInterface(ContractDefinition const& _contractDef)
 {
-	string ret = "contract " + _contractDef.name() + "{";
+	using namespace boost::adaptors;
+	using namespace boost::algorithm;
+	string ret = (_contractDef.isLibrary() ? "library " : "contract ") + _contractDef.name() + "{";
 
 	auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
 	{
-		string r = "";
-		solAssert(_paramNames.size() == _paramTypes.size(), "Names and types vector size does not match");
-		for (unsigned i = 0; i < _paramNames.size(); ++i)
-			r += (r.size() ? "," : "(") + _paramTypes[i] + " " + _paramNames[i];
-		return r.size() ? r + ")" : "()";
+		return "(" + join(boost::irange<size_t>(0, _paramNames.size()) | transformed([&](size_t _i) {
+			return _paramTypes[_i] + " " + _paramNames[_i];
+		}), ",") + ")";
 	};
+	// If this is a library, include all its enum and struct types. Should be more intelligent
+	// in the future and check what is actually used (it might even use types from other libraries
+	// or contracts or in the global scope).
+	if (_contractDef.isLibrary())
+	{
+		for (auto const& stru: _contractDef.definedStructs())
+		{
+			ret += "struct " + stru->name() + "{";
+			for (ASTPointer<VariableDeclaration> const& _member: stru->members())
+				ret += _member->type(nullptr)->canonicalName(false) + " " + _member->name() + ";";
+			ret += "}";
+		}
+		for (auto const& enu: _contractDef.definedEnums())
+		{
+			ret += "enum " + enu->name() + "{" +
+			join(enu->members() | transformed([](ASTPointer<EnumValue> const& _value) {
+				return _value->name();
+			}), ",") + "}";
+		}
+	}
 	if (_contractDef.constructor())
 	{
-		auto externalFunction = FunctionType(*_contractDef.constructor()).externalFunctionType();
+		auto externalFunction = FunctionType(*_contractDef.constructor()).interfaceFunctionType();
 		solAssert(!!externalFunction, "");
 		ret +=
 			"function " +
 			_contractDef.name() +
-			populateParameters(externalFunction->parameterNames(), externalFunction->parameterTypeNames()) +
+			populateParameters(
+				externalFunction->parameterNames(),
+				externalFunction->parameterTypeNames(_contractDef.isLibrary())
+			) +
 			";";
 	}
 	for (auto const& it: _contractDef.interfaceFunctions())
 	{
 		ret += "function " + it.second->declaration().name() +
-			populateParameters(it.second->parameterNames(), it.second->parameterTypeNames()) +
-			(it.second->isConstant() ? "constant " : "");
+			populateParameters(
+				it.second->parameterNames(),
+				it.second->parameterTypeNames(_contractDef.isLibrary())
+			) + (it.second->isConstant() ? "constant " : "");
 		if (it.second->returnParameterTypes().size())
-			ret += "returns" + populateParameters(it.second->returnParameterNames(), it.second->returnParameterTypeNames());
+			ret += "returns" + populateParameters(
+				it.second->returnParameterNames(),
+				it.second->returnParameterTypeNames(_contractDef.isLibrary())
+			);
 		else if (ret.back() == ' ')
 			ret.pop_back();
 		ret += ";";

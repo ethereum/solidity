@@ -135,7 +135,7 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 					FunctionType ftype(*v);
 					solAssert(!!v->annotation().type.get(), "");
 					functionsSeen.insert(v->name());
-					FixedHash<4> hash(dev::sha3(ftype.externalSignature(v->name())));
+					FixedHash<4> hash(dev::sha3(ftype.externalSignature()));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*v)));
 				}
 		}
@@ -215,6 +215,13 @@ TypePointer StructDefinition::type(ContractDefinition const*) const
 	return make_shared<TypeType>(make_shared<StructType>(*this));
 }
 
+TypeDeclarationAnnotation& StructDefinition::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new TypeDeclarationAnnotation();
+	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
+}
+
 TypePointer EnumValue::type(ContractDefinition const*) const
 {
 	auto parentDef = dynamic_cast<EnumDefinition const*>(scope());
@@ -227,6 +234,13 @@ TypePointer EnumDefinition::type(ContractDefinition const*) const
 	return make_shared<TypeType>(make_shared<EnumType>(*this));
 }
 
+TypeDeclarationAnnotation& EnumDefinition::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new TypeDeclarationAnnotation();
+	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
+}
+
 TypePointer FunctionDefinition::type(ContractDefinition const*) const
 {
 	return make_shared<FunctionType>(*this);
@@ -234,7 +248,7 @@ TypePointer FunctionDefinition::type(ContractDefinition const*) const
 
 string FunctionDefinition::externalSignature() const
 {
-	return FunctionType(*this).externalSignature(name());
+	return FunctionType(*this).externalSignature();
 }
 
 TypePointer ModifierDefinition::type(ContractDefinition const*) const

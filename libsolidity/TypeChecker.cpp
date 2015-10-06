@@ -299,7 +299,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 			if (f->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*f);
-				externalDeclarations[functionType->externalSignature(f->name())].push_back(
+				externalDeclarations[functionType->externalSignature()].push_back(
 					make_pair(f.get(), functionType)
 				);
 			}
@@ -307,7 +307,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 			if (v->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*v);
-				externalDeclarations[functionType->externalSignature(v->name())].push_back(
+				externalDeclarations[functionType->externalSignature()].push_back(
 					make_pair(v.get(), functionType)
 				);
 			}
@@ -397,12 +397,13 @@ bool TypeChecker::visit(StructDefinition const& _struct)
 
 bool TypeChecker::visit(FunctionDefinition const& _function)
 {
+	bool isLibraryFunction = dynamic_cast<ContractDefinition const&>(*_function.scope()).isLibrary();
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters() + _function.returnParameters())
 	{
 		if (!type(*var)->canLiveOutsideStorage())
 			typeError(*var, "Type is required to live outside storage.");
-		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->externalType()))
-			typeError(*var, "Internal type is not allowed for public and external functions.");
+		if (_function.visibility() >= FunctionDefinition::Visibility::Public && !(type(*var)->interfaceType(isLibraryFunction)))
+			fatalTypeError(*var, "Internal type is not allowed for public or external functions.");
 	}
 	for (ASTPointer<ModifierInvocation> const& modifier: _function.modifiers())
 		visitManually(
@@ -490,7 +491,7 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	}
 	else if (
 		_variable.visibility() >= VariableDeclaration::Visibility::Public &&
-		!FunctionType(_variable).externalType()
+		!FunctionType(_variable).interfaceFunctionType()
 	)
 		typeError(_variable, "Internal type is not allowed for public state variables.");
 	return false;
@@ -557,7 +558,7 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 			typeError(_eventDef, "More than 3 indexed arguments for event.");
 		if (!type(*var)->canLiveOutsideStorage())
 			typeError(*var, "Type is required to live outside storage.");
-		if (!type(*var)->externalType())
+		if (!type(*var)->interfaceType(false))
 			typeError(*var, "Internal type is not allowed as event parameter type.");
 	}
 	return false;

@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/ASTJsonConverter.h>
+#include <boost/algorithm/string/join.hpp>
 #include <libsolidity/AST.h>
 
 using namespace std;
@@ -144,7 +145,9 @@ bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
 
 bool ASTJsonConverter::visit(UserDefinedTypeName const& _node)
 {
-	addJsonNode("UserDefinedTypeName", { make_pair("name", _node.name()) });
+	addJsonNode("UserDefinedTypeName", {
+		make_pair("name", boost::algorithm::join(_node.namePath(), "."))
+	});
 	return true;
 }
 

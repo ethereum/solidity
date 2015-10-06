@@ -68,6 +68,12 @@ void Compiler::compileContract(
 	packIntoContractCreator(_contract, m_runtimeContext);
 	if (m_optimize)
 		m_context.optimise(m_optimizeRuns);
+
+	if (_contract.isLibrary())
+	{
+		solAssert(m_runtimeSub != size_t(-1), "");
+		m_context.injectVersionStampIntoSub(m_runtimeSub);
+	}
 }
 
 void Compiler::compileClone(
@@ -252,7 +258,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		fallback->accept(*this);
 		m_context << returnTag;
-		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes());
+		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes(), _contract.isLibrary());
 	}
 	else
 		m_context << eth::Instruction::STOP; // function not found
@@ -268,7 +274,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		appendCalldataUnpacker(functionType->parameterTypes());
 		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
 		m_context << returnTag;
-		appendReturnValuePacker(functionType->returnParameterTypes());
+		appendReturnValuePacker(functionType->returnParameterTypes(), _contract.isLibrary());
 	}
 }
 
@@ -280,15 +286,13 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 
 	// Retain the offset pointer as base_offset, the point from which the data offsets are computed.
 	m_context << eth::Instruction::DUP1;
-	for (TypePointer const& type: _typeParameters)
+	for (TypePointer const& parameterType: _typeParameters)
 	{
 		// stack: v1 v2 ... v(k-1) base_offset current_offset
-		switch (type->category())
-		{
-		case Type::Category::Array:
+		TypePointer type = parameterType->decodingType();
+		if (type->category() == Type::Category::Array)
 		{
 			auto const& arrayType = dynamic_cast<ArrayType const&>(*type);
-			solAssert(arrayType.location() != DataLocation::Storage, "");
 			solAssert(!arrayType.baseType()->isDynamicallySized(), "Nested arrays not yet implemented.");
 			if (_fromMemory)
 			{
@@ -342,9 +346,9 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 				CompilerUtils(m_context).moveToStackTop(1 + arrayType.sizeOnStack());
 				m_context << eth::Instruction::SWAP1;
 			}
-			break;
 		}
-		default:
+		else
+		{
 			solAssert(!type->isDynamicallySized(), "Unknown dynamically sized type: " + type->toString());
 			CompilerUtils(m_context).loadFromMemoryDynamic(*type, !_fromMemory, true);
 			CompilerUtils(m_context).moveToStackTop(1 + type->sizeOnStack());
@@ -355,7 +359,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 	m_context << eth::Instruction::POP << eth::Instruction::POP;
 }
 
-void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
+void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary)
 {
 	CompilerUtils utils(m_context);
 	if (_typeParameters.empty())
@@ -365,7 +369,7 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters)
 		utils.fetchFreeMemoryPointer();
 		//@todo optimization: if we return a single memory array, there should be enough space before
 		// its data to add the needed parts and we avoid a memory copy.
-		utils.encodeToMemory(_typeParameters, _typeParameters);
+		utils.encodeToMemory(_typeParameters, _typeParameters, true, false, _isLibrary);
 		utils.toSizeAfterFreeMemoryPointer();
 		m_context << eth::Instruction::RETURN;
 	}
