@@ -152,7 +152,8 @@ BOOST_AUTO_TEST_CASE(libraries)
 		}
 	)";
 	ContractDefinition const& contract = checkInterface(sourceCode);
-	set<string> expectedFunctions({"function f(uint256[] x,Lib.Str y,Lib.E z);"});
+	BOOST_CHECK(contract.isLibrary());
+	set<string> expectedFunctions({"function f(uint256[] x,Lib.Str storage y,Lib.E z);"});
 	BOOST_REQUIRE_EQUAL(1, contract.definedFunctions().size());
 	BOOST_CHECK(expectedFunctions == set<string>({sourcePart(*contract.definedFunctions().at(0))}));
 }
