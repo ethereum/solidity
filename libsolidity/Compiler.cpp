@@ -260,6 +260,9 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		m_context << returnTag;
 		appendReturnValuePacker(FunctionType(*fallback).returnParameterTypes(), _contract.isLibrary());
 	}
+	else if (_contract.isLibrary())
+		// Reject invalid library calls and ether sent to a library.
+		m_context.appendJumpTo(m_context.errorTag());
 	else
 		m_context << eth::Instruction::STOP; // function not found
 

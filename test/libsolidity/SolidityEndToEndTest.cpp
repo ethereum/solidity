@@ -5578,6 +5578,29 @@ BOOST_AUTO_TEST_CASE(version_stamp_for_libraries)
 	BOOST_CHECK_EQUAL(runtimeCode[7], int(eth::Instruction::POP));
 }
 
+BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
+{
+	char const* sourceCode = R"(
+		library lib {}
+		contract c {
+			function f(address x) returns (bool) {
+				return x.send(1);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "lib");
+	Address libraryAddress = m_contractAddress;
+	compileAndRun(sourceCode, 10, "c");
+	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 10);
+	BOOST_CHECK_EQUAL(m_state.balance(libraryAddress), 0);
+	BOOST_CHECK(callContractFunction("f(address)", encodeArgs(u160(libraryAddress))) == encodeArgs(false));
+	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 10);
+	BOOST_CHECK_EQUAL(m_state.balance(libraryAddress), 0);
+	BOOST_CHECK(callContractFunction("f(address)", encodeArgs(u160(m_contractAddress))) == encodeArgs(true));
+	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 10);
+	BOOST_CHECK_EQUAL(m_state.balance(libraryAddress), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
