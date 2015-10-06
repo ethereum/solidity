@@ -125,12 +125,12 @@ vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _na
 	return iterator->second.resolveName(_name, false);
 }
 
-vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _recursive)
+vector<Declaration const*> NameAndTypeResolver::nameFromCurrentScope(ASTString const& _name, bool _recursive) const
 {
 	return m_currentScope->resolveName(_name, _recursive);
 }
 
-Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path, bool _recursive)
+Declaration const* NameAndTypeResolver::pathFromCurrentScope(vector<ASTString> const& _path, bool _recursive) const
 {
 	solAssert(!_path.empty(), "");
 	vector<Declaration const*> candidates = m_currentScope->resolveName(_path.front(), _recursive);

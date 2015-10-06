@@ -58,12 +58,12 @@ public:
 
 	/// Resolves a name in the "current" scope. Should only be called during the initial
 	/// resolving phase.
-	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _recursive = true);
+	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _recursive = true) const;
 
 	/// Resolves a path starting from the "current" scope. Should only be called during the initial
 	/// resolving phase.
 	/// @note Returns a null pointer if any component in the path was not unique or not found.
-	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path, bool _recursive = true);
+	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path, bool _recursive = true) const;
 
 	/// returns the vector of declarations without repetitions
 	static std::vector<Declaration const*> cleanedDeclarations(
