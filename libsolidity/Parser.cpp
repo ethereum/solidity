@@ -522,7 +522,14 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	{
 		ASTNodeFactory nodeFactory(*this);
 		nodeFactory.markEndPosition();
-		type = nodeFactory.createNode<UserDefinedTypeName>(expectIdentifierToken());
+		vector<ASTString> identifierPath{*expectIdentifierToken()};
+		while (m_scanner->currentToken() == Token::Period)
+		{
+			m_scanner->next();
+			nodeFactory.markEndPosition();
+			identifierPath.push_back(*expectIdentifierToken());
+		}
+		type = nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
 	}
 	else
 		BOOST_THROW_EXCEPTION(createParserError("Expected type name"));
@@ -1036,7 +1043,7 @@ ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
 	ASTNodeFactory nodeFactory(*this, _primary);
 	ASTPointer<TypeName> type;
 	if (auto identifier = dynamic_cast<Identifier const*>(_primary.get()))
-		type = nodeFactory.createNode<UserDefinedTypeName>(make_shared<ASTString>(identifier->name()));
+		type = nodeFactory.createNode<UserDefinedTypeName>(vector<ASTString>{identifier->name()});
 	else if (auto typeName = dynamic_cast<ElementaryTypeNameExpression const*>(_primary.get()))
 		type = nodeFactory.createNode<ElementaryTypeName>(typeName->typeToken());
 	else

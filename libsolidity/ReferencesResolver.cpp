@@ -54,20 +54,13 @@ bool ReferencesResolver::visit(Return const& _return)
 
 bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 {
-	auto declarations = m_resolver.nameFromCurrentScope(_typeName.name());
-	if (declarations.empty())
+	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
+	if (!declaration)
 		BOOST_THROW_EXCEPTION(
 			DeclarationError() <<
 			errinfo_sourceLocation(_typeName.location()) <<
-			errinfo_comment("Undeclared identifier.")
+			errinfo_comment("Identifier not found or not unique.")
 		);
-	else if (declarations.size() > 1)
-		BOOST_THROW_EXCEPTION(
-			DeclarationError() <<
-			errinfo_sourceLocation(_typeName.location()) <<
-			errinfo_comment("Duplicate identifier.")
-		);
-	Declaration const* declaration = *declarations.begin();
 	_typeName.annotation().referencedDeclaration = declaration;
 	return true;
 }

@@ -36,9 +36,8 @@ namespace solidity
 {
 
 /**
- * Resolves name references, types and checks types of all expressions.
- * Specifically, it checks that all operations are valid for the inferred types.
- * An exception is throw on the first error.
+ * Resolves name references, typenames and sets the (explicitly given) types for all variable
+ * declarations.
  */
 class NameAndTypeResolver: private boost::noncopyable
 {
@@ -60,6 +59,11 @@ public:
 	/// Resolves a name in the "current" scope. Should only be called during the initial
 	/// resolving phase.
 	std::vector<Declaration const*> nameFromCurrentScope(ASTString const& _name, bool _recursive = true);
+
+	/// Resolves a path starting from the "current" scope. Should only be called during the initial
+	/// resolving phase.
+	/// @note Returns a null pointer if any component in the path was not unique or not found.
+	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path, bool _recursive = true);
 
 	/// returns the vector of declarations without repetitions
 	static std::vector<Declaration const*> cleanedDeclarations(
