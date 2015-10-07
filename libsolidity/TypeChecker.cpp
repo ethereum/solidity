@@ -824,10 +824,15 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	{
 		// call by positional arguments
 		for (size_t i = 0; i < arguments.size(); ++i)
-			if (
-				!functionType->takesArbitraryParameters() &&
-				!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i])
-			)
+		{
+			auto const& argType = type(*arguments[i]);
+			if (functionType->takesArbitraryParameters())
+			{
+				if (auto t = dynamic_cast<IntegerConstantType const*>(argType.get()))
+					if (!t->integerType())
+						typeError(*arguments[i], "Integer constant too large.");
+			}
+			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				typeError(
 					*arguments[i],
 					"Invalid type for argument in function call. "
@@ -837,6 +842,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 					parameterTypes[i]->toString() +
 					" requested."
 				);
+		}
 	}
 	else
 	{
