@@ -1107,6 +1107,24 @@ BOOST_AUTO_TEST_CASE(event_too_many_indexed)
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(anonymous_event_four_indexed)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint indexed a, bytes3 indexed b, bool indexed c, uint indexed d) anonymous;
+		})";
+	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+}
+
+BOOST_AUTO_TEST_CASE(anonymous_event_too_many_indexed)
+{
+	char const* text = R"(
+		contract c {
+			event e(uint indexed a, bytes3 indexed b, bool indexed c, uint indexed d, uint indexed e) anonymous;
+		})";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(event_call)
 {
 	char const* text = R"(
