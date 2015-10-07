@@ -216,6 +216,7 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract) 
 	if (result.empty())
 		BOOST_THROW_EXCEPTION(_contract.createTypeError("Linearization of inheritance graph impossible"));
 	_contract.annotation().linearizedBaseContracts = result;
+	_contract.annotation().contractDependencies.insert(result.begin() + 1, result.end());
 }
 
 template <class _T>

@@ -2366,6 +2366,26 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text, true), Warning);
 }
 
+BOOST_AUTO_TEST_CASE(cyclic_binary_dependency)
+{
+	char const* text = R"(
+		contract A { function f() { new B(); } }
+		contract B { function f() { new C(); } }
+		contract C { function f() { new A(); } }
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(cyclic_binary_dependency_via_inheritance)
+{
+	char const* text = R"(
+		contract A is B { }
+		contract B { function f() { new C(); } }
+		contract C { function f() { new A(); } }
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

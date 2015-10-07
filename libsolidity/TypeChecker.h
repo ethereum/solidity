@@ -99,6 +99,11 @@ private:
 	virtual void endVisit(ElementaryTypeNameExpression const& _expr) override;
 	virtual void endVisit(Literal const& _literal) override;
 
+	bool contractDependenciesAreCyclic(
+		ContractDefinition const& _contract,
+		std::set<ContractDefinition const*> const& _seenContracts = std::set<ContractDefinition const*>()
+	) const;
+
 	/// @returns the referenced declaration and throws on error.
 	Declaration const& dereference(Identifier const& _identifier);
 

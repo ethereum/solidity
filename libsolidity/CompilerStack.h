@@ -39,6 +39,7 @@ namespace dev
 
 namespace eth
 {
+class Assembly;
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 }
@@ -195,6 +196,13 @@ private:
 	};
 
 	void resolveImports();
+	/// Compile a single contract and put the result in @a _compiledContracts.
+	void compileContract(
+		bool _optimize,
+		unsigned _runs,
+		ContractDefinition const& _contract,
+		std::map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
+	);
 
 	Contract const& contract(std::string const& _contractName = "") const;
 	Source const& source(std::string const& _sourceName = "") const;
