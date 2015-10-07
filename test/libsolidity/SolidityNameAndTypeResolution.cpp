@@ -54,9 +54,9 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 	try
 	{
 		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
-		NameAndTypeResolver resolver({});
-		resolver.registerDeclarations(*sourceUnit);
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
+		NameAndTypeResolver resolver(globalContext->declarations());
+		resolver.registerDeclarations(*sourceUnit);
 
 		for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -2364,6 +2364,17 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 		}
 	)";
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text, true), Warning);
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_large_integer_constant)
+{
+	char const* text = R"(
+		contract c
+		{
+			function f() { sha3(2**500); }
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(cyclic_binary_dependency)
