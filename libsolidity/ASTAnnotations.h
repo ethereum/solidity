@@ -25,6 +25,7 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <set>
 #include <libsolidity/ASTForward.h>
 
 namespace dev
@@ -53,6 +54,9 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation
 	/// List of all (direct and indirect) base contracts in order from derived to
 	/// base, including the contract itself.
 	std::vector<ContractDefinition const*> linearizedBaseContracts;
+	/// List of contracts this contract creates, i.e. which need to be compiled first.
+	/// Also includes all contracts from @a linearizedBaseContracts.
+	std::set<ContractDefinition const*> contractDependencies;
 };
 
 struct VariableDeclarationAnnotation: ASTAnnotation

@@ -908,12 +908,15 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		typeError(_newExpression, "Trying to create an instance of an abstract contract.");
 
 	auto scopeContract = _newExpression.contractName().annotation().contractScope;
-	auto const& bases = contract->annotation().linearizedBaseContracts;
-	solAssert(!bases.empty(), "Linearized base contracts not yet available.");
-	if (find(bases.begin(), bases.end(), scopeContract) != bases.end())
+	scopeContract->annotation().contractDependencies.insert(contract);
+	solAssert(
+		!contract->annotation().linearizedBaseContracts.empty(),
+		"Linearized base contracts not yet available."
+	);
+	if (contractDependenciesAreCyclic(*scopeContract))
 		typeError(
 			_newExpression,
-			"Circular reference for contract creation: cannot create instance of derived or same contract."
+			"Circular reference for contract creation (cannot create instance of derived or same contract)."
 		);
 
 	auto contractType = make_shared<ContractType>(*contract);
@@ -1116,6 +1119,22 @@ void TypeChecker::endVisit(Literal const& _literal)
 	_literal.annotation().type = Type::forLiteral(_literal);
 	if (!_literal.annotation().type)
 		fatalTypeError(_literal, "Invalid literal value.");
+}
+
+bool TypeChecker::contractDependenciesAreCyclic(
+	ContractDefinition const& _contract,
+	std::set<ContractDefinition const*> const& _seenContracts
+) const
+{
+	// Naive depth-first search that remembers nodes already seen.
+	if (_seenContracts.count(&_contract))
+		return true;
+	set<ContractDefinition const*> seen(_seenContracts);
+	seen.insert(&_contract);
+	for (auto const* c: _contract.annotation().contractDependencies)
+		if (contractDependenciesAreCyclic(*c, seen))
+			return true;
+	return false;
 }
 
 Declaration const& TypeChecker::dereference(Identifier const& _identifier)

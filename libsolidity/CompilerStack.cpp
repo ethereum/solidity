@@ -170,22 +170,8 @@ bool CompilerStack::compile(bool _optimize, unsigned _runs)
 	map<ContractDefinition const*, eth::Assembly const*> compiledContracts;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
-			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-			{
-				if (!contract->annotation().isFullyImplemented)
-					continue;
-				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs);
-				compiler->compileContract(*contract, compiledContracts);
-				Contract& compiledContract = m_contracts.at(contract->name());
-				compiledContract.compiler = compiler;
-				compiledContract.object = compiler->assembledObject();
-				compiledContract.runtimeObject = compiler->runtimeObject();
-				compiledContracts[compiledContract.contract] = &compiler->assembly();
-
-				Compiler cloneCompiler(_optimize, _runs);
-				cloneCompiler.compileClone(*contract, compiledContracts);
-				compiledContract.cloneObject = cloneCompiler.assembledObject();
-			}
+			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
+				compileContract(_optimize, _runs, *contract, compiledContracts);
 	return true;
 }
 
@@ -373,6 +359,31 @@ void CompilerStack::resolveImports()
 			toposort(&sourcePair.second);
 
 	swap(m_sourceOrder, sourceOrder);
+}
+
+void CompilerStack::compileContract(
+	bool _optimize,
+	unsigned _runs,
+	ContractDefinition const& _contract,
+	map<ContractDefinition const*, eth::Assembly const*>& _compiledContracts
+)
+{
+	if (_compiledContracts.count(&_contract) || !_contract.annotation().isFullyImplemented)
+		return;
+	for (auto const* dependency: _contract.annotation().contractDependencies)
+		compileContract(_optimize, _runs, *dependency, _compiledContracts);
+
+	shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs);
+	compiler->compileContract(_contract, _compiledContracts);
+	Contract& compiledContract = m_contracts.at(_contract.name());
+	compiledContract.compiler = compiler;
+	compiledContract.object = compiler->assembledObject();
+	compiledContract.runtimeObject = compiler->runtimeObject();
+	_compiledContracts[compiledContract.contract] = &compiler->assembly();
+
+	Compiler cloneCompiler(_optimize, _runs);
+	cloneCompiler.compileClone(_contract, _compiledContracts);
+	compiledContract.cloneObject = cloneCompiler.assembledObject();
 }
 
 std::string CompilerStack::defaultContractName() const
