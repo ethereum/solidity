@@ -2400,9 +2400,9 @@ BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
 {
 	char const* sourceCode = R"(
 		contract ClientReceipt {
-			event Deposit(address indexed _from, bytes32 indexed _id, uint _value) anonymous;
+			event Deposit(address indexed _from, bytes32 indexed _id, uint indexed _value, uint indexed _value2, bytes32 data) anonymous;
 			function deposit(bytes32 _id, bool _manually) {
-				Deposit(msg.sender, _id, msg.value);
+				Deposit(msg.sender, _id, msg.value, 2, "abc");
 			}
 		}
 	)";
@@ -2412,10 +2412,12 @@ BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
 	callContractFunctionWithValue("deposit(bytes32,bool)", value, id);
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
-	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(value)));
-	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_CHECK(m_logs[0].data == encodeArgs("abc"));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 4);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(m_sender));
 	BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(id));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(value));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[3], h256(2));
 }
 
 BOOST_AUTO_TEST_CASE(event_lots_of_data)

@@ -554,7 +554,9 @@ bool TypeChecker::visit(EventDefinition const& _eventDef)
 	{
 		if (var->isIndexed())
 			numIndexed++;
-		if (numIndexed > 3)
+		if (_eventDef.isAnonymous() && numIndexed > 4)
+			typeError(_eventDef, "More than 4 indexed arguments for anonymous event.");
+		else if (!_eventDef.isAnonymous() && numIndexed > 3)
 			typeError(_eventDef, "More than 3 indexed arguments for event.");
 		if (!type(*var)->canLiveOutsideStorage())
 			typeError(*var, "Type is required to live outside storage.");
