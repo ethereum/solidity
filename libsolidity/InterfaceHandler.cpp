@@ -1,8 +1,6 @@
 
 #include <libsolidity/InterfaceHandler.h>
-#include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/irange.hpp>
-#include <boost/algorithm/string/join.hpp>
 #include <libsolidity/AST.h>
 #include <libsolidity/CompilerStack.h>
 using namespace std;
@@ -111,15 +109,16 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 
 string InterfaceHandler::ABISolidityInterface(ContractDefinition const& _contractDef)
 {
-	using namespace boost::adaptors;
-	using namespace boost::algorithm;
 	string ret = (_contractDef.isLibrary() ? "library " : "contract ") + _contractDef.name() + "{";
 
 	auto populateParameters = [](vector<string> const& _paramNames, vector<string> const& _paramTypes)
 	{
-		return "(" + join(boost::irange<size_t>(0, _paramNames.size()) | transformed([&](size_t _i) {
-			return _paramTypes[_i] + " " + _paramNames[_i];
-		}), ",") + ")";
+		string ret = "(";
+		for (size_t i = 0; i < _paramNames.size(); ++i)
+			ret += _paramTypes[i] + " " + _paramNames[i] + ",";
+		if (ret.size() != 1)
+			ret.pop_back();
+		return ret + ")";
 	};
 	// If this is a library, include all its enum and struct types. Should be more intelligent
 	// in the future and check what is actually used (it might even use types from other libraries
@@ -135,10 +134,12 @@ string InterfaceHandler::ABISolidityInterface(ContractDefinition const& _contrac
 		}
 		for (auto const& enu: _contractDef.definedEnums())
 		{
-			ret += "enum " + enu->name() + "{" +
-			join(enu->members() | transformed([](ASTPointer<EnumValue> const& _value) {
-				return _value->name();
-			}), ",") + "}";
+			ret += "enum " + enu->name() + "{";
+			for (ASTPointer<EnumValue> const& val: enu->members())
+				ret += val->name() + ",";
+			if (ret.back() == ',')
+				ret.pop_back();
+			ret += "}";
 		}
 	}
 	if (_contractDef.constructor())
