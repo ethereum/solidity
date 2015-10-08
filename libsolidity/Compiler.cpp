@@ -623,10 +623,13 @@ bool Compiler::visit(VariableDeclarationStatement const& _variableDeclarationSta
 {
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _variableDeclarationStatement);
-	if (Expression const* expression = _variableDeclarationStatement.expression())
+	solAssert(_variableDeclarationStatement.declarations().size() == 1, "To be implemented.");
+	solAssert(!!_variableDeclarationStatement.declarations().front(), "");
+	VariableDeclaration const& varDecl = *_variableDeclarationStatement.declarations().front();
+	if (Expression const* expression = _variableDeclarationStatement.initialValue())
 	{
-		compileExpression(*expression, _variableDeclarationStatement.declaration().annotation().type);
-		CompilerUtils(m_context).moveToStackVariable(_variableDeclarationStatement.declaration());
+		compileExpression(*expression, varDecl.annotation().type);
+		CompilerUtils(m_context).moveToStackVariable(varDecl);
 	}
 	checker.check();
 	return false;

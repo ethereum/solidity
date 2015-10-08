@@ -771,13 +771,35 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 	ASTPointer<TypeName> const& _lookAheadArrayType
 )
 {
-	VarDeclParserOptions options;
-	options.allowVar = true;
-	options.allowInitialValue = true;
-	options.allowLocationSpecifier = true;
-	ASTPointer<VariableDeclaration> variable = parseVariableDeclaration(options, _lookAheadArrayType);
-	ASTNodeFactory nodeFactory(*this, variable);
-	return nodeFactory.createNode<VariableDeclarationStatement>(variable);
+	ASTNodeFactory nodeFactory(*this);
+	if (_lookAheadArrayType)
+		nodeFactory.setLocation(_lookAheadArrayType->location());
+	vector<ASTPointer<VariableDeclaration>> variables;
+	ASTPointer<Expression> value;
+	if (
+		!_lookAheadArrayType &&
+		m_scanner->currentToken() == Token::Var &&
+		m_scanner->peekNextToken() == Token::LParen
+	)
+	{
+		// Parse `var (a, b, ,, c) = ...` into a single VariableDeclarationStatement with multiple variables.
+		solAssert(false, "To be implemented.");
+	}
+	else
+	{
+		VarDeclParserOptions options;
+		options.allowVar = true;
+		options.allowLocationSpecifier = true;
+		options.allowInitialValue = false;
+		variables.push_back(parseVariableDeclaration(options, _lookAheadArrayType));
+	}
+	if (m_scanner->currentToken() == Token::Assign)
+	{
+		m_scanner->next();
+		value = parseExpression();
+		nodeFactory.setEndPositionFromNode(value);
+	}
+	return nodeFactory.createNode<VariableDeclarationStatement>(variables, value);
 }
 
 ASTPointer<ExpressionStatement> Parser::parseExpressionStatement(

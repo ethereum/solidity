@@ -424,16 +424,17 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	// Note that assignments before the first declaration are legal because of the special scoping
 	// rules inherited from JavaScript.
 
-	// This only infers the type from its type name.
-	// If an explicit type is required, it throws, otherwise it returns TypePointer();
+	// type is filled either by ReferencesResolver directly from the type name or by
+	// TypeChecker at the VariableDeclarationStatement level.
 	TypePointer varType = _variable.annotation().type;
+	solAssert(!!varType, "Failed to infer variable type.");
 	if (_variable.isConstant())
 	{
 		if (!dynamic_cast<ContractDefinition const*>(_variable.scope()))
 			typeError(_variable, "Illegal use of \"constant\" specifier.");
 		if (!_variable.value())
 			typeError(_variable, "Uninitialized \"constant\" variable.");
-		if (varType && !varType->isValueType())
+		if (!varType->isValueType())
 		{
 			bool constImplemented = false;
 			if (auto arrayType = dynamic_cast<ArrayType const*>(varType.get()))
@@ -446,43 +447,20 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 				);
 		}
 	}
-	if (varType)
-	{
-		if (_variable.value())
-			expectType(*_variable.value(), *varType);
-		else
-		{
-			if (auto ref = dynamic_cast<ReferenceType const *>(varType.get()))
-				if (ref->dataStoredIn(DataLocation::Storage) && _variable.isLocalVariable() && !_variable.isCallableParameter())
-				{
-					auto err = make_shared<Warning>();
-					*err <<
-						errinfo_sourceLocation(_variable.location()) <<
-						errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + _variable.name() + "'?");
-					m_errors.push_back(err);
-				}
-		}
-	}
+	if (_variable.value())
+		expectType(*_variable.value(), *varType);
 	else
 	{
-		// Infer type from value.
-		if (!_variable.value())
-			fatalTypeError(_variable, "Assignment necessary for type detection.");
-		_variable.value()->accept(*this);
-
-		TypePointer const& valueType = type(*_variable.value());
-		solAssert(!!valueType, "");
-		if (
-			valueType->category() == Type::Category::IntegerConstant &&
-			!dynamic_pointer_cast<IntegerConstantType const>(valueType)->integerType()
-		)
-			fatalTypeError(*_variable.value(), "Invalid integer constant " + valueType->toString() + ".");
-		else if (valueType->category() == Type::Category::Void)
-			fatalTypeError(_variable, "Variable cannot have void type.");
-		varType = valueType->mobileType();
+		if (auto ref = dynamic_cast<ReferenceType const *>(varType.get()))
+			if (ref->dataStoredIn(DataLocation::Storage) && _variable.isLocalVariable() && !_variable.isCallableParameter())
+			{
+				auto err = make_shared<Warning>();
+				*err <<
+					errinfo_sourceLocation(_variable.location()) <<
+					errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + _variable.name() + "'?");
+				m_errors.push_back(err);
+			}
 	}
-	solAssert(!!varType, "");
-	_variable.annotation().type = varType;
 	if (!_variable.isStateVariable())
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
@@ -619,6 +597,42 @@ void TypeChecker::endVisit(Return const& _return)
 				"."
 			);
 	}
+}
+
+bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
+{
+	solAssert(_statement.declarations().size() == 1, "To be implemented.");
+	solAssert(!!_statement.declarations().front(), "");
+	VariableDeclaration const& var = *_statement.declarations().front();
+	solAssert(!var.value(), "Value has to be tied to statement.");
+	if (!var.annotation().type)
+	{
+		solAssert(!var.typeName(), "");
+		// Infer type from value.
+		if (!_statement.initialValue())
+			fatalTypeError(_statement, "Assignment necessary for type detection.");
+		_statement.initialValue()->accept(*this);
+
+		TypePointer const& valueType = type(*_statement.initialValue());
+		solAssert(!!valueType, "");
+		if (
+			valueType->category() == Type::Category::IntegerConstant &&
+			!dynamic_pointer_cast<IntegerConstantType const>(valueType)->integerType()
+		)
+			fatalTypeError(*_statement.initialValue(), "Invalid integer constant " + valueType->toString() + ".");
+		else if (valueType->category() == Type::Category::Void)
+			fatalTypeError(_statement, "Variable cannot have void type.");
+		var.annotation().type = valueType->mobileType();
+		var.accept(*this);
+		return false;
+	}
+	else
+	{
+		var.accept(*this);
+		if (_statement.initialValue())
+			expectType(*_statement.initialValue(), *var.annotation().type);
+	}
+	return false;
 }
 
 void TypeChecker::endVisit(ExpressionStatement const& _statement)
