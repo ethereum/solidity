@@ -558,7 +558,9 @@ protected:
 
 private:
 	ASTPointer<TypeName> m_typeName; ///< can be empty ("var")
-	ASTPointer<Expression> m_value; ///< the assigned value, can be missing
+	/// Initially assigned value, can be missing. For local variables, this is stored inside
+	/// VariableDeclarationStatement and not here.
+	ASTPointer<Expression> m_value;
 	bool m_isStateVariable; ///< Whether or not this is a contract state variable
 	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
 	bool m_isConstant; ///< Whether the variable is a compile-time constant.

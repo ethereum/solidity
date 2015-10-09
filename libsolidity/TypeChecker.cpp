@@ -449,18 +449,6 @@ bool TypeChecker::visit(VariableDeclaration const& _variable)
 	}
 	if (_variable.value())
 		expectType(*_variable.value(), *varType);
-	else
-	{
-		if (auto ref = dynamic_cast<ReferenceType const *>(varType.get()))
-			if (ref->dataStoredIn(DataLocation::Storage) && _variable.isLocalVariable() && !_variable.isCallableParameter())
-			{
-				auto err = make_shared<Warning>();
-				*err <<
-					errinfo_sourceLocation(_variable.location()) <<
-					errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + _variable.name() + "'?");
-				m_errors.push_back(err);
-			}
-	}
 	if (!_variable.isStateVariable())
 	{
 		if (varType->dataStoredIn(DataLocation::Memory) || varType->dataStoredIn(DataLocation::CallData))
@@ -601,36 +589,101 @@ void TypeChecker::endVisit(Return const& _return)
 
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 {
-	solAssert(_statement.declarations().size() == 1, "To be implemented.");
-	solAssert(!!_statement.declarations().front(), "");
-	VariableDeclaration const& var = *_statement.declarations().front();
-	solAssert(!var.value(), "Value has to be tied to statement.");
-	if (!var.annotation().type)
+	solAssert(!_statement.declarations().empty(), "");
+	if (!_statement.initialValue())
 	{
-		solAssert(!var.typeName(), "");
-		// Infer type from value.
-		if (!_statement.initialValue())
+		// No initial value is only permitted for single variables with specified type.
+		if (_statement.declarations().size() != 1 || !_statement.declarations().front())
 			fatalTypeError(_statement, "Assignment necessary for type detection.");
-		_statement.initialValue()->accept(*this);
-
-		TypePointer const& valueType = type(*_statement.initialValue());
-		solAssert(!!valueType, "");
-		if (
-			valueType->category() == Type::Category::IntegerConstant &&
-			!dynamic_pointer_cast<IntegerConstantType const>(valueType)->integerType()
-		)
-			fatalTypeError(*_statement.initialValue(), "Invalid integer constant " + valueType->toString() + ".");
-		else if (valueType->category() == Type::Category::Void)
-			fatalTypeError(_statement, "Variable cannot have void type.");
-		var.annotation().type = valueType->mobileType();
-		var.accept(*this);
+		VariableDeclaration const& varDecl = *_statement.declarations().front();
+		if (!varDecl.annotation().type)
+			fatalTypeError(_statement, "Assignment necessary for type detection.");
+		if (auto ref = dynamic_cast<ReferenceType const*>(varDecl.annotation().type.get()))
+		{
+			if (ref->dataStoredIn(DataLocation::Storage))
+			{
+				auto err = make_shared<Warning>();
+				*err <<
+					errinfo_sourceLocation(varDecl.location()) <<
+					errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?");
+				m_errors.push_back(err);
+			}
+		}
+		varDecl.accept(*this);
 		return false;
 	}
-	else
+
+	// Here we have an initial value and might have to derive some types before we can visit
+	// the variable declaration(s).
+
+	_statement.initialValue()->accept(*this);
+	shared_ptr<TupleType const> valueType = dynamic_pointer_cast<TupleType const>(_statement.initialValue()->annotation().type);
+	if (!valueType)
+		valueType = make_shared<TupleType const>(TypePointers{_statement.initialValue()->annotation().type});
+
+	vector<ASTPointer<VariableDeclaration>> variables = _statement.declarations();
+	// If numbers do not match, fill up if variables begin or end empty (not both).
+	if (valueType->components().size() != variables.size())
 	{
-		var.accept(*this);
-		if (_statement.initialValue())
-			expectType(*_statement.initialValue(), *var.annotation().type);
+		if (!variables.front() && !variables.back())
+			fatalTypeError(
+				_statement,
+				"Wildcard both at beginning and end of variable declaration list is only allowed "
+				"if the number of components is equal."
+			);
+		while (valueType->components().size() > variables.size())
+			if (!variables.front())
+				variables.insert(variables.begin(), shared_ptr<VariableDeclaration>());
+			else
+				variables.push_back(shared_ptr<VariableDeclaration>());
+		while (valueType->components().size() < variables.size())
+			if (!variables.empty() && !variables.front())
+				variables.erase(variables.begin());
+			else if (!variables.empty() && !variables.back())
+				variables.pop_back();
+			else
+				break;
+		if (valueType->components().size() != variables.size())
+			fatalTypeError(
+				_statement,
+				"Unable to match the number of variables to the number of values."
+			);
+	}
+	solAssert(variables.size() == valueType->components().size(), "");
+
+	for (size_t i = 0; i < variables.size(); ++i)
+	{
+		if (!variables[i])
+			continue;
+		VariableDeclaration const& var = *variables[i];
+		solAssert(!var.value(), "Value has to be tied to statement.");
+		TypePointer const& valueComponentType = valueType->components()[i];
+		solAssert(!!valueComponentType, "");
+		if (!var.annotation().type)
+		{
+			// Infer type from value.
+			solAssert(!var.typeName(), "");
+			if (
+				valueComponentType->category() == Type::Category::IntegerConstant &&
+				!dynamic_pointer_cast<IntegerConstantType const>(valueComponentType)->integerType()
+			)
+				fatalTypeError(*_statement.initialValue(), "Invalid integer constant " + valueComponentType->toString() + ".");
+			var.annotation().type = valueComponentType->mobileType();
+			var.accept(*this);
+		}
+		else
+		{
+			var.accept(*this);
+			if (!valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type))
+				typeError(
+					_statement,
+					"Type " +
+					valueComponentType->toString() +
+					" is not implicitly convertible to expected type " +
+					var.annotation().type->toString() +
+					"."
+				);
+		}
 	}
 	return false;
 }
@@ -799,23 +852,14 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	if (!functionType)
 	{
 		typeError(_functionCall, "Type is not callable");
-		_functionCall.annotation().type = make_shared<VoidType>();
+		_functionCall.annotation().type = make_shared<TupleType>();
 		return false;
 	}
+	else if (functionType->returnParameterTypes().size() == 1)
+		_functionCall.annotation().type = functionType->returnParameterTypes().front();
 	else
-	{
-		// @todo actually the return type should be an anonymous struct,
-		// but we change it to the type of the first return value until we have anonymous
-		// structs and tuples
-		if (functionType->returnParameterTypes().empty())
-			_functionCall.annotation().type = make_shared<VoidType>();
-		else
-			_functionCall.annotation().type = functionType->returnParameterTypes().front();
-	}
+		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
 
-	//@todo would be nice to create a struct type from the arguments
-	// and then ask if that is implicitly convertible to the struct represented by the
-	// function parameters
 	TypePointers const& parameterTypes = functionType->parameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{

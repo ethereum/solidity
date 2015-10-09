@@ -783,14 +783,34 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 	)
 	{
 		// Parse `var (a, b, ,, c) = ...` into a single VariableDeclarationStatement with multiple variables.
-		solAssert(false, "To be implemented.");
+		m_scanner->next();
+		m_scanner->next();
+		do
+		{
+			ASTPointer<VariableDeclaration> var;
+			if (m_scanner->currentToken() == Token::Comma)
+				m_scanner->next();
+			else
+			{
+				ASTNodeFactory varDeclNodeFactory(*this);
+				ASTPointer<ASTString> name = expectIdentifierToken();
+				var = varDeclNodeFactory.createNode<VariableDeclaration>(
+					ASTPointer<TypeName>(),
+					name,
+					ASTPointer<Expression>(),
+					VariableDeclaration::Visibility::Default
+				);
+			}
+			variables.push_back(var);
+		} while (m_scanner->currentToken() != Token::RParen);
+		nodeFactory.markEndPosition();
+		m_scanner->next();
 	}
 	else
 	{
 		VarDeclParserOptions options;
 		options.allowVar = true;
 		options.allowLocationSpecifier = true;
-		options.allowInitialValue = false;
 		variables.push_back(parseVariableDeclaration(options, _lookAheadArrayType));
 	}
 	if (m_scanner->currentToken() == Token::Assign)

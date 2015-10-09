@@ -1285,7 +1285,7 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
 
 BOOST_AUTO_TEST_CASE(disallow_declaration_of_void_type)
 {
-	char const* sourceCode = "contract c { function f() { var x = f(); } }";
+	char const* sourceCode = "contract c { function f() { var (x) = f(); } }";
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
 }
 
@@ -2134,7 +2134,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 		contract C {
 			function f(uint) returns (string);
 			function g() {
-				var x = this.f(2);
+				var (x,) = this.f(2);
 			}
 		}
 	)";
