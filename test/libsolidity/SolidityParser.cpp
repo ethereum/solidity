@@ -952,18 +952,6 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
-BOOST_AUTO_TEST_CASE(multi_variable_declaration_invalid)
-{
-	char const* text = R"(
-		library Lib {
-			function f() {
-				var () = g();
-			}
-		}
-	)";
-	BOOST_CHECK_THROW(parseText(text), ParserError);
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }

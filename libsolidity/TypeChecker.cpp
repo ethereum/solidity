@@ -617,47 +617,57 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 	// the variable declaration(s).
 
 	_statement.initialValue()->accept(*this);
-	shared_ptr<TupleType const> valueType = dynamic_pointer_cast<TupleType const>(_statement.initialValue()->annotation().type);
-	if (!valueType)
-		valueType = make_shared<TupleType const>(TypePointers{_statement.initialValue()->annotation().type});
+	TypePointers valueTypes;
+	if (auto tupleType = dynamic_cast<TupleType const*>(_statement.initialValue()->annotation().type.get()))
+		valueTypes = tupleType->components();
+	else
+		valueTypes = TypePointers{_statement.initialValue()->annotation().type};
 
-	vector<ASTPointer<VariableDeclaration>> variables = _statement.declarations();
+	// Determine which component is assigned to which variable.
 	// If numbers do not match, fill up if variables begin or end empty (not both).
-	if (valueType->components().size() != variables.size())
-	{
-		if (!variables.front() && !variables.back())
-			fatalTypeError(
-				_statement,
-				"Wildcard both at beginning and end of variable declaration list is only allowed "
-				"if the number of components is equal."
-			);
-		while (valueType->components().size() > variables.size())
-			if (!variables.front())
-				variables.insert(variables.begin(), shared_ptr<VariableDeclaration>());
-			else
-				variables.push_back(shared_ptr<VariableDeclaration>());
-		while (valueType->components().size() < variables.size())
-			if (!variables.empty() && !variables.front())
-				variables.erase(variables.begin());
-			else if (!variables.empty() && !variables.back())
-				variables.pop_back();
-			else
-				break;
-		if (valueType->components().size() != variables.size())
-			fatalTypeError(
-				_statement,
-				"Unable to match the number of variables to the number of values."
-			);
-	}
-	solAssert(variables.size() == valueType->components().size(), "");
+	vector<VariableDeclaration const*>& assignments = _statement.annotation().assignments;
+	assignments.resize(valueTypes.size(), nullptr);
+	vector<ASTPointer<VariableDeclaration>> const& variables = _statement.declarations();
+	if (valueTypes.size() != variables.size() && !variables.front() && !variables.back())
+		fatalTypeError(
+			_statement,
+			"Wildcard both at beginning and end of variable declaration list is only allowed "
+			"if the number of components is equal."
+		);
+	size_t minNumValues = variables.size();
+	if (!variables.back() || !variables.front())
+		--minNumValues;
+	if (valueTypes.size() < minNumValues)
+		fatalTypeError(
+			_statement,
+			"Not enough components (" +
+			toString(valueTypes.size()) +
+			") in value to assign all variables (" +
+			toString(minNumValues) + ")."
+		);
+	if (valueTypes.size() > variables.size() && variables.front() && variables.back())
+		fatalTypeError(
+			_statement,
+			"Too many components (" +
+			toString(valueTypes.size()) +
+			") in value for variable assignment (" +
+			toString(minNumValues) +
+			" needed)."
+		);
+	bool fillRight = (!variables.back() || variables.front());
+	for (size_t i = 0; i < min(variables.size(), valueTypes.size()); ++i)
+		if (fillRight)
+			assignments[i] = variables[i].get();
+		else
+			assignments[assignments.size() - i - 1] = variables[variables.size() - i - 1].get();
 
-	for (size_t i = 0; i < variables.size(); ++i)
+	for (size_t i = 0; i < assignments.size(); ++i)
 	{
-		if (!variables[i])
+		if (!assignments[i])
 			continue;
-		VariableDeclaration const& var = *variables[i];
+		VariableDeclaration const& var = *assignments[i];
 		solAssert(!var.value(), "Value has to be tied to statement.");
-		TypePointer const& valueComponentType = valueType->components()[i];
+		TypePointer const& valueComponentType = valueTypes[i];
 		solAssert(!!valueComponentType, "");
 		if (!var.annotation().type)
 		{

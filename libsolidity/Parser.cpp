@@ -785,12 +785,13 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 		// Parse `var (a, b, ,, c) = ...` into a single VariableDeclarationStatement with multiple variables.
 		m_scanner->next();
 		m_scanner->next();
-		do
+		while (true)
 		{
 			ASTPointer<VariableDeclaration> var;
-			if (m_scanner->currentToken() == Token::Comma)
-				m_scanner->next();
-			else
+			if (
+				m_scanner->currentToken() != Token::Comma &&
+				m_scanner->currentToken() != Token::RParen
+			)
 			{
 				ASTNodeFactory varDeclNodeFactory(*this);
 				ASTPointer<ASTString> name = expectIdentifierToken();
@@ -802,7 +803,11 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 				);
 			}
 			variables.push_back(var);
-		} while (m_scanner->currentToken() != Token::RParen);
+			if (m_scanner->currentToken() == Token::RParen)
+				break;
+			else
+				expectToken(Token::Comma);
+		}
 		nodeFactory.markEndPosition();
 		m_scanner->next();
 	}

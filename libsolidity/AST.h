@@ -982,6 +982,8 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
+	VariableDeclarationStatementAnnotation& annotation() const override;
+
 	std::vector<ASTPointer<VariableDeclaration>> const& declarations() const { return m_variables; }
 	Expression const* initialValue() const { return m_initialValue.get(); }
 

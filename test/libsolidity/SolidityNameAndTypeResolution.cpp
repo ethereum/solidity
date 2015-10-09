@@ -2405,6 +2405,65 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_fail)
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fine)
+{
+	char const* text = R"(
+		contract C {
+			function three() returns (uint, uint, uint);
+			function two() returns (uint, uint);
+			function f() {
+				var (a,) = three();
+				var (b,c,) = two();
+				var (,d) = three();
+				var (,e,g) = two();
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseAndAnalyseReturnError(text));
+}
+
+BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_1)
+{
+	char const* text = R"(
+		contract C {
+			function one() returns (uint);
+			function f() { var (a, b, ) = one(); }
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_2)
+{
+	char const* text = R"(
+		contract C {
+			function one() returns (uint);
+			function f() { var (a, , ) = one(); }
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_3)
+{
+	char const* text = R"(
+		contract C {
+			function one() returns (uint);
+			function f() { var (, , a) = one(); }
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_4)
+{
+	char const* text = R"(
+		contract C {
+			function one() returns (uint);
+			function f() { var (, a, b) = one(); }
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
