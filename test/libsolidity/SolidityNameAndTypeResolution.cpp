@@ -2397,6 +2397,14 @@ BOOST_AUTO_TEST_CASE(cyclic_binary_dependency_via_inheritance)
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(multi_variable_declaration_fail)
+{
+	char const* text = R"(
+		contract C { function f() { var (x,y); } }
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -934,6 +934,24 @@ BOOST_AUTO_TEST_CASE(library_simple)
 	BOOST_CHECK_NO_THROW(parseText(text));
 }
 
+BOOST_AUTO_TEST_CASE(multi_variable_declaration)
+{
+	char const* text = R"(
+		library Lib {
+			function f() {
+				var (a,b,c) = g();
+				var (d) = 2;
+				var (,e) = 3;
+				var (f,) = 4;
+				var (x,,) = g();
+				var (,y,) = g();
+			}
+			function g() returns (uint, uint, uint) {}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseText(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
