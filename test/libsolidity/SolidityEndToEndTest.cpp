@@ -3452,6 +3452,7 @@ BOOST_AUTO_TEST_CASE(array_copy_target_leftover2)
 		asString(fromHex("0000000000000000"))
 	));
 }
+
 BOOST_AUTO_TEST_CASE(array_copy_storage_storage_struct)
 {
 	char const* sourceCode = R"(
@@ -3474,6 +3475,22 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_struct)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(4, 5));
 	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
+BOOST_AUTO_TEST_CASE(array_push)
+{
+	char const* sourceCode = R"(
+		contract c {
+			int[] data;
+			function test() returns (uint) {
+				data.push(5);
+				data.push(4);
+				return data.push(3);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(3));
 }
 
 BOOST_AUTO_TEST_CASE(external_array_args)
