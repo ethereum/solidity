@@ -69,6 +69,7 @@ class VariableDeclarationStatement;
 class ExpressionStatement;
 class Expression;
 class Assignment;
+class TupleExpression;
 class UnaryOperation;
 class BinaryOperation;
 class FunctionCall;

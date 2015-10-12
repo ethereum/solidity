@@ -637,6 +637,7 @@ bool Compiler::visit(VariableDeclarationStatement const& _variableDeclarationSta
 		for (size_t i = 0; i < assignments.size(); ++i)
 		{
 			size_t j = assignments.size() - i - 1;
+			solAssert(!!valueTypes[j], "");
 			VariableDeclaration const* varDecl = assignments[j];
 			if (!varDecl)
 				utils.popStackElement(*valueTypes[j]);

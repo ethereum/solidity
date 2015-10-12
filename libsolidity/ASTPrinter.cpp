@@ -256,6 +256,14 @@ bool ASTPrinter::visit(Assignment const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(TupleExpression const& _node)
+{
+	writeLine(string("TupleExpression"));
+	printType(_node);
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(UnaryOperation const& _node)
 {
 	writeLine(string("UnaryOperation (") + (_node.isPrefixOperation() ? "prefix" : "postfix") +
@@ -473,6 +481,11 @@ void ASTPrinter::endVisit(ExpressionStatement const&)
 }
 
 void ASTPrinter::endVisit(Assignment const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(TupleExpression const&)
 {
 	m_indentation--;
 }

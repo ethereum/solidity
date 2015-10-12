@@ -682,6 +682,7 @@ private:
 
 /**
  * Type that can hold a finite sequence of values of different types.
+ * In some cases, the components are empty pointers (when used as placeholders).
  */
 class TupleType: public Type
 {
@@ -695,6 +696,7 @@ public:
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
+	virtual bool isImplicitlyConvertibleTo(Type const& _other) const override;
 
 	std::vector<TypePointer> const& components() const { return m_components; }
 

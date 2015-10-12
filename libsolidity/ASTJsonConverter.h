@@ -68,6 +68,7 @@ public:
 	bool visit(VariableDeclarationStatement const& _node) override;
 	bool visit(ExpressionStatement const& _node) override;
 	bool visit(Assignment const& _node) override;
+	bool visit(TupleExpression const& _node) override;
 	bool visit(UnaryOperation const& _node) override;
 	bool visit(BinaryOperation const& _node) override;
 	bool visit(FunctionCall const& _node) override;
@@ -99,6 +100,7 @@ public:
 	void endVisit(VariableDeclarationStatement const&) override;
 	void endVisit(ExpressionStatement const&) override;
 	void endVisit(Assignment const&) override;
+	void endVisit(TupleExpression const&) override;
 	void endVisit(UnaryOperation const&) override;
 	void endVisit(BinaryOperation const&) override;
 	void endVisit(FunctionCall const&) override;

@@ -73,6 +73,7 @@ public:
 	virtual bool visit(VariableDeclarationStatement& _node) { return visitNode(_node); }
 	virtual bool visit(ExpressionStatement& _node) { return visitNode(_node); }
 	virtual bool visit(Assignment& _node) { return visitNode(_node); }
+	virtual bool visit(TupleExpression& _node) { return visitNode(_node); }
 	virtual bool visit(UnaryOperation& _node) { return visitNode(_node); }
 	virtual bool visit(BinaryOperation& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionCall& _node) { return visitNode(_node); }
@@ -113,6 +114,7 @@ public:
 	virtual void endVisit(VariableDeclarationStatement& _node) { endVisitNode(_node); }
 	virtual void endVisit(ExpressionStatement& _node) { endVisitNode(_node); }
 	virtual void endVisit(Assignment& _node) { endVisitNode(_node); }
+	virtual void endVisit(TupleExpression& _node) { endVisitNode(_node); }
 	virtual void endVisit(UnaryOperation& _node) { endVisitNode(_node); }
 	virtual void endVisit(BinaryOperation& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionCall& _node) { endVisitNode(_node); }
@@ -165,6 +167,7 @@ public:
 	virtual bool visit(VariableDeclarationStatement const& _node) { return visitNode(_node); }
 	virtual bool visit(ExpressionStatement const& _node) { return visitNode(_node); }
 	virtual bool visit(Assignment const& _node) { return visitNode(_node); }
+	virtual bool visit(TupleExpression const& _node) { return visitNode(_node); }
 	virtual bool visit(UnaryOperation const& _node) { return visitNode(_node); }
 	virtual bool visit(BinaryOperation const& _node) { return visitNode(_node); }
 	virtual bool visit(FunctionCall const& _node) { return visitNode(_node); }
@@ -205,6 +208,7 @@ public:
 	virtual void endVisit(VariableDeclarationStatement const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ExpressionStatement const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Assignment const& _node) { endVisitNode(_node); }
+	virtual void endVisit(TupleExpression const& _node) { endVisitNode(_node); }
 	virtual void endVisit(UnaryOperation const& _node) { endVisitNode(_node); }
 	virtual void endVisit(BinaryOperation const& _node) { endVisitNode(_node); }
 	virtual void endVisit(FunctionCall const& _node) { endVisitNode(_node); }

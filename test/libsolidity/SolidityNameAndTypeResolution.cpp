@@ -2460,6 +2460,33 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_4)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(tuples)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint a = (1);
+				var (b,) = (1,);
+				var (c,d) = (1, 2 + a);
+				var (e,) = (1, 2, b);
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+}
+
+BOOST_AUTO_TEST_CASE(tuples_empty_components)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				(1,,2);
+			}
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_5)
 {
 	char const* text = R"(

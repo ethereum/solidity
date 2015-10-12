@@ -5677,6 +5677,61 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration)
 	BOOST_CHECK(callContractFunction("f()", encodeArgs()) == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(tuples)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint[] data;
+			function g() internal returns (uint a, uint b, uint[] storage c) {
+				return (1, 2, data);
+			}
+			function h() external returns (uint a, uint b) {
+				return (5, 6);
+			}
+			function f() returns (uint) {
+				data.length = 1;
+				data[0] = 3;
+				uint a; uint b;
+				(a, b) = this.h();
+				if (a != 1 || b != 2) return 1;
+				uint[] storage c;
+				(a, b, c) = g();
+				if (a != 5 || b != 6 || c[0] != 3) return 2;
+				(a, b) = (b, a);
+				if (a != 6 || b != 5) return 3;
+				(a, , b, ) = (8, 9, 10, 11, 12);
+				if (a != 8 || b != 10) return 3;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(destructuring_assignment_wildcard)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) {
+				uint a;
+				uint b;
+				uint c;
+				(a,) = (1,);
+				if (a != 1) return 1;
+				(,b) = (2,3,4);
+				if (b != 4) return 2;
+				(, c,) = (5,6,7);
+				if (c != 6) return 3;
+				(a, b,) = (11, 12, 13);
+				if (a != 11 || b != 12) return 4;
+				(, a, b) = (11, 12, 13);
+				if (a != 12 || b != 13) return 5;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 }

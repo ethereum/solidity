@@ -1256,8 +1256,8 @@ string TupleType::toString(bool _short) const
 		return "tuple()";
 	string str = "tuple(";
 	for (auto const& t: m_components)
-		str += t->toString(_short) + ", ";
-	str.resize(str.size() - 2);
+		str += (t ? t->toString(_short) : "") + ",";
+	str.pop_back();
 	return str + ")";
 }
 
@@ -1273,8 +1273,28 @@ unsigned TupleType::sizeOnStack() const
 {
 	unsigned size = 0;
 	for (auto const& t: m_components)
-		size += t->sizeOnStack();
+		size += t ? t->sizeOnStack() : 0;
 	return size;
+}
+
+bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
+{
+	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
+	{
+		if (components().size() != tupleType->components().size())
+			return false;
+		for (size_t i = 0; i < components().size(); ++i)
+			if ((!components()[i]) != (!tupleType->components()[i]))
+				return false;
+			else if (
+				components()[i] &&
+				!components()[i]->isImplicitlyConvertibleTo(*tupleType->components()[i])
+			)
+				return false;
+		return true;
+	}
+	else
+		return false;
 }
 
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
@@ -1638,14 +1658,15 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary) const
 			parameterTypes.push_back(t);
 	}
 
-	//@todo make this more intelligent once we support destructuring assignments
+	// Removes dynamic types.
 	TypePointers returnParameterTypes;
 	vector<string> returnParameterNames;
-	if (!m_returnParameterTypes.empty() && m_returnParameterTypes.front()->calldataEncodedSize() > 0)
-	{
-		returnParameterTypes.push_back(m_returnParameterTypes.front());
-		returnParameterNames.push_back(m_returnParameterNames.front());
-	}
+	for (size_t i = 0; i < m_returnParameterTypes.size(); ++i)
+		if (m_returnParameterTypes[i]->calldataEncodedSize() > 0)
+		{
+			returnParameterTypes.push_back(m_returnParameterTypes[i]);
+			returnParameterNames.push_back(m_returnParameterNames[i]);
+		}
 	return make_shared<FunctionType>(
 		parameterTypes,
 		returnParameterTypes,

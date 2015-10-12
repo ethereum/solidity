@@ -559,6 +559,24 @@ void Assignment::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void TupleExpression::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+		for (auto const& component: m_components)
+			if (component)
+				component->accept(_visitor);
+	_visitor.endVisit(*this);
+}
+
+void TupleExpression::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+		for (auto const& component: m_components)
+			if (component)
+				component->accept(_visitor);
+	_visitor.endVisit(*this);
+}
+
 void UnaryOperation::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
