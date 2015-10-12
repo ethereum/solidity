@@ -784,26 +784,42 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	}
 	case Type::Category::Array:
 	{
-		solAssert(member == "length", "Illegal array member.");
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
-		if (!type.isDynamicallySized())
+		if (member == "length")
 		{
-			utils().popStackElement(type);
-			m_context << type.length();
+			if (!type.isDynamicallySized())
+			{
+				utils().popStackElement(type);
+				m_context << type.length();
+			}
+			else
+				switch (type.location())
+				{
+				case DataLocation::CallData:
+					m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+					break;
+				case DataLocation::Storage:
+					setLValue<StorageArrayLength>(_memberAccess, type);
+					break;
+				case DataLocation::Memory:
+					m_context << eth::Instruction::MLOAD;
+					break;
+				}
+		}
+		else if (member == "push" && type.isDynamicallySized() && type.location() == DataLocation::Storage)
+		{
+			if (type.isByteArray())
+			{
+				solAssert(!type.isString(), "Index access to string is not allowed.");
+				setLValue<StorageByteArrayElement>(_indexAccess);
+			}
+			else
+				setLValueToStorageItem(_indexAccess);
+			setLValue<StorageArrayLength>(_memberAccess, type);
 		}
 		else
-			switch (type.location())
-			{
-			case DataLocation::CallData:
-				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
-				break;
-			case DataLocation::Storage:
-				setLValue<StorageArrayLength>(_memberAccess, type);
-				break;
-			case DataLocation::Memory:
-				m_context << eth::Instruction::MLOAD;
-				break;
-			}
+			solAssert(false, "Illegal array member.");
+		
 		break;
 	}
 	default:
