@@ -1244,8 +1244,9 @@ string TupleType::toString(bool _short) const
 u256 TupleType::storageSize() const
 {
 	BOOST_THROW_EXCEPTION(
-		InternalCompilerError()
-				<< errinfo_comment("Storage size of non-storable tuple type requested."));
+		InternalCompilerError() <<
+		errinfo_comment("Storage size of non-storable tuple type requested.")
+	);
 }
 
 unsigned TupleType::sizeOnStack() const

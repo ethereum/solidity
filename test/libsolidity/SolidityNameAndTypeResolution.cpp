@@ -2411,11 +2411,14 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fine)
 		contract C {
 			function three() returns (uint, uint, uint);
 			function two() returns (uint, uint);
+			function none();
 			function f() {
 				var (a,) = three();
 				var (b,c,) = two();
 				var (,d) = three();
 				var (,e,g) = two();
+				var (,,) = three();
+				var () = none();
 		}
 	)";
 	BOOST_CHECK_NO_THROW(parseAndAnalyseReturnError(text));
@@ -2459,6 +2462,28 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_4)
 		contract C {
 			function one() returns (uint);
 			function f() { var (, a, b) = one(); }
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_5)
+{
+	char const* text = R"(
+		contract C {
+			function one() returns (uint);
+			function f() { var (,) = one(); }
+		}
+	)";
+	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_6)
+{
+	char const* text = R"(
+		contract C {
+			function two() returns (uint, uint);
+			function f() { var (a, b, c) = two(); }
 		}
 	)";
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
