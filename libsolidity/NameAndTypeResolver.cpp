@@ -350,7 +350,9 @@ void DeclarationRegistrationHelper::endVisit(VariableDeclarationStatement& _vari
 	// Register the local variables with the function
 	// This does not fit here perfectly, but it saves us another AST visit.
 	solAssert(m_currentFunction, "Variable declaration without function.");
-	m_currentFunction->addLocalVariable(_variableDeclarationStatement.declaration());
+	for (ASTPointer<VariableDeclaration> const& var: _variableDeclarationStatement.declarations())
+		if (var)
+			m_currentFunction->addLocalVariable(*var);
 }
 
 bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)

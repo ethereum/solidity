@@ -87,6 +87,7 @@ private:
 	virtual bool visit(WhileStatement const& _whileStatement) override;
 	virtual bool visit(ForStatement const& _forStatement) override;
 	virtual void endVisit(Return const& _return) override;
+	virtual bool visit(VariableDeclarationStatement const& _variable) override;
 	virtual void endVisit(ExpressionStatement const& _statement) override;
 	virtual bool visit(Assignment const& _assignment) override;
 	virtual void endVisit(BinaryOperation const& _operation) override;

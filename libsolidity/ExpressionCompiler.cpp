@@ -427,11 +427,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			unsigned returnParametersSize = CompilerUtils::sizeOnStack(function.returnParameterTypes());
 			// callee adds return parameters, but removes arguments and return label
 			m_context.adjustStackOffset(returnParametersSize - CompilerUtils::sizeOnStack(function.parameterTypes()) - 1);
-
-			// @todo for now, the return value of a function is its first return value, so remove
-			// all others
-			for (unsigned i = 1; i < function.returnParameterTypes().size(); ++i)
-				utils().popStackElement(*function.returnParameterTypes()[i]);
 			break;
 		}
 		case Location::External:
@@ -1123,19 +1118,15 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	bool returnSuccessCondition = funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode;
 	bool isCallCode = funKind == FunctionKind::BareCallCode || funKind == FunctionKind::CallCode;
 
-	//@todo only return the first return value for now
-	Type const* firstReturnType =
-		_functionType.returnParameterTypes().empty() ?
-		nullptr :
-		_functionType.returnParameterTypes().front().get();
 	unsigned retSize = 0;
 	if (returnSuccessCondition)
 		retSize = 0; // return value actually is success condition
-	else if (firstReturnType)
-	{
-		retSize = firstReturnType->calldataEncodedSize();
-		solAssert(retSize > 0, "Unable to return dynamic type from external call.");
-	}
+	else
+		for (auto const& retType: _functionType.returnParameterTypes())
+		{
+			solAssert(retType->calldataEncodedSize() > 0, "Unable to return dynamic type from external call.");
+			retSize += retType->calldataEncodedSize();
+		}
 
 	// Evaluate arguments.
 	TypePointers argumentTypes;
@@ -1255,16 +1246,20 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		utils().loadFromMemoryDynamic(IntegerType(160), false, true, false);
 		utils().convertType(IntegerType(160), FixedBytesType(20));
 	}
-	else if (firstReturnType)
+	else if (!_functionType.returnParameterTypes().empty())
 	{
 		utils().fetchFreeMemoryPointer();
-		if (dynamic_cast<ReferenceType const*>(firstReturnType))
+		bool memoryNeeded = false;
+		for (auto const& retType: _functionType.returnParameterTypes())
 		{
-			utils().loadFromMemoryDynamic(*firstReturnType, false, true, true);
-			utils().storeFreeMemoryPointer();
+			utils().loadFromMemoryDynamic(*retType, false, true, true);
+			if (dynamic_cast<ReferenceType const*>(retType.get()))
+				memoryNeeded = true;
 		}
+		if (memoryNeeded)
+			utils().storeFreeMemoryPointer();
 		else
-			utils().loadFromMemoryDynamic(*firstReturnType, false, true, false);
+			m_context << eth::Instruction::POP;
 	}
 }
 

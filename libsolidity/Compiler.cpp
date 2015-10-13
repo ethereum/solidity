@@ -623,10 +623,29 @@ bool Compiler::visit(VariableDeclarationStatement const& _variableDeclarationSta
 {
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _variableDeclarationStatement);
-	if (Expression const* expression = _variableDeclarationStatement.expression())
+	if (Expression const* expression = _variableDeclarationStatement.initialValue())
 	{
-		compileExpression(*expression, _variableDeclarationStatement.declaration().annotation().type);
-		CompilerUtils(m_context).moveToStackVariable(_variableDeclarationStatement.declaration());
+		CompilerUtils utils(m_context);
+		compileExpression(*expression);
+		TypePointers valueTypes;
+		if (auto tupleType = dynamic_cast<TupleType const*>(expression->annotation().type.get()))
+			valueTypes = tupleType->components();
+		else
+			valueTypes = TypePointers{expression->annotation().type};
+		auto const& assignments = _variableDeclarationStatement.annotation().assignments;
+		solAssert(assignments.size() == valueTypes.size(), "");
+		for (size_t i = 0; i < assignments.size(); ++i)
+		{
+			size_t j = assignments.size() - i - 1;
+			VariableDeclaration const* varDecl = assignments[j];
+			if (!varDecl)
+				utils.popStackElement(*valueTypes[j]);
+			else
+			{
+				utils.convertType(*valueTypes[j], *varDecl->annotation().type);
+				utils.moveToStackVariable(*varDecl);
+			}
+		}
 	}
 	checker.check();
 	return false;

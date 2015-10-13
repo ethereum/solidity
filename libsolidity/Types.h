@@ -132,8 +132,8 @@ public:
 	enum class Category
 	{
 		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
-		FixedBytes, Contract, Struct, Function, Enum,
-		Mapping, Void, TypeType, Modifier, Magic
+		FixedBytes, Contract, Struct, Function, Enum, Tuple,
+		Mapping, TypeType, Modifier, Magic
 	};
 
 	/// @{
@@ -683,6 +683,28 @@ private:
 };
 
 /**
+ * Type that can hold a finite sequence of values of different types.
+ */
+class TupleType: public Type
+{
+public:
+	virtual Category category() const override { return Category::Tuple; }
+	explicit TupleType(std::vector<TypePointer> const& _types = std::vector<TypePointer>()): m_components(_types) {}
+	virtual bool operator==(Type const& _other) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
+	virtual std::string toString(bool) const override;
+	virtual bool canBeStored() const override { return false; }
+	virtual u256 storageSize() const override;
+	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned sizeOnStack() const override;
+
+	std::vector<TypePointer> const& components() const { return m_components; }
+
+private:
+	std::vector<TypePointer> const m_components;
+};
+
+/**
  * The type of a function, identified by its (return) parameter types.
  * @todo the return parameters should also have names, i.e. return parameters should be a struct
  * type.
@@ -872,24 +894,6 @@ public:
 private:
 	TypePointer m_keyType;
 	TypePointer m_valueType;
-};
-
-/**
- * The void type, can only be implicitly used as the type that is returned by functions without
- * return parameters.
- */
-class VoidType: public Type
-{
-public:
-	virtual Category category() const override { return Category::Void; }
-	VoidType() {}
-
-	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
-	virtual std::string toString(bool) const override { return "void"; }
-	virtual bool canBeStored() const override { return false; }
-	virtual u256 storageSize() const override;
-	virtual bool canLiveOutsideStorage() const override { return false; }
-	virtual unsigned sizeOnStack() const override { return 0; }
 };
 
 /**

@@ -5613,6 +5613,30 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 	BOOST_CHECK_EQUAL(m_state.balance(libraryAddress), 0);
 }
 
+BOOST_AUTO_TEST_CASE(multi_variable_declaration)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function g() returns (uint a, uint b, uint c) {
+				a = 1; b = 2; c = 3;
+			}
+			function f() returns (bool) {
+				var (x, y, z) = g();
+				if (x != 1 || y != 2 || z != 3) return false;
+				var (, a,) = g();
+				if (a != 2) return false;
+				var (b,) = g();
+				if (b != 1) return false;
+				var (,c) = g();
+				if (c != 3) return false;
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", encodeArgs()) == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

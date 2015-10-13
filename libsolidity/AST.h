@@ -558,7 +558,9 @@ protected:
 
 private:
 	ASTPointer<TypeName> m_typeName; ///< can be empty ("var")
-	ASTPointer<Expression> m_value; ///< the assigned value, can be missing
+	/// Initially assigned value, can be missing. For local variables, this is stored inside
+	/// VariableDeclarationStatement and not here.
+	ASTPointer<Expression> m_value;
 	bool m_isStateVariable; ///< Whether or not this is a contract state variable
 	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
 	bool m_isConstant; ///< Whether the variable is a compile-time constant.
@@ -963,20 +965,33 @@ public:
  * Definition of a variable as a statement inside a function. It requires a type name (which can
  * also be "var") but the actual assignment can be missing.
  * Examples: var a = 2; uint256 a;
+ * As a second form, multiple variables can be declared, cannot have a type and must be assigned
+ * right away. If the first or last component is unnamed, it can "consume" an arbitrary number
+ * of components.
+ * Examples: var (a, b) = f(); var (a,,,c) = g(); var (a,) = d();
  */
 class VariableDeclarationStatement: public Statement
 {
 public:
-	VariableDeclarationStatement(SourceLocation const& _location, ASTPointer<VariableDeclaration> _variable):
-		Statement(_location), m_variable(_variable) {}
+	VariableDeclarationStatement(
+		SourceLocation const& _location,
+		std::vector<ASTPointer<VariableDeclaration>> const& _variables,
+		ASTPointer<Expression> const& _initialValue
+	):
+		Statement(_location), m_variables(_variables), m_initialValue(_initialValue) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	VariableDeclaration const& declaration() const { return *m_variable; }
-	Expression const* expression() const { return m_variable->value().get(); }
+	VariableDeclarationStatementAnnotation& annotation() const override;
+
+	std::vector<ASTPointer<VariableDeclaration>> const& declarations() const { return m_variables; }
+	Expression const* initialValue() const { return m_initialValue.get(); }
 
 private:
-	ASTPointer<VariableDeclaration> m_variable;
+	/// List of variables, some of which can be empty pointers (unnamed components).
+	std::vector<ASTPointer<VariableDeclaration>> m_variables;
+	/// The assigned expression / initial value.
+	ASTPointer<Expression> m_initialValue;
 };
 
 /**

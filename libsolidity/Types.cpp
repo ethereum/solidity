@@ -223,7 +223,7 @@ TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
 {
 	// "delete" is ok for all integer types
 	if (_operator == Token::Delete)
-		return make_shared<VoidType>();
+		return make_shared<TupleType>();
 	// no further unary operators for addresses
 	else if (isAddress())
 		return TypePointer();
@@ -562,7 +562,7 @@ TypePointer FixedBytesType::unaryOperatorResult(Token::Value _operator) const
 {
 	// "delete" and "~" is okay for FixedBytesType
 	if (_operator == Token::Delete)
-		return make_shared<VoidType>();
+		return make_shared<TupleType>();
 	else if (_operator == Token::BitNot)
 		return shared_from_this();
 
@@ -617,7 +617,7 @@ u256 BoolType::literalValue(Literal const* _literal) const
 TypePointer BoolType::unaryOperatorResult(Token::Value _operator) const
 {
 	if (_operator == Token::Delete)
-		return make_shared<VoidType>();
+		return make_shared<TupleType>();
 	return (_operator == Token::Not) ? shared_from_this() : TypePointer();
 }
 
@@ -658,7 +658,7 @@ bool ContractType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 
 TypePointer ContractType::unaryOperatorResult(Token::Value _operator) const
 {
-	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
+	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
 TypePointer ReferenceType::unaryOperatorResult(Token::Value _operator) const
@@ -672,9 +672,9 @@ TypePointer ReferenceType::unaryOperatorResult(Token::Value _operator) const
 	case DataLocation::CallData:
 		return TypePointer();
 	case DataLocation::Memory:
-		return make_shared<VoidType>();
+		return make_shared<TupleType>();
 	case DataLocation::Storage:
-		return m_isPointer ? TypePointer() : make_shared<VoidType>();
+		return m_isPointer ? TypePointer() : make_shared<TupleType>();
 	default:
 		solAssert(false, "");
 	}
@@ -1175,7 +1175,7 @@ set<string> StructType::membersMissingInMemory() const
 
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 {
-	return _operator == Token::Delete ? make_shared<VoidType>() : TypePointer();
+	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();
 }
 
 bool EnumType::operator==(Type const& _other) const
@@ -1220,6 +1220,41 @@ unsigned int EnumType::memberValue(ASTString const& _member) const
 		++index;
 	}
 	BOOST_THROW_EXCEPTION(m_enum.createTypeError("Requested unknown enum value ." + _member));
+}
+
+bool TupleType::operator==(Type const& _other) const
+{
+	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
+		return components() == tupleType->components();
+	else
+		return false;
+}
+
+string TupleType::toString(bool _short) const
+{
+	if (m_components.empty())
+		return "tuple()";
+	string str = "tuple(";
+	for (auto const& t: m_components)
+		str += t->toString(_short) + ", ";
+	str.resize(str.size() - 2);
+	return str + ")";
+}
+
+u256 TupleType::storageSize() const
+{
+	BOOST_THROW_EXCEPTION(
+		InternalCompilerError() <<
+		errinfo_comment("Storage size of non-storable tuple type requested.")
+	);
+}
+
+unsigned TupleType::sizeOnStack() const
+{
+	unsigned size = 0;
+	for (auto const& t: m_components)
+		size += t->sizeOnStack();
+	return size;
 }
 
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
@@ -1645,13 +1680,6 @@ string MappingType::toString(bool _short) const
 string MappingType::canonicalName(bool) const
 {
 	return "mapping(" + keyType()->canonicalName(false) + " => " + valueType()->canonicalName(false) + ")";
-}
-
-u256 VoidType::storageSize() const
-{
-	BOOST_THROW_EXCEPTION(
-		InternalCompilerError()
-			<< errinfo_comment("Storage size of non-storable void type requested."));
 }
 
 bool TypeType::operator==(Type const& _other) const

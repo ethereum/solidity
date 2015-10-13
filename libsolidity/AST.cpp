@@ -325,6 +325,13 @@ ReturnAnnotation& Return::annotation() const
 	return static_cast<ReturnAnnotation&>(*m_annotation);
 }
 
+VariableDeclarationStatementAnnotation& VariableDeclarationStatement::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new VariableDeclarationStatementAnnotation();
+	return static_cast<VariableDeclarationStatementAnnotation&>(*m_annotation);
+}
+
 ExpressionAnnotation& Expression::annotation() const
 {
 	if (!m_annotation)
