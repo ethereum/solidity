@@ -2419,9 +2419,10 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fine)
 				var (,e,g) = two();
 				var (,,) = three();
 				var () = none();
+			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyseReturnError(text));
+	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_1)

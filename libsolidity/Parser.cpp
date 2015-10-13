@@ -785,29 +785,30 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 		// Parse `var (a, b, ,, c) = ...` into a single VariableDeclarationStatement with multiple variables.
 		m_scanner->next();
 		m_scanner->next();
-		while (true)
-		{
-			ASTPointer<VariableDeclaration> var;
-			if (
-				m_scanner->currentToken() != Token::Comma &&
-				m_scanner->currentToken() != Token::RParen
-			)
+		if (m_scanner->currentToken() != Token::RParen)
+			while (true)
 			{
-				ASTNodeFactory varDeclNodeFactory(*this);
-				ASTPointer<ASTString> name = expectIdentifierToken();
-				var = varDeclNodeFactory.createNode<VariableDeclaration>(
-					ASTPointer<TypeName>(),
-					name,
-					ASTPointer<Expression>(),
-					VariableDeclaration::Visibility::Default
-				);
+				ASTPointer<VariableDeclaration> var;
+				if (
+					m_scanner->currentToken() != Token::Comma &&
+					m_scanner->currentToken() != Token::RParen
+				)
+				{
+					ASTNodeFactory varDeclNodeFactory(*this);
+					ASTPointer<ASTString> name = expectIdentifierToken();
+					var = varDeclNodeFactory.createNode<VariableDeclaration>(
+						ASTPointer<TypeName>(),
+						name,
+						ASTPointer<Expression>(),
+						VariableDeclaration::Visibility::Default
+					);
+				}
+				variables.push_back(var);
+				if (m_scanner->currentToken() == Token::RParen)
+					break;
+				else
+					expectToken(Token::Comma);
 			}
-			variables.push_back(var);
-			if (m_scanner->currentToken() == Token::RParen)
-				break;
-			else
-				expectToken(Token::Comma);
-		}
 		nodeFactory.markEndPosition();
 		m_scanner->next();
 	}

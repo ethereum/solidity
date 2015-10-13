@@ -589,7 +589,6 @@ void TypeChecker::endVisit(Return const& _return)
 
 bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 {
-	solAssert(!_statement.declarations().empty(), "");
 	if (!_statement.initialValue())
 	{
 		// No initial value is only permitted for single variables with specified type.
@@ -628,14 +627,24 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 	vector<VariableDeclaration const*>& assignments = _statement.annotation().assignments;
 	assignments.resize(valueTypes.size(), nullptr);
 	vector<ASTPointer<VariableDeclaration>> const& variables = _statement.declarations();
-	if (valueTypes.size() != variables.size() && !variables.front() && !variables.back())
+	if (variables.empty())
+	{
+		if (!valueTypes.empty())
+			fatalTypeError(
+				_statement,
+				"Too many components (" +
+				toString(valueTypes.size()) +
+				") in value for variable assignment (0) needed"
+			);
+	}
+	else if (valueTypes.size() != variables.size() && !variables.front() && !variables.back())
 		fatalTypeError(
 			_statement,
 			"Wildcard both at beginning and end of variable declaration list is only allowed "
 			"if the number of components is equal."
 		);
 	size_t minNumValues = variables.size();
-	if (!variables.back() || !variables.front())
+	if (!variables.empty() && (!variables.back() || !variables.front()))
 		--minNumValues;
 	if (valueTypes.size() < minNumValues)
 		fatalTypeError(
@@ -654,7 +663,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			toString(minNumValues) +
 			" needed)."
 		);
-	bool fillRight = (!variables.back() || variables.front());
+	bool fillRight = !variables.empty() && (!variables.back() || variables.front());
 	for (size_t i = 0; i < min(variables.size(), valueTypes.size()); ++i)
 		if (fillRight)
 			assignments[i] = variables[i].get();
