@@ -3481,16 +3481,19 @@ BOOST_AUTO_TEST_CASE(array_push)
 {
 	char const* sourceCode = R"(
 		contract c {
-			int[] data;
-			function test() returns (uint) {
+			uint[] data;
+			function test() returns (uint x, uint y, uint z, uint l) {
 				data.push(5);
+				x = data[0];
 				data.push(4);
-				return data.push(3);
+				y = data[1];
+				l = data.push(3);
+				z = data[2];
 			}
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("test()") == encodeArgs(3));
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(5, 4, 3, 2));
 }
 
 BOOST_AUTO_TEST_CASE(external_array_args)
