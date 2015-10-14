@@ -1328,7 +1328,7 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 		size_t si = fillRight ? i : components().size() - i - 1;
 		size_t ti = fillRight ? i : targetComponents.size() - i - 1;
 		if (components()[si] && targetComponents[ti])
-			tempComponents[ti] = components()[si]->closestTemporaryType(targetComponents[si]);
+			tempComponents[ti] = components()[si]->closestTemporaryType(targetComponents[ti]);
 	}
 	return make_shared<TupleType>(tempComponents);
 }

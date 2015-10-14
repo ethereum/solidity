@@ -552,29 +552,37 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	}
 	case Type::Category::Tuple:
 	{
-		//@TODO wildcards
 		TupleType const& sourceTuple = dynamic_cast<TupleType const&>(_typeOnStack);
 		TupleType const& targetTuple = dynamic_cast<TupleType const&>(_targetType);
-		solAssert(sourceTuple.components().size() == targetTuple.components().size(), "");
+		// fillRight: remove excess values at right side, !fillRight: remove eccess values at left side
+		bool fillRight = !targetTuple.components().empty() && (
+			!targetTuple.components().back() ||
+			targetTuple.components().front()
+		);
 		unsigned depth = sourceTuple.sizeOnStack();
 		for (size_t i = 0; i < sourceTuple.components().size(); ++i)
 		{
-			TypePointer const& sourceType = sourceTuple.components()[i];
-			TypePointer const& targetType = targetTuple.components()[i];
+			TypePointer sourceType = sourceTuple.components()[i];
+			TypePointer targetType;
+			if (fillRight && i < targetTuple.components().size())
+				targetType = targetTuple.components()[i];
+			else if (!fillRight && targetTuple.components().size() + i >= sourceTuple.components().size())
+				targetType = targetTuple.components()[targetTuple.components().size() - (sourceTuple.components().size() - i)];
 			if (!sourceType)
 			{
 				solAssert(!targetType, "");
 				continue;
 			}
 			unsigned sourceSize = sourceType->sizeOnStack();
-			unsigned targetSize = targetType->sizeOnStack();
-			if (*sourceType != *targetType || _cleanupNeeded)
+			unsigned targetSize = targetType ? targetType->sizeOnStack() : 0;
+			if (!targetType || *sourceType != *targetType || _cleanupNeeded)
 			{
-				if (sourceSize > 0)
-					copyToStackTop(depth, sourceSize);
-
-				convertType(*sourceType, *targetType, _cleanupNeeded);
-
+				if (targetType)
+				{
+					if (sourceSize > 0)
+						copyToStackTop(depth, sourceSize);
+					convertType(*sourceType, *targetType, _cleanupNeeded);
+				}
 				if (sourceSize > 0 || targetSize > 0)
 				{
 					// Move it back into its place.
@@ -582,8 +590,6 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 						m_context <<
 							eth::swapInstruction(depth + targetSize - sourceSize) <<
 							eth::Instruction::POP;
-					if (targetSize < sourceSize)
-						moveToStackTop(sourceSize - targetSize, depth );
 					// Value shrank
 					for (unsigned j = targetSize; j < sourceSize; ++j)
 					{

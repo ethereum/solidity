@@ -5699,8 +5699,8 @@ BOOST_AUTO_TEST_CASE(tuples)
 				if (a != 1 || b != 2 || c[0] != 3) return 2;
 				(a, b) = (b, a);
 				if (a != 2 || b != 1) return 3;
-//				(a, , b, ) = (8, 9, 10, 11, 12);
-//				if (a != 8 || b != 10) return 3;
+				(a, , b, ) = (8, 9, 10, 11, 12);
+				if (a != 8 || b != 10) return 4;
 			}
 		}
 	)";
@@ -5724,7 +5724,7 @@ BOOST_AUTO_TEST_CASE(destructuring_assignment)
 			}
 			function f(bytes s) returns (uint) {
 				uint loc;
-				uint[] memArray;
+				uint[] memory memArray;
 				(loc, x, y, data, arrayData[3]) = (8, 4, returnsArray(), s, 2);
 				if (loc != 8) return 1;
 				if (x != 4) return 2;
@@ -5737,6 +5737,9 @@ BOOST_AUTO_TEST_CASE(destructuring_assignment)
 				(memArray, loc) = (arrayData, 3);
 				if (loc != 3) return 9;
 				if (memArray.length != arrayData.length) return 10;
+				bytes memory memBytes;
+				(x, memBytes, y[2], ) = (456, s, 789, 101112, 131415);
+				if (x != 456 || memBytes.length != s.length || y[2] != 789) return 11;
 			}
 		}
 	)";

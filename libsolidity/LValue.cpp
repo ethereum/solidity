@@ -496,10 +496,8 @@ void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _loc
 {
 	// values are below the lvalue references
 	unsigned valuePos = sizeOnStack();
-
-	//@TODO wildcards
-
 	TypePointers const& valueTypes = dynamic_cast<TupleType const&>(_sourceType).components();
+	solAssert(valueTypes.size() == m_lvalues.size(), "");
 	// valuePos .... refPos ...
 	// We will assign from right to left to optimize stack layout.
 	for (size_t i = 0; i < m_lvalues.size(); ++i)
@@ -507,16 +505,15 @@ void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _loc
 		unique_ptr<LValue> const& lvalue = m_lvalues[m_lvalues.size() - i - 1];
 		TypePointer const& valType = valueTypes[valueTypes.size() - i - 1];
 		unsigned stackHeight = m_context.stackHeight();
-		solAssert(!!valType, "");
+		solAssert(!valType == !lvalue, "");
+		if (!lvalue)
+			continue;
 		valuePos += valType->sizeOnStack();
-		if (lvalue)
-		{
-			// copy value to top
-			CompilerUtils(m_context).copyToStackTop(valuePos, valType->sizeOnStack());
-			// move lvalue ref above value
-			CompilerUtils(m_context).moveToStackTop(valType->sizeOnStack(), lvalue->sizeOnStack());
-			lvalue->storeValue(*valType, _location, true);
-		}
+		// copy value to top
+		CompilerUtils(m_context).copyToStackTop(valuePos, valType->sizeOnStack());
+		// move lvalue ref above value
+		CompilerUtils(m_context).moveToStackTop(valType->sizeOnStack(), lvalue->sizeOnStack());
+		lvalue->storeValue(*valType, _location, true);
 		valuePos += m_context.stackHeight() - stackHeight;
 	}
 	// As the type of an assignment to a tuple type is the empty tuple, we always move.

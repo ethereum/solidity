@@ -177,7 +177,6 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
-//	cout << "-----Assignment" << endl;
 	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
 	_assignment.rightHandSide().accept(*this);
 	// Perform some conversion already. This will convert storage types to memory and literals
@@ -185,10 +184,8 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	TypePointer type = _assignment.rightHandSide().annotation().type->closestTemporaryType(
 		_assignment.leftHandSide().annotation().type
 	);
-//	cout << "-----Type conversion" << endl;
 	utils().convertType(*_assignment.rightHandSide().annotation().type, *type);
 
-//	cout << "-----LHS" << endl;
 	_assignment.leftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
 
@@ -214,7 +211,6 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 				m_context << eth::swapInstruction(itemSize + lvalueSize) << eth::Instruction::POP;
 		}
 	}
-//	cout << "-----Store" << endl;
 	m_currentLValue->storeValue(*type, _assignment.location());
 	m_currentLValue.reset();
 	return false;
