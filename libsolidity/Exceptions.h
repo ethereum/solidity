@@ -26,11 +26,18 @@
 #include <utility>
 #include <libdevcore/Exceptions.h>
 #include <libevmasm/SourceLocation.h>
+#include <libsolidity/Utils.h>
 
 namespace dev
 {
 namespace solidity
 {
+class Error;
+using ErrorList = std::vector<std::shared_ptr<Error const>>;
+
+struct CompilerError: virtual Exception {};
+struct InternalCompilerError: virtual Exception {};
+struct fatalError: virtual Exception {}; //todo rename to FatalError
 
 class Error: virtual public Exception
 {
@@ -41,7 +48,6 @@ public:
 		DocstringParsingError,
 		ParserError,
 		TypeError,
-
 		Warning
 	};
 
@@ -65,22 +71,39 @@ public:
 				m_typeName = "Warning";
 				break;
 			default:
-				m_typeName = "Error";
+				solAssert(false, "");
 				break;
 		}
 	}
 
-	Type const type() { return m_type; } const
+	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
 
+
+	/// helper functions
+	static Error const* containsErrorOfType(ErrorList const& _list, Error::Type _type)
+	{
+		for (auto e: _list)
+		{
+			if(e->type() == _type)
+				return e.get();
+		}
+		return nullptr;
+	}
+	static bool containsOnlyWarnings(ErrorList const& _list)
+	{
+		for (auto e: _list)
+		{
+			if(e->type() != Type::Warning)
+				return false;
+		}
+		return true;
+	}
 private:
 	Type m_type;
 	std::string m_typeName;
 };
 
-struct CompilerError: virtual Exception {};
-struct InternalCompilerError: virtual Exception {};
-struct FatalError: virtual Exception {};
 
 using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
 
@@ -96,7 +119,6 @@ public:
 };
 
 
-using ErrorList = std::vector<std::shared_ptr<Error const>>;
 using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
 using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
 

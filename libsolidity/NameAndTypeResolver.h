@@ -44,12 +44,15 @@ class NameAndTypeResolver: private boost::noncopyable
 public:
 	NameAndTypeResolver(std::vector<Declaration const*> const& _globals, ErrorList& _errors);
 	/// Registers all declarations found in the source unit.
-	void registerDeclarations(SourceUnit& _sourceUnit);
+	/// @returns false in case of type error.
+	bool registerDeclarations(SourceUnit& _sourceUnit);
 	/// Resolves all names and types referenced from the given contract.
-	void resolveNamesAndTypes(ContractDefinition& _contract);
+	/// @returns false in case of type error.
+	bool resolveNamesAndTypes(ContractDefinition& _contract);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations
 	/// that create their own scope.
-	void updateDeclaration(Declaration const& _declaration);
+	/// @returns false in case of type error.
+	bool updateDeclaration(Declaration const& _declaration);
 
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
 	/// the global scope is used (i.e. the one containing only the contract).
@@ -66,7 +69,7 @@ public:
 	Declaration const* pathFromCurrentScope(std::vector<ASTString> const& _path, bool _recursive = true) const;
 
 	/// returns the vector of declarations without repetitions
-	static std::vector<Declaration const*> cleanedDeclarations(
+	std::vector<Declaration const*> cleanedDeclarations(
 		Identifier const& _identifier,
 		std::vector<Declaration const*> const& _declarations
 	);
@@ -78,8 +81,8 @@ private:
 	/// into the current scope if they are not present already.
 	void importInheritedScope(ContractDefinition const& _base);
 
-	/// Computes "C3-Linearization" of base contracts and stores it inside the contract.
-	void linearizeBaseContracts(ContractDefinition& _contract) const;
+	/// Computes "C3-Linearization" of base contracts and stores it inside the contract. Reports errors if any
+	void linearizeBaseContracts(ContractDefinition& _contract);
 	/// Computes the C3-merge of the given list of lists of bases.
 	/// @returns the linearized vector or an empty vector if linearization is not possible.
 	template <class _T>
@@ -89,6 +92,21 @@ private:
 	/// where nullptr denotes the global scope. Note that structs are not scope since they do
 	/// not contain code.
 	std::map<ASTNode const*, DeclarationContainer> m_scopes;
+
+	// creates the Declaration error and adds it in the errors list
+	void reportDeclarationError(
+		SourceLocation _sourceLoction,
+		std::string const& _description,
+		SourceLocation _secondarySourceLocation,
+		std::string const& _secondaryDescription
+	);
+	// creates the Declaration error and adds it in the errors list and throws FatalError
+	void reportFatalDeclarationError(SourceLocation _sourceLoction, std::string _description);
+
+	// creates the Declaration error and adds it in the errors list
+	void reportTypeError(Error _e);
+	// creates the Declaration error and adds it in the errors list and throws FatalError
+	void reportFatalTypeError(Error _e);
 
 	DeclarationContainer* m_currentScope = nullptr;
 	ErrorList& m_errors;
@@ -101,7 +119,7 @@ private:
 class DeclarationRegistrationHelper: private ASTVisitor
 {
 public:
-	DeclarationRegistrationHelper(std::map<ASTNode const*, DeclarationContainer>& _scopes, ASTNode& _astRoot);
+	DeclarationRegistrationHelper(std::map<ASTNode const*, DeclarationContainer>& _scopes, ASTNode& _astRoot, ErrorList& _errors);
 
 private:
 	bool visit(ContractDefinition& _contract) override;
@@ -126,10 +144,20 @@ private:
 
 	/// @returns the canonical name of the current scope.
 	std::string currentCanonicalName() const;
+	// creates the Declaration error and adds it in the errors list
+	void declarationError(
+		SourceLocation _sourceLoction,
+		std::string const& _description,
+		SourceLocation _secondarySourceLocation,
+		std::string const& _secondaryDescription
+	);
+	// creates the Declaration error and adds it in the errors list and throws FatalError
+	void fatalDeclarationError(SourceLocation _sourceLoction, std::string const& _description);
 
 	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
 	Declaration const* m_currentScope;
 	VariableScope* m_currentFunction;
+	ErrorList& m_errors;
 };
 
 }

@@ -167,6 +167,7 @@ public:
 	/// @returns the list of errors that occured during parsing and type checking.
 	ErrorList const& errors() const { return m_errors; }
 
+
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.

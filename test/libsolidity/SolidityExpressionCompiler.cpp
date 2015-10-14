@@ -92,11 +92,13 @@ bytes compileFirstExpression(
 	vector<shared_ptr<MagicVariableDeclaration const>> _globalDeclarations = {}
 )
 {
-	Parser parser;
 	ASTPointer<SourceUnit> sourceUnit;
 	try
 	{
-		sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode)));
+		ErrorList errors;
+		sourceUnit = Parser(errors).parse(make_shared<Scanner>(CharStream(_sourceCode)));
+		if (!sourceUnit)
+			return bytes();
 	}
 	catch(boost::exception const& _e)
 	{
@@ -108,9 +110,9 @@ bytes compileFirstExpression(
 	declarations.reserve(_globalDeclarations.size() + 1);
 	for (ASTPointer<Declaration const> const& variable: _globalDeclarations)
 		declarations.push_back(variable.get());
-	/// TODO:
-	ErrorList errorList;
-	NameAndTypeResolver resolver(declarations, errorList);
+
+	ErrorList errors;
+	NameAndTypeResolver resolver(declarations, errors);
 	resolver.registerDeclarations(*sourceUnit);
 
 	vector<ContractDefinition const*> inheritanceHierarchy;
@@ -123,7 +125,7 @@ bytes compileFirstExpression(
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			TypeChecker typeChecker;
+			TypeChecker typeChecker(errors);
 			BOOST_REQUIRE(typeChecker.checkTypeRequirements(*contract));
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())

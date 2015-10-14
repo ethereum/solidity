@@ -36,24 +36,26 @@ bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
 	{
 		visit(_contract);
 	}
-	catch (FatalError const&)
+	catch (fatalError const&)
 	{
 		// We got a fatal error which required to stop further type checking, but we can
 		// continue normally from here.
 		if (m_errors.empty())
 			throw; // Something is weird here, rather throw again.
 	}
-	bool success = true;
-	for (auto const& it: m_errors)
-	{
-		Error const& e = dynamic_cast<Error const&>(it.get());
-		if (e.type() != Error::Type::Warning)
-		{
-			success = false;
-			break;
-		}
-	}
-	return success;
+
+return	Error::containsOnlyWarnings(m_errors);
+//	bool success = true;
+//	for (auto const& it: m_errors)
+//	{
+//		auto e = dynamic_cast<Error const*>(it.get());
+//		if (e->type() != Error::Type::Warning)
+//		{
+//			success = false;
+//			break;
+//		}
+//	}
+//	return success;
 }
 
 TypePointer const& TypeChecker::type(Expression const& _expression) const
@@ -1255,7 +1257,7 @@ void TypeChecker::requireLValue(Expression const& _expression)
 
 void TypeChecker::typeError(ASTNode const& _node, string const& _description)
 {
-	auto err = make_shared<Error>(Error(Error::Type::TypeError));;
+	auto err = make_shared<Error>(Error::Type::TypeError);
 	*err <<
 		errinfo_sourceLocation(_node.location()) <<
 		errinfo_comment(_description);
@@ -1266,5 +1268,5 @@ void TypeChecker::typeError(ASTNode const& _node, string const& _description)
 void TypeChecker::fatalTypeError(ASTNode const& _node, string const& _description)
 {
 	typeError(_node, _description);
-	BOOST_THROW_EXCEPTION(FatalError());
+	BOOST_THROW_EXCEPTION(fatalError());
 }

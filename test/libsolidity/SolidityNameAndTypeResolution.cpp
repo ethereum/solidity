@@ -44,16 +44,23 @@ namespace test
 namespace
 {
 
-pair<ASTPointer<SourceUnit>, shared_ptr<Exception const>>
+pair<ASTPointer<SourceUnit>, std::shared_ptr<Error::Type const>>
 parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 {
-	Parser parser;
+	ErrorList errors;
+	Parser parser(errors);
 	ASTPointer<SourceUnit> sourceUnit;
-	shared_ptr<Exception const> err;
 	// catch exceptions for a transition period
 	try
 	{
 		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
+		if(!sourceUnit)
+			return make_pair(sourceUnit, nullptr);
+
+		NameAndTypeResolver resolver({}, errors);
+		solAssert(Error::containsOnlyWarnings(errors), "");
+		resolver.registerDeclarations(*sourceUnit);
+
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
 		NameAndTypeResolver resolver(globalContext->declarations());
 		resolver.registerDeclarations(*sourceUnit);
@@ -71,51 +78,45 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 			{
 				globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*globalContext->currentThis());
-				TypeChecker typeChecker;
+
+				TypeChecker typeChecker(errors);
 				bool success = typeChecker.checkTypeRequirements(*contract);
 				BOOST_CHECK(success || !typeChecker.errors().empty());
-				for (auto const& firstError: typeChecker.errors())
+
+				for (auto const& currentError: errors)
 				{
-					if (_reportWarnings || !dynamic_pointer_cast<Warning const>(firstError))
-					{
-						err = firstError;
-						break;
-					}
-					else if (_reportWarnings)
-					{
-						err = firstError;
-						break;
-					}
+					if (
+						(_reportWarnings && currentError->type() == Error::Type::Warning) ||
+						(!_reportWarnings && currentError->type() != Error::Type::Warning)
+					)
+						return make_pair(sourceUnit, std::make_shared<Error::Type const>(currentError->type()));
 				}
 			}
 	}
-	catch (ParserError const& _exception)
+	catch(Error const& _e)
 	{
-		return make_pair(sourceUnit, make_shared<ParserError>(_exception));
+		return make_pair(sourceUnit, std::make_shared<Error::Type const>(_e.type()));
 	}
-	catch (DeclarationError const& _exception)
+	catch (Exception const& _exception)
 	{
-		return make_pair(sourceUnit, make_shared<DeclarationError>(_exception));
+		return make_pair(sourceUnit, nullptr);
 	}
-	catch (TypeError const& _exception)
-	{
-		return make_pair(sourceUnit, make_shared<TypeError>(_exception));
-	}
-	return make_pair(sourceUnit, err);
+	return make_pair(sourceUnit, nullptr);
 }
 
 ASTPointer<SourceUnit> parseAndAnalyse(string const& _source)
 {
 	auto sourceAndError = parseAnalyseAndReturnError(_source);
-	BOOST_REQUIRE(!sourceAndError.second);
+	BOOST_REQUIRE(!!sourceAndError.first);
 	return sourceAndError.first;
 }
 
-shared_ptr<Exception const> parseAndAnalyseReturnError(std::string const& _source, bool _warning = false)
+Error::Type parseAndAnalyseReturnErrorType(std::string const& _source, bool _warning = false)
 {
 	auto sourceAndError = parseAnalyseAndReturnError(_source, _warning);
 	BOOST_REQUIRE(!!sourceAndError.second);
-	return sourceAndError.second;
+	BOOST_REQUIRE(!!sourceAndError.first);
+	return *sourceAndError.second;
 }
 
 static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source, unsigned index)
@@ -140,10 +141,6 @@ static FunctionTypePointer const& retrieveFunctionBySignature(
 
 }
 
-#define SOLIDITY_CHECK_ERROR_TYPE(_statement, _ErrorType)				\
-	BOOST_CHECK(!!dynamic_cast<_ErrorType const*>(_statement.get()))
-
-
 BOOST_AUTO_TEST_SUITE(SolidityNameAndTypeResolution)
 
 BOOST_AUTO_TEST_CASE(smoke_test)
@@ -161,7 +158,7 @@ BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
 					   "  uint256 variable;\n"
 					   "  uint128 variable;\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(double_function_declaration)
@@ -170,7 +167,7 @@ BOOST_AUTO_TEST_CASE(double_function_declaration)
 					   "  function fun() { uint x; }\n"
 					   "  function fun() { uint x; }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(double_variable_declaration)
@@ -178,7 +175,7 @@ BOOST_AUTO_TEST_CASE(double_variable_declaration)
 	char const* text = "contract test {\n"
 					   "  function f() { uint256 x; if (true)  { uint256 x; } }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(name_shadowing)
@@ -205,7 +202,7 @@ BOOST_AUTO_TEST_CASE(undeclared_name)
 					   "  uint256 variable;\n"
 					   "  function f(uint256 arg) { f(notfound); }"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
@@ -225,7 +222,7 @@ BOOST_AUTO_TEST_CASE(struct_definition_directly_recursive)
 					   "    MyStructName x;\n"
 					   "  }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(struct_definition_indirectly_recursive)
@@ -240,7 +237,7 @@ BOOST_AUTO_TEST_CASE(struct_definition_indirectly_recursive)
 					   "    MyStructName1 x;\n"
 					   "  }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(struct_definition_not_really_recursive)
@@ -287,7 +284,7 @@ BOOST_AUTO_TEST_CASE(type_checking_return_wrong_number)
 	char const* text = "contract test {\n"
 					   "  function f() returns (bool r1, bool r2) { return 1 >= 2; }"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(type_checking_return_wrong_type)
@@ -295,7 +292,7 @@ BOOST_AUTO_TEST_CASE(type_checking_return_wrong_type)
 	char const* text = "contract test {\n"
 					   "  function f() returns (uint256 r) { return 1 >= 2; }"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(type_checking_function_call)
@@ -320,7 +317,7 @@ BOOST_AUTO_TEST_CASE(type_conversion_for_comparison_invalid)
 	char const* text = "contract test {\n"
 					   "  function f() { int32(2) == uint64(2); }"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
@@ -356,7 +353,7 @@ BOOST_AUTO_TEST_CASE(balance_invalid)
 					   "    address(0).balance = 7;\n"
 					   "  }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(assignment_to_mapping)
@@ -371,7 +368,7 @@ BOOST_AUTO_TEST_CASE(assignment_to_mapping)
 					   "    data.map = a;\n"
 					   "  }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(assignment_to_struct)
@@ -395,7 +392,7 @@ BOOST_AUTO_TEST_CASE(returns_in_constructor)
 					   "  function test() returns (uint a) {\n"
 					   "  }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(forward_function_reference)
@@ -483,7 +480,7 @@ BOOST_AUTO_TEST_CASE(create_abstract_contract)
 			function foo() { b = new base();}
 			}
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_optional)
@@ -527,7 +524,7 @@ BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
 		contract derived is base { function foo() {} }
 		contract wrong is derived { function foo(); }
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(function_canonical_signature)
@@ -636,7 +633,7 @@ BOOST_AUTO_TEST_CASE(function_external_call_not_allowed_conversion)
 			}
 			function g (C c) external {}
 	})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(function_internal_allowed_conversion)
@@ -668,7 +665,7 @@ BOOST_AUTO_TEST_CASE(function_internal_not_allowed_conversion)
 				g(a);
 			}
 	})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(hash_collision_in_interface)
@@ -679,7 +676,7 @@ BOOST_AUTO_TEST_CASE(hash_collision_in_interface)
 					   "  function tgeo() {\n"
 					   "  }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(inheritance_basic)
@@ -713,7 +710,7 @@ BOOST_AUTO_TEST_CASE(cyclic_inheritance)
 		contract A is B { }
 		contract B is A { }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(legal_override_direct)
@@ -741,7 +738,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_visibility)
 		contract B { function f() internal {} }
 		contract C is B { function f() public {} }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(illegal_override_constness)
@@ -750,7 +747,7 @@ BOOST_AUTO_TEST_CASE(illegal_override_constness)
 		contract B { function f() constant {} }
 		contract C is B { function f() {} }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(complex_inheritance)
@@ -820,7 +817,7 @@ BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
 			function f() { B b = A(1); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(function_modifier_invocation)
@@ -843,7 +840,7 @@ BOOST_AUTO_TEST_CASE(invalid_function_modifier_type)
 			modifier mod1(uint a) { if (a > 0) _ }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
@@ -884,7 +881,7 @@ BOOST_AUTO_TEST_CASE(illegal_modifier_override)
 		contract A { modifier mod(uint a) {} }
 		contract B is A { modifier mod(uint8 a) {} }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(modifier_overrides_function)
@@ -893,7 +890,7 @@ BOOST_AUTO_TEST_CASE(modifier_overrides_function)
 		contract A { modifier mod(uint a) {} }
 		contract B is A { function mod(uint a) {} }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(function_overrides_modifier)
@@ -902,7 +899,7 @@ BOOST_AUTO_TEST_CASE(function_overrides_modifier)
 		contract A { function mod(uint a) {} }
 		contract B is A { modifier mod(uint a) {} }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(modifier_returns_value)
@@ -913,7 +910,7 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 			modifier mod(uint a) { return 7; }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(state_variable_accessors)
@@ -964,7 +961,7 @@ BOOST_AUTO_TEST_CASE(function_clash_with_state_variable_accessor)
 					   "uint256 foo;\n"
 					   "   function foo() {}\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(private_state_variable)
@@ -1022,7 +1019,7 @@ BOOST_AUTO_TEST_CASE(state_variable_member_of_wrong_class1)
 					   "contract Child is Parent2{\n"
 					   "    function foo() returns (uint256) { return Parent2.m_aMember1; }\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(state_variable_member_of_wrong_class2)
@@ -1037,7 +1034,7 @@ BOOST_AUTO_TEST_CASE(state_variable_member_of_wrong_class2)
 					   "    function foo() returns (uint256) { return Child.m_aMember2; }\n"
 					   "    uint256 public m_aMember3;\n"
 					   "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function)
@@ -1059,7 +1056,7 @@ BOOST_AUTO_TEST_CASE(fallback_function_with_arguments)
 			function(uint a) { x = 2; }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_twice)
@@ -1071,7 +1068,7 @@ BOOST_AUTO_TEST_CASE(fallback_function_twice)
 			function() { x = 3; }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_inheritance)
@@ -1104,7 +1101,7 @@ BOOST_AUTO_TEST_CASE(event_too_many_indexed)
 		contract c {
 			event e(uint indexed a, bytes3 indexed b, bool indexed c, uint indexed d);
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(anonymous_event_four_indexed)
@@ -1178,7 +1175,7 @@ BOOST_AUTO_TEST_CASE(access_to_internal_function)
 		contract d {
 			function g() { c(0).f(); }
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(access_to_default_state_variable_visibility)
@@ -1190,7 +1187,7 @@ BOOST_AUTO_TEST_CASE(access_to_default_state_variable_visibility)
 		contract d {
 			function g() { c(0).a(); }
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(access_to_internal_state_variable)
@@ -1211,7 +1208,7 @@ BOOST_AUTO_TEST_CASE(error_count_in_named_args)
 							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
 							 "  function b() returns (uint r) { r = a({a: 1}); }\n"
 							 "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(empty_in_named_args)
@@ -1220,7 +1217,7 @@ BOOST_AUTO_TEST_CASE(empty_in_named_args)
 							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
 							 "  function b() returns (uint r) { r = a({}); }\n"
 							 "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(duplicate_parameter_names_in_named_args)
@@ -1229,7 +1226,7 @@ BOOST_AUTO_TEST_CASE(duplicate_parameter_names_in_named_args)
 							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
 							 "  function b() returns (uint r) { r = a({a: 1, a: 2}); }\n"
 							 "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_parameter_names_in_named_args)
@@ -1238,7 +1235,7 @@ BOOST_AUTO_TEST_CASE(invalid_parameter_names_in_named_args)
 							 "  function a(uint a, uint b) returns (uint r) { r = a + b; }\n"
 							 "  function b() returns (uint r) { r = a({a: 1, c: 2}); }\n"
 							 "}\n";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
@@ -1280,13 +1277,18 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
 				return 5;
 		}
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(disallow_declaration_of_void_type)
 {
+<<<<<<< HEAD
 	char const* sourceCode = "contract c { function f() { var (x) = f(); } }";
 	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+=======
+	char const* sourceCode = "contract c { function f() { var x = f(); } }";
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
+>>>>>>> 2cd6509... errors instead of exceptions
 }
 
 BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
@@ -1309,7 +1311,7 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 			}
 			uint256 a;
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(exp_operator_negative_exponent)
@@ -1318,7 +1320,7 @@ BOOST_AUTO_TEST_CASE(exp_operator_negative_exponent)
 		contract test {
 			function f() returns(uint d) { return 2 ** -3; }
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
@@ -1327,7 +1329,7 @@ BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
 		contract test {
 			function f() returns(uint d) { return 2 ** 10000000000; }
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(enum_member_access)
@@ -1357,7 +1359,7 @@ BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
 				ActionChoices choices;
 			}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
@@ -1408,7 +1410,7 @@ BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
 				uint64 b;
 			}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(enum_duplicate_values)
@@ -1418,7 +1420,7 @@ BOOST_AUTO_TEST_CASE(enum_duplicate_values)
 				enum ActionChoices { GoLeft, GoRight, GoLeft, Sit }
 			}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(private_visibility)
@@ -1431,7 +1433,7 @@ BOOST_AUTO_TEST_CASE(private_visibility)
 			function g() { f(); }
 		}
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(private_visibility_via_explicit_base_access)
@@ -1444,7 +1446,7 @@ BOOST_AUTO_TEST_CASE(private_visibility_via_explicit_base_access)
 			function g() { base.f(); }
 		}
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(external_visibility)
@@ -1455,7 +1457,7 @@ BOOST_AUTO_TEST_CASE(external_visibility)
 			function g() { f(); }
 		}
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(external_base_visibility)
@@ -1468,7 +1470,7 @@ BOOST_AUTO_TEST_CASE(external_base_visibility)
 			function g() { base.f(); }
 		}
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(external_argument_assign)
@@ -1478,7 +1480,7 @@ BOOST_AUTO_TEST_CASE(external_argument_assign)
 			function f(uint a) external { a = 1; }
 		}
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(external_argument_increment)
@@ -1488,7 +1490,7 @@ BOOST_AUTO_TEST_CASE(external_argument_increment)
 			function f(uint a) external { a++; }
 		}
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(external_argument_delete)
@@ -1498,7 +1500,7 @@ BOOST_AUTO_TEST_CASE(external_argument_delete)
 			function f(uint a) external { delete a; }
 		}
 		)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(test_for_bug_override_function_with_bytearray_type)
@@ -1520,7 +1522,7 @@ BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
 		contract c {
 			function f(uint a) { uint8[a] x; }
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(array_copy_with_different_types1)
@@ -1531,7 +1533,7 @@ BOOST_AUTO_TEST_CASE(array_copy_with_different_types1)
 			uint[] b;
 			function f() { b = a; }
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(array_copy_with_different_types2)
@@ -1542,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(array_copy_with_different_types2)
 			uint8[] b;
 			function f() { b = a; }
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(array_copy_with_different_types_conversion_possible)
@@ -1575,7 +1577,7 @@ BOOST_AUTO_TEST_CASE(array_copy_with_different_types_dynamic_static)
 			uint[80] b;
 			function f() { b = a; }
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_int)
@@ -1584,7 +1586,7 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_int)
 		contract c {
 			uint8 a = 1000;
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
@@ -1593,7 +1595,7 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
 		contract c {
 			uint a = "abc";
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
@@ -1718,7 +1720,7 @@ BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
 			function changeIt() { x = 9; }
 			uint constant x = 56;
 	})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(complex_const_variable)
@@ -1728,7 +1730,7 @@ BOOST_AUTO_TEST_CASE(complex_const_variable)
 		contract Foo {
 			mapping(uint => bool) constant mapVar;
 	})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(uninitialized_const_variable)
@@ -1737,20 +1739,7 @@ BOOST_AUTO_TEST_CASE(uninitialized_const_variable)
 		contract Foo {
 			uint constant y;
 	})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
-}
-
-BOOST_AUTO_TEST_CASE(local_const_variable)
-{
-	char const* text = R"(
-		contract Foo {
-			function localConst() returns (uint ret)
-			{
-				uint constant local = 4;
-				return local;
-			}
-	})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), ParserError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
@@ -1762,7 +1751,7 @@ BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
 			function g() returns(uint) { return f(3, 5); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(ambiguous_overloaded_function)
@@ -1775,7 +1764,7 @@ BOOST_AUTO_TEST_CASE(ambiguous_overloaded_function)
 			function g() returns(uint) { return f(1); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(assignment_of_nonoverloaded_function)
@@ -1798,7 +1787,7 @@ BOOST_AUTO_TEST_CASE(assignment_of_overloaded_function)
 			function g() returns(uint) { var x = f; return x(7); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(external_types_clash)
@@ -1812,7 +1801,7 @@ BOOST_AUTO_TEST_CASE(external_types_clash)
 			function f(uint8 a) { }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(override_changes_return_types)
@@ -1825,7 +1814,7 @@ BOOST_AUTO_TEST_CASE(override_changes_return_types)
 			function f(uint a) returns (uint8) { }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multiple_constructors)
@@ -1836,7 +1825,7 @@ BOOST_AUTO_TEST_CASE(multiple_constructors)
 			function test() {}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(equal_overload)
@@ -1847,7 +1836,7 @@ BOOST_AUTO_TEST_CASE(equal_overload)
 			function test(uint a) external {}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), DeclarationError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(uninitialized_var)
@@ -1857,7 +1846,7 @@ BOOST_AUTO_TEST_CASE(uninitialized_var)
 			function f() returns (uint) { var x; return 2; }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(string)
@@ -1879,7 +1868,7 @@ BOOST_AUTO_TEST_CASE(string_index)
 			function f() { var a = s[2]; }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(string_length)
@@ -1890,7 +1879,7 @@ BOOST_AUTO_TEST_CASE(string_length)
 			function f() { var a = s.length; }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(negative_integers_to_signed_out_of_bound)
@@ -1900,7 +1889,7 @@ BOOST_AUTO_TEST_CASE(negative_integers_to_signed_out_of_bound)
 			int8 public i = -129;
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(negative_integers_to_signed_min)
@@ -1920,7 +1909,7 @@ BOOST_AUTO_TEST_CASE(positive_integers_to_signed_out_of_bound)
 			int8 public j = 128;
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed_out_of_bound_max)
@@ -1940,7 +1929,7 @@ BOOST_AUTO_TEST_CASE(negative_integers_to_unsigned)
 			uint8 public x = -1;
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_unsigned_out_of_bound)
@@ -1950,7 +1939,7 @@ BOOST_AUTO_TEST_CASE(positive_integers_to_unsigned_out_of_bound)
 			uint8 public x = 700;
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(integer_boolean_operators)
@@ -1958,15 +1947,15 @@ BOOST_AUTO_TEST_CASE(integer_boolean_operators)
 	char const* sourceCode1 = R"(
 		contract test { function() { uint x = 1; uint y = 2; x || y; } }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode1), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode1) == Error::Type::TypeError);
 	char const* sourceCode2 = R"(
 		contract test { function() { uint x = 1; uint y = 2; x && y; } }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode2), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode2) == Error::Type::TypeError);
 	char const* sourceCode3 = R"(
 		contract test { function() { uint x = 1; !x; } }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode3), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode3) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(reference_compare_operators)
@@ -1974,11 +1963,11 @@ BOOST_AUTO_TEST_CASE(reference_compare_operators)
 	char const* sourceCode1 = R"(
 		contract test { bytes a; bytes b; function() { a == b; } }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode1), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode1) == Error::Type::TypeError);
 	char const* sourceCode2 = R"(
 		contract test { struct s {uint a;} s x; s y; function() { x == y; } }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode2), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode2) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(overwrite_memory_location_external)
@@ -1988,7 +1977,7 @@ BOOST_AUTO_TEST_CASE(overwrite_memory_location_external)
 			function f(uint[] memory a) external {}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(overwrite_storage_location_external)
@@ -1998,7 +1987,7 @@ BOOST_AUTO_TEST_CASE(overwrite_storage_location_external)
 			function f(uint[] storage a) external {}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(storage_location_local_variables)
@@ -2024,7 +2013,7 @@ BOOST_AUTO_TEST_CASE(no_mappings_in_memory_array)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(assignment_mem_to_local_storage_variable)
@@ -2038,7 +2027,7 @@ BOOST_AUTO_TEST_CASE(assignment_mem_to_local_storage_variable)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(storage_assign_to_different_local_variable)
@@ -2055,7 +2044,7 @@ BOOST_AUTO_TEST_CASE(storage_assign_to_different_local_variable)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
@@ -2069,7 +2058,7 @@ BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(assignment_mem_storage_variable_directly)
@@ -2096,7 +2085,7 @@ BOOST_AUTO_TEST_CASE(function_argument_mem_to_storage)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(function_argument_storage_to_mem)
@@ -2125,7 +2114,7 @@ BOOST_AUTO_TEST_CASE(mem_array_assignment_changes_base_type)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
@@ -2138,7 +2127,7 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(memory_arrays_not_resizeable)
@@ -2151,7 +2140,7 @@ BOOST_AUTO_TEST_CASE(memory_arrays_not_resizeable)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(struct_constructor)
@@ -2217,7 +2206,7 @@ BOOST_AUTO_TEST_CASE(invalid_integer_literal_fraction)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(invalid_integer_literal_exp)
@@ -2229,7 +2218,7 @@ BOOST_AUTO_TEST_CASE(invalid_integer_literal_exp)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
@@ -2244,7 +2233,7 @@ BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(string_bytes_conversion)
@@ -2270,7 +2259,7 @@ BOOST_AUTO_TEST_CASE(inheriting_from_library)
 		library Lib {}
 		contract Test is Lib {}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(inheriting_library)
@@ -2279,7 +2268,7 @@ BOOST_AUTO_TEST_CASE(inheriting_library)
 		contract Test {}
 		library Lib is Test {}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(library_having_variables)
@@ -2287,7 +2276,7 @@ BOOST_AUTO_TEST_CASE(library_having_variables)
 	char const* text = R"(
 		library Lib { uint x; }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(valid_library)
@@ -2321,7 +2310,7 @@ BOOST_AUTO_TEST_CASE(creating_contract_within_the_contract)
 			function f() { var x = new Test(); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
@@ -2335,7 +2324,7 @@ BOOST_AUTO_TEST_CASE(array_out_of_bound_access)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(literal_string_to_storage_pointer)
@@ -2345,7 +2334,7 @@ BOOST_AUTO_TEST_CASE(literal_string_to_storage_pointer)
 			function f() { string x = "abc"; }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(non_initialized_references)
@@ -2363,7 +2352,10 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text, true), Warning);
+
+	auto b = parseAndAnalyseReturnErrorType(text, true);
+	(void)b;
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text, true) == Error::Type::Warning);
 }
 
 BOOST_AUTO_TEST_CASE(sha3_with_large_integer_constant)

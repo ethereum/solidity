@@ -45,9 +45,10 @@ public:
 		m_reader.parse(generatedInterfaceString, generatedInterface);
 		Json::Value expectedInterface;
 		m_reader.parse(_expectedInterfaceString, expectedInterface);
-		BOOST_CHECK_MESSAGE(expectedInterface == generatedInterface,
-							"Expected:\n" << expectedInterface.toStyledString() <<
-							"\n but got:\n" << generatedInterface.toStyledString());
+		BOOST_CHECK_MESSAGE(
+			expectedInterface == generatedInterface,
+			"Expected:\n" << expectedInterface.toStyledString() << "\n but got:\n" << generatedInterface.toStyledString()
+		);
 	}
 
 private:

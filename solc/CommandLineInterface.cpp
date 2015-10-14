@@ -496,7 +496,7 @@ bool CommandLineInterface::processInput()
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
 				*error,
-				(dynamic_pointer_cast<Warning const>(error)) ? "Warning" : "Error", *m_compiler
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error", *m_compiler
 			);
 		if (!successful)
 			return false;
