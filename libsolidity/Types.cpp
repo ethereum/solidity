@@ -1242,6 +1242,38 @@ unsigned int EnumType::memberValue(ASTString const& _member) const
 	BOOST_THROW_EXCEPTION(m_enum.createTypeError("Requested unknown enum value ." + _member));
 }
 
+bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
+{
+	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
+	{
+		TypePointers const& targets = tupleType->components();
+		if (targets.empty())
+			return components().empty();
+		if (components().size() != targets.size() && !targets.front() && !targets.back())
+			return false; // (,a,) = (1,2,3,4) - unable to position `a` in the tuple.
+		size_t minNumValues = targets.size();
+		if (!targets.back() || !targets.front())
+			--minNumValues; // wildcards can also match 0 components
+		if (components().size() < minNumValues)
+			return false;
+		if (components().size() > targets.size() && targets.front() && targets.back())
+			return false; // larger source and no wildcard
+		bool fillRight = !targets.back() || targets.front();
+		for (size_t i = 0; i < min(targets.size(), components().size()); ++i)
+		{
+			auto const& s = components()[fillRight ? i : components().size() - i - 1];
+			auto const& t = targets[fillRight ? i : targets.size() - i - 1];
+			if (!s && t)
+				return false;
+			else if (s && t && !s->isImplicitlyConvertibleTo(*t))
+				return false;
+		}
+		return true;
+	}
+	else
+		return false;
+}
+
 bool TupleType::operator==(Type const& _other) const
 {
 	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
@@ -1252,10 +1284,10 @@ bool TupleType::operator==(Type const& _other) const
 
 string TupleType::toString(bool _short) const
 {
-	if (m_components.empty())
+	if (components().empty())
 		return "tuple()";
 	string str = "tuple(";
-	for (auto const& t: m_components)
+	for (auto const& t: components())
 		str += (t ? t->toString(_short) : "") + ",";
 	str.pop_back();
 	return str + ")";
@@ -1272,29 +1304,33 @@ u256 TupleType::storageSize() const
 unsigned TupleType::sizeOnStack() const
 {
 	unsigned size = 0;
-	for (auto const& t: m_components)
+	for (auto const& t: components())
 		size += t ? t->sizeOnStack() : 0;
 	return size;
 }
 
-bool TupleType::isImplicitlyConvertibleTo(Type const& _other) const
+TypePointer TupleType::mobileType() const
 {
-	if (auto tupleType = dynamic_cast<TupleType const*>(&_other))
+	TypePointers mobiles;
+	for (auto const& c: components())
+		mobiles.push_back(c ? c->mobileType() : TypePointer());
+	return make_shared<TupleType>(mobiles);
+}
+
+TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) const
+{
+	solAssert(!!_targetType, "");
+	TypePointers const& targetComponents = dynamic_cast<TupleType const&>(*_targetType).components();
+	bool fillRight = !targetComponents.empty() && (!targetComponents.back() || targetComponents.front());
+	TypePointers tempComponents(targetComponents.size());
+	for (size_t i = 0; i < min(targetComponents.size(), components().size()); ++i)
 	{
-		if (components().size() != tupleType->components().size())
-			return false;
-		for (size_t i = 0; i < components().size(); ++i)
-			if ((!components()[i]) != (!tupleType->components()[i]))
-				return false;
-			else if (
-				components()[i] &&
-				!components()[i]->isImplicitlyConvertibleTo(*tupleType->components()[i])
-			)
-				return false;
-		return true;
+		size_t si = fillRight ? i : components().size() - i - 1;
+		size_t ti = fillRight ? i : targetComponents.size() - i - 1;
+		if (components()[si] && targetComponents[ti])
+			tempComponents[ti] = components()[si]->closestTemporaryType(targetComponents[si]);
 	}
-	else
-		return false;
+	return make_shared<TupleType>(tempComponents);
 }
 
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):

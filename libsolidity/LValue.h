@@ -23,6 +23,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/ArrayUtils.h>
 
@@ -33,6 +34,7 @@ namespace solidity
 
 class Declaration;
 class Type;
+class TupleType;
 class ArrayType;
 class CompilerContext;
 class VariableDeclaration;
@@ -43,7 +45,7 @@ class VariableDeclaration;
 class LValue
 {
 protected:
-	LValue(CompilerContext& _compilerContext, Type const& _dataType):
+	explicit LValue(CompilerContext& _compilerContext, Type const* _dataType = nullptr):
 		m_context(_compilerContext), m_dataType(_dataType) {}
 
 public:
@@ -68,7 +70,7 @@ public:
 
 protected:
 	CompilerContext& m_context;
-	Type const& m_dataType;
+	Type const* m_dataType;
 };
 
 /**
@@ -191,6 +193,31 @@ public:
 
 private:
 	ArrayType const& m_arrayType;
+};
+
+/**
+ * Tuple object that can itself hold several LValues.
+ */
+class TupleObject: public LValue
+{
+public:
+	/// Constructs the LValue assuming that the other LValues are present on the stack.
+	/// Empty unique_ptrs are possible if e.g. some values should be ignored during assignment.
+	TupleObject(CompilerContext& _compilerContext, std::vector<std::unique_ptr<LValue>>&& _lvalues);
+	virtual unsigned sizeOnStack() const;
+	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
+	virtual void storeValue(
+		Type const& _sourceType,
+		SourceLocation const& _location = SourceLocation(),
+		bool _move = false
+	) const override;
+	virtual void setToZero(
+		SourceLocation const& _location = SourceLocation(),
+		bool _removeReference = true
+	) const override;
+
+private:
+	std::vector<std::unique_ptr<LValue>> m_lvalues;
 };
 
 }

@@ -550,6 +550,55 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		}
 		break;
 	}
+	case Type::Category::Tuple:
+	{
+		//@TODO wildcards
+		TupleType const& sourceTuple = dynamic_cast<TupleType const&>(_typeOnStack);
+		TupleType const& targetTuple = dynamic_cast<TupleType const&>(_targetType);
+		solAssert(sourceTuple.components().size() == targetTuple.components().size(), "");
+		unsigned depth = sourceTuple.sizeOnStack();
+		for (size_t i = 0; i < sourceTuple.components().size(); ++i)
+		{
+			TypePointer const& sourceType = sourceTuple.components()[i];
+			TypePointer const& targetType = targetTuple.components()[i];
+			if (!sourceType)
+			{
+				solAssert(!targetType, "");
+				continue;
+			}
+			unsigned sourceSize = sourceType->sizeOnStack();
+			unsigned targetSize = targetType->sizeOnStack();
+			if (*sourceType != *targetType || _cleanupNeeded)
+			{
+				if (sourceSize > 0)
+					copyToStackTop(depth, sourceSize);
+
+				convertType(*sourceType, *targetType, _cleanupNeeded);
+
+				if (sourceSize > 0 || targetSize > 0)
+				{
+					// Move it back into its place.
+					for (unsigned j = 0; j < min(sourceSize, targetSize); ++j)
+						m_context <<
+							eth::swapInstruction(depth + targetSize - sourceSize) <<
+							eth::Instruction::POP;
+					if (targetSize < sourceSize)
+						moveToStackTop(sourceSize - targetSize, depth );
+					// Value shrank
+					for (unsigned j = targetSize; j < sourceSize; ++j)
+					{
+						moveToStackTop(depth - 1, 1);
+						m_context << eth::Instruction::POP;
+					}
+					// Value grew
+					if (targetSize > sourceSize)
+						moveIntoStack(depth + targetSize - sourceSize, targetSize - sourceSize);
+				}
+			}
+			depth -= sourceSize;
+		}
+		break;
+	}
 	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
@@ -631,18 +680,20 @@ void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 		m_context << eth::dupInstruction(_stackDepth);
 }
 
-void CompilerUtils::moveToStackTop(unsigned _stackDepth)
+void CompilerUtils::moveToStackTop(unsigned _stackDepth, unsigned _itemSize)
 {
 	solAssert(_stackDepth <= 15, "Stack too deep, try removing local variables.");
-	for (unsigned i = 0; i < _stackDepth; ++i)
-		m_context << eth::swapInstruction(1 + i);
+	for (unsigned j = 0; j < _itemSize; ++j)
+		for (unsigned i = 0; i < _stackDepth + _itemSize - 1; ++i)
+			m_context << eth::swapInstruction(1 + i);
 }
 
-void CompilerUtils::moveIntoStack(unsigned _stackDepth)
+void CompilerUtils::moveIntoStack(unsigned _stackDepth, unsigned _itemSize)
 {
 	solAssert(_stackDepth <= 16, "Stack too deep, try removing local variables.");
-	for (unsigned i = _stackDepth; i > 0; --i)
-		m_context << eth::swapInstruction(i);
+	for (unsigned j = 0; j < _itemSize; ++j)
+		for (unsigned i = _stackDepth; i > 0; --i)
+			m_context << eth::swapInstruction(i + _itemSize - 1);
 }
 
 void CompilerUtils::popStackElement(Type const& _type)

@@ -597,13 +597,20 @@ bool Compiler::visit(Break const& _breakStatement)
 bool Compiler::visit(Return const& _return)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _return);
-	//@todo modifications are needed to make this work with functions returning multiple values
 	if (Expression const* expression = _return.expression())
 	{
 		solAssert(_return.annotation().functionReturnParameters, "Invalid return parameters pointer.");
-		VariableDeclaration const& firstVariable = *_return.annotation().functionReturnParameters->parameters().front();
-		compileExpression(*expression, firstVariable.annotation().type);
-		CompilerUtils(m_context).moveToStackVariable(firstVariable);
+		vector<ASTPointer<VariableDeclaration>> const& returnParameters =
+			_return.annotation().functionReturnParameters->parameters();
+		TypePointers types;
+		for (auto const& retVariable: returnParameters)
+			types.push_back(retVariable->annotation().type);
+
+		TypePointer expectedType = types.size() == 1 ? types.front() : make_shared<TupleType>(types);
+		compileExpression(*expression, expectedType);
+
+		for (auto const& retVariable: boost::adaptors::reverse(returnParameters))
+			CompilerUtils(m_context).moveToStackVariable(*retVariable);
 	}
 	for (unsigned i = 0; i < m_stackCleanupForReturn; ++i)
 		m_context << eth::Instruction::POP;

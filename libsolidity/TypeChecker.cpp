@@ -730,7 +730,13 @@ bool TypeChecker::visit(Assignment const& _assignment)
 	requireLValue(_assignment.leftHandSide());
 	TypePointer t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
-	if (t->category() == Type::Category::Mapping)
+	if (TupleType const* tupleType = dynamic_cast<TupleType const*>(t.get()))
+	{
+		// Sequenced assignments of tuples is not valid.
+		_assignment.annotation().type = make_shared<TupleType const>();
+		expectType(_assignment.rightHandSide(), *tupleType);
+	}
+	else if (t->category() == Type::Category::Mapping)
 	{
 		typeError(_assignment, "Mappings cannot be assigned to.");
 		_assignment.rightHandSide().accept(*this);
