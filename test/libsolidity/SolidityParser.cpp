@@ -997,7 +997,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration)
 			function g() returns (uint, uint, uint) {}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseText(text));
+	BOOST_CHECK(successParse(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

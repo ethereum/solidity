@@ -57,12 +57,11 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 		if(!sourceUnit)
 			return make_pair(sourceUnit, nullptr);
 
-		NameAndTypeResolver resolver({}, errors);
+		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
+		NameAndTypeResolver resolver(globalContext->declarations(), errors);
 		solAssert(Error::containsOnlyWarnings(errors), "");
 		resolver.registerDeclarations(*sourceUnit);
 
-		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
-		NameAndTypeResolver resolver(globalContext->declarations());
 		resolver.registerDeclarations(*sourceUnit);
 
 		for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
@@ -81,7 +80,7 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 
 				TypeChecker typeChecker(errors);
 				bool success = typeChecker.checkTypeRequirements(*contract);
-				BOOST_CHECK(success || !typeChecker.errors().empty());
+				BOOST_CHECK(success || !errors.empty());
 
 				for (auto const& currentError: errors)
 				{
@@ -1119,7 +1118,7 @@ BOOST_AUTO_TEST_CASE(anonymous_event_too_many_indexed)
 		contract c {
 			event e(uint indexed a, bytes3 indexed b, bool indexed c, uint indexed d, uint indexed e) anonymous;
 		})";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(event_call)
@@ -1282,13 +1281,8 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
 
 BOOST_AUTO_TEST_CASE(disallow_declaration_of_void_type)
 {
-<<<<<<< HEAD
 	char const* sourceCode = "contract c { function f() { var (x) = f(); } }";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(sourceCode), TypeError);
-=======
-	char const* sourceCode = "contract c { function f() { var x = f(); } }";
 	BOOST_CHECK(parseAndAnalyseReturnErrorType(sourceCode) == Error::Type::TypeError);
->>>>>>> 2cd6509... errors instead of exceptions
 }
 
 BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
@@ -2353,8 +2347,6 @@ BOOST_AUTO_TEST_CASE(non_initialized_references)
 		}
 	)";
 
-	auto b = parseAndAnalyseReturnErrorType(text, true);
-	(void)b;
 	BOOST_CHECK(parseAndAnalyseReturnErrorType(text, true) == Error::Type::Warning);
 }
 
@@ -2366,7 +2358,7 @@ BOOST_AUTO_TEST_CASE(sha3_with_large_integer_constant)
 			function f() { sha3(2**500); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(cyclic_binary_dependency)
@@ -2376,7 +2368,7 @@ BOOST_AUTO_TEST_CASE(cyclic_binary_dependency)
 		contract B { function f() { new C(); } }
 		contract C { function f() { new A(); } }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(cyclic_binary_dependency_via_inheritance)
@@ -2386,7 +2378,7 @@ BOOST_AUTO_TEST_CASE(cyclic_binary_dependency_via_inheritance)
 		contract B { function f() { new C(); } }
 		contract C { function f() { new A(); } }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_fail)
@@ -2394,7 +2386,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_fail)
 	char const* text = R"(
 		contract C { function f() { var (x,y); } }
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fine)
@@ -2425,7 +2417,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_1)
 			function f() { var (a, b, ) = one(); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_2)
 {
@@ -2435,7 +2427,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_2)
 			function f() { var (a, , ) = one(); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_3)
@@ -2446,7 +2438,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_3)
 			function f() { var (, , a) = one(); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_4)
@@ -2457,7 +2449,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_4)
 			function f() { var (, a, b) = one(); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_5)
@@ -2468,7 +2460,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_5)
 			function f() { var (,) = one(); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_6)
@@ -2479,7 +2471,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_6)
 			function f() { var (a, b, c) = two(); }
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(parseAndAnalyseReturnErrorType(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

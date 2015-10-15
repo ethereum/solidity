@@ -127,11 +127,14 @@ string compile(string _input, bool _optimize)
 	{
 		bool succ = compiler.compile(_input, _optimize);
 		for (auto const& error: compiler.errors())
+		{
+			auto err = dynamic_pointer_cast<Error const>(error);
 			errors.append(formatError(
 				*error,
-				(dynamic_pointer_cast<Warning const>(error)) ? "Warning" : "Error",
+				(err->type() == Error::Type::Warning) ? "Warning" : "Error",
 				compiler
 			));
+		}
 		success = succ; // keep success false on exception
 	}
 	catch (Error const& error)

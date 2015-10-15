@@ -26,7 +26,6 @@
 #include <utility>
 #include <libdevcore/Exceptions.h>
 #include <libevmasm/SourceLocation.h>
-#include <libsolidity/Utils.h>
 
 namespace dev
 {
@@ -51,34 +50,10 @@ public:
 		Warning
 	};
 
-	Error(Type _type) :	m_type(_type)
-	{
-		switch(m_type)
-		{
-			case Type::DeclarationError:
-				m_typeName = "Declaration Error";
-				break;
-			case Type::DocstringParsingError:
-				m_typeName = "Docstring Parsing Error";
-				break;
-			case Type::ParserError:
-				m_typeName = "Parser Error";
-				break;
-			case Type::TypeError:
-				m_typeName = "Type Error";
-				break;
-			case Type::Warning:
-				m_typeName = "Warning";
-				break;
-			default:
-				solAssert(false, "");
-				break;
-		}
-	}
+	explicit Error(Type _type);
 
 	Type type() const { return m_type; }
 	std::string const& typeName() const { return m_typeName; }
-
 
 	/// helper functions
 	static Error const* containsErrorOfType(ErrorList const& _list, Error::Type _type)
