@@ -114,18 +114,16 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 	return gasEstimates;
 }
 
-string compile(string _input, bool _optimize)
+string compile(StringMap const& _sources, bool _optimize)
 {
-	StringMap sources;
-	sources[""] = _input;
-
 	Json::Value output(Json::objectValue);
 	Json::Value errors(Json::arrayValue);
 	CompilerStack compiler;
 	bool success = false;
 	try
 	{
-		bool succ = compiler.compile(_input, _optimize);
+		compiler.addSources(_sources);
+		bool succ = compiler.compile(_optimize);
 		for (auto const& error: compiler.errors())
 		{
 			auto err = dynamic_pointer_cast<Error const>(error);
@@ -175,19 +173,52 @@ string compile(string _input, bool _optimize)
 			contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
 			contractData["gasEstimates"] = estimateGas(compiler, contractName);
 			ostringstream unused;
-			contractData["assembly"] = compiler.streamAssembly(unused, contractName, sources, true);
+			contractData["assembly"] = compiler.streamAssembly(unused, contractName, _sources, true);
 			output["contracts"][contractName] = contractData;
 		}
 
 		output["sources"] = Json::Value(Json::objectValue);
-		output["sources"][""] = Json::Value(Json::objectValue);
-		output["sources"][""]["AST"] = ASTJsonConverter(compiler.ast("")).json();
+		for (auto const& source: _sources)
+		{
+			output["sources"][source.first] = Json::Value(Json::objectValue);
+			output["sources"][source.first]["AST"] = ASTJsonConverter(compiler.ast(source.first)).json();
+		}
 	}
 
 	return Json::FastWriter().write(output);
 }
 
-static string outputBuffer;
+string compileMulti(string const& _input, bool _optimize)
+{
+	Json::Reader reader;
+	Json::Value input;
+	if (!reader.parse(_input, input, false))
+	{
+		Json::Value errors(Json::arrayValue);
+		errors.append("Error parsing input JSON: " + reader.getFormattedErrorMessages());
+		Json::Value output(Json::objectValue);
+		output["errors"] = errors;
+		return Json::FastWriter().write(output);
+	}
+	else
+	{
+		StringMap sources;
+		Json::Value jsonSources = input["sources"];
+		if (jsonSources.isObject())
+			for (auto const& sourceName: jsonSources.getMemberNames())
+				sources[sourceName] = jsonSources[sourceName].asString();
+		return compile(sources, _optimize);
+	}
+}
+
+string compileSingle(string const& _input, bool _optimize)
+{
+	StringMap sources;
+	sources[""] = _input;
+	return compile(sources, _optimize);
+}
+
+static string s_outputBuffer;
 
 extern "C"
 {
@@ -197,7 +228,12 @@ extern char const* version()
 }
 extern char const* compileJSON(char const* _input, bool _optimize)
 {
-	outputBuffer = compile(_input, _optimize);
-	return outputBuffer.c_str();
+	s_outputBuffer = compileSingle(_input, _optimize);
+	return s_outputBuffer.c_str();
+}
+extern char const* compileJSONMulti(char const* _input, bool _optimize)
+{
+	s_outputBuffer = compileMulti(_input, _optimize);
+	return s_outputBuffer.c_str();
 }
 }
