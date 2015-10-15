@@ -505,10 +505,7 @@ public:
 	virtual unsigned sizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
-	virtual MemberList const& members() const override
-	{
-		return isString() ? EmptyMemberList : s_arrayTypeMemberList;
-	}
+	virtual MemberList const& members() const override;
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer decodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
@@ -532,7 +529,8 @@ private:
 	TypePointer m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
-	static const MemberList s_arrayTypeMemberList;
+	/// List of member types, will be lazy-initialized because of recursive references.
+	mutable std::unique_ptr<MemberList> m_members;
 };
 
 /**
@@ -736,7 +734,9 @@ public:
 		Event, ///< syntactic sugar for LOG*
 		SetGas, ///< modify the default gas value for the function call
 		SetValue, ///< modify the default value transfer for the function call
-		BlockHash ///< BLOCKHASH
+		BlockHash, ///< BLOCKHASH
+		ArrayPush, ///< .push() to a dynamically sized array in storage
+		ByteArrayPush ///< .push() to a dynamically sized byte array in storage
 	};
 
 	virtual Category category() const override { return Category::Function; }

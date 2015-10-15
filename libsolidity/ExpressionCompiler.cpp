@@ -623,6 +623,44 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			appendExternalFunctionCall(function, arguments);
 			break;
 		}
+		case Location::ByteArrayPush:
+		case Location::ArrayPush:
+		{
+			_functionCall.expression().accept(*this);
+			solAssert(function.parameterTypes().size() == 1, "");
+			solAssert(!!function.parameterTypes()[0], "");
+			TypePointer const& paramType = function.parameterTypes()[0];
+			shared_ptr<ArrayType> arrayType =
+				function.location() == Location::ArrayPush ?
+				make_shared<ArrayType>(DataLocation::Storage, paramType) :
+				make_shared<ArrayType>(DataLocation::Storage);
+			// get the current length
+			ArrayUtils(m_context).retrieveLength(*arrayType);
+			m_context << eth::Instruction::DUP1;
+			// stack: ArrayReference currentLength currentLength
+			m_context << u256(1) << eth::Instruction::ADD;
+			// stack: ArrayReference currentLength newLength
+			m_context << eth::Instruction::DUP3 << eth::Instruction::DUP2;
+			ArrayUtils(m_context).resizeDynamicArray(*arrayType);
+			m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
+			// stack: newLength ArrayReference oldLength
+			ArrayUtils(m_context).accessIndex(*arrayType, false);
+
+			// stack: newLength storageSlot slotOffset
+			arguments[0]->accept(*this);
+			// stack: newLength storageSlot slotOffset argValue
+			TypePointer type = arguments[0]->annotation().type;
+			utils().convertType(*type, *arrayType->baseType());
+			type = arrayType->baseType();
+			utils().moveToStackTop(1 + type->sizeOnStack());
+			utils().moveToStackTop(1 + type->sizeOnStack());
+			// stack: newLength argValue storageSlot slotOffset
+			if (function.location() == Location::ArrayPush)
+				StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+			else
+				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
+			break;
+		}
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid function type."));
 		}
@@ -784,26 +822,37 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	}
 	case Type::Category::Array:
 	{
-		solAssert(member == "length", "Illegal array member.");
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
-		if (!type.isDynamicallySized())
+		if (member == "length")
 		{
-			utils().popStackElement(type);
-			m_context << type.length();
+			if (!type.isDynamicallySized())
+			{
+				utils().popStackElement(type);
+				m_context << type.length();
+			}
+			else
+				switch (type.location())
+				{
+				case DataLocation::CallData:
+					m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+					break;
+				case DataLocation::Storage:
+					setLValue<StorageArrayLength>(_memberAccess, type);
+					break;
+				case DataLocation::Memory:
+					m_context << eth::Instruction::MLOAD;
+					break;
+				}
+		}
+		else if (member == "push")
+		{
+			solAssert(
+				type.isDynamicallySized() && type.location() == DataLocation::Storage,
+				"Tried to use .push() on a non-dynamically sized array"
+			);
 		}
 		else
-			switch (type.location())
-			{
-			case DataLocation::CallData:
-				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
-				break;
-			case DataLocation::Storage:
-				setLValue<StorageArrayLength>(_memberAccess, type);
-				break;
-			case DataLocation::Memory:
-				m_context << eth::Instruction::MLOAD;
-				break;
-			}
+			solAssert(false, "Illegal array member.");
 		break;
 	}
 	default:

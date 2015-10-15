@@ -858,6 +858,28 @@ string ArrayType::canonicalName(bool _addDataLocation) const
 	return ret;
 }
 
+MemberList const& ArrayType::members() const
+{
+	if (!m_members)
+	{
+		MemberList::MemberMap members;
+		if (!isString())
+		{
+			members.push_back({"length", make_shared<IntegerType>(256)});
+			if (isDynamicallySized() && location() == DataLocation::Storage)
+				members.push_back({"push", make_shared<FunctionType>(
+					TypePointers{baseType()},
+					TypePointers{make_shared<IntegerType>(256)},
+					strings{string()},
+					strings{string()},
+					isByteArray() ? FunctionType::Location::ByteArrayPush : FunctionType::Location::ArrayPush
+				)});
+		}
+		m_members.reset(new MemberList(members));
+	}
+	return *m_members;
+}
+
 TypePointer ArrayType::encodingType() const
 {
 	if (location() == DataLocation::Storage)
@@ -912,8 +934,6 @@ TypePointer ArrayType::copyForLocation(DataLocation _location, bool _isPointer) 
 	copy->m_length = m_length;
 	return copy;
 }
-
-const MemberList ArrayType::s_arrayTypeMemberList({{"length", make_shared<IntegerType>(256)}});
 
 bool ContractType::operator==(Type const& _other) const
 {
@@ -1421,6 +1441,8 @@ unsigned FunctionType::sizeOnStack() const
 	else if (location == Location::Bare || location == Location::BareCallCode)
 		size = 1;
 	else if (location == Location::Internal)
+		size = 1;
+	else if (location == Location::ArrayPush || location == Location::ByteArrayPush)
 		size = 1;
 	if (m_gasSet)
 		size++;
