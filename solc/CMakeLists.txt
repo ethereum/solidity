@@ -18,7 +18,7 @@ else()
 endif()
 
 if (EMSCRIPTEN)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS='[\"_compileJSON\",\"_version\"]'")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS='[\"_compileJSON\",\"_version\",\"_compileJSONMulti\"]'")
 	add_executable(soljson jsonCompiler.cpp ${HEADERS})
 	eth_use(soljson REQUIRED Solidity)
 else()
