@@ -311,20 +311,20 @@ void NameAndTypeResolver::reportDeclarationError(
 	m_errors.push_back(err);
 }
 
-void NameAndTypeResolver::reportDeclarationError(SourceLocation _sourceLoction,	string const& _description)
+void NameAndTypeResolver::reportDeclarationError(SourceLocation _sourceLocation, string const& _description)
 {
 	auto err = make_shared<Error>(Error::Type::DeclarationError); // todo remove Error?
-	*err <<	errinfo_sourceLocation(_sourceLoction) << errinfo_comment(_description);
+	*err <<	errinfo_sourceLocation(_sourceLocation) << errinfo_comment(_description);
 
 	m_errors.push_back(err);
 }
 
 void NameAndTypeResolver::reportFatalDeclarationError(
-	SourceLocation _sourceLoction,
-	string _description
+	SourceLocation _sourceLocation,
+	string const& _description
 )
 {
-	reportDeclarationError(_sourceLoction, _description);
+	reportDeclarationError(_sourceLocation, _description);
 	BOOST_THROW_EXCEPTION(FatalError());
 }
 
@@ -511,7 +511,7 @@ string DeclarationRegistrationHelper::currentCanonicalName() const
 }
 
 void DeclarationRegistrationHelper::declarationError(
-	SourceLocation _sourceLoction,
+	SourceLocation _sourceLocation,
 	string const& _description,
 	SourceLocation _secondarySourceLocation,
 	string const& _secondaryDescription
@@ -519,7 +519,7 @@ void DeclarationRegistrationHelper::declarationError(
 {
 	auto err = make_shared<Error>(Error::Type::DeclarationError);
 	*err <<
-		errinfo_sourceLocation(_sourceLoction) <<
+		errinfo_sourceLocation(_sourceLocation) <<
 		errinfo_comment(_description) <<
 		errinfo_secondarySourceLocation(
 			SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
@@ -528,20 +528,20 @@ void DeclarationRegistrationHelper::declarationError(
 	m_errors.push_back(err);
 }
 
-void DeclarationRegistrationHelper::declarationError(SourceLocation _sourceLoction, string const& _description)
+void DeclarationRegistrationHelper::declarationError(SourceLocation _sourceLocation, string const& _description)
 {
 	auto err = make_shared<Error>(Error::Type::DeclarationError);
-	*err <<	errinfo_sourceLocation(_sourceLoction) << errinfo_comment(_description);
+	*err <<	errinfo_sourceLocation(_sourceLocation) << errinfo_comment(_description);
 
 	m_errors.push_back(err);
 }
 
 void DeclarationRegistrationHelper::fatalDeclarationError(
-	SourceLocation _sourceLoction,
+	SourceLocation _sourceLocation,
 	string const& _description
 )
 {
-	declarationError(_sourceLoction, _description);
+	declarationError(_sourceLocation, _description);
 	BOOST_THROW_EXCEPTION(FatalError());
 }
 

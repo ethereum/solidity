@@ -101,9 +101,9 @@ private:
 		std::string const& _secondaryDescription
 	);
 	// creates the Declaration error and adds it in the errors list
-	void reportDeclarationError(SourceLocation _sourceLoction, std::string const& _description);
+	void reportDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
 	// creates the Declaration error and adds it in the errors list and throws FatalError
-	void reportFatalDeclarationError(SourceLocation _sourceLoction, std::string _description);
+	void reportFatalDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
 
 	// creates the Declaration error and adds it in the errors list
 	void reportTypeError(Error _e);
@@ -148,16 +148,16 @@ private:
 	std::string currentCanonicalName() const;
 	// creates the Declaration error and adds it in the errors list
 	void declarationError(
-		SourceLocation _sourceLoction,
+		SourceLocation _sourceLocation,
 		std::string const& _description,
 		SourceLocation _secondarySourceLocation,
 		std::string const& _secondaryDescription
 	);
 
 	// creates the Declaration error and adds it in the errors list
-	void declarationError(SourceLocation _sourceLoction, std::string const& _description);
+	void declarationError(SourceLocation _sourceLocation, std::string const& _description);
 	// creates the Declaration error and adds it in the errors list and throws FatalError
-	void fatalDeclarationError(SourceLocation _sourceLoction, std::string const& _description);
+	void fatalDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
 
 	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
 	Declaration const* m_currentScope;
