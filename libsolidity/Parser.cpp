@@ -1171,8 +1171,8 @@ void Parser::parserError(string const& _description)
 {
 	auto err = make_shared<Error>(Error::Type::ParserError);
 	*err <<
-			errinfo_sourceLocation(SourceLocation(position(), position(), sourceName())) <<
-			errinfo_comment(_description);
+		errinfo_sourceLocation(SourceLocation(position(), position(), sourceName())) <<
+		errinfo_comment(_description);
 
 	m_errors.push_back(err);
 }
