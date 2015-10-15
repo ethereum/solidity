@@ -57,7 +57,7 @@ bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
 	if (!declaration)
 		BOOST_THROW_EXCEPTION(
-			DeclarationError() <<
+			Error(Error::Type::DeclarationError) <<
 			errinfo_sourceLocation(_typeName.location()) <<
 			errinfo_comment("Identifier not found or not unique.")
 		);
@@ -70,7 +70,7 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
 	if (declarations.empty())
 		BOOST_THROW_EXCEPTION(
-			DeclarationError() <<
+			Error(Error::Type::DeclarationError) <<
 			errinfo_sourceLocation(_identifier.location()) <<
 			errinfo_comment("Undeclared identifier.")
 		);

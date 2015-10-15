@@ -42,12 +42,12 @@ namespace solidity
 class TypeChecker: private ASTConstVisitor
 {
 public:
+	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
+	TypeChecker(ErrorList& _errors): m_errors(_errors) {}
+
 	/// Performs type checking on the given contract and all of its sub-nodes.
 	/// @returns true iff all checks passed. Note even if all checks passed, errors() can still contain warnings
 	bool checkTypeRequirements(ContractDefinition const& _contract);
-
-	/// @returns the list of errors and warnings found during type checking.
-	std::vector<std::shared_ptr<Error const>> const& errors() const { return m_errors; }
 
 	/// @returns the type of an expression and asserts that it is present.
 	TypePointer const& type(Expression const& _expression) const;
@@ -55,13 +55,13 @@ public:
 	/// (this can happen for variables with non-explicit types before their types are resolved)
 	TypePointer const& type(VariableDeclaration const& _variable) const;
 
+private:
 	/// Adds a new error to the list of errors.
 	void typeError(ASTNode const& _node, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort type checking.
 	void fatalTypeError(ASTNode const& _node, std::string const& _description);
 
-private:
 	virtual bool visit(ContractDefinition const& _contract) override;
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
@@ -114,7 +114,7 @@ private:
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression);
 
-	std::vector<std::shared_ptr<Error const>> m_errors;
+	ErrorList& m_errors;
 };
 
 }

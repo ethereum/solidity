@@ -243,7 +243,7 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 				if (find(paramNames.begin(), paramNames.end(), pair.first) == paramNames.end())
 					// LTODO: mismatching parameter name, throw some form of warning and not just an exception
 					BOOST_THROW_EXCEPTION(
-						DocstringParsingError() <<
+						Error(Error::Type::DocstringParsingError) <<
 						errinfo_comment("documented parameter \"" + pair.first + "\" not found in the parameter list of the function.")
 					);					
 				params[pair.first] = pair.second;
@@ -310,7 +310,7 @@ string::const_iterator InterfaceHandler::parseDocTagParam(
 	// find param name
 	auto currPos = find(_pos, _end, ' ');
 	if (currPos == _end)
-		BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("End of param name not found" + string(_pos, _end)));
+		BOOST_THROW_EXCEPTION(Error(Error::Type::DocstringParsingError) << errinfo_comment("End of param name not found" + string(_pos, _end)));
 
 
 	auto paramName = string(_pos, currPos);
@@ -369,7 +369,7 @@ string::const_iterator InterfaceHandler::parseDocTag(
 				return parseDocTagLine(_pos, _end, m_author, DocTagType::Author, false);
 			else
 				// LTODO: for now this else makes no sense but later comments will go to more language constructs
-				BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("@author tag is legal only for contracts"));
+				BOOST_THROW_EXCEPTION(Error(Error::Type::DocstringParsingError) << errinfo_comment("@author tag is legal only for contracts"));
 		}
 		else if (_tag == "title")
 		{
@@ -377,13 +377,13 @@ string::const_iterator InterfaceHandler::parseDocTag(
 				return parseDocTagLine(_pos, _end, m_title, DocTagType::Title, false);
 			else
 				// LTODO: Unknown tag, throw some form of warning and not just an exception
-				BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("@title tag is legal only for contracts"));
+				BOOST_THROW_EXCEPTION(Error(Error::Type::DocstringParsingError) << errinfo_comment("@title tag is legal only for contracts"));
 		}
 		else if (_tag == "param")
 			return parseDocTagParam(_pos, _end);
 		else
 			// LTODO: Unknown tag, throw some form of warning and not just an exception
-			BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("Unknown tag " + _tag + " encountered"));
+			BOOST_THROW_EXCEPTION(Error(Error::Type::DocstringParsingError) << errinfo_comment("Unknown tag " + _tag + " encountered"));
 	}
 	else
 		return appendDocTag(_pos, _end, _owner);
@@ -410,13 +410,13 @@ string::const_iterator InterfaceHandler::appendDocTag(
 			return parseDocTagLine(_pos, _end, m_author, DocTagType::Author, true);
 		else
 			// LTODO: Unknown tag, throw some form of warning and not just an exception
-			BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("@author tag in illegal comment"));
+			BOOST_THROW_EXCEPTION(Error(Error::Type::DocstringParsingError) << errinfo_comment("@author tag in illegal comment"));
 	case DocTagType::Title:
 		if (_owner == CommentOwner::Contract)
 			return parseDocTagLine(_pos, _end, m_title, DocTagType::Title, true);
 		else
 			// LTODO: Unknown tag, throw some form of warning and not just an exception
-			BOOST_THROW_EXCEPTION(DocstringParsingError() << errinfo_comment("@title tag in illegal comment"));
+			BOOST_THROW_EXCEPTION(Error(Error::Type::DocstringParsingError) << errinfo_comment("@title tag in illegal comment"));
 	case DocTagType::Param:
 		return appendDocTagParam(_pos, _end);
 	default:
@@ -451,7 +451,7 @@ void InterfaceHandler::parseDocString(string const& _string, CommentOwner _owner
 			auto tagNameEndPos = firstSpaceOrNl(tagPos, end);
 			if (tagNameEndPos == end)
 				BOOST_THROW_EXCEPTION(
-					DocstringParsingError() <<
+					Error(Error::Type::DocstringParsingError) <<
 					errinfo_comment("End of tag " + string(tagPos, tagNameEndPos) + "not found"));
 
 			currPos = parseDocTag(tagNameEndPos + 1, end, string(tagPos + 1, tagNameEndPos), _owner);

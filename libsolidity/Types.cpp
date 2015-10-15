@@ -50,7 +50,7 @@ void StorageOffsets::computeOffsets(TypePointers const& _types)
 			byteOffset = 0;
 		}
 		if (slotOffset >= bigint(1) << 256)
-			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Object too large for storage."));
+			BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Object too large for storage."));
 		offsets[i] = make_pair(u256(slotOffset), byteOffset);
 		solAssert(type->storageSize() >= 1, "Invalid storage size.");
 		if (type->storageSize() == 1 && byteOffset + type->storageBytes() <= 32)
@@ -64,7 +64,7 @@ void StorageOffsets::computeOffsets(TypePointers const& _types)
 	if (byteOffset > 0)
 		++slotOffset;
 	if (slotOffset >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Object too large for storage."));
+		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Object too large for storage."));
 	m_storageSize = u256(slotOffset);
 	swap(m_offsets, offsets);
 }
@@ -805,7 +805,7 @@ u256 ArrayType::storageSize() const
 	else
 		size = bigint(length()) * baseType()->storageSize();
 	if (size >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Array too large for storage."));
+		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Array too large for storage."));
 	return max<u256>(1, u256(size));
 }
 

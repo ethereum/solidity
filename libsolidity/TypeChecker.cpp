@@ -43,14 +43,7 @@ bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
 		if (m_errors.empty())
 			throw; // Something is weird here, rather throw again.
 	}
-	bool success = true;
-	for (auto const& it: m_errors)
-		if (!dynamic_cast<Warning const*>(it.get()))
-		{
-			success = false;
-			break;
-		}
-	return success;
+	return	Error::containsOnlyWarnings(m_errors);
 }
 
 TypePointer const& TypeChecker::type(Expression const& _expression) const
@@ -87,7 +80,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 		{
 			if (fallbackFunction)
 			{
-				auto err = make_shared<DeclarationError>();
+				auto err = make_shared<Error>(Error::Type::DeclarationError);
 				*err << errinfo_comment("Only one fallback function is allowed.");
 				m_errors.push_back(err);
 			}
@@ -143,7 +136,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 		for (; it != functions[_contract.name()].end(); ++it)
 			ssl.append("Another declaration is here:", (*it)->location());
 
-		auto err = make_shared<DeclarationError>();
+		auto err = make_shared<Error>(Error(Error::Type::DeclarationError));
 		*err <<
 			errinfo_sourceLocation(functions[_contract.name()].front()->location()) <<
 			errinfo_comment("More than one constructor defined.") <<
@@ -157,7 +150,7 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 			for (size_t j = i + 1; j < overloads.size(); ++j)
 				if (FunctionType(*overloads[i]).hasEqualArgumentTypes(FunctionType(*overloads[j])))
 				{
-					auto err = make_shared<DeclarationError>();
+					auto err = make_shared<Error>(Error(Error::Type::DeclarationError));
 					*err <<
 						errinfo_sourceLocation(overloads[j]->location()) <<
 						errinfo_comment("Function with same name and arguments defined twice.") <<
@@ -601,7 +594,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		{
 			if (ref->dataStoredIn(DataLocation::Storage))
 			{
-				auto err = make_shared<Warning>();
+				auto err = make_shared<Error>(Error::Type::Warning);
 				*err <<
 					errinfo_sourceLocation(varDecl.location()) <<
 					errinfo_comment("Uninitialized storage pointer. Did you mean '<type> memory " + varDecl.name() + "'?");
@@ -1251,7 +1244,7 @@ void TypeChecker::requireLValue(Expression const& _expression)
 
 void TypeChecker::typeError(ASTNode const& _node, string const& _description)
 {
-	auto err = make_shared<TypeError>();
+	auto err = make_shared<Error>(Error::Type::TypeError);
 	*err <<
 		errinfo_sourceLocation(_node.location()) <<
 		errinfo_comment(_description);

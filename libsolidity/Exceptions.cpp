@@ -15,25 +15,38 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
- * @date 2014
- * Solidity Utilities.
+ * @author Liana <liana@ethdev.com>
+ * @date 2015
+ * Solidity exception hierarchy.
  */
 
-#pragma once
-
-#include <libdevcore/Assertions.h>
 #include <libsolidity/Exceptions.h>
+#include <libsolidity/Utils.h>
 
-namespace dev
+using namespace dev;
+using namespace dev::solidity;
+
+Error::Error(Type _type): m_type(_type)
 {
-namespace solidity
-{
-struct InternalCompilerError;
+	switch(m_type)
+	{
+		case Type::DeclarationError:
+			m_typeName = "Declaration Error";
+			break;
+		case Type::DocstringParsingError:
+			m_typeName = "Docstring Parsing Error";
+			break;
+		case Type::ParserError:
+			m_typeName = "Parser Error";
+			break;
+		case Type::TypeError:
+			m_typeName = "Type Error";
+			break;
+		case Type::Warning:
+			m_typeName = "Warning";
+			break;
+		default:
+			solAssert(false, "");
+			break;
+	}
 }
-}
-
-/// Assertion that throws an InternalCompilerError containing the given description if it is not met.
-#define solAssert(CONDITION, DESCRIPTION) \
-	assertThrow(CONDITION, ::dev::solidity::InternalCompilerError, DESCRIPTION)
-

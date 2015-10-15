@@ -48,21 +48,29 @@ namespace
 
 eth::AssemblyItems compileContract(const string& _sourceCode)
 {
-	Parser parser;
+	ErrorList errors;
+	Parser parser(errors);
 	ASTPointer<SourceUnit> sourceUnit;
 	BOOST_REQUIRE_NO_THROW(sourceUnit = parser.parse(make_shared<Scanner>(CharStream(_sourceCode))));
-	NameAndTypeResolver resolver({});
+	BOOST_CHECK(!!sourceUnit);
+
+	NameAndTypeResolver resolver({}, errors);
+	solAssert(Error::containsOnlyWarnings(errors), "");
 	resolver.registerDeclarations(*sourceUnit);
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
 			BOOST_REQUIRE_NO_THROW(resolver.resolveNamesAndTypes(*contract));
+			if (!Error::containsOnlyWarnings(errors))
+				return AssemblyItems();
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
-			TypeChecker checker;
+			TypeChecker checker(errors);
 			BOOST_REQUIRE_NO_THROW(checker.checkTypeRequirements(*contract));
+			if (!Error::containsOnlyWarnings(errors))
+				return AssemblyItems();
 		}
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))

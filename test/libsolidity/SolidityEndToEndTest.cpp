@@ -4705,7 +4705,7 @@ BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
 	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
 	"}\n";
 
-	compileRequireThrow<DocstringParsingError>(sourceCode);
+	compileRequireError(sourceCode, Error::Type::DocstringParsingError);
 }
 
 BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
@@ -4717,7 +4717,7 @@ BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
 	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
 	"}\n";
 
-	compileRequireThrow<DocstringParsingError>(sourceCode);
+	compileRequireError(sourceCode, Error::Type::DocstringParsingError);
 }
 
 

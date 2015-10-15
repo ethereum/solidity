@@ -137,7 +137,7 @@ ModifierDefinition const& CompilerContext::functionModifier(string const& _name)
 			if (modifier->name() == _name)
 				return *modifier.get();
 	BOOST_THROW_EXCEPTION(InternalCompilerError()
-						  << errinfo_comment("Function modifier " + _name + " not found."));
+		<< errinfo_comment("Function modifier " + _name + " not found."));
 }
 
 unsigned CompilerContext::baseStackOffsetOfVariable(Declaration const& _declaration) const

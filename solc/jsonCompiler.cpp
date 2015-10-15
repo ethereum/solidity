@@ -127,24 +127,19 @@ string compile(string _input, bool _optimize)
 	{
 		bool succ = compiler.compile(_input, _optimize);
 		for (auto const& error: compiler.errors())
+		{
+			auto err = dynamic_pointer_cast<Error const>(error);
 			errors.append(formatError(
 				*error,
-				(dynamic_pointer_cast<Warning const>(error)) ? "Warning" : "Error",
+				(err->type() == Error::Type::Warning) ? "Warning" : "Error",
 				compiler
 			));
+		}
 		success = succ; // keep success false on exception
 	}
-	catch (ParserError const& exception)
+	catch (Error const& error)
 	{
-		errors.append(formatError(exception, "Parser error", compiler));
-	}
-	catch (DeclarationError const& exception)
-	{
-		errors.append(formatError(exception, "Declaration error", compiler));
-	}
-	catch (TypeError const& exception)
-	{
-		errors.append(formatError(exception, "Type error", compiler));
+		errors.append(formatError(error, error.typeName(), compiler));
 	}
 	catch (CompilerError const& exception)
 	{
@@ -153,10 +148,6 @@ string compile(string _input, bool _optimize)
 	catch (InternalCompilerError const& exception)
 	{
 		errors.append(formatError(exception, "Internal compiler error", compiler));
-	}
-	catch (DocstringParsingError const& exception)
-	{
-		errors.append(formatError(exception, "Documentation parsing error", compiler));
 	}
 	catch (Exception const& exception)
 	{

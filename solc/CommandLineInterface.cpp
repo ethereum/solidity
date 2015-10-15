@@ -496,26 +496,11 @@ bool CommandLineInterface::processInput()
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
 				*error,
-				(dynamic_pointer_cast<Warning const>(error)) ? "Warning" : "Error", *m_compiler
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error", *m_compiler
 			);
 		if (!successful)
 			return false;
 		m_compiler->link(m_libraries);
-	}
-	catch (ParserError const& _exception)
-	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Parser error", *m_compiler);
-		return false;
-	}
-	catch (DeclarationError const& _exception)
-	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Declaration error", *m_compiler);
-		return false;
-	}
-	catch (TypeError const& _exception)
-	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Type error", *m_compiler);
-		return false;
 	}
 	catch (CompilerError const& _exception)
 	{
@@ -528,9 +513,13 @@ bool CommandLineInterface::processInput()
 			 << boost::diagnostic_information(_exception);
 		return false;
 	}
-	catch (DocstringParsingError const& _exception)
+	catch (Error const& _error)
 	{
-		cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_exception) << endl;
+		if (_error.type() == Error::Type::DocstringParsingError)
+			cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
+		else
+			SourceReferenceFormatter::printExceptionInformation(cerr, _error, _error.typeName(), *m_compiler);
+
 		return false;
 	}
 	catch (Exception const& _exception)

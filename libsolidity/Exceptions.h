@@ -31,17 +31,54 @@ namespace dev
 {
 namespace solidity
 {
-struct Error: virtual Exception {};
-
-struct ParserError: virtual Error {};
-struct TypeError: virtual Error {};
-struct DeclarationError: virtual Error {};
-struct DocstringParsingError: virtual Error {};
-struct Warning: virtual Error {};
+class Error;
+using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
 struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
 struct FatalError: virtual Exception {};
+
+class Error: virtual public Exception
+{
+public:
+	enum class Type
+	{
+		DeclarationError,
+		DocstringParsingError,
+		ParserError,
+		TypeError,
+		Warning
+	};
+
+	explicit Error(Type _type);
+
+	Type type() const { return m_type; }
+	std::string const& typeName() const { return m_typeName; }
+
+	/// helper functions
+	static Error const* containsErrorOfType(ErrorList const& _list, Error::Type _type)
+	{
+		for (auto e: _list)
+		{
+			if (e->type() == _type)
+				return e.get();
+		}
+		return nullptr;
+	}
+	static bool containsOnlyWarnings(ErrorList const& _list)
+	{
+		for (auto e: _list)
+		{
+			if (e->type() != Type::Warning)
+				return false;
+		}
+		return true;
+	}
+private:
+	Type m_type;
+	std::string m_typeName;
+};
+
 
 using errorSourceLocationInfo = std::pair<std::string, SourceLocation>;
 
@@ -55,6 +92,7 @@ public:
 	}
 	std::vector<errorSourceLocationInfo> infos;
 };
+
 
 using errinfo_sourceLocation = boost::error_info<struct tag_sourceLocation, SourceLocation>;
 using errinfo_secondarySourceLocation = boost::error_info<struct tag_secondarySourceLocation, SecondarySourceLocation>;
