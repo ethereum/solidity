@@ -97,7 +97,9 @@ void CompilerStack::setSource(string const& _sourceCode)
 
 bool CompilerStack::parse()
 {
+	//reset
 	m_errors.clear();
+	m_parseSuccessful = false;
 
 	for (auto& sourcePair: m_sources)
 	{
@@ -114,7 +116,9 @@ bool CompilerStack::parse()
 	bool success = true;
 	NameAndTypeResolver resolver(m_globalContext->declarations(), m_errors);
 	for (Source const* source: m_sourceOrder)
-		success = success && resolver.registerDeclarations(*source->ast);
+		if (!resolver.registerDeclarations(*source->ast))
+			return false;
+
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))

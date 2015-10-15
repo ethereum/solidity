@@ -296,17 +296,25 @@ vector<_T const*> NameAndTypeResolver::cThreeMerge(list<list<_T const*>>& _toMer
 void NameAndTypeResolver::reportDeclarationError(
 	SourceLocation _sourceLoction,
 	string const& _description,
-	SourceLocation _secondarySourceLocation = SourceLocation(),
-	string const& _secondaryDescription = ""
+	SourceLocation _secondarySourceLocation,
+	string const& _secondaryDescription
 )
 {
 	auto err = make_shared<Error>(Error::Type::DeclarationError); // todo remove Error?
 	*err <<
-			errinfo_sourceLocation(_sourceLoction) <<
-			errinfo_comment(_description) <<
-			errinfo_secondarySourceLocation(
-				SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
-			);
+		errinfo_sourceLocation(_sourceLoction) <<
+		errinfo_comment(_description) <<
+		errinfo_secondarySourceLocation(
+			SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
+		);
+
+	m_errors.push_back(err);
+}
+
+void NameAndTypeResolver::reportDeclarationError(SourceLocation _sourceLoction,	string const& _description)
+{
+	auto err = make_shared<Error>(Error::Type::DeclarationError); // todo remove Error?
+	*err <<	errinfo_sourceLocation(_sourceLoction) << errinfo_comment(_description);
 
 	m_errors.push_back(err);
 }
@@ -330,7 +338,6 @@ void NameAndTypeResolver::reportFatalTypeError(Error _e)
 	reportTypeError(_e);
 	BOOST_THROW_EXCEPTION(FatalError());
 }
-
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	map<ASTNode const*, DeclarationContainer>& _scopes,
@@ -506,17 +513,25 @@ string DeclarationRegistrationHelper::currentCanonicalName() const
 void DeclarationRegistrationHelper::declarationError(
 	SourceLocation _sourceLoction,
 	string const& _description,
-	SourceLocation _secondarySourceLocation = SourceLocation(),
-	string const& _secondaryDescription = ""
+	SourceLocation _secondarySourceLocation,
+	string const& _secondaryDescription
 )
 {
 	auto err = make_shared<Error>(Error::Type::DeclarationError);
 	*err <<
-			errinfo_sourceLocation(_sourceLoction) <<
-			errinfo_comment(_description) <<
-			errinfo_secondarySourceLocation(
-				SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
-			);
+		errinfo_sourceLocation(_sourceLoction) <<
+		errinfo_comment(_description) <<
+		errinfo_secondarySourceLocation(
+			SecondarySourceLocation().append(_secondaryDescription, _secondarySourceLocation)
+		);
+
+	m_errors.push_back(err);
+}
+
+void DeclarationRegistrationHelper::declarationError(SourceLocation _sourceLoction, string const& _description)
+{
+	auto err = make_shared<Error>(Error::Type::DeclarationError);
+	*err <<	errinfo_sourceLocation(_sourceLoction) << errinfo_comment(_description);
 
 	m_errors.push_back(err);
 }

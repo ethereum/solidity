@@ -60,7 +60,7 @@ public:
 	{
 		for (auto e: _list)
 		{
-			if(e->type() == _type)
+			if (e->type() == _type)
 				return e.get();
 		}
 		return nullptr;
@@ -69,7 +69,7 @@ public:
 	{
 		for (auto e: _list)
 		{
-			if(e->type() != Type::Warning)
+			if (e->type() != Type::Warning)
 				return false;
 		}
 		return true;

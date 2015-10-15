@@ -100,6 +100,8 @@ private:
 		SourceLocation _secondarySourceLocation,
 		std::string const& _secondaryDescription
 	);
+	// creates the Declaration error and adds it in the errors list
+	void reportDeclarationError(SourceLocation _sourceLoction, std::string const& _description);
 	// creates the Declaration error and adds it in the errors list and throws FatalError
 	void reportFatalDeclarationError(SourceLocation _sourceLoction, std::string _description);
 
@@ -151,6 +153,9 @@ private:
 		SourceLocation _secondarySourceLocation,
 		std::string const& _secondaryDescription
 	);
+
+	// creates the Declaration error and adds it in the errors list
+	void declarationError(SourceLocation _sourceLoction, std::string const& _description);
 	// creates the Declaration error and adds it in the errors list and throws FatalError
 	void fatalDeclarationError(SourceLocation _sourceLoction, std::string const& _description);
 
