@@ -97,7 +97,6 @@ void CompilerStack::setSource(string const& _sourceCode)
 
 bool CompilerStack::parse()
 {
-	// todo not sure about clear. can contain warnings
 	m_errors.clear();
 
 	for (auto& sourcePair: m_sources)
