@@ -62,8 +62,6 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 		solAssert(Error::containsOnlyWarnings(errors), "");
 		resolver.registerDeclarations(*sourceUnit);
 
-		resolver.registerDeclarations(*sourceUnit);
-
 		for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			{
