@@ -218,7 +218,7 @@ string compileSingle(string const& _input, bool _optimize)
 	return compile(sources, _optimize);
 }
 
-static string outputBuffer;
+static string s_outputBuffer;
 
 extern "C"
 {
@@ -228,12 +228,12 @@ extern char const* version()
 }
 extern char const* compileJSON(char const* _input, bool _optimize)
 {
-	outputBuffer = compileSingle(_input, _optimize);
-	return outputBuffer.c_str();
+	s_outputBuffer = compileSingle(_input, _optimize);
+	return s_outputBuffer.c_str();
 }
 extern char const* compileJSONMulti(char const* _input, bool _optimize)
 {
-	outputBuffer = compileMulti(_input, _optimize);
-	return outputBuffer.c_str();
+	s_outputBuffer = compileMulti(_input, _optimize);
+	return s_outputBuffer.c_str();
 }
 }
