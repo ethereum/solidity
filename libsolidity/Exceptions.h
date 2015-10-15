@@ -36,7 +36,7 @@ using ErrorList = std::vector<std::shared_ptr<Error const>>;
 
 struct CompilerError: virtual Exception {};
 struct InternalCompilerError: virtual Exception {};
-struct fatalError: virtual Exception {}; //todo rename to FatalError
+struct FatalError: virtual Exception {};
 
 class Error: virtual public Exception
 {

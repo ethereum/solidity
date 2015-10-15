@@ -15,7 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /**
- * @author Christian <c@ethdev.com>
+ * @author Liana <liana@ethdev.com>
  * @date 2015
  * Solidity exception hierarchy.
  */
@@ -26,7 +26,7 @@
 using namespace dev;
 using namespace dev::solidity;
 
-Error::Error(Error::Type _type): m_type(_type)
+Error::Error(Type _type): m_type(_type)
 {
 	switch(m_type)
 	{

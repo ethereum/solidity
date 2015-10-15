@@ -60,7 +60,7 @@ bool successParse(std::string const& _source)
 		if(!sourceUnit)
 			return false;
 	}
-	catch (fatalError const& _exception)
+	catch (FatalError const& _exception)
 	{
 		if (Error::containsErrorOfType(errors, Error::Type::ParserError))
 			return false;

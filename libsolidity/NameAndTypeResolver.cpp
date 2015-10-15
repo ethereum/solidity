@@ -49,7 +49,7 @@ bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
 	{
 		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errors);
 	}
-	catch (fatalError)
+	catch (FatalError)
 	{
 		return false;
 	}
@@ -122,7 +122,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			);
 		}
 	}
-	catch (fatalError const& _e)
+	catch (FatalError const& _e)
 	{
 		return false;
 	}
@@ -136,7 +136,7 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 		m_scopes[nullptr].registerDeclaration(_declaration, false, true);
 		solAssert(_declaration.scope() == nullptr, "Updated declaration outside global scope.");
 	}
-	catch(fatalError _error)
+	catch(FatalError _error)
 	{
 		return false;
 	}
@@ -317,7 +317,7 @@ void NameAndTypeResolver::reportFatalDeclarationError(
 )
 {
 	reportDeclarationError(_sourceLoction, _description);
-	BOOST_THROW_EXCEPTION(fatalError());
+	BOOST_THROW_EXCEPTION(FatalError());
 }
 
 void NameAndTypeResolver::reportTypeError(Error _e)
@@ -328,7 +328,7 @@ void NameAndTypeResolver::reportTypeError(Error _e)
 void NameAndTypeResolver::reportFatalTypeError(Error _e)
 {
 	reportTypeError(_e);
-	BOOST_THROW_EXCEPTION(fatalError());
+	BOOST_THROW_EXCEPTION(FatalError());
 }
 
 
@@ -527,7 +527,7 @@ void DeclarationRegistrationHelper::fatalDeclarationError(
 )
 {
 	declarationError(_sourceLoction, _description);
-	BOOST_THROW_EXCEPTION(fatalError());
+	BOOST_THROW_EXCEPTION(FatalError());
 }
 
 }

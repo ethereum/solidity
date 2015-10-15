@@ -101,11 +101,21 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 	return make_pair(sourceUnit, nullptr);
 }
 
-ASTPointer<SourceUnit> parseAndAnalyse(string const& _source)
+ASTPointer<SourceUnit> createSourceUnit(string const& _source)
 {
 	auto sourceAndError = parseAnalyseAndReturnError(_source);
 	BOOST_REQUIRE(!!sourceAndError.first);
+	BOOST_REQUIRE(!sourceAndError.second);
 	return sourceAndError.first;
+}
+
+bool successResolving(std::string const& _source)
+{
+	auto sourceAndError = parseAnalyseAndReturnError(_source);
+
+	if (sourceAndError.second && *sourceAndError.second == Error::Type::TypeError)
+		return false;
+	return true;
 }
 
 Error::Type parseAndAnalyseReturnErrorType(std::string const& _source, bool _warning = false)
@@ -146,7 +156,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 					   "  uint256 stateVariable1;\n"
 					   "  function fun(uint256 arg1) { uint256 y; }"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
@@ -181,7 +191,7 @@ BOOST_AUTO_TEST_CASE(name_shadowing)
 					   "  uint256 variable;\n"
 					   "  function f() { uint32 variable ; }"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(name_references)
@@ -190,7 +200,7 @@ BOOST_AUTO_TEST_CASE(name_references)
 					   "  uint256 variable;\n"
 					   "  function f(uint256 arg) returns (uint out) { f(variable); test; out; }"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(undeclared_name)
@@ -208,7 +218,7 @@ BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
 					   "  function g() { f(); }"
 					   "  function f() {  }"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(struct_definition_directly_recursive)
@@ -245,7 +255,7 @@ BOOST_AUTO_TEST_CASE(struct_definition_not_really_recursive)
 			struct s2 { s1 x; s1 y; }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(struct_definition_recursion_via_mapping)
@@ -257,7 +267,7 @@ BOOST_AUTO_TEST_CASE(struct_definition_recursion_via_mapping)
 					   "    mapping(uint => MyStructName1) x;\n"
 					   "  }\n"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(type_inference_smoke_test)
@@ -265,7 +275,7 @@ BOOST_AUTO_TEST_CASE(type_inference_smoke_test)
 	char const* text = "contract test {\n"
 					   "  function f(uint256 arg1, uint32 arg2) returns (bool ret) { var x = arg1 + arg2 == 8; ret = x; }"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(type_checking_return)
@@ -273,7 +283,7 @@ BOOST_AUTO_TEST_CASE(type_checking_return)
 	char const* text = "contract test {\n"
 					   "  function f() returns (bool r) { return 1 >= 2; }"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(type_checking_return_wrong_number)
@@ -298,7 +308,7 @@ BOOST_AUTO_TEST_CASE(type_checking_function_call)
 					   "  function f() returns (bool r) { return g(12, true) == 3; }\n"
 					   "  function g(uint256 a, bool b) returns (uint256 r) { }\n"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(type_conversion_for_comparison)
@@ -306,7 +316,7 @@ BOOST_AUTO_TEST_CASE(type_conversion_for_comparison)
 	char const* text = "contract test {\n"
 					   "  function f() { uint32(2) == int64(2); }"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(type_conversion_for_comparison_invalid)
@@ -322,7 +332,7 @@ BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 	char const* text = "contract test {\n"
 					   "  function f() returns (int256 r) { var x = int256(uint32(2)); return x; }"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(large_string_literal)
@@ -330,7 +340,7 @@ BOOST_AUTO_TEST_CASE(large_string_literal)
 	char const* text = "contract test {\n"
 					   "  function f() { var x = \"123456789012345678901234567890123\"; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(balance)
@@ -340,7 +350,7 @@ BOOST_AUTO_TEST_CASE(balance)
 					   "    uint256 x = address(0).balance;\n"
 					   "  }\n"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(balance_invalid)
@@ -380,7 +390,7 @@ BOOST_AUTO_TEST_CASE(assignment_to_struct)
 					   "    data = a;\n"
 					   "  }\n"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(returns_in_constructor)
@@ -404,7 +414,7 @@ BOOST_AUTO_TEST_CASE(forward_function_reference)
 					   "    if (First(2).fun() == true) return 1;\n"
 					   "  }\n"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
@@ -414,7 +424,7 @@ BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 					   "    return 1 & 2 == 8 & 9 && 1 ^ 2 < 4 | 6;\n"
 					   "  }\n"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(function_no_implementation)
@@ -423,7 +433,7 @@ BOOST_AUTO_TEST_CASE(function_no_implementation)
 	char const* text = "contract test {\n"
 		"  function functionName(bytes32 input) returns (bytes32 out);\n"
 		"}\n";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = createSourceUnit(text), "Parsing and name Resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	ContractDefinition* contract = dynamic_cast<ContractDefinition*>(nodes[0].get());
 	BOOST_CHECK(contract);
@@ -438,7 +448,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 		contract base { function foo(); }
 		contract derived is base { function foo() {} }
 		)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = createSourceUnit(text), "Parsing and name Resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[0].get());
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
@@ -457,7 +467,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
 		contract base { function foo(bool); }
 		contract derived is base { function foo(uint) {} }
 		)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = createSourceUnit(text), "Parsing and name Resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[0].get());
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
@@ -491,7 +501,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_optional)
 			function foo() {}
 		}
 		)";
-	ETH_TEST_REQUIRE_NO_THROW(parseAndAnalyse(text), "Parsing and name resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(createSourceUnit(text), "Parsing and name resolving failed");
 }
 
 BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_not_provided)
@@ -505,7 +515,7 @@ BOOST_AUTO_TEST_CASE(abstract_contract_constructor_args_not_provided)
 			function foo() {}
 		}
 		)";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = createSourceUnit(text), "Parsing and name resolving failed");
 	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
 	BOOST_CHECK_EQUAL(nodes.size(), 3);
 	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[2].get());
@@ -532,7 +542,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature)
 					   "    ret = arg1 + arg2;\n"
 					   "  }\n"
 					   "}\n";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = createSourceUnit(text), "Parsing and name Resolving failed");
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -549,7 +559,7 @@ BOOST_AUTO_TEST_CASE(function_canonical_signature_type_aliases)
 					   "    ret = 5;\n"
 					   "  }\n"
 					   "}\n";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = createSourceUnit(text), "Parsing and name Resolving failed");
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -572,7 +582,7 @@ BOOST_AUTO_TEST_CASE(function_external_types)
 			   ret = 5;
 			}
 		})";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = createSourceUnit(text), "Parsing and name Resolving failed");
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -594,7 +604,7 @@ BOOST_AUTO_TEST_CASE(enum_external_type)
 				ret = 5;
 			}
 		})";
-	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name Resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = createSourceUnit(text), "Parsing and name Resolving failed");
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 		{
@@ -616,7 +626,7 @@ BOOST_AUTO_TEST_CASE(function_external_call_allowed_conversion)
 			}
 			function g (C c) external {}
 	})";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(function_external_call_not_allowed_conversion)
@@ -646,7 +656,7 @@ BOOST_AUTO_TEST_CASE(function_internal_allowed_conversion)
 				g(a);
 			}
 	})";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(function_internal_not_allowed_conversion)
@@ -685,7 +695,7 @@ BOOST_AUTO_TEST_CASE(inheritance_basic)
 			function f() { baseMember = 7; }
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
@@ -698,7 +708,7 @@ BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
 			function g() { f(); rootFunction(); }
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(cyclic_inheritance)
@@ -716,7 +726,7 @@ BOOST_AUTO_TEST_CASE(legal_override_direct)
 		contract B { function f() {} }
 		contract C is B { function f(uint i) {} }
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(legal_override_indirect)
@@ -726,7 +736,7 @@ BOOST_AUTO_TEST_CASE(legal_override_indirect)
 		contract B { function f() {} }
 		contract C is A, B { }
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(illegal_override_visibility)
@@ -754,7 +764,7 @@ BOOST_AUTO_TEST_CASE(complex_inheritance)
 		contract B { function f() {} function g() returns (uint8 r) {} }
 		contract C is A, B { }
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(constructor_visibility)
@@ -764,7 +774,7 @@ BOOST_AUTO_TEST_CASE(constructor_visibility)
 		contract A { function A() { } }
 		contract B is A { function f() { A x = A(0); } }
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(overriding_constructor)
@@ -774,7 +784,7 @@ BOOST_AUTO_TEST_CASE(overriding_constructor)
 		contract A { function A() { } }
 		contract B is A { function A() returns (uint8 r) {} }
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(missing_base_constructor_arguments)
@@ -783,7 +793,7 @@ BOOST_AUTO_TEST_CASE(missing_base_constructor_arguments)
 		contract A { function A(uint a) { } }
 		contract B is A { }
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
@@ -792,7 +802,7 @@ BOOST_AUTO_TEST_CASE(base_constructor_arguments_override)
 		contract A { function A(uint a) { } }
 		contract B is A { }
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
@@ -803,7 +813,7 @@ BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
 			function f() { A a = B(1); }
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
@@ -826,7 +836,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 			modifier mod2(bytes7 a) { while (a == "1234567") _ }
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_function_modifier_type)
@@ -849,7 +859,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
 			modifier mod2(bytes7 a) { while (a == "1234567") _ }
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
@@ -860,7 +870,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 			modifier mod(uint a) { if (a > 0) _ }
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(legal_modifier_override)
@@ -869,7 +879,7 @@ BOOST_AUTO_TEST_CASE(legal_modifier_override)
 		contract A { modifier mod(uint a) {} }
 		contract B is A { modifier mod(uint a) {} }
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(illegal_modifier_override)
@@ -923,7 +933,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
-	ETH_TEST_CHECK_NO_THROW(source = parseAndAnalyse(text), "Parsing and Resolving names failed");
+	ETH_TEST_CHECK_NO_THROW(source = createSourceUnit(text), "Parsing and Resolving names failed");
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
@@ -973,7 +983,7 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
-	ETH_TEST_CHECK_NO_THROW(source = parseAndAnalyse(text), "Parsing and Resolving names failed");
+	ETH_TEST_CHECK_NO_THROW(source = createSourceUnit(text), "Parsing and Resolving names failed");
 	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function;
 	function = retrieveFunctionBySignature(contract, "foo()");
@@ -991,7 +1001,7 @@ BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
 					   "contract Child is Parent{\n"
 					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
@@ -1002,7 +1012,7 @@ BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
 					   "contract Child is Parent{\n"
 					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
 					   "}\n";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(state_variable_member_of_wrong_class1)
@@ -1042,7 +1052,7 @@ BOOST_AUTO_TEST_CASE(fallback_function)
 			function() { x = 2; }
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_with_arguments)
@@ -1079,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(fallback_function_inheritance)
 			function() { x = 2; }
 		}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(event)
@@ -1089,7 +1099,7 @@ BOOST_AUTO_TEST_CASE(event)
 			event e(uint indexed a, bytes3 indexed s, bool indexed b);
 			function f() { e(2, "abc", true); }
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(event_too_many_indexed)
@@ -1107,7 +1117,7 @@ BOOST_AUTO_TEST_CASE(anonymous_event_four_indexed)
 		contract c {
 			event e(uint indexed a, bytes3 indexed b, bool indexed c, uint indexed d) anonymous;
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(anonymous_event_too_many_indexed)
@@ -1126,7 +1136,7 @@ BOOST_AUTO_TEST_CASE(event_call)
 			event e(uint a, bytes3 indexed s, bool indexed b);
 			function f() { e(2, "abc", true); }
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(event_inheritance)
@@ -1138,7 +1148,7 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 		contract c is base {
 			function f() { e(2, "abc", true); }
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
@@ -1148,7 +1158,7 @@ BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
 			event e1(uint a, uint e1, uint e2);
 			event e2(uint a, uint e1, uint e2);
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
@@ -1160,7 +1170,7 @@ BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
 		contract d {
 			function g() { c(0).f(); }
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(access_to_internal_function)
@@ -1196,7 +1206,7 @@ BOOST_AUTO_TEST_CASE(access_to_internal_state_variable)
 		contract d {
 			function g() { c(0).a(); }
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(error_count_in_named_args)
@@ -1242,7 +1252,7 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
 			function f(uint){
 		}
 	})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
@@ -1252,7 +1262,7 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 			function f() returns(bool){
 		}
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
@@ -1263,7 +1273,7 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 				return k;
 		}
 	})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
@@ -1293,7 +1303,7 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 			}
 			uint256 a;
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(sourceCodeFine),
+	ETH_TEST_CHECK_NO_THROW(createSourceUnit(sourceCodeFine),
 		"Parsing and Resolving names failed");
 	char const* sourceCode = R"(
 		contract c {
@@ -1336,7 +1346,7 @@ BOOST_AUTO_TEST_CASE(enum_member_access)
 				ActionChoices choices;
 			}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
@@ -1368,7 +1378,7 @@ BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
 				uint64 b;
 			}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
@@ -1385,7 +1395,7 @@ BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
 				ActionChoices b;
 			}
 	)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
@@ -1505,7 +1515,7 @@ BOOST_AUTO_TEST_CASE(test_for_bug_override_function_with_bytearray_type)
 			function f(bytes _a) external returns (uint256 r) {r = 42;}
 		}
 		)";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(sourceCode), "Parsing and Name Resolving failed");
+	ETH_TEST_CHECK_NO_THROW(createSourceUnit(sourceCode), "Parsing and Name Resolving failed");
 }
 
 BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
@@ -1547,7 +1557,7 @@ BOOST_AUTO_TEST_CASE(array_copy_with_different_types_conversion_possible)
 			uint8[] b;
 			function f() { a = b; }
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(array_copy_with_different_types_static_dynamic)
@@ -1558,7 +1568,7 @@ BOOST_AUTO_TEST_CASE(array_copy_with_different_types_static_dynamic)
 			uint8[80] b;
 			function f() { a = b; }
 		})";
-	ETH_TEST_CHECK_NO_THROW(parseAndAnalyse(text), "Parsing and Name Resolving Failed");
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(array_copy_with_different_types_dynamic_static)
@@ -1702,7 +1712,7 @@ BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
 			bytes arr;
 			function f() { byte a = arr[0];}
 		})";
-	ETH_TEST_REQUIRE_NO_THROW(parseAndAnalyse(text), "Type resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(createSourceUnit(text), "Type resolving failed");
 }
 
 BOOST_AUTO_TEST_CASE(assigning_value_to_const_variable)
@@ -1767,7 +1777,7 @@ BOOST_AUTO_TEST_CASE(assignment_of_nonoverloaded_function)
 			function g() returns(uint) { var x = f; return x(7); }
 		}
 	)";
-	ETH_TEST_REQUIRE_NO_THROW(parseAndAnalyse(sourceCode), "Type resolving failed");
+	ETH_TEST_REQUIRE_NO_THROW(createSourceUnit(sourceCode), "Type resolving failed");
 }
 
 BOOST_AUTO_TEST_CASE(assignment_of_overloaded_function)
@@ -1849,7 +1859,7 @@ BOOST_AUTO_TEST_CASE(string)
 			function f(string x) external { s = x; }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(string_index)
@@ -1891,7 +1901,7 @@ BOOST_AUTO_TEST_CASE(negative_integers_to_signed_min)
 			int8 public i = -128;
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(positive_integers_to_signed_out_of_bound)
@@ -1911,7 +1921,7 @@ BOOST_AUTO_TEST_CASE(positive_integers_to_signed_out_of_bound_max)
 			int8 public j = 127;
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(negative_integers_to_unsigned)
@@ -1993,7 +2003,7 @@ BOOST_AUTO_TEST_CASE(storage_location_local_variables)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(no_mappings_in_memory_array)
@@ -2063,7 +2073,7 @@ BOOST_AUTO_TEST_CASE(assignment_mem_storage_variable_directly)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(function_argument_mem_to_storage)
@@ -2091,7 +2101,7 @@ BOOST_AUTO_TEST_CASE(function_argument_storage_to_mem)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(mem_array_assignment_changes_base_type)
@@ -2145,7 +2155,7 @@ BOOST_AUTO_TEST_CASE(struct_constructor)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(struct_constructor_nested)
@@ -2160,7 +2170,7 @@ BOOST_AUTO_TEST_CASE(struct_constructor_nested)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(struct_named_constructor)
@@ -2173,7 +2183,7 @@ BOOST_AUTO_TEST_CASE(struct_named_constructor)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(sourceCode));
+	BOOST_CHECK_NO_THROW(createSourceUnit(sourceCode));
 }
 
 BOOST_AUTO_TEST_CASE(literal_strings)
@@ -2186,7 +2196,7 @@ BOOST_AUTO_TEST_CASE(literal_strings)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(invalid_integer_literal_fraction)
@@ -2242,7 +2252,7 @@ BOOST_AUTO_TEST_CASE(string_bytes_conversion)
 			function m() internal { string(b); }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(inheriting_from_library)
@@ -2276,7 +2286,7 @@ BOOST_AUTO_TEST_CASE(valid_library)
 	char const* text = R"(
 		library Lib { uint constant x = 9; }
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(call_to_library_function)
@@ -2292,7 +2302,7 @@ BOOST_AUTO_TEST_CASE(call_to_library_function)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(creating_contract_within_the_contract)
@@ -2404,7 +2414,7 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fine)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(successResolving(text));
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_1)

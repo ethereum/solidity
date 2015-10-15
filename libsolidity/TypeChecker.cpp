@@ -36,7 +36,7 @@ bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
 	{
 		visit(_contract);
 	}
-	catch (fatalError const&)
+	catch (FatalError const&)
 	{
 		// We got a fatal error which required to stop further type checking, but we can
 		// continue normally from here.
@@ -1268,5 +1268,5 @@ void TypeChecker::typeError(ASTNode const& _node, string const& _description)
 void TypeChecker::fatalTypeError(ASTNode const& _node, string const& _description)
 {
 	typeError(_node, _description);
-	BOOST_THROW_EXCEPTION(fatalError());
+	BOOST_THROW_EXCEPTION(FatalError());
 }

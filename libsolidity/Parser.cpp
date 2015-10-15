@@ -87,7 +87,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		}
 		return nodeFactory.createNode<SourceUnit>(nodes);
 	}
-	catch(fatalError const& _error)
+	catch(FatalError const& _error)
 	{
 		return nullptr;
 	}
@@ -1179,7 +1179,7 @@ void Parser::parserError(string const& _description)
 void Parser::fatalParserError(string const& _description)
 {
 	parserError(_description);
-	BOOST_THROW_EXCEPTION(fatalError());
+	BOOST_THROW_EXCEPTION(FatalError());
 }
 
 }
