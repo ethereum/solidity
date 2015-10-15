@@ -42,7 +42,7 @@ namespace solidity
 class TypeChecker: private ASTConstVisitor
 {
 public:
-	/// @_errors the reference to the list of errors and warnings to add them found during type checking.
+	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
 	TypeChecker(ErrorList& _errors): m_errors(_errors) {}
 
 	/// Performs type checking on the given contract and all of its sub-nodes.

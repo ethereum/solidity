@@ -34,8 +34,7 @@ class Scanner;
 class Parser
 {
 public:
-	Parser(ErrorList& errors):
-		m_errors(errors){};
+	Parser(ErrorList& errors): m_errors(errors){};
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
 	std::shared_ptr<std::string const> const& sourceName() const;

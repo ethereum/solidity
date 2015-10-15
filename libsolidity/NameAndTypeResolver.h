@@ -44,14 +44,14 @@ class NameAndTypeResolver: private boost::noncopyable
 public:
 	NameAndTypeResolver(std::vector<Declaration const*> const& _globals, ErrorList& _errors);
 	/// Registers all declarations found in the source unit.
-	/// @returns false in case of type error.
+	/// @returns false in case of error.
 	bool registerDeclarations(SourceUnit& _sourceUnit);
 	/// Resolves all names and types referenced from the given contract.
-	/// @returns false in case of type error.
+	/// @returns false in case of error.
 	bool resolveNamesAndTypes(ContractDefinition& _contract);
 	/// Updates the given global declaration (used for "this"). Not to be used with declarations
 	/// that create their own scope.
-	/// @returns false in case of type error.
+	/// @returns false in case of error.
 	bool updateDeclaration(Declaration const& _declaration);
 
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,

@@ -42,7 +42,7 @@ namespace
 ASTPointer<ContractDefinition> parseText(std::string const& _source, ErrorList& _errors)
 {
 	ASTPointer<SourceUnit> sourceUnit = Parser(_errors).parse(std::make_shared<Scanner>(CharStream(_source)));
-	if(!sourceUnit)
+	if (!sourceUnit)
 		return ASTPointer<ContractDefinition>();
 	for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 		if (ASTPointer<ContractDefinition> contract = dynamic_pointer_cast<ContractDefinition>(node))
@@ -57,7 +57,7 @@ bool successParse(std::string const& _source)
 	try
 	{
 		auto sourceUnit = parseText(_source, errors);
-		if(!sourceUnit)
+		if (!sourceUnit)
 			return false;
 	}
 	catch (FatalError const& _exception)
@@ -68,6 +68,7 @@ bool successParse(std::string const& _source)
 	if (Error::containsErrorOfType(errors, Error::Type::ParserError))
 		return false;
 
+	BOOST_CHECK(Error::containsOnlyWarnings(errors));
 	return true;
 }
 
@@ -168,7 +169,6 @@ BOOST_AUTO_TEST_CASE(two_exact_functions)
 	// with support of overloaded functions, during parsing,
 	// we can't determine whether they match exactly, however
 	// it will throw DeclarationError in following stage.
-	// TODO add test to the SolidityNameAndTypeDeclaration
 	BOOST_CHECK(successParse(text));
 }
 
@@ -848,7 +848,7 @@ BOOST_AUTO_TEST_CASE(external_variable)
 	BOOST_CHECK(!successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(arrays_in_storagze)
+BOOST_AUTO_TEST_CASE(arrays_in_storage)
 {
 	char const* text = R"(
 		contract c {

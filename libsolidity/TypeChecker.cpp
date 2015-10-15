@@ -43,19 +43,7 @@ bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
 		if (m_errors.empty())
 			throw; // Something is weird here, rather throw again.
 	}
-
-return	Error::containsOnlyWarnings(m_errors);
-//	bool success = true;
-//	for (auto const& it: m_errors)
-//	{
-//		auto e = dynamic_cast<Error const*>(it.get());
-//		if (e->type() != Error::Type::Warning)
-//		{
-//			success = false;
-//			break;
-//		}
-//	}
-//	return success;
+	return	Error::containsOnlyWarnings(m_errors);
 }
 
 TypePointer const& TypeChecker::type(Expression const& _expression) const
@@ -72,7 +60,6 @@ TypePointer const& TypeChecker::type(VariableDeclaration const& _variable) const
 
 bool TypeChecker::visit(ContractDefinition const& _contract)
 {
-
 	// We force our own visiting order here.
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);

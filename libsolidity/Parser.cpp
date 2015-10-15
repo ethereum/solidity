@@ -66,7 +66,8 @@ private:
 
 ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 {
-	try{
+	try
+	{
 		m_scanner = _scanner;
 		ASTNodeFactory nodeFactory(*this);
 		vector<ASTPointer<ASTNode>> nodes;

@@ -77,12 +77,12 @@ public:
 			m_compiler.compile(m_optimize, m_optimizeRuns);
 			BOOST_REQUIRE(Error::containsErrorOfType(m_compiler.errors(), _type));
 		}
-		catch(Error const& _e)
+		catch (Error const& _e)
 		{
 			BOOST_REQUIRE(_e.type() == _type);
 			foundError = true;
 		}
-		catch(Exception const& _exception)
+		catch (Exception const& _exception)
 		{
 			BOOST_REQUIRE(false);
 		}
