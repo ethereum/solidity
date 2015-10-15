@@ -732,8 +732,8 @@ bool TypeChecker::visit(Assignment const& _assignment)
 	_assignment.annotation().type = t;
 	if (TupleType const* tupleType = dynamic_cast<TupleType const*>(t.get()))
 	{
-		// Sequenced assignments of tuples is not valid.
-		_assignment.annotation().type = make_shared<TupleType const>();
+		// Sequenced assignments of tuples is not valid, make the result a "void" type.
+		_assignment.annotation().type = make_shared<TupleType>();
 		expectType(_assignment.rightHandSide(), *tupleType);
 	}
 	else if (t->category() == Type::Category::Mapping)
