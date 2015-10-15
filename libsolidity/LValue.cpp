@@ -484,15 +484,17 @@ void TupleObject::retrieveValue(SourceLocation const& _location, bool _remove) c
 			solAssert(initialDepth + m_context.stackHeight() >= initialStack, "");
 			unsigned depth = initialDepth + m_context.stackHeight() - initialStack;
 			if (lv->sizeOnStack() > 0)
+			{
 				if (_remove && depth > lv->sizeOnStack())
 					CompilerUtils(m_context).moveToStackTop(depth, depth - lv->sizeOnStack());
 				else if (!_remove && depth > 0)
 					CompilerUtils(m_context).copyToStackTop(depth, lv->sizeOnStack());
+			}
 			lv->retrieveValue(_location, true);
 		}
 }
 
-void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
+void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _location, bool) const
 {
 	// values are below the lvalue references
 	unsigned valuePos = sizeOnStack();
