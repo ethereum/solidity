@@ -113,7 +113,6 @@ bool CompilerStack::parse()
 	resolveImports();
 
 	m_globalContext = make_shared<GlobalContext>();
-	bool success = true;
 	NameAndTypeResolver resolver(m_globalContext->declarations(), m_errors);
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
@@ -124,17 +123,12 @@ bool CompilerStack::parse()
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			{
 				m_globalContext->setCurrentContract(*contract);
-				success = success && resolver.updateDeclaration(*m_globalContext->currentThis());
-				success = success && resolver.updateDeclaration(*m_globalContext->currentSuper());
-				success = success && resolver.resolveNamesAndTypes(*contract);
+				if (!resolver.updateDeclaration(*m_globalContext->currentThis())) return false;
+				if (!resolver.updateDeclaration(*m_globalContext->currentSuper())) return false;
+				if (!resolver.resolveNamesAndTypes(*contract)) return false;
 				m_contracts[contract->name()].contract = contract;
 			}
 
-	if (!success)
-	{
-		m_parseSuccessful = false;
-		return m_parseSuccessful;
-	}
 	InterfaceHandler interfaceHandler;
 	bool typesFine = true;
 	for (Source const* source: m_sourceOrder)
