@@ -623,27 +623,29 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			appendExternalFunctionCall(function, arguments);
 			break;
 		}
+		case Location::ByteArrayPush:
+			solAssert(false, "Not properly implemented yet");
 		case Location::ArrayPush:
 		{
-			cout << "Beginning " << m_context.stackHeight() << endl;
+			_functionCall.expression().accept(*this);
 			solAssert(function.parameterTypes().size() == 1, "");
 			solAssert(!!function.parameterTypes()[0], "");
 			TypePointer const& paramType = function.parameterTypes()[0];
-			ArrayType arrayType(DataLocation::Storage, paramType);
+			shared_ptr<ArrayType> arrayType =
+				function.location() == Location::ArrayPush ?
+				make_shared<ArrayType>(DataLocation::Storage, paramType) :
+				make_shared<ArrayType>(DataLocation::Storage);
 			// get the current length
-			ArrayUtils(m_context).retrieveLength(arrayType);
+			ArrayUtils(m_context).retrieveLength(*arrayType);
 			m_context << eth::Instruction::DUP1;
-			cout << "After DUP1  " << m_context.stackHeight() << endl;
 			// stack: ArrayReference currentLength currentLength
 			m_context << u256(1) << eth::Instruction::ADD;
 			// stack: ArrayReference currentLength newLength
 			m_context << eth::Instruction::DUP3 << eth::Instruction::DUP2;
-			ArrayUtils(m_context).resizeDynamicArray(arrayType);
-			cout << "After Resize Dynamic Array  " << m_context.stackHeight() << endl;
+			ArrayUtils(m_context).resizeDynamicArray(*arrayType);
 			m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
 			// stack: newLength ArrayReference oldLength
-			ArrayUtils(m_context).accessIndex(arrayType, false);
-			cout << "After Access Index  " << m_context.stackHeight() << endl;
+			ArrayUtils(m_context).accessIndex(*arrayType, false);
 
 			// stack: newLength storageSlot slotOffset
 			arguments[0]->accept(*this);
@@ -657,9 +659,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
 			break;
 		}
-		case Location::ByteArrayPush:
-			// TODO
-			break;
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid function type."));
 		}
@@ -852,7 +851,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		}
 		else
 			solAssert(false, "Illegal array member.");
-		
 		break;
 	}
 	default:
