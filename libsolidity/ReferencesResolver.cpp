@@ -60,7 +60,7 @@ bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 			Error(Error::Type::DeclarationError) <<
 			errinfo_sourceLocation(_typeName.location()) <<
 			errinfo_comment("Identifier not found or not unique.")
-
+		);
 	_typeName.annotation().referencedDeclaration = declaration;
 	return true;
 }

@@ -140,7 +140,7 @@ bool CompilerStack::parse()
 			{
 				m_globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*m_globalContext->currentThis());
-				TypeChecker typeChecker;
+				TypeChecker typeChecker(m_errors);
 				if (typeChecker.checkTypeRequirements(*contract))
 				{
 					contract->setDevDocumentation(interfaceHandler.devDocumentation(*contract));
@@ -150,7 +150,6 @@ bool CompilerStack::parse()
 					typesFine = false;
 
 				m_contracts[contract->name()].contract = contract;
-				m_errors += typeChecker.errors();
 			}
 	m_parseSuccessful = typesFine;
 	return m_parseSuccessful;
