@@ -3495,26 +3495,27 @@ BOOST_AUTO_TEST_CASE(array_push)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(5, 4, 3, 3));
 }
-#if 0 // reactivate once ByteArrayPush is properly implemented
+
 BOOST_AUTO_TEST_CASE(byte_array_push)
 {
 	char const* sourceCode = R"(
 		contract c {
 			bytes data;
-			function test() returns (byte x, byte y, byte z, uint l) {
-				data.push(5);
-				x = data[0];
+			function test() returns (bool x) {
+				if (data.push(5) != 1)  return true;
+				if (data[0] != 5) return true;
 				data.push(4);
-				y = data[1];
-				l = data.push(3);
-				z = data[2];
+				if (data[1] != 4) return true;
+				uint l = data.push(3);
+				if (data[2] != 3) return true;
+				if (l != 3) return true;
 			}
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("test()") == encodeArgs(5, 4, 3, 3));
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(false));
 }
-#endif
+
 BOOST_AUTO_TEST_CASE(external_array_args)
 {
 	char const* sourceCode = R"(

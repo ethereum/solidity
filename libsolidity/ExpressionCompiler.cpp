@@ -624,7 +624,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			break;
 		}
 		case Location::ByteArrayPush:
-			solAssert(false, "Not properly implemented yet");
 		case Location::ArrayPush:
 		{
 			_functionCall.expression().accept(*this);
@@ -651,12 +650,15 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments[0]->accept(*this);
 			// stack: newLength storageSlot slotOffset argValue
 			TypePointer type = arguments[0]->annotation().type;
-			utils().convertType(*type, *type->mobileType());
-			type = type->mobileType();
+			utils().convertType(*type, *arrayType->baseType());
+			type = arrayType->baseType();
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			// stack: newLength argValue storageSlot slotOffset
-			StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+			if (function.location() == Location::ArrayPush)
+				StorageItem(m_context, *paramType).storeValue(*type, _functionCall.location(), true);
+			else
+				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
 			break;
 		}
 		default:
