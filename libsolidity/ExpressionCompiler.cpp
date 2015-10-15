@@ -664,9 +664,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// stack: newLength storageSlot slotOffset
 			arguments[0]->accept(*this);
 			// stack: newLength storageSlot slotOffset argValue
-			TypePointer type = arguments[0]->annotation().type;
-			utils().convertType(*type, *arrayType->baseType());
-			type = arrayType->baseType();
+			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
+			utils().convertType(*arguments[0]->annotation().type, *type);
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			// stack: newLength argValue storageSlot slotOffset

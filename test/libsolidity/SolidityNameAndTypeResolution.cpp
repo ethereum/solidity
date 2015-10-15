@@ -109,13 +109,9 @@ ASTPointer<SourceUnit> parseAndAnalyse(string const& _source)
 	return sourceAndError.first;
 }
 
-bool success(std::string const& _source)
+bool success(string const& _source)
 {
-	auto sourceAndError = parseAnalyseAndReturnError(_source);
-
-	if (sourceAndError.second && *sourceAndError.second == Error::Type::TypeError)
-		return false;
-	return true;
+	return !parseAnalyseAndReturnError(_source).second;
 }
 
 Error::Type expectError(std::string const& _source, bool _warning = false)
@@ -2472,7 +2468,7 @@ BOOST_AUTO_TEST_CASE(tuples)
 			}
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseAndAnalyse(text));
+	BOOST_CHECK(success(text));
 }
 
 BOOST_AUTO_TEST_CASE(tuples_empty_components)
@@ -2484,7 +2480,7 @@ BOOST_AUTO_TEST_CASE(tuples_empty_components)
 			}
 		}
 	)";
-	SOLIDITY_CHECK_ERROR_TYPE(parseAndAnalyseReturnError(text), TypeError);
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_5)
