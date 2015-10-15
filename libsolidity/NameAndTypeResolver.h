@@ -106,9 +106,9 @@ private:
 	void reportFatalDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
 
 	// creates the Declaration error and adds it in the errors list
-	void reportTypeError(Error _e);
+	void reportTypeError(Error const& _e);
 	// creates the Declaration error and adds it in the errors list and throws FatalError
-	void reportFatalTypeError(Error _e);
+	void reportFatalTypeError(const Error& _e);
 
 	DeclarationContainer* m_currentScope = nullptr;
 	ErrorList& m_errors;

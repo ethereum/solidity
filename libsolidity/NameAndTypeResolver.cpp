@@ -328,12 +328,12 @@ void NameAndTypeResolver::reportFatalDeclarationError(
 	BOOST_THROW_EXCEPTION(FatalError());
 }
 
-void NameAndTypeResolver::reportTypeError(Error _e)
+void NameAndTypeResolver::reportTypeError(Error const& _e)
 {
 	m_errors.push_back(make_shared<Error>(_e));
 }
 
-void NameAndTypeResolver::reportFatalTypeError(Error _e)
+void NameAndTypeResolver::reportFatalTypeError(Error const& _e)
 {
 	reportTypeError(_e);
 	BOOST_THROW_EXCEPTION(FatalError());
