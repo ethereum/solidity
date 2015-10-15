@@ -108,7 +108,7 @@ private:
 	// creates the Declaration error and adds it in the errors list
 	void reportTypeError(Error const& _e);
 	// creates the Declaration error and adds it in the errors list and throws FatalError
-	void reportFatalTypeError(const Error& _e);
+	void reportFatalTypeError(Error const& _e);
 
 	DeclarationContainer* m_currentScope = nullptr;
 	ErrorList& m_errors;

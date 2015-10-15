@@ -136,7 +136,7 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 		m_scopes[nullptr].registerDeclaration(_declaration, false, true);
 		solAssert(_declaration.scope() == nullptr, "Updated declaration outside global scope.");
 	}
-	catch(FatalError _error)
+	catch(FatalError const& _error)
 	{
 		return false;
 	}
