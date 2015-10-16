@@ -2505,6 +2505,27 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration_wildcards_fail_6)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
+{
+	char const* text = R"(
+		contract C {
+			struct R { uint[10][10] y; }
+			struct S { uint a; uint b; uint[20][20][20] c; R d; }
+			S data;
+			function f() {
+				C.S x = data;
+				C.S memory y;
+				C.S[10] memory z;
+				C.S[10];
+				y.a = 2;
+				x.c[1][2][3] = 9;
+				x.d.y[2][2] = 3;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

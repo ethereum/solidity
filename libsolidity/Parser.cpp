@@ -734,6 +734,9 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 	// These two cases are very hard to distinguish:
 	// x[7 * 20 + 3] a;  -  x[7 * 20 + 3] = 9;
 	// In the first case, x is a type name, in the second it is the name of a variable.
+	// As an extension, we can even have:
+	// `x.y.z[1][2] a;` and `x.y.z[1][2] = 10;`
+	// Where in the first, x.y.z leads to a type name where in the second, it accesses structs.
 	switch (peekStatementType())
 	{
 	case LookAheadInfo::VariableDeclarationStatement:
@@ -744,36 +747,43 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 		break;
 	}
 
-	// At this point, we have '(Identifier|ElementaryTypeName) "["'.
-	// We parse '(Identifier|ElementaryTypeName) ( "[" Expression "]" )+' and then decide whether to hand this over
-	// to ExpressionStatement or create a VariableDeclarationStatement out of it.
-	ASTPointer<PrimaryExpression> primary;
+	// At this point, we have 'Identifier "["' or 'Identifier "." Identifier' or 'ElementoryTypeName "["'.
+	// We parse '(Identifier ("." Identifier)* |ElementaryTypeName) ( "[" Expression "]" )+'
+	// until we can decide whether to hand this over to ExpressionStatement or create a
+	// VariableDeclarationStatement out of it.
+
+	vector<ASTPointer<PrimaryExpression>> path;
+	bool startedWithElementary = false;
 	if (m_scanner->currentToken() == Token::Identifier)
-		primary = parseIdentifier();
+		path.push_back(parseIdentifier());
 	else
 	{
-		primary = ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(m_scanner->currentToken());
+		startedWithElementary = true;
+		path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(m_scanner->currentToken()));
 		m_scanner->next();
 	}
+	while (!startedWithElementary && m_scanner->currentToken() == Token::Period)
+	{
+		m_scanner->next();
+		path.push_back(parseIdentifier());
+	}
 	vector<pair<ASTPointer<Expression>, SourceLocation>> indices;
-	solAssert(m_scanner->currentToken() == Token::LBrack, "");
-	SourceLocation indexLocation = primary->location();
-	do
+	while (m_scanner->currentToken() == Token::LBrack)
 	{
 		expectToken(Token::LBrack);
 		ASTPointer<Expression> index;
 		if (m_scanner->currentToken() != Token::RBrack)
 			index = parseExpression();
+		SourceLocation indexLocation = path.front()->location();
 		indexLocation.end = endPosition();
 		indices.push_back(make_pair(index, indexLocation));
 		expectToken(Token::RBrack);
 	}
-	while (m_scanner->currentToken() == Token::LBrack);
 
 	if (m_scanner->currentToken() == Token::Identifier || Token::isLocationSpecifier(m_scanner->currentToken()))
-		return parseVariableDeclarationStatement(typeNameIndexAccessStructure(primary, indices));
+		return parseVariableDeclarationStatement(typeNameIndexAccessStructure(path, indices));
 	else
-		return parseExpressionStatement(expressionFromIndexAccessStructure(primary, indices));
+		return parseExpressionStatement(expressionFromIndexAccessStructure(path, indices));
 }
 
 ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStatement(
@@ -1090,7 +1100,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// We have a variable declaration if we get a keyword that specifies a type name.
 	// If it is an identifier or an elementary type name followed by an identifier, we also have
 	// a variable declaration.
-	// If we get an identifier followed by a "[", it can be both ("type[9] a;" or "arr[9] = 7;").
+	// If we get an identifier followed by a "[" or ".", it can be both ("lib.type[9] a;" or "variable.el[9] = 7;").
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->currentToken());
 	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
@@ -1102,25 +1112,36 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 		Token::Value next = m_scanner->peekNextToken();
 		if (next == Token::Identifier || Token::isLocationSpecifier(next))
 			return LookAheadInfo::VariableDeclarationStatement;
-		if (m_scanner->peekNextToken() == Token::LBrack)
+		if (next == Token::LBrack || next == Token::Period)
 			return LookAheadInfo::IndexAccessStructure;
 	}
 	return LookAheadInfo::ExpressionStatement;
 }
 
 ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
-	ASTPointer<PrimaryExpression> const& _primary,
+	vector<ASTPointer<PrimaryExpression>> const& _path,
 	vector<pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 )
 {
-	ASTNodeFactory nodeFactory(*this, _primary);
+	solAssert(!_path.empty(), "");
+	ASTNodeFactory nodeFactory(*this);
+	SourceLocation location = _path.front()->location();
+	location.end = _path.back()->location().end;
+	nodeFactory.setLocation(location);
+
 	ASTPointer<TypeName> type;
-	if (auto identifier = dynamic_cast<Identifier const*>(_primary.get()))
-		type = nodeFactory.createNode<UserDefinedTypeName>(vector<ASTString>{identifier->name()});
-	else if (auto typeName = dynamic_cast<ElementaryTypeNameExpression const*>(_primary.get()))
+	if (auto typeName = dynamic_cast<ElementaryTypeNameExpression const*>(_path.front().get()))
+	{
+		solAssert(_path.size() == 1, "");
 		type = nodeFactory.createNode<ElementaryTypeName>(typeName->typeToken());
+	}
 	else
-		solAssert(false, "Invalid type name for array look-ahead.");
+	{
+		vector<ASTString> path;
+		for (auto const& el: _path)
+			path.push_back(dynamic_cast<Identifier const&>(*el).name());
+		type = nodeFactory.createNode<UserDefinedTypeName>(path);
+	}
 	for (auto const& lengthExpression: _indices)
 	{
 		nodeFactory.setLocation(lengthExpression.second);
@@ -1130,12 +1151,24 @@ ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
 }
 
 ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
-	ASTPointer<PrimaryExpression> const& _primary,
+	vector<ASTPointer<PrimaryExpression>> const& _path,
 	vector<pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 )
 {
-	ASTNodeFactory nodeFactory(*this, _primary);
-	ASTPointer<Expression> expression(_primary);
+	solAssert(!_path.empty(), "");
+	ASTNodeFactory nodeFactory(*this, _path.front());
+	ASTPointer<Expression> expression(_path.front());
+	for (size_t i = 1; i < _path.size(); ++i)
+	{
+		SourceLocation location(_path.front()->location());
+		location.end = _path[i]->location().end;
+		nodeFactory.setLocation(location);
+		Identifier const& identifier = dynamic_cast<Identifier const&>(*_path[i]);
+		expression = nodeFactory.createNode<MemberAccess>(
+			expression,
+			make_shared<ASTString>(identifier.name())
+		);
+	}
 	for (auto const& index: _indices)
 	{
 		nodeFactory.setLocation(index.second);
