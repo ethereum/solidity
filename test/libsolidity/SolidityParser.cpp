@@ -1015,6 +1015,24 @@ BOOST_AUTO_TEST_CASE(tuples)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
+{
+	char const* text = R"(
+		contract C {
+			struct S { uint a; uint b; uint[][][] c; }
+			function f() {
+				C.S x;
+				C.S memory y;
+				C.S[10] memory z;
+				C.S[10](x);
+				x.a = 2;
+				x.c[1][2][3] = 9;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

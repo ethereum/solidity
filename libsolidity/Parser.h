@@ -125,14 +125,14 @@ private:
 	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this is not possible to
 	/// decide with constant look-ahead.
 	LookAheadInfo peekStatementType() const;
-	/// Returns a typename parsed in look-ahead fashion from something like "a[8][2**70]".
+	/// Returns a typename parsed in look-ahead fashion from something like "a.b[8][2**70]".
 	ASTPointer<TypeName> typeNameIndexAccessStructure(
-		ASTPointer<PrimaryExpression> const& _primary,
+		std::vector<ASTPointer<PrimaryExpression>> const& _path,
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 	);
-	/// Returns an expression parsed in look-ahead fashion from something like "a[8][2**70]".
+	/// Returns an expression parsed in look-ahead fashion from something like "a.b[8][2**70]".
 	ASTPointer<Expression> expressionFromIndexAccessStructure(
-		ASTPointer<PrimaryExpression> const& _primary,
+		std::vector<ASTPointer<PrimaryExpression>> const& _path,
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 	);
 	/// If current token value is not _value, throw exception otherwise advance token.
