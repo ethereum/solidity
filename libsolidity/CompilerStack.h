@@ -56,7 +56,7 @@ class SourceUnit;
 class Compiler;
 class GlobalContext;
 class InterfaceHandler;
-struct Error;
+class Error;
 
 enum class DocumentationType: uint8_t
 {
