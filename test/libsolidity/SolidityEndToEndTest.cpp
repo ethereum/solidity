@@ -5772,6 +5772,21 @@ BOOST_AUTO_TEST_CASE(destructuring_assignment_wildcard)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(lone_struct_array_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct s { uint a; uint b;}
+			function f() returns (uint) {
+				s[7][]; // This is only the type, should not have any effect
+				return 3;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(3)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

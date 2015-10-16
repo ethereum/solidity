@@ -950,6 +950,12 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 			break;
 		}
 	}
+	else if (baseType.category() == Type::Category::TypeType)
+	{
+		solAssert(baseType.sizeOnStack() == 0, "");
+		solAssert(_indexAccess.annotation().type->sizeOnStack() == 0, "");
+		// no-op - this seems to be a lone array type (`structType[];`)
+	}
 	else
 		solAssert(false, "Index access only allowed for mappings or arrays.");
 
@@ -1000,6 +1006,10 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		// no-op
 	}
 	else if (dynamic_cast<EnumDefinition const*>(declaration))
+	{
+		// no-op
+	}
+	else if (dynamic_cast<StructDefinition const*>(declaration))
 	{
 		// no-op
 	}
