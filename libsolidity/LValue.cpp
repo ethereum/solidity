@@ -245,8 +245,9 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 		{
 			m_context << eth::Instruction::POP; // remove byte offset
 			ArrayUtils(m_context).copyArrayToStorage(
-						dynamic_cast<ArrayType const&>(*m_dataType),
-						dynamic_cast<ArrayType const&>(_sourceType));
+				dynamic_cast<ArrayType const&>(*m_dataType),
+				dynamic_cast<ArrayType const&>(_sourceType)
+			);
 			if (_move)
 				m_context << eth::Instruction::POP;
 		}
