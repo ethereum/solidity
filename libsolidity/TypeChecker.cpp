@@ -43,7 +43,7 @@ bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
 		if (m_errors.empty())
 			throw; // Something is weird here, rather throw again.
 	}
-	return	Error::containsOnlyWarnings(m_errors);
+	return Error::containsOnlyWarnings(m_errors);
 }
 
 TypePointer const& TypeChecker::type(Expression const& _expression) const
