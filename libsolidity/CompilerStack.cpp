@@ -104,7 +104,9 @@ bool CompilerStack::parse()
 	for (auto& sourcePair: m_sources)
 	{
 		sourcePair.second.scanner->reset();
-		sourcePair.second.ast = Parser(m_errors).parse(sourcePair.second.scanner); // todo check for errors
+		sourcePair.second.ast = Parser(m_errors).parse(sourcePair.second.scanner);
+		if (!sourcePair.second.ast)
+			solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
 	}
 	if (!Error::containsOnlyWarnings(m_errors))
 		// errors while parsing. sould stop before type checking

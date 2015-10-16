@@ -49,8 +49,10 @@ bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
 	{
 		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errors);
 	}
-	catch (FatalError)
+	catch (FatalError const& _e)
 	{
+		if (m_errors.empty())
+			throw; // Something is weird here, rather throw again.
 		return false;
 	}
 	return true;
@@ -124,6 +126,8 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	}
 	catch (FatalError const& _e)
 	{
+		if (m_errors.empty())
+			throw; // Something is weird here, rather throw again.
 		return false;
 	}
 	return true;
@@ -136,8 +140,10 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 		m_scopes[nullptr].registerDeclaration(_declaration, false, true);
 		solAssert(_declaration.scope() == nullptr, "Updated declaration outside global scope.");
 	}
-	catch(FatalError const& _error)
+	catch (FatalError const& _error)
 	{
+		if (m_errors.empty())
+			throw; // Something is weird here, rather throw again.
 		return false;
 	}
 	return true;
