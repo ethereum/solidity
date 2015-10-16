@@ -179,17 +179,12 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
 	_assignment.rightHandSide().accept(*this);
-	TypePointer type = _assignment.rightHandSide().annotation().type;
-	if (!_assignment.annotation().type->dataStoredIn(DataLocation::Storage))
-	{
-		utils().convertType(*type, *_assignment.annotation().type);
-		type = _assignment.annotation().type;
-	}
-	else
-	{
-		utils().convertType(*type, *type->mobileType());
-		type = type->mobileType();
-	}
+	// Perform some conversion already. This will convert storage types to memory and literals
+	// to their actual type, but will not convert e.g. memory to storage.
+	TypePointer type = _assignment.rightHandSide().annotation().type->closestTemporaryType(
+		_assignment.leftHandSide().annotation().type
+	);
+	utils().convertType(*_assignment.rightHandSide().annotation().type, *type);
 
 	_assignment.leftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
@@ -218,6 +213,26 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	}
 	m_currentLValue->storeValue(*type, _assignment.location());
 	m_currentLValue.reset();
+	return false;
+}
+
+bool ExpressionCompiler::visit(TupleExpression const& _tuple)
+{
+	vector<unique_ptr<LValue>> lvalues;
+	for (auto const& component: _tuple.components())
+		if (component)
+		{
+			component->accept(*this);
+			if (_tuple.annotation().lValueRequested)
+			{
+				solAssert(!!m_currentLValue, "");
+				lvalues.push_back(move(m_currentLValue));
+			}
+		}
+		else if (_tuple.annotation().lValueRequested)
+			lvalues.push_back(unique_ptr<LValue>());
+	if (_tuple.annotation().lValueRequested)
+		m_currentLValue.reset(new TupleObject(m_context, move(lvalues)));
 	return false;
 }
 
@@ -649,9 +664,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// stack: newLength storageSlot slotOffset
 			arguments[0]->accept(*this);
 			// stack: newLength storageSlot slotOffset argValue
-			TypePointer type = arguments[0]->annotation().type;
-			utils().convertType(*type, *arrayType->baseType());
-			type = arrayType->baseType();
+			TypePointer type = arguments[0]->annotation().type->closestTemporaryType(arrayType->baseType());
+			utils().convertType(*arguments[0]->annotation().type, *type);
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			utils().moveToStackTop(1 + type->sizeOnStack());
 			// stack: newLength argValue storageSlot slotOffset

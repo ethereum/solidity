@@ -1068,6 +1068,30 @@ private:
 };
 
 /**
+ * Tuple or just parenthesized expression.
+ * Examples: (1, 2), (x,), (x), ()
+ * Individual components might be empty shared pointers (as in the second example).
+ * The respective types in lvalue context are: 2-tuple, 2-tuple (with wildcard), type of x, 0-tuple
+ * Not in lvalue context: 2-tuple, _1_-tuple, type of x, 0-tuple.
+ */
+class TupleExpression: public Expression
+{
+public:
+	TupleExpression(
+		SourceLocation const& _location,
+		std::vector<ASTPointer<Expression>> const& _components
+	):
+		Expression(_location), m_components(_components) {}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	std::vector<ASTPointer<Expression>> const& components() const { return m_components; }
+
+private:
+	std::vector<ASTPointer<Expression>> m_components;
+};
+
+/**
  * Operation involving a unary operator, pre- or postfix.
  * Examples: ++i, delete x or !true
  */

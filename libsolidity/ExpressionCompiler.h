@@ -72,6 +72,7 @@ public:
 
 private:
 	virtual bool visit(Assignment const& _assignment) override;
+	virtual bool visit(TupleExpression const& _tuple) override;
 	virtual bool visit(UnaryOperation const& _unaryOperation) override;
 	virtual bool visit(BinaryOperation const& _binaryOperation) override;
 	virtual bool visit(FunctionCall const& _functionCall) override;

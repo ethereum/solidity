@@ -806,6 +806,7 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 				)
 				{
 					ASTNodeFactory varDeclNodeFactory(*this);
+					varDeclNodeFactory.markEndPosition();
 					ASTPointer<ASTString> name = expectIdentifierToken();
 					var = varDeclNodeFactory.createNode<VariableDeclaration>(
 						ASTPointer<TypeName>(),
@@ -1009,10 +1010,25 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		break;
 	case Token::LParen:
 	{
+		// Tuple or parenthesized expression.
+		// Special cases: () is empty tuple type, (x) is not a real tuple, (x,) is one-dimensional tuple
 		m_scanner->next();
-		ASTPointer<Expression> expression = parseExpression();
+		vector<ASTPointer<Expression>> components;
+		if (m_scanner->currentToken() != Token::RParen)
+			while (true)
+			{
+				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != Token::RParen)
+					components.push_back(parseExpression());
+				else
+					components.push_back(ASTPointer<Expression>());
+				if (m_scanner->currentToken() == Token::RParen)
+					break;
+				else if (m_scanner->currentToken() == Token::Comma)
+					m_scanner->next();
+			}
+		nodeFactory.markEndPosition();
 		expectToken(Token::RParen);
-		return expression;
+		return nodeFactory.createNode<TupleExpression>(components);
 	}
 	default:
 		if (Token::isElementaryTypeName(token))

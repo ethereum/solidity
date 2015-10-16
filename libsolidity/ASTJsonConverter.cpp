@@ -226,6 +226,12 @@ bool ASTJsonConverter::visit(Assignment const& _node)
 	return true;
 }
 
+bool ASTJsonConverter::visit(TupleExpression const&)
+{
+	addJsonNode("TupleExpression",{}, true);
+	return true;
+}
+
 bool ASTJsonConverter::visit(UnaryOperation const& _node)
 {
 	addJsonNode("UnaryOperation",
@@ -392,6 +398,11 @@ void ASTJsonConverter::endVisit(ExpressionStatement const&)
 }
 
 void ASTJsonConverter::endVisit(Assignment const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(TupleExpression const&)
 {
 	goUp();
 }

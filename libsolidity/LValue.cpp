@@ -32,9 +32,9 @@ using namespace solidity;
 
 
 StackVariable::StackVariable(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
-	LValue(_compilerContext, *_declaration.annotation().type),
+	LValue(_compilerContext, _declaration.annotation().type.get()),
 	m_baseStackOffset(m_context.baseStackOffsetOfVariable(_declaration)),
-	m_size(m_dataType.sizeOnStack())
+	m_size(m_dataType->sizeOnStack())
 {
 }
 
@@ -70,23 +70,23 @@ void StackVariable::storeValue(Type const&, SourceLocation const& _location, boo
 
 void StackVariable::setToZero(SourceLocation const& _location, bool) const
 {
-	CompilerUtils(m_context).pushZeroValue(m_dataType);
-	storeValue(m_dataType, _location, true);
+	CompilerUtils(m_context).pushZeroValue(*m_dataType);
+	storeValue(*m_dataType, _location, true);
 }
 
 MemoryItem::MemoryItem(CompilerContext& _compilerContext, Type const& _type, bool _padded):
-	LValue(_compilerContext, _type),
+	LValue(_compilerContext, &_type),
 	m_padded(_padded)
 {
 }
 
 void MemoryItem::retrieveValue(SourceLocation const&, bool _remove) const
 {
-	if (m_dataType.isValueType())
+	if (m_dataType->isValueType())
 	{
 		if (!_remove)
 			m_context << eth::Instruction::DUP1;
-		CompilerUtils(m_context).loadFromMemoryDynamic(m_dataType, false, m_padded, false);
+		CompilerUtils(m_context).loadFromMemoryDynamic(*m_dataType, false, m_padded, false);
 	}
 	else
 		m_context << eth::Instruction::MLOAD;
@@ -95,24 +95,24 @@ void MemoryItem::retrieveValue(SourceLocation const&, bool _remove) const
 void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool _move) const
 {
 	CompilerUtils utils(m_context);
-	if (m_dataType.isValueType())
+	if (m_dataType->isValueType())
 	{
 		solAssert(_sourceType.isValueType(), "");
 		utils.moveIntoStack(_sourceType.sizeOnStack());
-		utils.convertType(_sourceType, m_dataType, true);
+		utils.convertType(_sourceType, *m_dataType, true);
 		if (!_move)
 		{
-			utils.moveToStackTop(m_dataType.sizeOnStack());
-			utils.copyToStackTop(2, m_dataType.sizeOnStack());
+			utils.moveToStackTop(m_dataType->sizeOnStack());
+			utils.copyToStackTop(2, m_dataType->sizeOnStack());
 		}
-		utils.storeInMemoryDynamic(m_dataType, m_padded);
+		utils.storeInMemoryDynamic(*m_dataType, m_padded);
 		m_context << eth::Instruction::POP;
 	}
 	else
 	{
-		solAssert(_sourceType == m_dataType, "Conversion not implemented for assignment to memory.");
+		solAssert(_sourceType == *m_dataType, "Conversion not implemented for assignment to memory.");
 
-		solAssert(m_dataType.sizeOnStack() == 1, "");
+		solAssert(m_dataType->sizeOnStack() == 1, "");
 		if (!_move)
 			m_context << eth::Instruction::DUP2 << eth::Instruction::SWAP1;
 		// stack: [value] value lvalue
@@ -126,8 +126,8 @@ void MemoryItem::setToZero(SourceLocation const&, bool _removeReference) const
 	CompilerUtils utils(m_context);
 	if (!_removeReference)
 		m_context << eth::Instruction::DUP1;
-	utils.pushZeroValue(m_dataType);
-	utils.storeInMemoryDynamic(m_dataType, m_padded);
+	utils.pushZeroValue(*m_dataType);
+	utils.storeInMemoryDynamic(*m_dataType, m_padded);
 	m_context << eth::Instruction::POP;
 }
 
@@ -139,21 +139,21 @@ StorageItem::StorageItem(CompilerContext& _compilerContext, VariableDeclaration 
 }
 
 StorageItem::StorageItem(CompilerContext& _compilerContext, Type const& _type):
-	LValue(_compilerContext, _type)
+	LValue(_compilerContext, &_type)
 {
-	if (m_dataType.isValueType())
+	if (m_dataType->isValueType())
 	{
-		solAssert(m_dataType.storageSize() == m_dataType.sizeOnStack(), "");
-		solAssert(m_dataType.storageSize() == 1, "Invalid storage size.");
+		solAssert(m_dataType->storageSize() == m_dataType->sizeOnStack(), "");
+		solAssert(m_dataType->storageSize() == 1, "Invalid storage size.");
 	}
 }
 
 void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 {
 	// stack: storage_key storage_offset
-	if (!m_dataType.isValueType())
+	if (!m_dataType->isValueType())
 	{
-		solAssert(m_dataType.sizeOnStack() == 1, "Invalid storage ref size.");
+		solAssert(m_dataType->sizeOnStack() == 1, "Invalid storage ref size.");
 		if (_remove)
 			m_context << eth::Instruction::POP; // remove byte offset
 		else
@@ -162,22 +162,22 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 	}
 	if (!_remove)
 		CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
-	if (m_dataType.storageBytes() == 32)
+	if (m_dataType->storageBytes() == 32)
 		m_context << eth::Instruction::POP << eth::Instruction::SLOAD;
 	else
 	{
 		m_context
 			<< eth::Instruction::SWAP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP1
 			<< u256(0x100) << eth::Instruction::EXP << eth::Instruction::SWAP1 << eth::Instruction::DIV;
-		if (m_dataType.category() == Type::Category::FixedBytes)
-			m_context << (u256(0x1) << (256 - 8 * m_dataType.storageBytes())) << eth::Instruction::MUL;
+		if (m_dataType->category() == Type::Category::FixedBytes)
+			m_context << (u256(0x1) << (256 - 8 * m_dataType->storageBytes())) << eth::Instruction::MUL;
 		else if (
-			m_dataType.category() == Type::Category::Integer &&
-			dynamic_cast<IntegerType const&>(m_dataType).isSigned()
+			m_dataType->category() == Type::Category::Integer &&
+			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
 		)
-			m_context << u256(m_dataType.storageBytes() - 1) << eth::Instruction::SIGNEXTEND;
+			m_context << u256(m_dataType->storageBytes() - 1) << eth::Instruction::SIGNEXTEND;
 		else
-			m_context << ((u256(0x1) << (8 * m_dataType.storageBytes())) - 1) << eth::Instruction::AND;
+			m_context << ((u256(0x1) << (8 * m_dataType->storageBytes())) - 1) << eth::Instruction::AND;
 	}
 }
 
@@ -185,11 +185,11 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 {
 	CompilerUtils utils(m_context);
 	// stack: value storage_key storage_offset
-	if (m_dataType.isValueType())
+	if (m_dataType->isValueType())
 	{
-		solAssert(m_dataType.storageBytes() <= 32, "Invalid storage bytes size.");
-		solAssert(m_dataType.storageBytes() > 0, "Invalid storage bytes size.");
-		if (m_dataType.storageBytes() == 32)
+		solAssert(m_dataType->storageBytes() <= 32, "Invalid storage bytes size.");
+		solAssert(m_dataType->storageBytes() > 0, "Invalid storage bytes size.");
+		if (m_dataType->storageBytes() == 32)
 		{
 			// offset should be zero
 			m_context << eth::Instruction::POP;
@@ -207,24 +207,24 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack: value storege_ref multiplier old_full_value
 			// clear bytes in old value
 			m_context
-				<< eth::Instruction::DUP2 << ((u256(1) << (8 * m_dataType.storageBytes())) - 1)
+				<< eth::Instruction::DUP2 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
 				<< eth::Instruction::MUL;
 			m_context << eth::Instruction::NOT << eth::Instruction::AND;
 			// stack: value storage_ref multiplier cleared_value
 			m_context
 				<< eth::Instruction::SWAP1 << eth::Instruction::DUP4;
 			// stack: value storage_ref cleared_value multiplier value
-			if (m_dataType.category() == Type::Category::FixedBytes)
+			if (m_dataType->category() == Type::Category::FixedBytes)
 				m_context
-					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(m_dataType).numBytes()))
+					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))
 					<< eth::Instruction::SWAP1 << eth::Instruction::DIV;
 			else if (
-				m_dataType.category() == Type::Category::Integer &&
-				dynamic_cast<IntegerType const&>(m_dataType).isSigned()
+				m_dataType->category() == Type::Category::Integer &&
+				dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
 			)
 				// remove the higher order bits
 				m_context
-					<< (u256(1) << (8 * (32 - m_dataType.storageBytes())))
+					<< (u256(1) << (8 * (32 - m_dataType->storageBytes())))
 					<< eth::Instruction::SWAP1
 					<< eth::Instruction::DUP2
 					<< eth::Instruction::MUL
@@ -239,23 +239,24 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 	else
 	{
 		solAssert(
-			_sourceType.category() == m_dataType.category(),
+			_sourceType.category() == m_dataType->category(),
 			"Wrong type conversation for assignment.");
-		if (m_dataType.category() == Type::Category::Array)
+		if (m_dataType->category() == Type::Category::Array)
 		{
 			m_context << eth::Instruction::POP; // remove byte offset
 			ArrayUtils(m_context).copyArrayToStorage(
-						dynamic_cast<ArrayType const&>(m_dataType),
-						dynamic_cast<ArrayType const&>(_sourceType));
+				dynamic_cast<ArrayType const&>(*m_dataType),
+				dynamic_cast<ArrayType const&>(_sourceType)
+			);
 			if (_move)
 				m_context << eth::Instruction::POP;
 		}
-		else if (m_dataType.category() == Type::Category::Struct)
+		else if (m_dataType->category() == Type::Category::Struct)
 		{
 			// stack layout: source_ref target_ref target_offset
 			// note that we have structs, so offset should be zero and are ignored
 			m_context << eth::Instruction::POP;
-			auto const& structType = dynamic_cast<StructType const&>(m_dataType);
+			auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
 			auto const& sourceType = dynamic_cast<StructType const&>(_sourceType);
 			solAssert(
 				structType.structDefinition() == sourceType.structDefinition(),
@@ -313,18 +314,18 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 
 void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 {
-	if (m_dataType.category() == Type::Category::Array)
+	if (m_dataType->category() == Type::Category::Array)
 	{
 		if (!_removeReference)
 			CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
-		ArrayUtils(m_context).clearArray(dynamic_cast<ArrayType const&>(m_dataType));
+		ArrayUtils(m_context).clearArray(dynamic_cast<ArrayType const&>(*m_dataType));
 	}
-	else if (m_dataType.category() == Type::Category::Struct)
+	else if (m_dataType->category() == Type::Category::Struct)
 	{
 		// stack layout: storage_key storage_offset
 		// @todo this can be improved: use StorageItem for non-value types, and just store 0 in
 		// all slots that contain value types later.
-		auto const& structType = dynamic_cast<StructType const&>(m_dataType);
+		auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
 		for (auto const& member: structType.members())
 		{
 			// zero each member that is not a mapping
@@ -342,10 +343,10 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 	}
 	else
 	{
-		solAssert(m_dataType.isValueType(), "Clearing of unsupported type requested: " + m_dataType.toString());
+		solAssert(m_dataType->isValueType(), "Clearing of unsupported type requested: " + m_dataType->toString());
 		if (!_removeReference)
 			CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
-		if (m_dataType.storageBytes() == 32)
+		if (m_dataType->storageBytes() == 32)
 		{
 			// offset should be zero
 			m_context
@@ -361,7 +362,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 			// stack: storege_ref multiplier old_full_value
 			// clear bytes in old value
 			m_context
-				<< eth::Instruction::SWAP1 << ((u256(1) << (8 * m_dataType.storageBytes())) - 1)
+				<< eth::Instruction::SWAP1 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
 				<< eth::Instruction::MUL;
 			m_context << eth::Instruction::NOT << eth::Instruction::AND;
 			// stack: storage_ref cleared_value
@@ -374,7 +375,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 static FixedBytesType byteType(1);
 
 StorageByteArrayElement::StorageByteArrayElement(CompilerContext& _compilerContext):
-	LValue(_compilerContext, byteType)
+	LValue(_compilerContext, &byteType)
 {
 }
 
@@ -427,7 +428,7 @@ void StorageByteArrayElement::setToZero(SourceLocation const&, bool _removeRefer
 }
 
 StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, const ArrayType& _arrayType):
-	LValue(_compilerContext, *_arrayType.memberType("length")),
+	LValue(_compilerContext, _arrayType.memberType("length").get()),
 	m_arrayType(_arrayType)
 {
 	solAssert(m_arrayType.isDynamicallySized(), "");
@@ -454,4 +455,92 @@ void StorageArrayLength::setToZero(SourceLocation const&, bool _removeReference)
 	if (!_removeReference)
 		m_context << eth::Instruction::DUP1;
 	ArrayUtils(m_context).clearDynamicArray(m_arrayType);
+}
+
+
+TupleObject::TupleObject(
+	CompilerContext& _compilerContext,
+	std::vector<std::unique_ptr<LValue>>&& _lvalues
+):
+	LValue(_compilerContext), m_lvalues(move(_lvalues))
+{
+}
+
+unsigned TupleObject::sizeOnStack() const
+{
+	unsigned size = 0;
+	for (auto const& lv: m_lvalues)
+		if (lv)
+			size += lv->sizeOnStack();
+	return size;
+}
+
+void TupleObject::retrieveValue(SourceLocation const& _location, bool _remove) const
+{
+	unsigned initialDepth = sizeOnStack();
+	unsigned initialStack = m_context.stackHeight();
+	for (auto const& lv: m_lvalues)
+		if (lv)
+		{
+			solAssert(initialDepth + m_context.stackHeight() >= initialStack, "");
+			unsigned depth = initialDepth + m_context.stackHeight() - initialStack;
+			if (lv->sizeOnStack() > 0)
+			{
+				if (_remove && depth > lv->sizeOnStack())
+					CompilerUtils(m_context).moveToStackTop(depth, depth - lv->sizeOnStack());
+				else if (!_remove && depth > 0)
+					CompilerUtils(m_context).copyToStackTop(depth, lv->sizeOnStack());
+			}
+			lv->retrieveValue(_location, true);
+		}
+}
+
+void TupleObject::storeValue(Type const& _sourceType, SourceLocation const& _location, bool) const
+{
+	// values are below the lvalue references
+	unsigned valuePos = sizeOnStack();
+	TypePointers const& valueTypes = dynamic_cast<TupleType const&>(_sourceType).components();
+	solAssert(valueTypes.size() == m_lvalues.size(), "");
+	// valuePos .... refPos ...
+	// We will assign from right to left to optimize stack layout.
+	for (size_t i = 0; i < m_lvalues.size(); ++i)
+	{
+		unique_ptr<LValue> const& lvalue = m_lvalues[m_lvalues.size() - i - 1];
+		TypePointer const& valType = valueTypes[valueTypes.size() - i - 1];
+		unsigned stackHeight = m_context.stackHeight();
+		solAssert(!valType == !lvalue, "");
+		if (!lvalue)
+			continue;
+		valuePos += valType->sizeOnStack();
+		// copy value to top
+		CompilerUtils(m_context).copyToStackTop(valuePos, valType->sizeOnStack());
+		// move lvalue ref above value
+		CompilerUtils(m_context).moveToStackTop(valType->sizeOnStack(), lvalue->sizeOnStack());
+		lvalue->storeValue(*valType, _location, true);
+		valuePos += m_context.stackHeight() - stackHeight;
+	}
+	// As the type of an assignment to a tuple type is the empty tuple, we always move.
+	CompilerUtils(m_context).popStackElement(_sourceType);
+}
+
+void TupleObject::setToZero(SourceLocation const& _location, bool _removeReference) const
+{
+	if (_removeReference)
+	{
+		for (size_t i = 0; i < m_lvalues.size(); ++i)
+			if (m_lvalues[m_lvalues.size() - i])
+				m_lvalues[m_lvalues.size() - i]->setToZero(_location, true);
+	}
+	else
+	{
+		unsigned depth = sizeOnStack();
+		for (auto const& val: m_lvalues)
+			if (val)
+			{
+				if (val->sizeOnStack() > 0)
+					CompilerUtils(m_context).copyToStackTop(depth, val->sizeOnStack());
+				val->setToZero(_location, false);
+				depth -= val->sizeOnStack();
+			}
+	}
 }

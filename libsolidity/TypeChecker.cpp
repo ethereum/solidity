@@ -560,13 +560,31 @@ void TypeChecker::endVisit(Return const& _return)
 		return;
 	ParameterList const* params = _return.annotation().functionReturnParameters;
 	if (!params)
+	{
 		typeError(_return, "Return arguments not allowed.");
+		return;
+	}
+	TypePointers returnTypes;
+	for (auto const& var: params->parameters())
+		returnTypes.push_back(type(*var));
+	if (auto tupleType = dynamic_cast<TupleType const*>(type(*_return.expression()).get()))
+	{
+		if (tupleType->components().size() != params->parameters().size())
+			typeError(_return, "Different number of arguments in return statement than in returns declaration.");
+		else if (!tupleType->isImplicitlyConvertibleTo(TupleType(returnTypes)))
+			typeError(
+				*_return.expression(),
+				"Return argument type " +
+				type(*_return.expression())->toString() +
+				" is not implicitly convertible to expected type " +
+				TupleType(returnTypes).toString(false) +
+				"."
+			);
+	}
 	else if (params->parameters().size() != 1)
 		typeError(_return, "Different number of arguments in return statement than in returns declaration.");
 	else
 	{
-		// this could later be changed such that the paramaters type is an anonymous struct type,
-		// but for now, we only allow one return parameter
 		TypePointer const& expected = type(*params->parameters().front());
 		if (!type(*_return.expression())->isImplicitlyConvertibleTo(*expected))
 			typeError(
@@ -590,7 +608,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		VariableDeclaration const& varDecl = *_statement.declarations().front();
 		if (!varDecl.annotation().type)
 			fatalTypeError(_statement, "Assignment necessary for type detection.");
-		if (auto ref = dynamic_cast<ReferenceType const*>(varDecl.annotation().type.get()))
+		if (auto ref = dynamic_cast<ReferenceType const*>(type(varDecl).get()))
 		{
 			if (ref->dataStoredIn(DataLocation::Storage))
 			{
@@ -610,10 +628,10 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 
 	_statement.initialValue()->accept(*this);
 	TypePointers valueTypes;
-	if (auto tupleType = dynamic_cast<TupleType const*>(_statement.initialValue()->annotation().type.get()))
+	if (auto tupleType = dynamic_cast<TupleType const*>(type(*_statement.initialValue()).get()))
 		valueTypes = tupleType->components();
 	else
-		valueTypes = TypePointers{_statement.initialValue()->annotation().type};
+		valueTypes = TypePointers{type(*_statement.initialValue())};
 
 	// Determine which component is assigned to which variable.
 	// If numbers do not match, fill up if variables begin or end empty (not both).
@@ -712,7 +730,13 @@ bool TypeChecker::visit(Assignment const& _assignment)
 	requireLValue(_assignment.leftHandSide());
 	TypePointer t = type(_assignment.leftHandSide());
 	_assignment.annotation().type = t;
-	if (t->category() == Type::Category::Mapping)
+	if (TupleType const* tupleType = dynamic_cast<TupleType const*>(t.get()))
+	{
+		// Sequenced assignments of tuples is not valid, make the result a "void" type.
+		_assignment.annotation().type = make_shared<TupleType>();
+		expectType(_assignment.rightHandSide(), *tupleType);
+	}
+	else if (t->category() == Type::Category::Mapping)
 	{
 		typeError(_assignment, "Mappings cannot be assigned to.");
 		_assignment.rightHandSide().accept(*this);
@@ -737,6 +761,51 @@ bool TypeChecker::visit(Assignment const& _assignment)
 				" and " +
 				type(_assignment.rightHandSide())->toString()
 			);
+	}
+	return false;
+}
+
+bool TypeChecker::visit(TupleExpression const& _tuple)
+{
+	vector<ASTPointer<Expression>> const& components = _tuple.components();
+	TypePointers types;
+	if (_tuple.annotation().lValueRequested)
+	{
+		for (auto const& component: components)
+			if (component)
+			{
+				requireLValue(*component);
+				types.push_back(type(*component));
+			}
+			else
+				types.push_back(TypePointer());
+		_tuple.annotation().type = make_shared<TupleType>(types);
+		// If some of the components are not LValues, the error is reported above.
+		_tuple.annotation().isLValue = true;
+	}
+	else
+	{
+		for (size_t i = 0; i < components.size(); ++i)
+		{
+			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).
+			if (!components[i] && !(i == 1 && components.size() == 2))
+				fatalTypeError(_tuple, "Tuple component cannot be empty.");
+			else if (components[i])
+			{
+				components[i]->accept(*this);
+				types.push_back(type(*components[i]));
+			}
+			else
+				types.push_back(TypePointer());
+		}
+		if (components.size() == 1)
+			_tuple.annotation().type = type(*components[0]);
+		else
+		{
+			if (components.size() == 2 && !components[1])
+				types.pop_back();
+			_tuple.annotation().type = make_shared<TupleType>(types);
+		}
 	}
 	return false;
 }
@@ -1236,10 +1305,10 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 
 void TypeChecker::requireLValue(Expression const& _expression)
 {
+	_expression.annotation().lValueRequested = true;
 	_expression.accept(*this);
 	if (!_expression.annotation().isLValue)
 		typeError(_expression, "Expression has to be an lvalue.");
-	_expression.annotation().lValueRequested = true;
 }
 
 void TypeChecker::typeError(ASTNode const& _node, string const& _description)

@@ -983,7 +983,7 @@ BOOST_AUTO_TEST_CASE(local_const_variable)
 BOOST_AUTO_TEST_CASE(multi_variable_declaration)
 {
 	char const* text = R"(
-		library Lib {
+		contract C {
 			function f() {
 				var (a,b,c) = g();
 				var (d) = 2;
@@ -995,6 +995,21 @@ BOOST_AUTO_TEST_CASE(multi_variable_declaration)
 				var (,,) = g();
 			}
 			function g() returns (uint, uint, uint) {}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(tuples)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint a = (1);
+				var (b,) = (1,);
+				var (c,d) = (1, 2 + a);
+				var (e,) = (1, 2, b);
+			}
 		}
 	)";
 	BOOST_CHECK(successParse(text));

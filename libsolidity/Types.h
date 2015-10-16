@@ -210,6 +210,13 @@ public:
 	/// @returns true if this is a non-value type and the data of this type is stored at the
 	/// given location.
 	virtual bool dataStoredIn(DataLocation) const { return false; }
+	/// @returns the type of a temporary during assignment to a variable of the given type.
+	/// Specifically, returns the requested itself if it can be dynamically allocated (or is a value type)
+	/// and the mobile type otherwise.
+	virtual TypePointer closestTemporaryType(TypePointer const& _targetType) const
+	{
+		return _targetType->dataStoredIn(DataLocation::Storage) ? mobileType() : _targetType;
+	}
 
 	/// Returns the list of all members of this type. Default implementation: no members.
 	virtual MemberList const& members() const { return EmptyMemberList; }
@@ -682,12 +689,14 @@ private:
 
 /**
  * Type that can hold a finite sequence of values of different types.
+ * In some cases, the components are empty pointers (when used as placeholders).
  */
 class TupleType: public Type
 {
 public:
 	virtual Category category() const override { return Category::Tuple; }
 	explicit TupleType(std::vector<TypePointer> const& _types = std::vector<TypePointer>()): m_components(_types) {}
+	virtual bool isImplicitlyConvertibleTo(Type const& _other) const override;
 	virtual bool operator==(Type const& _other) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
 	virtual std::string toString(bool) const override;
@@ -695,6 +704,9 @@ public:
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
+	virtual TypePointer mobileType() const override;
+	/// Converts components to their temporary types and performs some wildcard matching.
+	virtual TypePointer closestTemporaryType(TypePointer const& _targetType) const override;
 
 	std::vector<TypePointer> const& components() const { return m_components; }
 
