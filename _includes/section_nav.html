@@ -14,7 +14,7 @@ next, lets build a link to it.
   {% assign document_url = document | prepend:"/docs/" | append:"/" %}
   {% if document_url == page.url %}
     <div class="section-nav">
-      <div class="left align-right">
+      <div class="left align-left">
           {% if forloop.first %}
             <span class="prev disabled">Back</span>
           {% else %}
@@ -23,7 +23,7 @@ next, lets build a link to it.
             <a href="{{ previous_page }}" class="prev">Back</a>
           {% endif %}
       </div>
-      <div class="right align-left">
+      <div class="right align-right">
           {% if forloop.last %}
             <span class="next disabled">Next</span>
           {% else %}
