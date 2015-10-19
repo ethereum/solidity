@@ -104,10 +104,10 @@ be converted to `address`.
 If the compiler does not allow implicit conversion but you know what you are
 doing, an explicit type conversion is sometimes possible:
 
-```js
+{% highlight javascript %}
 int8 y = -3;
 uint x = uint(y);
-```
+{% endhighlight %}
 
 At the end of this code snippet, `x` will have the value `0xfffff..fd` (64 hex
 characters), which is -3 in two's complement representation of 256 bits.
@@ -115,54 +115,54 @@ characters), which is -3 in two's complement representation of 256 bits.
 If a type is explicitly converted to a smaller type, higher-order bits are
 cut off:
 
-```js
+{% highlight javascript %}
 uint32 a = 0x12345678;
 uint16 b = uint16(a); // b will be 0x5678 now
-```
+{% endhighlight %}
 
 ### Type Deduction
 
 For convenience, it is not always necessary to explicitly specify the type of a
 variable, the compiler automatically infers it from the type of the first
 expression that is assigned to the variable:
-```js
+{% highlight javascript %}
 uint20 x = 0x123;
 var y = x;
-```
+{% endhighlight %}
 Here, the type of `y` will be `uint20`. Using `var` is not possible for function
 parameters or return parameters.
 
 Beware that currently, the type is only deduced from the first assignment, so
 the loop in the following snippet is infinite, as `i` will have the type
 `uint8` and any value of this type is smaller than `2000`.
-```js
+{% highlight javascript %}
 for (var i = 0; i < 2000; i++)
 {
     // do something
 }
-```
+{% endhighlight %}
 
 ## Functions on addresses
 
 It is possible to query the balance of an address using the property `balance`
 and to send Ether (in units of wei) to an address using the `send` function:
 
-```js
+{% highlight javascript %}
 address x = 0x123;
 address myAddress = this;
 if (x.balance < 10 && myAddress.balance >= 10) x.send(10);
-```
+{% endhighlight %}
 
 Beware that if `x` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the `send` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted. In this case, `send` returns `false`.
 
 Furthermore, to interface with contracts that do not adhere to the ABI (like the classic NameReg contract),
 the function `call` is provided which takes an arbitrary number of arguments of any type. These arguments are ABI-serialized (i.e. also padded to 32 bytes). One exception is the case where the first argument is encoded to exactly four bytes. In this case, it is not padded to allow the use of function signatures here.
 
-```js
+{% highlight javascript %}
 address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
 nameReg.call("register", "MyName");
 nameReg.call(bytes4(sha3("fun(uint256)")), a);
-```
+{% endhighlight %}
 
 `call` returns a boolean indicating whether the invoked function terminated (`true`) or caused an EVM exception (`false`). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
@@ -178,7 +178,7 @@ current contract using `this.balance`.
 Enums are one way to create a user-defined type in Solidity. They are explicitly convertible
 to and from all integer types but implicit conversion is not allowed.
 
-```js
+{% highlight javascript %}
 contract test {
     enum ActionChoices { GoLeft, GoRight, GoStraight, SitStill }
     ActionChoices choice;
@@ -201,7 +201,7 @@ contract test {
         return uint(defaultChoice);
     }
 }
-```
+{% endhighlight %}
 
 ## Reference Types
 
@@ -233,7 +233,7 @@ in the meantime.
 On the other hand, assignments from a memory stored reference type to another
 memory-stored reference type does not create a copy.
 
-```js
+{% highlight javascript %}
 contract c {
   uint[] x; // the data location of x is storage
   // the data location of memoryArray is memory
@@ -255,7 +255,7 @@ contract c {
   function g(uint[] storage storageArray) internal {}
   function h(uint[] memoryArray) {}
 }
-```
+{% endhighlight %}
 
 **Summary:**
 
@@ -292,7 +292,7 @@ Dynamic arrays can be resized in storage (not in memory) by changing the
 *push*: Dynamic storage arrays and `bytes` (not `string`) have a member function called `push` that can be used to append an element at the end of the array. The function returns the new length.
 
 
-```js
+{% highlight javascript %}
 contract ArrayContract {
   uint[2**20] m_aLotOfIntegers;
   // Note that the following is not a pair of arrays but an array of pairs.
@@ -331,14 +331,14 @@ contract ArrayContract {
     return m_pairsOfFlags.push(flag);
   }
 }
-```
+{% endhighlight %}
 
 ### Structs
 
 Solidity provides a way to define new types in the form of structs, which is
 shown in the following example:
 
-```js
+{% highlight javascript %}
 contract CrowdFunding {
   // Defines a new type with two fields.
   struct Funder {
@@ -376,7 +376,7 @@ contract CrowdFunding {
     return true;
   }
 }
-```
+{% endhighlight %}
 
 The contract does not provide the full functionality of a crowdfunding
 contract, but it contains the basic concepts necessary to understand structs.

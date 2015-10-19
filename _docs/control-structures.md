@@ -23,12 +23,12 @@ there is in C and JavaScript, so `if (1) { ... }` is _not_ valid Solidity.
 Functions of the current contract can be called directly ("internally"), also recursively, as seen in
 this nonsensical example:
 
-```js
+{% highlight javascript %}
 contract c {
   function g(uint a) returns (uint ret) { return f(); }
   function f() returns (uint ret) { return g(7) + f(); }
 }
-```
+{% endhighlight %}
 
 These function calls are translated into simple jumps inside the EVM. This has
 the effect that the current memory is not cleared, i.e. passing memory references
@@ -44,7 +44,7 @@ all function arguments have to be copied to memory.
 
 When calling functions
 of other contracts, the amount of Wei sent with the call and the gas can be specified:
-```js
+{% highlight javascript %}
 contract InfoFeed {
   function info() returns (uint ret) { return 42; }
 }
@@ -53,7 +53,7 @@ contract Consumer {
   function setFeed(address addr) { feed = InfoFeed(addr); }
   function callFeed() { feed.info.value(10).gas(800)(); }
 }
-```
+{% endhighlight %}
 Note that the expression `InfoFeed(addr)` performs an explicit type conversion stating
 that "we know that the type of the contract at the given address is `InfoFeed`" and
 this does not execute a constructor. We could also have used `function setFeed(InfoFeed _feed) { feed = _feed; }` directly.  Be careful about the fact that `feed.info.value(10).gas(800)`
@@ -65,7 +65,7 @@ parentheses at the end perform the actual call.
 Function call arguments can also be given by name, in any order, and the names
 of unused parameters (especially return parameters) can be omitted.
 
-```js
+{% highlight javascript %}
 contract c {
   function f(uint key, uint value) { ... }
   function g() {
@@ -77,7 +77,7 @@ contract c {
     return k;
   }
 }
-```
+{% endhighlight %}
 
 ## Order of Evaluation of Expressions
 
@@ -93,7 +93,7 @@ boolean expressions is done.
 
 Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time and also assign them to multiple variables (or LValues in general) at the same time:
 
-```js
+{% highlight javascript %}
 contract C {
   uint[] data;
   function f() returns (uint, bool, uint) {
@@ -119,7 +119,7 @@ contract C {
     // equivalent to 1.
   }
 }
-```
+{% endhighlight %}
 
 ### Complications for Arrays and Structs
 
@@ -133,7 +133,7 @@ There are some cases where exceptions are thrown automatically (see below). You 
 Catching exceptions is not yet possible.
 
 In the following example, we show how `throw` can be used to easily revert an Ether transfer and also how to check the return value of `send`:
-```js
+{% highlight javascript %}
 contract Sharer {
     function sendHalf(address addr) returns (uint balance) {
         if (!addr.send(msg.value/2))
@@ -141,7 +141,7 @@ contract Sharer {
         return this.balance;
     }
 }
-```
+{% endhighlight %}
 
 Currently, there are three situations, where exceptions happen automatically in Solidity:
 

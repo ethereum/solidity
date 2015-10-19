@@ -25,7 +25,7 @@ right now, we will go into more detail later.
 
 ## Storage
 
-```js
+{% highlight javascript %}
 contract SimpleStorage {
     uint storedData;
     function set(uint x) {
@@ -35,7 +35,7 @@ contract SimpleStorage {
         return storedData;
     }
 }
-```
+{% endhighlight %}
 
 `uint storedData` declares a state variable called `storedData` of type `uint`
 (unsigned integer of 256 bits) whose position in storage is automatically
@@ -44,7 +44,7 @@ or retrieve the value of the variable.
 
 ## Subcurrency Example
 
-```js
+{% highlight javascript %}
 contract Coin {
     address minter;
     mapping (address => uint) balances;
@@ -68,7 +68,7 @@ contract Coin {
         return balances[addr];
     }
 }
-```
+{% endhighlight %}
 
 This contract introduces some new concepts. One of them is the `address` type,
 which is a 160 bit value that does not allow any arithmetic operations.

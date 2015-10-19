@@ -29,20 +29,20 @@ non-elementary type, the positions are found by adding an offset of `sha3(k . p)
 `bytes` and `string` store their data in the same slot where also the length is stored if they are short. In particular: If the data is at most `31` bytes long, it is stored in the higher-order bytes (left aligned) and the lowest-order byte stores `length * 2`. If it is longer, the main slot stores `length * 2 + 1` and the data is stored as usual in `sha3(slot)`.
 
 So for the following contract snippet:
-```js
+{% highlight javascript %}
 contract c {
   struct S { uint a; uint b; }
   uint x;
   mapping(uint => mapping(uint => S)) data;
 }
-```
+{% endhighlight %}
 The position of `data[4][9].b` is at `sha3(uint256(9) . sha3(uint256(4) . uint(256(1))) + 1`.
 
 ## Esoteric Features
 
 There are some types in Solidity's type system that have no counterpart in the syntax. One of these types are the types of functions. But still, using `var` it is possible to have local variables of these types:
 
-```js
+{% highlight javascript %}
 contract FunctionSelector {
   function select(bool useB, uint x) returns (uint z) {
     var f = a;
@@ -56,7 +56,7 @@ contract FunctionSelector {
     return 2 * x;
   }
 }
-```
+{% endhighlight %}
 
 Calling `select(false, x)` will compute `x * x` and `select(true, x)` will compute `2 * x`.
 
@@ -70,19 +70,19 @@ At the end of this process, we know which expressions have to be on the stack in
 As the last step, the code in each block is completely re-generated. A dependency graph is created from the expressions on the stack at the end of the block and every operation that is not part of this graph is essentially dropped. Now code is generated that applies the modifications to memory and storage in the order they were made in the original code (dropping modifications which were found not to be needed) and finally, generates all values that are required to be on the stack in the correct place.
 
 These steps are applied to each basic block and the newly generated code is used as replacement if it is smaller. If a basic block is split at a JUMPI and during the analysis, the condition evaluates to a constant, the JUMPI is replaced depending on the value of the constant, and thus code like
-```js
+{% highlight javascript %}
 var x = 7;
 data[7] = 9;
 if (data[x] != x + 2)
   return 2;
 else
   return 1;
-```
+{% endhighlight %}
 is simplified to code which can also be compiled from
-```js
+{% highlight javascript %}
 data[7] = 9;
 return 1;
-```
+{% endhighlight %}
 even though the instructions contained a jump in the beginning.
 
 ## Using the Commandline Compiler
@@ -147,11 +147,11 @@ Unfortunately, there are some subtleties the compiler does not yet warn you abou
 
 ### Function Visibility Specifiers
 
-```js
+{% highlight javascript %}
 function myFunction() <visibility specifier> returns (bool) {
     return true;
 }
-```
+{% endhighlight %}
 
  - `public`: visible externally and internally (creates accessor function for storage/state variables)
  - `private`: only visible in the current contract
