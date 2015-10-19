@@ -997,3 +997,10 @@ code.output {
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+/* open button for code */
+.open-editor {
+  position: relative;
+  right: 1ex;
+  top: 2.5ex;
+}

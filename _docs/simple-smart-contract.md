@@ -9,6 +9,7 @@ right now, we will go into more detail later.
 
 ## Storage
 
+{% include open_link gist="a4532ce30246847b371b" %}
 {% highlight javascript %}
 contract SimpleStorage {
     uint storedData;
@@ -60,6 +61,7 @@ them somewhere, but you cannot impersonate someone else. This might change in
 the future.</p>
 </div>
 
+{% include open_link gist="ad490694f3e5b3de47ab" %}
 {% highlight javascript %}
 contract Coin {
     // The keyword "public" makes those variables
@@ -122,7 +124,7 @@ like this one. The accessor function created by the `public` keyword
 is a bit more complex in this case. It roughly looks like the
 following:
 {% highlight javascript %}
-function balancess(address _account) returns (uint balance) {
+function balances(address _account) returns (uint balance) {
     return balances[_account];
 }
 {% endhighlight %}
