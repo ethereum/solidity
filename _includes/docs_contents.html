@@ -1,6 +1,9 @@
 <div class="unit one-fifth hide-on-mobiles">
   <aside>
     {% for section in site.data.docs %}
+    {% if section.title == "hide" %}
+      {% continue %}
+    {% endif %}
     <h4>{{ section.title }}</h4>
     {% include docs_ul.html items=section.docs %}
     {% endfor %}
