@@ -1,0 +1,8 @@
+repository: https://github.com/ethereum/solidity
+
+collections:
+  docs:
+    output: true
+
+name: Solidity • Ethereum Smart Contract Programming Language
+url: https://ethereum.github.io/solidity/
