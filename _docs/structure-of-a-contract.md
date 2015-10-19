@@ -3,7 +3,6 @@ layout: docs
 title: Structure of a Contract
 permalink: /docs/structure-of-a-contract/
 ---
-# Structure of a Solidity Contract
 
 In Solidity, contracts are what classes are in object-oriented languages.
 They can contain so-called state variables, which are permanently stored

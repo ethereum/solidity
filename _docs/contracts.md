@@ -3,7 +3,6 @@ layout: docs
 title: Contracts
 permalink: /docs/contracts/
 ---
-# Contracts
 
 ## Interfacing with other Contracts
 

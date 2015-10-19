@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: A Simple Smart Contract
-permalink: docs/simple-smart-contract/
+permalink: /docs/simple-smart-contract/
 ---
 
 Let us begin with the most basic example. It is fine if you do not understand everything

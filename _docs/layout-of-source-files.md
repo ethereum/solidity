@@ -1,7 +1,7 @@
 ---
 layout: docs
 title: Layout of a Solidity Source File
-permalink: /docs/layout-of-soure-files/
+permalink: /docs/layout-of-source-files/
 ---
 
 A Solidity source file can contain an arbitrary number of contracts.

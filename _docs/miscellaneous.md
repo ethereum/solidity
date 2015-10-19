@@ -3,7 +3,6 @@ layout: docs
 title: Miscellaneous
 permalink: /docs/miscellaneous/
 ---
-# Miscellaneous
 
 ## Layout of State Variables in Storage
 

@@ -3,7 +3,6 @@ layout: docs
 title: Syntactic Sugar and Globally Available Variables
 permalink: /docs/syntactic-sugar-and-global-variables/
 ---
-# Syntactic Sugar and Globally Available Variables
 
 ## Ether and Time Units
 

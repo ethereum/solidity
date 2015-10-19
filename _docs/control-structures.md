@@ -3,7 +3,6 @@ layout: docs
 title: Control Structures
 permalink: /docs/control-structures/
 ---
-# Control Structures
 
 Most of the control structures from C/JavaScript are available in Solidity
 except for `switch` and `goto`. So
