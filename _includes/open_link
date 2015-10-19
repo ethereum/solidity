@@ -1,0 +1,1 @@
+<div class="right open-editor"><a target="browser-solidity" href="https://chriseth.github.io/browser-solidity/?gist={{ include.gist }}">open</a></div>
