@@ -1,0 +1,22 @@
+- title: Introduction to Smart Contracts
+  docs:
+  - simple-smart-contract
+  - blockchain-basics
+  - the-ethereum-virtual-machine
+
+- title: Solidity by Example
+  docs:
+  - voting
+  - blind-auction
+  - safe-remote-purchase
+  - micropayment-channel
+
+- title: Solidity in Depth
+  docs:
+  - layout-of-source-files
+  - structure-of-a-contract
+  - types
+  - syntactic-sugar-and-global-variables
+  - control-structures
+  - contracts
+  - miscellaneous
