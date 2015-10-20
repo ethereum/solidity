@@ -24,3 +24,8 @@
   - control-structures
   - contracts
   - miscellaneous
+
+- title: Common Patterns
+  docs:
+  - restricting-access
+  - state-machine
