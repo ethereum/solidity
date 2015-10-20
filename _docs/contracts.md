@@ -113,10 +113,25 @@ Restrictions for libraries in comparison to contracts:
 
 (these might be lifted at a later point)
 
-Common pitfalls for libraries
+### Common pitfalls for libraries
 
-* The value for `msg.sender` will be that of the contract which is calling the library function.  (If A calls contract B which internally calls library C, then within the function call of library C, `msg.sender` will be the address of contract B).
-* When declaring local variables for structs or arrays, modifications to them will not persist in storage unless they are declared with `storage` as their storage location.  (For example, `var my_struct = self.some_mapping[key]` any changes to `my_struct` would not be persisted in contract storage).
+#### The value of `msg.sender`
+
+The value for `msg.sender` will be that of the contract which is calling the library function.
+
+For example, if A calls contract B which internally calls library C, then within the function call of library C, `msg.sender` will be the address of contract B.
+
+The reason for this is that the expression `LibraryName.functionName()`
+performs an external function call using `CALLCODE`, which maps to a real EVM
+call just like `otherContract.functionName()` or `this.functionName()`.  This
+call extends the call depth by one (limited to 1024), stores the caller (the
+current contract) as `msg.sender`, and then executes the library contract's
+code against the current contracts storage.  This execution occurs in a
+completely new memory context meaning that memory types will be copied and
+cannot be passed by reference.
+
+It's worth noting that it is also possible to transfer ether together with this
+call using `LibraryName.functionName.value(x)()`.
 
 ## Constructor Arguments
 
