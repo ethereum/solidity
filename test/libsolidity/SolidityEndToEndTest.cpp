@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE(blockchain)
 							 "    blockNumber = block.number;\n"
 							 "  }\n"
 							 "}\n";
-	m_envInfo.setBeneficiary(Address(0x123));
+	m_envInfo.setAuthor(Address(0x123));
 	m_envInfo.setNumber(7);
 	compileAndRun(sourceCode, 27);
 	BOOST_CHECK(callContractFunctionWithValue("someInfo()", 28) == encodeArgs(28, 0x123, 7));
