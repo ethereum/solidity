@@ -28,8 +28,8 @@
 #include <libethcore/ABI.h>
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
-#include <libsolidity/CompilerStack.h>
-#include <libsolidity/Exceptions.h>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/Exceptions.h>
 
 namespace dev
 {

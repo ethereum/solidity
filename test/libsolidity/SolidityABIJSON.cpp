@@ -21,7 +21,7 @@
  */
 
 #include "../TestHelper.h"
-#include <libsolidity/CompilerStack.h>
+#include <libsolidity/interface/CompilerStack.h>
 #include <json/json.h>
 #include <libdevcore/Exceptions.h>
 

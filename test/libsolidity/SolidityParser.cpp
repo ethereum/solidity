@@ -23,9 +23,9 @@
 #include <string>
 #include <memory>
 #include <libdevcore/Log.h>
-#include <libsolidity/Scanner.h>
-#include <libsolidity/Parser.h>
-#include <libsolidity/Exceptions.h>
+#include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/parsing/Parser.h>
+#include <libsolidity/interface/Exceptions.h>
 #include "../TestHelper.h"
 
 using namespace std;

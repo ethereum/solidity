@@ -24,12 +24,12 @@
 
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
-#include <libsolidity/Scanner.h>
-#include <libsolidity/Parser.h>
-#include <libsolidity/NameAndTypeResolver.h>
-#include <libsolidity/Exceptions.h>
-#include <libsolidity/GlobalContext.h>
-#include <libsolidity/TypeChecker.h>
+#include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/parsing/Parser.h>
+#include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/analysis/GlobalContext.h>
+#include <libsolidity/analysis/TypeChecker.h>
 #include "../TestHelper.h"
 
 using namespace std;

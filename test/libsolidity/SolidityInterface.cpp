@@ -21,8 +21,8 @@
  */
 
 #include "../TestHelper.h"
-#include <libsolidity/CompilerStack.h>
-#include <libsolidity/AST.h>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/ast/AST.h>
 
 using namespace std;
 

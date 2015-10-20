@@ -26,12 +26,12 @@
 #include <libdevcore/Log.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Assembly.h>
-#include <libsolidity/Scanner.h>
-#include <libsolidity/Parser.h>
-#include <libsolidity/NameAndTypeResolver.h>
-#include <libsolidity/Compiler.h>
-#include <libsolidity/AST.h>
-#include <libsolidity/TypeChecker.h>
+#include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/parsing/Parser.h>
+#include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/codegen/Compiler.h>
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/analysis/TypeChecker.h>
 
 using namespace std;
 using namespace dev::eth;
