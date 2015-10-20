@@ -20,29 +20,38 @@ are used as function arguments or in assignments.
 `bool`: The possible values are constants `true` and `false`.
 
 Operators:  
-`!` (logical negation) `&&` (logical conjunction, "and"), `||` (logical disjunction, "or"), `==` (equality) and `!=` (inequality).
-The operators `||` and `&&` apply the common short-circuiting rules. This means that in the expression `f(x) || g(y)`, if `f(x)` evaluates to `true`, `g(y)` will not be evaluated even if it may have side-effects.
+
+*  `!` (logical negation)
+*  `&&` (logical conjunction, "and")
+*  `||` (logical disjunction, "or")
+*  `==` (equality)
+*  `!=` (inequality)
+
+> The operators `||` and `&&` apply the common short-circuiting rules. This means that in the expression `f(x) || g(y)`, if `f(x)` evaluates to `true`, `g(y)` will not be evaluated even if it may have side-effects.
 
 **Integers**  
 `int•` / `uint•`: Signed and unsigned integers of various sizes. Keywords `uint8` to `uint256` in steps of `8` (unsigned of 8 up to 256 bits) and `int8` to `int256`. `uint` and `int` are aliases for `uint256` and `int256`, respectively.
 
 Operators:  
-Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)  
-Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)  
-Arithmetic operators: `+`, `-`, unary `-`, unary `+`, `*`, `/`, `%` (remainder), `**` (exponentiation)
+
+* Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)  
+* Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)  
+* Arithmetic operators: `+`, `-`, unary `-`, unary `+`, `*`, `/`, `%` (remainder), `**` (exponentiation)
 
 **Address**  
 `address`: Holds a 20 byte value (size of an Ethereum address). Address types also have members(see [Functions on addresses](#functions-on-addresses)) and serve as base for all contracts.
 
 Operators:  
-`<=`, `<`, `==`, `!=`, `>=` and `>`.
+
+* `<=`, `<`, `==`, `!=`, `>=` and `>`
 
 **Fixed-size byte arrays**  
 `bytes1`, `bytes2`, `bytes3`, ..., `bytes32`. `byte` is an alias for `bytes1`.  
 
 Operators:  
-Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)  
-Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)  
+
+* Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)  
+* Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)  
 
 **Dynamically-sized byte array**  
 `bytes`: Dynamically-sized byte array, see [arrays](#arrays). Not a value-type!  
@@ -50,6 +59,7 @@ Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)
 
 **Integer Literals**  
 Integer Literals are arbitrary precision integers until they are used together with a non-literal. In `var x = 1 - 2;`, for example, the value of `1 - 2` is `-1`, which is assigned to `x` and thus `x` receives the type `int8` -- the smallest type that contains `-1`, although the natural types of `1` and `2` are actually `uint8`.    
+
 It is even possible to temporarily exceed the maximum of 256 bits as long as only integer literals are used for the computation: `var x = (0xffffffffffffffffffff * 0xffffffffffffffffffff) * 0;` Here, `x` will have the value `0` and thus the type `uint8`.
 
 **String Literals**  
@@ -62,6 +72,7 @@ If `a` is an LValue (i.e. a variable or something that can be assigned to), the 
 `a += e` is equivalent to `a = a + e`. The operators `-=`, `*=`, `/=`, `%=`, `a |=`, `&=` and `^=` are defined accordingly. `a++` and `a--` are equivalent to `a += 1` / `a -= 1` but the expression itself still has the previous value of `a`. In contrast, `--a` and `++a` have the same effect on `a` but return the value after the change.
 
 **delete**
+
 `delete a` assigns the initial value for the type to `a`. I.e. for integers it is equivalent to `a = 0`, but it can also be used on arrays, where it assigns a dynamic array of length zero or a static array of the same length with all elements reset. For structs, it assigns a struct with all members reset.
 
 `delete` has no effect on whole mappings (as the keys of mappings may be arbitrary and are generally unknown). So if you delete a struct, it will reset all members that are not mappings and also recurse into the members unless they are mappings. However, individual keys and what they map to can be deleted.
