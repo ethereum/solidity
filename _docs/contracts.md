@@ -130,8 +130,9 @@ code against the current contracts storage.  This execution occurs in a
 completely new memory context meaning that memory types will be copied and
 cannot be passed by reference.
 
-It's worth noting that it is also possible to transfer ether together with this
-call using `LibraryName.functionName.value(x)()`.
+It is *in principle* possible to transfer ether using
+`LibraryName.functionName.value(x)()`, but as `CALLCODE` is used, the Ether
+will just end up at the current contract.
 
 ## Constructor Arguments
 
