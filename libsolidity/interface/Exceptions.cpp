@@ -30,23 +30,26 @@ Error::Error(Type _type): m_type(_type)
 {
 	switch(m_type)
 	{
-		case Type::DeclarationError:
-			m_typeName = "Declaration Error";
-			break;
-		case Type::DocstringParsingError:
-			m_typeName = "Docstring Parsing Error";
-			break;
-		case Type::ParserError:
-			m_typeName = "Parser Error";
-			break;
-		case Type::TypeError:
-			m_typeName = "Type Error";
-			break;
-		case Type::Warning:
-			m_typeName = "Warning";
-			break;
-		default:
-			solAssert(false, "");
-			break;
+	case Type::DeclarationError:
+		m_typeName = "Declaration Error";
+		break;
+	case Type::DocstringParsingError:
+		m_typeName = "Docstring Parsing Error";
+		break;
+	case Type::ParserError:
+		m_typeName = "Parser Error";
+		break;
+	case Type::TypeError:
+		m_typeName = "Type Error";
+		break;
+	case Type::FormalError:
+		m_typeName = "Formal Error";
+		break;
+	case Type::Warning:
+		m_typeName = "Warning";
+		break;
+	default:
+		solAssert(false, "");
+		break;
 	}
 }

@@ -45,6 +45,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/formal/Why3Translator.h>
 
 using namespace std;
 namespace po = boost::program_options;
@@ -96,28 +97,30 @@ static void version()
 	exit(0);
 }
 
-static inline bool humanTargetedStdout(po::variables_map const& _args, string const& _name)
-{
-	return _args.count(_name) && !(_args.count("output-dir"));
-}
-
 static bool needsHumanTargetedStdout(po::variables_map const& _args)
 {
-
-	return
-		_args.count(g_argGas) ||
-		humanTargetedStdout(_args, g_argAbiStr) ||
-		humanTargetedStdout(_args, g_argSolInterfaceStr) ||
-		humanTargetedStdout(_args, g_argSignatureHashes) ||
-		humanTargetedStdout(_args, g_argNatspecUserStr) ||
-		humanTargetedStdout(_args, g_argAstJson) ||
-		humanTargetedStdout(_args, g_argNatspecDevStr) ||
-		humanTargetedStdout(_args, g_argAsmStr) ||
-		humanTargetedStdout(_args, g_argAsmJsonStr) ||
-		humanTargetedStdout(_args, g_argOpcodesStr) ||
-		humanTargetedStdout(_args, g_argBinaryStr) ||
-		humanTargetedStdout(_args, g_argRuntimeBinaryStr) ||
-		humanTargetedStdout(_args, g_argCloneBinaryStr);
+	if (_args.count(g_argGas))
+		return true;
+	if (_args.count("output-dir"))
+		return false;
+	for (string const& arg: {
+		g_argAbiStr,
+		g_argSolInterfaceStr,
+		g_argSignatureHashes,
+		g_argNatspecUserStr,
+		g_argAstJson,
+		g_argNatspecDevStr,
+		g_argAsmStr,
+		g_argAsmJsonStr,
+		g_argOpcodesStr,
+		g_argBinaryStr,
+		g_argRuntimeBinaryStr,
+		g_argCloneBinaryStr,
+		string("formal")
+	})
+		if (_args.count(arg))
+			return true;
+	return false;
 }
 
 void CommandLineInterface::handleBinary(string const& _contract)
@@ -164,7 +167,6 @@ void CommandLineInterface::handleOpcode(string const& _contract)
 		cout << eth::disassemble(m_compiler->object(_contract).bytecode);
 		cout << endl;
 	}
-
 }
 
 void CommandLineInterface::handleBytecode(string const& _contract)
@@ -284,6 +286,17 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
+void CommandLineInterface::handleFormal()
+{
+	if (!m_args.count("formal"))
+		return;
+
+	if (m_args.count("output-dir"))
+		createFile("solidity.mlw", m_compiler->formalTranslation());
+	else
+		cout << "Formal version:" << endl << m_compiler->formalTranslation() << endl;
+}
+
 bool CommandLineInterface::parseLibraryOption(string const& _input)
 {
 	namespace fs = boost::filesystem;
@@ -391,7 +404,8 @@ Allowed options)",
 		(g_argSolInterfaceStr.c_str(), "Solidity interface of the contracts.")
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUserStr.c_str(), "Natspec user documentation of all contracts.")
-		(g_argNatspecDevStr.c_str(), "Natspec developer documentation of all contracts.");
+		(g_argNatspecDevStr.c_str(), "Natspec developer documentation of all contracts.")
+		("formal", "Translated source suitable for formal analysis.");
 	desc.add(outputComponents);
 
 	po::options_description allOptions = desc;
@@ -492,15 +506,22 @@ bool CommandLineInterface::processInput()
 		bool optimize = m_args.count("optimize") > 0;
 		unsigned runs = m_args["optimize-runs"].as<unsigned>();
 		bool successful = m_compiler->compile(optimize, runs);
+		if (successful)
+			m_compiler->link(m_libraries);
+
+		if (successful && m_args.count("formal"))
+			if (!m_compiler->prepareFormalAnalysis())
+				successful = false;
+
 		for (auto const& error: m_compiler->errors())
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
 				*error,
 				(error->type() == Error::Type::Warning) ? "Warning" : "Error", *m_compiler
 			);
+
 		if (!successful)
 			return false;
-		m_compiler->link(m_libraries);
 	}
 	catch (CompilerError const& _exception)
 	{
@@ -755,6 +776,8 @@ void CommandLineInterface::outputCompilationResults()
 		handleMeta(DocumentationType::NatspecDev, contract);
 		handleMeta(DocumentationType::NatspecUser, contract);
 	} // end of contracts iteration
+
+	handleFormal();
 }
 
 }

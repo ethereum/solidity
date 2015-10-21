@@ -3,6 +3,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 aux_source_directory(analysis SRC_LIST)
 aux_source_directory(ast SRC_LIST)
 aux_source_directory(codegen SRC_LIST)
+aux_source_directory(formal SRC_LIST)
 aux_source_directory(interface SRC_LIST)
 aux_source_directory(parsing SRC_LIST)
 
