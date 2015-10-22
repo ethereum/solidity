@@ -20,7 +20,7 @@
  * Unit tests for the type system of Solidity.
  */
 
-#include <libsolidity/Types.h>
+#include <libsolidity/ast/Types.h>
 #include <boost/test/unit_test.hpp>
 
 using namespace std;

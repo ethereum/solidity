@@ -24,9 +24,9 @@
 #include <libevmasm/GasMeter.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/PathGasMeter.h>
-#include <libsolidity/AST.h>
-#include <libsolidity/GasEstimator.h>
-#include <libsolidity/SourceReferenceFormatter.h>
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
 
 using namespace std;
 using namespace dev::eth;

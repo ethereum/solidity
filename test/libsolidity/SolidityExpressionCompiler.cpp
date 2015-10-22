@@ -23,13 +23,13 @@
 #include <string>
 
 #include <libdevcore/Log.h>
-#include <libsolidity/Scanner.h>
-#include <libsolidity/Parser.h>
-#include <libsolidity/NameAndTypeResolver.h>
-#include <libsolidity/CompilerContext.h>
-#include <libsolidity/ExpressionCompiler.h>
-#include <libsolidity/AST.h>
-#include <libsolidity/TypeChecker.h>
+#include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/parsing/Parser.h>
+#include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/codegen/CompilerContext.h>
+#include <libsolidity/codegen/ExpressionCompiler.h>
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/analysis/TypeChecker.h>
 #include "../TestHelper.h"
 
 using namespace std;

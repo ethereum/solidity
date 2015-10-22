@@ -25,7 +25,7 @@
 #include <tuple>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Hash.h>
-#include <libsolidity/Exceptions.h>
+#include <libsolidity/interface/Exceptions.h>
 #include <test/libsolidity/solidityExecutionFramework.h>
 
 using namespace std;

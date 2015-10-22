@@ -23,8 +23,8 @@
 #include "../TestHelper.h"
 #include <string>
 #include <json/json.h>
-#include <libsolidity/CompilerStack.h>
-#include <libsolidity/Exceptions.h>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/Exceptions.h>
 #include <libdevcore/Exceptions.h>
 
 namespace dev

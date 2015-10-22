@@ -21,7 +21,7 @@
  */
 #pragma once
 
-#include <libsolidity/CompilerStack.h>
+#include <libsolidity/interface/CompilerStack.h>
 #include <memory>
 #include <boost/program_options.hpp>
 

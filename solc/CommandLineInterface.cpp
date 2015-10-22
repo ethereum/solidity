@@ -35,16 +35,16 @@
 #include <libdevcore/CommonIO.h>
 #include <libevmcore/Instruction.h>
 #include <libevmcore/Params.h>
-#include <libsolidity/Version.h>
-#include <libsolidity/Scanner.h>
-#include <libsolidity/Parser.h>
-#include <libsolidity/ASTPrinter.h>
-#include <libsolidity/ASTJsonConverter.h>
-#include <libsolidity/NameAndTypeResolver.h>
-#include <libsolidity/Exceptions.h>
-#include <libsolidity/CompilerStack.h>
-#include <libsolidity/SourceReferenceFormatter.h>
-#include <libsolidity/GasEstimator.h>
+#include <libsolidity/interface/Version.h>
+#include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/parsing/Parser.h>
+#include <libsolidity/ast/ASTPrinter.h>
+#include <libsolidity/ast/ASTJsonConverter.h>
+#include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/interface/Exceptions.h>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
+#include <libsolidity/interface/GasEstimator.h>
 
 using namespace std;
 namespace po = boost::program_options;
