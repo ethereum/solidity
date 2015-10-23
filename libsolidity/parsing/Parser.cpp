@@ -1180,7 +1180,13 @@ ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
 void Parser::expectToken(Token::Value _value)
 {
 	if (m_scanner->currentToken() != _value)
-		fatalParserError(std::string(string("Expected token ") + string(Token::name(_value))));
+		fatalParserError(
+			string("Expected token ") +
+			string(Token::name(_value)) +
+			string(" got '") +
+			string(Token::name(m_scanner->currentToken())) +
+			string("'")
+		);
 	m_scanner->next();
 }
 
@@ -1188,7 +1194,12 @@ Token::Value Parser::expectAssignmentOperator()
 {
 	Token::Value op = m_scanner->currentToken();
 	if (!Token::isAssignmentOp(op))
-		fatalParserError(std::string("Expected assignment operator"));
+		fatalParserError(
+			std::string("Expected assignment operator ") +
+			string(" got '") +
+			string(Token::name(m_scanner->currentToken())) +
+			string("'")
+		);
 	m_scanner->next();
 	return op;
 }
@@ -1196,7 +1207,12 @@ Token::Value Parser::expectAssignmentOperator()
 ASTPointer<ASTString> Parser::expectIdentifierToken()
 {
 	if (m_scanner->currentToken() != Token::Identifier)
-		fatalParserError(std::string("Expected identifier"));
+		fatalParserError(
+			std::string("Expected identifier ") +
+			string(" got '") +
+			string(Token::name(m_scanner->currentToken())) +
+			string("'")
+		);
 	return getLiteralAndAdvance();
 }
 
