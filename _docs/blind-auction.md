@@ -103,4 +103,4 @@ contract SimpleAuction {
         throw;
     }
 }
-{% end highlight %}
+{% endhighlight %}
