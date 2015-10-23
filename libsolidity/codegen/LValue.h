@@ -204,7 +204,7 @@ public:
 	/// Constructs the LValue assuming that the other LValues are present on the stack.
 	/// Empty unique_ptrs are possible if e.g. some values should be ignored during assignment.
 	TupleObject(CompilerContext& _compilerContext, std::vector<std::unique_ptr<LValue>>&& _lvalues);
-	virtual unsigned sizeOnStack() const;
+	virtual unsigned sizeOnStack() const override;
 	virtual void retrieveValue(SourceLocation const& _location, bool _remove = false) const override;
 	virtual void storeValue(
 		Type const& _sourceType,
