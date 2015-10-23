@@ -1180,7 +1180,13 @@ ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
 void Parser::expectToken(Token::Value _value)
 {
 	if (m_scanner->currentToken() != _value)
-		fatalParserError(std::string(string("Expected token ") + string(Token::name(_value))));
+		fatalParserError(std::string(
+			string("Expected token ") +
+			string(Token::name(_value)) +
+			string(" got '") +
+			string(Token::name(m_scanner->currentToken())) +
+			string("'")
+		));
 	m_scanner->next();
 }
 
