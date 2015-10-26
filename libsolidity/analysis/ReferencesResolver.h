@@ -43,12 +43,25 @@ class ReferencesResolver: private ASTConstVisitor
 {
 public:
 	ReferencesResolver(
-		ASTNode& _root,
+		ErrorList& _errors,
 		NameAndTypeResolver& _resolver,
 		ContractDefinition const* _currentContract,
 		ParameterList const* _returnParameters,
 		bool _resolveInsideCode = false
-	);
+	):
+		m_errors(_errors),
+		m_resolver(_resolver),
+		m_currentContract(_currentContract),
+		m_returnParameters(_returnParameters),
+		m_resolveInsideCode(_resolveInsideCode)
+	{}
+
+	/// @returns true if no errors during resolving
+	bool resolve(ASTNode& _root)
+	{
+		_root.accept(*this);
+		return m_errors.empty();
+	}
 
 private:
 	virtual bool visit(Block const&) override { return m_resolveInsideCode; }
@@ -59,6 +72,13 @@ private:
 
 	TypePointer typeFor(TypeName const& _typeName);
 
+	/// Adds a new error to the list of errors.
+	void typeError(std::string const& _description);
+
+	/// Adds a new error to the list of errors and throws to abort type checking.
+	void fatalTypeError(std::string const& _description);
+
+	ErrorList& m_errors;
 	NameAndTypeResolver& m_resolver;
 	ContractDefinition const* m_currentContract;
 	ParameterList const* m_returnParameters;

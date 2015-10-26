@@ -31,21 +31,6 @@ using namespace dev;
 using namespace dev::solidity;
 
 
-ReferencesResolver::ReferencesResolver(
-	ASTNode& _root,
-	NameAndTypeResolver& _resolver,
-	ContractDefinition const* _currentContract,
-	ParameterList const* _returnParameters,
-	bool _resolveInsideCode
-):
-	m_resolver(_resolver),
-	m_currentContract(_currentContract),
-	m_returnParameters(_returnParameters),
-	m_resolveInsideCode(_resolveInsideCode)
-{
-	_root.accept(*this);
-}
-
 bool ReferencesResolver::visit(Return const& _return)
 {
 	_return.annotation().functionReturnParameters = m_returnParameters;
@@ -108,19 +93,19 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				if (contract.isLibrary())
 				{
 					if (loc == Location::Memory)
-						BOOST_THROW_EXCEPTION(_variable.createTypeError(
+						fatalTypeError(
 							"Location has to be calldata or storage for external "
 							"library functions (remove the \"memory\" keyword)."
-						));
+						);
 				}
 				else
 				{
 					// force location of external function parameters (not return) to calldata
 					if (loc != Location::Default)
-						BOOST_THROW_EXCEPTION(_variable.createTypeError(
+						fatalTypeError(
 							"Location has to be calldata for external functions "
 							"(remove the \"memory\" or \"storage\" keyword)."
-						));
+						);
 				}
 				if (loc == Location::Default)
 					type = ref->copyForLocation(DataLocation::CallData, true);
@@ -130,10 +115,10 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				auto const& contract = dynamic_cast<ContractDefinition const&>(*_variable.scope()->scope());
 				// force locations of public or external function (return) parameters to memory
 				if (loc == Location::Storage && !contract.isLibrary())
-					BOOST_THROW_EXCEPTION(_variable.createTypeError(
+					fatalTypeError(
 						"Location has to be memory for publicly visible functions "
 						"(remove the \"storage\" keyword)."
-					));
+					);
 				if (loc == Location::Default || !contract.isLibrary())
 					type = ref->copyForLocation(DataLocation::Memory, true);
 			}
@@ -142,9 +127,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				if (_variable.isConstant())
 				{
 					if (loc != Location::Default && loc != Location::Memory)
-						BOOST_THROW_EXCEPTION(_variable.createTypeError(
-							"Storage location has to be \"memory\" (or unspecified) for constants."
-						));
+						fatalTypeError("Storage location has to be \"memory\" (or unspecified) for constants.");
 					loc = Location::Memory;
 				}
 				if (loc == Location::Default)
@@ -159,16 +142,14 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 			}
 		}
 		else if (loc != Location::Default && !ref)
-			BOOST_THROW_EXCEPTION(_variable.createTypeError(
-				"Storage location can only be given for array or struct types."
-			));
+			fatalTypeError("Storage location can only be given for array or struct types.");
 
 		if (!type)
-			BOOST_THROW_EXCEPTION(_variable.typeName()->createTypeError("Invalid type name."));
+			fatalTypeError("Invalid type name.");
 
 	}
 	else if (!_variable.canHaveAutoType())
-		BOOST_THROW_EXCEPTION(_variable.createTypeError("Explicit type needed."));
+		fatalTypeError("Explicit type needed.");
 	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
 
 	_variable.annotation().type = type;
@@ -194,9 +175,7 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 		else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 			type = make_shared<ContractType>(*contract);
 		else
-			BOOST_THROW_EXCEPTION(typeName->createTypeError(
-				"Name has to refer to a struct, enum or contract."
-			));
+			fatalTypeError("Name has to refer to a struct, enum or contract.");
 	}
 	else if (auto mapping = dynamic_cast<Mapping const*>(&_typeName))
 	{
@@ -212,9 +191,7 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 	{
 		TypePointer baseType = typeFor(arrayType->baseType());
 		if (baseType->storageBytes() == 0)
-			BOOST_THROW_EXCEPTION(arrayType->baseType().createTypeError(
-				"Illegal base type of storage size zero for array."
-			));
+			fatalTypeError("Illegal base type of storage size zero for array.");
 		if (Expression const* length = arrayType->length())
 		{
 			if (!length->annotation().type)
@@ -222,7 +199,7 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 
 			auto const* lengthType = dynamic_cast<IntegerConstantType const*>(length->annotation().type.get());
 			if (!lengthType)
-				BOOST_THROW_EXCEPTION(length->createTypeError("Invalid array length."));
+				fatalTypeError("Invalid array length.");
 			type = make_shared<ArrayType>(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
 		}
 		else
@@ -231,4 +208,19 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 
 	return _typeName.annotation().type = move(type);
 }
+
+void ReferencesResolver::typeError(string const& _description)
+{
+	auto err = make_shared<Error>(Error::Type::TypeError);
+	*err <<	errinfo_comment(_description);
+
+	m_errors.push_back(err);
+}
+
+void ReferencesResolver::fatalTypeError(string const& _description)
+{
+	typeError(_description);
+	BOOST_THROW_EXCEPTION(FatalError());
+}
+
 

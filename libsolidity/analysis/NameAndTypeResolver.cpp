@@ -64,44 +64,52 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	{
 		m_currentScope = &m_scopes[nullptr];
 
+		ReferencesResolver resolver(m_errors, *this, &_contract, nullptr);
+		bool result = true;
 		for (ASTPointer<InheritanceSpecifier> const& baseContract: _contract.baseContracts())
-			ReferencesResolver resolver(*baseContract, *this, &_contract, nullptr);
+			result = resolver.resolve(*baseContract);
 
 		m_currentScope = &m_scopes[&_contract];
 
-		linearizeBaseContracts(_contract);
-		std::vector<ContractDefinition const*> properBases(
-			++_contract.annotation().linearizedBaseContracts.begin(),
-			_contract.annotation().linearizedBaseContracts.end()
-		);
+		if (result)
+		{
 
-		for (ContractDefinition const* base: properBases)
-			importInheritedScope(*base);
+			linearizeBaseContracts(_contract);
+			std::vector<ContractDefinition const*> properBases(
+				++_contract.annotation().linearizedBaseContracts.begin(),
+				_contract.annotation().linearizedBaseContracts.end()
+			);
+
+			for (ContractDefinition const* base: properBases)
+				importInheritedScope(*base);
+		}
+
 
 		for (ASTPointer<StructDefinition> const& structDef: _contract.definedStructs())
-			ReferencesResolver resolver(*structDef, *this, &_contract, nullptr);
+			result = result && resolver.resolve(*structDef);
 		for (ASTPointer<EnumDefinition> const& enumDef: _contract.definedEnums())
-			ReferencesResolver resolver(*enumDef, *this, &_contract, nullptr);
+			result = result && resolver.resolve(*enumDef);
 		for (ASTPointer<VariableDeclaration> const& variable: _contract.stateVariables())
-			ReferencesResolver resolver(*variable, *this, &_contract, nullptr);
+			result = result && resolver.resolve(*variable);
 		for (ASTPointer<EventDefinition> const& event: _contract.events())
-			ReferencesResolver resolver(*event, *this, &_contract, nullptr);
-
+			result = result && resolver.resolve(*event);
 		// these can contain code, only resolve parameters for now
 		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
 		{
 			m_currentScope = &m_scopes[modifier.get()];
-			ReferencesResolver resolver(*modifier, *this, &_contract, nullptr);
+			ReferencesResolver resolver(m_errors);
+			result = result && resolver.resolve(*modifier);
 		}
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
 			m_currentScope = &m_scopes[function.get()];
 			ReferencesResolver referencesResolver(
-				*function,
+				m_errors;
 				*this,
 				&_contract,
 				function->returnParameterList().get()
 			);
+			result = result && resolver.resolve(*function);
 		}
 
 		m_currentScope = &m_scopes[&_contract];
@@ -110,19 +118,22 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
 		{
 			m_currentScope = &m_scopes[modifier.get()];
-			ReferencesResolver resolver(*modifier, *this, &_contract, nullptr, true);
+			ReferencesResolver resolver(m_errors, *this, &_contract, nullptr, true);
+			result = result && resolver.resolve(*modifier);
 		}
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
 			m_currentScope = &m_scopes[function.get()];
 			ReferencesResolver referencesResolver(
-				*function,
 				*this,
 				&_contract,
 				function->returnParameterList().get(),
 				true
 			);
+			result = result && resolver.resolve(*function);
 		}
+		if (!result)
+			return false;
 	}
 	catch (FatalError const& _e)
 	{
