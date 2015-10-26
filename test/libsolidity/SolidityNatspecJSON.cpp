@@ -63,6 +63,12 @@ public:
 		);
 	}
 
+	void expectNatspecError(std::string const& _code)
+	{
+		BOOST_CHECK(!m_compilerStack.parse(_code));
+		BOOST_REQUIRE(Error::containsErrorOfType(m_compilerStack.errors(), Error::Type::DocstringParsingError));
+	}
+
 private:
 	CompilerStack m_compilerStack;
 	Json::Reader m_reader;
@@ -541,6 +547,31 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 	)ABCDEF";
 
 	checkNatspec(sourceCode, natspec, true);
+}
+
+BOOST_AUTO_TEST_CASE(dev_title_at_function_error)
+{
+	char const* sourceCode = " /// @author Lefteris\n"
+	" /// @title Just a test contract\n"
+	"contract test {\n"
+	"  /// @dev Mul function\n"
+	"  /// @title I really should not be here\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	expectNatspecError(sourceCode);
+}
+
+BOOST_AUTO_TEST_CASE(dev_documenting_nonexistant_param)
+{
+	char const* sourceCode = "contract test {\n"
+	"  /// @dev Multiplies a number by 7 and adds second parameter\n"
+	"  /// @param a Documentation for the first parameter\n"
+	"  /// @param not_existing Documentation for the second parameter\n"
+	"  function mul(uint a, uint second) returns(uint d) { return a * 7 + second; }\n"
+	"}\n";
+
+	expectNatspecError(sourceCode);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

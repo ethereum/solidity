@@ -28,6 +28,7 @@
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/TypeChecker.h>
+#include <libsolidity/analysis/DocStringAnalyser.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/InterfaceHandler.h>
@@ -114,6 +115,12 @@ bool CompilerStack::parse()
 
 	resolveImports();
 
+	bool noErrors = true;
+	DocStringAnalyser docStringAnalyser(m_errors);
+	for (Source const* source: m_sourceOrder)
+		if (!docStringAnalyser.analyseDocStrings(*source->ast))
+			noErrors = false;
+
 	m_globalContext = make_shared<GlobalContext>();
 	NameAndTypeResolver resolver(m_globalContext->declarations(), m_errors);
 	for (Source const* source: m_sourceOrder)
@@ -131,8 +138,6 @@ bool CompilerStack::parse()
 				m_contracts[contract->name()].contract = contract;
 			}
 
-	InterfaceHandler interfaceHandler;
-	bool typesFine = true;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -142,15 +147,15 @@ bool CompilerStack::parse()
 				TypeChecker typeChecker(m_errors);
 				if (typeChecker.checkTypeRequirements(*contract))
 				{
-					contract->setDevDocumentation(interfaceHandler.devDocumentation(*contract));
-					contract->setUserDocumentation(interfaceHandler.userDocumentation(*contract));
+					contract->setDevDocumentation(InterfaceHandler::devDocumentation(*contract));
+					contract->setUserDocumentation(InterfaceHandler::userDocumentation(*contract));
 				}
 				else
-					typesFine = false;
+					noErrors = false;
 
 				m_contracts[contract->name()].contract = contract;
 			}
-	m_parseSuccessful = typesFine;
+	m_parseSuccessful = noErrors;
 	return m_parseSuccessful;
 }
 
@@ -287,7 +292,7 @@ string const& CompilerStack::metadata(string const& _contractName, Documentation
 
 	// caches the result
 	if (!*doc)
-		doc->reset(new string(currentContract.interfaceHandler->documentation(*currentContract.contract, _type)));
+		doc->reset(new string(InterfaceHandler::documentation(*currentContract.contract, _type)));
 
 	return *(*doc);
 }
@@ -427,9 +432,6 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 
 	return it->second;
 }
-
-CompilerStack::Contract::Contract(): interfaceHandler(make_shared<InterfaceHandler>()) {}
-
 
 }
 }
