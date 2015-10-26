@@ -70,9 +70,9 @@ bool DocStringAnalyser::visit(EventDefinition const& _node)
 }
 
 void DocStringAnalyser::handleCallable(
-		CallableDeclaration const& _callable,
-		Documented const& _node,
-		DocumentedAnnotation& _annotation
+	CallableDeclaration const& _callable,
+	Documented const& _node,
+	DocumentedAnnotation& _annotation
 )
 {
 	parseDocStrings(_node, _annotation);
