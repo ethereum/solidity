@@ -792,10 +792,15 @@ private:
 /**
  * Abstract base class for statements.
  */
-class Statement: public ASTNode
+class Statement: public ASTNode, public Documented
 {
 public:
-	explicit Statement(SourceLocation const& _location): ASTNode(_location) {}
+	explicit Statement(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString
+	): ASTNode(_location), Documented(_docString) {}
+
+	virtual StatementAnnotation& annotation() const override;
 };
 
 /**
@@ -806,9 +811,10 @@ class Block: public Statement
 public:
 	Block(
 		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
 		std::vector<ASTPointer<Statement>> const& _statements
 	):
-		Statement(_location), m_statements(_statements) {}
+		Statement(_location, _docString), m_statements(_statements) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -823,7 +829,10 @@ private:
 class PlaceholderStatement: public Statement
 {
 public:
-	explicit PlaceholderStatement(SourceLocation const& _location): Statement(_location) {}
+	explicit PlaceholderStatement(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString
+	): Statement(_location, _docString) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -838,11 +847,12 @@ class IfStatement: public Statement
 public:
 	IfStatement(
 		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _condition,
 		ASTPointer<Statement> const& _trueBody,
 		ASTPointer<Statement> const& _falseBody
 	):
-		Statement(_location),
+		Statement(_location, _docString),
 		m_condition(_condition),
 		m_trueBody(_trueBody),
 		m_falseBody(_falseBody)
@@ -867,7 +877,10 @@ private:
 class BreakableStatement: public Statement
 {
 public:
-	explicit BreakableStatement(SourceLocation const& _location): Statement(_location) {}
+	explicit BreakableStatement(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString
+	): Statement(_location, _docString) {}
 };
 
 class WhileStatement: public BreakableStatement
@@ -875,10 +888,11 @@ class WhileStatement: public BreakableStatement
 public:
 	WhileStatement(
 		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _condition,
 		ASTPointer<Statement> const& _body
 	):
-		BreakableStatement(_location), m_condition(_condition), m_body(_body) {}
+		BreakableStatement(_location, _docString), m_condition(_condition), m_body(_body) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -898,12 +912,13 @@ class ForStatement: public BreakableStatement
 public:
 	ForStatement(
 		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Statement> const& _initExpression,
 		ASTPointer<Expression> const& _conditionExpression,
 		ASTPointer<ExpressionStatement> const& _loopExpression,
 		ASTPointer<Statement> const& _body
 	):
-		BreakableStatement(_location),
+		BreakableStatement(_location, _docString),
 		m_initExpression(_initExpression),
 		m_condExpression(_conditionExpression),
 		m_loopExpression(_loopExpression),
@@ -931,7 +946,8 @@ private:
 class Continue: public Statement
 {
 public:
-	explicit Continue(SourceLocation const& _location): Statement(_location) {}
+	explicit Continue(SourceLocation const& _location, 	ASTPointer<ASTString> const& _docString):
+		Statement(_location, _docString) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 };
@@ -939,7 +955,8 @@ public:
 class Break: public Statement
 {
 public:
-	explicit Break(SourceLocation const& _location): Statement(_location) {}
+	explicit Break(SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
+		Statement(_location, _docString) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 };
@@ -947,8 +964,11 @@ public:
 class Return: public Statement
 {
 public:
-	Return(SourceLocation const& _location, ASTPointer<Expression> _expression):
-		Statement(_location), m_expression(_expression) {}
+	Return(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
+		ASTPointer<Expression> _expression
+	): Statement(_location, _docString), m_expression(_expression) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -966,7 +986,8 @@ private:
 class Throw: public Statement
 {
 public:
-	explicit Throw(SourceLocation const& _location): Statement(_location) {}
+	explicit Throw(SourceLocation const& _location, ASTPointer<ASTString> const& _docString):
+		Statement(_location, _docString) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 };
@@ -985,10 +1006,11 @@ class VariableDeclarationStatement: public Statement
 public:
 	VariableDeclarationStatement(
 		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
 		std::vector<ASTPointer<VariableDeclaration>> const& _variables,
 		ASTPointer<Expression> const& _initialValue
 	):
-		Statement(_location), m_variables(_variables), m_initialValue(_initialValue) {}
+		Statement(_location, _docString), m_variables(_variables), m_initialValue(_initialValue) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
@@ -1012,9 +1034,10 @@ class ExpressionStatement: public Statement
 public:
 	ExpressionStatement(
 		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> _expression
 	):
-		Statement(_location), m_expression(_expression) {}
+		Statement(_location, _docString), m_expression(_expression) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 

@@ -39,12 +39,8 @@ bool DocStringAnalyser::analyseDocStrings(SourceUnit const& _sourceUnit)
 
 bool DocStringAnalyser::visit(ContractDefinition const& _node)
 {
-	parseDocStrings(_node, _node.annotation());
-
-	static const set<string> validTags = set<string>{"author", "title", "dev", "notice"};
-	for (auto const& docTag: _node.annotation().docTags)
-		if (!validTags.count(docTag.first))
-			appendError("Doc tag @" + docTag.first + " not valid for contracts.");
+	static const set<string> validTags = set<string>{"author", "title", "dev", "notice", "why3"};
+	parseDocStrings(_node, _node.annotation(), validTags, "contracts");
 
 	return true;
 }
@@ -69,17 +65,24 @@ bool DocStringAnalyser::visit(EventDefinition const& _node)
 	return true;
 }
 
+bool DocStringAnalyser::visitNode(ASTNode const& _node)
+{
+	if (auto node = dynamic_cast<Statement const*>(&_node))
+	{
+		static const set<string> validTags = {"why3"};
+		parseDocStrings(*node, node->annotation(), validTags, "statements");
+	}
+	return true;
+}
+
 void DocStringAnalyser::handleCallable(
 	CallableDeclaration const& _callable,
 	Documented const& _node,
 	DocumentedAnnotation& _annotation
 )
 {
-	parseDocStrings(_node, _annotation);
 	static const set<string> validTags = set<string>{"author", "dev", "notice", "return", "param", "why3"};
-	for (auto const& docTag: _annotation.docTags)
-		if (!validTags.count(docTag.first))
-			appendError("Doc tag @" + docTag.first + " not valid for functions.");
+	parseDocStrings(_node, _annotation, validTags, "functions");
 
 	set<string> validParams;
 	for (auto const& p: _callable.parameters())
@@ -97,7 +100,12 @@ void DocStringAnalyser::handleCallable(
 			);
 }
 
-void DocStringAnalyser::parseDocStrings(Documented const& _node, DocumentedAnnotation& _annotation)
+void DocStringAnalyser::parseDocStrings(
+	Documented const& _node,
+	DocumentedAnnotation& _annotation,
+	set<string> const& _validTags,
+	string const& _nodeName
+)
 {
 	DocStringParser parser;
 	if (_node.documentation() && !_node.documentation()->empty())
@@ -106,6 +114,9 @@ void DocStringAnalyser::parseDocStrings(Documented const& _node, DocumentedAnnot
 			m_errorOccured = true;
 		_annotation.docTags = parser.tags();
 	}
+	for (auto const& docTag: _annotation.docTags)
+		if (!_validTags.count(docTag.first))
+			appendError("Doc tag @" + docTag.first + " not valid for " + _nodeName + ".");
 }
 
 void DocStringAnalyser::appendError(string const& _description)
