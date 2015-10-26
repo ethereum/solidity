@@ -24,15 +24,31 @@
 #include <functional>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/version.hpp>
 
 namespace dev
 {
 namespace test
 {
 
+#if (BOOST_VERSION >= 105900)
+#define ETH_BOOST_CHECK_IMPL(_message, _requireOrCheck) BOOST_TEST_TOOL_DIRECT_IMPL( \
+		false,															\
+		_requireOrCheck,												\
+		_message														\
+	)
+#else
+#define ETH_BOOST_CHECK_IMPL(_message, _requireOrCheck) BOOST_CHECK_IMPL( \
+		false,															\
+		_message,														\
+		_requireOrCheck,												\
+		CHECK_MSG														\
+	)
+#endif
+
 /// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
 /// Our version of BOOST_REQUIRE_NO_THROW()
-/// @param _statenent    The statement for which to make sure no exceptions are thrown
+/// @param _statement     The statement for which to make sure no exceptions are thrown
 /// @param _message       A message to act as a prefix to the expression's error information
 #define ETH_TEST_REQUIRE_NO_THROW(_statement, _message)				\
 	do																	\
@@ -46,12 +62,14 @@ namespace test
 		{																\
 			auto msg = std::string(_message " due to an exception thrown by " \
 				BOOST_STRINGIZE(_statement) "\n") + boost::diagnostic_information(_e); \
-			BOOST_CHECK_IMPL(false, msg, REQUIRE, CHECK_MSG);			\
+			ETH_BOOST_CHECK_IMPL(msg, REQUIRE);							\
 		}																\
 		catch (...)														\
 		{																\
-			BOOST_CHECK_IMPL(false, "Unknown exception thrown by "		\
-				BOOST_STRINGIZE(_statement), REQUIRE, CHECK_MSG);		\
+			ETH_BOOST_CHECK_IMPL(										\
+				"Unknown exception thrown by " BOOST_STRINGIZE(_statement),	\
+				REQUIRE													\
+			);															\
 		}																\
 	}																	\
 	while (0)
@@ -72,12 +90,14 @@ namespace test
 		{																\
 			auto msg = std::string(_message " due to an exception thrown by " \
 				BOOST_STRINGIZE(_statement) "\n") + boost::diagnostic_information(_e); \
-			BOOST_CHECK_IMPL(false, msg, CHECK, CHECK_MSG);				\
+			ETH_BOOST_CHECK_IMPL(msg, CHECK);							\
 		}																\
 		catch (...)														\
 		{																\
-			BOOST_CHECK_IMPL(false, "Unknown exception thrown by "		\
-				BOOST_STRINGIZE(_statement), CHECK, CHECK_MSG );		\
+			ETH_BOOST_CHECK_IMPL(										\
+				"Unknown exception thrown by " BOOST_STRINGIZE(_statement),	\
+				CHECK													\
+			);															\
 		}																\
 	}																	\
 	while (0)
