@@ -188,13 +188,10 @@ private:
 		eth::LinkerObject object;
 		eth::LinkerObject runtimeObject;
 		eth::LinkerObject cloneObject;
-		std::shared_ptr<InterfaceHandler> interfaceHandler;
 		mutable std::unique_ptr<std::string const> interface;
 		mutable std::unique_ptr<std::string const> solidityInterface;
 		mutable std::unique_ptr<std::string const> userDocumentation;
 		mutable std::unique_ptr<std::string const> devDocumentation;
-
-		Contract();
 	};
 
 	void resolveImports();

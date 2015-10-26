@@ -41,13 +41,26 @@ struct ASTAnnotation
 	virtual ~ASTAnnotation() {}
 };
 
+struct DocTag
+{
+	std::string content;	///< The text content of the tag.
+	std::string paramName;	///< Only used for @param, stores the parameter name.
+};
+
+struct DocumentedAnnotation
+{
+	virtual ~DocumentedAnnotation() {}
+	/// Mapping docstring tag name -> content.
+	std::multimap<std::string, DocTag> docTags;
+};
+
 struct TypeDeclarationAnnotation: ASTAnnotation
 {
 	/// The name of this type, prefixed by proper namespaces if globally accessible.
 	std::string canonicalName;
 };
 
-struct ContractDefinitionAnnotation: TypeDeclarationAnnotation
+struct ContractDefinitionAnnotation: TypeDeclarationAnnotation, DocumentedAnnotation
 {
 	/// Whether all functions are implemented.
 	bool isFullyImplemented = true;
@@ -57,6 +70,18 @@ struct ContractDefinitionAnnotation: TypeDeclarationAnnotation
 	/// List of contracts this contract creates, i.e. which need to be compiled first.
 	/// Also includes all contracts from @a linearizedBaseContracts.
 	std::set<ContractDefinition const*> contractDependencies;
+};
+
+struct FunctionDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+{
+};
+
+struct EventDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+{
+};
+
+struct ModifierDefinitionAnnotation: ASTAnnotation, DocumentedAnnotation
+{
 };
 
 struct VariableDeclarationAnnotation: ASTAnnotation

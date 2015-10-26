@@ -492,6 +492,8 @@ public:
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
 
+	virtual FunctionDefinitionAnnotation& annotation() const override;
+
 private:
 	bool m_isConstructor;
 	bool m_isDeclaredConst;
@@ -593,6 +595,8 @@ public:
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
 
+	virtual ModifierDefinitionAnnotation& annotation() const override;
+
 private:
 	ASTPointer<Block> m_body;
 };
@@ -646,6 +650,8 @@ public:
 	bool isAnonymous() const { return m_anonymous; }
 
 	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+
+	virtual EventDefinitionAnnotation& annotation() const override;
 
 private:
 	bool m_anonymous = false;

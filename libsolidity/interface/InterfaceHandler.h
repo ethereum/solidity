@@ -37,6 +37,7 @@ namespace solidity
 
 // Forward declarations
 class ContractDefinition;
+struct DocTag;
 enum class DocumentationType: uint8_t;
 
 enum class DocTagType: uint8_t
@@ -59,73 +60,33 @@ enum class CommentOwner
 class InterfaceHandler
 {
 public:
-	InterfaceHandler();
-
 	/// Get the given type of documentation
 	/// @param _contractDef The contract definition
 	/// @param _type        The type of the documentation. Can be one of the
 	///                     types provided by @c DocumentationType
 	/// @return             A string with the json representation of provided type
-	std::string documentation(
+	static std::string documentation(
 		ContractDefinition const& _contractDef,
 		DocumentationType _type
 	);
 	/// Get the ABI Interface of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A string with the json representation of the contract's ABI Interface
-	std::string abiInterface(ContractDefinition const& _contractDef);
-	std::string ABISolidityInterface(ContractDefinition const& _contractDef);
+	static std::string abiInterface(ContractDefinition const& _contractDef);
+	static std::string ABISolidityInterface(ContractDefinition const& _contractDef);
 	/// Get the User documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A string with the json representation of the contract's user documentation
-	std::string userDocumentation(ContractDefinition const& _contractDef);
+	static std::string userDocumentation(ContractDefinition const& _contractDef);
 	/// Genereates the Developer's documentation of the contract
 	/// @param _contractDef The contract definition
 	/// @return             A string with the json representation
 	///                     of the contract's developer documentation
-	std::string devDocumentation(ContractDefinition const& _contractDef);
+	static std::string devDocumentation(ContractDefinition const& _contractDef);
 
 private:
-	void resetUser();
-	void resetDev();
-
-	std::string::const_iterator parseDocTagLine(
-		std::string::const_iterator _pos,
-		std::string::const_iterator _end,
-		std::string& _tagString,
-		DocTagType _tagType,
-		bool _appending
-	);
-	std::string::const_iterator parseDocTagParam(
-		std::string::const_iterator _pos,
-		std::string::const_iterator _end
-	);
-	std::string::const_iterator appendDocTagParam(
-		std::string::const_iterator _pos,
-		std::string::const_iterator _end
-	);
-	void parseDocString(std::string const& _string, CommentOwner _owner);
-	std::string::const_iterator appendDocTag(
-		std::string::const_iterator _pos,
-		std::string::const_iterator _end,
-		CommentOwner _owner
-	);
-	std::string::const_iterator parseDocTag(
-		std::string::const_iterator _pos,
-		std::string::const_iterator _end,
-		std::string const& _tag,
-		CommentOwner _owner
-	);
-
-	// internal state
-	DocTagType m_lastTag;
-	std::string m_notice;
-	std::string m_dev;
-	std::string m_return;
-	std::string m_contractAuthor;
-	std::string m_author;
-	std::string m_title;
-	std::vector<std::pair<std::string, std::string>> m_params;
+	/// Returns concatenation of all content under the given tag name.
+	static std::string extractDoc(std::multimap<std::string, DocTag> const& _tags, std::string const& _name);
 };
 
 } //solidity NS

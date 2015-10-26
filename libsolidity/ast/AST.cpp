@@ -248,14 +248,35 @@ string FunctionDefinition::externalSignature() const
 	return FunctionType(*this).externalSignature();
 }
 
+FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new FunctionDefinitionAnnotation();
+	return static_cast<FunctionDefinitionAnnotation&>(*m_annotation);
+}
+
 TypePointer ModifierDefinition::type(ContractDefinition const*) const
 {
 	return make_shared<ModifierType>(*this);
 }
 
+ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new ModifierDefinitionAnnotation();
+	return static_cast<ModifierDefinitionAnnotation&>(*m_annotation);
+}
+
 TypePointer EventDefinition::type(ContractDefinition const*) const
 {
 	return make_shared<FunctionType>(*this);
+}
+
+EventDefinitionAnnotation& EventDefinition::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new EventDefinitionAnnotation();
+	return static_cast<EventDefinitionAnnotation&>(*m_annotation);
 }
 
 UserDefinedTypeNameAnnotation& UserDefinedTypeName::annotation() const
