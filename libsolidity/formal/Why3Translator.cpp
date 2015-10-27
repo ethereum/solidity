@@ -46,7 +46,7 @@ bool Why3Translator::process(SourceUnit const& _source)
 
 void Why3Translator::error(ASTNode const& _node, string const& _description)
 {
-	auto err = make_shared<Error>(Error::Type::FormalError);
+	auto err = make_shared<Error>(Error::Type::Why3TranslatorError);
 	*err <<
 		errinfo_sourceLocation(_node.location()) <<
 		errinfo_comment(_description);

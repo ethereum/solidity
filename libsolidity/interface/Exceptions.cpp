@@ -42,8 +42,8 @@ Error::Error(Type _type): m_type(_type)
 	case Type::TypeError:
 		m_typeName = "Type Error";
 		break;
-	case Type::FormalError:
-		m_typeName = "Formal Error";
+	case Type::Why3TranslatorError:
+		m_typeName = "Why3 Translator Error";
 		break;
 	case Type::Warning:
 		m_typeName = "Warning";

@@ -47,7 +47,7 @@ public:
 		DocstringParsingError,
 		ParserError,
 		TypeError,
-		FormalError,
+		Why3TranslatorError,
 		Warning
 	};
 
