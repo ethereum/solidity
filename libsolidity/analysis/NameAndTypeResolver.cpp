@@ -97,19 +97,19 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
 		{
 			m_currentScope = &m_scopes[modifier.get()];
-			ReferencesResolver resolver(m_errors);
+			ReferencesResolver resolver(m_errors, *this, &_contract, nullptr);
 			result = result && resolver.resolve(*modifier);
 		}
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
 			m_currentScope = &m_scopes[function.get()];
 			ReferencesResolver referencesResolver(
-				m_errors;
+				m_errors,
 				*this,
 				&_contract,
 				function->returnParameterList().get()
 			);
-			result = result && resolver.resolve(*function);
+			result = result && referencesResolver.resolve(*function);
 		}
 
 		m_currentScope = &m_scopes[&_contract];
@@ -125,6 +125,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		{
 			m_currentScope = &m_scopes[function.get()];
 			ReferencesResolver referencesResolver(
+				m_errors,
 				*this,
 				&_contract,
 				function->returnParameterList().get(),
