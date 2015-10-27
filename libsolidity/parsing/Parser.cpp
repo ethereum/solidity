@@ -600,7 +600,7 @@ ASTPointer<ParameterList> Parser::parseParameterList(
 	return nodeFactory.createNode<ParameterList>(parameters);
 }
 
-ASTPointer<Block> Parser::parseBlock()
+ASTPointer<Block> Parser::parseBlock(ASTPointer<ASTString> const& _docString)
 {
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::LBrace);
@@ -609,29 +609,32 @@ ASTPointer<Block> Parser::parseBlock()
 		statements.push_back(parseStatement());
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
-	return nodeFactory.createNode<Block>(statements);
+	return nodeFactory.createNode<Block>(_docString, statements);
 }
 
 ASTPointer<Statement> Parser::parseStatement()
 {
+	ASTPointer<ASTString> docString;
+	if (m_scanner->currentCommentLiteral() != "")
+		docString = make_shared<ASTString>(m_scanner->currentCommentLiteral());
 	ASTPointer<Statement> statement;
 	switch (m_scanner->currentToken())
 	{
 	case Token::If:
-		return parseIfStatement();
+		return parseIfStatement(docString);
 	case Token::While:
-		return parseWhileStatement();
+		return parseWhileStatement(docString);
 	case Token::For:
-		return parseForStatement();
+		return parseForStatement(docString);
 	case Token::LBrace:
-		return parseBlock();
+		return parseBlock(docString);
 		// starting from here, all statements must be terminated by a semicolon
 	case Token::Continue:
-		statement = ASTNodeFactory(*this).createNode<Continue>();
+		statement = ASTNodeFactory(*this).createNode<Continue>(docString);
 		m_scanner->next();
 		break;
 	case Token::Break:
-		statement = ASTNodeFactory(*this).createNode<Break>();
+		statement = ASTNodeFactory(*this).createNode<Break>(docString);
 		m_scanner->next();
 		break;
 	case Token::Return:
@@ -643,31 +646,31 @@ ASTPointer<Statement> Parser::parseStatement()
 			expression = parseExpression();
 			nodeFactory.setEndPositionFromNode(expression);
 		}
-		statement = nodeFactory.createNode<Return>(expression);
+		statement = nodeFactory.createNode<Return>(docString, expression);
 		break;
 	}
 	case Token::Throw:
 	{
-		statement = ASTNodeFactory(*this).createNode<Throw>();
+		statement = ASTNodeFactory(*this).createNode<Throw>(docString);
 		m_scanner->next();
 		break;
 	}
 	case Token::Identifier:
 		if (m_insideModifier && m_scanner->currentLiteral() == "_")
 		{
-			statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>();
+			statement = ASTNodeFactory(*this).createNode<PlaceholderStatement>(docString);
 			m_scanner->next();
 			return statement;
 		}
 	// fall-through
 	default:
-		statement = parseSimpleStatement();
+		statement = parseSimpleStatement(docString);
 	}
 	expectToken(Token::Semicolon);
 	return statement;
 }
 
-ASTPointer<IfStatement> Parser::parseIfStatement()
+ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)
 {
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::If);
@@ -684,10 +687,10 @@ ASTPointer<IfStatement> Parser::parseIfStatement()
 	}
 	else
 		nodeFactory.setEndPositionFromNode(trueBody);
-	return nodeFactory.createNode<IfStatement>(condition, trueBody, falseBody);
+	return nodeFactory.createNode<IfStatement>(_docString, condition, trueBody, falseBody);
 }
 
-ASTPointer<WhileStatement> Parser::parseWhileStatement()
+ASTPointer<WhileStatement> Parser::parseWhileStatement(ASTPointer<ASTString> const& _docString)
 {
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::While);
@@ -696,10 +699,10 @@ ASTPointer<WhileStatement> Parser::parseWhileStatement()
 	expectToken(Token::RParen);
 	ASTPointer<Statement> body = parseStatement();
 	nodeFactory.setEndPositionFromNode(body);
-	return nodeFactory.createNode<WhileStatement>(condition, body);
+	return nodeFactory.createNode<WhileStatement>(_docString, condition, body);
 }
 
-ASTPointer<ForStatement> Parser::parseForStatement()
+ASTPointer<ForStatement> Parser::parseForStatement(ASTPointer<ASTString> const& _docString)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<Statement> initExpression;
@@ -710,7 +713,7 @@ ASTPointer<ForStatement> Parser::parseForStatement()
 
 	// LTODO: Maybe here have some predicate like peekExpression() instead of checking for semicolon and RParen?
 	if (m_scanner->currentToken() != Token::Semicolon)
-		initExpression = parseSimpleStatement();
+		initExpression = parseSimpleStatement(ASTPointer<ASTString>());
 	expectToken(Token::Semicolon);
 
 	if (m_scanner->currentToken() != Token::Semicolon)
@@ -718,18 +721,21 @@ ASTPointer<ForStatement> Parser::parseForStatement()
 	expectToken(Token::Semicolon);
 
 	if (m_scanner->currentToken() != Token::RParen)
-		loopExpression = parseExpressionStatement();
+		loopExpression = parseExpressionStatement(ASTPointer<ASTString>());
 	expectToken(Token::RParen);
 
 	ASTPointer<Statement> body = parseStatement();
 	nodeFactory.setEndPositionFromNode(body);
-	return nodeFactory.createNode<ForStatement>(initExpression,
-												conditionExpression,
-												loopExpression,
-												body);
+	return nodeFactory.createNode<ForStatement>(
+		_docString,
+		initExpression,
+		conditionExpression,
+		loopExpression,
+		body
+	);
 }
 
-ASTPointer<Statement> Parser::parseSimpleStatement()
+ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& _docString)
 {
 	// These two cases are very hard to distinguish:
 	// x[7 * 20 + 3] a;  -  x[7 * 20 + 3] = 9;
@@ -740,9 +746,9 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 	switch (peekStatementType())
 	{
 	case LookAheadInfo::VariableDeclarationStatement:
-		return parseVariableDeclarationStatement();
+		return parseVariableDeclarationStatement(_docString);
 	case LookAheadInfo::ExpressionStatement:
-		return parseExpressionStatement();
+		return parseExpressionStatement(_docString);
 	default:
 		break;
 	}
@@ -781,12 +787,13 @@ ASTPointer<Statement> Parser::parseSimpleStatement()
 	}
 
 	if (m_scanner->currentToken() == Token::Identifier || Token::isLocationSpecifier(m_scanner->currentToken()))
-		return parseVariableDeclarationStatement(typeNameIndexAccessStructure(path, indices));
+		return parseVariableDeclarationStatement(_docString, typeNameIndexAccessStructure(path, indices));
 	else
-		return parseExpressionStatement(expressionFromIndexAccessStructure(path, indices));
+		return parseExpressionStatement(_docString, expressionFromIndexAccessStructure(path, indices));
 }
 
 ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStatement(
+	ASTPointer<ASTString> const& _docString,
 	ASTPointer<TypeName> const& _lookAheadArrayType
 )
 {
@@ -845,15 +852,16 @@ ASTPointer<VariableDeclarationStatement> Parser::parseVariableDeclarationStateme
 		value = parseExpression();
 		nodeFactory.setEndPositionFromNode(value);
 	}
-	return nodeFactory.createNode<VariableDeclarationStatement>(variables, value);
+	return nodeFactory.createNode<VariableDeclarationStatement>(_docString, variables, value);
 }
 
 ASTPointer<ExpressionStatement> Parser::parseExpressionStatement(
+	ASTPointer<ASTString> const& _docString,
 	ASTPointer<Expression> const& _lookAheadIndexAccessStructure
 )
 {
 	ASTPointer<Expression> expression = parseExpression(_lookAheadIndexAccessStructure);
-	return ASTNodeFactory(*this, expression).createNode<ExpressionStatement>(expression);
+	return ASTNodeFactory(*this, expression).createNode<ExpressionStatement>(_docString, expression);
 }
 
 ASTPointer<Expression> Parser::parseExpression(

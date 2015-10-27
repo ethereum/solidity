@@ -90,7 +90,11 @@ struct VariableDeclarationAnnotation: ASTAnnotation
 	TypePointer type;
 };
 
-struct ReturnAnnotation: ASTAnnotation
+struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
+{
+};
+
+struct ReturnAnnotation: StatementAnnotation
 {
 	/// Reference to the return parameters of the function.
 	ParameterList const* functionReturnParameters = nullptr;
@@ -109,7 +113,7 @@ struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
 	Declaration const* referencedDeclaration = nullptr;
 };
 
-struct VariableDeclarationStatementAnnotation: ASTAnnotation
+struct VariableDeclarationStatementAnnotation: StatementAnnotation
 {
 	/// Information about which component of the value is assigned to which variable.
 	/// The pointer can be null to signify that the component is discarded.

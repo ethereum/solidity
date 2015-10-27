@@ -82,17 +82,19 @@ private:
 		VarDeclParserOptions const& _options,
 		bool _allowEmpty = true
 	);
-	ASTPointer<Block> parseBlock();
+	ASTPointer<Block> parseBlock(ASTPointer<ASTString> const& _docString = {});
 	ASTPointer<Statement> parseStatement();
-	ASTPointer<IfStatement> parseIfStatement();
-	ASTPointer<WhileStatement> parseWhileStatement();
-	ASTPointer<ForStatement> parseForStatement();
+	ASTPointer<IfStatement> parseIfStatement(ASTPointer<ASTString> const& _docString);
+	ASTPointer<WhileStatement> parseWhileStatement(ASTPointer<ASTString> const& _docString);
+	ASTPointer<ForStatement> parseForStatement(ASTPointer<ASTString> const& _docString);
 	/// A "simple statement" can be a variable declaration statement or an expression statement.
-	ASTPointer<Statement> parseSimpleStatement();
+	ASTPointer<Statement> parseSimpleStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<VariableDeclarationStatement> parseVariableDeclarationStatement(
+		ASTPointer<ASTString> const& _docString,
 		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>()
 	);
 	ASTPointer<ExpressionStatement> parseExpressionStatement(
+		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _lookAheadIndexAccessStructure = ASTPointer<Expression>()
 	);
 	ASTPointer<Expression> parseExpression(

@@ -46,13 +46,20 @@ private:
 	virtual bool visit(ModifierDefinition const& _modifier) override;
 	virtual bool visit(EventDefinition const& _event) override;
 
+	virtual bool visitNode(ASTNode const&) override;
+
 	void handleCallable(
 		CallableDeclaration const& _callable,
 		Documented const& _node,
 		DocumentedAnnotation& _annotation
 	);
 
-	void parseDocStrings(Documented const& _node, DocumentedAnnotation& _annotation);
+	void parseDocStrings(
+		Documented const& _node,
+		DocumentedAnnotation& _annotation,
+		std::set<std::string> const& _validTags,
+		std::string const& _nodeName
+	);
 
 	void appendError(std::string const& _description);
 

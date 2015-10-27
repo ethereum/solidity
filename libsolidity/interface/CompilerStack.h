@@ -108,6 +108,11 @@ public:
 	/// Inserts the given addresses into the linker objects of all compiled contracts.
 	void link(std::map<std::string, h160> const& _libraries);
 
+	/// Tries to translate all source files into a language suitable for formal analysis.
+	/// @returns false on error.
+	bool prepareFormalAnalysis();
+	std::string const& formalTranslation() const { return m_formalTranslation; }
+
 	/// @returns the assembled object for a contract.
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
 	/// @returns the runtime object for the contract.
@@ -167,7 +172,6 @@ public:
 	/// @returns the list of errors that occured during parsing and type checking.
 	ErrorList const& errors() const { return m_errors; }
 
-
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
@@ -211,6 +215,7 @@ private:
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::vector<Source const*> m_sourceOrder;
 	std::map<std::string const, Contract> m_contracts;
+	std::string m_formalTranslation;
 	ErrorList m_errors;
 };
 

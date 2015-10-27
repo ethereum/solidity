@@ -32,6 +32,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/InterfaceHandler.h>
+#include <libsolidity/formal/Why3Translator.h>
 
 #include <libdevcore/SHA3.h>
 
@@ -203,6 +204,18 @@ void CompilerStack::link(const std::map<string, h160>& _libraries)
 		contract.second.runtimeObject.link(_libraries);
 		contract.second.cloneObject.link(_libraries);
 	}
+}
+
+bool CompilerStack::prepareFormalAnalysis()
+{
+	Why3Translator translator(m_errors);
+	for (Source const* source: m_sourceOrder)
+		if (!translator.process(*source->ast))
+			return false;
+
+	m_formalTranslation = translator.translation();
+
+	return true;
 }
 
 eth::AssemblyItems const* CompilerStack::assemblyItems(string const& _contractName) const
