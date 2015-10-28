@@ -29,3 +29,8 @@
   docs:
   - restricting-access
   - state-machine
+
+- title: Frequently Asked Questions
+  docs:
+  - faq/basics
+  - faq/advanced
