@@ -1,7 +1,8 @@
 ---
 layout: docs
-title: Syntactic Sugar and Globally Available Variables
-permalink: /docs/syntactic-sugar-and-global-variables/
+title: Units and Globally Available Variables
+link_title: Units and Global Vars
+permalink: /docs/units-and-global-variables/
 ---
 
 ## Ether and Time Units

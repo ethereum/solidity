@@ -1,6 +1,7 @@
 ---
 layout: docs
 title: A Simple Smart Contract
+link_title: A Simple Contract
 permalink: /docs/simple-smart-contract/
 ---
 

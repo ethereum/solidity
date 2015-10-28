@@ -1,6 +1,7 @@
 ---
 layout: docs
 title: Layout of a Solidity Source File
+link_title: Source File Layout
 permalink: /docs/layout-of-source-files/
 ---
 
