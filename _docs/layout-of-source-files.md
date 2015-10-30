@@ -12,6 +12,6 @@ the [commandline compiler](#using-the-commandline-compiler), you have to explici
 as arguments, the compiler will not search your filesystem on its own.
 
 **Comments** Single-line comments (`//`) and multi-line comments (`/*...*/`) are possible, while
-triple-slash comments (`///`) right in front of function declarations introduce
+ a slight variation (`///` and `/**...*/`) in front of function declarations introduce
 [NatSpec](Ethereum-Natural-Specification-Format) (which are not covered here).
 
