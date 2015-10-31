@@ -606,7 +606,11 @@ bool Compiler::visit(Return const& _return)
 		for (auto const& retVariable: returnParameters)
 			types.push_back(retVariable->annotation().type);
 
-		TypePointer expectedType = types.size() == 1 ? types.front() : make_shared<TupleType>(types);
+		TypePointer expectedType;
+		if (expression->annotation().type->category() == Type::Category::Tuple || types.size() != 1)
+			expectedType = make_shared<TupleType>(types);
+		else
+			expectedType = types.front();
 		compileExpression(*expression, expectedType);
 
 		for (auto const& retVariable: boost::adaptors::reverse(returnParameters))

@@ -598,7 +598,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 					}
 					// Value grew
 					if (targetSize > sourceSize)
-						moveIntoStack(depth + targetSize - sourceSize, targetSize - sourceSize);
+						moveIntoStack(depth + targetSize - sourceSize - 1, targetSize - sourceSize);
 				}
 			}
 			depth -= sourceSize;
