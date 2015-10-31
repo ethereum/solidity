@@ -234,6 +234,12 @@ what you are doing!
 
 Yes, but only in "internal" function calls.
 
+### If I return an enum, I only get integer values in web3.js. How to get the named values?
+
+Enums are not supported by the ABI, they are just supported by Solidity.
+You have to do the mapping yourself for now, we might provide some help
+later.
+
 ### What is the deal with "function () { ... }" inside Solidity contracts? How can a function not have a name?
 
 This function is called "fallback function" and it
