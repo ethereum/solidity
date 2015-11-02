@@ -12,7 +12,7 @@
 
   {% for p in site.docs %}
     {% if p.url == item_url %}
-      <li class="{{ c }}"><a href="{{ site.url }}{{ p.url }}">{{ p.title }}</a></li>
+    <li class="{{ c }}"><a href="{{ site.url }}{{ p.url }}">{% if p.link_title %}{{ p.link_title }}{% else %}{{ p.title }}{% endif %}</a></li>
       {% break %}
     {% endif %}
   {% endfor %}

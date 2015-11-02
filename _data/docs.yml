@@ -20,7 +20,7 @@
   - layout-of-source-files
   - structure-of-a-contract
   - types
-  - syntactic-sugar-and-global-variables
+  - units-and-global-variables
   - control-structures
   - contracts
   - miscellaneous
@@ -29,3 +29,8 @@
   docs:
   - restricting-access
   - state-machine
+
+- title: Frequently Asked Questions
+  docs:
+  - faq/basics
+  - faq/advanced
