@@ -10,9 +10,12 @@ This list was originally compiled by [fivedogit](mailto:fivedogit@gmail.com).
 ### What is Solidity?
 
 Solidity is the DEV-created (i.e. Ethereum Foundation-created),
-Javascript-inspired language used to create contracts. There are other
-languages you can use as well (LLL, Serpent, etc), but
-Solidity is the "recommended" contract language.
+Javascript-inspired language that can be used to create smart contracts
+on the Ethereum blockchain. There are other
+languages you can use as well (LLL, Serpent, etc). The main points in
+favour of Solidity is that it is statically typed and offers many
+advanced features like inheritance, libraries, complex
+user-defined types and a bytecode optimizer.
 
 Solidity contracts can be compiled a few different ways (see below) and the
 resulting output can be cut/pasted into a geth console to deploy them to the
@@ -206,8 +209,14 @@ The constructor is removed from the contract code once it is deployed,
 
 ### Can a contract have multiple constructors?
 
-No, a contract can have only one constructor, even if the arguments
-are different.
+No, a contract can have only one constructor.
+
+More specifically, it can only have one function whose name matches
+that of the constructor.
+
+Having multiple constructors with different number of arguments
+or argument types, as it is possible in other languages
+is not allowed in Solidity.
 
 ### Is a constructor required?
 
