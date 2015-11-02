@@ -5682,6 +5682,26 @@ BOOST_AUTO_TEST_CASE(tuples)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0)));
 }
 
+BOOST_AUTO_TEST_CASE(string_tuples)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (string, uint) {
+				return ("abc", 8);
+			}
+			function g() returns (string, string) {
+				return (h(), "def");
+			}
+			function h() returns (string) {
+				return ("abc",);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x40), u256(8), u256(3), string("abc")));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(0x40), u256(0x80), u256(3), string("abc"), u256(3), string("def")));
+}
+
 BOOST_AUTO_TEST_CASE(destructuring_assignment)
 {
 	char const* sourceCode = R"(
