@@ -20,12 +20,17 @@ The word transaction implies that the change you want to make (assume you want t
 two values at the same time) is either not done at all or completely applied. Furthermore,
 while your transaction is applied to the database, no other transaction can alter it.
 
-By this mechanism, bitcoin ensures that (in simplified words) the act of subtracting an
-amount from one account and adding it to another does not simply stop after the subtracting phase.
+As an example, imagine a table that lists the balances of all accounts in an
+electronic currency. If a transfer from one account to another is requested,
+the transactional nature of the database ensures that if the amount is
+subtracted from one account, it is always added to the other account. If due
+to whatever reason, adding the amount to the target account is not possible,
+the source account is also not modified.
 
 Furthermore, a transaction is always cryptographically signed by the sender (creator).
-This makes it impossible for anyone except the person holding the keys to an account
-(in the case of bitcoin) to spend the money in that account.
+This makes it straightforward to guard access to specific modifications of the
+database. In the example of the electronic currency, a simple check ensures that
+only the person holding the keys to the account can transfer money from it.
 
 ### Blocks
 
@@ -36,8 +41,8 @@ a so-called conflict?
 The abstract answer to this is that you do not have to care. An order of the transactions
 will be selected for you, the transactions will be bundled into what is called a "block"
 and then they will be executed and distributed among all participating nodes.
-The transaction that ends up being second will be either completely rejected or will
-just have no effect.
+If two transactions contradict each other, the one that ends up being second will
+be rejected and not become part of the block.
 
 These blocks form a linear sequence in time and that is where the word "blockchain"
 derives from. Blocks are added to the chain in rather regular intervals - for
