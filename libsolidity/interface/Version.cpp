@@ -65,7 +65,10 @@ bytes dev::solidity::binaryVersion()
 	solAssert(i < VersionString.size() && VersionString[i] == '-', "");
 	++i;
 	solAssert(i + 7 < VersionString.size(), "");
-	ret += fromHex(VersionString.substr(i, 8));
+	bytes commitHash = fromHex(VersionString.substr(i, 8));
+	if (commitHash.empty())
+		commitHash = bytes(4, 0);
+	ret += commitHash;
 	solAssert(ret.size() == 1 + 3 + 4, "");
 
 	return ret;
