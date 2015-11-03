@@ -393,7 +393,7 @@ footer {
 article {
   background-color: #444;
   @include border-radius(10px);
-  padding: 20px;
+  padding: 0px 20px 20px;
   margin: 0 10px;
   @include box-shadow(0 3px 10px rgba(0,0,0,.1));
   font-size: 14px;
@@ -409,7 +409,7 @@ article {
 
 @media (min-width: 768px) {
   article {
-    padding: 40px 40px 30px;
+    padding: 0px 40px 30px;
     font-size: 18px;
   }
 }
@@ -469,7 +469,7 @@ aside {
 .section-nav {
   text-align: center;
   padding-top: 20px;
-  padding-bottom: 20px;
+  padding-bottom: 60px;
   position: relative;
   /*background: url(../img/article-footer.png) top center no-repeat;*/
   margin: 10px -20px 10px;
