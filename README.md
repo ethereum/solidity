@@ -2,7 +2,7 @@
 [![Join the chat at https://gitter.im/ethereum/solidity](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/solidity?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ## Useful links
 
-To get started you can find a basic introduction to the language in [Solidity Tutorial](https://github.com/ethereum/wiki/wiki/Solidity-Tutorial).
+To get started you can find a basic introduction to the language in [Solidity Tutorial](https://ethereum.github.io/solidity/docs/home/).
 
 You can start using [Solidity in your browser](https://chriseth.github.io/browser-solidity/) with no need to download or compile anything. This application only supports compilation - if you want to inject it into the blockchain, you have to use a client like [Geth](https://github.com/ethereum/go-ethereum/wiki) or [AlethZero](https://github.com/ethereum/alethzero).
 
