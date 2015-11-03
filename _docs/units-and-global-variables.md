@@ -5,11 +5,37 @@ link_title: Units and Global Vars
 permalink: /docs/units-and-global-variables/
 ---
 
-## Ether and Time Units
+## Ether Units
 
-A literal number can take a suffix of `wei`, `finney`, `szabo` or `ether` to convert between the subdenominations of ether, where Ether currency numbers without a postfix are assumed to be "wei", e.g. `2 ether == 2000 finney` evaluates to `true`.
+A literal number can take a suffix of `wei`, `finney`, `szabo` or `ether` to convert between the subdenominations of Ether, where Ether currency numbers without a postfix are assumed to be "wei", e.g. `2 ether == 2000 finney` evaluates to `true`.
 
-Furthermore, suffixes of `seconds`, `minutes`, `hours`, `days`, `weeks` and `years` can be used to convert between units of time where seconds are the base unit and units are converted naively (i.e. a year is always exactly 365 days, etc.).
+## Time Units
+
+Suffixes of `seconds`, `minutes`, `hours`, `days`, `weeks` and
+`years` after literal numbers can be used to convert between units of time where seconds are the base
+unit and units are considered naively in the following way:
+
+ * `1 == 1 second`
+ * `1 minutes == 60 seconds`
+ * `1 hours == 60 minutes`
+ * `1 days == 24 hours`
+ * `1 weeks = 7 days`
+ * `1 years = 365 days`
+
+Take care if you perform calendar calculations using these units, because
+not every year equals 365 days and not even every day has 24 hours
+because of [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
+Due to the fact that leap seconds cannot be predicted, an exact calendar
+library has to be updated by an external oracle.
+
+These suffixes cannot be applied to variables. If you want to
+interpret some input variable in e.g. days, you can do it in the following way:
+
+{% highlight JavaScript %}
+function f(uint start, uint daysAfter) {
+  if (now >= start + daysAfter * 1 days) { ... }
+}
+{% endhighlight %}
 
 ## Special Variables and Functions
 
@@ -40,8 +66,18 @@ namespace and are mainly used to provide information about the blockchain.
  - `ripemd160(...) returns (bytes20)`: compute RIPEMD-160 hash of the (tightly packed) arguments
  - `ecrecover(bytes32, byte, bytes32, bytes32) returns (address)`: recover public key from elliptic curve signature - arguments are (data, v, r, s)
 
-In the above, "tightly packed" means that the arguments are concatenated without padding, i.e.
-`sha3("ab", "c") == sha3("abc") == sha3(0x616263) == sha3(6382179) = sha3(97, 98, 99)`. If padding is needed, explicit type conversions can be used.
+In the above, "tightly packed" means that the arguments are concatenated without padding.
+This means that the following are all identical:
+
+```sha3("ab", "c")
+sha3("abc")
+sha3(0x616263)
+sha3(6382179)
+sha3(97, 98, 99)
+```
+
+If padding is needed, explicit type conversions can be used: `sha3("\x00\x12")` is the
+same as `sha3(uint16(0x12))`.
 
 It might be that you run into Out-of-Gas for `sha256`, `ripemd160` or `ecrecover` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
