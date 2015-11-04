@@ -47,9 +47,71 @@ Mixing tabs and spaces should be avoided.
 
 Surround top level declarations in solidity source with two blank lines.
 
+Yes:
+```
+contract A {
+  ...
+}
+
+
+contract B {
+  ...
+}
+
+
+contract C {
+  ...
+}
+```
+
+No:
+```
+contract A {
+  ...
+}
+contract B {
+  ...
+}
+
+contract C {
+  ...
+}
+```
+
 Within a contract surround function declarations with a single blank line.
 
 Blank lines may be omitted between groups of related one-liners (such as stub functions for an abstract contract)
+
+Yes:
+```
+contract A {
+  function spam();
+  function ham();
+}
+
+
+contract B is A {
+  function spam() {
+    ...
+  }
+
+  function ham() {
+    ...
+  }
+}
+```
+
+No:
+```
+contract A {
+  function spam() {
+    ...
+  }
+  function ham() {
+    ...
+  }
+}
+```
 
 ### Source File Encoding
 
@@ -58,6 +120,36 @@ UTF-8 or ASCII encoding is preferred.
 ### Imports
 
 Import statements should always be placed at the top of the file.
+
+Yes:
+```
+import "owned";
+
+
+contract A {
+  ...
+}
+
+
+contract B is owned {
+  ...
+}
+```
+
+No:
+```
+contract A {
+  ...
+}
+
+
+import "owned";
+
+
+contract B is owned {
+  ...
+}
+```
 
 ### Whitespace in Expressions
 
