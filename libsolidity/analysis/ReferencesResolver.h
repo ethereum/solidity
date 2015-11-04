@@ -73,10 +73,10 @@ private:
 	TypePointer typeFor(TypeName const& _typeName);
 
 	/// Adds a new error to the list of errors.
-	void typeError(std::string const& _description, SourceLocation const& _location);
+	void typeError(SourceLocation const& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort type checking.
-	void fatalTypeError(std::string const& _description);
+	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 
 	ErrorList& m_errors;
 	NameAndTypeResolver& m_resolver;

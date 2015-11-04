@@ -93,7 +93,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				if (contract.isLibrary())
 				{
 					if (loc == Location::Memory)
-						fatalTypeError(
+						fatalTypeError(_variable.location(),
 							"Location has to be calldata or storage for external "
 							"library functions (remove the \"memory\" keyword)."
 						);
@@ -102,7 +102,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				{
 					// force location of external function parameters (not return) to calldata
 					if (loc != Location::Default)
-						fatalTypeError(
+						fatalTypeError(_variable.location(),
 							"Location has to be calldata for external functions "
 							"(remove the \"memory\" or \"storage\" keyword)."
 						);
@@ -115,7 +115,7 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				auto const& contract = dynamic_cast<ContractDefinition const&>(*_variable.scope()->scope());
 				// force locations of public or external function (return) parameters to memory
 				if (loc == Location::Storage && !contract.isLibrary())
-					fatalTypeError(
+					fatalTypeError(_variable.location(),
 						"Location has to be memory for publicly visible functions "
 						"(remove the \"storage\" keyword)."
 					);
@@ -127,7 +127,10 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				if (_variable.isConstant())
 				{
 					if (loc != Location::Default && loc != Location::Memory)
-						fatalTypeError("Storage location has to be \"memory\" (or unspecified) for constants.");
+						fatalTypeError(
+							_variable.location(),
+							"Storage location has to be \"memory\" (or unspecified) for constants."
+						);
 					loc = Location::Memory;
 				}
 				if (loc == Location::Default)
@@ -142,14 +145,14 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 			}
 		}
 		else if (loc != Location::Default && !ref)
-			fatalTypeError("Storage location can only be given for array or struct types.");
+			fatalTypeError(_variable.location(), "Storage location can only be given for array or struct types.");
 
 		if (!type)
-			fatalTypeError("Invalid type name.");
+			fatalTypeError(_variable.location(), "Invalid type name.");
 
 	}
 	else if (!_variable.canHaveAutoType())
-		fatalTypeError("Explicit type needed.");
+		fatalTypeError(_variable.location(), "Explicit type needed.");
 	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
 
 	_variable.annotation().type = type;
@@ -175,7 +178,7 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 		else if (ContractDefinition const* contract = dynamic_cast<ContractDefinition const*>(declaration))
 			type = make_shared<ContractType>(*contract);
 		else
-			fatalTypeError("Name has to refer to a struct, enum or contract.");
+			fatalTypeError(typeName->location(), "Name has to refer to a struct, enum or contract.");
 	}
 	else if (auto mapping = dynamic_cast<Mapping const*>(&_typeName))
 	{
@@ -191,7 +194,7 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 	{
 		TypePointer baseType = typeFor(arrayType->baseType());
 		if (baseType->storageBytes() == 0)
-			fatalTypeError("Illegal base type of storage size zero for array.");
+			fatalTypeError(arrayType->location(), "Illegal base type of storage size zero for array.");
 		if (Expression const* length = arrayType->length())
 		{
 			if (!length->annotation().type)
@@ -199,7 +202,7 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 
 			auto const* lengthType = dynamic_cast<IntegerConstantType const*>(length->annotation().type.get());
 			if (!lengthType)
-				fatalTypeError("Invalid array length.");
+				fatalTypeError(length->location(), "Invalid array length.");
 			type = make_shared<ArrayType>(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
 		}
 		else
@@ -209,7 +212,7 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 	return _typeName.annotation().type = move(type);
 }
 
-void ReferencesResolver::typeError(string const& _description, SourceLocation const& _location)
+void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)
 {
 	auto err = make_shared<Error>(Error::Type::TypeError);
 	*err <<	errinfo_sourceLocation(_location) << errinfo_comment(_description);
@@ -217,9 +220,9 @@ void ReferencesResolver::typeError(string const& _description, SourceLocation co
 	m_errors.push_back(err);
 }
 
-void ReferencesResolver::fatalTypeError(string const& _description)
+void ReferencesResolver::fatalTypeError(SourceLocation const& _location, string const& _description)
 {
-	typeError(_description);
+	typeError(_location, _description);
 	BOOST_THROW_EXCEPTION(FatalError());
 }
 
