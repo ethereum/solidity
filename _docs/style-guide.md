@@ -35,7 +35,7 @@ captures this concept well.
 
 ### Indentation
 
-Use 2 spaces per indentation level.
+Use 4 spaces per indentation level.
 
 ### Tabs or Spaces
 
@@ -50,31 +50,31 @@ Surround top level declarations in solidity source with two blank lines.
 Yes:
 ```
 contract A {
-  ...
+    ...
 }
 
 
 contract B {
-  ...
+    ...
 }
 
 
 contract C {
-  ...
+    ...
 }
 ```
 
 No:
 ```
 contract A {
-  ...
+    ...
 }
 contract B {
-  ...
+    ...
 }
 
 contract C {
-  ...
+    ...
 }
 ```
 
@@ -85,31 +85,31 @@ Blank lines may be omitted between groups of related one-liners (such as stub fu
 Yes:
 ```
 contract A {
-  function spam();
-  function ham();
+    function spam();
+    function ham();
 }
 
 
 contract B is A {
-  function spam() {
-    ...
-  }
+    function spam() {
+        ...
+    }
 
-  function ham() {
-    ...
-  }
+    function ham() {
+        ...
+    }
 }
 ```
 
 No:
 ```
 contract A {
-  function spam() {
-    ...
-  }
-  function ham() {
-    ...
-  }
+    function spam() {
+        ...
+    }
+    function ham() {
+        ...
+    }
 }
 ```
 
@@ -127,19 +127,19 @@ import "owned";
 
 
 contract A {
-  ...
+    ...
 }
 
 
 contract B is owned {
-  ...
+    ...
 }
 ```
 
 No:
 ```
 contract A {
-  ...
+    ...
 }
 
 
@@ -147,7 +147,7 @@ import "owned";
 
 
 contract B is owned {
-  ...
+    ...
 }
 ```
 
@@ -185,6 +185,118 @@ Avoid extraneous whitespace in the following  situations:
     y             = 2;
     long_variable = 3;
     ```
+
+
+### Control Structures
+
+The braces denoting the body of a contract, library, struct, function should:
+
+* open on the same line as the declaration
+* close on their own line at the same indentation level as the beginning of the
+  declaration.
+* The opening brace should be proceeded by a single space.
+
+Yes:
+```
+contract Coin {
+    struct Bank {
+        address owner;
+        uint balance;
+    }
+}
+```
+
+No:
+```
+contract Coin
+{
+    struct Bank {
+        address owner;
+        uint balance;
+    }
+}
+```
+
+The same recommendations apply to the control structures `if`, `else`, `while`,
+and `for`.
+
+Additionally there should be a single space between the control structures
+`if`, `while`, and `for` and the parenthetic block representing the
+conditional, as well as a single space between the conditional parenthetic
+block and the opening brace.
+
+Yes:
+```
+if (...) {
+    ...
+}
+
+for (...) {
+    ...
+}
+```
+
+No:
+```
+if (...)
+{
+    ...
+}
+
+while(...){
+}
+
+for (...) {
+    ...;}
+```
+
+For control structures who's body contains a single statement, omitting the
+braces is ok *if* the statement is contained on a single line.
+
+Yes:
+```
+if (x < 10)
+    x += 1;
+```
+
+No:
+```
+if (x < 10)
+    someArray.push(Coin({
+        name: 'spam',
+        value: 42
+    }));
+```
+
+For `if` blocks which have an `else` or `else if` clause, the `else` should be
+placed on it's own line following the previous closing parenthesis.  The
+parenthesis for the else block should follow the same rules as the other
+conditional control structures.
+
+Yes:
+```
+if (x < 3) {
+    x += 1;
+}
+else {
+    x -= 1;
+}
+
+
+if (x < 3)
+    x += 1;
+else
+    x -= 1;
+```
+
+No:
+```
+if (x < 3) {
+    x += 1;
+} else {
+    x -= 1;
+}
+```
 
 ### Other recommendations
 
