@@ -60,7 +60,7 @@ public:
 	bool resolve(ASTNode& _root)
 	{
 		_root.accept(*this);
-		return true;//m_errors.empty();
+		return Error::containsOnlyWarnings(m_errors);
 	}
 
 private:

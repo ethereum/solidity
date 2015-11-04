@@ -140,13 +140,13 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			if (!resolver.resolve(*function))
 				success = false;
 		}
-//		if (!result)
-//			return false;
+		if (!success)
+			return false;
 	}
 	catch (FatalError const& _e)
 	{
-//		if (m_errors.empty())
-//			throw; // Something is weird here, rather throw again.
+		if (m_errors.empty())
+			throw; // Something is weird here, rather throw again.
 		return false;
 	}
 	return true;
