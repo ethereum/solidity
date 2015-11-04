@@ -298,7 +298,17 @@ if (x < 3) {
 }
 ```
 
-### Other recommendations
+### Variable Declarations
+
+Declarations of array variables should not have a space between the type and
+the brackets.
+
+```
+Yes: uint[] x;
+No:  uint [] x;
+```
+
+### Other Recommendations
 
 * Surround operators with a single space on either side.
 
