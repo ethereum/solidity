@@ -25,6 +25,10 @@
   - contracts
   - miscellaneous
 
+- title: Coding Style
+  docs:
+  - style-guide
+
 - title: Common Patterns
   docs:
   - restricting-access
