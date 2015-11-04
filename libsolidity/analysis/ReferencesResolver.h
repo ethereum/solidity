@@ -60,7 +60,7 @@ public:
 	bool resolve(ASTNode& _root)
 	{
 		_root.accept(*this);
-		return m_errors.empty();
+		return true;//m_errors.empty();
 	}
 
 private:
@@ -73,7 +73,7 @@ private:
 	TypePointer typeFor(TypeName const& _typeName);
 
 	/// Adds a new error to the list of errors.
-	void typeError(std::string const& _description);
+	void typeError(std::string const& _description, SourceLocation const& _location);
 
 	/// Adds a new error to the list of errors and throws to abort type checking.
 	void fatalTypeError(std::string const& _description);

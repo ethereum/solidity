@@ -65,15 +65,15 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		m_currentScope = &m_scopes[nullptr];
 
 		ReferencesResolver resolver(m_errors, *this, &_contract, nullptr);
-		bool result = true;
+		bool success = true;
 		for (ASTPointer<InheritanceSpecifier> const& baseContract: _contract.baseContracts())
-			result = resolver.resolve(*baseContract);
+			if (!resolver.resolve(*baseContract))
+				success = false;
 
 		m_currentScope = &m_scopes[&_contract];
 
-		if (result)
+		if (success)
 		{
-
 			linearizeBaseContracts(_contract);
 			std::vector<ContractDefinition const*> properBases(
 				++_contract.annotation().linearizedBaseContracts.begin(),
@@ -84,21 +84,25 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 				importInheritedScope(*base);
 		}
 
-
 		for (ASTPointer<StructDefinition> const& structDef: _contract.definedStructs())
-			result = result && resolver.resolve(*structDef);
+			if (!resolver.resolve(*structDef))
+				success = false;
 		for (ASTPointer<EnumDefinition> const& enumDef: _contract.definedEnums())
-			result = result && resolver.resolve(*enumDef);
+			if (!resolver.resolve(*enumDef))
+				success = false;
 		for (ASTPointer<VariableDeclaration> const& variable: _contract.stateVariables())
-			result = result && resolver.resolve(*variable);
+			if (!resolver.resolve(*variable))
+				success = false;
 		for (ASTPointer<EventDefinition> const& event: _contract.events())
-			result = result && resolver.resolve(*event);
+			if (!resolver.resolve(*event))
+				success = false;
 		// these can contain code, only resolve parameters for now
 		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
 		{
 			m_currentScope = &m_scopes[modifier.get()];
 			ReferencesResolver resolver(m_errors, *this, &_contract, nullptr);
-			result = result && resolver.resolve(*modifier);
+			if (!resolver.resolve(*modifier))
+				success = false;
 		}
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
@@ -109,7 +113,8 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 				&_contract,
 				function->returnParameterList().get()
 			);
-			result = result && referencesResolver.resolve(*function);
+			if (!resolver.resolve(*function))
+				success = false;
 		}
 
 		m_currentScope = &m_scopes[&_contract];
@@ -119,7 +124,8 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		{
 			m_currentScope = &m_scopes[modifier.get()];
 			ReferencesResolver resolver(m_errors, *this, &_contract, nullptr, true);
-			result = result && resolver.resolve(*modifier);
+			if (!resolver.resolve(*modifier))
+				success = false;
 		}
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
@@ -131,15 +137,16 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 				function->returnParameterList().get(),
 				true
 			);
-			result = result && resolver.resolve(*function);
+			if (!resolver.resolve(*function))
+				success = false;
 		}
-		if (!result)
-			return false;
+//		if (!result)
+//			return false;
 	}
 	catch (FatalError const& _e)
 	{
-		if (m_errors.empty())
-			throw; // Something is weird here, rather throw again.
+//		if (m_errors.empty())
+//			throw; // Something is weird here, rather throw again.
 		return false;
 	}
 	return true;

@@ -209,10 +209,10 @@ TypePointer ReferencesResolver::typeFor(TypeName const& _typeName)
 	return _typeName.annotation().type = move(type);
 }
 
-void ReferencesResolver::typeError(string const& _description)
+void ReferencesResolver::typeError(string const& _description, SourceLocation const& _location)
 {
 	auto err = make_shared<Error>(Error::Type::TypeError);
-	*err <<	errinfo_comment(_description);
+	*err <<	errinfo_sourceLocation(_location) << errinfo_comment(_description);
 
 	m_errors.push_back(err);
 }
