@@ -298,6 +298,14 @@ if (x < 3) {
 }
 ```
 
+### Function Modifiers
+
+TODO
+
+### Mappings
+
+TODO
+
 ### Variable Declarations
 
 Declarations of array variables should not have a space between the type and
