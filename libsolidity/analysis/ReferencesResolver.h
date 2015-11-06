@@ -59,7 +59,14 @@ public:
 	/// @returns true if no errors during resolving
 	bool resolve(ASTNode& _root)
 	{
-		_root.accept(*this);
+		try
+		{
+			_root.accept(*this);
+		}
+		catch (FatalError const& e)
+		{
+			solAssert(m_errorOccurred, "");
+		}
 		return !m_errorOccurred;
 	}
 
