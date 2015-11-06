@@ -48,7 +48,7 @@ Mixing tabs and spaces should be avoided.
 Surround top level declarations in solidity source with two blank lines.
 
 Yes:
-```
+{% highlight javascript %}
 contract A {
     ...
 }
@@ -62,10 +62,10 @@ contract B {
 contract C {
     ...
 }
-```
+{% endhighlight %}
 
 No:
-```
+{% highlight javascript %}
 contract A {
     ...
 }
@@ -76,14 +76,14 @@ contract B {
 contract C {
     ...
 }
-```
+{% endhighlight %}
 
 Within a contract surround function declarations with a single blank line.
 
 Blank lines may be omitted between groups of related one-liners (such as stub functions for an abstract contract)
 
 Yes:
-```
+{% highlight javascript %}
 contract A {
     function spam();
     function ham();
@@ -99,10 +99,10 @@ contract B is A {
         ...
     }
 }
-```
+{% endhighlight %}
 
 No:
-```
+{% highlight javascript %}
 contract A {
     function spam() {
         ...
@@ -111,7 +111,7 @@ contract A {
         ...
     }
 }
-```
+{% endhighlight %}
 
 ### Source File Encoding
 
@@ -122,7 +122,7 @@ UTF-8 or ASCII encoding is preferred.
 Import statements should always be placed at the top of the file.
 
 Yes:
-```
+{% highlight javascript %}
 import "owned";
 
 
@@ -134,10 +134,10 @@ contract A {
 contract B is owned {
     ...
 }
-```
+{% endhighlight %}
 
 No:
-```
+{% highlight javascript %}
 contract A {
     ...
 }
@@ -149,7 +149,7 @@ import "owned";
 contract B is owned {
     ...
 }
-```
+{% endhighlight %}
 
 ### Whitespace in Expressions
 
@@ -157,22 +157,22 @@ Avoid extraneous whitespace in the following  situations:
 
 * Immediately inside parenthesis, brackets or braces.
 
-    ```
+    {% highlight javascript %}
     Yes: spam(ham[1], Coin({name: "ham"}));
     No: spam( ham[ 1 ], Coin( { name: "ham" } ) );
-    ```
+    {% endhighlight %}
 
 * Immediately before a comma, semicolon:
 
-    ```
+    {% highlight javascript %}
     Yes: function spam(uint i, Coin coin);
     No: function spam(uint i , Coin coin) ;
-    ```
+    {% endhighlight %}
 
 * More than one space around an assignment or other operator to align with
   another:
 
-    ```
+    {% highlight javascript %}
     Yes:
 
     x = 1;
@@ -184,7 +184,7 @@ Avoid extraneous whitespace in the following  situations:
     x             = 1;
     y             = 2;
     long_variable = 3;
-    ```
+    {% endhighlight %}
 
 
 ### Control Structures
@@ -197,17 +197,17 @@ The braces denoting the body of a contract, library, struct, function should:
 * The opening brace should be proceeded by a single space.
 
 Yes:
-```
+{% highlight javascript %}
 contract Coin {
     struct Bank {
         address owner;
         uint balance;
     }
 }
-```
+{% endhighlight %}
 
 No:
-```
+{% highlight javascript %}
 contract Coin
 {
     struct Bank {
@@ -215,7 +215,7 @@ contract Coin
         uint balance;
     }
 }
-```
+{% endhighlight %}
 
 The same recommendations apply to the control structures `if`, `else`, `while`,
 and `for`.
@@ -226,7 +226,7 @@ conditional, as well as a single space between the conditional parenthetic
 block and the opening brace.
 
 Yes:
-```
+{% highlight javascript %}
 if (...) {
     ...
 }
@@ -234,10 +234,10 @@ if (...) {
 for (...) {
     ...
 }
-```
+{% endhighlight %}
 
 No:
-```
+{% highlight javascript %}
 if (...)
 {
     ...
@@ -248,25 +248,25 @@ while(...){
 
 for (...) {
     ...;}
-```
+{% endhighlight %}
 
 For control structures who's body contains a single statement, omitting the
 braces is ok *if* the statement is contained on a single line.
 
 Yes:
-```
+{% highlight javascript %}
 if (x < 10)
     x += 1;
-```
+{% endhighlight %}
 
 No:
-```
+{% highlight javascript %}
 if (x < 10)
     someArray.push(Coin({
         name: 'spam',
         value: 42
     }));
-```
+{% endhighlight %}
 
 For `if` blocks which have an `else` or `else if` clause, the `else` should be
 placed on it's own line following the previous closing parenthesis.  The
@@ -274,7 +274,7 @@ parenthesis for the else block should follow the same rules as the other
 conditional control structures.
 
 Yes:
-```
+{% highlight javascript %}
 if (x < 3) {
     x += 1;
 }
@@ -287,16 +287,16 @@ if (x < 3)
     x += 1;
 else
     x -= 1;
-```
+{% endhighlight %}
 
 No:
-```
+{% highlight javascript %}
 if (x < 3) {
     x += 1;
 } else {
     x -= 1;
 }
-```
+{% endhighlight %}
 
 ### Function Modifiers
 
@@ -311,16 +311,16 @@ TODO
 Declarations of array variables should not have a space between the type and
 the brackets.
 
-```
+{% highlight javascript %}
 Yes: uint[] x;
 No:  uint [] x;
-```
+{% endhighlight %}
 
 ### Other Recommendations
 
 * Surround operators with a single space on either side.
 
-    ```
+    {% highlight javascript %}
     Yes:
 
     x = 3;
@@ -334,14 +334,14 @@ No:  uint [] x;
     x = 100/10;
     x += 3+4;
     x |= y&&z;
-    ```
+    {% endhighlight %}
 
 * Operators with a higher priority than others can exclude surrounding
   whitespace in order to denote precidence.  This is meant to allow for
   improved readability for complex statement. You should always use the same
   amount of whitespace on either side of an operator:
 
-    ```
+    {% highlight javascript %}
     Yes:
 
     x = 2**3 + 5;
@@ -353,7 +353,7 @@ No:  uint [] x;
     x = 2** 3 + 5;
     x = y+z;
     x +=1;
-    ```
+    {% endhighlight %}
 
 ## Naming Conventions
 
