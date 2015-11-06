@@ -69,7 +69,7 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 				globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*globalContext->currentThis());
 				resolver.updateDeclaration(*globalContext->currentSuper());
-				if (! resolver.resolveNamesAndTypes(*contract))
+				if (!resolver.resolveNamesAndTypes(*contract))
 					success = false;
 			}
 		if (success)
@@ -93,7 +93,7 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 				return make_pair(sourceUnit, std::make_shared<Error::Type const>(currentError->type()));
 		}
 	}
-	catch(Error const& _e)
+	catch (Error const& _e)
 	{
 		return make_pair(sourceUnit, std::make_shared<Error::Type const>(_e.type()));
 	}

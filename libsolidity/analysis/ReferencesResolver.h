@@ -80,16 +80,16 @@ private:
 	TypePointer typeFor(TypeName const& _typeName);
 
 	/// Adds a new error to the list of errors.
-	void TypeError(SourceLocation const& _location, std::string const& _description);
+	void typeError(SourceLocation const& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort type checking.
-	void TypeFatalError(SourceLocation const& _location, std::string const& _description);
+	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors.
-	void DeclarationError(const SourceLocation& _location, std::string const& _description);
+	void declarationError(const SourceLocation& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort type checking.
-	void DeclarationFatalError(const SourceLocation& _location, std::string const& _description);
+	void fatalDeclarationError(const SourceLocation& _location, std::string const& _description);
 
 	ErrorList& m_errors;
 	NameAndTypeResolver& m_resolver;

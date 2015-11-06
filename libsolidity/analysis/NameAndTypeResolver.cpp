@@ -108,7 +108,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
 			m_currentScope = &m_scopes[function.get()];
-			if (! ReferencesResolver(
+			if (!ReferencesResolver(
 				m_errors,
 				*this,
 				&_contract,
@@ -134,7 +134,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
 			m_currentScope = &m_scopes[function.get()];
-			if (! ReferencesResolver(
+			if (!ReferencesResolver(
 				m_errors,
 				*this,
 				&_contract,
