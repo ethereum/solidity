@@ -57,18 +57,7 @@ public:
 	{}
 
 	/// @returns true if no errors during resolving
-	bool resolve(ASTNode& _root)
-	{
-		try
-		{
-			_root.accept(*this);
-		}
-		catch (FatalError const& e)
-		{
-			solAssert(m_errorOccurred, "");
-		}
-		return !m_errorOccurred;
-	}
+	bool resolve(ASTNode& _root);
 
 private:
 	virtual bool visit(Block const&) override { return m_resolveInsideCode; }

@@ -47,6 +47,19 @@ bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 	return true;
 }
 
+bool ReferencesResolver::resolve(ASTNode& _root)
+{
+	try
+	{
+		_root.accept(*this);
+	}
+	catch (FatalError const& e)
+	{
+		solAssert(m_errorOccurred, "");
+	}
+	return !m_errorOccurred;
+}
+
 bool ReferencesResolver::visit(Identifier const& _identifier)
 {
 	auto declarations = m_resolver.nameFromCurrentScope(_identifier.name());
