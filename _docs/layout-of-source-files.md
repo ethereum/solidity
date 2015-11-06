@@ -26,8 +26,11 @@ the compiler will not yet search your filesystem on its own.
 ### Comments
 
 Single-line comments (`//`) and multi-line comments (`/*...*/`) are possible.
-Inside of triple-slash comments (`///`) right in front of function declarations or statements,
-you can use doxygen-style tags to document functions, annotate conditions for formal
-verification and provide a confirmation text that is shown to users if they want to
-invoke a function. This is covered in [natspec](../natspec/) (not yet written).
 
+There are special types of comments called [natspec](../natspec/) comments
+(documentation yet to be written). These are introduced by 
+triple-slash comments (`///`) or using double asterists (`/** ... */`).
+Right in front of function declarations or statements,
+you can use doxygen-style tags inside them to document functions, annotate conditions for formal
+verification and provide a **confirmation text** that is shown to users if they want to
+invoke a function.
