@@ -60,7 +60,7 @@ public:
 	bool resolve(ASTNode& _root)
 	{
 		_root.accept(*this);
-		return Error::containsOnlyWarnings(m_errors);
+		return !m_errorOccurred;
 	}
 
 private:
@@ -73,16 +73,23 @@ private:
 	TypePointer typeFor(TypeName const& _typeName);
 
 	/// Adds a new error to the list of errors.
-	void typeError(SourceLocation const& _location, std::string const& _description);
+	void TypeError(SourceLocation const& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort type checking.
-	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
+	void TypeFatalError(SourceLocation const& _location, std::string const& _description);
+
+	/// Adds a new error to the list of errors.
+	void DeclarationError(const SourceLocation& _location, std::string const& _description);
+
+	/// Adds a new error to the list of errors and throws to abort type checking.
+	void DeclarationFatalError(const SourceLocation& _location, std::string const& _description);
 
 	ErrorList& m_errors;
 	NameAndTypeResolver& m_resolver;
 	ContractDefinition const* m_currentContract;
 	ParameterList const* m_returnParameters;
-	bool m_resolveInsideCode;
+	bool const m_resolveInsideCode;
+	bool m_errorOccurred = false;
 };
 
 }

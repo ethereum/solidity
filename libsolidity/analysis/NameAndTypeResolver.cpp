@@ -84,6 +84,9 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 				importInheritedScope(*base);
 		}
 
+		if (!success)
+			return false;
+
 		for (ASTPointer<StructDefinition> const& structDef: _contract.definedStructs())
 			if (!resolver.resolve(*structDef))
 				success = false;
@@ -97,6 +100,8 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			if (!resolver.resolve(*event))
 				success = false;
 		// these can contain code, only resolve parameters for now
+		if (!success)
+			return false;
 		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
 		{
 			m_currentScope = &m_scopes[modifier.get()];
@@ -104,18 +109,23 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			if (!resolver.resolve(*modifier))
 				success = false;
 		}
+
+		if (!success)
+			return false;
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
 			m_currentScope = &m_scopes[function.get()];
-			ReferencesResolver referencesResolver(
+			if (! ReferencesResolver(
 				m_errors,
 				*this,
 				&_contract,
 				function->returnParameterList().get()
-			);
-			if (!resolver.resolve(*function))
+			).resolve(*function))
 				success = false;
 		}
+
+		if (!success)
+			return false;
 
 		m_currentScope = &m_scopes[&_contract];
 
@@ -127,17 +137,19 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			if (!resolver.resolve(*modifier))
 				success = false;
 		}
+
+		if (!success)
+			return false;
 		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
 		{
 			m_currentScope = &m_scopes[function.get()];
-			ReferencesResolver referencesResolver(
+			if (! ReferencesResolver(
 				m_errors,
 				*this,
 				&_contract,
 				function->returnParameterList().get(),
 				true
-			);
-			if (!resolver.resolve(*function))
+			).resolve(*function))
 				success = false;
 		}
 		if (!success)
