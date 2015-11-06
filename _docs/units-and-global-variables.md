@@ -48,7 +48,7 @@ namespace and are mainly used to provide information about the blockchain.
  - `block.difficulty` (`uint`): current block difficulty
  - `block.gaslimit` (`uint`): current block gaslimit
  - `block.number` (`uint`): current block number
- - `block.blockhash` (`function(uint) returns (bytes32)`): hash of the given block
+ - `block.blockhash` (`function(uint) returns (bytes32)`): hash of the given block - only for 256 most recent blocks
  - `block.timestamp` (`uint`): current block timestamp
  - `msg.data` (`bytes`): complete calldata
  - `msg.gas` (`uint`): remaining gas
@@ -58,6 +58,23 @@ namespace and are mainly used to provide information about the blockchain.
  - `now` (`uint`): current block timestamp (alias for `block.timestamp`)
  - `tx.gasprice` (`uint`): gas price of the transaction
  - `tx.origin` (`address`): sender of the transaction (full call chain)
+
+<div class="note info">
+The values of all members of <code>msg</code>, including <code>msg.sender</code> and
+<code>msg.value</code> can change
+for every **external** function call. This includes calls to library functions.
+<br/>
+If you want to implement access restrictions in library functions using
+<code>msg.sender</code>, you have to manually supply the value of
+<code>msg.sender</code> as an argument.
+</div>
+
+<div class="note info">
+The block hashes are not available for all blocks for scalability reasons.
+You can only access the hashes of the most recent 256 blocks, all other
+values will be zero.
+</div>
+
 
 ### Cryptographic Functions
 
