@@ -10,7 +10,7 @@ them can be quite expensive, we have to think about whether we want them to be
 stored in **memory** (which is not persisting) or **storage** (where the state
 variables are held).
 
-### Data location
+# Data location
 
 Every complex type, i.e. *arrays* and *structs*, has an additional
 annotation, the "data location", about whether it is stored in memory or in storage. Depending on the
@@ -48,8 +48,8 @@ contract c {
     // This does not work either, since it would "reset" the pointer, but there
     // is no sensible location it could point to.
     // delete y;
-	g(x); // calls g, handing over a reference to x
-	h(x); // calls h and creates an independent, temporary copy in memory
+    g(x); // calls g, handing over a reference to x
+    h(x); // calls h and creates an independent, temporary copy in memory
   }
   function g(uint[] storage storageArray) internal {}
   function h(uint[] memoryArray) {}
@@ -66,7 +66,7 @@ Default data location:
  - parameters (also return) of functions: memory
  - all other local variables: storage
 
-### Arrays
+# Arrays
 
 Arrays can have a compile-time fixed size or they can be dynamic.
 For storage arrays, the element type can be arbitrary (i.e. also other
@@ -85,10 +85,31 @@ Variables of type `bytes` and `string` are special arrays. A `bytes` is similar 
 but it is packed tightly in calldata. `string` is equal to `bytes` but does not allow
 length or index access (for now).
 
-*length*: Arrays have a `length` member to hold their number of elements.
+<div class="note info">
+If you want to access the byte-representation of a string <code>s</code>, use
+<code>bytes(s).length</code> / <code>bytes(s)[7] = 'x';</code>. Keep in mind
+that you are accessing the low-level bytes of the utf-8 representation,
+and not the individual characters!
+</div>
+
+## Members
+
+* **length**: Arrays have a `length` member to hold their number of elements.
 Dynamic arrays can be resized in storage (not in memory) by changing the
 `.length` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
-*push*: Dynamic storage arrays and `bytes` (not `string`) have a member function called `push` that can be used to append an element at the end of the array. The function returns the new length.
+* **push**: Dynamic storage arrays and `bytes` (not `string`) have a member function called `push` that can be used to append an element at the end of the array. The function returns the new length.
+
+<div class="note warning">
+It is not yet possible to use arrays of arrays in external functions.
+</div>
+
+<div class="note warning">
+Due to limitations of the EVM, it is not possible to return
+dynamic content from external function calls. The function <code>f</code> in
+<code>contract C { function f() returns (uint[]) { ... } }</code> will return
+something if called from web3.js, but not if called from Solidity.<br/>
+The only workaround for now is to use large statically-sized arrays.
+</div>
 
 
 {% highlight javascript %}
@@ -132,7 +153,7 @@ contract ArrayContract {
 }
 {% endhighlight %}
 
-### Structs
+# Structs
 
 Solidity provides a way to define new types in the form of structs, which is
 shown in the following example:
