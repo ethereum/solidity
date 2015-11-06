@@ -431,6 +431,45 @@ function thisFunctionNameIsReallyLong(address x, address y, address z)
 }
 {% endhighlight %}
 
+For constructor functions on inherited contracts who's bases require arguments,
+it is recommended to drop the base constructors onto new lines in the same
+manner as modifiers if the function declaration is long or hard to read.
+
+Yes:
+{% highlight javascript %}
+contract A is B, C, D {
+    function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+        B(param1)
+        C(param2, param3)
+        D(param4)
+    {
+        // do something with param5
+    }
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+contract A is B, C, D {
+    function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+    B(param1)
+    C(param2, param3)
+    D(param4)
+    {
+        // do something with param5
+    }
+}
+
+contract A is B, C, D {
+    function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+        B(param1)
+        C(param2, param3)
+        D(param4) {
+        // do something with param5
+    }
+}
+{% endhighlight %}
+
 > These guidelines for function declarations are intended to improve readability.
 Authors should use their best judgement as this guide does not try to cover all
 possible permutations for function declarations.
