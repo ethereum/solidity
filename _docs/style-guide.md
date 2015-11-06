@@ -157,17 +157,17 @@ Avoid extraneous whitespace in the following  situations:
 
 * Immediately inside parenthesis, brackets or braces.
 
-    {% highlight javascript %}
-    Yes: spam(ham[1], Coin({name: "ham"}));
-    No: spam( ham[ 1 ], Coin( { name: "ham" } ) );
-    {% endhighlight %}
+{% highlight javascript %}
+Yes: spam(ham[1], Coin({name: "ham"}));
+No: spam( ham[ 1 ], Coin( { name: "ham" } ) );
+{% endhighlight %}
 
 * Immediately before a comma, semicolon:
 
-    {% highlight javascript %}
-    Yes: function spam(uint i, Coin coin);
-    No: function spam(uint i , Coin coin) ;
-    {% endhighlight %}
+{% highlight javascript %}
+Yes: function spam(uint i, Coin coin);
+No: function spam(uint i , Coin coin) ;
+{% endhighlight %}
 
 * More than one space around an assignment or other operator to align with
   another:
