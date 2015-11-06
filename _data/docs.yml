@@ -20,6 +20,10 @@
   - layout-of-source-files
   - structure-of-a-contract
   - types
+  - name: value-types
+    indent: 1
+  - name: arrays-and-structs
+    indent: 1
   - units-and-global-variables
   - control-structures
   - contracts

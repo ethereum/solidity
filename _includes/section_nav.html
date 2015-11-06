@@ -2,7 +2,7 @@
 Map grabs the doc sections, giving us an array of arrays. Join, flattens all
 the items to a comma delimited string. Split turns it into an array again.
 {% endcomment %}
-{% assign docs = site.data.docs | map: 'docs' | join: ',' | split: ',' %}
+{% assign docs = site.data.docs | map: 'docs' | join: ',' | replace: '{"name"=>"','' | replace: '", "indent"=>1}','' | split: ',' %}
 
 {% comment %}
 Because this is built for every page, lets find where we are in the ordered

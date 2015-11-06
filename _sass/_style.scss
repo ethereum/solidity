@@ -431,6 +431,9 @@ aside {
 
   ul {
     padding-left: 0;
+    ul {
+        padding-left: 15px;
+    }
 
     &:first-child { margin-top: 0; }
   }
