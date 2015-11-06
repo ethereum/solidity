@@ -453,40 +453,40 @@ No:  uint [] x;
 
 * Surround operators with a single space on either side.
 
-    {% highlight javascript %}
-    Yes:
+{% highlight javascript %}
+Yes:
 
-    x = 3;
-    x = 100 / 10;
-    x += 3 + 4;
-    x |= y && z;
+x = 3;
+x = 100 / 10;
+x += 3 + 4;
+x |= y && z;
 
-    No:
+No:
 
-    x=3;
-    x = 100/10;
-    x += 3+4;
-    x |= y&&z;
-    {% endhighlight %}
+x=3;
+x = 100/10;
+x += 3+4;
+x |= y&&z;
+{% endhighlight %}
 
 * Operators with a higher priority than others can exclude surrounding
   whitespace in order to denote precidence.  This is meant to allow for
   improved readability for complex statement. You should always use the same
   amount of whitespace on either side of an operator:
 
-    {% highlight javascript %}
-    Yes:
+{% highlight javascript %}
+Yes:
 
-    x = 2**3 + 5;
-    x = 2*y + 3*z;
-    x = (a+b) * (a-b);
+x = 2**3 + 5;
+x = 2*y + 3*z;
+x = (a+b) * (a-b);
 
-    No:
+No:
 
-    x = 2** 3 + 5;
-    x = y+z;
-    x +=1;
-    {% endhighlight %}
+x = 2** 3 + 5;
+x = y+z;
+x +=1;
+{% endhighlight %}
 
 ## Naming Conventions
 
