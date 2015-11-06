@@ -189,7 +189,7 @@ No: function spam(uint i , Coin coin) ;
 
 ### Control Structures
 
-The braces denoting the body of a contract, library, struct, function should:
+The braces denoting the body of a contract, library, or struct should:
 
 * open on the same line as the declaration
 * close on their own line at the same indentation level as the beginning of the
@@ -298,9 +298,142 @@ if (x < 3) {
 }
 {% endhighlight %}
 
-### Function Modifiers
+### Function Declaration
 
-TODO
+For short function declarations, it is recommended for the opening brace of the
+function body to be kept on the same line as the function declaration.
+
+The closing brace should be at the same indentation level as the function
+declaration.
+
+The opening brace should be preceeded by a single space.
+
+Yes:
+{% highlight javascript %}
+function increment(uint x) returns (uint) {
+    return x + 1;
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+function increment(uint x) returns (uint)
+{
+    return x + 1;
+}
+
+function increment(uint x) returns (uint){
+    return x + 1;
+}
+
+function increment(uint x) returns (uint) {
+    return x + 1;
+    }
+
+function increment(uint x) returns (uint) {
+    return x + 1;}
+{% endhighlight %}
+
+The visibility modifiers for a function should come before any custom
+modifiers.
+
+Yes:
+{% highlight javascript %}
+function kill() public onlyowner {
+    suicide(owner);
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+function kill() onlyowner public {
+    suicide(owner);
+}
+{% endhighlight %}
+
+If the function arguments are also too long to be easily read on a single line,
+they can be wrapped using a hanging intendation.
+
+Yes:
+{% highlight javascript %}
+function thisFunctionHasLotsOfArguments(address a, address b, address c,
+                                        address d, address e, address f) {
+    do_something;
+}
+
+function thisFunctionHasLotsOfArguments(address a,
+                                        address b,
+                                        address c,
+                                        address d,
+                                        address e,
+                                        address f) {
+    do_something;
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+function thisFunctionHasLotsOfArguments(address a, address b, address c,
+    address d, address e, address f) {
+    do_something;
+}
+
+function thisFunctionHasLotsOfArguments(address a,
+    address b,
+    address c,
+    address d,
+    address e,
+    address f) {
+    do_something;
+}
+{% endhighlight %}
+
+For longer function declarations the modifiers and return statements can each
+be placed on their own lines indented at the same indentation level as the
+function body.  In these cases, the opening brace should be placed on the first
+line after the modifiers and return statements at the same indentation level as
+the function.
+
+Yes:
+{% highlight javascript %}
+function thisFunctionNameIsReallyLong(address x, address y, address z)
+    public
+    onlyowner
+    priced
+    returns (address)
+{
+    do_something;
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+function thisFunctionNameIsReallyLong(address x, address y, address z)
+                                      public
+                                      onlyowner
+                                      priced
+                                      returns (address) {
+    do_something;
+}
+
+function thisFunctionNameIsReallyLong(address x, address y, address z)
+    public onlyowner priced returns (address)
+{
+    do_something;
+}
+
+function thisFunctionNameIsReallyLong(address x, address y, address z)
+    public
+    onlyowner
+    priced
+    returns (address) {
+    do_something;
+}
+{% endhighlight %}
+
+> These guidelines for function declarations are intended to improve readability.
+Authors should use their best judgement as this guide does not try to cover all
+possible permutations for function declarations.
 
 ### Mappings
 
