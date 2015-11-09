@@ -12,7 +12,7 @@ crowdfunding, blind auctions, multi-signature wallets and more.
 
 On the next pages, we will first see a
 [simple smart]({{ site.url }}docs/simple-smart-contract/) written
-in Solidity followed by a basics about
+in Solidity followed by the basics about
 [blockchains]({{ site.url}}docs/blockchain-basics/)
 and the [Ethereum Virtual Machine]({{ site.url }}docs/the-ethereum-virtual-machine/).
 
