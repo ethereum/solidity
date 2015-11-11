@@ -113,6 +113,8 @@ void Why3Translator::addLine(string const& _line)
 
 void Why3Translator::add(string const& _str)
 {
+	if (m_currentLine.empty())
+		m_indentationAtLineStart = m_indentation;
 	m_currentLine += _str;
 }
 
@@ -120,7 +122,7 @@ void Why3Translator::newLine()
 {
 	if (!m_currentLine.empty())
 	{
-		for (size_t i = 0; i < m_indentation; ++i)
+		for (size_t i = 0; i < m_indentationAtLineStart; ++i)
 			m_result.push_back('\t');
 		m_result += m_currentLine;
 		m_result.push_back('\n');
@@ -130,6 +132,7 @@ void Why3Translator::newLine()
 
 void Why3Translator::unindent()
 {
+	newLine();
 	solAssert(m_indentation > 0, "");
 	m_indentation--;
 }
@@ -177,7 +180,6 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 		add(" (arg_" + param->name() + ": " + paramType + ")");
 	}
 	add(":");
-	newLine();
 
 	indent();
 	indent();
@@ -191,7 +193,7 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 			retString += ", ";
 		retString += paramType;
 	}
-	addLine(retString + ")");
+	add(retString + ")");
 	unindent();
 
 	addSourceFromDocStrings(_function.annotation());
@@ -218,6 +220,7 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 	addLine("try");
 
 	_function.body().accept(*this);
+	add(";");
 	addLine("raise Ret");
 
 	string retVals;
@@ -238,9 +241,18 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 bool Why3Translator::visit(Block const& _node)
 {
 	addSourceFromDocStrings(_node.annotation());
-	addLine("begin");
+	add("begin");
 	indent();
-	return true;
+	for (size_t i = 0; i < _node.statements().size(); ++i)
+	{
+		_node.statements()[i]->accept(*this);
+		if (!m_currentLine.empty() && i != _node.statements().size() - 1)
+			add(";");
+		newLine();
+	}
+	unindent();
+	add("end");
+	return false;
 }
 
 bool Why3Translator::visit(IfStatement const& _node)
@@ -250,12 +262,12 @@ bool Why3Translator::visit(IfStatement const& _node)
 	add("if ");
 	_node.condition().accept(*this);
 	add(" then");
-	newLine();
-	_node.trueStatement().accept(*this);
+	visitIndentedUnlessBlock(_node.trueStatement());
 	if (_node.falseStatement())
 	{
-		addLine("else");
-		_node.falseStatement()->accept(*this);
+		newLine();
+		add("else");
+		visitIndentedUnlessBlock(*_node.falseStatement());
 	}
 	return false;
 }
@@ -266,10 +278,10 @@ bool Why3Translator::visit(WhileStatement const& _node)
 
 	add("while ");
 	_node.condition().accept(*this);
-	add(" do");
 	newLine();
-	_node.body().accept(*this);
-	addLine("done;");
+	add("do");
+	visitIndentedUnlessBlock(_node.body());
+	add("done");
 	return false;
 }
 
@@ -286,14 +298,12 @@ bool Why3Translator::visit(Return const& _node)
 			error(_node, "Directly returning tuples not supported. Rather assign to return variable.");
 			return false;
 		}
-		newLine();
 		add("begin _" + params.front()->name() + " := ");
 		_node.expression()->accept(*this);
 		add("; raise Ret end");
-		newLine();
 	}
 	else
-		addLine("raise Ret;");
+		add("raise Ret");
 	return false;
 }
 
@@ -310,8 +320,6 @@ bool Why3Translator::visit(VariableDeclarationStatement const& _node)
 	{
 		add("_" + _node.declarations().front()->name() + " := ");
 		_node.initialValue()->accept(*this);
-		add(";");
-		newLine();
 	}
 	return false;
 }
@@ -517,7 +525,21 @@ bool Why3Translator::visit(Literal const& _literal)
 	return false;
 }
 
-void Why3Translator::addSourceFromDocStrings(const DocumentedAnnotation& _annotation)
+void Why3Translator::visitIndentedUnlessBlock(Statement const& _statement)
+{
+	bool isBlock = !!dynamic_cast<Block const*>(&_statement);
+	if (isBlock)
+		newLine();
+	else
+		indent();
+	_statement.accept(*this);
+	if (isBlock)
+		newLine();
+	else
+		unindent();
+}
+
+void Why3Translator::addSourceFromDocStrings(DocumentedAnnotation const& _annotation)
 {
 	auto why3Range = _annotation.docTags.equal_range("why3");
 	for (auto i = why3Range.first; i != why3Range.second; ++i)
