@@ -5781,6 +5781,21 @@ BOOST_AUTO_TEST_CASE(lone_struct_array_type)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(3)));
 }
 
+BOOST_AUTO_TEST_CASE(memory_overwrite)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bytes x) {
+				x = "12345";
+				x[3] = 0x61;
+				x[0] = 0x62;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeDyn(string("b23a5")));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
