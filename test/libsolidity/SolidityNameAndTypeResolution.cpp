@@ -136,7 +136,7 @@ static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source
 	return nullptr;
 }
 
-static FunctionTypePointer const& retrieveFunctionBySignature(
+static FunctionTypePointer retrieveFunctionBySignature(
 	ContractDefinition const* _contract,
 	std::string const& _signature
 )
