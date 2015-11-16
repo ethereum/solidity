@@ -1045,34 +1045,43 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 void TypeChecker::endVisit(NewExpression const& _newExpression)
 {
-	auto contract = dynamic_cast<ContractDefinition const*>(&dereference(_newExpression.contractName()));
+	if (auto contractName = dynamic_cast<UserDefinedTypeName const*>(&_newExpression.typeName()))
+	{
+		auto contract = dynamic_cast<ContractDefinition const*>(&dereference(*contractName));
 
-	if (!contract)
-		fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
-	if (!contract->annotation().isFullyImplemented)
-		typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
+		if (!contract)
+			fatalTypeError(_newExpression.location(), "Identifier is not a contract.");
+		if (!contract->annotation().isFullyImplemented)
+			typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
 
-	auto scopeContract = _newExpression.contractName().annotation().contractScope;
-	scopeContract->annotation().contractDependencies.insert(contract);
-	solAssert(
-		!contract->annotation().linearizedBaseContracts.empty(),
-		"Linearized base contracts not yet available."
-	);
-	if (contractDependenciesAreCyclic(*scopeContract))
-		typeError(
-			_newExpression.location(),
-			"Circular reference for contract creation (cannot create instance of derived or same contract)."
+		auto scopeContract = contractName->annotation().contractScope;
+		scopeContract->annotation().contractDependencies.insert(contract);
+		solAssert(
+			!contract->annotation().linearizedBaseContracts.empty(),
+			"Linearized base contracts not yet available."
 		);
+		if (contractDependenciesAreCyclic(*scopeContract))
+			typeError(
+				_newExpression.location(),
+				"Circular reference for contract creation (cannot create instance of derived or same contract)."
+			);
 
-	auto contractType = make_shared<ContractType>(*contract);
-	TypePointers const& parameterTypes = contractType->constructorType()->parameterTypes();
-	_newExpression.annotation().type = make_shared<FunctionType>(
-		parameterTypes,
-		TypePointers{contractType},
-		strings(),
-		strings(),
-		FunctionType::Location::Creation
-	);
+		auto contractType = make_shared<ContractType>(*contract);
+		TypePointers const& parameterTypes = contractType->constructorType()->parameterTypes();
+		_newExpression.annotation().type = make_shared<FunctionType>(
+			parameterTypes,
+			TypePointers{contractType},
+			strings(),
+			strings(),
+			FunctionType::Location::Creation
+		);
+	}
+	else if (auto arrayTypeName = dynamic_cast<ArrayTypeName const*>(&_newExpression.typeName()))
+	{
+		solAssert(false, "Not yet implemented.");
+	}
+	else
+		fatalTypeError(_newExpression.location(), "Contract or array type expected.");
 }
 
 bool TypeChecker::visit(MemberAccess const& _memberAccess)
@@ -1286,6 +1295,12 @@ Declaration const& TypeChecker::dereference(Identifier const& _identifier)
 {
 	solAssert(!!_identifier.annotation().referencedDeclaration, "Declaration not stored.");
 	return *_identifier.annotation().referencedDeclaration;
+}
+
+Declaration const& TypeChecker::dereference(UserDefinedTypeName const& _typeName)
+{
+	solAssert(!!_typeName.annotation().referencedDeclaration, "Declaration not stored.");
+	return *_typeName.annotation().referencedDeclaration;
 }
 
 void TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)

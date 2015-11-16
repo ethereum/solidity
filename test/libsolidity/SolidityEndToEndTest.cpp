@@ -1955,7 +1955,7 @@ BOOST_AUTO_TEST_CASE(value_for_constructor)
 		contract Main {
 			Helper h;
 			function Main() {
-				h = new Helper.value(10)("abc", true);
+				h = (new Helper).value(10)("abc", true);
 			}
 			function getFlag() returns (bool ret) { return h.getFlag(); }
 			function getName() returns (bytes3 ret) { return h.getName(); }

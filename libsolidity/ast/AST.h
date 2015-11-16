@@ -1216,23 +1216,24 @@ private:
 };
 
 /**
- * Expression that creates a new contract, e.g. the "new SomeContract" part in "new SomeContract(1, 2)".
+ * Expression that creates a new contract or memory-array,
+ * e.g. the "new SomeContract" part in "new SomeContract(1, 2)".
  */
 class NewExpression: public Expression
 {
 public:
 	NewExpression(
 		SourceLocation const& _location,
-		ASTPointer<Identifier> const& _contractName
+		ASTPointer<TypeName> const& _typeName
 	):
-		Expression(_location), m_contractName(_contractName) {}
+		Expression(_location), m_typeName(_typeName) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Identifier const& contractName() const { return *m_contractName; }
+	TypeName const& typeName() const { return *m_typeName; }
 
 private:
-	ASTPointer<Identifier> m_contractName;
+	ASTPointer<TypeName> m_typeName;
 };
 
 /**

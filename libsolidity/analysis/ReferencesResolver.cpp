@@ -44,6 +44,7 @@ bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 		fatalDeclarationError(_typeName.location(), "Identifier not found or not unique.");
 
 	_typeName.annotation().referencedDeclaration = declaration;
+	_typeName.annotation().contractScope = m_currentContract;
 	return true;
 }
 

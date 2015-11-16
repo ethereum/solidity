@@ -2529,6 +2529,24 @@ BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(create_memory_arrays)
+{
+	char const* text = R"(
+		library L {
+			struct R { uint[10][10] y; }
+			struct S { uint a; uint b; uint[20][20][20] c; R d; }
+		}
+		contract C {
+			function f(uint size) {
+				L.S[][] x = new L.S[][](10);
+				var y = new uint[](20);
+				var z = new bytes(size);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
