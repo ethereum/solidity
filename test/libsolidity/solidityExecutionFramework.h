@@ -43,7 +43,7 @@ class ExecutionFramework
 {
 public:
 	ExecutionFramework():
-		m_state(eth::State::Null)
+		m_state(0)
 	{
 		if (g_logVerbosity != -1)
 			g_logVerbosity = 0;
