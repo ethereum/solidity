@@ -34,7 +34,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-BlockId::BlockId(u256 const& _id): m_id(_id)
+BlockId::BlockId(u256 const& _id):
+	m_id(unsigned(_id))
 {
 	assertThrow( _id < initial().m_id, OptimizerException, "Tag number too large.");
 }
