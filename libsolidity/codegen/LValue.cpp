@@ -103,10 +103,20 @@ void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool
 		if (!_move)
 		{
 			utils.moveToStackTop(m_dataType->sizeOnStack());
-			utils.copyToStackTop(2, m_dataType->sizeOnStack());
+			utils.copyToStackTop(1 + m_dataType->sizeOnStack(), m_dataType->sizeOnStack());
 		}
-		utils.storeInMemoryDynamic(*m_dataType, m_padded);
-		m_context << eth::Instruction::POP;
+		if (!m_padded)
+		{
+			solAssert(m_dataType->calldataEncodedSize(false) == 1, "Invalid non-padded type.");
+			if (m_dataType->category() == Type::Category::FixedBytes)
+				m_context << u256(0) << eth::Instruction::BYTE;
+			m_context << eth::Instruction::SWAP1 << eth::Instruction::MSTORE8;
+		}
+		else
+		{
+			utils.storeInMemoryDynamic(*m_dataType, m_padded);
+			m_context << eth::Instruction::POP;
+		}
 	}
 	else
 	{
