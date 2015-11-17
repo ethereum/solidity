@@ -1045,6 +1045,9 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 
 void TypeChecker::endVisit(NewExpression const& _newExpression)
 {
+	TypePointer type = _newExpression.typeName().annotation().type;
+	solAssert(!!type, "Type name not resolved.");
+
 	if (auto contractName = dynamic_cast<UserDefinedTypeName const*>(&_newExpression.typeName()))
 	{
 		auto contract = dynamic_cast<ContractDefinition const*>(&dereference(*contractName));
@@ -1076,9 +1079,26 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			FunctionType::Location::Creation
 		);
 	}
-	else if (auto arrayTypeName = dynamic_cast<ArrayTypeName const*>(&_newExpression.typeName()))
+	else if (type->category() == Type::Category::Array)
 	{
-		solAssert(false, "Not yet implemented.");
+		if (!type->canLiveOutsideStorage())
+			fatalTypeError(
+				_newExpression.typeName().location(),
+				"Type cannot live outside storage."
+			);
+		if (!type->isDynamicallySized())
+			typeError(
+				_newExpression.typeName().location(),
+				"Length has to be placed in parentheses after the array type for new expression."
+			);
+		type = ReferenceType::copyForLocationIfReference(DataLocation::Memory, type);
+		_newExpression.annotation().type = make_shared<FunctionType>(
+			TypePointers{make_shared<IntegerType>(256)},
+			TypePointers{type},
+			strings(),
+			strings(),
+			FunctionType::Location::ObjectCreation
+		);
 	}
 	else
 		fatalTypeError(_newExpression.location(), "Contract or array type expected.");

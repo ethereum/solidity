@@ -2538,13 +2538,49 @@ BOOST_AUTO_TEST_CASE(create_memory_arrays)
 		}
 		contract C {
 			function f(uint size) {
-				L.S[][] x = new L.S[][](10);
+				L.S[][] memory x = new L.S[][](10);
 				var y = new uint[](20);
 				var z = new bytes(size);
 			}
 		}
 	)";
 	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_in_memory_array)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint size) {
+				var x = new mapping(uint => uint)[](4);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(new_for_non_array)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint size) {
+				var x = new uint(7);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_args_creating_memory_array)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint size) {
+				var x = new uint[]();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

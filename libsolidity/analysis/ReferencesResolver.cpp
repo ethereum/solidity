@@ -37,6 +37,11 @@ bool ReferencesResolver::visit(Return const& _return)
 	return true;
 }
 
+void ReferencesResolver::endVisit(NewExpression const& _new)
+{
+	typeFor(_new.typeName());
+}
+
 bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 {
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
