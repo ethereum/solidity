@@ -103,6 +103,11 @@ public:
 		bool _encodeAsLibraryTypes = false
 	);
 
+	/// Zero-initialises (the data part of) an already allocated memory array.
+	/// Stack pre: <length> <memptr>
+	/// Stack post: <updated_memptr>
+	void zeroInitialiseMemoryArray(ArrayType const& _type);
+
 	/// Uses a CALL to the identity contract to perform a memory-to-memory copy.
 	/// Stack pre: <size> <target> <source>
 	/// Stack post:

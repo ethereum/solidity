@@ -5816,6 +5816,50 @@ BOOST_AUTO_TEST_CASE(lone_struct_array_type)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(3)));
 }
 
+BOOST_AUTO_TEST_CASE(create_memory_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint[2] a; bytes b; }
+			function f() returns (byte, uint, uint, byte) {
+				var x = new bytes(200);
+				x[199] = 'A';
+				var y = new uint[2][](300);
+				y[203][1] = 8;
+				var z = new S[](180);
+				z[170].a[1] = 4;
+				z[170].b = new bytes(102);
+				z[170].b[99] = 'B';
+				return (x[199], y[203][1], z[170].a[1], z[170].b[99]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(string("A"), u256(8), u256(4), string("B")));
+}
+
+BOOST_AUTO_TEST_CASE(memory_arrays_of_various_sizes)
+{
+	// Computes binomial coefficients the chinese way
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint n, uint k) returns (uint) {
+				uint[][] memory rows = new uint[][](n + 1);
+				for (uint i = 1; i <= n; i++) {
+					rows[i] = new uint[](i);
+					rows[i][0] = rows[i][rows[i].length - 1] = 1;
+					for (uint j = 1; j < i - 1; j++)
+						rows[i][j] = rows[i - 1][j - 1] + rows[i - 1][j];
+				}
+				return rows[n][k - 1];
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", encodeArgs(u256(3), u256(1))) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", encodeArgs(u256(9), u256(5))) == encodeArgs(u256(70)));
+}
+
 BOOST_AUTO_TEST_CASE(memory_overwrite)
 {
 	char const* sourceCode = R"(

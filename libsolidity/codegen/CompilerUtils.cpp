@@ -266,6 +266,19 @@ void CompilerUtils::encodeToMemory(
 	popStackSlots(argSize + dynPointers + 1);
 }
 
+void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
+{
+	auto repeat = m_context.newTag();
+	m_context << repeat;
+	pushZeroValue(*_type.baseType());
+	storeInMemoryDynamic(*_type.baseType());
+	m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::SWAP1;
+	m_context << eth::Instruction::SUB << eth::Instruction::SWAP1;
+	m_context << eth::Instruction::DUP2;
+	m_context.appendConditionalJumpTo(repeat);
+	m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+}
+
 void CompilerUtils::memoryCopy()
 {
 	// Stack here: size target source
@@ -646,15 +659,8 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		{
 			m_context << arrayType->length() << eth::Instruction::SWAP1;
 			// stack: items_to_do memory_pos
-			auto repeat = m_context.newTag();
-			m_context << repeat;
-			pushZeroValue(*arrayType->baseType());
-			storeInMemoryDynamic(*arrayType->baseType());
-			m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::SWAP1;
-			m_context << eth::Instruction::SUB << eth::Instruction::SWAP1;
-			m_context << eth::Instruction::DUP2;
-			m_context.appendConditionalJumpTo(repeat);
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+			zeroInitialiseMemoryArray(*arrayType);
+			// stack: updated_memory_pos
 		}
 	}
 	else
