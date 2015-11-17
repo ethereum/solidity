@@ -587,11 +587,24 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				{
 					++numIndexed;
 					arguments[arg - 1]->accept(*this);
-					utils().convertType(
-						*arguments[arg - 1]->annotation().type,
-						*function.parameterTypes()[arg - 1],
-						true
-					);
+					if (auto const& arrayType = dynamic_pointer_cast<ArrayType const>(function.parameterTypes()[arg - 1]))
+					{
+						utils().fetchFreeMemoryPointer();
+						utils().encodeToMemory(
+							{arguments[arg - 1]->annotation().type},
+							{arrayType},
+							false,
+							true
+						);
+						utils().toSizeAfterFreeMemoryPointer();
+						m_context << eth::Instruction::SHA3;
+					}
+					else
+						utils().convertType(
+							*arguments[arg - 1]->annotation().type,
+							*function.parameterTypes()[arg - 1],
+							true
+						);
 				}
 			if (!event.isAnonymous())
 			{
