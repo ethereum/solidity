@@ -1123,7 +1123,11 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 	bytes complicatedConstant = toBigEndian(u256("0x817416927846239487123469187231298734162934871263941234127518276"));
 	unsigned occurrences = 0;
 	for (auto iter = optimizedBytecode.cbegin(); iter < optimizedBytecode.cend(); ++occurrences)
-		iter = search(iter, optimizedBytecode.cend(), complicatedConstant.cbegin(), complicatedConstant.cend()) + 1;
+	{
+		iter = search(iter, optimizedBytecode.cend(), complicatedConstant.cbegin(), complicatedConstant.cend());
+		if (iter < optimizedBytecode.cend())
+			++iter;
+	}
 	BOOST_CHECK_EQUAL(2, occurrences);
 
 	bytes constantWithZeros = toBigEndian(u256("0x77abc0000000000000000000000000000000000000000000000000000000001"));
