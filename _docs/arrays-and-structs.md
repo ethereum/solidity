@@ -150,6 +150,15 @@ contract ArrayContract {
   function addFlag(bool[2] flag) returns (uint) {
     return m_pairsOfFlags.push(flag);
   }
+  function createMemoryArray(uint size) returns (bytes) {
+    // Dynamic memory arrays are created using `new`:
+    uint[2][] memory arrayOfPairs = new uint[2][](size);
+    // Create a dynamic byte array:
+    bytes memory b = new bytes(200);
+    for (uint i = 0; i < b.length; i++)
+      b[i] = byte(i);
+    return b;
+  }
 }
 {% endhighlight %}
 
