@@ -5831,6 +5831,24 @@ BOOST_AUTO_TEST_CASE(memory_overwrite)
 	BOOST_CHECK(callContractFunction("f()") == encodeDyn(string("b23a5")));
 }
 
+BOOST_AUTO_TEST_CASE(addmod_mulmod)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function test() returns (uint) {
+				// Note that this only works because computation on literals is done using
+				// unbounded integers.
+				if ((2**255 + 2**255) % 7 != addmod(2**255, 2**255, 7))
+					return 1;
+				if ((2**255 + 2**255) % 7 != addmod(2**255, 2**255, 7))
+					return 2;
+				return 0;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(0)));
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 }
