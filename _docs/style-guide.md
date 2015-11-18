@@ -157,17 +157,17 @@ Avoid extraneous whitespace in the following  situations:
 
 * Immediately inside parenthesis, brackets or braces.
 
-    {% highlight javascript %}
-    Yes: spam(ham[1], Coin({name: "ham"}));
-    No: spam( ham[ 1 ], Coin( { name: "ham" } ) );
-    {% endhighlight %}
+{% highlight javascript %}
+Yes: spam(ham[1], Coin({name: "ham"}));
+No: spam( ham[ 1 ], Coin( { name: "ham" } ) );
+{% endhighlight %}
 
 * Immediately before a comma, semicolon:
 
-    {% highlight javascript %}
-    Yes: function spam(uint i, Coin coin);
-    No: function spam(uint i , Coin coin) ;
-    {% endhighlight %}
+{% highlight javascript %}
+Yes: function spam(uint i, Coin coin);
+No: function spam(uint i , Coin coin) ;
+{% endhighlight %}
 
 * More than one space around an assignment or other operator to align with
   another:
@@ -189,7 +189,8 @@ Avoid extraneous whitespace in the following  situations:
 
 ### Control Structures
 
-The braces denoting the body of a contract, library, struct, function should:
+The braces denoting the body of a contract, library, functions and structs
+should:
 
 * open on the same line as the declaration
 * close on their own line at the same indentation level as the beginning of the
@@ -216,6 +217,7 @@ contract Coin
     }
 }
 {% endhighlight %}
+
 
 The same recommendations apply to the control structures `if`, `else`, `while`,
 and `for`.
@@ -298,9 +300,204 @@ if (x < 3) {
 }
 {% endhighlight %}
 
-### Function Modifiers
+### Function Declaration
 
-TODO
+For short function declarations, it is recommended for the opening brace of the
+function body to be kept on the same line as the function declaration.
+
+The closing brace should be at the same indentation level as the function
+declaration.
+
+The opening brace should be preceeded by a single space.
+
+Yes:
+{% highlight javascript %}
+function increment(uint x) returns (uint) {
+    return x + 1;
+}
+
+function increment(uint x) public onlyowner returns (uint) {
+    return x + 1;
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+function increment(uint x) returns (uint)
+{
+    return x + 1;
+}
+
+function increment(uint x) returns (uint){
+    return x + 1;
+}
+
+function increment(uint x) returns (uint) {
+    return x + 1;
+    }
+
+function increment(uint x) returns (uint) {
+    return x + 1;}
+{% endhighlight %}
+
+The visibility modifiers for a function should come before any custom
+modifiers.
+
+Yes:
+{% highlight javascript %}
+function kill() public onlyowner {
+    suicide(owner);
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+function kill() onlyowner public {
+    suicide(owner);
+}
+{% endhighlight %}
+
+For long function declarations, it is recommended to drop each arguent onto
+it's own line at the same indentation level as the function body.  The closing
+parenthesis and opening bracket should be placed on their own line as well at
+the same indentation level as the function declaration.
+
+Yes:
+{% highlight javascript %}
+function thisFunctionHasLotsOfArguments(
+    address a,
+    address b,
+    address c,
+    address d,
+    address e,
+    address f,
+) {
+    do_something;
+}
+
+{% endhighlight %}
+No:
+{% highlight javascript %}
+function thisFunctionHasLotsOfArguments(address a, address b, address c,
+    address d, address e, address f) {
+    do_something;
+}
+
+function thisFunctionHasLotsOfArguments(address a,
+                                        address b,
+                                        address c,
+                                        address d,
+                                        address e,
+                                        address f) {
+    do_something;
+}
+
+function thisFunctionHasLotsOfArguments(
+    address a,
+    address b,
+    address c,
+    address d,
+    address e,
+    address f) {
+    do_something;
+}
+{% endhighlight %}
+
+If a long function declaration has modifiers, then each modifier should be
+dropped to it's own line.
+
+Yes:
+{% highlight javascript %}
+function thisFunctionNameIsReallyLong(address x, address y, address z)
+    public
+    onlyowner
+    priced
+    returns (address)
+{
+    do_something;
+}
+
+function thisFunctionNameIsReallyLong(
+    address x,
+    address y,
+    address z,
+)
+    public
+    onlyowner
+    priced
+    returns (address)
+{
+    do_something;
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+function thisFunctionNameIsReallyLong(address x, address y, address z)
+                                      public
+                                      onlyowner
+                                      priced
+                                      returns (address) {
+    do_something;
+}
+
+function thisFunctionNameIsReallyLong(address x, address y, address z)
+    public onlyowner priced returns (address)
+{
+    do_something;
+}
+
+function thisFunctionNameIsReallyLong(address x, address y, address z)
+    public
+    onlyowner
+    priced
+    returns (address) {
+    do_something;
+}
+{% endhighlight %}
+
+For constructor functions on inherited contracts who's bases require arguments,
+it is recommended to drop the base constructors onto new lines in the same
+manner as modifiers if the function declaration is long or hard to read.
+
+Yes:
+{% highlight javascript %}
+contract A is B, C, D {
+    function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+        B(param1)
+        C(param2, param3)
+        D(param4)
+    {
+        // do something with param5
+    }
+}
+{% endhighlight %}
+
+No:
+{% highlight javascript %}
+contract A is B, C, D {
+    function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+    B(param1)
+    C(param2, param3)
+    D(param4)
+    {
+        // do something with param5
+    }
+}
+
+contract A is B, C, D {
+    function A(uint param1, uint param2, uint param3, uint param4, uint param5)
+        B(param1)
+        C(param2, param3)
+        D(param4) {
+        // do something with param5
+    }
+}
+{% endhighlight %}
+
+> These guidelines for function declarations are intended to improve readability.
+Authors should use their best judgement as this guide does not try to cover all
+possible permutations for function declarations.
 
 ### Mappings
 
@@ -320,40 +517,40 @@ No:  uint [] x;
 
 * Surround operators with a single space on either side.
 
-    {% highlight javascript %}
-    Yes:
+{% highlight javascript %}
+Yes:
 
-    x = 3;
-    x = 100 / 10;
-    x += 3 + 4;
-    x |= y && z;
+x = 3;
+x = 100 / 10;
+x += 3 + 4;
+x |= y && z;
 
-    No:
+No:
 
-    x=3;
-    x = 100/10;
-    x += 3+4;
-    x |= y&&z;
-    {% endhighlight %}
+x=3;
+x = 100/10;
+x += 3+4;
+x |= y&&z;
+{% endhighlight %}
 
 * Operators with a higher priority than others can exclude surrounding
   whitespace in order to denote precidence.  This is meant to allow for
   improved readability for complex statement. You should always use the same
   amount of whitespace on either side of an operator:
 
-    {% highlight javascript %}
-    Yes:
+{% highlight javascript %}
+Yes:
 
-    x = 2**3 + 5;
-    x = 2*y + 3*z;
-    x = (a+b) * (a-b);
+x = 2**3 + 5;
+x = 2*y + 3*z;
+x = (a+b) * (a-b);
 
-    No:
+No:
 
-    x = 2** 3 + 5;
-    x = y+z;
-    x +=1;
-    {% endhighlight %}
+x = 2** 3 + 5;
+x = y+z;
+x +=1;
+{% endhighlight %}
 
 ## Naming Conventions
 
