@@ -6,7 +6,7 @@ permalink: /docs/blind-auction/
 
 
 In this section, we will show how easy it is to create a
-completely binding auction contract on Ethereum.
+completely blind auction contract on Ethereum.
 We will start with an open auction where everyone
 can see the bids that are made and then extend this
 contract into a blind auction where it is not
