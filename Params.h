@@ -57,13 +57,6 @@ extern u256 const c_quadCoeffDiv;			///< Divisor for the quadratic particle of t
 extern u256 const c_txGas;					///< Per transaction. NOTE: Not payable on data of calls between transactions.
 extern u256 const c_txDataZeroGas;			///< Per byte of data attached to a transaction that equals zero. NOTE: Not payable on data of calls between transactions.
 extern u256 const c_txDataNonZeroGas;		///< Per byte of data attached to a transaction that is not equal to zero. NOTE: Not payable on data of calls between transactions.
-extern u256 const c_ecrecoverGas;
-extern u256 const c_sha256Gas;
-extern u256 const c_sha256WordGas;
-extern u256 const c_ripemd160Gas;
-extern u256 const c_ripemd160WordGas;
-extern u256 const c_identityGas;
-extern u256 const c_identityWordGas;
 
 }
 }
