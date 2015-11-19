@@ -35,7 +35,6 @@ bool Why3Translator::process(SourceUnit const& _source)
 			fatalError(_source, "Multiple source units not yet supported");
 		appendPreface();
 		_source.accept(*this);
-		addLine("end");
 	}
 	catch (FatalError& _e)
 	{
@@ -71,18 +70,6 @@ module UInt256
 		type t = uint256,
 		constant max = max_uint256
 end
-
-module Solidity
-use import int.Int
-use import ref.Ref
-use import map.Map
-use import array.Array
-use import int.ComputerDivision
-use import mach.int.Unsigned
-use import UInt256
-
-exception Ret
-type state = StateUnused
 )";
 }
 
@@ -145,9 +132,52 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	if (_contract.isLibrary())
 		error(_contract, "Libraries not supported.");
 
-	addSourceFromDocStrings(_contract.annotation());
+	addLine("module Contract_" + _contract.name());
+	indent();
+	addLine("use import int.Int");
+	addLine("use import ref.Ref");
+	addLine("use import map.Map");
+	addLine("use import array.Array");
+	addLine("use import int.ComputerDivision");
+	addLine("use import mach.int.Unsigned");
+	addLine("use import UInt256");
+	addLine("exception Ret");
 
-	return true;
+	addLine("type state = {");
+	indent();
+	m_stateVariables = &_contract.stateVariables();
+	for (auto const& variable: _contract.stateVariables())
+	{
+		string varType = toFormalType(*variable->annotation().type);
+		if (varType.empty())
+			fatalError(*variable, "Type not supported.");
+		addLine("mutable _" + variable->name() + ": ref " + varType);
+	}
+	unindent();
+	addLine("}");
+
+	if (!_contract.baseContracts().empty())
+		error(*_contract.baseContracts().front(), "Inheritance not supported.");
+	if (!_contract.definedStructs().empty())
+		error(*_contract.definedStructs().front(), "User-defined types not supported.");
+	if (!_contract.definedEnums().empty())
+		error(*_contract.definedEnums().front(), "User-defined types not supported.");
+	if (!_contract.events().empty())
+		error(*_contract.events().front(), "Events not supported.");
+	if (!_contract.functionModifiers().empty())
+		error(*_contract.functionModifiers().front(), "Modifiers not supported.");
+
+	ASTNode::listAccept(_contract.definedFunctions(), *this);
+
+	return false;
+}
+
+void Why3Translator::endVisit(ContractDefinition const& _contract)
+{
+	m_stateVariables = nullptr;
+	addSourceFromDocStrings(_contract.annotation());
+	unindent();
+	addLine("end");
 }
 
 bool Why3Translator::visit(FunctionDefinition const& _function)
@@ -437,7 +467,7 @@ bool Why3Translator::visit(FunctionCall const& _node)
 
 	add("(");
 	_node.expression().accept(*this);
-	add(" StateUnused");
+	add(" state");
 	for (auto const& arg: _node.arguments())
 	{
 		add(" ");
@@ -495,10 +525,15 @@ bool Why3Translator::visit(Identifier const& _identifier)
 		add("_" + functionDef->name());
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		if (_identifier.annotation().lValueRequested)
-			add("_" + variable->name());
-		else
-			add("!_" + variable->name());
+		bool isStateVar = isStateVariable(variable);
+		bool lvalue = _identifier.annotation().lValueRequested;
+		if (!lvalue)
+			add("!(");
+		if (isStateVar)
+			add("state.");
+		add("_" + variable->name());
+		if (!lvalue)
+			add(")");
 	}
 	else
 		error(_identifier, "Not supported.");
@@ -522,6 +557,15 @@ bool Why3Translator::visit(Literal const& _literal)
 	default:
 		error(_literal, "Not supported.");
 	}
+	return false;
+}
+
+bool Why3Translator::isStateVariable(VariableDeclaration const* _var) const
+{
+	solAssert(!!m_stateVariables, "");
+	for (auto const& var: *m_stateVariables)
+		if (var.get() == _var)
+			return true;
 	return false;
 }
 

@@ -72,6 +72,7 @@ private:
 
 	virtual bool visit(SourceUnit const&) override { return true; }
 	virtual bool visit(ContractDefinition const& _contract) override;
+	virtual void endVisit(ContractDefinition const& _contract) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(Block const&) override;
 	virtual bool visit(IfStatement const& _node) override;
@@ -96,6 +97,8 @@ private:
 		return false;
 	}
 
+	bool isStateVariable(VariableDeclaration const* _var) const;
+
 	/// Visits the givin statement and indents it unless it is a block
 	/// (which does its own indentation).
 	void visitIndentedUnlessBlock(Statement const& _statement);
@@ -109,6 +112,9 @@ private:
 	/// is supported.
 	bool m_seenContract = false;
 	bool m_errorOccured = false;
+
+	std::vector<ASTPointer<VariableDeclaration>> const* m_stateVariables = nullptr;
+
 	std::string m_result;
 	ErrorList& m_errors;
 };
