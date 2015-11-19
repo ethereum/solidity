@@ -18,8 +18,8 @@ context, there is always a default, but it can be overridden by appending
 either `storage` or `memory` to the type. The default for function parameters (including return parameters) is `memory`, the default for local variables is `storage` and the location is forced
 to `storage` for state variables (obviously).
 
-There is also a third data location, "calldata" which is a non-modifyable
-non-persistent area whether function arguments are stored. Function parameters
+There is also a third data location, "calldata", which is a non-modifyable
+non-persistent area where function arguments are stored. Function parameters
 (not return parameters) of external functions are forced to "calldata" and
 it behaves mostly like memory.
 
