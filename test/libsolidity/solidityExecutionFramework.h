@@ -26,8 +26,10 @@
 #include <tuple>
 #include "../TestHelper.h"
 #include <libethcore/ABI.h>
+#include <libethcore/SealEngine.h>
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
+#include <libethereum/ChainParams.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
 
@@ -43,6 +45,7 @@ class ExecutionFramework
 {
 public:
 	ExecutionFramework():
+		m_sealEngine(eth::ChainParams().createSealEngine()),
 		m_state(0)
 	{
 		if (g_logVerbosity != -1)
@@ -251,7 +254,7 @@ protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, m_envInfo, 0);
+		eth::Executive executive(m_state, m_envInfo, m_sealEngine.get());
 		eth::ExecutionResult res;
 		executive.setResultRecipient(res);
 		eth::Transaction t =
@@ -286,6 +289,7 @@ protected:
 		m_logs = executive.logs();
 	}
 
+	std::unique_ptr<eth::SealEngineFace> m_sealEngine;
 	size_t m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
