@@ -42,7 +42,8 @@ namespace test
 class ExecutionFramework
 {
 public:
-	ExecutionFramework()
+	ExecutionFramework():
+		m_state(0)
 	{
 		if (g_logVerbosity != -1)
 			g_logVerbosity = 0;

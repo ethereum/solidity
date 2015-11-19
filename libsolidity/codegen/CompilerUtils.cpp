@@ -276,8 +276,10 @@ void CompilerUtils::memoryCopy()
 	m_context << u256(0) << u256(identityContractAddress);
 	// compute gas costs
 	m_context << u256(32) << eth::Instruction::DUP5 << u256(31) << eth::Instruction::ADD;
-	m_context << eth::Instruction::DIV << u256(eth::c_identityWordGas) << eth::Instruction::MUL;
-	m_context << u256(eth::c_identityGas) << eth::Instruction::ADD;
+	static unsigned c_identityGas = 3;
+	static unsigned c_identityWordGas = 15;
+	m_context << eth::Instruction::DIV << u256(c_identityWordGas) << eth::Instruction::MUL;
+	m_context << u256(c_identityGas) << eth::Instruction::ADD;
 	m_context << eth::Instruction::CALL;
 	m_context << eth::Instruction::POP; // ignore return value
 }
