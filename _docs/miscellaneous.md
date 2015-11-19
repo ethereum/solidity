@@ -138,6 +138,8 @@ Unfortunately, there are some subtleties the compiler does not yet warn you abou
  - `sha256(...) returns (bytes32)`: compute the SHA256 hash of the (tightly packed) arguments
  - `ripemd160(...) returns (bytes20)`: compute RIPEMD of 256 the (tightly packed) arguments
  - `ecrecover(bytes32, byte, bytes32, bytes32) returns (address)`: recover public key from elliptic curve signature
+ - `addmod(uint x, uint y, uint k) returns (uint)`: compute `(x + y) % k` where the addition is performed with arbitrary precision and does not wrap around at `2**256`.
+ - `mulmod(uint x, uint y, uint k) returns (uint)`: compute `(x * y) % k` where the multiplication is performed with arbitrary precision and does not wrap around at `2**256`.
  - `this` (current contract's type): the current contract, explicitly convertible to `address`
  - `super`: the contract one level higher in the inheritance hierarchy
  - `suicide(address)`: suicide the current contract, sending its funds to the given address
