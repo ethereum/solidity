@@ -637,6 +637,20 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			m_context << eth::Instruction::BLOCKHASH;
 			break;
 		}
+		case Location::AddMod:
+		case Location::MulMod:
+		{
+			for (unsigned i = 0; i < 3; i ++)
+			{
+				arguments[2 - i]->accept(*this);
+				utils().convertType(*arguments[2 - i]->annotation().type, IntegerType(256));
+			}
+			if (function.location() == Location::AddMod)
+				m_context << eth::Instruction::ADDMOD;
+			else
+				m_context << eth::Instruction::MULMOD;
+			break;
+		}
 		case Location::ECRecover:
 		case Location::SHA256:
 		case Location::RIPEMD160:
