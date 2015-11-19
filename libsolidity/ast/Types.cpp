@@ -858,7 +858,7 @@ string ArrayType::canonicalName(bool _addDataLocation) const
 	return ret;
 }
 
-MemberList const& ArrayType::members() const
+MemberList const& ArrayType::members(ContractDefinition const*) const
 {
 	if (!m_members)
 	{
@@ -956,7 +956,7 @@ string ContractType::canonicalName(bool) const
 	return m_contract.annotation().canonicalName;
 }
 
-MemberList const& ContractType::members() const
+MemberList const& ContractType::members(ContractDefinition const*) const
 {
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
@@ -1064,7 +1064,7 @@ bool StructType::operator==(Type const& _other) const
 unsigned StructType::calldataEncodedSize(bool _padded) const
 {
 	unsigned size = 0;
-	for (auto const& member: members())
+	for (auto const& member: members(nullptr))
 		if (!member.type->canLiveOutsideStorage())
 			return 0;
 		else
@@ -1080,7 +1080,7 @@ unsigned StructType::calldataEncodedSize(bool _padded) const
 u256 StructType::memorySize() const
 {
 	u256 size;
-	for (auto const& member: members())
+	for (auto const& member: members(nullptr))
 		if (member.type->canLiveOutsideStorage())
 			size += member.type->memoryHeadSize();
 	return size;
@@ -1088,7 +1088,7 @@ u256 StructType::memorySize() const
 
 u256 StructType::storageSize() const
 {
-	return max<u256>(1, members().storageSize());
+	return max<u256>(1, members(nullptr).storageSize());
 }
 
 string StructType::toString(bool _short) const
@@ -1099,7 +1099,7 @@ string StructType::toString(bool _short) const
 	return ret;
 }
 
-MemberList const& StructType::members() const
+MemberList const& StructType::members(ContractDefinition const*) const
 {
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
@@ -1149,7 +1149,7 @@ FunctionTypePointer StructType::constructorType() const
 {
 	TypePointers paramTypes;
 	strings paramNames;
-	for (auto const& member: members())
+	for (auto const& member: members(nullptr))
 	{
 		if (!member.type->canLiveOutsideStorage())
 			continue;
@@ -1167,7 +1167,7 @@ FunctionTypePointer StructType::constructorType() const
 
 pair<u256, unsigned> const& StructType::storageOffsetsOfMember(string const& _name) const
 {
-	auto const* offsets = members().memberStorageOffset(_name);
+	auto const* offsets = members(nullptr).memberStorageOffset(_name);
 	solAssert(offsets, "Storage offset of non-existing member requested.");
 	return *offsets;
 }
@@ -1175,7 +1175,7 @@ pair<u256, unsigned> const& StructType::storageOffsetsOfMember(string const& _na
 u256 StructType::memoryOffsetOfMember(string const& _name) const
 {
 	u256 offset;
-	for (auto const& member: members())
+	for (auto const& member: members(nullptr))
 		if (member.name == _name)
 			return offset;
 		else
@@ -1395,7 +1395,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	vector<string> retParamNames;
 	if (auto structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
-		for (auto const& member: structType->members())
+		for (auto const& member: structType->members(nullptr))
 			if (member.type->category() != Category::Mapping)
 			{
 				if (auto arrayType = dynamic_cast<ArrayType const*>(member.type.get()))
@@ -1533,7 +1533,7 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_returnParameterNames, m_location, m_arbitraryParameters);
 }
 
-MemberList const& FunctionType::members() const
+MemberList const& FunctionType::members(ContractDefinition const*) const
 {
 	switch (m_location)
 	{
@@ -1784,7 +1784,7 @@ unsigned TypeType::sizeOnStack() const
 	return 0;
 }
 
-MemberList const& TypeType::members() const
+MemberList const& TypeType::members(ContractDefinition const* _currentScope) const
 {
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
@@ -1800,9 +1800,9 @@ MemberList const& TypeType::members() const
 						it.second->asMemberFunction(true), // use callcode
 						&it.second->declaration()
 					));
-			else if (m_currentContract != nullptr)
+			else if (_currentScope != nullptr)
 			{
-				auto const& currentBases = m_currentContract->annotation().linearizedBaseContracts;
+				auto const& currentBases = _currentScope->annotation().linearizedBaseContracts;
 				if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
 					// We are accessing the type of a base contract, so add all public and protected
 					// members. Note that this does not add inherited functions on purpose.

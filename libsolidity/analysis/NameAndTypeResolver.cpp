@@ -64,7 +64,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 	{
 		m_currentScope = &m_scopes[nullptr];
 
-		ReferencesResolver resolver(m_errors, *this, &_contract, nullptr);
+		ReferencesResolver resolver(m_errors, *this, nullptr);
 		bool success = true;
 		for (ASTPointer<InheritanceSpecifier> const& baseContract: _contract.baseContracts())
 			if (!resolver.resolve(*baseContract))
@@ -100,7 +100,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
 		{
 			m_currentScope = &m_scopes[modifier.get()];
-			ReferencesResolver resolver(m_errors, *this, &_contract, nullptr);
+			ReferencesResolver resolver(m_errors, *this, nullptr);
 			if (!resolver.resolve(*modifier))
 				success = false;
 		}
@@ -111,7 +111,6 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			if (!ReferencesResolver(
 				m_errors,
 				*this,
-				&_contract,
 				function->returnParameterList().get()
 			).resolve(*function))
 				success = false;
@@ -126,7 +125,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
 		{
 			m_currentScope = &m_scopes[modifier.get()];
-			ReferencesResolver resolver(m_errors, *this, &_contract, nullptr, true);
+			ReferencesResolver resolver(m_errors, *this, nullptr, true);
 			if (!resolver.resolve(*modifier))
 				success = false;
 		}
@@ -137,7 +136,6 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 			if (!ReferencesResolver(
 				m_errors,
 				*this,
-				&_contract,
 				function->returnParameterList().get(),
 				true
 			).resolve(*function))

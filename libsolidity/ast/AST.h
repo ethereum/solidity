@@ -168,7 +168,7 @@ public:
 	/// The current contract has to be given since this context can change the type, especially of
 	/// contract types.
 	/// This can only be called once types of variable declarations have already been resolved.
-	virtual TypePointer type(ContractDefinition const* m_currentContract = nullptr) const = 0;
+	virtual TypePointer type() const = 0;
 
 protected:
 	virtual Visibility defaultVisibility() const { return Visibility::Public; }
@@ -290,7 +290,7 @@ public:
 	std::string const& devDocumentation() const;
 	void setDevDocumentation(std::string const& _devDocumentation);
 
-	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+	virtual TypePointer type() const override;
 
 	virtual ContractDefinitionAnnotation& annotation() const override;
 
@@ -350,7 +350,7 @@ public:
 
 	std::vector<ASTPointer<VariableDeclaration>> const& members() const { return m_members; }
 
-	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+	virtual TypePointer type() const override;
 
 	virtual TypeDeclarationAnnotation& annotation() const override;
 
@@ -372,7 +372,7 @@ public:
 
 	std::vector<ASTPointer<EnumValue>> const& members() const { return m_members; }
 
-	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+	virtual TypePointer type() const override;
 
 	virtual TypeDeclarationAnnotation& annotation() const override;
 
@@ -392,7 +392,7 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+	virtual TypePointer type() const override;
 };
 
 /**
@@ -490,7 +490,7 @@ public:
 	/// arguments separated by commas all enclosed in parentheses without any spaces.
 	std::string externalSignature() const;
 
-	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+	virtual TypePointer type() const override;
 
 	virtual FunctionDefinitionAnnotation& annotation() const override;
 
@@ -551,7 +551,7 @@ public:
 	bool isConstant() const { return m_isConstant; }
 	Location referenceLocation() const { return m_location; }
 
-	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+	virtual TypePointer type() const override;
 
 	virtual VariableDeclarationAnnotation& annotation() const override;
 
@@ -593,7 +593,7 @@ public:
 
 	Block const& body() const { return *m_body; }
 
-	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+	virtual TypePointer type() const override;
 
 	virtual ModifierDefinitionAnnotation& annotation() const override;
 
@@ -649,7 +649,7 @@ public:
 
 	bool isAnonymous() const { return m_anonymous; }
 
-	virtual TypePointer type(ContractDefinition const* m_currentContract) const override;
+	virtual TypePointer type() const override;
 
 	virtual EventDefinitionAnnotation& annotation() const override;
 
@@ -675,7 +675,7 @@ public:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("MagicVariableDeclaration used inside real AST."));
 	}
 
-	virtual TypePointer type(ContractDefinition const*) const override { return m_type; }
+	virtual TypePointer type() const override { return m_type; }
 
 private:
 	std::shared_ptr<Type const> m_type;

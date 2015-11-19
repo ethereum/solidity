@@ -45,13 +45,11 @@ public:
 	ReferencesResolver(
 		ErrorList& _errors,
 		NameAndTypeResolver& _resolver,
-		ContractDefinition const* _currentContract,
 		ParameterList const* _returnParameters,
 		bool _resolveInsideCode = false
 	):
 		m_errors(_errors),
 		m_resolver(_resolver),
-		m_currentContract(_currentContract),
 		m_returnParameters(_returnParameters),
 		m_resolveInsideCode(_resolveInsideCode)
 	{}
@@ -83,7 +81,6 @@ private:
 
 	ErrorList& m_errors;
 	NameAndTypeResolver& m_resolver;
-	ContractDefinition const* m_currentContract;
 	ParameterList const* m_returnParameters;
 	bool const m_resolveInsideCode;
 	bool m_errorOccurred = false;

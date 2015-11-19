@@ -188,9 +188,9 @@ vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 	return *m_inheritableMembers;
 }
 
-TypePointer ContractDefinition::type(ContractDefinition const* m_currentContract) const
+TypePointer ContractDefinition::type() const
 {
-	return make_shared<TypeType>(make_shared<ContractType>(*this), m_currentContract);
+	return make_shared<TypeType>(make_shared<ContractType>(*this));
 }
 
 ContractDefinitionAnnotation& ContractDefinition::annotation() const
@@ -207,7 +207,7 @@ TypeNameAnnotation& TypeName::annotation() const
 	return static_cast<TypeNameAnnotation&>(*m_annotation);
 }
 
-TypePointer StructDefinition::type(ContractDefinition const*) const
+TypePointer StructDefinition::type() const
 {
 	return make_shared<TypeType>(make_shared<StructType>(*this));
 }
@@ -219,14 +219,14 @@ TypeDeclarationAnnotation& StructDefinition::annotation() const
 	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
-TypePointer EnumValue::type(ContractDefinition const*) const
+TypePointer EnumValue::type() const
 {
 	auto parentDef = dynamic_cast<EnumDefinition const*>(scope());
 	solAssert(parentDef, "Enclosing Scope of EnumValue was not set");
 	return make_shared<EnumType>(*parentDef);
 }
 
-TypePointer EnumDefinition::type(ContractDefinition const*) const
+TypePointer EnumDefinition::type() const
 {
 	return make_shared<TypeType>(make_shared<EnumType>(*this));
 }
@@ -238,7 +238,7 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
-TypePointer FunctionDefinition::type(ContractDefinition const*) const
+TypePointer FunctionDefinition::type() const
 {
 	return make_shared<FunctionType>(*this);
 }
@@ -255,7 +255,7 @@ FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 	return static_cast<FunctionDefinitionAnnotation&>(*m_annotation);
 }
 
-TypePointer ModifierDefinition::type(ContractDefinition const*) const
+TypePointer ModifierDefinition::type() const
 {
 	return make_shared<ModifierType>(*this);
 }
@@ -267,7 +267,7 @@ ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
 	return static_cast<ModifierDefinitionAnnotation&>(*m_annotation);
 }
 
-TypePointer EventDefinition::type(ContractDefinition const*) const
+TypePointer EventDefinition::type() const
 {
 	return make_shared<FunctionType>(*this);
 }
@@ -324,7 +324,7 @@ bool VariableDeclaration::canHaveAutoType() const
 	return (!!callable && !isCallableParameter());
 }
 
-TypePointer VariableDeclaration::type(ContractDefinition const*) const
+TypePointer VariableDeclaration::type() const
 {
 	return annotation().type;
 }

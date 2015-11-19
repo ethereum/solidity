@@ -60,6 +60,8 @@ TypePointer const& TypeChecker::type(VariableDeclaration const& _variable) const
 
 bool TypeChecker::visit(ContractDefinition const& _contract)
 {
+	m_scope = &_contract;
+
 	// We force our own visiting order here.
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
@@ -1057,13 +1059,13 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (!contract->annotation().isFullyImplemented)
 			typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
 
-		auto scopeContract = contractName->annotation().contractScope;
-		scopeContract->annotation().contractDependencies.insert(contract);
+		solAssert(!!m_scope, "");
+		m_scope->annotation().contractDependencies.insert(contract);
 		solAssert(
 			!contract->annotation().linearizedBaseContracts.empty(),
 			"Linearized base contracts not yet available."
 		);
-		if (contractDependenciesAreCyclic(*scopeContract))
+		if (contractDependenciesAreCyclic(*m_scope))
 			typeError(
 				_newExpression.location(),
 				"Circular reference for contract creation (cannot create instance of derived or same contract)."
@@ -1112,7 +1114,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	// Retrieve the types of the arguments if this is used to call a function.
 	auto const& argumentTypes = _memberAccess.annotation().argumentTypes;
-	MemberList::MemberMap possibleMembers = exprType->members().membersByName(memberName);
+	MemberList::MemberMap possibleMembers = exprType->members(m_scope).membersByName(memberName);
 	if (possibleMembers.size() > 1 && argumentTypes)
 	{
 		// do overload resolution
@@ -1131,7 +1133,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			DataLocation::Storage,
 			exprType
 		);
-		if (!storageType->members().membersByName(memberName).empty())
+		if (!storageType->members(m_scope).membersByName(memberName).empty())
 			fatalTypeError(
 				_memberAccess.location(),
 				"Member \"" + memberName + "\" is not available in " +
@@ -1258,7 +1260,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
-				TypePointer function = declaration->type(_identifier.annotation().contractScope);
+				TypePointer function = declaration->type();
 				solAssert(!!function, "Requested type not present.");
 				auto const* functionType = dynamic_cast<FunctionType const*>(function.get());
 				if (functionType && functionType->canTakeArguments(*annotation.argumentTypes))
@@ -1277,7 +1279,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		"Referenced declaration is null after overload resolution."
 	);
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
-	annotation.type = annotation.referencedDeclaration->type(_identifier.annotation().contractScope);
+	annotation.type = annotation.referencedDeclaration->type();
 	if (!annotation.type)
 		fatalTypeError(_identifier.location(), "Declaration referenced before type could be determined.");
 	return false;
