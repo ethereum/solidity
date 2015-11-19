@@ -26,8 +26,10 @@
 #include <tuple>
 #include "../TestHelper.h"
 #include <libethcore/ABI.h>
+#include <libethashseal/Ethash.h>
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
+#include <libethereum/ChainParams.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
 
@@ -251,7 +253,8 @@ protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, m_envInfo, 0);
+		std::unique_ptr<eth::SealEngineFace> sealEngine(eth::ChainParams().createSealEngine());
+		eth::Executive executive(m_state, m_envInfo, sealEngine.get());
 		eth::ExecutionResult res;
 		executive.setResultRecipient(res);
 		eth::Transaction t =
