@@ -25,6 +25,7 @@
 #include <tuple>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/AssemblyItem.h>
+#include <libethcore/ChainOperationParams.h>
 
 namespace dev
 {
@@ -32,6 +33,8 @@ namespace eth
 {
 
 class KnownState;
+
+// TODO: FIXME: HOMESTEAD: XXX: @chfast populate m_schedule from an ExtVMFace instance via ExtVMFace::evmSchedule.
 
 /**
  * Class that helps computing the maximum gas consumption for instructions.
@@ -66,7 +69,8 @@ public:
 
 	u256 const& largestMemoryAccess() const { return m_largestMemoryAccess; }
 
-	static u256 runGas(Instruction _instruction);
+	u256 runGas(Instruction _instruction) const { return runGas(_instruction, m_schedule); }
+	static u256 runGas(Instruction _instruction, EVMSchedule const& _es);
 
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.
@@ -81,6 +85,8 @@ private:
 	std::shared_ptr<KnownState> m_state;
 	/// Largest point where memory was accessed since the creation of this object.
 	u256 m_largestMemoryAccess;
+
+	EVMSchedule m_schedule;
 };
 
 inline std::ostream& operator<<(std::ostream& _str, GasMeter::GasConsumption const& _consumption)

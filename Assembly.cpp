@@ -22,7 +22,6 @@
 #include "Assembly.h"
 #include <fstream>
 #include <libdevcore/Log.h>
-#include <libevmcore/Params.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/BlockDeduplicator.h>
