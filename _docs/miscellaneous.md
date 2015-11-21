@@ -35,7 +35,7 @@ contract c {
   mapping(uint => mapping(uint => S)) data;
 }
 {% endhighlight %}
-The position of `data[4][9].b` is at `sha3(uint256(9) . sha3(uint256(4) . uint(256(1))) + 1`.
+The position of `data[4][9].b` is at `sha3(uint256(9) . sha3(uint256(4) . uint256(1))) + 1`.
 
 ## Esoteric Features
 
