@@ -94,7 +94,7 @@ Of course, you can also specify several source files and actually that is also r
 
 If your contracts use [libraries](#libraries), you will notice that the bytecode contains substrings of the form `__LibraryName______`. You can use `solc` as a linker meaning that it will insert the library addresses for you at those points:
 
-Either add `--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456" to your command to provide an address for each library or store the string in a file (one library per line) and run `solc` using `--libraries fileName`.
+Either add `--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"` to your command to provide an address for each library or store the string in a file (one library per line) and run `solc` using `--libraries fileName`.
 
 If `solc` is called with the option `--link`, all input files are interpreted to be unlinked binaries (hex-encoded) in the `__LibraryName____`-format given above and are linked in-place (if the input is read from stdin, it is written to stdout). All options except `--libraries` are ignored (including `-o`) in this case.
 
