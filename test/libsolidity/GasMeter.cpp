@@ -59,12 +59,14 @@ public:
 
 	void testCreationTimeGas(string const& _sourceCode)
 	{
+		EVMSchedule schedule;// TODO: make relevant to supposed context.
+
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();
 		PathGasMeter meter(*m_compiler.assemblyItems());
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
 		u256 bytecodeSize(m_compiler.runtimeObject().bytecode.size());
-		gas += bytecodeSize * c_createDataGas;
+		gas += bytecodeSize * schedule.createDataGas;
 		BOOST_REQUIRE(!gas.isInfinite);
 		BOOST_CHECK(gas.value == m_gasUsed);
 	}

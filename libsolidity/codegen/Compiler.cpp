@@ -24,12 +24,11 @@
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libevmcore/Instruction.h>
+#include <libethcore/ChainOperationParams.h>
 #include <libevmasm/Assembly.h>
-#include <libevmcore/Params.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerUtils.h>
-
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -760,6 +759,7 @@ void Compiler::compileExpression(Expression const& _expression, TypePointer cons
 
 eth::Assembly Compiler::cloneRuntime()
 {
+	eth::EVMSchedule schedule;
 	eth::Assembly a;
 	a << eth::Instruction::CALLDATASIZE;
 	a << u256(0) << eth::Instruction::DUP1 << eth::Instruction::CALLDATACOPY;
@@ -771,7 +771,7 @@ eth::Assembly Compiler::cloneRuntime()
 	// this is the address which has to be substituted by the linker.
 	//@todo implement as special "marker" AssemblyItem.
 	a << u256("0xcafecafecafecafecafecafecafecafecafecafe");
-	a << u256(eth::c_callGas + eth::c_callValueTransferGas + 10) << eth::Instruction::GAS << eth::Instruction::SUB;
+	a << u256(schedule.callGas + schedule.callValueTransferGas + 10) << eth::Instruction::GAS << eth::Instruction::SUB;
 	a << eth::Instruction::CALLCODE;
 	//Propagate error condition (if CALLCODE pushes 0 on stack).
 	a << eth::Instruction::ISZERO;
