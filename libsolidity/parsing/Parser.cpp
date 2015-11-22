@@ -168,6 +168,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 			subNodes.push_back(parseModifierDefinition());
 		else if (currentTokenValue == Token::Event)
 			subNodes.push_back(parseEventDefinition());
+		else if (currentTokenValue == Token::Using)
+			subNodes.push_back(parseUsingDirective());
 		else
 			fatalParserError(std::string("Function, variable, struct or modifier declaration expected."));
 	}
@@ -473,6 +475,24 @@ ASTPointer<EventDefinition> Parser::parseEventDefinition()
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<EventDefinition>(name, docstring, parameters, anonymous);
+}
+
+ASTPointer<UsingForDirective> Parser::parseUsingDirective()
+{
+	ASTNodeFactory nodeFactory(*this);
+
+	expectToken(Token::Using);
+	//@todo this should actually parse a full path.
+	ASTPointer<Identifier> library(parseIdentifier());
+	ASTPointer<TypeName> typeName;
+	expectToken(Token::For);
+	if (m_scanner->currentToken() == Token::Mul)
+		m_scanner->next();
+	else
+		typeName = parseTypeName(false);
+	nodeFactory.markEndPosition();
+	expectToken(Token::Semicolon);
+	return nodeFactory.createNode<UsingForDirective>(library, typeName);
 }
 
 ASTPointer<ModifierInvocation> Parser::parseModifierInvocation()

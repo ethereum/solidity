@@ -1032,6 +1032,21 @@ BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(using_for)
+{
+	char const* text = R"(
+		contract C {
+			struct s { uint a; }
+			using LibraryName for uint;
+			using Library2 for *;
+			using Lib for s;
+			function f() {
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

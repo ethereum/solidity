@@ -335,6 +335,33 @@ private:
 	std::vector<ASTPointer<Expression>> m_arguments;
 };
 
+/**
+ * `using LibraryName for uint` will attach all functions from the library LibraryName
+ * to `uint` if the first parameter matches the type. `using LibraryName for *` attaches
+ * the function to any matching type.
+ */
+class UsingForDirective: public ASTNode
+{
+public:
+	UsingForDirective(
+		SourceLocation const& _location,
+		ASTPointer<Identifier> const& _libraryName,
+		ASTPointer<TypeName> const& _typeName
+	):
+		ASTNode(_location), m_libraryName(_libraryName), m_typeName(_typeName) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	Identifier const& libraryName() const { return *m_libraryName; }
+	/// @returns the type name the library is attached to, null for `*`.
+	TypeName const* typeName() const { return m_typeName.get(); }
+
+private:
+	ASTPointer<Identifier> m_libraryName;
+	ASTPointer<TypeName> m_typeName;
+};
+
 class StructDefinition: public Declaration
 {
 public:

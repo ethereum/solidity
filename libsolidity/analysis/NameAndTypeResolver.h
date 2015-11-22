@@ -160,8 +160,8 @@ private:
 	void fatalDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
 
 	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
-	Declaration const* m_currentScope;
-	VariableScope* m_currentFunction;
+	Declaration const* m_currentScope = nullptr;
+	VariableScope* m_currentFunction = nullptr;
 	ErrorList& m_errors;
 };
 

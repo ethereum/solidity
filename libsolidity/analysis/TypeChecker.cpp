@@ -356,7 +356,16 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 				" to " +
 				parameterTypes[i]->toString() +
 				" requested."
-			);
+						);
+}
+
+void TypeChecker::endVisit(UsingForDirective const& _usingFor)
+{
+	ContractDefinition const* library = dynamic_cast<ContractDefinition const*>(
+		_usingFor.libraryName().annotation().referencedDeclaration
+	);
+	if (!library || !library->isLibrary())
+		typeError(_usingFor.libraryName().location(), "Library name expected.");
 }
 
 bool TypeChecker::visit(StructDefinition const& _struct)

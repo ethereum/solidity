@@ -2529,6 +2529,28 @@ BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(using_for_library)
+{
+	char const* text = R"(
+		library D { }
+		contract C {
+			using D for uint;
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_not_library)
+{
+	char const* text = R"(
+		contract D { }
+		contract C {
+			using D for uint;
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(create_memory_arrays)
 {
 	char const* text = R"(
