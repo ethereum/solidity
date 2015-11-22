@@ -465,29 +465,48 @@ bool Why3Translator::visit(FunctionCall const& _node)
 		return true;
 	}
 	FunctionType const& function = dynamic_cast<FunctionType const&>(*_node.expression().annotation().type);
-	if (function.location() != FunctionType::Location::Internal)
+	switch (function.location())
 	{
+	case FunctionType::Location::AddMod:
+	case FunctionType::Location::MulMod:
+	{
+		//@todo require that third parameter is not zero
+		add("(of_int (mod (Int.(");
+		add(function.location() == FunctionType::Location::AddMod ? "+" : "*");
+		add(") (to_int ");
+		_node.arguments().at(0)->accept(*this);
+		add(") (to_int ");
+		_node.arguments().at(1)->accept(*this);
+		add(")) (to_int ");
+		_node.arguments().at(2)->accept(*this);
+		add(")))");
+		return false;
+	}
+	case FunctionType::Location::Internal:
+	{
+		if (!_node.names().empty())
+		{
+			error(_node, "Function calls with named arguments not supported.");
+			return true;
+		}
+
+		//@TODO check type conversions
+
+		add("(");
+		_node.expression().accept(*this);
+		add(" state");
+		for (auto const& arg: _node.arguments())
+		{
+			add(" ");
+			arg->accept(*this);
+		}
+		add(")");
+		return false;
+	}
+	default:
 		error(_node, "Only internal function calls supported.");
 		return true;
 	}
-	if (!_node.names().empty())
-	{
-		error(_node, "Function calls with named arguments not supported.");
-		return true;
-	}
-
-	//@TODO check type conversions
-
-	add("(");
-	_node.expression().accept(*this);
-	add(" state");
-	for (auto const& arg: _node.arguments())
-	{
-		add(" ");
-		arg->accept(*this);
-	}
-	add(")");
-	return false;
 }
 
 bool Why3Translator::visit(MemberAccess const& _node)
