@@ -588,11 +588,24 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				{
 					++numIndexed;
 					arguments[arg - 1]->accept(*this);
-					utils().convertType(
-						*arguments[arg - 1]->annotation().type,
-						*function.parameterTypes()[arg - 1],
-						true
-					);
+					if (auto const& arrayType = dynamic_pointer_cast<ArrayType const>(function.parameterTypes()[arg - 1]))
+					{
+						utils().fetchFreeMemoryPointer();
+						utils().encodeToMemory(
+							{arguments[arg - 1]->annotation().type},
+							{arrayType},
+							false,
+							true
+						);
+						utils().toSizeAfterFreeMemoryPointer();
+						m_context << eth::Instruction::SHA3;
+					}
+					else
+						utils().convertType(
+							*arguments[arg - 1]->annotation().type,
+							*function.parameterTypes()[arg - 1],
+							true
+						);
 				}
 			if (!event.isAnonymous())
 			{
@@ -623,6 +636,20 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			arguments[0]->accept(*this);
 			utils().convertType(*arguments[0]->annotation().type, *function.parameterTypes()[0], true);
 			m_context << eth::Instruction::BLOCKHASH;
+			break;
+		}
+		case Location::AddMod:
+		case Location::MulMod:
+		{
+			for (unsigned i = 0; i < 3; i ++)
+			{
+				arguments[2 - i]->accept(*this);
+				utils().convertType(*arguments[2 - i]->annotation().type, IntegerType(256));
+			}
+			if (function.location() == Location::AddMod)
+				m_context << eth::Instruction::ADDMOD;
+			else
+				m_context << eth::Instruction::MULMOD;
 			break;
 		}
 		case Location::ECRecover:

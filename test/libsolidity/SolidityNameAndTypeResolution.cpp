@@ -62,35 +62,38 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 		solAssert(Error::containsOnlyWarnings(errors), "");
 		resolver.registerDeclarations(*sourceUnit);
 
+		bool success = true;
 		for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			{
 				globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*globalContext->currentThis());
 				resolver.updateDeclaration(*globalContext->currentSuper());
-				resolver.resolveNamesAndTypes(*contract);
+				if (!resolver.resolveNamesAndTypes(*contract))
+					success = false;
 			}
-		for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
-			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-			{
-				globalContext->setCurrentContract(*contract);
-				resolver.updateDeclaration(*globalContext->currentThis());
-
-				TypeChecker typeChecker(errors);
-				bool success = typeChecker.checkTypeRequirements(*contract);
-				BOOST_CHECK(success || !errors.empty());
-
-				for (auto const& currentError: errors)
+		if (success)
+			for (ASTPointer<ASTNode> const& node: sourceUnit->nodes())
+				if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 				{
-					if (
-						(_reportWarnings && currentError->type() == Error::Type::Warning) ||
-						(!_reportWarnings && currentError->type() != Error::Type::Warning)
-					)
-						return make_pair(sourceUnit, std::make_shared<Error::Type const>(currentError->type()));
+					globalContext->setCurrentContract(*contract);
+					resolver.updateDeclaration(*globalContext->currentThis());
+
+					TypeChecker typeChecker(errors);
+					bool success = typeChecker.checkTypeRequirements(*contract);
+					BOOST_CHECK(success || !errors.empty());
+
 				}
-			}
+		for (auto const& currentError: errors)
+		{
+			if (
+				(_reportWarnings && currentError->type() == Error::Type::Warning) ||
+				(!_reportWarnings && currentError->type() != Error::Type::Warning)
+			)
+				return make_pair(sourceUnit, std::make_shared<Error::Type const>(currentError->type()));
+		}
 	}
-	catch(Error const& _e)
+	catch (Error const& _e)
 	{
 		return make_pair(sourceUnit, std::make_shared<Error::Type const>(_e.type()));
 	}
@@ -133,7 +136,7 @@ static ContractDefinition const* retrieveContract(ASTPointer<SourceUnit> _source
 	return nullptr;
 }
 
-static FunctionTypePointer const& retrieveFunctionBySignature(
+static FunctionTypePointer retrieveFunctionBySignature(
 	ContractDefinition const* _contract,
 	std::string const& _signature
 )

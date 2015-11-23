@@ -35,7 +35,6 @@ bool Why3Translator::process(SourceUnit const& _source)
 			fatalError(_source, "Multiple source units not yet supported");
 		appendPreface();
 		_source.accept(*this);
-		addLine("end");
 	}
 	catch (FatalError& _e)
 	{
@@ -71,18 +70,6 @@ module UInt256
 		type t = uint256,
 		constant max = max_uint256
 end
-
-module Solidity
-use import int.Int
-use import ref.Ref
-use import map.Map
-use import array.Array
-use import int.ComputerDivision
-use import mach.int.Unsigned
-use import UInt256
-
-exception Ret
-type state = StateUnused
 )";
 }
 
@@ -113,6 +100,8 @@ void Why3Translator::addLine(string const& _line)
 
 void Why3Translator::add(string const& _str)
 {
+	if (m_currentLine.empty())
+		m_indentationAtLineStart = m_indentation;
 	m_currentLine += _str;
 }
 
@@ -120,7 +109,7 @@ void Why3Translator::newLine()
 {
 	if (!m_currentLine.empty())
 	{
-		for (size_t i = 0; i < m_indentation; ++i)
+		for (size_t i = 0; i < m_indentationAtLineStart; ++i)
 			m_result.push_back('\t');
 		m_result += m_currentLine;
 		m_result.push_back('\n');
@@ -130,6 +119,7 @@ void Why3Translator::newLine()
 
 void Why3Translator::unindent()
 {
+	newLine();
 	solAssert(m_indentation > 0, "");
 	m_indentation--;
 }
@@ -142,9 +132,52 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	if (_contract.isLibrary())
 		error(_contract, "Libraries not supported.");
 
-	addSourceFromDocStrings(_contract.annotation());
+	addLine("module Contract_" + _contract.name());
+	indent();
+	addLine("use import int.Int");
+	addLine("use import ref.Ref");
+	addLine("use import map.Map");
+	addLine("use import array.Array");
+	addLine("use import int.ComputerDivision");
+	addLine("use import mach.int.Unsigned");
+	addLine("use import UInt256");
+	addLine("exception Ret");
 
-	return true;
+	addLine("type state = {");
+	indent();
+	m_stateVariables = &_contract.stateVariables();
+	for (auto const& variable: _contract.stateVariables())
+	{
+		string varType = toFormalType(*variable->annotation().type);
+		if (varType.empty())
+			fatalError(*variable, "Type not supported.");
+		addLine("mutable _" + variable->name() + ": ref " + varType);
+	}
+	unindent();
+	addLine("}");
+
+	if (!_contract.baseContracts().empty())
+		error(*_contract.baseContracts().front(), "Inheritance not supported.");
+	if (!_contract.definedStructs().empty())
+		error(*_contract.definedStructs().front(), "User-defined types not supported.");
+	if (!_contract.definedEnums().empty())
+		error(*_contract.definedEnums().front(), "User-defined types not supported.");
+	if (!_contract.events().empty())
+		error(*_contract.events().front(), "Events not supported.");
+	if (!_contract.functionModifiers().empty())
+		error(*_contract.functionModifiers().front(), "Modifiers not supported.");
+
+	ASTNode::listAccept(_contract.definedFunctions(), *this);
+
+	return false;
+}
+
+void Why3Translator::endVisit(ContractDefinition const& _contract)
+{
+	m_stateVariables = nullptr;
+	addSourceFromDocStrings(_contract.annotation());
+	unindent();
+	addLine("end");
 }
 
 bool Why3Translator::visit(FunctionDefinition const& _function)
@@ -177,7 +210,6 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 		add(" (arg_" + param->name() + ": " + paramType + ")");
 	}
 	add(":");
-	newLine();
 
 	indent();
 	indent();
@@ -191,7 +223,7 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 			retString += ", ";
 		retString += paramType;
 	}
-	addLine(retString + ")");
+	add(retString + ")");
 	unindent();
 
 	addSourceFromDocStrings(_function.annotation());
@@ -218,6 +250,7 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 	addLine("try");
 
 	_function.body().accept(*this);
+	add(";");
 	addLine("raise Ret");
 
 	string retVals;
@@ -238,9 +271,18 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 bool Why3Translator::visit(Block const& _node)
 {
 	addSourceFromDocStrings(_node.annotation());
-	addLine("begin");
+	add("begin");
 	indent();
-	return true;
+	for (size_t i = 0; i < _node.statements().size(); ++i)
+	{
+		_node.statements()[i]->accept(*this);
+		if (!m_currentLine.empty() && i != _node.statements().size() - 1)
+			add(";");
+		newLine();
+	}
+	unindent();
+	add("end");
+	return false;
 }
 
 bool Why3Translator::visit(IfStatement const& _node)
@@ -250,12 +292,12 @@ bool Why3Translator::visit(IfStatement const& _node)
 	add("if ");
 	_node.condition().accept(*this);
 	add(" then");
-	newLine();
-	_node.trueStatement().accept(*this);
+	visitIndentedUnlessBlock(_node.trueStatement());
 	if (_node.falseStatement())
 	{
-		addLine("else");
-		_node.falseStatement()->accept(*this);
+		newLine();
+		add("else");
+		visitIndentedUnlessBlock(*_node.falseStatement());
 	}
 	return false;
 }
@@ -266,10 +308,10 @@ bool Why3Translator::visit(WhileStatement const& _node)
 
 	add("while ");
 	_node.condition().accept(*this);
-	add(" do");
 	newLine();
-	_node.body().accept(*this);
-	addLine("done;");
+	add("do");
+	visitIndentedUnlessBlock(_node.body());
+	add("done");
 	return false;
 }
 
@@ -286,14 +328,12 @@ bool Why3Translator::visit(Return const& _node)
 			error(_node, "Directly returning tuples not supported. Rather assign to return variable.");
 			return false;
 		}
-		newLine();
 		add("begin _" + params.front()->name() + " := ");
 		_node.expression()->accept(*this);
 		add("; raise Ret end");
-		newLine();
 	}
 	else
-		addLine("raise Ret;");
+		add("raise Ret");
 	return false;
 }
 
@@ -310,8 +350,6 @@ bool Why3Translator::visit(VariableDeclarationStatement const& _node)
 	{
 		add("_" + _node.declarations().front()->name() + " := ");
 		_node.initialValue()->accept(*this);
-		add(";");
-		newLine();
 	}
 	return false;
 }
@@ -429,7 +467,7 @@ bool Why3Translator::visit(FunctionCall const& _node)
 
 	add("(");
 	_node.expression().accept(*this);
-	add(" StateUnused");
+	add(" state");
 	for (auto const& arg: _node.arguments())
 	{
 		add(" ");
@@ -487,10 +525,15 @@ bool Why3Translator::visit(Identifier const& _identifier)
 		add("_" + functionDef->name());
 	else if (auto variable = dynamic_cast<VariableDeclaration const*>(declaration))
 	{
-		if (_identifier.annotation().lValueRequested)
-			add("_" + variable->name());
-		else
-			add("!_" + variable->name());
+		bool isStateVar = isStateVariable(variable);
+		bool lvalue = _identifier.annotation().lValueRequested;
+		if (!lvalue)
+			add("!(");
+		if (isStateVar)
+			add("state.");
+		add("_" + variable->name());
+		if (!lvalue)
+			add(")");
 	}
 	else
 		error(_identifier, "Not supported.");
@@ -517,7 +560,30 @@ bool Why3Translator::visit(Literal const& _literal)
 	return false;
 }
 
-void Why3Translator::addSourceFromDocStrings(const DocumentedAnnotation& _annotation)
+bool Why3Translator::isStateVariable(VariableDeclaration const* _var) const
+{
+	solAssert(!!m_stateVariables, "");
+	for (auto const& var: *m_stateVariables)
+		if (var.get() == _var)
+			return true;
+	return false;
+}
+
+void Why3Translator::visitIndentedUnlessBlock(Statement const& _statement)
+{
+	bool isBlock = !!dynamic_cast<Block const*>(&_statement);
+	if (isBlock)
+		newLine();
+	else
+		indent();
+	_statement.accept(*this);
+	if (isBlock)
+		newLine();
+	else
+		unindent();
+}
+
+void Why3Translator::addSourceFromDocStrings(DocumentedAnnotation const& _annotation)
 {
 	auto why3Range = _annotation.docTags.equal_range("why3");
 	for (auto i = why3Range.first; i != why3Range.second; ++i)

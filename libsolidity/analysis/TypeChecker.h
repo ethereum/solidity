@@ -57,10 +57,10 @@ public:
 
 private:
 	/// Adds a new error to the list of errors.
-	void typeError(ASTNode const& _node, std::string const& _description);
+	void typeError(SourceLocation const& _location, std::string const& _description);
 
 	/// Adds a new error to the list of errors and throws to abort type checking.
-	void fatalTypeError(ASTNode const& _node, std::string const& _description);
+	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 
 	virtual bool visit(ContractDefinition const& _contract) override;
 	/// Checks that two functions defined in this contract with the same name have different

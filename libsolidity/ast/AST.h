@@ -818,6 +818,8 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
+	std::vector<ASTPointer<Statement>> const& statements() const { return m_statements; }
+
 private:
 	std::vector<ASTPointer<Statement>> m_statements;
 };
