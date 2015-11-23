@@ -191,19 +191,17 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 					   "  function functionName(bytes32 input) returns (bytes32 out) {}\n"
 					   "}\n";
 	BOOST_CHECK(successParse(text));
-	ErrorList e;
-	ASTPointer<ContractDefinition> contract = parseText(text, e);
-	FunctionDefinition const* function = nullptr;
-
 	ErrorList errors;
-	auto functions = parseText(text, errors)->definedFunctions();
+	ASTPointer<ContractDefinition> contract = parseText(text, errors);
+	FunctionDefinition const* function = nullptr;
+	auto functions = contract->definedFunctions();
+
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is a test function");
 }
 
 BOOST_AUTO_TEST_CASE(function_normal_comments)
 {
-	ASTPointer<ContractDefinition> contract;
 	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
@@ -212,7 +210,8 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 					   "}\n";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
-	auto functions = parseText(text, errors)->definedFunctions();
+	ASTPointer<ContractDefinition> contract = parseText(text, errors);
+	auto functions = contract->definedFunctions();
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	BOOST_CHECK_MESSAGE(function->documentation() == nullptr,
 						"Should not have gotten a Natspecc comment for this function");
@@ -220,7 +219,6 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 
 BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 {
-	ASTPointer<ContractDefinition> contract;
 	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
@@ -235,7 +233,8 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 					   "}\n";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
-	auto functions = parseText(text, errors)->definedFunctions();
+	ASTPointer<ContractDefinition> contract = parseText(text, errors);
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is test function 1");
@@ -253,7 +252,6 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 
 BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 {
-	ASTPointer<ContractDefinition> contract;
 	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
@@ -263,7 +261,8 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 					   "}\n";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
-	auto functions = parseText(text, errors)->definedFunctions();
+	ASTPointer<ContractDefinition> contract = parseText(text, errors);
+	auto functions = contract->definedFunctions();
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "This is a test function\n"
 						 " and it has 2 lines");
@@ -271,7 +270,6 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 
 BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 {
-	ASTPointer<ContractDefinition> contract;
 	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  /// fun1 description\n"
@@ -288,7 +286,8 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 					   "}\n";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
-	auto functions = parseText(text, errors)->definedFunctions();
+	ASTPointer<ContractDefinition> contract = parseText(text, errors);
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	checkFunctionNatspec(function, "fun1 description");
@@ -300,7 +299,6 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 
 BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 {
-	ASTPointer<ContractDefinition> contract;
 	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
@@ -315,7 +313,8 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 					   "}\n";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
-	auto functions = parseText(text, errors)->definedFunctions();
+	ASTPointer<ContractDefinition> contract = parseText(text, errors);
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	BOOST_CHECK_MESSAGE(!function->documentation(),
@@ -324,7 +323,6 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 
 BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 {
-	ASTPointer<ContractDefinition> contract;
 	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
@@ -339,7 +337,8 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 					   "}\n";
 	BOOST_CHECK(successParse(text));
 	ErrorList errors;
-	auto functions = parseText(text, errors)->definedFunctions();
+	ASTPointer<ContractDefinition> contract = parseText(text, errors);
+	auto functions = contract->definedFunctions();
 
 	ETH_TEST_REQUIRE_NO_THROW(function = functions.at(0), "Failed to retrieve function");
 	BOOST_CHECK_MESSAGE(!function->documentation(),
