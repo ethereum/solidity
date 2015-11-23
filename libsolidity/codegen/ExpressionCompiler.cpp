@@ -23,16 +23,17 @@
 #include <utility>
 #include <numeric>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libevmcore/Params.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/SHA3.h>
+#include <libethcore/ChainOperationParams.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
-
 using namespace std;
+
+// TODO: FIXME: HOMESTEAD: XXX: @chriseth Params deprecated - use EVMSchedule instead.
 
 namespace dev
 {
@@ -1195,6 +1196,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	vector<ASTPointer<Expression const>> const& _arguments
 )
 {
+	eth::EVMSchedule schedule;// TODO: Make relevant to current suppose context.
 	solAssert(
 		_functionType.takesArbitraryParameters() ||
 		_arguments.size() == _functionType.parameterTypes().size(), ""
@@ -1303,11 +1305,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	{
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = eth::c_callGas + 10;
+		u256 gasNeededByCaller = schedule.callGas + 10;
 		if (_functionType.valueSet())
-			gasNeededByCaller += eth::c_callValueTransferGas;
+			gasNeededByCaller += schedule.callValueTransferGas;
 		if (!isCallCode)
-			gasNeededByCaller += eth::c_callNewAccountGas; // we never know
+			gasNeededByCaller += schedule.callNewAccountGas; // we never know
 		m_context <<
 			gasNeededByCaller <<
 			eth::Instruction::GAS <<
