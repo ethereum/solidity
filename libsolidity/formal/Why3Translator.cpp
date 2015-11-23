@@ -650,7 +650,6 @@ string Why3Translator::transformVariableReferences(string const& _annotation)
 	auto pos = _annotation.begin();
 	while (true)
 	{
-
 		auto hash = find(pos, _annotation.end(), '#');
 		ret.append(pos, hash);
 		if (hash == _annotation.end())
@@ -658,7 +657,11 @@ string Why3Translator::transformVariableReferences(string const& _annotation)
 
 		auto hashEnd = find_if(hash + 1, _annotation.end(), [](char _c)
 		{
-			return _c != '_' && _c != '$' && !('a' <= _c && _c <= 'z') && !('A' <= _c && _c <= 'Z') && !('0' <= _c && _c <= '9');
+			return
+				(_c != '_' && _c != '$') &&
+				!('a' <= _c && _c <= 'z') &&
+				!('A' <= _c && _c <= 'Z') &&
+				!('0' <= _c && _c <= '9');
 		});
 		string varName(hash + 1, hashEnd);
 		if (isLocalVariable(varName))
