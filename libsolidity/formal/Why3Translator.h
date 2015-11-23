@@ -117,7 +117,7 @@ private:
 	bool m_seenContract = false;
 	bool m_errorOccured = false;
 
-	std::vector<ASTPointer<VariableDeclaration>> const* m_stateVariables = nullptr;
+	std::vector<VariableDeclaration const*> m_stateVariables;
 	std::map<std::string, VariableDeclaration const*> m_localVariables;
 
 	struct Line

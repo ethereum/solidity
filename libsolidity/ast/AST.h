@@ -58,15 +58,15 @@ public:
 	virtual void accept(ASTVisitor& _visitor) = 0;
 	virtual void accept(ASTConstVisitor& _visitor) const = 0;
 	template <class T>
-	static void listAccept(std::vector<ASTPointer<T>>& _list, ASTVisitor& _visitor)
+	static void listAccept(std::vector<T> const& _list, ASTVisitor& _visitor)
 	{
-		for (ASTPointer<T>& element: _list)
+		for (T const& element: _list)
 			element->accept(_visitor);
 	}
 	template <class T>
-	static void listAccept(std::vector<ASTPointer<T>> const& _list, ASTConstVisitor& _visitor)
+	static void listAccept(std::vector<T> const& _list, ASTConstVisitor& _visitor)
 	{
-		for (ASTPointer<T> const& element: _list)
+		for (T const& element: _list)
 			element->accept(_visitor);
 	}
 
@@ -238,23 +238,13 @@ public:
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<ASTString> const& _documentation,
 		std::vector<ASTPointer<InheritanceSpecifier>> const& _baseContracts,
-		std::vector<ASTPointer<StructDefinition>> const& _definedStructs,
-		std::vector<ASTPointer<EnumDefinition>> const& _definedEnums,
-		std::vector<ASTPointer<VariableDeclaration>> const& _stateVariables,
-		std::vector<ASTPointer<FunctionDefinition>> const& _definedFunctions,
-		std::vector<ASTPointer<ModifierDefinition>> const& _functionModifiers,
-		std::vector<ASTPointer<EventDefinition>> const& _events,
+		std::vector<ASTPointer<ASTNode>> const& _subNodes,
 		bool _isLibrary
 	):
 		Declaration(_location, _name),
 		Documented(_documentation),
 		m_baseContracts(_baseContracts),
-		m_definedStructs(_definedStructs),
-		m_definedEnums(_definedEnums),
-		m_stateVariables(_stateVariables),
-		m_definedFunctions(_definedFunctions),
-		m_functionModifiers(_functionModifiers),
-		m_events(_events),
+		m_subNodes(_subNodes),
 		m_isLibrary(_isLibrary)
 	{}
 
@@ -262,13 +252,14 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	std::vector<ASTPointer<InheritanceSpecifier>> const& baseContracts() const { return m_baseContracts; }
-	std::vector<ASTPointer<StructDefinition>> const& definedStructs() const { return m_definedStructs; }
-	std::vector<ASTPointer<EnumDefinition>> const& definedEnums() const { return m_definedEnums; }
-	std::vector<ASTPointer<VariableDeclaration>> const& stateVariables() const { return m_stateVariables; }
-	std::vector<ASTPointer<ModifierDefinition>> const& functionModifiers() const { return m_functionModifiers; }
-	std::vector<ASTPointer<FunctionDefinition>> const& definedFunctions() const { return m_definedFunctions; }
-	std::vector<ASTPointer<EventDefinition>> const& events() const { return m_events; }
-	std::vector<ASTPointer<EventDefinition>> const& interfaceEvents() const;
+	std::vector<ASTPointer<ASTNode>> const& subNodes() const { return m_subNodes; }
+	std::vector<StructDefinition const*> definedStructs() const;
+	std::vector<EnumDefinition const*> definedEnums() const;
+	std::vector<VariableDeclaration const*> stateVariables() const;
+	std::vector<ModifierDefinition const*> functionModifiers() const;
+	std::vector<FunctionDefinition const*> definedFunctions() const;
+	std::vector<EventDefinition const*> events() const;
+	std::vector<EventDefinition const*> const& interfaceEvents() const;
 	bool isLibrary() const { return m_isLibrary; }
 
 	/// @returns a map of canonical function signatures to FunctionDefinitions
@@ -296,12 +287,7 @@ public:
 
 private:
 	std::vector<ASTPointer<InheritanceSpecifier>> m_baseContracts;
-	std::vector<ASTPointer<StructDefinition>> m_definedStructs;
-	std::vector<ASTPointer<EnumDefinition>> m_definedEnums;
-	std::vector<ASTPointer<VariableDeclaration>> m_stateVariables;
-	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
-	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
-	std::vector<ASTPointer<EventDefinition>> m_events;
+	std::vector<ASTPointer<ASTNode>> m_subNodes;
 	bool m_isLibrary;
 
 	// parsed Natspec documentation of the contract.
@@ -310,7 +296,7 @@ private:
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
-	mutable std::unique_ptr<std::vector<ASTPointer<EventDefinition>>> m_interfaceEvents;
+	mutable std::unique_ptr<std::vector<EventDefinition const*>> m_interfaceEvents;
 	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
 };
 

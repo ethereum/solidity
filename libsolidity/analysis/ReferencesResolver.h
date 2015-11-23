@@ -55,7 +55,7 @@ public:
 	{}
 
 	/// @returns true if no errors during resolving
-	bool resolve(ASTNode& _root);
+	bool resolve(ASTNode const& _root);
 
 private:
 	virtual bool visit(Block const&) override { return m_resolveInsideCode; }

@@ -133,9 +133,9 @@ ModifierDefinition const& CompilerContext::functionModifier(string const& _name)
 {
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
 	for (ContractDefinition const* contract: m_inheritanceHierarchy)
-		for (ASTPointer<ModifierDefinition> const& modifier: contract->functionModifiers())
+		for (ModifierDefinition const* modifier: contract->functionModifiers())
 			if (modifier->name() == _name)
-				return *modifier.get();
+				return *modifier;
 	BOOST_THROW_EXCEPTION(InternalCompilerError()
 		<< errinfo_comment("Function modifier " + _name + " not found."));
 }
@@ -195,7 +195,7 @@ eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(
 	FunctionType functionType(_function);
 	auto it = _searchStart;
 	for (; it != m_inheritanceHierarchy.end(); ++it)
-		for (ASTPointer<FunctionDefinition> const& function: (*it)->definedFunctions())
+		for (FunctionDefinition const* function: (*it)->definedFunctions())
 			if (
 				function->name() == name &&
 				!function->isConstructor() &&

@@ -63,6 +63,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 	m_scope = &_contract;
 
 	// We force our own visiting order here.
+	//@TODO structs will be visited again below, but it is probably fine.
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
@@ -76,7 +77,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 		typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
 
 	FunctionDefinition const* fallbackFunction = nullptr;
-	for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
+	for (FunctionDefinition const* function: _contract.definedFunctions())
 	{
 		if (function->name().empty())
 		{
@@ -88,7 +89,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			}
 			else
 			{
-				fallbackFunction = function.get();
+				fallbackFunction = function;
 				if (!fallbackFunction->parameters().empty())
 					typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
 			}
@@ -97,10 +98,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			_contract.annotation().isFullyImplemented = false;
 	}
 
-	ASTNode::listAccept(_contract.stateVariables(), *this);
-	ASTNode::listAccept(_contract.events(), *this);
-	ASTNode::listAccept(_contract.functionModifiers(), *this);
-	ASTNode::listAccept(_contract.definedFunctions(), *this);
+	ASTNode::listAccept(_contract.subNodes(), *this);
 
 	checkContractExternalTypeClashes(_contract);
 	// check for hash collisions in function signatures
@@ -127,8 +125,8 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 	/// Checks that two functions with the same name defined in this contract have different
 	/// argument types and that there is at most one constructor.
 	map<string, vector<FunctionDefinition const*>> functions;
-	for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
-		functions[function->name()].push_back(function.get());
+	for (FunctionDefinition const* function: _contract.definedFunctions())
+		functions[function->name()].push_back(function);
 
 	// Constructor
 	if (functions[_contract.name()].size() > 1)
@@ -172,7 +170,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
-		for (ASTPointer<FunctionDefinition> const& function: contract->definedFunctions())
+		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
 			auto& overloads = functions[function->name()];
 			FunctionTypePointer funType = make_shared<FunctionType>(*function);
@@ -248,7 +246,7 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 	// We search from derived to base, so the stored item causes the error.
 	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
 	{
-		for (ASTPointer<FunctionDefinition> const& function: contract->definedFunctions())
+		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
 			if (function->isConstructor())
 				continue; // constructors can neither be overridden nor override anything
@@ -269,14 +267,14 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 				)
 					typeError(overriding->location(), "Override changes extended function signature.");
 			}
-			functions[name].push_back(function.get());
+			functions[name].push_back(function);
 		}
-		for (ASTPointer<ModifierDefinition> const& modifier: contract->functionModifiers())
+		for (ModifierDefinition const* modifier: contract->functionModifiers())
 		{
 			string const& name = modifier->name();
 			ModifierDefinition const*& override = modifiers[name];
 			if (!override)
-				override = modifier.get();
+				override = modifier;
 			else if (ModifierType(*override) != ModifierType(*modifier))
 				typeError(override->location(), "Override changes modifier signature.");
 			if (!functions[name].empty())
@@ -290,20 +288,20 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 	map<string, vector<pair<Declaration const*, FunctionTypePointer>>> externalDeclarations;
 	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
 	{
-		for (ASTPointer<FunctionDefinition> const& f: contract->definedFunctions())
+		for (FunctionDefinition const* f: contract->definedFunctions())
 			if (f->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*f);
 				externalDeclarations[functionType->externalSignature()].push_back(
-					make_pair(f.get(), functionType)
+					make_pair(f, functionType)
 				);
 			}
-		for (ASTPointer<VariableDeclaration> const& v: contract->stateVariables())
+		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*v);
 				externalDeclarations[functionType->externalSignature()].push_back(
-					make_pair(v.get(), functionType)
+					make_pair(v, functionType)
 				);
 			}
 	}

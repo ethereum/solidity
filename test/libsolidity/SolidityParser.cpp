@@ -73,7 +73,7 @@ bool successParse(std::string const& _source)
 }
 
 void checkFunctionNatspec(
-	ASTPointer<FunctionDefinition> _function,
+	FunctionDefinition const* _function,
 	std::string const& _expectedDoc
 )
 {
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 	BOOST_CHECK(successParse(text));
 	ErrorList e;
 	ASTPointer<ContractDefinition> contract = parseText(text, e);
-	ASTPointer<FunctionDefinition> function;
+	FunctionDefinition const* function = nullptr;
 
 	ErrorList errors;
 	auto functions = parseText(text, errors)->definedFunctions();
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(function_natspec_documentation)
 BOOST_AUTO_TEST_CASE(function_normal_comments)
 {
 	ASTPointer<ContractDefinition> contract;
-	ASTPointer<FunctionDefinition> function;
+	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  // We won't see this comment\n"
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(function_normal_comments)
 BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 {
 	ASTPointer<ContractDefinition> contract;
-	ASTPointer<FunctionDefinition> function;
+	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  /// This is test function 1\n"
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(multiple_functions_natspec_documentation)
 BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 {
 	ASTPointer<ContractDefinition> contract;
-	ASTPointer<FunctionDefinition> function;
+	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  /// This is a test function\n"
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(multiline_function_documentation)
 BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 {
 	ASTPointer<ContractDefinition> contract;
-	ASTPointer<FunctionDefinition> function;
+	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  /// fun1 description\n"
 					   "  function fun1(uint256 a) {\n"
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(natspec_comment_in_function_body)
 BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 {
 	ASTPointer<ContractDefinition> contract;
-	ASTPointer<FunctionDefinition> function;
+	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  function ///I am in the wrong place \n"
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(natspec_docstring_between_keyword_and_signature)
 BOOST_AUTO_TEST_CASE(natspec_docstring_after_signature)
 {
 	ASTPointer<ContractDefinition> contract;
-	ASTPointer<FunctionDefinition> function;
+	FunctionDefinition const* function = nullptr;
 	char const* text = "contract test {\n"
 					   "  uint256 stateVar;\n"
 					   "  function fun1(uint256 a) {\n"

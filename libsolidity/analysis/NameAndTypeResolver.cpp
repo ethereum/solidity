@@ -84,35 +84,11 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 				importInheritedScope(*base);
 		}
 
-		for (ASTPointer<StructDefinition> const& structDef: _contract.definedStructs())
-			if (!resolver.resolve(*structDef))
-				success = false;
-		for (ASTPointer<EnumDefinition> const& enumDef: _contract.definedEnums())
-			if (!resolver.resolve(*enumDef))
-				success = false;
-		for (ASTPointer<VariableDeclaration> const& variable: _contract.stateVariables())
-			if (!resolver.resolve(*variable))
-				success = false;
-		for (ASTPointer<EventDefinition> const& event: _contract.events())
-			if (!resolver.resolve(*event))
-				success = false;
 		// these can contain code, only resolve parameters for now
-		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
+		for (ASTPointer<ASTNode> const& node: _contract.subNodes())
 		{
-			m_currentScope = &m_scopes[modifier.get()];
-			ReferencesResolver resolver(m_errors, *this, nullptr);
-			if (!resolver.resolve(*modifier))
-				success = false;
-		}
-
-		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
-		{
-			m_currentScope = &m_scopes[function.get()];
-			if (!ReferencesResolver(
-				m_errors,
-				*this,
-				function->returnParameterList().get()
-			).resolve(*function))
+			m_currentScope = &m_scopes[m_scopes.count(node.get()) ? node.get() : &_contract];
+			if (!resolver.resolve(*node))
 				success = false;
 		}
 
@@ -122,17 +98,17 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		m_currentScope = &m_scopes[&_contract];
 
 		// now resolve references inside the code
-		for (ASTPointer<ModifierDefinition> const& modifier: _contract.functionModifiers())
+		for (ModifierDefinition const* modifier: _contract.functionModifiers())
 		{
-			m_currentScope = &m_scopes[modifier.get()];
+			m_currentScope = &m_scopes[modifier];
 			ReferencesResolver resolver(m_errors, *this, nullptr, true);
 			if (!resolver.resolve(*modifier))
 				success = false;
 		}
 
-		for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
+		for (FunctionDefinition const* function: _contract.definedFunctions())
 		{
-			m_currentScope = &m_scopes[function.get()];
+			m_currentScope = &m_scopes[function];
 			if (!ReferencesResolver(
 				m_errors,
 				*this,

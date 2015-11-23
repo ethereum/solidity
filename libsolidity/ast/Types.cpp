@@ -970,7 +970,7 @@ MemberList const& ContractType::members(ContractDefinition const*) const
 		{
 			// add the most derived of all functions which are visible in derived contracts
 			for (ContractDefinition const* base: m_contract.annotation().linearizedBaseContracts)
-				for (ASTPointer<FunctionDefinition> const& function: base->definedFunctions())
+				for (FunctionDefinition const* function: base->definedFunctions())
 				{
 					if (!function->isVisibleInDerivedContracts())
 						continue;
@@ -991,7 +991,7 @@ MemberList const& ContractType::members(ContractDefinition const*) const
 						members.push_back(MemberList::Member(
 							function->name(),
 							functionType,
-							function.get()
+							function
 						));
 				}
 		}
@@ -1024,9 +1024,9 @@ vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::stateVar
 {
 	vector<VariableDeclaration const*> variables;
 	for (ContractDefinition const* contract: boost::adaptors::reverse(m_contract.annotation().linearizedBaseContracts))
-		for (ASTPointer<VariableDeclaration> const& variable: contract->stateVariables())
+		for (VariableDeclaration const* variable: contract->stateVariables())
 			if (!variable->isConstant())
-				variables.push_back(variable.get());
+				variables.push_back(variable);
 	TypePointers types;
 	for (auto variable: variables)
 		types.push_back(variable->annotation().type);

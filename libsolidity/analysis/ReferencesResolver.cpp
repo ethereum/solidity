@@ -53,7 +53,7 @@ bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 	return true;
 }
 
-bool ReferencesResolver::resolve(ASTNode& _root)
+bool ReferencesResolver::resolve(ASTNode const& _root)
 {
 	try
 	{

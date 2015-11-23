@@ -145,8 +145,8 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 
 	addLine("type state = {");
 	indent();
-	m_stateVariables = &_contract.stateVariables();
-	for (auto const& variable: _contract.stateVariables())
+	m_stateVariables = _contract.stateVariables();
+	for (VariableDeclaration const* variable: m_stateVariables)
 	{
 		string varType = toFormalType(*variable->annotation().type);
 		if (varType.empty())
@@ -174,7 +174,7 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 
 void Why3Translator::endVisit(ContractDefinition const& _contract)
 {
-	m_stateVariables = nullptr;
+	m_stateVariables.clear();
 	addSourceFromDocStrings(_contract.annotation());
 	unindent();
 	addLine("end");
@@ -600,17 +600,12 @@ bool Why3Translator::visit(Literal const& _literal)
 
 bool Why3Translator::isStateVariable(VariableDeclaration const* _var) const
 {
-	solAssert(!!m_stateVariables, "");
-	for (auto const& var: *m_stateVariables)
-		if (var.get() == _var)
-			return true;
-	return false;
+	return contains(m_stateVariables, _var);
 }
 
 bool Why3Translator::isStateVariable(string const& _name) const
 {
-	solAssert(!!m_stateVariables, "");
-	for (auto const& var: *m_stateVariables)
+	for (auto const& var: m_stateVariables)
 		if (var->name() == _name)
 			return true;
 	return false;

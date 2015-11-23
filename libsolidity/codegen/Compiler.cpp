@@ -385,7 +385,7 @@ void Compiler::registerStateVariables(ContractDefinition const& _contract)
 
 void Compiler::initializeStateVariables(ContractDefinition const& _contract)
 {
-	for (ASTPointer<VariableDeclaration> const& variable: _contract.stateVariables())
+	for (VariableDeclaration const* variable: _contract.stateVariables())
 		if (variable->value() && !variable->isConstant())
 			ExpressionCompiler(m_context, m_optimize).appendStateVariableInitialization(*variable);
 }

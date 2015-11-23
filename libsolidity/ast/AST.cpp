@@ -74,29 +74,83 @@ map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() 
 
 FunctionDefinition const* ContractDefinition::constructor() const
 {
-	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
+	for (FunctionDefinition const* f: definedFunctions())
 		if (f->isConstructor())
-			return f.get();
+			return f;
 	return nullptr;
 }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
 {
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
-		for (ASTPointer<FunctionDefinition> const& f: contract->definedFunctions())
+		for (FunctionDefinition const* f: contract->definedFunctions())
 			if (f->name().empty())
-				return f.get();
+				return f;
 	return nullptr;
 }
 
-vector<ASTPointer<EventDefinition>> const& ContractDefinition::interfaceEvents() const
+vector<StructDefinition const*> ContractDefinition::definedStructs() const
+{
+	vector<StructDefinition const*> ret;
+	for (auto const& node: m_subNodes)
+		if (auto v = dynamic_cast<StructDefinition const*>(node.get()))
+			ret.push_back(v);
+	return ret;
+}
+
+vector<EnumDefinition const*> ContractDefinition::definedEnums() const
+{
+	vector<EnumDefinition const*> ret;
+	for (auto const& node: m_subNodes)
+		if (auto v = dynamic_cast<EnumDefinition const*>(node.get()))
+			ret.push_back(v);
+	return ret;
+}
+
+vector<VariableDeclaration const*> ContractDefinition::stateVariables() const
+{
+	vector<VariableDeclaration const*> ret;
+	for (auto const& node: m_subNodes)
+		if (auto v = dynamic_cast<VariableDeclaration const*>(node.get()))
+			ret.push_back(v);
+	return ret;
+}
+
+vector<ModifierDefinition const*> ContractDefinition::functionModifiers() const
+{
+	vector<ModifierDefinition const*> ret;
+	for (auto const& node: m_subNodes)
+		if (auto v = dynamic_cast<ModifierDefinition const*>(node.get()))
+			ret.push_back(v);
+	return ret;
+}
+
+vector<FunctionDefinition const*> ContractDefinition::definedFunctions() const
+{
+	vector<FunctionDefinition const*> ret;
+	for (auto const& node: m_subNodes)
+		if (auto v = dynamic_cast<FunctionDefinition const*>(node.get()))
+			ret.push_back(v);
+	return ret;
+}
+
+vector<EventDefinition const*> ContractDefinition::events() const
+{
+	vector<EventDefinition const*> ret;
+	for (auto const& node: m_subNodes)
+		if (auto v = dynamic_cast<EventDefinition const*>(node.get()))
+			ret.push_back(v);
+	return ret;
+}
+
+vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
 {
 	if (!m_interfaceEvents)
 	{
 		set<string> eventsSeen;
-		m_interfaceEvents.reset(new vector<ASTPointer<EventDefinition>>());
+		m_interfaceEvents.reset(new vector<EventDefinition const*>());
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
-			for (ASTPointer<EventDefinition> const& e: contract->events())
+			for (EventDefinition const* e: contract->events())
 				if (eventsSeen.count(e->name()) == 0)
 				{
 					eventsSeen.insert(e->name());
@@ -116,10 +170,10 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		{
 			vector<FunctionTypePointer> functions;
-			for (ASTPointer<FunctionDefinition> const& f: contract->definedFunctions())
+			for (FunctionDefinition const* f: contract->definedFunctions())
 				if (f->isPartOfExternalInterface())
 					functions.push_back(make_shared<FunctionType>(*f, false));
-			for (ASTPointer<VariableDeclaration> const& v: contract->stateVariables())
+			for (VariableDeclaration const* v: contract->stateVariables())
 				if (v->isPartOfExternalInterface())
 					functions.push_back(make_shared<FunctionType>(*v));
 			for (FunctionTypePointer const& fun: functions)
@@ -176,14 +230,14 @@ vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 			}
 		};
 
-		for (ASTPointer<FunctionDefinition> const& f: definedFunctions())
-			addInheritableMember(f.get());
+		for (FunctionDefinition const* f: definedFunctions())
+			addInheritableMember(f);
 
-		for (ASTPointer<VariableDeclaration> const& v: stateVariables())
-			addInheritableMember(v.get());
+		for (VariableDeclaration const* v: stateVariables())
+			addInheritableMember(v);
 
-		for (ASTPointer<StructDefinition> const& s: definedStructs())
-			addInheritableMember(s.get());
+		for (StructDefinition const* s: definedStructs())
+			addInheritableMember(s);
 	}
 	return *m_inheritableMembers;
 }
