@@ -74,6 +74,7 @@ private:
 	virtual bool visit(ContractDefinition const& _contract) override;
 	virtual void endVisit(ContractDefinition const& _contract) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
+	virtual void endVisit(FunctionDefinition const& _function) override;
 	virtual bool visit(Block const&) override;
 	virtual bool visit(IfStatement const& _node) override;
 	virtual bool visit(WhileStatement const& _node) override;
@@ -98,12 +99,17 @@ private:
 	}
 
 	bool isStateVariable(VariableDeclaration const* _var) const;
+	bool isStateVariable(std::string const& _name) const;
+	bool isLocalVariable(VariableDeclaration const* _var) const;
+	bool isLocalVariable(std::string const& _name) const;
 
 	/// Visits the givin statement and indents it unless it is a block
 	/// (which does its own indentation).
 	void visitIndentedUnlessBlock(Statement const& _statement);
 
 	void addSourceFromDocStrings(DocumentedAnnotation const& _annotation);
+	/// Transforms substring like `#varName` and `#stateVarName` to code that evaluates to their value.
+	std::string transformVariableReferences(std::string const& _annotation);
 
 	size_t m_indentationAtLineStart = 0;
 	size_t m_indentation = 0;
@@ -114,6 +120,7 @@ private:
 	bool m_errorOccured = false;
 
 	std::vector<ASTPointer<VariableDeclaration>> const* m_stateVariables = nullptr;
+	std::map<std::string, VariableDeclaration const*> m_localVariables;
 
 	std::string m_result;
 	ErrorList& m_errors;

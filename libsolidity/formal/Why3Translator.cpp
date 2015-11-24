@@ -198,6 +198,14 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 		return false;
 	}
 
+	m_localVariables.clear();
+	for (auto const& var: _function.parameters())
+		m_localVariables[var->name()] = var.get();
+	for (auto const& var: _function.returnParameters())
+		m_localVariables[var->name()] = var.get();
+	for (auto const& var: _function.localVariables())
+		m_localVariables[var->name()] = var;
+
 	add("let rec _" + _function.name());
 	add(" (state: state)");
 	for (auto const& param: _function.parameters())
@@ -266,6 +274,11 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 	addLine("end");
 	addLine("");
 	return false;
+}
+
+void Why3Translator::endVisit(FunctionDefinition const&)
+{
+	m_localVariables.clear();
 }
 
 bool Why3Translator::visit(Block const& _node)
@@ -452,29 +465,48 @@ bool Why3Translator::visit(FunctionCall const& _node)
 		return true;
 	}
 	FunctionType const& function = dynamic_cast<FunctionType const&>(*_node.expression().annotation().type);
-	if (function.location() != FunctionType::Location::Internal)
+	switch (function.location())
 	{
+	case FunctionType::Location::AddMod:
+	case FunctionType::Location::MulMod:
+	{
+		//@todo require that third parameter is not zero
+		add("(of_int (mod (Int.(");
+		add(function.location() == FunctionType::Location::AddMod ? "+" : "*");
+		add(") (to_int ");
+		_node.arguments().at(0)->accept(*this);
+		add(") (to_int ");
+		_node.arguments().at(1)->accept(*this);
+		add(")) (to_int ");
+		_node.arguments().at(2)->accept(*this);
+		add(")))");
+		return false;
+	}
+	case FunctionType::Location::Internal:
+	{
+		if (!_node.names().empty())
+		{
+			error(_node, "Function calls with named arguments not supported.");
+			return true;
+		}
+
+		//@TODO check type conversions
+
+		add("(");
+		_node.expression().accept(*this);
+		add(" state");
+		for (auto const& arg: _node.arguments())
+		{
+			add(" ");
+			arg->accept(*this);
+		}
+		add(")");
+		return false;
+	}
+	default:
 		error(_node, "Only internal function calls supported.");
 		return true;
 	}
-	if (!_node.names().empty())
-	{
-		error(_node, "Function calls with named arguments not supported.");
-		return true;
-	}
-
-	//@TODO check type conversions
-
-	add("(");
-	_node.expression().accept(*this);
-	add(" state");
-	for (auto const& arg: _node.arguments())
-	{
-		add(" ");
-		arg->accept(*this);
-	}
-	add(")");
-	return false;
 }
 
 bool Why3Translator::visit(MemberAccess const& _node)
@@ -569,6 +601,28 @@ bool Why3Translator::isStateVariable(VariableDeclaration const* _var) const
 	return false;
 }
 
+bool Why3Translator::isStateVariable(string const& _name) const
+{
+	solAssert(!!m_stateVariables, "");
+	for (auto const& var: *m_stateVariables)
+		if (var->name() == _name)
+			return true;
+	return false;
+}
+
+bool Why3Translator::isLocalVariable(VariableDeclaration const* _var) const
+{
+	for (auto const& var: m_localVariables)
+		if (var.second == _var)
+			return true;
+	return false;
+}
+
+bool Why3Translator::isLocalVariable(string const& _name) const
+{
+	return m_localVariables.count(_name);
+}
+
 void Why3Translator::visitIndentedUnlessBlock(Statement const& _statement)
 {
 	bool isBlock = !!dynamic_cast<Block const*>(&_statement);
@@ -587,5 +641,40 @@ void Why3Translator::addSourceFromDocStrings(DocumentedAnnotation const& _annota
 {
 	auto why3Range = _annotation.docTags.equal_range("why3");
 	for (auto i = why3Range.first; i != why3Range.second; ++i)
-		addLine(i->second.content);
+		addLine(transformVariableReferences(i->second.content));
 }
+
+string Why3Translator::transformVariableReferences(string const& _annotation)
+{
+	string ret;
+	auto pos = _annotation.begin();
+	while (true)
+	{
+		auto hash = find(pos, _annotation.end(), '#');
+		ret.append(pos, hash);
+		if (hash == _annotation.end())
+			break;
+
+		auto hashEnd = find_if(hash + 1, _annotation.end(), [](char _c)
+		{
+			return
+				(_c != '_' && _c != '$') &&
+				!('a' <= _c && _c <= 'z') &&
+				!('A' <= _c && _c <= 'Z') &&
+				!('0' <= _c && _c <= '9');
+		});
+		string varName(hash + 1, hashEnd);
+		if (isLocalVariable(varName))
+			ret += "(to_int !_" + varName + ")";
+		else if (isStateVariable(varName))
+			ret += "(to_int !(state._" + varName + "))";
+		else if (varName == "result") //@todo actually use the name of the return parameters
+			ret += "(to_int result)";
+		else
+			ret.append(hash, hashEnd);
+
+		pos = hashEnd;
+	}
+	return ret;
+}
+
