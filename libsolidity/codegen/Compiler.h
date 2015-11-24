@@ -92,13 +92,6 @@ private:
 	void registerStateVariables(ContractDefinition const& _contract);
 	void initializeStateVariables(ContractDefinition const& _contract);
 
-	/// Initialises all memory arrays in the local variables to point to an empty location.
-	void initialiseMemoryArrays(std::vector<VariableDeclaration const*> _variables);
-	/// Pushes the initialised value of the given type to the stack. If the type is a memory
-	/// reference type, allocates memory and pushes the memory pointer.
-	/// Not to be used for storage references.
-	void initialiseInMemory(Type const& _type);
-
 	virtual bool visit(VariableDeclaration const& _variableDeclaration) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(IfStatement const& _ifStatement) override;

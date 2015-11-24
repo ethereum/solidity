@@ -1226,7 +1226,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	else
 		for (auto const& retType: _functionType.returnParameterTypes())
 		{
-			solAssert(retType->calldataEncodedSize() > 0, "Unable to return dynamic type from external call.");
+			solAssert(!retType->isDynamicallySized(), "Unable to return dynamic type from external call.");
 			retSize += retType->calldataEncodedSize();
 		}
 
