@@ -941,6 +941,7 @@ private:
 	TypePointer m_actualType;
 	/// List of member types, will be lazy-initialized because of recursive references.
 	mutable std::unique_ptr<MemberList> m_members;
+	mutable ContractDefinition const* m_cachedScope = nullptr;
 };
 
 

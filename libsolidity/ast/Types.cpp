@@ -1787,7 +1787,7 @@ unsigned TypeType::sizeOnStack() const
 MemberList const& TypeType::members(ContractDefinition const* _currentScope) const
 {
 	// We need to lazy-initialize it because of recursive references.
-	if (!m_members)
+	if (!m_members || m_cachedScope != _currentScope)
 	{
 		MemberList::MemberMap members;
 		if (m_actualType->category() == Category::Contract)
@@ -1818,6 +1818,7 @@ MemberList const& TypeType::members(ContractDefinition const* _currentScope) con
 				members.push_back(MemberList::Member(enumValue->name(), enumType));
 		}
 		m_members.reset(new MemberList(members));
+		m_cachedScope = _currentScope;
 	}
 	return *m_members;
 }
