@@ -271,7 +271,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWordBoundaries) const
 {
 	solAssert(
-		_sourceType.baseType()->calldataEncodedSize() > 0,
+		!_sourceType.baseType()->isDynamicallySized(),
 		"Nested dynamic arrays not implemented here."
 	);
 	CompilerUtils utils(m_context);

@@ -781,7 +781,7 @@ bool ArrayType::operator==(Type const& _other) const
 unsigned ArrayType::calldataEncodedSize(bool _padded) const
 {
 	if (isDynamicallySized())
-		return 0;
+		return 32;
 	bigint size = bigint(length()) * (isByteArray() ? 1 : baseType()->calldataEncodedSize(_padded));
 	size = ((size + 31) / 32) * 32;
 	solAssert(size <= numeric_limits<unsigned>::max(), "Array size does not fit unsigned.");
@@ -1698,7 +1698,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary) const
 	TypePointers returnParameterTypes;
 	vector<string> returnParameterNames;
 	for (size_t i = 0; i < m_returnParameterTypes.size(); ++i)
-		if (m_returnParameterTypes[i]->calldataEncodedSize() > 0)
+		if (!m_returnParameterTypes[i]->isDynamicallySized())
 		{
 			returnParameterTypes.push_back(m_returnParameterTypes[i]);
 			returnParameterNames.push_back(m_returnParameterNames[i]);

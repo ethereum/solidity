@@ -613,7 +613,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	}
 }
 
-void CompilerUtils::pushZeroValue(const Type& _type)
+void CompilerUtils::pushZeroValue(Type const& _type)
 {
 	auto const* referenceType = dynamic_cast<ReferenceType const*>(&_type);
 	if (!referenceType || referenceType->location() == DataLocation::Storage)
