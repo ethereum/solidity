@@ -292,7 +292,8 @@ bool Why3Translator::visit(Block const& _node)
 		if (i != _node.statements().size() - 1)
 		{
 			auto it = m_lines.end() - 1;
-			while (it != m_lines.begin() && it->contents.empty()) --it;
+			while (it != m_lines.begin() && it->contents.empty())
+				--it;
 			if (!boost::algorithm::ends_with(it->contents, "begin"))
 				it->contents += ";";
 		}
