@@ -1311,13 +1311,13 @@ bool TypeChecker::contractDependenciesAreCyclic(
 	return false;
 }
 
-Declaration const& TypeChecker::dereference(Identifier const& _identifier)
+Declaration const& TypeChecker::dereference(Identifier const& _identifier) const
 {
 	solAssert(!!_identifier.annotation().referencedDeclaration, "Declaration not stored.");
 	return *_identifier.annotation().referencedDeclaration;
 }
 
-Declaration const& TypeChecker::dereference(UserDefinedTypeName const& _typeName)
+Declaration const& TypeChecker::dereference(UserDefinedTypeName const& _typeName) const
 {
 	solAssert(!!_typeName.annotation().referencedDeclaration, "Declaration not stored.");
 	return *_typeName.annotation().referencedDeclaration;
