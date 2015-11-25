@@ -39,6 +39,7 @@ class ImportDirective;
 class Declaration;
 class ContractDefinition;
 class InheritanceSpecifier;
+class UsingForDirective;
 class StructDefinition;
 class EnumDefinition;
 class EnumValue;
