@@ -132,12 +132,6 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 	expectToken(_isLibrary ? Token::Library : Token::Contract);
 	ASTPointer<ASTString> name = expectIdentifierToken();
 	vector<ASTPointer<InheritanceSpecifier>> baseContracts;
-	vector<ASTPointer<StructDefinition>> structs;
-	vector<ASTPointer<EnumDefinition>> enums;
-	vector<ASTPointer<VariableDeclaration>> stateVariables;
-	vector<ASTPointer<FunctionDefinition>> functions;
-	vector<ASTPointer<ModifierDefinition>> modifiers;
-	vector<ASTPointer<EventDefinition>> events;
 	if (m_scanner->currentToken() == Token::Is)
 		do
 		{
@@ -145,6 +139,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 			baseContracts.push_back(parseInheritanceSpecifier());
 		}
 		while (m_scanner->currentToken() == Token::Comma);
+	vector<ASTPointer<ASTNode>> subNodes;
 	expectToken(Token::LBrace);
 	while (true)
 	{
@@ -152,11 +147,11 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 		if (currentTokenValue == Token::RBrace)
 			break;
 		else if (currentTokenValue == Token::Function)
-			functions.push_back(parseFunctionDefinition(name.get()));
+			subNodes.push_back(parseFunctionDefinition(name.get()));
 		else if (currentTokenValue == Token::Struct)
-			structs.push_back(parseStructDefinition());
+			subNodes.push_back(parseStructDefinition());
 		else if (currentTokenValue == Token::Enum)
-			enums.push_back(parseEnumDefinition());
+			subNodes.push_back(parseEnumDefinition());
 		else if (
 			currentTokenValue == Token::Identifier ||
 			currentTokenValue == Token::Mapping ||
@@ -166,13 +161,13 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 			VarDeclParserOptions options;
 			options.isStateVariable = true;
 			options.allowInitialValue = true;
-			stateVariables.push_back(parseVariableDeclaration(options));
+			subNodes.push_back(parseVariableDeclaration(options));
 			expectToken(Token::Semicolon);
 		}
 		else if (currentTokenValue == Token::Modifier)
-			modifiers.push_back(parseModifierDefinition());
+			subNodes.push_back(parseModifierDefinition());
 		else if (currentTokenValue == Token::Event)
-			events.push_back(parseEventDefinition());
+			subNodes.push_back(parseEventDefinition());
 		else
 			fatalParserError(std::string("Function, variable, struct or modifier declaration expected."));
 	}
@@ -182,12 +177,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 		name,
 		docString,
 		baseContracts,
-		structs,
-		enums,
-		stateVariables,
-		functions,
-		modifiers,
-		events,
+		subNodes,
 		_isLibrary
 	);
 }

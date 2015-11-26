@@ -120,7 +120,7 @@ string InterfaceHandler::ABISolidityInterface(ContractDefinition const& _contrac
 		{
 			ret += "struct " + stru->name() + "{";
 			for (ASTPointer<VariableDeclaration> const& _member: stru->members())
-				ret += _member->type(nullptr)->canonicalName(false) + " " + _member->name() + ";";
+				ret += _member->type()->canonicalName(false) + " " + _member->name() + ";";
 			ret += "}";
 		}
 		for (auto const& enu: _contractDef.definedEnums())

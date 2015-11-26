@@ -117,6 +117,8 @@ private:
 	/// Runs type checks on @a _expression to infer its type and then checks that it is an LValue.
 	void requireLValue(Expression const& _expression);
 
+	ContractDefinition const* m_scope = nullptr;
+
 	ErrorList& m_errors;
 };
 

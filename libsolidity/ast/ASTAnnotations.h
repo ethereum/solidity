@@ -138,9 +138,6 @@ struct ExpressionAnnotation: ASTAnnotation
 
 struct IdentifierAnnotation: ExpressionAnnotation
 {
-	/// Stores a reference to the current contract.
-	/// This is needed because types of base contracts change depending on the context.
-	ContractDefinition const* contractScope = nullptr;
 	/// Referenced declaration, set at latest during overload resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
 	/// List of possible declarations it could refer to.

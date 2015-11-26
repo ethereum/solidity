@@ -74,29 +74,29 @@ map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() 
 
 FunctionDefinition const* ContractDefinition::constructor() const
 {
-	for (ASTPointer<FunctionDefinition> const& f: m_definedFunctions)
+	for (FunctionDefinition const* f: definedFunctions())
 		if (f->isConstructor())
-			return f.get();
+			return f;
 	return nullptr;
 }
 
 FunctionDefinition const* ContractDefinition::fallbackFunction() const
 {
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
-		for (ASTPointer<FunctionDefinition> const& f: contract->definedFunctions())
+		for (FunctionDefinition const* f: contract->definedFunctions())
 			if (f->name().empty())
-				return f.get();
+				return f;
 	return nullptr;
 }
 
-vector<ASTPointer<EventDefinition>> const& ContractDefinition::interfaceEvents() const
+vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
 {
 	if (!m_interfaceEvents)
 	{
 		set<string> eventsSeen;
-		m_interfaceEvents.reset(new vector<ASTPointer<EventDefinition>>());
+		m_interfaceEvents.reset(new vector<EventDefinition const*>());
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
-			for (ASTPointer<EventDefinition> const& e: contract->events())
+			for (EventDefinition const* e: contract->events())
 				if (eventsSeen.count(e->name()) == 0)
 				{
 					eventsSeen.insert(e->name());
@@ -116,10 +116,10 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::inter
 		for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		{
 			vector<FunctionTypePointer> functions;
-			for (ASTPointer<FunctionDefinition> const& f: contract->definedFunctions())
+			for (FunctionDefinition const* f: contract->definedFunctions())
 				if (f->isPartOfExternalInterface())
 					functions.push_back(make_shared<FunctionType>(*f, false));
-			for (ASTPointer<VariableDeclaration> const& v: contract->stateVariables())
+			for (VariableDeclaration const* v: contract->stateVariables())
 				if (v->isPartOfExternalInterface())
 					functions.push_back(make_shared<FunctionType>(*v));
 			for (FunctionTypePointer const& fun: functions)
@@ -176,21 +176,21 @@ vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 			}
 		};
 
-		for (ASTPointer<FunctionDefinition> const& f: definedFunctions())
-			addInheritableMember(f.get());
+		for (FunctionDefinition const* f: definedFunctions())
+			addInheritableMember(f);
 
-		for (ASTPointer<VariableDeclaration> const& v: stateVariables())
-			addInheritableMember(v.get());
+		for (VariableDeclaration const* v: stateVariables())
+			addInheritableMember(v);
 
-		for (ASTPointer<StructDefinition> const& s: definedStructs())
-			addInheritableMember(s.get());
+		for (StructDefinition const* s: definedStructs())
+			addInheritableMember(s);
 	}
 	return *m_inheritableMembers;
 }
 
-TypePointer ContractDefinition::type(ContractDefinition const* m_currentContract) const
+TypePointer ContractDefinition::type() const
 {
-	return make_shared<TypeType>(make_shared<ContractType>(*this), m_currentContract);
+	return make_shared<TypeType>(make_shared<ContractType>(*this));
 }
 
 ContractDefinitionAnnotation& ContractDefinition::annotation() const
@@ -207,7 +207,7 @@ TypeNameAnnotation& TypeName::annotation() const
 	return static_cast<TypeNameAnnotation&>(*m_annotation);
 }
 
-TypePointer StructDefinition::type(ContractDefinition const*) const
+TypePointer StructDefinition::type() const
 {
 	return make_shared<TypeType>(make_shared<StructType>(*this));
 }
@@ -219,14 +219,14 @@ TypeDeclarationAnnotation& StructDefinition::annotation() const
 	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
-TypePointer EnumValue::type(ContractDefinition const*) const
+TypePointer EnumValue::type() const
 {
 	auto parentDef = dynamic_cast<EnumDefinition const*>(scope());
 	solAssert(parentDef, "Enclosing Scope of EnumValue was not set");
 	return make_shared<EnumType>(*parentDef);
 }
 
-TypePointer EnumDefinition::type(ContractDefinition const*) const
+TypePointer EnumDefinition::type() const
 {
 	return make_shared<TypeType>(make_shared<EnumType>(*this));
 }
@@ -238,7 +238,7 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
-TypePointer FunctionDefinition::type(ContractDefinition const*) const
+TypePointer FunctionDefinition::type() const
 {
 	return make_shared<FunctionType>(*this);
 }
@@ -255,7 +255,7 @@ FunctionDefinitionAnnotation& FunctionDefinition::annotation() const
 	return static_cast<FunctionDefinitionAnnotation&>(*m_annotation);
 }
 
-TypePointer ModifierDefinition::type(ContractDefinition const*) const
+TypePointer ModifierDefinition::type() const
 {
 	return make_shared<ModifierType>(*this);
 }
@@ -267,7 +267,7 @@ ModifierDefinitionAnnotation& ModifierDefinition::annotation() const
 	return static_cast<ModifierDefinitionAnnotation&>(*m_annotation);
 }
 
-TypePointer EventDefinition::type(ContractDefinition const*) const
+TypePointer EventDefinition::type() const
 {
 	return make_shared<FunctionType>(*this);
 }
@@ -324,7 +324,7 @@ bool VariableDeclaration::canHaveAutoType() const
 	return (!!callable && !isCallableParameter());
 }
 
-TypePointer VariableDeclaration::type(ContractDefinition const*) const
+TypePointer VariableDeclaration::type() const
 {
 	return annotation().type;
 }

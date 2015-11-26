@@ -50,11 +50,10 @@ bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 
 	_typeName.annotation().referencedDeclaration = declaration;
 
-	_typeName.annotation().contractScope = m_currentContract;
 	return true;
 }
 
-bool ReferencesResolver::resolve(ASTNode& _root)
+bool ReferencesResolver::resolve(ASTNode const& _root)
 {
 	try
 	{
@@ -73,10 +72,7 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 	if (declarations.empty())
 		fatalDeclarationError(_identifier.location(), "Undeclared identifier.");
 	else if (declarations.size() == 1)
-	{
 		_identifier.annotation().referencedDeclaration = declarations.front();
-		_identifier.annotation().contractScope = m_currentContract;
-	}
 	else
 		_identifier.annotation().overloadedDeclarations =
 			m_resolver.cleanedDeclarations(_identifier, declarations);

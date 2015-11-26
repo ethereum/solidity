@@ -273,7 +273,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				"Struct assignment with conversion."
 			);
 			solAssert(sourceType.location() != DataLocation::CallData, "Structs in calldata not supported.");
-			for (auto const& member: structType.members())
+			for (auto const& member: structType.members(nullptr))
 			{
 				// assign each member that is not a mapping
 				TypePointer const& memberType = member.type;
@@ -336,7 +336,7 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 		// @todo this can be improved: use StorageItem for non-value types, and just store 0 in
 		// all slots that contain value types later.
 		auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
-		for (auto const& member: structType.members())
+		for (auto const& member: structType.members(nullptr))
 		{
 			// zero each member that is not a mapping
 			TypePointer const& memberType = member.type;

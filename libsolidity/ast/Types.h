@@ -217,9 +217,13 @@ public:
 	}
 
 	/// Returns the list of all members of this type. Default implementation: no members.
-	virtual MemberList const& members() const { return EmptyMemberList; }
+	/// @param _currentScope scope in which the members are accessed.
+	virtual MemberList const& members(ContractDefinition const* /*_currentScope*/) const { return EmptyMemberList; }
 	/// Convenience method, returns the type of the given named member or an empty pointer if no such member exists.
-	TypePointer memberType(std::string const& _name) const { return members().memberType(_name); }
+	TypePointer memberType(std::string const& _name, ContractDefinition const* _currentScope = nullptr) const
+	{
+		return members(_currentScope).memberType(_name);
+	}
 
 	virtual std::string toString(bool _short) const = 0;
 	std::string toString() const { return toString(false); }
@@ -277,7 +281,10 @@ public:
 	virtual unsigned storageBytes() const override { return m_bits / 8; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual MemberList const& members() const override { return isAddress() ? AddressMemberList : EmptyMemberList; }
+	virtual MemberList const& members(ContractDefinition const* /*_currentScope*/) const override
+	{
+		return isAddress() ? AddressMemberList : EmptyMemberList;
+	}
 
 	virtual std::string toString(bool _short) const override;
 
@@ -510,7 +517,7 @@ public:
 	virtual unsigned sizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
-	virtual MemberList const& members() const override;
+	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer decodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
@@ -563,7 +570,7 @@ public:
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
 
-	virtual MemberList const& members() const override;
+	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
 	{
 		return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address);
@@ -616,7 +623,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString(bool _short) const override;
 
-	virtual MemberList const& members() const override;
+	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
 	{
 		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : TypePointer();
@@ -810,7 +817,7 @@ public:
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
-	virtual MemberList const& members() const override;
+	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
 
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
@@ -918,8 +925,7 @@ class TypeType: public Type
 {
 public:
 	virtual Category category() const override { return Category::TypeType; }
-	explicit TypeType(TypePointer const& _actualType, ContractDefinition const* _currentContract = nullptr):
-		m_actualType(_actualType), m_currentContract(_currentContract) {}
+	explicit TypeType(TypePointer const& _actualType): m_actualType(_actualType) {}
 	TypePointer const& actualType() const { return m_actualType; }
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
@@ -929,14 +935,13 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
 	virtual std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
-	virtual MemberList const& members() const override;
+	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
 
 private:
 	TypePointer m_actualType;
-	/// Context in which this type is used (influences visibility etc.), can be nullptr.
-	ContractDefinition const* m_currentContract;
 	/// List of member types, will be lazy-initialized because of recursive references.
 	mutable std::unique_ptr<MemberList> m_members;
+	mutable ContractDefinition const* m_cachedScope = nullptr;
 };
 
 
@@ -983,7 +988,7 @@ public:
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual unsigned sizeOnStack() const override { return 0; }
-	virtual MemberList const& members() const override { return m_members; }
+	virtual MemberList const& members(ContractDefinition const*) const override { return m_members; }
 
 	virtual std::string toString(bool _short) const override;
 

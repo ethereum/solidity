@@ -542,7 +542,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				allocateMemory();
 				m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
 				// stack: <memory ptr> <source ref> <memory ptr>
-				for (auto const& member: typeOnStack.members())
+				for (auto const& member: typeOnStack.members(nullptr))
 				{
 					if (!member.type->canLiveOutsideStorage())
 						continue;
@@ -642,7 +642,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 	m_context << eth::Instruction::DUP1;
 
 	if (auto structType = dynamic_cast<StructType const*>(&_type))
-		for (auto const& member: structType->members())
+		for (auto const& member: structType->members(nullptr))
 		{
 			pushZeroValue(*member.type);
 			storeInMemoryDynamic(*member.type);

@@ -62,12 +62,7 @@ void ContractDefinition::accept(ASTVisitor& _visitor)
 	if (_visitor.visit(*this))
 	{
 		listAccept(m_baseContracts, _visitor);
-		listAccept(m_definedStructs, _visitor);
-		listAccept(m_definedEnums, _visitor);
-		listAccept(m_stateVariables, _visitor);
-		listAccept(m_events, _visitor);
-		listAccept(m_functionModifiers, _visitor);
-		listAccept(m_definedFunctions, _visitor);
+		listAccept(m_subNodes, _visitor);
 	}
 	_visitor.endVisit(*this);
 }
@@ -77,12 +72,7 @@ void ContractDefinition::accept(ASTConstVisitor& _visitor) const
 	if (_visitor.visit(*this))
 	{
 		listAccept(m_baseContracts, _visitor);
-		listAccept(m_definedStructs, _visitor);
-		listAccept(m_definedEnums, _visitor);
-		listAccept(m_stateVariables, _visitor);
-		listAccept(m_events, _visitor);
-		listAccept(m_functionModifiers, _visitor);
-		listAccept(m_definedFunctions, _visitor);
+		listAccept(m_subNodes, _visitor);
 	}
 	_visitor.endVisit(*this);
 }

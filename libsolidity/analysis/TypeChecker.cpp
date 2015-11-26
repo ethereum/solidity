@@ -60,7 +60,10 @@ TypePointer const& TypeChecker::type(VariableDeclaration const& _variable) const
 
 bool TypeChecker::visit(ContractDefinition const& _contract)
 {
+	m_scope = &_contract;
+
 	// We force our own visiting order here.
+	//@TODO structs will be visited again below, but it is probably fine.
 	ASTNode::listAccept(_contract.definedStructs(), *this);
 	ASTNode::listAccept(_contract.baseContracts(), *this);
 
@@ -74,7 +77,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 		typeError(function->returnParameterList()->location(), "Non-empty \"returns\" directive for constructor.");
 
 	FunctionDefinition const* fallbackFunction = nullptr;
-	for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
+	for (FunctionDefinition const* function: _contract.definedFunctions())
 	{
 		if (function->name().empty())
 		{
@@ -86,7 +89,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			}
 			else
 			{
-				fallbackFunction = function.get();
+				fallbackFunction = function;
 				if (!fallbackFunction->parameters().empty())
 					typeError(fallbackFunction->parameterList().location(), "Fallback function cannot take parameters.");
 			}
@@ -95,10 +98,7 @@ bool TypeChecker::visit(ContractDefinition const& _contract)
 			_contract.annotation().isFullyImplemented = false;
 	}
 
-	ASTNode::listAccept(_contract.stateVariables(), *this);
-	ASTNode::listAccept(_contract.events(), *this);
-	ASTNode::listAccept(_contract.functionModifiers(), *this);
-	ASTNode::listAccept(_contract.definedFunctions(), *this);
+	ASTNode::listAccept(_contract.subNodes(), *this);
 
 	checkContractExternalTypeClashes(_contract);
 	// check for hash collisions in function signatures
@@ -125,8 +125,8 @@ void TypeChecker::checkContractDuplicateFunctions(ContractDefinition const& _con
 	/// Checks that two functions with the same name defined in this contract have different
 	/// argument types and that there is at most one constructor.
 	map<string, vector<FunctionDefinition const*>> functions;
-	for (ASTPointer<FunctionDefinition> const& function: _contract.definedFunctions())
-		functions[function->name()].push_back(function.get());
+	for (FunctionDefinition const* function: _contract.definedFunctions())
+		functions[function->name()].push_back(function);
 
 	// Constructor
 	if (functions[_contract.name()].size() > 1)
@@ -170,7 +170,7 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
-		for (ASTPointer<FunctionDefinition> const& function: contract->definedFunctions())
+		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
 			auto& overloads = functions[function->name()];
 			FunctionTypePointer funType = make_shared<FunctionType>(*function);
@@ -246,7 +246,7 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 	// We search from derived to base, so the stored item causes the error.
 	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
 	{
-		for (ASTPointer<FunctionDefinition> const& function: contract->definedFunctions())
+		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
 			if (function->isConstructor())
 				continue; // constructors can neither be overridden nor override anything
@@ -267,14 +267,14 @@ void TypeChecker::checkContractIllegalOverrides(ContractDefinition const& _contr
 				)
 					typeError(overriding->location(), "Override changes extended function signature.");
 			}
-			functions[name].push_back(function.get());
+			functions[name].push_back(function);
 		}
-		for (ASTPointer<ModifierDefinition> const& modifier: contract->functionModifiers())
+		for (ModifierDefinition const* modifier: contract->functionModifiers())
 		{
 			string const& name = modifier->name();
 			ModifierDefinition const*& override = modifiers[name];
 			if (!override)
-				override = modifier.get();
+				override = modifier;
 			else if (ModifierType(*override) != ModifierType(*modifier))
 				typeError(override->location(), "Override changes modifier signature.");
 			if (!functions[name].empty())
@@ -288,20 +288,20 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 	map<string, vector<pair<Declaration const*, FunctionTypePointer>>> externalDeclarations;
 	for (ContractDefinition const* contract: _contract.annotation().linearizedBaseContracts)
 	{
-		for (ASTPointer<FunctionDefinition> const& f: contract->definedFunctions())
+		for (FunctionDefinition const* f: contract->definedFunctions())
 			if (f->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*f);
 				externalDeclarations[functionType->externalSignature()].push_back(
-					make_pair(f.get(), functionType)
+					make_pair(f, functionType)
 				);
 			}
-		for (ASTPointer<VariableDeclaration> const& v: contract->stateVariables())
+		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*v);
 				externalDeclarations[functionType->externalSignature()].push_back(
-					make_pair(v.get(), functionType)
+					make_pair(v, functionType)
 				);
 			}
 	}
@@ -1057,13 +1057,13 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 		if (!contract->annotation().isFullyImplemented)
 			typeError(_newExpression.location(), "Trying to create an instance of an abstract contract.");
 
-		auto scopeContract = contractName->annotation().contractScope;
-		scopeContract->annotation().contractDependencies.insert(contract);
+		solAssert(!!m_scope, "");
+		m_scope->annotation().contractDependencies.insert(contract);
 		solAssert(
 			!contract->annotation().linearizedBaseContracts.empty(),
 			"Linearized base contracts not yet available."
 		);
-		if (contractDependenciesAreCyclic(*scopeContract))
+		if (contractDependenciesAreCyclic(*m_scope))
 			typeError(
 				_newExpression.location(),
 				"Circular reference for contract creation (cannot create instance of derived or same contract)."
@@ -1112,7 +1112,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 
 	// Retrieve the types of the arguments if this is used to call a function.
 	auto const& argumentTypes = _memberAccess.annotation().argumentTypes;
-	MemberList::MemberMap possibleMembers = exprType->members().membersByName(memberName);
+	MemberList::MemberMap possibleMembers = exprType->members(m_scope).membersByName(memberName);
 	if (possibleMembers.size() > 1 && argumentTypes)
 	{
 		// do overload resolution
@@ -1131,7 +1131,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 			DataLocation::Storage,
 			exprType
 		);
-		if (!storageType->members().membersByName(memberName).empty())
+		if (!storageType->members(m_scope).membersByName(memberName).empty())
 			fatalTypeError(
 				_memberAccess.location(),
 				"Member \"" + memberName + "\" is not available in " +
@@ -1258,7 +1258,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 			for (Declaration const* declaration: annotation.overloadedDeclarations)
 			{
-				TypePointer function = declaration->type(_identifier.annotation().contractScope);
+				TypePointer function = declaration->type();
 				solAssert(!!function, "Requested type not present.");
 				auto const* functionType = dynamic_cast<FunctionType const*>(function.get());
 				if (functionType && functionType->canTakeArguments(*annotation.argumentTypes))
@@ -1277,7 +1277,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 		"Referenced declaration is null after overload resolution."
 	);
 	annotation.isLValue = annotation.referencedDeclaration->isLValue();
-	annotation.type = annotation.referencedDeclaration->type(_identifier.annotation().contractScope);
+	annotation.type = annotation.referencedDeclaration->type();
 	if (!annotation.type)
 		fatalTypeError(_identifier.location(), "Declaration referenced before type could be determined.");
 	return false;

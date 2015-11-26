@@ -888,10 +888,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::TypeType:
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.expression().annotation().type);
-		solAssert(
-			!type.members().membersByName(_memberAccess.memberName()).empty(),
-			"Invalid member access to " + type.toString(false)
-		);
 
 		if (dynamic_cast<ContractType const*>(type.actualType().get()))
 		{
@@ -1043,11 +1039,11 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	Declaration const* declaration = _identifier.annotation().referencedDeclaration;
 	if (MagicVariableDeclaration const* magicVar = dynamic_cast<MagicVariableDeclaration const*>(declaration))
 	{
-		switch (magicVar->type(_identifier.annotation().contractScope)->category())
+		switch (magicVar->type()->category())
 		{
 		case Type::Category::Contract:
 			// "this" or "super"
-			if (!dynamic_cast<ContractType const&>(*magicVar->type(_identifier.annotation().contractScope)).isSuper())
+			if (!dynamic_cast<ContractType const&>(*magicVar->type()).isSuper())
 				m_context << eth::Instruction::ADDRESS;
 			break;
 		case Type::Category::Integer:
