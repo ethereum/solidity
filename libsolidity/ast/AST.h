@@ -70,6 +70,10 @@ public:
 			element->accept(_visitor);
 	}
 
+	/// @returns a copy of the vector containing only the nodes which derive from T.
+	template <class _T>
+	static std::vector<_T const*> filteredNodes(std::vector<ASTPointer<ASTNode>> const& _nodes);
+
 	/// Returns the source code location of this node.
 	SourceLocation const& location() const { return m_location; }
 
@@ -94,6 +98,16 @@ protected:
 private:
 	SourceLocation m_location;
 };
+
+template <class _T>
+std::vector<_T const*> ASTNode::filteredNodes(std::vector<ASTPointer<ASTNode>> const& _nodes)
+{
+	std::vector<_T const*> ret;
+	for (auto const& n: _nodes)
+		if (auto const* nt = dynamic_cast<_T const*>(n.get()))
+			ret.push_back(nt);
+	return ret;
+}
 
 /**
  * Source unit containing import directives and contract definitions.
@@ -253,12 +267,12 @@ public:
 
 	std::vector<ASTPointer<InheritanceSpecifier>> const& baseContracts() const { return m_baseContracts; }
 	std::vector<ASTPointer<ASTNode>> const& subNodes() const { return m_subNodes; }
-	std::vector<StructDefinition const*> definedStructs() const;
-	std::vector<EnumDefinition const*> definedEnums() const;
-	std::vector<VariableDeclaration const*> stateVariables() const;
-	std::vector<ModifierDefinition const*> functionModifiers() const;
-	std::vector<FunctionDefinition const*> definedFunctions() const;
-	std::vector<EventDefinition const*> events() const;
+	std::vector<StructDefinition const*> definedStructs() const { return filteredNodes<StructDefinition>(m_subNodes); }
+	std::vector<EnumDefinition const*> definedEnums() const { return filteredNodes<EnumDefinition>(m_subNodes); }
+	std::vector<VariableDeclaration const*> stateVariables() const { return filteredNodes<VariableDeclaration>(m_subNodes); }
+	std::vector<ModifierDefinition const*> functionModifiers() const { return filteredNodes<ModifierDefinition>(m_subNodes); }
+	std::vector<FunctionDefinition const*> definedFunctions() const { return filteredNodes<FunctionDefinition>(m_subNodes); }
+	std::vector<EventDefinition const*> events() const { return filteredNodes<EventDefinition>(m_subNodes); }
 	std::vector<EventDefinition const*> const& interfaceEvents() const;
 	bool isLibrary() const { return m_isLibrary; }
 

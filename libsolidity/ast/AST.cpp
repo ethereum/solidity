@@ -89,60 +89,6 @@ FunctionDefinition const* ContractDefinition::fallbackFunction() const
 	return nullptr;
 }
 
-vector<StructDefinition const*> ContractDefinition::definedStructs() const
-{
-	vector<StructDefinition const*> ret;
-	for (auto const& node: m_subNodes)
-		if (auto v = dynamic_cast<StructDefinition const*>(node.get()))
-			ret.push_back(v);
-	return ret;
-}
-
-vector<EnumDefinition const*> ContractDefinition::definedEnums() const
-{
-	vector<EnumDefinition const*> ret;
-	for (auto const& node: m_subNodes)
-		if (auto v = dynamic_cast<EnumDefinition const*>(node.get()))
-			ret.push_back(v);
-	return ret;
-}
-
-vector<VariableDeclaration const*> ContractDefinition::stateVariables() const
-{
-	vector<VariableDeclaration const*> ret;
-	for (auto const& node: m_subNodes)
-		if (auto v = dynamic_cast<VariableDeclaration const*>(node.get()))
-			ret.push_back(v);
-	return ret;
-}
-
-vector<ModifierDefinition const*> ContractDefinition::functionModifiers() const
-{
-	vector<ModifierDefinition const*> ret;
-	for (auto const& node: m_subNodes)
-		if (auto v = dynamic_cast<ModifierDefinition const*>(node.get()))
-			ret.push_back(v);
-	return ret;
-}
-
-vector<FunctionDefinition const*> ContractDefinition::definedFunctions() const
-{
-	vector<FunctionDefinition const*> ret;
-	for (auto const& node: m_subNodes)
-		if (auto v = dynamic_cast<FunctionDefinition const*>(node.get()))
-			ret.push_back(v);
-	return ret;
-}
-
-vector<EventDefinition const*> ContractDefinition::events() const
-{
-	vector<EventDefinition const*> ret;
-	for (auto const& node: m_subNodes)
-		if (auto v = dynamic_cast<EventDefinition const*>(node.get()))
-			ret.push_back(v);
-	return ret;
-}
-
 vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() const
 {
 	if (!m_interfaceEvents)
