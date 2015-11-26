@@ -88,7 +88,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 		}
 		return nodeFactory.createNode<SourceUnit>(nodes);
 	}
-	catch (FatalError const& _error)
+	catch (FatalError const&)
 	{
 		if (m_errors.empty())
 			throw; // Something is weird here, rather throw again.
@@ -939,7 +939,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 	else if (m_scanner->currentToken() == Token::New)
 	{
 		expectToken(Token::New);
-		ASTPointer<Identifier> contractName(parseIdentifier());
+		ASTPointer<TypeName> contractName(parseTypeName(false));
 		nodeFactory.setEndPositionFromNode(contractName);
 		expression = nodeFactory.createNode<NewExpression>(contractName);
 	}

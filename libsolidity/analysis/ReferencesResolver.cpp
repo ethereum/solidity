@@ -37,6 +37,11 @@ bool ReferencesResolver::visit(Return const& _return)
 	return true;
 }
 
+void ReferencesResolver::endVisit(NewExpression const& _new)
+{
+	typeFor(_new.typeName());
+}
+
 bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 {
 	Declaration const* declaration = m_resolver.pathFromCurrentScope(_typeName.namePath());
@@ -44,6 +49,8 @@ bool ReferencesResolver::visit(UserDefinedTypeName const& _typeName)
 		fatalDeclarationError(_typeName.location(), "Identifier not found or not unique.");
 
 	_typeName.annotation().referencedDeclaration = declaration;
+
+	_typeName.annotation().contractScope = m_currentContract;
 	return true;
 }
 
@@ -53,7 +60,7 @@ bool ReferencesResolver::resolve(ASTNode& _root)
 	{
 		_root.accept(*this);
 	}
-	catch (FatalError const& e)
+	catch (FatalError const&)
 	{
 		solAssert(m_errorOccurred, "");
 	}

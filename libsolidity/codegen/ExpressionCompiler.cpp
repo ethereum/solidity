@@ -703,6 +703,53 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				StorageByteArrayElement(m_context).storeValue(*type, _functionCall.location(), true);
 			break;
 		}
+		case Location::ObjectCreation:
+		{
+			// Will allocate at the end of memory (MSIZE) and not write at all unless the base
+			// type is dynamically sized.
+			ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_functionCall.annotation().type);
+			_functionCall.expression().accept(*this);
+			solAssert(arguments.size() == 1, "");
+
+			// Fetch requested length.
+			arguments[0]->accept(*this);
+			utils().convertType(*arguments[0]->annotation().type, IntegerType(256));
+
+			// Stack: requested_length
+			// Allocate at max(MSIZE, freeMemoryPointer)
+			utils().fetchFreeMemoryPointer();
+			m_context << eth::Instruction::DUP1 << eth::Instruction::MSIZE;
+			m_context << eth::Instruction::LT;
+			auto initialise = m_context.appendConditionalJump();
+			// Free memory pointer does not point to empty memory, use MSIZE.
+			m_context << eth::Instruction::POP;
+			m_context << eth::Instruction::MSIZE;
+			m_context << initialise;
+
+			// Stack: requested_length memptr
+			m_context << eth::Instruction::SWAP1;
+			// Stack: memptr requested_length
+			// store length
+			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::MSTORE;
+			// Stack: memptr requested_length
+			// update free memory pointer
+			m_context << eth::Instruction::DUP1 << arrayType.baseType()->memoryHeadSize();
+			m_context << eth::Instruction::MUL << u256(32) << eth::Instruction::ADD;
+			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
+			utils().storeFreeMemoryPointer();
+			// Stack: memptr requested_length
+
+			// We only have to initialise if the base type is a not a value type.
+			if (dynamic_cast<ReferenceType const*>(arrayType.baseType().get()))
+			{
+				m_context << eth::Instruction::DUP2 << u256(32) << eth::Instruction::ADD;
+				utils().zeroInitialiseMemoryArray(arrayType);
+				m_context << eth::Instruction::POP;
+			}
+			else
+				m_context << eth::Instruction::POP;
+			break;
+		}
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid function type."));
 		}

@@ -43,7 +43,7 @@ class SourceUnit;
 class Why3Translator: private ASTConstVisitor
 {
 public:
-	Why3Translator(ErrorList& _errors): m_lines{{std::string(), 0}}, m_errors(_errors) {}
+	Why3Translator(ErrorList& _errors): m_lines(std::vector<Line>{{std::string(), 0}}), m_errors(_errors) {}
 
 	/// Appends formalisation of the given source unit to the output.
 	/// @returns false on error.

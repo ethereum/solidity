@@ -634,14 +634,14 @@ void FunctionCall::accept(ASTConstVisitor& _visitor) const
 void NewExpression::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))
-		m_contractName->accept(_visitor);
+		m_typeName->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 
 void NewExpression::accept(ASTConstVisitor& _visitor) const
 {
 	if (_visitor.visit(*this))
-		m_contractName->accept(_visitor);
+		m_typeName->accept(_visitor);
 	_visitor.endVisit(*this);
 }
 

@@ -2529,6 +2529,60 @@ BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(create_memory_arrays)
+{
+	char const* text = R"(
+		library L {
+			struct R { uint[10][10] y; }
+			struct S { uint a; uint b; uint[20][20][20] c; R d; }
+		}
+		contract C {
+			function f(uint size) {
+				L.S[][] memory x = new L.S[][](10);
+				var y = new uint[](20);
+				var z = new bytes(size);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_in_memory_array)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint size) {
+				var x = new mapping(uint => uint)[](4);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(new_for_non_array)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint size) {
+				var x = new uint(7);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_args_creating_memory_array)
+{
+	char const* text = R"(
+		contract C {
+			function f(uint size) {
+				var x = new uint[]();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

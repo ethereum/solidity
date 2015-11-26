@@ -141,9 +141,6 @@ public:
 	/// Factory functions that convert an AST @ref TypeName to a Type.
 	static TypePointer fromElementaryTypeName(Token::Value _typeToken);
 	static TypePointer fromElementaryTypeName(std::string const& _name);
-	static TypePointer fromUserDefinedTypeName(UserDefinedTypeName const& _typeName);
-	static TypePointer fromMapping(ElementaryTypeName& _keyType, TypeName& _valueType);
-	static TypePointer fromArrayTypeName(TypeName& _baseTypeName, Expression* _length);
 	/// @}
 
 	/// Auto-detect the proper type for a literal. @returns an empty pointer if the literal does
@@ -751,7 +748,8 @@ public:
 		AddMod, ///< ADDMOD
 		MulMod, ///< MULMOD
 		ArrayPush, ///< .push() to a dynamically sized array in storage
-		ByteArrayPush ///< .push() to a dynamically sized byte array in storage
+		ByteArrayPush, ///< .push() to a dynamically sized byte array in storage
+		ObjectCreation ///< array creation using new
 	};
 
 	virtual Category category() const override { return Category::Function; }

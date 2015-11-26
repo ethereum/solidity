@@ -111,6 +111,9 @@ struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
 {
 	/// Referenced declaration, set during reference resolution stage.
 	Declaration const* referencedDeclaration = nullptr;
+	/// Stores a reference to the current contract.
+	/// This is needed because types of base contracts change depending on the context.
+	ContractDefinition const* contractScope = nullptr;
 };
 
 struct VariableDeclarationStatementAnnotation: StatementAnnotation

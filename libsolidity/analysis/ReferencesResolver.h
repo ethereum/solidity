@@ -64,6 +64,7 @@ private:
 	virtual bool visit(Identifier const& _identifier) override;
 	virtual bool visit(UserDefinedTypeName const& _typeName) override;
 	virtual bool visit(Return const& _return) override;
+	virtual void endVisit(NewExpression const& _new) override;
 	virtual void endVisit(VariableDeclaration const& _variable) override;
 
 	TypePointer typeFor(TypeName const& _typeName);
