@@ -43,13 +43,13 @@ class SourceUnit;
 class Why3Translator: private ASTConstVisitor
 {
 public:
-	Why3Translator(ErrorList& _errors): m_errors(_errors) {}
+	Why3Translator(ErrorList& _errors): m_lines{{std::string(), 0}}, m_errors(_errors) {}
 
 	/// Appends formalisation of the given source unit to the output.
 	/// @returns false on error.
 	bool process(SourceUnit const& _source);
 
-	std::string translation() const { return m_result; }
+	std::string translation() const;
 
 private:
 	/// Returns an error.
@@ -64,11 +64,12 @@ private:
 	/// if the type is not supported.
 	std::string toFormalType(Type const& _type) const;
 
-	void indent() { newLine(); m_indentation++; }
+	void indent() { newLine(); m_lines.back().indentation++; }
 	void unindent();
 	void addLine(std::string const& _line);
 	void add(std::string const& _str);
 	void newLine();
+	void appendSemicolon();
 
 	virtual bool visit(SourceUnit const&) override { return true; }
 	virtual bool visit(ContractDefinition const& _contract) override;
@@ -111,9 +112,6 @@ private:
 	/// Transforms substring like `#varName` and `#stateVarName` to code that evaluates to their value.
 	std::string transformVariableReferences(std::string const& _annotation);
 
-	size_t m_indentationAtLineStart = 0;
-	size_t m_indentation = 0;
-	std::string m_currentLine;
 	/// True if we have already seen a contract. For now, only a single contract
 	/// is supported.
 	bool m_seenContract = false;
@@ -122,7 +120,12 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> const* m_stateVariables = nullptr;
 	std::map<std::string, VariableDeclaration const*> m_localVariables;
 
-	std::string m_result;
+	struct Line
+	{
+		std::string contents;
+		unsigned indentation;
+	};
+	std::vector<Line> m_lines;
 	ErrorList& m_errors;
 };
 

@@ -21,6 +21,7 @@
  */
 
 #include <libsolidity/formal/Why3Translator.h>
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 using namespace dev;
@@ -30,8 +31,7 @@ bool Why3Translator::process(SourceUnit const& _source)
 {
 	try
 	{
-		m_indentation = 0;
-		if (!m_result.empty())
+		if (m_lines.size() != 1 || !m_lines.back().contents.empty())
 			fatalError(_source, "Multiple source units not yet supported");
 		appendPreface();
 		_source.accept(*this);
@@ -41,6 +41,14 @@ bool Why3Translator::process(SourceUnit const& _source)
 		solAssert(m_errorOccured, "");
 	}
 	return !m_errorOccured;
+}
+
+string Why3Translator::translation() const
+{
+	string result;
+	for (auto const& line: m_lines)
+		result += string(line.indentation, '\t') + line.contents + "\n";
+	return result;
 }
 
 void Why3Translator::error(ASTNode const& _node, string const& _description)
@@ -61,7 +69,7 @@ void Why3Translator::fatalError(ASTNode const& _node, string const& _description
 
 void Why3Translator::appendPreface()
 {
-	m_result += R"(
+	m_lines.push_back(Line{R"(
 module UInt256
 	use import mach.int.Unsigned
 	type uint256
@@ -70,7 +78,7 @@ module UInt256
 		type t = uint256,
 		constant max = max_uint256
 end
-)";
+)", 0});
 }
 
 string Why3Translator::toFormalType(Type const& _type) const
@@ -100,28 +108,20 @@ void Why3Translator::addLine(string const& _line)
 
 void Why3Translator::add(string const& _str)
 {
-	if (m_currentLine.empty())
-		m_indentationAtLineStart = m_indentation;
-	m_currentLine += _str;
+	m_lines.back().contents += _str;
 }
 
 void Why3Translator::newLine()
 {
-	if (!m_currentLine.empty())
-	{
-		for (size_t i = 0; i < m_indentationAtLineStart; ++i)
-			m_result.push_back('\t');
-		m_result += m_currentLine;
-		m_result.push_back('\n');
-		m_currentLine.clear();
-	}
+	if (!m_lines.back().contents.empty())
+		m_lines.push_back({"", m_lines.back().indentation});
 }
 
 void Why3Translator::unindent()
 {
 	newLine();
-	solAssert(m_indentation > 0, "");
-	m_indentation--;
+	solAssert(m_lines.back().indentation > 0, "");
+	m_lines.back().indentation--;
 }
 
 bool Why3Translator::visit(ContractDefinition const& _contract)
@@ -289,8 +289,14 @@ bool Why3Translator::visit(Block const& _node)
 	for (size_t i = 0; i < _node.statements().size(); ++i)
 	{
 		_node.statements()[i]->accept(*this);
-		if (!m_currentLine.empty() && i != _node.statements().size() - 1)
-			add(";");
+		if (i != _node.statements().size() - 1)
+		{
+			auto it = m_lines.end() - 1;
+			while (it != m_lines.begin() && it->contents.empty())
+				--it;
+			if (!boost::algorithm::ends_with(it->contents, "begin"))
+				it->contents += ";";
+		}
 		newLine();
 	}
 	unindent();
