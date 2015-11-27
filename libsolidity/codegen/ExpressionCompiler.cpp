@@ -422,6 +422,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	else
 	{
 		FunctionType const& function = *functionType;
+		if (function.bound())
+			// Only callcode functions can be bound, this might be lifted later.
+			solAssert(function.location() == Location::CallCode, "");
 		switch (function.location())
 		{
 		case Location::Internal:
@@ -766,7 +769,26 @@ bool ExpressionCompiler::visit(NewExpression const&)
 void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
+
+	// Check whether the member is a bound function.
 	ASTString const& member = _memberAccess.memberName();
+	if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
+		if (funType->bound())
+		{
+			utils().convertType(
+				*_memberAccess.expression().annotation().type,
+				*funType->selfType(),
+				true
+			);
+			auto contract = dynamic_cast<ContractDefinition const*>(funType->declaration().scope());
+			solAssert(contract && contract->isLibrary(), "");
+			//@TODO library name might not be unique
+			m_context.appendLibraryAddress(contract->name());
+			m_context << funType->externalIdentifier();
+			utils().moveIntoStack(funType->selfType()->sizeOnStack(), 2);
+			return;
+		}
+
 	switch (_memberAccess.expression().annotation().type->category())
 	{
 	case Type::Category::Contract:
@@ -1239,7 +1261,6 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	vector<ASTPointer<Expression const>> const& _arguments
 )
 {
-	eth::EVMSchedule schedule;// TODO: Make relevant to current suppose context.
 	solAssert(
 		_functionType.takesArbitraryParameters() ||
 		_arguments.size() == _functionType.parameterTypes().size(), ""
@@ -1249,14 +1270,19 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// <stack top>
 	// value [if _functionType.valueSet()]
 	// gas [if _functionType.gasSet()]
+	// self object [if bound - moved to top right away]
 	// function identifier [unless bare]
 	// contract address
 
+	unsigned selfSize = _functionType.bound() ? _functionType.selfType()->sizeOnStack() : 0;
 	unsigned gasValueSize = (_functionType.gasSet() ? 1 : 0) + (_functionType.valueSet() ? 1 : 0);
-
-	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + (_functionType.isBareCall() ? 0 : 1));
+	unsigned contractStackPos = m_context.currentToBaseStackOffset(1 + gasValueSize + selfSize + (_functionType.isBareCall() ? 0 : 1));
 	unsigned gasStackPos = m_context.currentToBaseStackOffset(gasValueSize);
 	unsigned valueStackPos = m_context.currentToBaseStackOffset(1);
+
+	// move self object to top
+	if (_functionType.bound())
+		utils().moveToStackTop(gasValueSize, _functionType.selfType()->sizeOnStack());
 
 	using FunctionKind = FunctionType::Location;
 	FunctionKind funKind = _functionType.location();
@@ -1275,6 +1301,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 
 	// Evaluate arguments.
 	TypePointers argumentTypes;
+	TypePointers parameterTypes = _functionType.parameterTypes();
 	bool manualFunctionId =
 		(funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode) &&
 		!_arguments.empty() &&
@@ -1295,6 +1322,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		gasStackPos++;
 		valueStackPos++;
 	}
+	if (_functionType.bound())
+	{
+		argumentTypes.push_back(_functionType.selfType());
+		parameterTypes.insert(parameterTypes.begin(), _functionType.selfType());
+	}
 	for (size_t i = manualFunctionId ? 1 : 0; i < _arguments.size(); ++i)
 	{
 		_arguments[i]->accept(*this);
@@ -1313,7 +1345,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// pointer on the stack).
 	utils().encodeToMemory(
 		argumentTypes,
-		_functionType.parameterTypes(),
+		parameterTypes,
 		_functionType.padArguments(),
 		_functionType.takesArbitraryParameters(),
 		isCallCode
@@ -1346,6 +1378,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
 	{
+		eth::EVMSchedule schedule;// TODO: Make relevant to current suppose context.
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
 		u256 gasNeededByCaller = schedule.callGas + 10;
