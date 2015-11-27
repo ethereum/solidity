@@ -829,7 +829,9 @@ public:
 
 	/// @returns true if this function can take the given argument types (possibly
 	/// after implicit conversion).
-	bool canTakeArguments(TypePointers const& _arguments) const;
+	/// @param _selfType if the function is bound, this has to be supplied and is the type of the
+	/// expression the function is called on.
+	bool canTakeArguments(TypePointers const& _arguments, TypePointer const& _selfType = TypePointer()) const;
 	/// @returns true if the types of parameters are equal (does't check return parameter types)
 	bool hasEqualArgumentTypes(FunctionType const& _other) const;
 

@@ -1128,7 +1128,7 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		for (auto it = possibleMembers.begin(); it != possibleMembers.end();)
 			if (
 				it->type->category() == Type::Category::Function &&
-				!dynamic_cast<FunctionType const&>(*it->type).canTakeArguments(*argumentTypes)
+				!dynamic_cast<FunctionType const&>(*it->type).canTakeArguments(*argumentTypes, exprType)
 			)
 				it = possibleMembers.erase(it);
 			else
@@ -1163,6 +1163,15 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 	auto& annotation = _memberAccess.annotation();
 	annotation.referencedDeclaration = possibleMembers.front().declaration;
 	annotation.type = possibleMembers.front().type;
+
+	if (auto funType = dynamic_cast<FunctionType const*>(annotation.type.get()))
+		if (funType->bound() && !exprType->isImplicitlyConvertibleTo(*funType->selfType()))
+			typeError(
+				_memberAccess.location(),
+				"Function \"" + memberName + "\" cannot be called on an object of type " +
+				exprType->toString() + " (expected " + funType->selfType()->toString() + ")"
+			);
+
 	if (exprType->category() == Type::Category::Struct)
 		annotation.isLValue = true;
 	else if (exprType->category() == Type::Category::Array)

@@ -1640,8 +1640,11 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	}
 }
 
-bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes) const
+bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePointer const& _selfType) const
 {
+	solAssert(!bound() || _selfType, "");
+	if (bound() && !_selfType->isImplicitlyConvertibleTo(*selfType()))
+		return false;
 	TypePointers paramTypes = parameterTypes();
 	if (takesArbitraryParameters())
 		return true;

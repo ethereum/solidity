@@ -2628,6 +2628,51 @@ BOOST_AUTO_TEST_CASE(using_for_by_name)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(using_for_mismatch)
+{
+	char const* text = R"(
+		library D { function double(bytes32 self) returns (uint) { return 2; } }
+		contract C {
+			using D for uint;
+			function f(uint a) returns (uint) {
+				return a.double();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(using_for_not_used)
+{
+	// This is an error because the function is only bound to uint.
+	// Had it been bound to *, it would have worked.
+	char const* text = R"(
+		library D { function double(uint self) returns (uint) { return 2; } }
+		contract C {
+			using D for uint;
+			function f(uint16 a) returns (uint) {
+				return a.double();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(using_for_arbitrary_mismatch)
+{
+	// Bound to a, but self type does not match.
+	char const* text = R"(
+		library D { function double(bytes32 self) returns (uint) { return 2; } }
+		contract C {
+			using D for *;
+			function f(uint a) returns (uint) {
+				return a.double();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(bound_function_in_var)
 {
 	char const* text = R"(
