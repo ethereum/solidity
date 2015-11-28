@@ -15,6 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file EVMSchedule.h
+ * @author Gav <i@gavwood.com>
  * @author Christian <c@ethdev.com>
  * @date 2015
  */
@@ -63,8 +64,8 @@ struct EVMSchedule
 	u256 copyGas = 3;
 };
 
-extern EVMSchedule const FrontierSchedule;
-extern EVMSchedule const HomesteadSchedule;
+static const EVMSchedule FrontierSchedule = EVMSchedule(false, 21000);
+static const EVMSchedule HomesteadSchedule = EVMSchedule(true, 53000);
 
 }
 }
