@@ -142,7 +142,7 @@ Unfortunately, there are some subtleties the compiler does not yet warn you abou
  - `mulmod(uint x, uint y, uint k) returns (uint)`: compute `(x * y) % k` where the multiplication is performed with arbitrary precision and does not wrap around at `2**256`.
  - `this` (current contract's type): the current contract, explicitly convertible to `address`
  - `super`: the contract one level higher in the inheritance hierarchy
- - `suicide(address)`: suicide the current contract, sending its funds to the given address
+ - `selfdestruct(address)`: destroy the current contract, sending its funds to the given address
  - `<address>.balance`: balance of the address in Wei
  - `<address>.send(uint256) returns (bool)`: send given amount of Wei to address, returns `false` on failure.
 

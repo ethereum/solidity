@@ -157,7 +157,7 @@ contract owned {
 // including internal functions and state variables. These cannot be accessed externally via
 // `this`, though.
 contract mortal is owned {
-    function kill() { if (msg.sender == owner) suicide(owner); }
+    function kill() { if (msg.sender == owner) selfdestruct(owner); }
 }
 
 // These are only provided to make the interface known to the compiler.
@@ -203,7 +203,7 @@ Note that above, we call `mortal.kill()` to "forward" the destruction request. T
 is problematic, as seen in the following example:
 {% highlight javascript %}
 contract mortal is owned {
-    function kill() { if (msg.sender == owner) suicide(owner); }
+    function kill() { if (msg.sender == owner) selfdestruct(owner); }
 }
 contract Base1 is mortal {
     function kill() { /* do cleanup 1 */ mortal.kill(); }
@@ -220,7 +220,7 @@ function will bypass `Base1.kill`, basically because it does not even know about
 The way around this is to use `super`:
 {% highlight javascript %}
 contract mortal is owned {
-    function kill() { if (msg.sender == owner) suicide(owner); }
+    function kill() { if (msg.sender == owner) selfdestruct(owner); }
 }
 contract Base1 is mortal {
     function kill() { /* do cleanup 1 */ super.kill(); }
@@ -377,7 +377,7 @@ contract mortal is owned {
   // applies it to the "kill"-function, which causes that calls to "kill"
   // only have an effect if they are made by the stored owner.
   function kill() onlyowner {
-    suicide(owner);
+    selfdestruct(owner);
   }
 }
 contract priced {

@@ -170,12 +170,12 @@ these **create calls** and normal message calls is that the payload data is
 executed and the result stored as code and the caller / creator
 receives the address of the new contract on the stack.
 
-## Suicide
+## Selfdestruct
 
 The only possibility that code is removed from the blockchain is
-when a contract at that address performs the suicide operation.
+when a contract at that address performs the `SELFDESTRUCT` operation.
 The remaining Ether stored at that address is sent to a designated
 target and then the storage and code is removed.
 
-Note that even if a contract's code does not contain the suicide
+Note that even if a contract's code does not contain the `SELFDESTRUCT`
 opcode, it can still perform that operation using callcode.
