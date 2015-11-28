@@ -535,7 +535,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				{}
 			);
 			break;
-		case Location::Suicide:
+		case Location::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
 			m_context << eth::Instruction::SUICIDE;

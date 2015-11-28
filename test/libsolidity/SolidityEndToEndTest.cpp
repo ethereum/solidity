@@ -1483,6 +1483,22 @@ BOOST_AUTO_TEST_CASE(suicide)
 	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
 }
 
+BOOST_AUTO_TEST_CASE(selfdestruct)
+{
+	char const* sourceCode = "contract test {\n"
+							 "  function a(address receiver) returns (uint ret) {\n"
+							 "    selfdestruct(receiver);\n"
+							 "    return 10;\n"
+							 "  }\n"
+							 "}\n";
+	u256 amount(130);
+	compileAndRun(sourceCode, amount);
+	u160 address(23);
+	BOOST_CHECK(callContractFunction("a(address)", address) == bytes());
+	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
+	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
+}
+
 BOOST_AUTO_TEST_CASE(sha3)
 {
 	char const* sourceCode = "contract test {\n"

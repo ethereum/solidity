@@ -361,9 +361,9 @@ contract Wallet is multisig, multiowned, daylimit {
 			multiowned(_owners, _required) daylimit(_daylimit) {
 	}
 
-	// kills the contract sending everything to `_to`.
+	// destroys the contract sending everything to `_to`.
 	function kill(address _to) onlymanyowners(sha3(msg.data)) external {
-		suicide(_to);
+		selfdestruct(_to);
 	}
 
 	// gets called when no other function matches
