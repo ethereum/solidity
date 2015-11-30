@@ -11,18 +11,14 @@ This guide should be thought of as an evolving document that will change over
 time as useful conventions are found and old conventions are rendered obsolete.
 
 Many projects will implement their own style guides.  In the event of
-conflicts, project specific style guides take precidence.
+conflicts, project specific style guides take precedence.
 
 The structure and many of the recommendations within this style guide were
 taken from python's
 [pep8 style guide](https://www.python.org/dev/peps/pep-0008/)
 
-## Things this guide is not
-
-The goal of this guide is to be the *right* way or the *best* way to write
-solidity code.
-
-The goal of this guide is consistency.  A quote from python's
+The goal of this guide is *not* to be the right way or the best way to write
+solidity code.  The goal of this guide is *consistency*.  A quote from python's
 [pep8](https://www.python.org/dev/peps/pep-0008/#a-foolish-consistency-is-the-hobgoblin-of-little-minds)
 captures this concept well.
 
