@@ -134,6 +134,12 @@ public:
 	void moveToStackTop(unsigned _stackDepth, unsigned _itemSize = 1);
 	/// Moves @a _itemSize elements past @a _stackDepth other stack elements
 	void moveIntoStack(unsigned _stackDepth, unsigned _itemSize = 1);
+	/// Rotates the topmost @a _items items on the stack, such that the previously topmost element
+	/// is bottom-most.
+	void rotateStackUp(unsigned _items);
+	/// Rotates the topmost @a _items items on the stack, such that the previously bottom-most element
+	/// is now topmost.
+	void rotateStackDown(unsigned _items);
 	/// Removes the current value from the top of the stack.
 	void popStackElement(Type const& _type);
 	/// Removes element from the top of the stack _amount times.
