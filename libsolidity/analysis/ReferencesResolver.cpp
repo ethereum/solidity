@@ -128,19 +128,21 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	{
 		type = _variable.typeName()->annotation().type;
 		using Location = VariableDeclaration::Location;
-		Location loc = _variable.referenceLocation();
+		Location varLoc = _variable.referenceLocation();
+		DataLocation typeLoc = DataLocation::Memory;
 		// References are forced to calldata for external function parameters (not return)
 		// and memory for parameters (also return) of publicly visible functions.
 		// They default to memory for function parameters and storage for local variables.
 		// As an exception, "storage" is allowed for library functions.
 		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
 		{
+			bool isPointer = true;
 			if (_variable.isExternalCallableParameter())
 			{
 				auto const& contract = dynamic_cast<ContractDefinition const&>(*_variable.scope()->scope());
 				if (contract.isLibrary())
 				{
-					if (loc == Location::Memory)
+					if (varLoc == Location::Memory)
 						fatalTypeError(_variable.location(),
 							"Location has to be calldata or storage for external "
 							"library functions (remove the \"memory\" keyword)."
@@ -149,50 +151,52 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				else
 				{
 					// force location of external function parameters (not return) to calldata
-					if (loc != Location::Default)
+					if (varLoc != Location::Default)
 						fatalTypeError(_variable.location(),
 							"Location has to be calldata for external functions "
 							"(remove the \"memory\" or \"storage\" keyword)."
 						);
 				}
-				if (loc == Location::Default)
-					type = ref->copyForLocation(DataLocation::CallData, true);
+				if (varLoc == Location::Default)
+					typeLoc = DataLocation::CallData;
+				else
+					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
 			}
 			else if (_variable.isCallableParameter() && _variable.scope()->isPublic())
 			{
 				auto const& contract = dynamic_cast<ContractDefinition const&>(*_variable.scope()->scope());
 				// force locations of public or external function (return) parameters to memory
-				if (loc == Location::Storage && !contract.isLibrary())
+				if (varLoc == Location::Storage && !contract.isLibrary())
 					fatalTypeError(_variable.location(),
 						"Location has to be memory for publicly visible functions "
 						"(remove the \"storage\" keyword)."
 					);
-				if (loc == Location::Default || !contract.isLibrary())
-					type = ref->copyForLocation(DataLocation::Memory, true);
+				if (varLoc == Location::Default || !contract.isLibrary())
+					typeLoc = DataLocation::Memory;
+				else
+					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
 			}
 			else
 			{
 				if (_variable.isConstant())
 				{
-					if (loc != Location::Default && loc != Location::Memory)
+					if (varLoc != Location::Default && varLoc != Location::Memory)
 						fatalTypeError(
 							_variable.location(),
 							"Storage location has to be \"memory\" (or unspecified) for constants."
 						);
-					loc = Location::Memory;
+					typeLoc = DataLocation::Memory;
 				}
-				if (loc == Location::Default)
-					loc = _variable.isCallableParameter() ? Location::Memory : Location::Storage;
-				bool isPointer = !_variable.isStateVariable();
-				type = ref->copyForLocation(
-					loc == Location::Memory ?
-					DataLocation::Memory :
-					DataLocation::Storage,
-					isPointer
-				);
+				else if (varLoc == Location::Default)
+					typeLoc = _variable.isCallableParameter() ? DataLocation::Memory : DataLocation::Storage;
+				else
+					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
+				isPointer = !_variable.isStateVariable();
 			}
+
+			type = ref->copyForLocation(typeLoc, isPointer);
 		}
-		else if (loc != Location::Default && !ref)
+		else if (varLoc != Location::Default && !ref)
 			fatalTypeError(_variable.location(), "Storage location can only be given for array or struct types.");
 
 		if (!type)
