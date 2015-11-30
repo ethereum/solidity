@@ -695,18 +695,31 @@ void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 
 void CompilerUtils::moveToStackTop(unsigned _stackDepth, unsigned _itemSize)
 {
-	solAssert(_stackDepth <= 15, "Stack too deep, try removing local variables.");
-	for (unsigned j = 0; j < _itemSize; ++j)
-		for (unsigned i = 0; i < _stackDepth + _itemSize - 1; ++i)
-			m_context << eth::swapInstruction(1 + i);
+	moveIntoStack(_itemSize, _stackDepth);
 }
 
 void CompilerUtils::moveIntoStack(unsigned _stackDepth, unsigned _itemSize)
 {
-	solAssert(_stackDepth <= 16, "Stack too deep, try removing local variables.");
-	for (unsigned j = 0; j < _itemSize; ++j)
-		for (unsigned i = _stackDepth; i > 0; --i)
-			m_context << eth::swapInstruction(i + _itemSize - 1);
+	if (_stackDepth <= _itemSize)
+		for (unsigned i = 0; i < _stackDepth; ++i)
+			rotateStackDown(_stackDepth + _itemSize);
+	else
+		for (unsigned i = 0; i < _itemSize; ++i)
+			rotateStackUp(_stackDepth + _itemSize);
+}
+
+void CompilerUtils::rotateStackUp(unsigned _items)
+{
+	solAssert(_items - 1 <= 16, "Stack too deep, try removing local variables.");
+	for (unsigned i = 1; i < _items; ++i)
+		m_context << eth::swapInstruction(_items - i);
+}
+
+void CompilerUtils::rotateStackDown(unsigned _items)
+{
+	solAssert(_items - 1 <= 16, "Stack too deep, try removing local variables.");
+	for (unsigned i = 1; i < _items; ++i)
+		m_context << eth::swapInstruction(i);
 }
 
 void CompilerUtils::popStackElement(Type const& _type)
