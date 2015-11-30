@@ -739,7 +739,7 @@ public:
 		Creation, ///< external call using CREATE
 		Send, ///< CALL, but without data and gas
 		SHA3, ///< SHA3
-		Suicide, ///< SUICIDE
+		Selfdestruct, ///< SELFDESTRUCT
 		ECRecover, ///< CALL to special contract for ecrecover
 		SHA256, ///< CALL to special contract for sha256
 		RIPEMD160, ///< CALL to special contract for ripemd160
