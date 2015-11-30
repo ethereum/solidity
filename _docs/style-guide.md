@@ -346,14 +346,14 @@ modifiers.
 Yes:
 {% highlight javascript %}
 function kill() public onlyowner {
-    suicide(owner);
+    selfdestruct(owner);
 }
 {% endhighlight %}
 
 No:
 {% highlight javascript %}
 function kill() onlyowner public {
-    suicide(owner);
+    selfdestruct(owner);
 }
 {% endhighlight %}
 

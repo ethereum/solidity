@@ -63,7 +63,7 @@ several blockchain explorers.
 Contracts on the blockchain should have their original source
 code published if they are to be used by third parties.
 
-### Does suicide() free up space in the blockchain?
+### Does selfdestruct() free up space in the blockchain?
 
 It removes the contract bytecode and storage from the current block
 into the future, but since the blockchain stores every single block (i.e.
@@ -80,7 +80,7 @@ internal state which causes all functions to throw. This will make it impossible
 to use the contract and ether sent to the contract will be returned automatically.
 
 Now to answering the question: Inside a constructor, `msg.sender` is the
-creator. Save it. Then `suicide(creator);` to kill and return funds.
+creator. Save it. Then `selfdestruct(creator);` to kill and return funds.
 
 [example](https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol)
 
@@ -125,7 +125,7 @@ with `c.someMethod.sendTransaction({from:eth.accounts[x], gas: 1000000});`
 That is, because they can change state, they have to have a gas
 payment sent along to get the work done.
 
-### Get a contract to return its funds to you (not using suicide(...)). 
+### Get a contract to return its funds to you (not using selfdestruct(...)). 
 
 This example demonstrates how to send funds from a contract to an address. 
 
