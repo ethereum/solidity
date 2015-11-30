@@ -60,12 +60,12 @@ public:
 private:
 	virtual bool visit(Block const&) override { return m_resolveInsideCode; }
 	virtual bool visit(Identifier const& _identifier) override;
-	virtual bool visit(UserDefinedTypeName const& _typeName) override;
+	virtual bool visit(ElementaryTypeName const& _typeName) override;
+	virtual void endVisit(UserDefinedTypeName const& _typeName) override;
+	virtual void endVisit(Mapping const& _typeName) override;
+	virtual void endVisit(ArrayTypeName const& _typeName) override;
 	virtual bool visit(Return const& _return) override;
-	virtual void endVisit(NewExpression const& _new) override;
 	virtual void endVisit(VariableDeclaration const& _variable) override;
-
-	TypePointer typeFor(TypeName const& _typeName);
 
 	/// Adds a new error to the list of errors.
 	void typeError(SourceLocation const& _location, std::string const& _description);

@@ -123,6 +123,28 @@ void EnumValue::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void UsingForDirective::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_libraryName->accept(_visitor);
+		if (m_typeName)
+			m_typeName->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void UsingForDirective::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_libraryName->accept(_visitor);
+		if (m_typeName)
+			m_typeName->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void StructDefinition::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

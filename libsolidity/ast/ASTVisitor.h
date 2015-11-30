@@ -47,6 +47,7 @@ public:
 	virtual bool visit(ImportDirective& _node) { return visitNode(_node); }
 	virtual bool visit(ContractDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(InheritanceSpecifier& _node) { return visitNode(_node); }
+	virtual bool visit(UsingForDirective& _node) { return visitNode(_node); }
 	virtual bool visit(StructDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(EnumDefinition& _node) { return visitNode(_node); }
 	virtual bool visit(EnumValue& _node) { return visitNode(_node); }
@@ -88,6 +89,7 @@ public:
 	virtual void endVisit(ImportDirective& _node) { endVisitNode(_node); }
 	virtual void endVisit(ContractDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(InheritanceSpecifier& _node) { endVisitNode(_node); }
+	virtual void endVisit(UsingForDirective& _node) { endVisitNode(_node); }
 	virtual void endVisit(StructDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(EnumDefinition& _node) { endVisitNode(_node); }
 	virtual void endVisit(EnumValue& _node) { endVisitNode(_node); }
@@ -142,6 +144,7 @@ public:
 	virtual bool visit(ContractDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(InheritanceSpecifier const& _node) { return visitNode(_node); }
 	virtual bool visit(StructDefinition const& _node) { return visitNode(_node); }
+	virtual bool visit(UsingForDirective const& _node) { return visitNode(_node); }
 	virtual bool visit(EnumDefinition const& _node) { return visitNode(_node); }
 	virtual bool visit(EnumValue const& _node) { return visitNode(_node); }
 	virtual bool visit(ParameterList const& _node) { return visitNode(_node); }
@@ -182,6 +185,7 @@ public:
 	virtual void endVisit(ImportDirective const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ContractDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(InheritanceSpecifier const& _node) { endVisitNode(_node); }
+	virtual void endVisit(UsingForDirective const& _node) { endVisitNode(_node); }
 	virtual void endVisit(StructDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(EnumDefinition const& _node) { endVisitNode(_node); }
 	virtual void endVisit(EnumValue const& _node) { endVisitNode(_node); }

@@ -672,7 +672,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			_functionCall.expression().accept(*this);
 			solAssert(function.parameterTypes().size() == 1, "");
 			solAssert(!!function.parameterTypes()[0], "");
-			TypePointer const& paramType = function.parameterTypes()[0];
+			TypePointer paramType = function.parameterTypes()[0];
 			shared_ptr<ArrayType> arrayType =
 				function.location() == Location::ArrayPush ?
 				make_shared<ArrayType>(DataLocation::Storage, paramType) :

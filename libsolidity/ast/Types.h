@@ -90,6 +90,7 @@ public:
 	MemberList() {}
 	explicit MemberList(MemberMap const& _members): m_memberTypes(_members) {}
 	MemberList& operator=(MemberList&& _other);
+	void combine(MemberList const& _other);
 	TypePointer memberType(std::string const& _name) const
 	{
 		TypePointer type;
@@ -148,8 +149,6 @@ public:
 	static TypePointer forLiteral(Literal const& _literal);
 	/// @returns a pointer to _a or _b if the other is implicitly convertible to it or nullptr otherwise
 	static TypePointer commonType(TypePointer const& _a, TypePointer const& _b);
-
-	/// Calculates the
 
 	virtual Category category() const = 0;
 	virtual bool isImplicitlyConvertibleTo(Type const& _other) const { return *this == _other; }
@@ -216,9 +215,9 @@ public:
 		return _targetType->dataStoredIn(DataLocation::Storage) ? mobileType() : _targetType;
 	}
 
-	/// Returns the list of all members of this type. Default implementation: no members.
+	/// Returns the list of all members of this type. Default implementation: no members apart from bound.
 	/// @param _currentScope scope in which the members are accessed.
-	virtual MemberList const& members(ContractDefinition const* /*_currentScope*/) const { return EmptyMemberList; }
+	MemberList const& members(ContractDefinition const* _currentScope) const;
 	/// Convenience method, returns the type of the given named member or an empty pointer if no such member exists.
 	TypePointer memberType(std::string const& _name, ContractDefinition const* _currentScope = nullptr) const
 	{
@@ -251,9 +250,20 @@ public:
 	/// are returned without modification.
 	virtual TypePointer interfaceType(bool /*_inLibrary*/) const { return TypePointer(); }
 
+private:
+	/// @returns a member list containing all members added to this type by `using for` directives.
+	static MemberList::MemberMap boundFunctions(Type const& _type, ContractDefinition const& _scope);
+
 protected:
-	/// Convenience object used when returning an empty member list.
-	static const MemberList EmptyMemberList;
+	/// @returns the members native to this type depending on the given context. This function
+	/// is used (in conjunction with boundFunctions to fill m_members below.
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* /*_currentScope*/) const
+	{
+		return MemberList::MemberMap();
+	}
+
+	/// List of member types (parameterised by scape), will be lazy-initialized.
+	mutable std::map<ContractDefinition const*, std::unique_ptr<MemberList>> m_members;
 };
 
 /**
@@ -281,10 +291,7 @@ public:
 	virtual unsigned storageBytes() const override { return m_bits / 8; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual MemberList const& members(ContractDefinition const* /*_currentScope*/) const override
-	{
-		return isAddress() ? AddressMemberList : EmptyMemberList;
-	}
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 
 	virtual std::string toString(bool _short) const override;
 
@@ -294,8 +301,6 @@ public:
 	int numBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
 	bool isSigned() const { return m_modifier == Modifier::Signed; }
-
-	static const MemberList AddressMemberList;
 
 private:
 	int m_bits;
@@ -517,7 +522,7 @@ public:
 	virtual unsigned sizeOnStack() const override;
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
-	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer decodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
@@ -541,8 +546,6 @@ private:
 	TypePointer m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
-	/// List of member types, will be lazy-initialized because of recursive references.
-	mutable std::unique_ptr<MemberList> m_members;
 };
 
 /**
@@ -570,7 +573,7 @@ public:
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
 
-	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
 	{
 		return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address);
@@ -602,8 +605,6 @@ private:
 	bool m_super = false;
 	/// Type of the constructor, @see constructorType. Lazily initialized.
 	mutable FunctionTypePointer m_constructorType;
-	/// List of member types, will be lazy-initialized because of recursive references.
-	mutable std::unique_ptr<MemberList> m_members;
 };
 
 /**
@@ -623,7 +624,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString(bool _short) const override;
 
-	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override
 	{
 		return location() == DataLocation::Storage ? std::make_shared<IntegerType>(256) : TypePointer();
@@ -648,8 +649,6 @@ public:
 
 private:
 	StructDefinition const& m_struct;
-	/// List of member types, will be lazy-initialized because of recursive references.
-	mutable std::unique_ptr<MemberList> m_members;
 };
 
 /**
@@ -688,8 +687,6 @@ public:
 
 private:
 	EnumDefinition const& m_enum;
-	/// List of member types, will be lazy-initialized because of recursive references.
-	mutable std::unique_ptr<MemberList> m_members;
 };
 
 /**
@@ -791,7 +788,8 @@ public:
 		bool _arbitraryParameters = false,
 		Declaration const* _declaration = nullptr,
 		bool _gasSet = false,
-		bool _valueSet = false
+		bool _valueSet = false,
+		bool _bound = false
 	):
 		m_parameterTypes(_parameterTypes),
 		m_returnParameterTypes(_returnParameterTypes),
@@ -801,15 +799,18 @@ public:
 		m_arbitraryParameters(_arbitraryParameters),
 		m_gasSet(_gasSet),
 		m_valueSet(_valueSet),
+		m_bound(_bound),
 		m_declaration(_declaration)
 	{}
 
-	TypePointers const& parameterTypes() const { return m_parameterTypes; }
-	std::vector<std::string> const& parameterNames() const { return m_parameterNames; }
+	TypePointers parameterTypes() const;
+	std::vector<std::string> parameterNames() const;
 	std::vector<std::string> const parameterTypeNames(bool _addDataLocation) const;
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
 	std::vector<std::string> const returnParameterTypeNames(bool _addDataLocation) const;
+	/// @returns the "self" parameter type for a bound function
+	TypePointer selfType() const;
 
 	virtual bool operator==(Type const& _other) const override;
 	virtual std::string toString(bool _short) const override;
@@ -817,7 +818,7 @@ public:
 	virtual u256 storageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
-	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
@@ -828,7 +829,9 @@ public:
 
 	/// @returns true if this function can take the given argument types (possibly
 	/// after implicit conversion).
-	bool canTakeArguments(TypePointers const& _arguments) const;
+	/// @param _selfType if the function is bound, this has to be supplied and is the type of the
+	/// expression the function is called on.
+	bool canTakeArguments(TypePointers const& _arguments, TypePointer const& _selfType = TypePointer()) const;
 	/// @returns true if the types of parameters are equal (does't check return parameter types)
 	bool hasEqualArgumentTypes(FunctionType const& _other) const;
 
@@ -855,6 +858,7 @@ public:
 	bool takesArbitraryParameters() const { return m_arbitraryParameters; }
 	bool gasSet() const { return m_gasSet; }
 	bool valueSet() const { return m_valueSet; }
+	bool bound() const { return m_bound; }
 
 	/// @returns a copy of this type, where gas or value are set manually. This will never set one
 	/// of the parameters to fals.
@@ -865,7 +869,8 @@ public:
 	/// This is needed if external functions are called on other contracts, as they cannot return
 	/// dynamic values.
 	/// @param _inLibrary if true, uses CallCode as location.
-	FunctionTypePointer asMemberFunction(bool _inLibrary) const;
+	/// @param _bound if true, the argumenst are placed as `arg1.functionName(arg2, ..., argn)`.
+	FunctionTypePointer asMemberFunction(bool _inLibrary, bool _bound = false) const;
 
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
@@ -879,8 +884,8 @@ private:
 	bool const m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
+	bool const m_bound = false; ///< true iff the function is called as arg1.fun(arg2, ..., argn)
 	bool m_isConstant = false;
-	mutable std::unique_ptr<MemberList> m_members;
 	Declaration const* m_declaration = nullptr;
 };
 
@@ -935,13 +940,10 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned sizeOnStack() const override;
 	virtual std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
-	virtual MemberList const& members(ContractDefinition const* _currentScope) const override;
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
 
 private:
 	TypePointer m_actualType;
-	/// List of member types, will be lazy-initialized because of recursive references.
-	mutable std::unique_ptr<MemberList> m_members;
-	mutable ContractDefinition const* m_cachedScope = nullptr;
 };
 
 
@@ -988,14 +990,12 @@ public:
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual unsigned sizeOnStack() const override { return 0; }
-	virtual MemberList const& members(ContractDefinition const*) const override { return m_members; }
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
 
 	virtual std::string toString(bool _short) const override;
 
 private:
 	Kind m_kind;
-
-	MemberList m_members;
 };
 
 }

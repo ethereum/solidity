@@ -267,6 +267,7 @@ public:
 
 	std::vector<ASTPointer<InheritanceSpecifier>> const& baseContracts() const { return m_baseContracts; }
 	std::vector<ASTPointer<ASTNode>> const& subNodes() const { return m_subNodes; }
+	std::vector<UsingForDirective const*> usingForDirectives() const { return filteredNodes<UsingForDirective>(m_subNodes); }
 	std::vector<StructDefinition const*> definedStructs() const { return filteredNodes<StructDefinition>(m_subNodes); }
 	std::vector<EnumDefinition const*> definedEnums() const { return filteredNodes<EnumDefinition>(m_subNodes); }
 	std::vector<VariableDeclaration const*> stateVariables() const { return filteredNodes<VariableDeclaration>(m_subNodes); }
@@ -333,6 +334,33 @@ public:
 private:
 	ASTPointer<Identifier> m_baseName;
 	std::vector<ASTPointer<Expression>> m_arguments;
+};
+
+/**
+ * `using LibraryName for uint` will attach all functions from the library LibraryName
+ * to `uint` if the first parameter matches the type. `using LibraryName for *` attaches
+ * the function to any matching type.
+ */
+class UsingForDirective: public ASTNode
+{
+public:
+	UsingForDirective(
+		SourceLocation const& _location,
+		ASTPointer<Identifier> const& _libraryName,
+		ASTPointer<TypeName> const& _typeName
+	):
+		ASTNode(_location), m_libraryName(_libraryName), m_typeName(_typeName) {}
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	Identifier const& libraryName() const { return *m_libraryName; }
+	/// @returns the type name the library is attached to, null for `*`.
+	TypeName const* typeName() const { return m_typeName.get(); }
+
+private:
+	ASTPointer<Identifier> m_libraryName;
+	ASTPointer<TypeName> m_typeName;
 };
 
 class StructDefinition: public Declaration

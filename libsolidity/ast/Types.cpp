@@ -86,6 +86,11 @@ MemberList& MemberList::operator=(MemberList&& _other)
 	return *this;
 }
 
+void MemberList::combine(MemberList const & _other)
+{
+	m_memberTypes += _other.m_memberTypes;
+}
+
 std::pair<u256, unsigned> const* MemberList::memberStorageOffset(string const& _name) const
 {
 	if (!m_storageOffsets)
@@ -185,7 +190,52 @@ TypePointer Type::commonType(TypePointer const& _a, TypePointer const& _b)
 		return TypePointer();
 }
 
-const MemberList Type::EmptyMemberList;
+MemberList const& Type::members(ContractDefinition const* _currentScope) const
+{
+	if (!m_members[_currentScope])
+	{
+		MemberList::MemberMap members = nativeMembers(_currentScope);
+		if (_currentScope)
+			members +=  boundFunctions(*this, *_currentScope);
+		m_members[_currentScope] = unique_ptr<MemberList>(new MemberList(move(members)));
+	}
+	return *m_members[_currentScope];
+}
+
+MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition const& _scope)
+{
+	// Normalise data location of type.
+	TypePointer type = ReferenceType::copyForLocationIfReference(DataLocation::Storage, _type.shared_from_this());
+	set<Declaration const*> seenFunctions;
+	MemberList::MemberMap members;
+	for (ContractDefinition const* contract: _scope.annotation().linearizedBaseContracts)
+		for (UsingForDirective const* ufd: contract->usingForDirectives())
+		{
+			if (ufd->typeName() && *type != *ReferenceType::copyForLocationIfReference(
+				DataLocation::Storage,
+				ufd->typeName()->annotation().type
+			))
+				continue;
+			auto const& library = dynamic_cast<ContractDefinition const&>(
+				*ufd->libraryName().annotation().referencedDeclaration
+			);
+			for (auto const& it: library.interfaceFunctions())
+			{
+				FunctionType const& funType = *it.second;
+				solAssert(funType.hasDeclaration(), "Tried to bind function without declaration.");
+				if (seenFunctions.count(&funType.declaration()))
+					continue;
+				seenFunctions.insert(&funType.declaration());
+				if (auto fun = funType.asMemberFunction(true, true))
+					members.push_back(MemberList::Member(
+						funType.declaration().name(),
+						fun,
+						&funType.declaration()
+					));
+			}
+		}
+	return members;
+}
 
 IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 	m_bits(_bits), m_modifier(_modifier)
@@ -273,12 +323,18 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 	return commonType;
 }
 
-const MemberList IntegerType::AddressMemberList({
-	{"balance", make_shared<IntegerType >(256)},
-	{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true)},
-	{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true)},
-	{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
-});
+MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) const
+{
+	if (isAddress())
+		return {
+			{"balance", make_shared<IntegerType >(256)},
+			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true)},
+			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true)},
+			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
+		};
+	else
+		return MemberList::MemberMap();
+}
 
 bool IntegerConstantType::isValidLiteral(const Literal& _literal)
 {
@@ -858,26 +914,22 @@ string ArrayType::canonicalName(bool _addDataLocation) const
 	return ret;
 }
 
-MemberList const& ArrayType::members(ContractDefinition const*) const
+MemberList::MemberMap ArrayType::nativeMembers(ContractDefinition const*) const
 {
-	if (!m_members)
+	MemberList::MemberMap members;
+	if (!isString())
 	{
-		MemberList::MemberMap members;
-		if (!isString())
-		{
-			members.push_back({"length", make_shared<IntegerType>(256)});
-			if (isDynamicallySized() && location() == DataLocation::Storage)
-				members.push_back({"push", make_shared<FunctionType>(
-					TypePointers{baseType()},
-					TypePointers{make_shared<IntegerType>(256)},
-					strings{string()},
-					strings{string()},
-					isByteArray() ? FunctionType::Location::ByteArrayPush : FunctionType::Location::ArrayPush
-				)});
-		}
-		m_members.reset(new MemberList(members));
+		members.push_back({"length", make_shared<IntegerType>(256)});
+		if (isDynamicallySized() && location() == DataLocation::Storage)
+			members.push_back({"push", make_shared<FunctionType>(
+				TypePointers{baseType()},
+				TypePointers{make_shared<IntegerType>(256)},
+				strings{string()},
+				strings{string()},
+				isByteArray() ? FunctionType::Location::ByteArrayPush : FunctionType::Location::ArrayPush
+			)});
 	}
-	return *m_members;
+	return members;
 }
 
 TypePointer ArrayType::encodingType() const
@@ -956,55 +1008,47 @@ string ContractType::canonicalName(bool) const
 	return m_contract.annotation().canonicalName;
 }
 
-MemberList const& ContractType::members(ContractDefinition const*) const
+MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) const
 {
-	// We need to lazy-initialize it because of recursive references.
-	if (!m_members)
+	// All address members and all interface functions
+	MemberList::MemberMap members(IntegerType(120, IntegerType::Modifier::Address).nativeMembers(nullptr));
+	if (m_super)
 	{
-		// All address members and all interface functions
-		MemberList::MemberMap members(
-			IntegerType::AddressMemberList.begin(),
-			IntegerType::AddressMemberList.end()
-		);
-		if (m_super)
-		{
-			// add the most derived of all functions which are visible in derived contracts
-			for (ContractDefinition const* base: m_contract.annotation().linearizedBaseContracts)
-				for (FunctionDefinition const* function: base->definedFunctions())
+		// add the most derived of all functions which are visible in derived contracts
+		for (ContractDefinition const* base: m_contract.annotation().linearizedBaseContracts)
+			for (FunctionDefinition const* function: base->definedFunctions())
+			{
+				if (!function->isVisibleInDerivedContracts())
+					continue;
+				auto functionType = make_shared<FunctionType>(*function, true);
+				bool functionWithEqualArgumentsFound = false;
+				for (auto const& member: members)
 				{
-					if (!function->isVisibleInDerivedContracts())
+					if (member.name != function->name())
 						continue;
-					auto functionType = make_shared<FunctionType>(*function, true);
-					bool functionWithEqualArgumentsFound = false;
-					for (auto const& member: members)
-					{
-						if (member.name != function->name())
-							continue;
-						auto memberType = dynamic_cast<FunctionType const*>(member.type.get());
-						solAssert(!!memberType, "Override changes type.");
-						if (!memberType->hasEqualArgumentTypes(*functionType))
-							continue;
-						functionWithEqualArgumentsFound = true;
-						break;
-					}
-					if (!functionWithEqualArgumentsFound)
-						members.push_back(MemberList::Member(
-							function->name(),
-							functionType,
-							function
-						));
+					auto memberType = dynamic_cast<FunctionType const*>(member.type.get());
+					solAssert(!!memberType, "Override changes type.");
+					if (!memberType->hasEqualArgumentTypes(*functionType))
+						continue;
+					functionWithEqualArgumentsFound = true;
+					break;
 				}
-		}
-		else
-			for (auto const& it: m_contract.interfaceFunctions())
-				members.push_back(MemberList::Member(
-					it.second->declaration().name(),
-					it.second->asMemberFunction(m_contract.isLibrary()),
-					&it.second->declaration()
-				));
-		m_members.reset(new MemberList(members));
+				if (!functionWithEqualArgumentsFound)
+					members.push_back(MemberList::Member(
+						function->name(),
+						functionType,
+						function
+					));
+			}
 	}
-	return *m_members;
+	else
+		for (auto const& it: m_contract.interfaceFunctions())
+			members.push_back(MemberList::Member(
+				it.second->declaration().name(),
+				it.second->asMemberFunction(m_contract.isLibrary()),
+				&it.second->declaration()
+			));
+	return members;
 }
 
 shared_ptr<FunctionType const> const& ContractType::constructorType() const
@@ -1099,27 +1143,22 @@ string StructType::toString(bool _short) const
 	return ret;
 }
 
-MemberList const& StructType::members(ContractDefinition const*) const
+MemberList::MemberMap StructType::nativeMembers(ContractDefinition const*) const
 {
-	// We need to lazy-initialize it because of recursive references.
-	if (!m_members)
+	MemberList::MemberMap members;
+	for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
 	{
-		MemberList::MemberMap members;
-		for (ASTPointer<VariableDeclaration> const& variable: m_struct.members())
-		{
-			TypePointer type = variable->annotation().type;
-			// Skip all mapping members if we are not in storage.
-			if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
-				continue;
-			members.push_back(MemberList::Member(
-				variable->name(),
-				copyForLocationIfReference(type),
-				variable.get())
-			);
-		}
-		m_members.reset(new MemberList(members));
+		TypePointer type = variable->annotation().type;
+		// Skip all mapping members if we are not in storage.
+		if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
+			continue;
+		members.push_back(MemberList::Member(
+			variable->name(),
+			copyForLocationIfReference(type),
+			variable.get())
+		);
 	}
-	return *m_members;
+	return members;
 }
 
 TypePointer StructType::interfaceType(bool _inLibrary) const
@@ -1436,6 +1475,20 @@ FunctionType::FunctionType(const EventDefinition& _event):
 	swap(paramNames, m_parameterNames);
 }
 
+std::vector<string> FunctionType::parameterNames() const
+{
+	if (!bound())
+		return m_parameterNames;
+	return vector<string>(m_parameterNames.cbegin() + 1, m_parameterNames.cend());
+}
+
+TypePointers FunctionType::parameterTypes() const
+{
+	if (!bound())
+		return m_parameterTypes;
+	return TypePointers(m_parameterTypes.cbegin() + 1, m_parameterTypes.cend());
+}
+
 bool FunctionType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
@@ -1504,6 +1557,8 @@ unsigned FunctionType::sizeOnStack() const
 		size++;
 	if (m_valueSet)
 		size++;
+	if (bound())
+		size += m_parameterTypes.front()->sizeOnStack();
 	return size;
 }
 
@@ -1533,7 +1588,7 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_returnParameterNames, m_location, m_arbitraryParameters);
 }
 
-MemberList const& FunctionType::members(ContractDefinition const*) const
+MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) const
 {
 	switch (m_location)
 	{
@@ -1544,52 +1599,53 @@ MemberList const& FunctionType::members(ContractDefinition const*) const
 	case Location::RIPEMD160:
 	case Location::Bare:
 	case Location::BareCallCode:
-		if (!m_members)
-		{
-			MemberList::MemberMap members{
-				{
-					"value",
+	{
+		MemberList::MemberMap members{
+			{
+				"value",
+				make_shared<FunctionType>(
+					parseElementaryTypeVector({"uint"}),
+					TypePointers{copyAndSetGasOrValue(false, true)},
+					strings(),
+					strings(),
+					Location::SetValue,
+					false,
+					nullptr,
+					m_gasSet,
+					m_valueSet
+				)
+			}
+		};
+		if (m_location != Location::Creation)
+			members.push_back(
+				MemberList::Member(
+					"gas",
 					make_shared<FunctionType>(
 						parseElementaryTypeVector({"uint"}),
-						TypePointers{copyAndSetGasOrValue(false, true)},
+						TypePointers{copyAndSetGasOrValue(true, false)},
 						strings(),
 						strings(),
-						Location::SetValue,
+						Location::SetGas,
 						false,
 						nullptr,
 						m_gasSet,
 						m_valueSet
 					)
-				}
-			};
-			if (m_location != Location::Creation)
-				members.push_back(
-					MemberList::Member(
-						"gas",
-						make_shared<FunctionType>(
-							parseElementaryTypeVector({"uint"}),
-							TypePointers{copyAndSetGasOrValue(true, false)},
-							strings(),
-							strings(),
-							Location::SetGas,
-							false,
-							nullptr,
-							m_gasSet,
-							m_valueSet
-						)
-					)
-				);
-			m_members.reset(new MemberList(members));
-		}
-		return *m_members;
+				)
+			);
+		return members;
+	}
 	default:
-		return EmptyMemberList;
+		return MemberList::MemberMap();
 	}
 }
 
-bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes) const
+bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePointer const& _selfType) const
 {
-	TypePointers const& paramTypes = parameterTypes();
+	solAssert(!bound() || _selfType, "");
+	if (bound() && !_selfType->isImplicitlyConvertibleTo(*selfType()))
+		return false;
+	TypePointers paramTypes = parameterTypes();
 	if (takesArbitraryParameters())
 		return true;
 	else if (_argumentTypes.size() != paramTypes.size())
@@ -1678,11 +1734,12 @@ TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) con
 		m_arbitraryParameters,
 		m_declaration,
 		m_gasSet || _setGas,
-		m_valueSet || _setValue
+		m_valueSet || _setValue,
+		m_bound
 	);
 }
 
-FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary) const
+FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound) const
 {
 	TypePointers parameterTypes;
 	for (auto const& t: m_parameterTypes)
@@ -1712,14 +1769,15 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary) const
 		m_arbitraryParameters,
 		m_declaration,
 		m_gasSet,
-		m_valueSet
+		m_valueSet,
+		_bound
 	);
 }
 
 vector<string> const FunctionType::parameterTypeNames(bool _addDataLocation) const
 {
 	vector<string> names;
-	for (TypePointer const& t: m_parameterTypes)
+	for (TypePointer const& t: parameterTypes())
 		names.push_back(t->canonicalName(_addDataLocation));
 
 	return names;
@@ -1732,6 +1790,12 @@ vector<string> const FunctionType::returnParameterTypeNames(bool _addDataLocatio
 		names.push_back(t->canonicalName(_addDataLocation));
 
 	return names;
+}
+
+TypePointer FunctionType::selfType() const
+{
+	solAssert(bound(), "");
+	return m_parameterTypes.at(0);
 }
 
 ASTPointer<ASTString> FunctionType::documentation() const
@@ -1784,43 +1848,37 @@ unsigned TypeType::sizeOnStack() const
 	return 0;
 }
 
-MemberList const& TypeType::members(ContractDefinition const* _currentScope) const
+MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _currentScope) const
 {
-	// We need to lazy-initialize it because of recursive references.
-	if (!m_members || m_cachedScope != _currentScope)
+	MemberList::MemberMap members;
+	if (m_actualType->category() == Category::Contract)
 	{
-		MemberList::MemberMap members;
-		if (m_actualType->category() == Category::Contract)
+		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).contractDefinition();
+		if (contract.isLibrary())
+			for (auto const& it: contract.interfaceFunctions())
+				members.push_back(MemberList::Member(
+					it.second->declaration().name(),
+					it.second->asMemberFunction(true), // use callcode
+					&it.second->declaration()
+				));
+		else if (_currentScope != nullptr)
 		{
-			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).contractDefinition();
-			if (contract.isLibrary())
-				for (auto const& it: contract.interfaceFunctions())
-					members.push_back(MemberList::Member(
-						it.second->declaration().name(),
-						it.second->asMemberFunction(true), // use callcode
-						&it.second->declaration()
-					));
-			else if (_currentScope != nullptr)
-			{
-				auto const& currentBases = _currentScope->annotation().linearizedBaseContracts;
-				if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
-					// We are accessing the type of a base contract, so add all public and protected
-					// members. Note that this does not add inherited functions on purpose.
-					for (Declaration const* decl: contract.inheritableMembers())
-						members.push_back(MemberList::Member(decl->name(), decl->type(), decl));
-			}
+			auto const& currentBases = _currentScope->annotation().linearizedBaseContracts;
+			if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
+				// We are accessing the type of a base contract, so add all public and protected
+				// members. Note that this does not add inherited functions on purpose.
+				for (Declaration const* decl: contract.inheritableMembers())
+					members.push_back(MemberList::Member(decl->name(), decl->type(), decl));
 		}
-		else if (m_actualType->category() == Category::Enum)
-		{
-			EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).enumDefinition();
-			auto enumType = make_shared<EnumType>(enumDef);
-			for (ASTPointer<EnumValue> const& enumValue: enumDef.members())
-				members.push_back(MemberList::Member(enumValue->name(), enumType));
-		}
-		m_members.reset(new MemberList(members));
-		m_cachedScope = _currentScope;
 	}
-	return *m_members;
+	else if (m_actualType->category() == Category::Enum)
+	{
+		EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).enumDefinition();
+		auto enumType = make_shared<EnumType>(enumDef);
+		for (ASTPointer<EnumValue> const& enumValue: enumDef.members())
+			members.push_back(MemberList::Member(enumValue->name(), enumType));
+	}
+	return members;
 }
 
 ModifierType::ModifierType(const ModifierDefinition& _modifier)
@@ -1866,36 +1924,6 @@ string ModifierType::toString(bool _short) const
 MagicType::MagicType(MagicType::Kind _kind):
 	m_kind(_kind)
 {
-	switch (m_kind)
-	{
-	case Kind::Block:
-		m_members = MemberList({
-			{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
-			{"timestamp", make_shared<IntegerType>(256)},
-			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Location::BlockHash)},
-			{"difficulty", make_shared<IntegerType>(256)},
-			{"number", make_shared<IntegerType>(256)},
-			{"gaslimit", make_shared<IntegerType>(256)}
-		});
-		break;
-	case Kind::Message:
-		m_members = MemberList({
-			{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
-			{"gas", make_shared<IntegerType>(256)},
-			{"value", make_shared<IntegerType>(256)},
-			{"data", make_shared<ArrayType>(DataLocation::CallData)},
-			{"sig", make_shared<FixedBytesType>(4)}
-		});
-		break;
-	case Kind::Transaction:
-		m_members = MemberList({
-			{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
-			{"gasprice", make_shared<IntegerType>(256)}
-		});
-		break;
-	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
-	}
 }
 
 bool MagicType::operator==(Type const& _other) const
@@ -1904,6 +1932,37 @@ bool MagicType::operator==(Type const& _other) const
 		return false;
 	MagicType const& other = dynamic_cast<MagicType const&>(_other);
 	return other.m_kind == m_kind;
+}
+
+MemberList::MemberMap MagicType::nativeMembers(ContractDefinition const*) const
+{
+	switch (m_kind)
+	{
+	case Kind::Block:
+		return MemberList::MemberMap({
+			{"coinbase", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"timestamp", make_shared<IntegerType>(256)},
+			{"blockhash", make_shared<FunctionType>(strings{"uint"}, strings{"bytes32"}, FunctionType::Location::BlockHash)},
+			{"difficulty", make_shared<IntegerType>(256)},
+			{"number", make_shared<IntegerType>(256)},
+			{"gaslimit", make_shared<IntegerType>(256)}
+		});
+	case Kind::Message:
+		return MemberList::MemberMap({
+			{"sender", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"gas", make_shared<IntegerType>(256)},
+			{"value", make_shared<IntegerType>(256)},
+			{"data", make_shared<ArrayType>(DataLocation::CallData)},
+			{"sig", make_shared<FixedBytesType>(4)}
+		});
+	case Kind::Transaction:
+		return MemberList::MemberMap({
+			{"origin", make_shared<IntegerType>(0, IntegerType::Modifier::Address)},
+			{"gasprice", make_shared<IntegerType>(256)}
+		});
+	default:
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
+	}
 }
 
 string MagicType::toString(bool) const

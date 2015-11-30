@@ -76,6 +76,7 @@ private:
 	void checkLibraryRequirements(ContractDefinition const& _contract);
 
 	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
+	virtual void endVisit(UsingForDirective const& _usingFor) override;
 	virtual bool visit(StructDefinition const& _struct) override;
 	virtual bool visit(FunctionDefinition const& _function) override;
 	virtual bool visit(VariableDeclaration const& _variable) override;

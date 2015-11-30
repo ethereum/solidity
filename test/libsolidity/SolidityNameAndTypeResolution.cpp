@@ -2529,6 +2529,166 @@ BOOST_AUTO_TEST_CASE(member_access_parser_ambiguity)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(using_for_library)
+{
+	char const* text = R"(
+		library D { }
+		contract C {
+			using D for uint;
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_not_library)
+{
+	char const* text = R"(
+		contract D { }
+		contract C {
+			using D for uint;
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(using_for_function_exists)
+{
+	char const* text = R"(
+		library D { function double(uint self) returns (uint) { return 2*self; } }
+		contract C {
+			using D for uint;
+			function f(uint a) {
+				a.double;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_function_on_int)
+{
+	char const* text = R"(
+		library D { function double(uint self) returns (uint) { return 2*self; } }
+		contract C {
+			using D for uint;
+			function f(uint a) returns (uint) {
+				return a.double();
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_function_on_struct)
+{
+	char const* text = R"(
+		library D { struct s { uint a; } function mul(s storage self, uint x) returns (uint) { return self.a *= x; } }
+		contract C {
+			using D for D.s;
+			D.s x;
+			function f(uint a) returns (uint) {
+				return x.mul(a);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_overload)
+{
+	char const* text = R"(
+		library D {
+			struct s { uint a; }
+			function mul(s storage self, uint x) returns (uint) { return self.a *= x; }
+			function mul(s storage self, bytes32 x) returns (bytes32) { }
+		}
+		contract C {
+			using D for D.s;
+			D.s x;
+			function f(uint a) returns (uint) {
+				return x.mul(a);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_by_name)
+{
+	char const* text = R"(
+		library D { struct s { uint a; } function mul(s storage self, uint x) returns (uint) { return self.a *= x; } }
+		contract C {
+			using D for D.s;
+			D.s x;
+			function f(uint a) returns (uint) {
+				return x.mul({x: a});
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_mismatch)
+{
+	char const* text = R"(
+		library D { function double(bytes32 self) returns (uint) { return 2; } }
+		contract C {
+			using D for uint;
+			function f(uint a) returns (uint) {
+				return a.double();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(using_for_not_used)
+{
+	// This is an error because the function is only bound to uint.
+	// Had it been bound to *, it would have worked.
+	char const* text = R"(
+		library D { function double(uint self) returns (uint) { return 2; } }
+		contract C {
+			using D for uint;
+			function f(uint16 a) returns (uint) {
+				return a.double();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(using_for_arbitrary_mismatch)
+{
+	// Bound to a, but self type does not match.
+	char const* text = R"(
+		library D { function double(bytes32 self) returns (uint) { return 2; } }
+		contract C {
+			using D for *;
+			function f(uint a) returns (uint) {
+				return a.double();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(bound_function_in_var)
+{
+	char const* text = R"(
+		library D { struct s { uint a; } function mul(s storage self, uint x) returns (uint) { return self.a *= x; } }
+		contract C {
+			using D for D.s;
+			D.s x;
+			function f(uint a) returns (uint) {
+				var g = x.mul;
+				return g({x: a});
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(create_memory_arrays)
 {
 	char const* text = R"(
