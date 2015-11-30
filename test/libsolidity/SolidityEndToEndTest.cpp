@@ -4671,6 +4671,23 @@ BOOST_AUTO_TEST_CASE(arrays_in_constructors)
 	);
 }
 
+BOOST_AUTO_TEST_CASE(fixed_arrays_in_constructors)
+{
+	char const* sourceCode = R"(
+		contract Creator {
+			uint public r;
+			address public ch;
+			function Creator(address[3] s, uint x) {
+				r = x;
+				ch = s[2];
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Creator", encodeArgs(u256(1), u256(2), u256(3), u256(4)));
+	BOOST_REQUIRE(callContractFunction("r()") == encodeArgs(u256(4)));
+	BOOST_REQUIRE(callContractFunction("ch()") == encodeArgs(u256(3)));
+}
+
 BOOST_AUTO_TEST_CASE(arrays_from_and_to_storage)
 {
 	char const* sourceCode = R"(

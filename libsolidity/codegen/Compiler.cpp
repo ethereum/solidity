@@ -305,11 +305,19 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 				// @todo If base type is an array or struct, it is still calldata-style encoded, so
 				// we would have to convert it like below.
 				solAssert(arrayType.location() == DataLocation::Memory, "");
-				// compute data pointer
-				m_context << eth::Instruction::DUP1 << eth::Instruction::MLOAD;
-				m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
-				m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
-				m_context << u256(0x20) << eth::Instruction::ADD;
+				if (arrayType.isDynamicallySized())
+				{
+					// compute data pointer
+					m_context << eth::Instruction::DUP1 << eth::Instruction::MLOAD;
+					m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
+					m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
+					m_context << u256(0x20) << eth::Instruction::ADD;
+				}
+				else
+				{
+					m_context << eth::Instruction::DUP1;
+					m_context << u256(arrayType.calldataEncodedSize(true)) << eth::Instruction::ADD;
+				}
 			}
 			else
 			{
