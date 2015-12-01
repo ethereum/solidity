@@ -27,6 +27,26 @@
   - units-and-global-variables
   - control-structures
   - contracts
+  - name: creating-contracts
+    indent: 1
+  - name: visibility-and-accessors
+    indent: 1
+  - name: function-modifiers
+    indent: 1
+  - name: constants
+    indent: 1
+  - name: fallback-function
+    indent: 1
+  - name: events
+    indent: 1
+  - name: inheritance
+    indent: 1
+  - name: abstract-contracts
+    indent: 1
+  - name: libraries
+    indent: 1
+  - name: using-for
+    indent: 1
   - miscellaneous
 
 - title: Coding Style
