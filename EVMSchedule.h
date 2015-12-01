@@ -32,8 +32,9 @@ namespace eth
 struct EVMSchedule
 {
 	EVMSchedule(): tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
-	EVMSchedule(bool _efcd, u256 const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
+	EVMSchedule(bool _efcd, bool _hdc, u256 const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
 	bool exceptionalFailedCodeDeposit = true;
+	bool haveDelegateCall = true;
 	u256 stackLimit = 1024;
 	std::array<u256, 8> tierStepGas;
 	u256 expGas = 10;
@@ -64,8 +65,8 @@ struct EVMSchedule
 	u256 copyGas = 3;
 };
 
-static const EVMSchedule FrontierSchedule = EVMSchedule(false, 21000);
-static const EVMSchedule HomesteadSchedule = EVMSchedule(true, 53000);
+static const EVMSchedule FrontierSchedule = EVMSchedule(false, false, 21000);
+static const EVMSchedule HomesteadSchedule = EVMSchedule(true, true, 53000);
 
 }
 }
