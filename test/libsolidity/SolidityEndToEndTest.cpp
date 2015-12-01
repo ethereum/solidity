@@ -5957,6 +5957,126 @@ BOOST_AUTO_TEST_CASE(string_allocation_bug)
 	));
 }
 
+BOOST_AUTO_TEST_CASE(using_for_function_on_int)
+{
+	char const* sourceCode = R"(
+		library D { function double(uint self) returns (uint) { return 2*self; } }
+		contract C {
+			using D for uint;
+			function f(uint a) returns (uint) {
+				return a.double();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(9)) == encodeArgs(u256(2 * 9)));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_function_on_struct)
+{
+	char const* sourceCode = R"(
+		library D { struct s { uint a; } function mul(s storage self, uint x) returns (uint) { return self.a *= x; } }
+		contract C {
+			using D for D.s;
+			D.s public x;
+			function f(uint a) returns (uint) {
+				x.a = 3;
+				return x.mul(a);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(7)) == encodeArgs(u256(3 * 7)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(3 * 7)));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_overload)
+{
+	char const* sourceCode = R"(
+		library D {
+			struct s { uint a; }
+			function mul(s storage self, uint x) returns (uint) { return self.a *= x; }
+			function mul(s storage self, bytes32 x) returns (bytes32) { }
+		}
+		contract C {
+			using D for D.s;
+			D.s public x;
+			function f(uint a) returns (uint) {
+				x.a = 6;
+				return x.mul(a);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(7)) == encodeArgs(u256(6 * 7)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(6 * 7)));
+}
+
+BOOST_AUTO_TEST_CASE(using_for_by_name)
+{
+	char const* sourceCode = R"(
+		library D { struct s { uint a; } function mul(s storage self, uint x) returns (uint) { return self.a *= x; } }
+		contract C {
+			using D for D.s;
+			D.s public x;
+			function f(uint a) returns (uint) {
+				x.a = 6;
+				return x.mul({x: a});
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(7)) == encodeArgs(u256(6 * 7)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(6 * 7)));
+}
+
+BOOST_AUTO_TEST_CASE(bound_function_in_var)
+{
+	char const* sourceCode = R"(
+		library D { struct s { uint a; } function mul(s storage self, uint x) returns (uint) { return self.a *= x; } }
+		contract C {
+			using D for D.s;
+			D.s public x;
+			function f(uint a) returns (uint) {
+				x.a = 6;
+				var g = x.mul;
+				return g({x: a});
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(7)) == encodeArgs(u256(6 * 7)));
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(6 * 7)));
+}
+
+BOOST_AUTO_TEST_CASE(bound_function_to_string)
+{
+	char const* sourceCode = R"(
+		library D { function length(string memory self) returns (uint) { return bytes(self).length; } }
+		contract C {
+			using D for string;
+			string x;
+			function f() returns (uint) {
+				x = "abc";
+				return x.length();
+			}
+			function g() returns (uint) {
+				string memory s = "abc";
+				return s.length();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "D");
+	compileAndRun(sourceCode, 0, "C", bytes(), map<string, Address>{{"D", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(3)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

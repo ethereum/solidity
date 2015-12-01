@@ -1514,6 +1514,10 @@ bool FunctionType::operator==(Type const& _other) const
 	//@todo this is ugly, but cannot be prevented right now
 	if (m_gasSet != other.m_gasSet || m_valueSet != other.m_valueSet)
 		return false;
+	if (bound() != other.bound())
+		return false;
+	if (bound() && *selfType() != *other.selfType())
+		return false;
 	return true;
 }
 
