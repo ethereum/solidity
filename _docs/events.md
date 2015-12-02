@@ -11,7 +11,18 @@ of a dapp, which listen for these events.
 Events are
 inheritable members of contracts. When they are called, they cause the
 arguments to be stored in the transaction's log - a special data structure
-in the blockchain.
+in the blockchain. These logs are associated with the address of
+the contract and will be incorporated into the blockchain
+and stay there as long as a block is accessible (forever as of
+Frontier and Homestead, but this might change with Serenity). Log and
+event data is not accessible from within contracts (not even from
+the contract that created a log).
+
+SPV proofs for logs are possible, so if an external entity supplies
+a contract with such a proof, it can check that the log actually
+exists inside the blockchain (but be aware of the fact that
+ultimately, also the block headers have to be supplied because
+the contract can only see the last 256 block hashes).
 
 Up to three parameters can
 receive the attribute `indexed` which will cause the respective arguments
