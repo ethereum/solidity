@@ -79,6 +79,25 @@ var event = clientReceipt.Deposit(function(error, result) {
 
 {% endhighlight %}
 
+
+### Low-Level Interface to Logs
+
+It is also possible to access the low-level interface to the logging
+mechanism via the functions `log0`, `log1`, `log2`, `log3` and `log4`.
+`logi` takes `i + 1` parameter of type `bytes32`, where the first
+argument will be used for the data part of the log and the others
+as topics. The event call above can be performed in the same way as
+{% highlight javascript %}
+log3(
+  msg.value,
+  0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20,
+  msg.sender,
+  _id
+);`
+{% endhighlight javascript %}
+where the long hexadecimal number is equal to
+`sha3("Deposit(address,hash256,uint256)")`, the signature of the event.
+
 ### Additional Resources for Understanding Events:
 
 - Javascript documentation: <https://github.com/ethereum/wiki/wiki/JavaScript-API#contract-events>
