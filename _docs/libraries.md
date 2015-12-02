@@ -1,7 +1,7 @@
 ---
 layout: docs
-title: Contracts
-permalink: /docs/contracts/
+title: Libraries
+permalink: /docs/libraries/
 ---
 
 Libraries are similar to contracts, but their purpose is that they are deployed
