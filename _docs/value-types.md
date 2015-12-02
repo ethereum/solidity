@@ -49,6 +49,10 @@ Operators:
 `bytes`: Dynamically-sized byte array, see [arrays](#arrays). Not a value-type!  
 `string`: Dynamically-sized UTF8-encoded string, see [arrays](#arrays). Not a value-type!
 
+As a rule of thumb, use `bytes` for arbitrary-length raw byte data and `string`
+for arbitrary-length string (utf-8) data. If you can limit the length to a certain
+number of bytes, always use one of `bytes1` to `bytes32` because they are much cheaper.
+
 **Integer Literals**  
 Integer Literals are arbitrary precision integers until they are used together with a non-literal. In `var x = 1 - 2;`, for example, the value of `1 - 2` is `-1`, which is assigned to `x` and thus `x` receives the type `int8` -- the smallest type that contains `-1`, although the natural types of `1` and `2` are actually `uint8`.    
 
