@@ -14,7 +14,7 @@ state variables of the calling contract if they are explicitly supplied (it
 would have to way to name them, otherwise).
 
 The following example illustrates how to use libraries (but
-be sure to check out [usign for](../using-for) for a
+be sure to check out [using for](../using-for) for a
 more advanced example to implement a set).
 {% highlight javascript %}
 library Set {
