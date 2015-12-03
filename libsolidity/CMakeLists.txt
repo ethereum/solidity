@@ -7,7 +7,7 @@ aux_source_directory(formal SRC_LIST)
 aux_source_directory(interface SRC_LIST)
 aux_source_directory(parsing SRC_LIST)
 
-set(EXECUTABLE Solidity)
+set(EXECUTABLE solidity)
 
 file(GLOB HEADERS "*/*.h") 
 
