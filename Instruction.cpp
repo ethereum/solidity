@@ -293,7 +293,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::CALL,		{ "CALL",			0, 7, 1, true, SpecialTier } },
 	{ Instruction::CALLCODE,	{ "CALLCODE",		0, 7, 1, true, SpecialTier } },
 	{ Instruction::RETURN,		{ "RETURN",			0, 2, 0, true, ZeroTier } },
-	{ Instruction::DELEGATECALL,{ "DELEGATECALL",	0, 7, 1, true, SpecialTier } },
+	{ Instruction::DELEGATECALL,{ "DELEGATECALL",	0, 6, 1, true, SpecialTier } },
 	{ Instruction::SUICIDE,		{ "SUICIDE",		0, 1, 0, true, ZeroTier } }
 };
 
