@@ -172,8 +172,8 @@ public:
 
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
-	Declaration const* scope() const { return m_scope; }
-	void setScope(Declaration const* _scope) { m_scope = _scope; }
+	ASTNode const* scope() const { return m_scope; }
+	void setScope(ASTNode const* _scope) { m_scope = _scope; }
 
 	virtual bool isLValue() const { return false; }
 	virtual bool isPartOfExternalInterface() const { return false; }
@@ -190,7 +190,7 @@ protected:
 private:
 	ASTPointer<ASTString> m_name;
 	Visibility m_visibility;
-	Declaration const* m_scope;
+	ASTNode const* m_scope;
 };
 
 /**

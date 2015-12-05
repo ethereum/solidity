@@ -38,13 +38,18 @@ NameAndTypeResolver::NameAndTypeResolver(
 ) :
 	m_errors(_errors)
 {
-	m_scopes[nullptr].reset(new DeclarationContainer());
+	if (!m_scopes[nullptr])
+		m_scopes[nullptr].reset(new DeclarationContainer());
 	for (Declaration const* declaration: _globals)
 		m_scopes[nullptr]->registerDeclaration(*declaration);
 }
 
 bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
 {
+	solAssert(!m_scopes[&_sourceUnit], "");
+	m_scopes[&_sourceUnit].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
+	m_currentScope = m_scopes[&_sourceUnit].get();
+
 	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	try
 	{
@@ -59,11 +64,37 @@ bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
 	return true;
 }
 
+bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, SourceUnit const*> const& _sourceUnits)
+{
+	DeclarationContainer& target = *m_scopes.at(&_sourceUnit);
+	bool error = false;
+	for (auto const& node: _sourceUnit.nodes())
+		if (auto imp = dynamic_cast<ImportDirective const*>(node.get()))
+		{
+			if (!_sourceUnits.count(imp->identifier()))
+			{
+				reportDeclarationError(node->location(), "Import \"" + imp->identifier() + "\" not found.");
+				error = true;
+			}
+			else
+			{
+				auto scope = m_scopes.find(_sourceUnits.at(imp->identifier()));
+				solAssert(scope != end(m_scopes), "");
+				for (auto const& nameAndDeclaration: scope->second->declarations())
+					for (auto const& declaration: nameAndDeclaration.second)
+						target.registerDeclaration(*declaration, &nameAndDeclaration.first);
+
+			}
+		}
+	return !error;
+}
+
 bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
 	try
 	{
-		m_currentScope = m_scopes[nullptr].get();
+		m_currentScope = m_scopes[_contract.scope()].get();
+		solAssert(!!m_currentScope, "");
 
 		ReferencesResolver resolver(m_errors, *this, nullptr);
 		bool success = true;
@@ -134,7 +165,7 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 {
 	try
 	{
-		m_scopes[nullptr]->registerDeclaration(_declaration, false, true);
+		m_scopes[nullptr]->registerDeclaration(_declaration, nullptr, false, true);
 		solAssert(_declaration.scope() == nullptr, "Updated declaration outside global scope.");
 	}
 	catch (FatalError const&)
@@ -146,7 +177,7 @@ bool NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
 	return true;
 }
 
-vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
+vector<Declaration const*> NameAndTypeResolver::resolveName(ASTString const& _name, ASTNode const* _scope) const
 {
 	auto iterator = m_scopes.find(_scope);
 	if (iterator == end(m_scopes))
@@ -348,9 +379,10 @@ DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 	ErrorList& _errors
 ):
 	m_scopes(_scopes),
-	m_currentScope(nullptr),
+	m_currentScope(&_astRoot),
 	m_errors(_errors)
 {
+	solAssert(!!m_scopes.at(m_currentScope), "");
 	_astRoot.accept(*this);
 }
 
@@ -462,12 +494,12 @@ void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declara
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
 	solAssert(m_currentScope, "Closed non-existing scope.");
-	m_currentScope = m_scopes[m_currentScope]->enclosingDeclaration();
+	m_currentScope = m_scopes[m_currentScope]->enclosingNode();
 }
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
-	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, !_declaration.isVisibleInContract()))
+	if (!m_scopes[m_currentScope]->registerDeclaration(_declaration, nullptr, !_declaration.isVisibleInContract()))
 	{
 		SourceLocation firstDeclarationLocation;
 		SourceLocation secondDeclarationLocation;
@@ -502,14 +534,17 @@ string DeclarationRegistrationHelper::currentCanonicalName() const
 {
 	string ret;
 	for (
-		Declaration const* scope = m_currentScope;
+		ASTNode const* scope = m_currentScope;
 		scope != nullptr;
-		scope = m_scopes[scope]->enclosingDeclaration()
+		scope = m_scopes[scope]->enclosingNode()
 	)
 	{
-		if (!ret.empty())
-			ret = "." + ret;
-		ret = scope->name() + ret;
+		if (auto decl = dynamic_cast<Declaration const*>(scope))
+		{
+			if (!ret.empty())
+				ret = "." + ret;
+			ret = decl->name() + ret;
+		}
 	}
 	return ret;
 }

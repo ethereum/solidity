@@ -46,6 +46,8 @@ public:
 	/// Registers all declarations found in the source unit.
 	/// @returns false in case of error.
 	bool registerDeclarations(SourceUnit& _sourceUnit);
+	/// Applies the effect of import directives.
+	bool performImports(SourceUnit& _sourceUnit, std::map<std::string, SourceUnit const*> const& _sourceUnits);
 	/// Resolves all names and types referenced from the given contract.
 	/// @returns false in case of error.
 	bool resolveNamesAndTypes(ContractDefinition& _contract);
@@ -55,9 +57,9 @@ public:
 	bool updateDeclaration(Declaration const& _declaration);
 
 	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
-	/// the global scope is used (i.e. the one containing only the contract).
+	/// the global scope is used (i.e. the one containing only the pre-defined global variables).
 	/// @returns a pointer to the declaration on success or nullptr on failure.
-	std::vector<Declaration const*> resolveName(ASTString const& _name, Declaration const* _scope = nullptr) const;
+	std::vector<Declaration const*> resolveName(ASTString const& _name, ASTNode const* _scope = nullptr) const;
 
 	/// Resolves a name in the "current" scope. Should only be called during the initial
 	/// resolving phase.
@@ -88,11 +90,6 @@ private:
 	template <class _T>
 	static std::vector<_T const*> cThreeMerge(std::list<std::list<_T const*>>& _toMerge);
 
-	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
-	/// where nullptr denotes the global scope. Note that structs are not scope since they do
-	/// not contain code.
-	std::map<ASTNode const*, std::unique_ptr<DeclarationContainer>> m_scopes;
-
 	// creates the Declaration error and adds it in the errors list
 	void reportDeclarationError(
 		SourceLocation _sourceLoction,
@@ -109,6 +106,12 @@ private:
 	void reportTypeError(Error const& _e);
 	// creates the Declaration error and adds it in the errors list and throws FatalError
 	void reportFatalTypeError(Error const& _e);
+
+
+	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
+	/// where nullptr denotes the global scope. Note that structs are not scope since they do
+	/// not contain code.
+	std::map<ASTNode const*, std::unique_ptr<DeclarationContainer>> m_scopes;
 
 	DeclarationContainer* m_currentScope = nullptr;
 	ErrorList& m_errors;
@@ -164,7 +167,7 @@ private:
 	void fatalDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
 
 	std::map<ASTNode const*, std::unique_ptr<DeclarationContainer>>& m_scopes;
-	Declaration const* m_currentScope = nullptr;
+	ASTNode const* m_currentScope = nullptr;
 	VariableScope* m_currentFunction = nullptr;
 	ErrorList& m_errors;
 };

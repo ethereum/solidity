@@ -139,7 +139,9 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 			bool isPointer = true;
 			if (_variable.isExternalCallableParameter())
 			{
-				auto const& contract = dynamic_cast<ContractDefinition const&>(*_variable.scope()->scope());
+				auto const& contract = dynamic_cast<ContractDefinition const&>(
+					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
+				);
 				if (contract.isLibrary())
 				{
 					if (varLoc == Location::Memory)
@@ -162,9 +164,11 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 				else
 					typeLoc = varLoc == Location::Memory ? DataLocation::Memory : DataLocation::Storage;
 			}
-			else if (_variable.isCallableParameter() && _variable.scope()->isPublic())
+			else if (_variable.isCallableParameter() && dynamic_cast<Declaration const&>(*_variable.scope()).isPublic())
 			{
-				auto const& contract = dynamic_cast<ContractDefinition const&>(*_variable.scope()->scope());
+				auto const& contract = dynamic_cast<ContractDefinition const&>(
+					*dynamic_cast<Declaration const&>(*_variable.scope()).scope()
+				);
 				// force locations of public or external function (return) parameters to memory
 				if (varLoc == Location::Storage && !contract.isLibrary())
 					fatalTypeError(_variable.location(),

@@ -71,18 +71,21 @@ private:
 };
 
 Declaration const& resolveDeclaration(
-	vector<string> const& _namespacedName, NameAndTypeResolver const& _resolver)
+	SourceUnit const& _sourceUnit,
+	vector<string> const& _namespacedName,
+	NameAndTypeResolver const& _resolver
+)
 {
-	Declaration const* declaration = nullptr;
+	ASTNode const* scope = &_sourceUnit;
 	// bracers are required, cause msvc couldnt handle this macro in for statement
 	for (string const& namePart: _namespacedName)
 	{
-		auto declarations = _resolver.resolveName(namePart, declaration);
+		auto declarations = _resolver.resolveName(namePart, scope);
 		BOOST_REQUIRE(!declarations.empty());
-		BOOST_REQUIRE(declaration = *declarations.begin());
+		BOOST_REQUIRE(scope = *declarations.begin());
 	}
-	BOOST_REQUIRE(declaration);
-	return *declaration;
+	BOOST_REQUIRE(scope);
+	return dynamic_cast<Declaration const&>(*scope);
 }
 
 bytes compileFirstExpression(
@@ -140,13 +143,17 @@ bytes compileFirstExpression(
 			unsigned parametersSize = _localVariables.size(); // assume they are all one slot on the stack
 			context.adjustStackOffset(parametersSize);
 			for (vector<string> const& variable: _localVariables)
-				context.addVariable(dynamic_cast<VariableDeclaration const&>(resolveDeclaration(variable, resolver)),
-									parametersSize--);
+				context.addVariable(
+					dynamic_cast<VariableDeclaration const&>(resolveDeclaration(*sourceUnit, variable, resolver)),
+					parametersSize--
+				);
 
 			ExpressionCompiler(context).compile(*extractor.expression());
 
 			for (vector<string> const& function: _functions)
-				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(resolveDeclaration(function, resolver)));
+				context << context.functionEntryLabel(dynamic_cast<FunctionDefinition const&>(
+					resolveDeclaration(*sourceUnit, function, resolver)
+				));
 			bytes instructions = context.assembledObject().bytecode;
 			// debug
 			// cout << eth::disassemble(instructions) << endl;

@@ -103,12 +103,14 @@ bool CompilerStack::parse()
 	m_errors.clear();
 	m_parseSuccessful = false;
 
+	map<string, SourceUnit const*> sourceUnitsByName;
 	for (auto& sourcePair: m_sources)
 	{
 		sourcePair.second.scanner->reset();
 		sourcePair.second.ast = Parser(m_errors).parse(sourcePair.second.scanner);
 		if (!sourcePair.second.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
+		sourceUnitsByName[sourcePair.first] = sourcePair.second.ast.get();
 	}
 	if (!Error::containsOnlyWarnings(m_errors))
 		// errors while parsing. sould stop before type checking
@@ -126,6 +128,10 @@ bool CompilerStack::parse()
 	NameAndTypeResolver resolver(m_globalContext->declarations(), m_errors);
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
+			return false;
+
+	for (Source const* source: m_sourceOrder)
+		if (!resolver.performImports(*source->ast, sourceUnitsByName))
 			return false;
 
 	for (Source const* source: m_sourceOrder)
