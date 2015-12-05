@@ -85,6 +85,8 @@ Variables of type `bytes` and `string` are special arrays. A `bytes` is similar 
 but it is packed tightly in calldata. `string` is equal to `bytes` but does not allow
 length or index access (for now).
 
+So `bytes` should always be preferred over `byte[]` because it is cheaper.
+
 <div class="note info">
 If you want to access the byte-representation of a string <code>s</code>, use
 <code>bytes(s).length</code> / <code>bytes(s)[7] = 'x';</code>. Keep in mind
