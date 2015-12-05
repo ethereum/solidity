@@ -91,7 +91,7 @@ private:
 	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
 	/// where nullptr denotes the global scope. Note that structs are not scope since they do
 	/// not contain code.
-	std::map<ASTNode const*, DeclarationContainer> m_scopes;
+	std::map<ASTNode const*, std::unique_ptr<DeclarationContainer>> m_scopes;
 
 	// creates the Declaration error and adds it in the errors list
 	void reportDeclarationError(
@@ -121,7 +121,11 @@ private:
 class DeclarationRegistrationHelper: private ASTVisitor
 {
 public:
-	DeclarationRegistrationHelper(std::map<ASTNode const*, DeclarationContainer>& _scopes, ASTNode& _astRoot, ErrorList& _errors);
+	DeclarationRegistrationHelper(
+		std::map<ASTNode const*, std::unique_ptr<DeclarationContainer>>& _scopes,
+		ASTNode& _astRoot,
+		ErrorList& _errors
+	);
 
 private:
 	bool visit(ContractDefinition& _contract) override;
@@ -159,7 +163,7 @@ private:
 	// creates the Declaration error and adds it in the errors list and throws FatalError
 	void fatalDeclarationError(SourceLocation _sourceLocation, std::string const& _description);
 
-	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
+	std::map<ASTNode const*, std::unique_ptr<DeclarationContainer>>& m_scopes;
 	Declaration const* m_currentScope = nullptr;
 	VariableScope* m_currentFunction = nullptr;
 	ErrorList& m_errors;
