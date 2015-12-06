@@ -44,7 +44,7 @@ file(GLOB HEADERS "*.h")
 set(EXECUTABLE soltest)
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Solidity Eth::ethereum)
+eth_use(${EXECUTABLE} REQUIRED Solidity::solidity Eth::ethereum)
 
 include_directories(BEFORE ..)
 target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
