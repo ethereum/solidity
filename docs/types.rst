@@ -119,6 +119,10 @@ Dynamically-sized byte array
 `string`:
     Dynamically-sized UTF8-encoded string, see :ref:`arrays`. Not a value-type!
 
+As a rule of thumb, use `bytes` for arbitrary-length raw byte data and `string`
+for arbitrary-length string (utf-8) data. If you can limit the length to a certain
+number of bytes, always use one of `bytes1` to `bytes32` because they are much cheaper.
+
 .. index:: literal, literal;integer
 
 Integer Literals
@@ -260,6 +264,8 @@ shaves off one level in the type from the right).
 Variables of type `bytes` and `string` are special arrays. A `bytes` is similar to `byte[]`,
 but it is packed tightly in calldata. `string` is equal to `bytes` but does not allow
 length or index access (for now).
+
+So `bytes` should always be preferred over `byte[]` because it is cheaper.
 
 .. note::
     If you want to access the byte-representation of a string `s`, use

@@ -513,7 +513,7 @@ No::
     x |= y&&z;
 
 * Operators with a higher priority than others can exclude surrounding
-  whitespace in order to denote precidence.  This is meant to allow for
+  whitespace in order to denote precedence.  This is meant to allow for
   improved readability for complex statement. You should always use the same
   amount of whitespace on either side of an operator:
 
