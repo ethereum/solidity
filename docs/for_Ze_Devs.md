@@ -1,4 +1,4 @@
-## Preparing for Compiler Development on OS X
+### Preparing for Compiler Development on OS X
 
 # Requirements
 - OS X Yosemite (10.10.5)
