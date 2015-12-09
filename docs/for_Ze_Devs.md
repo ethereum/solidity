@@ -10,14 +10,14 @@
 brew update
 brew install boost --c++11 # this takes a while
 brew install cmake qt5 cryptopp miniupnpc leveldb gmp libmicrohttpd libjson-rpc-cpp 
-brew install llvm --HEAD --with-clang
+brew install llvm --HEAD --with-clang #only required if you plan on using DEVMJIT 
 ```
 
 # Clone source repo and run this script
 ```
 git clone --recursive https://github.com/ethereum/webthree-umbrella.git
 webthree-helpers/scripts/ethupdate.sh --no-push --simple-pull --project solidity #update solidity repo
-./webthree-helpers/scripts/ethbuild.sh --no-git --build-type Debug --project solidity --all --cores 4 -DFATDB=0 -DEVMJIT=0 -DETHASHCL=0 #install solidity
+./webthree-helpers/scripts/ethbuild.sh --no-git --build-type Debug --project solidity --all --cores 4 -DFATDB=0 -DEVMJIT=0 -DETHASHCL=0 #install solidity 
 ```
 
 # Bringing it all together
