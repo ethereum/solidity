@@ -54,6 +54,12 @@ struct DocumentedAnnotation
 	std::multimap<std::string, DocTag> docTags;
 };
 
+struct ImportAnnotation: ASTAnnotation
+{
+	/// The absolute path of the source unit to import.
+	std::string absolutePath;
+};
+
 struct TypeDeclarationAnnotation: ASTAnnotation
 {
 	/// The name of this type, prefixed by proper namespaces if globally accessible.

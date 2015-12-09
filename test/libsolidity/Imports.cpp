@@ -76,6 +76,23 @@ BOOST_AUTO_TEST_CASE(circular_import)
 	BOOST_CHECK(c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(relative_import)
+{
+	CompilerStack c;
+	c.addSource("a", "import \"./dir/b\"; contract A is B {}");
+	c.addSource("dir/b", "contract B {}");
+	c.addSource("dir/c", "import \"../a\"; contract C is A {}");
+	BOOST_CHECK(c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(relative_import_multiplex)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {}");
+	c.addSource("dir/a/b/c", "import \"../../.././a\"; contract B is A {}");
+	BOOST_CHECK(c.compile());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

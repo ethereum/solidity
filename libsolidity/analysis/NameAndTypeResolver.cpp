@@ -71,19 +71,25 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 	for (auto const& node: _sourceUnit.nodes())
 		if (auto imp = dynamic_cast<ImportDirective const*>(node.get()))
 		{
-			if (!_sourceUnits.count(imp->identifier()))
+			string const& path = imp->annotation().absolutePath;
+			if (!_sourceUnits.count(path))
 			{
-				reportDeclarationError(node->location(), "Import \"" + imp->identifier() + "\" not found.");
+				reportDeclarationError( node->location(),
+					"Import \"" +
+					path +
+					"\" (referenced as \"" +
+					imp->identifier() +
+					"\") not found."
+				);
 				error = true;
 			}
 			else
 			{
-				auto scope = m_scopes.find(_sourceUnits.at(imp->identifier()));
+				auto scope = m_scopes.find(_sourceUnits.at(path));
 				solAssert(scope != end(m_scopes), "");
 				for (auto const& nameAndDeclaration: scope->second->declarations())
 					for (auto const& declaration: nameAndDeclaration.second)
 						target.registerDeclaration(*declaration, &nameAndDeclaration.first);
-
 			}
 		}
 	return !error;

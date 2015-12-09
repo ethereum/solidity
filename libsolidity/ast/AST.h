@@ -142,6 +142,7 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ASTString const& identifier() const { return *m_identifier; }
+	virtual ImportAnnotation& annotation() const override;
 
 private:
 	ASTPointer<ASTString> m_identifier;
