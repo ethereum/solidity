@@ -337,6 +337,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto const& arguments = _inheritance.arguments();
 	TypePointers parameterTypes = ContractType(*base).constructorType()->parameterTypes();
 	if (!arguments.empty() && parameterTypes.size() != arguments.size())
+	{
 		typeError(
 			_inheritance.location(),
 			"Wrong argument count for constructor call: " +
@@ -345,6 +346,8 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 			toString(parameterTypes.size()) +
 			"."
 		);
+		return;
+	}
 
 	for (size_t i = 0; i < arguments.size(); ++i)
 		if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
