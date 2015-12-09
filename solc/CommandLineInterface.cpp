@@ -278,9 +278,9 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 				gas = GasEstimator::functionalEstimation(*items, entry, *it);
 			FunctionType type(*it);
 			cout << "   " << it->name() << "(";
-			auto end = type.parameterTypes().end();
-			for (auto it = type.parameterTypes().begin(); it != end; ++it)
-				cout << (*it)->toString() << (it + 1 == end ? "" : ",");
+			auto paramTypes = type.parameterTypes();
+			for (auto it = paramTypes.begin(); it != paramTypes.end(); ++it)
+				cout << (*it)->toString() << (it + 1 == paramTypes.end() ? "" : ",");
 			cout << "):\t" << gas << endl;
 		}
 	}

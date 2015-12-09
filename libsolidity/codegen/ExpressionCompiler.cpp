@@ -85,7 +85,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	FunctionType accessorType(_varDecl);
 
-	TypePointers const& paramTypes = accessorType.parameterTypes();
+	TypePointers paramTypes = accessorType.parameterTypes();
 
 	// retrieve the position of the variable
 	auto const& location = m_context.storageLocationOfVariable(_varDecl);
@@ -380,7 +380,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	else
 		functionType = dynamic_pointer_cast<FunctionType const>(_functionCall.expression().annotation().type);
 
-	TypePointers const& parameterTypes = functionType->parameterTypes();
+	TypePointers parameterTypes = functionType->parameterTypes();
 	vector<ASTPointer<Expression const>> const& callArguments = _functionCall.arguments();
 	vector<ASTPointer<ASTString>> const& callArgumentNames = _functionCall.names();
 	if (!functionType->takesArbitraryParameters())

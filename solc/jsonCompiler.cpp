@@ -103,9 +103,9 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 				gas = GasEstimator::functionalEstimation(*items, entry, *it);
 			FunctionType type(*it);
 			string sig = it->name() + "(";
-			auto end = type.parameterTypes().end();
-			for (auto it = type.parameterTypes().begin(); it != end; ++it)
-				sig += (*it)->toString() + (it + 1 == end ? "" : ",");
+			auto paramTypes = type.parameterTypes();
+			for (auto it = paramTypes.begin(); it != paramTypes.end(); ++it)
+				sig += (*it)->toString() + (it + 1 == paramTypes.end() ? "" : ",");
 			sig += ")";
 			internalFunctions[sig] = gasToJson(gas);
 		}
