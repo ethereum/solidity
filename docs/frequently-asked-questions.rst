@@ -742,6 +742,20 @@ If you want to send 20 Ether from a contract to the address `x`, you use `x.send
 Here, `x` can be a plain address or a contract. If the contract already explicitly defines
 a function `send` (and thus overwrites the special function), you can use `address(x).send(20 ether);`.
 
+What does the following strange check do in the Custom Token contract?
+======================================================================
+
+::
+
+    if (balanceOf[_to] + _value < balanceOf[_to]) throw;
+
+Integers in Solidity (and most other machine-related programming languages) are restricted to a certain range.
+For `uint256`, this is `0` up to `2**256 - 1`. If the result of some operation on those numbers
+does not fit inside this range, it is truncated. These truncations can have
+`serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so code like the one
+above is necessary to avoid certain attacks.
+
+
 More Questions?
 ===============
 
