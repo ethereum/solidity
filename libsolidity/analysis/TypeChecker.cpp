@@ -950,7 +950,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	else
 		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
 
-	TypePointers const& parameterTypes = functionType->parameterTypes();
+	TypePointers parameterTypes = functionType->parameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
 		string msg =
@@ -1079,7 +1079,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			);
 
 		auto contractType = make_shared<ContractType>(*contract);
-		TypePointers const& parameterTypes = contractType->constructorType()->parameterTypes();
+		TypePointers parameterTypes = contractType->constructorType()->parameterTypes();
 		_newExpression.annotation().type = make_shared<FunctionType>(
 			parameterTypes,
 			TypePointers{contractType},
