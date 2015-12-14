@@ -113,7 +113,7 @@ bool NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		if (success)
 		{
 			linearizeBaseContracts(_contract);
-			std::vector<ContractDefinition const*> properBases(
+			vector<ContractDefinition const*> properBases(
 				++_contract.annotation().linearizedBaseContracts.begin(),
 				_contract.annotation().linearizedBaseContracts.end()
 			);
@@ -380,7 +380,7 @@ void NameAndTypeResolver::reportFatalTypeError(Error const& _e)
 }
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
-	map<ASTNode const*, std::unique_ptr<DeclarationContainer>>& _scopes,
+	map<ASTNode const*, unique_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
 	ErrorList& _errors
 ):
@@ -489,9 +489,9 @@ void DeclarationRegistrationHelper::endVisit(EventDefinition&)
 
 void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declaration)
 {
-	map<ASTNode const*, std::unique_ptr<DeclarationContainer>>::iterator iter;
+	map<ASTNode const*, unique_ptr<DeclarationContainer>>::iterator iter;
 	bool newlyAdded;
-	std::unique_ptr<DeclarationContainer> container(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
+	unique_ptr<DeclarationContainer> container(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
 	tie(iter, newlyAdded) = m_scopes.emplace(&_declaration, move(container));
 	solAssert(newlyAdded, "Unable to add new scope.");
 	m_currentScope = &_declaration;
