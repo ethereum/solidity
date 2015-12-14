@@ -163,6 +163,13 @@ and the default is `internal`.
     visible for the contract they are defined in and not in
     derived contracts.
 
+.. note::
+    Everything that is inside a contract is visible to
+    all external observers. Making something `private`
+    only prevents other contract from accessing and modifying
+    the information, but it will still be visible to the
+    whole world outside of the blockchain.
+
 The visibility specifier is given after the type for
 state variables and between parameter list and
 return parameter list for functions.
