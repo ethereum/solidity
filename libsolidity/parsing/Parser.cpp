@@ -83,7 +83,7 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 				nodes.push_back(parseContractDefinition(token == Token::Library));
 				break;
 			default:
-				fatalParserError(std::string("Expected import directive or contract definition."));
+				fatalParserError(string("Expected import directive or contract definition."));
 			}
 		}
 		return nodeFactory.createNode<SourceUnit>(nodes);
@@ -113,14 +113,65 @@ int Parser::endPosition() const
 
 ASTPointer<ImportDirective> Parser::parseImportDirective()
 {
+	// import "abc" [as x];
+	// import * as x from "abc";
+	// import {a as b, c} from "abc";
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Import);
-	if (m_scanner->currentToken() != Token::StringLiteral)
-		fatalParserError(std::string("Expected string literal (URL)."));
-	ASTPointer<ASTString> url = getLiteralAndAdvance();
+	ASTPointer<ASTString> path;
+	ASTPointer<ASTString> unitAlias;
+	vector<pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> symbolAliases;
+
+	if (m_scanner->currentToken() == Token::StringLiteral)
+	{
+		path = getLiteralAndAdvance();
+		if (m_scanner->currentToken() == Token::As)
+		{
+			m_scanner->next();
+			unitAlias = expectIdentifierToken();
+		}
+	}
+	else
+	{
+		if (m_scanner->currentToken() == Token::LBrace)
+		{
+			m_scanner->next();
+			while (true)
+			{
+				ASTPointer<Identifier> id = parseIdentifier();
+				ASTPointer<ASTString> alias;
+				if (m_scanner->currentToken() == Token::As)
+				{
+					expectToken(Token::As);
+					alias = expectIdentifierToken();
+				}
+				symbolAliases.push_back(move(make_pair(move(id), move(alias))));
+				if (m_scanner->currentToken() != Token::Comma)
+					break;
+				m_scanner->next();
+			}
+			expectToken(Token::RBrace);
+		}
+		else if (m_scanner->currentToken() == Token::Mul)
+		{
+			m_scanner->next();
+			expectToken(Token::As);
+			unitAlias = expectIdentifierToken();
+		}
+		else
+			fatalParserError("Expected string literal (path), \"*\" or alias list.");
+		// "from" is not a keyword but parsed as an identifier because of backwards
+		// compatibility and because it is a really common word.
+		if (m_scanner->currentToken() != Token::Identifier || m_scanner->currentLiteral() != "from")
+			fatalParserError("Expected \"from\".");
+		m_scanner->next();
+		if (m_scanner->currentToken() != Token::StringLiteral)
+			fatalParserError("Expected import path.");
+		path = getLiteralAndAdvance();
+	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
-	return nodeFactory.createNode<ImportDirective>(url);
+	return nodeFactory.createNode<ImportDirective>(path, unitAlias, move(symbolAliases));
 }
 
 ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
@@ -171,7 +222,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 		else if (currentTokenValue == Token::Using)
 			subNodes.push_back(parseUsingDirective());
 		else
-			fatalParserError(std::string("Function, variable, struct or modifier declaration expected."));
+			fatalParserError(string("Function, variable, struct or modifier declaration expected."));
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
@@ -250,7 +301,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 		else if (Token::isVisibilitySpecifier(token))
 		{
 			if (visibility != Declaration::Visibility::Default)
-				fatalParserError(std::string("Multiple visibility specifiers."));
+				fatalParserError(string("Multiple visibility specifiers."));
 			visibility = parseVisibilitySpecifier(token);
 		}
 		else
@@ -327,7 +378,7 @@ ASTPointer<EnumDefinition> Parser::parseEnumDefinition()
 			break;
 		expectToken(Token::Comma);
 		if (m_scanner->currentToken() != Token::Identifier)
-			fatalParserError(std::string("Expected Identifier after ','"));
+			fatalParserError(string("Expected Identifier after ','"));
 	}
 
 	nodeFactory.markEndPosition();
@@ -363,7 +414,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		if (_options.isStateVariable && Token::isVariableVisibilitySpecifier(token))
 		{
 			if (visibility != Declaration::Visibility::Default)
-				fatalParserError(std::string("Visibility already specified."));
+				fatalParserError(string("Visibility already specified."));
 			visibility = parseVisibilitySpecifier(token);
 		}
 		else
@@ -375,9 +426,9 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 			else if (_options.allowLocationSpecifier && Token::isLocationSpecifier(token))
 			{
 				if (location != VariableDeclaration::Location::Default)
-					fatalParserError(std::string("Location already specified."));
+					fatalParserError(string("Location already specified."));
 				if (!type)
-					fatalParserError(std::string("Location specifier needs explicit type name."));
+					fatalParserError(string("Location specifier needs explicit type name."));
 				location = (
 					token == Token::Memory ?
 					VariableDeclaration::Location::Memory :
@@ -532,7 +583,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Var)
 	{
 		if (!_allowVar)
-			fatalParserError(std::string("Expected explicit type name."));
+			fatalParserError(string("Expected explicit type name."));
 		m_scanner->next();
 	}
 	else if (token == Token::Mapping)
@@ -551,7 +602,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 		type = nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
 	}
 	else
-		fatalParserError(std::string("Expected type name"));
+		fatalParserError(string("Expected type name"));
 
 	if (type)
 		// Parse "[...]" postfixes for arrays.
@@ -574,7 +625,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
 	if (!Token::isElementaryTypeName(m_scanner->currentToken()))
-		fatalParserError(std::string("Expected elementary type name for mapping key type"));
+		fatalParserError(string("Expected elementary type name for mapping key type"));
 	ASTPointer<ElementaryTypeName> keyType;
 	keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->currentToken());
 	m_scanner->next();
@@ -1072,7 +1123,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 			m_scanner->next();
 		}
 		else
-			fatalParserError(std::string("Expected primary expression."));
+			fatalParserError(string("Expected primary expression."));
 		break;
 	}
 	return expression;
@@ -1221,8 +1272,7 @@ Token::Value Parser::expectAssignmentOperator()
 	Token::Value op = m_scanner->currentToken();
 	if (!Token::isAssignmentOp(op))
 		fatalParserError(
-			std::string("Expected assignment operator ") +
-			string(" got '") +
+			string("Expected assignment operator,  got '") +
 			string(Token::name(m_scanner->currentToken())) +
 			string("'")
 		);
@@ -1234,8 +1284,7 @@ ASTPointer<ASTString> Parser::expectIdentifierToken()
 {
 	if (m_scanner->currentToken() != Token::Identifier)
 		fatalParserError(
-			std::string("Expected identifier ") +
-			string(" got '") +
+			string("Expected identifier, got '") +
 			string(Token::name(m_scanner->currentToken())) +
 			string("'")
 		);

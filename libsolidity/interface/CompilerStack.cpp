@@ -376,7 +376,7 @@ void CompilerStack::resolveImports()
 		for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
-				string path = absolutePath(import->identifier(), _sourceName);
+				string path = absolutePath(import->path(), _sourceName);
 				import->annotation().absolutePath = path;
 				if (!m_sources.count(path))
 					BOOST_THROW_EXCEPTION(

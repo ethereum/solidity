@@ -78,7 +78,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 					"Import \"" +
 					path +
 					"\" (referenced as \"" +
-					imp->identifier() +
+					imp->path() +
 					"\") not found."
 				);
 				error = true;
