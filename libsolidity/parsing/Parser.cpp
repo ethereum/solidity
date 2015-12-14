@@ -1056,6 +1056,28 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expectToken(Token::RParen);
 		return nodeFactory.createNode<TupleExpression>(components);
 	}
+	case Token::LBrack:
+	{
+		// Inline array expression
+		// Special cases: [] is empty tuple type, (x) is not a real tuple, (x,) is one-dimensional tuple
+		m_scanner->next();
+		vector<ASTPointer<Expression>> components;
+		if (m_scanner->currentToken() != Token::RBrack)
+			while (true)
+			{
+				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != Token::RBrack)
+					components.push_back(parseExpression());
+				else
+					components.push_back(ASTPointer<Expression>());
+				if (m_scanner->currentToken() == Token::RBrack)
+					break;
+				else if (m_scanner->currentToken() == Token::Comma)
+					m_scanner->next();
+			}
+		nodeFactory.markEndPosition();
+		expectToken(Token::RBrack);
+		return nodeFactory.createNode<TupleExpression>(components);		
+	}
 	default:
 		if (Token::isElementaryTypeName(token))
 		{

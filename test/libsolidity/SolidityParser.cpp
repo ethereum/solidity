@@ -1047,6 +1047,16 @@ BOOST_AUTO_TEST_CASE(using_for)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(inline_array_declaration)
+{
+	char const* text = R"(
+		contract C {
+			uint[] x = [0, 1, 2, 3];
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
