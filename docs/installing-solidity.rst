@@ -115,7 +115,7 @@ they relate only to Alethzero and Mix
     git clone --recursive https://github.com/ethereum/webthree-umbrella.git
     cd webthree-umbrella
     ./webthree-helpers/scripts/ethupdate.sh --no-push --simple-pull --project solidity # update Solidity repo
-    ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity --all --cores 4 # build Solidity
+    ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity --all -EVMJIT=0 --cores 4 # build Solidity
 
 If you opted to install Alethzero and Mix:
 
