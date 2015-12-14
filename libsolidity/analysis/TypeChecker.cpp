@@ -337,6 +337,7 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 	auto const& arguments = _inheritance.arguments();
 	TypePointers parameterTypes = ContractType(*base).constructorType()->parameterTypes();
 	if (!arguments.empty() && parameterTypes.size() != arguments.size())
+	{
 		typeError(
 			_inheritance.location(),
 			"Wrong argument count for constructor call: " +
@@ -345,6 +346,8 @@ void TypeChecker::endVisit(InheritanceSpecifier const& _inheritance)
 			toString(parameterTypes.size()) +
 			"."
 		);
+		return;
+	}
 
 	for (size_t i = 0; i < arguments.size(); ++i)
 		if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
@@ -950,7 +953,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	else
 		_functionCall.annotation().type = make_shared<TupleType>(functionType->returnParameterTypes());
 
-	TypePointers const& parameterTypes = functionType->parameterTypes();
+	TypePointers parameterTypes = functionType->parameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
 		string msg =
@@ -1079,7 +1082,7 @@ void TypeChecker::endVisit(NewExpression const& _newExpression)
 			);
 
 		auto contractType = make_shared<ContractType>(*contract);
-		TypePointers const& parameterTypes = contractType->constructorType()->parameterTypes();
+		TypePointers parameterTypes = contractType->constructorType()->parameterTypes();
 		_newExpression.annotation().type = make_shared<FunctionType>(
 			parameterTypes,
 			TypePointers{contractType},
