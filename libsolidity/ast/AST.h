@@ -1150,10 +1150,12 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	std::vector<ASTPointer<Expression>> const& components() const { return m_components; }
+	bool isInlineArray() const { return m_isArray; }
 
 private:
 	std::vector<ASTPointer<Expression>> m_components;
-	bool isInlineArray() const { return m_isArray; }
+	bool m_isArray;
+
 };
 
 /**
