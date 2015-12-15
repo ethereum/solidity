@@ -1140,9 +1140,12 @@ class TupleExpression: public Expression
 public:
 	TupleExpression(
 		SourceLocation const& _location,
-		std::vector<ASTPointer<Expression>> const& _components
+		std::vector<ASTPointer<Expression>> const& _components,
+		bool _isArray
 	):
-		Expression(_location), m_components(_components) {}
+		Expression(_location), 
+		m_components(_components), 
+		m_isArray(_isArray) {}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
