@@ -1127,9 +1127,10 @@ private:
 	ASTPointer<Expression> m_rightHandSide;
 };
 
+
 /**
- * Tuple or just parenthesized expression.
- * Examples: (1, 2), (x,), (x), ()
+ * Tuple, parenthesized expression, or bracketed expression.
+ * Examples: (1, 2), (x,), (x), (), [1, 2], 
  * Individual components might be empty shared pointers (as in the second example).
  * The respective types in lvalue context are: 2-tuple, 2-tuple (with wildcard), type of x, 0-tuple
  * Not in lvalue context: 2-tuple, _1_-tuple, type of x, 0-tuple.

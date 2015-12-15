@@ -1058,6 +1058,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expectToken(oppositeToken);
 		return nodeFactory.createNode<TupleExpression>(components);
 	}
+
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
