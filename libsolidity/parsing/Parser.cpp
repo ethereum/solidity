@@ -1035,27 +1035,33 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
 		break;
 	case Token::LParen:
+	case Token::LBrack:
 	{
-		// Tuple or parenthesized expression.
-		// Special cases: () is empty tuple type, (x) is not a real tuple, (x,) is one-dimensional tuple
+		// Tuple/parenthesized expression or inline array/bracketed expression.
+		// Special cases: ()/[] is empty tuple/array type, (x)/[] is not a real tuple/array,
+		// (x,) is one-dimensional tuple
 		m_scanner->next();
 		vector<ASTPointer<Expression>> components;
+		Token::Value oppositeToken = (token == Token::LParen ? Token::RParen : Token::RBrack);
+		bool isArray = (token == Token::LParen ? false : true);
+
 		if (m_scanner->currentToken() != Token::RParen)
 			while (true)
 			{
-				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != Token::RParen)
+				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
 					components.push_back(parseExpression());
 				else
 					components.push_back(ASTPointer<Expression>());
-				if (m_scanner->currentToken() == Token::RParen)
+				if (m_scanner->currentToken() == oppositeToken)
 					break;
 				else if (m_scanner->currentToken() == Token::Comma)
 					m_scanner->next();
 			}
 		nodeFactory.markEndPosition();
-		expectToken(Token::RParen);
-		return nodeFactory.createNode<TupleExpression>(components);
+		expectToken(oppositeToken);
+		return nodeFactory.createNode<TupleExpression>(components, isArray);
 	}
+
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
