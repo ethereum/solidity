@@ -115,15 +115,14 @@ they relate only to Alethzero and Mix
     git clone --recursive https://github.com/ethereum/webthree-umbrella.git
     cd webthree-umbrella
     ./webthree-helpers/scripts/ethupdate.sh --no-push --simple-pull --project solidity # update Solidity repo
-    ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity --all --cores 4 # build Solidity
+    ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity --cores 4 -DEVMJIT=0 # build Solidity
 
 If you opted to install Alethzero and Mix:
 
 .. code-block:: bash
 
-    git clone --recursive https://github.com/ethereum/webthree-umbrella.git
-    cd webthree-umbrella && mkdir -p build && cd build
-    cmake ..
+    ./webthree-helpers/scripts/ethupdate.sh --no-push --simple-pull --project all # update Solidity repo
+    ./webthree-helpers/scripts/ethbuild.sh --no-git --project all --cores 4 -DEVMJIT=0
 
 If you want to help developing Solidity,
 you should fork Solidity and add your personal fork as a second remote:
