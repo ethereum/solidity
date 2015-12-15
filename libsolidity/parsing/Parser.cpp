@@ -1034,26 +1034,28 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
 		break;
-	case Token::LParen:
+	case Token::LParen || Token::LBrack:
 	{
 		// Tuple or parenthesized expression.
 		// Special cases: () is empty tuple type, (x) is not a real tuple, (x,) is one-dimensional tuple
 		m_scanner->next();
 		vector<ASTPointer<Expression>> components;
+		Token::Value oppositeToken = (token == LParen ? Token::RParen : Token::RBrack);
+
 		if (m_scanner->currentToken() != Token::RParen)
 			while (true)
 			{
-				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != Token::RParen)
+				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
 					components.push_back(parseExpression());
 				else
 					components.push_back(ASTPointer<Expression>());
-				if (m_scanner->currentToken() == Token::RParen)
+				if (m_scanner->currentToken() == oppositeToken)
 					break;
 				else if (m_scanner->currentToken() == Token::Comma)
 					m_scanner->next();
 			}
 		nodeFactory.markEndPosition();
-		expectToken(Token::RParen);
+		expectToken(oppositeToken);
 		return nodeFactory.createNode<TupleExpression>(components);
 	}
 	default:
