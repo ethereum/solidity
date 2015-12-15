@@ -1155,7 +1155,6 @@ public:
 private:
 	std::vector<ASTPointer<Expression>> m_components;
 	bool m_isArray;
-
 };
 
 /**
