@@ -199,6 +199,8 @@ private:
 	};
 
 	void resolveImports();
+	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
+	std::string absolutePath(std::string const& _path, std::string const& _reference) const;
 	/// Compile a single contract and put the result in @a _compiledContracts.
 	void compileContract(
 		bool _optimize,

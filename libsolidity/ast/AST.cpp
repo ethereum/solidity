@@ -56,6 +56,13 @@ Error ASTNode::createTypeError(string const& _description) const
 	return Error(Error::Type::TypeError) << errinfo_sourceLocation(location()) << errinfo_comment(_description);
 }
 
+ImportAnnotation& ImportDirective::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new ImportAnnotation();
+	return static_cast<ImportAnnotation&>(*m_annotation);
+}
+
 map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const
 {
 	auto exportedFunctionList = interfaceFunctionList();

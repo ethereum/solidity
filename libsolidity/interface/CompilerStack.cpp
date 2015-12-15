@@ -22,6 +22,7 @@
  */
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
@@ -103,12 +104,14 @@ bool CompilerStack::parse()
 	m_errors.clear();
 	m_parseSuccessful = false;
 
+	map<string, SourceUnit const*> sourceUnitsByName;
 	for (auto& sourcePair: m_sources)
 	{
 		sourcePair.second.scanner->reset();
 		sourcePair.second.ast = Parser(m_errors).parse(sourcePair.second.scanner);
 		if (!sourcePair.second.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
+		sourceUnitsByName[sourcePair.first] = sourcePair.second.ast.get();
 	}
 	if (!Error::containsOnlyWarnings(m_errors))
 		// errors while parsing. sould stop before type checking
@@ -126,6 +129,10 @@ bool CompilerStack::parse()
 	NameAndTypeResolver resolver(m_globalContext->declarations(), m_errors);
 	for (Source const* source: m_sourceOrder)
 		if (!resolver.registerDeclarations(*source->ast))
+			return false;
+
+	for (Source const* source: m_sourceOrder)
+		if (!resolver.performImports(*source->ast, sourceUnitsByName))
 			return false;
 
 	for (Source const* source: m_sourceOrder)
@@ -361,7 +368,7 @@ void CompilerStack::resolveImports()
 	vector<Source const*> sourceOrder;
 	set<Source const*> sourcesSeen;
 
-	function<void(Source const*)> toposort = [&](Source const* _source)
+	function<void(string const&, Source const*)> toposort = [&](string const& _sourceName, Source const* _source)
 	{
 		if (sourcesSeen.count(_source))
 			return;
@@ -369,24 +376,42 @@ void CompilerStack::resolveImports()
 		for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
-				string const& id = import->identifier();
-				if (!m_sources.count(id))
+				string path = absolutePath(import->identifier(), _sourceName);
+				import->annotation().absolutePath = path;
+				if (!m_sources.count(path))
 					BOOST_THROW_EXCEPTION(
 						Error(Error::Type::ParserError)
 							<< errinfo_sourceLocation(import->location())
 							<< errinfo_comment("Source not found.")
 					);
 
-				toposort(&m_sources[id]);
+				toposort(path, &m_sources[path]);
 			}
 		sourceOrder.push_back(_source);
 	};
 
 	for (auto const& sourcePair: m_sources)
 		if (!sourcePair.second.isLibrary)
-			toposort(&sourcePair.second);
+			toposort(sourcePair.first, &sourcePair.second);
 
 	swap(m_sourceOrder, sourceOrder);
+}
+
+string CompilerStack::absolutePath(string const& _path, string const& _reference) const
+{
+	// Anything that does not start with `.` is an absolute path.
+	if (_path.empty() || _path.front() != '.')
+		return _path;
+	using path = boost::filesystem::path;
+	path p(_path);
+	path result(_reference);
+	result.remove_filename();
+	for (path::iterator it = p.begin(); it != p.end(); ++it)
+		if (*it == "..")
+			result = result.parent_path();
+		else if (*it != ".")
+			result /= *it;
+	return result.string();
 }
 
 void CompilerStack::compileContract(
