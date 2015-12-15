@@ -1034,7 +1034,8 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
 		break;
-	case Token::LParen || Token::LBrack:
+	case Token::LParen:
+	case Token::LBrack:
 	{
 		// Tuple or parenthesized expression.
 		// Special cases: () is empty tuple type, (x) is not a real tuple, (x,) is one-dimensional tuple

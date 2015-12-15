@@ -1153,6 +1153,7 @@ public:
 
 private:
 	std::vector<ASTPointer<Expression>> m_components;
+	bool isInlineArray() const { return m_isArray; }
 };
 
 /**
