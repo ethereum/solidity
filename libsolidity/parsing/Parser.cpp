@@ -119,7 +119,7 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Import);
 	ASTPointer<ASTString> path;
-	ASTPointer<ASTString> unitAlias;
+	ASTPointer<ASTString> unitAlias = make_shared<string>();
 	vector<pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> symbolAliases;
 
 	if (m_scanner->currentToken() == Token::StringLiteral)

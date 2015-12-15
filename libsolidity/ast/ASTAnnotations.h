@@ -54,10 +54,20 @@ struct DocumentedAnnotation
 	std::multimap<std::string, DocTag> docTags;
 };
 
+struct SourceUnitAnnotation: ASTAnnotation
+{
+	/// The "absolute" (in the compiler sense) path of this source unit.
+	std::string path;
+	/// The exported symbols (all global symbols).
+	std::map<ASTString, std::vector<Declaration const*>> exportedSymbols;
+};
+
 struct ImportAnnotation: ASTAnnotation
 {
 	/// The absolute path of the source unit to import.
 	std::string absolutePath;
+	/// The actual source unit.
+	SourceUnit const* sourceUnit = nullptr;
 };
 
 struct TypeDeclarationAnnotation: ASTAnnotation

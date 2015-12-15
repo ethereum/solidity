@@ -46,14 +46,16 @@ NameAndTypeResolver::NameAndTypeResolver(
 
 bool NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
 {
-	solAssert(!m_scopes[&_sourceUnit], "");
-	m_scopes[&_sourceUnit].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
+	if (!m_scopes[&_sourceUnit])
+		// By importing, it is possible that the container already exists.
+		m_scopes[&_sourceUnit].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
 	m_currentScope = m_scopes[&_sourceUnit].get();
 
 	// The helper registers all declarations in m_scopes as a side-effect of its construction.
 	try
 	{
 		DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit, m_errors);
+		_sourceUnit.annotation().exportedSymbols = m_scopes[&_sourceUnit]->declarations();
 	}
 	catch (FatalError const&)
 	{
@@ -83,7 +85,7 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 				);
 				error = true;
 			}
-			else
+			else if (imp->name().empty())
 			{
 				auto scope = m_scopes.find(_sourceUnits.at(path));
 				solAssert(scope != end(m_scopes), "");
@@ -380,7 +382,7 @@ void NameAndTypeResolver::reportFatalTypeError(Error const& _e)
 }
 
 DeclarationRegistrationHelper::DeclarationRegistrationHelper(
-	map<ASTNode const*, unique_ptr<DeclarationContainer>>& _scopes,
+	map<ASTNode const*, shared_ptr<DeclarationContainer>>& _scopes,
 	ASTNode& _astRoot,
 	ErrorList& _errors
 ):
@@ -390,6 +392,17 @@ DeclarationRegistrationHelper::DeclarationRegistrationHelper(
 {
 	solAssert(!!m_scopes.at(m_currentScope), "");
 	_astRoot.accept(*this);
+}
+
+bool DeclarationRegistrationHelper::visit(ImportDirective& _import)
+{
+	SourceUnit const* importee = _import.annotation().sourceUnit;
+	solAssert(!!importee, "");
+	if (!m_scopes[importee])
+		m_scopes[importee].reset(new DeclarationContainer(nullptr, m_scopes[nullptr].get()));
+	m_scopes[&_import] = m_scopes[importee];
+	registerDeclaration(_import, false);
+	return true;
 }
 
 bool DeclarationRegistrationHelper::visit(ContractDefinition& _contract)
@@ -489,9 +502,9 @@ void DeclarationRegistrationHelper::endVisit(EventDefinition&)
 
 void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declaration)
 {
-	map<ASTNode const*, unique_ptr<DeclarationContainer>>::iterator iter;
+	map<ASTNode const*, shared_ptr<DeclarationContainer>>::iterator iter;
 	bool newlyAdded;
-	unique_ptr<DeclarationContainer> container(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
+	shared_ptr<DeclarationContainer> container(new DeclarationContainer(m_currentScope, m_scopes[m_currentScope].get()));
 	tie(iter, newlyAdded) = m_scopes.emplace(&_declaration, move(container));
 	solAssert(newlyAdded, "Unable to add new scope.");
 	m_currentScope = &_declaration;

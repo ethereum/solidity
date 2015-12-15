@@ -120,6 +120,7 @@ public:
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
+	virtual SourceUnitAnnotation& annotation() const override;
 
 	std::vector<ASTPointer<ASTNode>> nodes() const { return m_nodes; }
 
@@ -128,44 +129,7 @@ private:
 };
 
 /**
- * Import directive for referencing other files / source objects.
- * Example: import "abc.sol" // imports all symbols of "abc.sol" into current scope
- * Source objects are identified by a string which can be a file name but does not have to be.
- * Other ways to use it:
- * import "abc" as x; // creates symbol "x" that contains all symbols in "abc"
- * import * as x from "abc"; // same as above
- * import {a as b, c} from "abc"; // creates new symbols "b" and "c" referencing "a" and "c" in "abc", respectively.
- */
-class ImportDirective: public ASTNode
-{
-public:
-	ImportDirective(
-		SourceLocation const& _location,
-		ASTPointer<ASTString> const& _path,
-			ASTPointer<ASTString> const& _unitAlias,
-			std::vector<std::pair<ASTPointer<Identifier>, ASTPointer<ASTString>>>&& _symbolAliases
-		):
-		ASTNode(_location), m_path(_path), m_unitAlias(_unitAlias), m_symbolAliases(_symbolAliases) {}
-
-	virtual void accept(ASTVisitor& _visitor) override;
-	virtual void accept(ASTConstVisitor& _visitor) const override;
-
-	ASTString const& path() const { return *m_path; }
-	virtual ImportAnnotation& annotation() const override;
-
-private:
-	ASTPointer<ASTString> m_path;
-	/// The alias for the module itself. If present, import the whole unit under that name and
-	/// ignore m_symbolAlias.
-	ASTPointer<ASTString> m_unitAlias;
-	/// The aliases for the specific symbols to import. If non-empty import the specific symbols.
-	/// If the second component is empty, import the identifier unchanged.
-	/// If both m_unitAlias and m_symbolAlias are empty, import all symbols into the current scope.
-	std::vector<std::pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> m_symbolAliases;
-};
-
-/**
- * Abstract AST class for a declaration (contract, function, struct, variable).
+ * Abstract AST class for a declaration (contract, function, struct, variable, import directive).
  */
 class Declaration: public ASTNode
 {
@@ -208,6 +172,45 @@ private:
 	ASTPointer<ASTString> m_name;
 	Visibility m_visibility;
 	ASTNode const* m_scope;
+};
+
+/**
+ * Import directive for referencing other files / source objects.
+ * Example: import "abc.sol" // imports all symbols of "abc.sol" into current scope
+ * Source objects are identified by a string which can be a file name but does not have to be.
+ * Other ways to use it:
+ * import "abc" as x; // creates symbol "x" that contains all symbols in "abc"
+ * import * as x from "abc"; // same as above
+ * import {a as b, c} from "abc"; // creates new symbols "b" and "c" referencing "a" and "c" in "abc", respectively.
+ */
+class ImportDirective: public Declaration
+{
+public:
+	ImportDirective(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _path,
+		ASTPointer<ASTString> const& _unitAlias,
+		std::vector<std::pair<ASTPointer<Identifier>, ASTPointer<ASTString>>>&& _symbolAliases
+	):
+		Declaration(_location, _unitAlias),
+		m_path(_path),
+		m_symbolAliases(_symbolAliases)
+	{ }
+
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	ASTString const& path() const { return *m_path; }
+	virtual ImportAnnotation& annotation() const override;
+
+	virtual TypePointer type() const override;
+
+private:
+	ASTPointer<ASTString> m_path;
+	/// The aliases for the specific symbols to import. If non-empty import the specific symbols.
+	/// If the second component is empty, import the identifier unchanged.
+	/// If both m_unitAlias and m_symbolAlias are empty, import all symbols into the current scope.
+	std::vector<std::pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> m_symbolAliases;
 };
 
 /**
