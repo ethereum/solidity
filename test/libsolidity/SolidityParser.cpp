@@ -1047,55 +1047,42 @@ BOOST_AUTO_TEST_CASE(using_for)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(inline_array_declaration_lvalue)
-{
-	char const* text = R"(
-		contract c {
-			uint[] a;
-			function f() returns (uint) {
-				a = [1,2,3];
-				return (a[3]);
-			}
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(inline_array_declaration_self)
-{
-	char const* text = R"(
-		contract c {
-			uint[] a;
-			function f() returns (uint) {
-				return ([1,2,3][0]);
-			}
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
-BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_beginning)
+BOOST_AUTO_TEST_CASE(inline_array_declaration)
 {
 	char const* text = R"(
 		contract c {
 			uint[] a;
 			function f() returns (uint, uint) {
+				a = [1,2,3];
+				return (a[3], [2,3,4][0]);
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+
+BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_lvalue)
+{
+	char const* text = R"(
+		contract c {
+			uint[] a;
+			function f() returns (uint) {
 				a = [,2,3];
-				return (a[3], [,3,4][0]);
+				return (a[0]);
 			}
 		}
 	)";
 	BOOST_CHECK(!successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_commas)
+BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_without_lvalue)
 {
 	char const* text = R"(
 		contract c {
 			uint[] a;
 			function f() returns (uint, uint) {
-				a = [1, ,3];
-				return (a[3], [3, ,4][0]);
+				return ([3, ,4][0]);
 			}
 		}
 	)";

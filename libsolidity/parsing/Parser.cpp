@@ -1038,26 +1038,25 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	case Token::LBrack:
 	{
 		// Tuple/parenthesized expression or inline array/bracketed expression.
-		// Special cases: ()/[] is empty tuple/array type, (x)/[] is not a real tuple/array,
-		// (x,) is one-dimensional tuple
+		// Special cases: ()/[] is empty tuple/array type, (x) is not a real tuple,
+		// (x,) is one-dimensional tuple, elements in arrays cannot be left out, only in tuples.
 		m_scanner->next();
 		vector<ASTPointer<Expression>> components;
 		Token::Value oppositeToken = (token == Token::LParen ? Token::RParen : Token::RBrack);
-		bool isArray = (token == Token::LBrack ? true : false);
-		if (isArray && (m_scanner->currentToken() == Token::Comma))
-			fatalParserError(std::string("Expected value in array cell after '[' ."));
+		bool isArray = (token == Token::LBrack);
+
 		if (m_scanner->currentToken() != oppositeToken)
 			while (true)
 			{
 				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
 					components.push_back(parseExpression());
+				else if (isArray)
+					parserError(std::string("Expected value in array cell after"));
 				else
 					components.push_back(ASTPointer<Expression>());
 				if (m_scanner->currentToken() == oppositeToken)
 					break;
 				else if (m_scanner->currentToken() == Token::Comma)
-					if (isArray && (m_scanner->peekNextToken() == Token::Comma || m_scanner->peekNextToken() == oppositeToken))
-						fatalParserError(std::string("Expected value in array cell after ',' ."));
 					m_scanner->next();
 			}
 		nodeFactory.markEndPosition();
