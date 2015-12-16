@@ -1043,9 +1043,10 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		m_scanner->next();
 		vector<ASTPointer<Expression>> components;
 		Token::Value oppositeToken = (token == Token::LParen ? Token::RParen : Token::RBrack);
-		bool isArray = (token == Token::LParen ? false : true);
-
-		if (m_scanner->currentToken() != Token::RParen)
+		bool isArray = (token == Token::RBrace ? true : false);
+		if (isArray && (m_scanner->currentToken() == Token::Comma))
+			fatalParserError("Expected value in array cell after '[' .");
+		if (m_scanner->currentToken() != oppositeToken)
 			while (true)
 			{
 				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
@@ -1055,6 +1056,8 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 				if (m_scanner->currentToken() == oppositeToken)
 					break;
 				else if (m_scanner->currentToken() == Token::Comma)
+					if (isArray && (m_scanner->peekNextToken() == (Token::Comma || oppositeToken)))
+						fatalParserError("Expected value in array cell after ',' .");
 					m_scanner->next();
 			}
 		nodeFactory.markEndPosition();

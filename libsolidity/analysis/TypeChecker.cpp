@@ -779,7 +779,6 @@ bool TypeChecker::visit(Assignment const& _assignment)
 
 bool TypeChecker::visit(TupleExpression const& _tuple)
 {
-
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
 	solAssert(!_tuple.isInlineArray(), "Tuple type not properly declared");
 	TypePointers types;
@@ -793,10 +792,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			}
 			else
 				types.push_back(TypePointer());
-		if (_tuple.isInlineArray())
-			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Storage, _tuple.annotation().type, types.size());
-		else
-			_tuple.annotation().type = make_shared<TupleType>(types);
+		_tuple.annotation().type = make_shared<TupleType>(types);
 		// If some of the components are not LValues, the error is reported above.
 		_tuple.annotation().isLValue = true;
 	}
@@ -806,10 +802,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		{
 			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).
 			if (!components[i] && !(i == 1 && components.size() == 2))
-				_tuple.isInlineArray() ? 
-					fatalTypeError(_tuple.location(), "Array component cannot have empty cells.")
-					:
-					fatalTypeError(_tuple.location(), "Tuple component cannot be empty.");
+				fatalTypeError(_tuple.location(), "Tuple component cannot be empty.");
 			else if (components[i])
 			{
 				components[i]->accept(*this);
