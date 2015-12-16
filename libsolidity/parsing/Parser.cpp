@@ -1051,7 +1051,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 				if (m_scanner->currentToken() != Token::Comma && m_scanner->currentToken() != oppositeToken)
 					components.push_back(parseExpression());
 				else if (isArray)
-					parserError(std::string("Expected value in array cell after"));
+					parserError("Expected expression (inline array elements cannot be omitted).");
 				else
 					components.push_back(ASTPointer<Expression>());
 				if (m_scanner->currentToken() == oppositeToken)
