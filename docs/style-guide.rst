@@ -529,10 +529,110 @@ No::
     x = y+z;
     x +=1;
 
+
+******************
 Naming Conventions
+******************
+
+Naming conventions are powerful when adopted and used broadly.  The use of
+different conventions can convey significant *meta* information that would
+otherwise not be immediately available.
+
+The naming recomendations given here are intended to improve the readability,
+and thus they are not rules, but rather guidelines to try and help convey the
+most information through the names of things.
+
+Lastly, consistency within a codebase should always supercede any conventions
+outlined in this document.
+
+
+Naming Styles
+=============
+
+To avoid confusion, the following names will be used to refer to different
+naming styles.
+
+* ``b`` (single lowercase letter)
+* ``B`` (single uppercase letter)
+* ``lowercase``
+* ``lower_case_with_underscores``
+* ``UPPERCASE``
+* ``UPPER_CASE_WITH_UNDERSCORES``
+* ``CapitalizedWords`` (or CapWords)
+
+.. note:: When using abbreviations in CapWords, capitalize all the letters of the abbreviation. Thus HTTPServerError is better than HttpServerError.
+
+
+The following naming conventions are discouraged.
+
+* ``mixedCase`` (differs from CapitalizedWords by initial lowercase character!)
+* ``Capitalized_Words_With_Underscores``
+
+
+Names to Avoid
+==============
+
+* ``l`` - Lowercase letter el
+* ``O`` - Uppercase letter oh
+* ``I`` - Uppercase letter eye
+
+Never use any of these for single letter variable names.  They are often
+indistinguishable from the numerals one and zero.
+
+
+Contract and Library Names
+==========================
+
+Contracts should be named using the CapWords style.
+
+
+Events
+======
+
+Events should be named using the CapWords style.
+
+
+Function Names
+==============
+
+Functions should be lowercase with words separated by underscores.
+
+
+Function Arguments
 ==================
 
-TODO
+When writing library functions that operate on a custom struct, the struct
+should be the first argument and should always be named ``self``.
+
+
+Contract and Local Variables
+============================
+
+Use lowercase words separated by underscores.  Use trailing underscores to
+avoid collisions with reserved names.
+
+
+Constants
+=========
+
+Constants should be named with all capital letters with underscores separating
+words.  (for example:``MAX_BLOCKS``)
+
+
+Modifiers
+=========
+
+Function modifiers should use lowercase words separated by underscores.
+
+
+Avoiding Collisions
+===================
+
+* ``single_trailing_underscore_``
+
+This convention is suggested when the desired name collides with that of a
+built-in or otherwise reserved name.
+
 
 General Recommendations
 =======================
