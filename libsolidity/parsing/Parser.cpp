@@ -1056,7 +1056,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 				if (m_scanner->currentToken() == oppositeToken)
 					break;
 				else if (m_scanner->currentToken() == Token::Comma)
-					if (isArray && (m_scanner->peekNextToken() == (Token::Comma || oppositeToken)))
+					if (isArray && (m_scanner->peekNextToken() == Token::Comma || m_scanner->peekNextToken() == oppositeToken))
 						fatalParserError(std::string("Expected value in array cell after ',' ."));
 					m_scanner->next();
 			}
