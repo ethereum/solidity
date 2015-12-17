@@ -2843,12 +2843,10 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
 {
 	char const* text = R"(
 		contract C {
-			function f() returns (string) {
-				string memory x = "foo";
-				string memory y = "man";
-				string memory z = "choo";
-				return ([x, y, z][1]);
-			}
+			uint[3] a;
+            function f() returns (string) {
+                return (["foo", "man", "choo"][1]);
+            }
 		}
 	)";
 	BOOST_CHECK(success(text));
