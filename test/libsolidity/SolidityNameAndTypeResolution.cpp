@@ -2791,7 +2791,7 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
 		contract C {
 			uint[3] a;
             function f() returns (string) {
-                return (['foo', 'man', 'choo'][1]);
+                return (["foo", "man", "choo"][1]);
             }
 		}
 	)";
