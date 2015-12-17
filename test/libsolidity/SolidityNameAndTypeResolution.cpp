@@ -2743,14 +2743,55 @@ BOOST_AUTO_TEST_CASE(invalid_args_creating_memory_array)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
-/*BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing)
+BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion)
 {
 	char const* text = R"(
 		contract C {
-			uint[] a;
-            function f() returns (uint, uint) {
-                a = [1,2,3];
-                return (a[3], [3,4][0]);
+            function f() returns (uint) {
+				uint8 x = 7;
+				uint16 y = 8;
+                uint32[] memory z = [x, y];
+                return (z[0]);
+            }
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_declaration)
+{
+	char const* text = R"(
+		contract C {
+			uint[3] a;
+            function f() returns (uint) {
+				uint32[] z = [1, 2, 3, 5];
+                return (z[0]);
+            }
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type)
+{
+	char const* text = R"(
+		contract C {
+			uint[3] a;
+            function f() returns (uint) {
+                return ([0, 2, 3][1]);
+            }
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
+{
+	char const* text = R"(
+		contract C {
+			uint[3] a;
+            function f() returns (string) {
+                return (['foo', 'man', 'choo'][1]);
             }
 		}
 	)";
@@ -2762,12 +2803,12 @@ BOOST_AUTO_TEST_CASE(invalid_types_in_inline_array)
 	char const* text = R"(
 		contract C {
 			function f() {
-				uint[] x = [45, "foo", true];
+				uint[] x = [45, 'foo', true];
 			}
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
-}*/
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
