@@ -559,14 +559,10 @@ naming styles.
 * ``UPPERCASE``
 * ``UPPER_CASE_WITH_UNDERSCORES``
 * ``CapitalizedWords`` (or CapWords)
-
-.. note:: When using abbreviations in CapWords, capitalize all the letters of the abbreviation. Thus HTTPServerError is better than HttpServerError.
-
-
-The following naming conventions are discouraged.
-
 * ``mixedCase`` (differs from CapitalizedWords by initial lowercase character!)
 * ``Capitalized_Words_With_Underscores``
+
+.. note:: When using abbreviations in CapWords, capitalize all the letters of the abbreviation. Thus HTTPServerError is better than HttpServerError.
 
 
 Names to Avoid
@@ -595,7 +591,7 @@ Events should be named using the CapWords style.
 Function Names
 ==============
 
-Functions should be lowercase with words separated by underscores.
+Functions should use mixedCase.
 
 
 Function Arguments
@@ -608,8 +604,7 @@ should be the first argument and should always be named ``self``.
 Contract and Local Variables
 ============================
 
-Use lowercase words separated by underscores.  Use trailing underscores to
-avoid collisions with reserved names.
+Use mixedCase.
 
 
 Constants
