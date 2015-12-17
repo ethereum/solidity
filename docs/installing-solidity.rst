@@ -115,7 +115,7 @@ they relate only to Alethzero and Mix
     git clone --recursive https://github.com/ethereum/webthree-umbrella.git
     cd webthree-umbrella
     ./webthree-helpers/scripts/ethupdate.sh --no-push --simple-pull --project solidity # update Solidity repo
-    ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity all --cores 4 -DEVMJIT=0 # build Solidity and others
+    ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity --all --cores 4 -DEVMJIT=0 # build Solidity and others
                                                                                 #enabling DEVMJIT on OS X will not build
                                                                                 #feel free to enable it on Linux 
 
