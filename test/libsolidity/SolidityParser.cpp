@@ -1047,6 +1047,48 @@ BOOST_AUTO_TEST_CASE(using_for)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(inline_array_declaration)
+{
+	char const* text = R"(
+		contract c {
+			uint[] a;
+			function f() returns (uint, uint) {
+				a = [1,2,3];
+				return (a[3], [2,3,4][0]);
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+
+BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_lvalue)
+{
+	char const* text = R"(
+		contract c {
+			uint[] a;
+			function f() returns (uint) {
+				a = [,2,3];
+				return (a[0]);
+			}
+		}
+	)";
+	BOOST_CHECK(!successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_without_lvalue)
+{
+	char const* text = R"(
+		contract c {
+			uint[] a;
+			function f() returns (uint, uint) {
+				return ([3, ,4][0]);
+			}
+		}
+	)";
+	BOOST_CHECK(!successParse(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -780,6 +780,7 @@ bool TypeChecker::visit(Assignment const& _assignment)
 bool TypeChecker::visit(TupleExpression const& _tuple)
 {
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
+	solAssert(!_tuple.isInlineArray(), "Tuple type not properly declared");
 	TypePointers types;
 	if (_tuple.annotation().lValueRequested)
 	{
