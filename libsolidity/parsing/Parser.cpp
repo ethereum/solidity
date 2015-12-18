@@ -1004,6 +1004,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	{
 	case Token::TrueLiteral:
 	case Token::FalseLiteral:
+		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Number:
