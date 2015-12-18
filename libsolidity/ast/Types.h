@@ -510,7 +510,15 @@ public:
 		m_baseType(copyForLocationIfReference(_baseType)),
 		m_hasDynamicLength(false),
 		m_length(_length)
-	{}
+	{
+	}
+	/// Constructor for an inline array type [1, 2, 3, 5]
+	/*ArrayType(TypePointer const& _baseType,):
+		ReferenceType(DataLocation::Memory),
+		m_baseType(copyForLocationIfReference(_baseType)),
+		m_hasDynamicLength(false),
+		m_length(_length)
+	{}*/
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -523,6 +531,7 @@ public:
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	//virtual MemberList::MemberMap multipleMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer decodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
