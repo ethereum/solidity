@@ -93,6 +93,14 @@ BOOST_AUTO_TEST_CASE(relative_import_multiplex)
 	BOOST_CHECK(c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(simple_alias)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {}");
+	c.addSource("dir/a/b/c", "import \"../../.././a\" as x; contract B { function() { x.A r = x.A(20); } }");
+	BOOST_CHECK(c.compile());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

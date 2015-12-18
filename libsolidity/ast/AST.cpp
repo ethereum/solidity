@@ -56,11 +56,24 @@ Error ASTNode::createTypeError(string const& _description) const
 	return Error(Error::Type::TypeError) << errinfo_sourceLocation(location()) << errinfo_comment(_description);
 }
 
+SourceUnitAnnotation& SourceUnit::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new SourceUnitAnnotation();
+	return static_cast<SourceUnitAnnotation&>(*m_annotation);
+}
+
 ImportAnnotation& ImportDirective::annotation() const
 {
 	if (!m_annotation)
 		m_annotation = new ImportAnnotation();
 	return static_cast<ImportAnnotation&>(*m_annotation);
+}
+
+TypePointer ImportDirective::type() const
+{
+	solAssert(!!annotation().sourceUnit, "");
+	return make_shared<ModuleType>(*annotation().sourceUnit);
 }
 
 map<FixedHash<4>, FunctionTypePointer> ContractDefinition::interfaceFunctions() const

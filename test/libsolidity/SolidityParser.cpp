@@ -1047,6 +1047,27 @@ BOOST_AUTO_TEST_CASE(using_for)
 	BOOST_CHECK(successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(complex_import)
+{
+	char const* text = R"(
+		import "abc" as x;
+		import * as x from "abc";
+		import {a as b, c as d, f} from "def";
+		contract x {}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(from_is_not_keyword)
+{
+	// "from" is not a keyword although it is used as a keyword in import directives.
+	char const* text = R"(
+		contract from {
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
 BOOST_AUTO_TEST_CASE(inline_array_declaration)
 {
 	char const* text = R"(
