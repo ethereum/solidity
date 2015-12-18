@@ -913,14 +913,16 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 
 		if (dynamic_cast<ContractType const*>(type.actualType().get()))
 		{
-			auto const& funType = dynamic_cast<FunctionType const&>(*_memberAccess.annotation().type);
-			if (funType.location() != FunctionType::Location::Internal)
-				m_context << funType.externalIdentifier();
-			else
+			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 			{
-				auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
-				solAssert(!!function, "Function not found in member access");
-				m_context << m_context.functionEntryLabel(*function).pushTag();
+				if (funType->location() != FunctionType::Location::Internal)
+					m_context << funType->externalIdentifier();
+				else
+				{
+					auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
+					solAssert(!!function, "Function not found in member access");
+					m_context << m_context.functionEntryLabel(*function).pushTag();
+				}
 			}
 		}
 		else if (auto enumType = dynamic_cast<EnumType const*>(type.actualType().get()))
