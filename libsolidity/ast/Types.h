@@ -134,7 +134,7 @@ public:
 	{
 		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
 		FixedBytes, Contract, Struct, Function, Enum, Tuple,
-		Mapping, TypeType, Modifier, Magic
+		Mapping, TypeType, Modifier, Magic, Module
 	};
 
 	/// @{
@@ -969,6 +969,34 @@ private:
 };
 
 
+
+/**
+ * Special type for imported modules. These mainly give access to their scope via members.
+ */
+class ModuleType: public Type
+{
+public:
+	virtual Category category() const override { return Category::Module; }
+
+	explicit ModuleType(SourceUnit const& _source): m_sourceUnit(_source) {}
+
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override
+	{
+		return TypePointer();
+	}
+
+	virtual bool operator==(Type const& _other) const override;
+	virtual bool canBeStored() const override { return false; }
+	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual unsigned sizeOnStack() const override { return 0; }
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
+
+	virtual std::string toString(bool _short) const override;
+
+private:
+	SourceUnit const& m_sourceUnit;
+};
+
 /**
  * Special type for magic variables (block, msg, tx), similar to a struct but without any reference
  * (it always references a global singleton by name).
@@ -979,7 +1007,7 @@ public:
 	enum class Kind { Block, Message, Transaction };
 	virtual Category category() const override { return Category::Magic; }
 
-	explicit MagicType(Kind _kind);
+	explicit MagicType(Kind _kind): m_kind(_kind) {}
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override
 	{

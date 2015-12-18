@@ -111,6 +111,8 @@ bool CompilerStack::parse()
 		sourcePair.second.ast = Parser(m_errors).parse(sourcePair.second.scanner);
 		if (!sourcePair.second.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
+		else
+			sourcePair.second.ast->annotation().path = sourcePair.first;
 		sourceUnitsByName[sourcePair.first] = sourcePair.second.ast.get();
 	}
 	if (!Error::containsOnlyWarnings(m_errors))
@@ -376,7 +378,7 @@ void CompilerStack::resolveImports()
 		for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
-				string path = absolutePath(import->identifier(), _sourceName);
+				string path = absolutePath(import->path(), _sourceName);
 				import->annotation().absolutePath = path;
 				if (!m_sources.count(path))
 					BOOST_THROW_EXCEPTION(
@@ -384,6 +386,7 @@ void CompilerStack::resolveImports()
 							<< errinfo_sourceLocation(import->location())
 							<< errinfo_comment("Source not found.")
 					);
+				import->annotation().sourceUnit = m_sources.at(path).ast.get();
 
 				toposort(path, &m_sources[path]);
 			}

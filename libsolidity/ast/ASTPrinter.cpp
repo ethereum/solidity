@@ -49,7 +49,7 @@ void ASTPrinter::print(ostream& _stream)
 
 bool ASTPrinter::visit(ImportDirective const& _node)
 {
-	writeLine("ImportDirective \"" + _node.identifier() + "\"");
+	writeLine("ImportDirective \"" + _node.path() + "\"");
 	printSourcePart(_node);
 	return goDeeper();
 }
