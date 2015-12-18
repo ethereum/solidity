@@ -2747,10 +2747,25 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion)
 {
 	char const* text = R"(
 		contract C {
-            function f() returns (uint) {
+            function f() {
 				uint8 x = 7;
 				uint16 y = 8;
-                uint32[] memory z = [x, y];
+                uint32[] z = [x, y];
+            }
+		}
+	)";
+	BOOST_CHECK(success(text));
+	
+}
+
+/*BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion_strings)
+{
+	char const* text = R"(
+		contract C {
+            function f() returns (string) {
+				string x = "Hello";
+				string y = "World";
+                bytes[] memory z = [x, y];
                 return (z[0]);
             }
 		}
@@ -2758,13 +2773,12 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(inline_array_declaration)
+BOOST_AUTO_TEST_CASE(inline_array_declaration_const_int_conversion)
 {
 	char const* text = R"(
 		contract C {
-			uint[3] a;
             function f() returns (uint) {
-				uint32[] z = [1, 2, 3, 5];
+				uint32[] z = [1,2,3,5];
                 return (z[0]);
             }
 		}
@@ -2776,9 +2790,8 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type)
 {
 	char const* text = R"(
 		contract C {
-			uint[3] a;
             function f() returns (uint) {
-                return ([0, 2, 3][1]);
+                return ([0,2,3][1]);
             }
 		}
 	)";
@@ -2789,7 +2802,6 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
 {
 	char const* text = R"(
 		contract C {
-			uint[3] a;
             function f() returns (string) {
                 return (["foo", "man", "choo"][1]);
             }
@@ -2797,7 +2809,7 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
 	)";
 	BOOST_CHECK(success(text));
 }
-
+*/
 BOOST_AUTO_TEST_CASE(invalid_types_in_inline_array)
 {
 	char const* text = R"(
