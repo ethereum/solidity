@@ -785,7 +785,6 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	bool isArray = _tuple.isInlineArray();
 	if (_tuple.annotation().lValueRequested)
 	{
-		//will handle [0, 1, 2, 4, 9]
 		for (auto const& component: components)
 			if (component)
 			{
@@ -794,8 +793,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			}
 			else
 				types.push_back(TypePointer());
-		if (isArray) _tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, type(*components[0]), types.size());
-		else _tuple.annotation().type = make_shared<TupleType>(types);
+		_tuple.annotation().type = make_shared<TupleType>(types);
 		// If some of the components are not LValues, the error is reported above.
 		_tuple.annotation().isLValue = true;
 	}
@@ -812,7 +810,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				types.push_back(type(*components[i]));
 				if (i == 0 && isArray)
 					internalArrayType = types[i]->mobileType();
-				else if (isArray)
+				else if (isArray) 
 					internalArrayType = Type::commonType(internalArrayType, types[i]->mobileType());
 					
 				if (internalArrayType == nullptr && isArray) 
@@ -824,7 +822,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		if (components.size() == 1 && !isArray)
 			_tuple.annotation().type = type(*components[0]);
 		else if (isArray) 
-			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, internalArrayType, types.size());		
+			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, internalArrayType);		
 		else
 		{
 			if (components.size() == 2 && !components[1])

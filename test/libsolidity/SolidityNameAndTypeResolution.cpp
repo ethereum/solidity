@@ -2843,10 +2843,9 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
 {
 	char const* text = R"(
 		contract C {
-			uint[3] a;
-            function f() returns (string) {
-                return (["foo", "man", "choo"][1]);
-            }
+			function f() returns (string) {
+				return (["foo", "man", "choo"][1]);
+			}
 		}
 	)";
 	BOOST_CHECK(success(text));
@@ -2863,6 +2862,7 @@ BOOST_AUTO_TEST_CASE(invalid_types_in_inline_array)
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
