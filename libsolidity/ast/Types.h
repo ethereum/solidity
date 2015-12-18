@@ -134,7 +134,7 @@ public:
 	{
 		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
 		FixedBytes, Contract, Struct, Function, Enum, Tuple,
-		Mapping, TypeType, Modifier, Magic
+		Mapping, TypeType, Modifier, Magic, Module
 	};
 
 	/// @{
@@ -510,7 +510,15 @@ public:
 		m_baseType(copyForLocationIfReference(_baseType)),
 		m_hasDynamicLength(false),
 		m_length(_length)
-	{}
+	{
+	}
+	/// Constructor for an inline array type [1, 2, 3, 5]
+	/*ArrayType(TypePointer const& _baseType,):
+		ReferenceType(DataLocation::Memory),
+		m_baseType(copyForLocationIfReference(_baseType)),
+		m_hasDynamicLength(false),
+		m_length(_length)
+	{}*/
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -523,6 +531,7 @@ public:
 	virtual std::string toString(bool _short) const override;
 	virtual std::string canonicalName(bool _addDataLocation) const override;
 	virtual MemberList::MemberMap nativeMembers(ContractDefinition const* _currentScope) const override;
+	//virtual MemberList::MemberMap multipleMembers(ContractDefinition const* _currentScope) const override;
 	virtual TypePointer encodingType() const override;
 	virtual TypePointer decodingType() const override;
 	virtual TypePointer interfaceType(bool _inLibrary) const override;
@@ -969,6 +978,34 @@ private:
 };
 
 
+
+/**
+ * Special type for imported modules. These mainly give access to their scope via members.
+ */
+class ModuleType: public Type
+{
+public:
+	virtual Category category() const override { return Category::Module; }
+
+	explicit ModuleType(SourceUnit const& _source): m_sourceUnit(_source) {}
+
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override
+	{
+		return TypePointer();
+	}
+
+	virtual bool operator==(Type const& _other) const override;
+	virtual bool canBeStored() const override { return false; }
+	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual unsigned sizeOnStack() const override { return 0; }
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override;
+
+	virtual std::string toString(bool _short) const override;
+
+private:
+	SourceUnit const& m_sourceUnit;
+};
+
 /**
  * Special type for magic variables (block, msg, tx), similar to a struct but without any reference
  * (it always references a global singleton by name).
@@ -979,7 +1016,7 @@ public:
 	enum class Kind { Block, Message, Transaction };
 	virtual Category category() const override { return Category::Magic; }
 
-	explicit MagicType(Kind _kind);
+	explicit MagicType(Kind _kind): m_kind(_kind) {}
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override
 	{

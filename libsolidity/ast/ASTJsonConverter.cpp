@@ -91,7 +91,7 @@ Json::Value const& ASTJsonConverter::json()
 
 bool ASTJsonConverter::visit(ImportDirective const& _node)
 {
-	addJsonNode("Import", { make_pair("file", _node.identifier())});
+	addJsonNode("Import", { make_pair("file", _node.path())});
 	return true;
 }
 

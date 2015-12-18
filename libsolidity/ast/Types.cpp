@@ -1925,9 +1925,25 @@ string ModifierType::toString(bool _short) const
 	return name + ")";
 }
 
-MagicType::MagicType(MagicType::Kind _kind):
-	m_kind(_kind)
+bool ModuleType::operator==(Type const& _other) const
 {
+	if (_other.category() != category())
+		return false;
+	return &m_sourceUnit == &dynamic_cast<ModuleType const&>(_other).m_sourceUnit;
+}
+
+MemberList::MemberMap ModuleType::nativeMembers(ContractDefinition const*) const
+{
+	MemberList::MemberMap symbols;
+	for (auto const& symbolName: m_sourceUnit.annotation().exportedSymbols)
+		for (Declaration const* symbol: symbolName.second)
+			symbols.push_back(MemberList::Member(symbolName.first, symbol->type(), symbol));
+	return symbols;
+}
+
+string ModuleType::toString(bool) const
+{
+	return string("module \"") + m_sourceUnit.annotation().path + string("\"");
 }
 
 bool MagicType::operator==(Type const& _other) const
