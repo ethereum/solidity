@@ -1042,12 +1042,14 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 			}
 	}
 	else
+	{
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.push_back(MemberList::Member(
 				it.second->declaration().name(),
 				it.second->asMemberFunction(m_contract.isLibrary()),
 				&it.second->declaration()
 			));
+	}
 	return members;
 }
 
@@ -1858,6 +1860,12 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 	if (m_actualType->category() == Category::Contract)
 	{
 		ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).contractDefinition();
+		bool isBase = false;
+		if (_currentScope != nullptr)
+		{
+			auto const& currentBases = _currentScope->annotation().linearizedBaseContracts;
+			isBase = (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end());
+		}
 		if (contract.isLibrary())
 			for (auto const& it: contract.interfaceFunctions())
 				members.push_back(MemberList::Member(
@@ -1865,14 +1873,19 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 					it.second->asMemberFunction(true), // use callcode
 					&it.second->declaration()
 				));
-		else if (_currentScope != nullptr)
+		if (isBase)
 		{
-			auto const& currentBases = _currentScope->annotation().linearizedBaseContracts;
-			if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
-				// We are accessing the type of a base contract, so add all public and protected
-				// members. Note that this does not add inherited functions on purpose.
-				for (Declaration const* decl: contract.inheritableMembers())
-					members.push_back(MemberList::Member(decl->name(), decl->type(), decl));
+			// We are accessing the type of a base contract, so add all public and protected
+			// members. Note that this does not add inherited functions on purpose.
+			for (Declaration const* decl: contract.inheritableMembers())
+				members.push_back(MemberList::Member(decl->name(), decl->type(), decl));
+		}
+		else
+		{
+			for (auto const& stru: contract.definedStructs())
+				members.push_back(MemberList::Member(stru->name(), stru->type(), stru));
+			for (auto const& enu: contract.definedEnums())
+				members.push_back(MemberList::Member(enu->name(), enu->type(), enu));
 		}
 	}
 	else if (m_actualType->category() == Category::Enum)
