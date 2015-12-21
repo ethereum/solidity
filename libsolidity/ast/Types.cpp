@@ -831,6 +831,8 @@ bool ArrayType::operator==(Type const& _other) const
 		other.isDynamicallySized() != isDynamicallySized()
 	)
 		return false;
+	if (*other.baseType() != *baseType())
+		return false;
 	return isDynamicallySized() || length()  == other.length();
 }
 
