@@ -238,7 +238,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 {
 	ASTNodeFactory nodeFactory(*this);
-	ASTPointer<Identifier> name(parseIdentifier());
+	ASTPointer<UserDefinedTypeName> name(parseUserDefinedTypeName());
 	vector<ASTPointer<Expression>> arguments;
 	if (m_scanner->currentToken() == Token::LParen)
 	{
@@ -533,8 +533,7 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	ASTNodeFactory nodeFactory(*this);
 
 	expectToken(Token::Using);
-	//@todo this should actually parse a full path.
-	ASTPointer<Identifier> library(parseIdentifier());
+	ASTPointer<UserDefinedTypeName> library(parseUserDefinedTypeName());
 	ASTPointer<TypeName> typeName;
 	expectToken(Token::For);
 	if (m_scanner->currentToken() == Token::Mul)
@@ -570,6 +569,20 @@ ASTPointer<Identifier> Parser::parseIdentifier()
 	return nodeFactory.createNode<Identifier>(expectIdentifierToken());
 }
 
+ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
+{
+	ASTNodeFactory nodeFactory(*this);
+	nodeFactory.markEndPosition();
+	vector<ASTString> identifierPath{*expectIdentifierToken()};
+	while (m_scanner->currentToken() == Token::Period)
+	{
+		m_scanner->next();
+		nodeFactory.markEndPosition();
+		identifierPath.push_back(*expectIdentifierToken());
+	}
+	return nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
+}
+
 ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 {
 	ASTNodeFactory nodeFactory(*this);
@@ -589,18 +602,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else if (token == Token::Mapping)
 		type = parseMapping();
 	else if (token == Token::Identifier)
-	{
-		ASTNodeFactory nodeFactory(*this);
-		nodeFactory.markEndPosition();
-		vector<ASTString> identifierPath{*expectIdentifierToken()};
-		while (m_scanner->currentToken() == Token::Period)
-		{
-			m_scanner->next();
-			nodeFactory.markEndPosition();
-			identifierPath.push_back(*expectIdentifierToken());
-		}
-		type = nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
-	}
+		type = parseUserDefinedTypeName();
 	else
 		fatalParserError(string("Expected type name"));
 

@@ -340,7 +340,7 @@ class InheritanceSpecifier: public ASTNode
 public:
 	InheritanceSpecifier(
 		SourceLocation const& _location,
-		ASTPointer<Identifier> const& _baseName,
+		ASTPointer<UserDefinedTypeName> const& _baseName,
 		std::vector<ASTPointer<Expression>> _arguments
 	):
 		ASTNode(_location), m_baseName(_baseName), m_arguments(_arguments) {}
@@ -348,11 +348,11 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Identifier const& name() const { return *m_baseName; }
+	UserDefinedTypeName const& name() const { return *m_baseName; }
 	std::vector<ASTPointer<Expression>> const& arguments() const { return m_arguments; }
 
 private:
-	ASTPointer<Identifier> m_baseName;
+	ASTPointer<UserDefinedTypeName> m_baseName;
 	std::vector<ASTPointer<Expression>> m_arguments;
 };
 
@@ -366,7 +366,7 @@ class UsingForDirective: public ASTNode
 public:
 	UsingForDirective(
 		SourceLocation const& _location,
-		ASTPointer<Identifier> const& _libraryName,
+		ASTPointer<UserDefinedTypeName> const& _libraryName,
 		ASTPointer<TypeName> const& _typeName
 	):
 		ASTNode(_location), m_libraryName(_libraryName), m_typeName(_typeName) {}
@@ -374,12 +374,12 @@ public:
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Identifier const& libraryName() const { return *m_libraryName; }
+	UserDefinedTypeName const& libraryName() const { return *m_libraryName; }
 	/// @returns the type name the library is attached to, null for `*`.
 	TypeName const* typeName() const { return m_typeName.get(); }
 
 private:
-	ASTPointer<Identifier> m_libraryName;
+	ASTPointer<UserDefinedTypeName> m_libraryName;
 	ASTPointer<TypeName> m_typeName;
 };
 

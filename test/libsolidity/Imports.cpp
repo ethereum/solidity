@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(simple_alias)
 {
 	CompilerStack c;
 	c.addSource("a", "contract A {}");
-	c.addSource("dir/a/b/c", "import \"../../.././a\" as x; contract B { function() { x.A r = x.A(20); } }");
+	c.addSource("dir/a/b/c", "import \"../../.././a\" as x; contract B is x.A { function() { x.A r = x.A(20); } }");
 	BOOST_CHECK(c.compile());
 }
 
