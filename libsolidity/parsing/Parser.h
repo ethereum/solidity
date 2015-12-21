@@ -77,6 +77,7 @@ private:
 	ASTPointer<UsingForDirective> parseUsingDirective();
 	ASTPointer<ModifierInvocation> parseModifierInvocation();
 	ASTPointer<Identifier> parseIdentifier();
+	ASTPointer<UserDefinedTypeName> parseUserDefinedTypeName();
 	ASTPointer<TypeName> parseTypeName(bool _allowVar);
 	ASTPointer<Mapping> parseMapping();
 	ASTPointer<ParameterList> parseParameterList(
