@@ -1348,6 +1348,21 @@ BOOST_AUTO_TEST_CASE(enum_member_access)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(enum_member_access_accross_contracts)
+{
+	char const* text = R"(
+			contract Interface {
+				enum MyEnum { One, Two }
+			}
+			contract Impl {
+				function test() returns (Interface.MyEnum) {
+					return Interface.MyEnum.One;
+				}
+			}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
 {
 	char const* text = R"(
@@ -2741,6 +2756,17 @@ BOOST_AUTO_TEST_CASE(invalid_args_creating_memory_array)
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(function_overload_array_type)
+{
+	char const* text = R"(
+			contract M {
+				function f(uint[] values);
+				function f(int[] values);
+			}
+	)";
+	BOOST_CHECK(success(text));
 }
 
 /*BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing)
