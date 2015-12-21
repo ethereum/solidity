@@ -807,12 +807,46 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
+<<<<<<< d5c74830e02c7985ac86df2608ccc615340a5158
+=======
+				if (i == 0) {
+					t = types[i];
+				}
+				else if (isArray) {
+					if (t->isImplicitlyConvertibleTo(*types[i]))
+						cout << "WE CAN CONVERT " << types[i]->toString() << " TO " << t->toString() << endl;
+					else
+						cout << "WE CANNOT CONVERT " << types[i]->toString() << " TO " << t->toString() << endl;
+					t = Type::commonType(t, types[i]);
+					cout << "t after commonType: " << t << endl;
+				}
+					
+				std::cout << "Type t = " << types[i] << " contains " << t << std::endl;
+				if (t == nullptr && isArray) {
+					cout << "hit null pointer error" << endl;
+					fatalTypeError(_tuple.location(), "Cannot convert elements of array");
+				}
+				//else if (t != nullptr && isArray)
+									
+>>>>>>> where I'm at currently
 			}
 			else
 				types.push_back(TypePointer());
 		}
 		if (components.size() == 1)
 			_tuple.annotation().type = type(*components[0]);
+<<<<<<< d5c74830e02c7985ac86df2608ccc615340a5158
+=======
+		else if (isArray) 
+		{
+			std::cout << "Hit is Array making space" << std::endl;
+			cout << "t after loop: " << t->toString() << endl;
+			//ArrayType const& actualType = dynamic_cast<ArrayType const&>(*baseType); 
+			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, t);
+			cout << "Array Type: " << _tuple.annotation().type << endl;
+			
+		}	
+>>>>>>> where I'm at currently
 		else
 		{
 			if (components.size() == 2 && !components[1])
