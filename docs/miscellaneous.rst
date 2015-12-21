@@ -115,13 +115,13 @@ If `solc` is called with the option `--link`, all input files are interpreted to
 Tips and Tricks
 ***************
 
- * Use `delete` on arrays to delete all its elements.
- * Use shorter types for struct elements and sort them such that short types are grouped together. This can lower the gas costs as multiple SSTORE operations might be combined into a single (SSTORE costs 5000 or 20000 gas, so this is what you want to optimise). Use the gas price estimator (with optimiser enabled) to check!
- * Make your state variables public - the compiler will create [getters](#accessor-functions) for you for free.
- * If you end up checking conditions on input or state a lot at the beginning of your functions, try using [modifiers](#function-modifiers)
- * If your contract has a function called `send` but you want to use the built-in send-function, use `address(contractVariable).send(amount)`.
- * If you want your contracts to receive ether when called via `send`, you have to implement the [fallback function](#fallback-functions).
- * Initialise storage structs with a single assignment: `x = MyStruct({a: 1, b: 2});`
+* Use `delete` on arrays to delete all its elements.
+* Use shorter types for struct elements and sort them such that short types are grouped together. This can lower the gas costs as multiple SSTORE operations might be combined into a single (SSTORE costs 5000 or 20000 gas, so this is what you want to optimise). Use the gas price estimator (with optimiser enabled) to check!
+* Make your state variables public - the compiler will create :ref:`getters <visibility-and-accessors>` for you for free.
+* If you end up checking conditions on input or state a lot at the beginning of your functions, try using :ref:`modifiers`.
+* If your contract has a function called `send` but you want to use the built-in send-function, use `address(contractVariable).send(amount)`.
+* If you do **not** want your contracts to receive ether when called via `send`, you can add a throwing fallback function `function() { throw; }`.
+* Initialise storage structs with a single assignment: `x = MyStruct({a: 1, b: 2});`
 
 ********
 Pitfalls
@@ -129,7 +129,7 @@ Pitfalls
 
 Unfortunately, there are some subtleties the compiler does not yet warn you about.
 
- - In `for (var i = 0; i < arrayName.length; i++) { ... }`, the type of `i` will be `uint8`, because this is the smallest type that is required to hold the value `0`. If the array has more than 255 elements, the loop will not terminate.
+- In `for (var i = 0; i < arrayName.length; i++) { ... }`, the type of `i` will be `uint8`, because this is the smallest type that is required to hold the value `0`. If the array has more than 255 elements, the loop will not terminate.
 
 **********
 Cheatsheet
@@ -140,30 +140,30 @@ Cheatsheet
 Global Variables
 ================
 
- - `block.coinbase` (`address`): current block miner's address
- - `block.difficulty` (`uint`): current block difficulty
- - `block.gaslimit` (`uint`): current block gaslimit
- - `block.number` (`uint`): current block number
- - `block.blockhash` (`function(uint) returns (bytes32)`): hash of the given block - only works for 256 most recent blocks
- - `block.timestamp` (`uint`): current block timestamp
- - `msg.data` (`bytes`): complete calldata
- - `msg.gas` (`uint`): remaining gas
- - `msg.sender` (`address`): sender of the message (current call)
- - `msg.value` (`uint`): number of wei sent with the message
- - `now` (`uint`): current block timestamp (alias for `block.timestamp`)
- - `tx.gasprice` (`uint`): gas price of the transaction
- - `tx.origin` (`address`): sender of the transaction (full call chain)
- - `sha3(...) returns (bytes32)`: compute the Ethereum-SHA3 hash of the (tightly packed) arguments
- - `sha256(...) returns (bytes32)`: compute the SHA256 hash of the (tightly packed) arguments
- - `ripemd160(...) returns (bytes20)`: compute RIPEMD of 256 the (tightly packed) arguments
- - `ecrecover(bytes32, uint8, bytes32, bytes32) returns (address)`: recover public key from elliptic curve signature
- - `addmod(uint x, uint y, uint k) returns (uint)`: compute `(x + y) % k` where the addition is performed with arbitrary precision and does not wrap around at `2**256`.
- - `mulmod(uint x, uint y, uint k) returns (uint)`: compute `(x * y) % k` where the multiplication is performed with arbitrary precision and does not wrap around at `2**256`.
- - `this` (current contract's type): the current contract, explicitly convertible to `address`
- - `super`: the contract one level higher in the inheritance hierarchy
- - `selfdestruct(address)`: destroy the current contract, sending its funds to the given address
- - `<address>.balance`: balance of the address in Wei
- - `<address>.send(uint256) returns (bool)`: send given amount of Wei to address, returns `false` on failure.
+- `block.coinbase` (`address`): current block miner's address
+- `block.difficulty` (`uint`): current block difficulty
+- `block.gaslimit` (`uint`): current block gaslimit
+- `block.number` (`uint`): current block number
+- `block.blockhash` (`function(uint) returns (bytes32)`): hash of the given block - only works for 256 most recent blocks
+- `block.timestamp` (`uint`): current block timestamp
+- `msg.data` (`bytes`): complete calldata
+- `msg.gas` (`uint`): remaining gas
+- `msg.sender` (`address`): sender of the message (current call)
+- `msg.value` (`uint`): number of wei sent with the message
+- `now` (`uint`): current block timestamp (alias for `block.timestamp`)
+- `tx.gasprice` (`uint`): gas price of the transaction
+- `tx.origin` (`address`): sender of the transaction (full call chain)
+- `sha3(...) returns (bytes32)`: compute the Ethereum-SHA3 hash of the (tightly packed) arguments
+- `sha256(...) returns (bytes32)`: compute the SHA256 hash of the (tightly packed) arguments
+- `ripemd160(...) returns (bytes20)`: compute RIPEMD of 256 the (tightly packed) arguments
+- `ecrecover(bytes32, uint8, bytes32, bytes32) returns (address)`: recover public key from elliptic curve signature
+- `addmod(uint x, uint y, uint k) returns (uint)`: compute `(x + y) % k` where the addition is performed with arbitrary precision and does not wrap around at `2**256`.
+- `mulmod(uint x, uint y, uint k) returns (uint)`: compute `(x * y) % k` where the multiplication is performed with arbitrary precision and does not wrap around at `2**256`.
+- `this` (current contract's type): the current contract, explicitly convertible to `address`
+- `super`: the contract one level higher in the inheritance hierarchy
+- `selfdestruct(address)`: destroy the current contract, sending its funds to the given address
+- `<address>.balance`: balance of the address in Wei
+- `<address>.send(uint256) returns (bool)`: send given amount of Wei to address, returns `false` on failure.
 
 .. index:: visibility, public, private, external, internal
 
@@ -176,10 +176,10 @@ Function Visibility Specifiers
         return true;
     }
 
- - `public`: visible externally and internally (creates accessor function for storage/state variables)
- - `private`: only visible in the current contract
- - `external`: only visible externally (only for functions) - i.e. can only be message-called (via `this.fun`)
- - `internal`: only visible internally
+- `public`: visible externally and internally (creates accessor function for storage/state variables)
+- `private`: only visible in the current contract
+- `external`: only visible externally (only for functions) - i.e. can only be message-called (via `this.fun`)
+- `internal`: only visible internally
 
 
 .. index:: modifiers, constant, anonymous, indexed
@@ -187,8 +187,8 @@ Function Visibility Specifiers
 Modifiers
 =========
 
- - `constant` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
- - `constant` for functions: Disallows modification of state - this is not enforced yet.
- - `anonymous` for events: Does not store event signature as topic.
- - `indexed` for event parameters: Stores the parameter as topic.
+- `constant` for state variables: Disallows assignment (except initialisation), does not occupy storage slot.
+- `constant` for functions: Disallows modification of state - this is not enforced yet.
+- `anonymous` for events: Does not store event signature as topic.
+- `indexed` for event parameters: Stores the parameter as topic.
 

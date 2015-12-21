@@ -124,6 +124,8 @@ This means that cyclic creation dependencies are impossible.
 
 .. index:: ! visibility, external, public, private, internal
 
+.. _visibility-and-accessors:
+
 ************************
 Visibility and Accessors
 ************************
@@ -231,6 +233,8 @@ Note that the mapping in the struct is omitted because there
 is no good way to provide the key for the mapping.
 
 .. index:: ! function;modifier
+
+.. _modifiers:
 
 ******************
 Function Modifiers

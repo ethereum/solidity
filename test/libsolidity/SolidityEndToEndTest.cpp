@@ -5377,6 +5377,21 @@ BOOST_AUTO_TEST_CASE(library_stray_values)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(33)) == encodeArgs(u256(42)));
 }
 
+BOOST_AUTO_TEST_CASE(cross_contract_types)
+{
+	char const* sourceCode = R"(
+		contract Lib { struct S {uint a; uint b; } }
+		contract Test {
+			function f() returns (uint r) {
+				var x = Lib.S({a: 2, b: 3});
+				r = x.b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(3)));
+}
+
 BOOST_AUTO_TEST_CASE(simple_throw)
 {
 	char const* sourceCode = R"(

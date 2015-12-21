@@ -554,6 +554,16 @@ What is the difference between `bytes` and `byte[]`?
 CALLDATA) or in memory, every single element of a `byte[]` is padded to 32
 bytes which wastes 31 bytes per element.
 
+Is it possible to send a value while calling an overloaded function?
+====================================================================
+
+It's a known missing feature. https://www.pivotaltracker.com/story/show/92020468
+as part of https://www.pivotaltracker.com/n/projects/1189488
+
+Best solution currently see is to introduce a special case for gas and value and
+just re-check whether they are present at the point of overload resolution.
+
+
 ******************
 Advanced Questions
 ******************
