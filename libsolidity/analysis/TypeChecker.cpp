@@ -780,8 +780,9 @@ bool TypeChecker::visit(Assignment const& _assignment)
 bool TypeChecker::visit(TupleExpression const& _tuple)
 {
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
-	solAssert(!_tuple.isInlineArray(), "Tuple type not properly declared");
 	TypePointers types;
+    TypePointer t;
+    bool isArray = _tuple.isInlineArray();
 	if (_tuple.annotation().lValueRequested)
 	{
 		for (auto const& component: components)
@@ -800,6 +801,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	{
 		for (size_t i = 0; i < components.size(); ++i)
 		{
+			cout << endl;
 			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).
 			if (!components[i] && !(i == 1 && components.size() == 2))
 				fatalTypeError(_tuple.location(), "Tuple component cannot be empty.");
@@ -807,46 +809,40 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
-<<<<<<< d5c74830e02c7985ac86df2608ccc615340a5158
-=======
 				if (i == 0) {
-					t = types[i];
+					t = types[i]->mobileType();
 				}
 				else if (isArray) {
 					if (t->isImplicitlyConvertibleTo(*types[i]))
 						cout << "WE CAN CONVERT " << types[i]->toString() << " TO " << t->toString() << endl;
+					else if (t->isImplicitlyConvertibleTo(*types[i]->mobileType()))
+						cout << "WE CAN CONVERT " << types[i]->toString() << " AS " << types[i]->mobileType()->toString() << " TO " << t->toString() << endl;
 					else
 						cout << "WE CANNOT CONVERT " << types[i]->toString() << " TO " << t->toString() << endl;
-					t = Type::commonType(t, types[i]);
-					cout << "t after commonType: " << t << endl;
+					t = Type::commonType(t, types[i]->mobileType());
+					if (t != nullptr) cout << "t after commonType: " << t->toString() << endl;
+					else cout << "t is NULL" << endl;
 				}
 					
-				std::cout << "Type t = " << types[i] << " contains " << t << std::endl;
+				cout << "Type t = " << types[i] << " contains " << t << endl;
 				if (t == nullptr && isArray) {
 					cout << "hit null pointer error" << endl;
 					fatalTypeError(_tuple.location(), "Cannot convert elements of array");
 				}
-				//else if (t != nullptr && isArray)
-									
->>>>>>> where I'm at currently
 			}
 			else
 				types.push_back(TypePointer());
 		}
-		if (components.size() == 1)
+		if (components.size() == 1 && !isArray)
 			_tuple.annotation().type = type(*components[0]);
-<<<<<<< d5c74830e02c7985ac86df2608ccc615340a5158
-=======
 		else if (isArray) 
 		{
-			std::cout << "Hit is Array making space" << std::endl;
-			cout << "t after loop: " << t->toString() << endl;
-			//ArrayType const& actualType = dynamic_cast<ArrayType const&>(*baseType); 
+			cout << "Hit is Array making space" << endl;
+			cout << "t after loop: " << t->toString() << endl; 
 			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, t);
 			cout << "Array Type: " << _tuple.annotation().type << endl;
 			
 		}	
->>>>>>> where I'm at currently
 		else
 		{
 			if (components.size() == 2 && !components[1])
