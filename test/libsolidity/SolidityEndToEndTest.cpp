@@ -86,6 +86,64 @@ BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
 	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(-8)));
 }
 
+BOOST_AUTO_TEST_CASE(conditional_expression_true_literal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				return true ? 5 : 10;
+ 			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(5)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_false_literal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				return false ? 5 : 10;
+ 			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(10)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_false_literal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) returns(uint d) {
+				return x > 100 ? 
+							x > 1000 ? 1000 : 100
+							:
+							x > 50 ? 50 : 10;
+ 			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1001)) == toBigEndian(u256(1000)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(500)) == toBigEndian(u256(100)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(80)) == toBigEndian(u256(50)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(40)) == toBigEndian(u256(10)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_as_left_value)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) returns(uint d) {
+				uint y = 1;
+				uint z = 1;
+				(x > 10 ? y : z) = 3;
+				return y ** z;
+ 			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(20)) == toBigEndian(u256(3)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(5)) == toBigEndian(u256(1)));
+}
+
 BOOST_AUTO_TEST_CASE(recursive_calls)
 {
 	char const* sourceCode = "contract test {\n"
