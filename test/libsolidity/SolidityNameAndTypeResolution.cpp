@@ -2960,6 +2960,30 @@ BOOST_AUTO_TEST_CASE(continue_not_in_loop_2)
 	BOOST_CHECK(expectError(text) == Error::Type::SyntaxError);
 }
 
+BOOST_AUTO_TEST_CASE(invalid_different_types_for_conditional_expression)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				true ? true : 2;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_left_value_in_conditional_expression)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				(true ? 3 : 5) = 1;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
