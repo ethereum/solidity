@@ -2767,7 +2767,6 @@ BOOST_AUTO_TEST_CASE(function_overload_array_type)
 }
 
 BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion)
-<<<<<<< HEAD
 {
 	char const* text = R"(
 			contract C {
@@ -2793,57 +2792,30 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion_st
 				string y = "World";
                 string[] z = [x, y];
                 return (z[0]);
-=======
-{
-	char const* text = R"(
-		contract C {
-            function f() {
-				uint8 x = 7;
-				uint16 y = 8;
-                uint32[] z = [x, y];
->>>>>>> 89e449043e02dc2c3e3c800608840d3920dc9a41
             }
 		}
 	)";
 	BOOST_CHECK(success(text));
-<<<<<<< HEAD
 }
+
 BOOST_AUTO_TEST_CASE(inline_array_declaration_const_int_conversion)
 {
 	char const* text = R"(
 		contract C {
             function f() returns (uint) {
 				uint8[] memory z = [1,2,3,5];
-=======
-	
-}
-
-/*BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion_strings)
-{
-	char const* text = R"(
-		contract C {
-            function f() returns (string) {
-				string x = "Hello";
-				string y = "World";
-                bytes[] memory z = [x, y];
->>>>>>> 89e449043e02dc2c3e3c800608840d3920dc9a41
                 return (z[0]);
             }
 		}
 	)";
 	BOOST_CHECK(success(text));
 }
-<<<<<<< HEAD
-BOOST_AUTO_TEST_CASE(inline_array_declaration_const_string_conversion)
-=======
 
-BOOST_AUTO_TEST_CASE(inline_array_declaration_const_int_conversion)
->>>>>>> 89e449043e02dc2c3e3c800608840d3920dc9a41
+BOOST_AUTO_TEST_CASE(inline_array_declaration_const_string_conversion)
 {
 	char const* text = R"(
 		contract C {
             function f() returns (uint) {
-<<<<<<< HEAD
 				string[] memory z = ["Hello", "World"];
                 return (z[0]);
             }
@@ -2851,6 +2823,7 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_const_int_conversion)
 	)";
 	BOOST_CHECK(success(text));
 }
+
 BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type)
 {
 	char const* text = R"(
@@ -2862,6 +2835,7 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type)
 	)";
 	BOOST_CHECK(success(text));
 }
+
 BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
 {
 	char const* text = R"(
@@ -2871,40 +2845,12 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
 				string memory y = "man";
 				string memory z = "choo";
                 return ([x, y, z][1]);
-=======
-				uint32[] z = [1,2,3,5];
-                return (z[0]);
->>>>>>> 89e449043e02dc2c3e3c800608840d3920dc9a41
             }
 		}
 	)";
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type)
-{
-	char const* text = R"(
-		contract C {
-            function f() returns (uint) {
-                return ([0,2,3][1]);
-            }
-		}
-	)";
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
-{
-	char const* text = R"(
-		contract C {
-            function f() returns (string) {
-                return (["foo", "man", "choo"][1]);
-            }
-		}
-	)";
-	BOOST_CHECK(success(text));
-}
-*/
 BOOST_AUTO_TEST_CASE(invalid_types_in_inline_array)
 {
 	char const* text = R"(
