@@ -1119,6 +1119,33 @@ public:
 	ExpressionAnnotation& annotation() const override;
 };
 
+class Conditional: public Expression
+{
+public:
+	Conditional(
+		SourceLocation const& _location,
+		ASTPointer<Expression> const& _condition,
+		ASTPointer<Expression> const& _trueExpression,
+		ASTPointer<Expression> const& _falseExpression
+	):
+		Expression(_location),
+		m_condition(_condition),
+		m_trueExpression(_trueExpression),
+		m_falseExpression(_falseExpression)
+	{}
+	virtual void accept(ASTVisitor& _visitor) override;
+	virtual void accept(ASTConstVisitor& _visitor) const override;
+
+	Expression const& condition() const { return *m_condition; }
+	Expression const& trueExpression() const { return *m_trueExpression; }
+	Expression const& falseExpression() const { return *m_falseExpression; }
+
+private:
+	ASTPointer<Expression> m_condition;
+	ASTPointer<Expression> m_trueExpression;
+	ASTPointer<Expression> m_falseExpression;
+};
+
 /// Assignment, can also be a compound assignment.
 /// Examples: (a = 7 + 8) or (a *= 2)
 class Assignment: public Expression
