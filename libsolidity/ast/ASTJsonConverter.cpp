@@ -217,6 +217,12 @@ bool ASTJsonConverter::visit(ExpressionStatement const&)
 	return true;
 }
 
+bool ASTJsonConverter::visit(Conditional const&)
+{
+	addJsonNode("Conditional", {}, true);
+	return true;
+}
+
 bool ASTJsonConverter::visit(Assignment const& _node)
 {
 	addJsonNode("Assignment",
@@ -393,6 +399,11 @@ void ASTJsonConverter::endVisit(VariableDeclarationStatement const&)
 }
 
 void ASTJsonConverter::endVisit(ExpressionStatement const&)
+{
+	goUp();
+}
+
+void ASTJsonConverter::endVisit(Conditional const&)
 {
 	goUp();
 }
