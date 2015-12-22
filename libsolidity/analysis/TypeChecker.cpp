@@ -744,6 +744,33 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 			typeError(_statement.expression().location(), "Invalid integer constant.");
 }
 
+void TypeChecker::endVisit(Conditional const& _conditional)
+{
+	TypePointer const& conditionType = type(_conditional.condition());
+	if (!conditionType->isImplicitlyConvertibleTo(BoolType()))
+		typeError(
+			_conditional.location(),
+			"Conditional expression's type " +
+			conditionType->toString() +
+			" doesn't match bool type."
+		);
+
+	TypePointer const& trueType = type(_conditional.trueExpression());
+	TypePointer const& falseType = type(_conditional.falseExpression());
+	// we fake it as an equal operator, but any other comparison operator can work.
+	TypePointer commonType = trueType->binaryOperatorResult(Token::Equal, falseType);
+	if (!commonType)
+		typeError(
+			_conditional.location(),
+			"True expression's type " +
+			trueType->toString() +
+			" doesn't match false expression's type " +
+			falseType->toString() +
+			"."
+		);
+	_conditional.annotation().type = commonType;
+}
+
 bool TypeChecker::visit(Assignment const& _assignment)
 {
 	requireLValue(_assignment.leftHandSide());
