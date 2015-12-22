@@ -1111,6 +1111,86 @@ BOOST_AUTO_TEST_CASE(inline_array_empty_cells_check_without_lvalue)
 	BOOST_CHECK(!successParse(text));
 }
 
+BOOST_AUTO_TEST_CASE(conditional_true_false_literal)
+{
+	char const* text = R"(
+		contract A {
+			function f() {
+				uint x = true ? 1 : 0;
+				uint y = false ? 0 : 1;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_with_constants)
+{
+	char const* text = R"(
+		contract A {
+			function f() {
+				uint x = 3 > 0 ? 3 : 0;
+				uint y = (3 > 0) ? 3 : 0;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_with_variables)
+{
+	char const* text = R"(
+		contract A {
+			function f() {
+				uint x = 3;
+				uint y = 1;
+				uint z = (x > y) ? x : y;
+				uint w = x > y ? x : y;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_multiple)
+{
+	char const* text = R"(
+		contract A {
+			function f() {
+				uint x = 3 < 0 ? 2 > 1 ? 2 : 1 : 7 > 2 ? 7 : 6;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_with_assignment)
+{
+	char const* text = R"(
+		contract A {
+			function f() {
+				uint y = 1;
+				uint x = 3 < 0 ? x = 3 : 6;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_as_left_value)
+{
+	char const* text = R"(
+		contract A {
+			function f() {
+				uint x;
+				uint y;
+				(true ? x : y) = 3;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
