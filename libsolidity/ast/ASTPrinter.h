@@ -75,6 +75,7 @@ public:
 	bool visit(Throw const& _node) override;
 	bool visit(VariableDeclarationStatement const& _node) override;
 	bool visit(ExpressionStatement const& _node) override;
+	bool visit(Conditional const& _node) override;
 	bool visit(Assignment const& _node) override;
 	bool visit(TupleExpression const& _node) override;
 	bool visit(UnaryOperation const& _node) override;
@@ -115,6 +116,7 @@ public:
 	void endVisit(Throw const&) override;
 	void endVisit(VariableDeclarationStatement const&) override;
 	void endVisit(ExpressionStatement const&) override;
+	void endVisit(Conditional const&) override;
 	void endVisit(Assignment const&) override;
 	void endVisit(TupleExpression const&) override;
 	void endVisit(UnaryOperation const&) override;
