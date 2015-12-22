@@ -799,39 +799,22 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	}
 	else
 	{	
-		cout << endl << "Components Size before loop: " << components.size() << endl;
-
 		for (size_t i = 0; i < components.size(); ++i)
 		{
-			cout << endl;
 			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).
 			if (!components[i] && !(i == 1 && components.size() == 2))
 				fatalTypeError(_tuple.location(), "Tuple component cannot be empty.");
 			else if (components[i])
 			{
-				
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
-				if (i == 0) {
+				if (i == 0)
 					t = types[i]->mobileType();
-				}
-				else if (isArray) {
-					if (t->isImplicitlyConvertibleTo(*types[i]))
-						cout << "WE CAN CONVERT " << types[i]->toString() << " TO " << t->toString() << endl;
-					else if (t->isImplicitlyConvertibleTo(*types[i]->mobileType()))
-						cout << "WE CAN CONVERT " << types[i]->toString() << " AS " << types[i]->mobileType()->toString() << " TO " << t->toString() << endl;
-					else
-						cout << "WE CANNOT CONVERT " << types[i]->toString() << " TO " << t->toString() << endl;
+				else if (isArray)
 					t = Type::commonType(t, types[i]->mobileType());
-					if (t != nullptr) cout << "t after commonType: " << t->toString() << endl;
-					else cout << "t is NULL" << endl;
-				}
 					
-				cout << "Type t = " << types[i] << " contains " << t << endl;
-				if (t == nullptr && isArray) {
-					cout << "hit null pointer error" << endl;
+				if (t == nullptr && isArray) 
 					fatalTypeError(_tuple.location(), "Cannot convert elements of array");
-				}
 			}
 			else
 				types.push_back(TypePointer());
@@ -839,13 +822,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		if (components.size() == 1 && !isArray)
 			_tuple.annotation().type = type(*components[0]);
 		else if (isArray) 
-		{
-			cout << "Hit is Array making space" << endl;
-			cout << "t after loop: " << t->toString() << endl; 
-			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, t);
-			cout << "Array Type: " << _tuple.annotation().type << endl;
-			
-		}	
+			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, t);		
 		else
 		{
 			if (components.size() == 2 && !components[1])

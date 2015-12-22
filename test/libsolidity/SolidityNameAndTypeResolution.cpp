@@ -2788,9 +2788,9 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion_st
 	char const* text = R"(
 		contract C {
             function f() returns (string) {
-				string x = "Hello";
-				string y = "World";
-                string[] z = [x, y];
+				string memory x = "Hello";
+				string memory y = "World";
+                string[] memory z = [x, y];
                 return (z[0]);
             }
 		}
@@ -2815,7 +2815,7 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_const_string_conversion)
 {
 	char const* text = R"(
 		contract C {
-            function f() returns (uint) {
+            function f() returns (string) {
 				string[] memory z = ["Hello", "World"];
                 return (z[0]);
             }
