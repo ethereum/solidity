@@ -808,7 +808,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
-				if (i == 0)
+				if (i == 0 && isArray)
 					t = types[i]->mobileType();
 				else if (isArray)
 					t = Type::commonType(t, types[i]->mobileType());
