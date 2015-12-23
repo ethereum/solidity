@@ -248,6 +248,14 @@ bool ASTPrinter::visit(ExpressionStatement const& _node)
 	return goDeeper();
 }
 
+bool ASTPrinter::visit(Conditional const& _node)
+{
+	writeLine("Conditional");
+	printType(_node);
+	printSourcePart(_node);
+	return goDeeper();
+}
+
 bool ASTPrinter::visit(Assignment const& _node)
 {
 	writeLine(string("Assignment using operator ") + Token::toString(_node.assignmentOperator()));
@@ -476,6 +484,11 @@ void ASTPrinter::endVisit(VariableDeclarationStatement const&)
 }
 
 void ASTPrinter::endVisit(ExpressionStatement const&)
+{
+	m_indentation--;
+}
+
+void ASTPrinter::endVisit(Conditional const&)
 {
 	m_indentation--;
 }
