@@ -769,6 +769,14 @@ void TypeChecker::endVisit(Conditional const& _conditional)
 			"."
 		);
 	_conditional.annotation().type = commonType;
+
+	if (_conditional.annotation().lValueRequested)
+	{
+		requireLValue(_conditional.trueExpression());
+		requireLValue(_conditional.falseExpression());
+
+		_conditional.annotation().isLValue = true;
+	}
 }
 
 bool TypeChecker::visit(Assignment const& _assignment)
