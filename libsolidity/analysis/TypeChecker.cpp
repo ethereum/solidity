@@ -798,7 +798,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		_tuple.annotation().isLValue = true;
 	}
 	else
-	{	
+	{
 		for (size_t i = 0; i < components.size(); ++i)
 		{
 			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).
