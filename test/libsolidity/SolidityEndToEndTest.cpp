@@ -128,6 +128,7 @@ BOOST_AUTO_TEST_CASE(conditional_expression_multiple)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(40)) == toBigEndian(u256(10)));
 }
 
+/*
 BOOST_AUTO_TEST_CASE(conditional_expression_as_left_value)
 {
 	char const* sourceCode = R"(
@@ -143,6 +144,7 @@ BOOST_AUTO_TEST_CASE(conditional_expression_as_left_value)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(20)) == toBigEndian(u256(3)));
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(5)) == toBigEndian(u256(1)));
 }
+*/
 
 BOOST_AUTO_TEST_CASE(recursive_calls)
 {
