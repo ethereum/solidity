@@ -71,6 +71,7 @@ public:
 	void appendConstStateVariableAccessor(const VariableDeclaration& _varDecl);
 
 private:
+	virtual bool visit(Conditional const& _condition) override;
 	virtual bool visit(Assignment const& _assignment) override;
 	virtual bool visit(TupleExpression const& _tuple) override;
 	virtual bool visit(UnaryOperation const& _unaryOperation) override;
