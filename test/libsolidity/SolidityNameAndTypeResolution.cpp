@@ -20,7 +20,6 @@
  * Unit tests for the name and type resolution of the solidity parser.
  */
 
-
 #include <string>
 
 #include <libdevcore/Log.h>
