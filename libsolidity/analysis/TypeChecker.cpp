@@ -781,8 +781,8 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 {
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
 	TypePointers types;
-    TypePointer t;
-    bool isArray = _tuple.isInlineArray();
+	TypePointer t;
+	bool isArray = _tuple.isInlineArray();
 	if (_tuple.annotation().lValueRequested)
 	{
 		for (auto const& component: components)
