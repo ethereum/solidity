@@ -551,6 +551,28 @@ void VariableDeclarationStatement::accept(ASTConstVisitor& _visitor) const
 	_visitor.endVisit(*this);
 }
 
+void Conditional::accept(ASTVisitor& _visitor)
+{
+	if (_visitor.visit(*this))
+	{
+		m_condition->accept(_visitor);
+		m_trueExpression->accept(_visitor);
+		m_falseExpression->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
+void Conditional::accept(ASTConstVisitor& _visitor) const
+{
+	if (_visitor.visit(*this))
+	{
+		m_condition->accept(_visitor);
+		m_trueExpression->accept(_visitor);
+		m_falseExpression->accept(_visitor);
+	}
+	_visitor.endVisit(*this);
+}
+
 void Assignment::accept(ASTVisitor& _visitor)
 {
 	if (_visitor.visit(*this))

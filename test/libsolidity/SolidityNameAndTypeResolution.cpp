@@ -2795,6 +2795,30 @@ BOOST_AUTO_TEST_CASE(invalid_types_in_inline_array)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }*/
 
+BOOST_AUTO_TEST_CASE(invalid_different_types_for_conditional_expression)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				true ? true : 2;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_left_value_in_conditional_expression)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				(true ? 3 : 5) = 1;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
