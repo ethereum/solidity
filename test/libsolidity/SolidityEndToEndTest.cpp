@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(conditional_expression_false_literal)
 	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(10)));
 }
 
-BOOST_AUTO_TEST_CASE(conditional_expression_false_literal)
+BOOST_AUTO_TEST_CASE(conditional_expression_multiple)
 {
 	char const* sourceCode = R"(
 		contract test {
