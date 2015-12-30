@@ -61,65 +61,65 @@ This means that cyclic creation dependencies are impossible.
 ::
 
     contract OwnedToken {
-      // TokenCreator is a contract type that is defined below.
-      // It is fine to reference it as long as it is not used
-      // to create a new contract.
-      TokenCreator creator;
-      address owner;
-      bytes32 name;
-      // This is the constructor which registers the
-      // creator and the assigned name.
-      function OwnedToken(bytes32 _name) {
-        owner = msg.sender;
-        // We do an explicit type conversion from `address`
-        // to `TokenCreator` and assume that the type of
-        // the calling contract is TokenCreator, there is
-        // no real way to check that.
-        creator = TokenCreator(msg.sender);
-        name = _name;
-      }
-      function changeName(bytes32 newName) {
-        // Only the creator can alter the name --
-        // the comparison is possible since contracts
-        // are implicitly convertible to addresses.
-        if (msg.sender == creator) name = newName;
-      }
-      function transfer(address newOwner) {
-        // Only the current owner can transfer the token.
-        if (msg.sender != owner) return;
-        // We also want to ask the creator if the transfer
-        // is fine. Note that this calls a function of the
-        // contract defined below. If the call fails (e.g.
-        // due to out-of-gas), the execution here stops
-        // immediately.
-        if (creator.isTokenTransferOK(owner, newOwner))
-          owner = newOwner;
-      }
+        // TokenCreator is a contract type that is defined below.
+        // It is fine to reference it as long as it is not used
+        // to create a new contract.
+        TokenCreator creator;
+        address owner;
+        bytes32 name;
+        // This is the constructor which registers the
+        // creator and the assigned name.
+        function OwnedToken(bytes32 _name) {
+            owner = msg.sender;
+            // We do an explicit type conversion from `address`
+            // to `TokenCreator` and assume that the type of
+            // the calling contract is TokenCreator, there is
+            // no real way to check that.
+            creator = TokenCreator(msg.sender);
+            name = _name;
+        }
+        function changeName(bytes32 newName) {
+            // Only the creator can alter the name --
+            // the comparison is possible since contracts
+            // are implicitly convertible to addresses.
+            if (msg.sender == creator) name = newName;
+        }
+        function transfer(address newOwner) {
+            // Only the current owner can transfer the token.
+            if (msg.sender != owner) return;
+            // We also want to ask the creator if the transfer
+            // is fine. Note that this calls a function of the
+            // contract defined below. If the call fails (e.g.
+            // due to out-of-gas), the execution here stops
+            // immediately.
+            if (creator.isTokenTransferOK(owner, newOwner))
+                owner = newOwner;
+        }
     }
 
     contract TokenCreator {
-      function createToken(bytes32 name)
+        function createToken(bytes32 name)
            returns (OwnedToken tokenAddress)
-      {
-        // Create a new Token contract and return its address.
-        // From the JavaScript side, the return type is simply
-        // "address", as this is the closest type available in
-        // the ABI.
-        return new OwnedToken(name);
-      }
-      function changeName(OwnedToken tokenAddress, bytes32 name) {
-        // Again, the external type of "tokenAddress" is
-        // simply "address".
-        tokenAddress.changeName(name);
-      }
-      function isTokenTransferOK(
-          address currentOwner,
-          address newOwner
-      ) returns (bool ok) {
-        // Check some arbitrary condition.
-        address tokenAddress = msg.sender;
-        return (sha3(newOwner) & 0xff) == (bytes20(tokenAddress) & 0xff);
-      }
+        {
+            // Create a new Token contract and return its address.
+            // From the JavaScript side, the return type is simply
+            // "address", as this is the closest type available in
+            // the ABI.
+            return new OwnedToken(name);
+        }
+        function changeName(OwnedToken tokenAddress, bytes32 name) {
+            // Again, the external type of "tokenAddress" is
+            // simply "address".
+            tokenAddress.changeName(name);
+        }
+        function isTokenTransferOK(
+            address currentOwner,
+            address newOwner
+        ) returns (bool ok) {
+            // Check some arbitrary condition.
+            address tokenAddress = msg.sender;
+            return (sha3(newOwner) & 0xff) == (bytes20(tokenAddress) & 0xff);
+        }
     }
 
 .. index:: ! visibility, external, public, private, internal
@@ -179,9 +179,9 @@ return parameter list for functions.
 ::
 
     contract c {
-      function f(uint a) private returns (uint b) { return a + 1; }
-      function setData(uint a) internal { data = a; }
-      uint public data;
+        function f(uint a) private returns (uint b) { return a + 1; }
+        function setData(uint a) internal { data = a; }
+        uint public data;
     }
 
 Other contracts can call `c.data()` to retrieve the value of
@@ -209,7 +209,7 @@ it is a state variable and if it is accessed externally
 ::
 
     contract test {
-         uint public data = 42;
+        uint public data = 42;
     }
 
 The next example is a bit more complex:
@@ -217,16 +217,16 @@ The next example is a bit more complex:
 ::
 
     contract complex {
-      struct Data { uint a; bytes3 b; mapping(uint => uint) map; }
-      mapping(uint => mapping(bool => Data[])) public data;
+        struct Data { uint a; bytes3 b; mapping(uint => uint) map; }
+        mapping(uint => mapping(bool => Data[])) public data;
     }
 
 It will generate a function of the following form::
 
     function data(uint arg1, bool arg2, uint arg3) returns (uint a, bytes3 b)
     {
-      a = data[arg1][arg2][arg3].a;
-      b = data[arg1][arg2][arg3].b;
+        a = data[arg1][arg2][arg3].a;
+        b = data[arg1][arg2][arg3].b;
     }
 
 Note that the mapping in the struct is omitted because there
@@ -247,41 +247,41 @@ inheritable properties of contracts and may be overridden by derived contracts.
 ::
 
     contract owned {
-      function owned() { owner = msg.sender; }
-      address owner;
+        function owned() { owner = msg.sender; }
+        address owner;
 
-      // This contract only defines a modifier but does not use
-      // it - it will be used in derived contracts.
-      // The function body is inserted where the special symbol
-      // "_" in the definition of a modifier appears.
-      // This means that if the owner calls this function, the
-      // function is executed and otherwise, an exception is
-      // thrown.
-      modifier onlyowner { if (msg.sender != owner) throw; _ }
+        // This contract only defines a modifier but does not use
+        // it - it will be used in derived contracts.
+        // The function body is inserted where the special symbol
+        // "_" in the definition of a modifier appears.
+        // This means that if the owner calls this function, the
+        // function is executed and otherwise, an exception is
+        // thrown.
+        modifier onlyowner { if (msg.sender != owner) throw; _ }
     }
     contract mortal is owned {
-      // This contract inherits the "onlyowner"-modifier from
-      // "owned" and applies it to the "close"-function, which
-      // causes that calls to "close" only have an effect if
-      // they are made by the stored owner.
-      function close() onlyowner {
-        selfdestruct(owner);
-      }
+        // This contract inherits the "onlyowner"-modifier from
+        // "owned" and applies it to the "close"-function, which
+        // causes that calls to "close" only have an effect if
+        // they are made by the stored owner.
+        function close() onlyowner {
+            selfdestruct(owner);
+        }
     }
     contract priced {
-      // Modifiers can receive arguments:
-      modifier costs(uint price) { if (msg.value >= price) _ }
+        // Modifiers can receive arguments:
+        modifier costs(uint price) { if (msg.value >= price) _ }
     }
     contract Register is priced, owned {
-      mapping (address => bool) registeredAddresses;
-      uint price;
-      function Register(uint initialPrice) { price = initialPrice; }
-      function register() costs(price) {
-        registeredAddresses[msg.sender] = true;
-      }
-      function changePrice(uint _price) onlyowner {
-        price = _price;
-      }
+        mapping (address => bool) registeredAddresses;
+        uint price;
+        function Register(uint initialPrice) { price = initialPrice; }
+        function register() costs(price) {
+            registeredAddresses[msg.sender] = true;
+        }
+        function changePrice(uint _price) onlyowner {
+            price = _price;
+        }
     }
 
 Multiple modifiers can be applied to a function by specifying them in a
@@ -305,8 +305,8 @@ for array and struct types and not possible for mapping types).
 ::
 
     contract C {
-      uint constant x = 32**22 + 8;
-      string constant text = "abc";
+        uint constant x = 32**22 + 8;
+        string constant text = "abc";
     }
 
 This has the effect that the compiler does not reserve a storage slot
@@ -336,24 +336,24 @@ possible.
 ::
 
     contract Test {
-      function() { x = 1; }
-      uint x;
+        function() { x = 1; }
+        uint x;
     }
 
     // This contract rejects any Ether sent to it. It is good
     // practise to include such a function for every contract
     // in order not to loose Ether.
     contract Rejector {
-      function() { throw; }
+        function() { throw; }
     }
 
     contract Caller {
       function callTest(address testAddress) {
-        Test(testAddress).call(0xabcdef01); // hash does not exist
-        // results in Test(testAddress).x becoming == 1.
-        Rejector r = Rejector(0x123);
-        r.send(2 ether);
-        // results in r.balance == 0 
+          Test(testAddress).call(0xabcdef01); // hash does not exist
+          // results in Test(testAddress).x becoming == 1.
+          Rejector r = Rejector(0x123);
+          r.send(2 ether);
+          // results in r.balance == 0
       }
     }
 
@@ -400,17 +400,17 @@ All non-indexed arguments will be stored in the data part of the log.
 ::
 
     contract ClientReceipt {
-      event Deposit(
-        address indexed _from,
-        bytes32 indexed _id,
-        uint _value
-      );
-      function deposit(bytes32 _id) {
-        // Any call to this function (even deeply nested) can
-        // be detected from the JavaScript API by filtering
-        // for `Deposit` to be called.
-        Deposit(msg.sender, _id, msg.value);
-      }
+        event Deposit(
+            address indexed _from,
+            bytes32 indexed _id,
+            uint _value
+        );
+        function deposit(bytes32 _id) {
+            // Any call to this function (even deeply nested) can
+            // be detected from the JavaScript API by filtering
+            // for `Deposit` to be called.
+            Deposit(msg.sender, _id, msg.value);
+        }
     }
 
 The use in the JavaScript API would be as follows:
@@ -425,17 +425,17 @@ The use in the JavaScript API would be as follows:
 
     // watch for changes
     event.watch(function(error, result){
-      // result will contain various information
-      // including the argumets given to the Deposit
-      // call.
-      if (!error)
-        console.log(result);
+        // result will contain various information
+        // including the argumets given to the Deposit
+        // call.
+        if (!error)
+            console.log(result);
     });
 
     // Or pass a callback to start watching immediately
     var event = clientReceipt.Deposit(function(error, result) {
-      if (!error)
-        console.log(result);
+        if (!error)
+            console.log(result);
     });
 
 .. index:: ! log
@@ -452,10 +452,10 @@ as topics. The event call above can be performed in the same way as
 ::
 
     log3(
-      msg.value,
-      0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20,
-      msg.sender,
-      _id
+        msg.value,
+        0x50cb9fe53daa9737b786ab3646f04d0150dc50ef4e75f59509d83667ad5adb20,
+        msg.sender,
+        _id
     );
 
 where the long hexadecimal number is equal to
@@ -502,7 +502,7 @@ Details are given in the following example.
     // accessed externally via `this`, though.
     contract mortal is owned {
         function kill() {
-          if (msg.sender == owner) selfdestruct(owner);
+            if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
@@ -611,12 +611,12 @@ Derived contracts need to provide all arguments needed for
 the base constructors. This can be done at two places::
 
     contract Base {
-      uint x;
-      function Base(uint _x) { x = _x; }
+        uint x;
+        function Base(uint _x) { x = _x; }
     }
     contract Derived is Base(7) {
-      function Derived(uint _y) Base(_y * _y) {
-      }
+        function Derived(uint _y) Base(_y * _y) {
+        }
     }
 
 Either directly in the inheritance list (`is Base(7)`) or in
@@ -667,13 +667,13 @@ Abstract Contracts
 Contract functions can lack an implementation as in the following example (note that the function declaration header is terminated by `;`)::
 
     contract feline {
-      function utterance() returns (bytes32);
+        function utterance() returns (bytes32);
     }
 
 Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
 
     contract Cat is feline {
-      function utterance() returns (bytes32) { return "miaow"; }
+        function utterance() returns (bytes32) { return "miaow"; }
     }
 
 If a contract inherits from an abstract contract and does not implement all non-implemented functions by overriding, it will itself be abstract.
@@ -716,35 +716,35 @@ more advanced example to implement a set).
       function insert(Data storage self, uint value)
           returns (bool)
       {
-        if (self.flags[value])
-          return false; // already there
-        self.flags[value] = true;
-        return true;
+          if (self.flags[value])
+              return false; // already there
+          self.flags[value] = true;
+          return true;
       }
       function remove(Data storage self, uint value)
-        returns (bool)
+          returns (bool)
       {
-        if (!self.flags[value])
-          return false; // not there
-        self.flags[value] = false;
-        return true;
+          if (!self.flags[value])
+              return false; // not there
+          self.flags[value] = false;
+          return true;
       }
       function contains(Data storage self, uint value)
-        returns (bool)
+          returns (bool)
       {
-        return self.flags[value];
+          return self.flags[value];
       }
     }
     contract C {
-      Set.Data knownValues;
-      function register(uint value) {
-        // The library functions can be called without a
-        // specific instance of the library, since the
-        // "instance" will be the current contract.
-        if (!Set.insert(knownValues, value))
-          throw;
-      }
-      // In this contract, we can also directly access knownValues.flags, if we want.
+        Set.Data knownValues;
+        function register(uint value) {
+            // The library functions can be called without a
+            // specific instance of the library, since the
+            // "instance" will be the current contract.
+            if (!Set.insert(knownValues, value))
+                throw;
+        }
+        // In this contract, we can also directly access knownValues.flags, if we want.
     }
 
 Of course, you do not have to follow this way to use
@@ -774,8 +774,8 @@ encoding of the address of the library contract.
 
 Restrictions for libraries in comparison to contracts:
 
- - no state variables
- - cannot inherit nor be inherited
+- no state variables
+- cannot inherit nor be inherited
 
 (these might be lifted at a later point)
 
@@ -845,63 +845,63 @@ Let us rewrite the set example from the
       function insert(Data storage self, uint value)
           returns (bool)
       {
-        if (self.flags[value])
-          return false; // already there
-        self.flags[value] = true;
-        return true;
+          if (self.flags[value])
+            return false; // already there
+          self.flags[value] = true;
+          return true;
       }
       function remove(Data storage self, uint value)
-        returns (bool)
+          returns (bool)
       {
-        if (!self.flags[value])
-          return false; // not there
-        self.flags[value] = false;
-        return true;
+          if (!self.flags[value])
+              return false; // not there
+          self.flags[value] = false;
+          return true;
       }
       function contains(Data storage self, uint value)
-        returns (bool)
+          returns (bool)
       {
-        return self.flags[value];
+          return self.flags[value];
       }
     }
 
     contract C {
-      using Set for Set.Data; // this is the crucial change
-      Set.Data knownValues;
-      function register(uint value) {
-        // Here, all variables of type Set.Data have
-        // corresponding member functions.
-        // The following function call is identical to
-        // Set.insert(knownValues, value)
-        if (!knownValues.insert(value))
-          throw;
-      }
+        using Set for Set.Data; // this is the crucial change
+        Set.Data knownValues;
+        function register(uint value) {
+            // Here, all variables of type Set.Data have
+            // corresponding member functions.
+            // The following function call is identical to
+            // Set.insert(knownValues, value)
+            if (!knownValues.insert(value))
+                throw;
+        }
     }
 
 It is also possible to extend elementary types in that way::
 
     library Search {
-      function indexOf(uint[] storage self, uint value) {
-        for (uint i = 0; i < self.length; i++)
-          if (self[i] == value) return i;
-        return uint(-1);
-      }
+        function indexOf(uint[] storage self, uint value) {
+            for (uint i = 0; i < self.length; i++)
+                if (self[i] == value) return i;
+            return uint(-1);
+        }
     }
 
     contract C {
-      using Search for uint[];
-      uint[] data;
-      function append(uint value) {
-        data.push(value);
-      }
-      function replace(uint _old, uint _new) {
-        // This performs the library function call
-        uint index = data.find(_old);
-        if (index == -1)
-          data.push(_new);
-        else
-          data[index] = _new;
-      }
+        using Search for uint[];
+        uint[] data;
+        function append(uint value) {
+            data.push(value);
+        }
+        function replace(uint _old, uint _new) {
+            // This performs the library function call
+            uint index = data.find(_old);
+            if (index == -1)
+                data.push(_new);
+            else
+                data[index] = _new;
+        }
     }
 
 Note that all library calls are actual EVM function calls. This means that
