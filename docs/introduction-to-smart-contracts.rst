@@ -100,7 +100,7 @@ registering with username and password - all you need is an Ethereum keypair.
         }
     }
 
-This contract introduces some new concepts, let us go through them one by one
+This contract introduces some new concepts, let us go through them one by one.
 
 The line `address public minter;` declares a state variable of type address
 that is publicly accessible. The `address` type is a 160 bit value
