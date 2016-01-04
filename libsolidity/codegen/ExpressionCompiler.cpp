@@ -233,7 +233,12 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 		else if (_tuple.annotation().lValueRequested)
 			lvalues.push_back(unique_ptr<LValue>());
 	if (_tuple.annotation().lValueRequested)
-		m_currentLValue.reset(new TupleObject(m_context, move(lvalues)));
+	{
+		if (_tuple.components().size() == 1)
+			m_currentLValue = move(lvalues[0]);
+		else
+			m_currentLValue.reset(new TupleObject(m_context, move(lvalues)));
+	}
 	return false;
 }
 
