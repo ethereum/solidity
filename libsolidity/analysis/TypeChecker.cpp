@@ -781,7 +781,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 {
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
 	TypePointers types;
-	TypePointer t;
+	TypePointer internalArrayType;
 	bool isArray = _tuple.isInlineArray();
 	if (_tuple.annotation().lValueRequested)
 	{
@@ -809,11 +809,11 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
 				if (i == 0 && isArray)
-					t = types[i]->mobileType();
+					internalArrayType = types[i]->mobileType();
 				else if (isArray)
-					t = Type::commonType(t, types[i]->mobileType());
+					internalArrayType = Type::commonType(internalArrayType, types[i]->mobileType());
 					
-				if (t == nullptr && isArray) 
+				if (internalArrayType == nullptr && isArray) 
 					fatalTypeError(_tuple.location(), "Cannot convert elements of array");
 			}
 			else
@@ -822,7 +822,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 		if (components.size() == 1 && !isArray)
 			_tuple.annotation().type = type(*components[0]);
 		else if (isArray) 
-			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, t);		
+			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, internalArrayType);		
 		else
 		{
 			if (components.size() == 2 && !components[1])
