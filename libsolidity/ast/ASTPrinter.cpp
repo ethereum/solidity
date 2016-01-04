@@ -63,7 +63,7 @@ bool ASTPrinter::visit(ContractDefinition const& _node)
 
 bool ASTPrinter::visit(InheritanceSpecifier const& _node)
 {
-	writeLine("InheritanceSpecifier \"" + _node.name().name() + "\"");
+	writeLine("InheritanceSpecifier");
 	printSourcePart(_node);
 	return goDeeper();
 }
