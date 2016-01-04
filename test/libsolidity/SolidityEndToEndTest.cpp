@@ -5785,6 +5785,21 @@ BOOST_AUTO_TEST_CASE(string_tuples)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(0x40), u256(0x80), u256(3), string("abc"), u256(3), string("def")));
 }
 
+BOOST_AUTO_TEST_CASE(decayed_tuple)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) {
+				uint x = 1;
+				(x) = 2;
+				return x;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_CASE(destructuring_assignment)
 {
 	char const* sourceCode = R"(

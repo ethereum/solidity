@@ -1008,6 +1008,7 @@ BOOST_AUTO_TEST_CASE(tuples)
 				var (b,) = (1,);
 				var (c,d) = (1, 2 + a);
 				var (e,) = (1, 2, b);
+				(a) = 3;
 			}
 		}
 	)";
