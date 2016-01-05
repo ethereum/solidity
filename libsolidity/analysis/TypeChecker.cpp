@@ -792,7 +792,10 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			}
 			else
 				types.push_back(TypePointer());
-		_tuple.annotation().type = make_shared<TupleType>(types);
+		if (components.size() == 1)
+			_tuple.annotation().type = type(*components[0]);
+		else
+			_tuple.annotation().type = make_shared<TupleType>(types);
 		// If some of the components are not LValues, the error is reported above.
 		_tuple.annotation().isLValue = true;
 	}
