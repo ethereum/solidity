@@ -538,7 +538,7 @@ Naming conventions are powerful when adopted and used broadly.  The use of
 different conventions can convey significant *meta* information that would
 otherwise not be immediately available.
 
-The naming recomendations given here are intended to improve the readability,
+The naming recommendations given here are intended to improve the readability,
 and thus they are not rules, but rather guidelines to try and help convey the
 most information through the names of things.
 
@@ -601,8 +601,8 @@ When writing library functions that operate on a custom struct, the struct
 should be the first argument and should always be named ``self``.
 
 
-Contract and Local Variables
-============================
+Local and State Variables
+=========================
 
 Use mixedCase.
 
