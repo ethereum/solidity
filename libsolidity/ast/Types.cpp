@@ -121,7 +121,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 	solAssert(Token::isElementaryTypeName(_typeToken),
 		"Expected an elementary type name but got " + ((tokenCstr) ? std::string(Token::toString(_typeToken)) : ""));
 
-	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
+	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes)
 	{
 		int offset = _typeToken - Token::Int;
 		int bytes = offset % 33;
