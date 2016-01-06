@@ -761,6 +761,21 @@ public:
 		TypeName(_location), m_type(_type)
 	{
 		solAssert(Token::isElementaryTypeName(_type), "");
+		m_N = 0;
+		m_M = 0;
+	}
+	//For uint<N>, int<N>, bytes<N>
+	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, uint8_t const& _N):
+		TypeName(_location), m_type(_type), m_N(_N)
+	{
+		solAssert(Token::isElementaryTypeName(_type), "");
+		m_M = 0;
+	}
+	//For real<N>x<M> and ureal<N>x<M>
+	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, uint8_t const& _N, uint8_t const& _M):
+		TypeName(_location), m_type(_type), m_N(_N), m_M(_M)
+	{
+		solAssert(Token::isElementaryTypeName(_type), "");
 	}
 	//For uint<N>, int<N>, bytes<N>
 	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, unsigned const& _N):
@@ -786,10 +801,15 @@ public:
 
 private:
 	Token::Value m_type;
+<<<<<<< 65f830a542433d7107e752909044ab258ad1fbe8
 	bool hasN = false;
 	bool hasM = false;
 	unsigned m_N;
 	unsigned m_M;
+=======
+	uint8_t m_N;
+	uint8_t m_M;
+>>>>>>> current work
 };
 
 /**
