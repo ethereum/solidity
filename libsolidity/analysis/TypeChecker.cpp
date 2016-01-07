@@ -765,7 +765,7 @@ bool TypeChecker::visit(Conditional const& _conditional)
 					" doesn't match false expression's type " +
 					falseType->toString() +
 					"."
-					);
+			);
 
 		_conditional.annotation().type = trueType;
 		_conditional.annotation().isLValue = true;
@@ -781,6 +781,7 @@ bool TypeChecker::visit(Conditional const& _conditional)
 		// we fake it as an equal operator, but any other comparison operator can work.
 		TypePointer commonType = trueType->binaryOperatorResult(Token::Equal, falseType);
 		if (!commonType)
+		{
 			typeError(
 					_conditional.location(),
 					"True expression's type " +
@@ -788,7 +789,11 @@ bool TypeChecker::visit(Conditional const& _conditional)
 					" doesn't match false expression's type " +
 					falseType->toString() +
 					"."
-					);
+			);
+			// even we can't find a common type, we have to set a type here,
+			// otherwise the upper statement will not be able to check the type.
+			commonType = trueType;
+		}
 
 		_conditional.annotation().type = commonType;
 	}

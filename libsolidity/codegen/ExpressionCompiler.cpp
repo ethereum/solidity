@@ -182,10 +182,12 @@ bool ExpressionCompiler::visit(Conditional const& _condition)
 	_condition.condition().accept(*this);
 	eth::AssemblyItem trueTag = m_context.appendConditionalJump();
 	_condition.falseExpression().accept(*this);
+	utils().convertType(*_condition.falseExpression().annotation().type, *_condition.annotation().type);
 	eth::AssemblyItem endTag = m_context.appendJumpToNew();
 	m_context << trueTag;
-	m_context.adjustStackOffset(-1);
+	m_context.adjustStackOffset(-_condition.annotation().type->sizeOnStack());
 	_condition.trueExpression().accept(*this);
+	utils().convertType(*_condition.trueExpression().annotation().type, *_condition.annotation().type);
 	m_context << endTag;
 	return false;
 }

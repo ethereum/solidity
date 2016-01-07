@@ -947,7 +947,7 @@ ASTPointer<Expression> Parser::parseExpression(
 		expectToken(Token::Colon);
 		ASTPointer<Expression> falseExpression = parseExpression();
 		ASTNodeFactory nodeFactory(*this, expression);
-		nodeFactory.setEndPositionFromNode(falseExpression); // TODO:
+		nodeFactory.setEndPositionFromNode(falseExpression);
 		return nodeFactory.createNode<Conditional>(expression, trueExpression, falseExpression);
 	}
 	else
