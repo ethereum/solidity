@@ -90,7 +90,7 @@ private:
 	virtual void endVisit(Return const& _return) override;
 	virtual bool visit(VariableDeclarationStatement const& _variable) override;
 	virtual void endVisit(ExpressionStatement const& _statement) override;
-	virtual void endVisit(Conditional const& _conditional) override;
+	virtual bool visit(Conditional const& _conditional) override;
 	virtual bool visit(Assignment const& _assignment) override;
 	virtual bool visit(TupleExpression const& _tuple) override;
 	virtual void endVisit(BinaryOperation const& _operation) override;
