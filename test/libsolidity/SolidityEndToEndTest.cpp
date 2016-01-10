@@ -6107,6 +6107,76 @@ BOOST_AUTO_TEST_CASE(bound_function_to_string)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(3)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_array_storage_to_memory_conversion_strings)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s = "aeou";
+			function f() returns (string, string) {
+				string memory t = "abc";
+				string[3] memory x = [s, t, "Hello"];
+				return (x[0], x[2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x40), u256(0x80), u256(4), string("aeou"), u256(3), string("abc")));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_storage_to_memory_conversion_ints)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint x, uint y) {
+				x = 3;
+				y = 6;
+				uint[2] memory z = [x, y];
+				return (z[0], z[1]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(3, 6));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_index_access_ints)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) {
+				return ([1, 2, 3, 4][2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_index_access_strings)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (string) {
+				return (["abc", "def", "g"][1]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x40), u256(3), string("def")));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_return)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint8[5]) {
+				return ([1,2,3,4,5]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1, 2, 3, 4, 5));
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 }
