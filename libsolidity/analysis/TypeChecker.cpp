@@ -780,8 +780,9 @@ bool TypeChecker::visit(Assignment const& _assignment)
 bool TypeChecker::visit(TupleExpression const& _tuple)
 {
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
-	solAssert(!_tuple.isInlineArray(), "Tuple type not properly declared");
 	TypePointers types;
+	TypePointer internalArrayType;
+	bool isArray = _tuple.isInlineArray();
 	if (_tuple.annotation().lValueRequested)
 	{
 		for (auto const& component: components)
@@ -810,12 +811,20 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
+				if (i == 0 && isArray)
+					internalArrayType = types[i]->mobileType();
+				else if (isArray && internalArrayType && types[i]->mobileType())
+					internalArrayType = Type::commonType(internalArrayType, types[i]->mobileType());
 			}
 			else
 				types.push_back(TypePointer());
 		}
-		if (components.size() == 1)
+		if (components.size() == 1 && !isArray)
 			_tuple.annotation().type = type(*components[0]);
+		else if (!internalArrayType && isArray) 
+			fatalTypeError(_tuple.location(), "Unable to deduce common type for array elements.");
+		else if (isArray)
+			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, internalArrayType, types.size());
 		else
 		{
 			if (components.size() == 2 && !components[1])
