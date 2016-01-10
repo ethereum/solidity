@@ -218,14 +218,6 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 
 bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 {
-<<<<<<< 12ffa8c908f3ef72b7a8c39851af2db52d2925d7
-	vector<unique_ptr<LValue>> lvalues;
-	for (auto const& component: _tuple.components())
-		if (component)
-		{
-			component->accept(*this);
-			if (_tuple.annotation().lValueRequested)
-=======
 	if (_tuple.isInlineArray())
     {
         ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
@@ -249,7 +241,6 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 		vector<unique_ptr<LValue>> lvalues;
 		for (auto const& component: _tuple.components())
 			if (component)
->>>>>>> all conversions are working
 			{
 				solAssert(!!m_currentLValue, "");
 				lvalues.push_back(move(m_currentLValue));

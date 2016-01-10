@@ -813,17 +813,16 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 				types.push_back(type(*components[i]));
 				if (i == 0 && isArray)
 					internalArrayType = types[i]->mobileType();
-				else if (isArray) 
-					internalArrayType = Type::commonType(internalArrayType, types[i]->mobileType());
-					
-				if (internalArrayType == nullptr && isArray) 
-					fatalTypeError(_tuple.location(), "Cannot convert elements of array");
+				else if (isArray && internalArrayType && types[i]->mobileType())
+                    internalArrayType = Type::commonType(internalArrayType, types[i]->mobileType());
 			}
 			else
 				types.push_back(TypePointer());
 		}
 		if (components.size() == 1 && !isArray)
 			_tuple.annotation().type = type(*components[0]);
+		else if (!internalArrayType && isArray) 
+            fatalTypeError(_tuple.location(), "Unable to deduce common type for array elements.");
 		else if (isArray) 
 			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, internalArrayType);		
 		else
