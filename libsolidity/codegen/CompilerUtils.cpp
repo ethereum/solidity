@@ -304,6 +304,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 
 	if (_typeOnStack == _targetType && !_cleanupNeeded)
 		return;
+		
 	Type::Category stackTypeCategory = _typeOnStack.category();
 	Type::Category targetTypeCategory = _targetType.category();
 
@@ -368,12 +369,12 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
 				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
 			if (stackTypeCategory == Type::Category::IntegerConstant)
-			{
+			{ 
 				IntegerConstantType const& constType = dynamic_cast<IntegerConstantType const&>(_typeOnStack);
 				// We know that the stack is clean, we only have to clean for a narrowing conversion
-				// where cleanup is forced.
+				// where cleanup is forced.		
 				if (targetType.numBits() < constType.integerType()->numBits() && _cleanupNeeded)
-					cleanHigherOrderBits(targetType);
+					cleanHigherOrderBits(targetType); 			
 			}
 			else
 			{
@@ -799,7 +800,7 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 	else if (_typeOnStack.isSigned())
 		m_context << u256(_typeOnStack.numBits() / 8 - 1) << eth::Instruction::SIGNEXTEND;
 	else
-		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << eth::Instruction::AND;
+		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << eth::Instruction::AND;	
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const

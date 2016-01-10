@@ -155,8 +155,6 @@ bytes compileFirstExpression(
 					resolveDeclaration(*sourceUnit, function, resolver)
 				));
 			bytes instructions = context.assembledObject().bytecode;
-			// debug
-			// cout << eth::disassemble(instructions) << endl;
 			return instructions;
 		}
 	BOOST_FAIL("No contract found in source.");
