@@ -2769,15 +2769,83 @@ BOOST_AUTO_TEST_CASE(function_overload_array_type)
 	BOOST_CHECK(success(text));
 }
 
-/*BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing)
+BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion)
+{
+	char const* text = R"(
+			contract C {
+				function f() returns (uint) {
+					uint8 x = 7;
+					uint16 y = 8;
+					uint32 z = 9;
+					uint32[3] memory ending = [x, y, z]; 
+					return (ending[1]);                   
+				}
+			}
+	)";
+	BOOST_CHECK(success(text));
+	
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion_strings)
 {
 	char const* text = R"(
 		contract C {
-			uint[] a;
-            function f() returns (uint, uint) {
-                a = [1,2,3];
-                return (a[3], [3,4][0]);
-            }
+			function f() returns (string) {
+				string memory x = "Hello";
+				string memory y = "World";
+				string[2] memory z = [x, y];
+				return (z[0]);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_declaration_const_int_conversion)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint) {
+				uint8[4] memory z = [1,2,3,5];
+				return (z[0]);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_declaration_const_string_conversion)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (string) {
+				string[2] memory z = ["Hello", "World"];
+				return (z[0]);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (uint) {
+				return ([4,5,6][1]);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
+{
+	char const* text = R"(
+		contract C {
+			function f() returns (string) {
+				return (["foo", "man", "choo"][1]);
+			}
 		}
 	)";
 	BOOST_CHECK(success(text));
@@ -2788,12 +2856,12 @@ BOOST_AUTO_TEST_CASE(invalid_types_in_inline_array)
 	char const* text = R"(
 		contract C {
 			function f() {
-				uint[] x = [45, "foo", true];
+				uint[3] x = [45, 'foo', true];
 			}
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
-}*/
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
