@@ -1106,6 +1106,18 @@ private:
  * An expression, i.e. something that has a value (which can also be of type "void" in case
  * of some function calls).
  * @abstract
+ struct ExpressionAnnotation: ASTAnnotation
+{
+	/// Inferred type of the expression.
+	TypePointer type;
+	/// Whether it is an LValue (i.e. something that can be assigned to).
+	bool isLValue = false;
+	/// Whether the expression is used in a context where the LValue is actually required.
+	bool lValueRequested = false;
+	/// Types of arguments if the expression is a function that is called - used
+	/// for overload resolution.
+	std::shared_ptr<std::vector<TypePointer>> argumentTypes;
+};
  */
 class Expression: public ASTNode
 {
