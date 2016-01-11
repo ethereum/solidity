@@ -6111,16 +6111,16 @@ BOOST_AUTO_TEST_CASE(inline_array_storage_to_memory_conversion_strings)
 {
 	char const* sourceCode = R"(
 		contract C {
-			string s = "aeou";
+			string s = "doh";
 			function f() returns (string, string) {
-				string memory t = "abc";
-				string[3] memory x = [s, t, "Hello"];
-				return (x[0], x[2]);
+				string memory t = "ray";
+				string[3] memory x = [s, t, "mi"];
+				return (x[1], x[2]);
 			}
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x40), u256(0x80), u256(4), string("aeou"), u256(3), string("abc")));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x40), u256(0x80), u256(3), string("ray"), u256(2), string("mi")));
 }
 
 BOOST_AUTO_TEST_CASE(inline_array_storage_to_memory_conversion_ints)
@@ -6156,22 +6156,33 @@ BOOST_AUTO_TEST_CASE(inline_array_index_access_strings)
 {
 	char const* sourceCode = R"(
 		contract C {
+			string public tester;
 			function f() returns (string) {
-				return (["abc", "def", "g"][1]);
+				return (["abc", "def", "g"][0]);
+			}
+			function test() {
+				tester = f();
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x40), u256(3), string("def")));
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("tester()") == encodeArgs(u256(0x20), u256(3), string("abc")));
 }
 
 BOOST_AUTO_TEST_CASE(inline_array_return)
 {
 	char const* sourceCode = R"(
 		contract C {
+			uint8[] tester; 
 			function f() returns (uint8[5]) {
 				return ([1,2,3,4,5]);
 			}
+			function test() returns (uint8, uint8, uint8, uint8, uint8) {
+				tester = f(); 
+				return (tester[0], tester[1], tester[2], tester[3], tester[4]);
+			}
+			
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
