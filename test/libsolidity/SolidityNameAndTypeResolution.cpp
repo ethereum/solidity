@@ -2783,7 +2783,6 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion)
 			}
 	)";
 	BOOST_CHECK(success(text));
-	
 }
 
 BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion_strings)
