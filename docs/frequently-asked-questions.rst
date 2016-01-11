@@ -326,7 +326,7 @@ Examples::
         struct S { uint a; uint b; }
         S public x = S(1, 2);
         string name = "Ada";
-		string[4] memory AdaArr = ["This", "is", "an", "array"];  
+        string[4] memory AdaArr = ["This", "is", "an", "array"];  
     }
     contract D {
         C c = new C();
