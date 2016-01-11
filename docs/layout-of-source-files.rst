@@ -9,24 +9,62 @@ Source files can contain an arbitrary number of contract definitions and include
 Importing other Source Files
 ============================
 
+Syntax and Semantics
+--------------------
 
-Other source files can be referenced using `import "filename";` and the symbols
-defined there will also be available in the current source file.
+Solidity supports import statements that are very similar to those available in JavaScript
+(from ES6 on), although Solidity does not know the concept of a "default export".
 
-.. warning::
+At a global level, you can use import statements of the following form:
 
-    Import will not work automatically for the commandline-compiler.
-    Furthermore, this system of importing other files is not completely fleshed out
-    yet, so please expect changes.
+`import "filename";` will import all global symbols from "filename" (and symbols imported there) into the current global scope (different than in ES6 but backwards-compatible for Solidity).
+
+`import * as symbolName from "filename";` creates a new global symbol `symbolName` whose members are all the global symbols from `"filename"`.
+
+`import {symbol1 as alias, symbol2} from "filename";` creates new global symbols `alias` and `symbol2` which reference `symbol1` and `symbal2` from `"filename"`, respectively.
+
+Another syntax is not part of ES6, but probably convenient:
+
+`import "filename" as symbolName;` is equivalent to `import * as symbolName from "filename";`.
+
+Paths
+-----
+
+In the above, `filename` is always treated as a path with `/` as directory separator,
+`.` as the current and `..` as the parent directory. Path names that do not start
+with `.` are treated as absolute paths.
+
+To import a file `x` from the same directory as the current file, use `import "./x" as x;`.
+If you use `import "x" as x;` instead, a different file could be referenced
+(in a global "include directory").
+
+It depends on the compiler (see below) how to actually resolve the paths.
+In general, the directory hierarchy does not need to strictly map onto your local
+filesystem, it can also map to resources discovered via e.g. ipfs, http or git.
+
+Use in actual Compilers
+-----------------------
+
+
+When the compiler is invoked, it is not only possible to specify how to
+discover the first element of a path, but it is possible to specify path prefix
+remappings so that e.g. `github.com/ethereum/dapp-bin/library` is remapped to
+`/usr/local/dapp-bin/library` and the compiler will read the files from there. If
+remapping keys are prefixes of each other, the longest is tried first. This
+allows for a "fallback-remapping" with e.g. `""` maps to
+`"/usr/local/include/solidity"`.
+
+For solc (the commandline compiler), these remappings are provided as `key=value`
+arguments, where the `=value` part is optional (and defaults to key in that
+case). All remapping values that are regular files are compiled (including
+their dependencies). This mechanism is completely backwards-compatible (as long
+as no filename contains a =) and thus not a breaking change.
 
 The `browser-based compiler <https://chriseth.github.io/browser-solidity>`_
-has quite advanced support for multiple files and can even import files
-directly from github, by using e.g.
-```import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol";```
+provides an automatic remapping for github and will also automatically retrieve the file:
+You can import the iterable mapping by e.g.
+`import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol"; as it_mapping;`.
 
-If you want to use multiple source files with the (commandline compiler)[../commandline-compiler/] solc,
-you have to specify all files you will use as arguments to solc,
-the compiler will not yet search your filesystem on its own.
 
 .. index:: ! comment, natspec
 
