@@ -2850,6 +2850,22 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_no_type_strings)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(inline_struct_declaration_arrays)
+{
+	char const* text = R"(
+		contract C {
+			struct S {
+				uint a;
+				string b;
+			}
+			function f() {
+				S[2] memory x = [S({a: 1, b: "fish"}), S({a: 2, b: "fish"})];
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(invalid_types_in_inline_array)
 {
 	char const* text = R"(
