@@ -141,7 +141,40 @@ BOOST_AUTO_TEST_CASE(conditional_expression_with_return_values)
 	BOOST_CHECK(callContractFunction("f(bool,uint256)", false, u256(20)) == encodeArgs(u256(0), u256(20)));
 }
 
-BOOST_AUTO_TEST_CASE(conditional_expression_storage_memory)
+BOOST_AUTO_TEST_CASE(conditional_expression_storage_memory_1)
+{
+	char const* sourceCode = R"(
+		contract test {
+			bytes2[2] data1;
+			function f(bool cond) returns (uint) {
+				bytes2[2] memory x;
+				x[0] = "aa";
+				bytes2[2] memory y;
+				y[0] = "bb";
+
+				data1 = cond ? x : y;
+
+				uint ret = 0;
+				if (data1[0] == "aa")
+				{
+					ret = 1;
+				}
+
+				if (data1[0] == "bb")
+				{
+					ret = 2;
+				}
+
+				return ret;
+			}    
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_storage_memory_2)
 {
 	char const* sourceCode = R"(
 		contract test {
