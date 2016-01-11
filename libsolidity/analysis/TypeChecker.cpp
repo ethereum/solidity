@@ -495,7 +495,10 @@ void TypeChecker::visitManually(
 				break;
 			}
 	if (!parameters)
+	{
 		typeError(_modifier.location(), "Referenced declaration is neither modifier nor base class.");
+		return;
+	}
 	if (parameters->size() != arguments.size())
 		typeError(
 			_modifier.location(),
