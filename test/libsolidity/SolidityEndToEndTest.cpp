@@ -147,20 +147,21 @@ BOOST_AUTO_TEST_CASE(conditional_expression_storage_memory)
 		contract test {
 			bytes2[2] data1;
 			function f(bool cond) returns (uint) {
+				data1[0] = "cc";
+
 				bytes2[2] memory x;
-				x[0] = "aa";
 				bytes2[2] memory y;
 				y[0] = "bb";
 
-				data1 = cond ? x : y;
+				x = cond ? y : data1;
 
 				uint ret = 0;
-				if (data1[0] == "aa")
+				if (x[0] == "bb")
 				{
 					ret = 1;
 				}
 
-				if (data1[0] == "bb")
+				if (x[0] == "cc")
 				{
 					ret = 2;
 				}
