@@ -231,9 +231,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
         {
             components[i]->accept(*this);
 			utils().convertType(*components[i]->annotation().type, *arrayType.baseType(), true);
-			cout << components[i]->annotation().type->toString(true) << endl;
 			components[i]->annotation().type = arrayType.baseType(); //force conversion
-			cout << components[i]->annotation().type->toString(true) << endl;
 			utils().storeInMemoryDynamic(*components[i]->annotation().type, true);				
         }
         m_context << eth::Instruction::POP;
@@ -796,7 +794,6 @@ bool ExpressionCompiler::visit(NewExpression const&)
 void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
-
 	// Check whether the member is a bound function.
 	ASTString const& member = _memberAccess.memberName();
 	if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
@@ -1145,6 +1142,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _literal);
 	TypePointer type = _literal.annotation().type;
+	
 	switch (type->category())
 	{
 	case Type::Category::IntegerConstant:
@@ -1155,7 +1153,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 		break; // will be done during conversion
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
-	}
+	}	
 }
 
 void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryOperation)
