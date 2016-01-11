@@ -396,7 +396,7 @@ high or low invalid bids.
                     // Bid was not actually revealed.
                     // Do not refund deposit.
                     continue;
-                refund += value;
+                refund += bid.deposit;
                 if (!fake && bid.deposit >= value)
                     if (placeBid(msg.sender, value))
                         refund -= value;
