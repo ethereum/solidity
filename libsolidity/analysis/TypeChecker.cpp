@@ -781,10 +781,12 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 {
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
 	TypePointers types;
-	TypePointer internalArrayType;
-	bool isArray = _tuple.isInlineArray();
+	TypePointer inlineArrayType;
+
 	if (_tuple.annotation().lValueRequested)
 	{
+		if (_tuple.isInlineArray())
+			fatalTypeError(_tuple.location(), "Inline array type cannot be declared as LValue.");
 		for (auto const& component: components)
 			if (component)
 			{
@@ -811,26 +813,34 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 			{
 				components[i]->accept(*this);
 				types.push_back(type(*components[i]));
-				if (i == 0 && isArray)
-					internalArrayType = types[i]->mobileType();
-				else if (isArray && internalArrayType && types[i]->mobileType())
-					internalArrayType = Type::commonType(internalArrayType, types[i]->mobileType());
+				if (_tuple.isInlineArray())
+					solAssert(!!types[i], "Inline array cannot have empty components");
+				if (i == 0 && _tuple.isInlineArray())
+					inlineArrayType = types[i]->mobileType();
+				else if (_tuple.isInlineArray() && inlineArrayType)
+					inlineArrayType = Type::commonType(inlineArrayType, types[i]->mobileType());
 			}
 			else
 				types.push_back(TypePointer());
 		}
-		if (components.size() == 1 && !isArray)
-			_tuple.annotation().type = type(*components[0]);
-		else if (!internalArrayType && isArray) 
-			fatalTypeError(_tuple.location(), "Unable to deduce common type for array elements.");
-		else if (isArray)
-			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, internalArrayType, types.size());
+		if (_tuple.isInlineArray())
+		{
+			if (!inlineArrayType) 
+				fatalTypeError(_tuple.location(), "Unable to deduce common type for array elements.");
+			_tuple.annotation().type = make_shared<ArrayType>(DataLocation::Memory, inlineArrayType, types.size());
+		}
 		else
 		{
-			if (components.size() == 2 && !components[1])
-				types.pop_back();
-			_tuple.annotation().type = make_shared<TupleType>(types);
+			if (components.size() == 1)
+				_tuple.annotation().type = type(*components[0]);
+			else
+			{
+				if (components.size() == 2 && !components[1])
+					types.pop_back();
+				_tuple.annotation().type = make_shared<TupleType>(types);
+			}
 		}
+
 	}
 	return false;
 }

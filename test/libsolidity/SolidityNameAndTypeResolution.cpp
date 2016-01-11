@@ -2862,6 +2862,31 @@ BOOST_AUTO_TEST_CASE(invalid_types_in_inline_array)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(dynamic_inline_array)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint[4][4] memory dyn = [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]];
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(lvalues_as_inline_array)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				[1, 2, 3]++;
+				[1, 2, 3] = [4, 5, 6];
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
