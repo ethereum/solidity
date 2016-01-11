@@ -186,6 +186,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 		_assignment.leftHandSide().annotation().type
 	);
 	utils().convertType(*_assignment.rightHandSide().annotation().type, *type);
+	
 	_assignment.leftHandSide().accept(*this);
 	solAssert(!!m_currentLValue, "LValue not retrieved.");
 
@@ -219,23 +220,24 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 {
 	if (_tuple.isInlineArray())
-    {
-        ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
-        auto components = _tuple.components();
-
-        m_context << max(u256(32u), arrayType.memorySize());
-        utils().allocateMemory();
-        m_context << eth::Instruction::DUP1;
-
-        for (unsigned i = 0; i < components.size(); ++i)
-        {
-            components[i]->accept(*this);
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
+		auto components = _tuple.components();
+		
+		m_context << max(u256(32u), arrayType.memorySize());
+		utils().allocateMemory();
+		m_context << eth::Instruction::DUP1;
+	
+		for (unsigned i = 0; i < components.size(); ++i)
+		{
+			components[i]->accept(*this);
 			utils().convertType(*components[i]->annotation().type, *arrayType.baseType(), true);
 			components[i]->annotation().type = arrayType.baseType(); //force conversion
 			utils().storeInMemoryDynamic(*components[i]->annotation().type, true);				
-        }
-        m_context << eth::Instruction::POP;
-    }
+		}
+		
+		m_context << eth::Instruction::POP;
+	}
 	else
 	{
 		vector<unique_ptr<LValue>> lvalues;
