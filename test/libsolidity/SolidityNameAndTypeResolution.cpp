@@ -2972,12 +2972,14 @@ BOOST_AUTO_TEST_CASE(invalid_different_types_for_conditional_expression)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(invalid_left_value_in_conditional_expression)
+BOOST_AUTO_TEST_CASE(left_value_in_conditional_expression_not_supported_yet)
 {
 	char const* text = R"(
 		contract C {
 			function f() {
-				(true ? 3 : 5) = 1;
+				uint x;
+				uint y;
+				(true ? x : y) = 1;
 			}
 		}
 	)";

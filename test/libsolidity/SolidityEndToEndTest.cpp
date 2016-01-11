@@ -128,22 +128,6 @@ BOOST_AUTO_TEST_CASE(conditional_expression_multiple)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(40)) == toBigEndian(u256(10)));
 }
 
-BOOST_AUTO_TEST_CASE(conditional_expression_as_left_value)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function f(uint x) returns(uint d) {
-				uint y = 1;
-				uint z = 1;
-				(x > 10 ? y : z) = 3;
-				return y ** z;
- 			}
-		})";
-	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("f(uint256)", u256(20)) == toBigEndian(u256(3)));
-	BOOST_CHECK(callContractFunction("f(uint256)", u256(5)) == toBigEndian(u256(1)));
-}
-
 BOOST_AUTO_TEST_CASE(conditional_expression_with_return_values)
 {
 	char const* sourceCode = R"(

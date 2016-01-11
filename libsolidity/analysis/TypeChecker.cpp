@@ -748,55 +748,37 @@ bool TypeChecker::visit(Conditional const& _conditional)
 {
 	expectType(_conditional.condition(), BoolType());
 
+	_conditional.trueExpression().accept(*this);
+	_conditional.falseExpression().accept(*this);
+
+	TypePointer const& trueType = type(_conditional.trueExpression());
+	TypePointer const& falseType = type(_conditional.falseExpression());
+
+	// we fake it as an equal operator, but any other comparison operator can work.
+	TypePointer commonType = trueType->binaryOperatorResult(Token::Equal, falseType);
+	if (!commonType)
+	{
+		typeError(
+				_conditional.location(),
+				"True expression's type " +
+				trueType->toString() +
+				" doesn't match false expression's type " +
+				falseType->toString() +
+				"."
+		);
+		// even we can't find a common type, we have to set a type here,
+		// otherwise the upper statement will not be able to check the type.
+		commonType = trueType;
+	}
+
+	_conditional.annotation().type = commonType;
+
 	if (_conditional.annotation().lValueRequested)
-	{
-		requireLValue(_conditional.trueExpression());
-		requireLValue(_conditional.falseExpression());
+		typeError(
+				_conditional.location(),
+				"Conditional expression as left value is not supported yet."
+		);
 
-		TypePointer const& trueType = type(_conditional.trueExpression());
-		TypePointer const& falseType = type(_conditional.falseExpression());
-
-		// as a left value, we require exact match to prevent subtle conversion issues.
-		if (*trueType != *falseType)
-			typeError(
-					_conditional.location(),
-					"True expression's type " +
-					trueType->toString() +
-					" doesn't match false expression's type " +
-					falseType->toString() +
-					"."
-			);
-
-		_conditional.annotation().type = trueType;
-		_conditional.annotation().isLValue = true;
-	}
-	else
-	{
-		_conditional.trueExpression().accept(*this);
-		_conditional.falseExpression().accept(*this);
-
-		TypePointer const& trueType = type(_conditional.trueExpression());
-		TypePointer const& falseType = type(_conditional.falseExpression());
-
-		// we fake it as an equal operator, but any other comparison operator can work.
-		TypePointer commonType = trueType->binaryOperatorResult(Token::Equal, falseType);
-		if (!commonType)
-		{
-			typeError(
-					_conditional.location(),
-					"True expression's type " +
-					trueType->toString() +
-					" doesn't match false expression's type " +
-					falseType->toString() +
-					"."
-			);
-			// even we can't find a common type, we have to set a type here,
-			// otherwise the upper statement will not be able to check the type.
-			commonType = trueType;
-		}
-
-		_conditional.annotation().type = commonType;
-	}
 	return false;
 }
 
