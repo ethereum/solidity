@@ -318,7 +318,7 @@ Can state variables be initialized in-line?
 ===========================================
 
 Yes, this is possible for all types (even for structs). However, for arrays it 
-should be noted that you must declare them as static memory arrays. Futhermore, multi dimensional arrays cannot be declared inline.
+should be noted that you must declare them as static memory arrays.
 
 Examples::
 

@@ -6123,6 +6123,23 @@ BOOST_AUTO_TEST_CASE(inline_array_storage_to_memory_conversion_strings)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x40), u256(0x80), u256(3), string("ray"), u256(2), string("mi")));
 }
 
+BOOST_AUTO_TEST_CASE(inline_array_strings_from_document)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint i) returns (string) {
+				string[4] memory x = ["This", "is", "an", "array"];
+				return (x[i]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(0)) == encodeArgs(u256(0x20), u256(4), string("This")));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1)) == encodeArgs(u256(0x20), u256(2), string("is")));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(2)) == encodeArgs(u256(0x20), u256(2), string("an")));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(u256(0x20), u256(5), string("array")));
+}
+
 BOOST_AUTO_TEST_CASE(inline_array_storage_to_memory_conversion_ints)
 {
 	char const* sourceCode = R"(

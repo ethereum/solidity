@@ -784,7 +784,6 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 {
 	vector<ASTPointer<Expression>> const& components = _tuple.components();
 	TypePointers types;
-	TypePointer inlineArrayType;
 
 	if (_tuple.annotation().lValueRequested)
 	{
@@ -807,6 +806,7 @@ bool TypeChecker::visit(TupleExpression const& _tuple)
 	}
 	else
 	{
+		TypePointer inlineArrayType;
 		for (size_t i = 0; i < components.size(); ++i)
 		{
 			// Outside of an lvalue-context, the only situation where a component can be empty is (x,).

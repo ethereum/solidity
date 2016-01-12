@@ -2883,11 +2883,11 @@ BOOST_AUTO_TEST_CASE(dynamic_inline_array)
 	char const* text = R"(
 		contract C {
 			function f() {
-				uint[4][4] memory dyn = [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]];
+				uint8[4][4] memory dyn = [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6], [4, 5, 6, 7]];
 			}
 		}
 	)";
-	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+	BOOST_CHECK(success(text));
 }
 
 BOOST_AUTO_TEST_CASE(lvalues_as_inline_array)
