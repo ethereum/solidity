@@ -497,7 +497,18 @@ bool CommandLineInterface::processInput()
 		return link();
 	}
 
-	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0));
+	function<pair<string,string>(string const&)> fileReader = [this](string const& _path)
+	{
+		auto path = boost::filesystem::path(_path);
+		if (!boost::filesystem::exists(path))
+			return make_pair(string(), string("File not found."));
+		else if (!boost::filesystem::is_regular_file(path))
+			return make_pair(string(), string("Not a valid file."));
+		else
+			return make_pair(m_sourceCodes[_path] = dev::contentsString(_path), string());
+	};
+
+	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0, fileReader));
 	try
 	{
 		for (auto const& sourceCode: m_sourceCodes)

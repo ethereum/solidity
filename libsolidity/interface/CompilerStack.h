@@ -27,6 +27,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <functional>
 #include <boost/noncopyable.hpp>
 #include <json/json.h>
 #include <libdevcore/Common.h>
@@ -74,8 +75,14 @@ enum class DocumentationType: uint8_t
 class CompilerStack: boost::noncopyable
 {
 public:
-	/// Creates a new compiler stack. Adds standard sources if @a _addStandardSources.
-	explicit CompilerStack(bool _addStandardSources = true);
+	/// File reading callback, should return a pair of content and error message (exactly one nonempty)
+	/// for a given path.
+	using ReadFileCallback = std::function<std::pair<std::string, std::string>(std::string const&)>;
+
+	/// Creates a new compiler stack.
+	/// @param _readFile callback to used to read files for import statements. Should return
+	/// @param _addStandardSources Adds standard sources if @a _addStandardSources.
+	explicit CompilerStack(bool _addStandardSources = true, ReadFileCallback const& _readFile = ReadFileCallback());
 
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
 	void reset(bool _keepSources = false, bool _addStandardSources = true);
@@ -198,6 +205,10 @@ private:
 		mutable std::unique_ptr<std::string const> devDocumentation;
 	};
 
+	/// Loads the missing sources from @a _ast (named @a _path) using the callback
+	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
+	/// @returns the newly loaded sources.
+	StringMap loadMissingSources(SourceUnit const& _ast, std::string const& _path);
 	void resolveImports();
 	/// @returns the absolute path corresponding to @a _path relative to @a _reference.
 	std::string absolutePath(std::string const& _path, std::string const& _reference) const;
@@ -212,6 +223,7 @@ private:
 	Contract const& contract(std::string const& _contractName = "") const;
 	Source const& source(std::string const& _sourceName = "") const;
 
+	ReadFileCallback m_readFile;
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
