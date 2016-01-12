@@ -317,7 +317,8 @@ by `msg.data`.
 Can state variables be initialized in-line?
 ===========================================
 
-Yes, this is possible for most types (even for structs), but not for arrays.
+Yes, this is possible for all types (even for structs). However, for arrays it 
+should be noted that you must declare them as static memory arrays.
 
 Examples::
 
@@ -325,6 +326,7 @@ Examples::
         struct S { uint a; uint b; }
         S public x = S(1, 2);
         string name = "Ada";
+        string[4] memory AdaArr = ["This", "is", "an", "array"];  
     }
     contract D {
         C c = new C();

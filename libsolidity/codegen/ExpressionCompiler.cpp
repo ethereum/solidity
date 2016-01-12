@@ -219,25 +219,46 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 
 bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 {
-	vector<unique_ptr<LValue>> lvalues;
-	for (auto const& component: _tuple.components())
-		if (component)
+	if (_tuple.isInlineArray())
+	{
+		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(*_tuple.annotation().type);
+		
+		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
+		m_context << max(u256(32u), arrayType.memorySize());
+		utils().allocateMemory();
+		m_context << eth::Instruction::DUP1;
+	
+		for (auto const& component: _tuple.components())
 		{
 			component->accept(*this);
-			if (_tuple.annotation().lValueRequested)
-			{
-				solAssert(!!m_currentLValue, "");
-				lvalues.push_back(move(m_currentLValue));
-			}
+			utils().convertType(*component->annotation().type, *arrayType.baseType(), true);
+			utils().storeInMemoryDynamic(*arrayType.baseType(), true);				
 		}
-		else if (_tuple.annotation().lValueRequested)
-			lvalues.push_back(unique_ptr<LValue>());
-	if (_tuple.annotation().lValueRequested)
+		
+		m_context << eth::Instruction::POP;
+	}
+	else
 	{
-		if (_tuple.components().size() == 1)
-			m_currentLValue = move(lvalues[0]);
-		else
-			m_currentLValue.reset(new TupleObject(m_context, move(lvalues)));
+		vector<unique_ptr<LValue>> lvalues;
+		for (auto const& component: _tuple.components())
+			if (component)
+			{
+				component->accept(*this);
+				if (_tuple.annotation().lValueRequested)
+				{
+					solAssert(!!m_currentLValue, "");
+					lvalues.push_back(move(m_currentLValue));
+				}
+			}
+			else if (_tuple.annotation().lValueRequested)
+				lvalues.push_back(unique_ptr<LValue>());
+		if (_tuple.annotation().lValueRequested)
+		{
+			if (_tuple.components().size() == 1)
+				m_currentLValue = move(lvalues[0]);
+			else
+				m_currentLValue.reset(new TupleObject(m_context, move(lvalues)));
+		}
 	}
 	return false;
 }
@@ -774,7 +795,6 @@ bool ExpressionCompiler::visit(NewExpression const&)
 void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
-
 	// Check whether the member is a bound function.
 	ASTString const& member = _memberAccess.memberName();
 	if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
@@ -1123,6 +1143,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _literal);
 	TypePointer type = _literal.annotation().type;
+	
 	switch (type->category())
 	{
 	case Type::Category::IntegerConstant:

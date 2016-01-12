@@ -6107,6 +6107,119 @@ BOOST_AUTO_TEST_CASE(bound_function_to_string)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(3)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_array_storage_to_memory_conversion_strings)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s = "doh";
+			function f() returns (string, string) {
+				string memory t = "ray";
+				string[3] memory x = [s, t, "mi"];
+				return (x[1], x[2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x40), u256(0x80), u256(3), string("ray"), u256(2), string("mi")));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_strings_from_document)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint i) returns (string) {
+				string[4] memory x = ["This", "is", "an", "array"];
+				return (x[i]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(0)) == encodeArgs(u256(0x20), u256(4), string("This")));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1)) == encodeArgs(u256(0x20), u256(2), string("is")));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(2)) == encodeArgs(u256(0x20), u256(2), string("an")));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(3)) == encodeArgs(u256(0x20), u256(5), string("array")));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_storage_to_memory_conversion_ints)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint x, uint y) {
+				x = 3;
+				y = 6;
+				uint[2] memory z = [x, y];
+				return (z[0], z[1]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(3, 6));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_index_access_ints)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) {
+				return ([1, 2, 3, 4][2]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_index_access_strings)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string public tester;
+			function f() returns (string) {
+				return (["abc", "def", "g"][0]);
+			}
+			function test() {
+				tester = f();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("tester()") == encodeArgs(u256(0x20), u256(3), string("abc")));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_return)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint8[] tester; 
+			function f() returns (uint8[5]) {
+				return ([1,2,3,4,5]);
+			}
+			function test() returns (uint8, uint8, uint8, uint8, uint8) {
+				tester = f(); 
+				return (tester[0], tester[1], tester[2], tester[3], tester[4]);
+			}
+			
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(1, 2, 3, 4, 5));
+}
+
+BOOST_AUTO_TEST_CASE(inline_long_string_return)
+{
+		char const* sourceCode = R"(
+		contract C { 
+			function f() returns (string) {
+				return (["somethingShort", "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"][1]);
+			}
+		}
+	)";
+	
+	string strLong = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678900123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789001234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeDyn(strLong));
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 }
