@@ -201,6 +201,10 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ASTString const& path() const { return *m_path; }
+	std::vector<std::pair<ASTPointer<Identifier>, ASTPointer<ASTString>>> const& symbolAliases() const
+	{
+		return m_symbolAliases;
+	}
 	virtual ImportAnnotation& annotation() const override;
 
 	virtual TypePointer type() const override;

@@ -49,6 +49,8 @@ Declaration const* DeclarationContainer::conflictingDeclaration(
 			if (!dynamic_cast<FunctionDefinition const*>(declaration))
 				return declaration;
 	}
+	else if (declarations.size() == 1 && declarations.front() == &_declaration)
+		return nullptr;
 	else if (!declarations.empty())
 		return declarations.front();
 
@@ -73,13 +75,12 @@ bool DeclarationContainer::registerDeclaration(
 		m_declarations.erase(*_name);
 		m_invisibleDeclarations.erase(*_name);
 	}
-	else if (conflictingDeclaration(_declaration))
+	else if (conflictingDeclaration(_declaration, _name))
 		return false;
 
-	if (_invisible)
-		m_invisibleDeclarations[*_name].push_back(&_declaration);
-	else
-		m_declarations[*_name].push_back(&_declaration);
+	vector<Declaration const*>& decls = _invisible ? m_invisibleDeclarations[*_name] : m_declarations[*_name];
+	if (!contains(decls, &_declaration))
+		decls.push_back(&_declaration);
 	return true;
 }
 

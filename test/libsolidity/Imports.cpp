@@ -101,6 +101,31 @@ BOOST_AUTO_TEST_CASE(simple_alias)
 	BOOST_CHECK(c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(complex_import)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {} contract B {} contract C { struct S { uint a; } }");
+	c.addSource("b", "import \"a\" as x; import {B as b, C as c, C} from \"a\"; "
+				"contract D is b { function f(c.S var1, x.C.S var2, C.S var3) internal {} }");
+	BOOST_CHECK(c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(name_clash_in_import)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {}");
+	c.addSource("b", "import \"a\"; contract A {} ");
+	BOOST_CHECK(!c.compile());
+	c.addSource("b", "import \"a\" as A; contract A {} ");
+	BOOST_CHECK(!c.compile());
+	c.addSource("b", "import {A as b} from \"a\"; contract b {} ");
+	BOOST_CHECK(!c.compile());
+	c.addSource("b", "import {A} from \"a\"; contract A {} ");
+	BOOST_CHECK(!c.compile());
+	c.addSource("b", "import {A} from \"a\"; contract B {} ");
+	BOOST_CHECK(c.compile());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

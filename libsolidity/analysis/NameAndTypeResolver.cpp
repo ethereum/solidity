@@ -76,23 +76,58 @@ bool NameAndTypeResolver::performImports(SourceUnit& _sourceUnit, map<string, So
 			string const& path = imp->annotation().absolutePath;
 			if (!_sourceUnits.count(path))
 			{
-				reportDeclarationError( node->location(),
-					"Import \"" +
-					path +
-					"\" (referenced as \"" +
-					imp->path() +
-					"\") not found."
+				reportDeclarationError(
+					imp->location(),
+					"Import \"" + path + "\" (referenced as \"" + imp->path() + "\") not found."
 				);
 				error = true;
+				continue;
 			}
+			auto scope = m_scopes.find(_sourceUnits.at(path));
+			solAssert(scope != end(m_scopes), "");
+			if (!imp->symbolAliases().empty())
+				for (auto const& alias: imp->symbolAliases())
+				{
+					auto declarations = scope->second->resolveName(alias.first->name(), false);
+					if (declarations.empty())
+					{
+						reportDeclarationError(
+							imp->location(),
+							"Declaration \"" +
+							alias.first->name() +
+							"\" not found in \"" +
+							path +
+							"\" (referenced as \"" +
+							imp->path() +
+							"\")."
+						);
+						error = true;
+					}
+					else
+						for (Declaration const* declaration: declarations)
+						{
+							ASTString const* name = alias.second ? alias.second.get() : &declaration->name();
+							if (!target.registerDeclaration(*declaration, name))
+							{
+								reportDeclarationError(
+									imp->location(),
+									"Identifier \"" + *name + "\" already declared."
+								);
+								error = true;
+							}
+						}
+				}
 			else if (imp->name().empty())
-			{
-				auto scope = m_scopes.find(_sourceUnits.at(path));
-				solAssert(scope != end(m_scopes), "");
 				for (auto const& nameAndDeclaration: scope->second->declarations())
 					for (auto const& declaration: nameAndDeclaration.second)
-						target.registerDeclaration(*declaration, &nameAndDeclaration.first);
-			}
+						if (!target.registerDeclaration(*declaration, &nameAndDeclaration.first))
+						{
+							reportDeclarationError(
+								imp->location(),
+								"Identifier \"" + nameAndDeclaration.first + "\" already declared."
+							);
+							error = true;
+						}
 		}
 	return !error;
 }
