@@ -426,6 +426,7 @@ bool CompilerStack::checkLibraryNameClashes()
 							));
 
 						m_errors.push_back(err);
+						clashFound = true;
 					}
 					else
 						libraries[contract->name()] = contract->location();
