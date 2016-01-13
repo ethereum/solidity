@@ -45,7 +45,6 @@ filesystem, it can also map to resources discovered via e.g. ipfs, http or git.
 Use in actual Compilers
 -----------------------
 
-
 When the compiler is invoked, it is not only possible to specify how to
 discover the first element of a path, but it is possible to specify path prefix
 remappings so that e.g. `github.com/ethereum/dapp-bin/library` is remapped to
@@ -54,16 +53,33 @@ remapping keys are prefixes of each other, the longest is tried first. This
 allows for a "fallback-remapping" with e.g. `""` maps to
 `"/usr/local/include/solidity"`.
 
+**solc**:
+
 For solc (the commandline compiler), these remappings are provided as `key=value`
 arguments, where the `=value` part is optional (and defaults to key in that
 case). All remapping values that are regular files are compiled (including
 their dependencies). This mechanism is completely backwards-compatible (as long
 as no filename contains a =) and thus not a breaking change.
 
+So as an example, if you clone
+`github.com/ethereum/dapp-bin/` locally to `/usr/local/dapp-bin`, you can use
+the following in your source file:
+
+`import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;`
+
+and then run the compiler as
+
+`solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol`
+
+**browser-solidity**:
+
 The `browser-based compiler <https://chriseth.github.io/browser-solidity>`_
-provides an automatic remapping for github and will also automatically retrieve the file:
+provides an automatic remapping for github and will also automatically retrieve
+the file over the network:
 You can import the iterable mapping by e.g.
-`import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol"; as it_mapping;`.
+`import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;`.
+
+Other source code providers may be added in the future.
 
 
 .. index:: ! comment, natspec
