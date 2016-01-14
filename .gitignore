@@ -29,6 +29,7 @@
 
 # Build directory
 build/
+docs/_build
 
 # vim stuff
 *.swp
