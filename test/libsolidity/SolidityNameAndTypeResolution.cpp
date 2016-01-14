@@ -27,6 +27,7 @@
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>
+#include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/analysis/TypeChecker.h>
@@ -56,6 +57,10 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
 		if(!sourceUnit)
 			return make_pair(sourceUnit, nullptr);
+
+		SyntaxChecker syntaxChecker(errors);
+		if (!syntaxChecker.checkSyntax(*sourceUnit))
+			return make_pair(sourceUnit, std::make_shared<Error::Type const>(errors[0]->type()));
 
 		std::shared_ptr<GlobalContext> globalContext = make_shared<GlobalContext>();
 		NameAndTypeResolver resolver(globalContext->declarations(), errors);
@@ -2901,6 +2906,32 @@ BOOST_AUTO_TEST_CASE(lvalues_as_inline_array)
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(break_not_in_loop)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				if (true)
+					break;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::SyntaxError);
+}
+
+BOOST_AUTO_TEST_CASE(continue_not_in_loop)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				if (true)
+					continue;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::SyntaxError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
