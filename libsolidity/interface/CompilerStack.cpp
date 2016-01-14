@@ -397,7 +397,7 @@ StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string 
 				*err <<
 					errinfo_sourceLocation(import->location()) <<
 					errinfo_comment("Source not found: " + errorMessage);
-				m_errors.push_back(move(err));
+				m_errors.push_back(std::move(err));
 				continue;
 			}
 			else
