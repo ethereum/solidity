@@ -369,6 +369,27 @@ BOOST_AUTO_TEST_CASE(successor_not_found_bug)
 	compileBothVersions(sourceCode);
 }
 
+BOOST_AUTO_TEST_CASE(incorrect_storage_access_bug)
+{
+	// This bug appeared because a sha3 operation with too low sequence number was used,
+	// resulting in memory not being rewritten before the sha3. The fix was to
+	// take the max of the min sequence numbers when merging the states.
+	char const* sourceCode = R"(
+		contract C
+		{
+			mapping(uint => uint) data;
+			function f() returns (uint)
+			{
+				if(data[now] == 0)
+					data[uint(-7)] = 5;
+				return data[now];
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f()");
+}
+
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
 	eth::KnownState state;
