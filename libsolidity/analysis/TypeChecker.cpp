@@ -292,6 +292,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 			if (f->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*f);
+				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].push_back(
 						make_pair(f, functionType)
@@ -301,6 +302,7 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 			if (v->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*v);
+				// under non error circumstances this should be true
 				if (functionType->interfaceFunctionType())
 					externalDeclarations[functionType->externalSignature()].push_back(
 						make_pair(v, functionType)
