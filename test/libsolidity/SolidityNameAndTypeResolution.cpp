@@ -1007,7 +1007,6 @@ BOOST_AUTO_TEST_CASE(struct_accessor_one_array_only)
 {
 	char const* sourceCode = R"(
 		contract test {
-
 			struct Data {  uint[15] m_array; }
 			Data public data;
 		}
