@@ -2650,6 +2650,169 @@ BOOST_AUTO_TEST_CASE(iterated_sha3_with_bytes)
 	));
 }
 
+BOOST_AUTO_TEST_CASE(sha3_with_uint_arrays)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint[] a;
+			uint x = 1;
+			uint y = 2;
+			uint z = 3;
+			function storageArray() returns (bytes32) {
+				a.push(x);
+				a.push(y);
+				a.push(z);
+				return sha3(a);
+			}
+			function memoryArray() returns (bytes32) {
+				//uint[3] memory b = [x, y, z];
+				storageArray();
+				uint[] memory b = new uint[](3);
+				b[0] = x;
+				b[1] = y;
+				b[2] = z;
+				return sha3(b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("storageArray()") == encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3))))
+	));
+	/*BOOST_CHECK(callContractFunction("memoryArray()") == encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3))))
+	));*/
+
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_dynamic_arrays)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function dynMemory() returns (bytes32) {
+				uint[3][2] memory c;
+				c[0] = [x, y, z];
+				c[1] = [x, y, z];
+				return sha3(c);
+			}
+			function dynStore() returns (bytes32) {
+				uint[3][2] d;
+				d[0].push(x);
+				d[0].push(y);
+				d[0].push(z);
+				d[1].push(x);
+				d[1].push(y);
+				d[1].push(z);
+				return sha3(d);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("dynMemory()") == encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3)) +
+						toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3))))
+	));
+	BOOST_CHECK(callContractFunction("dynStore())") == encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3)) +
+						toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3))))
+	));
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_structs)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct TestStruct {
+				uint[3] a;
+			}
+			TestStruct b;
+			TestStruct[3] c;
+			uint x = 1;
+			uint y = 2;
+			uint z = 3;
+			function memStructs() returns (bytes32) {
+				TestStruct memory testing = TestStruct({a:[x, y, z]});
+				return sha3(testing);
+			}
+			function storeStructs() returns (bytes32) {
+				b.a[0] = x;
+				b.a[1] = y;
+				b.a[2] = z;
+				return sha3(b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("memStructs()") == encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3))))
+	));
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct TestStruct {
+				uint[3] a;
+			}
+			TestStruct b;
+			TestStruct[3] c;
+			uint x = 1;
+			uint y = 2;
+			uint z = 3;
+			function memStructs() returns (bytes32) {
+				TestStruct memory testing = TestStruct({a:[x, y, z]});
+				return sha3(testing);
+			}
+			function storeStructs() returns (bytes32) {
+				b.a[0] = x;
+				b.a[1] = y;
+				b.a[2] = z;
+				return sha3(b);
+			}
+			function arrayOfStructs() returns (bool) {
+				c[0].a[0] = x;
+				c[0].a[1] = y;
+				c[0].a[2] = z;
+				c[1].a[0] = x;
+				c[1].a[1] = y;
+				c[1].a[2] = z;
+				c[2].a[0] = x;
+				c[2].a[1] = y;
+				c[2].a[2] = z;
+			}
+			function dynamicStructs() returns (bytes32) {
+				TestStruct[3][2] memory d = 
+							[
+								[{a:[x, y, z]}],
+								[{a:[x, y, z]}]
+							];
+				return sha3(d);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	/*BOOST_CHECK(callContractFunction("memStructs()") == encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3))))
+	));*/
+}
+
 BOOST_AUTO_TEST_CASE(generic_call)
 {
 	char const* sourceCode = R"**(

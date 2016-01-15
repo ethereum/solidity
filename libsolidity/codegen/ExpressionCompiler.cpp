@@ -575,9 +575,23 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			for (auto const& arg: arguments)
 			{
 				arg->accept(*this);
-				solAssert(!(arg->annotation().type->category() == Type::Category::Struct), "Struct type cannot be SHA3'd yet.");
-				argumentTypes.push_back(arg->annotation().type);
+				if (arg->annotation().type->category() == Type::Category::Struct)
+				{
+					StructType const& structType = dynamic_cast<StructType const&>(*arg->annotation().type);
+					vector<ASTPointer<VariableDeclaration>> members = structType.structDefinition().members();
+
+					for (ASTPointer<VariableDeclaration> const& member: members) //loop through struct type and grab members
+					{
+						TypePointer type = member->annotation().type;
+						cout << type->toString(false) << endl;
+						argumentTypes.push_back(type);
+					}
+				}
+				else
+					argumentTypes.push_back(arg->annotation().type);
 			}
+
+			cout << function.padArguments() << endl;
 			utils().fetchFreeMemoryPointer();
 			utils().encodeToMemory(argumentTypes, TypePointers(), function.padArguments(), true);
 			utils().toSizeAfterFreeMemoryPointer();
