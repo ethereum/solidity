@@ -292,17 +292,19 @@ void TypeChecker::checkContractExternalTypeClashes(ContractDefinition const& _co
 			if (f->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*f);
-				externalDeclarations[functionType->externalSignature()].push_back(
-					make_pair(f, functionType)
-				);
+				if (functionType->interfaceFunctionType())
+					externalDeclarations[functionType->externalSignature()].push_back(
+						make_pair(f, functionType)
+					);
 			}
 		for (VariableDeclaration const* v: contract->stateVariables())
 			if (v->isPartOfExternalInterface())
 			{
 				auto functionType = make_shared<FunctionType>(*v);
-				externalDeclarations[functionType->externalSignature()].push_back(
-					make_pair(v, functionType)
-				);
+				if (functionType->interfaceFunctionType())
+					externalDeclarations[functionType->externalSignature()].push_back(
+						make_pair(v, functionType)
+					);
 			}
 	}
 	for (auto const& it: externalDeclarations)

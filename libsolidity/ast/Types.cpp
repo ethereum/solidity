@@ -1593,6 +1593,10 @@ FunctionTypePointer FunctionType::interfaceFunctionType() const
 		else
 			return FunctionTypePointer();
 	}
+	auto variable = dynamic_cast<VariableDeclaration const*>(m_declaration);
+	if (variable && retParamTypes.empty())
+		return FunctionTypePointer();
+
 	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_returnParameterNames, m_location, m_arbitraryParameters);
 }
 
