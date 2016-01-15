@@ -1015,7 +1015,6 @@ BOOST_AUTO_TEST_CASE(struct_accessor_one_array_only)
 	BOOST_CHECK(expectError(sourceCode) == Error::Type::TypeError);
 }
 
-
 BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
 {
 	char const* text = "contract Parent {\n"
