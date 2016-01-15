@@ -1178,20 +1178,6 @@ BOOST_AUTO_TEST_CASE(conditional_with_assignment)
 	BOOST_CHECK(successParse(text));
 }
 
-BOOST_AUTO_TEST_CASE(conditional_as_left_value)
-{
-	char const* text = R"(
-		contract A {
-			function f() {
-				uint x;
-				uint y;
-				(true ? x : y) = 3;
-			}
-		}
-	)";
-	BOOST_CHECK(successParse(text));
-}
-
 BOOST_AUTO_TEST_SUITE_END()
 
 }
