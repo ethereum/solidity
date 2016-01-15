@@ -1236,6 +1236,25 @@ set<string> StructType::membersMissingInMemory() const
 	return missing;
 }
 
+TypePointers StructType::getMembers() const
+{
+	TypePointers argumentTypes;
+	for (auto const& member: m_struct.members()) //loop through struct type and grab members
+	{
+		if (member->annotation().type->category() == Type::Category::Struct)
+		{
+			StructType const& structType = dynamic_cast<StructType const&>(*member->annotation().type);
+			TypePointers innerStructArgs = structType.getMembers();
+			for (auto const& arg: innerStructArgs)
+				argumentTypes.push_back(arg);
+		}
+		TypePointer type = member->annotation().type;
+		cout << type->toString(false) << endl;
+		argumentTypes.push_back(type);
+	}
+	return argumentTypes;
+}
+
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 {
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();

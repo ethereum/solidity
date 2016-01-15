@@ -646,6 +646,8 @@ public:
 
 	/// @returns the set of all members that are removed in the memory version (typically mappings).
 	std::set<std::string> membersMissingInMemory() const;
+	/// @returns all members of the struct in a recursive fashion
+	TypePointers getMembers() const;
 
 private:
 	StructDefinition const& m_struct;

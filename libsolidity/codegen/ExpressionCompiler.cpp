@@ -572,20 +572,16 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case Location::SHA3:
 		{
 			TypePointers argumentTypes;
+			cout << endl;
 			for (auto const& arg: arguments)
 			{
 				arg->accept(*this);
 				if (arg->annotation().type->category() == Type::Category::Struct)
 				{
 					StructType const& structType = dynamic_cast<StructType const&>(*arg->annotation().type);
-					vector<ASTPointer<VariableDeclaration>> members = structType.structDefinition().members();
-
-					for (ASTPointer<VariableDeclaration> const& member: members) //loop through struct type and grab members
-					{
-						TypePointer type = member->annotation().type;
-						cout << type->toString(false) << endl;
-						argumentTypes.push_back(type);
-					}
+					TypePointers structArgs = structType.getMembers();
+					for (auto const& s_Arg: structArgs)
+						argumentTypes.push_back(s_Arg);
 				}
 				else
 					argumentTypes.push_back(arg->annotation().type);

@@ -160,7 +160,11 @@ void CompilerUtils::encodeToMemory(
 	TypePointers targetTypes = _targetTypes.empty() ? _givenTypes : _targetTypes;
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
 	for (TypePointer& t: targetTypes)
+	{
+		cout << t->toString(false) << endl;
 		t = t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
+		cout << t->toString(false) << endl;
+	}	
 
 	// Stack during operation:
 	// <v1> <v2> ... <vn> <mem_start> <dyn_head_1> ... <dyn_head_r> <end_of_mem>
@@ -176,10 +180,12 @@ void CompilerUtils::encodeToMemory(
 	for (size_t i = 0; i < _givenTypes.size(); ++i)
 	{
 		TypePointer targetType = targetTypes[i];
+		cout << targetType->toString(false) << endl;
 		solAssert(!!targetType, "Externalable type expected.");
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
 			// leave end_of_mem as dyn head pointer
+			cout << "we hitting here" << endl;
 			m_context << eth::Instruction::DUP1 << u256(32) << eth::Instruction::ADD;
 			dynPointers++;
 		}
