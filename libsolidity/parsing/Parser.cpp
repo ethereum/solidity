@@ -145,7 +145,7 @@ ASTPointer<ImportDirective> Parser::parseImportDirective()
 					expectToken(Token::As);
 					alias = expectIdentifierToken();
 				}
-				symbolAliases.push_back(move(make_pair(move(id), move(alias))));
+				symbolAliases.push_back(make_pair(move(id), move(alias)));
 				if (m_scanner->currentToken() != Token::Comma)
 					break;
 				m_scanner->next();
