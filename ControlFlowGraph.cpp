@@ -221,22 +221,36 @@ void ControlFlowGraph::gatherKnowledge()
 	KnownStatePointer emptyState = make_shared<KnownState>();
 	bool unknownJumpEncountered = false;
 
-	vector<pair<BlockId, KnownStatePointer>> workQueue({make_pair(BlockId::initial(), emptyState->copy())});
+	struct WorkQueueItem {
+		BlockId blockId;
+		KnownStatePointer state;
+		set<BlockId> blocksSeen;
+	};
+
+	vector<WorkQueueItem> workQueue{WorkQueueItem{BlockId::initial(), emptyState->copy(), set<BlockId>()}};
+	auto addWorkQueueItem = [&](WorkQueueItem const& _currentItem, BlockId _to, KnownStatePointer const& _state)
+	{
+		WorkQueueItem item;
+		item.blockId = _to;
+		item.state = _state->copy();
+		item.blocksSeen = _currentItem.blocksSeen;
+		item.blocksSeen.insert(_currentItem.blockId);
+		workQueue.push_back(move(item));
+	};
+
 	while (!workQueue.empty())
 	{
-		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
-		assertThrow(!!workQueue.back().first, OptimizerException, "");
-		if (!m_blocks.count(workQueue.back().first))
-		{
-			workQueue.pop_back();
-			continue; // too bad, we do not know the tag, probably an invalid jump
-		}
-		BasicBlock& block = m_blocks.at(workQueue.back().first);
-		KnownStatePointer state = workQueue.back().second;
+		WorkQueueItem item = move(workQueue.back());
 		workQueue.pop_back();
+		//@todo we might have to do something like incrementing the sequence number for each JUMPDEST
+		assertThrow(!!item.blockId, OptimizerException, "");
+		if (!m_blocks.count(item.blockId))
+			continue; // too bad, we do not know the tag, probably an invalid jump
+		BasicBlock& block = m_blocks.at(item.blockId);
+		KnownStatePointer state = item.state;
 		if (block.startState)
 		{
-			state->reduceToCommonKnowledge(*block.startState);
+			state->reduceToCommonKnowledge(*block.startState, !item.blocksSeen.count(item.blockId));
 			if (*state == *block.startState)
 				continue;
 		}
@@ -270,12 +284,12 @@ void ControlFlowGraph::gatherKnowledge()
 					unknownJumpEncountered = true;
 					for (auto const& it: m_blocks)
 						if (it.second.begin < it.second.end && m_items[it.second.begin].type() == Tag)
-							workQueue.push_back(make_pair(it.first, emptyState->copy()));
+							workQueue.push_back(WorkQueueItem{it.first, emptyState, set<BlockId>()});
 				}
 			}
 			else
 				for (auto tag: tags)
-					workQueue.push_back(make_pair(BlockId(tag), state->copy()));
+					addWorkQueueItem(item, BlockId(tag), state);
 		}
 		else if (block.begin <= pc && pc < block.end)
 			state->feedItem(m_items.at(pc++));
@@ -287,7 +301,7 @@ void ControlFlowGraph::gatherKnowledge()
 			block.endType == BasicBlock::EndType::HANDOVER ||
 			block.endType == BasicBlock::EndType::JUMPI
 		)
-			workQueue.push_back(make_pair(block.next, state->copy()));
+			addWorkQueueItem(item, block.next, state);
 	}
 
 	// Remove all blocks we never visited here. This might happen because a tag is pushed but

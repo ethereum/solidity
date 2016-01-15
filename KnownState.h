@@ -100,13 +100,12 @@ public:
 	void reset() { resetStorage(); resetMemory(); resetStack(); }
 
 	unsigned sequenceNumber() const { return m_sequenceNumber; }
-	/// Manually increments the storage and memory sequence number.
-	void incrementSequenceNumber() { m_sequenceNumber += 2; }
 
 	/// Replaces the state by the intersection with _other, i.e. only equal knowledge is retained.
 	/// If the stack heighht is different, the smaller one is used and the stack is compared
 	/// relatively.
-	void reduceToCommonKnowledge(KnownState const& _other);
+	/// @param _combineSequenceNumbers if true, sets the sequence number to the maximum of both
+	void reduceToCommonKnowledge(KnownState const& _other, bool _combineSequenceNumbers);
 
 	/// @returns a shared pointer to a copy of this state.
 	std::shared_ptr<KnownState> copy() const { return std::make_shared<KnownState>(*this); }

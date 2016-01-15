@@ -175,7 +175,7 @@ template <class _Mapping> void intersect(_Mapping& _this, _Mapping const& _other
 			it = _this.erase(it);
 }
 
-void KnownState::reduceToCommonKnowledge(KnownState const& _other)
+void KnownState::reduceToCommonKnowledge(KnownState const& _other, bool _combineSequenceNumbers)
 {
 	int stackDiff = m_stackHeight - _other.m_stackHeight;
 	for (auto it = m_stackElements.begin(); it != m_stackElements.end();)
@@ -213,9 +213,11 @@ void KnownState::reduceToCommonKnowledge(KnownState const& _other)
 
 	intersect(m_storageContent, _other.m_storageContent);
 	intersect(m_memoryContent, _other.m_memoryContent);
+	if (_combineSequenceNumbers)
+		m_sequenceNumber = max(m_sequenceNumber, _other.m_sequenceNumber);
 }
 
-bool KnownState::operator==(const KnownState& _other) const
+bool KnownState::operator==(KnownState const& _other) const
 {
 	if (m_storageContent != _other.m_storageContent || m_memoryContent != _other.m_memoryContent)
 		return false;
