@@ -807,7 +807,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			);
 			auto contract = dynamic_cast<ContractDefinition const*>(funType->declaration().scope());
 			solAssert(contract && contract->isLibrary(), "");
-			//@TODO library name might not be unique
 			m_context.appendLibraryAddress(contract->name());
 			m_context << funType->externalIdentifier();
 			utils().moveIntoStack(funType->selfType()->sizeOnStack(), 2);
@@ -1118,7 +1117,6 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	else if (auto contract = dynamic_cast<ContractDefinition const*>(declaration))
 	{
 		if (contract->isLibrary())
-			//@todo name should be unique, change once we have module management
 			m_context.appendLibraryAddress(contract->name());
 	}
 	else if (dynamic_cast<EventDefinition const*>(declaration))

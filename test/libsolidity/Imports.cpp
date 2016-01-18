@@ -101,6 +101,22 @@ BOOST_AUTO_TEST_CASE(simple_alias)
 	BOOST_CHECK(c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(library_name_clash)
+{
+	CompilerStack c;
+	c.addSource("a", "library A {}");
+	c.addSource("b", "library A {}");
+	BOOST_CHECK(!c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(library_name_clash_with_contract)
+{
+	CompilerStack c;
+	c.addSource("a", "contract A {}");
+	c.addSource("b", "library A {}");
+	BOOST_CHECK(c.compile());
+}
+
 BOOST_AUTO_TEST_CASE(complex_import)
 {
 	CompilerStack c;

@@ -148,6 +148,9 @@ bool CompilerStack::parse()
 				m_contracts[contract->name()].contract = contract;
 			}
 
+	if (!checkLibraryNameClashes())
+		noErrors = false;
+
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -398,6 +401,37 @@ void CompilerStack::resolveImports()
 			toposort(sourcePair.first, &sourcePair.second);
 
 	swap(m_sourceOrder, sourceOrder);
+}
+
+bool CompilerStack::checkLibraryNameClashes()
+{
+	bool clashFound = false;
+	map<string, SourceLocation> libraries;
+	for (Source const* source: m_sourceOrder)
+		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
+			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
+				if (contract->isLibrary())
+				{
+					if (libraries.count(contract->name()))
+					{
+						auto err = make_shared<Error>(Error::Type::DeclarationError);
+						*err <<
+							errinfo_sourceLocation(contract->location()) <<
+							errinfo_comment(
+								"Library \"" + contract->name() + "\" declared twice "
+								"(will create ambiguities during linking)."
+							) <<
+							errinfo_secondarySourceLocation(SecondarySourceLocation().append(
+									"The other declaration is here:", libraries[contract->name()]
+							));
+
+						m_errors.push_back(err);
+						clashFound = true;
+					}
+					else
+						libraries[contract->name()] = contract->location();
+				}
+	return !clashFound;
 }
 
 string CompilerStack::absolutePath(string const& _path, string const& _reference) const
