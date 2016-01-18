@@ -1003,6 +1003,17 @@ BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(struct_accessor_one_array_only)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct Data {  uint[15] m_array; }
+			Data public data;
+		}
+	)";
+	BOOST_CHECK(expectError(sourceCode) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
 {
 	char const* text = "contract Parent {\n"
