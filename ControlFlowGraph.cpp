@@ -284,7 +284,7 @@ void ControlFlowGraph::gatherKnowledge()
 					unknownJumpEncountered = true;
 					for (auto const& it: m_blocks)
 						if (it.second.begin < it.second.end && m_items[it.second.begin].type() == Tag)
-							workQueue.push_back(WorkQueueItem{it.first, emptyState, set<BlockId>()});
+							workQueue.push_back(WorkQueueItem{it.first, emptyState->copy(), set<BlockId>()});
 				}
 			}
 			else
