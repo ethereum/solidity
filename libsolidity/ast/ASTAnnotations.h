@@ -108,7 +108,6 @@ struct VariableDeclarationAnnotation: ASTAnnotation
 
 struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
 {
-	bool isInLoop = false;
 };
 
 struct ReturnAnnotation: StatementAnnotation
