@@ -42,36 +42,29 @@ void SyntaxChecker::syntaxError(SourceLocation const& _location, std::string con
 
 bool SyntaxChecker::visit(WhileStatement const& _whileStatement)
 {
-	_whileStatement.body().annotation().isInLoop = true;
+	m_inLoopDepth++;
 	return true;
+}
+
+void SyntaxChecker::endVisit(WhileStatement const& _whileStatement)
+{
+	m_inLoopDepth--;
 }
 
 bool SyntaxChecker::visit(ForStatement const& _forStatement)
 {
-	_forStatement.body().annotation().isInLoop = true;
+	m_inLoopDepth++;
 	return true;
 }
 
-bool SyntaxChecker::visit(Block const& _blockStatement)
+void SyntaxChecker::endVisit(ForStatement const& _forStatement)
 {
-	bool inLoop = _blockStatement.annotation().isInLoop;
-	for (auto& statement : _blockStatement.statements())
-		statement->annotation().isInLoop = inLoop;
-	return true;
-}
-
-bool SyntaxChecker::visit(IfStatement const& _ifStatement)
-{
-	bool inLoop = _ifStatement.annotation().isInLoop;
-	_ifStatement.trueStatement().annotation().isInLoop = inLoop;
-	if (_ifStatement.falseStatement())
-		_ifStatement.falseStatement()->annotation().isInLoop = inLoop;
-	return true;
+	m_inLoopDepth--;
 }
 
 bool SyntaxChecker::visit(Continue const& _continueStatement)
 {
-	if (!_continueStatement.annotation().isInLoop)
+	if (m_inLoopDepth <= 0)
 		// we're not in a for/while loop, report syntax error
 		syntaxError(_continueStatement.location(), "\"continue\" has to be in a \"for\" or \"while\" loop.");
 	return true;
@@ -79,7 +72,7 @@ bool SyntaxChecker::visit(Continue const& _continueStatement)
 
 bool SyntaxChecker::visit(Break const& _breakStatement)
 {
-	if (!_breakStatement.annotation().isInLoop)
+	if (m_inLoopDepth <= 0)
 		// we're not in a for/while loop, report syntax error
 		syntaxError(_breakStatement.location(), "\"break\" has to be in a \"for\" or \"while\" loop.");
 	return true;

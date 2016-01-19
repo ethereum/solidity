@@ -126,7 +126,7 @@ bool CompilerStack::parse()
 	SyntaxChecker syntaxChecker(m_errors);
 	for (Source const* source: m_sourceOrder)
 		if (!syntaxChecker.checkSyntax(*source->ast))
-			return false;
+			noErrors = false;
 
 	DocStringAnalyser docStringAnalyser(m_errors);
 	for (Source const* source: m_sourceOrder)

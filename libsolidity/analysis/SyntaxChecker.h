@@ -32,7 +32,7 @@ namespace solidity
  * The module that performs syntax analysis on the AST:
  *  - whether continue/break is in a for/while loop.
  */
-class SyntaxChecker : private ASTConstVisitor
+class SyntaxChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errors the reference to the list of errors and warnings to add them found during type checking.
@@ -45,13 +45,16 @@ private:
 	void syntaxError(SourceLocation const& _location, std::string const& _description);
 
 	virtual bool visit(WhileStatement const& _whileStatement) override;
+	virtual void endVisit(WhileStatement const& _whileStatement) override;
 	virtual bool visit(ForStatement const& _forStatement) override;
-	virtual bool visit(Block const& _blockStatement) override;
-	virtual bool visit(IfStatement const& _ifStatement) override;
+	virtual void endVisit(ForStatement const& _forStatement) override;
+
 	virtual bool visit(Continue const& _continueStatement) override;
 	virtual bool visit(Break const& _breakStatement) override;
 
 	ErrorList& m_errors;
+
+	int m_inLoopDepth = 0;
 };
 
 }
