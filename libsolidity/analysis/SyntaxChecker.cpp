@@ -40,24 +40,24 @@ void SyntaxChecker::syntaxError(SourceLocation const& _location, std::string con
 	m_errors.push_back(err);
 }
 
-bool SyntaxChecker::visit(WhileStatement const& _whileStatement)
+bool SyntaxChecker::visit(WhileStatement const&)
 {
 	m_inLoopDepth++;
 	return true;
 }
 
-void SyntaxChecker::endVisit(WhileStatement const& _whileStatement)
+void SyntaxChecker::endVisit(WhileStatement const&)
 {
 	m_inLoopDepth--;
 }
 
-bool SyntaxChecker::visit(ForStatement const& _forStatement)
+bool SyntaxChecker::visit(ForStatement const&)
 {
 	m_inLoopDepth++;
 	return true;
 }
 
-void SyntaxChecker::endVisit(ForStatement const& _forStatement)
+void SyntaxChecker::endVisit(ForStatement const&)
 {
 	m_inLoopDepth--;
 }

@@ -2934,6 +2934,21 @@ BOOST_AUTO_TEST_CASE(continue_not_in_loop)
 	BOOST_CHECK(expectError(text) == Error::Type::SyntaxError);
 }
 
+BOOST_AUTO_TEST_CASE(continue_not_in_loop_2)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				while (true)
+				{
+				}
+				continue;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::SyntaxError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
