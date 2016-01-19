@@ -223,6 +223,55 @@ BOOST_AUTO_TEST_CASE(conditional_expression_different_types)
 	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(0xcd)));
 	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(0xabab)));
 }
+
+/* let's add this back when I figure out the correct type conversion.
+BOOST_AUTO_TEST_CASE(conditional_expression_string_literal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(bool cond) returns (bytes32) {
+				return cond ? "true" : "false";
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(string("true", 4)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(string("false", 5)));
+}
+*/
+
+BOOST_AUTO_TEST_CASE(conditional_expression_tuples)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(bool cond) returns (uint, uint) {
+				return cond ? (1, 2) : (3, 4);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(1), u256(2)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(3), u256(4)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_functions)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function x() returns (uint) { return 1; }
+			function y() returns (uint) { return 2; }
+
+			function f(bool cond) returns (uint) {
+				var z = cond ? x : y;
+				return z();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_CASE(recursive_calls)
 {
 	char const* sourceCode = "contract test {\n"
