@@ -38,11 +38,8 @@
 #include <libdevcore/SHA3.h>
 
 using namespace std;
-
-namespace dev
-{
-namespace solidity
-{
+using namespace dev;
+using namespace dev::solidity;
 
 const map<string, string> StandardSources = map<string, string>{
 	{"coin", R"(import "CoinReg";import "Config";import "configUser";contract coin is configUser{function coin(bytes3 name, uint denom) {CoinReg(Config(configAddr()).lookup(3)).register(name, denom);}})"},
@@ -58,8 +55,8 @@ const map<string, string> StandardSources = map<string, string>{
 	{"std", R"(import "owned";import "mortal";import "Config";import "configUser";import "NameReg";import "named";)"}
 };
 
-CompilerStack::CompilerStack(bool _addStandardSources):
-	m_parseSuccessful(false)
+CompilerStack::CompilerStack(bool _addStandardSources, ReadFileCallback const& _readFile):
+	m_readFile(_readFile), m_parseSuccessful(false)
 {
 	if (_addStandardSources)
 		addSources(StandardSources, true); // add them as libraries
@@ -104,16 +101,30 @@ bool CompilerStack::parse()
 	m_errors.clear();
 	m_parseSuccessful = false;
 
+	vector<string> sourcesToParse;
+	for (auto const& s: m_sources)
+		sourcesToParse.push_back(s.first);
 	map<string, SourceUnit const*> sourceUnitsByName;
-	for (auto& sourcePair: m_sources)
+	for (size_t i = 0; i < sourcesToParse.size(); ++i)
 	{
-		sourcePair.second.scanner->reset();
-		sourcePair.second.ast = Parser(m_errors).parse(sourcePair.second.scanner);
-		if (!sourcePair.second.ast)
+		string const& path = sourcesToParse[i];
+		Source& source = m_sources[path];
+		source.scanner->reset();
+		source.ast = Parser(m_errors).parse(source.scanner);
+		sourceUnitsByName[path] = source.ast.get();
+		if (!source.ast)
 			solAssert(!Error::containsOnlyWarnings(m_errors), "Parser returned null but did not report error.");
 		else
-			sourcePair.second.ast->annotation().path = sourcePair.first;
-		sourceUnitsByName[sourcePair.first] = sourcePair.second.ast.get();
+		{
+			source.ast->annotation().path = path;
+			for (auto const& newSource: loadMissingSources(*source.ast, path))
+			{
+				string const& newPath = newSource.first;
+				string const& newContents = newSource.second;
+				m_sources[newPath].scanner = make_shared<Scanner>(CharStream(newContents), newPath);
+				sourcesToParse.push_back(newPath);
+			}
+		}
 	}
 	if (!Error::containsOnlyWarnings(m_errors))
 		// errors while parsing. sould stop before type checking
@@ -367,13 +378,44 @@ tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocati
 	return make_tuple(++startLine, ++startColumn, ++endLine, ++endColumn);
 }
 
+StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _path)
+{
+	StringMap newSources;
+	for (auto const& node: _ast.nodes())
+		if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
+		{
+			string path = absolutePath(import->path(), _path);
+			import->annotation().absolutePath = path;
+			if (m_sources.count(path) || newSources.count(path))
+				continue;
+			string contents;
+			string errorMessage;
+			if (!m_readFile)
+				errorMessage = "File not supplied initially.";
+			else
+				tie(contents, errorMessage) = m_readFile(path);
+			if (!errorMessage.empty())
+			{
+				auto err = make_shared<Error>(Error::Type::ParserError);
+				*err <<
+					errinfo_sourceLocation(import->location()) <<
+					errinfo_comment("Source not found: " + errorMessage);
+				m_errors.push_back(std::move(err));
+				continue;
+			}
+			else
+				newSources[path] = contents;
+		}
+	return newSources;
+}
+
 void CompilerStack::resolveImports()
 {
 	// topological sorting (depth first search) of the import graph, cutting potential cycles
 	vector<Source const*> sourceOrder;
 	set<Source const*> sourcesSeen;
 
-	function<void(string const&, Source const*)> toposort = [&](string const& _sourceName, Source const* _source)
+	function<void(Source const*)> toposort = [&](Source const* _source)
 	{
 		if (sourcesSeen.count(_source))
 			return;
@@ -381,24 +423,18 @@ void CompilerStack::resolveImports()
 		for (ASTPointer<ASTNode> const& node: _source->ast->nodes())
 			if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 			{
-				string path = absolutePath(import->path(), _sourceName);
-				import->annotation().absolutePath = path;
-				if (!m_sources.count(path))
-					BOOST_THROW_EXCEPTION(
-						Error(Error::Type::ParserError)
-							<< errinfo_sourceLocation(import->location())
-							<< errinfo_comment("Source not found.")
-					);
-				import->annotation().sourceUnit = m_sources.at(path).ast.get();
-
-				toposort(path, &m_sources[path]);
+				string const& path = import->annotation().absolutePath;
+				solAssert(!path.empty(), "");
+				solAssert(m_sources.count(path), "");
+				import->annotation().sourceUnit = m_sources[path].ast.get();
+				toposort(&m_sources[path]);
 			}
 		sourceOrder.push_back(_source);
 	};
 
 	for (auto const& sourcePair: m_sources)
 		if (!sourcePair.second.isLibrary)
-			toposort(sourcePair.first, &sourcePair.second);
+			toposort(&sourcePair.second);
 
 	swap(m_sourceOrder, sourceOrder);
 }
@@ -506,7 +542,4 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Given source file not found."));
 
 	return it->second;
-}
-
-}
 }
