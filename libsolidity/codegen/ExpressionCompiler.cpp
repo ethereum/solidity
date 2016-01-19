@@ -583,6 +583,17 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					for (auto const& s_Arg: structArgs)
 						argumentTypes.push_back(s_Arg);
 				}
+				else if (arg->annotation().type->category() == Type::Category::Tuple)
+				{
+					TupleType const& tupleType = dynamic_cast<TupleType const&>(*arg->annotation().type);
+					TypePointers tupleArgs = tupleType.components();
+					for (auto const& t_Arg: tupleArgs)
+						argumentTypes.push_back(t_Arg);
+				}
+				/*else if (arg->annotation().type->category() == Type::Category::Mapping)
+				{
+
+				}*/
 				else
 					argumentTypes.push_back(arg->annotation().type);
 			}

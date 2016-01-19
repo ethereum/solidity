@@ -65,6 +65,7 @@ void CompilerUtils::toSizeAfterFreeMemoryPointer()
 	fetchFreeMemoryPointer();
 	m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2 << eth::Instruction::SUB;
 	m_context << eth::Instruction::SWAP1;
+	cout << "hit the end of to Size After Free Memory Pointer" << endl;
 }
 
 unsigned CompilerUtils::loadFromMemory(
@@ -161,9 +162,8 @@ void CompilerUtils::encodeToMemory(
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
 	for (TypePointer& t: targetTypes)
 	{
-		cout << t->toString(false) << endl;
+		cout << t->mobileType()->toString(false) << endl;
 		t = t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
-		cout << t->toString(false) << endl;
 	}	
 
 	// Stack during operation:
@@ -180,7 +180,8 @@ void CompilerUtils::encodeToMemory(
 	for (size_t i = 0; i < _givenTypes.size(); ++i)
 	{
 		TypePointer targetType = targetTypes[i];
-		cout << targetType->toString(false) << endl;
+		cout << "given type[" << i << "]: " << _givenTypes[i]->toString(false) << endl;
+		cout << "target type[" << i << "]: " << targetType->toString(false) << endl;
 		solAssert(!!targetType, "Externalable type expected.");
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
@@ -196,6 +197,7 @@ void CompilerUtils::encodeToMemory(
 			TypePointer type = targetType;
 			if (_givenTypes[i]->dataStoredIn(DataLocation::Storage) && targetType->isValueType())
 			{
+				cout << "the bad place" << endl;
 				// special case: convert storage reference type to value type - this is only
 				// possible for library calls where we just forward the storage reference
 				solAssert(_encodeAsLibraryTypes, "");
@@ -206,11 +208,17 @@ void CompilerUtils::encodeToMemory(
 				_givenTypes[i]->dataStoredIn(DataLocation::CallData) ||
 				_givenTypes[i]->category() == Type::Category::StringLiteral
 			)
+			{
+				cout << "delay conversion" << endl;
 				type = _givenTypes[i]; // delay conversion
+			}
 			else
 				convertType(*_givenTypes[i], *targetType, true);
 			if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
+			{
+				cout << "Obvi hit array type" << endl; 
 				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
+			}
 			else
 				storeInMemoryDynamic(*type, _padToWordBoundaries);
 		}
@@ -223,10 +231,12 @@ void CompilerUtils::encodeToMemory(
 	unsigned thisDynPointer = 0;
 	for (size_t i = 0; i < _givenTypes.size(); ++i)
 	{
+		cout << "Do we hit this part of the loop?" << endl;
 		TypePointer targetType = targetTypes[i];
 		solAssert(!!targetType, "Externalable type expected.");
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
+			cout << "Target type is dynamically sized and copy dynamic data not in place" << endl;
 			// copy tail pointer (=mem_end - mem_start) to memory
 			m_context << eth::dupInstruction(2 + dynPointers) << eth::Instruction::DUP2;
 			m_context << eth::Instruction::SUB;
@@ -270,6 +280,7 @@ void CompilerUtils::encodeToMemory(
 	// remove unneeded stack elements (and retain memory pointer)
 	m_context << eth::swapInstruction(argSize + dynPointers + 1);
 	popStackSlots(argSize + dynPointers + 1);
+	cout << "hit the end of the compiler utils instructions" << endl;
 }
 
 void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)

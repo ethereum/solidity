@@ -2710,14 +2710,15 @@ BOOST_AUTO_TEST_CASE(sha3_with_nested_arrays)
 {
 	char const* sourceCode = R"(
 		contract test {
+            uint x = 1;
+            uint y = 2;
+            uint z = 3;
+            uint[3][2] d;
 			function nestedMemory() returns (bytes32) {
-				uint[3][2] memory c = new uint[3][2](6);
-				c[0] = [x, y, z];
-				c[1] = [x, y, z];
+				uint[3][2] memory c = [ [x,y,z], [x,y,z] ];
 				return sha3(c);
 			}
 			function nestedStore() returns (bytes32) {
-				uint[3][2] d;
 				d[0][0] = x;
 				d[0][1] = y;
 				d[0][2] = z;
@@ -2737,7 +2738,7 @@ BOOST_AUTO_TEST_CASE(sha3_with_nested_arrays)
 						toBigEndian(u256(2)) +
 						toBigEndian(u256(3))))
 	));
-	BOOST_CHECK(callContractFunction("nestedStore())") == encodeArgs(
+	BOOST_CHECK(callContractFunction("nestedStore()") == encodeArgs(
 		u256(dev::sha3(toBigEndian(u256(1)) +
 						toBigEndian(u256(2)) +
 						toBigEndian(u256(3)) +
@@ -2761,9 +2762,7 @@ BOOST_AUTO_TEST_CASE(sha3_with_tuples)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("sha3Tuples()") == encodeArgs(
-		u256(dev::sha3(bytes{0x66, 0x6f, 0x6f} +
-						toBigEndian(u256(10)) +
-						toBigEndian(u256(3))))
+		u256(dev::sha3(bytes{0x66, 0x6f, 0x6f} + toBigEndian(u256(10))))
 	));
 }
 
@@ -2778,15 +2777,18 @@ BOOST_AUTO_TEST_CASE(sha3_with_structs)
 			uint x = 1;
 			uint y = 2;
 			uint z = 3;
-			function memStructs() returns (bytes32) {
-				TestStruct memory testing = b;
-				return sha3(testing);
-			}
 			function storeStructs() returns (bytes32) {
 				b.a[0] = x;
 				b.a[1] = y;
 				b.a[2] = z;
 				return sha3(b);
+			}
+			function memStructs() returns (bytes32) {
+				TestStruct memory testing;
+				testing.a[0] = x;
+				testing.a[1] = y;
+				testing.a[2] = z;
+				return sha3(testing);
 			}
 		}
 	)";
@@ -2801,6 +2803,11 @@ BOOST_AUTO_TEST_CASE(sha3_with_structs)
 						toBigEndian(u256(2)) +
 						toBigEndian(u256(3))))
 	));
+	cout << toHex(callContractFunction("memStructs()")) << endl;
+	cout << toHex(encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) +
+						toBigEndian(u256(2)) +
+						toBigEndian(u256(3)))))) << endl;
 }
 
 BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
@@ -2813,7 +2820,6 @@ BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
 			struct secondStruct {
 				string b;
 			}
-			TestStruct b;
 			TestStruct[3] c;
 			uint x = 1;
 			uint y = 2;
@@ -2828,13 +2834,19 @@ BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
 				c[2].a[0] = x;
 				c[2].a[1] = y;
 				c[2].a[2] = z;
+				return sha3(c);
 			}
 			function dynamicStructs() returns (bytes32) {
-				TestStruct[3][2] memory d = 
-							[
-								[{a:[x, y, z]}],
-								[{a:[x, y, z]}]
-							];
+				TestStruct[3][3] memory d;
+				d[0][0].a[0] = x;
+				d[0][1].a[1] = y;
+				d[0][2].a[2] = z;
+				d[1][0].a[0] = x;
+				d[1][1].a[1] = y;
+				d[1][2].a[2] = z;
+				d[2][0].a[0] = x;
+				d[2][1].a[1] = y;
+				d[2][2].a[2] = z;
 				return sha3(d);
 			}
 		}
@@ -2847,18 +2859,41 @@ BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
 	));*/
 }
 
+BOOST_AUTO_TEST_CASE(sha3_with_struct_mappings)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct TestStruct {
+				string b;
+			}
+			mapping(string => TestStruct) testingStructs;
+			function f(string x, string y) returns (bytes32) {
+				testingStructs[x] = TestStruct("Hello");
+				testingStructs[y] = TestStruct("World");
+				return sha3(testingStructs);
+			}
+	    }
+	)";
+	compileAndRun(sourceCode);
+}
+
 BOOST_AUTO_TEST_CASE(sha3_with_nested_structs)
 {	//TODO: create nested struct
 	char const* sourceCode = R"(
 		contract test {
 			struct TestStruct {
-				uint[3] a;
+				nestedStruct a;
 			}
-			TestStruct b;
-			TestStruct[3] c;
-			uint x = 1;
-			uint y = 2;
-			uint z = 3;
+			struct nestedStruct {
+				uint b;
+			}
+			nestedStruct nest;
+			TestStruct test;
+			function f() returns (bytes32) {
+				nest.b = 1;
+				test = TestStruct(nest);
+				return sha3(nest);
+			}
 		}
 	)";
 	compileAndRun(sourceCode);
@@ -6428,6 +6463,24 @@ BOOST_AUTO_TEST_CASE(inline_long_string_return)
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f()") == encodeDyn(strLong));
 }
+
+BOOST_AUTO_TEST_CASE(inline_struct_declaration)
+{
+		char const* sourceCode = R"(
+		contract C { 
+			struct S {
+				uint8[3] a;
+			}
+			function f() returns (uint8) {
+				S memory s = S([1, 2, 3]);
+				return (s.a[1]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(2));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
