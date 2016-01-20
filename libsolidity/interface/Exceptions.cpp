@@ -39,6 +39,9 @@ Error::Error(Type _type): m_type(_type)
 	case Type::ParserError:
 		m_typeName = "Parser Error";
 		break;
+	case Type::SyntaxError:
+		m_typeName = "Syntax Error";
+		break;
 	case Type::TypeError:
 		m_typeName = "Type Error";
 		break;

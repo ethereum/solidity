@@ -30,6 +30,7 @@
 #include <libsolidity/analysis/NameAndTypeResolver.h>
 #include <libsolidity/analysis/TypeChecker.h>
 #include <libsolidity/analysis/DocStringAnalyser.h>
+#include <libsolidity/analysis/SyntaxChecker.h>
 #include <libsolidity/codegen/Compiler.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/InterfaceHandler.h>
@@ -133,6 +134,11 @@ bool CompilerStack::parse()
 	resolveImports();
 
 	bool noErrors = true;
+	SyntaxChecker syntaxChecker(m_errors);
+	for (Source const* source: m_sourceOrder)
+		if (!syntaxChecker.checkSyntax(*source->ast))
+			noErrors = false;
+
 	DocStringAnalyser docStringAnalyser(m_errors);
 	for (Source const* source: m_sourceOrder)
 		if (!docStringAnalyser.analyseDocStrings(*source->ast))
