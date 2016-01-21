@@ -572,7 +572,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case Location::SHA3:
 		{
 			TypePointers argumentTypes;
-
 			for (auto const& arg: arguments)
 			{
 				arg->accept(*this);
@@ -584,6 +583,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 					TypePointers structArgs = structType.getMembers(true);
 					for (auto const& s_Arg: structArgs)
 						argumentTypes.push_back(s_Arg);
+					//Devnote: perhaps this better belongs in encodeToMemory, however I have left another dev note for you there. All suggestions welcome.
 				}
 				else if (arg->annotation().type->category() == Type::Category::Tuple)
 				{
@@ -603,7 +603,6 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				else
 					argumentTypes.push_back(arg->annotation().type);
 			}
-
 			utils().fetchFreeMemoryPointer();
 			utils().encodeToMemory(argumentTypes, TypePointers(), function.padArguments(), true);
 			utils().toSizeAfterFreeMemoryPointer();

@@ -2683,24 +2683,32 @@ BOOST_AUTO_TEST_CASE(sha3_with_uint_arrays)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("memoryStatic()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
 	));
 	BOOST_CHECK(callContractFunction("storageStatic()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
 	));
 	BOOST_CHECK(callContractFunction("storageDynamic()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
 	));
 	BOOST_CHECK(callContractFunction("memoryDynamic()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
 	));
 
 	
@@ -2731,20 +2739,24 @@ BOOST_AUTO_TEST_CASE(sha3_with_nested_arrays)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("nestedMemory()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3)) +
-						toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3)) +
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
 	));
 	BOOST_CHECK(callContractFunction("nestedStore()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3)) +
-						toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3)) +
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
 	));
 }
 
@@ -2776,14 +2788,18 @@ BOOST_AUTO_TEST_CASE(sha3_with_structs)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("storeStructs()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
 	));
 	/*BOOST_CHECK(callContractFunction("memStructs()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
 	));*/
 	//TODO: Problem with memory structs...sha3 hash is different than storage sha3 hash
 }
@@ -2848,23 +2864,27 @@ BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("nestedMemory()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3)) +
-						toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3)) +
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3))))
 	));
 	BOOST_CHECK(callContractFunction("dynamicStructs()") == encodeArgs(
-		u256(dev::sha3(toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3)) +
-						toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3)) +
-						toBigEndian(u256(1)) +
-						toBigEndian(u256(2)) +
-						toBigEndian(u256(3))))
+		u256(
+			dev::sha3(
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3)) +
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3)) +
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3))))
 	));
 	//TODO: This does not compile currently...also might need to change the boost checks
 }

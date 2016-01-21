@@ -204,7 +204,7 @@ void CompilerUtils::encodeToMemory(
 			else
 				convertType(*_givenTypes[i], *targetType, true);
 			if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
-				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries); 
+				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);
 			else
 				storeInMemoryDynamic(*type, _padToWordBoundaries);
 		}
