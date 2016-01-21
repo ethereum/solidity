@@ -159,7 +159,7 @@ void CompilerUtils::encodeToMemory(
 	// stack: <v1> <v2> ... <vn> <mem>
 	TypePointers targetTypes = _targetTypes.empty() ? _givenTypes : _targetTypes;
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
-	for (TypePointer& t: targetTypes)
+	for (TypePointer& t: targetTypes) //DEVNOTE: this loop right here appears to be the source of the SHA3 problems...not sure how to get around it
 		t = t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
 
 	// Stack during operation:
@@ -204,10 +204,7 @@ void CompilerUtils::encodeToMemory(
 			else
 				convertType(*_givenTypes[i], *targetType, true);
 			if (auto arrayType = dynamic_cast<ArrayType const*>(type.get()))
-			{
-				solAssert(arrayType->baseType()->category() != Type::Category::Struct, "SHA3'd struct arrays not yet implemented.");
-				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries);				
-			} 
+				ArrayUtils(m_context).copyArrayToMemory(*arrayType, _padToWordBoundaries); 
 			else
 				storeInMemoryDynamic(*type, _padToWordBoundaries);
 		}

@@ -2815,14 +2815,11 @@ BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
 			struct TestStruct {
 				uint[3] a;
 			}
-			struct secondStruct {
-				string b;
-			}
 			TestStruct[3] c;
 			uint x = 1;
 			uint y = 2;
 			uint z = 3;
-			function arrayOfStructs() returns (bool) {
+			function arrayOfStructs() returns (bytes32) {
 				c[0].a[0] = x;
 				c[0].a[1] = y;
 				c[0].a[2] = z;
@@ -2870,7 +2867,7 @@ BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
 						toBigEndian(u256(3))))
 	));
 	//TODO: This does not compile currently...also might need to change the boost checks
-}*/
+}
 
 BOOST_AUTO_TEST_CASE(sha3_with_nested_structs)
 {	
@@ -2907,7 +2904,7 @@ BOOST_AUTO_TEST_CASE(sha3_with_nested_structs)
 	));
 	//TODO: Fix nested structs for both storage and memory
 	//TODO: Once memory structs are solved, make a test for memStore, and just plain mem	
-}
+}*/
 
 
 BOOST_AUTO_TEST_CASE(generic_call)
