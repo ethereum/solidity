@@ -1236,21 +1236,23 @@ set<string> StructType::membersMissingInMemory() const
 	return missing;
 }
 
-TypePointers StructType::getMembers() const
+TypePointers StructType::getMembers(bool getInnerStructMembers) const
 {
 	TypePointers argumentTypes;
 	for (auto const& member: m_struct.members()) //loop through struct type and grab members
 	{
-		if (member->annotation().type->category() == Type::Category::Struct)
-		{
-			StructType const& structType = dynamic_cast<StructType const&>(*member->annotation().type);
-			TypePointers innerStructArgs = structType.getMembers();
+		TypePointer type = member->annotation().type;
+		if (type->category() == Type::Category::Struct && getInnerStructMembers) 
+		{//currently getting a memory access violation when trying to get struct members
+			//only giving this message because currently SHA3 is the only one using it
+			//solAssert(type->category() != Type::Category::Struct, "SHA3'd nested struct members not yet implemented."); 
+			StructType const& structType = dynamic_cast<StructType const&>(*type);
+			TypePointers innerStructArgs = structType.getMembers(getInnerStructMembers);
 			for (auto const& arg: innerStructArgs)
 				argumentTypes.push_back(arg);
 		}
-		TypePointer type = member->annotation().type;
-		cout << type->toString(false) << endl;
-		argumentTypes.push_back(type);
+		else
+			argumentTypes.push_back(type);
 	}
 	return argumentTypes;
 }

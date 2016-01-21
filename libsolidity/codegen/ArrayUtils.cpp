@@ -274,7 +274,6 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		!_sourceType.baseType()->isDynamicallySized(),
 		"Nested dynamic arrays not implemented here."
 	);
-	cout << _sourceType.toString(false) << endl;
 	CompilerUtils utils(m_context);
 	unsigned baseSize = 1;
 	if (!_sourceType.isByteArray())
@@ -283,7 +282,6 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 
 	if (_sourceType.location() == DataLocation::CallData)
 	{
-		cout << "Why would we hit call data?" << endl;
 		if (!_sourceType.isDynamicallySized())
 			m_context << _sourceType.length();
 		if (baseSize > 1)
@@ -297,7 +295,6 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 	}
 	else if (_sourceType.location() == DataLocation::Memory)
 	{
-		cout << "HIT MEMORY PART" << endl;
 		retrieveLength(_sourceType);
 		// stack: target source length
 		if (!_sourceType.baseType()->isValueType())
@@ -393,7 +390,6 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 	}
 	else
 	{
-		cout << "Hit the storage" << endl;
 		solAssert(_sourceType.location() == DataLocation::Storage, "");
 		unsigned storageBytes = _sourceType.baseType()->storageBytes();
 		u256 storageSize = _sourceType.baseType()->storageSize();
@@ -460,36 +456,21 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		}
 		else
 		{
-			cout << "Do I get this low? " << endl;
 			// stack here: memory_end_offset storage_data_offset [storage_byte_offset] memory_offset
 			if (haveByteOffset)
-			{
-				cout << "Byte Offset" << endl;
 				m_context << eth::Instruction::DUP3 << eth::Instruction::DUP3;
-			}
 			else
 				m_context << eth::Instruction::DUP2 << u256(0);
-			cout << "Storage Item" << endl;
 			StorageItem(m_context, *_sourceType.baseType()).retrieveValue(SourceLocation(), true);
 			if (auto baseArray = dynamic_cast<ArrayType const*>(_sourceType.baseType().get()))
-			{	
-				cout << "copy Array to Memory" << endl;
 				copyArrayToMemory(*baseArray, _padToWordBoundaries);
-			}
 			else
-			{
-				cout << "Story in Memory Dynamic" << endl;
 				utils.storeInMemoryDynamic(*_sourceType.baseType());
-			}
 			// increment storage_data_offset and byte offset
 			if (haveByteOffset)
-			{
-				cout << "Increment Byte Offset" << endl;
 				incrementByteOffset(storageBytes, 2, 3);
-			}
 			else
 			{
-				cout << "assembly instructions" << endl;
 				m_context << eth::Instruction::SWAP1;
 				m_context << storageSize << eth::Instruction::ADD;
 				m_context << eth::Instruction::SWAP1;
@@ -501,13 +482,9 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 		m_context.appendConditionalJumpTo(loopStart);
 		// stack here: memory_end_offset storage_data_offset [storage_byte_offset] memory_offset
 		if (haveByteOffset)
-		{
-			cout << "Have Byte offset" << endl;
 			m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
-		}
 		if (_padToWordBoundaries && baseSize % 32 != 0)
 		{
-			cout << "Pad to Word Boundaries" << endl;
 			// memory_end_offset - start is the actual length (we want to compute the ceil of).
 			// memory_offset - start is its next multiple of 32, but it might be off by 32.
 			// so we compute: memory_end_offset += (memory_offset - memory_end_offest) & 31
@@ -516,7 +493,6 @@ void ArrayUtils::copyArrayToMemory(ArrayType const& _sourceType, bool _padToWord
 			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
 			m_context << eth::Instruction::SWAP2;
 		}
-		cout << "do we hit the end? " << endl;
 		m_context << loopEnd << eth::Instruction::POP << eth::Instruction::POP;
 	}
 }
