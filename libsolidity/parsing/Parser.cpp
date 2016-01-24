@@ -932,13 +932,26 @@ ASTPointer<Expression> Parser::parseExpression(
 )
 {
 	ASTPointer<Expression> expression = parseBinaryExpression(4, _lookAheadIndexAccessStructure);
-	if (!Token::isAssignmentOp(m_scanner->currentToken()))
+	if (Token::isAssignmentOp(m_scanner->currentToken()))
+	{
+		Token::Value assignmentOperator = expectAssignmentOperator();
+		ASTPointer<Expression> rightHandSide = parseExpression();
+		ASTNodeFactory nodeFactory(*this, expression);
+		nodeFactory.setEndPositionFromNode(rightHandSide);
+		return nodeFactory.createNode<Assignment>(expression, assignmentOperator, rightHandSide);
+	}
+	else if (m_scanner->currentToken() == Token::Value::Conditional)
+	{
+		m_scanner->next();
+		ASTPointer<Expression> trueExpression = parseExpression();
+		expectToken(Token::Colon);
+		ASTPointer<Expression> falseExpression = parseExpression();
+		ASTNodeFactory nodeFactory(*this, expression);
+		nodeFactory.setEndPositionFromNode(falseExpression);
+		return nodeFactory.createNode<Conditional>(expression, trueExpression, falseExpression);
+	}
+	else
 		return expression;
-	Token::Value assignmentOperator = expectAssignmentOperator();
-	ASTPointer<Expression> rightHandSide = parseExpression();
-	ASTNodeFactory nodeFactory(*this, expression);
-	nodeFactory.setEndPositionFromNode(rightHandSide);
-	return nodeFactory.createNode<Assignment>(expression, assignmentOperator, rightHandSide);
 }
 
 ASTPointer<Expression> Parser::parseBinaryExpression(

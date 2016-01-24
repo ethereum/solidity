@@ -86,6 +86,192 @@ BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
 	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(-8)));
 }
 
+BOOST_AUTO_TEST_CASE(conditional_expression_true_literal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				return true ? 5 : 10;
+ 			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(5)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_false_literal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint d) {
+				return false ? 5 : 10;
+ 			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(10)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_multiple)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint x) returns(uint d) {
+				return x > 100 ? 
+							x > 1000 ? 1000 : 100
+							:
+							x > 50 ? 50 : 10;
+ 			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(1001)) == toBigEndian(u256(1000)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(500)) == toBigEndian(u256(100)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(80)) == toBigEndian(u256(50)));
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(40)) == toBigEndian(u256(10)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_with_return_values)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(bool cond, uint v) returns (uint a, uint b) {
+				cond ? a = v : b = v;
+ 			}
+		})";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool,uint256)", true, u256(20)) == encodeArgs(u256(20), u256(0)));
+	BOOST_CHECK(callContractFunction("f(bool,uint256)", false, u256(20)) == encodeArgs(u256(0), u256(20)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_storage_memory_1)
+{
+	char const* sourceCode = R"(
+		contract test {
+			bytes2[2] data1;
+			function f(bool cond) returns (uint) {
+				bytes2[2] memory x;
+				x[0] = "aa";
+				bytes2[2] memory y;
+				y[0] = "bb";
+
+				data1 = cond ? x : y;
+
+				uint ret = 0;
+				if (data1[0] == "aa")
+				{
+					ret = 1;
+				}
+
+				if (data1[0] == "bb")
+				{
+					ret = 2;
+				}
+
+				return ret;
+			}    
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_storage_memory_2)
+{
+	char const* sourceCode = R"(
+		contract test {
+			bytes2[2] data1;
+			function f(bool cond) returns (uint) {
+				data1[0] = "cc";
+
+				bytes2[2] memory x;
+				bytes2[2] memory y;
+				y[0] = "bb";
+
+				x = cond ? y : data1;
+
+				uint ret = 0;
+				if (x[0] == "bb")
+				{
+					ret = 1;
+				}
+
+				if (x[0] == "cc")
+				{
+					ret = 2;
+				}
+
+				return ret;
+			}    
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_different_types)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(bool cond) returns (uint) {
+				uint8 x = 0xcd;
+				uint16 y = 0xabab;
+				return cond ? x : y;
+			}    
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(0xcd)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(0xabab)));
+}
+
+/* let's add this back when I figure out the correct type conversion.
+BOOST_AUTO_TEST_CASE(conditional_expression_string_literal)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(bool cond) returns (bytes32) {
+				return cond ? "true" : "false";
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(string("true", 4)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(string("false", 5)));
+}
+*/
+
+BOOST_AUTO_TEST_CASE(conditional_expression_tuples)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(bool cond) returns (uint, uint) {
+				return cond ? (1, 2) : (3, 4);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(1), u256(2)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(3), u256(4)));
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_functions)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function x() returns (uint) { return 1; }
+			function y() returns (uint) { return 2; }
+
+			function f(bool cond) returns (uint) {
+				var z = cond ? x : y;
+				return z();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_CASE(recursive_calls)
 {
 	char const* sourceCode = "contract test {\n"

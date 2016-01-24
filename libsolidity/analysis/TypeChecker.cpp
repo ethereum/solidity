@@ -744,6 +744,43 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 			typeError(_statement.expression().location(), "Invalid integer constant.");
 }
 
+bool TypeChecker::visit(Conditional const& _conditional)
+{
+	expectType(_conditional.condition(), BoolType());
+
+	_conditional.trueExpression().accept(*this);
+	_conditional.falseExpression().accept(*this);
+
+	TypePointer trueType = type(_conditional.trueExpression())->mobileType();
+	TypePointer falseType = type(_conditional.falseExpression())->mobileType();
+
+	TypePointer commonType = Type::commonType(trueType, falseType);
+	if (!commonType)
+	{
+		typeError(
+				_conditional.location(),
+				"True expression's type " +
+				trueType->toString() +
+				" doesn't match false expression's type " +
+				falseType->toString() +
+				"."
+		);
+		// even we can't find a common type, we have to set a type here,
+		// otherwise the upper statement will not be able to check the type.
+		commonType = trueType;
+	}
+
+	_conditional.annotation().type = commonType;
+
+	if (_conditional.annotation().lValueRequested)
+		typeError(
+				_conditional.location(),
+				"Conditional expression as left value is not supported yet."
+		);
+
+	return false;
+}
+
 bool TypeChecker::visit(Assignment const& _assignment)
 {
 	requireLValue(_assignment.leftHandSide());

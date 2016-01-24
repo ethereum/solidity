@@ -2960,6 +2960,182 @@ BOOST_AUTO_TEST_CASE(continue_not_in_loop_2)
 	BOOST_CHECK(expectError(text) == Error::Type::SyntaxError);
 }
 
+BOOST_AUTO_TEST_CASE(invalid_different_types_for_conditional_expression)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				true ? true : 2;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(left_value_in_conditional_expression_not_supported_yet)
+{
+	char const* text = R"(
+		contract C {
+			function f() {
+				uint x;
+				uint y;
+				(true ? x : y) = 1;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_with_different_struct)
+{
+	char const* text = R"(
+		contract C {
+			struct s1 {
+				uint x;
+			}
+			struct s2 {
+				uint x;
+			}
+			function f() {
+				s1 x;
+				s2 y;
+				true ? x : y;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_with_different_function_type)
+{
+	char const* text = R"(
+		contract C {
+			function x(bool) {}
+			function y() {}
+
+			function f() {
+				true ? x : y;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_with_different_enum)
+{
+	char const* text = R"(
+		contract C {
+			enum small { A, B, C, D }
+			enum big { A, B, C, D }
+
+			function f() {
+				small x;
+				big y;
+
+				true ? x : y;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(conditional_expression_with_different_mapping)
+{
+	char const* text = R"(
+		contract C {
+			mapping(uint8 => uint8) table1;
+			mapping(uint32 => uint8) table2;
+
+			function f() {
+				true ? table1 : table2;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(conditional_with_all_types)
+{
+	char const* text = R"(
+		contract C {
+			struct s1 {
+				uint x;
+			}
+			s1 struct_x;
+			s1 struct_y;
+
+			function fun_x() {}
+			function fun_y() {}
+
+			enum small { A, B, C, D }
+
+			mapping(uint8 => uint8) table1;
+			mapping(uint8 => uint8) table2;
+
+			function f() {
+				// integers
+				uint x;
+				uint y;
+				true ? x : y;
+
+				// integer constants
+				true ? 1 : 3;
+
+				// string literal
+				true ? "hello" : "world";
+
+				// bool
+				true ? true : false;
+
+				// real is not there yet.
+
+				// array
+				byte[2] memory a;
+				byte[2] memory b;
+				true ? a : b;
+
+				bytes memory e;
+				bytes memory f;
+				true ? e : f;
+
+				// fixed bytes
+				bytes2 c;
+				bytes2 d;
+				true ? c : d;
+
+				// contract doesn't fit in here
+
+				// struct
+				true ? struct_x : struct_y;
+
+				// function
+				true ? fun_x : fun_y;
+
+				// enum
+				small enum_x;
+				small enum_y;
+				true ? enum_x : enum_y;
+
+				// tuple
+				true ? (1, 2) : (3, 4);
+
+				// mapping
+				true ? table1 : table2;
+
+				// typetype
+				true ? uint32(1) : uint32(2);
+
+				// modifier doesn't fit in here
+
+				// magic doesn't fit in here
+
+				// module doesn't fit in here
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -176,6 +176,22 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 }
 
+bool ExpressionCompiler::visit(Conditional const& _condition)
+{
+	CompilerContext::LocationSetter locationSetter(m_context, _condition);
+	_condition.condition().accept(*this);
+	eth::AssemblyItem trueTag = m_context.appendConditionalJump();
+	_condition.falseExpression().accept(*this);
+	utils().convertType(*_condition.falseExpression().annotation().type, *_condition.annotation().type);
+	eth::AssemblyItem endTag = m_context.appendJumpToNew();
+	m_context << trueTag;
+	m_context.adjustStackOffset(-_condition.annotation().type->sizeOnStack());
+	_condition.trueExpression().accept(*this);
+	utils().convertType(*_condition.trueExpression().annotation().type, *_condition.annotation().type);
+	m_context << endTag;
+	return false;
+}
+
 bool ExpressionCompiler::visit(Assignment const& _assignment)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _assignment);
