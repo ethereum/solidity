@@ -256,7 +256,7 @@ public:
 	}
 
 	// Predicates
-	static bool isElementaryTypeName(Value tok) { return Int <= tok && tok < TypesEnd; }
+	static bool isElementaryTypeName(Value tok) { return (Int <= tok && tok < TypesEnd); }
 	static bool isAssignmentOp(Value tok) { return Assign <= tok && tok <= AssignMod; }
 	static bool isBinaryOp(Value op) { return Comma <= op && op <= Exp; }
 	static bool isCommutativeOp(Value op) { return op == BitOr || op == BitXor || op == BitAnd ||

@@ -115,13 +115,13 @@ u256 const& MemberList::storageSize() const
 	return m_storageOffsets->storageSize();
 }
 
-TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
+TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, int N, int M)
 {
 	char const* tokenCstr = Token::toString(_typeToken);
 	solAssert(Token::isElementaryTypeName(_typeToken),
 		"Expected an elementary type name but got " + ((tokenCstr) ? std::string(Token::toString(_typeToken)) : ""));
 
-	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes)
+	/*if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
 	{
 		int offset = _typeToken - Token::Int;
 		int bytes = offset % 33;
@@ -140,7 +140,29 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 			solAssert(false, "Unexpected modifier value. Should never happen");
 			return TypePointer();
 		}
+	}*/
+	if (_typeToken == Token::Int)
+	{
+		if (N == 0)
+			N = 256;
+		return make_shared<IntegerType>(N, IntegerType::Modifier::Signed);
 	}
+	else if (_typeToken == Token::UInt)
+	{
+		if (N == 0)
+			N = 256;
+		return make_shared<IntegerType>(N, IntegerType::Modifier::Unsigned);
+	}
+	else if (_typeToken == Token::Bytes && N < 32)
+	{
+		if (N == 0)
+			N = 32;
+		return make_shared<FixedBytesType>(N);
+	}
+	/*else if (_typeToken == Token::Real)
+		return make_shared<RationalType>(N, M, RealType::Modifier::Signed);
+	else if (_typeToken == Token::UReal)
+		return make_shared<RationalType>(N, M, RealType::Modifier::Unsigned);*/
 	else if (_typeToken == Token::Byte)
 		return make_shared<FixedBytesType>(1);
 	else if (_typeToken == Token::Address)
