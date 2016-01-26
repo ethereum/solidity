@@ -595,10 +595,9 @@ ASTPointer<ElementaryTypeName> Parser::parseElementaryType()
 		size_t delimiter = m_scanner->currentLiteral().find_first_of("0123456789");
 		var = m_scanner->currentLiteral().substr(0, delimiter);
 
-		if (delimiter == m_scanner->currentLiteral().npos)
+		if (delimiter == string::npos)
 			type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(token);
-
-		if (delimiter != string::npos)
+		else if (delimiter != string::npos)
 		{
 			if (var == "bytes" || var == "int" || var == "uint")
 			{
@@ -622,8 +621,12 @@ ASTPointer<ElementaryTypeName> Parser::parseElementaryType()
 		
 		return type;
 	}
-	else
-		ASTPointer<ElementaryTypeName>();
+	else 
+	{
+		fatalParserError(string("Expected elementary type name."));
+		return type;
+	}
+
 }
 
 ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
@@ -632,7 +635,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	ASTPointer<TypeName> type;
 	Token::Value token = m_scanner->currentToken();
 	
-	if (ASTPointer<TypeName>() != parseElementaryType())
+	if (Token::isElementaryTypeName(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")))))
 	{
 		type = parseElementaryType();
 		
@@ -671,10 +674,10 @@ ASTPointer<Mapping> Parser::parseMapping()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
-	if (ASTPointer<ElementaryTypeName>() == parseElementaryType())
-		fatalParserError(string("Expected elementary type name for mapping key type"));
-	ASTPointer<ElementaryTypeName> keyType;
-	keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->currentToken());
+	/*if (ASTPointer<ElementaryTypeName>() == parseElementaryType())
+		fatalParserError(string("Expected elementary type name for mapping key type"));*/
+	ASTPointer<ElementaryTypeName> keyType = parseElementaryType();
+	//keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->currentToken());
 	m_scanner->next();
 	expectToken(Token::Arrow);
 	bool const allowVar = false;
