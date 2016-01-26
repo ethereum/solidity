@@ -626,7 +626,6 @@ ASTPointer<ElementaryTypeName> Parser::parseElementaryType()
 		fatalParserError(string("Expected elementary type name."));
 		return type;
 	}
-
 }
 
 ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
@@ -634,7 +633,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type;
 	Token::Value token = m_scanner->currentToken();
-	
+
 	if (Token::isElementaryTypeName(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")))))
 	{
 		type = parseElementaryType();
