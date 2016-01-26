@@ -194,7 +194,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 	expectToken(Token::LBrace);
 	while (true)
 	{
-		Token::Value currentTokenValue= m_scanner->currentToken();
+		Token::Value currentTokenValue = m_scanner->currentToken();
+		//Token::Value elem = Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")));
 		if (currentTokenValue == Token::RBrace)
 			break;
 		else if (currentTokenValue == Token::Function)
@@ -393,7 +394,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 {
 	ASTNodeFactory nodeFactory = _lookAheadArrayType ?
 		ASTNodeFactory(*this, _lookAheadArrayType) : ASTNodeFactory(*this);
-	ASTPointer<TypeName> type;
+	ASTPointer<TypeName> type ;
 	if (_lookAheadArrayType)
 		type = _lookAheadArrayType;
 	else
@@ -583,22 +584,24 @@ ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 	return nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
 }
 
-ASTPointer<ElementaryTypeName> Parser::parseElementaryType()
+ASTPointer<ElementaryTypeName> Parser::parseElementaryTypeName()
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ElementaryTypeName> type;
-	Token::Value token = Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")));
+	Token::Value token(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
 	if (Token::isElementaryTypeName(token))
 	{
-		string var, n, x, m;
+		string var;
+		string m;
+		string x;
+		string n;
 
 		size_t delimiter = m_scanner->currentLiteral().find_first_of("0123456789");
 		var = m_scanner->currentLiteral().substr(0, delimiter);
 
-		if (delimiter == m_scanner->currentLiteral().npos)
+		if (delimiter == string::npos)
 			type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(token);
-
-		if (delimiter != string::npos)
+		else if (delimiter != string::npos)
 		{
 			if (var == "bytes" || var == "int" || var == "uint")
 			{
@@ -622,8 +625,11 @@ ASTPointer<ElementaryTypeName> Parser::parseElementaryType()
 		
 		return type;
 	}
-	else
-		ASTPointer<ElementaryTypeName>();
+	else 
+	{
+		fatalParserError(string("Expected elementary type name."));
+		return type;
+	}
 }
 
 ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
@@ -631,8 +637,9 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type;
 	Token::Value token = m_scanner->currentToken();
-	
-	if (ASTPointer<TypeName>() != parseElementaryType())
+
+	// because we no longer have explicit token names for types, it's now necessary to grab the current literal with no numbers
+	if (Token::isElementaryTypeName(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")))))
 	{
 		type = parseElementaryType();
 		
@@ -671,10 +678,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
-	if (ASTPointer<ElementaryTypeName>() == parseElementaryType())
-		fatalParserError(string("Expected elementary type name for mapping key type"));
-	ASTPointer<ElementaryTypeName> keyType;
-	keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->currentToken());
+	ASTPointer<ElementaryTypeName> keyType = parseElementaryType();
 	m_scanner->next();
 	expectToken(Token::Arrow);
 	bool const allowVar = false;
@@ -1111,6 +1115,8 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->currentToken();
 	ASTPointer<Expression> expression;
+	//cout << "parse primary expression: " << m_scanner->currentLiteral() << endl; 
+	Token::Value elem(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
 	switch (token)
 	{
 	case Token::TrueLiteral:
@@ -1180,7 +1186,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		if (Token::isElementaryTypeName(token))
 		{
 			// used for casts
-			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(token);
+			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elem);
 			m_scanner->next();
 		}
 		else
@@ -1241,6 +1247,8 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// If we get an identifier followed by a "[" or ".", it can be both ("lib.type[9] a;" or "variable.el[9] = 7;").
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->currentToken());
+	Token::Value elem(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
+	//cout << "peekStatementType: " << m_scanner->currentLiteral() << endl; 
 	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
 
 	if (token == Token::Mapping || token == Token::Var)

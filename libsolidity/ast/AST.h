@@ -767,6 +767,24 @@ public:
 		TypeName(_location), m_type(_type), m_N(_N)
 	{
 		solAssert(Token::isElementaryTypeName(_type), "");
+		annotation().hasN = true;
+		annotation().NxM = std::make_pair(m_N, 0);
+	}
+	//For real<N>x<M> and ureal<N>x<M>
+	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, unsigned const& _N, unsigned const& _M):
+		TypeName(_location), m_type(_type), m_N(_N), m_M(_M)
+	{
+		solAssert(Token::isElementaryTypeName(_type), "");
+		annotation().hasN = true;
+		annotation().hasM = true;
+		annotation().NxM = std::make_pair(m_N, m_M);
+	}
+<<<<<<< d574ea972a80fafc3b7fa1810fa2f302d87c04c8
+	//For uint<N>, int<N>, bytes<N>
+	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, unsigned const& _N):
+		TypeName(_location), m_type(_type), m_N(_N)
+	{
+		solAssert(Token::isElementaryTypeName(_type), "");
 		hasN = true;
 	}
 	//For real<N>x<M> and ureal<N>x<M>
@@ -777,17 +795,18 @@ public:
 		hasN = true;
 		hasM = true;
 	}
+=======
+
+>>>>>>> fix this embarassing mistake
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	Token::Value typeName() const { return m_type; }
-	unsigned N() const { return hasN ? m_N : 0; }
-	unsigned M() const { return hasM ? m_M : 0; }
+	unsigned N() const { return annotation().hasN ? m_N : 0; }
+	unsigned M() const { return annotation().hasM ? m_M : 0; }
 
 private:
 	Token::Value m_type;
-	bool hasN = false;
-	bool hasM = false;
 	unsigned m_N;
 	unsigned m_M;
 };
