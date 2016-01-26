@@ -777,24 +777,7 @@ public:
 		hasN = true;
 		hasM = true;
 	}
-<<<<<<< HEAD
-	//For uint<N>, int<N>, bytes<N>
-	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, unsigned const& _N):
-		TypeName(_location), m_type(_type), m_N(_N)
-	{
-		solAssert(Token::isElementaryTypeName(_type), "");
-		hasN = true;
-	}
-	//For real<N>x<M> and ureal<N>x<M>
-	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, unsigned const& _N, unsigned const& _M):
-		TypeName(_location), m_type(_type), m_N(_N), m_M(_M)
-	{
-		solAssert(Token::isElementaryTypeName(_type), "");
-		hasN = true;
-		hasM = true;
-	}
-=======
->>>>>>> b599f8925da532e1189c603785525883777707a5
+
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
