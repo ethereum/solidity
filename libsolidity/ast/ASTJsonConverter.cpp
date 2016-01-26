@@ -139,7 +139,12 @@ bool ASTJsonConverter::visit(TypeName const&)
 
 bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
 {
-	addJsonNode("ElementaryTypeName", { make_pair("name", Token::toString(_node.typeName())) });
+	
+	string name = Token::toString(_node.typeName());
+	name = false == _node.N() ? name 
+		: false == _node.M() ? name + to_string(_node.M())
+		: name + to_string(_node.N()) + "x" + to_string(_node.M());
+	addJsonNode("ElementaryTypeName", { make_pair("name", name) });
 	return true;
 }
 

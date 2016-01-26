@@ -194,7 +194,8 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 	expectToken(Token::LBrace);
 	while (true)
 	{
-		Token::Value currentTokenValue= m_scanner->currentToken();
+		Token::Value currentTokenValue = m_scanner->currentToken();
+		Token::Value elem = Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")));
 		if (currentTokenValue == Token::RBrace)
 			break;
 		else if (currentTokenValue == Token::Function)
@@ -206,7 +207,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 		else if (
 			currentTokenValue == Token::Identifier ||
 			currentTokenValue == Token::Mapping ||
-			Token::isElementaryTypeName(currentTokenValue)
+			Token::isElementaryTypeName(elem)
 		)
 		{
 			VarDeclParserOptions options;
@@ -393,7 +394,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 {
 	ASTNodeFactory nodeFactory = _lookAheadArrayType ?
 		ASTNodeFactory(*this, _lookAheadArrayType) : ASTNodeFactory(*this);
-	ASTPointer<TypeName> type;
+	ASTPointer<TypeName> type ;
 	if (_lookAheadArrayType)
 		type = _lookAheadArrayType;
 	else
@@ -587,7 +588,7 @@ ASTPointer<ElementaryTypeName> Parser::parseElementaryType()
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ElementaryTypeName> type;
-	Token::Value token = Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")));
+	Token::Value token(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
 	if (Token::isElementaryTypeName(token))
 	{
 		string var, n, x, m;
@@ -634,6 +635,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	ASTPointer<TypeName> type;
 	Token::Value token = m_scanner->currentToken();
 
+	// because we no longer have explicit token names for types, it's now necessary to grab the current literal with no numbers
 	if (Token::isElementaryTypeName(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")))))
 	{
 		type = parseElementaryType();
@@ -673,10 +675,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
-	/*if (ASTPointer<ElementaryTypeName>() == parseElementaryType())
-		fatalParserError(string("Expected elementary type name for mapping key type"));*/
 	ASTPointer<ElementaryTypeName> keyType = parseElementaryType();
-	//keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->currentToken());
 	m_scanner->next();
 	expectToken(Token::Arrow);
 	bool const allowVar = false;
@@ -1113,6 +1112,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->currentToken();
 	ASTPointer<Expression> expression;
+	Token::Value elem(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
 	switch (token)
 	{
 	case Token::TrueLiteral:
@@ -1179,10 +1179,10 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	}
 
 	default:
-		if (Token::isElementaryTypeName(token))
+		if (Token::isElementaryTypeName(elem))
 		{
 			// used for casts
-			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(token);
+			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elem);
 			m_scanner->next();
 		}
 		else
@@ -1243,7 +1243,8 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// If we get an identifier followed by a "[" or ".", it can be both ("lib.type[9] a;" or "variable.el[9] = 7;").
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->currentToken());
-	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
+	Token::Value elem(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
+	bool mightBeTypeName = (Token::isElementaryTypeName(elem) || token == Token::Identifier);
 
 	if (token == Token::Mapping || token == Token::Var)
 		return LookAheadInfo::VariableDeclarationStatement;
