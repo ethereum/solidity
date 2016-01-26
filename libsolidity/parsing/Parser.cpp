@@ -583,14 +583,59 @@ ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 	return nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
 }
 
+ASTPointer<ElementaryTypeName> Parser::parseElementaryType()
+{
+	ASTNodeFactory nodeFactory(*this);
+	ASTPointer<ElementaryTypeName> type;
+	Token::Value token = Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")));
+	if (Token::isElementaryTypeName(token))
+	{
+		string var, n, x, m;
+
+		size_t delimiter = m_scanner->currentLiteral().find_first_of("0123456789");
+		var = m_scanner->currentLiteral().substr(0, delimiter);
+
+		if (delimiter == m_scanner->currentLiteral().npos)
+			type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(token);
+
+		if (delimiter != string::npos)
+		{
+			if (var == "bytes" || var == "int" || var == "uint")
+			{
+				n = m_scanner->currentLiteral().substr(delimiter);
+				cout << var << n << endl;
+				type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(token, stoi(n));
+			}
+			else if (var == "real" || var == "ureal")
+			{
+				n = m_scanner->currentLiteral().substr(delimiter);
+				delimiter = n.find_first_of('x');
+				x = n.substr(delimiter);
+				delimiter = x.find_first_of("0123456789");
+				m = x.substr(delimiter);
+				if (delimiter == m.npos)
+					type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(token, stoi(n), stoi(m));
+			}
+			else
+				fatalParserError(string("Elementary typename was not properly defined."));
+		}
+		
+		return type;
+	}
+	else
+		ASTPointer<ElementaryTypeName>();
+}
+
 ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type;
 	Token::Value token = m_scanner->currentToken();
-	if (Token::isElementaryTypeName(token))
+	
+	if (ASTPointer<TypeName>() != parseElementaryType())
 	{
-		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(token);
+		type = parseElementaryType();
+		
 		m_scanner->next();
 	}
 	else if (token == Token::Var)
@@ -626,7 +671,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
-	if (!Token::isElementaryTypeName(m_scanner->currentToken()))
+	if (ASTPointer<ElementaryTypeName>() == parseElementaryType())
 		fatalParserError(string("Expected elementary type name for mapping key type"));
 	ASTPointer<ElementaryTypeName> keyType;
 	keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->currentToken());
