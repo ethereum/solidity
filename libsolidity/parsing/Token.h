@@ -211,7 +211,7 @@ namespace solidity
 	K(Int152, "int152", 0)                                             \
 	K(Int160, "int160", 0)                                             \
 	K(Int168, "int168", 0)                                             \
-	K(Int176, "int178", 0)                                             \
+	K(Int176, "int176", 0)                                             \
 	K(Int184, "int184", 0)                                             \
 	K(Int192, "int192", 0)                                             \
 	K(Int200, "int200", 0)                                             \
@@ -244,7 +244,7 @@ namespace solidity
 	K(UInt152, "uint152", 0)                                           \
 	K(UInt160, "uint160", 0)                                           \
 	K(UInt168, "uint168", 0)                                           \
-	K(UInt176, "uint178", 0)                                           \
+	K(UInt176, "uint176", 0)                                           \
 	K(UInt184, "uint184", 0)                                           \
 	K(UInt192, "uint192", 0)                                           \
 	K(UInt200, "uint200", 0)                                           \
