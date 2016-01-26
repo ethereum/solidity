@@ -68,6 +68,11 @@ namespace solidity
 
 #define IGNORE_TOKEN(name, string, precedence)
 
+const unsigned short NxM[32] = 
+		{8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 
+		128, 136, 144,  152, 160, 168, 176, 184, 192, 200, 208, 216, 
+		224, 232, 240, 248, 256};
+
 #define TOKEN_LIST(T, K)												\
 	/* End of source indicator. */										\
 	T(EOS, "EOS", 0)													\
@@ -190,14 +195,19 @@ namespace solidity
 	/* type keywords, keep them in this order, keep int as first keyword
 	 * the implementation in Types.cpp has to be synced to this here */\
 	K(Int, "int", 0)                                                   \
+	K(IntM, "intM", 0)                                                 \
 	K(UInt, "uint", 0)                                                 \
+	K(UIntM, "uintM", 0)                                               \
 	K(Bytes, "bytes", 0)                                               \
+	K(BytesM, "bytesM", 0)                                             \
 	K(Byte, "byte", 0)                                                 \
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(Real, "real", 0)                                                 \
+	K(RealMxN, "realMxN", 0)                                           \
 	K(UReal, "ureal", 0)                                               \
+	K(URealMxN, "urealMxN", 0)                                         \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
@@ -256,7 +266,7 @@ public:
 	}
 
 	// Predicates
-	static bool isElementaryTypeName(Value tok) { return (Int <= tok && tok < TypesEnd); }
+	static bool isElementaryTypeName(Value tok) { return Int <= tok && tok < TypesEnd; }
 	static bool isAssignmentOp(Value tok) { return Assign <= tok && tok <= AssignMod; }
 	static bool isBinaryOp(Value op) { return Comma <= op && op <= Exp; }
 	static bool isCommutativeOp(Value op) { return op == BitOr || op == BitXor || op == BitAnd ||

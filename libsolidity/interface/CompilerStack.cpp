@@ -501,7 +501,10 @@ void CompilerStack::compileContract(
 )
 {
 	if (_compiledContracts.count(&_contract) || !_contract.annotation().isFullyImplemented)
+	{
+		cout << "problem with counted contracts? " << endl;
 		return;
+	}
 	for (auto const* dependency: _contract.annotation().contractDependencies)
 		compileContract(_optimize, _runs, *dependency, _compiledContracts);
 

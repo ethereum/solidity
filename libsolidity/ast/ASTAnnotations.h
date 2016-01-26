@@ -104,6 +104,9 @@ struct VariableDeclarationAnnotation: ASTAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
 	TypePointer type;
+
+	unsigned N = 0;
+	unsigned M = 0;
 };
 
 struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
@@ -121,6 +124,12 @@ struct TypeNameAnnotation: ASTAnnotation
 	/// Type declared by this type name, i.e. type of a variable where this type name is used.
 	/// Set during reference resolution stage.
 	TypePointer type;
+	/// whether or not type has a specified N, i.e. uint32, bytes20, etc.
+	bool hasN = false;
+	/// whether or not type is a ureal or real and contains an M. 
+	bool hasM = false;
+	/// holds the values of N and M in first and second container respectively. 
+	std::pair<unsigned, unsigned> NxM;
 };
 
 struct UserDefinedTypeNameAnnotation: TypeNameAnnotation
