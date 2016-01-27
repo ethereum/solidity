@@ -584,14 +584,17 @@ ASTPointer<UserDefinedTypeName> Parser::parseUserDefinedTypeName()
 	return nodeFactory.createNode<UserDefinedTypeName>(identifierPath);
 }
 
-ASTPointer<ElementaryTypeName> Parser::parseElementaryType()
+ASTPointer<ElementaryTypeName> Parser::parseElementaryTypeName()
 {
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<ElementaryTypeName> type;
 	Token::Value token(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
 	if (Token::isElementaryTypeName(token))
 	{
-		string var, n, x, m;
+		string var;
+		string m;
+		string x;
+		string n;
 
 		size_t delimiter = m_scanner->currentLiteral().find_first_of("0123456789");
 		var = m_scanner->currentLiteral().substr(0, delimiter);
