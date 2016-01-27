@@ -195,7 +195,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 	while (true)
 	{
 		Token::Value currentTokenValue = m_scanner->currentToken();
-		Token::Value elem = Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")));
+		//Token::Value elem = Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890")));
 		if (currentTokenValue == Token::RBrace)
 			break;
 		else if (currentTokenValue == Token::Function)
@@ -207,7 +207,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 		else if (
 			currentTokenValue == Token::Identifier ||
 			currentTokenValue == Token::Mapping ||
-			Token::isElementaryTypeName(elem)
+			Token::isElementaryTypeName(currentTokenValue)
 		)
 		{
 			VarDeclParserOptions options;
@@ -1112,6 +1112,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->currentToken();
 	ASTPointer<Expression> expression;
+	//cout << "parse primary expression: " << m_scanner->currentLiteral() << endl; 
 	Token::Value elem(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
 	switch (token)
 	{
@@ -1179,7 +1180,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	}
 
 	default:
-		if (Token::isElementaryTypeName(elem))
+		if (Token::isElementaryTypeName(token))
 		{
 			// used for casts
 			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elem);
@@ -1244,7 +1245,8 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->currentToken());
 	Token::Value elem(Token::fromIdentifierOrKeyword(m_scanner->currentLiteral().substr(0, m_scanner->currentLiteral().find_first_of("1234567890"))));
-	bool mightBeTypeName = (Token::isElementaryTypeName(elem) || token == Token::Identifier);
+	//cout << "peekStatementType: " << m_scanner->currentLiteral() << endl; 
+	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
 
 	if (token == Token::Mapping || token == Token::Var)
 		return LookAheadInfo::VariableDeclarationStatement;

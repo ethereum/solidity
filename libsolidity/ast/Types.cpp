@@ -115,32 +115,13 @@ u256 const& MemberList::storageSize() const
 	return m_storageOffsets->storageSize();
 }
 
-TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, int N, int M)
+TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, unsigned N, unsigned M)
 {
-	char const* tokenCstr = Token::toString(_typeToken);
+	const char* tokenCstr = Token::toString(_typeToken);
+	//cout << "fromElementaryTypeName: " << tokenCstr << endl;
 	solAssert(Token::isElementaryTypeName(_typeToken),
-		"Expected an elementary type name but got " + ((tokenCstr) ? std::string(Token::toString(_typeToken)) : ""));
+		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_typeToken)) : ""));
 
-	/*if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
-	{
-		int offset = _typeToken - Token::Int;
-		int bytes = offset % 33;
-		if (bytes == 0 && _typeToken != Token::Bytes1)
-			bytes = 32;
-		int modifier = offset / 33;
-		switch(modifier)
-		{
-		case 0:
-			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Signed);
-		case 1:
-			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Unsigned);
-		case 2:
-			return make_shared<FixedBytesType>(bytes + 1);
-		default:
-			solAssert(false, "Unexpected modifier value. Should never happen");
-			return TypePointer();
-		}
-	}*/
 	if (_typeToken == Token::Int)
 	{
 		if (N == 0)
@@ -160,9 +141,23 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, int N, int M)
 		return make_shared<FixedBytesType>(N);
 	}
 	/*else if (_typeToken == Token::Real)
+	{
+		if (N == 0 && M == 0)
+		{
+			N = 128;
+			M = 128;
+		}
 		return make_shared<RationalType>(N, M, RealType::Modifier::Signed);
+	}
 	else if (_typeToken == Token::UReal)
-		return make_shared<RationalType>(N, M, RealType::Modifier::Unsigned);*/
+	{
+		if (N == 0 && M == 0)
+		{
+			N = 128;
+			M = 128;
+		}
+		return make_shared<RationalType>(N, M, RealType::Modifier::Unsigned);
+	}*/
 	else if (_typeToken == Token::Byte)
 		return make_shared<FixedBytesType>(1);
 	else if (_typeToken == Token::Address)
@@ -179,9 +174,10 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, int N, int M)
 		));
 }
 
-TypePointer Type::fromElementaryTypeName(string const& _name)
+TypePointer Type::fromElementaryTypeName(string const& _name, unsigned N, unsigned M)
 {
-	return fromElementaryTypeName(Token::fromIdentifierOrKeyword(_name));
+	cout << "from Elementary type string" << endl;
+	return fromElementaryTypeName(Token::fromIdentifierOrKeyword(_name), N, M);
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -1750,10 +1746,15 @@ u256 FunctionType::externalIdentifier() const
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 {
+	cout << "parseElementaryTypeVector" << endl;
 	TypePointers pointers;
 	pointers.reserve(_types.size());
 	for (string const& type: _types)
-		pointers.push_back(Type::fromElementaryTypeName(type));
+	{
+		unsigned delimiter = type.find_first_of("0123456789");
+
+		pointers.push_back(Type::fromElementaryTypeName(type.substr(0, delimiter), stoi(type.substr(delimiter))));
+	}
 	return pointers;
 }
 
