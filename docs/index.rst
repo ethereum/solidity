@@ -24,6 +24,8 @@ Useful links
 
 * `Source Code <https://github.com/ethereum/solidity/>`_
 
+* `Ethereum Stackexchange <https://ethereum.stackexchange.com/>`_
+
 * `Gitter Chat <https://gitter.im/ethereum/solidity/>`_
 
 Language Documentation
