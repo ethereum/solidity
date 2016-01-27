@@ -59,7 +59,7 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 
 bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 {
-	cout << "do we hit reference resolver" << endl;
+	cout << "ReferencesResolver: " << _typeName.annotation().type->toString(false) << endl;
 	if (!_typeName.M() && _typeName.N())
 		_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName(), _typeName.N());
 	else if (_typeName.M() && _typeName.N())

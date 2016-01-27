@@ -118,7 +118,7 @@ u256 const& MemberList::storageSize() const
 TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, unsigned N, unsigned M)
 {
 	const char* tokenCstr = Token::toString(_typeToken);
-	//cout << "fromElementaryTypeName: " << tokenCstr << endl;
+	cout << "fromElementaryTypeName: " << tokenCstr << ", N: " << std::to_string(N) << endl;
 	solAssert(Token::isElementaryTypeName(_typeToken),
 		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_typeToken)) : ""));
 
@@ -176,7 +176,6 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, unsigned N, un
 
 TypePointer Type::fromElementaryTypeName(string const& _name, unsigned N, unsigned M)
 {
-	cout << "from Elementary type string" << endl;
 	return fromElementaryTypeName(Token::fromIdentifierOrKeyword(_name), N, M);
 }
 
@@ -1746,14 +1745,18 @@ u256 FunctionType::externalIdentifier() const
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 {
-	cout << "parseElementaryTypeVector" << endl;
+	cout << "parseElementaryTypeVector " << _types << endl;
 	TypePointers pointers;
 	pointers.reserve(_types.size());
 	for (string const& type: _types)
 	{
-		unsigned delimiter = type.find_first_of("0123456789");
-
-		pointers.push_back(Type::fromElementaryTypeName(type.substr(0, delimiter), stoi(type.substr(delimiter))));
+		size_t delimiter = type.find_first_of("0123456789");
+		//cout << type << endl;
+		//cout << type.substr(0, delimiter) << type.substr(delimiter) << endl;
+		if (delimiter == string::npos)
+			pointers.push_back(Type::fromElementaryTypeName(type));
+		else
+			pointers.push_back(Type::fromElementaryTypeName(type.substr(0, delimiter), stoi(type.substr(delimiter))));
 	}
 	return pointers;
 }
