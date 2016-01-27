@@ -115,12 +115,12 @@ u256 const& MemberList::storageSize() const
 	return m_storageOffsets->storageSize();
 }
 
-TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, unsigned N, unsigned M)
+TypePointer Type::fromElementaryTypeName(ElementaryTypeName _type)
 {
-	const char* tokenCstr = Token::toString(_typeToken);
+	/*const char* tokenCstr = Token::toString(_typeToken);
 	cout << "fromElementaryTypeName: " << tokenCstr << ", N: " << std::to_string(N) << endl;
 	solAssert(Token::isElementaryTypeName(_typeToken),
-		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_typeToken)) : ""));
+		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_typeToken)) : ""));*/
 
 	if (_typeToken == Token::Int)
 	{
@@ -168,10 +168,10 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken, unsigned N, un
 		return make_shared<ArrayType>(DataLocation::Storage);
 	else if (_typeToken == Token::String)
 		return make_shared<ArrayType>(DataLocation::Storage, true);
-	else
+	/*else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
 			"Unable to convert elementary typename " + std::string(Token::toString(_typeToken)) + " to type."
-		));
+		));*/
 }
 
 TypePointer Type::fromElementaryTypeName(string const& _name, unsigned N, unsigned M)

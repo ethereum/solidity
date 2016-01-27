@@ -53,6 +53,7 @@ namespace dev
 namespace solidity
 {
 
+
 // TOKEN_LIST takes a list of 3 macros M, all of which satisfy the
 // same signature M(name, string, precedence), where name is the
 // symbolic token name, string is the corresponding syntactic symbol
@@ -66,12 +67,9 @@ namespace solidity
 // an argument (at any position) for a TOKEN_LIST call. It does
 // nothing with tokens belonging to the respective category.
 
-#define IGNORE_TOKEN(name, string, precedence)
 
-const unsigned short NxM[32] = 
-		{8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 
-		128, 136, 144,  152, 160, 168, 176, 184, 192, 200, 208, 216, 
-		224, 232, 240, 248, 256};
+
+#define IGNORE_TOKEN(name, string, precedence)
 
 #define TOKEN_LIST(T, K)												\
 	/* End of source indicator. */										\
@@ -317,5 +315,29 @@ private:
 	static char const m_tokenType[NUM_TOKENS];
 };
 
+class ElementaryTypeNameToken
+{
+public:
+	ElementaryTypeNameToken(std::string token)
+	{
+		solAssert(isElementaryTypename(token), "");
+		std::tie(tok, M, N) = setTypes(token);
+		m_name = token;
+	}
+	
+	std::string toString(bool tokValue = false) { return tokValue ? Token::toString(tok) : m_name; }
+	unsigned int returnM() const { return M; }
+	unsigned int returnN() const { return N; }
+	Token::Value returnTok() const { return tok; }
+
+private:
+	Token::Value tok;
+	std::string m_name;
+	unsigned int M;
+	unsigned int N;
+
+	bool isElementaryTypename(std::string _type);
+	std::tuple<Token::Value, unsigned int, unsigned int> setTypes(std::string toSet);
+};
 }
 }
