@@ -50,6 +50,48 @@ namespace dev
 namespace solidity
 {
 
+bool ElementaryTypeNameToken::isElementaryTypename(std::string _type)
+{
+	std::string baseType = _type.substr(0, _type.find_first_of("0123456789"));
+	Token::Value baseTok = Token::fromIdentifierOrKeyword(baseType);
+	unsigned short m;
+	if (!Token::isElementaryTypeName(baseTok))
+		return false;
+	m = std::stoi(_type.substr(_type.find_first_of("0123456789")));
+	if (baseType == "bytes")
+		return (0 < m && m <= 32) ? true : false;
+	else if (baseType == "uint" || baseType == "int")
+		return (0 < m && m <= 256 && m % 8 == 0) ? true : false;
+	else if (baseType == "ureal" || baseType == "real")
+	{
+		unsigned short n;
+		m = std::stoi(_type.substr(_type.find_first_of("0123456789"), _type.find_first_of("x") - 1));
+		n = std::stoi(_type.substr(_type.find_first_of("x") + 1));
+		return (0 < n + m && n + m <= 256 && (n % 8 == m % 8 == 0)) ? true : false;
+	}
+	return false;
+}
+
+std::tuple<Token::Value, unsigned int, unsigned int> ElementaryTypeNameToken::setTypes(std::string toSet)
+{
+	std::string baseType = toSet.substr(0, toSet.find_first_of("0123456789"));
+	Token::Value token;
+	unsigned int m = 0;
+	unsigned int n = 0;
+	if (baseType == "real" || baseType == "ureal")
+	{
+		token = Token::fromIdentifierOrKeyword(baseType + "MxN");
+		m = std::stoi(toSet.substr(toSet.find_first_of("0123456789"), toSet.find_first_of("x") - 1));
+		n = std::stoi(toSet.substr(toSet.find_first_of("x") + 1));
+	}
+	else
+	{
+		token = Token::fromIdentifierOrKeyword(baseType + "M");
+		m = std::stoi(toSet.substr(toSet.find_first_of("0123456789")));
+	}
+	return std::make_tuple(token, m, n);
+}
+
 #define T(name, string, precedence) #name,
 char const* const Token::m_name[NUM_TOKENS] =
 {
