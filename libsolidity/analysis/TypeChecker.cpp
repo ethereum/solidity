@@ -1373,7 +1373,6 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 {
-	cout << "I'm hitting here" << endl;
 	_expr.annotation().type = make_shared<TypeType>(Type::fromElementaryTypeName(_expr.typeToken()));
 }
 
