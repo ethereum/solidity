@@ -209,6 +209,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 			Token::isElementaryTypeName(currentTokenValue)
 		)
 		{
+			cout << "parseContractDefinition" << endl;
 			VarDeclParserOptions options;
 			options.isStateVariable = true;
 			options.allowInitialValue = true;
@@ -398,6 +399,7 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(
 		type = _lookAheadArrayType;
 	else
 	{
+		cout << "we are in parse variable declaration" << endl;
 		type = parseTypeName(_options.allowVar);
 		if (type != nullptr)
 			nodeFactory.setEndPositionFromNode(type);
@@ -539,7 +541,10 @@ ASTPointer<UsingForDirective> Parser::parseUsingDirective()
 	if (m_scanner->currentToken() == Token::Mul)
 		m_scanner->next();
 	else
+	{
+		cout << "We are in Using For Directives" << endl;
 		typeName = parseTypeName(false);
+	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::Semicolon);
 	return nodeFactory.createNode<UsingForDirective>(library, typeName);
@@ -589,15 +594,17 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	ASTPointer<TypeName> type;
 	Token::Value token = m_scanner->currentToken();
 	string lit = m_scanner->currentLiteral();
-
+	cout << "outside ifs, parseTypeName: " << lit << endl;
 	if (Token::isElementaryTypeName(token))
 	{
+		cout << "parseTypeName, Ordinary: " << lit << endl;
 		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(token);
-		
+
 		m_scanner->next();
 	}
 	else if (ElementaryTypeNameToken::isElementaryTypeName(lit))
 	{ // this is to parse all elementary types of variable sizes
+		cout << "parseTypeName, Elementary: " << lit << endl;
 		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(ElementaryTypeNameToken(lit));
 		
 		m_scanner->next();
@@ -635,15 +642,18 @@ ASTPointer<Mapping> Parser::parseMapping()
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
+	cout << "mapping: " << m_scanner->currentLiteral() << endl;
 	ASTPointer<ElementaryTypeName> keyType;
 	if (Token::isElementaryTypeName(m_scanner->currentToken()))
 		keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(m_scanner->currentToken());
 	else if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
 		keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(ElementaryTypeNameToken(m_scanner->currentLiteral()));
-
+	else
+		fatalParserError(string("Expected elementary type name for mapping key type"));
 	m_scanner->next();
 	expectToken(Token::Arrow);
 	bool const allowVar = false;
+	cout << "hit the mapping portion" << endl;
 	ASTPointer<TypeName> valueType = parseTypeName(allowVar);
 	nodeFactory.markEndPosition();
 	expectToken(Token::RParen);
@@ -839,6 +849,7 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	else
 	{
 		startedWithElementary = true;
+		cout << "we are in Parse Simple Statement" << endl;
 		if (Token::isElementaryTypeName(m_scanner->currentToken()))
 			path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(m_scanner->currentToken()));
 		else if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
@@ -1033,6 +1044,7 @@ ASTPointer<Expression> Parser::parseLeftHandSideExpression(
 	else if (m_scanner->currentToken() == Token::New)
 	{
 		expectToken(Token::New);
+		cout << "we are in parseLeftHandSideExpression" << endl;
 		ASTPointer<TypeName> contractName(parseTypeName(false));
 		nodeFactory.setEndPositionFromNode(contractName);
 		expression = nodeFactory.createNode<NewExpression>(contractName);
@@ -1153,6 +1165,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
+			cout << "in parse PrimaryExpression" << endl;
 			// used for casts
 			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(token);
 			m_scanner->next();
@@ -1221,7 +1234,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->currentToken());
 	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
-
+	cout << "in Peek statement Type" << endl;
 	if (token == Token::Mapping || token == Token::Var)
 		return LookAheadInfo::VariableDeclarationStatement;
 	if (mightBeTypeName)
@@ -1249,6 +1262,7 @@ ASTPointer<TypeName> Parser::typeNameIndexAccessStructure(
 	ASTPointer<TypeName> type;
 	if (auto typeName = dynamic_cast<ElementaryTypeNameExpression const*>(_path.front().get()))
 	{
+		cout << "typeNameIndexAccessStructure" << endl;
 		solAssert(_path.size() == 1, "");
 		if (typeName->isElementaryType())
 			type = nodeFactory.createNode<ElementaryTypeName>(typeName->elemName());

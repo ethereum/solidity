@@ -747,11 +747,6 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	virtual TypeNameAnnotation& annotation() const override;
-	unsigned N() const { return m_N; }
-	unsigned M() const { return m_M; }
-protected:
-	unsigned m_N = 0;
-	unsigned m_M = 0;
 };
 
 /**
@@ -763,15 +758,6 @@ class ElementaryTypeName: public TypeName
 public:
 	enum class TokenType {Original, Elementary};
 	//For all types that do not have a length appended to them
-	ElementaryTypeName(SourceLocation const& _location, Token::Value _type):
-		TypeName(_location), 
-		//only because the compiler doesn't like leave it empty, it should never be used 
-		m_elemType(ElementaryTypeNameToken(Token::toString(_type))),
-		m_type(_type),
-		type(TokenType::Original)
-	{
-		solAssert(Token::isElementaryTypeName(_type), "");
-	}
 	//For uint<N>, int<N>, bytes<N>, real<N>x<M>
 	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken _elem):
 		TypeName(_location),
@@ -779,6 +765,16 @@ public:
 		m_type(_elem.returnTok()), 
 		type(TokenType::Elementary)
 	{}
+	ElementaryTypeName(SourceLocation const& _location, Token::Value _type):
+		TypeName(_location), 
+		m_elemType(ElementaryTypeNameToken(Token::toString(_type))),
+		m_type(_type),
+		type(TokenType::Original)
+	{
+		std::cout << "curious if we hit here" << std::endl;
+		solAssert(Token::isElementaryTypeName(_type), "");
+	}
+	
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -786,8 +782,8 @@ public:
 	Token::Value typeName() const { return m_type; }
 	ElementaryTypeNameToken elemName() const 
 	{
-		solAssert(type != TokenType::Original, "cannot call varied name for original type");
-		return m_elemType; 
+		solAssert(isElementaryType(), "for varied name sizes only.");
+		return m_elemType; 		
 	}
 	bool isElementaryType() const { return type == TokenType::Elementary; }
 private:

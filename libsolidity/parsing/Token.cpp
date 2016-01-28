@@ -52,15 +52,22 @@ namespace solidity
 
 bool ElementaryTypeNameToken::isElementaryTypeName(std::string _type)
 {
+	if (
+		_type.find_first_of("0123456789") == string::npos &&
+		Token::isElementaryTypeName(Token::fromIdentifierOrKeyword(_type))
+	)
+		return true;
 	std::string baseType = _type.substr(0, _type.find_first_of("0123456789"));
 	Token::Value baseTok = Token::fromIdentifierOrKeyword(baseType);
 	short m;
 	if (!Token::isElementaryTypeName(baseTok))
+	{
+		cout << "inside token, is not elementary type: " << baseType << endl;
 		return false;
+	}
 	m = std::stoi(_type.substr(_type.find_first_of("0123456789")));
-	if (_type.find_first_of("0123456789") == string::npos)
-		return true;
-	else if (baseType == "bytes")
+	
+	if (baseType == "bytes")
 		return (0 < m && m <= 32) ? true : false;
 	else if (baseType == "uint" || baseType == "int")
 		return (0 < m && m <= 256 && m % 8 == 0) ? true : false;
@@ -71,11 +78,15 @@ bool ElementaryTypeNameToken::isElementaryTypeName(std::string _type)
 		n = std::stoi(_type.substr(_type.find_first_of("x") + 1));
 		return (0 < n + m && n + m <= 256 && (n % 8 == m % 8 == 0)) ? true : false;
 	}
+	cout << "uh oh" << endl;
 	return false;
 }
 
 std::tuple<Token::Value, unsigned int, unsigned int> ElementaryTypeNameToken::setTypes(std::string toSet)
 {
+	cout << "Token::type: " << toSet << endl;
+	if (toSet.find_first_of("0123456789") == string::npos)
+		return std::make_tuple(Token::fromIdentifierOrKeyword(toSet), 0, 0);
 	std::string baseType = toSet.substr(0, toSet.find_first_of("0123456789"));
 	Token::Value token;
 	unsigned int m = 0;
