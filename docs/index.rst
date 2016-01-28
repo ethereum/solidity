@@ -24,6 +24,8 @@ Useful links
 
 * `Source Code <https://github.com/ethereum/solidity/>`_
 
+* `Ethereum Stackexchange <https://ethereum.stackexchange.com/>`_
+
 * `Gitter Chat <https://gitter.im/ethereum/solidity/>`_
 
 Language Documentation
@@ -40,8 +42,10 @@ Remember that you can always try out the contracts
 
 The last and most extensive section will cover all aspects of Solidity in depth.
 
-If you still have questions or ideas for improving Solidity or this documentation,
-please feel free to come to out `gitter channel <https://gitter.im/ethereum/solidity/>`_.
+If you still have questions, you can try searching or asking on the
+`Ethereum Stackexchange <https://ethereum.stackexchange.com/>`_
+site, or come to our `gitter channel <https://gitter.im/ethereum/solidity/>`_.
+Ideas for improving Solidity or this documentation are always welcome!
 
 See also `Russian version (русский перевод) <https://github.com/ethereum/wiki/wiki/%D0%A0%D1%83%D0%BA%D0%BE%D0%B2%D0%BE%D0%B4%D1%81%D1%82%D0%B2%D0%BE-%D0%BF%D0%BE-Solidity>`_.
 
