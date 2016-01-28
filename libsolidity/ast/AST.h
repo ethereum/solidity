@@ -771,7 +771,6 @@ public:
 		m_type(_type),
 		type(TokenType::Original)
 	{
-		std::cout << "curious if we hit here" << std::endl;
 		solAssert(Token::isElementaryTypeName(_type), "");
 	}
 	

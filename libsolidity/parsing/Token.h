@@ -264,8 +264,7 @@ public:
 	}
 
 	// Predicates
-	static bool isElementaryTypeName(Value tok) { 
-		std::cout << "hitting here?" << std::endl; return Int <= tok && tok < TypesEnd; }
+	static bool isElementaryTypeName(Value tok) { return Int <= tok && tok < TypesEnd; }
 	static bool isAssignmentOp(Value tok) { return Assign <= tok && tok <= AssignMod; }
 	static bool isBinaryOp(Value op) { return Comma <= op && op <= Exp; }
 	static bool isCommutativeOp(Value op) { return op == BitOr || op == BitXor || op == BitAnd ||
@@ -295,9 +294,7 @@ public:
 	// have a (unique) string (e.g. an IDENTIFIER).
 	static char const* toString(Value tok)
 	{
-		std::cout << "Do we hit Token::toString()" << std::endl;
 		solAssert(tok < NUM_TOKENS, "");
-		std::cout << "if we get past assert, then this should work: " << m_string[tok] << std::endl;
 		return m_string[tok];
 	}
 
@@ -324,10 +321,7 @@ class ElementaryTypeNameToken
 public:
 	ElementaryTypeNameToken(std::string token)
 	{
-		std::cout << "hitting ElementaryTypeNameToken constructor" << std::endl;
-		std::cout << "token is " << token << std::endl;
 		solAssert(isElementaryTypeName(token), "");
-		std::cout << "do we get here though" << std::endl;
 		std::tie(tok, M, N) = setTypes(token);
 		m_name = token;
 	}

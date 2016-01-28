@@ -2046,7 +2046,6 @@ u256 FunctionType::externalIdentifier() const
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 {
-	cout << "parseElementaryTypeVector " << _types << endl;
 	TypePointers pointers;
 	pointers.reserve(_types.size());
 	for (string const& type: _types)
