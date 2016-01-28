@@ -103,7 +103,16 @@ One of the build targets of the Solidity repository is `solc`, the solidity comm
 Using `solc --help` provides you with an explanation of all options. The compiler can produce various outputs, ranging from simple binaries and assembly over an abstract syntax tree (parse tree) to estimations of gas usage.
 If you only want to compile a single file, you run it as `solc --bin sourceFile.sol` and it will print the binary. Before you deploy your contract, activate the optimizer while compiling using `solc --optimize --bin sourceFile.sol`. If you want to get some of the more advanced output variants of `solc`, it is probably better to tell it to output everything to separate files using `solc -o outputDirectory --bin --ast --asm sourceFile.sol`.
 
-Of course, you can also specify several source files and actually that is also required if you use the `import` statement in Solidity: The compiler will (for now) not automatically discover source files for you, so you have to provide it with all source files your project consists of.
+The commandline compiler will automatically read imported files from the filesystem, but
+it is also possible to provide path redirects using `prefix=path` in the following way:
+
+    solc github.com/ethereum/dapp-bin/=/usr/local/lib/dapp-bin/ =/usr/local/lib/fallback file.sol
+
+This essentially instructs the compiler to search for anything starting with
+`github.com/ethereum/dapp-bin/` under `/usr/local/lib/dapp-bin` and if it does not
+find the file there, it will look at `/usr/local/lib/fallback` (the empty prefix
+always matches) and if also that fails, it will make a full path lookup
+on the filesystem.
 
 If your contracts use [libraries](#libraries), you will notice that the bytecode contains substrings of the form `__LibraryName______`. You can use `solc` as a linker meaning that it will insert the library addresses for you at those points:
 

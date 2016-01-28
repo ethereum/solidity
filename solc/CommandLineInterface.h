@@ -61,6 +61,8 @@ private:
 	void handleGasEstimation(std::string const& _contract);
 	void handleFormal();
 
+	/// Fills @a m_sourceCodes initially and @a m_redirects.
+	void readInputFilesAndConfigureRemappings();
 	/// Tries to read from the file @a _input or interprets _input literally if that fails.
 	/// It then tries to parse the contents and appends to m_libraries.
 	bool parseLibraryOption(std::string const& _input);
@@ -76,6 +78,8 @@ private:
 	boost::program_options::variables_map m_args;
 	/// map of input files to source code strings
 	std::map<std::string, std::string> m_sourceCodes;
+	/// list of path prefix remappings, e.g. github.com/ethereum -> /usr/local/ethereum
+	std::vector<std::pair<std::string, std::string>> m_remappings;
 	/// map of library names to addresses
 	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack

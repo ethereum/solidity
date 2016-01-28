@@ -297,6 +297,48 @@ void CommandLineInterface::handleFormal()
 		cout << "Formal version:" << endl << m_compiler->formalTranslation() << endl;
 }
 
+void CommandLineInterface::readInputFilesAndConfigureRemappings()
+{
+	if (!m_args.count("input-file"))
+	{
+		string s;
+		while (!cin.eof())
+		{
+			getline(cin, s);
+			m_sourceCodes[g_stdinFileName].append(s + '\n');
+		}
+	}
+	else
+		for (string const& infile: m_args["input-file"].as<vector<string>>())
+		{
+			auto eq = find(infile.begin(), infile.end(), '=');
+			if (eq != infile.end())
+				m_remappings.push_back(make_pair(
+					string(infile.begin(), eq),
+					string(eq + 1, infile.end())
+				));
+			else
+			{
+				auto path = boost::filesystem::path(infile);
+				if (!boost::filesystem::exists(path))
+				{
+					cerr << "Skipping non existant input file \"" << infile << "\"" << endl;
+					continue;
+				}
+
+				if (!boost::filesystem::is_regular_file(path))
+				{
+					cerr << "\"" << infile << "\" is not a valid file. Skipping" << endl;
+					continue;
+				}
+
+				m_sourceCodes[infile] = dev::contentsString(infile);
+			}
+		}
+	// Add empty remapping to try the path itself.
+	m_remappings.push_back(make_pair(string(), string()));
+}
+
 bool CommandLineInterface::parseLibraryOption(string const& _input)
 {
 	namespace fs = boost::filesystem;
@@ -457,33 +499,7 @@ Allowed options)",
 
 bool CommandLineInterface::processInput()
 {
-	if (!m_args.count("input-file"))
-	{
-		string s;
-		while (!cin.eof())
-		{
-			getline(cin, s);
-			m_sourceCodes[g_stdinFileName].append(s + '\n');
-		}
-	}
-	else
-		for (string const& infile: m_args["input-file"].as<vector<string>>())
-		{
-			auto path = boost::filesystem::path(infile);
-			if (!boost::filesystem::exists(path))
-			{
-				cerr << "Skipping non existant input file \"" << infile << "\"" << endl;
-				continue;
-			}
-
-			if (!boost::filesystem::is_regular_file(path))
-			{
-				cerr << "\"" << infile << "\" is not a valid file. Skipping" << endl;
-				continue;
-			}
-
-			m_sourceCodes[infile] = dev::contentsString(infile);
-		}
+	readInputFilesAndConfigureRemappings();
 
 	if (m_args.count("libraries"))
 		for (string const& library: m_args["libraries"].as<vector<string>>())
@@ -499,13 +515,38 @@ bool CommandLineInterface::processInput()
 
 	function<pair<string,string>(string const&)> fileReader = [this](string const& _path)
 	{
-		auto path = boost::filesystem::path(_path);
-		if (!boost::filesystem::exists(path))
+		// Try to find the longest prefix match in all remappings. At the end, there will be an
+		// empty remapping so that we also try the path itself.
+		int errorLevel = 0;
+		size_t longestPrefix = 0;
+		string bestMatchPath;
+		for (auto const& redir: m_remappings)
+		{
+			auto const& virt = redir.first;
+			if (longestPrefix > 0 && virt.length() <= longestPrefix)
+				continue;
+			if (virt.length() > _path.length() || !std::equal(virt.begin(), virt.end(), _path.begin()))
+				continue;
+			string path = redir.second;
+			path.append(_path.begin() + virt.length(), _path.end());
+			auto boostPath = boost::filesystem::path(path);
+			if (!boost::filesystem::exists(boostPath))
+				errorLevel = max(errorLevel, 0);
+			else if (!boost::filesystem::is_regular_file(boostPath))
+				errorLevel = max(errorLevel, 1);
+			else
+			{
+				longestPrefix = virt.length();
+				bestMatchPath = path;
+			}
+		}
+		if (!bestMatchPath.empty())
+			return make_pair(m_sourceCodes[bestMatchPath] = dev::contentsString(bestMatchPath), string());
+		if (errorLevel == 0)
 			return make_pair(string(), string("File not found."));
-		else if (!boost::filesystem::is_regular_file(path))
-			return make_pair(string(), string("Not a valid file."));
 		else
-			return make_pair(m_sourceCodes[_path] = dev::contentsString(_path), string());
+			return make_pair(string(), string("Not a valid file."));
+
 	};
 
 	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0, fileReader));
