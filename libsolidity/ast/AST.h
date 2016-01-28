@@ -757,52 +757,17 @@ class ElementaryTypeName: public TypeName
 {
 public:
 	//For all types that do not have a length appended to them
-	ElementaryTypeName(SourceLocation const& _location, Token::Value _type):
-		TypeName(_location), m_type(_type)
-	{
-		solAssert(Token::isElementaryTypeName(_type), "");
-	}
 	//For uint<N>, int<N>, bytes<N>, real<N>x<M>
-	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken _type):
-		TypeName(_location),
-		realType(_type.toString()),
-		m_type(_type.returnTok()), 
-		m_M(_type.returnM()), 
-		m_N(_type.returnN())
-	{
-		solAssert(ElementaryTypeNameToken::isElementaryTypename(), "");
-	}
-<<<<<<< d574ea972a80fafc3b7fa1810fa2f302d87c04c8
-	//For uint<N>, int<N>, bytes<N>
-	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, unsigned const& _N):
-		TypeName(_location), m_type(_type), m_N(_N)
-	{
-		solAssert(Token::isElementaryTypeName(_type), "");
-		hasN = true;
-	}
-	//For real<N>x<M> and ureal<N>x<M>
-	ElementaryTypeName(SourceLocation const& _location, Token::Value _type, unsigned const& _N, unsigned const& _M):
-		TypeName(_location), m_type(_type), m_N(_N), m_M(_M)
-	{
-		solAssert(Token::isElementaryTypeName(_type), "");
-		hasN = true;
-		hasM = true;
-	}
-=======
+	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken _elem):
+		TypeName(_location), m_type(_elem)
+	{}
 
->>>>>>> fix this embarassing mistake
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Token::Value typeName() const { return m_type; }
-	unsigned N() const { return m_N; }
-	unsigned M() const { return m_M; }
-
+	ElementaryTypeNameToken typeName() const { return m_type; }
 private:
-	string realType;
-	Token::Value m_type;
-	unsigned m_N;
-	unsigned m_M;
+	ElementaryTypeNameToken m_type;
 };
 
 /**
@@ -1443,31 +1408,16 @@ private:
 class ElementaryTypeNameExpression: public PrimaryExpression
 {
 public:
-	ElementaryTypeNameExpression(SourceLocation const& _location, Token::Value _typeToken):
-		PrimaryExpression(_location), m_typeToken(_typeToken)
-	{
-		solAssert(Token::isElementaryTypeName(_typeToken), "");
-	}
-	//For uint<N>, int<N>, bytes<N>
 	ElementaryTypeNameExpression(SourceLocation const& _location, ElementaryTypeNameToken _type):
-		PrimaryExpression(_location),
-		m_typeToken(_type.returnTok()), 
-		m_M(_type.returnM()), 
-		m_N(_type.returnN())
-	{
-		solAssert(ElementaryTypeNameToken::isElementaryTypename(), "");
-	}
+		PrimaryExpression(_location), m_typeToken(_type)
+	{}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Token::Value typeName() const { return m_type; }
-	unsigned N() const { return m_N; }
-	unsigned M() const { return m_M; }
+	ElementaryTypeNameToken typeName() const { return m_typeToken; }
 
 private:
-	Token::Value m_typeToken;
-	unsigned m_N;
-	unsigned m_M;
+	ElementaryTypeNameToken m_typeToken;
 };
 
 /**

@@ -59,13 +59,7 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 
 bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 {
-	cout << "ReferencesResolver: " << _typeName.annotation().type->toString(false) << endl;
-	if (!_typeName.M() && _typeName.N())
-		_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName(), _typeName.N());
-	else if (_typeName.M() && _typeName.N())
-		_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName(), _typeName.N(), _typeName.M());
-	else 
-		_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
+	_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
 	return true;
 }
 
@@ -130,10 +124,10 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		return;
 
 	TypePointer type;
-	
 	if (_variable.typeName())
 	{
 		type = _variable.typeName()->annotation().type;
+
 		using Location = VariableDeclaration::Location;
 		Location varLoc = _variable.referenceLocation();
 		DataLocation typeLoc = DataLocation::Memory;
@@ -217,18 +211,8 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	else if (!_variable.canHaveAutoType())
 		fatalTypeError(_variable.location(), "Explicit type needed.");
 	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
+
 	_variable.annotation().type = type;
-	// gather variables N and M if they have been declared.
-	if (_variable.typeName()->annotation().hasN)
-	{
-		if (_variable.typeName()->annotation().hasM)
-		{
-			_variable.annotation().N = _variable.typeName()->annotation().NxM.first;
-			_variable.annotation().M = _variable.typeName()->annotation().NxM.second;
-		}
-		else
-			_variable.annotation().N = _variable.typeName()->annotation().NxM.first;
-	}
 }
 
 void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)

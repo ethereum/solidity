@@ -224,7 +224,6 @@ protected:
 	{
 		if (!s_compiledRegistrar)
 		{
-			cout << "========hit compiled registrar =========" << endl;
 			m_optimize = true;
 			m_compiler.reset(false, m_addStandardSources);
 			m_compiler.addSource("", registrarCode);
