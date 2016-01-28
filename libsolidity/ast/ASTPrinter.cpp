@@ -331,7 +331,7 @@ bool ASTPrinter::visit(Identifier const& _node)
 
 bool ASTPrinter::visit(ElementaryTypeNameExpression const& _node)
 {
-	writeLine(string("ElementaryTypeNameExpression ") + Token::toString(_node.typeToken()));
+	writeLine(string("ElementaryTypeNameExpression ") + Token::toString(_node.typeName()));
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
