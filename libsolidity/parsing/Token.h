@@ -315,6 +315,7 @@ private:
 	static char const m_tokenType[NUM_TOKENS];
 };
 
+
 class ElementaryTypeNameToken
 {
 public:
@@ -325,18 +326,19 @@ public:
 		m_name = token;
 	}
 	
-	static std::string toString(bool tokValue = false) { return tokValue ? Token::toString(tok) : m_name; }
-	static unsigned int returnM() { return M; }
-	static unsigned int returnN() { return N; }
-	static Token::Value returnTok() { return tok; }
+	std::string toString(bool tokValue = false) { return tokValue ? Token::toString(tok) : m_name; }
+	unsigned int returnM() { return M; }
+	unsigned int returnN() { return N; }
+	Token::Value returnTok() { return tok; }
 	static bool isElementaryTypeName(std::string _type);
 
 private:
-	static Token::Value tok;
-	static std::string m_name;
-	static unsigned int M;
-	static unsigned int N;
+	Token::Value tok;
+	std::string m_name;
+	unsigned int M;
+	unsigned int N;
 	std::tuple<Token::Value, unsigned int, unsigned int> setTypes(std::string toSet);
 };
+
 }
 }
