@@ -41,6 +41,12 @@ using namespace std;
 using namespace dev;
 using namespace solidity;
 
+extern "C" {
+/// Callback used to retrieve additional source files. "Returns" two pointers that should be
+/// heap-allocated and are free'd by the caller.
+typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
+}
+
 string formatError(Exception const& _exception, string const& _name, CompilerStack const& _compiler)
 {
 	ostringstream errorOutput;
@@ -114,11 +120,36 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 	return gasEstimates;
 }
 
-string compile(StringMap const& _sources, bool _optimize)
+string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback _readCallback)
 {
 	Json::Value output(Json::objectValue);
 	Json::Value errors(Json::arrayValue);
-	CompilerStack compiler;
+	CompilerStack::ReadFileCallback readCallback;
+	if (_readCallback)
+	{
+		readCallback = [=](string const& _path) -> pair<string, string>
+		{
+			char* contents_c = nullptr;
+			char* error_c = nullptr;
+			_readCallback(_path.c_str(), &contents_c, &error_c);
+			string contents;
+			string error;
+			if (!contents_c && !error_c)
+				error = "File not found.";
+			if (contents_c)
+			{
+				contents = string(contents_c);
+				free(contents_c);
+			}
+			if (error_c)
+			{
+				error = string(error_c);
+				free(error_c);
+			}
+			return make_pair(move(contents), move(error));
+		};
+	}
+	CompilerStack compiler(true, readCallback);
 	bool success = false;
 	try
 	{
@@ -188,7 +219,7 @@ string compile(StringMap const& _sources, bool _optimize)
 	return Json::FastWriter().write(output);
 }
 
-string compileMulti(string const& _input, bool _optimize)
+string compileMulti(string const& _input, bool _optimize, CStyleReadFileCallback _readCallback = nullptr)
 {
 	Json::Reader reader;
 	Json::Value input;
@@ -207,7 +238,7 @@ string compileMulti(string const& _input, bool _optimize)
 		if (jsonSources.isObject())
 			for (auto const& sourceName: jsonSources.getMemberNames())
 				sources[sourceName] = jsonSources[sourceName].asString();
-		return compile(sources, _optimize);
+		return compile(sources, _optimize, _readCallback);
 	}
 }
 
@@ -215,7 +246,7 @@ string compileSingle(string const& _input, bool _optimize)
 {
 	StringMap sources;
 	sources[""] = _input;
-	return compile(sources, _optimize);
+	return compile(sources, _optimize, nullptr);
 }
 
 static string s_outputBuffer;
@@ -234,6 +265,11 @@ extern char const* compileJSON(char const* _input, bool _optimize)
 extern char const* compileJSONMulti(char const* _input, bool _optimize)
 {
 	s_outputBuffer = compileMulti(_input, _optimize);
+	return s_outputBuffer.c_str();
+}
+extern char const* compileJSONCallback(char const* _input, bool _optimize, CStyleReadFileCallback _readCallback)
+{
+	s_outputBuffer = compileMulti(_input, _optimize, _readCallback);
 	return s_outputBuffer.c_str();
 }
 }
