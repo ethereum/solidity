@@ -82,8 +82,12 @@ bool ElementaryTypeNameToken::isElementaryTypeName(std::string _type)
 std::tuple<Token::Value, unsigned int, unsigned int> ElementaryTypeNameToken::setTypes(std::string toSet)
 {
 	if (toSet.find_first_of("0123456789") == string::npos)
+	{
+		//cout << "in Token: " << toSet << endl;
 		return std::make_tuple(Token::fromIdentifierOrKeyword(toSet), 0, 0);
+	}
 	std::string baseType = toSet.substr(0, toSet.find_first_of("0123456789"));
+	//cout << "in Token: " << toSet << endl;
 	Token::Value token;
 	unsigned int m = 0;
 	unsigned int n = 0;

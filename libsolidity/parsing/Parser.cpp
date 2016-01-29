@@ -820,7 +820,6 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	default:
 		break;
 	}
-
 	// At this point, we have 'Identifier "["' or 'Identifier "." Identifier' or 'ElementoryTypeName "["'.
 	// We parse '(Identifier ("." Identifier)* |ElementaryTypeName) ( "[" Expression "]" )+'
 	// until we can decide whether to hand this over to ExpressionStatement or create a
@@ -833,12 +832,8 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	else
 	{
 		startedWithElementary = true;
-		if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
-		{
-			ElementaryTypeNameToken elemToken(m_scanner->currentLiteral());
-			path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(elemToken));
-		}
-		
+		ElementaryTypeNameToken elemToken(m_scanner->currentLiteral());
+		path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(elemToken));
 		m_scanner->next();
 	}
 	while (!startedWithElementary && m_scanner->currentToken() == Token::Period)
@@ -1085,7 +1080,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Number:
-		if (Token::isEtherSubdenomination(m_scanner->peekNextToken()))
+			if (Token::isEtherSubdenomination(m_scanner->peekNextToken()))
 		{
 			ASTPointer<ASTString> literal = getLiteralAndAdvance();
 			nodeFactory.markEndPosition();
@@ -1105,10 +1100,13 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		}
 		// fall-through
 	case Token::StringLiteral:
+		
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Identifier:
+		if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
+			break;
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
 		break;
@@ -1208,6 +1206,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	Token::Value token(m_scanner->currentToken());
 	string lit = m_scanner->currentLiteral();
 	bool mightBeTypeName = (ElementaryTypeNameToken::isElementaryTypeName(lit) || token == Token::Identifier);
+
 	if (token == Token::Mapping || token == Token::Var)
 		return LookAheadInfo::VariableDeclarationStatement;
 	if (mightBeTypeName)
@@ -1343,6 +1342,7 @@ void Parser::parserError(string const& _description)
 
 void Parser::fatalParserError(string const& _description)
 {
+	cout << _description << endl;
 	parserError(_description);
 	BOOST_THROW_EXCEPTION(FatalError());
 }

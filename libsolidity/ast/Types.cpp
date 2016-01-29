@@ -123,6 +123,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 	Token::Value token = _type.returnTok();
 	unsigned int M = _type.returnM();
 	unsigned int N = _type.returnN();
+
 	if (token == Token::IntM)
 		return make_shared<IntegerType>(M, IntegerType::Modifier::Signed);
 	else if (token == Token::UIntM)
@@ -266,7 +267,8 @@ bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.category() == category() ||
 		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == Category::Enum ||
-		_convertTo.category() == Category::FixedBytes;
+		_convertTo.category() == Category::FixedBytes ||
+		_convertTo.category() == Category::Real;
 }
 
 TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const

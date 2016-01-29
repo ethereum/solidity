@@ -124,14 +124,10 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 		return;
 
 	TypePointer type;
-	
 	if (_variable.typeName())
 	{
 		type = _variable.typeName()->annotation().type;
-		/*cout << _variable.typeName()->N() << endl;
-		cout << _variable.typeName()->M() << endl;
-		_variable.annotation().N = _variable.typeName()->N();
-		_variable.annotation().M = _variable.typeName()->M();*/
+
 		using Location = VariableDeclaration::Location;
 		Location varLoc = _variable.referenceLocation();
 		DataLocation typeLoc = DataLocation::Memory;
@@ -215,9 +211,8 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	else if (!_variable.canHaveAutoType())
 		fatalTypeError(_variable.location(), "Explicit type needed.");
 	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
-	_variable.annotation().type = type;
-	// gather variables N and M if they have been declared.	
 
+	_variable.annotation().type = type;
 }
 
 void ReferencesResolver::typeError(SourceLocation const& _location, string const& _description)
