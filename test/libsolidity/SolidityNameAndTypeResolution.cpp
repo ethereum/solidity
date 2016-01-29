@@ -926,17 +926,14 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 
 BOOST_AUTO_TEST_CASE(state_variable_accessors)
 {
-	char const* text = R"(
-		contract test {
-			function fun() {
-				uint64(2);
-			}
-			uint256 public foo;
-			mapping(uint=>bytes4) public map;
-			mapping(uint=>mapping(uint=>bytes4)) public multimap;
-		}
-
-	)";
+	char const* text = "contract test {\n"
+ 						"  function fun() {\n"
+ 						"    uint64(2);\n"
+ 						"  }\n"
+ 						"uint256 public foo;\n"
+ 						"mapping(uint=>bytes4) public map;\n"
+ 						"mapping(uint=>mapping(uint=>bytes4)) public multiple_map;\n"
+ 						"}\n";
 
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
@@ -1643,7 +1640,7 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int32")) == *make_shared<IntegerType>(32, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int40")) == *make_shared<IntegerType>(40, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int48")) == *make_shared<IntegerType>(48, IntegerType::Modifier::Signed));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int52")) == *make_shared<IntegerType>(56, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int56")) == *make_shared<IntegerType>(56, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int64")) == *make_shared<IntegerType>(64, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int72")) == *make_shared<IntegerType>(72, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int80")) == *make_shared<IntegerType>(80, IntegerType::Modifier::Signed));

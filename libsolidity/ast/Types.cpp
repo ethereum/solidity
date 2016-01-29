@@ -138,10 +138,10 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
 	else if (token == Token::UInt)
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
-	else if (token == Token::Real)
+	/*else if (token == Token::Real)
 		return make_shared<RealType>(128, 128, RealType::Modifier::Signed);
 	else if (token == Token::UReal)
-		return make_shared<RealType>(128, 128, RealType::Modifier::Unsigned);
+		return make_shared<RealType>(128, 128, RealType::Modifier::Unsigned);*/
 	else if (token == Token::Byte)
 		return make_shared<FixedBytesType>(1);
 	else if (token == Token::Address)
@@ -154,7 +154,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 		return make_shared<ArrayType>(DataLocation::Storage, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-			"Unable to convert elementary typename " + _type.toString() + " to type."	
+			"Unable to convert elementary typename " + _type.toString() + " to type."
 		));
 }
 
@@ -337,8 +337,6 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 	else
 		return MemberList::MemberMap();
 }
-
-
 
 bool IntegerConstantType::isValidLiteral(const Literal& _literal)
 {
@@ -561,7 +559,7 @@ shared_ptr<IntegerType const> IntegerConstantType::integerType() const
 		);
 }
 
-RealType::RealType(int M, int N, RealType::Modifier _modifier):
+/*RealType::RealType(int M, int N, RealType::Modifier _modifier):
 	m_lBits(M), m_rBits(N), m_modifier(_modifier)
 {
 	solAssert( 
@@ -652,7 +650,7 @@ bool RealConstantType::isValidLiteral(const Literal& _literal)
 	return true;
 }
 
-/*RealConstantType::RealConstantType(Literal const& _literal)
+RealConstantType::RealConstantType(Literal const& _literal)
 {
 	m_value = bigint(_literal.value());
 
