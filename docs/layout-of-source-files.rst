@@ -71,6 +71,15 @@ and then run the compiler as
 
 `solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol`
 
+Note that solc only allows you to include files from certain directories:
+They have to be in the directory (or subdirectory) of one of the explicitly
+specified source files or in the directory (or subdirectory) of a remapping
+target. If you want to allow direct absolute includes, just add the
+remapping `=/`.
+
+If there are multiple remappings that lead to a valid file, the remapping
+with the longest common prefix is chosen.
+
 **browser-solidity**:
 
 The `browser-based compiler <https://chriseth.github.io/browser-solidity>`_
