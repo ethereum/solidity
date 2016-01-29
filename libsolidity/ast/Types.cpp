@@ -115,46 +115,11 @@ u256 const& MemberList::storageSize() const
 	return m_storageOffsets->storageSize();
 }
 
-TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
-{
-	const char* tokenCstr = Token::toString(_typeToken);
-	solAssert(Token::isElementaryTypeName(_typeToken),
-		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_typeToken)) : ""));
-	solAssert(
-		_typeToken != Token::IntM || 
-		_typeToken != Token::UIntM || 
-		_typeToken != Token::BytesM ||
-		_typeToken != Token::RealMxN ||
-		_typeToken != Token::URealMxN,
-		"Types for which we cannot derive proper length in generic token value function."
-	);
-		 
-	if (_typeToken == Token::Int)
-		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
-	else if (_typeToken == Token::UInt)
-		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
-	else if (_typeToken == Token::Real)
-		return make_shared<RealType>(128, 128, RealType::Modifier::Signed);
-	else if (_typeToken == Token::UReal)
-		return make_shared<RealType>(128, 128, RealType::Modifier::Unsigned);
-	else if (_typeToken == Token::Byte)
-		return make_shared<FixedBytesType>(1);
-	else if (_typeToken == Token::Address)
-		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
-	else if (_typeToken == Token::Bool)
-		return make_shared<BoolType>();
-	else if (_typeToken == Token::Bytes)
-		return make_shared<ArrayType>(DataLocation::Storage);
-	else if (_typeToken == Token::String)
-		return make_shared<ArrayType>(DataLocation::Storage, true);
-	else
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-			"Unable to convert elementary typename " + std::string(Token::toString(_typeToken)) + " to type."
-		));
-}
-
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 {
+	const char* tokenCstr = Token::toString(_type.returnTok());
+	solAssert(Token::isElementaryTypeName(_type.returnTok()),
+		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_type.returnTok())) : ""));
 	Token::Value token = _type.returnTok();
 	unsigned int M = _type.returnM();
 	unsigned int N = _type.returnN();
@@ -168,6 +133,24 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 		return make_shared<RealType>(M, N, RealType::Modifier::Unsigned);
 	else if (token == Token::BytesM)
 		return make_shared<FixedBytesType>(M);
+	else if (token == Token::Int)
+		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
+	else if (token == Token::UInt)
+		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
+	else if (token == Token::Real)
+		return make_shared<RealType>(128, 128, RealType::Modifier::Signed);
+	else if (token == Token::UReal)
+		return make_shared<RealType>(128, 128, RealType::Modifier::Unsigned);
+	else if (token == Token::Byte)
+		return make_shared<FixedBytesType>(1);
+	else if (token == Token::Address)
+		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
+	else if (token == Token::Bool)
+		return make_shared<BoolType>();
+	else if (token == Token::Bytes)
+		return make_shared<ArrayType>(DataLocation::Storage);
+	else if (token == Token::String)
+		return make_shared<ArrayType>(DataLocation::Storage, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
 			"Unable to convert elementary typename " + _type.toString() + " to type."	
@@ -176,7 +159,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
- 	return fromElementaryTypeName(Token::fromIdentifierOrKeyword(_name));
+ 	return fromElementaryTypeName(ElementaryTypeNameToken(_name));
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)

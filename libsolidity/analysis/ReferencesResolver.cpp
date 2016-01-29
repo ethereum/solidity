@@ -59,10 +59,7 @@ bool ReferencesResolver::visit(Identifier const& _identifier)
 
 bool ReferencesResolver::visit(ElementaryTypeName const& _typeName)
 {
-	_typeName.annotation().type = 
-		_typeName.isElementaryType() ?
-			Type::fromElementaryTypeName(_typeName.elemName()):
-			Type::fromElementaryTypeName(_typeName.typeName());
+	_typeName.annotation().type = Type::fromElementaryTypeName(_typeName.typeName());
 	return true;
 }
 
