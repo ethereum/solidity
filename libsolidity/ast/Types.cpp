@@ -571,7 +571,7 @@ RealType::RealType(int M, int N, RealType::Modifier _modifier):
 	solAssert( 
 		0 < (m_lBits + m_rBits) &&
 		(m_lBits + m_rBits) <= 256 &&
-		((m_lBits % 8) == (m_rBits % 8) == 0), 
+		((m_lBits % 8 == m_rBits % 8) == 0), 
 		"Invalid bit number for real type: " + dev::toString(M) + "." + dev::toString(N)
 	);
 }
