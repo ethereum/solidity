@@ -120,6 +120,12 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 	const char* tokenCstr = Token::toString(_type.returnTok());
 	solAssert(Token::isElementaryTypeName(_type.returnTok()),
 		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_type.returnTok())) : ""));
+	solAssert(_type.toString(true) != "realMxN" || 
+			_type.toString(true) != "real" ||
+			_type.toString(true) != "ureal" ||
+			_type.toString(true) != "urealMxN",
+			"Real data type is almost finished...but not yet. Give it a few more days."
+	);
 	Token::Value token = _type.returnTok();
 	unsigned int M = _type.returnM();
 	unsigned int N = _type.returnN();
@@ -138,10 +144,10 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
 	else if (token == Token::UInt)
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
-	/*else if (token == Token::Real)
+	else if (token == Token::Real)
 		return make_shared<RealType>(128, 128, RealType::Modifier::Signed);
 	else if (token == Token::UReal)
-		return make_shared<RealType>(128, 128, RealType::Modifier::Unsigned);*/
+		return make_shared<RealType>(128, 128, RealType::Modifier::Unsigned);
 	else if (token == Token::Byte)
 		return make_shared<FixedBytesType>(1);
 	else if (token == Token::Address)
@@ -559,7 +565,7 @@ shared_ptr<IntegerType const> IntegerConstantType::integerType() const
 		);
 }
 
-/*RealType::RealType(int M, int N, RealType::Modifier _modifier):
+RealType::RealType(int M, int N, RealType::Modifier _modifier):
 	m_lBits(M), m_rBits(N), m_modifier(_modifier)
 {
 	solAssert( 
@@ -637,7 +643,7 @@ TypePointer RealType::binaryOperatorResult(Token::Value _operator, TypePointer c
 	return commonType;
 }
 
-bool RealConstantType::isValidLiteral(const Literal& _literal)
+/*bool RealConstantType::isValidLiteral(const Literal& _literal)
 {
 	try
 	{
