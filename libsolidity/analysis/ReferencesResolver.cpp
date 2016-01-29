@@ -127,7 +127,6 @@ void ReferencesResolver::endVisit(VariableDeclaration const& _variable)
 	if (_variable.typeName())
 	{
 		type = _variable.typeName()->annotation().type;
-
 		using Location = VariableDeclaration::Location;
 		Location varLoc = _variable.referenceLocation();
 		DataLocation typeLoc = DataLocation::Memory;
