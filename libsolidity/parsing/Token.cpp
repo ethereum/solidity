@@ -74,7 +74,7 @@ bool ElementaryTypeNameToken::isElementaryTypeName(std::string _type)
 		short n;
 		m = std::stoi(_type.substr(_type.find_first_of("0123456789"), _type.find_first_of("x") - 1));
 		n = std::stoi(_type.substr(_type.find_first_of("x") + 1));
-		return (0 < n + m && n + m <= 256 && (n % 8 == m % 8 == 0)) ? true : false;
+		return (0 < n + m && n + m <= 256 && ((n % 8 == m % 8) == 0)) ? true : false;
 	}
 	return false;
 }

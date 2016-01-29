@@ -756,8 +756,6 @@ public:
 class ElementaryTypeName: public TypeName
 {
 public:
-	//For all types that do not have a length appended to them
-	//For uint<N>, int<N>, bytes<N>, real<N>x<M>
 	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken _elem):
 		TypeName(_location), m_type(_elem)
 	{}
@@ -766,6 +764,7 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ElementaryTypeNameToken typeName() const { return m_type; }
+
 private:
 	ElementaryTypeNameToken m_type;
 };

@@ -298,7 +298,7 @@ bool ASTJsonConverter::visit(Identifier const& _node)
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
 	addJsonNode("ElementaryTypenameExpression",
-				{ make_pair("value", Token::toString(_node.typeName().returnTok())), make_pair("type", type(_node)) });
+				{ make_pair("value", _node.typeName().toString()), make_pair("type", type(_node)) });
 	return true;
 }
 

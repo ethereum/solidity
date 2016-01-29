@@ -392,7 +392,7 @@ private:
  * Real constants either literals or computed. Example expressions: 2, 2+10, ~10.
  * There is one distinct type per value.
  */
-class RealConstantType: public Type
+/*class RealConstantType: public Type
 {
 public:
 	virtual Category category() const override { return Category::RealConstant; }
@@ -426,7 +426,7 @@ public:
 private:
 	bigint m_Lvalue;
 	bigint m_Rvalue;
-};
+};*/
 
 /**
  * Literal string, can be converted to bytes, bytesX or string.

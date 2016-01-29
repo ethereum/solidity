@@ -120,6 +120,12 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 	const char* tokenCstr = Token::toString(_type.returnTok());
 	solAssert(Token::isElementaryTypeName(_type.returnTok()),
 		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_type.returnTok())) : ""));
+	solAssert(_type.toString(true) != "realMxN" || 
+			_type.toString(true) != "real" ||
+			_type.toString(true) != "ureal" ||
+			_type.toString(true) != "urealMxN",
+			"Real data type is almost finished...but not yet. Give it a few more days."
+	);
 	Token::Value token = _type.returnTok();
 	unsigned int M = _type.returnM();
 	unsigned int N = _type.returnN();
@@ -154,7 +160,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 		return make_shared<ArrayType>(DataLocation::Storage, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-			"Unable to convert elementary typename " + _type.toString() + " to type."	
+			"Unable to convert elementary typename " + _type.toString() + " to type."
 		));
 }
 
@@ -337,8 +343,6 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 	else
 		return MemberList::MemberMap();
 }
-
-
 
 bool IntegerConstantType::isValidLiteral(const Literal& _literal)
 {
@@ -567,7 +571,7 @@ RealType::RealType(int M, int N, RealType::Modifier _modifier):
 	solAssert( 
 		0 < (m_lBits + m_rBits) &&
 		(m_lBits + m_rBits) <= 256 &&
-		m_lBits % 8 == m_rBits % 8 == 0, 
+		((m_lBits % 8 == m_rBits % 8) == 0), 
 		"Invalid bit number for real type: " + dev::toString(M) + "." + dev::toString(N)
 	);
 }
@@ -639,7 +643,7 @@ TypePointer RealType::binaryOperatorResult(Token::Value _operator, TypePointer c
 	return commonType;
 }
 
-bool RealConstantType::isValidLiteral(const Literal& _literal)
+/*bool RealConstantType::isValidLiteral(const Literal& _literal)
 {
 	try
 	{
@@ -652,7 +656,7 @@ bool RealConstantType::isValidLiteral(const Literal& _literal)
 	return true;
 }
 
-/*RealConstantType::RealConstantType(Literal const& _literal)
+RealConstantType::RealConstantType(Literal const& _literal)
 {
 	m_value = bigint(_literal.value());
 

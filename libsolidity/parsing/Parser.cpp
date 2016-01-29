@@ -824,15 +824,15 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	// We parse '(Identifier ("." Identifier)* |ElementaryTypeName) ( "[" Expression "]" )+'
 	// until we can decide whether to hand this over to ExpressionStatement or create a
 	// VariableDeclarationStatement out of it.
-
 	vector<ASTPointer<PrimaryExpression>> path;
 	bool startedWithElementary = false;
-	if (m_scanner->currentToken() == Token::Identifier)
+	string lit = m_scanner->currentLiteral();
+	if (m_scanner->currentToken() == Token::Identifier && !ElementaryTypeNameToken::isElementaryTypeName(lit))
 		path.push_back(parseIdentifier());
 	else
 	{
 		startedWithElementary = true;
-		ElementaryTypeNameToken elemToken(m_scanner->currentLiteral());
+		ElementaryTypeNameToken elemToken(lit);
 		path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(elemToken));
 		m_scanner->next();
 	}
@@ -1071,7 +1071,10 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	ASTNodeFactory nodeFactory(*this);
 	Token::Value token = m_scanner->currentToken();
 	ASTPointer<Expression> expression;
- 
+
+	if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
+		token = ElementaryTypeNameToken(m_scanner->currentLiteral()).returnTok();
+
 	switch (token)
 	{
 	case Token::TrueLiteral:
@@ -1080,7 +1083,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Number:
-			if (Token::isEtherSubdenomination(m_scanner->peekNextToken()))
+		if (Token::isEtherSubdenomination(m_scanner->peekNextToken()))
 		{
 			ASTPointer<ASTString> literal = getLiteralAndAdvance();
 			nodeFactory.markEndPosition();
@@ -1100,13 +1103,10 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		}
 		// fall-through
 	case Token::StringLiteral:
-		
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Identifier:
-		if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
-			break;
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
 		break;
@@ -1342,7 +1342,6 @@ void Parser::parserError(string const& _description)
 
 void Parser::fatalParserError(string const& _description)
 {
-	cout << _description << endl;
 	parserError(_description);
 	BOOST_THROW_EXCEPTION(FatalError());
 }
