@@ -139,10 +139,7 @@ bool ASTJsonConverter::visit(TypeName const&)
 
 bool ASTJsonConverter::visit(ElementaryTypeName const& _node)
 {
-	string name = 
-		_node.isElementaryType() ?
-			Type::fromElementaryTypeName(_node.elemName())->toString():
-			Type::fromElementaryTypeName(_node.typeName())->toString();
+	string name = Type::fromElementaryTypeName(_node.typeName())->toString();
 	addJsonNode("ElementaryTypeName", { make_pair("name", name) });
 	return true;
 }
@@ -300,14 +297,8 @@ bool ASTJsonConverter::visit(Identifier const& _node)
 
 bool ASTJsonConverter::visit(ElementaryTypeNameExpression const& _node)
 {
-	/*addJsonNode("ElementaryTypenameExpression",
-				{ make_pair("value", Token::toString(_node.typeToken())), make_pair("type", type(_node)) });*/
-	string value = 
-		_node.isElementaryType() ?
-			_node.elemName().toString():
-			Token::toString(_node.typeName());
-
-	addJsonNode("ElementaryTypeNameExpression",	{ make_pair("value", value), make_pair("type", type(_node))});
+	addJsonNode("ElementaryTypenameExpression",
+				{ make_pair("value", Token::toString(_node.typeName().returnTok())), make_pair("type", type(_node)) });
 	return true;
 }
 

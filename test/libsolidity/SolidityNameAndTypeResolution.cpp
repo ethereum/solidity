@@ -1633,7 +1633,7 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
 BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 {
 
-	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Int) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int")) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int8")) == *make_shared<IntegerType>(8, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int16")) == *make_shared<IntegerType>(16, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int24")) == *make_shared<IntegerType>(24, IntegerType::Modifier::Signed));
@@ -1667,7 +1667,7 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int248")) == *make_shared<IntegerType>(248, IntegerType::Modifier::Signed));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("int256")) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
 
-	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("uint")) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("uint8")) == *make_shared<IntegerType>(8, IntegerType::Modifier::Unsigned));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("uint16")) == *make_shared<IntegerType>(16, IntegerType::Modifier::Unsigned));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("uint24")) == *make_shared<IntegerType>(24, IntegerType::Modifier::Unsigned));
@@ -1701,39 +1701,39 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("uint248")) == *make_shared<IntegerType>(248, IntegerType::Modifier::Unsigned));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("uint256")) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
 
-	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Byte) == *make_shared<FixedBytesType>(1));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("1")) == *make_shared<FixedBytesType>(1));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("2")) == *make_shared<FixedBytesType>(2));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("3")) == *make_shared<FixedBytesType>(3));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("4")) == *make_shared<FixedBytesType>(4));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("5")) == *make_shared<FixedBytesType>(5));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("6")) == *make_shared<FixedBytesType>(6));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("7")) == *make_shared<FixedBytesType>(7));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("8")) == *make_shared<FixedBytesType>(8));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("9")) == *make_shared<FixedBytesType>(9));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("10")) == *make_shared<FixedBytesType>(10));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("11")) == *make_shared<FixedBytesType>(11));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("12")) == *make_shared<FixedBytesType>(12));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("13")) == *make_shared<FixedBytesType>(13));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("14")) == *make_shared<FixedBytesType>(14));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("15")) == *make_shared<FixedBytesType>(15));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("16")) == *make_shared<FixedBytesType>(16));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("17")) == *make_shared<FixedBytesType>(17));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("18")) == *make_shared<FixedBytesType>(18));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("19")) == *make_shared<FixedBytesType>(19));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("20")) == *make_shared<FixedBytesType>(20));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("21")) == *make_shared<FixedBytesType>(21));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("22")) == *make_shared<FixedBytesType>(22));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("23")) == *make_shared<FixedBytesType>(23));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("24")) == *make_shared<FixedBytesType>(24));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("25")) == *make_shared<FixedBytesType>(25));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("26")) == *make_shared<FixedBytesType>(26));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("27")) == *make_shared<FixedBytesType>(27));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("28")) == *make_shared<FixedBytesType>(28));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("29")) == *make_shared<FixedBytesType>(29));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("30")) == *make_shared<FixedBytesType>(30));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("31")) == *make_shared<FixedBytesType>(31));
-	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("32")) == *make_shared<FixedBytesType>(32));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("byte")) == *make_shared<FixedBytesType>(1));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes1")) == *make_shared<FixedBytesType>(1));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes2")) == *make_shared<FixedBytesType>(2));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes3")) == *make_shared<FixedBytesType>(3));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes4")) == *make_shared<FixedBytesType>(4));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes5")) == *make_shared<FixedBytesType>(5));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes6")) == *make_shared<FixedBytesType>(6));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes7")) == *make_shared<FixedBytesType>(7));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes8")) == *make_shared<FixedBytesType>(8));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes9")) == *make_shared<FixedBytesType>(9));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes10")) == *make_shared<FixedBytesType>(10));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes11")) == *make_shared<FixedBytesType>(11));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes12")) == *make_shared<FixedBytesType>(12));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes13")) == *make_shared<FixedBytesType>(13));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes14")) == *make_shared<FixedBytesType>(14));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes15")) == *make_shared<FixedBytesType>(15));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes16")) == *make_shared<FixedBytesType>(16));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes17")) == *make_shared<FixedBytesType>(17));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes18")) == *make_shared<FixedBytesType>(18));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes19")) == *make_shared<FixedBytesType>(19));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes20")) == *make_shared<FixedBytesType>(20));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes21")) == *make_shared<FixedBytesType>(21));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes22")) == *make_shared<FixedBytesType>(22));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes23")) == *make_shared<FixedBytesType>(23));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes24")) == *make_shared<FixedBytesType>(24));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes25")) == *make_shared<FixedBytesType>(25));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes26")) == *make_shared<FixedBytesType>(26));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes27")) == *make_shared<FixedBytesType>(27));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes28")) == *make_shared<FixedBytesType>(28));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes29")) == *make_shared<FixedBytesType>(29));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes30")) == *make_shared<FixedBytesType>(30));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes31")) == *make_shared<FixedBytesType>(31));
+	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken("bytes32")) == *make_shared<FixedBytesType>(32));
 }
 
 BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
