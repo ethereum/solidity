@@ -53,7 +53,6 @@ namespace dev
 namespace solidity
 {
 
-
 // TOKEN_LIST takes a list of 3 macros M, all of which satisfy the
 // same signature M(name, string, precedence), where name is the
 // symbolic token name, string is the corresponding syntactic symbol
@@ -66,8 +65,6 @@ namespace solidity
 // IGNORE_TOKEN is a convenience macro that can be supplied as
 // an argument (at any position) for a TOKEN_LIST call. It does
 // nothing with tokens belonging to the respective category.
-
-
 
 #define IGNORE_TOKEN(name, string, precedence)
 
@@ -314,7 +311,6 @@ private:
 	static int8_t const m_precedence[NUM_TOKENS];
 	static char const m_tokenType[NUM_TOKENS];
 };
-
 
 class ElementaryTypeNameToken
 {

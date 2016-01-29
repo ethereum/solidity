@@ -104,9 +104,6 @@ struct VariableDeclarationAnnotation: ASTAnnotation
 {
 	/// Type of variable (type of identifier referencing this variable).
 	TypePointer type;
-
-	unsigned N = 0;
-	unsigned M = 0;
 };
 
 struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
