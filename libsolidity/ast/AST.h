@@ -764,7 +764,7 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	ElementaryTypeNameToken typeName() const { return m_type; }
-	
+
 private:
 	ElementaryTypeNameToken m_type;
 };
