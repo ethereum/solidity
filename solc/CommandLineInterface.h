@@ -24,6 +24,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <memory>
 #include <boost/program_options.hpp>
+#include <boost/filesystem/path.hpp>
 
 namespace dev
 {
@@ -80,6 +81,8 @@ private:
 	std::map<std::string, std::string> m_sourceCodes;
 	/// list of path prefix remappings, e.g. github.com/ethereum -> /usr/local/ethereum
 	std::vector<std::pair<std::string, std::string>> m_remappings;
+	/// list of allowed directories to read files from
+	std::vector<boost::filesystem::path> m_allowedDirectories;
 	/// map of library names to addresses
 	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack

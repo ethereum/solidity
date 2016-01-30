@@ -27,6 +27,7 @@
 #include <fstream>
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include "solidity/BuildInfo.h"
@@ -313,10 +314,11 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 		{
 			auto eq = find(infile.begin(), infile.end(), '=');
 			if (eq != infile.end())
-				m_remappings.push_back(make_pair(
-					string(infile.begin(), eq),
-					string(eq + 1, infile.end())
-				));
+			{
+				string target(eq + 1, infile.end());
+				m_remappings.push_back(make_pair(string(infile.begin(), eq), target));
+				m_allowedDirectories.push_back(boost::filesystem::path(target).remove_filename());
+			}
 			else
 			{
 				auto path = boost::filesystem::path(infile);
@@ -332,7 +334,8 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 					continue;
 				}
 
-				m_sourceCodes[infile] = dev::contentsString(infile);
+				m_sourceCodes[path.string()] = dev::contentsString(path.string());
+				m_allowedDirectories.push_back(boost::filesystem::canonical(path).remove_filename());
 			}
 		}
 	// Add empty remapping to try the path itself.
@@ -515,8 +518,9 @@ bool CommandLineInterface::processInput()
 
 	function<pair<string,string>(string const&)> fileReader = [this](string const& _path)
 	{
-		// Try to find the longest prefix match in all remappings. At the end, there will be an
-		// empty remapping so that we also try the path itself.
+		// Try to find the longest prefix match in all remappings. At the end, there will bean
+		// empty remapping so that we also try the path itself, but any file should be either
+		// in (a subdirectory of) the directory of an explicit source or a remapping target.
 		int errorLevel = 0;
 		size_t longestPrefix = 0;
 		string bestMatchPath;
@@ -531,7 +535,26 @@ bool CommandLineInterface::processInput()
 			path.append(_path.begin() + virt.length(), _path.end());
 			auto boostPath = boost::filesystem::path(path);
 			if (!boost::filesystem::exists(boostPath))
+			{
 				errorLevel = max(errorLevel, 0);
+				continue;
+			}
+			boostPath = boost::filesystem::canonical(boostPath);
+			bool isAllowed = false;
+			for (auto const& dir: m_allowedDirectories)
+			{
+				// If dir is a prefix of boostPath, we are fine.
+				if (
+					std::distance(dir.begin(), dir.end()) <= std::distance(boostPath.begin(), boostPath.end()) &&
+					std::equal(dir.begin(), dir.end(), boostPath.begin())
+				)
+				{
+					isAllowed = true;
+					break;
+				}
+			}
+			if (!isAllowed)
+				errorLevel = max(errorLevel, 2);
 			else if (!boost::filesystem::is_regular_file(boostPath))
 				errorLevel = max(errorLevel, 1);
 			else
@@ -544,9 +567,10 @@ bool CommandLineInterface::processInput()
 			return make_pair(m_sourceCodes[bestMatchPath] = dev::contentsString(bestMatchPath), string());
 		if (errorLevel == 0)
 			return make_pair(string(), string("File not found."));
-		else
+		else if (errorLevel == 1)
 			return make_pair(string(), string("Not a valid file."));
-
+		else
+			return make_pair(string(), string("File outside of allowed directories."));
 	};
 
 	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0, fileReader));

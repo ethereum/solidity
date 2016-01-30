@@ -111,8 +111,11 @@ it is also possible to provide path redirects using `prefix=path` in the followi
 This essentially instructs the compiler to search for anything starting with
 `github.com/ethereum/dapp-bin/` under `/usr/local/lib/dapp-bin` and if it does not
 find the file there, it will look at `/usr/local/lib/fallback` (the empty prefix
-always matches) and if also that fails, it will make a full path lookup
-on the filesystem.
+always matches). `solc` will not read files from the filesystem that lie outside of
+the remapping targets and outside of the directories where explicitly specified source
+files reside, so things like `import "/etc/passwd";` only work if you add `=/` as a remapping.
+
+If there are multiple matches due to remappings, the one with the longest common prefix is selected.
 
 If your contracts use [libraries](#libraries), you will notice that the bytecode contains substrings of the form `__LibraryName______`. You can use `solc` as a linker meaning that it will insert the library addresses for you at those points:
 
