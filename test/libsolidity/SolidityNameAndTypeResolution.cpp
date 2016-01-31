@@ -927,13 +927,13 @@ BOOST_AUTO_TEST_CASE(modifier_returns_value)
 BOOST_AUTO_TEST_CASE(state_variable_accessors)
 {
 	char const* text = "contract test {\n"
-			"  function fun() {\n"
-			"    uint64(2);\n"
-			"  }\n"
-			"uint256 public foo;\n"
-			"mapping(uint=>bytes4) public map;\n"
-			"mapping(uint=>mapping(uint=>bytes4)) public multiple_map;\n"
-			"}\n";
+				"  function fun() {\n"
+				"    uint64(2);\n"
+				"  }\n"
+				"uint256 public foo;\n"
+				"mapping(uint=>bytes4) public map;\n"
+				"mapping(uint=>mapping(uint=>bytes4)) public multiple_map;\n"
+				"}\n";
 
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
