@@ -638,6 +638,11 @@ TypePointer FixedBytesType::binaryOperatorResult(Token::Value _operator, TypePoi
 	return TypePointer();
 }
 
+MemberList::MemberMap FixedBytesType::nativeMembers(const ContractDefinition*) const
+{
+	return MemberList::MemberMap{MemberList::Member{"length", make_shared<IntegerType>(8)}};
+}
+
 bool FixedBytesType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())

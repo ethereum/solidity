@@ -1004,6 +1004,16 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			solAssert(false, "Illegal array member.");
 		break;
 	}
+	case Type::Category::FixedBytes:
+	{
+		auto const& type = dynamic_cast<FixedBytesType const&>(*_memberAccess.expression().annotation().type);
+		utils().popStackElement(type);
+		if (member == "length")
+			m_context << u256(type.numBytes());
+		else
+			solAssert(false, "Illegal fixed bytes member.");
+		break;
+	}
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to unknown type."));
 	}
@@ -1084,6 +1094,22 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 				);
 			break;
 		}
+	}
+	else if (baseType.category() == Type::Category::FixedBytes)
+	{
+		FixedBytesType const& fixedBytesType = dynamic_cast<FixedBytesType const&>(baseType);
+		solAssert(_indexAccess.indexExpression(), "Index expression expected.");
+
+		_indexAccess.indexExpression()->accept(*this);
+		// stack layout: <value> <index>
+		// check out-of-bounds access
+		m_context << u256(fixedBytesType.numBytes());
+		m_context << eth::Instruction::DUP2 << eth::Instruction::LT << eth::Instruction::ISZERO;
+		// out-of-bounds access throws exception
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+
+		m_context << eth::Instruction::BYTE;
+		m_context << (u256(1) << (256 - 8)) << eth::Instruction::MUL;
 	}
 	else if (baseType.category() == Type::Category::TypeType)
 	{

@@ -3136,6 +3136,19 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(index_access_for_bytes)
+{
+	char const* text = R"(
+		contract C {
+			bytes20 x;
+			function f(bytes16 b) {
+				b[uint(x[2])];
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
