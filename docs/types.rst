@@ -110,6 +110,11 @@ Operators:
 
 * Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)  
 * Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)  
+* Index access: If `x` is of type `bytesI`, then `x[k]` for `0 <= k < I` returns the `k` th byte (read-only).
+
+Members:
+
+* `.length` yields the fixed length of the byte array (read-only).
 
 Dynamically-sized byte array
 ----------------------------
