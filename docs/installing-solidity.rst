@@ -98,11 +98,19 @@ Now add all the rest:
     sudo apt-get -y update
     sudo apt-get -y upgrade
 
-Use the following command to add the develop packages:
+For Ubuntu 15.04 (Vivid Vervet) or older, use the following command to add the develop packages:
+
+.. code-block:: bash
+
+    sudo apt-get -y install build-essential git cmake libboost-all-dev libgmp-dev libleveldb-dev libminiupnpc-dev libreadline-dev libncurses5-dev libcurl4-openssl-dev libcryptopp-dev libjson-rpc-cpp-dev libmicrohttpd-dev libjsoncpp-dev libedit-dev libz-dev
+
+For Ubuntu 15.10 (Wily Werewolf) or newer, use the following command instead:
 
 .. code-block:: bash
 
     sudo apt-get -y install build-essential git cmake libboost-all-dev libgmp-dev libleveldb-dev libminiupnpc-dev libreadline-dev libncurses5-dev libcurl4-openssl-dev libcryptopp-dev libjsonrpccpp-dev libmicrohttpd-dev libjsoncpp-dev libedit-dev libz-dev
+    
+The reason for the change is that `libjsonrpccpp-dev` is available in the universe repository for newer versions of Ubuntu.
 
 Building
 --------
