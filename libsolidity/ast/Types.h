@@ -132,15 +132,15 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
-		FixedBytes, Contract, Struct, Function, Enum, Tuple,
-		Mapping, TypeType, Modifier, Magic, Module
+		Integer, IntegerConstant, Real, RealConstant, StringLiteral, 
+		Bool, Array, FixedBytes, Contract, Struct, Function, Enum, 
+		Tuple, Mapping, TypeType, Modifier, Magic, Module
 	};
 
 	/// @{
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
-	static TypePointer fromElementaryTypeName(Token::Value _typeToken);
+	static TypePointer fromElementaryTypeName(ElementaryTypeNameToken _type);
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 	/// @}
 
@@ -342,6 +342,91 @@ public:
 private:
 	bigint m_value;
 };
+
+/**
+ * Fixed data type, compromised of M bits on left and N bits on right side of decimal.
+ */
+class RealType: public Type
+{
+public:
+	enum class Modifier
+	{
+		Unsigned, Signed
+	};
+	virtual Category category() const override { return Category::Real; }
+
+	explicit RealType(int M, int N, Modifier _modifier = Modifier::Unsigned);
+
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
+
+	virtual bool operator==(Type const& _other) const override;
+
+	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : (m_rBits + m_lBits) / 8; }
+	virtual unsigned storageBytes() const override { return (m_rBits + m_lBits) / 8; }
+	virtual bool isValueType() const override { return true; }
+
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override
+	{
+		return MemberList::MemberMap();
+	};
+
+	virtual std::string toString(bool _short) const override;
+
+	virtual TypePointer encodingType() const override { return shared_from_this(); }
+	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
+
+	int leftBits() const { return m_lBits; }
+	int rightBits() const { return m_rBits;}
+	bool isSigned() const { return m_modifier == Modifier::Signed; }
+
+private:
+	int m_lBits;
+	int m_rBits;
+	Modifier m_modifier;
+};
+
+/**
+ * Real constants either literals or computed. Example expressions: 2, 2+10, ~10.
+ * There is one distinct type per value.
+ */
+/*class RealConstantType: public Type
+{
+public:
+	virtual Category category() const override { return Category::RealConstant; }
+
+	/// @returns true if the literal is a valid real.
+	static bool isValidLiteral(Literal const& _literal);
+
+	explicit RealConstantType(Literal const& _literal);
+	explicit RealConstantType(bigint _Lvalue, bigint _Rvalue): 
+		m_Lvalue(_Lvalue), 
+		m_Rvalue(_Rvalue)
+	{}
+
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
+
+	virtual bool operator==(Type const& _other) const override;
+
+	virtual bool canBeStored() const override { return false; }
+	virtual bool canLiveOutsideStorage() const override { return false; }
+
+	virtual std::string toString(bool _short) const override;
+	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual TypePointer mobileType() const override;
+
+	/// @returns the smallest real type that can hold the value or an empty pointer if not possible.
+	std::shared_ptr<IntegerType const> integerType() const;
+
+private:
+	bigint m_Lvalue;
+	bigint m_Rvalue;
+};*/
 
 /**
  * Literal string, can be converted to bytes, bytesX or string.
