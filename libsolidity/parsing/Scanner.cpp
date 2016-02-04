@@ -714,7 +714,9 @@ Token::Value Scanner::scanIdentifierOrKeyword()
 	while (isIdentifierPart(m_char))
 		addLiteralCharAndAdvance();
 	literal.complete();
-	return Token::fromIdentifierOrKeyword(m_nextToken.literal);
+	return ElementaryTypeNameToken::isElementaryTypeName(m_nextToken.literal) ? 
+		ElementaryTypeNameToken(m_nextToken.literal).returnTok() : 
+		Token::fromIdentifierOrKeyword(m_nextToken.literal);
 }
 
 char CharStream::advanceAndGet(size_t _chars)

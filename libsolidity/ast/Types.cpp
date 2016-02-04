@@ -120,11 +120,11 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 	const char* tokenCstr = Token::toString(_type.returnTok());
 	solAssert(Token::isElementaryTypeName(_type.returnTok()),
 		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_type.returnTok())) : ""));
-	solAssert(_type.toString(true) != "realMxN" || 
-			_type.toString(true) != "real" ||
-			_type.toString(true) != "ureal" ||
-			_type.toString(true) != "urealMxN",
-			"Real data type is almost finished...but not yet. Give it a few more days."
+	solAssert(_type.toString(true) != "fixedMxN" || 
+			_type.toString(true) != "fixed" ||
+			_type.toString(true) != "ufixed" ||
+			_type.toString(true) != "ufixedMxN",
+			"Fixed data type is almost finished...but not yet. Give it a few more days."
 	);
 	Token::Value token = _type.returnTok();
 	unsigned int M = _type.returnM();
@@ -134,20 +134,20 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 		return make_shared<IntegerType>(M, IntegerType::Modifier::Signed);
 	else if (token == Token::UIntM)
 		return make_shared<IntegerType>(M, IntegerType::Modifier::Unsigned);
-	else if (token == Token::RealMxN)
-		return make_shared<RealType>(M, N, RealType::Modifier::Signed);
-	else if (token == Token::URealMxN)
-		return make_shared<RealType>(M, N, RealType::Modifier::Unsigned);
+	else if (token == Token::FixedMxN)
+		return make_shared<FixedPointType>(M, N, FixedPointType::Modifier::Signed);
+	else if (token == Token::UFixedMxN)
+		return make_shared<FixedPointType>(M, N, FixedPointType::Modifier::Unsigned);
 	else if (token == Token::BytesM)
 		return make_shared<FixedBytesType>(M);
 	else if (token == Token::Int)
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
 	else if (token == Token::UInt)
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
-	else if (token == Token::Real)
-		return make_shared<RealType>(128, 128, RealType::Modifier::Signed);
-	else if (token == Token::UReal)
-		return make_shared<RealType>(128, 128, RealType::Modifier::Unsigned);
+	else if (token == Token::Fixed)
+		return make_shared<FixedPointType>(128, 128, FixedPointType::Modifier::Signed);
+	else if (token == Token::UFixed)
+		return make_shared<FixedPointType>(128, 128, FixedPointType::Modifier::Unsigned);
 	else if (token == Token::Byte)
 		return make_shared<FixedBytesType>(1);
 	else if (token == Token::Address)
@@ -273,8 +273,7 @@ bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.category() == category() ||
 		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == Category::Enum ||
-		_convertTo.category() == Category::FixedBytes ||
-		_convertTo.category() == Category::Real;
+		_convertTo.category() == Category::FixedBytes;
 }
 
 TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
@@ -565,44 +564,44 @@ shared_ptr<IntegerType const> IntegerConstantType::integerType() const
 		);
 }
 
-RealType::RealType(int M, int N, RealType::Modifier _modifier):
-	m_lBits(M), m_rBits(N), m_modifier(_modifier)
+FixedPointType::FixedPointType(int integerBits, int fractionalBits, FixedPointType::Modifier _modifier):
+	m_integerBits(integerBits), m_fractionalBits(fractionalBits), m_modifier(_modifier)
 {
 	solAssert( 
-		0 < (m_lBits + m_rBits) &&
-		(m_lBits + m_rBits) <= 256 &&
-		((m_lBits % 8 == m_rBits % 8) == 0), 
-		"Invalid bit number for real type: " + dev::toString(M) + "." + dev::toString(N)
+		0 < (m_integerBits + m_fractionalBits) &&
+		(m_integerBits + m_fractionalBits) <= 256 &&
+		((m_integerBits % 8 == 0) && (m_fractionalBits % 8 == 0)), 
+		"Invalid bit number for FixedPoint type: " + dev::toString(integerBits) + "." + dev::toString(fractionalBits)
 	);
 }
 
-bool RealType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.category() != category())
 		return false;
-	RealType const& convertTo = dynamic_cast<RealType const&>(_convertTo);
-	if (convertTo.m_lBits < m_lBits && convertTo.m_rBits < m_rBits)
+	FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
+	if (convertTo.m_integerBits < m_integerBits && convertTo.m_fractionalBits < m_fractionalBits)
 		return false;
 	
 	if (isSigned())
 		return convertTo.isSigned();
 	else
-		return !convertTo.isSigned() || (convertTo.m_lBits > m_lBits && convertTo.m_rBits > m_rBits);
+		return !convertTo.isSigned() || (convertTo.m_integerBits > m_integerBits && convertTo.m_fractionalBits > m_fractionalBits);
 }
 
-bool RealType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.category() == category() ||
 		_convertTo.category() == Category::Integer ||
 		_convertTo.category() == Category::FixedBytes;
 }
 
-TypePointer RealType::unaryOperatorResult(Token::Value _operator) const
+TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
 {
-	// "delete" is ok for all real types
+	// "delete" is ok for all FixedPoint types
 	if (_operator == Token::Delete)
 		return make_shared<TupleType>();
-	// for non-address reals, we allow +, -, ++ and --
+	// for non-address FixedPoints, we allow +, -, ++ and --
 	else if (_operator == Token::Add || _operator == Token::Sub ||
 			_operator == Token::Inc || _operator == Token::Dec ||
 			_operator == Token::After || _operator == Token::BitNot)
@@ -611,30 +610,30 @@ TypePointer RealType::unaryOperatorResult(Token::Value _operator) const
 		return TypePointer();
 }
 
-bool RealType::operator==(Type const& _other) const
+bool FixedPointType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
 		return false;
-	RealType const& other = dynamic_cast<RealType const&>(_other);
-	return other.m_lBits == m_lBits && other.m_rBits == m_rBits && other.m_modifier == m_modifier;
+	FixedPointType const& other = dynamic_cast<FixedPointType const&>(_other);
+	return other.m_integerBits == m_integerBits && other.m_fractionalBits == m_fractionalBits && other.m_modifier == m_modifier;
 }
 
-string RealType::toString(bool) const
+string FixedPointType::toString(bool) const
 {
-	string prefix = isSigned() ? "real" : "uint";
-	return prefix + dev::toString(m_lBits) + "x" + dev::toString(m_rBits);
+	string prefix = isSigned() ? "fixed" : "ufixed";
+	return prefix + dev::toString(m_integerBits) + "x" + dev::toString(m_fractionalBits);
 }
 
-TypePointer RealType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (_other->category() != Category::RealConstant && _other->category() != category())
+	if (_other->category() != Category::FixedPointConstant && _other->category() != category())
 		return TypePointer();
-	auto commonType = dynamic_pointer_cast<RealType const>(Type::commonType(shared_from_this(), _other));
+	auto commonType = dynamic_pointer_cast<FixedPointType const>(Type::commonType(shared_from_this(), _other));
 
 	if (!commonType)
 		return TypePointer();
 
-	// All real types can be compared
+	// All FixedPoint types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
 	if (Token::isBooleanOp(_operator))
@@ -642,227 +641,6 @@ TypePointer RealType::binaryOperatorResult(Token::Value _operator, TypePointer c
 
 	return commonType;
 }
-
-/*bool RealConstantType::isValidLiteral(const Literal& _literal)
-{
-	try
-	{
-		bigint x(_literal.value());
-	}
-	catch (...)
-	{
-		return false;
-	}
-	return true;
-}
-
-RealConstantType::RealConstantType(Literal const& _literal)
-{
-	m_value = bigint(_literal.value());
-
-	switch (_literal.subDenomination())
-	{
-	case Literal::SubDenomination::Wei:
-	case Literal::SubDenomination::Second:
-	case Literal::SubDenomination::None:
-		break;
-	case Literal::SubDenomination::Szabo:
-		m_value *= bigint("1000000000000");
-		break;
-	case Literal::SubDenomination::Finney:
-		m_value *= bigint("1000000000000000");
-		break;
-	case Literal::SubDenomination::Ether:
-		m_value *= bigint("1000000000000000000");
-		break;
-	case Literal::SubDenomination::Minute:
-		m_value *= bigint("60");
-		break;
-	case Literal::SubDenomination::Hour:
-		m_value *= bigint("3600");
-		break;
-	case Literal::SubDenomination::Day:
-		m_value *= bigint("86400");
-		break;
-	case Literal::SubDenomination::Week:
-		m_value *= bigint("604800");
-		break;
-	case Literal::SubDenomination::Year:
-		m_value *= bigint("31536000");
-		break;
-	}
-}
-
-bool RealConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) const
-{
-	if (auto targetType = dynamic_cast<IntegerType const*>(&_convertTo))
-	{
-		if (m_value == 0)
-			return true;
-		int forSignBit = (targetType->isSigned() ? 1 : 0);
-		if (m_value > 0)
-		{
-			if (m_value <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
-				return true;
-		}
-		else if (targetType->isSigned() && -m_value <= (u256(1) << (targetType->numBits() - forSignBit)))
-			return true;
-		return false;
-	}
-	else if (_convertTo.category() == Category::FixedBytes)
-	{
-		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-		return fixedBytes.numBytes() * 8 >= integerType()->numBits();
-	}
-	else
-		return false;
-}
-
-bool RealConstantType::isExplicitlyConvertibleTo(Type const& _convertTo) const
-{
-	TypePointer intType = integerType();
-	return intType && intType->isExplicitlyConvertibleTo(_convertTo);
-}
-
-TypePointer RealConstantType::unaryOperatorResult(Token::Value _operator) const
-{
-	bigint value;
-	switch (_operator)
-	{
-	case Token::BitNot:
-		value = ~m_value;
-		break;
-	case Token::Add:
-		value = m_value;
-		break;
-	case Token::Sub:
-		value = -m_value;
-		break;
-	case Token::After:
-		return shared_from_this();
-	default:
-		return TypePointer();
-	}
-	return make_shared<IntegerConstantType>(value);
-}
-
-TypePointer RealConstantType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
-{
-	if (_other->category() == Category::Real)
-	{
-		shared_ptr<RealType const> realType = rationalType();
-		if (!realType)
-			return TypePointer();
-		return realType->binaryOperatorResult(_operator, _other);
-	}
-	else if (_other->category() != category())
-		return TypePointer();
-
-	RealConstantType const& other = dynamic_cast<RealConstantType const&>(*_other);
-	if (Token::isCompareOp(_operator))
-	{
-		shared_ptr<RealType const> thisRealType = rationalType();
-		shared_ptr<RealType const> otherRealType = other.rationalType();
-		if (!thisIntegerType || !otherIntegerType)
-			return TypePointer();
-		return thisIntegerType->binaryOperatorResult(_operator, otherIntegerType);
-	}
-	else
-	{
-		bigint value;
-		switch (_operator)
-		{
-		case Token::BitOr:
-			value = m_value | other.m_value;
-			break;
-		case Token::BitXor:
-			value = m_value ^ other.m_value;
-			break;
-		case Token::BitAnd:
-			value = m_value & other.m_value;
-			break;
-		case Token::Add:
-			value = m_value + other.m_value;
-			break;
-		case Token::Sub:
-			value = m_value - other.m_value;
-			break;
-		case Token::Mul:
-			value = m_value * other.m_value;
-			break;
-		case Token::Div:
-			if (other.m_value == 0)
-				return TypePointer();
-			value = m_value / other.m_value;
-			break;
-		case Token::Mod:
-			if (other.m_value == 0)
-				return TypePointer();
-			value = m_value % other.m_value;
-			break;
-		case Token::Exp:
-			if (other.m_value < 0)
-				return TypePointer();
-			else if (other.m_value > std::numeric_limits<unsigned int>::max())
-				return TypePointer();
-			else
-				value = boost::multiprecision::pow(m_value, other.m_value.convert_to<unsigned int>());
-			break;
-		default:
-			return TypePointer();
-		}
-		return make_shared<IntegerConstantType>(value);
-	}
-}
-
-bool RealConstantType::operator==(Type const& _other) const
-{
-	if (_other.category() != category())
-		return false;
-	return m_value == dynamic_cast<IntegerConstantType const&>(_other).m_value;
-}
-
-string RealConstantType::toString(bool) const
-{
-	return "int_const " + m_value.str();
-}
-
-u256 RealConstantType::literalValue(Literal const*) const
-{
-	u256 value;
-	// we ignore the literal and hope that the type was correctly determined
-	solAssert(m_value <= u256(-1), "Real constant too large.");
-	solAssert(m_value >= -(bigint(1) << 255), "Real constant too small.");
-
-	if (m_value >= 0)
-		value = u256(m_value);
-	else
-		value = s2u(s256(m_value));
-
-	return value;
-}
-
-TypePointer RealConstantType::mobileType() const
-{
-	auto intType = RealType();
-	solAssert(!!intType, "mobileType called with invalid Real constant " + toString(false));
-	return intType;
-}
-
-shared_ptr<RealType const> RealConstantType::RealType() const
-{
-	bigint value = m_value;
-	bool negative = (value < 0);
-	if (negative) // convert to positive number of same bit requirements
-		value = ((-value) - 1) << 1;
-	if (value > u256(-1))
-		return shared_ptr<RealType const>();
-	else
-		return make_shared<RealType>(
-			max(bytesRequired(value), 1u) * 8,
-			negative ? RealType::Modifier::Signed : RealType::Modifier::Unsigned
-		);
-}*/
 
 StringLiteralType::StringLiteralType(Literal const& _literal):
 	m_value(_literal.value())

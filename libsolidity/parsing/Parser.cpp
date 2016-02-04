@@ -207,7 +207,7 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 		else if (
 			currentTokenValue == Token::Identifier ||
 			currentTokenValue == Token::Mapping ||
-			ElementaryTypeNameToken::isElementaryTypeName(lit)
+			Token::isElementaryTypeName(currentTokenValue)
 		)
 		{
 			VarDeclParserOptions options;
@@ -589,12 +589,11 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type;
 	Token::Value token = m_scanner->currentToken();
-	string lit = m_scanner->currentLiteral();
 
-	if (ElementaryTypeNameToken::isElementaryTypeName(lit))
+	if (Token::isElementaryTypeName(token))
 	{
-		ElementaryTypeNameToken elem(lit);
-		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elem);
+		ElementaryTypeNameToken elemTypeName(m_scanner->currentLiteral());
+		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
 		m_scanner->next();
 	}
 	else if (token == Token::Var)
@@ -631,7 +630,7 @@ ASTPointer<Mapping> Parser::parseMapping()
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
 	ASTPointer<ElementaryTypeName> keyType;
-	if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
+	if (Token::isElementaryTypeName(m_scanner->currentToken()))
 		keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(ElementaryTypeNameToken(m_scanner->currentLiteral()));
 	else
 		fatalParserError(string("Expected elementary type name for mapping key type"));
@@ -826,13 +825,12 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	// VariableDeclarationStatement out of it.
 	vector<ASTPointer<PrimaryExpression>> path;
 	bool startedWithElementary = false;
-	string lit = m_scanner->currentLiteral();
-	if (m_scanner->currentToken() == Token::Identifier && !ElementaryTypeNameToken::isElementaryTypeName(lit))
+	if (m_scanner->currentToken() == Token::Identifier)
 		path.push_back(parseIdentifier());
 	else
 	{
 		startedWithElementary = true;
-		ElementaryTypeNameToken elemToken(lit);
+		ElementaryTypeNameToken elemToken(m_scanner->currentLiteral());
 		path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(elemToken));
 		m_scanner->next();
 	}
@@ -1072,9 +1070,6 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	Token::Value token = m_scanner->currentToken();
 	ASTPointer<Expression> expression;
 
-	if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
-		token = ElementaryTypeNameToken(m_scanner->currentLiteral()).returnTok();
-
 	switch (token)
 	{
 	case Token::TrueLiteral:
@@ -1141,9 +1136,10 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	}
 
 	default:
-		if (ElementaryTypeNameToken::isElementaryTypeName(m_scanner->currentLiteral()))
+		if (Token::isElementaryTypeName(token))
 		{
-			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(m_scanner->currentLiteral());
+			ElementaryTypeNameToken elementaryExpression(m_scanner->currentLiteral());
+			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elementaryExpression);
 			m_scanner->next();
 		}
 		else
@@ -1204,8 +1200,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	// If we get an identifier followed by a "[" or ".", it can be both ("lib.type[9] a;" or "variable.el[9] = 7;").
 	// In all other cases, we have an expression statement.
 	Token::Value token(m_scanner->currentToken());
-	string lit = m_scanner->currentLiteral();
-	bool mightBeTypeName = (ElementaryTypeNameToken::isElementaryTypeName(lit) || token == Token::Identifier);
+	bool mightBeTypeName = (Token::isElementaryTypeName(token) || token == Token::Identifier);
 
 	if (token == Token::Mapping || token == Token::Var)
 		return LookAheadInfo::VariableDeclarationStatement;

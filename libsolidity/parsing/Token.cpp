@@ -69,12 +69,12 @@ bool ElementaryTypeNameToken::isElementaryTypeName(std::string _type)
 		return (0 < m && m <= 32) ? true : false;
 	else if (baseType == "uint" || baseType == "int")
 		return (0 < m && m <= 256 && m % 8 == 0) ? true : false;
-	else if (baseType == "ureal" || baseType == "real")
+	else if (baseType == "ufixed" || baseType == "fixed")
 	{
 		short n;
-		m = std::stoi(_type.substr(_type.find_first_of("0123456789"), _type.find_first_of("x") - 1));
-		n = std::stoi(_type.substr(_type.find_first_of("x") + 1));
-		return (0 < n + m && n + m <= 256 && ((n % 8 == m % 8) == 0)) ? true : false;
+		m = std::stoi(_type.substr(_type.find_first_of("0123456789"), _type.find_last_of("x") - 1));
+		n = std::stoi(_type.substr(_type.find_last_of("x") + 1));
+		return (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0)));
 	}
 	return false;
 }
@@ -91,11 +91,11 @@ std::tuple<Token::Value, unsigned int, unsigned int> ElementaryTypeNameToken::se
 	Token::Value token;
 	unsigned int m = 0;
 	unsigned int n = 0;
-	if (baseType == "real" || baseType == "ureal")
+	if (baseType == "fixed" || baseType == "ufixed")
 	{
 		token = Token::fromIdentifierOrKeyword(baseType + "MxN");
-		m = std::stoi(toSet.substr(toSet.find_first_of("0123456789"), toSet.find_first_of("x") - 1));
-		n = std::stoi(toSet.substr(toSet.find_first_of("x") + 1));
+		m = std::stoi(toSet.substr(toSet.find_first_of("0123456789"), toSet.find_last_of("x") - 1));
+		n = std::stoi(toSet.substr(toSet.find_last_of("x") + 1));
 	}
 	else
 	{
