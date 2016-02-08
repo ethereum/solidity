@@ -132,7 +132,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
+		Integer, IntegerConstant, StringLiteral, Bool, FixedPoint, Array,
 		FixedBytes, Contract, Struct, Function, Enum, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module
 	};
@@ -140,7 +140,7 @@ public:
 	/// @{
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
-	static TypePointer fromElementaryTypeName(Token::Value _typeToken);
+	static TypePointer fromElementaryTypeName(ElementaryTypeNameToken _type);
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 	/// @}
 
