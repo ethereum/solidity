@@ -1394,7 +1394,7 @@ bool TypeChecker::visit(Identifier const& _identifier)
 
 void TypeChecker::endVisit(ElementaryTypeNameExpression const& _expr)
 {
-	_expr.annotation().type = make_shared<TypeType>(Type::fromElementaryTypeName(_expr.typeToken()));
+	_expr.annotation().type = make_shared<TypeType>(Type::fromElementaryTypeName(_expr.typeName()));
 }
 
 void TypeChecker::endVisit(Literal const& _literal)

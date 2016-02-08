@@ -756,18 +756,17 @@ public:
 class ElementaryTypeName: public TypeName
 {
 public:
-	ElementaryTypeName(SourceLocation const& _location, Token::Value _type):
-		TypeName(_location), m_type(_type)
-	{
-		solAssert(Token::isElementaryTypeName(_type), "");
-	}
+	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken const& _elem):
+		TypeName(_location), m_type(_elem)
+	{}
+
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Token::Value typeName() const { return m_type; }
+	ElementaryTypeNameToken const& typeName() const { return m_type; }
 
 private:
-	Token::Value m_type;
+	ElementaryTypeNameToken m_type;
 };
 
 /**
@@ -1408,18 +1407,16 @@ private:
 class ElementaryTypeNameExpression: public PrimaryExpression
 {
 public:
-	ElementaryTypeNameExpression(SourceLocation const& _location, Token::Value _typeToken):
-		PrimaryExpression(_location), m_typeToken(_typeToken)
-	{
-		solAssert(Token::isElementaryTypeName(_typeToken), "");
-	}
+	ElementaryTypeNameExpression(SourceLocation const& _location, ElementaryTypeNameToken const& _type):
+		PrimaryExpression(_location), m_typeToken(_type)
+	{}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	Token::Value typeToken() const { return m_typeToken; }
+	ElementaryTypeNameToken const& typeName() const { return m_typeToken; }
 
 private:
-	Token::Value m_typeToken;
+	ElementaryTypeNameToken m_typeToken;
 };
 
 /**

@@ -115,51 +115,55 @@ u256 const& MemberList::storageSize() const
 	return m_storageOffsets->storageSize();
 }
 
-TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
+TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
-	char const* tokenCstr = Token::toString(_typeToken);
-	solAssert(Token::isElementaryTypeName(_typeToken),
-		"Expected an elementary type name but got " + ((tokenCstr) ? string(Token::toString(_typeToken)) : ""));
+	string tokenString = _type.toString();
+	solAssert(Token::isElementaryTypeName(_type.returnTok()),
+		"Expected an elementary type name but got " + tokenString);
 
-	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
+	Token::Value token = _type.returnTok();
+	unsigned int M = _type.returnM();
+
+	switch (token)
 	{
-		int offset = _typeToken - Token::Int;
-		int bytes = offset % 33;
-		if (bytes == 0 && _typeToken != Token::Bytes1)
-			bytes = 32;
-		int modifier = offset / 33;
-		switch(modifier)
-		{
-		case 0:
-			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Signed);
-		case 1:
-			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Unsigned);
-		case 2:
-			return make_shared<FixedBytesType>(bytes + 1);
-		default:
-			solAssert(false, "Unexpected modifier value. Should never happen");
-			return TypePointer();
-		}
-	}
-	else if (_typeToken == Token::Byte)
+	case Token::IntM:
+		return make_shared<IntegerType>(M, IntegerType::Modifier::Signed);
+	case Token::UIntM:
+		return make_shared<IntegerType>(M, IntegerType::Modifier::Unsigned);
+	case Token::BytesM:
+		return make_shared<FixedBytesType>(M);
+	case Token::Int:
+		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
+	case Token::UInt:
+		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
+	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
-	else if (_typeToken == Token::Address)
+	case Token::Address:
 		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
-	else if (_typeToken == Token::Bool)
+	case Token::Bool:
 		return make_shared<BoolType>();
-	else if (_typeToken == Token::Bytes)
+	case Token::Bytes:
 		return make_shared<ArrayType>(DataLocation::Storage);
-	else if (_typeToken == Token::String)
+	case Token::String:
 		return make_shared<ArrayType>(DataLocation::Storage, true);
-	else
+	//no types found
+	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-			"Unable to convert elementary typename " + string(Token::toString(_typeToken)) + " to type."
+			"Unable to convert elementary typename " + _type.toString() + " to type."
 		));
+	}
 }
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
-	return fromElementaryTypeName(Token::fromIdentifierOrKeyword(_name));
+	string keyword = _name.substr(0, _name.find_first_of("0123456789"));
+	string info = "";
+	if (_name.find_first_of("0123456789") != string::npos)
+	{
+		keyword += "M";
+		info = _name.substr(_name.find_first_of("0123456789"));
+	}
+ 	return fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword(keyword), info));
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
