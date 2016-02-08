@@ -50,6 +50,44 @@ namespace dev
 namespace solidity
 {
 
+bool ElementaryTypeNameToken::isElementaryTypeName(Token::Value _baseType, string const& _info)
+{
+	if (!Token::isElementaryTypeName(_baseType))
+		return false;
+	string baseType = Token::toString(_baseType);
+	if (baseType.find('M') == string::npos)
+		return true;
+	short m;
+	m = stoi(_info.substr(_info.find_first_of("0123456789")));
+
+	if (baseType == "bytesM")
+		return (0 < m && m <= 32) ? true : false;
+	else if (baseType == "uintM" || baseType == "intM")
+		return (0 < m && m <= 256 && m % 8 == 0) ? true : false;
+	else if (baseType == "ufixedMxN" || baseType == "fixedMxN")
+	{
+		short n;
+		m = stoi(_info.substr(_info.find_first_of("0123456789"), _info.find_last_of("x") - 1));
+		n = stoi(_info.substr(_info.find_last_of("x") + 1));
+		return (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0)));
+	}
+	return false;
+}
+
+tuple<string, unsigned int, unsigned int> ElementaryTypeNameToken::setTypes(Token::Value _baseType, string const& _toSet)
+{
+	string baseType = Token::toString(_baseType);
+	if (_toSet.find_first_of("0123456789") == string::npos)
+		return make_tuple(baseType, 0, 0);
+	baseType = baseType.substr(0, baseType.find('M') - 1) + _toSet;
+	size_t index = _toSet.find('x') == string::npos ? string::npos : _toSet.find('x') - 1;
+	unsigned int m = stoi(_toSet.substr(0, index));
+	unsigned int n = 0;
+	if (baseType == "fixed" || baseType == "ufixed")
+		n = stoi(_toSet.substr(_toSet.find('x') + 1));
+	return make_tuple(baseType, m, n);
+}
+
 #define T(name, string, precedence) #name,
 char const* const Token::m_name[NUM_TOKENS] =
 {
@@ -80,7 +118,7 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-Token::Value Token::fromIdentifierOrKeyword(const std::string& _name)
+Token::Value Token::fromIdentifierOrKeyword(const string& _name)
 {
 	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
 	// and keywords to be put inside the keywords variable.
