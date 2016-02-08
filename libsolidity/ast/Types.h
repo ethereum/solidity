@@ -140,7 +140,7 @@ public:
 	/// @{
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
-	static TypePointer fromElementaryTypeName(ElementaryTypeNameToken _type);
+	static TypePointer fromElementaryTypeName(ElementaryTypeNameToken const& _type);
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 	/// @}
 

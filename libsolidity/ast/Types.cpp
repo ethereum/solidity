@@ -115,39 +115,43 @@ u256 const& MemberList::storageSize() const
 	return m_storageOffsets->storageSize();
 }
 
-TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
+TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
-	const char* tokenCstr = Token::toString(_type.returnTok());
+	string tokenString = _type.toString();
 	solAssert(Token::isElementaryTypeName(_type.returnTok()),
-		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_type.returnTok())) : ""));
+		"Expected an elementary type name but got " + tokenString);
 
 	Token::Value token = _type.returnTok();
 	unsigned int M = _type.returnM();
 
-	if (token == Token::IntM)
+	switch (token)
+	{
+	case Token::IntM:
 		return make_shared<IntegerType>(M, IntegerType::Modifier::Signed);
-	else if (token == Token::UIntM)
+	case Token::UIntM:
 		return make_shared<IntegerType>(M, IntegerType::Modifier::Unsigned);
-	else if (token == Token::BytesM)
+	case Token::BytesM:
 		return make_shared<FixedBytesType>(M);
-	else if (token == Token::Int)
+	case Token::Int:
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
-	else if (token == Token::UInt)
+	case Token::UInt:
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
-	else if (token == Token::Byte)
+	case Token::Byte:
 		return make_shared<FixedBytesType>(1);
-	else if (token == Token::Address)
+	case Token::Address:
 		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
-	else if (token == Token::Bool)
+	case Token::Bool:
 		return make_shared<BoolType>();
-	else if (token == Token::Bytes)
+	case Token::Bytes:
 		return make_shared<ArrayType>(DataLocation::Storage);
-	else if (token == Token::String)
+	case Token::String:
 		return make_shared<ArrayType>(DataLocation::Storage, true);
-	else
+	//no types found
+	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
 			"Unable to convert elementary typename " + _type.toString() + " to type."
 		));
+	}
 }
 
 TypePointer Type::fromElementaryTypeName(string const& _name)

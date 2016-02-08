@@ -321,10 +321,10 @@ public:
 		tok = token;
 	}
 	
-	std::string toString(bool const& tokValue = false) { return tokValue ? Token::toString(tok) : m_name; }
-	unsigned int returnM() { return M; }
-	unsigned int returnN() { return N; }
-	Token::Value returnTok() { return tok; }
+	std::string toString(bool const& tokValue = false) const& { return tokValue ? Token::toString(tok) : m_name; }
+	unsigned int const& returnM() const& { return M; }
+	unsigned int const& returnN() const& { return N; }
+	Token::Value const& returnTok() const& { return tok; }
 	static bool isElementaryTypeName(Token::Value _baseType, std::string const& _info);
 
 private:
