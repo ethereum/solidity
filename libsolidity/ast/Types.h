@@ -132,7 +132,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, FixedPoint, FixedPointConstant, StringLiteral, 
+		Integer, IntegerConstant, FixedPoint, StringLiteral, 
 		Bool, Array, FixedBytes, Contract, Struct, Function, Enum, 
 		Tuple, Mapping, TypeType, Modifier, Magic, Module
 	};
