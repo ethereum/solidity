@@ -115,51 +115,68 @@ u256 const& MemberList::storageSize() const
 	return m_storageOffsets->storageSize();
 }
 
-TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
+TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 {
-	char const* tokenCstr = Token::toString(_typeToken);
-	solAssert(Token::isElementaryTypeName(_typeToken),
-		"Expected an elementary type name but got " + ((tokenCstr) ? std::string(Token::toString(_typeToken)) : ""));
+	const char* tokenCstr = Token::toString(_type.returnTok());
+	solAssert(Token::isElementaryTypeName(_type.returnTok()),
+		"Expected an elementary type name but got " + (tokenCstr ? std::string(Token::toString(_type.returnTok())) : ""));
+	solAssert(_type.toString(true) != "fixedMxN" || 
+			_type.toString(true) != "fixed" ||
+			_type.toString(true) != "ufixed" ||
+			_type.toString(true) != "ufixedMxN",
+			"Fixed data type is almost finished...but not yet. Give it a few more days."
+	);
+	Token::Value token = _type.returnTok();
+	unsigned int M = _type.returnM();
+	unsigned int N = _type.returnN();
 
-	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
-	{
-		int offset = _typeToken - Token::Int;
-		int bytes = offset % 33;
-		if (bytes == 0 && _typeToken != Token::Bytes1)
-			bytes = 32;
-		int modifier = offset / 33;
-		switch(modifier)
-		{
-		case 0:
-			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Signed);
-		case 1:
-			return make_shared<IntegerType>(bytes * 8, IntegerType::Modifier::Unsigned);
-		case 2:
-			return make_shared<FixedBytesType>(bytes + 1);
-		default:
-			solAssert(false, "Unexpected modifier value. Should never happen");
-			return TypePointer();
-		}
-	}
-	else if (_typeToken == Token::Byte)
+	if (token == Token::IntM)
+		return make_shared<IntegerType>(M, IntegerType::Modifier::Signed);
+	else if (token == Token::UIntM)
+		return make_shared<IntegerType>(M, IntegerType::Modifier::Unsigned);
+	else if (token == Token::FixedMxN)
+		return make_shared<FixedPointType>(M, N, FixedPointType::Modifier::Signed);
+	else if (token == Token::UFixedMxN)
+		return make_shared<FixedPointType>(M, N, FixedPointType::Modifier::Unsigned);
+	else if (token == Token::BytesM)
+		return make_shared<FixedBytesType>(M);
+	else if (token == Token::Int)
+		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
+	else if (token == Token::UInt)
+		return make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned);
+	else if (token == Token::Fixed)
+		return make_shared<FixedPointType>(128, 128, FixedPointType::Modifier::Signed);
+	else if (token == Token::UFixed)
+		return make_shared<FixedPointType>(128, 128, FixedPointType::Modifier::Unsigned);
+	else if (token == Token::Byte)
 		return make_shared<FixedBytesType>(1);
-	else if (_typeToken == Token::Address)
+	else if (token == Token::Address)
 		return make_shared<IntegerType>(0, IntegerType::Modifier::Address);
-	else if (_typeToken == Token::Bool)
+	else if (token == Token::Bool)
 		return make_shared<BoolType>();
-	else if (_typeToken == Token::Bytes)
+	else if (token == Token::Bytes)
 		return make_shared<ArrayType>(DataLocation::Storage);
-	else if (_typeToken == Token::String)
+	else if (token == Token::String)
 		return make_shared<ArrayType>(DataLocation::Storage, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-			"Unable to convert elementary typename " + std::string(Token::toString(_typeToken)) + " to type."
+			"Unable to convert elementary typename " + _type.toString() + " to type."
 		));
 }
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
-	return fromElementaryTypeName(Token::fromIdentifierOrKeyword(_name));
+	string keyword = _name.substr(0, _name.find_first_of("0123456789"));
+	string info = "";
+	if (_name.find_first_of("0123456789") != string::npos)
+	{
+		if (keyword == "ufixed" || keyword == "fixed")
+			keyword += "MxN";
+		else
+			keyword += "M";
+		info = _name.substr(_name.find_first_of("0123456789"));
+	}
+ 	return fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword(keyword), info));
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -555,6 +572,84 @@ shared_ptr<IntegerType const> IntegerConstantType::integerType() const
 			max(bytesRequired(value), 1u) * 8,
 			negative ? IntegerType::Modifier::Signed : IntegerType::Modifier::Unsigned
 		);
+}
+
+FixedPointType::FixedPointType(int integerBits, int fractionalBits, FixedPointType::Modifier _modifier):
+	m_integerBits(integerBits), m_fractionalBits(fractionalBits), m_modifier(_modifier)
+{
+	solAssert( 
+		0 < (m_integerBits + m_fractionalBits) &&
+		(m_integerBits + m_fractionalBits) <= 256 &&
+		((m_integerBits % 8 == 0) && (m_fractionalBits % 8 == 0)), 
+		"Invalid bit number for FixedPoint type: " + dev::toString(integerBits) + "." + dev::toString(fractionalBits)
+	);
+}
+
+bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (_convertTo.category() != category())
+		return false;
+	FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
+	if (convertTo.m_integerBits < m_integerBits && convertTo.m_fractionalBits < m_fractionalBits)
+		return false;
+	
+	if (isSigned())
+		return convertTo.isSigned();
+	else
+		return !convertTo.isSigned() || (convertTo.m_integerBits > m_integerBits && convertTo.m_fractionalBits > m_fractionalBits);
+}
+
+bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	return _convertTo.category() == category() ||
+		_convertTo.category() == Category::Integer ||
+		_convertTo.category() == Category::FixedBytes;
+}
+
+TypePointer FixedPointType::unaryOperatorResult(Token::Value _operator) const
+{
+	// "delete" is ok for all FixedPoint types
+	if (_operator == Token::Delete)
+		return make_shared<TupleType>();
+	// for non-address FixedPoints, we allow +, -, ++ and --
+	else if (_operator == Token::Add || _operator == Token::Sub ||
+			_operator == Token::Inc || _operator == Token::Dec ||
+			_operator == Token::After || _operator == Token::BitNot)
+		return shared_from_this();
+	else
+		return TypePointer();
+}
+
+bool FixedPointType::operator==(Type const& _other) const
+{
+	if (_other.category() != category())
+		return false;
+	FixedPointType const& other = dynamic_cast<FixedPointType const&>(_other);
+	return other.m_integerBits == m_integerBits && other.m_fractionalBits == m_fractionalBits && other.m_modifier == m_modifier;
+}
+
+string FixedPointType::toString(bool) const
+{
+	string prefix = isSigned() ? "fixed" : "ufixed";
+	return prefix + dev::toString(m_integerBits) + "x" + dev::toString(m_fractionalBits);
+}
+
+TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+{
+	if (_other->category() != Category::FixedPointConstant && _other->category() != category())
+		return TypePointer();
+	auto commonType = dynamic_pointer_cast<FixedPointType const>(Type::commonType(shared_from_this(), _other));
+
+	if (!commonType)
+		return TypePointer();
+
+	// All FixedPoint types can be compared
+	if (Token::isCompareOp(_operator))
+		return commonType;
+	if (Token::isBooleanOp(_operator))
+		return TypePointer();
+
+	return commonType;
 }
 
 StringLiteralType::StringLiteralType(Literal const& _literal):

@@ -145,7 +145,7 @@ bool ASTPrinter::visit(TypeName const& _node)
 
 bool ASTPrinter::visit(ElementaryTypeName const& _node)
 {
-	writeLine(string("ElementaryTypeName ") + Token::toString(_node.typeName()));
+	writeLine(string("ElementaryTypeName ") + _node.typeName().toString());
 	printSourcePart(_node);
 	return goDeeper();
 }
@@ -331,7 +331,7 @@ bool ASTPrinter::visit(Identifier const& _node)
 
 bool ASTPrinter::visit(ElementaryTypeNameExpression const& _node)
 {
-	writeLine(string("ElementaryTypeNameExpression ") + Token::toString(_node.typeToken()));
+	writeLine(string("ElementaryTypeNameExpression ") + _node.typeName().toString());
 	printType(_node);
 	printSourcePart(_node);
 	return goDeeper();
