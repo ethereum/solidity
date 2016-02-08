@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_SUITE(SolidityTypes)
 BOOST_AUTO_TEST_CASE(storage_layout_simple)
 {
 	MemberList members(MemberList::MemberMap({
-		{string("first"), Type::fromElementaryTypeName("uint128")},
-		{string("second"), Type::fromElementaryTypeName("uint120")},
-		{string("wraps"), Type::fromElementaryTypeName("uint16")}
+		{string("first"), Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "128"))},
+		{string("second"), Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "120"))},
+		{string("wraps"), Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "16"))}
 	}));
 	BOOST_REQUIRE_EQUAL(u256(2), members.storageSize());
 	BOOST_REQUIRE(members.memberStorageOffset("first") != nullptr);
@@ -53,15 +53,15 @@ BOOST_AUTO_TEST_CASE(storage_layout_simple)
 BOOST_AUTO_TEST_CASE(storage_layout_mapping)
 {
 	MemberList members(MemberList::MemberMap({
-		{string("first"), Type::fromElementaryTypeName("uint128")},
+		{string("first"), Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "128"))},
 		{string("second"), make_shared<MappingType>(
-			Type::fromElementaryTypeName("uint8"),
-			Type::fromElementaryTypeName("uint8")
+			Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "8")),
+			Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "8"))
 		)},
-		{string("third"), Type::fromElementaryTypeName("uint16")},
+		{string("third"), Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "16"))},
 		{string("final"), make_shared<MappingType>(
-			Type::fromElementaryTypeName("uint8"),
-			Type::fromElementaryTypeName("uint8")
+			Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "8")),
+			Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "8"))
 		)},
 	}));
 	BOOST_REQUIRE_EQUAL(u256(4), members.storageSize());

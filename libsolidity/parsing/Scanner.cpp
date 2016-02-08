@@ -82,13 +82,9 @@ bool isWhiteSpace(char c)
 {
 	return c == ' ' || c == '\n' || c == '\t' || c == '\r';
 }
-bool isIdentifierStart(char c)
-{
-	return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
-}
 bool isIdentifierPart(char c)
 {
-	return isIdentifierStart(c) || isDecimalDigit(c);
+	return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 }
 
 int hexValue(char c)
@@ -382,8 +378,12 @@ Token::Value Scanner::scanSlash()
 void Scanner::scanToken()
 {
 	m_nextToken.literal.clear();
+	m_nextToken.extendedTokenInfo.clear();
 	m_nextSkippedComment.literal.clear();
+	m_nextSkippedComment.extendedTokenInfo.clear();
+
 	Token::Value token;
+	string tokenExtension = "";
 	do
 	{
 		// Remember the position of the next token
@@ -550,8 +550,8 @@ void Scanner::scanToken()
 			token = selectToken(Token::BitNot);
 			break;
 		default:
-			if (isIdentifierStart(m_char))
-				token = scanIdentifierOrKeyword();
+			if (isIdentifierPart(m_char))
+				tie(token, tokenExtension) = scanIdentifierOrKeyword();
 			else if (isDecimalDigit(m_char))
 				token = scanNumber();
 			else if (skipWhitespace())
@@ -568,6 +568,7 @@ void Scanner::scanToken()
 	while (token == Token::Whitespace);
 	m_nextToken.location.end = sourcePos();
 	m_nextToken.token = token;
+	m_nextToken.extendedTokenInfo = tokenExtension;
 }
 
 bool Scanner::scanEscape()
@@ -699,22 +700,34 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	// not be an identifier start or a decimal digit; see ECMA-262
 	// section 7.8.3, page 17 (note that we read only one decimal digit
 	// if the value is 0).
-	if (isDecimalDigit(m_char) || isIdentifierStart(m_char))
+	if (isDecimalDigit(m_char) || isIdentifierPart(m_char))
 		return Token::Illegal;
 	literal.complete();
 	return Token::Number;
 }
 
-Token::Value Scanner::scanIdentifierOrKeyword()
+tuple<Token::Value, string> Scanner::scanIdentifierOrKeyword()
 {
-	solAssert(isIdentifierStart(m_char), "");
+	solAssert(isIdentifierPart(m_char), "");
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	while (isIdentifierPart(m_char))
+	string keyword = "";
+	string description = "";
+	while (isIdentifierPart(m_char)) //get main keyword
+		addLiteralCharAndAdvance();
+	keyword = m_nextToken.literal;
+	while (isDecimalDigit(m_char) || isIdentifierPart(m_char)) //get the description
 		addLiteralCharAndAdvance();
 	literal.complete();
-	return Token::fromIdentifierOrKeyword(m_nextToken.literal);
+	if (m_nextToken.literal.find_first_of("0123456789") != string::npos)
+	{
+		description = m_nextToken.literal.substr(m_nextToken.literal.find_first_of("0123456789"));
+		keyword += "M";
+		if (description.find('x') != string::npos)
+			keyword += "xN";
+	}
+	return make_tuple(Token::fromIdentifierOrKeyword(keyword), description);
 }
 
 char CharStream::advanceAndGet(size_t _chars)
