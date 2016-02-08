@@ -592,7 +592,7 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 
 	if (Token::isElementaryTypeName(token))
 	{
-		ElementaryTypeNameToken elemTypeName(m_scanner->currentLiteral());
+		ElementaryTypeNameToken elemTypeName(token, m_scanner->currentTokenInfo());
 		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
 		m_scanner->next();
 	}
@@ -631,7 +631,8 @@ ASTPointer<Mapping> Parser::parseMapping()
 	expectToken(Token::LParen);
 	ASTPointer<ElementaryTypeName> keyType;
 	if (Token::isElementaryTypeName(m_scanner->currentToken()))
-		keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(ElementaryTypeNameToken(m_scanner->currentLiteral()));
+		keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>
+			(ElementaryTypeNameToken(m_scanner->currentToken(), m_scanner->currentTokenInfo()));
 	else
 		fatalParserError(string("Expected elementary type name for mapping key type"));
 	m_scanner->next();
@@ -830,7 +831,7 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	else
 	{
 		startedWithElementary = true;
-		ElementaryTypeNameToken elemToken(m_scanner->currentLiteral());
+		ElementaryTypeNameToken elemToken(m_scanner->currentToken(), m_scanner->currentTokenInfo());
 		path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(elemToken));
 		m_scanner->next();
 	}
@@ -1138,7 +1139,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
-			ElementaryTypeNameToken elementaryExpression(m_scanner->currentLiteral());
+			ElementaryTypeNameToken elementaryExpression(m_scanner->currentToken(), m_scanner->currentTokenInfo());
 			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elementaryExpression);
 			m_scanner->next();
 		}
