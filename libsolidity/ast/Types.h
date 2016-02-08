@@ -132,15 +132,15 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
-		FixedBytes, Contract, Struct, Function, Enum, Tuple,
-		Mapping, TypeType, Modifier, Magic, Module
+		Integer, IntegerConstant, FixedPoint, FixedPointConstant, StringLiteral, 
+		Bool, Array, FixedBytes, Contract, Struct, Function, Enum, 
+		Tuple, Mapping, TypeType, Modifier, Magic, Module
 	};
 
 	/// @{
 	/// @name Factory functions
 	/// Factory functions that convert an AST @ref TypeName to a Type.
-	static TypePointer fromElementaryTypeName(Token::Value _typeToken);
+	static TypePointer fromElementaryTypeName(ElementaryTypeNameToken _type);
 	static TypePointer fromElementaryTypeName(std::string const& _name);
 	/// @}
 
@@ -341,6 +341,51 @@ public:
 
 private:
 	bigint m_value;
+};
+
+/**
+ * Fixed data type, compromised of M bits on left and N bits on right side of the radix point.
+ */
+class FixedPointType: public Type
+{
+public:
+	enum class Modifier
+	{
+		Unsigned, Signed
+	};
+	virtual Category category() const override { return Category::FixedPoint; }
+
+	explicit FixedPointType(int integerBits, int fractionalBits, Modifier _modifier = Modifier::Unsigned);
+
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
+
+	virtual bool operator==(Type const& _other) const override;
+
+	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : (m_integerBits + m_fractionalBits) / 8; }
+	virtual unsigned storageBytes() const override { return (m_integerBits + m_fractionalBits) / 8; }
+	virtual bool isValueType() const override { return true; }
+
+	virtual MemberList::MemberMap nativeMembers(ContractDefinition const*) const override
+	{
+		return MemberList::MemberMap();
+	};
+
+	virtual std::string toString(bool _short) const override;
+
+	virtual TypePointer encodingType() const override { return shared_from_this(); }
+	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
+
+	int intBits() const { return m_fractionalBits; }
+	int fracBits() const { return m_fractionalBits;}
+	bool isSigned() const { return m_modifier == Modifier::Signed; }
+
+private:
+	int m_integerBits;
+	int m_fractionalBits;
+	Modifier m_modifier;
 };
 
 /**
