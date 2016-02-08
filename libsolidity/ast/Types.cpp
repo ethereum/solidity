@@ -166,7 +166,17 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
- 	return fromElementaryTypeName(ElementaryTypeNameToken(_name));
+	string keyword = _name.substr(0, _name.find_first_of("0123456789"));
+	string info = "";
+	if (_name.find_first_of("0123456789") != string::npos)
+	{
+		if (keyword == "ufixed" || keyword == "fixed")
+			keyword += "MxN";
+		else
+			keyword += "M";
+		info = _name.substr(_name.find_first_of("0123456789"));
+	}
+ 	return fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword(keyword), info));
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
@@ -626,7 +636,7 @@ string FixedPointType::toString(bool) const
 
 TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (_other->category() != Category::FixedPointConstant && _other->category() != category())
+	if (_other->category() != Category::FixedPoint && _other->category() != category())
 		return TypePointer();
 	auto commonType = dynamic_pointer_cast<FixedPointType const>(Type::commonType(shared_from_this(), _other));
 

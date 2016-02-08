@@ -199,10 +199,10 @@ namespace solidity
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
-	K(Fixed, "fixed", 0)                                                 \
-	K(FixedMxN, "fixedMxN", 0)                                           \
-	K(UFixed, "ufixed", 0)                                               \
-	K(UFixedMxN, "ufixedMxN", 0)                                         \
+	K(Fixed, "fixed", 0)                                               \
+	K(FixedMxN, "fixedMxN", 0)                                         \
+	K(UFixed, "ufixed", 0)                                             \
+	K(UFixedMxN, "ufixedMxN", 0)                                       \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
@@ -315,25 +315,25 @@ private:
 class ElementaryTypeNameToken
 {
 public:
-	ElementaryTypeNameToken(std::string token)
+	ElementaryTypeNameToken(Token::Value token, std::string const& description)
 	{
-		solAssert(isElementaryTypeName(token), "");
-		std::tie(tok, M, N) = setTypes(token);
-		m_name = token;
+		solAssert(isElementaryTypeName(token, description), "");
+		std::tie(m_name, M, N) = setTypes(token, description);
+		tok = token;
 	}
 	
-	std::string toString(bool tokValue = false) { return tokValue ? Token::toString(tok) : m_name; }
+	std::string toString(bool const& tokValue = false) { return tokValue ? Token::toString(tok) : m_name; }
 	unsigned int returnM() { return M; }
 	unsigned int returnN() { return N; }
 	Token::Value returnTok() { return tok; }
-	static bool isElementaryTypeName(std::string _type);
+	static bool isElementaryTypeName(Token::Value _baseType, std::string const& _info);
 
 private:
 	Token::Value tok;
 	std::string m_name;
 	unsigned int M;
 	unsigned int N;
-	std::tuple<Token::Value, unsigned int, unsigned int> setTypes(std::string toSet);
+	std::tuple<std::string, unsigned int, unsigned int> setTypes(Token::Value _baseType, std::string const& _toSet);
 };
 
 }
