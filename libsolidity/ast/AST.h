@@ -756,14 +756,14 @@ public:
 class ElementaryTypeName: public TypeName
 {
 public:
-	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken _elem):
+	ElementaryTypeName(SourceLocation const& _location, ElementaryTypeNameToken const& _elem):
 		TypeName(_location), m_type(_elem)
 	{}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	ElementaryTypeNameToken typeName() const { return m_type; }
+	ElementaryTypeNameToken const& typeName() const { return m_type; }
 
 private:
 	ElementaryTypeNameToken m_type;
@@ -1407,13 +1407,13 @@ private:
 class ElementaryTypeNameExpression: public PrimaryExpression
 {
 public:
-	ElementaryTypeNameExpression(SourceLocation const& _location, ElementaryTypeNameToken _type):
+	ElementaryTypeNameExpression(SourceLocation const& _location, ElementaryTypeNameToken const& _type):
 		PrimaryExpression(_location), m_typeToken(_type)
 	{}
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	ElementaryTypeNameToken typeName() const { return m_typeToken; }
+	ElementaryTypeNameToken const& typeName() const { return m_typeToken; }
 
 private:
 	ElementaryTypeNameToken m_typeToken;
