@@ -195,7 +195,6 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 	while (true)
 	{
 		Token::Value currentTokenValue = m_scanner->currentToken();
-		string lit = m_scanner->currentLiteral();
 		if (currentTokenValue == Token::RBrace)
 			break;
 		else if (currentTokenValue == Token::Function)
@@ -1138,6 +1137,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
+			//used for casts
 			ElementaryTypeNameToken elementaryExpression(m_scanner->currentToken(), m_scanner->currentTokenInfo());
 			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elementaryExpression);
 			m_scanner->next();

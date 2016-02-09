@@ -302,7 +302,7 @@ public:
 		return m_precedence[tok];
 	}
 
-	static Token::Value fromIdentifierOrKeyword(std::string const& _name);
+	static std::tuple<Token::Value, std::string> fromIdentifierOrKeyword(std::string const& _name);
 
 private:
 	static char const* const m_name[NUM_TOKENS];
@@ -314,25 +314,25 @@ private:
 class ElementaryTypeNameToken
 {
 public:
-	ElementaryTypeNameToken(Token::Value token, std::string const& description)
+	ElementaryTypeNameToken(Token::Value _token, std::string const& _detail)
 	{
-		solAssert(isElementaryTypeName(token, description), "");
-		std::tie(m_name, M, N) = setTypes(token, description);
-		tok = token;
+		std::tie(m_name, m_firstNumber, m_secondNumber) = parseDetails(_token, _detail);
+		m_token = _token;
 	}
-	
-	std::string toString(bool const& tokValue = false) const& { return tokValue ? Token::toString(tok) : m_name; }
-	unsigned int const& returnM() const& { return M; }
-	unsigned int const& returnN() const& { return N; }
-	Token::Value const& returnTok() const& { return tok; }
-	static bool isElementaryTypeName(Token::Value _baseType, std::string const& _info);
+
+	unsigned int const& firstNumber() const { return m_firstNumber; }
+	unsigned int const& secondNumber() const { return m_secondNumber; }
+	Token::Value const& returnTok() const { return m_token; }
+	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
+	std::string toString(bool const& tokValue = false) const { return tokValue ? Token::toString(m_token) : m_name; }
 
 private:
-	Token::Value tok;
+	Token::Value m_token;
 	std::string m_name;
-	unsigned int M;
-	unsigned int N;
-	std::tuple<std::string, unsigned int, unsigned int> setTypes(Token::Value _baseType, std::string const& _toSet);
+	unsigned int m_firstNumber;
+	unsigned int m_secondNumber;
+	/// throws if _details is malformed
+	std::tuple<std::string, unsigned int, unsigned int> parseDetails(Token::Value _baseType, std::string const& _details);
 };
 
 }
