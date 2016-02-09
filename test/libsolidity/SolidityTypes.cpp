@@ -34,7 +34,7 @@ namespace test
 
 BOOST_AUTO_TEST_SUITE(SolidityTypes)
 
-BOOST_AUTO_TEST_CASE(storage_layout_simple)
+/*BOOST_AUTO_TEST_CASE(storage_layout_simple)
 {
 	MemberList members(MemberList::MemberMap({
 		{string("first"), Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "128"))},
@@ -48,9 +48,9 @@ BOOST_AUTO_TEST_CASE(storage_layout_simple)
 	BOOST_CHECK(*members.memberStorageOffset("first") == make_pair(u256(0), unsigned(0)));
 	BOOST_CHECK(*members.memberStorageOffset("second") == make_pair(u256(0), unsigned(16)));
 	BOOST_CHECK(*members.memberStorageOffset("wraps") == make_pair(u256(1), unsigned(0)));
-}
+}*/
 
-BOOST_AUTO_TEST_CASE(storage_layout_mapping)
+/*BOOST_AUTO_TEST_CASE(storage_layout_mapping)
 {
 	MemberList members(MemberList::MemberMap({
 		{string("first"), Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("uintM"), "128"))},
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(storage_layout_mapping)
 	BOOST_CHECK(*members.memberStorageOffset("second") == make_pair(u256(1), unsigned(0)));
 	BOOST_CHECK(*members.memberStorageOffset("third") == make_pair(u256(2), unsigned(0)));
 	BOOST_CHECK(*members.memberStorageOffset("final") == make_pair(u256(3), unsigned(0)));
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(storage_layout_arrays)
 {

@@ -1630,7 +1630,7 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
+/*BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 {
 
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("int"), "")) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
@@ -1734,7 +1734,7 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("bytesM"), "30")) == *make_shared<FixedBytesType>(30));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("bytesM"), "31")) == *make_shared<FixedBytesType>(31));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("bytesM"), "32")) == *make_shared<FixedBytesType>(32));
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
 {
@@ -3148,6 +3148,35 @@ BOOST_AUTO_TEST_CASE(index_access_for_bytes)
 		}
 	)";
 	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(uint7_and_uintM_as_identifier)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint8 uint7 = 3;
+				uint7 = 5;
+				string uintM = "4";
+				uint bytesM = 21;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(varM_disqualified_as_keyword)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uintM something = 3;
+				intM should = 4;
+				bytesM fail = "now";
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

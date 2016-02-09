@@ -122,7 +122,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 		"Expected an elementary type name but got " + tokenString);
 
 	Token::Value token = _type.returnTok();
-	unsigned int M = _type.returnM();
+	unsigned int M = _type.firstNumber();
 
 	switch (token)
 	{
@@ -156,14 +156,10 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
-	string keyword = _name.substr(0, _name.find_first_of("0123456789"));
-	string info = "";
-	if (_name.find_first_of("0123456789") != string::npos)
-	{
-		keyword += "M";
-		info = _name.substr(_name.find_first_of("0123456789"));
-	}
- 	return fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword(keyword), info));
+	string details;
+	Token::Value token;
+	tie(token, details) = Token::fromIdentifierOrKeyword(_name);
+ 	return fromElementaryTypeName(ElementaryTypeNameToken(token, details));
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)

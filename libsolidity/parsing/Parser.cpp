@@ -1102,6 +1102,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Identifier:
+		cout << "hit identifier for primary expression" << endl;
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
 		break;
@@ -1138,6 +1139,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
+			//used for casts
 			ElementaryTypeNameToken elementaryExpression(m_scanner->currentToken(), m_scanner->currentTokenInfo());
 			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elementaryExpression);
 			m_scanner->next();
@@ -1208,7 +1210,10 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	{
 		Token::Value next = m_scanner->peekNextToken();
 		if (next == Token::Identifier || Token::isLocationSpecifier(next))
+		{
+			cout << "Peek statement type says this here is an identifier" << endl;
 			return LookAheadInfo::VariableDeclarationStatement;
+		}
 		if (next == Token::LBrack || next == Token::Period)
 			return LookAheadInfo::IndexAccessStructure;
 	}
@@ -1308,12 +1313,14 @@ ASTPointer<ASTString> Parser::expectIdentifierToken()
 			string(Token::name(m_scanner->currentToken())) +
 			string("'")
 		);
+	cout << "hit expect Identifier Token" << endl;
 	return getLiteralAndAdvance();
 }
 
 ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 {
 	ASTPointer<ASTString> identifier = make_shared<ASTString>(m_scanner->currentLiteral());
+	cout << *identifier << endl;
 	m_scanner->next();
 	return identifier;
 }
