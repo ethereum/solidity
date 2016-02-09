@@ -50,42 +50,61 @@ namespace dev
 namespace solidity
 {
 
-bool ElementaryTypeNameToken::isElementaryTypeName(Token::Value _baseType, string const& _info)
+tuple<string, string> ElementaryTypeNameToken::getKeywordAndDetails(string const& _literal)
 {
-	if (!Token::isElementaryTypeName(_baseType))
-		return false;
-	string baseType = Token::toString(_baseType);
-	if (baseType.find('M') == string::npos)
-		return true;
-	short m;
-	m = stoi(_info.substr(_info.find_first_of("0123456789")));
-
-	if (baseType == "bytesM")
-		return (0 < m && m <= 32) ? true : false;
-	else if (baseType == "uintM" || baseType == "intM")
-		return (0 < m && m <= 256 && m % 8 == 0) ? true : false;
-	else if (baseType == "ufixedMxN" || baseType == "fixedMxN")
+	/// {_literal, ""} simply means that it is not a keyword and rather an identifier
+	if (_literal.find_first_of("0123456789") != string::npos)
 	{
-		short n;
-		m = stoi(_info.substr(_info.find_first_of("0123456789"), _info.find_last_of("x") - 1));
-		n = stoi(_info.substr(_info.find_last_of("x") + 1));
-		return (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0)));
+		string baseType = _literal.substr(0, _literal.find_first_of("0123456789"));
+		short m = stoi(_literal.substr(_literal.find_first_of("0123456789")));
+		if (baseType == "bytes")
+			return (0 < m && m <= 32) ? make_tuple(baseType + "M", to_string(m)) : make_tuple(_literal, "");
+		else if (baseType == "uint" || baseType == "int")
+			return (0 < m && m <= 256 && m % 8 == 0) ? make_tuple(baseType + "M", to_string(m)) : make_tuple(_literal, "");
+		else if (baseType == "ufixed" || baseType == "fixed")
+		{
+			m = stoi(_literal.substr(_literal.find_first_of("0123456789"), _literal.find_last_of("x") - 1));
+			short n = stoi(_literal.substr(_literal.find_last_of("x") + 1));
+			return (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0))) ? 
+				make_tuple(baseType + "MxN", to_string(m) + "x" + to_string(n)) : make_tuple(_literal, "");
+		}
+		else
+			return make_tuple(_literal, "");
 	}
-	return false;
+	else
+		return make_tuple(_literal, "");
 }
 
-tuple<string, unsigned int, unsigned int> ElementaryTypeNameToken::setTypes(Token::Value _baseType, string const& _toSet)
+tuple<string, unsigned int, unsigned int> ElementaryTypeNameToken::parseDetails(Token::Value _baseType, string const& _details)
 {
+	solAssert(Token::isElementaryTypeName(_baseType), "");
 	string baseType = Token::toString(_baseType);
-	if (_toSet.find_first_of("0123456789") == string::npos)
+	if (_details.length() == 0)
 		return make_tuple(baseType, 0, 0);
-	baseType = baseType.substr(0, baseType.find('M') - 1) + _toSet;
-	size_t index = _toSet.find('x') == string::npos ? string::npos : _toSet.find('x') - 1;
-	unsigned int m = stoi(_toSet.substr(0, index));
-	unsigned int n = 0;
-	if (baseType == "fixed" || baseType == "ufixed")
-		n = stoi(_toSet.substr(_toSet.find('x') + 1));
-	return make_tuple(baseType, m, n);
+
+	if (baseType == "bytesM")
+	{
+		for (unsigned m = 1; m <= 32; m++)
+			if (to_string(m) == _details)
+				return make_tuple(baseType.substr(0, baseType.size()-1) + to_string(m), m, 0);
+	}
+	else if (baseType == "uintM" || baseType == "intM")
+	{
+		for (unsigned m = 8; m <= 256; m+=8)
+			if (to_string(m) == _details)
+				return make_tuple(baseType.substr(0, baseType.size()-1) + to_string(m), m, 0);
+	}
+	else if (baseType == "ufixedMxN" || baseType == "fixedMxN")
+	{
+		for (unsigned m = 0; m <= 256; m+=8)
+			for (unsigned n = 8; m + n <= 256; n+=8)
+				if ((to_string(m) + "x" + to_string(n)) == _details)
+					return make_tuple(baseType.substr(0, baseType.size()-3) + to_string(m) + "x" + to_string(n), m, n);
+	}
+	
+	BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << 
+		errinfo_comment("Cannot create elementary type name token out of type " + baseType + " and size " + _details)
+	);	
 }
 
 #define T(name, string, precedence) #name,

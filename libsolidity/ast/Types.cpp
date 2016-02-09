@@ -122,7 +122,7 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 		"Expected an elementary type name but got " + tokenString);
 
 	Token::Value token = _type.returnTok();
-	unsigned int M = _type.returnM();
+	unsigned int M = _type.firstNumber();
 
 	switch (token)
 	{

@@ -3137,6 +3137,34 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(uint7_and_uintM_as_identifier)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint8 uint7 = 3;
+				uint7 = 5;
+				string uintM = "4";
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(uint7_as_identifier)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uintM something = 3;
+				intM should = 4;
+				bytesM fail = "now";
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -82,7 +82,7 @@ bool isWhiteSpace(char c)
 {
 	return c == ' ' || c == '\n' || c == '\t' || c == '\r';
 }
-bool isIdentifierPart(char c)
+bool isIdentifierStart(char c)
 {
 	return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 }
@@ -383,7 +383,7 @@ void Scanner::scanToken()
 	m_nextSkippedComment.extendedTokenInfo.clear();
 
 	Token::Value token;
-	string tokenExtension = "";
+	string tokenExtension;
 	do
 	{
 		// Remember the position of the next token
@@ -550,7 +550,7 @@ void Scanner::scanToken()
 			token = selectToken(Token::BitNot);
 			break;
 		default:
-			if (isIdentifierPart(m_char))
+			if (isIdentifierStart(m_char))
 				tie(token, tokenExtension) = scanIdentifierOrKeyword();
 			else if (isDecimalDigit(m_char))
 				token = scanNumber();
@@ -700,7 +700,7 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	// not be an identifier start or a decimal digit; see ECMA-262
 	// section 7.8.3, page 17 (note that we read only one decimal digit
 	// if the value is 0).
-	if (isDecimalDigit(m_char) || isIdentifierPart(m_char))
+	if (isDecimalDigit(m_char) || isIdentifierStart(m_char))
 		return Token::Illegal;
 	literal.complete();
 	return Token::Number;
@@ -708,26 +708,17 @@ Token::Value Scanner::scanNumber(char _charSeen)
 
 tuple<Token::Value, string> Scanner::scanIdentifierOrKeyword()
 {
-	solAssert(isIdentifierPart(m_char), "");
+	solAssert(isIdentifierStart(m_char), "");
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	string keyword = "";
-	string description = "";
-	while (isIdentifierPart(m_char)) //get main keyword
-		addLiteralCharAndAdvance();
-	keyword = m_nextToken.literal;
-	while (isDecimalDigit(m_char) || isIdentifierPart(m_char)) //get the description
+	string keyword;
+	string details;
+	while (isDecimalDigit(m_char) || isIdentifierStart(m_char)) //get full literal
 		addLiteralCharAndAdvance();
 	literal.complete();
-	if (m_nextToken.literal.find_first_of("0123456789") != string::npos)
-	{
-		description = m_nextToken.literal.substr(m_nextToken.literal.find_first_of("0123456789"));
-		keyword += "M";
-		if (description.find('x') != string::npos)
-			keyword += "xN";
-	}
-	return make_tuple(Token::fromIdentifierOrKeyword(keyword), description);
+	tie(keyword, details) = ElementaryTypeNameToken::getKeywordAndDetails(m_nextToken.literal);	
+	return make_tuple(Token::fromIdentifierOrKeyword(keyword), details);
 }
 
 char CharStream::advanceAndGet(size_t _chars)
