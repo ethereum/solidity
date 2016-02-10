@@ -188,10 +188,19 @@ How do you represent double/float in Solidity?
 
 This is not yet possible.
 
-Is it possible to in-line initialize an array like so: string32[] myarray = ["a", "b"];
+Is it possible to in-line initialize an array like so: string[] myarray = ["a", "b"];
 =======================================================================================
 
-This is not yet possible.
+Yes. However it should be noted that this currently only works with statically sized memory arrays. You can even create an inline memory
+array in the return statement. Pretty cool, huh?
+
+Example::
+    contract C {
+        function f() returns (uint) {
+            string[4] memory AdaArr = ["This", "is", "an", "array"];
+            return ([1, 2, 3, 4][2]);
+        }
+    }
 
 What are events and why do we need them?
 ========================================
