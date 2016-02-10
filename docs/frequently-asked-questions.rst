@@ -195,10 +195,11 @@ Yes. However it should be noted that this currently only works with statically s
 array in the return statement. Pretty cool, huh?
 
 Example::
+
     contract C {
-        function f() returns (uint) {
+        function f() returns (uint8[5]) {
             string[4] memory AdaArr = ["This", "is", "an", "array"];
-            return ([1, 2, 3, 4][2]);
+            return ([1, 2, 3, 4, 5]);
         }
     }
 
