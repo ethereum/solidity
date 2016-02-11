@@ -50,29 +50,39 @@ namespace dev
 namespace solidity
 {
 
-tuple<string, string> ElementaryTypeNameToken::getKeywordAndDetails(string const& _literal)
+tuple<string, string, bool> ElementaryTypeNameToken::getKeywordAndDetails(string const& _literal)
 {
-	/// {_literal, ""} simply means that it is not a keyword and rather an identifier
+	bool containsFlexibleType = false; //to determine whether or not flexible type is used as literal
 	if (_literal.find_first_of("0123456789") != string::npos)
 	{
 		string baseType = _literal.substr(0, _literal.find_first_of("0123456789"));
 		short m = stoi(_literal.substr(_literal.find_first_of("0123456789")));
 		if (baseType == "bytes")
-			return (0 < m && m <= 32) ? make_tuple(baseType + "M", to_string(m)) : make_tuple(_literal, "");
+			return (0 < m && m <= 32) ? 
+				make_tuple(baseType + "M", to_string(m), containsFlexibleType) : 
+				make_tuple(_literal, "", containsFlexibleType);
 		else if (baseType == "uint" || baseType == "int")
-			return (0 < m && m <= 256 && m % 8 == 0) ? make_tuple(baseType + "M", to_string(m)) : make_tuple(_literal, "");
+			return (0 < m && m <= 256 && m % 8 == 0) ? 
+				make_tuple(baseType + "M", to_string(m), containsFlexibleType) : 
+				make_tuple(_literal, "", containsFlexibleType);
 		else if (baseType == "ufixed" || baseType == "fixed")
 		{
 			m = stoi(_literal.substr(_literal.find_first_of("0123456789"), _literal.find_last_of("x") - 1));
 			short n = stoi(_literal.substr(_literal.find_last_of("x") + 1));
 			return (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0))) ? 
-				make_tuple(baseType + "MxN", to_string(m) + "x" + to_string(n)) : make_tuple(_literal, "");
+				make_tuple(baseType + "MxN", to_string(m) + "x" + to_string(n), containsFlexibleType) : 
+				make_tuple(_literal, "", containsFlexibleType);
 		}
 		else
-			return make_tuple(_literal, "");
+			return make_tuple(_literal, "", containsFlexibleType);
+	}
+	else if (_literal == "uintM" || _literal == "intM" || _literal == "fixedMxN" || _literal == "ufixedMxN" || _literal == "bytesM")
+	{
+		containsFlexibleType = true;
+		return make_tuple(_literal, "", containsFlexibleType);
 	}
 	else
-		return make_tuple(_literal, "");
+		return make_tuple(_literal, "", containsFlexibleType);
 }
 
 tuple<string, unsigned int, unsigned int> ElementaryTypeNameToken::parseDetails(Token::Value _baseType, string const& _details)
@@ -137,7 +147,7 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-Token::Value Token::fromIdentifierOrKeyword(const string& _name)
+pair<Token::Value, ElementaryTypeNameToken> Token::fromIdentifierOrKeyword(const string& _name)
 {
 	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
 	// and keywords to be put inside the keywords variable.
@@ -147,7 +157,7 @@ Token::Value Token::fromIdentifierOrKeyword(const string& _name)
 #undef KEYWORD
 #undef TOKEN
 	auto it = keywords.find(_name);
-	return it == keywords.end() ? Token::Identifier : it->second;
+	return it == keywords.end() ? make_pair(Token::Identifier, "") : it->second;
 }
 
 #undef KT

@@ -86,7 +86,10 @@ bool isIdentifierStart(char c)
 {
 	return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 }
-
+bool isIdentifierPart(char c)
+{
+	return isIdentifierStart(c) || isDecimalDigit(c);
+}
 int hexValue(char c)
 {
 	if (c >= '0' && c <= '9')
@@ -714,11 +717,14 @@ tuple<Token::Value, string> Scanner::scanIdentifierOrKeyword()
 	// Scan the rest of the identifier characters.
 	string keyword;
 	string details;
-	while (isDecimalDigit(m_char) || isIdentifierStart(m_char)) //get full literal
+	bool isFlexibleType;
+	while (isIdentifierPart(m_char)) //get full literal
 		addLiteralCharAndAdvance();
 	literal.complete();
-	tie(keyword, details) = ElementaryTypeNameToken::getKeywordAndDetails(m_nextToken.literal);	
-	return make_tuple(Token::fromIdentifierOrKeyword(keyword), details);
+	tie(keyword, details, isFlexibleType) = ElementaryTypeNameToken::getKeywordAndDetails(m_nextToken.literal);
+	return isFlexibleType ? 
+			make_tuple(selectToken(Token::Identifier), details) : 
+			make_tuple(Token::fromIdentifierOrKeyword(keyword));
 }
 
 char CharStream::advanceAndGet(size_t _chars)

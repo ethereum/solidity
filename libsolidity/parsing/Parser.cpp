@@ -1138,6 +1138,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 	default:
 		if (Token::isElementaryTypeName(token))
 		{
+			//used for casts
 			ElementaryTypeNameToken elementaryExpression(m_scanner->currentToken(), m_scanner->currentTokenInfo());
 			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elementaryExpression);
 			m_scanner->next();

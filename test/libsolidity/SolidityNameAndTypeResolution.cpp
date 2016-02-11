@@ -3164,7 +3164,7 @@ BOOST_AUTO_TEST_CASE(uint7_and_uintM_as_identifier)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(uint7_as_identifier)
+BOOST_AUTO_TEST_CASE(varM_disqualified_as_keyword)
 {
 	char const* text = R"(
 		contract test {
