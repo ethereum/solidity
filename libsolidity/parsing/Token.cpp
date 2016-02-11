@@ -50,6 +50,38 @@ namespace dev
 namespace solidity
 {
 
+tuple<string, unsigned int, unsigned int> ElementaryTypeNameToken::parseDetails(Token::Value _baseType, string const& _details)
+{
+	solAssert(Token::isElementaryTypeName(_baseType), "");
+	string baseType = Token::toString(_baseType);
+	if (_details.length() == 0)
+		return make_tuple(baseType, 0, 0);
+
+	if (baseType == "bytesM")
+	{
+		for (unsigned m = 1; m <= 32; m++)
+			if (to_string(m) == _details)
+				return make_tuple(baseType.substr(0, baseType.size()-1) + to_string(m), m, 0);
+	}
+	else if (baseType == "uintM" || baseType == "intM")
+	{
+		for (unsigned m = 8; m <= 256; m+=8)
+			if (to_string(m) == _details)
+				return make_tuple(baseType.substr(0, baseType.size()-1) + to_string(m), m, 0);
+	}
+	else if (baseType == "ufixedMxN" || baseType == "fixedMxN")
+	{
+		for (unsigned m = 0; m <= 256; m+=8)
+			for (unsigned n = 8; m + n <= 256; n+=8)
+				if ((to_string(m) + "x" + to_string(n)) == _details)
+					return make_tuple(baseType.substr(0, baseType.size()-3) + to_string(m) + "x" + to_string(n), m, n);
+	}
+	
+	BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << 
+		errinfo_comment("Cannot create elementary type name token out of type " + baseType + " and size " + _details)
+	);	
+}
+
 #define T(name, string, precedence) #name,
 char const* const Token::m_name[NUM_TOKENS] =
 {
@@ -80,8 +112,35 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-Token::Value Token::fromIdentifierOrKeyword(const std::string& _name)
+tuple<Token::Value, string> Token::fromIdentifierOrKeyword(const string& _literal)
 {
+	string token = _literal;
+	string details;
+	if (_literal == "uintM" || _literal == "intM" || _literal == "fixedMxN" || _literal == "ufixedMxN" || _literal == "bytesM")
+		return make_pair(Token::Identifier, details);
+	if (_literal.find_first_of("0123456789") != string::npos)
+	{
+		string baseType = _literal.substr(0, _literal.find_first_of("0123456789"));
+		short m = stoi(_literal.substr(_literal.find_first_of("0123456789")));
+		if (baseType == "bytes")
+		{
+			details = (0 < m && m <= 32) ? to_string(m) : "";
+			token = details.empty() ? _literal : baseType + "M";
+		}
+		else if (baseType == "uint" || baseType == "int")
+		{
+			details = (0 < m && m <= 256 && m % 8 == 0) ? to_string(m) : "";
+			token = details.empty() ? _literal : baseType + "M";
+		}
+		else if (baseType == "ufixed" || baseType == "fixed")
+		{
+			m = stoi(to_string(m).substr(0, to_string(m).find_first_of("x") - 1));
+			short n = stoi(_literal.substr(_literal.find_last_of("x") + 1));
+			details = (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0))) ? 
+						to_string(m) + "x" + to_string(n) : "";
+			token = details.empty() ? _literal : baseType + "MxN" ;
+		}
+	}
 	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
 	// and keywords to be put inside the keywords variable.
 #define KEYWORD(name, string, precedence) {string, Token::name},
@@ -89,8 +148,8 @@ Token::Value Token::fromIdentifierOrKeyword(const std::string& _name)
 	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
 #undef KEYWORD
 #undef TOKEN
-	auto it = keywords.find(_name);
-	return it == keywords.end() ? Token::Identifier : it->second;
+	auto it = keywords.find(token);
+	return it == keywords.end() ? make_pair(Token::Identifier, details) : make_pair(it->second, details);
 }
 
 #undef KT
