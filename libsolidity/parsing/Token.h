@@ -302,7 +302,7 @@ public:
 		return m_precedence[tok];
 	}
 
-	static Token::Value fromIdentifierOrKeyword(std::string const& _name);
+	static std::tuple<Token::Value, std::string> fromIdentifierOrKeyword(std::string const& _name);
 
 private:
 	static char const* const m_name[NUM_TOKENS];
@@ -323,7 +323,6 @@ public:
 	unsigned int const& firstNumber() const& { return m_firstNumber; }
 	unsigned int const& secondNumber() const& { return m_secondNumber; }
 	Token::Value const& returnTok() const& { return m_token; }
-	static std::tuple<std::string, std::string, bool> getKeywordAndDetails(std::string const& _literal);
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
 	std::string toString(bool const& tokValue = false) const { return tokValue ? Token::toString(m_token) : m_name; }
 

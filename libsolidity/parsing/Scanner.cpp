@@ -715,16 +715,10 @@ tuple<Token::Value, string> Scanner::scanIdentifierOrKeyword()
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	string keyword;
-	string details;
-	bool isFlexibleType;
 	while (isIdentifierPart(m_char)) //get full literal
 		addLiteralCharAndAdvance();
 	literal.complete();
-	tie(keyword, details, isFlexibleType) = ElementaryTypeNameToken::getKeywordAndDetails(m_nextToken.literal);
-	return isFlexibleType ? 
-			make_tuple(selectToken(Token::Identifier), details) : 
-			make_tuple(Token::fromIdentifierOrKeyword(keyword));
+	return Token::fromIdentifierOrKeyword(m_nextToken.literal);
 }
 
 char CharStream::advanceAndGet(size_t _chars)

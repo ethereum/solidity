@@ -1630,7 +1630,7 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
+/*BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 {
 
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("int"), "")) == *make_shared<IntegerType>(256, IntegerType::Modifier::Signed));
@@ -1734,7 +1734,7 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("bytesM"), "30")) == *make_shared<FixedBytesType>(30));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("bytesM"), "31")) == *make_shared<FixedBytesType>(31));
 	BOOST_CHECK(*Type::fromElementaryTypeName(ElementaryTypeNameToken(Token::fromIdentifierOrKeyword("bytesM"), "32")) == *make_shared<FixedBytesType>(32));
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(test_byte_is_alias_of_byte1)
 {
@@ -3158,6 +3158,7 @@ BOOST_AUTO_TEST_CASE(uint7_and_uintM_as_identifier)
 				uint8 uint7 = 3;
 				uint7 = 5;
 				string uintM = "4";
+				uint bytesM = 21;
 			}
 		}
 	)";

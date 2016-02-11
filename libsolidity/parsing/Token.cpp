@@ -50,7 +50,7 @@ namespace dev
 namespace solidity
 {
 
-tuple<string, string, bool> ElementaryTypeNameToken::getKeywordAndDetails(string const& _literal)
+/*tuple<string, string, bool> ElementaryTypeNameToken::getKeywordAndDetails(string const& _literal)
 {
 	bool containsFlexibleType = false; //to determine whether or not flexible type is used as literal
 	if (_literal.find_first_of("0123456789") != string::npos)
@@ -83,7 +83,7 @@ tuple<string, string, bool> ElementaryTypeNameToken::getKeywordAndDetails(string
 	}
 	else
 		return make_tuple(_literal, "", containsFlexibleType);
-}
+}*/
 
 tuple<string, unsigned int, unsigned int> ElementaryTypeNameToken::parseDetails(Token::Value _baseType, string const& _details)
 {
@@ -147,8 +147,35 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-pair<Token::Value, ElementaryTypeNameToken> Token::fromIdentifierOrKeyword(const string& _name)
+tuple<Token::Value, string> Token::fromIdentifierOrKeyword(const string& _literal)
 {
+	string token = _literal;
+	string details;
+	if (_literal == "uintM" || _literal == "intM" || _literal == "fixedMxN" || _literal == "ufixedMxN" || _literal == "bytesM")
+		return make_pair(Token::Identifier, details);
+	if (_literal.find_first_of("0123456789") != string::npos)
+	{
+		string baseType = _literal.substr(0, _literal.find_first_of("0123456789"));
+		short m = stoi(_literal.substr(_literal.find_first_of("0123456789")));
+		if (baseType == "bytes")
+		{
+			details = (0 < m && m <= 32) ? to_string(m) : "";
+			token = details.empty() ? _literal : baseType + "M";
+		}
+		else if (baseType == "uint" || baseType == "int")
+		{
+			details = (0 < m && m <= 256 && m % 8 == 0) ? to_string(m) : "";
+			token = details.empty() ? _literal : baseType + "M";
+		}
+		else if (baseType == "ufixed" || baseType == "fixed")
+		{
+			m = stoi(to_string(m).substr(0, to_string(m).find_first_of("x") - 1));
+			short n = stoi(_literal.substr(_literal.find_last_of("x") + 1));
+			details = (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0))) ? 
+						to_string(m) + "x" + to_string(n) : "";
+			token = details.empty() ? _literal : baseType + "MxN" ;
+		}
+	}
 	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
 	// and keywords to be put inside the keywords variable.
 #define KEYWORD(name, string, precedence) {string, Token::name},
@@ -156,8 +183,8 @@ pair<Token::Value, ElementaryTypeNameToken> Token::fromIdentifierOrKeyword(const
 	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
 #undef KEYWORD
 #undef TOKEN
-	auto it = keywords.find(_name);
-	return it == keywords.end() ? make_pair(Token::Identifier, "") : it->second;
+	auto it = keywords.find(token);
+	return it == keywords.end() ? make_pair(Token::Identifier, details) : make_pair(it->second, details);
 }
 
 #undef KT
