@@ -3157,8 +3157,9 @@ BOOST_AUTO_TEST_CASE(uint7_and_uintM_as_identifier)
 			function f() {
 				uint8 uint7 = 3;
 				uint7 = 5;
-				string uintM = "4";
+				//string uintM = "Hello you";
 				uint bytesM = 21;
+				int uintM = 33;
 			}
 		}
 	)";

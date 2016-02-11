@@ -1102,7 +1102,6 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		expression = nodeFactory.createNode<Literal>(token, getLiteralAndAdvance());
 		break;
 	case Token::Identifier:
-		cout << "hit identifier for primary expression" << endl;
 		nodeFactory.markEndPosition();
 		expression = nodeFactory.createNode<Identifier>(getLiteralAndAdvance());
 		break;
@@ -1210,10 +1209,7 @@ Parser::LookAheadInfo Parser::peekStatementType() const
 	{
 		Token::Value next = m_scanner->peekNextToken();
 		if (next == Token::Identifier || Token::isLocationSpecifier(next))
-		{
-			cout << "Peek statement type says this here is an identifier" << endl;
 			return LookAheadInfo::VariableDeclarationStatement;
-		}
 		if (next == Token::LBrack || next == Token::Period)
 			return LookAheadInfo::IndexAccessStructure;
 	}
