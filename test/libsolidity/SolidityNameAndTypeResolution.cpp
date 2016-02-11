@@ -3154,12 +3154,12 @@ BOOST_AUTO_TEST_CASE(uint7_and_uintM_as_identifier)
 {
 	char const* text = R"(
 		contract test {
+		string uintM = "Hello 4 you";
 			function f() {
 				uint8 uint7 = 3;
 				uint7 = 5;
-				//string uintM = "Hello you";
+				string memory intM;
 				uint bytesM = 21;
-				int uintM = 33;
 			}
 		}
 	)";

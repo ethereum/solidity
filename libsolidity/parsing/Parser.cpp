@@ -1309,14 +1309,12 @@ ASTPointer<ASTString> Parser::expectIdentifierToken()
 			string(Token::name(m_scanner->currentToken())) +
 			string("'")
 		);
-	cout << "hit expect Identifier Token" << endl;
 	return getLiteralAndAdvance();
 }
 
 ASTPointer<ASTString> Parser::getLiteralAndAdvance()
 {
 	ASTPointer<ASTString> identifier = make_shared<ASTString>(m_scanner->currentLiteral());
-	cout << *identifier << endl;
 	m_scanner->next();
 	return identifier;
 }
