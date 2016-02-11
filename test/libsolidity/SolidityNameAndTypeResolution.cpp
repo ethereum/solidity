@@ -3136,6 +3136,21 @@ BOOST_AUTO_TEST_CASE(conditional_with_all_types)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(constructor_call_invalid_arg_count)
+{
+	// This caused a segfault in an earlier version
+	char const* text = R"(
+		contract C {
+			function C(){}
+		}
+		contract D is C {
+			function D() C(5){}
+		}
+	)";
+
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_CASE(index_access_for_bytes)
 {
 	char const* text = R"(
