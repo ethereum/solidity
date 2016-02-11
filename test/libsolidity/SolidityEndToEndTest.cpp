@@ -2836,6 +2836,283 @@ BOOST_AUTO_TEST_CASE(iterated_sha3_with_bytes)
 	));
 }
 
+BOOST_AUTO_TEST_CASE(sha3_with_uint_arrays)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint[3] a;
+			uint[] b;
+			uint x = 1;
+			uint y = 2;
+			uint z = 3;
+			function storageStatic() returns (bytes32) {
+				a[0] = x;
+				a[1] = y;
+				a[2] = z;
+				return sha3(a);
+			}
+			function memoryStatic() returns (bytes32) {
+				uint[3] memory c = [x, y, z];
+				return sha3(c);
+			}
+			function storageDynamic() returns (bytes32) {
+				b.push(x);
+				b.push(y);
+				b.push(z);
+				return sha3(b);
+			}
+			function memoryDynamic() returns (bytes32) {
+				uint[] memory c = b;
+				return sha3(c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("memoryStatic()") == encodeArgs(
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
+	));
+	BOOST_CHECK(callContractFunction("storageStatic()") == encodeArgs(
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
+	));
+	BOOST_CHECK(callContractFunction("storageDynamic()") == encodeArgs(
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
+	));
+	BOOST_CHECK(callContractFunction("memoryDynamic()") == encodeArgs(
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
+	));
+
+	
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_nested_arrays)
+{
+	char const* sourceCode = R"(
+		contract test {
+            uint x = 1;
+            uint y = 2;
+            uint z = 3;
+            uint[3][2] d;
+			function nestedMemory() returns (bytes32) {
+				uint[3][2] memory c = [ [x,y,z], [x,y,z] ];
+				return sha3(c);
+			}
+			function nestedStore() returns (bytes32) {
+				d[0][0] = x;
+				d[0][1] = y;
+				d[0][2] = z;
+				d[1][0] = x;
+				d[1][1] = y;
+				d[1][2] = z;
+				return sha3(d);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("nestedMemory()") == encodeArgs(
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3)) +
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
+	));
+	BOOST_CHECK(callContractFunction("nestedStore()") == encodeArgs(
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3)) +
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
+	));
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_structs)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct TestStruct {
+				uint[3] a;
+			}
+			TestStruct b;
+			uint x = 1;
+			uint y = 2;
+			uint z = 3;
+			function storeStructs() returns (bytes32) {
+				b.a[0] = x;
+				b.a[1] = y;
+				b.a[2] = z;
+				return sha3(b);
+			}
+			/*function memStructs() returns (bytes32) {
+				TestStruct memory testing;
+				testing.a[0] = x;
+				testing.a[1] = y;
+				testing.a[2] = z;
+				return sha3(testing);
+			} // commented out for later testing */
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("storeStructs()") == encodeArgs(
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
+	));
+	/*BOOST_CHECK(callContractFunction("memStructs()") == encodeArgs(
+		u256(
+			dev::sha3(
+				toBigEndian(u256(1)) +
+				toBigEndian(u256(2)) +
+				toBigEndian(u256(3))))
+	));*/
+	//TODO: Problem with memory structs...sha3 hash is different than storage sha3 hash
+}
+
+/*BOOST_AUTO_TEST_CASE(sha3_with_tuples)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function getTuple() returns (string, uint) {
+				return ("foo", 10);
+			}
+			function sha3Tuple() returns (bytes32) {
+				return sha3(getTuple());
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("sha3Tuples()") == encodeArgs(
+		u256(dev::sha3(bytes{0x66, 0x6f, 0x6f} + toBigEndian(u256(10))))
+	));
+
+	//TODO: Get tuples working with SHA3, currently giving memory pointer errors
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_struct_arrays)
+{
+	char const* sourceCode = R"(
+		contract test {
+			struct TestStruct {
+				uint[3] a;
+			}
+			TestStruct[3] c;
+			uint x = 1;
+			uint y = 2;
+			uint z = 3;
+			function arrayOfStructs() returns (bytes32) {
+				c[0].a[0] = x;
+				c[0].a[1] = y;
+				c[0].a[2] = z;
+				c[1].a[0] = x;
+				c[1].a[1] = y;
+				c[1].a[2] = z;
+				c[2].a[0] = x;
+				c[2].a[1] = y;
+				c[2].a[2] = z;
+				return sha3(c);
+			}
+			function dynamicStructs() returns (bytes32) {
+				TestStruct[3][3] memory d;
+				d[0][0].a[0] = x;
+				d[0][1].a[1] = y;
+				d[0][2].a[2] = z;
+				d[1][0].a[0] = x;
+				d[1][1].a[1] = y;
+				d[1][2].a[2] = z;
+				d[2][0].a[0] = x;
+				d[2][1].a[1] = y;
+				d[2][2].a[2] = z;
+				return sha3(d);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("nestedMemory()") == encodeArgs(
+		u256(
+			dev::sha3(
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3)) +
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3))))
+	));
+	BOOST_CHECK(callContractFunction("dynamicStructs()") == encodeArgs(
+		u256(
+			dev::sha3(
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3)) +
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3)) +
+					toBigEndian(u256(1)) +
+					toBigEndian(u256(2)) +
+					toBigEndian(u256(3))))
+	));
+	//TODO: This does not compile currently...also might need to change the boost checks
+}
+
+BOOST_AUTO_TEST_CASE(sha3_with_nested_structs)
+{	
+	char const* sourceCode = R"(
+		contract test {
+			struct testStruct {
+				nestedStruct a;
+			}
+			struct nestedStruct {
+				uint b;
+				string c;
+			}
+			nestedStruct nestStore;
+			testStruct forStore;
+			testStruct forMem;
+			function store() returns (bytes32) {
+				nestStore.b = 1;
+				nestStore.c = "foo";
+				forStore = testStruct(nestStore);
+				return sha3(forStore);
+			}
+			function storeMem() returns (bytes32) {
+				nestedStruct memory nestMem = nestedStruct(1, "foo");
+				forMem = testStruct(nestMem);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("store()") == encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) + bytes{0x66, 0x6f, 0x6f}))
+	));
+	BOOST_CHECK(callContractFunction("storeMem()") == encodeArgs(
+		u256(dev::sha3(toBigEndian(u256(1)) + bytes{0x66, 0x6f, 0x6f}))
+	));
+	//TODO: Fix nested structs for both storage and memory
+	//TODO: Once memory structs are solved, make a test for memStore, and just plain mem	
+}*/
+
+
 BOOST_AUTO_TEST_CASE(generic_call)
 {
 	char const* sourceCode = R"**(
@@ -6394,6 +6671,24 @@ BOOST_AUTO_TEST_CASE(inline_long_string_return)
 	compileAndRun(sourceCode, 0, "C");
 	BOOST_CHECK(callContractFunction("f()") == encodeDyn(strLong));
 }
+
+BOOST_AUTO_TEST_CASE(inline_struct_declaration)
+{
+		char const* sourceCode = R"(
+		contract C { 
+			struct S {
+				uint8[3] a;
+			}
+			function f() returns (uint8) {
+				S memory s = S([1, 2, 3]);
+				return (s.a[1]);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(2));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

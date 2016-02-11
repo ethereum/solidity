@@ -646,6 +646,10 @@ public:
 
 	/// @returns the set of all members that are removed in the memory version (typically mappings).
 	std::set<std::string> membersMissingInMemory() const;
+	/// @returns all members of the struct. When getInnerStructMembers is set, if the struct 
+	/// contains a struct member, it will gather the members of said struct via recursion.
+	/// Otherwise, it will grab the struct members in their original type format. 
+	TypePointers getMembers(bool getInnerStructMembers) const;
 
 private:
 	StructDefinition const& m_struct;

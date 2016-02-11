@@ -1236,6 +1236,27 @@ set<string> StructType::membersMissingInMemory() const
 	return missing;
 }
 
+TypePointers StructType::getMembers(bool getInnerStructMembers) const
+{
+	TypePointers argumentTypes;
+	for (auto const& member: m_struct.members()) //loop through struct type and grab members
+	{
+		TypePointer type = member->annotation().type;
+		if (type->category() == Type::Category::Struct && getInnerStructMembers) 
+		{//currently getting a variable size and position mismatch
+			//only giving this message because currently SHA3 is the only one using it
+			solAssert(type->category() != Type::Category::Struct, "SHA3'd nested struct members not yet implemented."); 
+			StructType const& structType = dynamic_cast<StructType const&>(*type);
+			TypePointers innerStructArgs = structType.getMembers(getInnerStructMembers);
+			for (auto const& arg: innerStructArgs)
+				argumentTypes.push_back(arg);
+		}
+		else
+			argumentTypes.push_back(type);
+	}
+	return argumentTypes;
+}
+
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
 {
 	return _operator == Token::Delete ? make_shared<TupleType>() : TypePointer();

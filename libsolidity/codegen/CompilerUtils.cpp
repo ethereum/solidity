@@ -159,7 +159,7 @@ void CompilerUtils::encodeToMemory(
 	// stack: <v1> <v2> ... <vn> <mem>
 	TypePointers targetTypes = _targetTypes.empty() ? _givenTypes : _targetTypes;
 	solAssert(targetTypes.size() == _givenTypes.size(), "");
-	for (TypePointer& t: targetTypes)
+	for (TypePointer& t: targetTypes) //DEVNOTE: this loop right here appears to be the source of the SHA3 problems...not sure how to get around it
 		t = t->mobileType()->interfaceType(_encodeAsLibraryTypes)->encodingType();
 
 	// Stack during operation:
