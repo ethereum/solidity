@@ -320,9 +320,9 @@ public:
 		m_token = _token;
 	}
 
-	unsigned int const& firstNumber() const& { return m_firstNumber; }
-	unsigned int const& secondNumber() const& { return m_secondNumber; }
-	Token::Value const& returnTok() const& { return m_token; }
+	unsigned int const& firstNumber() const { return m_firstNumber; }
+	unsigned int const& secondNumber() const { return m_secondNumber; }
+	Token::Value returnTok() const { return m_token; }
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
 	std::string toString(bool const& tokValue = false) const { return tokValue ? Token::toString(m_token) : m_name; }
 
