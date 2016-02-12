@@ -156,10 +156,11 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 
 TypePointer Type::fromElementaryTypeName(string const& _name)
 {
-	string details;
+	unsigned short firstNum;
+	unsigned short secondNum;
 	Token::Value token;
-	tie(token, details) = Token::fromIdentifierOrKeyword(_name);
- 	return fromElementaryTypeName(ElementaryTypeNameToken(token, details));
+	tie(token, firstNum, secondNum) = Token::fromIdentifierOrKeyword(_name);
+ 	return fromElementaryTypeName(ElementaryTypeNameToken(token, firstNum, secondNum));
 }
 
 TypePointer Type::forLiteral(Literal const& _literal)
