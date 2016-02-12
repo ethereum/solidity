@@ -50,36 +50,65 @@ namespace dev
 namespace solidity
 {
 
-tuple<string, unsigned int, unsigned int> ElementaryTypeNameToken::parseDetails(Token::Value _baseType, string const& _details)
+void ElementaryTypeNameToken::parseDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second)
 {
 	solAssert(Token::isElementaryTypeName(_baseType), "");
 	string baseType = Token::toString(_baseType);
-	if (_details.length() == 0)
-		return make_tuple(baseType, 0, 0);
+	if (_first == 0 && _second == 0)
+	{
+		m_name = baseType;
+		m_firstNumber = _first;
+		m_secondNumber = _second;
+	}
 
 	if (baseType == "bytesM")
 	{
+		solAssert(_second == 0, "There should not be a second size argument to type bytesM.");
 		for (unsigned m = 1; m <= 32; m++)
-			if (to_string(m) == _details)
-				return make_tuple(baseType.substr(0, baseType.size()-1) + to_string(m), m, 0);
+			if (m == _first)
+			{
+				m_name = baseType.substr(0, baseType.size()-1) + to_string(_first);
+				m_firstNumber = _first;
+				m_secondNumber = _second;
+			}
 	}
 	else if (baseType == "uintM" || baseType == "intM")
 	{
+		solAssert(_second == 0, "There should not be a second size argument to type " + baseType + ".");
 		for (unsigned m = 8; m <= 256; m+=8)
-			if (to_string(m) == _details)
-				return make_tuple(baseType.substr(0, baseType.size()-1) + to_string(m), m, 0);
+			if (m == _first)
+			{
+				m_name = baseType.substr(0, baseType.size()-1) + to_string(_first);
+				m_firstNumber = _first;
+				m_secondNumber = _second;
+			}
 	}
 	else if (baseType == "ufixedMxN" || baseType == "fixedMxN")
 	{
 		for (unsigned m = 0; m <= 256; m+=8)
 			for (unsigned n = 8; m + n <= 256; n+=8)
-				if ((to_string(m) + "x" + to_string(n)) == _details)
-					return make_tuple(baseType.substr(0, baseType.size()-3) + to_string(m) + "x" + to_string(n), m, n);
+				if (m == _first && n == _second)
+				{
+					m_name = baseType.substr(0, baseType.size()-3) + 
+							to_string(_first) + 
+							"x" +
+							to_string(_second);
+					m_firstNumber = _first;
+					m_secondNumber = _second;
+				}
 	}
 	
-	BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << 
-		errinfo_comment("Cannot create elementary type name token out of type " + baseType + " and size " + _details)
-	);	
+	if (m_name.empty())
+		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << 
+			errinfo_comment(
+				"Cannot create elementary type name token out of type " + 
+				baseType +
+				" and size(s) " +
+				to_string(_first) +
+				" and " +
+				to_string(_second)
+			)
+		);	
 }
 
 #define T(name, string, precedence) #name,
@@ -112,33 +141,68 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-tuple<Token::Value, string> Token::fromIdentifierOrKeyword(const string& _literal)
+unsigned Token::extractM(string _literal)
 {
-	string token = _literal;
-	string details;
-	if (_literal == "uintM" || _literal == "intM" || _literal == "fixedMxN" || _literal == "ufixedMxN" || _literal == "bytesM")
-		return make_pair(Token::Identifier, details);
+	try
+	{
+		unsigned short m = stoi(_literal.substr(_literal.find_first_of("0123456789")));
+		return m;
+	}
+	catch(out_of_range& e)
+	{
+		return 0;
+	}
+}
+pair<unsigned, unsigned> Token::extractMxN(string _literal)
+{
+	try
+	{
+		unsigned short m = stoi(_literal.substr(0, _literal.find_last_of("x") - 1));
+		unsigned short n = stoi(_literal.substr(_literal.find_last_of("x") + 1));
+		return make_pair(m, n);
+	}
+	catch (out_of_range& e)
+	{
+		return make_pair(0, 0);
+	}
+}
+tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeyword(string const& _literal)
+{
 	if (_literal.find_first_of("0123456789") != string::npos)
 	{
 		string baseType = _literal.substr(0, _literal.find_first_of("0123456789"));
-		short m = stoi(_literal.substr(_literal.find_first_of("0123456789")));
 		if (baseType == "bytes")
 		{
-			details = (0 < m && m <= 32) ? to_string(m) : "";
-			token = details.empty() ? _literal : baseType + "M";
+			unsigned short m = extractM(_literal);
+			if (0 < m && m <= 32)
+				return make_tuple(Token::BytesM, m, 0);
+			return make_tuple(Token::Identifier, 0, 0);
 		}
 		else if (baseType == "uint" || baseType == "int")
 		{
-			details = (0 < m && m <= 256 && m % 8 == 0) ? to_string(m) : "";
-			token = details.empty() ? _literal : baseType + "M";
+			unsigned short m = extractM(_literal);			
+			if (0 < m && m <= 256 && m % 8 == 0)
+			{
+				if (baseType == "uint")
+					return make_tuple(Token::UIntM, m, 0);
+				else
+					return make_tuple(Token::IntM, m, 0);
+			}
+			return make_tuple(Token::Identifier, 0, 0);
 		}
 		else if (baseType == "ufixed" || baseType == "fixed")
 		{
-			m = stoi(to_string(m).substr(0, to_string(m).find_first_of("x") - 1));
-			short n = stoi(_literal.substr(_literal.find_last_of("x") + 1));
-			details = (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0))) ? 
-						to_string(m) + "x" + to_string(n) : "";
-			token = details.empty() ? _literal : baseType + "MxN" ;
+			unsigned short m;
+			unsigned short n;
+			tie(m, n) = extractMxN(_literal);
+			if (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0)))
+			{
+				if (baseType == "ufixed")
+					return make_tuple(Token::UFixedMxN, m, n);
+				else
+					return make_tuple(Token::FixedMxN, m, n);
+			}
+			return make_tuple(Token::Identifier, 0, 0);
 		}
 	}
 	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
@@ -148,8 +212,8 @@ tuple<Token::Value, string> Token::fromIdentifierOrKeyword(const string& _litera
 	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
 #undef KEYWORD
 #undef TOKEN
-	auto it = keywords.find(token);
-	return it == keywords.end() ? make_pair(Token::Identifier, details) : make_pair(it->second, details);
+	auto it = keywords.find(_literal);
+	return it == keywords.end() ? make_tuple(Token::Identifier, 0, 0) : make_tuple(it->second, 0, 0);
 }
 
 #undef KT

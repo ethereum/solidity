@@ -189,19 +189,19 @@ namespace solidity
 	K(After, "after", 0)                                               \
 	/* type keywords*/                                                 \
 	K(Int, "int", 0)                                                   \
-	K(IntM, "intM", 0)                                                 \
+	T(IntM, "intM", 0)                                                 \
 	K(UInt, "uint", 0)                                                 \
-	K(UIntM, "uintM", 0)                                               \
+	T(UIntM, "uintM", 0)                                               \
 	K(Bytes, "bytes", 0)                                               \
-	K(BytesM, "bytesM", 0)                                             \
+	T(BytesM, "bytesM", 0)                                             \
 	K(Byte, "byte", 0)                                                 \
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(Fixed, "fixed", 0)                                               \
-	K(FixedMxN, "fixedMxN", 0)                                         \
+	T(FixedMxN, "fixedMxN", 0)                                         \
 	K(UFixed, "ufixed", 0)                                             \
-	K(UFixedMxN, "ufixedMxN", 0)                                       \
+	T(UFixedMxN, "ufixedMxN", 0)                                       \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
@@ -302,9 +302,14 @@ public:
 		return m_precedence[tok];
 	}
 
-	static std::tuple<Token::Value, std::string> fromIdentifierOrKeyword(std::string const& _name);
+	static std::tuple<Token::Value, unsigned short, unsigned short> fromIdentifierOrKeyword(std::string const& _literal);
 
 private:
+	// extractM and extractMxN provide a safe way to extract numbers, 
+	// if out_of_range error is thrown, they returns 0s, therefore securing 
+	// the variable's identity as an identifier.
+	static unsigned extractM(std::string _literal);
+	static std::pair<unsigned, unsigned> extractMxN(std::string _literal);
 	static char const* const m_name[NUM_TOKENS];
 	static char const* const m_string[NUM_TOKENS];
 	static int8_t const m_precedence[NUM_TOKENS];
@@ -314,9 +319,9 @@ private:
 class ElementaryTypeNameToken
 {
 public:
-	ElementaryTypeNameToken(Token::Value _token, std::string const& _detail)
+	ElementaryTypeNameToken(Token::Value _token, unsigned const& _firstNumber, unsigned const& _secondNumber)
 	{
-		std::tie(m_name, m_firstNumber, m_secondNumber) = parseDetails(_token, _detail);
+		parseDetails(_token, _firstNumber, _secondNumber);
 		m_token = _token;
 	}
 
@@ -331,8 +336,8 @@ private:
 	std::string m_name;
 	unsigned int m_firstNumber;
 	unsigned int m_secondNumber;
-	/// throws if _details is malformed
-	std::tuple<std::string, unsigned int, unsigned int> parseDetails(Token::Value _baseType, std::string const& _details);
+	/// throws if type is not properly sized
+	void parseDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second);
 };
 
 }

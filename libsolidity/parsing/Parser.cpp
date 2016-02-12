@@ -590,7 +590,10 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	Token::Value token = m_scanner->currentToken();
 	if (Token::isElementaryTypeName(token))
 	{
-		ElementaryTypeNameToken elemTypeName(token, m_scanner->currentTokenInfo());
+		unsigned firstSize;
+		unsigned secondSize;
+		tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
+		ElementaryTypeNameToken elemTypeName(token, firstSize, secondSize);
 		type = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
 		m_scanner->next();
 	}
@@ -628,11 +631,14 @@ ASTPointer<Mapping> Parser::parseMapping()
 	expectToken(Token::Mapping);
 	expectToken(Token::LParen);
 	ASTPointer<ElementaryTypeName> keyType;
-	if (Token::isElementaryTypeName(m_scanner->currentToken()))
-		keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>
-			(ElementaryTypeNameToken(m_scanner->currentToken(), m_scanner->currentTokenInfo()));
-	else
+	Token::Value token = m_scanner->currentToken();
+	if (!Token::isElementaryTypeName(token))
 		fatalParserError(string("Expected elementary type name for mapping key type"));
+	unsigned firstSize;
+	unsigned secondSize;
+	tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
+	ElementaryTypeNameToken elemTypeName(token, firstSize, secondSize);
+	keyType = ASTNodeFactory(*this).createNode<ElementaryTypeName>(elemTypeName);
 	m_scanner->next();
 	expectToken(Token::Arrow);
 	bool const allowVar = false;
@@ -829,7 +835,10 @@ ASTPointer<Statement> Parser::parseSimpleStatement(ASTPointer<ASTString> const& 
 	else
 	{
 		startedWithElementary = true;
-		ElementaryTypeNameToken elemToken(m_scanner->currentToken(), m_scanner->currentTokenInfo());
+		unsigned firstNum;
+		unsigned secondNum;
+		tie(firstNum, secondNum) = m_scanner->currentTokenInfo();
+		ElementaryTypeNameToken elemToken(m_scanner->currentToken(), firstNum, secondNum);
 		path.push_back(ASTNodeFactory(*this).createNode<ElementaryTypeNameExpression>(elemToken));
 		m_scanner->next();
 	}
@@ -1138,7 +1147,10 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 		if (Token::isElementaryTypeName(token))
 		{
 			//used for casts
-			ElementaryTypeNameToken elementaryExpression(m_scanner->currentToken(), m_scanner->currentTokenInfo());
+			unsigned firstSize;
+			unsigned secondSize;
+			tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
+			ElementaryTypeNameToken elementaryExpression(m_scanner->currentToken(), firstSize, secondSize);
 			expression = nodeFactory.createNode<ElementaryTypeNameExpression>(elementaryExpression);
 			m_scanner->next();
 		}
