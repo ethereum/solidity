@@ -189,19 +189,19 @@ namespace solidity
 	K(After, "after", 0)                                               \
 	/* type keywords*/                                                 \
 	K(Int, "int", 0)                                                   \
-	T(IntM, "intM", 0)                                                   \
+	T(IntM, "intM", 0)                                                 \
 	K(UInt, "uint", 0)                                                 \
-	T(UIntM, "uintM", 0)                                                  \
+	T(UIntM, "uintM", 0)                                               \
 	K(Bytes, "bytes", 0)                                               \
-	T(BytesM, "bytesM", 0)                                                 \
+	T(BytesM, "bytesM", 0)                                             \
 	K(Byte, "byte", 0)                                                 \
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(Fixed, "fixed", 0)                                               \
-	T(FixedMxN, "fixedMxN", 0)                                               \
+	T(FixedMxN, "fixedMxN", 0)                                         \
 	K(UFixed, "ufixed", 0)                                             \
-	T(UFixedMxN, "ufixedMxN", 0)                                              \
+	T(UFixedMxN, "ufixedMxN", 0)                                       \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
