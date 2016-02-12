@@ -195,7 +195,6 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition(bool _isLibrary)
 	while (true)
 	{
 		Token::Value currentTokenValue = m_scanner->currentToken();
-		string lit = m_scanner->currentLiteral();
 		if (currentTokenValue == Token::RBrace)
 			break;
 		else if (currentTokenValue == Token::Function)
