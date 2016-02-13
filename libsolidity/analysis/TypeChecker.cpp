@@ -504,6 +504,7 @@ void TypeChecker::visitManually(
 		return;
 	}
 	if (parameters->size() != arguments.size())
+	{
 		typeError(
 			_modifier.location(),
 			"Wrong argument count for modifier invocation: " +
@@ -512,6 +513,8 @@ void TypeChecker::visitManually(
 			toString(parameters->size()) +
 			"."
 		);
+		return;
+	}
 	for (size_t i = 0; i < _modifier.arguments().size(); ++i)
 		if (!type(*arguments[i])->isImplicitlyConvertibleTo(*type(*(*parameters)[i])))
 			typeError(
