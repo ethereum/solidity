@@ -141,7 +141,7 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-unsigned Token::extractM(string _literal)
+unsigned Token::extractM(string const& _literal)
 {
 	try
 	{
@@ -153,7 +153,7 @@ unsigned Token::extractM(string _literal)
 		return 0;
 	}
 }
-pair<unsigned, unsigned> Token::extractMxN(string _literal)
+pair<unsigned, unsigned> Token::extractMxN(string const& _literal)
 {
 	try
 	{
