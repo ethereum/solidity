@@ -387,8 +387,8 @@ void Scanner::scanToken()
 
 	Token::Value token;
 	// M and N are for the purposes of grabbing different type sizes
-	unsigned M;
-	unsigned N;
+	unsigned m;
+	unsigned n;
 	do
 	{
 		// Remember the position of the next token
@@ -556,7 +556,7 @@ void Scanner::scanToken()
 			break;
 		default:
 			if (isIdentifierStart(m_char))
-				tie(token, M, N) = scanIdentifierOrKeyword();
+				tie(token, m, n) = scanIdentifierOrKeyword();
 			else if (isDecimalDigit(m_char))
 				token = scanNumber();
 			else if (skipWhitespace())
@@ -573,7 +573,7 @@ void Scanner::scanToken()
 	while (token == Token::Whitespace);
 	m_nextToken.location.end = sourcePos();
 	m_nextToken.token = token;
-	m_nextToken.extendedTokenInfo = make_tuple(M,N);
+	m_nextToken.extendedTokenInfo = make_tuple(m, n);
 }
 
 bool Scanner::scanEscape()

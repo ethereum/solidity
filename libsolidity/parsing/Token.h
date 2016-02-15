@@ -198,10 +198,8 @@ namespace solidity
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
-	K(Fixed, "fixed", 0)                                               \
-	T(FixedMxN, "fixedMxN", 0)                                         \
-	K(UFixed, "ufixed", 0)                                             \
-	T(UFixedMxN, "ufixedMxN", 0)                                       \
+	K(Real, "real", 0)                                                 \
+	K(UReal, "ureal", 0)                                               \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
@@ -305,11 +303,10 @@ public:
 	static std::tuple<Token::Value, unsigned short, unsigned short> fromIdentifierOrKeyword(std::string const& _literal);
 
 private:
-	// extractM and extractMxN provide a safe way to extract numbers, 
+	// extractM provides a safe way to extract numbers, 
 	// if out_of_range error is thrown, they returns 0s, therefore securing 
 	// the variable's identity as an identifier.
-	static unsigned extractM(std::string _literal);
-	static std::pair<unsigned, unsigned> extractMxN(std::string _literal);
+	static unsigned extractM(std::string const& _literal);
 	static char const* const m_name[NUM_TOKENS];
 	static char const* const m_string[NUM_TOKENS];
 	static int8_t const m_precedence[NUM_TOKENS];
@@ -321,23 +318,28 @@ class ElementaryTypeNameToken
 public:
 	ElementaryTypeNameToken(Token::Value _token, unsigned const& _firstNumber, unsigned const& _secondNumber)
 	{
-		parseDetails(_token, _firstNumber, _secondNumber);
-		m_token = _token;
+		assertDetails(_token, _firstNumber, _secondNumber);
 	}
 
-	unsigned int const& firstNumber() const { return m_firstNumber; }
-	unsigned int const& secondNumber() const { return m_secondNumber; }
-	Token::Value const& returnTok() const { return m_token; }
+	unsigned int firstNumber() const { return m_firstNumber; }
+	unsigned int secondNumber() const { return m_secondNumber; }
+	Token::Value token() const { return m_token; }
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
-	std::string toString(bool const& tokValue = false) const { return tokValue ? Token::toString(m_token) : m_name; }
+	std::string toString(bool const& tokenValue = false) const 
+	{
+		std::string name = Token::toString(m_token);
+		if (tokenValue || (firstNumber() == 0 && secondNumber() == 0))
+			return name;
+		//need to set it up this way for fixed types construction in future
+		return name.substr(0, name.size() - 1) + std::to_string(m_firstNumber);
+	}
 
 private:
 	Token::Value m_token;
-	std::string m_name;
 	unsigned int m_firstNumber;
 	unsigned int m_secondNumber;
 	/// throws if type is not properly sized
-	void parseDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second);
+	void assertDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second);
 };
 
 }

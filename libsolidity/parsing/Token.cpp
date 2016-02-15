@@ -50,65 +50,26 @@ namespace dev
 namespace solidity
 {
 
-void ElementaryTypeNameToken::parseDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second)
+void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second)
 {
 	solAssert(Token::isElementaryTypeName(_baseType), "");
-	string baseType = Token::toString(_baseType);
-	if (_first == 0 && _second == 0)
-	{
-		m_name = baseType;
-		m_firstNumber = _first;
-		m_secondNumber = _second;
-	}
-
-	if (baseType == "bytesM")
+	string tokenString = Token::toString(_baseType);
+	if (_baseType == Token::BytesM)
 	{
 		solAssert(_second == 0, "There should not be a second size argument to type bytesM.");
-		for (unsigned m = 1; m <= 32; m++)
-			if (m == _first)
-			{
-				m_name = baseType.substr(0, baseType.size()-1) + to_string(_first);
-				m_firstNumber = _first;
-				m_secondNumber = _second;
-			}
+		solAssert(_first <= 32, "No elementary type bytes" + to_string(_first) + ".");
 	}
-	else if (baseType == "uintM" || baseType == "intM")
+	else if (_baseType == Token::UIntM || _baseType == Token::IntM)
 	{
-		solAssert(_second == 0, "There should not be a second size argument to type " + baseType + ".");
-		for (unsigned m = 8; m <= 256; m+=8)
-			if (m == _first)
-			{
-				m_name = baseType.substr(0, baseType.size()-1) + to_string(_first);
-				m_firstNumber = _first;
-				m_secondNumber = _second;
-			}
+		solAssert(_second == 0, "There should not be a second size argument to type " + tokenString + ".");
+		solAssert(
+			_first <= 256 && _first % 8 == 0, 
+			"No elementary type " + tokenString + to_string(_first) + "."
+		);
 	}
-	else if (baseType == "ufixedMxN" || baseType == "fixedMxN")
-	{
-		for (unsigned m = 0; m <= 256; m+=8)
-			for (unsigned n = 8; m + n <= 256; n+=8)
-				if (m == _first && n == _second)
-				{
-					m_name = baseType.substr(0, baseType.size()-3) + 
-							to_string(_first) + 
-							"x" +
-							to_string(_second);
-					m_firstNumber = _first;
-					m_secondNumber = _second;
-				}
-	}
-	
-	if (m_name.empty())
-		BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << 
-			errinfo_comment(
-				"Cannot create elementary type name token out of type " + 
-				baseType +
-				" and size(s) " +
-				to_string(_first) +
-				" and " +
-				to_string(_second)
-			)
-		);	
+	m_token = _baseType;
+	m_firstNumber = _first;
+	m_secondNumber = _second;
 }
 
 #define T(name, string, precedence) #name,
@@ -141,11 +102,11 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-unsigned Token::extractM(string _literal)
+unsigned Token::extractM(string const& _literal)
 {
 	try
 	{
-		unsigned short m = stoi(_literal.substr(_literal.find_first_of("0123456789")));
+		unsigned short m = stoi(_literal);
 		return m;
 	}
 	catch(out_of_range& e)
@@ -153,54 +114,28 @@ unsigned Token::extractM(string _literal)
 		return 0;
 	}
 }
-pair<unsigned, unsigned> Token::extractMxN(string _literal)
-{
-	try
-	{
-		unsigned short m = stoi(_literal.substr(0, _literal.find_last_of("x") - 1));
-		unsigned short n = stoi(_literal.substr(_literal.find_last_of("x") + 1));
-		return make_pair(m, n);
-	}
-	catch (out_of_range& e)
-	{
-		return make_pair(0, 0);
-	}
-}
 tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeyword(string const& _literal)
 {
-	if (_literal.find_first_of("0123456789") != string::npos)
+	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
+	if (positionM != _literal.end())
 	{
-		string baseType = _literal.substr(0, _literal.find_first_of("0123456789"));
-		if (baseType == "bytes")
+		string baseType(_literal.begin(), positionM);
+		auto positionX = find(positionM, _literal.end(), 'x');
+		unsigned short m = extractM(string(positionM, positionX));
+		if (baseType == toString(Token::Bytes))
 		{
-			unsigned short m = extractM(_literal);
 			if (0 < m && m <= 32)
 				return make_tuple(Token::BytesM, m, 0);
 			return make_tuple(Token::Identifier, 0, 0);
 		}
-		else if (baseType == "uint" || baseType == "int")
+		else if (baseType == toString(Token::UInt) || baseType == toString(Token::Int))
 		{
-			unsigned short m = extractM(_literal);			
 			if (0 < m && m <= 256 && m % 8 == 0)
 			{
-				if (baseType == "uint")
+				if (baseType == toString(Token::UInt))
 					return make_tuple(Token::UIntM, m, 0);
 				else
 					return make_tuple(Token::IntM, m, 0);
-			}
-			return make_tuple(Token::Identifier, 0, 0);
-		}
-		else if (baseType == "ufixed" || baseType == "fixed")
-		{
-			unsigned short m;
-			unsigned short n;
-			tie(m, n) = extractMxN(_literal);
-			if (0 < n + m && n + m <= 256 && ((n % 8 == 0) && (m % 8 == 0)))
-			{
-				if (baseType == "ufixed")
-					return make_tuple(Token::UFixedMxN, m, n);
-				else
-					return make_tuple(Token::FixedMxN, m, n);
 			}
 			return make_tuple(Token::Identifier, 0, 0);
 		}

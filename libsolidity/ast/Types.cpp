@@ -118,20 +118,20 @@ u256 const& MemberList::storageSize() const
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
 	string tokenString = _type.toString();
-	solAssert(Token::isElementaryTypeName(_type.returnTok()),
+	solAssert(Token::isElementaryTypeName(_type.token()),
 		"Expected an elementary type name but got " + tokenString);
 
-	Token::Value token = _type.returnTok();
-	unsigned int M = _type.firstNumber();
+	Token::Value token = _type.token();
+	unsigned int m = _type.firstNumber();
 
 	switch (token)
 	{
 	case Token::IntM:
-		return make_shared<IntegerType>(M, IntegerType::Modifier::Signed);
+		return make_shared<IntegerType>(m, IntegerType::Modifier::Signed);
 	case Token::UIntM:
-		return make_shared<IntegerType>(M, IntegerType::Modifier::Unsigned);
+		return make_shared<IntegerType>(m, IntegerType::Modifier::Unsigned);
 	case Token::BytesM:
-		return make_shared<FixedBytesType>(M);
+		return make_shared<FixedBytesType>(m);
 	case Token::Int:
 		return make_shared<IntegerType>(256, IntegerType::Modifier::Signed);
 	case Token::UInt:
