@@ -336,7 +336,7 @@ private:
 	std::string m_name;
 	unsigned int m_firstNumber;
 	unsigned int m_secondNumber;
-	/// throws if _details is malformed
+	/// throws if type is not properly sized
 	void parseDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second);
 };
 
