@@ -57,13 +57,13 @@ void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned con
 	if (_baseType == Token::BytesM)
 	{
 		solAssert(_second == 0, "There should not be a second size argument to type bytesM.");
-		solAssert(0 <= _first && _first <= 32, "No elementary type bytes" + to_string(_first) + ".");
+		solAssert(_first <= 32, "No elementary type bytes" + to_string(_first) + ".");
 	}
 	else if (_baseType == Token::UIntM || _baseType == Token::IntM)
 	{
 		solAssert(_second == 0, "There should not be a second size argument to type " + tokenString + ".");
 		solAssert(
-			(0 <= _first && _first <= 256 && (_first % 8 == 0)), 
+			_first <= 256 && _first % 8 == 0, 
 			"No elementary type " + tokenString + to_string(_first) + "."
 		);
 	}
