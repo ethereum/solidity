@@ -120,16 +120,16 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 	if (positionM != _literal.end())
 	{
 		string baseType(_literal.begin(), positionM);
+		auto positionX = find(positionM, _literal.end(), 'x');
+		unsigned short m = extractM(string(positionM, positionX));
 		if (baseType == toString(Token::Bytes))
 		{
-			unsigned short m = extractM(string(positionM, _literal.end()));
 			if (0 < m && m <= 32)
 				return make_tuple(Token::BytesM, m, 0);
 			return make_tuple(Token::Identifier, 0, 0);
 		}
 		else if (baseType == toString(Token::UInt) || baseType == toString(Token::Int))
 		{
-			unsigned short m = extractM(string(positionM, _literal.end()));
 			if (0 < m && m <= 256 && m % 8 == 0)
 			{
 				if (baseType == toString(Token::UInt))
