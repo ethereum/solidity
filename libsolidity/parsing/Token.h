@@ -323,7 +323,7 @@ public:
 
 	unsigned int firstNumber() const { return m_firstNumber; }
 	unsigned int secondNumber() const { return m_secondNumber; }
-	Token::Value returnToken() const { return m_token; }
+	Token::Value token() const { return m_token; }
 	///if tokValue is set to true, then returns the actual token type name, otherwise, returns full type
 	std::string toString(bool const& tokenValue = false) const 
 	{
