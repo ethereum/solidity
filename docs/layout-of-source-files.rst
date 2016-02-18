@@ -34,8 +34,7 @@ current global scope (different than in ES6 but backwards-compatible for Solidit
 
   import {symbol1 as alias, symbol2} from "filename";
 
-...creates new global symbols `alias` and `symbol2` which reference `symbol1` and `symbol2` 
-from `"filename"`, respectively.
+...creates new global symbols `alias` and `symbol2` which reference `symbol1` and `symbol2` from `"filename"`, respectively.
 
 Another syntax is not part of ES6, but probably convenient:
 
@@ -83,11 +82,15 @@ So as an example, if you clone
 `github.com/ethereum/dapp-bin/` locally to `/usr/local/dapp-bin`, you can use
 the following in your source file:
 
-`import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;`
+::
+
+  import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;
 
 and then run the compiler as
 
-`solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol`
+.. code-block:: shell
+
+  solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
 
 Note that solc only allows you to include files from certain directories:
 They have to be in the directory (or subdirectory) of one of the explicitly
