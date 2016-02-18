@@ -3207,6 +3207,31 @@ BOOST_AUTO_TEST_CASE(long_uint_variable_fails)
 	BOOST_CHECK(!success(text));
 }
 
+BOOST_AUTO_TEST_CASE(bytes10abc_is_identifier)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				bytes32 bytes10abc = "abc";
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(int10abc_is_identifier)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint uint10abc = 3;
+				int int10abc = 4;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
