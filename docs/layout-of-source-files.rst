@@ -119,6 +119,16 @@ Comments
 
 Single-line comments (`//`) and multi-line comments (`/*...*/`) are possible.
 
+::
+
+  // This is a single-line comment.
+  
+  /*
+  This is a 
+  multi-line comment.
+  */
+  
+
 There are special types of comments called natspec comments
 (documentation yet to be written). These are introduced by 
 triple-slash comments (`///`) or using double asterisks (`/** ... */`).
