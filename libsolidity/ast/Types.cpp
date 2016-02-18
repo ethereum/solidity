@@ -81,8 +81,8 @@ MemberList& MemberList::operator=(MemberList&& _other)
 {
 	assert(&_other != this);
 
-	m_memberTypes = std::move(_other.m_memberTypes);
-	m_storageOffsets = std::move(_other.m_storageOffsets);
+	m_memberTypes = move(_other.m_memberTypes);
+	m_storageOffsets = move(_other.m_storageOffsets);
 	return *this;
 }
 
@@ -91,7 +91,7 @@ void MemberList::combine(MemberList const & _other)
 	m_memberTypes += _other.m_memberTypes;
 }
 
-std::pair<u256, unsigned> const* MemberList::memberStorageOffset(string const& _name) const
+pair<u256, unsigned> const* MemberList::memberStorageOffset(string const& _name) const
 {
 	if (!m_storageOffsets)
 	{
@@ -119,7 +119,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 {
 	char const* tokenCstr = Token::toString(_typeToken);
 	solAssert(Token::isElementaryTypeName(_typeToken),
-		"Expected an elementary type name but got " + ((tokenCstr) ? std::string(Token::toString(_typeToken)) : ""));
+		"Expected an elementary type name but got " + ((tokenCstr) ? string(Token::toString(_typeToken)) : ""));
 
 	if (Token::Int <= _typeToken && _typeToken <= Token::Bytes32)
 	{
@@ -153,7 +153,7 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 		return make_shared<ArrayType>(DataLocation::Storage, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment(
-			"Unable to convert elementary typename " + std::string(Token::toString(_typeToken)) + " to type."
+			"Unable to convert elementary typename " + string(Token::toString(_typeToken)) + " to type."
 		));
 }
 
@@ -242,8 +242,10 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 {
 	if (isAddress())
 		m_bits = 160;
-	solAssert(m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
-			  "Invalid bit number for integer type: " + dev::toString(_bits));
+	solAssert(
+		m_bits > 0 && m_bits <= 256 && m_bits % 8 == 0,
+		"Invalid bit number for integer type: " + dev::toString(_bits)
+	);
 }
 
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
@@ -496,7 +498,7 @@ TypePointer IntegerConstantType::binaryOperatorResult(Token::Value _operator, Ty
 		case Token::Exp:
 			if (other.m_value < 0)
 				return TypePointer();
-			else if (other.m_value > std::numeric_limits<unsigned int>::max())
+			else if (other.m_value > numeric_limits<unsigned int>::max())
 				return TypePointer();
 			else
 				value = boost::multiprecision::pow(m_value, other.m_value.convert_to<unsigned int>());
@@ -969,9 +971,9 @@ TypePointer ArrayType::interfaceType(bool _inLibrary) const
 		return TypePointer();
 
 	if (isDynamicallySized())
-		return std::make_shared<ArrayType>(DataLocation::Memory, baseExt);
+		return make_shared<ArrayType>(DataLocation::Memory, baseExt);
 	else
-		return std::make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
+		return make_shared<ArrayType>(DataLocation::Memory, baseExt, m_length);
 }
 
 u256 ArrayType::memorySize() const
@@ -1484,7 +1486,7 @@ FunctionType::FunctionType(const EventDefinition& _event):
 	swap(paramNames, m_parameterNames);
 }
 
-std::vector<string> FunctionType::parameterNames() const
+vector<string> FunctionType::parameterNames() const
 {
 	if (!bound())
 		return m_parameterNames;
@@ -1668,7 +1670,7 @@ bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePoin
 	else if (_argumentTypes.size() != paramTypes.size())
 		return false;
 	else
-		return std::equal(
+		return equal(
 			_argumentTypes.cbegin(),
 			_argumentTypes.cend(),
 			paramTypes.cbegin(),
