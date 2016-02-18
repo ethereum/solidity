@@ -103,10 +103,11 @@ void ReferencesResolver::endVisit(ArrayTypeName const& _typeName)
 	{
 		if (!length->annotation().type)
 			ConstantEvaluator e(*length);
-
-		auto const* lengthType = dynamic_cast<IntegerConstantType const*>(length->annotation().type.get());
+		auto const* lengthType = dynamic_cast<ConstantNumberType const*>(length->annotation().type.get());
 		if (!lengthType)
 			fatalTypeError(length->location(), "Invalid array length.");
+		else if (lengthType->denominator() != 1)
+			fatalTypeError(length->location(), "Invalid input for array length, expected integer.");
 		else
 			_typeName.annotation().type = make_shared<ArrayType>(DataLocation::Storage, baseType, lengthType->literalValue(nullptr));
 	}

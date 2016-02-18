@@ -6631,6 +6631,29 @@ BOOST_AUTO_TEST_CASE(delete_on_array_of_structs)
 	// This code interprets x as an array length and thus will go out of gas.
 	// neither of the two should throw due to out-of-bounds access
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+
+}
+
+BOOST_AUTO_TEST_CASE(fixed_data_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			fixed public pi = 3.141592;
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+}
+
+BOOST_AUTO_TEST_CASE(fixed_data_type_expression)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(fixed a) returns (fixed) {
+				return (a + 3);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
 }
 
 BOOST_AUTO_TEST_CASE(internal_library_function)

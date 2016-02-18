@@ -186,6 +186,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
 		)
 			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
+		//need something here for Fixed...guidance would be nice
 		else
 			m_context << ((u256(0x1) << (8 * m_dataType->storageBytes())) - 1) << Instruction::AND;
 	}
@@ -240,6 +241,9 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 					<< Instruction::MUL
 					<< Instruction::DIV;
 			m_context  << Instruction::MUL << Instruction::OR;
+			//else if (m_dataType->category() == Type::Category::Fixed)
+			//trying to figure out what this does...going to require some more assistance
+			m_context  << Instruction::MUL << eth::Instruction::OR;
 			// stack: value storage_ref updated_value
 			m_context << Instruction::SWAP1 << Instruction::SSTORE;
 			if (_move)
