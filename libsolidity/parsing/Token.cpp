@@ -50,6 +50,27 @@ namespace dev
 namespace solidity
 {
 
+void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned const& _first, unsigned const& _second)
+{
+	solAssert(Token::isElementaryTypeName(_baseType), "");
+	if (_baseType == Token::BytesM)
+	{
+		solAssert(_second == 0, "There should not be a second size argument to type bytesM.");
+		solAssert(_first <= 32, "No elementary type bytes" + to_string(_first) + ".");
+	}
+	else if (_baseType == Token::UIntM || _baseType == Token::IntM)
+	{
+		solAssert(_second == 0, "There should not be a second size argument to type " + string(Token::toString(_baseType)) + ".");
+		solAssert(
+			_first <= 256 && _first % 8 == 0, 
+			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "."
+		);
+	}
+	m_token = _baseType;
+	m_firstNumber = _first;
+	m_secondNumber = _second;
+}
+
 #define T(name, string, precedence) #name,
 char const* const Token::m_name[NUM_TOKENS] =
 {
@@ -80,7 +101,47 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-Token::Value Token::fromIdentifierOrKeyword(const std::string& _name)
+unsigned Token::extractM(string const& _literal)
+{
+	try
+	{
+		unsigned short m = stoi(_literal);
+		return m;
+	}
+	catch(out_of_range& e)
+	{
+		return 0;
+	}
+}
+tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeyword(string const& _literal)
+{
+	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
+	if (positionM != _literal.end())
+	{
+		string baseType(_literal.begin(), positionM);
+		auto positionX = find_if_not(positionM, _literal.end(), ::isdigit);
+		unsigned short m = extractM(string(positionM, positionX));
+		Token::Value keyword = keywordByName(baseType);
+		if (keyword == Token::Bytes)
+		{
+			if (0 < m && m <= 32 && positionX == _literal.end())
+				return make_tuple(Token::BytesM, m, 0);
+		}
+		else if (keyword == Token::UInt || keyword == Token::Int)
+		{
+			if (0 < m && m <= 256 && m % 8 == 0 && positionX == _literal.end())
+			{
+				if (keyword == Token::UInt)
+					return make_tuple(Token::UIntM, m, 0);
+				else
+					return make_tuple(Token::IntM, m, 0);
+			}
+		}
+		return make_tuple(Token::Identifier, 0, 0);
+	}
+	return make_tuple(keywordByName(_literal), 0, 0);
+}
+Token::Value Token::keywordByName(string const& _name)
 {
 	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
 	// and keywords to be put inside the keywords variable.
@@ -95,6 +156,5 @@ Token::Value Token::fromIdentifierOrKeyword(const std::string& _name)
 
 #undef KT
 #undef KK
-
 }
 }

@@ -122,6 +122,7 @@ public:
 
 	SourceLocation currentLocation() const { return m_currentToken.location; }
 	std::string const& currentLiteral() const { return m_currentToken.literal; }
+	std::tuple<unsigned, unsigned> const& currentTokenInfo() const { return m_currentToken.extendedTokenInfo; }
 	///@}
 
 	///@{
@@ -160,6 +161,7 @@ private:
 		Token::Value token;
 		SourceLocation location;
 		std::string literal;
+		std::tuple<unsigned, unsigned> extendedTokenInfo;
 	};
 
 	///@{
@@ -190,7 +192,7 @@ private:
 
 	void scanDecimalDigits();
 	Token::Value scanNumber(char _charSeen = 0);
-	Token::Value scanIdentifierOrKeyword();
+	std::tuple<Token::Value, unsigned, unsigned> scanIdentifierOrKeyword();
 
 	Token::Value scanString();
 	Token::Value scanSingleLineDocComment();

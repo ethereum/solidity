@@ -90,7 +90,6 @@ bool isIdentifierPart(char c)
 {
 	return isIdentifierStart(c) || isDecimalDigit(c);
 }
-
 int hexValue(char c)
 {
 	if (c >= '0' && c <= '9')
@@ -382,8 +381,14 @@ Token::Value Scanner::scanSlash()
 void Scanner::scanToken()
 {
 	m_nextToken.literal.clear();
+	m_nextToken.extendedTokenInfo = make_tuple(0, 0);
 	m_nextSkippedComment.literal.clear();
+	m_nextSkippedComment.extendedTokenInfo = make_tuple(0, 0);
+
 	Token::Value token;
+	// M and N are for the purposes of grabbing different type sizes
+	unsigned m;
+	unsigned n;
 	do
 	{
 		// Remember the position of the next token
@@ -551,7 +556,7 @@ void Scanner::scanToken()
 			break;
 		default:
 			if (isIdentifierStart(m_char))
-				token = scanIdentifierOrKeyword();
+				tie(token, m, n) = scanIdentifierOrKeyword();
 			else if (isDecimalDigit(m_char))
 				token = scanNumber();
 			else if (skipWhitespace())
@@ -568,6 +573,7 @@ void Scanner::scanToken()
 	while (token == Token::Whitespace);
 	m_nextToken.location.end = sourcePos();
 	m_nextToken.token = token;
+	m_nextToken.extendedTokenInfo = make_tuple(m, n);
 }
 
 bool Scanner::scanEscape()
@@ -705,13 +711,13 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	return Token::Number;
 }
 
-Token::Value Scanner::scanIdentifierOrKeyword()
+tuple<Token::Value, unsigned, unsigned> Scanner::scanIdentifierOrKeyword()
 {
 	solAssert(isIdentifierStart(m_char), "");
 	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	while (isIdentifierPart(m_char))
+	while (isIdentifierPart(m_char)) //get full literal
 		addLiteralCharAndAdvance();
 	literal.complete();
 	return Token::fromIdentifierOrKeyword(m_nextToken.literal);
