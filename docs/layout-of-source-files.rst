@@ -17,15 +17,33 @@ Solidity supports import statements that are very similar to those available in 
 
 At a global level, you can use import statements of the following form:
 
-`import "filename";` will import all global symbols from "filename" (and symbols imported there) into the current global scope (different than in ES6 but backwards-compatible for Solidity).
+::
 
-`import * as symbolName from "filename";` creates a new global symbol `symbolName` whose members are all the global symbols from `"filename"`.
+  import "filename";
 
-`import {symbol1 as alias, symbol2} from "filename";` creates new global symbols `alias` and `symbol2` which reference `symbol1` and `symbal2` from `"filename"`, respectively.
+...will import all global symbols from "filename" (and symbols imported there) into the 
+current global scope (different than in ES6 but backwards-compatible for Solidity).
+
+::
+
+  import * as symbolName from "filename";
+
+...creates a new global symbol `symbolName` whose members are all the global symbols from `"filename"`.
+
+::
+
+  import {symbol1 as alias, symbol2} from "filename";
+
+...creates new global symbols `alias` and `symbol2` which reference `symbol1` and `symbol2` 
+from `"filename"`, respectively.
 
 Another syntax is not part of ES6, but probably convenient:
 
-`import "filename" as symbolName;` is equivalent to `import * as symbolName from "filename";`.
+::
+
+  import "filename" as symbolName;
+
+...is equivalent to `import * as symbolName from "filename";`.
 
 Paths
 -----
