@@ -120,15 +120,16 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 	if (positionM != _literal.end())
 	{
 		string baseType(_literal.begin(), positionM);
-		auto positionX = find(positionM, _literal.end(), 'x');
+		auto positionX = find_if_not(positionM, _literal.end(), ::isdigit);
 		unsigned short m = extractM(string(positionM, positionX));
-		if (baseType == toString(Token::Bytes))
+		Token::Value baseToken = checkToken(baseType);
+		if (baseToken == Token::Bytes)
 		{
 			if (0 < m && m <= 32)
 				return make_tuple(Token::BytesM, m, 0);
 			return make_tuple(Token::Identifier, 0, 0);
 		}
-		else if (baseType == toString(Token::UInt) || baseType == toString(Token::Int))
+		else if (baseToken == Token::UInt || baseToken == Token::Int)
 		{
 			if (0 < m && m <= 256 && m % 8 == 0)
 			{
@@ -139,7 +140,12 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 			}
 			return make_tuple(Token::Identifier, 0, 0);
 		}
+		return make_tuple(Token::Identifier, 0, 0);
 	}
+	return make_tuple(checkToken(_literal), 0, 0);
+}
+Token::Value Token::checkToken(string const& _name)
+{
 	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
 	// and keywords to be put inside the keywords variable.
 #define KEYWORD(name, string, precedence) {string, Token::name},
@@ -147,12 +153,11 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
 #undef KEYWORD
 #undef TOKEN
-	auto it = keywords.find(_literal);
-	return it == keywords.end() ? make_tuple(Token::Identifier, 0, 0) : make_tuple(it->second, 0, 0);
+	auto it = keywords.find(_name);
+	return it == keywords.end() ? Token::Identifier : it->second;
 }
 
 #undef KT
 #undef KK
-
 }
 }

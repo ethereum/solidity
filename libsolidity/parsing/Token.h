@@ -307,6 +307,7 @@ private:
 	// if out_of_range error is thrown, they returns 0s, therefore securing 
 	// the variable's identity as an identifier.
 	static unsigned extractM(std::string const& _literal);
+	static Token::Value checkToken(std::string const& _name);
 	static char const* const m_name[NUM_TOKENS];
 	static char const* const m_string[NUM_TOKENS];
 	static int8_t const m_precedence[NUM_TOKENS];
