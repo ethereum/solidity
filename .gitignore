@@ -30,6 +30,7 @@
 # Build directory
 build/
 docs/_build
+docs/utils/__pycache__
 
 # vim stuff
 *.swp
