@@ -117,9 +117,9 @@ u256 const& MemberList::storageSize() const
 
 TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 {
-	string tokenString = _type.toString();
 	solAssert(Token::isElementaryTypeName(_type.token()),
-		"Expected an elementary type name but got " + tokenString);
+		"Expected an elementary type name but got " + _type.toString()
+	);
 
 	Token::Value token = _type.token();
 	unsigned int m = _type.firstNumber();
