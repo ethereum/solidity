@@ -7,11 +7,11 @@ Structure of a Contract
 ***********************
 
 Contracts in Solidity are similar to classes in object-oriented languages.
-Each contract can contain declarations of :ref:`state-variables`, :ref:`functions`,
-:ref:`function-modifiers`, :ref:`events`, :ref:`structs-types` and :ref:`enum-types`.
+Each contract can contain declarations of :ref:`structure-state-variables`, :ref:`structure-functions`,
+:ref:`structure-function-modifiers`, :ref:`structure-events`, :ref:`structure-structs-types` and :ref:`structure-enum-types`.
 Furthermore, contracts can inherit from other contracts.
 
-.. _state-variables:
+.. _structure-state-variables:
 
 State Variables
 ===============
@@ -29,7 +29,7 @@ See the :ref:`types` section for valid state variable types and
 :ref:`visibility-and-accessors` for possible choices for 
 visability.
 
-.. _functions:
+.. _structure-functions:
 
 Functions
 =========
@@ -44,11 +44,11 @@ Functions are the executable units of code within a contract.
     }
   }
 
-Functions can be called internally or externally (:ref:`function-calls`)
+:ref:`function-calls` can happen internally or externally
 and have different levels of visibility (:ref:`visibility-and-accessors`)
 towards other contracts. 
 
-.. _function-modifiers:
+.. _structure-function-modifiers:
 
 Function Modifiers
 ==================
@@ -72,7 +72,7 @@ Function modifiers can be used to amend the semantics of functions in a declarat
 
 See :ref:`modifiers` in the section on contracts for a more in-depth explanation.
 
-.. _events:
+.. _structure-events:
 
 Events
 ======
@@ -90,7 +90,7 @@ Events are convenience interfaces with the EVM logging facilities.
     }
   }
 
-.. _structs-types:
+.. _structure-structs-types:
 
 Structs Types
 =============
@@ -108,7 +108,7 @@ Structs are custom defined types that can group several variables.
     }
   }
 
-.. _enum-types:
+.. _structure-enum-types:
 
 Enum Types
 ==========
