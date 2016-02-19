@@ -7,11 +7,11 @@ Structure of a Contract
 ***********************
 
 Contracts in Solidity are similar to classes in object-oriented languages.
-Each contract can contain declarations of :ref:`state_variables`, :ref:`functions`,
-:ref:`function_modifiers`, :ref:`events`, :ref:`structs_types` and :ref:`enum_types`.
+Each contract can contain declarations of :ref:`state-variables`, :ref:`functions`,
+:ref:`function-modifiers`, :ref:`events`, :ref:`structs-types` and :ref:`enum-types`.
 Furthermore, contracts can inherit from other contracts.
 
-.. _state_variables:
+.. _state-variables:
 
 State Variables
 ===============
@@ -40,7 +40,7 @@ Functions are the executable units of code within a contract.
     }
   }
 
-.. _function_modifiers:
+.. _function-modifiers:
 
 Function Modifiers
 ==================
@@ -80,7 +80,7 @@ Events are convenience interfaces with the EVM logging facilities.
     }
   }
 
-.. _structs_types:
+.. _structs-types:
 
 Structs Types
 =============
@@ -98,7 +98,7 @@ Structs are custom defined types that can group several variables.
     }
   }
 
-.. _enum_types:
+.. _enum-types:
 
 Enum Types
 ==========
