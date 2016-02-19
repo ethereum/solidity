@@ -148,6 +148,8 @@ String Literals are written with double quotes (`"abc"`). As with integer litera
 
 .. index:: enum
 
+.. _enums:
+
 Enums
 =====
 
@@ -356,6 +358,8 @@ Members
 
 
 .. index:: ! struct, ! type;struct
+
+.. _structs:
 
 Structs
 -------

@@ -53,7 +53,8 @@ towards other contracts.
 Function Modifiers
 ==================
 
-Function modifiers can be used to amend the semantics of functions in a declarative way.
+Function modifiers can be used to amend the semantics of functions in a declarative way
+(see :ref:`modifiers` in contracts section).
 
 ::
   
@@ -70,7 +71,7 @@ Function modifiers can be used to amend the semantics of functions in a declarat
     }
   }
 
-See :ref:`modifiers` in the section on contracts for a more in-depth explanation.
+ in the section on contracts for a more in-depth explanation.
 
 .. _structure-events:
 
@@ -90,12 +91,16 @@ Events are convenience interfaces with the EVM logging facilities.
     }
   }
 
+See :ref:`events` in contracts section for information on how events are declared 
+and can be used from within a dapp.
+
 .. _structure-structs-types:
 
 Structs Types
 =============
 
-Structs are custom defined types that can group several variables.
+Structs are custom defined types that can group several variables (see 
+:ref:`structs` in types section).
 
 ::
 
@@ -113,7 +118,8 @@ Structs are custom defined types that can group several variables.
 Enum Types
 ==========
 
-Enums can be used to create custom types with a finite set of values.
+Enums can be used to create custom types with a finite set of values (see 
+:ref:`enums` in types section).
 
 ::
   
