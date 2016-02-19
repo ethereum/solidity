@@ -25,6 +25,10 @@ State variables are values which are permanently stored in contract storage.
     // ...
   }
 
+See the :ref:`types` section for valid state variable types and
+:ref:`visibility-and-accessors` for possible choices for 
+visability.
+
 .. _functions:
 
 Functions
@@ -39,6 +43,10 @@ Functions are the executable units of code within a contract.
       // ...
     }
   }
+
+Functions can be called internally or externally (:ref:`function-calls`)
+and have different levels of visibility (:ref:`visibility-and-accessors`)
+towards other contracts. 
 
 .. _function-modifiers:
 
@@ -61,6 +69,8 @@ Function modifiers can be used to amend the semantics of functions in a declarat
         // ...
     }
   }
+
+See :ref:`modifiers` in the section on contracts for a more in-depth explanation.
 
 .. _events:
 

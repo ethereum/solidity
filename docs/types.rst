@@ -1,5 +1,7 @@
 .. index:: type
 
+.. _types:
+
 *****
 Types
 *****
