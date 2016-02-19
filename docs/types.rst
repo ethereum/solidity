@@ -1,5 +1,7 @@
 .. index:: type
 
+.. _types:
+
 *****
 Types
 *****
@@ -145,6 +147,8 @@ String Literals
 String Literals are written with double quotes (`"abc"`). As with integer literals, their type can vary, but they are implicitly convertible to `bytes•` if they fit, to `bytes` and to `string`.
 
 .. index:: enum
+
+.. _enums:
 
 Enums
 =====
@@ -354,6 +358,8 @@ Members
 
 
 .. index:: ! struct, ! type;struct
+
+.. _structs:
 
 Structs
 -------

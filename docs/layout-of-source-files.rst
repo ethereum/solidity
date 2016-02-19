@@ -17,15 +17,32 @@ Solidity supports import statements that are very similar to those available in 
 
 At a global level, you can use import statements of the following form:
 
-`import "filename";` will import all global symbols from "filename" (and symbols imported there) into the current global scope (different than in ES6 but backwards-compatible for Solidity).
+::
 
-`import * as symbolName from "filename";` creates a new global symbol `symbolName` whose members are all the global symbols from `"filename"`.
+  import "filename";
 
-`import {symbol1 as alias, symbol2} from "filename";` creates new global symbols `alias` and `symbol2` which reference `symbol1` and `symbal2` from `"filename"`, respectively.
+...will import all global symbols from "filename" (and symbols imported there) into the 
+current global scope (different than in ES6 but backwards-compatible for Solidity).
+
+::
+
+  import * as symbolName from "filename";
+
+...creates a new global symbol `symbolName` whose members are all the global symbols from `"filename"`.
+
+::
+
+  import {symbol1 as alias, symbol2} from "filename";
+
+...creates new global symbols `alias` and `symbol2` which reference `symbol1` and `symbol2` from `"filename"`, respectively.
 
 Another syntax is not part of ES6, but probably convenient:
 
-`import "filename" as symbolName;` is equivalent to `import * as symbolName from "filename";`.
+::
+
+  import "filename" as symbolName;
+
+...is equivalent to `import * as symbolName from "filename";`.
 
 Paths
 -----
@@ -65,11 +82,15 @@ So as an example, if you clone
 `github.com/ethereum/dapp-bin/` locally to `/usr/local/dapp-bin`, you can use
 the following in your source file:
 
-`import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;`
+::
+
+  import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;
 
 and then run the compiler as
 
-`solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol`
+.. code-block:: shell
+
+  solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
 
 Note that solc only allows you to include files from certain directories:
 They have to be in the directory (or subdirectory) of one of the explicitly
@@ -97,6 +118,16 @@ Comments
 ========
 
 Single-line comments (`//`) and multi-line comments (`/*...*/`) are possible.
+
+::
+
+  // This is a single-line comment.
+  
+  /*
+  This is a 
+  multi-line comment.
+  */
+  
 
 There are special types of comments called natspec comments
 (documentation yet to be written). These are introduced by 

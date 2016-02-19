@@ -20,6 +20,8 @@ there is in C and JavaScript, so `if (1) { ... }` is *not* valid Solidity.
 
 .. index:: ! function;call, function;internal, function;external
 
+.. _function-calls:
+
 Function Calls
 ==============
 

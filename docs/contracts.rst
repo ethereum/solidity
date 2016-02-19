@@ -359,6 +359,8 @@ possible.
 
 .. index:: ! event
 
+.. _events:
+
 ******
 Events
 ******
