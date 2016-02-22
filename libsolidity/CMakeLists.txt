@@ -6,6 +6,7 @@ aux_source_directory(codegen SRC_LIST)
 aux_source_directory(formal SRC_LIST)
 aux_source_directory(interface SRC_LIST)
 aux_source_directory(parsing SRC_LIST)
+aux_source_directory(inlineasm SRC_LIST)
 
 set(EXECUTABLE solidity)
 

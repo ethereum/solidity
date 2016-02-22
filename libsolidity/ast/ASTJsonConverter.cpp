@@ -157,6 +157,12 @@ bool ASTJsonConverter::visit(Mapping const&)
 	return true;
 }
 
+bool ASTJsonConverter::visit(InlineAssembly const&)
+{
+	addJsonNode("InlineAssembly", {}, true);
+	return true;
+}
+
 bool ASTJsonConverter::visit(Block const&)
 {
 	addJsonNode("Block", {}, true);
@@ -352,6 +358,10 @@ void ASTJsonConverter::endVisit(UserDefinedTypeName const&)
 }
 
 void ASTJsonConverter::endVisit(Mapping const&)
+{
+}
+
+void ASTJsonConverter::endVisit(InlineAssembly const&)
 {
 }
 

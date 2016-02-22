@@ -21,7 +21,6 @@
  */
 
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/interface/Exceptions.h>
 
@@ -85,7 +84,7 @@ void SourceReferenceFormatter::printExceptionInformation(
 	ostream& _stream,
 	Exception const& _exception,
 	string const& _name,
-	CompilerStack const& _compiler
+	function<Scanner const&(string const&)> const& _scannerFromSourceName
 )
 {
 	SourceLocation const* location = boost::get_error_info<errinfo_sourceLocation>(_exception);
@@ -94,7 +93,7 @@ void SourceReferenceFormatter::printExceptionInformation(
 
 	if (location)
 	{
-		scannerPtr = &_compiler.scanner(*location->sourceName);
+		scannerPtr = &_scannerFromSourceName(*location->sourceName);
 		printSourceName(_stream, *location, *scannerPtr);
 	}
 
@@ -104,7 +103,7 @@ void SourceReferenceFormatter::printExceptionInformation(
 
 	if (location)
 	{
-		scannerPtr = &_compiler.scanner(*location->sourceName);
+		scannerPtr = &_scannerFromSourceName(*location->sourceName);
 		printSourceLocation(_stream, *location, *scannerPtr);
 	}
 
@@ -112,7 +111,7 @@ void SourceReferenceFormatter::printExceptionInformation(
 	{
 		for (auto info: secondarylocation->infos)
 		{
-			scannerPtr = &_compiler.scanner(*info.second.sourceName);
+			scannerPtr = &_scannerFromSourceName(*info.second.sourceName);
 			_stream << info.first << " ";
 			printSourceName(_stream, info.second, *scannerPtr);
 			_stream << endl;

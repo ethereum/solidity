@@ -50,6 +50,9 @@ private:
 	bool link();
 	void writeLinkedFiles();
 
+	/// Parse assembly input.
+	bool assemble();
+
 	void outputCompilationResults();
 
 	void handleCombinedJSON();
@@ -73,6 +76,7 @@ private:
 	/// @arg _data to be written
 	void createFile(std::string const& _fileName, std::string const& _data);
 
+	bool m_onlyAssemble = false;
 	bool m_onlyLink = false;
 
 	/// Compiler arguments variable map

@@ -21,6 +21,7 @@
  */
 
 #include <string>
+#include <functional>
 #include <iostream>
 #include <json/json.h>
 #include <libdevcore/Common.h>
@@ -47,10 +48,14 @@ extern "C" {
 typedef void (*CStyleReadFileCallback)(char const* _path, char** o_contents, char** o_error);
 }
 
-string formatError(Exception const& _exception, string const& _name, CompilerStack const& _compiler)
+string formatError(
+	Exception const& _exception,
+	string const& _name,
+	function<Scanner const&(string const&)> const& _scannerFromSourceName
+)
 {
 	ostringstream errorOutput;
-	SourceReferenceFormatter::printExceptionInformation(errorOutput, _exception, _name, _compiler);
+	SourceReferenceFormatter::printExceptionInformation(errorOutput, _exception, _name, _scannerFromSourceName);
 	return errorOutput.str();
 }
 
@@ -150,6 +155,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 		};
 	}
 	CompilerStack compiler(true, readCallback);
+	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return compiler.scanner(_sourceName); };
 	bool success = false;
 	try
 	{
@@ -161,22 +167,22 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			errors.append(formatError(
 				*error,
 				(err->type() == Error::Type::Warning) ? "Warning" : "Error",
-				compiler
+				scannerFromSourceName
 			));
 		}
 		success = succ; // keep success false on exception
 	}
 	catch (Error const& error)
 	{
-		errors.append(formatError(error, error.typeName(), compiler));
+		errors.append(formatError(error, error.typeName(), scannerFromSourceName));
 	}
 	catch (CompilerError const& exception)
 	{
-		errors.append(formatError(exception, "Compiler error", compiler));
+		errors.append(formatError(exception, "Compiler error", scannerFromSourceName));
 	}
 	catch (InternalCompilerError const& exception)
 	{
-		errors.append(formatError(exception, "Internal compiler error", compiler));
+		errors.append(formatError(exception, "Internal compiler error", scannerFromSourceName));
 	}
 	catch (Exception const& exception)
 	{

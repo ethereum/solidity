@@ -81,6 +81,7 @@ private:
 	);
 	ASTPointer<Block> parseBlock(ASTPointer<ASTString> const& _docString = {});
 	ASTPointer<Statement> parseStatement();
+	ASTPointer<InlineAssembly> parseInlineAssembly(ASTPointer<ASTString> const& _docString = {});
 	ASTPointer<IfStatement> parseIfStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<WhileStatement> parseWhileStatement(ASTPointer<ASTString> const& _docString);
 	ASTPointer<ForStatement> parseForStatement(ASTPointer<ASTString> const& _docString);

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <ostream>
+#include <functional>
 #include <libevmasm/SourceLocation.h>
 
 namespace dev
@@ -44,7 +45,7 @@ public:
 		std::ostream& _stream,
 		Exception const& _exception,
 		std::string const& _name,
-		CompilerStack const& _compiler
+		std::function<Scanner const&(std::string const&)> const& _scannerFromSourceName
 	);
 private:
 	static void printSourceName(std::ostream& _stream, SourceLocation const& _location, Scanner const& _scanner);
