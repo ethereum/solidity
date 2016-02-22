@@ -25,6 +25,7 @@
 #include <memory>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/parsing/Token.h>
+#include <libsolidity/ast/ASTForward.h>
 
 namespace dev
 {
@@ -32,9 +33,6 @@ namespace solidity
 {
 
 class Scanner;
-template <class T>
-using ASTPointer = std::shared_ptr<T>;
-using ASTString = std::string; // might be changed to a reference to the source
 
 class ParserBase
 {
