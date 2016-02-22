@@ -22,7 +22,8 @@
 
 #pragma once
 
-#include "libsolidity/ast/AST.h"
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/parsing/ParserBase.h>
 
 namespace dev
 {
@@ -31,21 +32,15 @@ namespace solidity
 
 class Scanner;
 
-class Parser
+class Parser: public ParserBase
 {
 public:
-	Parser(ErrorList& errors): m_errors(errors){};
+	Parser(ErrorList& _errors): ParserBase(_errors) {}
 
 	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
-	std::shared_ptr<std::string const> const& sourceName() const;
 
 private:
 	class ASTNodeFactory;
-
-	/// Start position of the current token
-	int position() const;
-	/// End position of the current token
-	int endPosition() const;
 
 	struct VarDeclParserOptions
 	{
@@ -139,29 +134,13 @@ private:
 		std::vector<ASTPointer<PrimaryExpression>> const& _path,
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 	);
-	/// If current token value is not _value, throw exception otherwise advance token.
-	void expectToken(Token::Value _value);
-	Token::Value expectAssignmentOperator();
-	ASTPointer<ASTString> expectIdentifierToken();
-	ASTPointer<ASTString> getLiteralAndAdvance();
 	///@}
 
 	/// Creates an empty ParameterList at the current location (used if parameters can be omitted).
 	ASTPointer<ParameterList> createEmptyParameterList();
 
-	/// Creates a @ref ParserError and annotates it with the current position and the
-	/// given @a _description.
-	void parserError(std::string const& _description);
-
-	/// Creates a @ref ParserError and annotates it with the current position and the
-	/// given @a _description. Throws the FatalError.
-	void fatalParserError(std::string const& _description);
-
-	std::shared_ptr<Scanner> m_scanner;
 	/// Flag that signifies whether '_' is parsed as a PlaceholderStatement or a regular identifier.
 	bool m_insideModifier = false;
-	/// The reference to the list of errors and warning to add errors/warnings during parsing
-	ErrorList& m_errors;
 };
 
 }

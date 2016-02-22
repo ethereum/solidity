@@ -96,21 +96,6 @@ ASTPointer<SourceUnit> Parser::parse(shared_ptr<Scanner> const& _scanner)
 	}
 }
 
-std::shared_ptr<const string> const& Parser::sourceName() const
-{
-	return m_scanner->sourceName();
-}
-
-int Parser::position() const
-{
-	return m_scanner->currentLocation().start;
-}
-
-int Parser::endPosition() const
-{
-	return m_scanner->currentLocation().end;
-}
-
 ASTPointer<ImportDirective> Parser::parseImportDirective()
 {
 	// import "abc" [as x];
@@ -1286,71 +1271,11 @@ ASTPointer<Expression> Parser::expressionFromIndexAccessStructure(
 	return expression;
 }
 
-void Parser::expectToken(Token::Value _value)
-{
-	if (m_scanner->currentToken() != _value)
-		fatalParserError(
-			string("Expected token ") +
-			string(Token::name(_value)) +
-			string(" got '") +
-			string(Token::name(m_scanner->currentToken())) +
-			string("'")
-		);
-	m_scanner->next();
-}
-
-Token::Value Parser::expectAssignmentOperator()
-{
-	Token::Value op = m_scanner->currentToken();
-	if (!Token::isAssignmentOp(op))
-		fatalParserError(
-			string("Expected assignment operator,  got '") +
-			string(Token::name(m_scanner->currentToken())) +
-			string("'")
-		);
-	m_scanner->next();
-	return op;
-}
-
-ASTPointer<ASTString> Parser::expectIdentifierToken()
-{
-	if (m_scanner->currentToken() != Token::Identifier)
-		fatalParserError(
-			string("Expected identifier, got '") +
-			string(Token::name(m_scanner->currentToken())) +
-			string("'")
-		);
-	return getLiteralAndAdvance();
-}
-
-ASTPointer<ASTString> Parser::getLiteralAndAdvance()
-{
-	ASTPointer<ASTString> identifier = make_shared<ASTString>(m_scanner->currentLiteral());
-	m_scanner->next();
-	return identifier;
-}
-
 ASTPointer<ParameterList> Parser::createEmptyParameterList()
 {
 	ASTNodeFactory nodeFactory(*this);
 	nodeFactory.setLocationEmpty();
 	return nodeFactory.createNode<ParameterList>(vector<ASTPointer<VariableDeclaration>>());
-}
-
-void Parser::parserError(string const& _description)
-{
-	auto err = make_shared<Error>(Error::Type::ParserError);
-	*err <<
-		errinfo_sourceLocation(SourceLocation(position(), position(), sourceName())) <<
-		errinfo_comment(_description);
-
-	m_errors.push_back(err);
-}
-
-void Parser::fatalParserError(string const& _description)
-{
-	parserError(_description);
-	BOOST_THROW_EXCEPTION(FatalError());
 }
 
 }
