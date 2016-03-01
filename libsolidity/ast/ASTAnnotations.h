@@ -110,6 +110,17 @@ struct StatementAnnotation: ASTAnnotation, DocumentedAnnotation
 {
 };
 
+namespace assembly
+{
+struct Identifier; // forward
+}
+
+struct InlineAssemblyAnnotation: StatementAnnotation
+{
+	/// Mapping containing resolved references to external identifiers.
+	std::map<assembly::Identifier const*, Declaration const*> externalReferences;
+};
+
 struct ReturnAnnotation: StatementAnnotation
 {
 	/// Reference to the return parameters of the function.

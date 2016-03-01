@@ -29,42 +29,36 @@ namespace dev
 {
 namespace solidity
 {
-
-class AsmData
+namespace assembly
 {
-public:
-	/// Direct EVM instruction (except PUSHi and JUMPDEST)
-	struct Instruction { eth::Instruction instruction; };
-	/// Literal number or string (up to 32 bytes)
-	struct Literal { bool isNumber; std::string value; };
-	/// External / internal identifier or label reference
-	struct Identifier { std::string name; };
-	struct FunctionalInstruction;
-	/// Jump label ("name:")
-	struct Label { std::string name; };
-	/// Assignemnt (":= x", moves stack top into x, potentially multiple slots)
-	struct Assignment { Identifier variableName; };
-	struct FunctionalAssignment;
-	struct VariableDeclaration;
-	struct Block;
-	using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionalInstruction, VariableDeclaration, Block>;
-	/// Functional assignment ("x := mload(20)", expects push-1-expression on the right hand
-	/// side and requires x to occupy exactly one stack slot.
-	struct FunctionalAssignment { Identifier variableName; std::shared_ptr<Statement> value; };
-	/// Functional instruction, e.g. "mul(mload(20), add(2, x))"
-	struct FunctionalInstruction { Instruction instruction; std::vector<Statement> arguments; };
-	/// Block-scope variable declaration ("let x := mload(20)"), non-hoisted
-	struct VariableDeclaration { std::string name; std::shared_ptr<Statement> value; };
-	/// Block that creates a scope (frees declared stack variables)
-	struct Block { std::vector<Statement> statements; };
 
-	AsmData(Block&& _statements): m_statements(_statements) {}
+/// What follows are the AST nodes for assembly.
 
-	Block const& statements() const { return m_statements; }
+/// Direct EVM instruction (except PUSHi and JUMPDEST)
+struct Instruction { eth::Instruction instruction; };
+/// Literal number or string (up to 32 bytes)
+struct Literal { bool isNumber; std::string value; };
+/// External / internal identifier or label reference
+struct Identifier { std::string name; };
+struct FunctionalInstruction;
+/// Jump label ("name:")
+struct Label { std::string name; };
+/// Assignemnt (":= x", moves stack top into x, potentially multiple slots)
+struct Assignment { Identifier variableName; };
+struct FunctionalAssignment;
+struct VariableDeclaration;
+struct Block;
+using Statement = boost::variant<Instruction, Literal, Label, Assignment, Identifier, FunctionalAssignment, FunctionalInstruction, VariableDeclaration, Block>;
+/// Functional assignment ("x := mload(20)", expects push-1-expression on the right hand
+/// side and requires x to occupy exactly one stack slot.
+struct FunctionalAssignment { Identifier variableName; std::shared_ptr<Statement> value; };
+/// Functional instruction, e.g. "mul(mload(20), add(2, x))"
+struct FunctionalInstruction { Instruction instruction; std::vector<Statement> arguments; };
+/// Block-scope variable declaration ("let x := mload(20)"), non-hoisted
+struct VariableDeclaration { std::string name; std::shared_ptr<Statement> value; };
+/// Block that creates a scope (frees declared stack variables)
+struct Block { std::vector<Statement> statements; };
 
-private:
-	Block m_statements;
-};
-
+}
 }
 }

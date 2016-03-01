@@ -773,7 +773,7 @@ void CommandLineInterface::handleAst(string const& _argStr)
 void CommandLineInterface::actOnInput()
 {
 	if (m_onlyAssemble)
-		return; //@TODO
+		outputAssembly();
 	else if (m_onlyLink)
 		writeLinkedFiles();
 	else
@@ -831,25 +831,38 @@ bool CommandLineInterface::assemble()
 {
 	//@TODO later, we will use the convenience interface and should also remove the include above
 	bool successful = true;
-	ErrorList errors;
 	map<string, shared_ptr<Scanner>> scanners;
 	for (auto const& src: m_sourceCodes)
 	{
 		auto scanner = make_shared<Scanner>(CharStream(src.second), src.first);
 		scanners[src.first] = scanner;
-		InlineAssemblyParser parser(errors);
-		if (!parser.parse(scanner))
+		if (!m_assemblyStacks[src.first].parse(scanner))
 			successful = false;
+		else
+			//@TODO we should not just throw away the result here
+			m_assemblyStacks[src.first].assemble();
 	}
-	for (auto const& error: errors)
-		SourceReferenceFormatter::printExceptionInformation(
-			cerr,
-			*error,
-			(error->type() == Error::Type::Warning) ? "Warning" : "Error",
-			[&](string const& _source) -> Scanner const& { return *scanners.at(_source); }
-		);
+	for (auto const& stack: m_assemblyStacks)
+		for (auto const& error: stack.second.errors())
+			SourceReferenceFormatter::printExceptionInformation(
+				cerr,
+				*error,
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+				[&](string const& _source) -> Scanner const& { return *scanners.at(_source); }
+			);
 
 	return successful;
+}
+
+void CommandLineInterface::outputAssembly()
+{
+	for (auto const& src: m_sourceCodes)
+	{
+		cout << endl << "======= " << src.first << " =======" << endl;
+		eth::Assembly assembly = m_assemblyStacks[src.first].assemble();
+		cout << assembly.assemble().toHex() << endl;
+		cout << assembly.out();
+	}
 }
 
 void CommandLineInterface::outputCompilationResults()

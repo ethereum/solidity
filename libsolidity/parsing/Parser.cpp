@@ -735,16 +735,17 @@ ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> con
 {
 	ASTNodeFactory nodeFactory(*this);
 	expectToken(Token::Assembly);
-	if (m_scanner->currentToken() != Token::StringLiteral)
-		fatalParserError("Expected assembly name.");
-	if (m_scanner->currentLiteral() != "evmasm")
-		fatalParserError("Only \"evmasm\" supported.");
-	m_scanner->next();
+	if (m_scanner->currentToken() == Token::StringLiteral)
+	{
+		if (m_scanner->currentLiteral() != "evmasm")
+			fatalParserError("Only \"evmasm\" supported.");
+		m_scanner->next();
+	}
 
-	InlineAssemblyParser parser(m_errors);
-	shared_ptr<InlineAssemblyBlock> operations = parser.parse(m_scanner);
+	assembly::Parser asmParser(m_errors);
+	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner);
 	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<InlineAssembly>(_docString, operations);
+	return nodeFactory.createNode<InlineAssembly>(_docString, block);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)

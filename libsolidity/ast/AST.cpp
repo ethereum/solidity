@@ -363,6 +363,13 @@ StatementAnnotation& Statement::annotation() const
 	return static_cast<StatementAnnotation&>(*m_annotation);
 }
 
+InlineAssemblyAnnotation& InlineAssembly::annotation() const
+{
+	if (!m_annotation)
+		m_annotation = new InlineAssemblyAnnotation();
+	return static_cast<InlineAssemblyAnnotation&>(*m_annotation);
+}
+
 ReturnAnnotation& Return::annotation() const
 {
 	if (!m_annotation)

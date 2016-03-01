@@ -109,6 +109,8 @@ public:
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the assembly item corresponding to the pushed subroutine, i.e. its offset.
 	eth::AssemblyItem addSubroutine(eth::Assembly const& _assembly) { return m_asm.appendSubSize(_assembly); }
+	/// Appends the given code (used by inline assembly) ignoring any stack height changes.
+	void appendInlineAssembly(eth::Assembly const& _assembly) { int deposit = m_asm.deposit(); m_asm.append(_assembly); m_asm.setDeposit(deposit); }
 	/// Pushes the size of the final program
 	void appendProgramSize() { return m_asm.appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack

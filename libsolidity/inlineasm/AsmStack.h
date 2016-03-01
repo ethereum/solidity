@@ -17,40 +17,41 @@
 /**
  * @author Christian <c@ethdev.com>
  * @date 2016
- * Solidity inline assembly parser.
+ * Full-stack Solidity inline assember.
  */
 
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <libsolidity/inlineasm/AsmData.h>
-#include <libsolidity/parsing/ParserBase.h>
+#include <string>
+#include <functional>
+#include <libsolidity/interface/Exceptions.h>
 
 namespace dev
 {
+namespace eth
+{
+class Assembly;
+}
 namespace solidity
 {
+class Scanner;
 namespace assembly
 {
+struct Block;
 
-class Parser: public ParserBase
+class InlineAssemblyStack
 {
 public:
-	Parser(ErrorList& _errors): ParserBase(_errors) {}
+	/// Parse the given inline assembly chunk starting with `{` and ending with the corresponding `}`.
+	/// @return false or error.
+	bool parse(std::shared_ptr<Scanner> const& _scanner);
+	eth::Assembly assemble();
 
-	/// Parses an inline assembly block starting with `{` and ending with `}`.
-	/// @returns an empty shared pointer on error.
-	std::shared_ptr<Block> parse(std::shared_ptr<Scanner> const& _scanner);
+	ErrorList const& errors() const { return m_errors; }
 
-protected:
-	Block parseBlock();
-	Statement parseStatement();
-	/// Parses a functional expression that has to push exactly one stack element
-	Statement parseExpression();
-	Statement parseElementaryOperation(bool _onlySinglePusher = false);
-	VariableDeclaration parseVariableDeclaration();
-	FunctionalInstruction parseFunctionalInstruction(Statement const& _instruction);
+private:
+	std::shared_ptr<Block> m_asmBlock;
+	ErrorList m_errors;
 };
 
 }

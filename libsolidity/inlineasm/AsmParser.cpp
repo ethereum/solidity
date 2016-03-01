@@ -29,13 +29,14 @@
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
+using namespace dev::solidity::assembly;
 
-shared_ptr<AsmData> InlineAssemblyParser::parse(std::shared_ptr<Scanner> const& _scanner)
+shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scanner)
 {
 	try
 	{
 		m_scanner = _scanner;
-		return make_shared<AsmData>(parseBlock());
+		return make_shared<assembly::Block>(parseBlock());
 	}
 	catch (FatalError const&)
 	{
@@ -45,17 +46,17 @@ shared_ptr<AsmData> InlineAssemblyParser::parse(std::shared_ptr<Scanner> const& 
 	return nullptr;
 }
 
-AsmData::Block InlineAssemblyParser::parseBlock()
+assembly::Block Parser::parseBlock()
 {
 	expectToken(Token::LBrace);
-	AsmData::Block block;
+	Block block;
 	while (m_scanner->currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
 	m_scanner->next();
 	return block;
 }
 
-AsmData::Statement InlineAssemblyParser::parseStatement()
+assembly::Statement Parser::parseStatement()
 {
 	switch (m_scanner->currentToken())
 	{
@@ -69,8 +70,9 @@ AsmData::Statement InlineAssemblyParser::parseStatement()
 		expectToken(Token::Colon);
 		string name = m_scanner->currentLiteral();
 		expectToken(Token::Identifier);
-		return AsmData::Assignment{AsmData::Identifier{name}};
+		return assembly::Assignment{assembly::Identifier{name}};
 	}
+	case Token::Return: // opcode
 	default:
 		break;
 	}
@@ -78,28 +80,28 @@ AsmData::Statement InlineAssemblyParser::parseStatement()
 	// Simple instruction (might turn into functional),
 	// literal,
 	// identifier (might turn into label or functional assignment)
-	AsmData::Statement statement(parseElementaryOperation());
+	Statement statement(parseElementaryOperation());
 	switch (m_scanner->currentToken())
 	{
 	case Token::LParen:
 		return parseFunctionalInstruction(statement);
 	case Token::Colon:
 	{
-		if (statement.type() != typeid(AsmData::Identifier))
+		if (statement.type() != typeid(assembly::Identifier))
 			fatalParserError("Label name / variable name must precede \":\".");
-		string const& name = boost::get<AsmData::Identifier>(statement).name;
+		string const& name = boost::get<assembly::Identifier>(statement).name;
 		m_scanner->next();
 		if (m_scanner->currentToken() == Token::Assign)
 		{
 			// functional assignment
 			m_scanner->next();
-			unique_ptr<AsmData::Statement> value;
-			value.reset(new AsmData::Statement(parseExpression()));
-			return AsmData::FunctionalAssignment{{move(name)}, move(value)};
+			unique_ptr<Statement> value;
+			value.reset(new Statement(parseExpression()));
+			return FunctionalAssignment{{std::move(name)}, std::move(value)};
 		}
 		else
 			// label
-			return AsmData::Label{name};
+			return Label{name};
 	}
 	default:
 		break;
@@ -107,16 +109,16 @@ AsmData::Statement InlineAssemblyParser::parseStatement()
 	return statement;
 }
 
-AsmData::Statement InlineAssemblyParser::parseExpression()
+assembly::Statement Parser::parseExpression()
 {
-	AsmData::Statement operation = parseElementaryOperation(true);
+	Statement operation = parseElementaryOperation(true);
 	if (m_scanner->currentToken() == Token::LParen)
 		return parseFunctionalInstruction(operation);
 	else
 		return operation;
 }
 
-AsmData::Statement InlineAssemblyParser::parseElementaryOperation(bool _onlySinglePusher)
+assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 {
 	// Allowed instructions, lowercase names.
 	static map<string, eth::Instruction> s_instructions;
@@ -129,6 +131,8 @@ AsmData::Statement InlineAssemblyParser::parseElementaryOperation(bool _onlySing
 			)
 				continue;
 			string name = instruction.first;
+			if (instruction.second == eth::Instruction::SUICIDE)
+				name = "selfdestruct";
 			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
 			s_instructions[name] = instruction.second;
 		}
@@ -138,8 +142,13 @@ AsmData::Statement InlineAssemblyParser::parseElementaryOperation(bool _onlySing
 	switch (m_scanner->currentToken())
 	{
 	case Token::Identifier:
+	case Token::Return:
 	{
-		string literal = m_scanner->currentLiteral();
+		string literal;
+		if (m_scanner->currentToken() == Token::Return)
+			literal = "return";
+		else
+			literal = m_scanner->currentLiteral();
 		// first search the set of instructions.
 		if (s_instructions.count(literal))
 		{
@@ -151,17 +160,17 @@ AsmData::Statement InlineAssemblyParser::parseElementaryOperation(bool _onlySing
 					fatalParserError("Instruction " + info.name + " not allowed in this context.");
 			}
 			m_scanner->next();
-			return AsmData::Instruction{instr};
+			return Instruction{instr};
 		}
 		else
 			m_scanner->next();
-			return AsmData::Identifier{literal};
+			return Identifier{literal};
 		break;
 	}
 	case Token::StringLiteral:
 	case Token::Number:
 	{
-		AsmData::Literal literal{
+		Literal literal{
 			m_scanner->currentToken() == Token::Number,
 			m_scanner->currentLiteral()
 		};
@@ -175,23 +184,23 @@ AsmData::Statement InlineAssemblyParser::parseElementaryOperation(bool _onlySing
 	return {};
 }
 
-AsmData::VariableDeclaration InlineAssemblyParser::parseVariableDeclaration()
+assembly::VariableDeclaration Parser::parseVariableDeclaration()
 {
 	expectToken(Token::Let);
 	string name = m_scanner->currentLiteral();
 	expectToken(Token::Identifier);
 	expectToken(Token::Colon);
 	expectToken(Token::Assign);
-	unique_ptr<AsmData::Statement> value;
-	value.reset(new AsmData::Statement(parseExpression()));
-	return AsmData::VariableDeclaration{name, move(value)};
+	unique_ptr<Statement> value;
+	value.reset(new Statement(parseExpression()));
+	return VariableDeclaration{name, std::move(value)};
 }
 
-AsmData::FunctionalInstruction InlineAssemblyParser::parseFunctionalInstruction(AsmData::Statement const& _instruction)
+FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement const& _instruction)
 {
-	if (_instruction.type() != typeid(AsmData::Instruction))
+	if (_instruction.type() != typeid(Instruction))
 		fatalParserError("Assembly instruction required in front of \"(\")");
-	eth::Instruction instr = boost::get<AsmData::Instruction>(_instruction).instruction;
+	eth::Instruction instr = boost::get<Instruction>(_instruction).instruction;
 	eth::InstructionInfo instrInfo = eth::instructionInfo(instr);
 	if (eth::Instruction::DUP1 <= instr && instr <= eth::Instruction::DUP16)
 		fatalParserError("DUPi instructions not allowed for functional notation");
@@ -199,7 +208,7 @@ AsmData::FunctionalInstruction InlineAssemblyParser::parseFunctionalInstruction(
 		fatalParserError("SWAPi instructions not allowed for functional notation");
 
 	expectToken(Token::LParen);
-	vector<AsmData::Statement> arguments;
+	vector<Statement> arguments;
 	unsigned args = unsigned(instrInfo.args);
 	for (unsigned i = 0; i < args; ++i)
 	{
@@ -208,5 +217,5 @@ AsmData::FunctionalInstruction InlineAssemblyParser::parseFunctionalInstruction(
 			expectToken(Token::Comma);
 	}
 	expectToken(Token::RParen);
-	return AsmData::FunctionalInstruction{{instr}, move(arguments)};
+	return FunctionalInstruction{{instr}, std::move(arguments)};
 }

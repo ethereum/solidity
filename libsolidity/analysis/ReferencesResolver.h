@@ -64,6 +64,7 @@ private:
 	virtual void endVisit(UserDefinedTypeName const& _typeName) override;
 	virtual void endVisit(Mapping const& _typeName) override;
 	virtual void endVisit(ArrayTypeName const& _typeName) override;
+	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
 	virtual bool visit(Return const& _return) override;
 	virtual void endVisit(VariableDeclaration const& _variable) override;
 

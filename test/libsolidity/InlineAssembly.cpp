@@ -23,8 +23,9 @@
 #include <string>
 #include <memory>
 #include <libdevcore/Log.h>
+#include <libevmasm/Assembly.h>
 #include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/inlineasm/AsmParser.h>
+#include <libsolidity/inlineasm/AsmStack.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/AST.h>
 #include "../TestHelper.h"
@@ -40,30 +41,36 @@ namespace test
 
 namespace
 {
-shared_ptr<InlineAssemblyBlock> parse(std::string const& _source, ErrorList& _errors)
-{
-	return InlineAssemblyParser(_errors).parse(std::make_shared<Scanner>(CharStream(_source)));
-}
 
-bool successParse(std::string const& _source)
+bool successParse(std::string const& _source, bool _assemble = false)
 {
-	ErrorList errors;
+	assembly::InlineAssemblyStack stack;
 	try
 	{
-		auto assembly = parse(_source, errors);
-		if (!assembly)
+		if (!stack.parse(std::make_shared<Scanner>(CharStream(_source))))
 			return false;
+		if (_assemble)
+		{
+			stack.assemble();
+			if (!stack.errors().empty())
+				return false;
+		}
 	}
 	catch (FatalError const&)
 	{
-		if (Error::containsErrorOfType(errors, Error::Type::ParserError))
+		if (Error::containsErrorOfType(stack.errors(), Error::Type::ParserError))
 			return false;
 	}
-	if (Error::containsErrorOfType(errors, Error::Type::ParserError))
+	if (Error::containsErrorOfType(stack.errors(), Error::Type::ParserError))
 		return false;
 
-	BOOST_CHECK(Error::containsOnlyWarnings(errors));
+	BOOST_CHECK(Error::containsOnlyWarnings(stack.errors()));
 	return true;
+}
+
+bool successAssemble(string const& _source)
+{
+	return successParse(_source, true);
 }
 
 }
@@ -129,6 +136,16 @@ BOOST_AUTO_TEST_CASE(vardecl_complex)
 BOOST_AUTO_TEST_CASE(blocks)
 {
 	BOOST_CHECK(successParse("{ let x := 7 { let y := 3 } { let z := 2 } }"));
+}
+
+BOOST_AUTO_TEST_CASE(string_literals)
+{
+	BOOST_CHECK(successAssemble("{ let x := \"12345678901234567890123456789012\" }"));
+}
+
+BOOST_AUTO_TEST_CASE(oversize_string_literals)
+{
+	BOOST_CHECK(!successAssemble("{ let x := \"123456789012345678901234567890123\" }"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
