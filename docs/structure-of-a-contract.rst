@@ -27,7 +27,7 @@ State variables are values which are permanently stored in contract storage.
 
 See the :ref:`types` section for valid state variable types and
 :ref:`visibility-and-accessors` for possible choices for 
-visability.
+visibility.
 
 .. _structure-functions:
 
