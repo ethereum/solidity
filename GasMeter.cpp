@@ -126,18 +126,22 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item)
 		}
 		case Instruction::CALL:
 		case Instruction::CALLCODE:
+		case Instruction::DELEGATECALL:
+		{
 			gas = m_schedule.callGas;
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(0)))
 				gas += (*value);
 			else
 				gas = GasConsumption::infinite();
-			if (_item.instruction() != Instruction::CALLCODE)
+			if (_item.instruction() == Instruction::CALL)
 				gas += m_schedule.callNewAccountGas; // We very rarely know whether the address exists.
-			if (!classes.knownZero(m_state->relativeStackElement(-2)))
+			int valueSize = _item.instruction() == Instruction::DELEGATECALL ? 0 : 1;
+			if (!classes.knownZero(m_state->relativeStackElement(-1 - valueSize)))
 				gas += m_schedule.callValueTransferGas;
-			gas += memoryGas(-3, -4);
-			gas += memoryGas(-5, -6);
+			gas += memoryGas(-2 - valueSize, -3 - valueSize);
+			gas += memoryGas(-4 - valueSize, -5 - valueSize);
 			break;
+		}
 		case Instruction::CREATE:
 			gas = m_schedule.createGas;
 			gas += memoryGas(-1, -2);

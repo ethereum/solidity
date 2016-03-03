@@ -134,6 +134,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	{
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
 	case Instruction::CREATE:
 	case Instruction::GAS:
 	case Instruction::PC:
@@ -157,6 +158,7 @@ bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 	case Instruction::MSTORE8:
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
 		return true;
 	default:
 		return false;
@@ -169,6 +171,7 @@ bool SemanticInformation::invalidatesStorage(Instruction _instruction)
 	{
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
 	case Instruction::CREATE:
 	case Instruction::SSTORE:
 		return true;
