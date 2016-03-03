@@ -521,7 +521,6 @@ ConstantNumberType::ConstantNumberType(Literal const& _literal)
 	}
 	else
 		m_value = bigint(_literal.value());
-
 	switch (_literal.subDenomination())
 	{
 	case Literal::SubDenomination::None:
@@ -564,28 +563,14 @@ bool ConstantNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		if (m_value == 0)
 			return true;
 		int forSignBit = (targetType->isSigned() ? 1 : 0);
-		if (m_scalingFactor == 0) //if current type is integer
+		if (m_value > 0)
 		{
-			if (m_value > 0)
-			{
-				if (m_value <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
-					return true;
-			}
-			else if (targetType->isSigned() && -m_value <= (u256(1) << (targetType->numBits() - forSignBit)))
+			if (m_value <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
 				return true;
-			return false;
 		}
-		else if (m_scalingFactor != 0) //if current type is fixed point
-		{
-			if (m_value > 0)
-			{
-				if (leftOfRadix() <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
-					return true;
-			}
-			else if (targetType->isSigned() && -leftOfRadix() <= (u256(1) << (targetType->numBits() - forSignBit)))
-				return true;
-			return false;
-		}
+		else if (targetType->isSigned() && -m_value <= (u256(1) << (targetType->numBits() - forSignBit)))
+			return true;
+		return false;
 	}
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
@@ -593,35 +578,22 @@ bool ConstantNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		if (m_value == 0)
 			return true;
 		int forSignBit = (targetType->isSigned() ? 1 : 0);
-		if (m_scalingFactor == 0) //if the current type is an integer, focus on the integer bits
+		if (m_value > 0)
 		{
-			if (m_value > 0)
-			{
-				if (m_value <= (u256(-1) >> (256 - targetType->integerBits() + forSignBit)))
-					return true;
-			}
-			else if (targetType->isSigned() && -m_value <= (u256(1) << (targetType->integerBits() - forSignBit)))
+			if (
+				m_value <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)) &&
+			 	m_scalingFactor <= targetType->fractionalBits()
+			)
 				return true;
-			return false;
-		}
-		else if (m_scalingFactor != 0)	//if the current type is fixed point, focus on both the
-		{						//integer bits and fractional bits and ensure they fit
-			if (m_value > 0)
-			{
-				if (
-					leftOfRadix() <= (u256(-1) >> (256 - targetType->integerBits() + forSignBit)) &&
-					rightOfRadix() <= (u256(-1) >> (256 - targetType->fractionalBits() + forSignBit))
-				)
-					return true;			
-			}
 			else if (
 				targetType->isSigned() &&
-				-leftOfRadix() <= (u256(1) >> (256 - targetType->integerBits() + forSignBit)) &&
-				-rightOfRadix() <= (u256(1) >> (256 - targetType->fractionalBits() + forSignBit))
+				-m_value <= (u256(1) >> (256 - targetType->numBits() + forSignBit)) &&
+				m_scalingFactor <= targetType->fractionalBits()
 			)
 				return true;
 			return false;
 		}
+
 	}
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
@@ -738,18 +710,11 @@ TypePointer ConstantNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			value = m_value.numerator() & other.m_value.numerator();
 			break;
 		case Token::Add:
-			value = leftOfRadix() + other.leftOfRadix();
-			value *= boost::multiprecision::pow(bigint(10), scale);
-			value += rightOfRadix() + other.rightOfRadix();;
+			value = m_value + other.m_value;
 			break;
 		case Token::Sub:
-			value = leftOfRadix() - other.leftOfRadix();
-			if (rightOfRadix() < other.rightOfRadix())
-				scale = other.m_scalingFactor;
-			value *= boost::multiprecision::pow(bigint(10), scale);
-			value += (rightOfRadix() - other.rightOfRadix());
+			value = m_value - other.m_value;
 			break;
-		//these next 4 need to be scaled accordingly if it's a fixed type
 		case Token::Mul:
 			scale = m_scalingFactor - other.m_scalingFactor;
 			value = m_value * other.m_value;
@@ -761,7 +726,6 @@ TypePointer ConstantNumberType::binaryOperatorResult(Token::Value _operator, Typ
 				value = m_value / other.m_value;
 			break;
 		case Token::Mod:
-		{
 			if (other.m_value == 0)
 				return TypePointer();
 			else if (fixedPointType)
@@ -815,7 +779,6 @@ string ConstantNumberType::toString(bool) const
 {
 	if (m_value.denominator() == 1)
 		return "int_const " + m_value.numerator().str();
-
 	return "rational_const " + m_value.numerator().str() + '/' + m_value.denominator().str();
 }
 
