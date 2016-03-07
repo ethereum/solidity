@@ -306,6 +306,7 @@ public:
 
 private:
 	// extractUnsigned provides a safe way to extract numbers, 
+	// if out_of_range error is thrown, they returns 0s, therefore securing 
 	// the variable's identity as an identifier. If an invalid conversion
  	// error is thrown (usually in the case of grabbing N from a fixed type)
  	// then a 1 is thrown to purposely ensure that it will declare itself as an identifier
