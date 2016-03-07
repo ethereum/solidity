@@ -124,7 +124,7 @@ public:
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
 	/// @returns the runtime object for the contract.
 	eth::LinkerObject const& runtimeObject(std::string const& _contractName = "") const;
-	/// @returns the bytecode of a contract that uses an already deployed contract via CALLCODE.
+	/// @returns the bytecode of a contract that uses an already deployed contract via DELEGATECALL.
 	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
 	/// substituted by the actual address. Note that this sequence starts end ends in three X
 	/// characters but can contain anything in between.

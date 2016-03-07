@@ -72,7 +72,7 @@ Json::Value gasToJson(GasEstimator::GasConsumption const& _gas)
 
 Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 {
-	eth::EVMSchedule schedule;// TODO: make relevant to supposed context.
+	eth::EVMSchedule schedule;
 	Json::Value gasEstimates(Json::objectValue);
 	using Gas = GasEstimator::GasConsumption;
 	if (!_compiler.assemblyItems(_contract) && !_compiler.runtimeAssemblyItems(_contract))

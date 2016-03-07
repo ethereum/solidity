@@ -44,7 +44,7 @@ public:
 		ContractDefinition const& _contract,
 		std::map<ContractDefinition const*, eth::Assembly const*> const& _contracts
 	);
-	/// Compiles a contract that uses CALLCODE to call into a pre-deployed version of the given
+	/// Compiles a contract that uses DELEGATECALL to call into a pre-deployed version of the given
 	/// contract at runtime, but contains the full creation-time code.
 	void compileClone(
 		ContractDefinition const& _contract,
