@@ -121,7 +121,7 @@ unsigned Token::extractUnsigned(string const& _literal)
 	}
 	catch (invalid_argument& e)
 	{
-		return 1;
+		return 0;
 	}
 }
 tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeyword(string const& _literal)
