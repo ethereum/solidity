@@ -305,10 +305,11 @@ public:
 	static std::tuple<Token::Value, unsigned short, unsigned short> fromIdentifierOrKeyword(std::string const& _literal);
 
 private:
-	// extractM provides a safe way to extract numbers, 
-	// if out_of_range error is thrown, they returns 0s, therefore securing 
-	// the variable's identity as an identifier.
-	static unsigned extractM(std::string const& _literal);
+	// extractUnsigned provides a safe way to extract numbers, 
+	// the variable's identity as an identifier. If an invalid conversion
+ 	// error is thrown (usually in the case of grabbing N from a fixed type)
+ 	// then a 1 is thrown to purposely ensure that it will declare itself as an identifier
+	static unsigned extractUnsigned(std::string const& _literal);
 	// @returns the keyword with name @a _name or Token::Identifier of no such keyword exists.
 	static Token::Value keywordByName(std::string const& _name);
 	static char const* const m_name[NUM_TOKENS];
