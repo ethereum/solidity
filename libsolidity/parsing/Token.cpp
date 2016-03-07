@@ -108,11 +108,11 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-unsigned Token::extractUnsigned(string const& _literal)
+unsigned Token::extractUnsigned(string::const_iterator const& _begin, string::const_iterator const& _end)
 {
 	try
 	{
-		unsigned short m = stoi(_literal);
+		unsigned short m = stoi(string(_begin, _end));
 		return m;
 	}
 	catch(out_of_range& e)
@@ -131,7 +131,7 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 	{
 		string baseType(_literal.begin(), positionM);
 		auto positionX = find_if_not(positionM, _literal.end(), ::isdigit);
-		unsigned short m = extractUnsigned(string(positionM, positionX));
+		unsigned short m = extractUnsigned(positionM, positionX);
 		Token::Value keyword = keywordByName(baseType);
 		if (keyword == Token::Bytes)
 		{
@@ -151,7 +151,7 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 		else if (keyword == Token::UFixed || keyword == Token::Fixed)
 		{
 			auto positionN = find_if_not(positionX + 1, _literal.end(), ::isdigit);
-			unsigned short n = extractUnsigned(string(positionX + 1, positionN));
+			unsigned short n = extractUnsigned(positionX + 1, positionN);
 			if (
 				0 < m + n && 
 				m + n <= 256 && 

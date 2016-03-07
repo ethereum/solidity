@@ -310,7 +310,7 @@ private:
 	// the variable's identity as an identifier. If an invalid conversion
  	// error is thrown (usually in the case of grabbing N from a fixed type)
  	// then a 0 is thrown to purposely ensure that it will declare itself as an identifier
-	static unsigned extractUnsigned(std::string const& _literal);
+	static unsigned extractUnsigned(std::string::const_iterator const& _begin, std::string::const_iterator const& _end);
 	// @returns the keyword with name @a _name or Token::Identifier of no such keyword exists.
 	static Token::Value keywordByName(std::string const& _name);
 	static char const* const m_name[NUM_TOKENS];
