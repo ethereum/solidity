@@ -66,6 +66,13 @@ void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned con
 			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "."
 		);
 	}
+	else if (_baseType == Token::UFixedMxN || _baseType == Token::FixedMxN)
+	{
+		solAssert(
+			_first + _second <= 256 && _first % 8 == 0 && _second % 8 == 0,
+			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "x" + to_string(_second) + "."
+		);
+	}
 	m_token = _baseType;
 	m_firstNumber = _first;
 	m_secondNumber = _second;
@@ -101,7 +108,7 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-unsigned Token::extractM(string const& _literal)
+unsigned Token::extractUnsigned(string const& _literal)
 {
 	try
 	{
@@ -112,6 +119,10 @@ unsigned Token::extractM(string const& _literal)
 	{
 		return 0;
 	}
+	catch (invalid_argument& e)
+	{
+		return 1;
+	}
 }
 tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeyword(string const& _literal)
 {
@@ -120,7 +131,7 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 	{
 		string baseType(_literal.begin(), positionM);
 		auto positionX = find_if_not(positionM, _literal.end(), ::isdigit);
-		unsigned short m = extractM(string(positionM, positionX));
+		unsigned short m = extractUnsigned(string(positionM, positionX));
 		Token::Value keyword = keywordByName(baseType);
 		if (keyword == Token::Bytes)
 		{
@@ -136,6 +147,25 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 				else
 					return make_tuple(Token::IntM, m, 0);
 			}
+		}
+		else if (keyword == Token::UFixed || keyword == Token::Fixed)
+		{
+			auto positionN = find_if_not(positionX + 1, _literal.end(), ::isdigit);
+			unsigned short n = extractUnsigned(string(positionX + 1, positionN));
+			if (
+				0 < m + n && 
+				m + n <= 256 && 
+				m % 8 == 0 && 
+				n % 8 == 0 && 
+				positionN == _literal.end() &&
+				*positionX == 'x'
+			)
+			{
+				if (keyword == Token::UFixed)
+					return make_tuple(Token::UFixed, m, n);
+				else
+					return make_tuple(Token::Fixed, m, n);
+			}	
 		}
 		return make_tuple(Token::Identifier, 0, 0);
 	}
