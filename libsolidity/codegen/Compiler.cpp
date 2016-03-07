@@ -773,15 +773,13 @@ eth::Assembly Compiler::cloneRuntime()
 	a << u256(0) << eth::Instruction::DUP1 << eth::Instruction::CALLDATACOPY;
 	//@todo adjust for larger return values, make this dynamic.
 	a << u256(0x20) << u256(0) << eth::Instruction::CALLDATASIZE;
-	// unfortunately, we have to send the value again, so that CALLVALUE returns the correct value
-	// in the callcoded contract.
-	a << u256(0) << eth::Instruction::CALLVALUE;
+	a << u256(0);
 	// this is the address which has to be substituted by the linker.
 	//@todo implement as special "marker" AssemblyItem.
 	a << u256("0xcafecafecafecafecafecafecafecafecafecafe");
-	a << u256(schedule.callGas + schedule.callValueTransferGas + 10) << eth::Instruction::GAS << eth::Instruction::SUB;
-	a << eth::Instruction::CALLCODE;
-	//Propagate error condition (if CALLCODE pushes 0 on stack).
+	a << u256(schedule.callGas + 10) << eth::Instruction::GAS << eth::Instruction::SUB;
+	a << eth::Instruction::DELEGATECALL;
+	//Propagate error condition (if DELEGATECALL pushes 0 on stack).
 	a << eth::Instruction::ISZERO;
 	a.appendJumpI(a.errorTag());
 	//@todo adjust for larger return values, make this dynamic.

@@ -465,8 +465,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	{
 		FunctionType const& function = *functionType;
 		if (function.bound())
-			// Only callcode functions can be bound, this might be lifted later.
-			solAssert(function.location() == Location::CallCode, "");
+			// Only delegatecall functions can be bound, this might be lifted later.
+			solAssert(function.location() == Location::DelegateCall, "");
 		switch (function.location())
 		{
 		case Location::Internal:
@@ -492,8 +492,10 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		}
 		case Location::External:
 		case Location::CallCode:
+		case Location::DelegateCall:
 		case Location::Bare:
 		case Location::BareCallCode:
+		case Location::BareDelegateCall:
 			_functionCall.expression().accept(*this);
 			appendExternalFunctionCall(function, arguments);
 			break;
@@ -875,7 +877,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 			);
 			m_context << eth::Instruction::BALANCE;
 		}
-		else if ((set<string>{"send", "call", "callcode"}).count(member))
+		else if ((set<string>{"send", "call", "callcode", "delegatecall"}).count(member))
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
 				IntegerType(0, IntegerType::Modifier::Address),
@@ -1356,6 +1358,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	FunctionKind funKind = _functionType.location();
 	bool returnSuccessCondition = funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode;
 	bool isCallCode = funKind == FunctionKind::BareCallCode || funKind == FunctionKind::CallCode;
+	bool isDelegateCall = funKind == FunctionKind::BareDelegateCall || funKind == FunctionKind::DelegateCall;
 
 	unsigned retSize = 0;
 	if (returnSuccessCondition)
@@ -1371,13 +1374,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	TypePointers argumentTypes;
 	TypePointers parameterTypes = _functionType.parameterTypes();
 	bool manualFunctionId =
-		(funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode) &&
+		(funKind == FunctionKind::Bare || funKind == FunctionKind::BareCallCode || funKind == FunctionKind::BareDelegateCall) &&
 		!_arguments.empty() &&
 		_arguments.front()->annotation().type->mobileType()->calldataEncodedSize(false) ==
 			CompilerUtils::dataStartOffset;
 	if (manualFunctionId)
 	{
-		// If we have a BareCall or BareCallCode and the first type has exactly 4 bytes, use it as
+		// If we have a Bare* and the first type has exactly 4 bytes, use it as
 		// function identifier.
 		_arguments.front()->accept(*this);
 		utils().convertType(
@@ -1416,7 +1419,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		parameterTypes,
 		_functionType.padArguments(),
 		_functionType.takesArbitraryParameters(),
-		isCallCode
+		isCallCode || isDelegateCall
 	);
 
 	// Stack now:
@@ -1435,8 +1438,10 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	m_context << eth::Instruction::DUP2;
 
 	// CALL arguments: outSize, outOff, inSize, inOff (already present up to here)
-	// value, addr, gas (stack top)
-	if (_functionType.valueSet())
+	// [value,] addr, gas (stack top)
+	if (isDelegateCall)
+		solAssert(!_functionType.valueSet(), "Value set for delegatecall");
+	else if (_functionType.valueSet())
 		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
 	else
 		m_context << u256(0);
@@ -1446,20 +1451,22 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
 	{
-		eth::EVMSchedule schedule;// TODO: Make relevant to current suppose context.
+		eth::EVMSchedule schedule;
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
 		u256 gasNeededByCaller = schedule.callGas + 10;
 		if (_functionType.valueSet())
 			gasNeededByCaller += schedule.callValueTransferGas;
-		if (!isCallCode)
+		if (!isCallCode && !isDelegateCall)
 			gasNeededByCaller += schedule.callNewAccountGas; // we never know
 		m_context <<
 			gasNeededByCaller <<
 			eth::Instruction::GAS <<
 			eth::Instruction::SUB;
 	}
-	if (isCallCode)
+	if (isDelegateCall)
+		m_context << eth::Instruction::DELEGATECALL;
+	else if (isCallCode)
 		m_context << eth::Instruction::CALLCODE;
 	else
 		m_context << eth::Instruction::CALL;
