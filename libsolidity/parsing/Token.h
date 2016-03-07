@@ -198,8 +198,10 @@ namespace solidity
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
-	K(Real, "real", 0)                                                 \
-	K(UReal, "ureal", 0)                                               \
+	K(Fixed, "fixed", 0)                                               \
+	T(FixedMxN, "fixedMxN", 0)                                         \
+	K(UFixed, "ufixed", 0)                                             \
+	T(UFixedMxN, "ufixedMxN", 0)                                       \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
