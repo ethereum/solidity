@@ -2324,7 +2324,7 @@ BOOST_AUTO_TEST_CASE(call_to_library_function)
 {
 	char const* text = R"(
 		library Lib {
-			uint constant public pimil = 3141592;
+			uint constant public pimil = 4712388;
 			function min(uint x, uint y) returns (uint);
 		}
 		contract Test {
