@@ -112,14 +112,10 @@ unsigned Token::extractUnsigned(string::const_iterator const& _begin, string::co
 {
 	try
 	{
-		unsigned short m = stoi(string(_begin, _end));
+		unsigned short m = boost::lexical_cast<unsigned short>(string(_begin, _end));
 		return m;
 	}
-	catch(out_of_range& e)
-	{
-		return 0;
-	}
-	catch (invalid_argument& e)
+	catch(const boost::bad_lexical_cast &)
 	{
 		return 0;
 	}
