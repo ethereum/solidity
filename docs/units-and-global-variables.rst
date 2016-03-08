@@ -72,7 +72,7 @@ Block and Transaction Properties
 
     If you want to implement access restrictions in library functions using
     `msg.sender`, you have to manually supply the value of
-    `sg.sender` as an argument.
+    `msg.sender` as an argument.
 
 .. note::
     The block hashes are not available for all blocks for scalability reasons.
