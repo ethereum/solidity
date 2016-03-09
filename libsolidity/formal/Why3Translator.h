@@ -52,7 +52,7 @@ public:
 	std::string translation() const;
 
 private:
-	/// Returns an error.
+	/// Creates an error and adds it to errors list.
 	void error(ASTNode const& _node, std::string const& _description);
 	/// Reports a fatal error and throws.
 	void fatalError(ASTNode const& _node, std::string const& _description);

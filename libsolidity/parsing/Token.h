@@ -143,6 +143,7 @@ namespace solidity
 	\
 	/* Keywords */                                                     \
 	K(Anonymous, "anonymous", 0)                                       \
+	K(Assembly, "assembly", 0)                                         \
 	K(Break, "break", 0)                                               \
 	K(Const, "constant", 0)                                            \
 	K(Continue, "continue", 0)                                         \
@@ -220,6 +221,7 @@ namespace solidity
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
 	K(Final, "final", 0)                                               \
+	K(Inline, "inline", 0)                                             \
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
 	K(Of, "of", 0)                                                     \
@@ -251,7 +253,7 @@ public:
 	};
 #undef T
 
-	// Returns a string corresponding to the C++ token name
+	// @returns a string corresponding to the C++ token name
 	// (e.g. "LT" for the token LT).
 	static char const* name(Value tok)
 	{
@@ -285,7 +287,7 @@ public:
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
 
-	// Returns a string corresponding to the JS token string
+	// @returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
 	// have a (unique) string (e.g. an IDENTIFIER).
 	static char const* toString(Value tok)
@@ -294,7 +296,7 @@ public:
 		return m_string[tok];
 	}
 
-	// Returns the precedence > 0 for binary and compare
+	// @returns the precedence > 0 for binary and compare
 	// operators; returns 0 otherwise.
 	static int precedence(Value tok)
 	{
