@@ -42,6 +42,7 @@
 
 #include <map>
 #include <libsolidity/parsing/Token.h>
+#include <boost/range/iterator_range.hpp>
 
 using namespace std;
 
@@ -108,11 +109,11 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-unsigned Token::extractUnsigned(string::const_iterator const& _begin, string::const_iterator const& _end)
+unsigned Token::extractUnsigned(string::const_iterator _begin, string::const_iterator _end)
 {
 	try
 	{
-		unsigned short m = boost::lexical_cast<unsigned short>(string(_begin, _end));
+		unsigned short m = boost::lexical_cast<unsigned short>(boost::make_iterator_range(_begin, _end));
 		return m;
 	}
 	catch(const boost::bad_lexical_cast &)
@@ -146,8 +147,8 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 		}
 		else if (keyword == Token::UFixed || keyword == Token::Fixed)
 		{
-			auto positionN = find_if_not(positionX + 1, _literal.end(), ::isdigit);
-			unsigned short n = extractUnsigned(positionX + 1, positionN);
+			auto positionN = find_if_not(positionX++, _literal.end(), ::isdigit);
+			unsigned short n = extractUnsigned(positionX++, positionN);
 			if (
 				0 < m + n && 
 				m + n <= 256 && 
