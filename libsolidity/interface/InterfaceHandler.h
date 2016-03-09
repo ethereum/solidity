@@ -85,7 +85,7 @@ public:
 	static std::string devDocumentation(ContractDefinition const& _contractDef);
 
 private:
-	/// Returns concatenation of all content under the given tag name.
+	/// @returns concatenation of all content under the given tag name.
 	static std::string extractDoc(std::multimap<std::string, DocTag> const& _tags, std::string const& _name);
 };
 

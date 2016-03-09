@@ -826,7 +826,7 @@ public:
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
 	/// current function.
-	/// Returns an empty shared pointer if one of the input/return parameters does not have an
+	/// @returns an empty shared pointer if one of the input/return parameters does not have an
 	/// external type.
 	FunctionTypePointer interfaceFunctionType() const;
 

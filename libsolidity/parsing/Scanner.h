@@ -108,13 +108,13 @@ public:
 	/// Resets scanner to the start of input.
 	void reset();
 
-	/// Returns the next token and advances input
+	/// @returns the next token and advances input
 	Token::Value next();
 
 	///@{
 	///@name Information about the current token
 
-	/// Returns the current token
+	/// @returns the current token
 	Token::Value currentToken()
 	{
 		return m_currentToken.token;
@@ -138,7 +138,7 @@ public:
 	///@{
 	///@name Information about the next token
 
-	/// Returns the next token without advancing input.
+	/// @returns the next token without advancing input.
 	Token::Value peekNextToken() const { return m_nextToken.token; }
 	SourceLocation peekLocation() const { return m_nextToken.location; }
 	std::string const& peekLiteral() const { return m_nextToken.literal; }
