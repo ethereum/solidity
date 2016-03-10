@@ -231,6 +231,7 @@ namespace solidity
 	K(Type, "type", 0)                                                 \
 	K(TypeOf, "typeof", 0)                                             \
 	K(Using, "using", 0)                                               \
+	T(Timestamp, "timestamp", 0)                                       \
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
@@ -304,11 +305,11 @@ public:
 		return m_precedence[tok];
 	}
 
-	static std::tuple<Token::Value, unsigned short, unsigned short> fromIdentifierOrKeyword(std::string const& _literal);
+	static std::tuple<Token::Value, unsigned int, unsigned int> fromIdentifierOrKeyword(std::string const& _literal);
 
 private:
-	// @returns 0 on error (invalid digit or number too large)
-	static unsigned extractUnsigned(std::string::const_iterator _begin, std::string::const_iterator _end);
+	// @returns -1 on error (invalid digit or number too large)
+	static int parseSize(std::string::const_iterator _begin, std::string::const_iterator _end);
 	// @returns the keyword with name @a _name or Token::Identifier of no such keyword exists.
 	static Token::Value keywordByName(std::string const& _name);
 	static char const* const m_name[NUM_TOKENS];
