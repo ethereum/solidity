@@ -406,15 +406,15 @@ a location in the caller's memory preallocated by the caller.
 Calls are **limited** to a depth of 1024, which means that for more complex
 operations, loops should be preferred over recursive calls.
 
-.. index:: callcode, library
+.. index:: delegatecall, callcode, library
 
-Callcode and Libraries
-======================
+Delegatecall / Callcode and Libraries
+=====================================
 
-There exists a special variant of a message call, named **callcode**
+There exists a special variant of a message call, named **delegatecall**
 which is identical to a message call apart from the fact that
 the code at the target address is executed in the context of the calling
-contract.
+contract and `msg.sender` and `msg.value` do not change their values.
 
 This means that a contract can dynamically load code from a different
 address at runtime. Storage, current address and balance still
@@ -461,4 +461,4 @@ The remaining Ether stored at that address is sent to a designated
 target and then the storage and code is removed.
 
 Note that even if a contract's code does not contain the `SELFDESTRUCT`
-opcode, it can still perform that operation using callcode.
+opcode, it can still perform that operation using delegatecall or callcode.

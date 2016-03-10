@@ -54,7 +54,7 @@ Operators:
 Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<integer_literals>` (or literal expressions).
 
-.. index:: address, balance, send, call, callcode
+.. index:: address, balance, send, call, callcode, delegatecall
 
 Address
 -------
@@ -82,7 +82,7 @@ and to send Ether (in units of wei) to an address using the `send` function:
 .. note::
     If `x` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the `send` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted. In this case, `send` returns `false`.
 
-* `call` and `callcode`
+* `call`, `callcode` and `delegatecall`
 
 Furthermore, to interface with contracts that do not adhere to the ABI,
 the function `call` is provided which takes an arbitrary number of arguments of any type. These arguments are padded to 32 bytes and concatenated. One exception is the case where the first argument is encoded to exactly four bytes. In this case, it is not padded to allow the use of function signatures here.
@@ -95,9 +95,9 @@ the function `call` is provided which takes an arbitrary number of arguments of 
 
 `call` returns a boolean indicating whether the invoked function terminated (`true`) or caused an EVM exception (`false`). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
-In a similar way, the function `callcode` can be used: The difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of `callcode` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for callcode to be used.
+In a similar way, the function `delegatecall` can be used: The difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of `delegatecall` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called `callcode` was available that did not provide access to the original `msg.sender` and `msg.value` values.
 
-Both `call` and `callcode` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
+All three functions `call`, `delegatecall` and `callcode` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
 .. note::
     All contracts inherit the members of address, so it is possible to query the balance of the
