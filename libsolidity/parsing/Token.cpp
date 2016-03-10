@@ -109,26 +109,26 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-unsigned Token::extractUnsigned(string::const_iterator _begin, string::const_iterator _end)
+int Token::parseSize(string::const_iterator _begin, string::const_iterator _end)
 {
 	try
 	{
-		unsigned short m = boost::lexical_cast<unsigned short>(boost::make_iterator_range(_begin, _end));
+		unsigned int m = boost::lexical_cast<int>(boost::make_iterator_range(_begin, _end));
 		return m;
 	}
-	catch(const boost::bad_lexical_cast &)
+	catch(boost::bad_lexical_cast const&)
 	{
-		return 0;
+		return -1;
 	}
 }
-tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeyword(string const& _literal)
+tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(string const& _literal)
 {
 	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
 	if (positionM != _literal.end())
 	{
 		string baseType(_literal.begin(), positionM);
 		auto positionX = find_if_not(positionM, _literal.end(), ::isdigit);
-		unsigned short m = extractUnsigned(positionM, positionX);
+		int m = parseSize(positionM, positionX);
 		Token::Value keyword = keywordByName(baseType);
 		if (keyword == Token::Bytes)
 		{
@@ -147,8 +147,8 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 		}
 		else if (keyword == Token::UFixed || keyword == Token::Fixed)
 		{
-			auto positionN = find_if_not(positionX++, _literal.end(), ::isdigit);
-			unsigned short n = extractUnsigned(positionX++, positionN);
+			auto positionN = find_if_not(++positionX, _literal.end(), ::isdigit);
+			int n = parseSize(++positionX, positionN);
 			if (
 				0 < m + n && 
 				m + n <= 256 && 
