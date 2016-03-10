@@ -184,10 +184,9 @@ return parameter list for functions.
         uint public data;
     }
 
-Other contracts can call `c.data()` to retrieve the value of
-data in state storage, but are not able to call `f`.
-Contracts derived from `c` can call `setData` to alter the
-value of `data` (but only in their own state).
+Other contracts can call `c.data()` to retrieve the value of data in state
+storage, but are not able to call `f`. Contracts derived from `c` can call
+`setData` to alter the value of `data` (but only in their own state).
 
 .. index:: ! accessor;function, ! function;accessor
 
