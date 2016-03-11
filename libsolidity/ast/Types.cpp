@@ -469,7 +469,7 @@ bool ConstantNumberType::isValidLiteral(Literal const& _literal)
 		{
 			//problem here. If the first digit is a 0 in the string, it won't
 			//turn it into a integer...Using find if not to count the leading 0s.
-			
+
 			auto leadingZeroes = find_if_not(
 				radixPoint + 1, 
 				_literal.value().end(), 
