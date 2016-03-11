@@ -145,7 +145,7 @@ Assigning *to* a state variable always creates an independent copy. On the other
 Exceptions
 ==========
 
-There are some cases where exceptions are thrown automatically (see below). You can use the `throw` instruction to throw an exception manually. The effect of an exception is that the currently executing call is stopped and reverted (i.e. all changes to the state and balances are undone) and the exception is also "bubbled up" through Solidity function calls (exceptions are `send` and the low-level functions `call` and `callcode`, those return `false` in case of an exception).
+There are some cases where exceptions are thrown automatically (see below). You can use the `throw` instruction to throw an exception manually. The effect of an exception is that the currently executing call is stopped and reverted (i.e. all changes to the state and balances are undone) and the exception is also "bubbled up" through Solidity function calls (exceptions are `send` and the low-level functions `call`, `delegatecall` and `callcode`, those return `false` in case of an exception).
 
 Catching exceptions is not yet possible.
 
