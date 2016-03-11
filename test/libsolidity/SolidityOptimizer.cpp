@@ -390,6 +390,20 @@ BOOST_AUTO_TEST_CASE(incorrect_storage_access_bug)
 	compareVersions("f()");
 }
 
+BOOST_AUTO_TEST_CASE(sequence_number_for_calls)
+{
+	// This is a test for a bug that was present because we did not increment the sequence
+	// number for CALLs - CALLs can read and write from memory (and DELEGATECALLs can do the same
+	// to storage), so the sequence number should be incremented.
+	char const* sourceCode = R"(
+		contract test {
+			function f(string a, string b) returns (bool) { return sha256(a) == sha256(b); }
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("f(string,string)", 0x40, 0x80, 3, "abc", 3, "def");
+}
+
 BOOST_AUTO_TEST_CASE(cse_intermediate_swap)
 {
 	eth::KnownState state;
