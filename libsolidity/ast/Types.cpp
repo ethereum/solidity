@@ -1623,7 +1623,7 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	case Location::BareDelegateCall:
 	{
 		MemberList::MemberMap members;
-		if (m_location != Location::BareDelegateCall)
+		if (m_location != Location::BareDelegateCall && m_location != Location::DelegateCall)
 			members.push_back(MemberList::Member(
 				"value",
 				make_shared<FunctionType>(
