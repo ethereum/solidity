@@ -62,6 +62,7 @@ Set up Homebrew:
     brew install cmake cryptopp miniupnpc leveldb gmp libmicrohttpd libjson-rpc-cpp 
     # For Mix IDE and Alethzero only
     brew install xz d-bus
+    brew install homebrew/versions/v8-315
     brew install llvm --HEAD --with-clang 
     brew install qt5 --with-d-bus          # add --verbose if long waits with a stale screen drive you crazy as well
 
