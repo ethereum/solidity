@@ -143,6 +143,7 @@ namespace solidity
 	\
 	/* Keywords */                                                     \
 	K(Anonymous, "anonymous", 0)                                       \
+	K(Assembly, "assembly", 0)                                         \
 	K(Break, "break", 0)                                               \
 	K(Const, "constant", 0)                                            \
 	K(Continue, "continue", 0)                                         \
@@ -198,8 +199,10 @@ namespace solidity
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
-	K(Real, "real", 0)                                                 \
-	K(UReal, "ureal", 0)                                               \
+	K(Fixed, "fixed", 0)                                               \
+	T(FixedMxN, "fixedMxN", 0)                                         \
+	K(UFixed, "ufixed", 0)                                             \
+	T(UFixedMxN, "ufixedMxN", 0)                                       \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
 	/* Literals */                                                     \
@@ -218,6 +221,7 @@ namespace solidity
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
 	K(Final, "final", 0)                                               \
+	K(Inline, "inline", 0)                                             \
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
 	K(Of, "of", 0)                                                     \
@@ -249,7 +253,7 @@ public:
 	};
 #undef T
 
-	// Returns a string corresponding to the C++ token name
+	// @returns a string corresponding to the C++ token name
 	// (e.g. "LT" for the token LT).
 	static char const* name(Value tok)
 	{
@@ -283,7 +287,7 @@ public:
 	static bool isEtherSubdenomination(Value op) { return op == SubWei || op == SubSzabo || op == SubFinney || op == SubEther; }
 	static bool isTimeSubdenomination(Value op) { return op == SubSecond || op == SubMinute || op == SubHour || op == SubDay || op == SubWeek || op == SubYear; }
 
-	// Returns a string corresponding to the JS token string
+	// @returns a string corresponding to the JS token string
 	// (.e., "<" for the token LT) or NULL if the token doesn't
 	// have a (unique) string (e.g. an IDENTIFIER).
 	static char const* toString(Value tok)
@@ -292,7 +296,7 @@ public:
 		return m_string[tok];
 	}
 
-	// Returns the precedence > 0 for binary and compare
+	// @returns the precedence > 0 for binary and compare
 	// operators; returns 0 otherwise.
 	static int precedence(Value tok)
 	{
@@ -300,13 +304,11 @@ public:
 		return m_precedence[tok];
 	}
 
-	static std::tuple<Token::Value, unsigned short, unsigned short> fromIdentifierOrKeyword(std::string const& _literal);
+	static std::tuple<Token::Value, unsigned int, unsigned int> fromIdentifierOrKeyword(std::string const& _literal);
 
 private:
-	// extractM provides a safe way to extract numbers, 
-	// if out_of_range error is thrown, they returns 0s, therefore securing 
-	// the variable's identity as an identifier.
-	static unsigned extractM(std::string const& _literal);
+	// @returns -1 on error (invalid digit or number too large)
+	static int parseSize(std::string::const_iterator _begin, std::string::const_iterator _end);
 	// @returns the keyword with name @a _name or Token::Identifier of no such keyword exists.
 	static Token::Value keywordByName(std::string const& _name);
 	static char const* const m_name[NUM_TOKENS];

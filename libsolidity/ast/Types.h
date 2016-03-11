@@ -732,8 +732,10 @@ public:
 		Internal, ///< stack-call using plain JUMP
 		External, ///< external call using CALL
 		CallCode, ///< extercnal call using CALLCODE, i.e. not exchanging the storage
+		DelegateCall, ///< extercnal call using DELEGATECALL, i.e. not exchanging the storage
 		Bare, ///< CALL without function hash
 		BareCallCode, ///< CALLCODE without function hash
+		BareDelegateCall, ///< DELEGATECALL without function hash
 		Creation, ///< external call using CREATE
 		Send, ///< CALL, but without data and gas
 		SHA3, ///< SHA3
@@ -824,7 +826,7 @@ public:
 	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
 	/// appropriate external types (i.e. the interfaceType()s) of input/return parameters of
 	/// current function.
-	/// Returns an empty shared pointer if one of the input/return parameters does not have an
+	/// @returns an empty shared pointer if one of the input/return parameters does not have an
 	/// external type.
 	FunctionTypePointer interfaceFunctionType() const;
 
@@ -869,7 +871,7 @@ public:
 	/// removed and the location of reference types is changed from CallData to Memory.
 	/// This is needed if external functions are called on other contracts, as they cannot return
 	/// dynamic values.
-	/// @param _inLibrary if true, uses CallCode as location.
+	/// @param _inLibrary if true, uses DelegateCall as location.
 	/// @param _bound if true, the argumenst are placed as `arg1.functionName(arg2, ..., argn)`.
 	FunctionTypePointer asMemberFunction(bool _inLibrary, bool _bound = false) const;
 

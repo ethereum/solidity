@@ -101,7 +101,7 @@ public:
 	/// Sets the given source code as the only source unit apart from standard sources and parses it.
 	/// @returns false on error.
 	bool parse(std::string const& _sourceCode);
-	/// Returns a list of the contract names in the sources.
+	/// @returns a list of the contract names in the sources.
 	std::vector<std::string> contractNames() const;
 	std::string defaultContractName() const;
 
@@ -124,7 +124,7 @@ public:
 	eth::LinkerObject const& object(std::string const& _contractName = "") const;
 	/// @returns the runtime object for the contract.
 	eth::LinkerObject const& runtimeObject(std::string const& _contractName = "") const;
-	/// @returns the bytecode of a contract that uses an already deployed contract via CALLCODE.
+	/// @returns the bytecode of a contract that uses an already deployed contract via DELEGATECALL.
 	/// The returned bytes will contain a sequence of 20 bytes of the format "XXX...XXX" which have to
 	/// substituted by the actual address. Note that this sequence starts end ends in three X
 	/// characters but can contain anything in between.
@@ -144,13 +144,13 @@ public:
 	/// Prerequisite: Successful compilation.
 	Json::Value streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap(), bool _inJsonFormat = false) const;
 
-	/// Returns a string representing the contract interface in JSON.
+	/// @returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& interface(std::string const& _contractName = "") const;
-	/// Returns a string representing the contract interface in Solidity.
+	/// @returns a string representing the contract interface in Solidity.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& solidityInterface(std::string const& _contractName = "") const;
-	/// Returns a string representing the contract's documentation in JSON.
+	/// @returns a string representing the contract's documentation in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType

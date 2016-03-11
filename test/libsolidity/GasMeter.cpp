@@ -59,7 +59,7 @@ public:
 
 	void testCreationTimeGas(string const& _sourceCode)
 	{
-		EVMSchedule schedule;// TODO: make relevant to supposed context.
+		EVMSchedule schedule;
 
 		compileAndRun(_sourceCode);
 		auto state = make_shared<KnownState>();

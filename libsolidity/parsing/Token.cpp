@@ -42,6 +42,7 @@
 
 #include <map>
 #include <libsolidity/parsing/Token.h>
+#include <boost/range/iterator_range.hpp>
 
 using namespace std;
 
@@ -64,6 +65,13 @@ void ElementaryTypeNameToken::assertDetails(Token::Value _baseType, unsigned con
 		solAssert(
 			_first <= 256 && _first % 8 == 0, 
 			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "."
+		);
+	}
+	else if (_baseType == Token::UFixedMxN || _baseType == Token::FixedMxN)
+	{
+		solAssert(
+			_first + _second <= 256 && _first % 8 == 0 && _second % 8 == 0,
+			"No elementary type " + string(Token::toString(_baseType)) + to_string(_first) + "x" + to_string(_second) + "."
 		);
 	}
 	m_token = _baseType;
@@ -101,26 +109,26 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
-unsigned Token::extractM(string const& _literal)
+int Token::parseSize(string::const_iterator _begin, string::const_iterator _end)
 {
 	try
 	{
-		unsigned short m = stoi(_literal);
+		unsigned int m = boost::lexical_cast<int>(boost::make_iterator_range(_begin, _end));
 		return m;
 	}
-	catch(out_of_range& e)
+	catch(boost::bad_lexical_cast const&)
 	{
-		return 0;
+		return -1;
 	}
 }
-tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeyword(string const& _literal)
+tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(string const& _literal)
 {
 	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
 	if (positionM != _literal.end())
 	{
 		string baseType(_literal.begin(), positionM);
 		auto positionX = find_if_not(positionM, _literal.end(), ::isdigit);
-		unsigned short m = extractM(string(positionM, positionX));
+		int m = parseSize(positionM, positionX);
 		Token::Value keyword = keywordByName(baseType);
 		if (keyword == Token::Bytes)
 		{
@@ -136,6 +144,29 @@ tuple<Token::Value, unsigned short, unsigned short> Token::fromIdentifierOrKeywo
 				else
 					return make_tuple(Token::IntM, m, 0);
 			}
+		}
+		else if (keyword == Token::UFixed || keyword == Token::Fixed)
+		{
+			if (
+				positionM < positionX &&
+				positionX < _literal.end() &&
+				*positionX == 'x' &&
+				all_of(positionX + 1, _literal.end(), ::isdigit)
+			) {
+				int n = parseSize(positionX + 1, _literal.end());
+				if (
+					0 < m && m < 256 &&
+					0 < n && n < 256 &&
+					m + n <= 256 &&
+					m % 8 == 0 &&
+					n % 8 == 0
+				) {
+					if (keyword == Token::UFixed)
+						return make_tuple(Token::UFixed, m, n);
+					else
+						return make_tuple(Token::Fixed, m, n);
+				}
+			}	
 		}
 		return make_tuple(Token::Identifier, 0, 0);
 	}

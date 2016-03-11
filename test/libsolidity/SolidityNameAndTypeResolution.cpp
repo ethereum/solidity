@@ -3232,6 +3232,32 @@ BOOST_AUTO_TEST_CASE(int10abc_is_identifier)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(invalid_fixed_types)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed0x7 a = .3;
+				fixed99999999999999999999999999999999999999x7 b = 9.5;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
+{
+	char const* text = R"(
+		library L { function l() {} }
+		contract test {
+			function f() {
+				L.l.value;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

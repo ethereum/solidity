@@ -333,6 +333,7 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 			{"balance", make_shared<IntegerType >(256)},
 			{"call", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::Bare, true)},
 			{"callcode", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareCallCode, true)},
+			{"delegatecall", make_shared<FunctionType>(strings(), strings{"bool"}, FunctionType::Location::BareDelegateCall, true)},
 			{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
 		};
 	else
@@ -1561,9 +1562,9 @@ unsigned FunctionType::sizeOnStack() const
 	}
 
 	unsigned size = 0;
-	if (location == Location::External || location == Location::CallCode)
+	if (location == Location::External || location == Location::CallCode || location == Location::DelegateCall)
 		size = 2;
-	else if (location == Location::Bare || location == Location::BareCallCode)
+	else if (location == Location::Bare || location == Location::BareCallCode || location == Location::BareDelegateCall)
 		size = 1;
 	else if (location == Location::Internal)
 		size = 1;
@@ -1619,9 +1620,11 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 	case Location::RIPEMD160:
 	case Location::Bare:
 	case Location::BareCallCode:
+	case Location::BareDelegateCall:
 	{
-		MemberList::MemberMap members{
-			{
+		MemberList::MemberMap members;
+		if (m_location != Location::BareDelegateCall && m_location != Location::DelegateCall)
+			members.push_back(MemberList::Member(
 				"value",
 				make_shared<FunctionType>(
 					parseElementaryTypeVector({"uint"}),
@@ -1634,25 +1637,22 @@ MemberList::MemberMap FunctionType::nativeMembers(ContractDefinition const*) con
 					m_gasSet,
 					m_valueSet
 				)
-			}
-		};
+			));
 		if (m_location != Location::Creation)
-			members.push_back(
-				MemberList::Member(
-					"gas",
-					make_shared<FunctionType>(
-						parseElementaryTypeVector({"uint"}),
-						TypePointers{copyAndSetGasOrValue(true, false)},
-						strings(),
-						strings(),
-						Location::SetGas,
-						false,
-						nullptr,
-						m_gasSet,
-						m_valueSet
-					)
+			members.push_back(MemberList::Member(
+				"gas",
+				make_shared<FunctionType>(
+					parseElementaryTypeVector({"uint"}),
+					TypePointers{copyAndSetGasOrValue(true, false)},
+					strings(),
+					strings(),
+					Location::SetGas,
+					false,
+					nullptr,
+					m_gasSet,
+					m_valueSet
 				)
-			);
+			));
 		return members;
 	}
 	default:
@@ -1700,6 +1700,7 @@ bool FunctionType::isBareCall() const
 	{
 	case Location::Bare:
 	case Location::BareCallCode:
+	case Location::BareDelegateCall:
 	case Location::ECRecover:
 	case Location::SHA256:
 	case Location::RIPEMD160:
@@ -1785,7 +1786,7 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 		returnParameterTypes,
 		m_parameterNames,
 		returnParameterNames,
-		_inLibrary ? Location::CallCode : m_location,
+		_inLibrary ? Location::DelegateCall : m_location,
 		m_arbitraryParameters,
 		m_declaration,
 		m_gasSet,
@@ -1884,7 +1885,7 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 			for (auto const& it: contract.interfaceFunctions())
 				members.push_back(MemberList::Member(
 					it.second->declaration().name(),
-					it.second->asMemberFunction(true), // use callcode
+					it.second->asMemberFunction(true),
 					&it.second->declaration()
 				));
 		if (isBase)

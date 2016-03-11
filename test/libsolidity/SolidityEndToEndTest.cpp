@@ -2890,6 +2890,62 @@ BOOST_AUTO_TEST_CASE(generic_callcode)
 	BOOST_CHECK_EQUAL(m_state.balance(c_senderAddress), 50);
 }
 
+BOOST_AUTO_TEST_CASE(generic_delegatecall)
+{
+	char const* sourceCode = R"**(
+			contract receiver {
+				uint public received;
+				address public sender;
+				uint public value;
+				function receive(uint256 x) { received = x; sender = msg.sender; value = msg.value; }
+			}
+			contract sender {
+				uint public received;
+				address public sender;
+				uint public value;
+				function doSend(address rec)
+				{
+					bytes4 signature = bytes4(bytes32(sha3("receive(uint256)")));
+					rec.delegatecall(signature, 23);
+				}
+			}
+	)**";
+	compileAndRun(sourceCode, 0, "receiver");
+	u160 const c_receiverAddress = m_contractAddress;
+	compileAndRun(sourceCode, 50, "sender");
+	u160 const c_senderAddress = m_contractAddress;
+	BOOST_CHECK(m_sender != c_senderAddress); // just for sanity
+	BOOST_CHECK(callContractFunctionWithValue("doSend(address)", 11, c_receiverAddress) == encodeArgs());
+	BOOST_CHECK(callContractFunction("received()") == encodeArgs(u256(23)));
+	BOOST_CHECK(callContractFunction("sender()") == encodeArgs(u160(m_sender)));
+	BOOST_CHECK(callContractFunction("value()") == encodeArgs(u256(11)));
+	m_contractAddress = c_receiverAddress;
+	BOOST_CHECK(callContractFunction("received()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("sender()") == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("value()") == encodeArgs(u256(0)));
+	BOOST_CHECK(m_state.storage(c_receiverAddress).empty());
+	BOOST_CHECK(!m_state.storage(c_senderAddress).empty());
+	BOOST_CHECK_EQUAL(m_state.balance(c_receiverAddress), 0);
+	BOOST_CHECK_EQUAL(m_state.balance(c_senderAddress), 50 + 11);
+}
+
+BOOST_AUTO_TEST_CASE(library_call_in_homestead)
+{
+	char const* sourceCode = R"(
+		library Lib { function m() returns (address) { return msg.sender; } }
+		contract Test {
+			address public sender;
+			function f() {
+				sender = Lib.m();
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Lib");
+	compileAndRun(sourceCode, 0, "Test", bytes(), map<string, Address>{{"Lib", m_contractAddress}});
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("sender()") == encodeArgs(u160(m_sender)));
+}
+
 BOOST_AUTO_TEST_CASE(store_bytes)
 {
 	// this test just checks that the copy loop does not mess up the stack
@@ -5847,7 +5903,7 @@ BOOST_AUTO_TEST_CASE(version_stamp_for_libraries)
 	bytes runtimeCode = compileAndRun(sourceCode, 0, "lib");
 	BOOST_CHECK(runtimeCode.size() >= 8);
 	BOOST_CHECK_EQUAL(runtimeCode[0], int(eth::Instruction::PUSH6)); // might change once we switch to 1.x.x
-	BOOST_CHECK_EQUAL(runtimeCode[1], 2); // might change once we switch away from x.2.x
+	BOOST_CHECK_EQUAL(runtimeCode[1], 3); // might change once we switch away from x.3.x
 	BOOST_CHECK_EQUAL(runtimeCode[7], int(eth::Instruction::POP));
 }
 
