@@ -124,12 +124,12 @@ private:
 	/// For source code of the form "a[][8]" ("IndexAccessStructure"), this is not possible to
 	/// decide with constant look-ahead.
 	LookAheadInfo peekStatementType() const;
-	/// Returns a typename parsed in look-ahead fashion from something like "a.b[8][2**70]".
+	/// @returns a typename parsed in look-ahead fashion from something like "a.b[8][2**70]".
 	ASTPointer<TypeName> typeNameIndexAccessStructure(
 		std::vector<ASTPointer<PrimaryExpression>> const& _path,
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
 	);
-	/// Returns an expression parsed in look-ahead fashion from something like "a.b[8][2**70]".
+	/// @returns an expression parsed in look-ahead fashion from something like "a.b[8][2**70]".
 	ASTPointer<Expression> expressionFromIndexAccessStructure(
 		std::vector<ASTPointer<PrimaryExpression>> const& _path,
 		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices
