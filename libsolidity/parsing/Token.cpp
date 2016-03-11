@@ -147,21 +147,25 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 		}
 		else if (keyword == Token::UFixed || keyword == Token::Fixed)
 		{
-			auto positionN = find_if_not(++positionX, _literal.end(), ::isdigit);
-			int n = parseSize(++positionX, positionN);
 			if (
-				0 < m + n && 
-				m + n <= 256 && 
-				m % 8 == 0 && 
-				n % 8 == 0 && 
-				positionN == _literal.end() &&
-				*positionX == 'x'
-			)
-			{
-				if (keyword == Token::UFixed)
-					return make_tuple(Token::UFixed, m, n);
-				else
-					return make_tuple(Token::Fixed, m, n);
+				positionM < positionX &&
+				positionX < _literal.end() &&
+				*positionX == 'x' &&
+				all_of(positionX + 1, _literal.end(), ::isdigit)
+			) {
+				int n = parseSize(positionX + 1, _literal.end());
+				if (
+					0 < m && m < 256 &&
+					0 < n && n < 256 &&
+					m + n <= 256 &&
+					m % 8 == 0 &&
+					n % 8 == 0
+				) {
+					if (keyword == Token::UFixed)
+						return make_tuple(Token::UFixed, m, n);
+					else
+						return make_tuple(Token::Fixed, m, n);
+				}
 			}	
 		}
 		return make_tuple(Token::Identifier, 0, 0);

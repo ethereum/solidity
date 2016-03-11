@@ -231,7 +231,6 @@ namespace solidity
 	K(Type, "type", 0)                                                 \
 	K(TypeOf, "typeof", 0)                                             \
 	K(Using, "using", 0)                                               \
-	T(Timestamp, "timestamp", 0)                                       \
 	/* Illegal token - not able to scan. */                            \
 	T(Illegal, "ILLEGAL", 0)                                           \
 	\
