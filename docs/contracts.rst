@@ -4,10 +4,10 @@
 Contracts
 ##########
 
-Contracts in Solidity what classes are in object oriented languages.
-They persistent data in state variables and functions that can modify these variables.
-Calling a function on a different contract (instance) will perform an EVM
-function call and thus switch the context such that state variables are
+Contracts in Solidity are what classes are in object oriented languages. They
+contain persistent data in state variables and functions that can modify these
+variables. Calling a function on a different contract (instance) will perform
+an EVM function call and thus switch the context such that state variables are
 inaccessible.
 
 .. index:: ! contract;creation
@@ -184,10 +184,9 @@ return parameter list for functions.
         uint public data;
     }
 
-Other contracts can call `c.data()` to retrieve the value of
-data in state storage, but are not able to call `f`.
-Contracts derived from `c` can call `setData` to alter the
-value of `data` (but only in their own state).
+Other contracts can call `c.data()` to retrieve the value of data in state
+storage, but are not able to call `f`. Contracts derived from `c` can call
+`setData` to alter the value of `data` (but only in their own state).
 
 .. index:: ! accessor;function, ! function;accessor
 
