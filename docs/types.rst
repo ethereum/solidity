@@ -51,6 +51,9 @@ Operators:
 * Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)  
 * Arithmetic operators: `+`, `-`, unary `-`, unary `+`, `*`, `/`, `%` (remainder), `**` (exponentiation)
 
+Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
+operators are :ref:`literals<integer_literals>` (or literal expressions).
+
 .. index:: address, balance, send, call, callcode
 
 Address
@@ -132,12 +135,18 @@ number of bytes, always use one of `bytes1` to `bytes32` because they are much c
 
 .. index:: literal, literal;integer
 
+.. _integer_literals:
+
 Integer Literals
 -----------------
 
 Integer Literals are arbitrary precision integers until they are used together with a non-literal. In `var x = 1 - 2;`, for example, the value of `1 - 2` is `-1`, which is assigned to `x` and thus `x` receives the type `int8` -- the smallest type that contains `-1`, although the natural types of `1` and `2` are actually `uint8`.    
 
 It is even possible to temporarily exceed the maximum of 256 bits as long as only integer literals are used for the computation: `var x = (0xffffffffffffffffffff * 0xffffffffffffffffffff) * 0;` Here, `x` will have the value `0` and thus the type `uint8`.
+
+.. warning::
+    Divison on integer literals used to truncate in earlier versions, but it will actually convert into a rational number in the future, i.e. `1/2` is not equal to `0`, but to `0.5`.
+
 
 .. index:: literal, literal;string, string
 
