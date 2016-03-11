@@ -3617,7 +3617,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_literal_seconds_and_wei)
 			}
 		}
 	)";
-	BOOST_CHECK(success(text));
+	BOOST_CHECK(!success(text));
 }
 
 BOOST_AUTO_TEST_CASE(array_declaration_with_fixed_literal)
