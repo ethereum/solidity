@@ -143,10 +143,16 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 				);
 			else
 			{
-				if (SemanticInformation::invalidatesMemory(_item.instruction()))
+				bool invMem = SemanticInformation::invalidatesMemory(_item.instruction());
+				bool invStor = SemanticInformation::invalidatesStorage(_item.instruction());
+				// We could be a bit more fine-grained here (CALL only invalidates part of
+				// memory, etc), but we do not for now.
+				if (invMem)
 					resetMemory();
-				if (SemanticInformation::invalidatesStorage(_item.instruction()))
+				if (invStor)
 					resetStorage();
+				if (invMem || invStor)
+					m_sequenceNumber += 2; // Increment by two because it can read and write
 				assertThrow(info.ret <= 1, InvalidDeposit, "");
 				if (info.ret == 1)
 					setStackElement(
