@@ -296,7 +296,9 @@ So `bytes` should always be preferred over `byte[]` because it is cheaper.
 Allocating Memory Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Creating arrays with variable length in memory can be done using the `new` keyword:
+Creating arrays with variable length in memory can be done using the `new` keyword.
+As opposed to storage arrays, it is **not** possible to resize memory arrays by assigning to
+the `.length` member.
 
 ::
 
