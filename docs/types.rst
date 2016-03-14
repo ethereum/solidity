@@ -291,6 +291,23 @@ So `bytes` should always be preferred over `byte[]` because it is cheaper.
     that you are accessing the low-level bytes of the utf-8 representation,
     and not the individual characters!
 
+.. index:: ! array;allocating, new
+
+Allocating Memory Arrays
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Creating arrays with variable length in memory can be done using the `new` keyword:
+
+::
+
+    contract C {
+      function f(uint len) {
+        uint[] a = new uint[](7);
+        bytes b = new bytes(len);
+      }
+    }
+
+
 .. index:: ! array;length, length, push, !array;push
 
 Members
