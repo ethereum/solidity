@@ -302,8 +302,8 @@ Creating arrays with variable length in memory can be done using the `new` keywo
 
     contract C {
       function f(uint len) {
-        uint[] a = new uint[](7);
-        bytes b = new bytes(len);
+        uint[] memory a = new uint[](7);
+        bytes memory b = new bytes(len);
       }
     }
 
