@@ -387,8 +387,11 @@ public:
 	std::shared_ptr<IntegerType const> integerType() const;
 	/// @returns the smallest fixed type that can hold the value or an empty pointer
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
+
+	bigint fractionalBitsNeeded() const;
 	bigint denominator() const { return m_value.denominator(); }
-	
+	bigint wholeNumbers() const { return m_value.numerator() / m_value.denominator(); }
+
 private:
 	rational m_value;
 };

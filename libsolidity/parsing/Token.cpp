@@ -153,9 +153,9 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 				positionM < positionX &&
 				positionX < _literal.end() &&
 				*positionX == 'x' &&
-				all_of(++positionX, _literal.end(), ::isdigit)
+				all_of(positionX + 1, _literal.end(), ::isdigit)
 			) {
-				int n = parseSize(positionX, _literal.end());
+				int n = parseSize(positionX + 1, _literal.end());
 				if (
 					0 <= m && m <= 256 &&
 					0 <= n && n <= 256 &&

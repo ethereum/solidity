@@ -436,19 +436,6 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			);
 		break;
 	}
-	/*case Type::Category::Fixed:
-	{
-		if (targetTypeCategory == Type::Category::Integer)
-		{
-			//need some guidance here
-		}
-		else if (targetTypeCategory == Type::Category::FixedBytes)
-		{
-			//need some guidance here
-		}
-		else
-			//need some guidance here
-	}*/
 	case Type::Category::Array:
 	{
 		solAssert(targetTypeCategory == stackTypeCategory, "");

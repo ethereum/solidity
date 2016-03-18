@@ -362,6 +362,7 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 FixedPointType::FixedPointType(int _integerBits, int _fractionalBits, FixedPointType::Modifier _modifier):
 	m_integerBits(_integerBits), m_fractionalBits(_fractionalBits), m_modifier(_modifier)
 {
+	cout << "FIXED POINT CONSTRUCTOR: " << _integerBits << "x" << _fractionalBits << endl;
 	solAssert(
 		m_integerBits + m_fractionalBits > 0 && 
 		m_integerBits + m_fractionalBits <= 256 && 
@@ -469,7 +470,6 @@ bool ConstantNumberType::isValidLiteral(Literal const& _literal)
 		{
 			//problem here. If the first digit is a 0 in the string, it won't
 			//turn it into a integer...Using find if not to count the leading 0s.
-
 			auto leadingZeroes = find_if_not(
 				radixPoint + 1, 
 				_literal.value().end(), 
@@ -516,18 +516,17 @@ ConstantNumberType::ConstantNumberType(Literal const& _literal)
 			distance(radixPoint + 1, _literal.value().end())
 		);
 		numerator = bigint(string(_literal.value().begin(), radixPoint));
-
 		m_value = numerator + denominator;
 	}
 	else
 		m_value = bigint(_literal.value());
+
 	switch (_literal.subDenomination())
 	{
 	case Literal::SubDenomination::None:
 	case Literal::SubDenomination::Wei:
 	case Literal::SubDenomination::Second:
 		break;
-	}
 	case Literal::SubDenomination::Szabo:
 		m_value *= bigint("1000000000000");
 		break;
@@ -574,28 +573,16 @@ bool ConstantNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	}
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
-		auto targetType = dynamic_cast<FixedPointType const*>(&_convertTo);
-		if (m_value == 0)
-			return true;
-		int forSignBit = (targetType->isSigned() ? 1 : 0);
-		if (m_value > 0)
-		{
-			bool properlyScaledBits = m_scalingFactor <= targetType->fractionalBits() ? 
-				true : m_scalingFactor == 1 && targetType->fractionalBits() == 0 ? true : false;
-			if (m_value <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)) && properlyScaledBits)
-				return true;
-			else if (targetType->isSigned() && -m_value <= (u256(1) << (targetType->numBits() - forSignBit)) && properlyScaledBits)
-				return true;
-			return false;
-		}
-
-	}
-	else if (_convertTo.category() == Category::FixedPoint)
-	{
 		cout << "IMPLICIT CONVERSION" << endl;
 		if (fixedPointType() && fixedPointType()->isImplicitlyConvertibleTo(_convertTo))
 			return true;
 
+		return false;
+	}
+	else if (_convertTo.category() == Category::FixedPoint)
+	{
+		if (fixedPointType() && fixedPointType()->isImplicitlyConvertibleTo(_convertTo))
+			return true;
 		return false;
 	}
 	else if (_convertTo.category() == Category::FixedBytes)
@@ -613,6 +600,7 @@ bool ConstantNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		TypePointer intType = integerType();
 		return intType && intType->isExplicitlyConvertibleTo(_convertTo);
 	}
+	cout << "EXPLICIT CONVERSION" << endl;
 	TypePointer fixType = fixedPointType();
 	return fixType && fixType->isExplicitlyConvertibleTo(_convertTo);
 }
@@ -628,10 +616,10 @@ TypePointer ConstantNumberType::unaryOperatorResult(Token::Value _operator) cons
 		value = ~m_value.numerator();
 		break;
 	case Token::Add:
-		value = m_value;
+		value = +(m_value);
 		break;
 	case Token::Sub:
-		value = -m_value;
+		value = -(m_value);
 		break;
 	case Token::After:
 		return shared_from_this();
@@ -711,7 +699,6 @@ TypePointer ConstantNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			value = m_value - other.m_value;
 			break;
 		case Token::Mul:
-			scale = m_scalingFactor - other.m_scalingFactor;
 			value = m_value * other.m_value;
 			break;			
 		case Token::Div:
@@ -734,6 +721,7 @@ TypePointer ConstantNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			break;	
 		case Token::Exp:
 		{
+			cout << "Is this the source of the problem" << endl;
 			bigint newDenominator;
 			bigint newNumerator;
 			if (other.m_value.denominator() != 1) 
@@ -781,7 +769,7 @@ u256 ConstantNumberType::literalValue(Literal const*) const
 {
 	u256 value;
 	// we ignore the literal and hope that the type was correctly determined
-	solAssert(m_value <= u256(-1), "Number constant too large.");
+
 	solAssert(m_value >= -(bigint(1) << 255), "Number constant too small.");
 
 	if (m_value >= 0)
@@ -807,7 +795,7 @@ TypePointer ConstantNumberType::mobileType() const
 
 shared_ptr<IntegerType const> ConstantNumberType::integerType() const
 {
-	bigint value = m_value.numerator() / m_value.denominator();
+	bigint value = wholeNumbers();
 	bool negative = (value < 0);
 	if (negative) // convert to positive number of same bit requirements
 		value = ((0 - value) - 1) << 1;
@@ -822,26 +810,49 @@ shared_ptr<IntegerType const> ConstantNumberType::integerType() const
 
 shared_ptr<FixedPointType const> ConstantNumberType::fixedPointType() const
 {
-	rational value = m_value;
-	cout << "Original value: " << value << endl;
-	bool negative = (value < 0);
-	if (negative) // convert to absolute value
-		value = abs(value);
-	if (value > u256(-1))
+	//do calculations up here
+	bigint integers = wholeNumbers();
+	//bigint _remainder = abs(m_value.numerator() % m_value.denominator());
+	bool fractionalSignBit = integers == 0; //sign the fractional side or the integer side
+	bool negative = (m_value < 0);
+	//todo: change name
+	bigint fractionalBits = fractionalBitsNeeded();
+
+	if (negative && !fractionalSignBit) // convert to positive number of same bit requirements
+	{
+		integers = ((0 - integers) - 1) << 1;
+		fractionalBits = ((0 - fractionalBits) - 1) << 1;
+	}
+	else if (negative && fractionalSignBit)
+		fractionalBits = ((0 - fractionalBits) - 1) << 1;
+	
+	if (fractionalBits > u256(-1))
 		return shared_ptr<FixedPointType const>();
 	else
 	{
-		// need to fix this because these aren't the proper M and N
-		bigint integerBits = m_value.numerator() / m_value.denominator();
-		bigint remains = m_value.numerator() % m_value.denominator();
-		cout << "Integer: " << integerBits.str() << endl;
-		cout << "Remains: " << remains.str() << endl << endl;
-		bigint fractionalBits;
+		unsigned totalBytesRequired = bytesRequired(fractionalBits) * 8;
+		unsigned integerBytesRequired = bytesRequired(integers) * 8;
 		return make_shared<FixedPointType>(
-			max(bytesRequired(integerBits), 1u) * 8, max(bytesRequired(fractionalBits), 1u) * 8,
+			integerBytesRequired, totalBytesRequired - integerBytesRequired,
  			negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned
 		);
 	}
+}
+
+//todo: change name of function
+bigint ConstantNumberType::fractionalBitsNeeded() const
+{
+	auto value = m_value;
+	for (unsigned fractionalBits = 0; value < boost::multiprecision::pow(bigint(2), 256); fractionalBits += 8, value *= 10)
+	{
+		if (value.denominator() == 1)
+			return value.numerator()/value.denominator();
+		for ( ; value.denominator() != 1 && value < boost::multiprecision::pow(bigint(2), fractionalBits); value *= 10)
+			if (value.denominator() == 1)
+				return value.numerator()/value.denominator();
+	}	
+	cout << "too big :(" << endl;
+	return value.numerator()/value.denominator();
 }
 
 
