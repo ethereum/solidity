@@ -580,16 +580,11 @@ bool ConstantNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		int forSignBit = (targetType->isSigned() ? 1 : 0);
 		if (m_value > 0)
 		{
-			if (
-				m_value <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)) &&
-			 	m_scalingFactor <= targetType->fractionalBits()
-			)
+			bool properlyScaledBits = m_scalingFactor <= targetType->fractionalBits() ? 
+				true : m_scalingFactor == 1 && targetType->fractionalBits() == 0 ? true : false;
+			if (m_value <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)) && properlyScaledBits)
 				return true;
-			else if (
-				targetType->isSigned() &&
-				-m_value <= (u256(1) >> (256 - targetType->numBits() + forSignBit)) &&
-				m_scalingFactor <= targetType->fractionalBits()
-			)
+			else if (targetType->isSigned() && -m_value <= (u256(1) << (targetType->numBits() - forSignBit)) && properlyScaledBits)
 				return true;
 			return false;
 		}
