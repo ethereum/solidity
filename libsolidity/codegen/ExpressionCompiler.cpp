@@ -185,7 +185,8 @@ bool ExpressionCompiler::visit(Conditional const& _condition)
 	utils().convertType(*_condition.falseExpression().annotation().type, *_condition.annotation().type);
 	eth::AssemblyItem endTag = m_context.appendJumpToNew();
 	m_context << trueTag;
-	m_context.adjustStackOffset(-_condition.annotation().type->sizeOnStack());
+	int offset = _condition.annotation().type->sizeOnStack();
+	m_context.adjustStackOffset(-offset);
 	_condition.trueExpression().accept(*this);
 	utils().convertType(*_condition.trueExpression().annotation().type, *_condition.annotation().type);
 	m_context << endTag;

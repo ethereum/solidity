@@ -22,7 +22,16 @@
 
 #include <string>
 #include <tuple>
+
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4535) // calling _set_se_translator requires /EHa
+#endif
 #include <boost/test/unit_test.hpp>
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+
 #include <libdevcore/Hash.h>
 #include <test/libsolidity/solidityExecutionFramework.h>
 
