@@ -36,7 +36,7 @@ bool Why3Translator::process(SourceUnit const& _source)
 		appendPreface();
 		_source.accept(*this);
 	}
-	catch (FatalError& _e)
+	catch (FatalError& /*_e*/)
 	{
 		solAssert(m_errorOccured, "");
 	}

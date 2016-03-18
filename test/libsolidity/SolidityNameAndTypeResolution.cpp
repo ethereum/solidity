@@ -102,7 +102,7 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 	{
 		return make_pair(sourceUnit, std::make_shared<Error::Type const>(_e.type()));
 	}
-	catch (Exception const& _exception)
+	catch (Exception const& /*_exception*/)
 	{
 		return make_pair(sourceUnit, nullptr);
 	}
