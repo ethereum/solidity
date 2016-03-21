@@ -33,5 +33,8 @@ if (NOT EMSCRIPTEN)
 	add_subdirectory(liblll)
 	add_subdirectory(test)
 endif()
+if (ETHASHCL)
+	add_subdirectory(lllc)
+endif()
 
 # TODO installation and packaging rules
