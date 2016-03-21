@@ -26,6 +26,7 @@ include(EthUtils)
 include(EthOptions)
 configure_project(TESTS)
 
+add_subdirectory(libevmasm)
 add_subdirectory(libsolidity)
 add_subdirectory(solc)
 if (NOT EMSCRIPTEN)
