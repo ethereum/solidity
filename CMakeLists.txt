@@ -30,6 +30,7 @@ add_subdirectory(libevmasm)
 add_subdirectory(libsolidity)
 add_subdirectory(solc)
 if (NOT EMSCRIPTEN)
+	add_subdirectory(liblll)
 	add_subdirectory(test)
 endif()
 
