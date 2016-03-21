@@ -20,10 +20,10 @@
  * Versioning.
  */
 
-#include <libevmasm/Version.h>
 #include <string>
 #include <ethereum/BuildInfo.h>
 #include <libdevcore/Common.h>
+#include <libsolidity/libevmasm/Version.h>
 
 using namespace dev;
 using namespace std;
