@@ -6,6 +6,7 @@ set(EXECUTABLE evmasm)
 
 file(GLOB HEADERS "*.h")
 
+include_directories(BEFORE ..)
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 eth_use(${EXECUTABLE} REQUIRED Eth::evmcore)
 

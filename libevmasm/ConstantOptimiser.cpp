@@ -19,9 +19,9 @@
  * @date 2015
  */
 
-#include <solidity/libevmasm/ConstantOptimiser.h>
-#include <solidity/libevmasm/Assembly.h>
-#include <solidity/libevmasm/GasMeter.h>
+#include <libevmasm/ConstantOptimiser.h>
+#include <libevmasm/Assembly.h>
+#include <libevmasm/GasMeter.h>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
