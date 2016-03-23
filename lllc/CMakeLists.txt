@@ -6,7 +6,7 @@ file(GLOB HEADERS "*.h")
 include_directories(BEFORE ..)
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Eth::lll Dev::buildinfo)
+eth_use(${EXECUTABLE} REQUIRED Solidity::lll Dev::buildinfo)
 
 install( TARGETS ${EXECUTABLE} DESTINATION bin )
 

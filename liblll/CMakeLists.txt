@@ -15,7 +15,7 @@ file(GLOB HEADERS "*.h")
 include_directories(BEFORE ..)
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Eth::evmasm)
+eth_use(${EXECUTABLE} REQUIRED Solidity::evmasm)
 #target_link_libraries(${EXECUTABLE} evmasm)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
