@@ -613,6 +613,7 @@ Note that the full code of the created contract has to be included in the creato
 This also means that cyclic creations are not possible (because the contract would have
 to contain its own code) - at least not in a general way.
 
+
 How do you create 2-dimensional arrays?
 =======================================
 
@@ -646,6 +647,20 @@ gas and return your 20 Wei).
 
 In the above example, the low-level function `call` is used to invoke another
 contract with `p.data` as payload and `p.amount` Wei is sent with that call.
+
+How do I initialize a contract with only a specific amount of wei?
+==================================================================
+
+Currently the approach is a little ugly, but there is little that can be done to improve it.
+You will need to make sure that you have both contracts aware of each other's presence.
+In this example::
+    contract B {}
+    contract A {
+        address child;
+        function test() {
+            child = (new B).value(10)(); //construct a new B with 10 wei
+        }
+    }
 
 Can a contract function accept a two-dimensional array?
 =======================================================
