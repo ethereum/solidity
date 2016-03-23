@@ -490,8 +490,14 @@ Variable Declarations
 Declarations of array variables should not have a space between the type and
 the brackets.
 
-Yes: `uint[] x;`
-No:  `uint [] x;`
+Yes::
+
+    uint[] x;
+
+No::
+
+    uint [] x;
+
 
 Other Recommendations
 =====================
