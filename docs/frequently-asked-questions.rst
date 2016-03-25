@@ -652,6 +652,8 @@ How do I initialize a contract with only a specific amount of wei?
 ==================================================================
 
 Currently the approach is a little ugly, but there is little that can be done to improve it.
+In the case of a `contract A` calling a new instance of `contract B`, parentheses have to be used around
+`new B` because `B.value` would refer to a member of `B` called `value`.
 You will need to make sure that you have both contracts aware of each other's presence.
 In this example::
     contract B {}
