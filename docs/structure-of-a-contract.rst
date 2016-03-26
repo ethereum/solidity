@@ -71,8 +71,6 @@ Function modifiers can be used to amend the semantics of functions in a declarat
     }
   }
 
-See into the section on :ref:`contracts` for a more in-depth explanation.
-
 .. _structure-events:
 
 Events
