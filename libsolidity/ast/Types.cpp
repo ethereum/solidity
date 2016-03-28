@@ -817,7 +817,7 @@ shared_ptr<FixedPointType const> ConstantNumberType::fixedPointType() const
 	bool negative = (m_value < 0);
 	//todo: change name
 	bigint fractionalBits = fractionalBitsNeeded();
-
+	cout << "Total int: " << fractionalBits.str() << endl;
 	if (negative && !fractionalSignBit) // convert to positive number of same bit requirements
 	{
 		integers = ((0 - integers) - 1) << 1;
@@ -830,10 +830,14 @@ shared_ptr<FixedPointType const> ConstantNumberType::fixedPointType() const
 		return shared_ptr<FixedPointType const>();
 	else
 	{
-		unsigned totalBytesRequired = bytesRequired(fractionalBits) * 8;
+		cout << "m_value: " << m_value << endl;
+		cout << "Total int: " << fractionalBits.str() << endl;
+		unsigned fractionalBytesRequired = bytesRequired(fractionalBits) * 8;
 		unsigned integerBytesRequired = bytesRequired(integers) * 8;
+		cout << "Fractional Bytes Required: " << fractionalBytesRequired << endl;
+		cout << "Integer Bytes Required: " << integerBytesRequired << endl << endl;
 		return make_shared<FixedPointType>(
-			integerBytesRequired, totalBytesRequired - integerBytesRequired,
+			integerBytesRequired, fractionalBytesRequired,
  			negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned
 		);
 	}
@@ -842,7 +846,7 @@ shared_ptr<FixedPointType const> ConstantNumberType::fixedPointType() const
 //todo: change name of function
 bigint ConstantNumberType::fractionalBitsNeeded() const
 {
-	auto value = m_value;
+	auto value = m_value - wholeNumbers();
 	for (unsigned fractionalBits = 0; value < boost::multiprecision::pow(bigint(2), 256); fractionalBits += 8, value *= 10)
 	{
 		if (value.denominator() == 1)

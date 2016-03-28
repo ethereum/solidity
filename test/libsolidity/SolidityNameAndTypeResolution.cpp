@@ -3434,7 +3434,7 @@ BOOST_AUTO_TEST_CASE(inline_array_fixed_rationals)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed8x16[3] memory a = [3.5, 4.1234, 2.5];
+				ufixed8x16[4] memory a = [3.5, 4.1234, 2.5, 4.0];
 			}
 		}
 	)";
