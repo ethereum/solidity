@@ -345,11 +345,11 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		break;
 	case Type::Category::Integer:
 	case Type::Category::Contract:
-	case Type::Category::NumberConstant:
+	case Type::Category::RationalNumber
 	case Type::Category::FixedPoint:
 		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
-			solAssert(stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::NumberConstant,
+			solAssert(stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::RationalNumber,
 				"Invalid conversion to FixedBytesType requested.");
 			// conversion from bytes to string. no need to clean the high bit
 			// only to shift left because of opposite alignment
@@ -366,7 +366,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		{
 			solAssert(
 				stackTypeCategory == Type::Category::Integer || 
-				stackTypeCategory == Type::Category::NumberConstant ||
+				stackTypeCategory == Type::Category::RationalNumber ||
 				stackTypeCategory == Type::Category::FixedPoint,
 				"Invalid conversion to FixedMxNType requested."
 			);
@@ -384,9 +384,9 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			IntegerType addressType(0, IntegerType::Modifier::Address);
 			IntegerType const& targetType = targetTypeCategory == Type::Category::Integer
 				? dynamic_cast<IntegerType const&>(_targetType) : addressType;
-			if (stackTypeCategory == Type::Category::NumberConstant)
+			if (stackTypeCategory == Type::Category::RationalNumber)
 			{
-				ConstantNumberType const& constType = dynamic_cast<ConstantNumberType const&>(_typeOnStack);
+				RationalNumberType const& constType = dynamic_cast<RationalNumberType const&>(_typeOnStack);
 				// We know that the stack is clean, we only have to clean for a narrowing conversion
 				// where cleanup is forced.
 				if (targetType.numBits() < constType.integerType()->numBits() && _cleanupNeeded)

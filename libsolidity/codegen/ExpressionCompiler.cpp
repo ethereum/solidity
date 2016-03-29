@@ -285,7 +285,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	// the operator should know how to convert itself and to which types it applies, so
 	// put this code together with "Type::acceptsBinary/UnaryOperator" into a class that
 	// represents the operator
-	if (_unaryOperation.annotation().type->category() == Type::Category::NumberConstant)
+	if (_unaryOperation.annotation().type->category() == Type::Category::RationalNumber)
 	{
 		m_context << _unaryOperation.annotation().type->literalValue(nullptr);
 		return false;
@@ -360,7 +360,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 	if (c_op == Token::And || c_op == Token::Or) // special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
-	else if (commonType.category() == Type::Category::NumberConstant)
+	else if (commonType.category() == Type::Category::RationalNumber)
 		m_context << commonType.literalValue(nullptr);
 	else
 	{
@@ -370,7 +370,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		// for commutative operators, push the literal as late as possible to allow improved optimization
 		auto isLiteral = [](Expression const& _e)
 		{
-			return dynamic_cast<Literal const*>(&_e) || _e.annotation().type->category() == Type::Category::NumberConstant;
+			return dynamic_cast<Literal const*>(&_e) || _e.annotation().type->category() == Type::Category::RationalNumber;
 		};
 		bool swap = m_optimize && Token::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
 		if (swap)
@@ -1225,7 +1225,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	
 	switch (type->category())
 	{
-	case Type::Category::NumberConstant:
+	case Type::Category::RationalNumber:
 	case Type::Category::Bool:
 		m_context << type->literalValue(&_literal);
 		break;

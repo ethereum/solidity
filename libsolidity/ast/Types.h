@@ -135,7 +135,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, NumberConstant, StringLiteral, Bool, FixedPoint, Array,
+		Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array,
 		FixedBytes, Contract, Struct, Function, Enum, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module
 	};
@@ -356,17 +356,17 @@ private:
  * Example expressions: 2, 3.14, 2+10.2, ~10.
  * There is one distinct type per value.
  */
-class ConstantNumberType: public Type
+class RationalNumberType: public Type
 {
 public:
 
-	virtual Category category() const override { return Category::NumberConstant; }
+	virtual Category category() const override { return Category::RationalNumber; }
 
 	/// @returns true if the literal is a valid integer.
 	static bool isValidLiteral(Literal const& _literal);
 
-	explicit ConstantNumberType(Literal const& _literal);
-	explicit ConstantNumberType(rational _value):
+	explicit RationalNumberType(Literal const& _literal);
+	explicit RationalNumberType(rational _value):
 		m_value(_value)
 	{}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;

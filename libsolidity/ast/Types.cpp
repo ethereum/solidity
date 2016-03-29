@@ -181,8 +181,8 @@ TypePointer Type::forLiteral(Literal const& _literal)
 	case Token::FalseLiteral:
 		return make_shared<BoolType>();
 	case Token::Number:
-		if (ConstantNumberType::isValidLiteral(_literal))
-			return make_shared<ConstantNumberType>(_literal);
+		if (RationalNumberType::isValidLiteral(_literal))
+			return make_shared<RationalNumberType>(_literal);
 		else
 			return TypePointer();		
 	case Token::StringLiteral:
@@ -326,7 +326,7 @@ string IntegerType::toString(bool) const
 
 TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (_other->category() != Category::NumberConstant && _other->category() != category())
+	if (_other->category() != Category::RationalNumber && _other->category() != category())
 		return TypePointer();
 	auto commonType = dynamic_pointer_cast<IntegerType const>(Type::commonType(shared_from_this(), _other));
 
@@ -441,7 +441,7 @@ string FixedPointType::toString(bool) const
 
 TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (_other->category() != Category::NumberConstant 
+	if (_other->category() != Category::RationalNumber 
 		&& _other->category() != category()
 		&& _other->category() != Category::Integer
 	)
@@ -459,7 +459,7 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 	return commonType;
 }
 
-bool ConstantNumberType::isValidLiteral(Literal const& _literal)
+bool RationalNumberType::isValidLiteral(Literal const& _literal)
 {
 	try
 	{
@@ -495,7 +495,7 @@ bool ConstantNumberType::isValidLiteral(Literal const& _literal)
 	return true;
 }
 
-ConstantNumberType::ConstantNumberType(Literal const& _literal)
+RationalNumberType::RationalNumberType(Literal const& _literal)
 {
 	rational numerator;
 	rational denominator = bigint(1);
@@ -554,7 +554,7 @@ ConstantNumberType::ConstantNumberType(Literal const& _literal)
 	}
 }
 
-bool ConstantNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.category() == Category::Integer)
 	{
@@ -593,7 +593,7 @@ bool ConstantNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	return false;
 }
 
-bool ConstantNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
+bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (m_value.denominator() == 1)
 	{
@@ -605,7 +605,7 @@ bool ConstantNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return fixType && fixType->isExplicitlyConvertibleTo(_convertTo);
 }
 
-TypePointer ConstantNumberType::unaryOperatorResult(Token::Value _operator) const
+TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) const
 {
 	rational value;
 	switch (_operator)
@@ -626,10 +626,10 @@ TypePointer ConstantNumberType::unaryOperatorResult(Token::Value _operator) cons
 	default:
 		return TypePointer();
 	}
-	return make_shared<ConstantNumberType>(value);
+	return make_shared<RationalNumberType>(value);
 }
 
-TypePointer ConstantNumberType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
+TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	if (_other->category() == Category::Integer)
 	{
@@ -649,7 +649,7 @@ TypePointer ConstantNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	else if (_other->category() != category())
 		return TypePointer();
 
-	ConstantNumberType const& other = dynamic_cast<ConstantNumberType const&>(*_other);
+	RationalNumberType const& other = dynamic_cast<RationalNumberType const&>(*_other);
 	if (Token::isCompareOp(_operator))
 	{
 		if (m_value.denominator() == 1)
@@ -746,26 +746,26 @@ TypePointer ConstantNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		default:
 			return TypePointer();
 		}
-		return make_shared<ConstantNumberType>(value);
+		return make_shared<RationalNumberType>(value);
 	}
 }
 
-bool ConstantNumberType::operator==(Type const& _other) const
+bool RationalNumberType::operator==(Type const& _other) const
 {
 	if (_other.category() != category())
 		return false;
-	ConstantNumberType const& other = dynamic_cast<ConstantNumberType const&>(_other);
+	RationalNumberType const& other = dynamic_cast<RationalNumberType const&>(_other);
 	return m_value == other.m_value;
 }
 
-string ConstantNumberType::toString(bool) const
+string RationalNumberType::toString(bool) const
 {
 	if (m_value.denominator() == 1)
 		return "int_const " + m_value.numerator().str();
 	return "rational_const " + m_value.numerator().str() + '/' + m_value.denominator().str();
 }
 
-u256 ConstantNumberType::literalValue(Literal const*) const
+u256 RationalNumberType::literalValue(Literal const*) const
 {
 	u256 value;
 	// we ignore the literal and hope that the type was correctly determined
@@ -780,7 +780,7 @@ u256 ConstantNumberType::literalValue(Literal const*) const
 	return value;
 }
 
-TypePointer ConstantNumberType::mobileType() const
+TypePointer RationalNumberType::mobileType() const
 {
 	if (m_value.denominator() == 1)
 	{
@@ -793,7 +793,7 @@ TypePointer ConstantNumberType::mobileType() const
 	return fixType;
 }
 
-shared_ptr<IntegerType const> ConstantNumberType::integerType() const
+shared_ptr<IntegerType const> RationalNumberType::integerType() const
 {
 	bigint value = wholeNumbers();
 	bool negative = (value < 0);
@@ -808,7 +808,7 @@ shared_ptr<IntegerType const> ConstantNumberType::integerType() const
 		);
 }
 
-shared_ptr<FixedPointType const> ConstantNumberType::fixedPointType() const
+shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 {
 	//do calculations up here
 	bigint integers = wholeNumbers();
@@ -844,10 +844,14 @@ shared_ptr<FixedPointType const> ConstantNumberType::fixedPointType() const
 }
 
 //todo: change name of function
-bigint ConstantNumberType::fractionalBitsNeeded() const
+bigint RationalNumberType::findFractionNumberAndBits(bool getWholeNumber = false) const
 {
-	auto value = m_value - wholeNumbers();
-	for (unsigned fractionalBits = 0; value < boost::multiprecision::pow(bigint(2), 256); fractionalBits += 8, value *= 10)
+	rational value;
+	if (getWholeNumber)
+		value = m_value;
+	else
+		value = m_value - wholeNumbers();
+	for (unsigned fractionalBits = 0; value < boost::multiprecision::pow(bigint(2), 256); fractionalBits += 8, value *= 256)
 	{
 		if (value.denominator() == 1)
 			return value.numerator()/value.denominator();

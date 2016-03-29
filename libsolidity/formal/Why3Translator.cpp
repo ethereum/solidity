@@ -428,9 +428,9 @@ bool Why3Translator::visit(BinaryOperation const& _binaryOperation)
 	Type const& commonType = *_binaryOperation.annotation().commonType;
 	Token::Value const c_op = _binaryOperation.getOperator();
 
-	if (commonType.category() == Type::Category::NumberConstant)
+	if (commonType.category() == Type::Category::RationalNumber)
 	{
-		auto const& constantNumber = dynamic_cast<ConstantNumberType const&>(commonType);
+		auto const& constantNumber = dynamic_cast<RationalNumberType const&>(commonType);
 		if (constantNumber.denominator() != bigint(1))
 			error(_binaryOperation, "Fractional numbers not supported.");
 		add("(of_int " + toString(commonType.literalValue(nullptr)) + ")");
@@ -592,9 +592,9 @@ bool Why3Translator::visit(Literal const& _literal)
 		else
 			add("true");
 		break;
-	case Type::Category::NumberConstant:
+	case Type::Category::RationalNumber:
 	{
-		auto const& constantNumber = dynamic_cast<ConstantNumberType const&>(*type);
+		auto const& constantNumber = dynamic_cast<RationalNumberType const&>(*type);
 		if (constantNumber.denominator() != 1)
 			error(_literal, "Fractional numbers not supported.");
 		add("(of_int " + toString(type->literalValue(&_literal)) + ")");
