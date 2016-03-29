@@ -31,7 +31,7 @@ using namespace dev::solidity;
 void ConstantEvaluator::endVisit(UnaryOperation const& _operation)
 {
 	TypePointer const& subType = _operation.subExpression().annotation().type;
-	if (!dynamic_cast<ConstantNumberType const*>(subType.get()))
+	if (!dynamic_cast<RationalNumberType const*>(subType.get()))
 		BOOST_THROW_EXCEPTION(_operation.subExpression().createTypeError("Invalid constant expression."));
 	TypePointer t = subType->unaryOperatorResult(_operation.getOperator());
 	_operation.annotation().type = t;
@@ -41,9 +41,9 @@ void ConstantEvaluator::endVisit(BinaryOperation const& _operation)
 {
 	TypePointer const& leftType = _operation.leftExpression().annotation().type;
 	TypePointer const& rightType = _operation.rightExpression().annotation().type;
-	if (!dynamic_cast<ConstantNumberType const*>(leftType.get()))
+	if (!dynamic_cast<RationalNumberType const*>(leftType.get()))
 		BOOST_THROW_EXCEPTION(_operation.leftExpression().createTypeError("Invalid constant expression."));
-	if (!dynamic_cast<ConstantNumberType const*>(rightType.get()))
+	if (!dynamic_cast<RationalNumberType const*>(rightType.get()))
 		BOOST_THROW_EXCEPTION(_operation.rightExpression().createTypeError("Invalid constant expression."));
 	TypePointer commonType = leftType->binaryOperatorResult(_operation.getOperator(), rightType);
 	if (Token::isCompareOp(_operation.getOperator()))
