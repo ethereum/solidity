@@ -172,6 +172,23 @@ Are mappings iterable?
 Mappings themselves are not iterable, but you can use a higher-level
 datastructure on top of it, for example the `iterable mapping <https://github.com/ethereum/dapp-bin/blob/master/library/iterable_mapping.sol>`_.
 
+Can I put arrays inside of a mapping? How do I make a mapping of a mapping?
+===========================================================================
+
+Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping. 
+
+An example of this would be::
+    contract c {
+        struct myStruct {
+            uint someNumber;
+            string someString;
+        }
+        mapping(uint => mapping(string => myStruct)) myDynamicMapping;
+        function storeInMapping() {
+            myDynamicMapping[1]["Foo"] = myStruct(2, "Bar");
+        }
+    }
+
 Can you return an array or a string from a solidity function call?
 ==================================================================
 
