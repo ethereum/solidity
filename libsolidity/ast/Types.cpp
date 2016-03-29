@@ -713,8 +713,9 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			else if (fixedPointType)
 			{
 				value = m_value;
-				bigint integers = m_value.numerator() / m_value.denominator();
-				value -= integers;
+				rational divisor = m_value / other.m_value;
+				value -= divisor * m_value;
+				cout << "MODULO VALUE: " << value << endl;
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
@@ -816,7 +817,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	bool fractionalSignBit = integers == 0; //sign the fractional side or the integer side
 	bool negative = (m_value < 0);
 	//todo: change name
-	bigint fractionalBits = fractionalBitsNeeded();
+	bigint fractionalBits = findFractionNumberAndBits();
 	cout << "Total int: " << fractionalBits.str() << endl;
 	if (negative && !fractionalSignBit) // convert to positive number of same bit requirements
 	{
@@ -844,23 +845,20 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 }
 
 //todo: change name of function
-bigint RationalNumberType::findFractionNumberAndBits(bool getWholeNumber = false) const
+tuple<bigint, unsigned> RationalNumberType::findFractionNumberAndBits(bool getWholeNumber) const
 {
 	rational value;
 	if (getWholeNumber)
 		value = m_value;
 	else
 		value = m_value - wholeNumbers();
-	for (unsigned fractionalBits = 0; value < boost::multiprecision::pow(bigint(2), 256); fractionalBits += 8, value *= 256)
+	for (unsigned fractionalBits = 0; value < boost::multiprecision::pow(bigint(2), 256); fractionalBits += 8, value *= 10)
 	{
 		if (value.denominator() == 1)
-			return value.numerator()/value.denominator();
-		for ( ; value.denominator() != 1 && value < boost::multiprecision::pow(bigint(2), fractionalBits); value *= 10)
-			if (value.denominator() == 1)
-				return value.numerator()/value.denominator();
+			return make_tuple(value.numerator(), fractionalBits);
 	}	
 	cout << "too big :(" << endl;
-	return value.numerator()/value.denominator();
+	return make_tuple(value.numerator()/value.denominator(), fractionalBits);
 }
 
 

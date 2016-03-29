@@ -345,7 +345,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		break;
 	case Type::Category::Integer:
 	case Type::Category::Contract:
-	case Type::Category::RationalNumber
+	case Type::Category::RationalNumber:
 	case Type::Category::FixedPoint:
 		if (targetTypeCategory == Type::Category::FixedBytes)
 		{

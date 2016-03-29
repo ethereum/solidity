@@ -388,7 +388,7 @@ public:
 	/// @returns the smallest fixed type that can hold the value or an empty pointer
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
-	bigint fractionalBitsNeeded() const;
+	std::tuple<bigint, unsigned> findFractionNumberAndBits(bool getWholeNumber = false) const;
 	bigint denominator() const { return m_value.denominator(); }
 	bigint wholeNumbers() const { return m_value.numerator() / m_value.denominator(); }
 
