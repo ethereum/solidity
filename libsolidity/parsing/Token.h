@@ -334,7 +334,8 @@ public:
 		std::string name = Token::toString(m_token);
 		if (tokenValue || (firstNumber() == 0 && secondNumber() == 0))
 			return name;
-		else if (m_token == Token::FixedMxN || m_token == Token::UFixedMxN)
+		solAssert(name.size() >= 3, "Token name size should be greater than 3. Should not reach here.");
+		if (m_token == Token::FixedMxN || m_token == Token::UFixedMxN)
 			return name.substr(0, name.size() - 3) + std::to_string(m_firstNumber) + "x" + std::to_string(m_secondNumber);
 		else
 			return name.substr(0, name.size() - 1) + std::to_string(m_firstNumber);
