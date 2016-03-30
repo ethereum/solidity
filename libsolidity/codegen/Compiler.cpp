@@ -26,6 +26,7 @@
 #include <libevmcore/Instruction.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libevmasm/Assembly.h>
+#include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerUtils.h>
@@ -494,6 +495,91 @@ bool Compiler::visit(FunctionDefinition const& _function)
 
 	if (!_function.isConstructor())
 		m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
+	return false;
+}
+
+bool Compiler::visit(InlineAssembly const& _inlineAssembly)
+{
+	ErrorList errors;
+	assembly::CodeGenerator codeGen(_inlineAssembly.operations(), errors);
+	int startStackHeight = m_context.stackHeight();
+	m_context.appendInlineAssembly(codeGen.assemble(
+		[&](assembly::Identifier const& _identifier, eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierContext _context) {
+			auto ref = _inlineAssembly.annotation().externalReferences.find(&_identifier);
+			if (ref == _inlineAssembly.annotation().externalReferences.end())
+				return false;
+			Declaration const* decl = ref->second;
+			solAssert(!!decl, "");
+			if (_context == assembly::CodeGenerator::IdentifierContext::RValue)
+			{
+				solAssert(!!decl->type(), "Type of declaration required but not yet determined.");
+				if (/*FunctionDefinition const* functionDef = */dynamic_cast<FunctionDefinition const*>(decl))
+				{
+					solAssert(false, "Referencing local functions in inline assembly not yet implemented.");
+					// This does not work directly, because the label does not exist in _assembly
+					// (it is a fresh assembly object).
+					// _assembly.append(m_context.virtualFunctionEntryLabel(*functionDef).pushTag());
+				}
+				else if (auto variable = dynamic_cast<VariableDeclaration const*>(decl))
+				{
+					solAssert(!variable->isConstant(), "");
+					if (m_context.isLocalVariable(variable))
+					{
+						int stackDiff = _assembly.deposit() + startStackHeight - m_context.baseStackOffsetOfVariable(*variable);
+						if (stackDiff < 1 || stackDiff > 16)
+							BOOST_THROW_EXCEPTION(
+								CompilerError() <<
+								errinfo_comment("Stack too deep, try removing local variables.")
+							);
+						for (unsigned i = 0; i < variable->type()->sizeOnStack(); ++i)
+							_assembly.append(eth::dupInstruction(stackDiff));
+					}
+					else
+					{
+						solAssert(m_context.isStateVariable(variable), "Invalid variable type.");
+						auto const& location = m_context.storageLocationOfVariable(*variable);
+						if (!variable->type()->isValueType())
+						{
+							solAssert(location.second == 0, "Intra-slot offest assumed to be zero.");
+							_assembly.append(location.first);
+						}
+						else
+						{
+							_assembly.append(location.first);
+							_assembly.append(u256(location.second));
+						}
+					}
+				}
+				else if (auto contract = dynamic_cast<ContractDefinition const*>(decl))
+				{
+					solAssert(contract->isLibrary(), "");
+					_assembly.appendLibraryAddress(contract->name());
+				}
+				else
+					solAssert(false, "Invalid declaration type.");
+			} else {
+				// lvalue context
+				auto variable = dynamic_cast<VariableDeclaration const*>(decl);
+				solAssert(
+					!!variable || !m_context.isLocalVariable(variable),
+					"Can only assign to stack variables in inline assembly."
+				);
+				unsigned size = variable->type()->sizeOnStack();
+				int stackDiff = _assembly.deposit() + startStackHeight - m_context.baseStackOffsetOfVariable(*variable) - size;
+				if (stackDiff > 16 || stackDiff < 1)
+					BOOST_THROW_EXCEPTION(
+						CompilerError() <<
+						errinfo_comment("Stack too deep, try removing local variables.")
+					);
+				for (unsigned i = 0; i < size; ++i) {
+					_assembly.append(eth::swapInstruction(stackDiff));
+					_assembly.append(eth::Instruction::POP);
+				}
+			}
+			return true;
+		}
+	));
+	solAssert(errors.empty(), "Code generation for inline assembly with errors requested.");
 	return false;
 }
 

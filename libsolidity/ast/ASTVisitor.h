@@ -62,6 +62,7 @@ public:
 	virtual bool visit(UserDefinedTypeName& _node) { return visitNode(_node); }
 	virtual bool visit(Mapping& _node) { return visitNode(_node); }
 	virtual bool visit(ArrayTypeName& _node) { return visitNode(_node); }
+	virtual bool visit(InlineAssembly& _node) { return visitNode(_node); }
 	virtual bool visit(Block& _node) { return visitNode(_node); }
 	virtual bool visit(PlaceholderStatement& _node) { return visitNode(_node); }
 	virtual bool visit(IfStatement& _node) { return visitNode(_node); }
@@ -105,6 +106,7 @@ public:
 	virtual void endVisit(UserDefinedTypeName& _node) { endVisitNode(_node); }
 	virtual void endVisit(Mapping& _node) { endVisitNode(_node); }
 	virtual void endVisit(ArrayTypeName& _node) { endVisitNode(_node); }
+	virtual void endVisit(InlineAssembly& _node) { endVisitNode(_node); }
 	virtual void endVisit(Block& _node) { endVisitNode(_node); }
 	virtual void endVisit(PlaceholderStatement& _node) { endVisitNode(_node); }
 	virtual void endVisit(IfStatement& _node) { endVisitNode(_node); }
@@ -166,6 +168,7 @@ public:
 	virtual bool visit(WhileStatement const& _node) { return visitNode(_node); }
 	virtual bool visit(ForStatement const& _node) { return visitNode(_node); }
 	virtual bool visit(Continue const& _node) { return visitNode(_node); }
+	virtual bool visit(InlineAssembly const& _node) { return visitNode(_node); }
 	virtual bool visit(Break const& _node) { return visitNode(_node); }
 	virtual bool visit(Return const& _node) { return visitNode(_node); }
 	virtual bool visit(Throw const& _node) { return visitNode(_node); }
@@ -209,6 +212,7 @@ public:
 	virtual void endVisit(WhileStatement const& _node) { endVisitNode(_node); }
 	virtual void endVisit(ForStatement const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Continue const& _node) { endVisitNode(_node); }
+	virtual void endVisit(InlineAssembly const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Break const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Return const& _node) { endVisitNode(_node); }
 	virtual void endVisit(Throw const& _node) { endVisitNode(_node); }

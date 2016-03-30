@@ -21,10 +21,11 @@
  */
 #pragma once
 
-#include <libsolidity/interface/CompilerStack.h>
 #include <memory>
 #include <boost/program_options.hpp>
 #include <boost/filesystem/path.hpp>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/inlineasm/AsmStack.h>
 
 namespace dev
 {
@@ -50,6 +51,10 @@ private:
 	bool link();
 	void writeLinkedFiles();
 
+	/// Parse assembly input.
+	bool assemble();
+	void outputAssembly();
+
 	void outputCompilationResults();
 
 	void handleCombinedJSON();
@@ -73,6 +78,7 @@ private:
 	/// @arg _data to be written
 	void createFile(std::string const& _fileName, std::string const& _data);
 
+	bool m_onlyAssemble = false;
 	bool m_onlyLink = false;
 
 	/// Compiler arguments variable map
@@ -87,6 +93,8 @@ private:
 	std::map<std::string, h160> m_libraries;
 	/// Solidity compiler stack
 	std::unique_ptr<dev::solidity::CompilerStack> m_compiler;
+	/// Assembly stacks for assembly-only mode
+	std::map<std::string, assembly::InlineAssemblyStack> m_assemblyStacks;
 };
 
 }

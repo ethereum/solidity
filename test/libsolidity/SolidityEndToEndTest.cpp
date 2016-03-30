@@ -6486,6 +6486,95 @@ BOOST_AUTO_TEST_CASE(fixed_bytes_length_access)
 	BOOST_CHECK(callContractFunction("f(bytes32)", "789") == encodeArgs(u256(32), u256(16), u256(8)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_write_to_stack)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint r, bytes32 r2) {
+				assembly { r := 7 r2 := "abcdef" }
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7), string("abcdef")));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_read_and_write_stack)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint r) {
+				for (uint x = 0; x < 10; ++x)
+					assembly { r := add(r, x) }
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(45)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_memory_access)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function test() returns (bytes) {
+				bytes memory x = new bytes(5);
+				for (uint i = 0; i < x.length; ++i)
+					x[i] = byte(i + 1);
+				assembly { mstore(add(x, 32), "12345678901234567890123456789012") }
+				return x;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(u256(0x20), u256(5), string("12345")));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_storage_access)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint16 x;
+			uint16 public y;
+			uint public z;
+			function f() {
+				// we know that z is aligned because it is too large, so we just discard its
+				// intra-slot offset value
+				assembly { 7 z pop sstore }
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs());
+	BOOST_CHECK(callContractFunction("z()") == encodeArgs(u256(7)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_assembly_jumps)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				assembly {
+					let n := calldataload(4)
+					let a := 1
+					let b := a
+				loop:
+					jumpi(loopend, eq(n, 0))
+					a add swap1
+					n := sub(n, 1)
+					jump(loop)
+				loopend:
+					mstore(0, a)
+					return(0, 0x20)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()", u256(5)) == encodeArgs(u256(13)));
+	BOOST_CHECK(callContractFunction("f()", u256(7)) == encodeArgs(u256(34)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

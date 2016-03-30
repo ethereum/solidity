@@ -20,11 +20,13 @@
  * Solidity parser.
  */
 
+#include <ctype.h>
 #include <vector>
 #include <libdevcore/Log.h>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/interface/InterfaceHandler.h>
 
@@ -712,6 +714,8 @@ ASTPointer<Statement> Parser::parseStatement()
 		m_scanner->next();
 		break;
 	}
+	case Token::Assembly:
+		return parseInlineAssembly(docString);
 	case Token::Identifier:
 		if (m_insideModifier && m_scanner->currentLiteral() == "_")
 		{
@@ -725,6 +729,23 @@ ASTPointer<Statement> Parser::parseStatement()
 	}
 	expectToken(Token::Semicolon);
 	return statement;
+}
+
+ASTPointer<InlineAssembly> Parser::parseInlineAssembly(ASTPointer<ASTString> const& _docString)
+{
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::Assembly);
+	if (m_scanner->currentToken() == Token::StringLiteral)
+	{
+		if (m_scanner->currentLiteral() != "evmasm")
+			fatalParserError("Only \"evmasm\" supported.");
+		m_scanner->next();
+	}
+
+	assembly::Parser asmParser(m_errors);
+	shared_ptr<assembly::Block> block = asmParser.parse(m_scanner);
+	nodeFactory.markEndPosition();
+	return nodeFactory.createNode<InlineAssembly>(_docString, block);
 }
 
 ASTPointer<IfStatement> Parser::parseIfStatement(ASTPointer<ASTString> const& _docString)

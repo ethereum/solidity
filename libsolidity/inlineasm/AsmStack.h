@@ -16,40 +16,44 @@
 */
 /**
  * @author Christian <c@ethdev.com>
- * @date 2014
- * Formatting functions for errors referencing positions and locations in the source.
+ * @date 2016
+ * Full-stack Solidity inline assember.
  */
 
 #pragma once
 
-#include <ostream>
+#include <string>
 #include <functional>
-#include <libevmasm/SourceLocation.h>
+#include <libsolidity/interface/Exceptions.h>
 
 namespace dev
 {
-
-struct Exception; // forward
-
+namespace eth
+{
+class Assembly;
+}
 namespace solidity
 {
+class Scanner;
+namespace assembly
+{
+struct Block;
 
-class Scanner; // forward
-class CompilerStack; // forward
-
-struct SourceReferenceFormatter
+class InlineAssemblyStack
 {
 public:
-	static void printSourceLocation(std::ostream& _stream, SourceLocation const& _location, Scanner const& _scanner);
-	static void printExceptionInformation(
-		std::ostream& _stream,
-		Exception const& _exception,
-		std::string const& _name,
-		std::function<Scanner const&(std::string const&)> const& _scannerFromSourceName
-	);
+	/// Parse the given inline assembly chunk starting with `{` and ending with the corresponding `}`.
+	/// @return false or error.
+	bool parse(std::shared_ptr<Scanner> const& _scanner);
+	eth::Assembly assemble();
+
+	ErrorList const& errors() const { return m_errors; }
+
 private:
-	static void printSourceName(std::ostream& _stream, SourceLocation const& _location, Scanner const& _scanner);
+	std::shared_ptr<Block> m_asmBlock;
+	ErrorList m_errors;
 };
 
+}
 }
 }

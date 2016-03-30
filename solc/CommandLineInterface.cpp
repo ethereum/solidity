@@ -45,6 +45,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
 #include <libsolidity/interface/GasEstimator.h>
+#include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/formal/Why3Translator.h>
 
 using namespace std;
@@ -431,6 +432,10 @@ Allowed options)",
 		)
 		(g_argGas.c_str(), "Print an estimate of the maximal gas usage for each function.")
 		(
+			"assemble",
+			"Switch to assembly mode, ignoring all options and assumes input is assembly."
+		)
+		(
 			"link",
 			"Switch to linker mode, ignoring all options apart from --libraries "
 			"and modify binaries in place."
@@ -509,6 +514,12 @@ bool CommandLineInterface::processInput()
 			if (!parseLibraryOption(library))
 				return false;
 
+	if (m_args.count("assemble"))
+	{
+		// switch to assembly mode
+		m_onlyAssemble = true;
+		return assemble();
+	}
 	if (m_args.count("link"))
 	{
 		// switch to linker mode
@@ -574,6 +585,7 @@ bool CommandLineInterface::processInput()
 	};
 
 	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0, fileReader));
+	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
 	{
 		for (auto const& sourceCode: m_sourceCodes)
@@ -593,7 +605,8 @@ bool CommandLineInterface::processInput()
 			SourceReferenceFormatter::printExceptionInformation(
 				cerr,
 				*error,
-				(error->type() == Error::Type::Warning) ? "Warning" : "Error", *m_compiler
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+				scannerFromSourceName
 			);
 
 		if (!successful)
@@ -601,7 +614,7 @@ bool CommandLineInterface::processInput()
 	}
 	catch (CompilerError const& _exception)
 	{
-		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Compiler error", *m_compiler);
+		SourceReferenceFormatter::printExceptionInformation(cerr, _exception, "Compiler error", scannerFromSourceName);
 		return false;
 	}
 	catch (InternalCompilerError const& _exception)
@@ -615,7 +628,7 @@ bool CommandLineInterface::processInput()
 		if (_error.type() == Error::Type::DocstringParsingError)
 			cerr << "Documentation parsing error: " << *boost::get_error_info<errinfo_comment>(_error) << endl;
 		else
-			SourceReferenceFormatter::printExceptionInformation(cerr, _error, _error.typeName(), *m_compiler);
+			SourceReferenceFormatter::printExceptionInformation(cerr, _error, _error.typeName(), scannerFromSourceName);
 
 		return false;
 	}
@@ -759,7 +772,9 @@ void CommandLineInterface::handleAst(string const& _argStr)
 
 void CommandLineInterface::actOnInput()
 {
-	if (m_onlyLink)
+	if (m_onlyAssemble)
+		outputAssembly();
+	else if (m_onlyLink)
 		writeLinkedFiles();
 	else
 		outputCompilationResults();
@@ -810,6 +825,44 @@ void CommandLineInterface::writeLinkedFiles()
 			cout << src.second << endl;
 		else
 			writeFile(src.first, src.second);
+}
+
+bool CommandLineInterface::assemble()
+{
+	//@TODO later, we will use the convenience interface and should also remove the include above
+	bool successful = true;
+	map<string, shared_ptr<Scanner>> scanners;
+	for (auto const& src: m_sourceCodes)
+	{
+		auto scanner = make_shared<Scanner>(CharStream(src.second), src.first);
+		scanners[src.first] = scanner;
+		if (!m_assemblyStacks[src.first].parse(scanner))
+			successful = false;
+		else
+			//@TODO we should not just throw away the result here
+			m_assemblyStacks[src.first].assemble();
+	}
+	for (auto const& stack: m_assemblyStacks)
+		for (auto const& error: stack.second.errors())
+			SourceReferenceFormatter::printExceptionInformation(
+				cerr,
+				*error,
+				(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+				[&](string const& _source) -> Scanner const& { return *scanners.at(_source); }
+			);
+
+	return successful;
+}
+
+void CommandLineInterface::outputAssembly()
+{
+	for (auto const& src: m_sourceCodes)
+	{
+		cout << endl << "======= " << src.first << " =======" << endl;
+		eth::Assembly assembly = m_assemblyStacks[src.first].assemble();
+		cout << assembly.assemble().toHex() << endl;
+		cout << assembly.out();
+	}
 }
 
 void CommandLineInterface::outputCompilationResults()
