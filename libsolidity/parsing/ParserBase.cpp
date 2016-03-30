@@ -44,14 +44,32 @@ int ParserBase::endPosition() const
 
 void ParserBase::expectToken(Token::Value _value)
 {
-	if (m_scanner->currentToken() != _value)
-		fatalParserError(
-			string("Expected token ") +
-			string(Token::name(_value)) +
-			string(" got '") +
-			string(Token::name(m_scanner->currentToken())) +
-			string("'")
-		);
+	Token::Value tok = m_scanner->currentToken();
+	if (tok != _value)
+	{
+		if (Token::isElementaryTypeName(tok)) //for the sake of accuracy in reporting
+		{
+			unsigned firstSize;
+			unsigned secondSize;
+			tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
+			ElementaryTypeNameToken elemTypeName(tok, firstSize, secondSize);
+			fatalParserError(
+				string("Expected token ") +
+				string(Token::name(_value)) +
+				string(" got '") +
+				elemTypeName.toString() +
+				string("'")
+			);
+		}
+		else
+			fatalParserError(
+				string("Expected token ") +
+				string(Token::name(_value)) +
+				string(" got '") +
+				string(Token::name(m_scanner->currentToken())) +
+				string("'")
+			);
+	}
 	m_scanner->next();
 }
 
@@ -59,23 +77,54 @@ Token::Value ParserBase::expectAssignmentOperator()
 {
 	Token::Value op = m_scanner->currentToken();
 	if (!Token::isAssignmentOp(op))
-		fatalParserError(
-			string("Expected assignment operator,  got '") +
-			string(Token::name(m_scanner->currentToken())) +
-			string("'")
-		);
+	{
+		if (Token::isElementaryTypeName(op)) //for the sake of accuracy in reporting
+		{
+			unsigned firstSize;
+			unsigned secondSize;
+			tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
+			ElementaryTypeNameToken elemTypeName(op, firstSize, secondSize);
+			fatalParserError(
+				string("Expected assignment operator,  got '") +
+				elemTypeName.toString() +
+				string("'")
+			);
+		}
+		else
+			fatalParserError(
+				string("Expected assignment operator,  got '") +
+				string(Token::name(m_scanner->currentToken())) +
+				string("'")
+			);
+	}
 	m_scanner->next();
 	return op;
 }
 
 ASTPointer<ASTString> ParserBase::expectIdentifierToken()
 {
-	if (m_scanner->currentToken() != Token::Identifier)
-		fatalParserError(
-			string("Expected identifier, got '") +
-			string(Token::name(m_scanner->currentToken())) +
-			string("'")
-		);
+	Token::Value id = m_scanner->currentToken();
+	if (id != Token::Identifier)
+	{
+		if (Token::isElementaryTypeName(id)) //for the sake of accuracy in reporting
+		{
+			unsigned firstSize;
+			unsigned secondSize;
+			tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
+			ElementaryTypeNameToken elemTypeName(id, firstSize, secondSize);
+			fatalParserError(
+				string("Expected identifier, got '") +
+				elemTypeName.toString() +
+				string("'")
+			);
+		}
+		else
+			fatalParserError(
+				string("Expected identifier, got '") +
+				string(Token::name(id)) +
+				string("'")
+			);
+	}
 	return getLiteralAndAdvance();
 }
 
