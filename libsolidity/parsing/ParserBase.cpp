@@ -49,10 +49,7 @@ void ParserBase::expectToken(Token::Value _value)
 	{
 		if (Token::isElementaryTypeName(tok)) //for the sake of accuracy in reporting
 		{
-			unsigned firstSize;
-			unsigned secondSize;
-			tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
-			ElementaryTypeNameToken elemTypeName(tok, firstSize, secondSize);
+			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
 			fatalParserError(
 				string("Expected token ") +
 				string(Token::name(_value)) +
@@ -80,10 +77,7 @@ Token::Value ParserBase::expectAssignmentOperator()
 	{
 		if (Token::isElementaryTypeName(op)) //for the sake of accuracy in reporting
 		{
-			unsigned firstSize;
-			unsigned secondSize;
-			tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
-			ElementaryTypeNameToken elemTypeName(op, firstSize, secondSize);
+			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
 			fatalParserError(
 				string("Expected assignment operator,  got '") +
 				elemTypeName.toString() +
@@ -108,10 +102,7 @@ ASTPointer<ASTString> ParserBase::expectIdentifierToken()
 	{
 		if (Token::isElementaryTypeName(id)) //for the sake of accuracy in reporting
 		{
-			unsigned firstSize;
-			unsigned secondSize;
-			tie(firstSize, secondSize) = m_scanner->currentTokenInfo();
-			ElementaryTypeNameToken elemTypeName(id, firstSize, secondSize);
+			ElementaryTypeNameToken elemTypeName = m_scanner->currentElementaryTypeNameToken();
 			fatalParserError(
 				string("Expected identifier, got '") +
 				elemTypeName.toString() +

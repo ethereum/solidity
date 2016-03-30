@@ -119,6 +119,13 @@ public:
 	{
 		return m_currentToken.token;
 	}
+	ElementaryTypeNameToken currentElementaryTypeNameToken()
+	{
+		unsigned firstSize;
+		unsigned secondSize;
+		std::tie(firstSize, secondSize) = m_currentToken.extendedTokenInfo;
+		return ElementaryTypeNameToken(m_currentToken.token, firstSize, secondSize);
+	}
 
 	SourceLocation currentLocation() const { return m_currentToken.location; }
 	std::string const& currentLiteral() const { return m_currentToken.literal; }

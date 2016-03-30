@@ -132,6 +132,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 		Token::Value keyword = keywordByName(baseType);
 		if (keyword == Token::Bytes)
 		{
+			solAssert(m != -1, "Invalid type M in fixed command. Should not reach here.");
 			if (0 < m && m <= 32 && positionX == _literal.end())
 				return make_tuple(Token::BytesM, m, 0);
 		}
@@ -139,6 +140,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 		{
 			if (0 < m && m <= 256 && m % 8 == 0 && positionX == _literal.end())
 			{
+				solAssert(m != -1, "Invalid type M in fixed command. Should not reach here.");
 				if (keyword == Token::UInt)
 					return make_tuple(Token::UIntM, m, 0);
 				else
@@ -160,6 +162,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 					m % 8 == 0 &&
 					n % 8 == 0
 				) {
+					solAssert(n != -1, "Invalid type N in fixed command. Should not reach here.");
 					if (keyword == Token::UFixed)
 						return make_tuple(Token::UFixedMxN, m, n);
 					else
