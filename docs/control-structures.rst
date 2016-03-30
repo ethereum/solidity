@@ -203,7 +203,7 @@ idea is that assembly libraries will be used to enhance the language in such way
 		function at(address _addr) returns (bytes o_code) {
 			assembly {
 				// retrieve the size of the code, this needs assembly
-				let size := extcodesize(_addr);
+				let size := extcodesize(_addr)
 				// allocate output byte array - this could also be done without assembly
 				// by using o_code = new bytes(size)
 				o_code := mload(0x40)
@@ -427,7 +427,7 @@ Strings are stored left-aligned and cannot be longer than 32 bytes.
 
 	assembly { 2 3 add "abc" and }
 
-Functionaly Style
+Functional Style
 -----------------
 
 You can type opcode after opcode in the same way they will end up in bytecode. For example
@@ -571,7 +571,7 @@ For both ways, the colon points to the name of the variable.
 		let v := 0 // functional-style assignment as part of variable declaration
 		let g := add(v, 2)
 		sload(10)
-		:= v // instruction style assignment, puts the result of sload(10) into v
+		=: v // instruction style assignment, puts the result of sload(10) into v
 	}
 
 
