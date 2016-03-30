@@ -178,6 +178,7 @@ Can I put arrays inside of a mapping? How do I make a mapping of a mapping?
 Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping. 
 
 An example of this would be::
+
     contract c {
         struct myStruct {
             uint someNumber;
