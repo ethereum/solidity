@@ -666,6 +666,22 @@ gas and return your 20 Wei).
 In the above example, the low-level function `call` is used to invoke another
 contract with `p.data` as payload and `p.amount` Wei is sent with that call.
 
+What happens to a mapping copied from a mapping of structs?
+===========================================================
+
+This is a very interesting question. Suppose that we have a contract field set up like such::
+
+    struct user{
+        mapping(string => address) usedContracts;
+    }
+    mapping(uint => user) userList;
+    function somefunction{
+       user userA = userList[1];
+       userList[2] = userA;
+    }
+
+In this case, the mapping of the struct being copied over into the userList is ignored.
+
 How do I initialize a contract with only a specific amount of wei?
 ==================================================================
 
