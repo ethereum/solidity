@@ -6575,6 +6575,22 @@ BOOST_AUTO_TEST_CASE(inline_assembly_jumps)
 	BOOST_CHECK(callContractFunction("f()", u256(7)) == encodeArgs(u256(34)));
 }
 
+BOOST_AUTO_TEST_CASE(index_access_with_type_conversion)
+{
+	// Test for a bug where higher order bits cleanup was not done for array index access.
+	char const* sourceCode = R"(
+			contract C {
+				function f(uint x) returns (uint[256] r){
+					r[uint8(x)] = 2;
+				}
+			}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// neither of the two should throw due to out-of-bounds access
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(0x01)).size() == 256 * 32);
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(0x101)).size() == 256 * 32);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
