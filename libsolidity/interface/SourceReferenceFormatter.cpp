@@ -91,7 +91,7 @@ void SourceReferenceFormatter::printExceptionInformation(
 	auto secondarylocation = boost::get_error_info<errinfo_secondarySourceLocation>(_exception);
 	Scanner const* scannerPtr = nullptr;
 
-	if (location)
+	if (location && location->sourceName)
 	{
 		scannerPtr = &_scannerFromSourceName(*location->sourceName);
 		printSourceName(_stream, *location, *scannerPtr);
@@ -101,7 +101,7 @@ void SourceReferenceFormatter::printExceptionInformation(
 	if (string const* description = boost::get_error_info<errinfo_comment>(_exception))
 		_stream << ": " << *description << endl;
 
-	if (location)
+	if (location && location->sourceName)
 	{
 		scannerPtr = &_scannerFromSourceName(*location->sourceName);
 		printSourceLocation(_stream, *location, *scannerPtr);
@@ -111,8 +111,13 @@ void SourceReferenceFormatter::printExceptionInformation(
 	{
 		for (auto info: secondarylocation->infos)
 		{
-			scannerPtr = &_scannerFromSourceName(*info.second.sourceName);
 			_stream << info.first << " ";
+			if (!info.second.sourceName)
+			{
+				_stream << endl;
+				continue;
+			}
+			scannerPtr = &_scannerFromSourceName(*info.second.sourceName);
 			printSourceName(_stream, info.second, *scannerPtr);
 			_stream << endl;
 			printSourceLocation(_stream, info.second, *scannerPtr);
