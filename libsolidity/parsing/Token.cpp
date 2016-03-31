@@ -155,16 +155,17 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 			) {
 				int n = parseSize(positionX + 1, _literal.end());
 				if (
-					0 < m && m < 256 &&
-					0 < n && n < 256 &&
+					0 <= m && m <= 256 &&
+					0 <= n && n <= 256 &&
+					m + n > 0 &&
 					m + n <= 256 &&
 					m % 8 == 0 &&
 					n % 8 == 0
 				) {
 					if (keyword == Token::UFixed)
-						return make_tuple(Token::UFixed, m, n);
+						return make_tuple(Token::UFixedMxN, m, n);
 					else
-						return make_tuple(Token::Fixed, m, n);
+						return make_tuple(Token::FixedMxN, m, n);
 				}
 			}	
 		}

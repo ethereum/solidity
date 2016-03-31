@@ -190,18 +190,18 @@ namespace solidity
 	K(After, "after", 0)                                               \
 	/* type keywords*/                                                 \
 	K(Int, "int", 0)                                                   \
-	T(IntM, "intM", 0)                                                 \
 	K(UInt, "uint", 0)                                                 \
-	T(UIntM, "uintM", 0)                                               \
 	K(Bytes, "bytes", 0)                                               \
-	T(BytesM, "bytesM", 0)                                             \
 	K(Byte, "byte", 0)                                                 \
 	K(String, "string", 0)                                             \
 	K(Address, "address", 0)                                           \
 	K(Bool, "bool", 0)                                                 \
 	K(Fixed, "fixed", 0)                                               \
-	T(FixedMxN, "fixedMxN", 0)                                         \
 	K(UFixed, "ufixed", 0)                                             \
+	T(IntM, "intM", 0)                                                 \
+	T(UIntM, "uintM", 0)                                               \
+	T(BytesM, "bytesM", 0)                                             \
+	T(FixedMxN, "fixedMxN", 0)                                         \
 	T(UFixedMxN, "ufixedMxN", 0)                                       \
 	T(TypesEnd, NULL, 0) /* used as type enum end marker */            \
 	\
@@ -334,8 +334,11 @@ public:
 		std::string name = Token::toString(m_token);
 		if (tokenValue || (firstNumber() == 0 && secondNumber() == 0))
 			return name;
-		//need to set it up this way for fixed types construction in future
-		return name.substr(0, name.size() - 1) + std::to_string(m_firstNumber);
+		solAssert(name.size() >= 3, "Token name size should be greater than 3. Should not reach here.");
+		if (m_token == Token::FixedMxN || m_token == Token::UFixedMxN)
+			return name.substr(0, name.size() - 3) + std::to_string(m_firstNumber) + "x" + std::to_string(m_secondNumber);
+		else
+			return name.substr(0, name.size() - 1) + std::to_string(m_firstNumber);
 	}
 
 private:

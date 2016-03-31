@@ -3258,6 +3258,18 @@ BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
 	BOOST_CHECK(!success(text));
 }
 
+BOOST_AUTO_TEST_CASE(invalid_fixed_type_long)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed8x888888888888888888888888888888888888888888888888888 b;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
