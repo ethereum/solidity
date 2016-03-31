@@ -40,15 +40,26 @@ class CompilerStack; // forward
 struct SourceReferenceFormatter
 {
 public:
-	static void printSourceLocation(std::ostream& _stream, SourceLocation const& _location, Scanner const& _scanner);
+	using ScannerFromSourceNameFun = std::function<Scanner const&(std::string const&)>;
+	/// Prints source location if it is given.
+	static void printSourceLocation(
+		std::ostream& _stream,
+		SourceLocation const* _location,
+		ScannerFromSourceNameFun const& _scannerFromSourceName
+	);
 	static void printExceptionInformation(
 		std::ostream& _stream,
 		Exception const& _exception,
 		std::string const& _name,
-		std::function<Scanner const&(std::string const&)> const& _scannerFromSourceName
+		ScannerFromSourceNameFun const& _scannerFromSourceName
 	);
 private:
-	static void printSourceName(std::ostream& _stream, SourceLocation const& _location, Scanner const& _scanner);
+	/// Prints source name if location is given.
+	static void printSourceName(
+		std::ostream& _stream,
+		SourceLocation const* _location,
+		ScannerFromSourceNameFun const& _scannerFromSourceName
+	);
 };
 
 }
