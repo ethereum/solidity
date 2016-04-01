@@ -31,7 +31,7 @@ add_subdirectory(libsolidity)
 add_subdirectory(solc)
 if (NOT EMSCRIPTEN)
 	add_subdirectory(liblll)
-	add_subdirectory(test)
+	#add_subdirectory(test)
 	add_subdirectory(lllc)
 endif()
 

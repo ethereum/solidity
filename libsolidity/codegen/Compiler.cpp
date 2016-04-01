@@ -23,7 +23,7 @@
 #include <libsolidity/codegen/Compiler.h>
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libevmasm/Assembly.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>

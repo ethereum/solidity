@@ -23,7 +23,7 @@
 #pragma once
 
 #include <boost/variant.hpp>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 
 namespace dev
 {

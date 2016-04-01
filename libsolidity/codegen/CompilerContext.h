@@ -25,7 +25,7 @@
 #include <ostream>
 #include <stack>
 #include <utility>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>

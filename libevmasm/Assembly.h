@@ -26,7 +26,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/AssemblyItem.h>
 #include <libevmasm/LinkerObject.h>

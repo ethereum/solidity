@@ -25,7 +25,7 @@
 #include <sstream>
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libevmasm/SourceLocation.h>
 #include "Exceptions.h"
 

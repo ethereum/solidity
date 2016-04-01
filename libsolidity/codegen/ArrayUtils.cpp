@@ -21,7 +21,7 @@
  */
 
 #include <libsolidity/codegen/ArrayUtils.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/ast/Types.h>

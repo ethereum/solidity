@@ -23,7 +23,7 @@
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <ctype.h>
 #include <algorithm>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libsolidity/parsing/Scanner.h>
 
 using namespace std;

@@ -21,7 +21,7 @@
  */
 
 #include <libsolidity/codegen/LValue.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
