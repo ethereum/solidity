@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include "Instruction.h"
+#include "./Instruction.h"
 
 #include <functional>
 #include <libdevcore/Common.h>
@@ -27,9 +27,9 @@
 #include <libdevcore/Log.h>
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
+using namespace dev::solidity;
 
-const std::map<std::string, Instruction> dev::eth::c_instructions =
+const std::map<std::string, Instruction> dev::solidity::c_instructions =
 {
 	{ "STOP", Instruction::STOP },
 	{ "ADD", Instruction::ADD },
@@ -297,7 +297,7 @@ static const std::map<Instruction, InstructionInfo> c_instructionInfo =
 	{ Instruction::SUICIDE,		{ "SUICIDE",		0, 1, 0, true, ZeroTier } }
 };
 
-void dev::eth::eachInstruction(
+void dev::solidity::eachInstruction(
 	bytes const& _mem,
 	function<void(Instruction,u256 const&)> const& _onInstruction
 )
@@ -307,7 +307,7 @@ void dev::eth::eachInstruction(
 		Instruction instr = Instruction(*it);
 		size_t additional = 0;
 		if (isValidInstruction(instr))
-			additional = instructionInfo(instr).additional;
+			additional = getInstructionInfo(instr).additional;
 		u256 data;
 		for (size_t i = 0; i < additional; ++i)
 		{
@@ -319,7 +319,7 @@ void dev::eth::eachInstruction(
 	}
 }
 
-string dev::eth::disassemble(bytes const& _mem)
+string dev::solidity::disassemble(bytes const& _mem)
 {
 	stringstream ret;
 	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
@@ -327,7 +327,7 @@ string dev::eth::disassemble(bytes const& _mem)
 			ret << "0x" << hex << int(_instr) << " ";
 		else
 		{
-			InstructionInfo info = instructionInfo(_instr);
+			InstructionInfo info = getInstructionInfo(_instr);
 			ret << info.name << " ";
 			if (info.additional)
 				ret << "0x" << hex << _data << " ";
@@ -336,7 +336,7 @@ string dev::eth::disassemble(bytes const& _mem)
 	return ret.str();
 }
 
-InstructionInfo dev::eth::instructionInfo(Instruction _inst)
+InstructionInfo dev::solidity::getInstructionInfo(Instruction _inst)
 {
 	try
 	{
@@ -348,7 +348,7 @@ InstructionInfo dev::eth::instructionInfo(Instruction _inst)
 	}
 }
 
-bool dev::eth::isValidInstruction(Instruction _inst)
+bool dev::solidity::isValidInstruction(Instruction _inst)
 {
 	return !!c_instructionInfo.count(_inst);
 }

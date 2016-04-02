@@ -28,6 +28,7 @@
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SourceLocation.h>
 #include "Exceptions.h"
+using namespace dev::solidity;
 
 namespace dev
 {

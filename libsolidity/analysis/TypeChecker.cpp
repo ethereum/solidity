@@ -595,7 +595,7 @@ bool TypeChecker::visit(InlineAssembly const& _inlineAssembly)
 				if (!varDecl->isLocalVariable())
 					return false; // only local variables are inline-assemlby lvalues
 				for (unsigned i = 0; i < declaration->type()->sizeOnStack(); ++i)
-					_assembly.append(eth::Instruction::POP); // remove value just to verify the stack height
+					_assembly.append(solidity::Instruction::POP); // remove value just to verify the stack height
 			}
 			else
 				return false;

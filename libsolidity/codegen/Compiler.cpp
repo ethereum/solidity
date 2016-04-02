@@ -92,8 +92,8 @@ void Compiler::compileClone(
 	m_runtimeSub = size_t(runtimeSub.data());
 
 	// stack contains sub size
-	m_context << eth::Instruction::DUP1 << runtimeSub << u256(0) << eth::Instruction::CODECOPY;
-	m_context << u256(0) << eth::Instruction::RETURN;
+	m_context << solidity::Instruction::DUP1 << runtimeSub << u256(0) << solidity::Instruction::CODECOPY;
+	m_context << u256(0) << solidity::Instruction::RETURN;
 
 	appendFunctionsWithoutCode();
 
@@ -164,8 +164,8 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 	m_runtimeSub = size_t(runtimeSub.data());
 
 	// stack contains sub size
-	m_context << eth::Instruction::DUP1 << runtimeSub << u256(0) << eth::Instruction::CODECOPY;
-	m_context << u256(0) << eth::Instruction::RETURN;
+	m_context << solidity::Instruction::DUP1 << runtimeSub << u256(0) << solidity::Instruction::CODECOPY;
+	m_context << u256(0) << solidity::Instruction::RETURN;
 
 	// note that we have to include the functions again because of absolute jump labels
 	appendFunctionsWithoutCode();
@@ -208,15 +208,15 @@ void Compiler::appendConstructor(FunctionDefinition const& _constructor)
 			// argument size is dynamic, use CODESIZE to determine it
 			m_context.appendProgramSize(); // program itself
 			// CODESIZE is program plus manually added arguments
-			m_context << eth::Instruction::CODESIZE << eth::Instruction::SUB;
+			m_context << solidity::Instruction::CODESIZE << solidity::Instruction::SUB;
 		}
 		else
 			m_context << u256(argumentSize);
 		// stack: <memptr> <argument size>
-		m_context << eth::Instruction::DUP1;
+		m_context << solidity::Instruction::DUP1;
 		m_context.appendProgramSize();
-		m_context << eth::Instruction::DUP4 << eth::Instruction::CODECOPY;
-		m_context << eth::Instruction::DUP2 << eth::Instruction::ADD;
+		m_context << solidity::Instruction::DUP4 << solidity::Instruction::CODECOPY;
+		m_context << solidity::Instruction::DUP2 << solidity::Instruction::ADD;
 		CompilerUtils(m_context).storeFreeMemoryPointer();
 		// stack: <memptr>
 		appendCalldataUnpacker(FunctionType(_constructor).parameterTypes(), true);
@@ -235,7 +235,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	// ether with constant gas
 	if (interfaceFunctions.size() > 5 || fallback)
 	{
-		m_context << eth::Instruction::CALLDATASIZE << eth::Instruction::ISZERO;
+		m_context << solidity::Instruction::CALLDATASIZE << solidity::Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(notFound);
 	}
 
@@ -247,7 +247,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 	for (auto const& it: interfaceFunctions)
 	{
 		callDataUnpackerEntryPoints.insert(std::make_pair(it.first, m_context.newTag()));
-		m_context << eth::dupInstruction(1) << u256(FixedHash<4>::Arith(it.first)) << eth::Instruction::EQ;
+		m_context << solidity::dupInstruction(1) << u256(FixedHash<4>::Arith(it.first)) << solidity::Instruction::EQ;
 		m_context.appendConditionalJumpTo(callDataUnpackerEntryPoints.at(it.first));
 	}
 	m_context.appendJumpTo(notFound);
@@ -264,7 +264,7 @@ void Compiler::appendFunctionSelector(ContractDefinition const& _contract)
 		// Reject invalid library calls and ether sent to a library.
 		m_context.appendJumpTo(m_context.errorTag());
 	else
-		m_context << eth::Instruction::STOP; // function not found
+		m_context << solidity::Instruction::STOP; // function not found
 
 	for (auto const& it: interfaceFunctions)
 	{
@@ -288,7 +288,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 	//@todo this does not yet support nested dynamic arrays
 
 	// Retain the offset pointer as base_offset, the point from which the data offsets are computed.
-	m_context << eth::Instruction::DUP1;
+	m_context << solidity::Instruction::DUP1;
 	for (TypePointer const& parameterType: _typeParameters)
 	{
 		// stack: v1 v2 ... v(k-1) base_offset current_offset
@@ -309,15 +309,15 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 				if (arrayType.isDynamicallySized())
 				{
 					// compute data pointer
-					m_context << eth::Instruction::DUP1 << eth::Instruction::MLOAD;
-					m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
-					m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
-					m_context << u256(0x20) << eth::Instruction::ADD;
+					m_context << solidity::Instruction::DUP1 << solidity::Instruction::MLOAD;
+					m_context << solidity::Instruction::DUP3 << solidity::Instruction::ADD;
+					m_context << solidity::Instruction::SWAP2 << solidity::Instruction::SWAP1;
+					m_context << u256(0x20) << solidity::Instruction::ADD;
 				}
 				else
 				{
-					m_context << eth::Instruction::DUP1;
-					m_context << u256(arrayType.calldataEncodedSize(true)) << eth::Instruction::ADD;
+					m_context << solidity::Instruction::DUP1;
+					m_context << u256(arrayType.calldataEncodedSize(true)) << solidity::Instruction::ADD;
 				}
 			}
 			else
@@ -329,19 +329,19 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 					// put on stack: data_pointer length
 					CompilerUtils(m_context).loadFromMemoryDynamic(IntegerType(256), !_fromMemory);
 					// stack: base_offset data_offset next_pointer
-					m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP3 << eth::Instruction::ADD;
+					m_context << solidity::Instruction::SWAP1 << solidity::Instruction::DUP3 << solidity::Instruction::ADD;
 					// stack: base_offset next_pointer data_pointer
 					// retrieve length
 					CompilerUtils(m_context).loadFromMemoryDynamic(IntegerType(256), !_fromMemory, true);
 					// stack: base_offset next_pointer length data_pointer
-					m_context << eth::Instruction::SWAP2;
+					m_context << solidity::Instruction::SWAP2;
 					// stack: base_offset data_pointer length next_pointer
 				}
 				else
 				{
 					// leave the pointer on the stack
-					m_context << eth::Instruction::DUP1;
-					m_context << u256(calldataType->calldataEncodedSize()) << eth::Instruction::ADD;
+					m_context << solidity::Instruction::DUP1;
+					m_context << u256(calldataType->calldataEncodedSize()) << solidity::Instruction::ADD;
 				}
 				if (arrayType.location() == DataLocation::Memory)
 				{
@@ -355,7 +355,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 				}
 				// move base_offset up
 				CompilerUtils(m_context).moveToStackTop(1 + arrayType.sizeOnStack());
-				m_context << eth::Instruction::SWAP1;
+				m_context << solidity::Instruction::SWAP1;
 			}
 		}
 		else
@@ -363,18 +363,18 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 			solAssert(!type->isDynamicallySized(), "Unknown dynamically sized type: " + type->toString());
 			CompilerUtils(m_context).loadFromMemoryDynamic(*type, !_fromMemory, true);
 			CompilerUtils(m_context).moveToStackTop(1 + type->sizeOnStack());
-			m_context << eth::Instruction::SWAP1;
+			m_context << solidity::Instruction::SWAP1;
 		}
 		// stack: v1 v2 ... v(k-1) v(k) base_offset mem_offset
 	}
-	m_context << eth::Instruction::POP << eth::Instruction::POP;
+	m_context << solidity::Instruction::POP << solidity::Instruction::POP;
 }
 
 void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary)
 {
 	CompilerUtils utils(m_context);
 	if (_typeParameters.empty())
-		m_context << eth::Instruction::STOP;
+		m_context << solidity::Instruction::STOP;
 	else
 	{
 		utils.fetchFreeMemoryPointer();
@@ -382,7 +382,7 @@ void Compiler::appendReturnValuePacker(TypePointers const& _typeParameters, bool
 		// its data to add the needed parts and we avoid a memory copy.
 		utils.encodeToMemory(_typeParameters, _typeParameters, true, false, _isLibrary);
 		utils.toSizeAfterFreeMemoryPointer();
-		m_context << eth::Instruction::RETURN;
+		m_context << solidity::Instruction::RETURN;
 	}
 }
 
@@ -476,12 +476,12 @@ bool Compiler::visit(FunctionDefinition const& _function)
 	while (stackLayout.back() != int(stackLayout.size() - 1))
 		if (stackLayout.back() < 0)
 		{
-			m_context << eth::Instruction::POP;
+			m_context << solidity::Instruction::POP;
 			stackLayout.pop_back();
 		}
 		else
 		{
-			m_context << eth::swapInstruction(stackLayout.size() - stackLayout.back() - 1);
+			m_context << solidity::swapInstruction(stackLayout.size() - stackLayout.back() - 1);
 			swap(stackLayout[stackLayout.back()], stackLayout.back());
 		}
 	//@todo assert that everything is in place now
@@ -532,7 +532,7 @@ bool Compiler::visit(InlineAssembly const& _inlineAssembly)
 								errinfo_comment("Stack too deep, try removing local variables.")
 							);
 						for (unsigned i = 0; i < variable->type()->sizeOnStack(); ++i)
-							_assembly.append(eth::dupInstruction(stackDiff));
+							_assembly.append(solidity::dupInstruction(stackDiff));
 					}
 					else
 					{
@@ -572,8 +572,8 @@ bool Compiler::visit(InlineAssembly const& _inlineAssembly)
 						errinfo_comment("Stack too deep, try removing local variables.")
 					);
 				for (unsigned i = 0; i < size; ++i) {
-					_assembly.append(eth::swapInstruction(stackDiff));
-					_assembly.append(eth::Instruction::POP);
+					_assembly.append(solidity::swapInstruction(stackDiff));
+					_assembly.append(solidity::Instruction::POP);
 				}
 			}
 			return true;
@@ -588,7 +588,7 @@ bool Compiler::visit(IfStatement const& _ifStatement)
 	StackHeightChecker checker(m_context);
 	CompilerContext::LocationSetter locationSetter(m_context, _ifStatement);
 	compileExpression(_ifStatement.condition());
-	m_context << eth::Instruction::ISZERO;
+	m_context << solidity::Instruction::ISZERO;
 	eth::AssemblyItem falseTag = m_context.appendConditionalJump();
 	eth::AssemblyItem endTag = falseTag;
 	_ifStatement.trueStatement().accept(*this);
@@ -615,7 +615,7 @@ bool Compiler::visit(WhileStatement const& _whileStatement)
 
 	m_context << loopStart;
 	compileExpression(_whileStatement.condition());
-	m_context << eth::Instruction::ISZERO;
+	m_context << solidity::Instruction::ISZERO;
 	m_context.appendConditionalJumpTo(loopEnd);
 
 	_whileStatement.body().accept(*this);
@@ -649,7 +649,7 @@ bool Compiler::visit(ForStatement const& _forStatement)
 	if (_forStatement.condition())
 	{
 		compileExpression(*_forStatement.condition());
-		m_context << eth::Instruction::ISZERO;
+		m_context << solidity::Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(loopEnd);
 	}
 
@@ -710,7 +710,7 @@ bool Compiler::visit(Return const& _return)
 			CompilerUtils(m_context).moveToStackVariable(*retVariable);
 	}
 	for (unsigned i = 0; i < m_stackCleanupForReturn; ++i)
-		m_context << eth::Instruction::POP;
+		m_context << solidity::Instruction::POP;
 	m_context.appendJumpTo(m_returnTag);
 	m_context.adjustStackOffset(m_stackCleanupForReturn);
 	return false;
@@ -831,7 +831,7 @@ void Compiler::appendModifierOrFunctionCode()
 		modifier.body().accept(*this);
 
 		for (unsigned i = 0; i < c_stackSurplus; ++i)
-			m_context << eth::Instruction::POP;
+			m_context << solidity::Instruction::POP;
 		m_stackCleanupForReturn -= c_stackSurplus;
 	}
 }
@@ -855,20 +855,20 @@ eth::Assembly Compiler::cloneRuntime()
 {
 	eth::EVMSchedule schedule;
 	eth::Assembly a;
-	a << eth::Instruction::CALLDATASIZE;
-	a << u256(0) << eth::Instruction::DUP1 << eth::Instruction::CALLDATACOPY;
+	a << solidity::Instruction::CALLDATASIZE;
+	a << u256(0) << solidity::Instruction::DUP1 << solidity::Instruction::CALLDATACOPY;
 	//@todo adjust for larger return values, make this dynamic.
-	a << u256(0x20) << u256(0) << eth::Instruction::CALLDATASIZE;
+	a << u256(0x20) << u256(0) << solidity::Instruction::CALLDATASIZE;
 	a << u256(0);
 	// this is the address which has to be substituted by the linker.
 	//@todo implement as special "marker" AssemblyItem.
 	a << u256("0xcafecafecafecafecafecafecafecafecafecafe");
-	a << u256(schedule.callGas + 10) << eth::Instruction::GAS << eth::Instruction::SUB;
-	a << eth::Instruction::DELEGATECALL;
+	a << u256(schedule.callGas + 10) << solidity::Instruction::GAS << solidity::Instruction::SUB;
+	a << solidity::Instruction::DELEGATECALL;
 	//Propagate error condition (if DELEGATECALL pushes 0 on stack).
-	a << eth::Instruction::ISZERO;
+	a << solidity::Instruction::ISZERO;
 	a.appendJumpI(a.errorTag());
 	//@todo adjust for larger return values, make this dynamic.
-	a << u256(0x20) << u256(0) << eth::Instruction::RETURN;
+	a << u256(0x20) << u256(0) << solidity::Instruction::RETURN;
 	return a;
 }

@@ -166,7 +166,7 @@ pair<u256, unsigned> CompilerContext::storageLocationOfVariable(const Declaratio
 
 CompilerContext& CompilerContext::appendJump(eth::AssemblyItem::JumpType _jumpType)
 {
-	eth::AssemblyItem item(eth::Instruction::JUMP);
+	eth::AssemblyItem item(solidity::Instruction::JUMP);
 	item.setJumpType(_jumpType);
 	return *this << item;
 }
@@ -182,7 +182,7 @@ void CompilerContext::resetVisitedNodes(ASTNode const* _node)
 void CompilerContext::injectVersionStampIntoSub(size_t _subIndex)
 {
 	eth::Assembly& sub = m_asm.sub(_subIndex);
-	sub.injectStart(eth::Instruction::POP);
+	sub.injectStart(solidity::Instruction::POP);
 	sub.injectStart(fromBigEndian<u256>(binaryVersion()));
 }
 

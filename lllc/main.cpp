@@ -29,6 +29,7 @@
 #include "ethereum/BuildInfo.h"
 using namespace std;
 using namespace dev;
+using namespace dev::solidity;
 using namespace dev::eth;
 
 void help()

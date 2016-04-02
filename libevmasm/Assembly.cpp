@@ -121,7 +121,7 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 		switch (i.type())
 		{
 		case Operation:
-			_out << "  " << instructionInfo(i.instruction()).name  << "\t" << i.getJumpTypeAsString();
+			_out << "  " << getInstructionInfo(i.instruction()).name  << "\t" << i.getJumpTypeAsString();
 			break;
 		case Push:
 			_out << "  PUSH " << hex << i.data();
@@ -205,7 +205,7 @@ Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes
 		{
 		case Operation:
 			collection.append(
-				createJsonValue(instructionInfo(i.instruction()).name, i.location().start, i.location().end, i.getJumpTypeAsString()));
+				createJsonValue(getInstructionInfo(i.instruction()).name, i.location().start, i.location().end, i.getJumpTypeAsString()));
 			break;
 		case Push:
 			collection.append(

@@ -435,7 +435,7 @@ string Pattern::toString() const
 	switch (m_type)
 	{
 	case Operation:
-		s << instructionInfo(Instruction(unsigned(m_data))).name;
+		s << getInstructionInfo(Instruction(unsigned(m_data))).name;
 		break;
 	case Push:
 		s << "PUSH " << hex << m_data;

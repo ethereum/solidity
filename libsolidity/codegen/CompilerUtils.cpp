@@ -45,26 +45,26 @@ void CompilerUtils::initialiseFreeMemoryPointer()
 
 void CompilerUtils::fetchFreeMemoryPointer()
 {
-	m_context << u256(freeMemoryPointer) << eth::Instruction::MLOAD;
+	m_context << u256(freeMemoryPointer) << solidity::Instruction::MLOAD;
 }
 
 void CompilerUtils::storeFreeMemoryPointer()
 {
-	m_context << u256(freeMemoryPointer) << eth::Instruction::MSTORE;
+	m_context << u256(freeMemoryPointer) << solidity::Instruction::MSTORE;
 }
 
 void CompilerUtils::allocateMemory()
 {
 	fetchFreeMemoryPointer();
-	m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2 << eth::Instruction::ADD;
+	m_context << solidity::Instruction::SWAP1 << solidity::Instruction::DUP2 << solidity::Instruction::ADD;
 	storeFreeMemoryPointer();
 }
 
 void CompilerUtils::toSizeAfterFreeMemoryPointer()
 {
 	fetchFreeMemoryPointer();
-	m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2 << eth::Instruction::SUB;
-	m_context << eth::Instruction::SWAP1;
+	m_context << solidity::Instruction::DUP1 << solidity::Instruction::SWAP2 << solidity::Instruction::SUB;
+	m_context << solidity::Instruction::SWAP1;
 }
 
 unsigned CompilerUtils::loadFromMemory(
@@ -87,7 +87,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 )
 {		
 	if (_keepUpdatedMemoryOffset)
-		m_context << eth::Instruction::DUP1;
+		m_context << solidity::Instruction::DUP1;
 
 	if (auto arrayType = dynamic_cast<ArrayType const*>(&_type))
 	{
@@ -95,7 +95,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 		solAssert(!_fromCalldata, "");
 		solAssert(_padToWordBoundaries, "");
 		if (_keepUpdatedMemoryOffset)
-			m_context << arrayType->memorySize() << eth::Instruction::ADD;
+			m_context << arrayType->memorySize() << solidity::Instruction::ADD;
 	}
 	else
 	{
@@ -104,7 +104,7 @@ void CompilerUtils::loadFromMemoryDynamic(
 		{
 			// update memory counter
 			moveToStackTop(_type.sizeOnStack());
-			m_context << u256(numBytes) << eth::Instruction::ADD;
+			m_context << u256(numBytes) << solidity::Instruction::ADD;
 		}
 	}
 }
@@ -113,7 +113,7 @@ void CompilerUtils::storeInMemory(unsigned _offset)
 {
 	unsigned numBytes = prepareMemoryStore(IntegerType(256), true);
 	if (numBytes > 0)
-		m_context << u256(_offset) << eth::Instruction::MSTORE;
+		m_context << u256(_offset) << solidity::Instruction::MSTORE;
 }
 
 void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBoundaries)
@@ -125,13 +125,13 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 	}
 	else if (auto str = dynamic_cast<StringLiteralType const*>(&_type))
 	{
-		m_context << eth::Instruction::DUP1;
+		m_context << solidity::Instruction::DUP1;
 		storeStringData(bytesConstRef(str->value()));
 		if (_padToWordBoundaries)
 			m_context << u256(((str->value().size() + 31) / 32) * 32);
 		else
 			m_context << u256(str->value().size());
-		m_context << eth::Instruction::ADD;
+		m_context << solidity::Instruction::ADD;
 	}
 	else
 	{
@@ -142,8 +142,8 @@ void CompilerUtils::storeInMemoryDynamic(Type const& _type, bool _padToWordBound
 				_type.sizeOnStack() == 1,
 				"Memory store of types with stack size != 1 not implemented."
 			);
-			m_context << eth::Instruction::DUP2 << eth::Instruction::MSTORE;
-			m_context << u256(numBytes) << eth::Instruction::ADD;
+			m_context << solidity::Instruction::DUP2 << solidity::Instruction::MSTORE;
+			m_context << u256(numBytes) << solidity::Instruction::ADD;
 		}
 	}
 }
@@ -168,7 +168,7 @@ void CompilerUtils::encodeToMemory(
 	// of the ith dynamic parameter, which is filled once the dynamic parts are processed.
 
 	// store memory start pointer
-	m_context << eth::Instruction::DUP1;
+	m_context << solidity::Instruction::DUP1;
 
 	unsigned argSize = CompilerUtils::sizeOnStack(_givenTypes);
 	unsigned stackPos = 0; // advances through the argument values
@@ -180,7 +180,7 @@ void CompilerUtils::encodeToMemory(
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
 			// leave end_of_mem as dyn head pointer
-			m_context << eth::Instruction::DUP1 << u256(32) << eth::Instruction::ADD;
+			m_context << solidity::Instruction::DUP1 << u256(32) << solidity::Instruction::ADD;
 			dynPointers++;
 		}
 		else
@@ -222,10 +222,10 @@ void CompilerUtils::encodeToMemory(
 		if (targetType->isDynamicallySized() && !_copyDynamicDataInPlace)
 		{
 			// copy tail pointer (=mem_end - mem_start) to memory
-			m_context << eth::dupInstruction(2 + dynPointers) << eth::Instruction::DUP2;
-			m_context << eth::Instruction::SUB;
-			m_context << eth::dupInstruction(2 + dynPointers - thisDynPointer);
-			m_context << eth::Instruction::MSTORE;
+			m_context << solidity::dupInstruction(2 + dynPointers) << solidity::Instruction::DUP2;
+			m_context << solidity::Instruction::SUB;
+			m_context << solidity::dupInstruction(2 + dynPointers - thisDynPointer);
+			m_context << solidity::Instruction::MSTORE;
 			// stack: ... <end_of_mem>
 			if (_givenTypes[i]->category() == Type::Category::StringLiteral)
 			{
@@ -243,13 +243,13 @@ void CompilerUtils::encodeToMemory(
 				copyToStackTop(argSize - stackPos + dynPointers + 2, arrayType.sizeOnStack());
 				// stack: ... <end_of_mem> <value...>
 				// copy length to memory
-				m_context << eth::dupInstruction(1 + arrayType.sizeOnStack());
+				m_context << solidity::dupInstruction(1 + arrayType.sizeOnStack());
 				ArrayUtils(m_context).retrieveLength(arrayType, 1);
 				// stack: ... <end_of_mem> <value...> <end_of_mem'> <length>
 				storeInMemoryDynamic(IntegerType(256), true);
 				// stack: ... <end_of_mem> <value...> <end_of_mem''>
 				// copy the new memory pointer
-				m_context << eth::swapInstruction(arrayType.sizeOnStack() + 1) << eth::Instruction::POP;
+				m_context << solidity::swapInstruction(arrayType.sizeOnStack() + 1) << solidity::Instruction::POP;
 				// stack: ... <end_of_mem''> <value...>
 				// copy data part
 				ArrayUtils(m_context).copyArrayToMemory(arrayType, _padToWordBoundaries);
@@ -262,7 +262,7 @@ void CompilerUtils::encodeToMemory(
 	}
 
 	// remove unneeded stack elements (and retain memory pointer)
-	m_context << eth::swapInstruction(argSize + dynPointers + 1);
+	m_context << solidity::swapInstruction(argSize + dynPointers + 1);
 	popStackSlots(argSize + dynPointers + 1);
 }
 
@@ -272,11 +272,11 @@ void CompilerUtils::zeroInitialiseMemoryArray(ArrayType const& _type)
 	m_context << repeat;
 	pushZeroValue(*_type.baseType());
 	storeInMemoryDynamic(*_type.baseType());
-	m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::SWAP1;
-	m_context << eth::Instruction::SUB << eth::Instruction::SWAP1;
-	m_context << eth::Instruction::DUP2;
+	m_context << solidity::Instruction::SWAP1 << u256(1) << solidity::Instruction::SWAP1;
+	m_context << solidity::Instruction::SUB << solidity::Instruction::SWAP1;
+	m_context << solidity::Instruction::DUP2;
 	m_context.appendConditionalJumpTo(repeat);
-	m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+	m_context << solidity::Instruction::SWAP1 << solidity::Instruction::POP;
 }
 
 void CompilerUtils::memoryCopy()
@@ -284,16 +284,16 @@ void CompilerUtils::memoryCopy()
 	// Stack here: size target source
 	// stack for call: outsize target size source value contract gas
 	//@TODO do not use ::CALL if less than 32 bytes?
-	m_context << eth::Instruction::DUP3 << eth::Instruction::SWAP1;
+	m_context << solidity::Instruction::DUP3 << solidity::Instruction::SWAP1;
 	m_context << u256(0) << u256(identityContractAddress);
 	// compute gas costs
-	m_context << u256(32) << eth::Instruction::DUP5 << u256(31) << eth::Instruction::ADD;
+	m_context << u256(32) << solidity::Instruction::DUP5 << u256(31) << solidity::Instruction::ADD;
 	static unsigned c_identityGas = 3;
 	static unsigned c_identityWordGas = 15;
-	m_context << eth::Instruction::DIV << u256(c_identityWordGas) << eth::Instruction::MUL;
-	m_context << u256(c_identityGas) << eth::Instruction::ADD;
-	m_context << eth::Instruction::CALL;
-	m_context << eth::Instruction::POP; // ignore return value
+	m_context << solidity::Instruction::DIV << u256(c_identityWordGas) << solidity::Instruction::MUL;
+	m_context << u256(c_identityGas) << solidity::Instruction::ADD;
+	m_context << solidity::Instruction::CALL;
+	m_context << solidity::Instruction::POP; // ignore return value
 }
 
 void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded)
@@ -317,7 +317,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			// conversion from bytes to integer. no need to clean the high bit
 			// only to shift right because of opposite alignment
 			IntegerType const& targetIntegerType = dynamic_cast<IntegerType const&>(_targetType);
-			m_context << (u256(1) << (256 - typeOnStack.numBytes() * 8)) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			m_context << (u256(1) << (256 - typeOnStack.numBytes() * 8)) << solidity::Instruction::SWAP1 << solidity::Instruction::DIV;
 			if (targetIntegerType.numBits() < typeOnStack.numBytes() * 8)
 				convertType(IntegerType(typeOnStack.numBytes() * 8), _targetType, _cleanupNeeded);
 		}
@@ -329,12 +329,12 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			if (targetType.numBytes() < typeOnStack.numBytes())
 			{
 				if (targetType.numBytes() == 0)
-					m_context << eth::Instruction::DUP1 << eth::Instruction::XOR;
+					m_context << solidity::Instruction::DUP1 << solidity::Instruction::XOR;
 				else
 				{
 					m_context << (u256(1) << (256 - targetType.numBytes() * 8));
-					m_context << eth::Instruction::DUP1 << eth::Instruction::SWAP2;
-					m_context << eth::Instruction::DIV << eth::Instruction::MUL;
+					m_context << solidity::Instruction::DUP1 << solidity::Instruction::SWAP2;
+					m_context << solidity::Instruction::DIV << solidity::Instruction::MUL;
 				}
 			}
 		}
@@ -356,7 +356,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
 				if (targetBytesType.numBytes() * 8 > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
-			m_context << (u256(1) << (256 - targetBytesType.numBytes() * 8)) << eth::Instruction::MUL;
+			m_context << (u256(1) << (256 - targetBytesType.numBytes() * 8)) << solidity::Instruction::MUL;
 		}
 		else if (targetTypeCategory == Type::Category::Enum)
 			// just clean
@@ -406,7 +406,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			m_context << storageSize;
 			allocateMemory();
 			// stack: mempos
-			m_context << eth::Instruction::DUP1 << u256(data.size());
+			m_context << solidity::Instruction::DUP1 << u256(data.size());
 			storeInMemoryDynamic(IntegerType(256));
 			// stack: mempos datapos
 			storeStringData(data);
@@ -445,18 +445,18 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 
 				// allocate memory
 				// stack: <source ref> (variably sized) <length>
-				m_context << eth::Instruction::DUP1;
+				m_context << solidity::Instruction::DUP1;
 				ArrayUtils(m_context).convertLengthToSize(targetType, true);
 				// stack: <source ref> (variably sized) <length> <size>
 				if (targetType.isDynamicallySized())
-					m_context << u256(0x20) << eth::Instruction::ADD;
+					m_context << u256(0x20) << solidity::Instruction::ADD;
 				allocateMemory();
 				// stack: <source ref> (variably sized) <length> <mem start>
-				m_context << eth::Instruction::DUP1;
+				m_context << solidity::Instruction::DUP1;
 				moveIntoStack(2 + stackSize);
 				if (targetType.isDynamicallySized())
 				{
-					m_context << eth::Instruction::DUP2;
+					m_context << solidity::Instruction::DUP2;
 					storeInMemoryDynamic(IntegerType(256));
 				}
 				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos>
@@ -468,12 +468,12 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				}
 				else
 				{
-					m_context << u256(0) << eth::Instruction::SWAP1;
+					m_context << u256(0) << solidity::Instruction::SWAP1;
 					// stack: <mem start> <source ref> (variably sized) <length> <counter> <mem data pos>
 					auto repeat = m_context.newTag();
 					m_context << repeat;
-					m_context << eth::Instruction::DUP3 << eth::Instruction::DUP3;
-					m_context << eth::Instruction::LT << eth::Instruction::ISZERO;
+					m_context << solidity::Instruction::DUP3 << solidity::Instruction::DUP3;
+					m_context << solidity::Instruction::LT << solidity::Instruction::ISZERO;
 					auto loopEnd = m_context.appendConditionalJump();
 					copyToStackTop(3 + stackSize, stackSize);
 					copyToStackTop(2 + stackSize, 1);
@@ -482,11 +482,11 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 						StorageItem(m_context, *typeOnStack.baseType()).retrieveValue(SourceLocation(), true);
 					convertType(*typeOnStack.baseType(), *targetType.baseType(), _cleanupNeeded);
 					storeInMemoryDynamic(*targetType.baseType(), true);
-					m_context << eth::Instruction::SWAP1 << u256(1) << eth::Instruction::ADD;
-					m_context << eth::Instruction::SWAP1;
+					m_context << solidity::Instruction::SWAP1 << u256(1) << solidity::Instruction::ADD;
+					m_context << solidity::Instruction::SWAP1;
 					m_context.appendJumpTo(repeat);
 					m_context << loopEnd;
-					m_context << eth::Instruction::POP;
+					m_context << solidity::Instruction::POP;
 				}
 				// stack: <mem start> <source ref> (variably sized) <length> <mem data pos updated>
 				popStackSlots(2 + stackSize);
@@ -540,14 +540,14 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				// stack: <source ref>
 				m_context << typeOnStack.memorySize();
 				allocateMemory();
-				m_context << eth::Instruction::SWAP1 << eth::Instruction::DUP2;
+				m_context << solidity::Instruction::SWAP1 << solidity::Instruction::DUP2;
 				// stack: <memory ptr> <source ref> <memory ptr>
 				for (auto const& member: typeOnStack.members(nullptr))
 				{
 					if (!member.type->canLiveOutsideStorage())
 						continue;
 					pair<u256, unsigned> const& offsets = typeOnStack.storageOffsetsOfMember(member.name);
-					m_context << offsets.first << eth::Instruction::DUP3 << eth::Instruction::ADD;
+					m_context << offsets.first << solidity::Instruction::DUP3 << solidity::Instruction::ADD;
 					m_context << u256(offsets.second);
 					StorageItem(m_context, *member.type).retrieveValue(SourceLocation(), true);
 					TypePointer targetMemberType = targetType.memberType(member.name);
@@ -555,7 +555,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 					convertType(*member.type, *targetMemberType, true);
 					storeInMemoryDynamic(*targetMemberType, true);
 				}
-				m_context << eth::Instruction::POP << eth::Instruction::POP;
+				m_context << solidity::Instruction::POP << solidity::Instruction::POP;
 			}
 			break;
 		case DataLocation::CallData:
@@ -602,13 +602,13 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 					// Move it back into its place.
 					for (unsigned j = 0; j < min(sourceSize, targetSize); ++j)
 						m_context <<
-							eth::swapInstruction(depth + targetSize - sourceSize) <<
-							eth::Instruction::POP;
+							solidity::swapInstruction(depth + targetSize - sourceSize) <<
+							solidity::Instruction::POP;
 					// Value shrank
 					for (unsigned j = targetSize; j < sourceSize; ++j)
 					{
 						moveToStackTop(depth - 1, 1);
-						m_context << eth::Instruction::POP;
+						m_context << solidity::Instruction::POP;
 					}
 					// Value grew
 					if (targetSize > sourceSize)
@@ -639,7 +639,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 
 	m_context << u256(max(32u, _type.calldataEncodedSize()));
 	allocateMemory();
-	m_context << eth::Instruction::DUP1;
+	m_context << solidity::Instruction::DUP1;
 
 	if (auto structType = dynamic_cast<StructType const*>(&_type))
 		for (auto const& member: structType->members(nullptr))
@@ -657,7 +657,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		}
 		else if (arrayType->length() > 0)
 		{
-			m_context << arrayType->length() << eth::Instruction::SWAP1;
+			m_context << arrayType->length() << solidity::Instruction::SWAP1;
 			// stack: items_to_do memory_pos
 			zeroInitialiseMemoryArray(*arrayType);
 			// stack: updated_memory_pos
@@ -667,7 +667,7 @@ void CompilerUtils::pushZeroValue(Type const& _type)
 		solAssert(false, "Requested initialisation for unknown type: " + _type.toString());
 
 	// remove the updated memory pointer
-	m_context << eth::Instruction::POP;
+	m_context << solidity::Instruction::POP;
 }
 
 void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
@@ -683,14 +683,14 @@ void CompilerUtils::moveToStackVariable(VariableDeclaration const& _variable)
 			errinfo_comment("Stack too deep, try removing local variables.")
 		);
 	for (unsigned i = 0; i < size; ++i)
-		m_context << eth::swapInstruction(stackPosition - size + 1) << eth::Instruction::POP;
+		m_context << solidity::swapInstruction(stackPosition - size + 1) << solidity::Instruction::POP;
 }
 
 void CompilerUtils::copyToStackTop(unsigned _stackDepth, unsigned _itemSize)
 {
 	solAssert(_stackDepth <= 16, "Stack too deep, try removing local variables.");
 	for (unsigned i = 0; i < _itemSize; ++i)
-		m_context << eth::dupInstruction(_stackDepth);
+		m_context << solidity::dupInstruction(_stackDepth);
 }
 
 void CompilerUtils::moveToStackTop(unsigned _stackDepth, unsigned _itemSize)
@@ -712,14 +712,14 @@ void CompilerUtils::rotateStackUp(unsigned _items)
 {
 	solAssert(_items - 1 <= 16, "Stack too deep, try removing local variables.");
 	for (unsigned i = 1; i < _items; ++i)
-		m_context << eth::swapInstruction(_items - i);
+		m_context << solidity::swapInstruction(_items - i);
 }
 
 void CompilerUtils::rotateStackDown(unsigned _items)
 {
 	solAssert(_items - 1 <= 16, "Stack too deep, try removing local variables.");
 	for (unsigned i = 1; i < _items; ++i)
-		m_context << eth::swapInstruction(i);
+		m_context << solidity::swapInstruction(i);
 }
 
 void CompilerUtils::popStackElement(Type const& _type)
@@ -730,7 +730,7 @@ void CompilerUtils::popStackElement(Type const& _type)
 void CompilerUtils::popStackSlots(size_t _amount)
 {
 	for (size_t i = 0; i < _amount; ++i)
-		m_context << eth::Instruction::POP;
+		m_context << solidity::Instruction::POP;
 }
 
 unsigned CompilerUtils::sizeOnStack(vector<shared_ptr<Type const>> const& _variableTypes)
@@ -744,7 +744,7 @@ unsigned CompilerUtils::sizeOnStack(vector<shared_ptr<Type const>> const& _varia
 void CompilerUtils::computeHashStatic()
 {
 	storeInMemory(0);
-	m_context << u256(32) << u256(0) << eth::Instruction::SHA3;
+	m_context << u256(32) << u256(0) << solidity::Instruction::SHA3;
 }
 
 void CompilerUtils::storeStringData(bytesConstRef _data)
@@ -758,14 +758,14 @@ void CompilerUtils::storeStringData(bytesConstRef _data)
 			m_context << h256::Arith(h256(_data.cropped(i), h256::AlignLeft));
 			storeInMemoryDynamic(IntegerType(256));
 		}
-		m_context << eth::Instruction::POP;
+		m_context << solidity::Instruction::POP;
 	}
 	else
 	{
 		// stack: mempos mempos_data
 		m_context.appendData(_data.toBytes());
-		m_context << u256(_data.size()) << eth::Instruction::SWAP2;
-		m_context << eth::Instruction::CODECOPY;
+		m_context << u256(_data.size()) << solidity::Instruction::SWAP2;
+		m_context << solidity::Instruction::CODECOPY;
 	}
 }
 
@@ -774,18 +774,18 @@ unsigned CompilerUtils::loadFromMemoryHelper(Type const& _type, bool _fromCallda
 	unsigned numBytes = _type.calldataEncodedSize(_padToWordBoundaries);
 	bool leftAligned = _type.category() == Type::Category::FixedBytes;
 	if (numBytes == 0)
-		m_context << eth::Instruction::POP << u256(0);
+		m_context << solidity::Instruction::POP << u256(0);
 	else
 	{
 		solAssert(numBytes <= 32, "Static memory load of more than 32 bytes requested.");
-		m_context << (_fromCalldata ? eth::Instruction::CALLDATALOAD : eth::Instruction::MLOAD);
+		m_context << (_fromCalldata ? solidity::Instruction::CALLDATALOAD : solidity::Instruction::MLOAD);
 		if (numBytes != 32)
 		{
 			// add leading or trailing zeros by dividing/multiplying depending on alignment
 			u256 shiftFactor = u256(1) << ((32 - numBytes) * 8);
-			m_context << shiftFactor << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			m_context << shiftFactor << solidity::Instruction::SWAP1 << solidity::Instruction::DIV;
 			if (leftAligned)
-				m_context << shiftFactor << eth::Instruction::MUL;
+				m_context << shiftFactor << solidity::Instruction::MUL;
 		}
 	}
 
@@ -797,9 +797,9 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 	if (_typeOnStack.numBits() == 256)
 		return;
 	else if (_typeOnStack.isSigned())
-		m_context << u256(_typeOnStack.numBits() / 8 - 1) << eth::Instruction::SIGNEXTEND;
+		m_context << u256(_typeOnStack.numBits() / 8 - 1) << solidity::Instruction::SIGNEXTEND;
 	else
-		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << eth::Instruction::AND;
+		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << solidity::Instruction::AND;
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const
@@ -807,13 +807,13 @@ unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBou
 	unsigned numBytes = _type.calldataEncodedSize(_padToWordBoundaries);
 	bool leftAligned = _type.category() == Type::Category::FixedBytes;
 	if (numBytes == 0)
-		m_context << eth::Instruction::POP;
+		m_context << solidity::Instruction::POP;
 	else
 	{
 		solAssert(numBytes <= 32, "Memory store of more than 32 bytes requested.");
 		if (numBytes != 32 && !leftAligned && !_padToWordBoundaries)
 			// shift the value accordingly before storing
-			m_context << (u256(1) << ((32 - numBytes) * 8)) << eth::Instruction::MUL;
+			m_context << (u256(1) << ((32 - numBytes) * 8)) << solidity::Instruction::MUL;
 	}
 	return numBytes;
 }

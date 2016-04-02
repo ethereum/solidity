@@ -161,11 +161,11 @@ void CommandLineInterface::handleBinary(string const& _contract)
 void CommandLineInterface::handleOpcode(string const& _contract)
 {
 	if (m_args.count("output-dir"))
-		createFile(_contract + ".opcode", eth::disassemble(m_compiler->object(_contract).bytecode));
+		createFile(_contract + ".opcode", solidity::disassemble(m_compiler->object(_contract).bytecode));
 	else
 	{
 		cout << "Opcodes: " << endl;
-		cout << eth::disassemble(m_compiler->object(_contract).bytecode);
+		cout << solidity::disassemble(m_compiler->object(_contract).bytecode);
 		cout << endl;
 	}
 }
@@ -674,7 +674,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count("clone-bin"))
 			contractData["clone-bin"] = m_compiler->cloneObject(contractName).toHex();
 		if (requests.count("opcodes"))
-			contractData["opcodes"] = eth::disassemble(m_compiler->object(contractName).bytecode);
+			contractData["opcodes"] = solidity::disassemble(m_compiler->object(contractName).bytecode);
 		if (requests.count("asm"))
 		{
 			ostringstream unused;

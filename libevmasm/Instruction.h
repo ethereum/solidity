@@ -28,7 +28,7 @@
 
 namespace dev
 {
-namespace eth
+namespace solidity
 {
 
 DEV_SIMPLE_EXCEPTION(InvalidDeposit);
@@ -250,7 +250,7 @@ struct InstructionInfo
 };
 
 /// Information on all the instructions.
-InstructionInfo instructionInfo(Instruction _inst);
+InstructionInfo getInstructionInfo(Instruction _inst);
 
 /// check whether instructions exists
 bool isValidInstruction(Instruction _inst);

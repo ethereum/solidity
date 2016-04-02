@@ -75,7 +75,7 @@ void ExpressionCompiler::appendConstStateVariableAccessor(VariableDeclaration co
 	utils().convertType(*_varDecl.value()->annotation().type, *_varDecl.annotation().type);
 
 	// append return
-	m_context << eth::dupInstruction(_varDecl.annotation().type->sizeOnStack() + 1);
+	m_context << solidity::dupInstruction(_varDecl.annotation().type->sizeOnStack() + 1);
 	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 }
 
@@ -103,13 +103,13 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 				"Accessors for mapping with dynamically-sized keys not yet implemented."
 			);
 			// pop offset
-			m_context << eth::Instruction::POP;
+			m_context << solidity::Instruction::POP;
 			// move storage offset to memory.
 			utils().storeInMemory(32);
 			// move key to memory.
 			utils().copyToStackTop(paramTypes.size() - i, 1);
 			utils().storeInMemory(0);
-			m_context << u256(64) << u256(0) << eth::Instruction::SHA3;
+			m_context << u256(64) << u256(0) << solidity::Instruction::SHA3;
 			// push offset
 			m_context << u256(0);
 			returnType = mappingType->valueType();
@@ -117,7 +117,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
 		{
 			// pop offset
-			m_context << eth::Instruction::POP;
+			m_context << solidity::Instruction::POP;
 			utils().copyToStackTop(paramTypes.size() - i + 1, 1);
 			ArrayUtils(m_context).accessIndex(*arrayType);
 			returnType = arrayType->baseType();
@@ -127,12 +127,12 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	}
 	// remove index arguments.
 	if (paramTypes.size() == 1)
-		m_context << eth::Instruction::SWAP2 << eth::Instruction::POP << eth::Instruction::SWAP1;
+		m_context << solidity::Instruction::SWAP2 << solidity::Instruction::POP << solidity::Instruction::SWAP1;
 	else if (paramTypes.size() >= 2)
 	{
-		m_context << eth::swapInstruction(paramTypes.size());
-		m_context << eth::Instruction::POP;
-		m_context << eth::swapInstruction(paramTypes.size());
+		m_context << solidity::swapInstruction(paramTypes.size());
+		m_context << solidity::Instruction::POP;
+		m_context << solidity::swapInstruction(paramTypes.size());
 		utils().popStackSlots(paramTypes.size() - 1);
 	}
 	unsigned retSizeOnStack = 0;
@@ -141,7 +141,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	if (StructType const* structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
 		// remove offset
-		m_context << eth::Instruction::POP;
+		m_context << solidity::Instruction::POP;
 		auto const& names = accessorType.returnParameterNames();
 		// struct
 		for (size_t i = 0; i < names.size(); ++i)
@@ -152,7 +152,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 				if (!arrayType->isByteArray())
 					continue;
 			pair<u256, unsigned> const& offsets = structType->storageOffsetsOfMember(names[i]);
-			m_context << eth::Instruction::DUP1 << u256(offsets.first) << eth::Instruction::ADD << u256(offsets.second);
+			m_context << solidity::Instruction::DUP1 << u256(offsets.first) << solidity::Instruction::ADD << u256(offsets.second);
 			TypePointer memberType = structType->memberType(names[i]);
 			StorageItem(m_context, *memberType).retrieveValue(SourceLocation(), true);
 			utils().convertType(*memberType, *returnTypes[i]);
@@ -160,7 +160,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 			retSizeOnStack += returnTypes[i]->sizeOnStack();
 		}
 		// remove slot
-		m_context << eth::Instruction::POP;
+		m_context << solidity::Instruction::POP;
 	}
 	else
 	{
@@ -172,7 +172,7 @@ void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& 
 	}
 	solAssert(retSizeOnStack == utils().sizeOnStack(returnTypes), "");
 	solAssert(retSizeOnStack <= 15, "Stack is too deep.");
-	m_context << eth::dupInstruction(retSizeOnStack + 1);
+	m_context << solidity::dupInstruction(retSizeOnStack + 1);
 	m_context.appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
 }
 
@@ -226,7 +226,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 			solAssert(itemSize + lvalueSize <= 16, "Stack too deep, try removing local variables.");
 			// value [lvalue_ref] updated_value
 			for (unsigned i = 0; i < itemSize; ++i)
-				m_context << eth::swapInstruction(itemSize + lvalueSize) << eth::Instruction::POP;
+				m_context << solidity::swapInstruction(itemSize + lvalueSize) << solidity::Instruction::POP;
 		}
 	}
 	m_currentLValue->storeValue(*type, _assignment.location());
@@ -243,7 +243,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 		solAssert(!arrayType.isDynamicallySized(), "Cannot create dynamically sized inline array.");
 		m_context << max(u256(32u), arrayType.memorySize());
 		utils().allocateMemory();
-		m_context << eth::Instruction::DUP1;
+		m_context << solidity::Instruction::DUP1;
 	
 		for (auto const& component: _tuple.components())
 		{
@@ -252,7 +252,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 			utils().storeInMemoryDynamic(*arrayType.baseType(), true);				
 		}
 		
-		m_context << eth::Instruction::POP;
+		m_context << solidity::Instruction::POP;
 	}
 	else
 	{
@@ -298,13 +298,13 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 	switch (_unaryOperation.getOperator())
 	{
 	case Token::Not: // !
-		m_context << eth::Instruction::ISZERO;
+		m_context << solidity::Instruction::ISZERO;
 		break;
 	case Token::BitNot: // ~
-		m_context << eth::Instruction::NOT;
+		m_context << solidity::Instruction::NOT;
 		break;
 	case Token::After: // after
-		m_context << eth::Instruction::TIMESTAMP << eth::Instruction::ADD;
+		m_context << solidity::Instruction::TIMESTAMP << solidity::Instruction::ADD;
 		break;
 	case Token::Delete: // delete
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
@@ -319,20 +319,20 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		{
 			// store value for later
 			solAssert(_unaryOperation.annotation().type->sizeOnStack() == 1, "Stack size != 1 not implemented.");
-			m_context << eth::Instruction::DUP1;
+			m_context << solidity::Instruction::DUP1;
 			if (m_currentLValue->sizeOnStack() > 0)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
-					m_context << eth::swapInstruction(i);
+					m_context << solidity::swapInstruction(i);
 		}
 		m_context << u256(1);
 		if (_unaryOperation.getOperator() == Token::Inc)
-			m_context << eth::Instruction::ADD;
+			m_context << solidity::Instruction::ADD;
 		else
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::SUB;
+			m_context << solidity::Instruction::SWAP1 << solidity::Instruction::SUB;
 		// Stack for prefix: [ref...] (*ref)+-1
 		// Stack for postfix: *ref [ref...] (*ref)+-1
 		for (unsigned i = m_currentLValue->sizeOnStack(); i > 0; --i)
-			m_context << eth::swapInstruction(i);
+			m_context << solidity::swapInstruction(i);
 		m_currentLValue->storeValue(
 			*_unaryOperation.annotation().type, _unaryOperation.location(),
 			!_unaryOperation.isPrefixOperation());
@@ -342,7 +342,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		// unary add, so basically no-op
 		break;
 	case Token::Sub: // -
-		m_context << u256(0) << eth::Instruction::SUB;
+		m_context << u256(0) << solidity::Instruction::SUB;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Invalid unary operator: " +
@@ -452,7 +452,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 
 		m_context << max(u256(32u), structType.memorySize());
 		utils().allocateMemory();
-		m_context << eth::Instruction::DUP1;
+		m_context << solidity::Instruction::DUP1;
 
 		for (unsigned i = 0; i < arguments.size(); ++i)
 		{
@@ -460,7 +460,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().convertType(*arguments[i]->annotation().type, *functionType->parameterTypes()[i]);
 			utils().storeInMemoryDynamic(*functionType->parameterTypes()[i]);
 		}
-		m_context << eth::Instruction::POP;
+		m_context << solidity::Instruction::POP;
 	}
 	else
 	{
@@ -518,21 +518,21 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().fetchFreeMemoryPointer();
 			// pushes size
 			eth::AssemblyItem subroutine = m_context.addSubroutine(assembly);
-			m_context << eth::Instruction::DUP1 << subroutine;
-			m_context << eth::Instruction::DUP4 << eth::Instruction::CODECOPY;
+			m_context << solidity::Instruction::DUP1 << subroutine;
+			m_context << solidity::Instruction::DUP4 << solidity::Instruction::CODECOPY;
 
-			m_context << eth::Instruction::ADD;
+			m_context << solidity::Instruction::ADD;
 			utils().encodeToMemory(argumentTypes, function.parameterTypes());
 			// now on stack: memory_end_ptr
 			// need: size, offset, endowment
 			utils().toSizeAfterFreeMemoryPointer();
 			if (function.valueSet())
-				m_context << eth::dupInstruction(3);
+				m_context << solidity::dupInstruction(3);
 			else
 				m_context << u256(0);
-			m_context << eth::Instruction::CREATE;
+			m_context << solidity::Instruction::CREATE;
 			if (function.valueSet())
-				m_context << eth::swapInstruction(1) << eth::Instruction::POP;
+				m_context << solidity::swapInstruction(1) << solidity::Instruction::POP;
 			break;
 		}
 		case Location::SetGas:
@@ -546,9 +546,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Its values of gasSet and valueSet is equal to the original function's though.
 			unsigned stackDepth = (function.gasSet() ? 1 : 0) + (function.valueSet() ? 1 : 0);
 			if (stackDepth > 0)
-				m_context << eth::swapInstruction(stackDepth);
+				m_context << solidity::swapInstruction(stackDepth);
 			if (function.gasSet())
-				m_context << eth::Instruction::POP;
+				m_context << solidity::Instruction::POP;
 			break;
 		}
 		case Location::SetValue:
@@ -557,7 +557,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Note that function is not the original function, but the ".value" function.
 			// Its values of gasSet and valueSet is equal to the original function's though.
 			if (function.valueSet())
-				m_context << eth::Instruction::POP;
+				m_context << solidity::Instruction::POP;
 			arguments.front()->accept(*this);
 			break;
 		case Location::Send:
@@ -586,7 +586,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 		case Location::Selfdestruct:
 			arguments.front()->accept(*this);
 			utils().convertType(*arguments.front()->annotation().type, *function.parameterTypes().front(), true);
-			m_context << eth::Instruction::SUICIDE;
+			m_context << solidity::Instruction::SUICIDE;
 			break;
 		case Location::SHA3:
 		{
@@ -599,7 +599,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().fetchFreeMemoryPointer();
 			utils().encodeToMemory(argumentTypes, TypePointers(), function.padArguments(), true);
 			utils().toSizeAfterFreeMemoryPointer();
-			m_context << eth::Instruction::SHA3;
+			m_context << solidity::Instruction::SHA3;
 			break;
 		}
 		case Location::Log0:
@@ -622,7 +622,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				false,
 				true);
 			utils().toSizeAfterFreeMemoryPointer();
-			m_context << eth::logInstruction(logNumber);
+			m_context << solidity::logInstruction(logNumber);
 			break;
 		}
 		case Location::Event:
@@ -646,7 +646,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 							true
 						);
 						utils().toSizeAfterFreeMemoryPointer();
-						m_context << eth::Instruction::SHA3;
+						m_context << solidity::Instruction::SHA3;
 					}
 					else
 						utils().convertType(
@@ -676,14 +676,14 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().encodeToMemory(nonIndexedArgTypes, nonIndexedParamTypes);
 			// need: topic1 ... topicn memsize memstart
 			utils().toSizeAfterFreeMemoryPointer();
-			m_context << eth::logInstruction(numIndexed);
+			m_context << solidity::logInstruction(numIndexed);
 			break;
 		}
 		case Location::BlockHash:
 		{
 			arguments[0]->accept(*this);
 			utils().convertType(*arguments[0]->annotation().type, *function.parameterTypes()[0], true);
-			m_context << eth::Instruction::BLOCKHASH;
+			m_context << solidity::Instruction::BLOCKHASH;
 			break;
 		}
 		case Location::AddMod:
@@ -695,9 +695,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().convertType(*arguments[2 - i]->annotation().type, IntegerType(256));
 			}
 			if (function.location() == Location::AddMod)
-				m_context << eth::Instruction::ADDMOD;
+				m_context << solidity::Instruction::ADDMOD;
 			else
-				m_context << eth::Instruction::MULMOD;
+				m_context << solidity::Instruction::MULMOD;
 			break;
 		}
 		case Location::ECRecover:
@@ -710,7 +710,7 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 															   {Location::RIPEMD160, 3}};
 			m_context << contractAddresses.find(function.location())->second;
 			for (unsigned i = function.sizeOnStack(); i > 0; --i)
-				m_context << eth::swapInstruction(i);
+				m_context << solidity::swapInstruction(i);
 			appendExternalFunctionCall(function, arguments);
 			break;
 		}
@@ -727,13 +727,13 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				make_shared<ArrayType>(DataLocation::Storage);
 			// get the current length
 			ArrayUtils(m_context).retrieveLength(*arrayType);
-			m_context << eth::Instruction::DUP1;
+			m_context << solidity::Instruction::DUP1;
 			// stack: ArrayReference currentLength currentLength
-			m_context << u256(1) << eth::Instruction::ADD;
+			m_context << u256(1) << solidity::Instruction::ADD;
 			// stack: ArrayReference currentLength newLength
-			m_context << eth::Instruction::DUP3 << eth::Instruction::DUP2;
+			m_context << solidity::Instruction::DUP3 << solidity::Instruction::DUP2;
 			ArrayUtils(m_context).resizeDynamicArray(*arrayType);
-			m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
+			m_context << solidity::Instruction::SWAP2 << solidity::Instruction::SWAP1;
 			// stack: newLength ArrayReference oldLength
 			ArrayUtils(m_context).accessIndex(*arrayType, false);
 
@@ -766,36 +766,36 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			// Stack: requested_length
 			// Allocate at max(MSIZE, freeMemoryPointer)
 			utils().fetchFreeMemoryPointer();
-			m_context << eth::Instruction::DUP1 << eth::Instruction::MSIZE;
-			m_context << eth::Instruction::LT;
+			m_context << solidity::Instruction::DUP1 << solidity::Instruction::MSIZE;
+			m_context << solidity::Instruction::LT;
 			auto initialise = m_context.appendConditionalJump();
 			// Free memory pointer does not point to empty memory, use MSIZE.
-			m_context << eth::Instruction::POP;
-			m_context << eth::Instruction::MSIZE;
+			m_context << solidity::Instruction::POP;
+			m_context << solidity::Instruction::MSIZE;
 			m_context << initialise;
 
 			// Stack: requested_length memptr
-			m_context << eth::Instruction::SWAP1;
+			m_context << solidity::Instruction::SWAP1;
 			// Stack: memptr requested_length
 			// store length
-			m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3 << eth::Instruction::MSTORE;
+			m_context << solidity::Instruction::DUP1 << solidity::Instruction::DUP3 << solidity::Instruction::MSTORE;
 			// Stack: memptr requested_length
 			// update free memory pointer
-			m_context << eth::Instruction::DUP1 << arrayType.baseType()->memoryHeadSize();
-			m_context << eth::Instruction::MUL << u256(32) << eth::Instruction::ADD;
-			m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
+			m_context << solidity::Instruction::DUP1 << arrayType.baseType()->memoryHeadSize();
+			m_context << solidity::Instruction::MUL << u256(32) << solidity::Instruction::ADD;
+			m_context << solidity::Instruction::DUP3 << solidity::Instruction::ADD;
 			utils().storeFreeMemoryPointer();
 			// Stack: memptr requested_length
 
 			// We only have to initialise if the base type is a not a value type.
 			if (dynamic_cast<ReferenceType const*>(arrayType.baseType().get()))
 			{
-				m_context << eth::Instruction::DUP2 << u256(32) << eth::Instruction::ADD;
+				m_context << solidity::Instruction::DUP2 << u256(32) << solidity::Instruction::ADD;
 				utils().zeroInitialiseMemoryArray(arrayType);
-				m_context << eth::Instruction::POP;
+				m_context << solidity::Instruction::POP;
 			}
 			else
-				m_context << eth::Instruction::POP;
+				m_context << solidity::Instruction::POP;
 			break;
 		}
 		default:
@@ -876,7 +876,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 				IntegerType(0, IntegerType::Modifier::Address),
 				true
 			);
-			m_context << eth::Instruction::BALANCE;
+			m_context << solidity::Instruction::BALANCE;
 		}
 		else if ((set<string>{"send", "call", "callcode", "delegatecall"}).count(member))
 			utils().convertType(
@@ -894,30 +894,30 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::Magic:
 		// we can ignore the kind of magic and only look at the name of the member
 		if (member == "coinbase")
-			m_context << eth::Instruction::COINBASE;
+			m_context << solidity::Instruction::COINBASE;
 		else if (member == "timestamp")
-			m_context << eth::Instruction::TIMESTAMP;
+			m_context << solidity::Instruction::TIMESTAMP;
 		else if (member == "difficulty")
-			m_context << eth::Instruction::DIFFICULTY;
+			m_context << solidity::Instruction::DIFFICULTY;
 		else if (member == "number")
-			m_context << eth::Instruction::NUMBER;
+			m_context << solidity::Instruction::NUMBER;
 		else if (member == "gaslimit")
-			m_context << eth::Instruction::GASLIMIT;
+			m_context << solidity::Instruction::GASLIMIT;
 		else if (member == "sender")
-			m_context << eth::Instruction::CALLER;
+			m_context << solidity::Instruction::CALLER;
 		else if (member == "value")
-			m_context << eth::Instruction::CALLVALUE;
+			m_context << solidity::Instruction::CALLVALUE;
 		else if (member == "origin")
-			m_context << eth::Instruction::ORIGIN;
+			m_context << solidity::Instruction::ORIGIN;
 		else if (member == "gas")
-			m_context << eth::Instruction::GAS;
+			m_context << solidity::Instruction::GAS;
 		else if (member == "gasprice")
-			m_context << eth::Instruction::GASPRICE;
+			m_context << solidity::Instruction::GASPRICE;
 		else if (member == "data")
-			m_context << u256(0) << eth::Instruction::CALLDATASIZE;
+			m_context << u256(0) << solidity::Instruction::CALLDATASIZE;
 		else if (member == "sig")
-			m_context << u256(0) << eth::Instruction::CALLDATALOAD
-				<< (u256(0xffffffff) << (256 - 32)) << eth::Instruction::AND;
+			m_context << u256(0) << solidity::Instruction::CALLDATALOAD
+				<< (u256(0xffffffff) << (256 - 32)) << solidity::Instruction::AND;
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown magic member."));
 		break;
@@ -929,13 +929,13 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		case DataLocation::Storage:
 		{
 			pair<u256, unsigned> const& offsets = type.storageOffsetsOfMember(member);
-			m_context << offsets.first << eth::Instruction::ADD << u256(offsets.second);
+			m_context << offsets.first << solidity::Instruction::ADD << u256(offsets.second);
 			setLValueToStorageItem(_memberAccess);
 			break;
 		}
 		case DataLocation::Memory:
 		{
-			m_context << type.memoryOffsetOfMember(member) << eth::Instruction::ADD;
+			m_context << type.memoryOffsetOfMember(member) << solidity::Instruction::ADD;
 			setLValue<MemoryItem>(_memberAccess, *_memberAccess.annotation().type);
 			break;
 		}
@@ -986,13 +986,13 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 				switch (type.location())
 				{
 				case DataLocation::CallData:
-					m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+					m_context << solidity::Instruction::SWAP1 << solidity::Instruction::POP;
 					break;
 				case DataLocation::Storage:
 					setLValue<StorageArrayLength>(_memberAccess, type);
 					break;
 				case DataLocation::Memory:
-					m_context << eth::Instruction::MLOAD;
+					m_context << solidity::Instruction::MLOAD;
 					break;
 				}
 		}
@@ -1046,7 +1046,7 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 				false,
 				true
 			);
-			m_context << eth::Instruction::SWAP1;
+			m_context << solidity::Instruction::SWAP1;
 			utils().storeInMemoryDynamic(IntegerType(256));
 			utils().toSizeAfterFreeMemoryPointer();
 		}
@@ -1054,12 +1054,12 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		{
 			m_context << u256(0); // memory position
 			appendExpressionCopyToMemory(*keyType, *_indexAccess.indexExpression());
-			m_context << eth::Instruction::SWAP1;
+			m_context << solidity::Instruction::SWAP1;
 			solAssert(CompilerUtils::freeMemoryPointer >= 0x40, "");
 			utils().storeInMemoryDynamic(IntegerType(256));
 			m_context << u256(0);
 		}
-		m_context << eth::Instruction::SHA3;
+		m_context << solidity::Instruction::SHA3;
 		m_context << u256(0);
 		setLValueToStorageItem(_indexAccess);
 	}
@@ -1109,12 +1109,12 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 		// stack layout: <value> <index>
 		// check out-of-bounds access
 		m_context << u256(fixedBytesType.numBytes());
-		m_context << eth::Instruction::DUP2 << eth::Instruction::LT << eth::Instruction::ISZERO;
+		m_context << solidity::Instruction::DUP2 << solidity::Instruction::LT << solidity::Instruction::ISZERO;
 		// out-of-bounds access throws exception
 		m_context.appendConditionalJumpTo(m_context.errorTag());
 
-		m_context << eth::Instruction::BYTE;
-		m_context << (u256(1) << (256 - 8)) << eth::Instruction::MUL;
+		m_context << solidity::Instruction::BYTE;
+		m_context << (u256(1) << (256 - 8)) << solidity::Instruction::MUL;
 	}
 	else if (baseType.category() == Type::Category::TypeType)
 	{
@@ -1139,11 +1139,11 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 		case Type::Category::Contract:
 			// "this" or "super"
 			if (!dynamic_cast<ContractType const&>(*magicVar->type()).isSuper())
-				m_context << eth::Instruction::ADDRESS;
+				m_context << solidity::Instruction::ADDRESS;
 			break;
 		case Type::Category::Integer:
 			// "now"
-			m_context << eth::Instruction::TIMESTAMP;
+			m_context << solidity::Instruction::TIMESTAMP;
 			break;
 		default:
 			break;
@@ -1208,11 +1208,11 @@ void ExpressionCompiler::appendAndOrOperatorCode(BinaryOperation const& _binaryO
 	solAssert(c_op == Token::Or || c_op == Token::And, "");
 
 	_binaryOperation.leftExpression().accept(*this);
-	m_context << eth::Instruction::DUP1;
+	m_context << solidity::Instruction::DUP1;
 	if (c_op == Token::And)
-		m_context << eth::Instruction::ISZERO;
+		m_context << solidity::Instruction::ISZERO;
 	eth::AssemblyItem endLabel = m_context.appendConditionalJump();
-	m_context << eth::Instruction::POP;
+	m_context << solidity::Instruction::POP;
 	_binaryOperation.rightExpression().accept(*this);
 	m_context << endLabel;
 }
@@ -1221,9 +1221,9 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 {
 	if (_operator == Token::Equal || _operator == Token::NotEqual)
 	{
-		m_context << eth::Instruction::EQ;
+		m_context << solidity::Instruction::EQ;
 		if (_operator == Token::NotEqual)
-			m_context << eth::Instruction::ISZERO;
+			m_context << solidity::Instruction::ISZERO;
 	}
 	else
 	{
@@ -1235,19 +1235,19 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 		{
 		case Token::GreaterThanOrEqual:
 			m_context <<
-				(isSigned ? eth::Instruction::SLT : eth::Instruction::LT) <<
-				eth::Instruction::ISZERO;
+				(isSigned ? solidity::Instruction::SLT : solidity::Instruction::LT) <<
+				solidity::Instruction::ISZERO;
 			break;
 		case Token::LessThanOrEqual:
 			m_context <<
-				(isSigned ? eth::Instruction::SGT : eth::Instruction::GT) <<
-				eth::Instruction::ISZERO;
+				(isSigned ? solidity::Instruction::SGT : solidity::Instruction::GT) <<
+				solidity::Instruction::ISZERO;
 			break;
 		case Token::GreaterThan:
-			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
+			m_context << (isSigned ? solidity::Instruction::SGT : solidity::Instruction::GT);
 			break;
 		case Token::LessThan:
-			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
+			m_context << (isSigned ? solidity::Instruction::SLT : solidity::Instruction::LT);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));
@@ -1275,22 +1275,22 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	switch (_operator)
 	{
 	case Token::Add:
-		m_context << eth::Instruction::ADD;
+		m_context << solidity::Instruction::ADD;
 		break;
 	case Token::Sub:
-		m_context << eth::Instruction::SUB;
+		m_context << solidity::Instruction::SUB;
 		break;
 	case Token::Mul:
-		m_context << eth::Instruction::MUL;
+		m_context << solidity::Instruction::MUL;
 		break;
 	case Token::Div:
-		m_context  << (c_isSigned ? eth::Instruction::SDIV : eth::Instruction::DIV);
+		m_context  << (c_isSigned ? solidity::Instruction::SDIV : solidity::Instruction::DIV);
 		break;
 	case Token::Mod:
-		m_context << (c_isSigned ? eth::Instruction::SMOD : eth::Instruction::MOD);
+		m_context << (c_isSigned ? solidity::Instruction::SMOD : solidity::Instruction::MOD);
 		break;
 	case Token::Exp:
-		m_context << eth::Instruction::EXP;
+		m_context << solidity::Instruction::EXP;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown arithmetic operator."));
@@ -1302,13 +1302,13 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 	switch (_operator)
 	{
 	case Token::BitOr:
-		m_context << eth::Instruction::OR;
+		m_context << solidity::Instruction::OR;
 		break;
 	case Token::BitAnd:
-		m_context << eth::Instruction::AND;
+		m_context << solidity::Instruction::AND;
 		break;
 	case Token::BitXor:
-		m_context << eth::Instruction::XOR;
+		m_context << solidity::Instruction::XOR;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown bit operator."));
@@ -1392,7 +1392,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			true
 		);
 		for (unsigned i = 0; i < gasValueSize; ++i)
-			m_context << eth::swapInstruction(gasValueSize - i);
+			m_context << solidity::swapInstruction(gasValueSize - i);
 		gasStackPos++;
 		valueStackPos++;
 	}
@@ -1411,7 +1411,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	utils().fetchFreeMemoryPointer();
 	if (!_functionType.isBareCall() || manualFunctionId)
 	{
-		m_context << eth::dupInstruction(2 + gasValueSize + CompilerUtils::sizeOnStack(argumentTypes));
+		m_context << solidity::dupInstruction(2 + gasValueSize + CompilerUtils::sizeOnStack(argumentTypes));
 		utils().storeInMemoryDynamic(IntegerType(8 * CompilerUtils::dataStartOffset), false);
 	}
 	// If the function takes arbitrary parameters, copy dynamic length data in place.
@@ -1437,21 +1437,21 @@ void ExpressionCompiler::appendExternalFunctionCall(
 	// put on stack: <size of output> <memory pos of output> <size of input> <memory pos of input>
 	m_context << u256(retSize);
 	utils().fetchFreeMemoryPointer();
-	m_context << eth::Instruction::DUP1 << eth::Instruction::DUP4 << eth::Instruction::SUB;
-	m_context << eth::Instruction::DUP2;
+	m_context << solidity::Instruction::DUP1 << solidity::Instruction::DUP4 << solidity::Instruction::SUB;
+	m_context << solidity::Instruction::DUP2;
 
 	// CALL arguments: outSize, outOff, inSize, inOff (already present up to here)
 	// [value,] addr, gas (stack top)
 	if (isDelegateCall)
 		solAssert(!_functionType.valueSet(), "Value set for delegatecall");
 	else if (_functionType.valueSet())
-		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
+		m_context << solidity::dupInstruction(m_context.baseToCurrentStackOffset(valueStackPos));
 	else
 		m_context << u256(0);
-	m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
+	m_context << solidity::dupInstruction(m_context.baseToCurrentStackOffset(contractStackPos));
 
 	if (_functionType.gasSet())
-		m_context << eth::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
+		m_context << solidity::dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
 	{
 		eth::EVMSchedule schedule;
@@ -1464,15 +1464,15 @@ void ExpressionCompiler::appendExternalFunctionCall(
 			gasNeededByCaller += schedule.callNewAccountGas; // we never know
 		m_context <<
 			gasNeededByCaller <<
-			eth::Instruction::GAS <<
-			eth::Instruction::SUB;
+			solidity::Instruction::GAS <<
+			solidity::Instruction::SUB;
 	}
 	if (isDelegateCall)
-		m_context << eth::Instruction::DELEGATECALL;
+		m_context << solidity::Instruction::DELEGATECALL;
 	else if (isCallCode)
-		m_context << eth::Instruction::CALLCODE;
+		m_context << solidity::Instruction::CALLCODE;
 	else
-		m_context << eth::Instruction::CALL;
+		m_context << solidity::Instruction::CALL;
 
 	unsigned remainsSize =
 		2 + // contract address, input_memory_end
@@ -1481,11 +1481,11 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		(!_functionType.isBareCall() || manualFunctionId);
 
 	if (returnSuccessCondition)
-		m_context << eth::swapInstruction(remainsSize);
+		m_context << solidity::swapInstruction(remainsSize);
 	else
 	{
 		//Propagate error condition (if CALL pushes 0 on stack).
-		m_context << eth::Instruction::ISZERO;
+		m_context << solidity::Instruction::ISZERO;
 		m_context.appendConditionalJumpTo(m_context.errorTag());
 	}
 
@@ -1515,7 +1515,7 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		if (memoryNeeded)
 			utils().storeFreeMemoryPointer();
 		else
-			m_context << eth::Instruction::POP;
+			m_context << solidity::Instruction::POP;
 	}
 }
 

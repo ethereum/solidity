@@ -50,9 +50,9 @@ struct SemanticInformation
 	/// the information in the current block header, memory, storage or stack.
 	static bool isDeterministic(AssemblyItem const& _item);
 	/// @returns true if the given instruction modifies memory.
-	static bool invalidatesMemory(Instruction _instruction);
+	static bool invalidatesMemory(solidity::Instruction _instruction);
 	/// @returns true if the given instruction modifies storage (even indirectly).
-	static bool invalidatesStorage(Instruction _instruction);
+	static bool invalidatesStorage(solidity::Instruction _instruction);
 };
 
 }

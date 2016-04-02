@@ -57,7 +57,7 @@ int AssemblyItem::deposit() const
 	switch (m_type)
 	{
 	case Operation:
-		return instructionInfo(instruction()).ret - instructionInfo(instruction()).args;
+		return getInstructionInfo(instruction()).ret - getInstructionInfo(instruction()).args;
 	case Push:
 	case PushString:
 	case PushTag:
@@ -93,8 +93,8 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 	switch (_item.type())
 	{
 	case Operation:
-		_out << " " << instructionInfo(_item.instruction()).name;
-		if (_item.instruction() == eth::Instruction::JUMP || _item.instruction() == eth::Instruction::JUMPI)
+		_out << " " << getInstructionInfo(_item.instruction()).name;
+		if (_item.instruction() == solidity::Instruction::JUMP || _item.instruction() == solidity::Instruction::JUMPI)
 			_out << "\t" << _item.getJumpTypeAsString();
 		break;
 	case Push:
