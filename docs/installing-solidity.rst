@@ -58,6 +58,8 @@ Set up Homebrew:
 .. code-block:: bash
 
     brew update
+    brew upgrade
+    
     brew install boost --c++11             # this takes a while
     brew install cmake cryptopp miniupnpc leveldb gmp libmicrohttpd libjson-rpc-cpp 
     # For Mix IDE and Alethzero only
