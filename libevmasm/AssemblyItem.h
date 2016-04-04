@@ -58,7 +58,7 @@ public:
 
 	AssemblyItem(u256 _push, SourceLocation const& _location = SourceLocation()):
 		AssemblyItem(Push, _push, _location) { }
-	AssemblyItem(Instruction _i, SourceLocation const& _location = SourceLocation()):
+	AssemblyItem(solidity::Instruction _i, SourceLocation const& _location = SourceLocation()):
 		AssemblyItem(Operation, byte(_i), _location) { }
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0, SourceLocation const& _location = SourceLocation()):
 		m_type(_type),

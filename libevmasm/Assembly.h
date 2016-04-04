@@ -69,10 +69,10 @@ public:
 	void appendProgramSize() { append(AssemblyItem(PushProgramSize)); }
 	void appendLibraryAddress(std::string const& _identifier) { append(newPushLibraryAddress(_identifier)); }
 
-	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
-	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
-	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMP); return ret; }
-	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(Instruction::JUMPI); return ret; }
+	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(solidity::Instruction::JUMP); return ret; }
+	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(solidity::Instruction::JUMPI); return ret; }
+	AssemblyItem appendJump(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(solidity::Instruction::JUMP); return ret; }
+	AssemblyItem appendJumpI(AssemblyItem const& _tag) { auto ret = append(_tag.pushTag()); append(solidity::Instruction::JUMPI); return ret; }
 	AssemblyItem errorTag() { return AssemblyItem(PushTag, 0); }
 
 	template <class T> Assembly& operator<<(T const& _d) { append(_d); return *this; }
@@ -86,7 +86,7 @@ public:
 	void ignored() { m_baseDeposit = m_deposit; }
 	void endIgnored() { m_deposit = m_baseDeposit; m_baseDeposit = 0; }
 
-	void popTo(int _deposit) { while (m_deposit > _deposit) append(Instruction::POP); }
+	void popTo(int _deposit) { while (m_deposit > _deposit) append(solidity::Instruction::POP); }
 
 	void injectStart(AssemblyItem const& _i);
 	std::string out() const;

@@ -66,7 +66,7 @@ void ArrayUtils::copyArrayToStorage(ArrayType const& _targetType, ArrayType cons
 	{
 		// increment source pointer to point to data
 		m_context << solidity::Instruction::SWAP1 << u256(0x20);
-		m_context << solidity::Instruction::ADD << solidity::Instruction::SWAP1;
+		m_context << solidity::Instruction::ADD << Instruction::SWAP1;
 	}
 
 	// stack: target_ref source_ref source_length
