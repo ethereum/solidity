@@ -84,13 +84,13 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item)
 			break;
 		case Instruction::MLOAD:
 		case Instruction::MSTORE:
-			gas += memoryGas(classes.find(solidity::Instruction::ADD, {
+			gas += memoryGas(classes.find(Instruction::ADD, {
 				m_state->relativeStackElement(0),
 				classes.find(AssemblyItem(32))
 			}));
 			break;
 		case Instruction::MSTORE8:
-			gas += memoryGas(classes.find(solidity::Instruction::ADD, {
+			gas += memoryGas(classes.find(Instruction::ADD, {
 				m_state->relativeStackElement(0),
 				classes.find(AssemblyItem(1))
 			}));
@@ -198,7 +198,7 @@ GasMeter::GasConsumption GasMeter::memoryGas(int _stackPosOffset, int _stackPosS
 	if (classes.knownZero(m_state->relativeStackElement(_stackPosSize)))
 		return GasConsumption(0);
 	else
-		return memoryGas(classes.find(solidity::Instruction::ADD, {
+		return memoryGas(classes.find(Instruction::ADD, {
 			m_state->relativeStackElement(_stackPosOffset),
 			m_state->relativeStackElement(_stackPosSize)
 		}));

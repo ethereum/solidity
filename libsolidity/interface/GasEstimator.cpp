@@ -137,8 +137,8 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 		using Id = ExpressionClasses::Id;
 		using Ids = vector<Id>;
 		Id hashValue = classes.find(u256(FixedHash<4>::Arith(FixedHash<4>(dev::sha3(_signature)))));
-		Id calldata = classes.find(solidity::Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
-		classes.forceEqual(hashValue, solidity::Instruction::DIV, Ids{
+		Id calldata = classes.find(Instruction::CALLDATALOAD, Ids{classes.find(u256(0))});
+		classes.forceEqual(hashValue, Instruction::DIV, Ids{
 			calldata,
 			classes.find(u256(1) << (8 * 28))
 		});
@@ -165,7 +165,7 @@ GasEstimator::GasConsumption GasEstimator::functionalEstimation(
 	AssemblyItem invalidTag(PushTag, u256(-0x10));
 	state->feedItem(invalidTag, true);
 	if (parametersSize > 0)
-		state->feedItem(solidity::swapInstruction(parametersSize));
+		state->feedItem(swapInstruction(parametersSize));
 
 	return PathGasMeter(_items).estimateMax(_offset, state);
 }

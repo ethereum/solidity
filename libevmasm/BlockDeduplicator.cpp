@@ -106,7 +106,7 @@ BlockDeduplicator::BlockIterator& BlockDeduplicator::BlockIterator::operator++()
 {
 	if (it == end)
 		return *this;
-	if (SemanticInformation::altersControlFlow(*it) && *it != AssemblyItem(solidity::Instruction::JUMPI))
+	if (SemanticInformation::altersControlFlow(*it) && *it != AssemblyItem(Instruction::JUMPI))
 		it = end;
 	else
 	{

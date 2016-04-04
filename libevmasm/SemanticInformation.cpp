@@ -147,7 +147,7 @@ bool SemanticInformation::isDeterministic(AssemblyItem const& _item)
 	}
 }
 
-bool SemanticInformation::invalidatesMemory(solidity::Instruction _instruction)
+bool SemanticInformation::invalidatesMemory(Instruction _instruction)
 {
 	switch (_instruction)
 	{
