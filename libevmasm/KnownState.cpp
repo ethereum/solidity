@@ -101,7 +101,7 @@ KnownState::StoreOperation KnownState::feedItem(AssemblyItem const& _item, bool 
 	else
 	{
 		Instruction instruction = _item.instruction();
-		InstructionInfo info = getInstructionInfo(instruction);
+		InstructionInfo info = instructionInfo(instruction);
 		if (SemanticInformation::isDupInstruction(_item))
 			setStackElement(
 				m_stackHeight + 1,

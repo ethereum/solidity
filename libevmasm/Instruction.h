@@ -250,7 +250,7 @@ struct InstructionInfo
 };
 
 /// Information on all the instructions.
-InstructionInfo getInstructionInfo(Instruction _inst);
+InstructionInfo instructionInfo(Instruction _inst);
 
 /// check whether instructions exists
 bool isValidInstruction(Instruction _inst);

@@ -209,7 +209,7 @@ u256 GasMeter::runGas(Instruction _instruction, EVMSchedule const& _es)
 	if (_instruction == Instruction::JUMPDEST)
 		return 1;
 
-	int tier = getInstructionInfo(_instruction).gasPriceTier;
+	int tier = instructionInfo(_instruction).gasPriceTier;
 	assertThrow(tier != InvalidTier, OptimizerException, "Invalid gas tier.");
 	return _es.tierStepGas[tier];
 }

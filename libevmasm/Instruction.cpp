@@ -307,7 +307,7 @@ void dev::solidity::eachInstruction(
 		Instruction instr = Instruction(*it);
 		size_t additional = 0;
 		if (isValidInstruction(instr))
-			additional = getInstructionInfo(instr).additional;
+			additional = instructionInfo(instr).additional;
 		u256 data;
 		for (size_t i = 0; i < additional; ++i)
 		{
@@ -327,7 +327,7 @@ string dev::solidity::disassemble(bytes const& _mem)
 			ret << "0x" << hex << int(_instr) << " ";
 		else
 		{
-			InstructionInfo info = getInstructionInfo(_instr);
+			InstructionInfo info = instructionInfo(_instr);
 			ret << info.name << " ";
 			if (info.additional)
 				ret << "0x" << hex << _data << " ";
@@ -336,7 +336,7 @@ string dev::solidity::disassemble(bytes const& _mem)
 	return ret.str();
 }
 
-InstructionInfo dev::solidity::getInstructionInfo(Instruction _inst)
+InstructionInfo dev::solidity::instructionInfo(Instruction _inst)
 {
 	try
 	{

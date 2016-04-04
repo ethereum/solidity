@@ -154,7 +154,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 			dev::solidity::Instruction const& instr = s_instructions[literal];
 			if (_onlySinglePusher)
 			{
-				InstructionInfo info = dev::solidity::getInstructionInfo(instr);
+				InstructionInfo info = dev::solidity::instructionInfo(instr);
 				if (info.ret != 1)
 					fatalParserError("Instruction " + info.name + " not allowed in this context.");
 			}
@@ -200,7 +200,7 @@ FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement con
 	if (_instruction.type() != typeid(Instruction))
 		fatalParserError("Assembly instruction required in front of \"(\")");
 	solidity::Instruction instr = boost::get<solidity::assembly::Instruction>(_instruction).instruction;
-	InstructionInfo instrInfo = getInstructionInfo(instr);
+	InstructionInfo instrInfo = instructionInfo(instr);
 	if (solidity::Instruction::DUP1 <= instr && instr <= solidity::Instruction::DUP16)
 		fatalParserError("DUPi instructions not allowed for functional notation");
 	if (solidity::Instruction::SWAP1 <= instr && instr <= solidity::Instruction::SWAP16)
