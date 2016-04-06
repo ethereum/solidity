@@ -29,10 +29,14 @@ configure_project(TESTS)
 add_subdirectory(libevmasm)
 add_subdirectory(libsolidity)
 add_subdirectory(solc)
+
 if (NOT EMSCRIPTEN)
 	add_subdirectory(liblll)
-	add_subdirectory(test)
 	add_subdirectory(lllc)
+endif()
+
+if (TESTS AND NOT EMSCRIPTEN)
+	add_subdirectory(test)
 endif()
 
 # TODO installation and packaging rules
