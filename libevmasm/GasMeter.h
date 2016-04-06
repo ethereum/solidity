@@ -25,7 +25,6 @@
 #include <tuple>
 #include <libevmasm/ExpressionClasses.h>
 #include <libevmasm/AssemblyItem.h>
-#include <libethcore/ChainOperationParams.h>
 
 namespace dev
 {
@@ -34,7 +33,44 @@ namespace eth
 
 class KnownState;
 
-// TODO: FIXME: HOMESTEAD: XXX: @chfast populate m_schedule from an ExtVMFace instance via ExtVMFace::evmSchedule.
+namespace GasCosts
+{
+	static unsigned const stackLimit = 1024;
+	static unsigned const tier0Gas = 0;
+	static unsigned const tier1Gas = 2;
+	static unsigned const tier2Gas = 3;
+	static unsigned const tier3Gas = 5;
+	static unsigned const tier4Gas = 8;
+	static unsigned const tier5Gas = 10;
+	static unsigned const tier6Gas = 20;
+	static unsigned const tier7Gas = 0;
+	static unsigned const expGas = 10;
+	static unsigned const expByteGas = 10;
+	static unsigned const sha3Gas = 30;
+	static unsigned const sha3WordGas = 6;
+	static unsigned const sloadGas = 50;
+	static unsigned const sstoreSetGas = 20000;
+	static unsigned const sstoreResetGas = 5000;
+	static unsigned const sstoreRefundGas = 15000;
+	static unsigned const jumpdestGas = 1;
+	static unsigned const logGas = 375;
+	static unsigned const logDataGas = 8;
+	static unsigned const logTopicGas = 375;
+	static unsigned const createGas = 32000;
+	static unsigned const callGas = 40;
+	static unsigned const callStipend = 2300;
+	static unsigned const callValueTransferGas = 9000;
+	static unsigned const callNewAccountGas = 25000;
+	static unsigned const suicideRefundGas = 24000;
+	static unsigned const memoryGas = 3;
+	static unsigned const quadCoeffDiv = 512;
+	static unsigned const createDataGas = 200;
+	static unsigned const txGas = 21000;
+	static unsigned const txCreateGas = 53000;
+	static unsigned const txDataZeroGas = 4;
+	static unsigned const txDataNonZeroGas = 68;
+	static unsigned const copyGas = 3;
+}
 
 /**
  * Class that helps computing the maximum gas consumption for instructions.
@@ -47,7 +83,8 @@ class GasMeter
 public:
 	struct GasConsumption
 	{
-		GasConsumption(u256 _value = 0, bool _infinite = false): value(_value), isInfinite(_infinite) {}
+		GasConsumption(unsigned _value = 0, bool _infinite = false): value(_value), isInfinite(_infinite) {}
+		GasConsumption(u256 _value, bool _infinite = false): value(_value), isInfinite(_infinite) {}
 		static GasConsumption infinite() { return GasConsumption(0, true); }
 
 		GasConsumption& operator+=(GasConsumption const& _other);
@@ -69,8 +106,7 @@ public:
 
 	u256 const& largestMemoryAccess() const { return m_largestMemoryAccess; }
 
-	u256 runGas(Instruction _instruction) const { return runGas(_instruction, m_schedule); }
-	static u256 runGas(Instruction _instruction, EVMSchedule const& _es);
+	static unsigned runGas(Instruction _instruction);
 
 private:
 	/// @returns _multiplier * (_value + 31) / 32, if _value is a known constant and infinite otherwise.
@@ -85,8 +121,6 @@ private:
 	std::shared_ptr<KnownState> m_state;
 	/// Largest point where memory was accessed since the creation of this object.
 	u256 m_largestMemoryAccess;
-
-	EVMSchedule m_schedule;
 };
 
 inline std::ostream& operator<<(std::ostream& _str, GasMeter::GasConsumption const& _consumption)

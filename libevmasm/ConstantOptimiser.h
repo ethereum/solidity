@@ -24,7 +24,6 @@
 #include <vector>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
-#include <libethcore/ChainOperationParams.h>
 
 namespace dev
 {
@@ -34,8 +33,6 @@ namespace eth
 class AssemblyItem;
 using AssemblyItems = std::vector<AssemblyItem>;
 class Assembly;
-
-// TODO: FIXME: HOMESTEAD: XXX: @chfast populate m_schedule from an ExtVMFace instance via ExtVMFace::evmSchedule.
 
 /**
  * Abstract base class for one way to change how constants are represented in the code.
@@ -91,7 +88,6 @@ protected:
 
 	Params m_params;
 	u256 const& m_value;
-	EVMSchedule m_schedule;
 };
 
 /**
@@ -105,8 +101,6 @@ public:
 		ConstantOptimisationMethod(_params, _value) {}
 	virtual bigint gasNeeded() override;
 	virtual void execute(Assembly&, AssemblyItems&) override {}
-
-	EVMSchedule m_schedule;
 };
 
 /**
@@ -121,7 +115,6 @@ public:
 
 protected:
 	AssemblyItems m_copyRoutine;
-	EVMSchedule m_schedule;
 };
 
 /**
@@ -148,7 +141,6 @@ protected:
 	bigint gasNeeded(AssemblyItems const& _routine);
 
 	AssemblyItems m_routine;
-	EVMSchedule m_schedule;
 };
 
 }

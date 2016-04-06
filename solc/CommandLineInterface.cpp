@@ -35,6 +35,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libevmasm/Instruction.h>
+#include <libevmasm/GasMeter.h>
 #include <libsolidity/interface/Version.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
@@ -240,7 +241,6 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 
 void CommandLineInterface::handleGasEstimation(string const& _contract)
 {
-	eth::EVMSchedule schedule;	// TODO: make it relevant to the SealEngine/EnvInfo.
 	using Gas = GasEstimator::GasConsumption;
 	if (!m_compiler->assemblyItems(_contract) && !m_compiler->runtimeAssemblyItems(_contract))
 		return;
@@ -250,8 +250,8 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 		Gas gas = GasEstimator::functionalEstimation(*items);
 		u256 bytecodeSize(m_compiler->runtimeObject(_contract).bytecode.size());
 		cout << "construction:" << endl;
-		cout << "   " << gas << " + " << (bytecodeSize * schedule.createDataGas) << " = ";
-		gas += bytecodeSize * schedule.createDataGas;
+		cout << "   " << gas << " + " << (bytecodeSize * eth::GasCosts::createDataGas) << " = ";
+		gas += bytecodeSize * eth::GasCosts::createDataGas;
 		cout << gas << endl;
 	}
 	if (eth::AssemblyItems const* items = m_compiler->runtimeAssemblyItems(_contract))

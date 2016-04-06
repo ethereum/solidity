@@ -71,13 +71,13 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item)
 				m_state->storageContent().count(slot) &&
 				classes.knownNonZero(m_state->storageContent().at(slot))
 			))
-				gas += m_schedule.sstoreResetGas; //@todo take refunds into account
+				gas += GasCosts::sstoreResetGas; //@todo take refunds into account
 			else
-				gas += m_schedule.sstoreSetGas;
+				gas += GasCosts::sstoreSetGas;
 			break;
 		}
 		case Instruction::SLOAD:
-			gas += m_schedule.sloadGas;
+			gas += GasCosts::sloadGas;
 			break;
 		case Instruction::RETURN:
 			gas += memoryGas(0, -1);
@@ -96,18 +96,18 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item)
 			}));
 			break;
 		case Instruction::SHA3:
-			gas = m_schedule.sha3Gas;
-			gas += wordGas(m_schedule.sha3WordGas, m_state->relativeStackElement(-1));
+			gas = GasCosts::sha3Gas;
+			gas += wordGas(GasCosts::sha3WordGas, m_state->relativeStackElement(-1));
 			gas += memoryGas(0, -1);
 			break;
 		case Instruction::CALLDATACOPY:
 		case Instruction::CODECOPY:
 			gas += memoryGas(0, -2);
-			gas += wordGas(m_schedule.copyGas, m_state->relativeStackElement(-2));
+			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-2));
 			break;
 		case Instruction::EXTCODECOPY:
 			gas += memoryGas(-1, -3);
-			gas += wordGas(m_schedule.copyGas, m_state->relativeStackElement(-3));
+			gas += wordGas(GasCosts::copyGas, m_state->relativeStackElement(-3));
 			break;
 		case Instruction::LOG0:
 		case Instruction::LOG1:
@@ -116,10 +116,10 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item)
 		case Instruction::LOG4:
 		{
 			unsigned n = unsigned(_item.instruction()) - unsigned(Instruction::LOG0);
-			gas = m_schedule.logGas + m_schedule.logTopicGas * n;
+			gas = GasCosts::logGas + GasCosts::logTopicGas * n;
 			gas += memoryGas(0, -1);
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(-1)))
-				gas += m_schedule.logDataGas * (*value);
+				gas += GasCosts::logDataGas * (*value);
 			else
 				gas = GasConsumption::infinite();
 			break;
@@ -128,30 +128,30 @@ GasMeter::GasConsumption GasMeter::estimateMax(AssemblyItem const& _item)
 		case Instruction::CALLCODE:
 		case Instruction::DELEGATECALL:
 		{
-			gas = m_schedule.callGas;
+			gas = GasCosts::callGas;
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(0)))
 				gas += (*value);
 			else
 				gas = GasConsumption::infinite();
 			if (_item.instruction() == Instruction::CALL)
-				gas += m_schedule.callNewAccountGas; // We very rarely know whether the address exists.
+				gas += GasCosts::callNewAccountGas; // We very rarely know whether the address exists.
 			int valueSize = _item.instruction() == Instruction::DELEGATECALL ? 0 : 1;
 			if (!classes.knownZero(m_state->relativeStackElement(-1 - valueSize)))
-				gas += m_schedule.callValueTransferGas;
+				gas += GasCosts::callValueTransferGas;
 			gas += memoryGas(-2 - valueSize, -3 - valueSize);
 			gas += memoryGas(-4 - valueSize, -5 - valueSize);
 			break;
 		}
 		case Instruction::CREATE:
-			gas = m_schedule.createGas;
+			gas = GasCosts::createGas;
 			gas += memoryGas(-1, -2);
 			break;
 		case Instruction::EXP:
-			gas = m_schedule.expGas;
+			gas = GasCosts::expGas;
 			if (u256 const* value = classes.knownConstant(m_state->relativeStackElement(-1)))
-				gas += m_schedule.expByteGas * (32 - (h256(*value).firstBitSet() / 8));
+				gas += GasCosts::expByteGas * (32 - (h256(*value).firstBitSet() / 8));
 			else
-				gas += m_schedule.expByteGas * 32;
+				gas += GasCosts::expByteGas * 32;
 			break;
 		default:
 			break;
@@ -187,7 +187,7 @@ GasMeter::GasConsumption GasMeter::memoryGas(ExpressionClasses::Id _position)
 	auto memGas = [=](u256 const& pos) -> u256
 	{
 		u256 size = (pos + 31) / 32;
-		return m_schedule.memoryGas * size + size * size / m_schedule.quadCoeffDiv;
+		return GasCosts::memoryGas * size + size * size / GasCosts::quadCoeffDiv;
 	};
 	return memGas(*value) - memGas(previous);
 }
@@ -204,14 +204,25 @@ GasMeter::GasConsumption GasMeter::memoryGas(int _stackPosOffset, int _stackPosS
 		}));
 }
 
-u256 GasMeter::runGas(Instruction _instruction, EVMSchedule const& _es)
+unsigned GasMeter::runGas(Instruction _instruction)
 {
 	if (_instruction == Instruction::JUMPDEST)
 		return 1;
 
-	int tier = instructionInfo(_instruction).gasPriceTier;
-	assertThrow(tier != InvalidTier, OptimizerException, "Invalid gas tier.");
-	return _es.tierStepGas[tier];
+	switch (instructionInfo(_instruction).gasPriceTier)
+	{
+	case 0: return GasCosts::tier0Gas;
+	case 1: return GasCosts::tier1Gas;
+	case 2: return GasCosts::tier2Gas;
+	case 3: return GasCosts::tier3Gas;
+	case 4: return GasCosts::tier4Gas;
+	case 5: return GasCosts::tier5Gas;
+	case 6: return GasCosts::tier6Gas;
+	case 7: return GasCosts::tier7Gas;
+	default: break;
+	}
+	assertThrow(false, OptimizerException, "Invalid gas tier.");
+	return 0;
 }
 
 

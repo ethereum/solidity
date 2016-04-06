@@ -24,7 +24,6 @@
 #include <string>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/Common.h>
-#include <libevmasm/Version.h>
 #include <libsolidity/interface/Utils.h>
 #include <solidity/BuildInfo.h>
 
@@ -39,8 +38,7 @@ string const dev::solidity::VersionString =
 	"-" +
 	string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) +
 	(ETH_CLEAN_REPO ? "" : "*") +
-	"/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM)
-	" linked to libethereum-" + eth::VersionStringLibEvmAsm;
+	"/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
 
 
 bytes dev::solidity::binaryVersion()
