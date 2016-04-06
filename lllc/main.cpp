@@ -26,7 +26,6 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
 #include <libevmasm/Instruction.h>
-#include "ethereum/BuildInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -48,9 +47,8 @@ void help()
 
 void version()
 {
-	cout << "LLLC, the Lovely Little Language Compiler " << dev::Version << endl;
+	cout << "LLLC, the Lovely Little Language Compiler " << endl;
 	cout << "  By Gav Wood, (c) 2014." << endl;
-	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
 }
 

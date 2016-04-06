@@ -69,13 +69,12 @@ unsigned ConstantOptimisationMethod::optimiseConstants(
 
 bigint ConstantOptimisationMethod::simpleRunGas(AssemblyItems const& _items)
 {
-	EVMSchedule schedule;	// TODO: make relevant to context.
 	bigint gas = 0;
 	for (AssemblyItem const& item: _items)
 		if (item.type() == Push)
-			gas += GasMeter::runGas(Instruction::PUSH1, schedule);
+			gas += GasMeter::runGas(Instruction::PUSH1);
 		else if (item.type() == Operation)
-			gas += GasMeter::runGas(item.instruction(), schedule);
+			gas += GasMeter::runGas(item.instruction());
 	return gas;
 }
 
@@ -85,11 +84,11 @@ bigint ConstantOptimisationMethod::dataGas(bytes const& _data) const
 	{
 		bigint gas;
 		for (auto b: _data)
-			gas += b ? m_schedule.txDataNonZeroGas : m_schedule.txDataZeroGas;
+			gas += b ? GasCosts::txDataNonZeroGas : GasCosts::txDataZeroGas;
 		return gas;
 	}
 	else
-		return m_schedule.createDataGas * dataSize();
+		return GasCosts::createDataGas * dataSize();
 }
 
 size_t ConstantOptimisationMethod::bytesRequired(AssemblyItems const& _items)
@@ -121,7 +120,7 @@ bigint LiteralMethod::gasNeeded()
 	return combineGas(
 		simpleRunGas({Instruction::PUSH1}),
 		// PUSHX plus data
-		(m_params.isCreation ? m_schedule.txDataNonZeroGas : m_schedule.createDataGas) + dataGas(),
+		(m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas) + dataGas(),
 		0
 	);
 }
@@ -148,9 +147,9 @@ bigint CodeCopyMethod::gasNeeded()
 {
 	return combineGas(
 		// Run gas: we ignore memory increase costs
-		simpleRunGas(m_copyRoutine) + m_schedule.copyGas,
+		simpleRunGas(m_copyRoutine) + GasCosts::copyGas,
 		// Data gas for copy routines: Some bytes are zero, but we ignore them.
-		bytesRequired(m_copyRoutine) * (m_params.isCreation ? m_schedule.txDataNonZeroGas : m_schedule.createDataGas),
+		bytesRequired(m_copyRoutine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
 		// Data gas for data itself
 		dataGas(toBigEndian(m_value))
 	);
@@ -217,9 +216,9 @@ bigint ComputeMethod::gasNeeded(AssemblyItems const& _routine)
 {
 	size_t numExps = count(_routine.begin(), _routine.end(), Instruction::EXP);
 	return combineGas(
-		simpleRunGas(_routine) + numExps * (m_schedule.expGas + m_schedule.expByteGas),
+		simpleRunGas(_routine) + numExps * (GasCosts::expGas + GasCosts::expByteGas),
 		// Data gas for routine: Some bytes are zero, but we ignore them.
-		bytesRequired(_routine) * (m_params.isCreation ? m_schedule.txDataNonZeroGas : m_schedule.createDataGas),
+		bytesRequired(_routine) * (m_params.isCreation ? GasCosts::txDataNonZeroGas : GasCosts::createDataGas),
 		0
 	);
 }

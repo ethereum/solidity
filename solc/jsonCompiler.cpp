@@ -28,6 +28,7 @@
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
 #include <libevmasm/Instruction.h>
+#include <libevmasm/GasMeter.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTPrinter.h>
@@ -77,7 +78,6 @@ Json::Value gasToJson(GasEstimator::GasConsumption const& _gas)
 
 Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 {
-	eth::EVMSchedule schedule;
 	Json::Value gasEstimates(Json::objectValue);
 	using Gas = GasEstimator::GasConsumption;
 	if (!_compiler.assemblyItems(_contract) && !_compiler.runtimeAssemblyItems(_contract))
@@ -88,7 +88,7 @@ Json::Value estimateGas(CompilerStack const& _compiler, string const& _contract)
 		u256 bytecodeSize(_compiler.runtimeObject(_contract).bytecode.size());
 		Json::Value creationGas(Json::arrayValue);
 		creationGas[0] = gasToJson(gas);
-		creationGas[1] = gasToJson(bytecodeSize * schedule.createDataGas);
+		creationGas[1] = gasToJson(bytecodeSize * eth::GasCosts::createDataGas);
 		gasEstimates["creation"] = creationGas;
 	}
 	if (eth::AssemblyItems const* items = _compiler.runtimeAssemblyItems(_contract))

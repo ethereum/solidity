@@ -24,8 +24,8 @@
 #include <algorithm>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libevmasm/Instruction.h>
-#include <libethcore/ChainOperationParams.h>
 #include <libevmasm/Assembly.h>
+#include <libevmasm/GasMeter.h>
 #include <libsolidity/inlineasm/AsmCodeGen.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
@@ -853,7 +853,6 @@ void Compiler::compileExpression(Expression const& _expression, TypePointer cons
 
 eth::Assembly Compiler::cloneRuntime()
 {
-	eth::EVMSchedule schedule;
 	eth::Assembly a;
 	a << Instruction::CALLDATASIZE;
 	a << u256(0) << Instruction::DUP1 << Instruction::CALLDATACOPY;
@@ -863,7 +862,7 @@ eth::Assembly Compiler::cloneRuntime()
 	// this is the address which has to be substituted by the linker.
 	//@todo implement as special "marker" AssemblyItem.
 	a << u256("0xcafecafecafecafecafecafecafecafecafecafe");
-	a << u256(schedule.callGas + 10) << Instruction::GAS << Instruction::SUB;
+	a << u256(eth::GasCosts::callGas + 10) << Instruction::GAS << Instruction::SUB;
 	a << Instruction::DELEGATECALL;
 	//Propagate error condition (if DELEGATECALL pushes 0 on stack).
 	a << Instruction::ISZERO;

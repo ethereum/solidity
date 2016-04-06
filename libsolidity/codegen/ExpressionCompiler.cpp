@@ -25,15 +25,13 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/SHA3.h>
-#include <libethcore/ChainOperationParams.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/ExpressionCompiler.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
+#include <libevmasm/GasMeter.h>
 using namespace std;
-
-// TODO: FIXME: HOMESTEAD: XXX: @chriseth Params deprecated - use EVMSchedule instead.
 
 namespace dev
 {
@@ -1454,14 +1452,13 @@ void ExpressionCompiler::appendExternalFunctionCall(
 		m_context << dupInstruction(m_context.baseToCurrentStackOffset(gasStackPos));
 	else
 	{
-		eth::EVMSchedule schedule;
 		// send all gas except the amount needed to execute "SUB" and "CALL"
 		// @todo this retains too much gas for now, needs to be fine-tuned.
-		u256 gasNeededByCaller = schedule.callGas + 10;
+		u256 gasNeededByCaller = eth::GasCosts::callGas + 10;
 		if (_functionType.valueSet())
-			gasNeededByCaller += schedule.callValueTransferGas;
+			gasNeededByCaller += eth::GasCosts::callValueTransferGas;
 		if (!isCallCode && !isDelegateCall)
-			gasNeededByCaller += schedule.callNewAccountGas; // we never know
+			gasNeededByCaller += eth::GasCosts::callNewAccountGas; // we never know
 		m_context <<
 			gasNeededByCaller <<
 			Instruction::GAS <<
