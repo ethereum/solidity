@@ -23,7 +23,7 @@
 #pragma once
 
 #include <boost/variant.hpp>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 
 namespace dev
 {
@@ -35,7 +35,7 @@ namespace assembly
 /// What follows are the AST nodes for assembly.
 
 /// Direct EVM instruction (except PUSHi and JUMPDEST)
-struct Instruction { eth::Instruction instruction; };
+struct Instruction { solidity::Instruction instruction; };
 /// Literal number or string (up to 32 bytes)
 struct Literal { bool isNumber; std::string value; };
 /// External / internal identifier or label reference

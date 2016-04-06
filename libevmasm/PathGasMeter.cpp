@@ -76,7 +76,7 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 		bool branchStops = false;
 		jumpTags.clear();
 		AssemblyItem const& item = m_items.at(index);
-		if (item.type() == Tag || item == AssemblyItem(eth::Instruction::JUMPDEST))
+		if (item.type() == Tag || item == AssemblyItem(Instruction::JUMPDEST))
 		{
 			// Do not allow any backwards jump. This is quite restrictive but should work for
 			// the simplest things.
@@ -84,14 +84,14 @@ GasMeter::GasConsumption PathGasMeter::handleQueueItem()
 				return GasMeter::GasConsumption::infinite();
 			path->visitedJumpdests.insert(index);
 		}
-		else if (item == AssemblyItem(eth::Instruction::JUMP))
+		else if (item == AssemblyItem(Instruction::JUMP))
 		{
 			branchStops = true;
 			jumpTags = state->tagsInExpression(state->relativeStackElement(0));
 			if (jumpTags.empty()) // unknown jump destination
 				return GasMeter::GasConsumption::infinite();
 		}
-		else if (item == AssemblyItem(eth::Instruction::JUMPI))
+		else if (item == AssemblyItem(Instruction::JUMPI))
 		{
 			ExpressionClasses::Id condition = state->relativeStackElement(-1);
 			if (classes.knownNonZero(condition) || !classes.knownZero(condition))

@@ -25,6 +25,7 @@
 #include <functional>
 #include <libevmasm/Assembly.h>
 #include <libevmasm/SourceLocation.h>
+#include <libevmasm/Instruction.h>
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <libsolidity/inlineasm/AsmData.h>
 
@@ -116,7 +117,7 @@ public:
 			m_identifierAccess = [](assembly::Identifier const&, eth::Assembly&, CodeGenerator::IdentifierContext) { return false; };
 	}
 
-	void operator()(Instruction const& _instruction)
+	void operator()(dev::solidity::assembly::Instruction const& _instruction)
 	{
 		m_state.assembly.append(_instruction.instruction);
 	}
@@ -145,7 +146,7 @@ public:
 					"Variable inaccessible, too deep inside stack (" + boost::lexical_cast<string>(heightDiff) + ")"
 				);
 			else
-				m_state.assembly.append(eth::dupInstruction(heightDiff));
+				m_state.assembly.append(solidity::dupInstruction(heightDiff));
 			return;
 		}
 		else if (eth::AssemblyItem const* label = m_state.findLabel(_identifier.name))
@@ -196,7 +197,7 @@ public:
 		//@TODO check height before and after
 		while (m_state.variables.size() > numVariables)
 		{
-			m_state.assembly.append(eth::Instruction::POP);
+			m_state.assembly.append(solidity::Instruction::POP);
 			m_state.variables.pop_back();
 		}
 	}
@@ -215,8 +216,8 @@ private:
 				);
 			else
 			{
-				m_state.assembly.append(eth::swapInstruction(heightDiff));
-				m_state.assembly.append(eth::Instruction::POP);
+				m_state.assembly.append(solidity::swapInstruction(heightDiff));
+				m_state.assembly.append(solidity::Instruction::POP);
 			}
 			return;
 		}

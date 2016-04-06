@@ -21,7 +21,7 @@
  */
 
 #include <libsolidity/codegen/LValue.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/codegen/CompilerUtils.h>
@@ -49,7 +49,7 @@ void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 		);
 	solAssert(stackPos + 1 >= m_size, "Size and stack pos mismatch.");
 	for (unsigned i = 0; i < m_size; ++i)
-		m_context << eth::dupInstruction(stackPos + 1);
+		m_context << dupInstruction(stackPos + 1);
 }
 
 void StackVariable::storeValue(Type const&, SourceLocation const& _location, bool _move) const
@@ -63,7 +63,7 @@ void StackVariable::storeValue(Type const&, SourceLocation const& _location, boo
 		);
 	else if (stackDiff > 0)
 		for (unsigned i = 0; i < m_size; ++i)
-			m_context << eth::swapInstruction(stackDiff) << eth::Instruction::POP;
+			m_context << swapInstruction(stackDiff) << Instruction::POP;
 	if (!_move)
 		retrieveValue(_location);
 }
@@ -85,11 +85,11 @@ void MemoryItem::retrieveValue(SourceLocation const&, bool _remove) const
 	if (m_dataType->isValueType())
 	{
 		if (!_remove)
-			m_context << eth::Instruction::DUP1;
+			m_context << Instruction::DUP1;
 		CompilerUtils(m_context).loadFromMemoryDynamic(*m_dataType, false, m_padded, false);
 	}
 	else
-		m_context << eth::Instruction::MLOAD;
+		m_context << Instruction::MLOAD;
 }
 
 void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool _move) const
@@ -109,13 +109,13 @@ void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool
 		{
 			solAssert(m_dataType->calldataEncodedSize(false) == 1, "Invalid non-padded type.");
 			if (m_dataType->category() == Type::Category::FixedBytes)
-				m_context << u256(0) << eth::Instruction::BYTE;
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::MSTORE8;
+				m_context << u256(0) << Instruction::BYTE;
+			m_context << Instruction::SWAP1 << Instruction::MSTORE8;
 		}
 		else
 		{
 			utils.storeInMemoryDynamic(*m_dataType, m_padded);
-			m_context << eth::Instruction::POP;
+			m_context << Instruction::POP;
 		}
 	}
 	else
@@ -124,10 +124,10 @@ void MemoryItem::storeValue(Type const& _sourceType, SourceLocation const&, bool
 
 		solAssert(m_dataType->sizeOnStack() == 1, "");
 		if (!_move)
-			m_context << eth::Instruction::DUP2 << eth::Instruction::SWAP1;
+			m_context << Instruction::DUP2 << Instruction::SWAP1;
 		// stack: [value] value lvalue
 		// only store the reference
-		m_context << eth::Instruction::MSTORE;
+		m_context << Instruction::MSTORE;
 	}
 }
 
@@ -135,10 +135,10 @@ void MemoryItem::setToZero(SourceLocation const&, bool _removeReference) const
 {
 	CompilerUtils utils(m_context);
 	if (!_removeReference)
-		m_context << eth::Instruction::DUP1;
+		m_context << Instruction::DUP1;
 	utils.pushZeroValue(*m_dataType);
 	utils.storeInMemoryDynamic(*m_dataType, m_padded);
-	m_context << eth::Instruction::POP;
+	m_context << Instruction::POP;
 }
 
 StorageItem::StorageItem(CompilerContext& _compilerContext, VariableDeclaration const& _declaration):
@@ -165,29 +165,29 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 	{
 		solAssert(m_dataType->sizeOnStack() == 1, "Invalid storage ref size.");
 		if (_remove)
-			m_context << eth::Instruction::POP; // remove byte offset
+			m_context << Instruction::POP; // remove byte offset
 		else
-			m_context << eth::Instruction::DUP2;
+			m_context << Instruction::DUP2;
 		return;
 	}
 	if (!_remove)
 		CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
 	if (m_dataType->storageBytes() == 32)
-		m_context << eth::Instruction::POP << eth::Instruction::SLOAD;
+		m_context << Instruction::POP << Instruction::SLOAD;
 	else
 	{
 		m_context
-			<< eth::Instruction::SWAP1 << eth::Instruction::SLOAD << eth::Instruction::SWAP1
-			<< u256(0x100) << eth::Instruction::EXP << eth::Instruction::SWAP1 << eth::Instruction::DIV;
+			<< Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1
+			<< u256(0x100) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
 		if (m_dataType->category() == Type::Category::FixedBytes)
-			m_context << (u256(0x1) << (256 - 8 * m_dataType->storageBytes())) << eth::Instruction::MUL;
+			m_context << (u256(0x1) << (256 - 8 * m_dataType->storageBytes())) << Instruction::MUL;
 		else if (
 			m_dataType->category() == Type::Category::Integer &&
 			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
 		)
-			m_context << u256(m_dataType->storageBytes() - 1) << eth::Instruction::SIGNEXTEND;
+			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
 		else
-			m_context << ((u256(0x1) << (8 * m_dataType->storageBytes())) - 1) << eth::Instruction::AND;
+			m_context << ((u256(0x1) << (8 * m_dataType->storageBytes())) - 1) << Instruction::AND;
 	}
 }
 
@@ -202,32 +202,32 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 		if (m_dataType->storageBytes() == 32)
 		{
 			// offset should be zero
-			m_context << eth::Instruction::POP;
+			m_context << Instruction::POP;
 			if (!_move)
-				m_context << eth::Instruction::DUP2 << eth::Instruction::SWAP1;
-			m_context << eth::Instruction::SSTORE;
+				m_context << Instruction::DUP2 << Instruction::SWAP1;
+			m_context << Instruction::SSTORE;
 		}
 		else
 		{
 			// OR the value into the other values in the storage slot
-			m_context << u256(0x100) << eth::Instruction::EXP;
+			m_context << u256(0x100) << Instruction::EXP;
 			// stack: value storage_ref multiplier
 			// fetch old value
-			m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
+			m_context << Instruction::DUP2 << Instruction::SLOAD;
 			// stack: value storege_ref multiplier old_full_value
 			// clear bytes in old value
 			m_context
-				<< eth::Instruction::DUP2 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
-				<< eth::Instruction::MUL;
-			m_context << eth::Instruction::NOT << eth::Instruction::AND;
+				<< Instruction::DUP2 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
+				<< Instruction::MUL;
+			m_context << Instruction::NOT << Instruction::AND;
 			// stack: value storage_ref multiplier cleared_value
 			m_context
-				<< eth::Instruction::SWAP1 << eth::Instruction::DUP4;
+				<< Instruction::SWAP1 << Instruction::DUP4;
 			// stack: value storage_ref cleared_value multiplier value
 			if (m_dataType->category() == Type::Category::FixedBytes)
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))
-					<< eth::Instruction::SWAP1 << eth::Instruction::DIV;
+					<< Instruction::SWAP1 << Instruction::DIV;
 			else if (
 				m_dataType->category() == Type::Category::Integer &&
 				dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
@@ -235,15 +235,15 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				// remove the higher order bits
 				m_context
 					<< (u256(1) << (8 * (32 - m_dataType->storageBytes())))
-					<< eth::Instruction::SWAP1
-					<< eth::Instruction::DUP2
-					<< eth::Instruction::MUL
-					<< eth::Instruction::DIV;
-			m_context  << eth::Instruction::MUL << eth::Instruction::OR;
+					<< Instruction::SWAP1
+					<< Instruction::DUP2
+					<< Instruction::MUL
+					<< Instruction::DIV;
+			m_context  << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
+			m_context << Instruction::SWAP1 << Instruction::SSTORE;
 			if (_move)
-				m_context << eth::Instruction::POP;
+				m_context << Instruction::POP;
 		}
 	}
 	else
@@ -253,19 +253,19 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			"Wrong type conversation for assignment.");
 		if (m_dataType->category() == Type::Category::Array)
 		{
-			m_context << eth::Instruction::POP; // remove byte offset
+			m_context << Instruction::POP; // remove byte offset
 			ArrayUtils(m_context).copyArrayToStorage(
 				dynamic_cast<ArrayType const&>(*m_dataType),
 				dynamic_cast<ArrayType const&>(_sourceType)
 			);
 			if (_move)
-				m_context << eth::Instruction::POP;
+				m_context << Instruction::POP;
 		}
 		else if (m_dataType->category() == Type::Category::Struct)
 		{
 			// stack layout: source_ref target_ref target_offset
 			// note that we have structs, so offset should be zero and are ignored
-			m_context << eth::Instruction::POP;
+			m_context << Instruction::POP;
 			auto const& structType = dynamic_cast<StructType const&>(*m_dataType);
 			auto const& sourceType = dynamic_cast<StructType const&>(_sourceType);
 			solAssert(
@@ -284,7 +284,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				{
 					// stack layout: source_ref target_ref
 					pair<u256, unsigned> const& offsets = sourceType.storageOffsetsOfMember(member.name);
-					m_context << offsets.first << eth::Instruction::DUP3 << eth::Instruction::ADD;
+					m_context << offsets.first << Instruction::DUP3 << Instruction::ADD;
 					m_context << u256(offsets.second);
 					// stack: source_ref target_ref source_member_ref source_member_off
 					StorageItem(m_context, *sourceMemberType).retrieveValue(_location, true);
@@ -296,13 +296,13 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 					// stack layout: source_ref target_ref
 					TypePointer sourceMemberType = sourceType.memberType(member.name);
 					m_context << sourceType.memoryOffsetOfMember(member.name);
-					m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
+					m_context << Instruction::DUP3 << Instruction::ADD;
 					MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);
 					// stack layout: source_ref target_ref source_value...
 				}
 				unsigned stackSize = sourceMemberType->sizeOnStack();
 				pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
-				m_context << eth::dupInstruction(1 + stackSize) << offsets.first << eth::Instruction::ADD;
+				m_context << dupInstruction(1 + stackSize) << offsets.first << Instruction::ADD;
 				m_context << u256(offsets.second);
 				// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
 				StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);
@@ -312,7 +312,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			if (_move)
 				utils.popStackSlots(2);
 			else
-				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+				m_context << Instruction::SWAP1 << Instruction::POP;
 		}
 		else
 			BOOST_THROW_EXCEPTION(
@@ -344,12 +344,12 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 				continue;
 			pair<u256, unsigned> const& offsets = structType.storageOffsetsOfMember(member.name);
 			m_context
-				<< offsets.first << eth::Instruction::DUP3 << eth::Instruction::ADD
+				<< offsets.first << Instruction::DUP3 << Instruction::ADD
 				<< u256(offsets.second);
 			StorageItem(m_context, *memberType).setToZero();
 		}
 		if (_removeReference)
-			m_context << eth::Instruction::POP << eth::Instruction::POP;
+			m_context << Instruction::POP << Instruction::POP;
 	}
 	else
 	{
@@ -360,23 +360,23 @@ void StorageItem::setToZero(SourceLocation const&, bool _removeReference) const
 		{
 			// offset should be zero
 			m_context
-				<< eth::Instruction::POP << u256(0)
-				<< eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
+				<< Instruction::POP << u256(0)
+				<< Instruction::SWAP1 << Instruction::SSTORE;
 		}
 		else
 		{
-			m_context << u256(0x100) << eth::Instruction::EXP;
+			m_context << u256(0x100) << Instruction::EXP;
 			// stack: storage_ref multiplier
 			// fetch old value
-			m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
+			m_context << Instruction::DUP2 << Instruction::SLOAD;
 			// stack: storege_ref multiplier old_full_value
 			// clear bytes in old value
 			m_context
-				<< eth::Instruction::SWAP1 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
-				<< eth::Instruction::MUL;
-			m_context << eth::Instruction::NOT << eth::Instruction::AND;
+				<< Instruction::SWAP1 << ((u256(1) << (8 * m_dataType->storageBytes())) - 1)
+				<< Instruction::MUL;
+			m_context << Instruction::NOT << Instruction::AND;
 			// stack: storage_ref cleared_value
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
+			m_context << Instruction::SWAP1 << Instruction::SSTORE;
 		}
 	}
 }
@@ -393,48 +393,48 @@ void StorageByteArrayElement::retrieveValue(SourceLocation const&, bool _remove)
 {
 	// stack: ref byte_number
 	if (_remove)
-		m_context << eth::Instruction::SWAP1 << eth::Instruction::SLOAD
-			<< eth::Instruction::SWAP1 << eth::Instruction::BYTE;
+		m_context << Instruction::SWAP1 << Instruction::SLOAD
+			<< Instruction::SWAP1 << Instruction::BYTE;
 	else
-		m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD
-			<< eth::Instruction::DUP2 << eth::Instruction::BYTE;
-	m_context << (u256(1) << (256 - 8)) << eth::Instruction::MUL;
+		m_context << Instruction::DUP2 << Instruction::SLOAD
+			<< Instruction::DUP2 << Instruction::BYTE;
+	m_context << (u256(1) << (256 - 8)) << Instruction::MUL;
 }
 
 void StorageByteArrayElement::storeValue(Type const&, SourceLocation const&, bool _move) const
 {
 	// stack: value ref byte_number
-	m_context << u256(31) << eth::Instruction::SUB << u256(0x100) << eth::Instruction::EXP;
+	m_context << u256(31) << Instruction::SUB << u256(0x100) << Instruction::EXP;
 	// stack: value ref (1<<(8*(31-byte_number)))
-	m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
+	m_context << Instruction::DUP2 << Instruction::SLOAD;
 	// stack: value ref (1<<(8*(31-byte_number))) old_full_value
 	// clear byte in old value
-	m_context << eth::Instruction::DUP2 << u256(0xff) << eth::Instruction::MUL
-		<< eth::Instruction::NOT << eth::Instruction::AND;
+	m_context << Instruction::DUP2 << u256(0xff) << Instruction::MUL
+		<< Instruction::NOT << Instruction::AND;
 	// stack: value ref (1<<(32-byte_number)) old_full_value_with_cleared_byte
-	m_context << eth::Instruction::SWAP1;
-	m_context << (u256(1) << (256 - 8)) << eth::Instruction::DUP5 << eth::Instruction::DIV
-		<< eth::Instruction::MUL << eth::Instruction::OR;
+	m_context << Instruction::SWAP1;
+	m_context << (u256(1) << (256 - 8)) << Instruction::DUP5 << Instruction::DIV
+		<< Instruction::MUL << Instruction::OR;
 	// stack: value ref new_full_value
-	m_context << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
+	m_context << Instruction::SWAP1 << Instruction::SSTORE;
 	if (_move)
-		m_context << eth::Instruction::POP;
+		m_context << Instruction::POP;
 }
 
 void StorageByteArrayElement::setToZero(SourceLocation const&, bool _removeReference) const
 {
 	// stack: ref byte_number
 	if (!_removeReference)
-		m_context << eth::Instruction::DUP2 << eth::Instruction::DUP2;
-	m_context << u256(31) << eth::Instruction::SUB << u256(0x100) << eth::Instruction::EXP;
+		m_context << Instruction::DUP2 << Instruction::DUP2;
+	m_context << u256(31) << Instruction::SUB << u256(0x100) << Instruction::EXP;
 	// stack: ref (1<<(8*(31-byte_number)))
-	m_context << eth::Instruction::DUP2 << eth::Instruction::SLOAD;
+	m_context << Instruction::DUP2 << Instruction::SLOAD;
 	// stack: ref (1<<(8*(31-byte_number))) old_full_value
 	// clear byte in old value
-	m_context << eth::Instruction::SWAP1 << u256(0xff) << eth::Instruction::MUL;
-	m_context << eth::Instruction::NOT << eth::Instruction::AND;
+	m_context << Instruction::SWAP1 << u256(0xff) << Instruction::MUL;
+	m_context << Instruction::NOT << Instruction::AND;
 	// stack: ref old_full_value_with_cleared_byte
-	m_context << eth::Instruction::SWAP1 << eth::Instruction::SSTORE;
+	m_context << Instruction::SWAP1 << Instruction::SSTORE;
 }
 
 StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, const ArrayType& _arrayType):
@@ -448,22 +448,22 @@ void StorageArrayLength::retrieveValue(SourceLocation const&, bool _remove) cons
 {
 	ArrayUtils(m_context).retrieveLength(m_arrayType);
 	if (_remove)
-		m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
+		m_context << Instruction::SWAP1 << Instruction::POP;
 }
 
 void StorageArrayLength::storeValue(Type const&, SourceLocation const&, bool _move) const
 {
 	if (_move)
-		m_context << eth::Instruction::SWAP1;
+		m_context << Instruction::SWAP1;
 	else
-		m_context << eth::Instruction::DUP2;
+		m_context << Instruction::DUP2;
 	ArrayUtils(m_context).resizeDynamicArray(m_arrayType);
 }
 
 void StorageArrayLength::setToZero(SourceLocation const&, bool _removeReference) const
 {
 	if (!_removeReference)
-		m_context << eth::Instruction::DUP1;
+		m_context << Instruction::DUP1;
 	ArrayUtils(m_context).clearDynamicArray(m_arrayType);
 }
 

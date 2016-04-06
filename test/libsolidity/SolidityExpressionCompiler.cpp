@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(literal_true)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x1});
+	bytes expectation({byte(Instruction::PUSH1), 0x1});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(literal_false)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x0});
+	bytes expectation({byte(Instruction::PUSH1), 0x0});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(int_literal)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH10), 0x12, 0x34, 0x56, 0x78, 0x90,
+	bytes expectation({byte(Instruction::PUSH10), 0x12, 0x34, 0x56, 0x78, 0x90,
 													   0x12, 0x34, 0x56, 0x78, 0x90});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(int_with_wei_ether_subdenomination)
 		})";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x1});
+	bytes expectation({byte(Instruction::PUSH1), 0x1});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(int_with_szabo_ether_subdenomination)
 		})";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH5), 0xe8, 0xd4, 0xa5, 0x10, 0x00});
+	bytes expectation({byte(Instruction::PUSH5), 0xe8, 0xd4, 0xa5, 0x10, 0x00});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(int_with_finney_ether_subdenomination)
 		})";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH7), 0x3, 0x8d, 0x7e, 0xa4, 0xc6, 0x80, 0x00});
+	bytes expectation({byte(Instruction::PUSH7), 0x3, 0x8d, 0x7e, 0xa4, 0xc6, 0x80, 0x00});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(int_with_ether_ether_subdenomination)
 		})";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH8), 0xd, 0xe0, 0xb6, 0xb3, 0xa7, 0x64, 0x00, 0x00});
+	bytes expectation({byte(Instruction::PUSH8), 0xd, 0xe0, 0xb6, 0xb3, 0xa7, 0x64, 0x00, 0x00});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -268,12 +268,12 @@ BOOST_AUTO_TEST_CASE(comparison)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::PUSH2), 0x11, 0xaa,
-					   byte(eth::Instruction::PUSH2), 0x10, 0xaa,
-					   byte(eth::Instruction::LT),
-					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::ISZERO)});
+	bytes expectation({byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::PUSH2), 0x11, 0xaa,
+					   byte(Instruction::PUSH2), 0x10, 0xaa,
+					   byte(Instruction::LT),
+					   byte(Instruction::EQ),
+					   byte(Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -284,22 +284,22 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x12, // 8 + 10
-					   byte(eth::Instruction::PUSH1), 0x4,
-					   byte(eth::Instruction::GT),
-					   byte(eth::Instruction::ISZERO), // after this we have 4 <= 8 + 10
-					   byte(eth::Instruction::DUP1),
-					   byte(eth::Instruction::PUSH1), 0x11,
-					   byte(eth::Instruction::JUMPI), // short-circuit if it is true
-					   byte(eth::Instruction::POP),
-					   byte(eth::Instruction::PUSH1), 0x2,
-					   byte(eth::Instruction::PUSH1), 0x9,
-					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::ISZERO), // after this we have 9 != 2
-					   byte(eth::Instruction::JUMPDEST),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::ISZERO)});
+	bytes expectation({byte(Instruction::PUSH1), 0x12, // 8 + 10
+					   byte(Instruction::PUSH1), 0x4,
+					   byte(Instruction::GT),
+					   byte(Instruction::ISZERO), // after this we have 4 <= 8 + 10
+					   byte(Instruction::DUP1),
+					   byte(Instruction::PUSH1), 0x11,
+					   byte(Instruction::JUMPI), // short-circuit if it is true
+					   byte(Instruction::POP),
+					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::PUSH1), 0x9,
+					   byte(Instruction::EQ),
+					   byte(Instruction::ISZERO), // after this we have 9 != 2
+					   byte(Instruction::JUMPDEST),
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::EQ),
+					   byte(Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -309,23 +309,23 @@ BOOST_AUTO_TEST_CASE(arithmetics)
 							 "  function f(uint y) { var x = ((((((((y ^ 8) & 7) | 6) - 5) + 4) % 3) / 2) * 1); }"
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}, {"test", "f", "x"}});
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::PUSH1), 0x2,
-					   byte(eth::Instruction::PUSH1), 0x3,
-					   byte(eth::Instruction::PUSH1), 0x4,
-					   byte(eth::Instruction::PUSH1), 0x5,
-					   byte(eth::Instruction::PUSH1), 0x6,
-					   byte(eth::Instruction::PUSH1), 0x7,
-					   byte(eth::Instruction::PUSH1), 0x8,
-					   byte(eth::Instruction::DUP10),
-					   byte(eth::Instruction::XOR),
-					   byte(eth::Instruction::AND),
-					   byte(eth::Instruction::OR),
-					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::ADD),
-					   byte(eth::Instruction::MOD),
-					   byte(eth::Instruction::DIV),
-					   byte(eth::Instruction::MUL)});
+	bytes expectation({byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::PUSH1), 0x3,
+					   byte(Instruction::PUSH1), 0x4,
+					   byte(Instruction::PUSH1), 0x5,
+					   byte(Instruction::PUSH1), 0x6,
+					   byte(Instruction::PUSH1), 0x7,
+					   byte(Instruction::PUSH1), 0x8,
+					   byte(Instruction::DUP10),
+					   byte(Instruction::XOR),
+					   byte(Instruction::AND),
+					   byte(Instruction::OR),
+					   byte(Instruction::SUB),
+					   byte(Instruction::ADD),
+					   byte(Instruction::MOD),
+					   byte(Instruction::DIV),
+					   byte(Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -336,13 +336,13 @@ BOOST_AUTO_TEST_CASE(unary_operators)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "y"}, {"test", "f", "x"}});
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x2,
-					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::PUSH1), 0x0,
-					   byte(eth::Instruction::SUB),
-					   byte(eth::Instruction::NOT),
-					   byte(eth::Instruction::EQ),
-					   byte(eth::Instruction::ISZERO)});
+	bytes expectation({byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::DUP3),
+					   byte(Instruction::PUSH1), 0x0,
+					   byte(Instruction::SUB),
+					   byte(Instruction::NOT),
+					   byte(Instruction::EQ),
+					   byte(Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -354,44 +354,44 @@ BOOST_AUTO_TEST_CASE(unary_inc_dec)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "x"}});
 
 	// Stack: a, x
-	bytes expectation({byte(eth::Instruction::DUP2),
-					   byte(eth::Instruction::DUP1),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::ADD),
+	bytes expectation({byte(Instruction::DUP2),
+					   byte(Instruction::DUP1),
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::ADD),
 					   // Stack here: a x a (a+1)
-					   byte(eth::Instruction::SWAP3),
-					   byte(eth::Instruction::POP), // first ++
+					   byte(Instruction::SWAP3),
+					   byte(Instruction::POP), // first ++
 					   // Stack here: (a+1) x a
-					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::ADD),
+					   byte(Instruction::DUP3),
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::ADD),
 					   // Stack here: (a+1) x a (a+2)
-					   byte(eth::Instruction::SWAP3),
-					   byte(eth::Instruction::POP),
+					   byte(Instruction::SWAP3),
+					   byte(Instruction::POP),
 					   // Stack here: (a+2) x a
-					   byte(eth::Instruction::DUP3), // second ++
-					   byte(eth::Instruction::XOR),
+					   byte(Instruction::DUP3), // second ++
+					   byte(Instruction::XOR),
 					   // Stack here: (a+2) x a^(a+2)
-					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::DUP1),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::SWAP1),
-					   byte(eth::Instruction::SUB),
+					   byte(Instruction::DUP3),
+					   byte(Instruction::DUP1),
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::SWAP1),
+					   byte(Instruction::SUB),
 					   // Stack here: (a+2) x a^(a+2) (a+2) (a+1)
-					   byte(eth::Instruction::SWAP4),
-					   byte(eth::Instruction::POP), // first --
-					   byte(eth::Instruction::XOR),
+					   byte(Instruction::SWAP4),
+					   byte(Instruction::POP), // first --
+					   byte(Instruction::XOR),
 					   // Stack here: (a+1) x a^(a+2)^(a+2)
-					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::PUSH1), 0x1,
-					   byte(eth::Instruction::SWAP1),
-					   byte(eth::Instruction::SUB),
+					   byte(Instruction::DUP3),
+					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::SWAP1),
+					   byte(Instruction::SUB),
 					   // Stack here: (a+1) x a^(a+2)^(a+2) a
-					   byte(eth::Instruction::SWAP3),
-					   byte(eth::Instruction::POP), // second ++
+					   byte(Instruction::SWAP3),
+					   byte(Instruction::POP), // second ++
 					   // Stack here: a x a^(a+2)^(a+2)
-					   byte(eth::Instruction::DUP3), // will change
-					   byte(eth::Instruction::XOR)});
+					   byte(Instruction::DUP3), // will change
+					   byte(Instruction::XOR)});
 					   // Stack here: a x a^(a+2)^(a+2)^a
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
@@ -404,16 +404,16 @@ BOOST_AUTO_TEST_CASE(assignment)
 	bytes code = compileFirstExpression(sourceCode, {}, {{"test", "f", "a"}, {"test", "f", "b"}});
 
 	// Stack: a, b
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x2,
-					   byte(eth::Instruction::DUP2),
-					   byte(eth::Instruction::DUP4),
-					   byte(eth::Instruction::ADD),
+	bytes expectation({byte(Instruction::PUSH1), 0x2,
+					   byte(Instruction::DUP2),
+					   byte(Instruction::DUP4),
+					   byte(Instruction::ADD),
 					   // Stack here: a b 2 a+b
-					   byte(eth::Instruction::SWAP3),
-					   byte(eth::Instruction::POP),
-					   byte(eth::Instruction::DUP3),
+					   byte(Instruction::SWAP3),
+					   byte(Instruction::POP),
+					   byte(Instruction::DUP3),
 					   // Stack here: a+b b 2 a+b
-					   byte(eth::Instruction::MUL)});
+					   byte(Instruction::MUL)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -427,26 +427,26 @@ BOOST_AUTO_TEST_CASE(function_call)
 										{{"test", "f", "a"}, {"test", "f", "b"}});
 
 	// Stack: a, b
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x02,
-					   byte(eth::Instruction::PUSH1), 0x0c,
-					   byte(eth::Instruction::PUSH1), 0x01,
-					   byte(eth::Instruction::DUP5),
-					   byte(eth::Instruction::ADD),
+	bytes expectation({byte(Instruction::PUSH1), 0x02,
+					   byte(Instruction::PUSH1), 0x0c,
+					   byte(Instruction::PUSH1), 0x01,
+					   byte(Instruction::DUP5),
+					   byte(Instruction::ADD),
 					   // Stack here: a b 2 <ret label> (a+1)
-					   byte(eth::Instruction::DUP4),
-					   byte(eth::Instruction::PUSH1), 0x13,
-					   byte(eth::Instruction::JUMP),
-					   byte(eth::Instruction::JUMPDEST),
+					   byte(Instruction::DUP4),
+					   byte(Instruction::PUSH1), 0x13,
+					   byte(Instruction::JUMP),
+					   byte(Instruction::JUMPDEST),
 					   // Stack here: a b 2 g(a+1, b)
-					   byte(eth::Instruction::MUL),
+					   byte(Instruction::MUL),
 					   // Stack here: a b g(a+1, b)*2
-					   byte(eth::Instruction::DUP3),
-					   byte(eth::Instruction::ADD),
+					   byte(Instruction::DUP3),
+					   byte(Instruction::ADD),
 					   // Stack here: a b a+g(a+1, b)*2
-					   byte(eth::Instruction::SWAP2),
-					   byte(eth::Instruction::POP),
-					   byte(eth::Instruction::DUP2),
-					   byte(eth::Instruction::JUMPDEST)});
+					   byte(Instruction::SWAP2),
+					   byte(Instruction::POP),
+					   byte(Instruction::DUP2),
+					   byte(Instruction::JUMPDEST)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(negative_literals_8bits)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation(bytes({byte(eth::Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x80));
+	bytes expectation(bytes({byte(Instruction::PUSH32)}) + bytes(31, 0xff) + bytes(1, 0x80));
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(negative_literals_16bits)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation(bytes({byte(eth::Instruction::PUSH32)}) + bytes(30, 0xff) + bytes{0xf5, 0x43});
+	bytes expectation(bytes({byte(Instruction::PUSH32)}) + bytes(30, 0xff) + bytes{0xf5, 0x43});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(intermediately_overflowing_literals)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation(bytes({byte(eth::Instruction::PUSH1), 0xbf}));
+	bytes expectation(bytes({byte(Instruction::PUSH1), 0xbf}));
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 
@@ -495,8 +495,8 @@ BOOST_AUTO_TEST_CASE(blockhash)
 	bytes code = compileFirstExpression(sourceCode, {}, {},
 										{make_shared<MagicVariableDeclaration>("block", make_shared<MagicType>(MagicType::Kind::Block))});
 
-	bytes expectation({byte(eth::Instruction::PUSH1), 0x03,
-					   byte(eth::Instruction::BLOCKHASH)});
+	bytes expectation({byte(Instruction::PUSH1), 0x03,
+					   byte(Instruction::BLOCKHASH)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
 }
 

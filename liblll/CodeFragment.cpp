@@ -30,7 +30,7 @@
 #pragma GCC diagnostic pop
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include "CompilerState.h"
 #include "Parser.h"
 using namespace std;

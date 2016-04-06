@@ -25,7 +25,7 @@
 #include <ostream>
 #include <stack>
 #include <utility>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/Types.h>
@@ -126,7 +126,7 @@ public:
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
 	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
-	CompilerContext& operator<<(eth::Instruction _instruction) { m_asm.append(_instruction); return *this; }
+	CompilerContext& operator<<(Instruction _instruction) { m_asm.append(_instruction); return *this; }
 	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
 

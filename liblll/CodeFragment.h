@@ -22,7 +22,7 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
 #include "Exceptions.h"
 

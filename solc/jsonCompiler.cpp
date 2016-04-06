@@ -27,7 +27,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/CommonIO.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/ast/ASTPrinter.h>
@@ -206,7 +206,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			contractData["interface"] = compiler.interface(contractName);
 			contractData["bytecode"] = compiler.object(contractName).toHex();
 			contractData["runtimeBytecode"] = compiler.runtimeObject(contractName).toHex();
-			contractData["opcodes"] = eth::disassemble(compiler.object(contractName).bytecode);
+			contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
 			contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
 			contractData["gasEstimates"] = estimateGas(compiler, contractName);
 			ostringstream unused;

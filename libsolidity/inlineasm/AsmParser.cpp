@@ -23,7 +23,6 @@
 #include <libsolidity/inlineasm/AsmParser.h>
 #include <ctype.h>
 #include <algorithm>
-#include <libevmcore/Instruction.h>
 #include <libsolidity/parsing/Scanner.h>
 
 using namespace std;
@@ -121,17 +120,17 @@ assembly::Statement Parser::parseExpression()
 assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 {
 	// Allowed instructions, lowercase names.
-	static map<string, eth::Instruction> s_instructions;
+	static map<string, dev::solidity::Instruction> s_instructions;
 	if (s_instructions.empty())
-		for (auto const& instruction: eth::c_instructions)
+		for (auto const& instruction: solidity::c_instructions)
 		{
 			if (
-				instruction.second == eth::Instruction::JUMPDEST ||
-				(eth::Instruction::PUSH1 <= instruction.second && instruction.second <= eth::Instruction::PUSH32)
+				instruction.second == solidity::Instruction::JUMPDEST ||
+				(solidity::Instruction::PUSH1 <= instruction.second && instruction.second <= solidity::Instruction::PUSH32)
 			)
 				continue;
 			string name = instruction.first;
-			if (instruction.second == eth::Instruction::SUICIDE)
+			if (instruction.second == solidity::Instruction::SUICIDE)
 				name = "selfdestruct";
 			transform(name.begin(), name.end(), name.begin(), [](unsigned char _c) { return tolower(_c); });
 			s_instructions[name] = instruction.second;
@@ -152,10 +151,10 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 		// first search the set of instructions.
 		if (s_instructions.count(literal))
 		{
-			eth::Instruction const& instr = s_instructions[literal];
+			dev::solidity::Instruction const& instr = s_instructions[literal];
 			if (_onlySinglePusher)
 			{
-				eth::InstructionInfo info = eth::instructionInfo(instr);
+				InstructionInfo info = dev::solidity::instructionInfo(instr);
 				if (info.ret != 1)
 					fatalParserError("Instruction " + info.name + " not allowed in this context.");
 			}
@@ -200,11 +199,11 @@ FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement con
 {
 	if (_instruction.type() != typeid(Instruction))
 		fatalParserError("Assembly instruction required in front of \"(\")");
-	eth::Instruction instr = boost::get<Instruction>(_instruction).instruction;
-	eth::InstructionInfo instrInfo = eth::instructionInfo(instr);
-	if (eth::Instruction::DUP1 <= instr && instr <= eth::Instruction::DUP16)
+	solidity::Instruction instr = boost::get<solidity::assembly::Instruction>(_instruction).instruction;
+	InstructionInfo instrInfo = instructionInfo(instr);
+	if (solidity::Instruction::DUP1 <= instr && instr <= solidity::Instruction::DUP16)
 		fatalParserError("DUPi instructions not allowed for functional notation");
-	if (eth::Instruction::SWAP1 <= instr && instr <= eth::Instruction::SWAP16)
+	if (solidity::Instruction::SWAP1 <= instr && instr <= solidity::Instruction::SWAP16)
 		fatalParserError("SWAPi instructions not allowed for functional notation");
 
 	expectToken(Token::LParen);

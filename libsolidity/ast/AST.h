@@ -28,7 +28,7 @@
 #include <memory>
 #include <boost/noncopyable.hpp>
 #include <libevmasm/SourceLocation.h>
-#include <libevmcore/Instruction.h>
+#include <libevmasm/Instruction.h>
 #include <libsolidity/interface/Utils.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>

@@ -58,11 +58,11 @@ public:
 		m_optimize = true;
 		bytes optimizedBytecode = compileAndRun(_sourceCode, _value, _contractName);
 		size_t nonOptimizedSize = 0;
-		eth::eachInstruction(nonOptimizedBytecode, [&](Instruction, u256 const&) {
+		solidity::eachInstruction(nonOptimizedBytecode, [&](Instruction, u256 const&) {
 			nonOptimizedSize++;
 		});
 		size_t optimizedSize = 0;
-		eth::eachInstruction(optimizedBytecode, [&](Instruction, u256 const&) {
+		solidity::eachInstruction(optimizedBytecode, [&](Instruction, u256 const&) {
 			optimizedSize++;
 		});
 		BOOST_CHECK_MESSAGE(
@@ -308,8 +308,8 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 	m_optimize = true;
 	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "c");
 	size_t numSHA3s = 0;
-	eth::eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
-		if (_instr == eth::Instruction::SHA3)
+	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
+		if (_instr == Instruction::SHA3)
 			numSHA3s++;
 	});
 	BOOST_CHECK_EQUAL(1, numSHA3s);
@@ -351,8 +351,8 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 	m_optimize = true;
 	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "test");
 	size_t numSHA3s = 0;
-	eth::eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
-		if (_instr == eth::Instruction::SHA3)
+	eachInstruction(optimizedBytecode, [&](Instruction _instr, u256 const&) {
+		if (_instr == Instruction::SHA3)
 			numSHA3s++;
 	});
 // TEST DISABLED UNTIL 93693404 IS IMPLEMENTED
@@ -1071,16 +1071,16 @@ BOOST_AUTO_TEST_CASE(block_deduplicator)
 		AssemblyItem(PushTag, 1),
 		AssemblyItem(PushTag, 3),
 		u256(6),
-		eth::Instruction::SWAP3,
-		eth::Instruction::JUMP,
+		Instruction::SWAP3,
+		Instruction::JUMP,
 		AssemblyItem(Tag, 1),
 		u256(6),
-		eth::Instruction::SWAP3,
-		eth::Instruction::JUMP,
+		Instruction::SWAP3,
+		Instruction::JUMP,
 		AssemblyItem(Tag, 2),
 		u256(6),
-		eth::Instruction::SWAP3,
-		eth::Instruction::JUMP,
+		Instruction::SWAP3,
+		Instruction::JUMP,
 		AssemblyItem(Tag, 3)
 	};
 	BlockDeduplicator dedup(input);
@@ -1097,23 +1097,23 @@ BOOST_AUTO_TEST_CASE(block_deduplicator_loops)
 {
 	AssemblyItems input{
 		u256(0),
-		eth::Instruction::SLOAD,
+		Instruction::SLOAD,
 		AssemblyItem(PushTag, 1),
 		AssemblyItem(PushTag, 2),
-		eth::Instruction::JUMPI,
-		eth::Instruction::JUMP,
+		Instruction::JUMPI,
+		Instruction::JUMP,
 		AssemblyItem(Tag, 1),
 		u256(5),
 		u256(6),
-		eth::Instruction::SSTORE,
+		Instruction::SSTORE,
 		AssemblyItem(PushTag, 1),
-		eth::Instruction::JUMP,
+		Instruction::JUMP,
 		AssemblyItem(Tag, 2),
 		u256(5),
 		u256(6),
-		eth::Instruction::SSTORE,
+		Instruction::SSTORE,
 		AssemblyItem(PushTag, 2),
-		eth::Instruction::JUMP,
+		Instruction::JUMP,
 	};
 	BlockDeduplicator dedup(input);
 	dedup.deduplicate();

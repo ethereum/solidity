@@ -94,7 +94,7 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItem const& _item)
 	{
 	case Operation:
 		_out << " " << instructionInfo(_item.instruction()).name;
-		if (_item.instruction() == eth::Instruction::JUMP || _item.instruction() == eth::Instruction::JUMPI)
+		if (_item.instruction() == solidity::Instruction::JUMP || _item.instruction() == solidity::Instruction::JUMPI)
 			_out << "\t" << _item.getJumpTypeAsString();
 		break;
 	case Push:

@@ -6,7 +6,7 @@ file(GLOB HEADERS "*.h")
 include_directories(BEFORE ..)
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Solidity::lll Dev::buildinfo)
+eth_use(${EXECUTABLE} REQUIRED Solidity::lll Dev::buildinfo Solidity::evmasm)
 
 install( TARGETS ${EXECUTABLE} DESTINATION bin )
 
