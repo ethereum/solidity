@@ -72,6 +72,7 @@ assembly::Statement Parser::parseStatement()
 		return assembly::Assignment{assembly::Identifier{name}};
 	}
 	case Token::Return: // opcode
+	case Token::Byte: // opcode
 	default:
 		break;
 	}
@@ -142,10 +143,13 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 	{
 	case Token::Identifier:
 	case Token::Return:
+	case Token::Byte:
 	{
 		string literal;
 		if (m_scanner->currentToken() == Token::Return)
 			literal = "return";
+		else if (m_scanner->currentToken() == Token::Byte)
+			literal = "byte";
 		else
 			literal = m_scanner->currentLiteral();
 		// first search the set of instructions.

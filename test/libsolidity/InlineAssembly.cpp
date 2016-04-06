@@ -88,6 +88,11 @@ BOOST_AUTO_TEST_CASE(simple_instructions)
 	BOOST_CHECK(successParse("{ dup1 dup1 mul dup1 sub }"));
 }
 
+BOOST_AUTO_TEST_CASE(keywords)
+{
+	BOOST_CHECK(successParse("{ byte return }"));
+}
+
 BOOST_AUTO_TEST_CASE(constants)
 {
 	BOOST_CHECK(successParse("{ 7 8 mul }"));
