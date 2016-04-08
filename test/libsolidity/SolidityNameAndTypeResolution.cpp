@@ -3278,16 +3278,16 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_type_long)
 	BOOST_CHECK(!success(text));
 }
 
-BOOST_AUTO_TEST_CASE(valid_fixed_types)
+BOOST_AUTO_TEST_CASE(valid_fixed_types_casting)
 {
 	char const* text = R"(
 		contract test {
 			function f(){
-				fixed8x8 a = 87654321.12345678;
-				fixed16x16 b = a**2;
-				fixed24x24 c = b**3;
-				fixed32x32 d = b**2;
-				fixed40x40 e = a**5;
+				ufixed8x8 a = ufixed8x8(8765.1234);
+				ufixed16x16 b = a**2;
+				ufixed24x24 c = b**3;
+				ufixed32x32 d = b**2;
+				ufixed40x40 e = a**5;
 			}
 		}
 	)";
@@ -3310,7 +3310,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_int_conversion)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(fixed_type_const_int_conversion)
+BOOST_AUTO_TEST_CASE(fixed_type_rational_conversion)
 {
 	char const* text = R"(
 		contract test {
@@ -3328,8 +3328,8 @@ BOOST_AUTO_TEST_CASE(fixed_type_literal)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 3.14;
-				ufixed d = 2.555555;
+				fixed a = 4.5;
+				ufixed d = 2.5;
 			}
 		}
 	)";
@@ -3341,17 +3341,30 @@ BOOST_AUTO_TEST_CASE(fixed_type_literal_expression)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 3.14 * 3;
-				ufixed b = 4 - 2.555555;
-				fixed c = 1.0 / 3.0;
-				ufixed d = 599 + .5367;
-				ufixed e = 35.245 % 12.9;
-				ufixed f = 1.2 % 2.00000;
+				ufixed8x248 a = 3.14 * 3;
+				ufixed8x248 b = 4 - 2.555555;
+				ufixed0x256 c = 1.0 / 3.0;
+				ufixed16x240 d = 599 + .5367;
+				ufixed8x248 e = 35.245 % 12.9;
+				ufixed8x248 f = 1.2 % 2;
 				fixed g = 2 ** -2;
 			}
 		}
 	)";
 	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed g = 2 ** -2.2;
+				fixed b = 3 ** 2.56;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_invalid_size_conversion)
@@ -3408,7 +3421,7 @@ BOOST_AUTO_TEST_CASE(mapping_with_fixed_literal)
 {
 	char const* text = R"(
 		contract test {
-			mapping(fixed => string) fixedString;
+			mapping(ufixed8x248 => string) fixedString;
 			function f() {
 				fixedString[3.14] = "Pi";
 			}
@@ -3434,7 +3447,7 @@ BOOST_AUTO_TEST_CASE(inline_array_fixed_rationals)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed8x16[4] memory a = [3.5, 4.1234, 2.5, 4.0];
+				ufixed8x248[4] memory a = [3.5, 4.1234, 2.5, 4.0];
 			}
 		}
 	)";
@@ -3445,8 +3458,8 @@ BOOST_AUTO_TEST_CASE(zero_and_eight_variants_fixed)
 {
 	char const* text = R"(
 		contract A {
-			fixed8x0 someInt = 4;
-			fixed0x8 half = 0.5;
+			ufixed8x0 someInt = 4;
+			ufixed0x8 half = 0.5;
 		}
 	)";
 	BOOST_CHECK(success(text));
@@ -3457,9 +3470,9 @@ BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed0x8 a = 0.12345678;
-				ufixed8x0 b = 12345678.0;
-				ufixed0x8 c = 0.00000009;
+				ufixed0x256 a = 0.12345678;
+				ufixed24x0 b = 12345678.0;
+				ufixed0x256 c = 0.00000009;
 			}
 		}
 	)";
@@ -3510,13 +3523,38 @@ BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				bytes32 c = 3.183;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 3.183;
+				bytes32 c = a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
 BOOST_AUTO_TEST_CASE(rational_unary_operation)
 {
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = +3.5134;
-				fixed b = -2.5145;
+				ufixed8x248 a = +3.5134;
+				fixed8x248 b = -3.5134;
 			}
 		}
 	)";

@@ -243,7 +243,6 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			m_context  << Instruction::MUL << Instruction::OR;
 			//else if (m_dataType->category() == Type::Category::Fixed)
 			//trying to figure out what this does...going to require some more assistance
-			m_context  << Instruction::MUL << eth::Instruction::OR;
 			// stack: value storage_ref updated_value
 			m_context << Instruction::SWAP1 << Instruction::SSTORE;
 			if (_move)

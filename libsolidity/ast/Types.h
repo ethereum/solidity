@@ -385,10 +385,11 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> integerType() const;
-	/// @returns the smallest fixed type that can hold the value or an empty pointer
+	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss. 
+	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
-	std::tuple<bigint, unsigned> findFractionNumberAndBits(bool getWholeNumber = false) const;
+	std::tuple<bigint, unsigned> findFractionNumberAndBits(unsigned const restrictedBits = 0) const;
 	bigint denominator() const { return m_value.denominator(); }
 	bigint wholeNumbers() const { return m_value.numerator() / m_value.denominator(); }
 

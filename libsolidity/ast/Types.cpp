@@ -362,7 +362,6 @@ MemberList::MemberMap IntegerType::nativeMembers(ContractDefinition const*) cons
 FixedPointType::FixedPointType(int _integerBits, int _fractionalBits, FixedPointType::Modifier _modifier):
 	m_integerBits(_integerBits), m_fractionalBits(_fractionalBits), m_modifier(_modifier)
 {
-	cout << "FIXED POINT CONSTRUCTOR: " << _integerBits << "x" << _fractionalBits << endl;
 	solAssert(
 		m_integerBits + m_fractionalBits > 0 && 
 		m_integerBits + m_fractionalBits <= 256 && 
@@ -573,14 +572,6 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	}
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
-		cout << "IMPLICIT CONVERSION" << endl;
-		if (fixedPointType() && fixedPointType()->isImplicitlyConvertibleTo(_convertTo))
-			return true;
-
-		return false;
-	}
-	else if (_convertTo.category() == Category::FixedPoint)
-	{
 		if (fixedPointType() && fixedPointType()->isImplicitlyConvertibleTo(_convertTo))
 			return true;
 		return false;
@@ -588,7 +579,10 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedBytes)
 	{
 		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-		return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+		if (m_value.denominator() == 1)
+			return fixedBytes.numBytes() * 8 >= integerType()->numBits();
+		else
+			return fixedBytes.numBytes() * 8 >= fixedPointType()->numBits();
 	}
 	return false;
 }
@@ -600,7 +594,6 @@ bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 		TypePointer intType = integerType();
 		return intType && intType->isExplicitlyConvertibleTo(_convertTo);
 	}
-	cout << "EXPLICIT CONVERSION" << endl;
 	TypePointer fixType = fixedPointType();
 	return fixType && fixType->isExplicitlyConvertibleTo(_convertTo);
 }
@@ -612,7 +605,7 @@ TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) cons
 	{
 	case Token::BitNot:
 		if(m_value.denominator() != 1)
-			BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Cannot perform bit operations on non integer fixed type."));
+			return TypePointer();
 		value = ~m_value.numerator();
 		break;
 	case Token::Add:
@@ -640,7 +633,6 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	}
 	else if (_other->category() == Category::FixedPoint)
 	{
-		cout << "BINARY OPERATOR RESULTS" << endl;
 		shared_ptr<FixedPointType const> fixType = fixedPointType();
 		if (!fixType)
 			return TypePointer();
@@ -662,7 +654,6 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		}
 		else
 		{
-			cout << "BINARY OPERATOR RESULTS PART 2" << endl;
 			shared_ptr<FixedPointType const> thisFixedPointType = fixedPointType();
 			shared_ptr<FixedPointType const> otherFixedPointType = other.fixedPointType();
 			if (!thisFixedPointType || !otherFixedPointType)
@@ -673,23 +664,23 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	else
 	{
 		rational value;
-		bool fixedPointType = (m_value.denominator() != 1 || other.m_value.denominator() != 1);
+		bool fractional = (m_value.denominator() != 1 || other.m_value.denominator() != 1);
 		switch (_operator)
 		{
 		//bit operations will only be enabled for integers and fixed types that resemble integers
 		case Token::BitOr:
-			if (fixedPointType)
-				BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Cannot perform bit operations on non integer fixed type."));
+			if (fractional)
+				return TypePointer();
 			value = m_value.numerator() | other.m_value.numerator();
 			break;
 		case Token::BitXor:
-			if (fixedPointType)
-				BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Cannot perform bit operations on non integer fixed type."));
+			if (fractional)
+				return TypePointer();
 			value = m_value.numerator() ^ other.m_value.numerator();
 			break;
 		case Token::BitAnd:
-			if (fixedPointType)
-				BOOST_THROW_EXCEPTION(Error(Error::Type::TypeError) << errinfo_comment("Cannot perform bit operations on non integer fixed type."));
+			if (fractional)
+				return TypePointer();
 			value = m_value.numerator() & other.m_value.numerator();
 			break;
 		case Token::Add:
@@ -700,7 +691,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			break;
 		case Token::Mul:
 			value = m_value * other.m_value;
-			break;			
+			break;	
 		case Token::Div:
 			if (other.m_value == 0)
 				return TypePointer();
@@ -710,19 +701,22 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		case Token::Mod:
 			if (other.m_value == 0)
 				return TypePointer();
-			else if (fixedPointType)
+			else if (fractional)
 			{
 				value = m_value;
-				rational divisor = m_value / other.m_value;
-				value -= divisor * m_value;
-				cout << "MODULO VALUE: " << value << endl;
+				if (value > other.m_value)
+				{
+					do
+					{
+						value -= other.m_value;
+					} while (value > other.m_value);
+				}
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
 			break;	
 		case Token::Exp:
 		{
-			cout << "Is this the source of the problem" << endl;
 			bigint newDenominator;
 			bigint newNumerator;
 			if (other.m_value.denominator() != 1) 
@@ -769,14 +763,17 @@ string RationalNumberType::toString(bool) const
 u256 RationalNumberType::literalValue(Literal const*) const
 {
 	u256 value;
+	unsigned uselessBits = 0;
+	bigint shiftedValue;
+	tie(shiftedValue, uselessBits) = findFractionNumberAndBits();
 	// we ignore the literal and hope that the type was correctly determined
-
-	solAssert(m_value >= -(bigint(1) << 255), "Number constant too small.");
+	solAssert(shiftedValue <= u256(-1), "Integer constant too large.");
+	solAssert(shiftedValue >= -(bigint(1) << 255), "Number constant too small.");
 
 	if (m_value >= 0)
-		value = u256(m_value.numerator());
+		value = u256(shiftedValue);
 	else
-		value = s2u(s256(m_value.numerator()));
+		value = s2u(s256(0 - shiftedValue));
 
 	return value;
 }
@@ -794,6 +791,7 @@ TypePointer RationalNumberType::mobileType() const
 	return fixType;
 }
 
+//TODO: combine integerType() and fixedPointType() into one function
 shared_ptr<IntegerType const> RationalNumberType::integerType() const
 {
 	bigint value = wholeNumbers();
@@ -813,52 +811,62 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 {
 	//do calculations up here
 	bigint integers = wholeNumbers();
-	//bigint _remainder = abs(m_value.numerator() % m_value.denominator());
+	bigint shiftedValue;
+	unsigned integerBits = 0;
+	unsigned fractionalBits = 0;
 	bool fractionalSignBit = integers == 0; //sign the fractional side or the integer side
 	bool negative = (m_value < 0);
-	//todo: change name
-	bigint fractionalBits = findFractionNumberAndBits();
-	cout << "Total int: " << fractionalBits.str() << endl;
+
 	if (negative && !fractionalSignBit) // convert to positive number of same bit requirements
 	{
 		integers = ((0 - integers) - 1) << 1;
-		fractionalBits = ((0 - fractionalBits) - 1) << 1;
+		integerBits = max(bytesRequired(integers), 1u) * 8;
+		tie(shiftedValue, fractionalBits) = findFractionNumberAndBits(integerBits);
 	}
 	else if (negative && fractionalSignBit)
-		fractionalBits = ((0 - fractionalBits) - 1) << 1;
-	
-	if (fractionalBits > u256(-1))
-		return shared_ptr<FixedPointType const>();
+		tie(shiftedValue, fractionalBits) = findFractionNumberAndBits();
 	else
 	{
-		cout << "m_value: " << m_value << endl;
-		cout << "Total int: " << fractionalBits.str() << endl;
-		unsigned fractionalBytesRequired = bytesRequired(fractionalBits) * 8;
-		unsigned integerBytesRequired = bytesRequired(integers) * 8;
-		cout << "Fractional Bytes Required: " << fractionalBytesRequired << endl;
-		cout << "Integer Bytes Required: " << integerBytesRequired << endl << endl;
+		if (!fractionalSignBit)
+			integerBits = max(bytesRequired(integers), 1u) * 8;
+		tie(shiftedValue, fractionalBits) = findFractionNumberAndBits(integerBits);
+		if (shiftedValue == 0 && fractionalSignBit)
+		{
+			integerBits = 8;
+			fractionalBits = 8;
+		}
+	}
+
+	if (shiftedValue > u256(-1) || integers > u256(-1))
+		return shared_ptr<FixedPointType const>();
+	else
 		return make_shared<FixedPointType>(
-			integerBytesRequired, fractionalBytesRequired,
+			integerBits, fractionalBits,
  			negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned
 		);
-	}
 }
 
 //todo: change name of function
-tuple<bigint, unsigned> RationalNumberType::findFractionNumberAndBits(bool getWholeNumber) const
+tuple<bigint, unsigned> RationalNumberType::findFractionNumberAndBits(unsigned const restrictedBits) const
 {
-	rational value;
-	if (getWholeNumber)
-		value = m_value;
-	else
-		value = m_value - wholeNumbers();
-	for (unsigned fractionalBits = 0; value < boost::multiprecision::pow(bigint(2), 256); fractionalBits += 8, value *= 10)
+	bool isNegative = m_value < 0;
+	rational value = abs(m_value);
+	unsigned fractionalBits = 0;
+	for (; fractionalBits <= 256 - restrictedBits; fractionalBits += 8, value *= 256)
 	{
 		if (value.denominator() == 1)
 			return make_tuple(value.numerator(), fractionalBits);
-	}	
-	cout << "too big :(" << endl;
-	return make_tuple(value.numerator()/value.denominator(), fractionalBits);
+		bigint predictionValue = 256 * (value.numerator() / value.denominator());
+		if (predictionValue > u256(-1))
+			return make_tuple(value.numerator()/value.denominator(), fractionalBits);
+		predictionValue = ((0 - predictionValue) - 1) << 1;
+		if (predictionValue > u256(-1) && isNegative)
+		// essentially asking if its negative and if so will giving it a sign bit value put it over the limit 
+		// if we also multiply it one more time by 256	
+			return make_tuple(((0 - value.numerator() / value.denominator()) - 1) << 1, fractionalBits);
+		
+	}
+	return make_tuple(value.numerator()/value.denominator(), 256 - restrictedBits);
 }
 
 

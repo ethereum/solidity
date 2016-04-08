@@ -6634,7 +6634,7 @@ BOOST_AUTO_TEST_CASE(delete_on_array_of_structs)
 
 }
 
-BOOST_AUTO_TEST_CASE(fixed_data_type)
+/*BOOST_AUTO_TEST_CASE(fixed_data_type)
 {
 	char const* sourceCode = R"(
 		contract C {
@@ -6654,7 +6654,7 @@ BOOST_AUTO_TEST_CASE(fixed_data_type_expression)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(internal_library_function)
 {
