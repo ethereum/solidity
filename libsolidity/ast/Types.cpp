@@ -572,6 +572,7 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	}
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
+		cout << "hit here?" << endl;
 		if (fixedPointType() && fixedPointType()->isImplicitlyConvertibleTo(_convertTo))
 			return true;
 		return false;
@@ -803,41 +804,48 @@ shared_ptr<IntegerType const> RationalNumberType::integerType() const
 
 shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 {
-	//do calculations up here
-	bigint integers = wholeNumbers();
-	bigint shiftedValue;
-	unsigned integerBits = 0;
-	unsigned fractionalBits = 0;
-	bool fractionalSignBit = integers == 0; //sign the fractional side or the integer side
 	bool negative = (m_value < 0);
-
-	if (negative && !fractionalSignBit) // convert to positive number of same bit requirements
-	{
-		integers = ((0 - integers) - 1) << 1;
-		integerBits = max(bytesRequired(integers), 1u) * 8;
-		tie(shiftedValue, fractionalBits) = findFractionNumberAndBits(integerBits);
-	}
-	else if (negative && fractionalSignBit)
-		tie(shiftedValue, fractionalBits) = findFractionNumberAndBits();
+	unsigned fractionalBits = 0;
+	unsigned integerBits = bytesRequired(wholeNumbers()) * 8;
+	rational value = m_value;
+	bigint l = bigint(1) << 256;
+	rational maxValue = rational(l);
+	if (!negative)
+		maxValue -= 1;
 	else
+		value = -value;
+	cout << "Max value: " << maxValue << endl;
+	while (value * 0x100 <= maxValue && value.denominator() != 1 && fractionalBits < 256 - integerBits)
 	{
-		if (!fractionalSignBit)
-			integerBits = max(bytesRequired(integers), 1u) * 8;
-		tie(shiftedValue, fractionalBits) = findFractionNumberAndBits(integerBits);
-		if (shiftedValue == 0 && fractionalSignBit)
-		{
-			integerBits = 8;
-			fractionalBits = 8;
-		}
+		value *= 0x100;
+		fractionalBits += 8;
 	}
 
-	if (shiftedValue > u256(-1) || integers > u256(-1))
+	if (value > maxValue)
+	{
+		cout << "value > max value " << endl;
 		return shared_ptr<FixedPointType const>();
-	else
-		return make_shared<FixedPointType>(
-			integerBits, fractionalBits,
- 			negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned
-		);
+	}
+	bigint v = value.denominator() / value.numerator();
+	if (negative)
+		v = -v;
+	// u256(v) is the actual value that will be put on the stack
+	// From here on, very similar to integerType()
+	//if (negative) // convert to positive number of same bit requirements
+	//	value = ((0 - value) - 1) << 1;
+	if (value > u256(-1))
+	{
+		cout << "Too large of a number" << endl;
+		return shared_ptr<FixedPointType const>();
+	}
+	
+	cout << "integer bits: " << integerBits << ", fractionalBits: " << fractionalBits << endl;
+	//solAssert(integerBits >= fractionalBits, "Invalid bit requirement calculation.");
+	//@todo special handling for integerBits == 0 && fractionalBits == 0?
+	return make_shared<FixedPointType>(
+		integerBits, fractionalBits,
+		negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned
+	);
 }
 
 //todo: change name of function
