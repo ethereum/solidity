@@ -32,6 +32,8 @@
 #include <libethereum/ChainParams.h>
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
+#include <libethcore/BasicAuthority.h>
+#include <libethcore/SealEngine.h>
 
 namespace dev
 {
@@ -45,6 +47,7 @@ class ExecutionFramework
 {
 public:
 	ExecutionFramework():
+		m_sealEngineInit(),
 		m_sealEngine(eth::ChainParams().createSealEngine()),
 		m_state(0)
 	{
@@ -236,6 +239,17 @@ public:
 	};
 
 private:
+	struct sealEngineInit
+	{
+		sealEngineInit()
+		{
+			dev::eth::BasicAuthority::init();
+			dev::eth::NoProof::init();
+		}
+	};
+
+	sealEngineInit m_sealEngineInit;
+
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
 	-> typename std::enable_if<std::is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
