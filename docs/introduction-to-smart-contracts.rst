@@ -122,7 +122,7 @@ get the idea - the compiler figures that out for you.
 .. index:: mapping
 
 The next line, `mapping (address => uint) public balances;` also
-creates a public state variable, but it of a more complex datatype.
+creates a public state variable, but it is a more complex datatype.
 The type maps addresses to unsigned integers.
 Mappings can be seen as hashtables which are
 virtually initialized such that every possible key exists and is mapped to a
