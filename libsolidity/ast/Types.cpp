@@ -703,14 +703,8 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 				return TypePointer();
 			else if (fractional)
 			{
-				value = m_value;
-				if (value > other.m_value)
-				{
-					do
-					{
-						value -= other.m_value;
-					} while (value > other.m_value);
-				}
+				rational tempValue = m_value / other.m_value;
+				value = m_value - (tempValue.numerator() / tempValue.denominator()) * other.m_value;
 			}
 			else
 				value = m_value.numerator() % other.m_value.numerator();
