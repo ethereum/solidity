@@ -23,7 +23,6 @@
 #include <string>
 #include <iostream>
 #include <boost/test/unit_test.hpp>
-#include <libdevcore/Log.h>
 #include <libevmasm/SourceLocation.h>
 #include <libevmasm/Assembly.h>
 #include <libsolidity/parsing/Scanner.h>

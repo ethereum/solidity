@@ -53,7 +53,6 @@
 #pragma once
 
 #include <libdevcore/Common.h>
-#include <libdevcore/Log.h>
 #include <libdevcore/CommonData.h>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/parsing/Token.h>

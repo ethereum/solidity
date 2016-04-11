@@ -22,7 +22,6 @@
 
 #include <ctype.h>
 #include <vector>
-#include <libdevcore/Log.h>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/parsing/Scanner.h>

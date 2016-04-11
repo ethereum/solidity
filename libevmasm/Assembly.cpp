@@ -21,7 +21,6 @@
 
 #include "Assembly.h"
 #include <fstream>
-#include <libdevcore/Log.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/BlockDeduplicator.h>
@@ -307,9 +306,6 @@ void Assembly::injectStart(AssemblyItem const& _i)
 	m_items.insert(m_items.begin(), _i);
 }
 
-struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
-#define copt dev::LogOutputStream<OptimiserChannel, true>()
-
 Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
 	if (!_enable)
@@ -318,10 +314,8 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
 	{
-		copt << toString(*this);
 		count = 0;
 
-		copt << "Performing optimisation...";
 		// This only modifies PushTags, we have to run again to actually remove code.
 		BlockDeduplicator dedup(m_items);
 		if (dedup.deduplicate())
@@ -360,7 +354,6 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 
 					if (shouldReplace)
 					{
-						copt << "Old size: " << (iter - orig) << ", new size: " << optimisedChunk.size();
 						count++;
 						optimisedItems += optimisedChunk;
 					}
@@ -383,8 +376,6 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 		*this,
 		m_items
 	);
-
-	copt << total << " optimisations done.";
 
 	for (auto& sub: m_subs)
 	  sub.optimise(true, false, _runs);
