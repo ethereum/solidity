@@ -199,7 +199,7 @@ activate themselves.
     contract SimpleAuction {
         // Parameters of the auction. Times are either
         // absolute unix timestamps (seconds since 1970-01-01)
-        // ore time periods in seconds.
+        // or time periods in seconds.
         address public beneficiary;
         uint public auctionStart;
         uint public biddingTime;
