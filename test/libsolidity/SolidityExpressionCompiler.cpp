@@ -22,7 +22,6 @@
 
 #include <string>
 
-#include <libdevcore/Log.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>
 #include <libsolidity/analysis/NameAndTypeResolver.h>

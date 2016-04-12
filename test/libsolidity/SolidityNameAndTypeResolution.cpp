@@ -22,7 +22,6 @@
 
 #include <string>
 
-#include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/parsing/Parser.h>

@@ -27,6 +27,7 @@
 #include <map>
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
+#include <libdevcore/CommonIO.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/parsing/Token.h>
