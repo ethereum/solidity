@@ -3454,11 +3454,10 @@ BOOST_AUTO_TEST_CASE(inline_array_fixed_rationals)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(zero_and_eight_variants_fixed)
+BOOST_AUTO_TEST_CASE(zero_and_eight_variant_fixed)
 {
 	char const* text = R"(
 		contract A {
-			ufixed8x0 someInt = 4;
 			ufixed0x8 half = 0.5;
 		}
 	)";
@@ -3471,7 +3470,7 @@ BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
 		contract test {
 			function f() {
 				ufixed0x256 a = 0.12345678;
-				ufixed24x0 b = 12345678.0;
+				ufixed24x8 b = 12345678.5;
 				ufixed0x256 c = 0.00000009;
 			}
 		}
@@ -3532,7 +3531,7 @@ BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
 			}
 		}
 	)";
-	BOOST_CHECK(success(text));
+	BOOST_CHECK(!success(text));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)

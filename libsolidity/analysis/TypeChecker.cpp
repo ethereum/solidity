@@ -774,9 +774,10 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			solAssert(!var.typeName(), "");
 			if (
 				valueComponentType->category() == Type::Category::RationalNumber &&
-				!dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->integerType()
+				!dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->integerType() &&
+				!dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->fixedPointType()
 			)
-				fatalTypeError(_statement.initialValue()->location(), "Invalid integer constant " + valueComponentType->toString() + ".");
+				fatalTypeError(_statement.initialValue()->location(), "Invalid rational " + valueComponentType->toString() + ".");
 			var.annotation().type = valueComponentType->mobileType();
 			var.accept(*this);
 		}
@@ -800,8 +801,11 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 void TypeChecker::endVisit(ExpressionStatement const& _statement)
 {
 	if (type(_statement.expression())->category() == Type::Category::RationalNumber)
-		if (!dynamic_pointer_cast<RationalNumberType const>(type(_statement.expression()))->integerType())
-			typeError(_statement.expression().location(), "Invalid integer constant.");
+		if (
+			!dynamic_pointer_cast<RationalNumberType const>(type(_statement.expression()))->integerType() && 
+			!dynamic_pointer_cast<RationalNumberType const>(type(_statement.expression()))->fixedPointType()
+		)
+			typeError(_statement.expression().location(), "Invalid rational number.");
 }
 
 bool TypeChecker::visit(Conditional const& _conditional)
@@ -1107,8 +1111,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			if (functionType->takesArbitraryParameters())
 			{
 				if (auto t = dynamic_cast<RationalNumberType const*>(argType.get()))
-					if (!t->integerType())
-						typeError(arguments[i]->location(), "Integer constant too large.");
+					if (!t->integerType() && !t->fixedPointType())
+						typeError(arguments[i]->location(), "Rational number too large.");
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				typeError(
@@ -1343,8 +1347,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			expectType(*index, IntegerType(256));
 			if (auto numberType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 			{
-				if (numberType->denominator() != 1)
-					typeError(_access.location(), "Invalid type for array access.");
+				solAssert(!numberType->denominator() != 1 ,"Invalid type for array access.");
 				if (!actualType.isDynamicallySized() && actualType.length() <= numberType->literalValue(nullptr))
 					typeError(_access.location(), "Out of bounds array access.");
 			}				
@@ -1371,7 +1374,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			resultType = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, typeType.actualType()));
 		else
 		{
-			index->accept(*this);
+			expectType(*index, IntegerType(256));
 			if (auto length = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				resultType = make_shared<TypeType>(make_shared<ArrayType>(
 					DataLocation::Memory,

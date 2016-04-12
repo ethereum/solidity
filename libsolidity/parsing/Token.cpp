@@ -158,7 +158,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 				int n = parseSize(positionX + 1, _literal.end());
 				if (
 					0 <= m && m <= 256 &&
-					0 <= n && n <= 256 &&
+					8 <= n && n <= 256 &&
 					m + n > 0 &&
 					m + n <= 256 &&
 					m % 8 == 0 &&

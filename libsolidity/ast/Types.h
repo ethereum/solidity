@@ -363,9 +363,8 @@ public:
 	virtual Category category() const override { return Category::RationalNumber; }
 
 	/// @returns true if the literal is a valid integer.
-	static bool isValidLiteral(Literal const& _literal);
-
-	explicit RationalNumberType(Literal const& _literal);
+	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
+	
 	explicit RationalNumberType(rational _value):
 		m_value(_value)
 	{}
@@ -389,9 +388,8 @@ public:
 	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
-	std::tuple<bigint, unsigned> findFractionNumberAndBits(unsigned const restrictedBits = 0) const;
 	bigint denominator() const { return m_value.denominator(); }
-	bigint wholeNumbers() const { return m_value.numerator() / m_value.denominator(); }
+	bigint integerPart() const { return m_value.numerator() / m_value.denominator(); }
 
 private:
 	rational m_value;
