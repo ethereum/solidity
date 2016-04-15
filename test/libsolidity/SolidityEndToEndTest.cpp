@@ -2000,6 +2000,26 @@ BOOST_AUTO_TEST_CASE(constructor_with_long_arguments)
 	BOOST_CHECK(callContractFunction("b()") == encodeDyn(b));
 }
 
+BOOST_AUTO_TEST_CASE(constructor_static_array_argument)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public a;
+			uint[3] public b;
+
+			function C(uint _a, uint[3] _b) {
+				a = _a;
+				b = _b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C", encodeArgs(u256(1), u256(2), u256(3), u256(4)));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(1)));
+	BOOST_CHECK(callContractFunction("b(uint256)", u256(0)) == encodeArgs(u256(2)));
+	BOOST_CHECK(callContractFunction("b(uint256)", u256(1)) == encodeArgs(u256(3)));
+	BOOST_CHECK(callContractFunction("b(uint256)", u256(2)) == encodeArgs(u256(4)));
+}
+
 BOOST_AUTO_TEST_CASE(functions_called_by_constructor)
 {
 	char const* sourceCode = R"(
