@@ -759,7 +759,7 @@ void ArrayUtils::clearStorageLoop(Type const& _type) const
 	StorageItem(m_context, _type).setToZero(SourceLocation(), false);
 	m_context << Instruction::POP;
 	// increment
-	m_context << u256(1) << Instruction::ADD;
+	m_context << _type.storageSize() << Instruction::ADD;
 	m_context.appendJumpTo(loopStart);
 	// cleanup
 	m_context << zeroLoopEnd;
