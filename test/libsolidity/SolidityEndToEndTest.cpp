@@ -6591,6 +6591,28 @@ BOOST_AUTO_TEST_CASE(index_access_with_type_conversion)
 	BOOST_CHECK(callContractFunction("f(uint256)", u256(0x101)).size() == 256 * 32);
 }
 
+BOOST_AUTO_TEST_CASE(delete_on_array_of_structs)
+{
+	// Test for a bug where we did not increment the counter properly while deleting a dynamic array.
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint x; uint[] y; }
+			S[] data;
+			function f() returns (bool) {
+				data.length = 2;
+				data[0].x = 2**200;
+				data[1].x = 2**200;
+				delete data;
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// This code interprets x as an array length and thus will go out of gas.
+	// neither of the two should throw due to out-of-bounds access
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
