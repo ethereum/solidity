@@ -47,10 +47,10 @@ class ExecutionFramework
 {
 public:
 	ExecutionFramework():
-		m_sealEngineInit(),
-		m_sealEngine(eth::ChainParams().createSealEngine()),
 		m_state(0)
 	{
+		eth::NoProof::init();
+		m_sealEngine.reset(eth::ChainParams().createSealEngine());
 		if (g_logVerbosity != -1)
 			g_logVerbosity = 0;
 		//m_state.resetCurrent();
@@ -239,17 +239,6 @@ public:
 	};
 
 private:
-	struct sealEngineInit
-	{
-		sealEngineInit()
-		{
-			dev::eth::BasicAuthority::init();
-			dev::eth::NoProof::init();
-		}
-	};
-
-	sealEngineInit m_sealEngineInit;
-
 	template <class CppFunction, class... Args>
 	auto callCppAndEncodeResult(CppFunction const& _cppFunction, Args const&... _arguments)
 	-> typename std::enable_if<std::is_void<decltype(_cppFunction(_arguments...))>::value, bytes>::type
