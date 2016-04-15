@@ -316,7 +316,7 @@ void Compiler::appendCalldataUnpacker(TypePointers const& _typeParameters, bool 
 				}
 				else
 				{
-					m_context << Instruction::DUP1;
+					m_context << Instruction::SWAP1 << Instruction::DUP2;
 					m_context << u256(arrayType.calldataEncodedSize(true)) << Instruction::ADD;
 				}
 			}
