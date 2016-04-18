@@ -44,13 +44,29 @@ public:
 	std::shared_ptr<Block> parse(std::shared_ptr<Scanner> const& _scanner);
 
 protected:
+	/// Creates an inline assembly node with the given source location.
+	template <class T> T createWithLocation(SourceLocation const& _loc = SourceLocation())
+	{
+		T r;
+		r.location = _loc;
+		if (r.location.isEmpty())
+		{
+			r.location.start = position();
+			r.location.end = endPosition();
+		}
+		if (!r.location.sourceName)
+			r.location.sourceName = sourceName();
+		return r;
+	}
+	SourceLocation location() const { return SourceLocation(position(), endPosition(), sourceName()); }
+
 	Block parseBlock();
 	Statement parseStatement();
 	/// Parses a functional expression that has to push exactly one stack element
 	Statement parseExpression();
 	Statement parseElementaryOperation(bool _onlySinglePusher = false);
 	VariableDeclaration parseVariableDeclaration();
-	FunctionalInstruction parseFunctionalInstruction(Statement const& _instruction);
+	FunctionalInstruction parseFunctionalInstruction(Statement&& _instruction);
 };
 
 }

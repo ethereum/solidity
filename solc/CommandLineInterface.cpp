@@ -861,7 +861,7 @@ void CommandLineInterface::outputAssembly()
 		cout << endl << "======= " << src.first << " =======" << endl;
 		eth::Assembly assembly = m_assemblyStacks[src.first].assemble();
 		cout << assembly.assemble().toHex() << endl;
-		cout << assembly.out();
+		assembly.stream(cout, "", m_sourceCodes);
 	}
 }
 

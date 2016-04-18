@@ -34,14 +34,18 @@ using namespace dev::solidity::assembly;
 
 bool InlineAssemblyStack::parse(const std::shared_ptr<Scanner>& _scanner)
 {
+	m_parserResult = make_shared<Block>();
 	Parser parser(m_errors);
-	m_asmBlock = parser.parse(_scanner);
-	return !!m_asmBlock;
+	auto result = parser.parse(_scanner);
+	if (!result)
+		return false;
+	*m_parserResult = std::move(*result);
+	return true;
 }
 
 eth::Assembly InlineAssemblyStack::assemble()
 {
-	CodeGenerator codeGen(*m_asmBlock, m_errors);
+	CodeGenerator codeGen(*m_parserResult, m_errors);
 	return codeGen.assemble();
 }
 

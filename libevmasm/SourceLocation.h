@@ -36,26 +36,13 @@ namespace dev
  */
 struct SourceLocation
 {
+	SourceLocation(): start(-1), end(-1) { }
 	SourceLocation(int _start, int _end, std::shared_ptr<std::string const> _sourceName):
 		start(_start), end(_end), sourceName(_sourceName) { }
-	SourceLocation(): start(-1), end(-1) { }
-
-	SourceLocation(SourceLocation const& _other):
-		start(_other.start),
-		end(_other.end),
-		sourceName(_other.sourceName)
-	{}
-
-	SourceLocation& operator=(SourceLocation const& _other)
-	{
-		if (&_other == this)
-			return *this;
-
-		start = _other.start;
-		end = _other.end;
-		sourceName = _other.sourceName;
-		return *this;
-	}
+	SourceLocation(SourceLocation&&) = default;
+	SourceLocation(SourceLocation const& _other) = default;
+	SourceLocation& operator=(SourceLocation const&) = default;
+	SourceLocation& operator=(SourceLocation&&) = default;
 
 	bool operator==(SourceLocation const& _other) const { return start == _other.start && end == _other.end;}
 	bool operator!=(SourceLocation const& _other) const { return !operator==(_other); }
