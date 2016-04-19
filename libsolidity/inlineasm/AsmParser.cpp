@@ -207,7 +207,7 @@ assembly::VariableDeclaration Parser::parseVariableDeclaration()
 	return varDecl;
 }
 
-FunctionalInstruction Parser::parseFunctionalInstruction(Statement&& _instruction)
+FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement&& _instruction)
 {
 	if (_instruction.type() != typeid(Instruction))
 		fatalParserError("Assembly instruction required in front of \"(\")");
