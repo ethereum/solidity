@@ -179,6 +179,7 @@ bool CompilerStack::parse()
 				{
 					contract->setDevDocumentation(InterfaceHandler::devDocumentation(*contract));
 					contract->setUserDocumentation(InterfaceHandler::userDocumentation(*contract));
+					contract->setFullDocumentation(InterfaceHandler::fullDocumentation(*contract));
 				}
 				else
 					noErrors = false;
@@ -327,6 +328,9 @@ string const& CompilerStack::metadata(string const& _contractName, Documentation
 		break;
 	case DocumentationType::ABISolidityInterface:
 		doc = &currentContract.solidityInterface;
+		break;
+	case DocumentationType::FullDocumentation:
+		doc = &currentContract.fullDocumentation;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));

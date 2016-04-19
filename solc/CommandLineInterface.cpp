@@ -71,6 +71,7 @@ static string const g_argCloneBinaryStr = "clone-bin";
 static string const g_argOpcodesStr = "opcodes";
 static string const g_argNatspecDevStr = "devdoc";
 static string const g_argNatspecUserStr = "userdoc";
+static string const g_argFullDocStr = "fulldoc";
 static string const g_argAddStandard = "add-std";
 static string const g_stdinFileName = "<stdin>";
 
@@ -85,7 +86,8 @@ static set<string> const g_combinedJsonArgs{
 	"asm",
 	"ast",
 	"userdoc",
-	"devdoc"
+	"devdoc",
+	"fulldoc"
 };
 
 static void version()
@@ -112,6 +114,7 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argNatspecUserStr,
 		g_argAstJson,
 		g_argNatspecDevStr,
+        g_argFullDocStr,
 		g_argAsmStr,
 		g_argAsmJsonStr,
 		g_argOpcodesStr,
@@ -236,6 +239,18 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 			cout << m_compiler->metadata(_contract, _type) << endl;
 		}
 
+	}
+}
+
+void CommandLineInterface::handleDocumentation(std::string const& _contract)
+{
+	if (m_args.count(g_argFullDocStr))
+	{
+		auto _type = DocumentationType::FullDocumentation;
+		if (m_args.count("output-dir"))
+			createFile(_contract + ".doc", m_compiler->metadata(_contract, _type));
+		else
+			cout << m_compiler->metadata(_contract, _type) << endl;
 	}
 }
 
@@ -455,6 +470,7 @@ Allowed options)",
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUserStr.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDevStr.c_str(), "Natspec developer documentation of all contracts.")
+		(g_argFullDocStr.c_str(), "Render to Markdown full documentation of all contracts.")
 		("formal", "Translated source suitable for formal analysis.");
 	desc.add(outputComponents);
 
@@ -904,6 +920,7 @@ void CommandLineInterface::outputCompilationResults()
 		handleMeta(DocumentationType::ABISolidityInterface, contract);
 		handleMeta(DocumentationType::NatspecDev, contract);
 		handleMeta(DocumentationType::NatspecUser, contract);
+		handleDocumentation(contract);
 	} // end of contracts iteration
 
 	handleFormal();

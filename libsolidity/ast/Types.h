@@ -844,6 +844,8 @@ public:
 	Location const& location() const { return m_location; }
 	/// @returns the external signature of this function type given the function name
 	std::string externalSignature() const;
+	/// @returns the full signature of this function: name, parameter types and names, etc.
+	std::string fullSignature() const;
 	/// @returns the external identifier of this function (the hash of the signature).
 	u256 externalIdentifier() const;
 	Declaration const& declaration() const
