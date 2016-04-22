@@ -35,7 +35,7 @@ shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scann
 	try
 	{
 		m_scanner = _scanner;
-		return make_shared<assembly::Block>(parseBlock());
+		return make_shared<Block>(parseBlock());
 	}
 	catch (FatalError const&)
 	{
@@ -47,10 +47,11 @@ shared_ptr<assembly::Block> Parser::parse(std::shared_ptr<Scanner> const& _scann
 
 assembly::Block Parser::parseBlock()
 {
+	assembly::Block block = createWithLocation<Block>();
 	expectToken(Token::LBrace);
-	Block block;
 	while (m_scanner->currentToken() != Token::RBrace)
 		block.statements.emplace_back(parseStatement());
+	block.location.end = endPosition();
 	m_scanner->next();
 	return block;
 }
@@ -65,11 +66,14 @@ assembly::Statement Parser::parseStatement()
 		return parseBlock();
 	case Token::Assign:
 	{
+		assembly::Assignment assignment = createWithLocation<assembly::Assignment>();
 		m_scanner->next();
 		expectToken(Token::Colon);
-		string name = m_scanner->currentLiteral();
+		assignment.variableName.location = location();
+		assignment.variableName.name = m_scanner->currentLiteral();
+		assignment.location.end = endPosition();
 		expectToken(Token::Identifier);
-		return assembly::Assignment{assembly::Identifier{name}};
+		return assignment;
 	}
 	case Token::Return: // opcode
 	case Token::Byte: // opcode
@@ -84,24 +88,30 @@ assembly::Statement Parser::parseStatement()
 	switch (m_scanner->currentToken())
 	{
 	case Token::LParen:
-		return parseFunctionalInstruction(statement);
+		return parseFunctionalInstruction(std::move(statement));
 	case Token::Colon:
 	{
 		if (statement.type() != typeid(assembly::Identifier))
 			fatalParserError("Label name / variable name must precede \":\".");
-		string const& name = boost::get<assembly::Identifier>(statement).name;
+		assembly::Identifier const& identifier = boost::get<assembly::Identifier>(statement);
 		m_scanner->next();
 		if (m_scanner->currentToken() == Token::Assign)
 		{
 			// functional assignment
+			FunctionalAssignment funAss = createWithLocation<FunctionalAssignment>(identifier.location);
 			m_scanner->next();
-			unique_ptr<Statement> value;
-			value.reset(new Statement(parseExpression()));
-			return FunctionalAssignment{{std::move(name)}, std::move(value)};
+			funAss.variableName = identifier;
+			funAss.value.reset(new Statement(parseExpression()));
+			funAss.location.end = locationOf(*funAss.value).end;
+			return funAss;
 		}
 		else
+		{
 			// label
-			return Label{name};
+			Label label = createWithLocation<Label>(identifier.location);
+			label.name = identifier.name;
+			return label;
+		}
 	}
 	default:
 		break;
@@ -113,7 +123,7 @@ assembly::Statement Parser::parseExpression()
 {
 	Statement operation = parseElementaryOperation(true);
 	if (m_scanner->currentToken() == Token::LParen)
-		return parseFunctionalInstruction(operation);
+		return parseFunctionalInstruction(std::move(operation));
 	else
 		return operation;
 }
@@ -137,8 +147,7 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 			s_instructions[name] = instruction.second;
 		}
 
-	//@TODO track location
-
+	Statement ret;
 	switch (m_scanner->currentToken())
 	{
 	case Token::Identifier:
@@ -162,48 +171,50 @@ assembly::Statement Parser::parseElementaryOperation(bool _onlySinglePusher)
 				if (info.ret != 1)
 					fatalParserError("Instruction " + info.name + " not allowed in this context.");
 			}
-			m_scanner->next();
-			return Instruction{instr};
+			ret = Instruction{location(), instr};
 		}
 		else
-			m_scanner->next();
-			return Identifier{literal};
+			ret = Identifier{location(), literal};
 		break;
 	}
 	case Token::StringLiteral:
 	case Token::Number:
 	{
-		Literal literal{
+		ret = Literal{
+			location(),
 			m_scanner->currentToken() == Token::Number,
 			m_scanner->currentLiteral()
 		};
-		m_scanner->next();
-		return literal;
-	}
-	default:
 		break;
 	}
-	fatalParserError("Expected elementary inline assembly operation.");
-	return {};
+	default:
+		fatalParserError("Expected elementary inline assembly operation.");
+	}
+	m_scanner->next();
+	return ret;
 }
 
 assembly::VariableDeclaration Parser::parseVariableDeclaration()
 {
+	VariableDeclaration varDecl = createWithLocation<VariableDeclaration>();
 	expectToken(Token::Let);
-	string name = m_scanner->currentLiteral();
+	varDecl.name = m_scanner->currentLiteral();
 	expectToken(Token::Identifier);
 	expectToken(Token::Colon);
 	expectToken(Token::Assign);
-	unique_ptr<Statement> value;
-	value.reset(new Statement(parseExpression()));
-	return VariableDeclaration{name, std::move(value)};
+	varDecl.value.reset(new Statement(parseExpression()));
+	varDecl.location.end = locationOf(*varDecl.value).end;
+	return varDecl;
 }
 
-FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement const& _instruction)
+FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement&& _instruction)
 {
 	if (_instruction.type() != typeid(Instruction))
 		fatalParserError("Assembly instruction required in front of \"(\")");
-	solidity::Instruction instr = boost::get<solidity::assembly::Instruction>(_instruction).instruction;
+	FunctionalInstruction ret;
+	ret.instruction = std::move(boost::get<Instruction>(_instruction));
+	ret.location = ret.instruction.location;
+	solidity::Instruction instr = ret.instruction.instruction;
 	InstructionInfo instrInfo = instructionInfo(instr);
 	if (solidity::Instruction::DUP1 <= instr && instr <= solidity::Instruction::DUP16)
 		fatalParserError("DUPi instructions not allowed for functional notation");
@@ -211,14 +222,29 @@ FunctionalInstruction Parser::parseFunctionalInstruction(assembly::Statement con
 		fatalParserError("SWAPi instructions not allowed for functional notation");
 
 	expectToken(Token::LParen);
-	vector<Statement> arguments;
 	unsigned args = unsigned(instrInfo.args);
 	for (unsigned i = 0; i < args; ++i)
 	{
-		arguments.push_back(parseExpression());
+		ret.arguments.emplace_back(parseExpression());
 		if (i != args - 1)
-			expectToken(Token::Comma);
+		{
+			if (m_scanner->currentToken() != Token::Comma)
+				fatalParserError(string(
+					"Expected comma (" +
+					instrInfo.name +
+					" expects " +
+					boost::lexical_cast<string>(args) +
+					" arguments)"
+				));
+			else
+				m_scanner->next();
+		}
 	}
+	ret.location.end = endPosition();
+	if (m_scanner->currentToken() == Token::Comma)
+		fatalParserError(
+			string("Expected ')' (" + instrInfo.name + " expects " + boost::lexical_cast<string>(args) + " arguments)")
+		);
 	expectToken(Token::RParen);
-	return FunctionalInstruction{{instr}, std::move(arguments)};
+	return ret;
 }

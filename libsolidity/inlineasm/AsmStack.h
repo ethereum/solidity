@@ -50,7 +50,7 @@ public:
 	ErrorList const& errors() const { return m_errors; }
 
 private:
-	std::shared_ptr<Block> m_asmBlock;
+	std::shared_ptr<Block> m_parserResult;
 	ErrorList m_errors;
 };
 

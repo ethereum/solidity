@@ -26,6 +26,7 @@
 #include <string>
 #include <ostream>
 #include <tuple>
+#include <libdevcore/Common.h> // defines noexcept macro for MSVC
 
 namespace dev
 {
@@ -36,24 +37,21 @@ namespace dev
  */
 struct SourceLocation
 {
+	SourceLocation(): start(-1), end(-1) { }
 	SourceLocation(int _start, int _end, std::shared_ptr<std::string const> _sourceName):
 		start(_start), end(_end), sourceName(_sourceName) { }
-	SourceLocation(): start(-1), end(-1) { }
-
-	SourceLocation(SourceLocation const& _other):
+	SourceLocation(SourceLocation&& _other) noexcept:
 		start(_other.start),
 		end(_other.end),
-		sourceName(_other.sourceName)
+		sourceName(std::move(_other.sourceName))
 	{}
-
-	SourceLocation& operator=(SourceLocation const& _other)
+	SourceLocation(SourceLocation const& _other) = default;
+	SourceLocation& operator=(SourceLocation const&) = default;
+	SourceLocation& operator=(SourceLocation&& _other) noexcept
 	{
-		if (&_other == this)
-			return *this;
-
 		start = _other.start;
 		end = _other.end;
-		sourceName = _other.sourceName;
+		sourceName = std::move(_other.sourceName);
 		return *this;
 	}
 
