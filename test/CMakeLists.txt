@@ -43,6 +43,9 @@ endforeach(file)
 file(GLOB HEADERS "*.h")
 set(EXECUTABLE soltest)
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+if (WIN32)
+	target_link_libraries(${EXECUTABLE} shlwapi)
+endif()
 
 eth_use(${EXECUTABLE} REQUIRED Solidity::solidity Eth::ethereum Eth::ethcore)
 
