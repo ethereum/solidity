@@ -197,7 +197,7 @@ MemberList const& Type::members(ContractDefinition const* _currentScope) const
 	{
 		MemberList::MemberMap members = nativeMembers(_currentScope);
 		if (_currentScope)
-			members +=  boundFunctions(*this, *_currentScope);
+			members += boundFunctions(*this, *_currentScope);
 		m_members[_currentScope] = unique_ptr<MemberList>(new MemberList(move(members)));
 	}
 	return *m_members[_currentScope];
@@ -220,19 +220,14 @@ MemberList::MemberMap Type::boundFunctions(Type const& _type, ContractDefinition
 			auto const& library = dynamic_cast<ContractDefinition const&>(
 				*ufd->libraryName().annotation().referencedDeclaration
 			);
-			for (auto const& it: library.interfaceFunctions())
+			for (FunctionDefinition const* function: library.definedFunctions())
 			{
-				FunctionType const& funType = *it.second;
-				solAssert(funType.hasDeclaration(), "Tried to bind function without declaration.");
-				if (seenFunctions.count(&funType.declaration()))
+				if (!function->isVisibleInDerivedContracts() || seenFunctions.count(function))
 					continue;
-				seenFunctions.insert(&funType.declaration());
+				seenFunctions.insert(function);
+				FunctionType funType(*function, false);
 				if (auto fun = funType.asMemberFunction(true, true))
-					members.push_back(MemberList::Member(
-						funType.declaration().name(),
-						fun,
-						&funType.declaration()
-					));
+					members.push_back(MemberList::Member(function->name(), fun, function));
 			}
 		}
 	return members;
@@ -1052,7 +1047,7 @@ MemberList::MemberMap ContractType::nativeMembers(ContractDefinition const*) con
 					));
 			}
 	}
-	else
+	else if (!m_contract.isLibrary())
 	{
 		for (auto const& it: m_contract.interfaceFunctions())
 			members.push_back(MemberList::Member(
@@ -1772,21 +1767,40 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 			parameterTypes.push_back(t);
 	}
 
-	// Removes dynamic types.
+	Location location = m_location;
+	if (_inLibrary)
+	{
+		solAssert(!!m_declaration, "Declaration has to be available.");
+		if (!m_declaration->isPublic())
+			location = Location::Internal; // will be inlined
+		else
+			location = Location::DelegateCall;
+	}
+
 	TypePointers returnParameterTypes;
 	vector<string> returnParameterNames;
-	for (size_t i = 0; i < m_returnParameterTypes.size(); ++i)
-		if (!m_returnParameterTypes[i]->isDynamicallySized())
-		{
-			returnParameterTypes.push_back(m_returnParameterTypes[i]);
-			returnParameterNames.push_back(m_returnParameterNames[i]);
-		}
+	if (location == Location::Internal)
+	{
+		returnParameterNames = m_returnParameterNames;
+		returnParameterTypes = m_returnParameterTypes;
+	}
+	else
+	{
+		// Removes dynamic types.
+		for (size_t i = 0; i < m_returnParameterTypes.size(); ++i)
+			if (!m_returnParameterTypes[i]->isDynamicallySized())
+			{
+				returnParameterTypes.push_back(m_returnParameterTypes[i]);
+				returnParameterNames.push_back(m_returnParameterNames[i]);
+			}
+	}
+
 	return make_shared<FunctionType>(
 		parameterTypes,
 		returnParameterTypes,
 		m_parameterNames,
 		returnParameterNames,
-		_inLibrary ? Location::DelegateCall : m_location,
+		location,
 		m_arbitraryParameters,
 		m_declaration,
 		m_gasSet,
@@ -1882,12 +1896,13 @@ MemberList::MemberMap TypeType::nativeMembers(ContractDefinition const* _current
 			isBase = (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end());
 		}
 		if (contract.isLibrary())
-			for (auto const& it: contract.interfaceFunctions())
-				members.push_back(MemberList::Member(
-					it.second->declaration().name(),
-					it.second->asMemberFunction(true),
-					&it.second->declaration()
-				));
+			for (FunctionDefinition const* function: contract.definedFunctions())
+				if (function->isVisibleInDerivedContracts())
+					members.push_back(MemberList::Member(
+						function->name(),
+						FunctionType(*function).asMemberFunction(true),
+						function
+					));
 		if (isBase)
 		{
 			// We are accessing the type of a base contract, so add all public and protected

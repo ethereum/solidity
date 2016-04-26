@@ -78,7 +78,7 @@ private:
 	virtual bool visit(BinaryOperation const& _binaryOperation) override;
 	virtual bool visit(FunctionCall const& _functionCall) override;
 	virtual bool visit(NewExpression const& _newExpression) override;
-	virtual void endVisit(MemberAccess const& _memberAccess) override;
+	virtual bool visit(MemberAccess const& _memberAccess) override;
 	virtual bool visit(IndexAccess const& _indexAccess) override;
 	virtual void endVisit(Identifier const& _identifier) override;
 	virtual void endVisit(Literal const& _literal) override;
