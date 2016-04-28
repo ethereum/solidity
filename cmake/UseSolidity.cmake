@@ -6,7 +6,11 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	set(CMAKE_LIBRARY_PATH ${SOL_BUILD_DIR};${CMAKE_LIBRARY_PATH})
 
 	find_package(Solidity)
-	eth_show_dependency(SOLIDITY solidity)
+
+	# Hide confusing blank dependency information when using FindSolidity on itself.
+	if (NOT(${MODULE_MAIN} STREQUAL Solidity))
+		eth_show_dependency(SOLIDITY solidity)
+	endif()
 
 	target_include_directories(${TARGET} PUBLIC ${Solidity_INCLUDE_DIRS})
 
