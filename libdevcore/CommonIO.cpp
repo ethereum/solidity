@@ -34,36 +34,6 @@
 using namespace std;
 using namespace dev;
 
-string dev::memDump(bytes const& _bytes, unsigned _width, bool _html)
-{
-	stringstream ret;
-	if (_html)
-		ret << "<pre style=\"font-family: Monospace,Lucida Console,Courier,Courier New,sans-serif; font-size: small\">";
-	for (unsigned i = 0; i < _bytes.size(); i += _width)
-	{
-		ret << hex << setw(4) << setfill('0') << i << " ";
-		for (unsigned j = i; j < i + _width; ++j)
-			if (j < _bytes.size())
-				if (_bytes[j] >= 32 && _bytes[j] < 127)
-					if ((char)_bytes[j] == '<' && _html)
-						ret << "&lt;";
-					else if ((char)_bytes[j] == '&' && _html)
-						ret << "&amp;";
-					else
-						ret << (char)_bytes[j];
-				else
-					ret << '?';
-			else
-				ret << ' ';
-		ret << " ";
-		for (unsigned j = i; j < i + _width && j < _bytes.size(); ++j)
-			ret << setfill('0') << setw(2) << hex << (unsigned)_bytes[j] << " ";
-		ret << "\n";
-	}
-	if (_html)
-		ret << "</pre>";
-	return ret.str();
-}
 
 template <typename _T>
 inline _T contentsGeneric(std::string const& _file)
@@ -83,19 +53,6 @@ inline _T contentsGeneric(std::string const& _file)
 
 	ret.resize((length + c_elementSize - 1) / c_elementSize);
 	is.read(const_cast<char*>(reinterpret_cast<char const*>(ret.data())), length);
-	return ret;
-}
-
-bytes dev::contents(string const& _file)
-{
-	return contentsGeneric<bytes>(_file);
-}
-
-bytesSec dev::contentsSec(string const& _file)
-{
-	bytes b = contentsGeneric<bytes>(_file);
-	bytesSec ret(b);
-	bytesRef(&b).cleanse();
 	return ret;
 }
 
@@ -130,53 +87,4 @@ void dev::writeFile(std::string const& _file, bytesConstRef _data, bool _writeDe
 			BOOST_THROW_EXCEPTION(FileError() << errinfo_comment("Could not write to file: " + _file));
 		DEV_IGNORE_EXCEPTIONS(fs::permissions(_file, fs::owner_read|fs::owner_write));
 	}
-}
-
-std::string dev::getPassword(std::string const& _prompt)
-{
-#if defined(_WIN32)
-	cout << _prompt << flush;
-	// Get current Console input flags
-	HANDLE hStdin;
-	DWORD fdwSaveOldMode;
-	if ((hStdin = GetStdHandle(STD_INPUT_HANDLE)) == INVALID_HANDLE_VALUE)
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("GetStdHandle"));
-	if (!GetConsoleMode(hStdin, &fdwSaveOldMode))
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("GetConsoleMode"));
-	// Set console flags to no echo
-	if (!SetConsoleMode(hStdin, fdwSaveOldMode & (~ENABLE_ECHO_INPUT)))
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("SetConsoleMode"));
-	// Read the string
-	std::string ret;
-	std::getline(cin, ret);
-	// Restore old input mode
-	if (!SetConsoleMode(hStdin, fdwSaveOldMode))
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("SetConsoleMode"));
-	return ret;
-#else
-	struct termios oflags;
-	struct termios nflags;
-	char password[256];
-
-	// disable echo in the terminal
-	tcgetattr(fileno(stdin), &oflags);
-	nflags = oflags;
-	nflags.c_lflag &= ~ECHO;
-	nflags.c_lflag |= ECHONL;
-
-	if (tcsetattr(fileno(stdin), TCSANOW, &nflags) != 0)
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("tcsetattr"));
-
-	printf("%s", _prompt.c_str());
-	if (!fgets(password, sizeof(password), stdin))
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("fgets"));
-	password[strlen(password) - 1] = 0;
-
-	// restore terminal
-	if (tcsetattr(fileno(stdin), TCSANOW, &oflags) != 0)
-		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("tcsetattr"));
-
-
-	return password;
-#endif
 }
