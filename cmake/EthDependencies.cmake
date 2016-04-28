@@ -13,6 +13,15 @@ function(eth_show_dependency DEP NAME)
 	endif()
 endfunction()
 
+# TODO - This here is a BIG PROBLEM!  For our Windows builds we don't have a real packaging system.
+# Instead we fake it by hosting ZIPs on our own server, and then unzipping them into a local
+# directory inside webthree-helpers.   That is ugly enough in itself, but it completely breaks
+# down when the have the repos as standalone, because the Boost libraries are huge (about 500Mb),
+# so downloading multiple copies of them is singularly unappealing.   Maybe it is time for us to
+# look at Chocolately right now?
+#
+# See https://github.com/ethereum/webthree-umbrella/issues/345.
+
 if (DEFINED MSVC)
 	# by defining CMAKE_PREFIX_PATH variable, cmake will look for dependencies first in our own repository before looking in system paths like /usr/local/ ...
 	# this must be set to point to the same directory as $ETH_DEPENDENCY_INSTALL_DIR in /extdep directory
