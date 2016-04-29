@@ -1392,14 +1392,18 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 
 void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 {
-	solUnimplemented("Shift operators not yet implemented.");
+	// stack: rvalue lvalue
+
 	switch (_operator)
 	{
 	case Token::SHL:
+		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::MUL;
 		break;
 	case Token::SAR:
+		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
 		break;
 	case Token::SHR:
+		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::DIV;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown shift operator."));
