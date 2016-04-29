@@ -211,6 +211,7 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	Token::Value op = _assignment.assignmentOperator();
 	if (op != Token::Assign) // compound assignment
 	{
+		Token::Value target_op = Token::AssignmentToBinaryOp(op);
 		solUnimplementedAssert(_assignment.annotation().type->isValueType(), "Compound operators not implemented for non-value types.");
 		unsigned lvalueSize = m_currentLValue->sizeOnStack();
 		unsigned itemSize = _assignment.annotation().type->sizeOnStack();
@@ -221,7 +222,11 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 			// value lvalue_ref value lvalue_ref
 		}
 		m_currentLValue->retrieveValue(_assignment.location(), true);
-		appendOrdinaryBinaryOperatorCode(Token::AssignmentToBinaryOp(op), *_assignment.annotation().type);
+		if (Token::isShiftOp(target_op))
+			// shift only cares about the signedness of both sides
+			appendShiftOperatorCode(target_op, *_assignment.leftHandSide().annotation().type, *_assignment.rightHandSide().annotation().type);
+		else
+			appendOrdinaryBinaryOperatorCode(target_op, *_assignment.annotation().type);
 		if (lvalueSize > 0)
 		{
 			solAssert(itemSize + lvalueSize <= 16, "Stack too deep, try removing local variables.");
@@ -361,7 +366,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	else
 	{
 		bool cleanupNeeded = false;
-		if (Token::isCompareOp(c_op))
+		if (Token::isCompareOp(c_op) || Token::isShiftOp(c_op))
 			cleanupNeeded = true;
 		if (commonType.category() == Type::Category::Integer && (c_op == Token::Div || c_op == Token::Mod))
 			cleanupNeeded = true;
@@ -386,7 +391,10 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 			leftExpression.accept(*this);
 			utils().convertType(*leftExpression.annotation().type, commonType, cleanupNeeded);
 		}
-		if (Token::isCompareOp(c_op))
+		if (Token::isShiftOp(c_op))
+			// shift only cares about the signedness of both sides
+			appendShiftOperatorCode(c_op, *leftExpression.annotation().type, *rightExpression.annotation().type);
+		else if (Token::isCompareOp(c_op))
 			appendCompareOperatorCode(c_op, commonType);
 		else
 			appendOrdinaryBinaryOperatorCode(c_op, commonType);
@@ -1326,8 +1334,6 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 		appendArithmeticOperatorCode(_operator, _type);
 	else if (Token::isBitOp(_operator))
 		appendBitOperatorCode(_operator);
-	else if (Token::isShiftOp(_operator))
-		appendShiftOperatorCode(_operator);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown binary operator."));
 }
@@ -1390,17 +1396,44 @@ void ExpressionCompiler::appendBitOperatorCode(Token::Value _operator)
 	}
 }
 
-void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
+void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type const& _leftType, Type const& _rightType)
 {
-	solUnimplemented("Shift operators not yet implemented.");
+	// stack: rvalue lvalue
+
+	bool c_leftSigned = false;
+	if (auto leftType = dynamic_cast<IntegerType const*>(&_leftType))
+		c_leftSigned = leftType->isSigned();
+	else
+		solUnimplemented("Only IntegerType can be shifted.");
+
+	// The RValue can be a RationalNumberType too.
+	bool c_rightSigned = false;
+	if (auto rightType = dynamic_cast<RationalNumberType const*>(&_rightType))
+	{
+		solAssert(rightType->integerType(), "integerType() called for fractional number.");
+		c_rightSigned = rightType->integerType()->isSigned();
+	}
+	else if (auto rightType = dynamic_cast<IntegerType const*>(&_rightType))
+		c_rightSigned = rightType->isSigned();
+	else
+		solUnimplemented("Not implemented yet - FixedPointType.");
+
+	// shift with negative rvalue throws exception
+	if (c_rightSigned)
+	{
+		m_context << u256(0) << Instruction::DUP3 << Instruction::SLT;
+		m_context.appendConditionalJumpTo(m_context.errorTag());
+	}
+
 	switch (_operator)
 	{
 	case Token::SHL:
+		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::MUL;
 		break;
 	case Token::SAR:
+		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_leftSigned ? Instruction::SDIV : Instruction::DIV);
 		break;
 	case Token::SHR:
-		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown shift operator."));
 	}

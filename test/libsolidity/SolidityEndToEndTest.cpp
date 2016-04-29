@@ -8456,6 +8456,304 @@ BOOST_AUTO_TEST_CASE(shift_negative_constant_right)
 	BOOST_CHECK(callContractFunction("a()") == encodeArgs(u256(-0x42)));
 }
 
+BOOST_AUTO_TEST_CASE(shift_left)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a, uint b) returns (uint) {
+				return a << b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(0)) == encodeArgs(u256(0x4266)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(8)) == encodeArgs(u256(0x426600)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(16)) == encodeArgs(u256(0x42660000)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(17)) == encodeArgs(u256(0x84cc0000)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(240)) == fromHex("4266000000000000000000000000000000000000000000000000000000000000"));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(256)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_left_uint32)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint32 a, uint32 b) returns (uint) {
+				return a << b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(0)) == encodeArgs(u256(0x4266)));
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(8)) == encodeArgs(u256(0x426600)));
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(16)) == encodeArgs(u256(0x42660000)));
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(17)) == encodeArgs(u256(0x84cc0000)));
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(32)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_left_uint8)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint8 a, uint8 b) returns (uint) {
+				return a << b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint8,uint8)", u256(0x66), u256(0)) == encodeArgs(u256(0x66)));
+	BOOST_CHECK(callContractFunction("f(uint8,uint8)", u256(0x66), u256(8)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_left_assignment)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a, uint b) returns (uint) {
+				a <<= b;
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(0)) == encodeArgs(u256(0x4266)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(8)) == encodeArgs(u256(0x426600)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(16)) == encodeArgs(u256(0x42660000)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(17)) == encodeArgs(u256(0x84cc0000)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(240)) == fromHex("4266000000000000000000000000000000000000000000000000000000000000"));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(256)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_right)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a, uint b) returns (uint) {
+				return a >> b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(0)) == encodeArgs(u256(0x4266)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(8)) == encodeArgs(u256(0x42)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(16)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(17)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_garbled)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint8 a, uint8 b) returns (uint) {
+				assembly {
+					a := 0xffffffff
+				}
+				// Higher bits should be cleared before the shift
+				return a >> b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x0), u256(4)) == encodeArgs(u256(0xf)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_uint32)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint32 a, uint32 b) returns (uint) {
+				return a >> b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(0)) == encodeArgs(u256(0x4266)));
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(8)) == encodeArgs(u256(0x42)));
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(16)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("f(uint32,uint32)", u256(0x4266), u256(17)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_uint8)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint8 a, uint8 b) returns (uint) {
+				return a >> b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint8,uint8)", u256(0x66), u256(0)) == encodeArgs(u256(0x66)));
+	BOOST_CHECK(callContractFunction("f(uint8,uint8)", u256(0x66), u256(8)) == encodeArgs(u256(0x0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_assignment)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint a, uint b) returns (uint) {
+				a >>= b;
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(0)) == encodeArgs(u256(0x4266)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(8)) == encodeArgs(u256(0x42)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(16)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("f(uint256,uint256)", u256(0x4266), u256(17)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_negative_lvalue)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(int a, int b) returns (int) {
+				return a >> b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(-4266), u256(0)) == encodeArgs(u256(-4266)));
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(-4266), u256(8)) == encodeArgs(u256(-16)));
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(-4266), u256(16)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(-4266), u256(17)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_right_negative_lvalue_assignment)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(int a, int b) returns (int) {
+				a >>= b;
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(-4266), u256(0)) == encodeArgs(u256(-4266)));
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(-4266), u256(8)) == encodeArgs(u256(-16)));
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(-4266), u256(16)) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(-4266), u256(17)) == encodeArgs(u256(0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_negative_rvalue)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(int a, int b) returns (int) {
+				return a << b;
+			}
+			function g(int a, int b) returns (int) {
+				return a >> b;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(1), u256(-1)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("g(int256,int256)", u256(1), u256(-1)) == encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(shift_negative_rvalue_assignment)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(int a, int b) returns (int) {
+				a <<= b;
+				return a;
+			}
+			function g(int a, int b) returns (int) {
+				a >>= b;
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(int256,int256)", u256(1), u256(-1)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("g(int256,int256)", u256(1), u256(-1)) == encodeArgs());
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_left_assignment)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint a) {
+				a = 0x42;
+				a <<= 8;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x4200)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_constant_right_assignment)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint a) {
+				a = 0x4200;
+				a >>= 8;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x42)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_cleanup)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint16 x) {
+				x = 0xffff;
+				x += 32;
+				x <<= 8;
+				x >>= 16;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_cleanup_garbled)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint8 x) {
+				assembly {
+					x := 0xffff
+				}
+				x >>= 8;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(0x0)));
+}
+
+BOOST_AUTO_TEST_CASE(shift_overflow)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function leftU(uint8 x, uint8 y) returns (uint8) {
+				return x << y;
+			}
+			function leftS(int8 x, int8 y) returns (int8) {
+				return x << y;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 8) == encodeArgs(u256(0)));
+	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 1) == encodeArgs(u256(254)));
+	BOOST_CHECK(callContractFunction("leftU(uint8,uint8)", 255, 0) == encodeArgs(u256(255)));
+
+	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 7) == encodeArgs(u256(128)));
+	BOOST_CHECK(callContractFunction("leftS(int8,int8)", 1, 6) == encodeArgs(u256(64)));
+}
+
 BOOST_AUTO_TEST_CASE(inline_assembly_in_modifiers)
 {
 	char const* sourceCode = R"(
