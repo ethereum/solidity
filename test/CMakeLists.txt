@@ -42,7 +42,7 @@ endforeach(file)
 
 file(GLOB HEADERS "*.h")
 set(EXECUTABLE soltest)
-add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+eth_simple_add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED Solidity::solidity Eth::ethereum Eth::ethcore)
 

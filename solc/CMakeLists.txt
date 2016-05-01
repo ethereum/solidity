@@ -6,7 +6,7 @@ include_directories(BEFORE ..)
 set(EXECUTABLE solc)
 
 file(GLOB HEADERS "*.h")
-add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+eth_simple_add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED Solidity::solidity)
 target_link_libraries(${EXECUTABLE} ${Boost_PROGRAM_OPTIONS_LIBRARIES})
