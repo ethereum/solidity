@@ -50,7 +50,7 @@ void CompilerContext::addStateVariable(
 
 void CompilerContext::startFunction(Declaration const& _function)
 {
-	m_functionsWithCode.insert(&_function);
+	m_functionCompilationQueue.startFunction(_function);
 	*this << functionEntryLabel(_function);
 }
 
@@ -81,21 +81,12 @@ bool CompilerContext::isLocalVariable(Declaration const* _declaration) const
 
 eth::AssemblyItem CompilerContext::functionEntryLabel(Declaration const& _declaration)
 {
-	auto res = m_functionEntryLabels.find(&_declaration);
-	if (res == m_functionEntryLabels.end())
-	{
-		eth::AssemblyItem tag(m_asm.newTag());
-		m_functionEntryLabels.insert(make_pair(&_declaration, tag));
-		return tag.tag();
-	}
-	else
-		return res->second.tag();
+	return m_functionCompilationQueue.entryLabel(_declaration, *this);
 }
 
 eth::AssemblyItem CompilerContext::functionEntryLabelIfExists(Declaration const& _declaration) const
 {
-	auto res = m_functionEntryLabels.find(&_declaration);
-	return res == m_functionEntryLabels.end() ? eth::AssemblyItem(eth::UndefinedItem) : res->second.tag();
+	return m_functionCompilationQueue.entryLabelIfExists(_declaration);
 }
 
 eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(FunctionDefinition const& _function)
@@ -120,13 +111,9 @@ FunctionDefinition const* CompilerContext::nextConstructor(ContractDefinition co
 	return nullptr;
 }
 
-set<Declaration const*> CompilerContext::functionsWithoutCode()
+Declaration const* CompilerContext::nextFunctionToCompile() const
 {
-	set<Declaration const*> functions;
-	for (auto const& it: m_functionEntryLabels)
-		if (m_functionsWithCode.count(it.first) == 0)
-			functions.insert(it.first);
-	return functions;
+	return m_functionCompilationQueue.nextFunctionToCompile();
 }
 
 ModifierDefinition const& CompilerContext::functionModifier(string const& _name) const
@@ -217,6 +204,49 @@ vector<ContractDefinition const*>::const_iterator CompilerContext::superContract
 void CompilerContext::updateSourceLocation()
 {
 	m_asm.setSourceLocation(m_visitedNodes.empty() ? SourceLocation() : m_visitedNodes.top()->location());
+}
+
+eth::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabel(
+	Declaration const& _declaration,
+	CompilerContext& _context
+)
+{
+	auto res = m_entryLabels.find(&_declaration);
+	if (res == m_entryLabels.end())
+	{
+		eth::AssemblyItem tag(_context.newTag());
+		m_entryLabels.insert(make_pair(&_declaration, tag));
+		m_functionsToCompile.push(&_declaration);
+		return tag.tag();
+	}
+	else
+		return res->second.tag();
+
+}
+
+eth::AssemblyItem CompilerContext::FunctionCompilationQueue::entryLabelIfExists(Declaration const& _declaration) const
+{
+	auto res = m_entryLabels.find(&_declaration);
+	return res == m_entryLabels.end() ? eth::AssemblyItem(eth::UndefinedItem) : res->second.tag();
+}
+
+Declaration const* CompilerContext::FunctionCompilationQueue::nextFunctionToCompile() const
+{
+	while (!m_functionsToCompile.empty())
+	{
+		if (m_alreadyCompiledFunctions.count(m_functionsToCompile.front()))
+			m_functionsToCompile.pop();
+		else
+			return m_functionsToCompile.front();
+	}
+	return nullptr;
+}
+
+void CompilerContext::FunctionCompilationQueue::startFunction(Declaration const& _function)
+{
+	if (!m_functionsToCompile.empty() && m_functionsToCompile.front() == &_function)
+		m_functionsToCompile.pop();
+	m_alreadyCompiledFunctions.insert(&_function);
 }
 
 }

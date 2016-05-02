@@ -107,7 +107,7 @@ private:
 	virtual bool visit(PlaceholderStatement const&) override;
 
 	/// Repeatedly visits all function which are referenced but which are not compiled yet.
-	void appendFunctionsWithoutCode();
+	void appendMissingFunctions();
 
 	/// Appends one layer of function modifier code of the current function, or the function
 	/// body itself if the last modifier was reached.
