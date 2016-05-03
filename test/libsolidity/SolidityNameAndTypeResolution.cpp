@@ -3257,6 +3257,20 @@ BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
 	BOOST_CHECK(!success(text));
 }
 
+BOOST_AUTO_TEST_CASE(library_instances_cannot_be_used)
+{
+	char const* text = R"(
+		library L { function l() {} }
+		contract test {
+			function f() {
+				L x;
+				x.l();
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
 BOOST_AUTO_TEST_CASE(invalid_fixed_type_long)
 {
 	char const* text = R"(
