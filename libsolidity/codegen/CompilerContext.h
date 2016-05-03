@@ -24,6 +24,7 @@
 
 #include <ostream>
 #include <stack>
+#include <queue>
 #include <utility>
 #include <libevmasm/Instruction.h>
 #include <libevmasm/Assembly.h>
@@ -72,8 +73,11 @@ public:
 	eth::AssemblyItem superFunctionEntryLabel(FunctionDefinition const& _function, ContractDefinition const& _base);
 	FunctionDefinition const* nextConstructor(ContractDefinition const& _contract) const;
 
-	/// @returns the set of functions for which we still need to generate code
-	std::set<Declaration const*> functionsWithoutCode();
+	/// @returns the next function in the queue of functions that are still to be compiled
+	/// (i.e. that were referenced during compilation but where we did not yet generate code for).
+	/// Returns nullptr if the queue is empty. Does not remove the function from the queue,
+	/// that will only be done by startFunction below.
+	Declaration const* nextFunctionToCompile() const;
 	/// Resets function specific members, inserts the function entry label and marks the function
 	/// as "having code".
 	void startFunction(Declaration const& _function);
@@ -168,6 +172,38 @@ private:
 	/// Updates source location set in the assembly.
 	void updateSourceLocation();
 
+	/**
+	 * Helper class that manages function labels and ensures that referenced functions are
+	 * compiled in a specific order.
+	 */
+	struct FunctionCompilationQueue
+	{
+		/// @returns the entry label of the given function and creates it if it does not exist yet.
+		/// @param _context compiler context used to create a new tag if needed
+		eth::AssemblyItem entryLabel(Declaration const& _declaration, CompilerContext& _context);
+		/// @returns the entry label of the given function. Might return an AssemblyItem of type
+		/// UndefinedItem if it does not exist yet.
+		eth::AssemblyItem entryLabelIfExists(Declaration const& _declaration) const;
+
+		/// @returns the next function in the queue of functions that are still to be compiled
+		/// (i.e. that were referenced during compilation but where we did not yet generate code for).
+		/// Returns nullptr if the queue is empty. Does not remove the function from the queue,
+		/// that will only be done by startFunction below.
+		Declaration const* nextFunctionToCompile() const;
+		/// Informs the queue that we are about to compile the given function, i.e. removes
+		/// the function from the queue of functions to compile.
+		void startFunction(const Declaration &_function);
+
+		/// Labels pointing to the entry points of functions.
+		std::map<Declaration const*, eth::AssemblyItem> m_entryLabels;
+		/// Set of functions for which we did not yet generate code.
+		std::set<Declaration const*> m_alreadyCompiledFunctions;
+		/// Queue of functions that still need to be compiled (important to be a queue to maintain
+		/// determinism even in the presence of a non-deterministic allocator).
+		/// Mutable because we will throw out some functions earlier than needed.
+		mutable std::queue<Declaration const*> m_functionsToCompile;
+	} m_functionCompilationQueue;
+
 	eth::Assembly m_asm;
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
@@ -177,10 +213,6 @@ private:
 	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).
 	std::map<Declaration const*, unsigned> m_localVariables;
-	/// Labels pointing to the entry points of functions.
-	std::map<Declaration const*, eth::AssemblyItem> m_functionEntryLabels;
-	/// Set of functions for which we did not yet generate code.
-	std::set<Declaration const*> m_functionsWithCode;
 	/// List of current inheritance hierarchy from derived to base.
 	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
 	/// Stack of current visited AST nodes, used for location attachment

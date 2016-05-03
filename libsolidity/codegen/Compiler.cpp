@@ -58,7 +58,7 @@ void Compiler::compileContract(
 		CompilerContext::LocationSetter locationSetterRunTime(m_context, _contract);
 		initializeContext(_contract, _contracts);
 		appendFunctionSelector(_contract);
-		appendFunctionsWithoutCode();
+		appendMissingFunctions();
 	}
 
 	// Swap the runtime context with the creation-time context
@@ -95,7 +95,7 @@ void Compiler::compileClone(
 	m_context << Instruction::DUP1 << runtimeSub << u256(0) << Instruction::CODECOPY;
 	m_context << u256(0) << Instruction::RETURN;
 
-	appendFunctionsWithoutCode();
+	appendMissingFunctions();
 
 	if (m_optimize)
 		m_context.optimise(m_optimizeRuns);
@@ -168,7 +168,7 @@ void Compiler::packIntoContractCreator(ContractDefinition const& _contract, Comp
 	m_context << u256(0) << Instruction::RETURN;
 
 	// note that we have to include the functions again because of absolute jump labels
-	appendFunctionsWithoutCode();
+	appendMissingFunctions();
 }
 
 void Compiler::appendBaseConstructor(FunctionDefinition const& _constructor)
@@ -778,17 +778,13 @@ bool Compiler::visit(PlaceholderStatement const& _placeholderStatement)
 	return true;
 }
 
-void Compiler::appendFunctionsWithoutCode()
+void Compiler::appendMissingFunctions()
 {
-	set<Declaration const*> functions = m_context.functionsWithoutCode();
-	while (!functions.empty())
+	while (Declaration const* function = m_context.nextFunctionToCompile())
 	{
-		for (Declaration const* function: functions)
-		{
-			m_context.setStackOffset(0);
-			function->accept(*this);
-		}
-		functions = m_context.functionsWithoutCode();
+		m_context.setStackOffset(0);
+		function->accept(*this);
+		solAssert(m_context.nextFunctionToCompile() != function, "Compiled the wrong function?");
 	}
 }
 
