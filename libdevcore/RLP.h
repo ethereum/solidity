@@ -391,52 +391,15 @@ public:
 
 	~RLPStream() {}
 
-	/// Append given datum to the byte stream.
-	RLPStream& append(unsigned _s) { return append(bigint(_s)); }
-	RLPStream& append(u160 _s) { return append(bigint(_s)); }
-	RLPStream& append(u256 _s) { return append(bigint(_s)); }
-	RLPStream& append(bigint _s);
-	RLPStream& append(bytesConstRef _s, bool _compact = false);
-	RLPStream& append(bytes const& _s) { return append(bytesConstRef(&_s)); }
-	RLPStream& append(std::string const& _s) { return append(bytesConstRef(_s)); }
-	RLPStream& append(char const* _s) { return append(std::string(_s)); }
-	template <unsigned N> RLPStream& append(FixedHash<N> _s, bool _compact = false, bool _allOrNothing = false) { return _allOrNothing && !_s ? append(bytesConstRef()) : append(_s.ref(), _compact); }
-
-	/// Appends an arbitrary RLP fragment - this *must* be a single item unless @a _itemCount is given.
-	RLPStream& append(RLP const& _rlp, size_t _itemCount = 1) { return appendRaw(_rlp.data(), _itemCount); }
-
-	/// Appends a sequence of data to the stream as a list.
-	template <class _T> RLPStream& append(std::vector<_T> const& _s) { return appendVector(_s); }
-	template <class _T> RLPStream& appendVector(std::vector<_T> const& _s) { appendList(_s.size()); for (auto const& i: _s) append(i); return *this; }
-	template <class _T, size_t S> RLPStream& append(std::array<_T, S> const& _s) { appendList(_s.size()); for (auto const& i: _s) append(i); return *this; }
-	template <class _T> RLPStream& append(std::set<_T> const& _s) { appendList(_s.size()); for (auto const& i: _s) append(i); return *this; }
-	template <class _T> RLPStream& append(std::unordered_set<_T> const& _s) { appendList(_s.size()); for (auto const& i: _s) append(i); return *this; }
-	template <class T, class U> RLPStream& append(std::pair<T, U> const& _s) { appendList(2); append(_s.first); append(_s.second); return *this; }
-
 	/// Appends a list.
 	RLPStream& appendList(size_t _items);
 	RLPStream& appendList(bytesConstRef _rlp);
 	RLPStream& appendList(bytes const& _rlp) { return appendList(&_rlp); }
-	RLPStream& appendList(RLPStream const& _s) { return appendList(&_s.out()); }
-
 	/// Appends raw (pre-serialised) RLP data. Use with caution.
 	RLPStream& appendRaw(bytesConstRef _rlp, size_t _itemCount = 1);
-	RLPStream& appendRaw(bytes const& _rlp, size_t _itemCount = 1) { return appendRaw(&_rlp, _itemCount); }
-
-	/// Shift operators for appending data items.
-	template <class T> RLPStream& operator<<(T _data) { return append(_data); }
-
-	/// Clear the output stream so far.
-	void clear() { m_out.clear(); m_listStack.clear(); }
 
 	/// Read the byte stream.
-	bytes const& out() const { if(!m_listStack.empty()) BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("listStack is not empty")); return m_out; }
-
-	/// Invalidate the object and steal the output byte stream.
-	bytes&& invalidate() { if(!m_listStack.empty()) BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("listStack is not empty")); return std::move(m_out); }
-
-	/// Swap the contents of the output stream out for some other byte array.
-	void swapOut(bytes& _dest) { if(!m_listStack.empty()) BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("listStack is not empty")); swap(m_out, _dest); }
+	bytes const& out() const { return m_out; }
 
 private:
 	void noteAppended(size_t _itemCount = 1);
@@ -460,28 +423,7 @@ private:
 	std::vector<std::pair<size_t, size_t>> m_listStack;
 };
 
-template <class _T> void rlpListAux(RLPStream& _out, _T _t) { _out << _t; }
-template <class _T, class ... _Ts> void rlpListAux(RLPStream& _out, _T _t, _Ts ... _ts) { rlpListAux(_out << _t, _ts...); }
-
-/// Export a single item in RLP format, returning a byte array.
-template <class _T> bytes rlp(_T _t) { return (RLPStream() << _t).out(); }
-
 /// Export a list of items in RLP format, returning a byte array.
 inline bytes rlpList() { return RLPStream(0).out(); }
-template <class ... _Ts> bytes rlpList(_Ts ... _ts)
-{
-	RLPStream out(sizeof ...(_Ts));
-	rlpListAux(out, _ts...);
-	return out.out();
-}
-
-/// The empty string in RLP format.
-extern bytes RLPNull;
-
-/// The empty list in RLP format.
-extern bytes RLPEmptyList;
-
-/// Human readable version of RLP.
-std::ostream& operator<<(std::ostream& _out, dev::RLP const& _d);
 
 }
