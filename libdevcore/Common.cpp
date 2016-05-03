@@ -20,6 +20,7 @@
  */
 
 #include "Common.h"
+#include "Terminal.h"
 #include "Exceptions.h"
 #include "Log.h"
 #include "solidity/BuildInfo.h"
