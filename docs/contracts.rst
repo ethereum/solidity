@@ -341,7 +341,7 @@ possible.
 
     // This contract rejects any Ether sent to it. It is good
     // practise to include such a function for every contract
-    // in order not to loose Ether.
+    // in order not to lose Ether.
     contract Rejector {
         function() { throw; }
     }
