@@ -697,6 +697,18 @@ accessed. As a library is an isolated piece of source code, it can only access
 state variables of the calling contract if they are explicitly supplied (it
 would have to way to name them, otherwise).
 
+Libraries can be seen as implicit base contracts of the contracts that use them.
+They will not be explicitly visible in the inheritance hierarchy, but calls
+to library functions look just like calls to functions of explicit base
+contracts (`L.f()` if `L` is the name of the library). Furthermore,
+`internal` functions of libraries are visible in all contracts, just as
+if the library were a base contract. Of course, calls to internal functions
+use the internal calling convention, which means that all internal types
+can be passed and memory types will be passed by reference and not copied.
+In order to realise this in the EVM, code of internal library functions
+(and all functions called from therein) will be pulled into the calling
+contract and a regular `JUMP` call will be used instead of a `DELEGATECALL`.
+
 .. index:: using for, set
 
 The following example illustrates how to use libraries (but
@@ -762,6 +774,60 @@ actual external function call is performed.
 `msg.sender`, `msg.value` and `this` will retain their values
 in this call, though (prior to Homestead, `msg.sender` and
 `msg.value` changed, though).
+
+The following example shows how to use memory types and
+internal functions in libraries in order to implement
+custom types without the overhead of external function calls:
+
+::
+
+	library bigint {
+		struct bigint {
+		    uint[] limbs;
+		}
+		function fromUint(uint x) internal returns (bigint r) {
+		    r.limbs = new uint[](1);
+		    r.limbs[0] = x;
+		}
+		function add(bigint _a, bigint _b) internal returns (bigint r) {
+		    r.limbs = new uint[](max(_a.limbs.length, _b.limbs.length));
+		    uint carry = 0;
+		    for (uint i = 0; i < r.limbs.length; ++i) {
+		        uint a = limb(_a, i);
+		        uint b = limb(_b, i);
+		        r.limbs[i] = a + b + carry;
+		        if (a + b < a || (a + b == uint(-1) && carry > 0))
+		            carry = 1;
+		        else
+		            carry = 0;
+		    }
+		    if (carry > 0) {
+		        // too bad, we have to add a limb
+		        uint[] memory newLimbs = new uint[](r.limbs.length + 1);
+		        for (i = 0; i < r.limbs.length; ++i)
+		            newLimbs[i] = r.limbs[i];
+		        newLimbs[i] = carry;
+		        r.limbs = newLimbs;
+		    }
+		}
+
+		function limb(bigint _a, uint _limb) internal returns (uint) {
+		    return _limb < _a.limbs.length ? _a.limbs[_limb] : 0;
+		}
+
+		function max(uint a, uint b) private returns (uint) {
+		    return a > b ? a : b;
+		}
+	}
+
+	contract C {
+		using bigint for bigint.bigint;
+		function f() {
+		    var x = bigint.fromUint(7);
+		    var y = bigint.fromUint(uint(-1));
+		    var z = x.add(y);
+		}
+	}
 
 As the compiler cannot know where the library will be
 deployed at, these addresses have to be filled into the
