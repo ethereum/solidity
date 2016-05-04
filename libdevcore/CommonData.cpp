@@ -31,7 +31,6 @@
 #pragma warning(pop)
 #endif
 #include "Exceptions.h"
-#include "Log.h"
 using namespace std;
 using namespace dev;
 
