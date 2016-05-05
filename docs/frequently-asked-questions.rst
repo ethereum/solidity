@@ -24,7 +24,7 @@ Solidity contracts can be compiled a few different ways (see below) and the
 resulting output can be cut/pasted into a geth console to deploy them to the
 Ethereum blockchain.
 
-There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and 
+There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and
 there should be a `test contract <https://github.com/ethereum/solidity/blob/develop/test/libsolidity/SolidityEndToEndTest.cpp>`_ for every single feature of Solidity.
 
 How do I compile contracts?
