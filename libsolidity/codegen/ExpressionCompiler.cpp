@@ -464,8 +464,8 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	{
 		FunctionType const& function = *functionType;
 		if (function.bound())
-			// Only delegatecall functions can be bound, this might be lifted later.
-			solAssert(function.location() == Location::DelegateCall, "");
+			// Only delegatecall and internal functions can be bound, this might be lifted later.
+			solAssert(function.location() == Location::DelegateCall || function.location() == Location::Internal, "");
 		switch (function.location())
 		{
 		case Location::Internal:
@@ -480,13 +480,21 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 				utils().convertType(*arguments[i]->annotation().type, *function.parameterTypes()[i]);
 			}
 			_functionCall.expression().accept(*this);
+			unsigned parameterSize = CompilerUtils::sizeOnStack(function.parameterTypes());
+			if (function.bound())
+			{
+				// stack: arg2, ..., argn, label, arg1
+				unsigned depth = parameterSize + 1;
+				utils().moveIntoStack(depth, function.selfType()->sizeOnStack());
+				parameterSize += function.selfType()->sizeOnStack();
+			}
 
 			m_context.appendJump(eth::AssemblyItem::JumpType::IntoFunction);
 			m_context << returnLabel;
 
 			unsigned returnParametersSize = CompilerUtils::sizeOnStack(function.returnParameterTypes());
 			// callee adds return parameters, but removes arguments and return label
-			m_context.adjustStackOffset(returnParametersSize - CompilerUtils::sizeOnStack(function.parameterTypes()) - 1);
+			m_context.adjustStackOffset(returnParametersSize - parameterSize - 1);
 			break;
 		}
 		case Location::External:
@@ -809,7 +817,7 @@ bool ExpressionCompiler::visit(NewExpression const&)
 	return false;
 }
 
-void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
+bool ExpressionCompiler::visit(MemberAccess const& _memberAccess)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _memberAccess);
 	// Check whether the member is a bound function.
@@ -817,19 +825,68 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
 		if (funType->bound())
 		{
+			_memberAccess.expression().accept(*this);
 			utils().convertType(
 				*_memberAccess.expression().annotation().type,
 				*funType->selfType(),
 				true
 			);
-			auto contract = dynamic_cast<ContractDefinition const*>(funType->declaration().scope());
-			solAssert(contract && contract->isLibrary(), "");
-			m_context.appendLibraryAddress(contract->name());
-			m_context << funType->externalIdentifier();
-			utils().moveIntoStack(funType->selfType()->sizeOnStack(), 2);
-			return;
+			if (funType->location() == FunctionType::Location::Internal)
+			{
+				m_context << m_context.functionEntryLabel(
+					dynamic_cast<FunctionDefinition const&>(funType->declaration())
+				).pushTag();
+				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 1);
+			}
+			else
+			{
+				solAssert(funType->location() == FunctionType::Location::DelegateCall, "");
+				auto contract = dynamic_cast<ContractDefinition const*>(funType->declaration().scope());
+				solAssert(contract && contract->isLibrary(), "");
+				m_context.appendLibraryAddress(contract->name());
+				m_context << funType->externalIdentifier();
+				utils().moveIntoStack(funType->selfType()->sizeOnStack(), 2);
+			}
+			return false;
 		}
 
+	// Special processing for TypeType because we do not want to visit the library itself
+	// for internal functions.
+	if (TypeType const* type = dynamic_cast<TypeType const*>(_memberAccess.expression().annotation().type.get()))
+	{
+		if (dynamic_cast<ContractType const*>(type->actualType().get()))
+		{
+			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
+			{
+				if (funType->location() != FunctionType::Location::Internal)
+				{
+					_memberAccess.expression().accept(*this);
+					m_context << funType->externalIdentifier();
+				}
+				else
+				{
+					// We do not visit the expression here on purpose, because in the case of an
+					// internal library function call, this would push the library address forcing
+					// us to link against it although we actually do not need it.
+					auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
+					solAssert(!!function, "Function not found in member access");
+					m_context << m_context.functionEntryLabel(*function).pushTag();
+				}
+			}
+			else
+				_memberAccess.expression().accept(*this);
+		}
+		else if (auto enumType = dynamic_cast<EnumType const*>(type->actualType().get()))
+		{
+			_memberAccess.expression().accept(*this);
+			m_context << enumType->memberValue(_memberAccess.memberName());
+		}
+		else
+			_memberAccess.expression().accept(*this);
+		return false;
+	}
+
+	_memberAccess.expression().accept(*this);
 	switch (_memberAccess.expression().annotation().type->category())
 	{
 	case Type::Category::Contract:
@@ -948,28 +1005,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		m_context << type.memberValue(_memberAccess.memberName());
 		break;
 	}
-	case Type::Category::TypeType:
-	{
-		TypeType const& type = dynamic_cast<TypeType const&>(*_memberAccess.expression().annotation().type);
-
-		if (dynamic_cast<ContractType const*>(type.actualType().get()))
-		{
-			if (auto funType = dynamic_cast<FunctionType const*>(_memberAccess.annotation().type.get()))
-			{
-				if (funType->location() != FunctionType::Location::Internal)
-					m_context << funType->externalIdentifier();
-				else
-				{
-					auto const* function = dynamic_cast<FunctionDefinition const*>(_memberAccess.annotation().referencedDeclaration);
-					solAssert(!!function, "Function not found in member access");
-					m_context << m_context.functionEntryLabel(*function).pushTag();
-				}
-			}
-		}
-		else if (auto enumType = dynamic_cast<EnumType const*>(type.actualType().get()))
-			m_context << enumType->memberValue(_memberAccess.memberName());
-		break;
-	}
 	case Type::Category::Array:
 	{
 		auto const& type = dynamic_cast<ArrayType const&>(*_memberAccess.expression().annotation().type);
@@ -1018,6 +1053,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Member access to unknown type."));
 	}
+	return false;
 }
 
 bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)

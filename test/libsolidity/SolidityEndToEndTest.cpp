@@ -6633,6 +6633,108 @@ BOOST_AUTO_TEST_CASE(delete_on_array_of_structs)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(internal_library_function)
+{
+	// tests that internal library functions can be called from outside
+	// and retain the same memory context (i.e. are pulled into the caller's code)
+	char const* sourceCode = R"(
+		library L {
+			function f(uint[] _data) internal {
+				_data[3] = 2;
+			}
+		}
+		contract C {
+			function f() returns (uint) {
+				uint[] memory x = new uint[](7);
+				x[3] = 8;
+				L.f(x);
+				return x[3];
+			}
+		}
+	)";
+	// This has to work without linking, because everything will be inlined.
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(internal_library_function_calling_private)
+{
+	// tests that internal library functions that are called from outside and that
+	// themselves call private functions are still able to (i.e. the private function
+	// also has to be pulled into the caller's code)
+	char const* sourceCode = R"(
+		library L {
+			function g(uint[] _data) private {
+				_data[3] = 2;
+			}
+			function f(uint[] _data) internal {
+				g(_data);
+			}
+		}
+		contract C {
+			function f() returns (uint) {
+				uint[] memory x = new uint[](7);
+				x[3] = 8;
+				L.f(x);
+				return x[3];
+			}
+		}
+	)";
+	// This has to work without linking, because everything will be inlined.
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(internal_library_function_bound)
+{
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint[] data; }
+			function f(S _s) internal {
+				_s.data[3] = 2;
+			}
+		}
+		contract C {
+			using L for L.S;
+			function f() returns (uint) {
+				L.S memory x;
+				x.data = new uint[](7);
+				x.data[3] = 8;
+				x.f();
+				return x.data[3];
+			}
+		}
+	)";
+	// This has to work without linking, because everything will be inlined.
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(internal_library_function_return_var_size)
+{
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint[] data; }
+			function f(S _s) internal returns (uint[]) {
+				_s.data[3] = 2;
+				return _s.data;
+			}
+		}
+		contract C {
+			using L for L.S;
+			function f() returns (uint) {
+				L.S memory x;
+				x.data = new uint[](7);
+				x.data[3] = 8;
+				return x.f()[3];
+			}
+		}
+	)";
+	// This has to work without linking, because everything will be inlined.
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

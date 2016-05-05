@@ -91,6 +91,12 @@ eth::AssemblyItem CompilerContext::functionEntryLabelIfExists(Declaration const&
 
 eth::AssemblyItem CompilerContext::virtualFunctionEntryLabel(FunctionDefinition const& _function)
 {
+	// Libraries do not allow inheritance and their functions can be inlined, so we should not
+	// search the inheritance hierarchy (which will be the wrong one in case the function
+	// is inlined).
+	if (auto scope = dynamic_cast<ContractDefinition const*>(_function.scope()))
+		if (scope->isLibrary())
+			return functionEntryLabel(_function);
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
 	return virtualFunctionEntryLabel(_function, m_inheritanceHierarchy.begin());
 }
