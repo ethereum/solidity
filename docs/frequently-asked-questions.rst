@@ -85,7 +85,7 @@ First, a word of warning: Killing contracts sounds like a good idea, because "cl
 is always good, but as seen above, it does not really clean up. Furthermore,
 if Ether is sent to removed contracts, the Ether will be forever lost.
 
-If you want to deactivate your contracts, rather **disable** them by changing some
+If you want to deactivate your contracts, it is preferable to **disable** them by changing some
 internal state which causes all functions to throw. This will make it impossible
 to use the contract and ether sent to the contract will be returned automatically.
 
