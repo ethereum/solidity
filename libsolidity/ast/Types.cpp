@@ -387,18 +387,8 @@ bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		else
 			return !convertTo.isSigned() || (convertTo.m_integerBits > m_integerBits);
 	}
-	else if (_convertTo.category() == Category::Integer)
-	{
-		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (convertTo.numBits() < m_integerBits)
-			return false;
-		else if (isSigned())
-			return convertTo.isSigned();
-		else
-			return !convertTo.isSigned() || convertTo.numBits() > m_integerBits;
-	}
-	else
-		return false;
+	
+	return false;
 }
 
 bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -459,6 +449,8 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 		return commonType;
 	if (Token::isBitOp(_operator) || Token::isBooleanOp(_operator))
 		return TypePointer();
+	if (Token::Exp == _operator)
+		return TypePointer();
 	return commonType;
 }
 
@@ -470,13 +462,12 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		rational numerator;
 		rational denominator(1);
 		
-		auto radixPoint = find(_literal.value().begin(), _literal.value().end(), '.');		
-
+		auto radixPoint = find(_literal.value().begin(), _literal.value().end(), '.');
 		if (radixPoint != _literal.value().end())
 		{
 			if (
 				!all_of(radixPoint + 1, _literal.value().end(), ::isdigit) || 
-				!all_of(_literal.value().begin(), radixPoint, ::isdigit)
+				!all_of(_literal.value().begin(), radixPoint, ::isdigit) 
 			)
 				throw;
 			//Only decimal notation allowed here, leading zeros would switch to octal.
@@ -485,8 +476,7 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 				_literal.value().end(), 
 				[](char const& a) { return a == '0'; }
 			);
-			auto fractionalBegin = leadingZeroes != _literal.value().end() ?
-				leadingZeroes : radixPoint + 1;
+			auto fractionalBegin = leadingZeroes;
 
 			denominator = bigint(string(fractionalBegin, _literal.value().end()));
 			denominator /= boost::multiprecision::pow(
@@ -498,43 +488,44 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 		}
 		else
 			x = bigint(_literal.value());
-		switch (_literal.subDenomination())
-		{
-			case Literal::SubDenomination::None:
-			case Literal::SubDenomination::Wei:
-			case Literal::SubDenomination::Second:
-				break;
-			case Literal::SubDenomination::Szabo:
-				x *= bigint("1000000000000");
-				break;
-			case Literal::SubDenomination::Finney:
-				x *= bigint("1000000000000000");
-				break;
-			case Literal::SubDenomination::Ether:
-				x *= bigint("1000000000000000000");
-				break;
-			case Literal::SubDenomination::Minute:
-				x *= bigint("60");
-				break;
-			case Literal::SubDenomination::Hour:
-				x *= bigint("3600");
-				break;
-			case Literal::SubDenomination::Day:
-				x *= bigint("86400");
-				break;
-			case Literal::SubDenomination::Week:
-				x *= bigint("604800");
-				break;
-			case Literal::SubDenomination::Year:
-				x *= bigint("31536000");
-				break;
-		}
-
 	}
 	catch (...)
 	{
 		return make_tuple(false, rational(0));
 	}
+	switch (_literal.subDenomination())
+	{
+		case Literal::SubDenomination::None:
+		case Literal::SubDenomination::Wei:
+		case Literal::SubDenomination::Second:
+			break;
+		case Literal::SubDenomination::Szabo:
+			x *= bigint("1000000000000");
+			break;
+		case Literal::SubDenomination::Finney:
+			x *= bigint("1000000000000000");
+			break;
+		case Literal::SubDenomination::Ether:
+			x *= bigint("1000000000000000000");
+			break;
+		case Literal::SubDenomination::Minute:
+			x *= bigint("60");
+			break;
+		case Literal::SubDenomination::Hour:
+			x *= bigint("3600");
+			break;
+		case Literal::SubDenomination::Day:
+			x *= bigint("86400");
+			break;
+		case Literal::SubDenomination::Week:
+			x *= bigint("604800");
+			break;
+		case Literal::SubDenomination::Year:
+			x *= bigint("31536000");
+			break;
+	}
+
+
 	return make_tuple(true, x);
 }
 
@@ -559,8 +550,14 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	}
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
-		if (fixedPointType() && fixedPointType()->isImplicitlyConvertibleTo(_convertTo))
-			return true;
+		//call fixed point type...call fractional bits...shift our number by the number of fractional bits...
+		//...see if it's a whole number. Make helper function for whether or not finitely representable. 
+		if (auto fixed = fixedPointType())
+		{
+			rational value = m_value * boost::multiprecision::pow(bigint(2), fixed->fractionalBits());
+			if (value.denominator() == 1 && fixed->isImplicitlyConvertibleTo(_convertTo))
+				return true;
+		}
 		return false;
 	}
 	else if (_convertTo.category() == Category::FixedBytes)
@@ -744,7 +741,17 @@ string RationalNumberType::toString(bool) const
 u256 RationalNumberType::literalValue(Literal const*) const
 {
 	u256 value;
-	bigint shiftedValue = integerPart();
+	bigint shiftedValue; 
+
+	if (m_value.denominator() != 1)
+	{
+		rational temporaryValue = m_value;
+		auto fixed = fixedPointType();
+		temporaryValue *= boost::multiprecision::pow(bigint(2), fixed->fractionalBits());
+		shiftedValue = temporaryValue.numerator() / temporaryValue.denominator();
+	}
+	else
+		shiftedValue = integerPart();
 	// we ignore the literal and hope that the type was correctly determined
 	solAssert(shiftedValue <= u256(-1), "Integer constant too large.");
 	solAssert(shiftedValue >= -(bigint(1) << 255), "Number constant too small.");
@@ -772,6 +779,7 @@ TypePointer RationalNumberType::mobileType() const
 //TODO: combine integerType() and fixedPointType() into one function
 shared_ptr<IntegerType const> RationalNumberType::integerType() const
 {
+	solAssert(m_value.denominator() == 1, "Non integer type found.");
 	bigint value = integerPart();
 	bool negative = (value < 0);
 	if (negative) // convert to positive number of same bit requirements
@@ -788,46 +796,43 @@ shared_ptr<IntegerType const> RationalNumberType::integerType() const
 shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 {
 	bool negative = (m_value < 0);
+	bigint fillRationalBits = bigint(1) << 256; //use this because rationals don't have bit ops
 	unsigned fractionalBits = 0;
 	unsigned integerBits = 0;
-	rational value = m_value;
-	bigint transitionValue = bigint(1) << 256;
-	rational maxValue = rational(transitionValue);
+	rational value = abs(m_value); //convert to absolute value of same type for byte requirements
+	rational maxValue = negative ? 
+		rational(fillRationalBits) / 2:
+		rational(fillRationalBits) - 1;
 
-	if (!negative)
+	while (value * 0x100 <= maxValue && value.denominator() != 1 && fractionalBits < 256)
 	{
-		maxValue -= 1;
-		integerBits = bytesRequired(integerPart()) * 8;
-	}
-	else
-	{
-		value = abs(value);
-		if (integerPart() > 0)
-			transitionValue = ((0 - integerPart()) - 1) << 1;
-		else
-			transitionValue = 0;
-		integerBits = bytesRequired(transitionValue) * 8;
-	}
-
-	while (value * 0x100 <= maxValue && value.denominator() != 1 && fractionalBits < 256 - integerBits)
-	{	
 		value *= 0x100;
 		fractionalBits += 8;
 	}
-
+	
 	if (value > maxValue)
 		return shared_ptr<FixedPointType const>();
-	bigint v = value.denominator() / value.numerator();
-	if (negative)
-		v = -v;
 	// u256(v) is the actual value that will be put on the stack
 	// From here on, very similar to integerType()
-	//if (negative) // convert to positive number of same bit requirements
-	//	value = ((0 - value) - 1) << 1;
-	if (value > u256(-1))
+	bigint v = value.numerator() / value.denominator();
+	if (negative) //convert back to negative number and then shift into a positive number of equal size
+		v = (v - 1) << 1;
+		
+	if (v > u256(-1))
 		return shared_ptr<FixedPointType const>();
-	//solAssert(integerBits >= fractionalBits, "Invalid bit requirement calculation.");
-	//@todo special handling for integerBits == 0 && fractionalBits == 0?
+	if (0 == integerPart())
+		integerBits = 0;
+	else
+		integerBits = (bytesRequired(v) * 8) - fractionalBits;
+
+	if (integerBits > 256 || fractionalBits > 256 || fractionalBits + integerBits > 256)
+		return shared_ptr<FixedPointType const>();
+	if (integerBits + fractionalBits == 0)
+	{
+		integerBits = 0;
+		fractionalBits = 8;
+	}
+
 	return make_shared<FixedPointType>(
 		integerBits, fractionalBits,
 		negative ? FixedPointType::Modifier::Signed : FixedPointType::Modifier::Unsigned

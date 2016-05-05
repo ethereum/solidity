@@ -774,8 +774,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			solAssert(!var.typeName(), "");
 			if (
 				valueComponentType->category() == Type::Category::RationalNumber &&
-				!dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->integerType() &&
-				!dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->fixedPointType()
+				!dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->mobileType()
 			)
 				fatalTypeError(_statement.initialValue()->location(), "Invalid rational " + valueComponentType->toString() + ".");
 			var.annotation().type = valueComponentType->mobileType();
@@ -785,14 +784,32 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		{
 			var.accept(*this);
 			if (!valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type))
-				typeError(
-					_statement.location(),
-					"Type " +
-					valueComponentType->toString() +
-					" is not implicitly convertible to expected type " +
-					var.annotation().type->toString() +
-					"."
-				);
+			{
+				if (
+					valueComponentType->category() == Type::Category::RationalNumber &&
+					dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->denominator() != 1 &&
+					!!valueComponentType->mobileType()
+				)
+					typeError(
+						_statement.location(),
+						"Type " +
+						valueComponentType->toString() +
+						" is not implicitly convertible to expected type " +
+						var.annotation().type->toString() +
+						". Try converting to type " +
+						valueComponentType->mobileType()->toString() +
+						" or use an explicit conversion." 
+					);
+				else
+					typeError(
+						_statement.location(),
+						"Type " +
+						valueComponentType->toString() +
+						" is not implicitly convertible to expected type " +
+						var.annotation().type->toString() +
+						"."
+					);
+			}
 		}
 	}
 	return false;
@@ -1499,16 +1516,33 @@ Declaration const& TypeChecker::dereference(UserDefinedTypeName const& _typeName
 void TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)
 {
 	_expression.accept(*this);
-
 	if (!type(_expression)->isImplicitlyConvertibleTo(_expectedType))
-		typeError(
-			_expression.location(),
-			"Type " +
-			type(_expression)->toString() +
-			" is not implicitly convertible to expected type " +
-			_expectedType.toString() +
-			"."
-		);
+	{
+		if (
+			type(_expression)->category() == Type::Category::RationalNumber &&
+			dynamic_pointer_cast<RationalNumberType const>(type(_expression))->denominator() != 1 &&
+			!!type(_expression)->mobileType()
+		)
+			typeError(
+				_expression.location(),
+				"Type " +
+				type(_expression)->toString() +
+				" is not implicitly convertible to expected type " +
+				_expectedType.toString() +
+				". Try converting to type " +
+				type(_expression)->mobileType()->toString() +
+				" or using an explicit conversion." 
+			);
+		else
+			typeError(
+				_expression.location(),
+				"Type " +
+				type(_expression)->toString() +
+				" is not implicitly convertible to expected type " +
+				_expectedType.toString() +
+				"."
+			);
+	}		
 }
 
 void TypeChecker::requireLValue(Expression const& _expression)

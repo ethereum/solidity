@@ -3278,23 +3278,6 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_type_long)
 	BOOST_CHECK(!success(text));
 }
 
-BOOST_AUTO_TEST_CASE(valid_fixed_types_casting)
-{
-	char const* text = R"(
-		contract test {
-			function f(){
-				ufixed8x8 a = ufixed8x8(8765.1234);
-				ufixed16x16 b = a**2;
-				ufixed24x24 c = b**3;
-				ufixed32x32 d = b**2;
-				ufixed40x40 e = a**5;
-			}
-		}
-	)";
-
-	BOOST_CHECK(success(text));
-}
-
 BOOST_AUTO_TEST_CASE(fixed_type_int_conversion)
 {
 	char const* text = R"(
@@ -3310,7 +3293,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_int_conversion)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(fixed_type_rational_conversion)
+BOOST_AUTO_TEST_CASE(fixed_type_rational_int_conversion)
 {
 	char const* text = R"(
 		contract test {
@@ -3323,7 +3306,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_rational_conversion)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(fixed_type_literal)
+BOOST_AUTO_TEST_CASE(fixed_type_rational_fraction_conversion)
 {
 	char const* text = R"(
 		contract test {
@@ -3336,17 +3319,214 @@ BOOST_AUTO_TEST_CASE(fixed_type_literal)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(fixed_type_literal_expression)
+BOOST_AUTO_TEST_CASE(invalid_int_implicit_conversion_from_fixed)
 {
 	char const* text = R"(
 		contract test {
 			function f() {
-				ufixed8x248 a = 3.14 * 3;
-				ufixed8x248 b = 4 - 2.555555;
-				ufixed0x256 c = 1.0 / 3.0;
-				ufixed16x240 d = 599 + .5367;
-				ufixed8x248 e = 35.245 % 12.9;
-				ufixed8x248 f = 1.2 % 2;
+				fixed a = 4.5;
+				int b = a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_unary_operation)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed8x16 a = +3.25;
+				fixed8x16 b = -3.25;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)
+{
+	char const* text = R"(
+		contract A {
+			function f() {
+				ufixed0x8 a = 0.5;
+				ufixed0x56 b = 0.0000000000000006661338147750939242541790008544921875;
+				fixed0x8 c = -0.5;
+				fixed0x56 d = -0.0000000000000006661338147750939242541790008544921875;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed248x8 a = 123456781234567979695948382928485849359686494864095409282048094275023098123.5;
+				ufixed0x256 b = 0.920890746623327805482905058466021565416131529487595827354393978494366605267637829135688384325135165352082715782143655824815685807141335814463015972119819459298455224338812271036061391763384038070334798471324635050876128428143374549108557403087615966796875;
+				ufixed0x256 c = 0.0000000000015198847363997979984922685411315294875958273543939784943666052676464653042434787697605517039455161817147718251801220885263595179331845639229818863564267318422845592626219390573301877339317935702714669975697814319204326238832436501979827880859375;
+				fixed248x8 d = -123456781234567979695948382928485849359686494864095409282048094275023098123.5;
+				fixed0x256 e = -0.93322335481643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
+				fixed0x256 g = -0.00011788606643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_size)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed a = 11/4;
+				ufixed248x8 b = a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_lost_data)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed0x256 a = 1/3;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_valid_explicit_conversions)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed0x256 a = ufixed0x256(1/3);
+				ufixed0x248 b = ufixed0x248(1/3);
+				ufixed0x8 c = ufixed0x8(1/3);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_rational)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint[3.5] a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_fixed_type)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint[fixed(3.5)] a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				bytes32 c = 3.2;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 3.2;
+				bytes32 c = a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_with_fixed_literal)
+{
+	char const* text = R"(
+		contract test {
+			mapping(ufixed8x248 => string) fixedString;
+			function f() {
+				fixedString[0.5] = "Half";
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_points_inside_structs)
+{
+	char const* text = R"(
+		contract test {
+			struct myStruct {
+				ufixed a;
+				int b;
+			}
+			myStruct a = myStruct(3.125, 3);
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_fixed_types)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed[3] memory a = [fixed(3.5), fixed(-4.25), fixed(967.125)];
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_rationals)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed8x8[4] memory a = [3.5, 4.125, 2.5, 4.0];
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed8x8 a = 3.5 * 3;
+				ufixed8x8 b = 4 - 2.5;
+				ufixed8x8 c = 11 / 4;
+				ufixed16x240 d = 599 + 0.21875;
+				ufixed8x248 e = ufixed8x248(35.245 % 12.9);
+				ufixed8x248 f = ufixed8x248(1.2 % 2);
 				fixed g = 2 ** -2;
 			}
 		}
@@ -3360,147 +3540,9 @@ BOOST_AUTO_TEST_CASE(rational_as_exponent_value)
 		contract test {
 			function f() {
 				fixed g = 2 ** -2.2;
-				fixed b = 3 ** 2.56;
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(fixed_type_invalid_size_conversion)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed a = 1/3;
-				ufixed248x8 b = a + 2.5;
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(fixed_type_valid_size_conversion)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed a = 1/3;
-				ufixed248x8 b = ufixed248x8(a) + 2.5;
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(uint_array_declaration_with_fixed_type)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				uint[fixed(3.56)] a;
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(array_declaration_with_fixed_literal)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				uint[3.56] a;
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(mapping_with_fixed_literal)
-{
-	char const* text = R"(
-		contract test {
-			mapping(ufixed8x248 => string) fixedString;
-			function f() {
-				fixedString[3.14] = "Pi";
-			}
-		}
-	)";
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(inline_array_fixed_type)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed[3] memory a = [fixed(3.5), fixed(4.1234), fixed(967.32)];
-			}
-		}
-	)";
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(inline_array_fixed_rationals)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				ufixed8x248[4] memory a = [3.5, 4.1234, 2.5, 4.0];
-			}
-		}
-	)";
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(zero_and_eight_variant_fixed)
-{
-	char const* text = R"(
-		contract A {
-			ufixed0x8 half = 0.5;
-		}
-	)";
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				ufixed0x256 a = 0.12345678;
-				ufixed24x8 b = 12345678.5;
-				ufixed0x256 c = 0.00000009;
-			}
-		}
-	)";
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(var_capable_of_holding_constant_rationals)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				var a = 0.12345678;
-				var b = 12345678.0;
-				var c = 0.00000009;
-			}
-		}
-	)";
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(invalid_rational_exponent_usage)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed8x8 a = 3 ** 1.5;
-				fixed24x24 b = 2 ** (1/2);
+				ufixed b = 3 ** 2.5;
+				ufixed24x24 b = 2 ** (1/2);
 				fixed40x40 c = 42 ** (-1/4);
-				fixed48x48 d = 16 ** -0.33;
 			}
 		}
 	)";
@@ -3512,52 +3554,40 @@ BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents)
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 3 ** fixed(1.5);
-				fixed b = 2 ** fixed(1/2);
+				ufixed a = 3 ** ufixed(1.5);
+				ufixed b = 2 ** ufixed(1/2);
 				fixed c = 42 ** fixed(-1/4);
 				fixed d = 16 ** fixed(-0.33);
 			}
 		}
 	)";
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				bytes32 c = 3.183;
-			}
-		}
-	)";
 	BOOST_CHECK(!success(text));
 }
 
-BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
+BOOST_AUTO_TEST_CASE(var_capable_of_holding_constant_rationals)
 {
 	char const* text = R"(
 		contract test {
 			function f() {
-				fixed a = 3.183;
-				bytes32 c = a;
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
-}
-
-BOOST_AUTO_TEST_CASE(rational_unary_operation)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				ufixed8x248 a = +3.5134;
-				fixed8x248 b = -3.5134;
+				var a = 0.12345678;
+				var b = 12345678.352;
+				var c = 0.00000009;
 			}
 		}
 	)";
 	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(var_handle_divided_integers)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				var x = 1/3;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));	
 }
 
 BOOST_AUTO_TEST_CASE(rational_bitnot_unary_operation)
@@ -3606,6 +3636,19 @@ BOOST_AUTO_TEST_CASE(rational_bitand_binary_operation)
 		}
 	)";
 	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(zero_handling)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed8x8 a = 0;
+				ufixed8x8 b = 0;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
