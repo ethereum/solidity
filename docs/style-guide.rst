@@ -157,15 +157,23 @@ Avoid extraneous whitespace in the following  situations:
 
 * Immediately inside parenthesis, brackets or braces.
 
-Yes: `spam(ham[1], Coin({name: "ham"}));`
+Yes::
 
-No: `spam( ham[ 1 ], Coin( { name: "ham" } ) );`
+    spam(ham[1], Coin({name: "ham"}));
+
+No::
+
+    spam( ham[ 1 ], Coin( { name: "ham" } ) );`
 
 * Immediately before a comma, semicolon:
 
-Yes: `function spam(uint i, Coin coin);` 
+Yes::
 
-No: `function spam(uint i , Coin coin) ;`
+    function spam(uint i, Coin coin); 
+
+No::
+
+    function spam(uint i , Coin coin) ;
 
 * More than one space around an assignment or other operator to align with
   another:
