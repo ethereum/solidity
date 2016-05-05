@@ -80,7 +80,7 @@ Events are convenience interfaces with the EVM logging facilities.
 
 ::
 
-  contract SimpleAuction {
+  contract SimpleAuction {
     event HighestBidIncreased(address bidder, uint amount); // Event
     
     function bid() {
