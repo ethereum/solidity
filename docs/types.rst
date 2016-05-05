@@ -59,7 +59,7 @@ operators are :ref:`literals<integer_literals>` (or literal expressions).
 Address
 -------
 
-`address`: Holds a 20 byte value (size of an Ethereum address). Address types also have members(see [Functions on addresses](#functions-on-addresses)) and serve as base for all contracts.
+`address`: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as base for all contracts.
 
 Operators:  
 
