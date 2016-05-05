@@ -34,15 +34,6 @@
 using namespace std;
 using namespace dev;
 
-bool dev::isHex(string const& _s)
-{
-	unsigned i = (_s.size() >= 2 && _s.substr(0, 2) == "0x") ? 2 : 0;
-	for (; i < _s.size(); ++i)
-		if (fromHex(_s[i], WhenError::DontThrow) == -1)
-			return false;
-	return true;
-}
-
 std::string dev::escaped(std::string const& _s, bool _all)
 {
 	static const map<char, char> prettyEscapes{{'\r', 'r'}, {'\n', 'n'}, {'\t', 't'}, {'\v', 'v'}};
@@ -68,17 +59,6 @@ std::string dev::escaped(std::string const& _s, bool _all)
 		else
 			ret.push_back(i);
 	ret.push_back('"');
-	return ret;
-}
-
-std::string dev::randomWord()
-{
-	static std::mt19937_64 s_eng(0);
-	std::string ret(boost::random::uniform_int_distribution<int>(1, 5)(s_eng), ' ');
-	char const n[] = "qwertyuiop";//asdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
-	boost::random::uniform_int_distribution<int> d(0, sizeof(n) - 2);
-	for (char& c: ret)
-		c = n[d(s_eng)];
 	return ret;
 }
 
@@ -123,25 +103,5 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 		else
 			return bytes();
 	}
-	return ret;
-}
-
-bytes dev::asNibbles(bytesConstRef const& _s)
-{
-	std::vector<uint8_t> ret;
-	ret.reserve(_s.size() * 2);
-	for (auto i: _s)
-	{
-		ret.push_back(i / 16);
-		ret.push_back(i % 16);
-	}
-	return ret;
-}
-
-std::string dev::toString(string32 const& _s)
-{
-	std::string ret;
-	for (unsigned i = 0; i < 32 && _s[i]; ++i)
-		ret.push_back(_s[i]);
 	return ret;
 }
