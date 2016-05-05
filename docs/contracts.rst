@@ -67,6 +67,7 @@ This means that cyclic creation dependencies are impossible.
         TokenCreator creator;
         address owner;
         bytes32 name;
+
         // This is the constructor which registers the
         // creator and the assigned name.
         function OwnedToken(bytes32 _name) {
@@ -78,12 +79,14 @@ This means that cyclic creation dependencies are impossible.
             creator = TokenCreator(msg.sender);
             name = _name;
         }
+
         function changeName(bytes32 newName) {
             // Only the creator can alter the name --
             // the comparison is possible since contracts
             // are implicitly convertible to addresses.
             if (msg.sender == creator) name = newName;
         }
+
         function transfer(address newOwner) {
             // Only the current owner can transfer the token.
             if (msg.sender != owner) return;
@@ -107,11 +110,13 @@ This means that cyclic creation dependencies are impossible.
             // the ABI.
             return new OwnedToken(name);
         }
+
         function changeName(OwnedToken tokenAddress, bytes32 name) {
             // Again, the external type of "tokenAddress" is
             // simply "address".
             tokenAddress.changeName(name);
         }
+
         function isTokenTransferOK(
             address currentOwner,
             address newOwner
@@ -222,8 +227,7 @@ The next example is a bit more complex:
 
 It will generate a function of the following form::
 
-    function data(uint arg1, bool arg2, uint arg3) returns (uint a, bytes3 b)
-    {
+    function data(uint arg1, bool arg2, uint arg3) returns (uint a, bytes3 b) {
         a = data[arg1][arg2][arg3].a;
         b = data[arg1][arg2][arg3].b;
     }
@@ -258,6 +262,8 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // thrown.
         modifier onlyowner { if (msg.sender != owner) throw; _ }
     }
+
+
     contract mortal is owned {
         // This contract inherits the "onlyowner"-modifier from
         // "owned" and applies it to the "close"-function, which
@@ -267,10 +273,14 @@ inheritable properties of contracts and may be overridden by derived contracts.
             selfdestruct(owner);
         }
     }
+
+
     contract priced {
         // Modifiers can receive arguments:
         modifier costs(uint price) { if (msg.value >= price) _ }
     }
+
+
     contract Register is priced, owned {
         mapping (address => bool) registeredAddresses;
         uint price;
@@ -339,12 +349,14 @@ possible.
         uint x;
     }
 
+
     // This contract rejects any Ether sent to it. It is good
     // practise to include such a function for every contract
     // in order not to lose Ether.
     contract Rejector {
         function() { throw; }
     }
+
 
     contract Caller {
       function callTest(address testAddress) {
@@ -406,6 +418,7 @@ All non-indexed arguments will be stored in the data part of the log.
             bytes32 indexed _id,
             uint _value
         );
+
         function deposit(bytes32 _id) {
             // Any call to this function (even deeply nested) can
             // be detected from the JavaScript API by filtering
@@ -497,6 +510,7 @@ Details are given in the following example.
         address owner;
     }
 
+
     // Use "is" to derive from another contract. Derived
     // contracts can access all non-private members including
     // internal functions and state variables. These cannot be
@@ -507,6 +521,7 @@ Details are given in the following example.
         }
     }
 
+
     // These abstract contracts are only provided to make the
     // interface known to the compiler. Note the function
     // without body. If a contract does not implement all
@@ -514,10 +529,13 @@ Details are given in the following example.
     contract Config {
         function lookup(uint id) returns (address adr);
     }
+
+
     contract NameReg {
         function register(bytes32 name);
         function unregister();
      }
+
 
     // Multiple inheritance is possible. Note that "owned" is
     // also a base class of "mortal", yet there is only a single
@@ -542,6 +560,7 @@ Details are given in the following example.
         }
     }
 
+
     // If a constructor takes an argument, it needs to be
     // provided in the header (or modifier-invocation-style at
     // the constructor of the derived contract (see below)).
@@ -564,12 +583,18 @@ seen in the following example::
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
+
+
     contract Base1 is mortal {
         function kill() { /* do cleanup 1 */ mortal.kill(); }
     }
+
+
     contract Base2 is mortal {
         function kill() { /* do cleanup 2 */ mortal.kill(); }
     }
+
+
     contract Final is Base1, Base2 {
     }
 
@@ -583,12 +608,18 @@ derived override, but this function will bypass
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
+
+
     contract Base1 is mortal {
         function kill() { /* do cleanup 1 */ super.kill(); }
     }
+
+
     contract Base2 is mortal {
         function kill() { /* do cleanup 2 */ super.kill(); }
     }
+
+
     contract Final is Base2, Base1 {
     }
 
@@ -615,6 +646,8 @@ the base constructors. This can be done at two places::
         uint x;
         function Base(uint _x) { x = _x; }
     }
+
+
     contract Derived is Base(7) {
         function Derived(uint _y) Base(_y * _y) {
         }
@@ -721,6 +754,7 @@ more advanced example to implement a set).
       // We define a new struct datatype that will be used to
       // hold its data in the calling contract.
       struct Data { mapping(uint => bool) flags; }
+
       // Note that the first parameter is of type "storage
       // reference" and thus only its storage address and not
       // its contents is passed as part of the call.  This is a
@@ -735,6 +769,7 @@ more advanced example to implement a set).
           self.flags[value] = true;
           return true;
       }
+
       function remove(Data storage self, uint value)
           returns (bool)
       {
@@ -743,14 +778,18 @@ more advanced example to implement a set).
           self.flags[value] = false;
           return true;
       }
+
       function contains(Data storage self, uint value)
           returns (bool)
       {
           return self.flags[value];
       }
     }
+
+
     contract C {
         Set.Data knownValues;
+
         function register(uint value) {
             // The library functions can be called without a
             // specific instance of the library, since the
@@ -783,12 +822,14 @@ custom types without the overhead of external function calls:
 
 	library bigint {
 		struct bigint {
-		    uint[] limbs;
+    	    uint[] limbs;
 		}
+
 		function fromUint(uint x) internal returns (bigint r) {
 		    r.limbs = new uint[](1);
 		    r.limbs[0] = x;
 		}
+
 		function add(bigint _a, bigint _b) internal returns (bigint r) {
 		    r.limbs = new uint[](max(_a.limbs.length, _b.limbs.length));
 		    uint carry = 0;
@@ -819,6 +860,7 @@ custom types without the overhead of external function calls:
 		    return a > b ? a : b;
 		}
 	}
+
 
 	contract C {
 		using bigint for bigint.bigint;
@@ -882,6 +924,7 @@ Let us rewrite the set example from the
     // This is the same code as before, just without comments
     library Set {
       struct Data { mapping(uint => bool) flags; }
+
       function insert(Data storage self, uint value)
           returns (bool)
       {
@@ -890,6 +933,7 @@ Let us rewrite the set example from the
           self.flags[value] = true;
           return true;
       }
+
       function remove(Data storage self, uint value)
           returns (bool)
       {
@@ -898,6 +942,7 @@ Let us rewrite the set example from the
           self.flags[value] = false;
           return true;
       }
+
       function contains(Data storage self, uint value)
           returns (bool)
       {
@@ -905,9 +950,11 @@ Let us rewrite the set example from the
       }
     }
 
+
     contract C {
         using Set for Set.Data; // this is the crucial change
         Set.Data knownValues;
+
         function register(uint value) {
             // Here, all variables of type Set.Data have
             // corresponding member functions.
@@ -928,12 +975,15 @@ It is also possible to extend elementary types in that way::
         }
     }
 
+
     contract C {
         using Search for uint[];
         uint[] data;
+
         function append(uint value) {
             data.push(value);
         }
+
         function replace(uint _old, uint _new) {
             // This performs the library function call
             uint index = data.find(_old);
