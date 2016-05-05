@@ -39,18 +39,17 @@ of votes.
 ::
 
     /// @title Voting with delegation.
-    contract Ballot
-    {
+    contract Ballot {
         // This declares a new complex type which will
         // be used for variables later.
         // It will represent a single voter.
-        struct Voter
-        {
+        struct Voter {
             uint weight; // weight is accumulated by delegation
             bool voted;  // if true, that person already voted
             address delegate; // person delegated to
             uint vote;   // index of the voted proposal
         }
+
         // This is a type for a single proposal.
         struct Proposal
         {
@@ -59,21 +58,23 @@ of votes.
         }
 
         address public chairperson;
+
         // This declares a state variable that
         // stores a `Voter` struct for each possible address.
         mapping(address => Voter) public voters;
+
         // A dynamically-sized array of `Proposal` structs.
         Proposal[] public proposals;
 
         /// Create a new ballot to choose one of `proposalNames`.
-        function Ballot(bytes32[] proposalNames)
-        {
+        function Ballot(bytes32[] proposalNames) {
             chairperson = msg.sender;
             voters[chairperson].weight = 1;
+
             // For each of the provided proposal names,
             // create a new proposal object and add it
             // to the end of the array.
-            for (uint i = 0; i < proposalNames.length; i++)
+            for (uint i = 0; i < proposalNames.length; i++) {
                 // `Proposal({...})` creates a temporary
                 // Proposal object and `proposal.push(...)`
                 // appends it to the end of `proposals`.
@@ -81,60 +82,68 @@ of votes.
                     name: proposalNames[i],
                     voteCount: 0
                 }));
+            }
         }
 
         // Give `voter` the right to vote on this ballot.
         // May only be called by `chairperson`.
-        function giveRightToVote(address voter)
-        {
-            if (msg.sender != chairperson || voters[voter].voted)
+        function giveRightToVote(address voter) {
+            if (msg.sender != chairperson || voters[voter].voted) {
                 // `throw` terminates and reverts all changes to
                 // the state and to Ether balances. It is often
                 // a good idea to use this if functions are
                 // called incorrectly. But watch out, this
                 // will also consume all provided gas.
                 throw;
+            }
             voters[voter].weight = 1;
         }
 
         /// Delegate your vote to the voter `to`.
-        function delegate(address to)
-        {
+        function delegate(address to) {
             // assigns reference
             Voter sender = voters[msg.sender];
             if (sender.voted)
                 throw;
+
             // Forward the delegation as long as
             // `to` also delegated.
             while (voters[to].delegate != address(0) &&
-                   voters[to].delegate != msg.sender)
-                to = voters[to].delegate;
+                   voters[to].delegate != msg.sender) {
+                       to = voters[to].delegate;
+            }
+
             // We found a loop in the delegation, not allowed.
-            if (to == msg.sender)
+            if (to == msg.sender) {
                 throw;
+            }
+
             // Since `sender` is a reference, this
             // modifies `voters[msg.sender].voted`
             sender.voted = true;
             sender.delegate = to;
             Voter delegate = voters[to];
-            if (delegate.voted)
+            if (delegate.voted) {
                 // If the delegate already voted,
                 // directly add to the number of votes 
                 proposals[delegate.vote].voteCount += sender.weight;
-            else
+            }
+            else {
                 // If the delegate did not vote yet,
                 // add to her weight.
                 delegate.weight += sender.weight;
+            }
         }
 
         /// Give your vote (including votes delegated to you)
         /// to proposal `proposals[proposal].name`.
-        function vote(uint proposal)
-        {
+        function vote(uint proposal) {
             Voter sender = voters[msg.sender];
-            if (sender.voted) throw;
+            if (sender.voted)
+                throw;
             sender.voted = true;
             sender.vote = proposal;
+
             // If `proposal` is out of the range of the array,
             // this will throw automatically and revert all
             // changes.
@@ -147,10 +156,8 @@ of votes.
                 returns (uint winningProposal)
         {
             uint winningVoteCount = 0;
-            for (uint p = 0; p < proposals.length; p++)
-            {
-                if (proposals[p].voteCount > winningVoteCount)
-                {
+            for (uint p = 0; p < proposals.length; p++) {
+                if (proposals[p].voteCount > winningVoteCount) {
                     winningVoteCount = proposals[p].voteCount;
                     winningProposal = p;
                 }
@@ -223,8 +230,10 @@ activate themselves.
         /// Create a simple auction with `_biddingTime`
         /// seconds bidding time on behalf of the
         /// beneficiary address `_beneficiary`.
-        function SimpleAuction(uint _biddingTime,
-                               address _beneficiary) {
+        function SimpleAuction(
+            uint _biddingTime,
+            address _beneficiary
+        ) {
             beneficiary = _beneficiary;
             auctionStart = now;
             biddingTime = _biddingTime;
@@ -238,16 +247,19 @@ activate themselves.
             // No arguments are necessary, all
             // information is already part of
             // the transaction.
-            if (now > auctionStart + biddingTime)
+            if (now > auctionStart + biddingTime) {
                 // Revert the call if the bidding
                 // period is over.
                 throw;
-            if (msg.value <= highestBid)
+            }
+            if (msg.value <= highestBid) {
                 // If the bid is not higher, send the
                 // money back.
                 throw;
-            if (highestBidder != 0)
+            }
+            if (highestBidder != 0) {
                 highestBidder.send(highestBid);
+            }
             highestBidder = msg.sender;
             highestBid = msg.value;
             HighestBidIncreased(msg.sender, msg.value);
@@ -261,6 +273,7 @@ activate themselves.
             if (ended)
                 throw; // this function has already been called
             AuctionEnded(highestBidder, highestBid);
+
             // We send all the money we have, because some
             // of the refunds might have failed.
             beneficiary.send(this.balance);
@@ -319,13 +332,12 @@ high or low invalid bids.
 
 ::
 
-    contract BlindAuction
-    {
-        struct Bid
-        {
+    contract BlindAuction {
+        struct Bid {
             bytes32 blindedBid;
             uint deposit;
         }
+
         address public beneficiary;
         uint public auctionStart;
         uint public biddingEnd;
@@ -346,10 +358,11 @@ high or low invalid bids.
         modifier onlyBefore(uint _time) { if (now >= _time) throw; _ }
         modifier onlyAfter(uint _time) { if (now <= _time) throw; _ }
 
-        function BlindAuction(uint _biddingTime,
-                                uint _revealTime,
-                                address _beneficiary)
-        {
+        function BlindAuction(
+            uint _biddingTime,
+            uint _revealTime,
+            address _beneficiary
+        ) {
             beneficiary = _beneficiary;
             auctionStart = now;
             biddingEnd = now + _biddingTime;
@@ -377,29 +390,38 @@ high or low invalid bids.
         /// Reveal your blinded bids. You will get a refund for all
         /// correctly blinded invalid bids and for all bids except for
         /// the totally highest.
-        function reveal(uint[] _values, bool[] _fake,
-                        bytes32[] _secret)
+        function reveal(
+            uint[] _values,
+            bool[] _fake,
+            bytes32[] _secret
+        )
             onlyAfter(biddingEnd)
             onlyBefore(revealEnd)
         {
             uint length = bids[msg.sender].length;
-            if (_values.length != length || _fake.length != length ||
-                        _secret.length != length)
+            if (
+                _values.length != length
+                || _fake.length != length
+                || _secret.length != length
+            ) {
                 throw;
+            }
+
             uint refund;
-            for (uint i = 0; i < length; i++)
-            {
+            for (uint i = 0; i < length; i++) {
                 var bid = bids[msg.sender][i];
                 var (value, fake, secret) =
                         (_values[i], _fake[i], _secret[i]);
-                if (bid.blindedBid != sha3(value, fake, secret))
+                if (bid.blindedBid != sha3(value, fake, secret)) {
                     // Bid was not actually revealed.
                     // Do not refund deposit.
                     continue;
+                }
                 refund += bid.deposit;
-                if (!fake && bid.deposit >= value)
+                if (!fake && bid.deposit >= value) {
                     if (placeBid(msg.sender, value))
                         refund -= value;
+                }
                 // Make it impossible for the sender to re-claim
                 // the same deposit.
                 bid.blindedBid = 0;
@@ -413,11 +435,13 @@ high or low invalid bids.
         function placeBid(address bidder, uint value) internal
                 returns (bool success)
         {
-            if (value <= highestBid)
+            if (value <= highestBid) {
                 return false;
-            if (highestBidder != 0)
+            }
+            if (highestBidder != 0) {
                 // Refund the previously highest bidder.
                 highestBidder.send(highestBid);
+            }
             highestBid = value;
             highestBidder = bidder;
             return true;
@@ -428,7 +452,8 @@ high or low invalid bids.
         function auctionEnd()
             onlyAfter(revealEnd)
         {
-            if (ended) throw;
+            if (ended)
+                throw;
             AuctionEnded(highestBidder, highestBid);
             // We send all the money we have, because some
             // of the refunds might have failed.
@@ -436,7 +461,9 @@ high or low invalid bids.
             ended = true;
         }
 
-        function () { throw; }
+        function () {
+            throw;
+        }
     }
 
 .. index:: purchase, remote purchase, escrow
@@ -449,39 +476,39 @@ Safe Remote Purchase
 
 ::
 
-    contract Purchase
-    {
+    contract Purchase {
         uint public value;
         address public seller;
         address public buyer;
         enum State { Created, Locked, Inactive }
         State public state;
-        function Purchase()
-        {
+
+        function Purchase() {
             seller = msg.sender;
             value = msg.value / 2;
             if (2 * value != msg.value) throw;
         }
-        modifier require(bool _condition)
-        {
+
+        modifier require(bool _condition) {
             if (!_condition) throw;
             _
         }
-        modifier onlyBuyer()
-        {
+
+        modifier onlyBuyer() {
             if (msg.sender != buyer) throw;
             _
         }
-        modifier onlySeller()
-        {
+
+        modifier onlySeller() {
             if (msg.sender != seller) throw;
             _
         }
-        modifier inState(State _state)
-        {
+
+        modifier inState(State _state) {
             if (state != _state) throw;
             _
         }
+
         event aborted();
         event purchaseConfirmed();
         event itemReceived();
@@ -497,6 +524,7 @@ Safe Remote Purchase
             seller.send(this.balance);
             state = State.Inactive;
         }
+
         /// Confirm the purchase as buyer.
         /// Transaction has to include `2 * value` ether.
         /// The ether will be locked until confirmReceived
@@ -509,6 +537,7 @@ Safe Remote Purchase
             buyer = msg.sender;
             state = State.Locked;
         }
+
         /// Confirm that you (the buyer) received the item.
         /// This will release the locked ether.
         function confirmReceived()
@@ -520,7 +549,10 @@ Safe Remote Purchase
             seller.send(this.balance);
             state = State.Inactive;
         }
-        function() { throw; }
+
+        function() {
+            throw;
+        }
     }
 
 ********************
