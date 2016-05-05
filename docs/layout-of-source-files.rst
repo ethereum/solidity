@@ -129,10 +129,11 @@ Single-line comments (`//`) and multi-line comments (`/*...*/`) are possible.
   */
   
 
-There are special types of comments called natspec comments
-(documentation yet to be written). These are introduced by 
-triple-slash comments (`///`) or using double asterisks (`/** ... */`).
-Right in front of function declarations or statements,
-you can use doxygen-style tags inside them to document functions, annotate conditions for formal
-verification and provide a **confirmation text** that is shown to users if they want to
-invoke a function.
+Additionally, there is another type of comment called a natspec comment,
+for which the documentation is not yet written. They are written with a
+triple slash (`///`) or a double asterisk block(`/** ... */`) and
+they should be used directly above function declarations or statements. 
+You can use Doxygen-style tags inside these comments to document
+functions, annotate conditions for formal verification, and provide a 
+**confirmation text** which is shown to users when they attempt to invoke a
+function.
