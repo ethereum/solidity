@@ -482,6 +482,11 @@ No::
         }
     }
 
+When declaring short functions with a single statement, it is permissible to do it on a single line.
+
+Permissible::
+
+    function shortFunction() { doSomething(); }
 
 These guidelines for function declarations are intended to improve readability.
 Authors should use their best judgement as this guide does not try to cover all
