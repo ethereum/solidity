@@ -155,7 +155,7 @@ Whitespace in Expressions
 
 Avoid extraneous whitespace in the following  situations:
 
-Immediately inside parenthesis, brackets or braces.
+Immediately inside parenthesis, brackets or braces, with the exception of single-line function declarations.
 
 Yes::
 
@@ -164,6 +164,10 @@ Yes::
 No::
 
     spam( ham[ 1 ], Coin( { name: "ham" } ) );`
+
+Exception::
+
+    function singleLine() { spam(); }
 
 Immediately before a comma, semicolon:
 
