@@ -155,7 +155,7 @@ Whitespace in Expressions
 
 Avoid extraneous whitespace in the following  situations:
 
-* Immediately inside parenthesis, brackets or braces.
+Immediately inside parenthesis, brackets or braces.
 
 Yes::
 
@@ -165,7 +165,7 @@ No::
 
     spam( ham[ 1 ], Coin( { name: "ham" } ) );`
 
-* Immediately before a comma, semicolon:
+Immediately before a comma, semicolon:
 
 Yes::
 
@@ -175,7 +175,7 @@ No::
 
     function spam(uint i , Coin coin) ;
 
-* More than one space around an assignment or other operator to align with
+More than one space around an assignment or other operator to align with
   another:
 
 Yes::
