@@ -400,9 +400,9 @@ high or low invalid bids.
         {
             uint length = bids[msg.sender].length;
             if (
-                _values.length != length
-                || _fake.length != length
-                || _secret.length != length
+                _values.length != length ||
+                _fake.length != length ||
+                _secret.length != length
             ) {
                 throw;
             }
