@@ -252,7 +252,7 @@ No::
     for (...) {
         ...;}
 
-For control structures who's body contains a single statement, omitting the
+For control structures whose body contains a single statement, omitting the
 braces is ok *if* the statement is contained on a single line.
 
 Yes::
@@ -445,7 +445,7 @@ No::
         doSomething();
     }
 
-For constructor functions on inherited contracts who's bases require arguments,
+For constructor functions on inherited contracts whose bases require arguments,
 it is recommended to drop the base constructors onto new lines in the same
 manner as modifiers if the function declaration is long or hard to read.
 
