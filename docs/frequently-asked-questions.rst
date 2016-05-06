@@ -24,7 +24,7 @@ Solidity contracts can be compiled a few different ways (see below) and the
 resulting output can be cut/pasted into a geth console to deploy them to the
 Ethereum blockchain.
 
-There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and 
+There are some `contract examples <https://github.com/fivedogit/solidity-baby-steps/tree/master/contracts/>`_ by fivedogit and
 there should be a `test contract <https://github.com/ethereum/solidity/blob/develop/test/libsolidity/SolidityEndToEndTest.cpp>`_ for every single feature of Solidity.
 
 How do I compile contracts?
@@ -76,7 +76,7 @@ Does selfdestruct() free up space in the blockchain?
 
 It removes the contract bytecode and storage from the current block
 into the future, but since the blockchain stores every single block (i.e.
-all history), this will not actually free up space on full/achive nodes.
+all history), this will not actually free up space on full/archive nodes.
 
 Create a contract that can be killed and return funds
 =====================================================
@@ -85,7 +85,7 @@ First, a word of warning: Killing contracts sounds like a good idea, because "cl
 is always good, but as seen above, it does not really clean up. Furthermore,
 if Ether is sent to removed contracts, the Ether will be forever lost.
 
-If you want to deactivate your contracts, rather **disable** them by changing some
+If you want to deactivate your contracts, it is preferable to **disable** them by changing some
 internal state which causes all functions to throw. This will make it impossible
 to use the contract and ether sent to the contract will be returned automatically.
 
@@ -184,7 +184,9 @@ An example of this would be::
             uint someNumber;
             string someString;
         }
+
         mapping(uint => mapping(string => myStruct)) myDynamicMapping;
+
         function storeInMapping() {
             myDynamicMapping[1]["Foo"] = myStruct(2, "Bar");
         }
@@ -351,11 +353,17 @@ should be noted that you must declare them as static memory arrays.
 Examples::
 
     contract C {
-        struct S { uint a; uint b; }
+        struct S {
+            uint a;
+            uint b;
+        }
+
         S public x = S(1, 2);
         string name = "Ada";
         string[4] memory AdaArr = ["This", "is", "an", "array"];  
     }
+
+
     contract D {
         C c = new C();
     }
@@ -405,9 +413,11 @@ you should always convert it to a `bytes` first::
 
     contract C {
         string s;
+
         function append(byte c) {
             bytes(s).push(c);
         }
+
         function set(uint i, byte c) {
             bytes(s)[i] = c;
         }
@@ -448,15 +458,21 @@ If you do not want to throw, you can return a pair::
 
     contract C {
         uint[] counters;
+
         function getCounter(uint index)
             returns (uint counter, bool error) {
                 if (index >= counters.length) return (0, true);
                 else return (counters[index], false);
-            }
+        }
+
         function checkCounter(uint index) {
             var (counter, error) = getCounter(index);
-            if (error) { ... }
-            else { ... }
+            if (error) {
+                ...
+            }
+            else {
+                ...
+            }
         }
     }
 
@@ -515,12 +531,15 @@ Example::
     contract C {
         uint[] data1;
         uint[] data2;
+
         function appendOne() {
             append(data1);
         }
+
         function appendTwo() {
             append(data2);
         }
+
         function append(uint[] storage d) {
             d.push(1);
         }
@@ -542,6 +561,7 @@ be created in memory, although it will be created in storage::
     contract C {
         uint someVariable;
         uint[] data;
+
         function f() {
             uint[] x;
             x.push(2);
@@ -565,6 +585,7 @@ The correct way to do this is the following::
     contract C {
         uint someVariable;
         uint[] data;
+
         function f() {
             uint[] x = data;
             x.push(2);
@@ -674,6 +695,7 @@ This is a very interesting question. Suppose that we have a contract field set u
     struct user{
         mapping(string => address) usedContracts;
     }
+
     function somefunction{
        user user1;
        user1.usedContracts["Hello"] = "World";
@@ -694,6 +716,7 @@ In this example::
     contract B {}
     contract A {
         address child;
+
         function test() {
             child = (new B).value(10)(); //construct a new B with 10 wei
         }
@@ -735,16 +758,20 @@ independent copies will be created::
 
     contract C {
       uint[20] x;
+
       function f() {
         g(x);
         h(x);
       }
+
       function g(uint[20] y) {
         y[2] = 3;
       }
+
       function h(uint[20] storage y) {
         y[3] = 4;
       }
+   }
 
 The call to `g(x)` will not have an effect on `x` because it needs
 to create an independent copy of the storage value in memory
@@ -765,10 +792,10 @@ contract level) with `arrayname.length = <some new length>;`. If you get the
 
 ::
 
-    int8[] memory memArr;       // Case 1
-    memArr.length++;            // illegal
-    int8[5] storageArr;         // Case 2
-    somearray.length++;         // legal
+    int8[] memory memArr;        // Case 1
+    memArr.length++;             // illegal
+    int8[5] storageArr;          // Case 2
+    somearray.length++;          // legal
     int8[5] storage storageArr2; // Explicit case 2
     somearray2.length++;         // legal
 
@@ -821,7 +848,8 @@ What does the following strange check do in the Custom Token contract?
 
 ::
 
-    if (balanceOf[_to] + _value < balanceOf[_to]) throw;
+    if (balanceOf[_to] + _value < balanceOf[_to])
+        throw;
 
 Integers in Solidity (and most other machine-related programming languages) are restricted to a certain range.
 For `uint256`, this is `0` up to `2**256 - 1`. If the result of some operation on those numbers

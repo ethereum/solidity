@@ -43,7 +43,7 @@ The operators `||` and `&&` apply the common short-circuiting rules. This means 
 Integers
 --------
 
-`int•` / `uint•`: Signed and unsigned integers of various sizes. Keywords `uint8` to `uint256` in steps of `8` (unsigned of 8 up to 256 bits) and `int8` to `int256`. `uint` and `int` are aliases for `uint256` and `int256`, respectively.
+`int` / `uint`: Signed and unsigned integers of various sizes. Keywords `uint8` to `uint256` in steps of `8` (unsigned of 8 up to 256 bits) and `int8` to `int256`. `uint` and `int` are aliases for `uint256` and `int256`, respectively.
 
 Operators:  
 
@@ -59,7 +59,7 @@ operators are :ref:`literals<integer_literals>` (or literal expressions).
 Address
 -------
 
-`address`: Holds a 20 byte value (size of an Ethereum address). Address types also have members(see [Functions on addresses](#functions-on-addresses)) and serve as base for all contracts.
+`address`: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as base for all contracts.
 
 Operators:  
 
@@ -153,7 +153,7 @@ It is even possible to temporarily exceed the maximum of 256 bits as long as onl
 String Literals
 ---------------
 
-String Literals are written with double quotes (`"abc"`). As with integer literals, their type can vary, but they are implicitly convertible to `bytes•` if they fit, to `bytes` and to `string`.
+String Literals are written with double quotes (`"abc"`). As with integer literals, their type can vary, but they are implicitly convertible to `bytes` if they fit, to `bytes` and to `string`.
 
 .. index:: enum
 
