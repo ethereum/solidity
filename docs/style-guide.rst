@@ -365,14 +365,14 @@ Yes::
         address e,
         address f,
     ) {
-        do_something;
+        doSomething();
     }
 
 No::
 
     function thisFunctionHasLotsOfArguments(address a, address b, address c,
         address d, address e, address f) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionHasLotsOfArguments(address a,
@@ -381,7 +381,7 @@ No::
                                             address d,
                                             address e,
                                             address f) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionHasLotsOfArguments(
@@ -391,7 +391,7 @@ No::
         address d,
         address e,
         address f) {
-        do_something;
+        doSomething();
     }
 
 If a long function declaration has modifiers, then each modifier should be
@@ -405,7 +405,7 @@ Yes::
         priced
         returns (address)
     {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(
@@ -418,7 +418,7 @@ Yes::
         priced
         returns (address)
     {
-        do_something;
+        doSomething();
     }
 
 No::
@@ -428,13 +428,13 @@ No::
                                           onlyowner
                                           priced
                                           returns (address) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
         public onlyowner priced returns (address)
     {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
@@ -442,7 +442,7 @@ No::
         onlyowner
         priced
         returns (address) {
-        do_something;
+        doSomething();
     }
 
 For constructor functions on inherited contracts who's bases require arguments,
