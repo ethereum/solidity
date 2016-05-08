@@ -113,8 +113,6 @@ public:
 	/// Adds a subroutine to the code (in the data section) and pushes its size (via a tag)
 	/// on the stack. @returns the assembly item corresponding to the pushed subroutine, i.e. its offset.
 	eth::AssemblyItem addSubroutine(eth::Assembly const& _assembly) { return m_asm.appendSubSize(_assembly); }
-	/// Appends the given code (used by inline assembly) ignoring any stack height changes.
-	void appendInlineAssembly(eth::Assembly const& _assembly) { int deposit = m_asm.deposit(); m_asm.append(_assembly); m_asm.setDeposit(deposit); }
 	/// Pushes the size of the final program
 	void appendProgramSize() { return m_asm.appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
@@ -140,6 +138,10 @@ public:
 	void optimise(unsigned _runs = 200) { m_asm.optimise(true, true, _runs); }
 
 	eth::Assembly const& assembly() const { return m_asm; }
+	/// @returns non-const reference to the underlying assembly. Should be avoided in favour of
+	/// wrappers in this class.
+	eth::Assembly& nonConstAssembly() { return m_asm; }
+
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFormat shows whether the out should be in Json format
 	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const

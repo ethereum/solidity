@@ -452,14 +452,25 @@ Note that the order of arguments is reversed in functional-style as opposed to t
 way. If you use functional-style, the first argument will end up on the stack top.
 
 
-Access to External Variables
-----------------------------
+Access to External Variables and Functions
+------------------------------------------
 
 Solidity variables and other identifiers can be accessed by simply using their name.
 For storage and memory variables, this will push the address and not the value onto the
 stack. Also note that non-struct and non-array storage variable addresses occupy two slots
 on the stack: One for the address and one for the byte offset inside the storage slot.
 In assignments (see below), we can even use local Solidity variables to assign to.
+
+Functions external to inline assembly can also be accessed: The assemble will
+push their entry label (with virtual function resolution applied). The calling semantics
+in solidity are:
+
+ - the caller pushes return label, arg1, arg2, ..., argn
+ - the call returns with ret1, ret2, ..., retn
+
+This feature is still a bit cumbersome to use, because the stack offset essentially
+changes during the call, and thus references to local variables will be wrong.
+It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
