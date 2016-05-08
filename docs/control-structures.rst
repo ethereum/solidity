@@ -208,7 +208,7 @@ idea is that assembly libraries will be used to enhance the language in such way
 				// by using o_code = new bytes(size)
 				o_code := mload(0x40)
 				// new "memory end" including padding
-				mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), bnot(0x1f))))
+				mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
 				// store length in memory
 				mstore(o_code, size)
 				// actually retrieve the code, this needs assembly
@@ -292,7 +292,7 @@ The opcodes `pushi` and `jumpdest` cannot be used directly.
 +-----------------------+------+---------------------------------------------------------------+
 | exp(x, y)             |      | x to the power of y                                           |
 +-----------------------+------+---------------------------------------------------------------+
-| bnot(x)               |      | ~x, every bit of x is negated                                 |
+| not(x)                |      | ~x, every bit of x is negated                                 |
 +-----------------------+------+---------------------------------------------------------------+
 | lt(x, y)              |      | 1 if x < y, 0 otherwise                                       |
 +-----------------------+------+---------------------------------------------------------------+
@@ -304,7 +304,7 @@ The opcodes `pushi` and `jumpdest` cannot be used directly.
 +-----------------------+------+---------------------------------------------------------------+
 | eq(x, y)              |      | 1 if x == y, 0 otherwise                                      |
 +-----------------------+------+---------------------------------------------------------------+
-| not(x)                |      | 1 if x == 0, 0 otherwise                                      |
+| iszero(x)             |      | 1 if x == 0, 0 otherwise                                      |
 +-----------------------+------+---------------------------------------------------------------+
 | and(x, y)             |      | bitwise and of x and y                                        |
 +-----------------------+------+---------------------------------------------------------------+
