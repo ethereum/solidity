@@ -118,6 +118,10 @@ Contract Related
 
 `this` (current contract's type):
     the current contract, explicitly convertible to `address`
+    
+    - this.balance: The balance of the current account.
+    - this.send: Send ether to an address.
+    
 `selfdestruct(address)`:
     destroy the current contract, sending its funds to the given address
 
