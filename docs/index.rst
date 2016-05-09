@@ -16,6 +16,8 @@ Useful links
 
 * `Ethereum <https://ethereum.org>`_
 
+* `Ethereum Studio <https://live.ether.camp/>`_
+
 * `Browser-Based Compiler <https://chriseth.github.io/browser-solidity/>`_
 
 * `Changelog <https://github.com/ethereum/wiki/wiki/Solidity-Changelog>`_
