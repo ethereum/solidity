@@ -552,7 +552,7 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		{
 			// We disallow implicit conversion if we would have to truncate (fixedPointType()
 			// can return a type that requires truncation).
-			rational value = m_value * boost::multiprecision::pow(bigint(2), fixed->fractionalBits());
+			rational value = m_value * (bigint(1) << fixed->fractionalBits());
 			return value.denominator() == 1 && fixed->isImplicitlyConvertibleTo(_convertTo);
 		}
 		return false;
@@ -711,18 +711,23 @@ string RationalNumberType::toString(bool) const
 
 u256 RationalNumberType::literalValue(Literal const*) const
 {
+	// We ignore the literal and hope that the type was correctly determined to represent
+	// its value.
+
 	u256 value;
 	bigint shiftedValue; 
 
-	if (m_value.denominator() != 1)
-	{
-		rational temporaryValue = m_value;
-		auto fixed = fixedPointType();
-		temporaryValue *= boost::multiprecision::pow(bigint(2), fixed->fractionalBits());
-		shiftedValue = temporaryValue.numerator() / temporaryValue.denominator();
-	}
+	if (m_value.denominator() == 1)
+		shiftedValue = m_value.numerator();
 	else
-		shiftedValue = integerPart();
+	{
+		auto fixed = fixedPointType();
+		solAssert(!!fixed, "");
+		rational shifted = m_value * (bigint(1) << fixed->fractionalBits());
+		// truncate
+		shiftedValue = shifted.numerator() / shifted.denominator();
+	}
+
 	// we ignore the literal and hope that the type was correctly determined
 	solAssert(shiftedValue <= u256(-1), "Integer constant too large.");
 	solAssert(shiftedValue >= -(bigint(1) << 255), "Number constant too small.");
@@ -742,7 +747,6 @@ TypePointer RationalNumberType::mobileType() const
 		return fixedPointType();
 }
 
-//TODO: combine integerType() and fixedPointType() into one function
 shared_ptr<IntegerType const> RationalNumberType::integerType() const
 {
 	solAssert(m_value.denominator() == 1, "integerType() called for fractional number.");
@@ -762,13 +766,12 @@ shared_ptr<IntegerType const> RationalNumberType::integerType() const
 shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 {
 	bool negative = (m_value < 0);
-	bigint fillRationalBits = bigint(1) << 256; //use this because rationals don't have bit ops
 	unsigned fractionalBits = 0;
 	unsigned integerBits = 0;
-	rational value = abs(m_value); //convert to absolute value of same type for byte requirements
+	rational value = abs(m_value); // We care about the sign later.
 	rational maxValue = negative ? 
-		rational(fillRationalBits) / 2:
-		rational(fillRationalBits) - 1;
+		rational(bigint(1) << 255):
+		rational((bigint(1) << 256) - 1);
 
 	while (value * 0x100 <= maxValue && value.denominator() != 1 && fractionalBits < 256)
 	{
@@ -781,7 +784,9 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 	// u256(v) is the actual value that will be put on the stack
 	// From here on, very similar to integerType()
 	bigint v = value.numerator() / value.denominator();
-	if (negative) //convert back to negative number and then shift into a positive number of equal size
+	if (negative)
+		// modify value to satisfy bit requirements for negative numbers:
+		// add one bit for sign and decrement because negative numbers can be larger
 		v = (v - 1) << 1;
 		
 	if (v > u256(-1))
@@ -793,7 +798,7 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 
 	if (integerBits > 256 || fractionalBits > 256 || fractionalBits + integerBits > 256)
 		return shared_ptr<FixedPointType const>();
-	if (integerBits + fractionalBits == 0)
+	if (integerBits == 0 && fractionalBits == 0)
 	{
 		integerBits = 0;
 		fractionalBits = 8;
