@@ -186,12 +186,12 @@ TypePointer Type::forLiteral(Literal const& _literal)
 		if (get<0>(validLiteral) == true)
 			return make_shared<RationalNumberType>(get<1>(validLiteral));
 		else
-			return TypePointer();		
+			return TypePointer();
 	}
 	case Token::StringLiteral:
 		return make_shared<StringLiteralType>(_literal);
 	default:
-		return shared_ptr<Type>();
+		return TypePointer();
 	}
 }
 
@@ -261,7 +261,7 @@ IntegerType::IntegerType(int _bits, IntegerType::Modifier _modifier):
 bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	if (_convertTo.category() == category())
-	{	
+	{
 		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
 		if (convertTo.m_bits < m_bits)
 			return false;
@@ -471,12 +471,11 @@ tuple<bool, rational> RationalNumberType::isValidLiteral(Literal const& _literal
 			)
 				throw;
 			//Only decimal notation allowed here, leading zeros would switch to octal.
-			auto leadingZeroes = find_if_not(
+			auto fractionalBegin = find_if_not(
 				radixPoint + 1, 
 				_literal.value().end(), 
 				[](char const& a) { return a == '0'; }
 			);
-			auto fractionalBegin = leadingZeroes;
 
 			denominator = bigint(string(fractionalBegin, _literal.value().end()));
 			denominator /= boost::multiprecision::pow(
@@ -550,13 +549,12 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	}
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
-		//call fixed point type...call fractional bits...shift our number by the number of fractional bits...
-		//...see if it's a whole number. Make helper function for whether or not finitely representable. 
 		if (auto fixed = fixedPointType())
 		{
+			// We disallow implicit conversion if we would have to truncate (fixedPointType()
+			// can return a type that requires truncation).
 			rational value = m_value * boost::multiprecision::pow(bigint(2), fixed->fractionalBits());
-			if (value.denominator() == 1 && fixed->isImplicitlyConvertibleTo(_convertTo))
-				return true;
+			return value.denominator() == 1 && fixed->isImplicitlyConvertibleTo(_convertTo);
 		}
 		return false;
 	}
@@ -573,13 +571,8 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 
 bool RationalNumberType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
-	if (m_value.denominator() == 1)
-	{
-		TypePointer intType = integerType();
-		return intType && intType->isExplicitlyConvertibleTo(_convertTo);
-	}
-	TypePointer fixType = fixedPointType();
-	return fixType && fixType->isExplicitlyConvertibleTo(_convertTo);
+	TypePointer mobType = mobileType();
+	return mobType && mobType->isExplicitlyConvertibleTo(_convertTo);
 }
 
 TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) const
@@ -608,19 +601,12 @@ TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) cons
 
 TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (_other->category() == Category::Integer)
+	if (_other->category() == Category::Integer || _other->category() == Category::FixedPoint)
 	{
-		shared_ptr<IntegerType const> intType = integerType();
-		if (!intType)
+		auto mobile = mobileType();
+		if (!mobile)
 			return TypePointer();
-		return intType->binaryOperatorResult(_operator, _other);
-	}
-	else if (_other->category() == Category::FixedPoint)
-	{
-		shared_ptr<FixedPointType const> fixType = fixedPointType();
-		if (!fixType)
-			return TypePointer();
-		return fixType->binaryOperatorResult(_operator, _other);
+		return mobile->binaryOperatorResult(_operator, _other);
 	}
 	else if (_other->category() != category())
 		return TypePointer();
@@ -628,22 +614,14 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	RationalNumberType const& other = dynamic_cast<RationalNumberType const&>(*_other);
 	if (Token::isCompareOp(_operator))
 	{
-		if (m_value.denominator() == 1)
-		{
-			shared_ptr<IntegerType const> thisIntegerType = integerType();
-			shared_ptr<IntegerType const> otherIntegerType = other.integerType();
-			if (!thisIntegerType || !otherIntegerType)
-				return TypePointer();
-			return thisIntegerType->binaryOperatorResult(_operator, otherIntegerType);
-		}
-		else
-		{
-			shared_ptr<FixedPointType const> thisFixedPointType = fixedPointType();
-			shared_ptr<FixedPointType const> otherFixedPointType = other.fixedPointType();
-			if (!thisFixedPointType || !otherFixedPointType)
-				return TypePointer();
-			return thisFixedPointType->binaryOperatorResult(_operator, otherFixedPointType);
-		}		
+		// Since we do not have a "BoolConstantType", we have to do the acutal comparison
+		// at runtime and convert to mobile typse first. Such a comparison is not a very common
+		// use-case and will be optimized away.
+		TypePointer thisMobile = mobileType();
+		TypePointer otherMobile = other.mobileType();
+		if (!thisMobile || !otherMobile)
+			return TypePointer();
+		return thisMobile->binaryOperatorResult(_operator, otherMobile);
 	}
 	else
 	{
@@ -695,25 +673,19 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			break;	
 		case Token::Exp:
 		{
-			bigint newDenominator;
-			bigint newNumerator;
+			using boost::multiprecision::pow;
 			if (other.m_value.denominator() != 1) 
 				return TypePointer();
-			else if (abs(other.m_value) > numeric_limits<unsigned>::max())
-				return TypePointer();
-			else if (other.m_value < 0) //apply inverse
-			{
-				rational absoluteValue = abs(other.m_value);
-				newDenominator = boost::multiprecision::pow(m_value.numerator(), absoluteValue.numerator().convert_to<unsigned>());
-				newNumerator = boost::multiprecision::pow(m_value.denominator(), absoluteValue.numerator().convert_to<unsigned>());
-				value = rational(newNumerator, newDenominator);
-			}
+			else if (abs(other.m_value) > numeric_limits<uint32_t>::max())
+				return TypePointer(); // This will need too much memory to represent.
+			uint32_t exponent = abs(other.m_value).numerator().convert_to<uint32_t>();
+			bigint numerator = pow(m_value.numerator(), exponent);
+			bigint denominator = pow(m_value.denominator(), exponent);
+			if (other.m_value >= 0)
+				value = rational(numerator, denominator);
 			else
-			{
-				newNumerator = boost::multiprecision::pow(m_value.numerator(), other.m_value.numerator().convert_to<unsigned>());
-				newDenominator = boost::multiprecision::pow(m_value.denominator(), other.m_value.numerator().convert_to<unsigned>());
-				value = rational(newNumerator, newDenominator);
-			}
+				// invert
+				value = rational(denominator, numerator);
 			break;
 		}
 		default:

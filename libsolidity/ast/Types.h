@@ -365,7 +365,7 @@ public:
 	/// @returns true if the literal is a valid integer.
 	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
 	
-	explicit RationalNumberType(rational _value):
+	explicit RationalNumberType(rational const& _value):
 		m_value(_value)
 	{}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
