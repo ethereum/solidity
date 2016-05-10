@@ -766,20 +766,15 @@ u256 RationalNumberType::literalValue(Literal const*) const
 TypePointer RationalNumberType::mobileType() const
 {
 	if (m_value.denominator() == 1)
-	{
-		auto intType = integerType();
-		solAssert(!!intType, "mobileType called with invalid integer constant " + toString(false));
-		return intType;
-	}
-	auto fixType = fixedPointType();
-	solAssert(!!fixType, "mobileType called with invalid fixed constant " + toString(false));
-	return fixType;
+		return integerType();
+	else
+		return fixedPointType();
 }
 
 //TODO: combine integerType() and fixedPointType() into one function
 shared_ptr<IntegerType const> RationalNumberType::integerType() const
 {
-	solAssert(m_value.denominator() == 1, "Non integer type found.");
+	solAssert(m_value.denominator() == 1, "integerType() called for fractional number.");
 	bigint value = integerPart();
 	bool negative = (value < 0);
 	if (negative) // convert to positive number of same bit requirements

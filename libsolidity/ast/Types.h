@@ -205,7 +205,7 @@ public:
 	virtual unsigned sizeOnStack() const { return 1; }
 	/// @returns the mobile (in contrast to static) type corresponding to the given type.
 	/// This returns the corresponding integer type for ConstantTypes and the pointer type
-	/// for storage reference types.
+	/// for storage reference types. Might return a null pointer if there is no fitting type.
 	virtual TypePointer mobileType() const { return shared_from_this(); }
 	/// @returns true if this is a non-value type and the data of this type is stored at the
 	/// given location.

@@ -772,12 +772,17 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		{
 			// Infer type from value.
 			solAssert(!var.typeName(), "");
-			if (
-				valueComponentType->category() == Type::Category::RationalNumber &&
-				!dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->mobileType()
-			)
-				fatalTypeError(_statement.initialValue()->location(), "Invalid rational " + valueComponentType->toString() + ".");
 			var.annotation().type = valueComponentType->mobileType();
+			if (!var.annotation().type)
+				if (valueComponentType->category() == Type::Category::RationalNumber)
+					fatalTypeError(
+						_statement.initialValue()->location(),
+						"Invalid rational " +
+						valueComponentType->toString() +
+						" (absolute value too large or divison by zero)."
+					);
+				else
+					solAssert(false, "");
 			var.accept(*this);
 		}
 		else
@@ -787,8 +792,8 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			{
 				if (
 					valueComponentType->category() == Type::Category::RationalNumber &&
-					dynamic_pointer_cast<RationalNumberType const>(valueComponentType)->denominator() != 1 &&
-					!!valueComponentType->mobileType()
+					dynamic_cast<RationalNumberType const&>(*valueComponentType).denominator() != 1 &&
+					valueComponentType->mobileType()
 				)
 					typeError(
 						_statement.location(),
@@ -818,10 +823,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 void TypeChecker::endVisit(ExpressionStatement const& _statement)
 {
 	if (type(_statement.expression())->category() == Type::Category::RationalNumber)
-		if (
-			!dynamic_pointer_cast<RationalNumberType const>(type(_statement.expression()))->integerType() && 
-			!dynamic_pointer_cast<RationalNumberType const>(type(_statement.expression()))->fixedPointType()
-		)
+		if (!dynamic_cast<RationalNumberType const&>(*type(_statement.expression())).mobileType())
 			typeError(_statement.expression().location(), "Invalid rational number.");
 }
 
@@ -1128,8 +1130,8 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			if (functionType->takesArbitraryParameters())
 			{
 				if (auto t = dynamic_cast<RationalNumberType const*>(argType.get()))
-					if (!t->integerType() && !t->fixedPointType())
-						typeError(arguments[i]->location(), "Rational number too large.");
+					if (!t->mobileType())
+						typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				typeError(
@@ -1367,7 +1369,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 				solAssert(!numberType->denominator() != 1 ,"Invalid type for array access.");
 				if (!actualType.isDynamicallySized() && actualType.length() <= numberType->literalValue(nullptr))
 					typeError(_access.location(), "Out of bounds array access.");
-			}				
+			}
 		}
 		resultType = actualType.baseType();
 		isLValue = actualType.location() != DataLocation::CallData;
@@ -1521,7 +1523,7 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 		if (
 			type(_expression)->category() == Type::Category::RationalNumber &&
 			dynamic_pointer_cast<RationalNumberType const>(type(_expression))->denominator() != 1 &&
-			!!type(_expression)->mobileType()
+			type(_expression)->mobileType()
 		)
 			typeError(
 				_expression.location(),
@@ -1531,7 +1533,7 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 				_expectedType.toString() +
 				". Try converting to type " +
 				type(_expression)->mobileType()->toString() +
-				" or using an explicit conversion." 
+				" or use an explicit conversion."
 			);
 		else
 			typeError(
