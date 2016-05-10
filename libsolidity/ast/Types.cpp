@@ -395,7 +395,6 @@ bool FixedPointType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.category() == category() ||
 		_convertTo.category() == Category::Integer ||
-		_convertTo.category() == Category::Enum ||
 		_convertTo.category() == Category::FixedBytes;
 }
 
@@ -859,6 +858,7 @@ bool FixedBytesType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 bool FixedBytesType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 {
 	return _convertTo.category() == Category::Integer ||
+		_convertTo.category() == Category::FixedPoint ||
 		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == category();
 }
