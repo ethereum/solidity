@@ -281,10 +281,6 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
-	//@todo type checking and creating code for an operator should be in the same place:
-	// the operator should know how to convert itself and to which types it applies, so
-	// put this code together with "Type::acceptsBinary/UnaryOperator" into a class that
-	// represents the operator
 	if (_unaryOperation.annotation().type->category() == Type::Category::RationalNumber)
 	{
 		m_context << _unaryOperation.annotation().type->literalValue(nullptr);
@@ -1305,6 +1301,9 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 {
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 	bool const c_isSigned = type.isSigned();
+
+	if (_type.category() == Type::Category::FixedPoint)
+		solAssert(false, "Not yet implemented - FixedPointType.");
 
 	switch (_operator)
 	{

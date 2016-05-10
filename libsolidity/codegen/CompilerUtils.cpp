@@ -343,10 +343,11 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 	case Type::Category::Enum:
 		solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Enum, "");
 		break;
+	case Type::Category::FixedPoint:
+		solAssert(false, "Not yet implemented - FixedPointType.");
 	case Type::Category::Integer:
 	case Type::Category::Contract:
 	case Type::Category::RationalNumber:
-	case Type::Category::FixedPoint:
 		if (targetTypeCategory == Type::Category::FixedBytes)
 		{
 			solAssert(stackTypeCategory == Type::Category::Integer || stackTypeCategory == Type::Category::RationalNumber,
@@ -375,8 +376,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
 				if (targetFixedPointType.integerBits() > typeOnStack->numBits())
 					cleanHigherOrderBits(*typeOnStack);
-			//need m_context call here
-				
+			solAssert(false, "Not yet implemented - FixedPointType.");
 		}
 		else
 		{
@@ -389,6 +389,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 				RationalNumberType const& constType = dynamic_cast<RationalNumberType const&>(_typeOnStack);
 				// We know that the stack is clean, we only have to clean for a narrowing conversion
 				// where cleanup is forced.
+				solAssert(!constType.isFractional(), "Not yet implemented - FixedPointType.");
 				if (targetType.numBits() < constType.integerType()->numBits() && _cleanupNeeded)
 					cleanHigherOrderBits(targetType);
 			}

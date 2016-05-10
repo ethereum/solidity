@@ -774,6 +774,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			solAssert(!var.typeName(), "");
 			var.annotation().type = valueComponentType->mobileType();
 			if (!var.annotation().type)
+			{
 				if (valueComponentType->category() == Type::Category::RationalNumber)
 					fatalTypeError(
 						_statement.initialValue()->location(),
@@ -783,6 +784,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 					);
 				else
 					solAssert(false, "");
+			}
 			var.accept(*this);
 		}
 		else

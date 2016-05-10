@@ -44,7 +44,7 @@ class FunctionType; // forward
 using TypePointer = std::shared_ptr<Type const>;
 using FunctionTypePointer = std::shared_ptr<FunctionType const>;
 using TypePointers = std::vector<TypePointer>;
-using rational = boost::rational<bigint>;
+using rational = boost::rational<dev::bigint>;
 
 
 enum class DataLocation { Storage, CallData, Memory };
@@ -389,7 +389,7 @@ public:
 	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
-	/// @returns true iff the value is not an integer.
+	/// @returns true if the value is not an integer.
 	bool isFractional() const { return m_value.denominator() != 1; }
 
 private:
