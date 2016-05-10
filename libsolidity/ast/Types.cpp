@@ -123,8 +123,8 @@ TypePointer Type::fromElementaryTypeName(ElementaryTypeNameToken const& _type)
 	);
 
 	Token::Value token = _type.token();
-	unsigned int m = _type.firstNumber();
-	unsigned int n = _type.secondNumber();
+	unsigned m = _type.firstNumber();
+	unsigned n = _type.secondNumber();
 
 	switch (token)
 	{
@@ -699,19 +699,19 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 			bigint newNumerator;
 			if (other.m_value.denominator() != 1) 
 				return TypePointer();
-			else if (abs(other.m_value) > numeric_limits<unsigned int>::max())
+			else if (abs(other.m_value) > numeric_limits<unsigned>::max())
 				return TypePointer();
 			else if (other.m_value < 0) //apply inverse
 			{
 				rational absoluteValue = abs(other.m_value);
-				newDenominator = boost::multiprecision::pow(m_value.numerator(), absoluteValue.numerator().convert_to<unsigned int>());
-				newNumerator = boost::multiprecision::pow(m_value.denominator(), absoluteValue.numerator().convert_to<unsigned int>());
+				newDenominator = boost::multiprecision::pow(m_value.numerator(), absoluteValue.numerator().convert_to<unsigned>());
+				newNumerator = boost::multiprecision::pow(m_value.denominator(), absoluteValue.numerator().convert_to<unsigned>());
 				value = rational(newNumerator, newDenominator);
 			}
 			else
 			{
-				newNumerator = boost::multiprecision::pow(m_value.numerator(), other.m_value.numerator().convert_to<unsigned int>());
-				newDenominator = boost::multiprecision::pow(m_value.denominator(), other.m_value.numerator().convert_to<unsigned int>());
+				newNumerator = boost::multiprecision::pow(m_value.numerator(), other.m_value.numerator().convert_to<unsigned>());
+				newDenominator = boost::multiprecision::pow(m_value.denominator(), other.m_value.numerator().convert_to<unsigned>());
 				value = rational(newNumerator, newDenominator);
 			}
 			break;
@@ -1555,9 +1555,9 @@ bool EnumType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.category() == category() || _convertTo.category() == Category::Integer;
 }
 
-unsigned int EnumType::memberValue(ASTString const& _member) const
+unsigned EnumType::memberValue(ASTString const& _member) const
 {
-	unsigned int index = 0;
+	unsigned index = 0;
 	for (ASTPointer<EnumValue> const& decl: m_enum.members())
 	{
 		if (decl->name() == _member)
