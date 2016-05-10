@@ -97,13 +97,20 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 				return make_pair(sourceUnit, std::make_shared<Error::Type const>(currentError->type()));
 		}
 	}
+	catch (InternalCompilerError const& _e)
+	{
+		string message("Internal compiler error");
+		if (string const* description = boost::get_error_info<errinfo_comment>(_e))
+			message += ": " + *description;
+		BOOST_FAIL(message);
+	}
 	catch (Error const& _e)
 	{
 		return make_pair(sourceUnit, std::make_shared<Error::Type const>(_e.type()));
 	}
-	catch (Exception const& /*_exception*/)
+	catch (...)
 	{
-		return make_pair(sourceUnit, nullptr);
+		BOOST_FAIL("Unexpected exception.");
 	}
 	return make_pair(sourceUnit, nullptr);
 }
@@ -3516,6 +3523,19 @@ BOOST_AUTO_TEST_CASE(inline_array_rationals)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(rational_index_access)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint[] memory a;
+				a[.5];
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
 BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
 {
 	char const* text = R"(
@@ -3572,6 +3592,18 @@ BOOST_AUTO_TEST_CASE(var_capable_of_holding_constant_rationals)
 				var a = 0.12345678;
 				var b = 12345678.352;
 				var c = 0.00000009;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(var_and_rational_with_tuple)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				var (a, b) = (.5, 1/3);
 			}
 		}
 	)";
