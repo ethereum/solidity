@@ -204,8 +204,9 @@ public:
 	virtual bool isValueType() const { return false; }
 	virtual unsigned sizeOnStack() const { return 1; }
 	/// @returns the mobile (in contrast to static) type corresponding to the given type.
-	/// This returns the corresponding integer type for ConstantTypes and the pointer type
-	/// for storage reference types. Might return a null pointer if there is no fitting type.
+	/// This returns the corresponding IntegerType or FixedPointType for RationalNumberType
+	/// and the pointer type for storage reference types.
+	/// Might return a null pointer if there is no fitting type.
 	virtual TypePointer mobileType() const { return shared_from_this(); }
 	/// @returns true if this is a non-value type and the data of this type is stored at the
 	/// given location.
@@ -388,8 +389,8 @@ public:
 	/// If the integer part does not fit, returns an empty pointer.
 	std::shared_ptr<FixedPointType const> fixedPointType() const;
 
-	bigint denominator() const { return m_value.denominator(); }
-	bigint integerPart() const { return m_value.numerator() / m_value.denominator(); }
+	/// @returns true iff the value is not an integer.
+	bool isFractional() const { return m_value.denominator() != 1; }
 
 private:
 	rational m_value;

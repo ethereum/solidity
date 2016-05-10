@@ -534,15 +534,15 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		auto targetType = dynamic_cast<IntegerType const*>(&_convertTo);
 		if (m_value == 0)
 			return true;
-		if (m_value.denominator() != 1)
+		if (isFractional())
 			return false;
 		int forSignBit = (targetType->isSigned() ? 1 : 0);
 		if (m_value > 0)
 		{
-			if (integerPart() <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
+			if (m_value.numerator() <= (u256(-1) >> (256 - targetType->numBits() + forSignBit)))
 				return true;
 		}
-		else if (targetType->isSigned() && -integerPart() <= (u256(1) << (targetType->numBits() - forSignBit)))
+		else if (targetType->isSigned() && -m_value.numerator() <= (u256(1) << (targetType->numBits() - forSignBit)))
 			return true;
 		return false;
 	}
@@ -560,7 +560,7 @@ bool RationalNumberType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedBytes)
 	{
 		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-		if (m_value.denominator() == 1)
+		if (!isFractional())
 			return fixedBytes.numBytes() * 8 >= integerType()->numBits();
 		else
 			return false;
@@ -580,7 +580,7 @@ TypePointer RationalNumberType::unaryOperatorResult(Token::Value _operator) cons
 	switch (_operator)
 	{
 	case Token::BitNot:
-		if(m_value.denominator() != 1)
+		if (isFractional())
 			return TypePointer();
 		value = ~m_value.numerator();
 		break;
@@ -625,7 +625,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 	else
 	{
 		rational value;
-		bool fractional = (m_value.denominator() != 1 || other.m_value.denominator() != 1);
+		bool fractional = isFractional() || other.isFractional();
 		switch (_operator)
 		{
 		//bit operations will only be enabled for integers and fixed types that resemble integers
@@ -673,7 +673,7 @@ TypePointer RationalNumberType::binaryOperatorResult(Token::Value _operator, Typ
 		case Token::Exp:
 		{
 			using boost::multiprecision::pow;
-			if (other.m_value.denominator() != 1) 
+			if (other.isFractional())
 				return TypePointer();
 			else if (abs(other.m_value) > numeric_limits<uint32_t>::max())
 				return TypePointer(); // This will need too much memory to represent.
@@ -704,7 +704,7 @@ bool RationalNumberType::operator==(Type const& _other) const
 
 string RationalNumberType::toString(bool) const
 {
-	if (m_value.denominator() == 1)
+	if (!isFractional())
 		return "int_const " + m_value.numerator().str();
 	return "rational_const " + m_value.numerator().str() + '/' + m_value.denominator().str();
 }
@@ -717,7 +717,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 	u256 value;
 	bigint shiftedValue; 
 
-	if (m_value.denominator() == 1)
+	if (!isFractional())
 		shiftedValue = m_value.numerator();
 	else
 	{
@@ -741,7 +741,7 @@ u256 RationalNumberType::literalValue(Literal const*) const
 
 TypePointer RationalNumberType::mobileType() const
 {
-	if (m_value.denominator() == 1)
+	if (!isFractional())
 		return integerType();
 	else
 		return fixedPointType();
@@ -749,8 +749,8 @@ TypePointer RationalNumberType::mobileType() const
 
 shared_ptr<IntegerType const> RationalNumberType::integerType() const
 {
-	solAssert(m_value.denominator() == 1, "integerType() called for fractional number.");
-	bigint value = integerPart();
+	solAssert(!isFractional(), "integerType() called for fractional number.");
+	bigint value = m_value.numerator();
 	bool negative = (value < 0);
 	if (negative) // convert to positive number of same bit requirements
 		value = ((0 - value) - 1) << 1;

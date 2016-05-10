@@ -792,7 +792,7 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 			{
 				if (
 					valueComponentType->category() == Type::Category::RationalNumber &&
-					dynamic_cast<RationalNumberType const&>(*valueComponentType).denominator() != 1 &&
+					dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
 					valueComponentType->mobileType()
 				)
 					typeError(
@@ -1366,9 +1366,9 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			expectType(*index, IntegerType(256));
 			if (auto numberType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 			{
-				solAssert(!numberType->denominator() != 1 ,"Invalid type for array access.");
-				if (!actualType.isDynamicallySized() && actualType.length() <= numberType->literalValue(nullptr))
-					typeError(_access.location(), "Out of bounds array access.");
+				if (!numberType->isFractional()) // error is reported above
+					if (!actualType.isDynamicallySized() && actualType.length() <= numberType->literalValue(nullptr))
+						typeError(_access.location(), "Out of bounds array access.");
 			}
 		}
 		resultType = actualType.baseType();
@@ -1522,7 +1522,7 @@ void TypeChecker::expectType(Expression const& _expression, Type const& _expecte
 	{
 		if (
 			type(_expression)->category() == Type::Category::RationalNumber &&
-			dynamic_pointer_cast<RationalNumberType const>(type(_expression))->denominator() != 1 &&
+			dynamic_pointer_cast<RationalNumberType const>(type(_expression))->isFractional() &&
 			type(_expression)->mobileType()
 		)
 			typeError(
