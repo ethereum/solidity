@@ -767,7 +767,6 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 {
 	bool negative = (m_value < 0);
 	unsigned fractionalBits = 0;
-	unsigned integerBits = 0;
 	rational value = abs(m_value); // We care about the sign later.
 	rational maxValue = negative ? 
 		rational(bigint(1) << 255):
@@ -788,13 +787,19 @@ shared_ptr<FixedPointType const> RationalNumberType::fixedPointType() const
 		// modify value to satisfy bit requirements for negative numbers:
 		// add one bit for sign and decrement because negative numbers can be larger
 		v = (v - 1) << 1;
-		
+
 	if (v > u256(-1))
 		return shared_ptr<FixedPointType const>();
-	if (0 == integerPart())
+
+	unsigned totalBits = bytesRequired(v) * 8;
+	solAssert(totalBits <= 256, "");
+	unsigned integerBits = totalBits >= fractionalBits ? totalBits - fractionalBits : 0;
+	// Special case: Numbers between -1 and 0 have their sign bit in the fractional part.
+	if (negative && abs(m_value) < 1 && totalBits > fractionalBits)
+	{
+		fractionalBits += 8;
 		integerBits = 0;
-	else
-		integerBits = (bytesRequired(v) * 8) - fractionalBits;
+	}
 
 	if (integerBits > 256 || fractionalBits > 256 || fractionalBits + integerBits > 256)
 		return shared_ptr<FixedPointType const>();
