@@ -32,8 +32,8 @@ Functions of the current contract can be called directly ("internally"), also re
 this nonsensical example::
 
     contract c {
-      function g(uint a) returns (uint ret) { return f(); }
-      function f() returns (uint ret) { return g(7) + f(); }
+        function g(uint a) returns (uint ret) { return f(); }
+        function f() returns (uint ret) { return g(7) + f(); }
     }
 
 These function calls are translated into simple jumps inside the EVM. This has
@@ -53,12 +53,12 @@ When calling functions
 of other contracts, the amount of Wei sent with the call and the gas can be specified::
 
     contract InfoFeed {
-      function info() returns (uint ret) { return 42; }
+        function info() returns (uint ret) { return 42; }
     }
     contract Consumer {
-      InfoFeed feed;
-      function setFeed(address addr) { feed = InfoFeed(addr); }
-      function callFeed() { feed.info.value(10).gas(800)(); }
+        InfoFeed feed;
+        function setFeed(address addr) { feed = InfoFeed(addr); }
+        function callFeed() { feed.info.value(10).gas(800)(); }
     }
 
 Note that the expression `InfoFeed(addr)` performs an explicit type conversion stating
@@ -76,15 +76,15 @@ of unused parameters (especially return parameters) can be omitted.
 ::
 
     contract c {
-      function f(uint key, uint value) { ... }
-      function g() {
-        // named arguments
-        f({value: 2, key: 3});
-      }
-      // omitted parameters
-      function func(uint k, uint) returns(uint) {
-        return k;
-      }
+        function f(uint key, uint value) { ... }
+        function g() {
+            // named arguments
+            f({value: 2, key: 3});
+        }
+        // omitted parameters
+        function func(uint k, uint) returns(uint) {
+            return k;
+        }
     }
 
 Order of Evaluation of Expressions
@@ -109,29 +109,31 @@ Destructuring Assignments and Returning Multiple Values
 Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time and also assign them to multiple variables (or LValues in general) at the same time::
 
     contract C {
-      uint[] data;
-      function f() returns (uint, bool, uint) {
-        return (7, true, 2);
-      }
-      function g() {
-        // Declares and assigns the variables. Specifying the type explicitly is not possible.
-        var (x, b, y) = f();
-        // Assigns to a pre-existing variable.
-        (x, y) = (2, 7);
-        // Common trick to swap values -- does not work for non-value storage types.
-        (x, y) = (y, x);
-        // Components can be left out (also for variable declarations).
-        // If the tuple ends in an empty component,
-        // the rest of the values are discarded.
-        (data.length,) = f(); // Sets the length to 7
-        // The same can be done on the left side.
-        (,data[3]) = f(); // Sets data[3] to 2
-        // Components can only be left out at the left-hand-side of assignments, with
-        // one exception:
-        (x,) = (1,);
-        // (1,) is the only way to specify a 1-component tuple, because (1) is
-        // equivalent to 1.
-      }
+        uint[] data;
+
+        function f() returns (uint, bool, uint) {
+            return (7, true, 2);
+        }
+
+        function g() {
+            // Declares and assigns the variables. Specifying the type explicitly is not possible.
+            var (x, b, y) = f();
+            // Assigns to a pre-existing variable.
+            (x, y) = (2, 7);
+            // Common trick to swap values -- does not work for non-value storage types.
+            (x, y) = (y, x);
+            // Components can be left out (also for variable declarations).
+            // If the tuple ends in an empty component,
+            // the rest of the values are discarded.
+            (data.length,) = f(); // Sets the length to 7
+            // The same can be done on the left side.
+            (,data[3]) = f(); // Sets data[3] to 2
+            // Components can only be left out at the left-hand-side of assignments, with
+            // one exception:
+            (x,) = (1,);
+            // (1,) is the only way to specify a 1-component tuple, because (1) is
+            // equivalent to 1.
+        }
     }
 
 Complications for Arrays and Structs
