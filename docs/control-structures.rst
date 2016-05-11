@@ -246,8 +246,8 @@ arising when writing manual assembly by the following features:
 We now want to describe the inline assembly language in detail.
 
 .. warning::
-	Inline assembly is still a relatively new feature and might change if it does not prove useful,
-	so please try to keep up to date.
+    Inline assembly is still a relatively new feature and might change if it does not prove useful,
+    so please try to keep up to date.
 
 Example
 -------
@@ -258,23 +258,23 @@ idea is that assembly libraries will be used to enhance the language in such way
 
 .. code::
 
-	library GetCode {
-		function at(address _addr) returns (bytes o_code) {
-			assembly {
-				// retrieve the size of the code, this needs assembly
-				let size := extcodesize(_addr)
-				// allocate output byte array - this could also be done without assembly
-				// by using o_code = new bytes(size)
-				o_code := mload(0x40)
-				// new "memory end" including padding
-				mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
-				// store length in memory
-				mstore(o_code, size)
-				// actually retrieve the code, this needs assembly
-				extcodecopy(_addr, add(o_code, 0x20), 0, size)
-			}
-		}
-	}
+    library GetCode {
+        function at(address _addr) returns (bytes o_code) {
+            assembly {
+                // retrieve the size of the code, this needs assembly
+                let size := extcodesize(_addr)
+                // allocate output byte array - this could also be done without assembly
+                // by using o_code = new bytes(size)
+                o_code := mload(0x40)
+                // new "memory end" including padding
+                mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), bnot(0x1f))))
+                // store length in memory
+                mstore(o_code, size)
+                // actually retrieve the code, this needs assembly
+                extcodecopy(_addr, add(o_code, 0x20), 0, size)
+            }
+        }
+    }
 
 Inline assemmbly could also be beneficial in cases where the optimizer fails to produce
 efficient code. Please be aware that assembly is much more difficult to write because
@@ -283,24 +283,24 @@ you really know what you are doing.
 
 .. code::
 
-	library VectorSum {
-		// This function is less efficient because the optimizer currently fails to
-		// remove the bounds checks in array access.
-		function sumSolidity(uint[] _data) returns (uint o_sum) {
-			for (uint i = 0; i < _data.length; ++i)
-				o_sum += _data[i];
-		}
-		// We know that we only access the array in bounds, so we can avoid the check.
-		// 0x20 needs to be added to an array because the first slot contains the
-		// array length.
-		function sumAsm(uint[] _data) returns (uint o_sum) {
-			for (uint i = 0; i < _data.length; ++i) {
-				assembly {
+    library VectorSum {
+        // This function is less efficient because the optimizer currently fails to
+        // remove the bounds checks in array access.
+        function sumSolidity(uint[] _data) returns (uint o_sum) {
+            for (uint i = 0; i < _data.length; ++i)
+                o_sum += _data[i];
+        }
+        // We know that we only access the array in bounds, so we can avoid the check.
+        // 0x20 needs to be added to an array because the first slot contains the
+        // array length.
+        function sumAsm(uint[] _data) returns (uint o_sum) {
+            for (uint i = 0; i < _data.length; ++i) {
+                assembly {
                     o_sum := mload(add(add(_data, 0x20), i))
                 }
             }
-		}
-	}
+        }
+    }
 
 Syntax
 ------
@@ -487,7 +487,7 @@ Strings are stored left-aligned and cannot be longer than 32 bytes.
 
 .. code::
 
-	assembly { 2 3 add "abc" and }
+    assembly { 2 3 add "abc" and }
 
 Functional Style
 -----------------
@@ -497,7 +497,7 @@ adding `3` to the contents in memory at position `0x80` would be
 
 .. code::
 
-	3 0x80 mload add 0x80 mstore
+    3 0x80 mload add 0x80 mstore
 
 As it is often hard to see what the actual arguments for certain opcodes are,
 Solidity inline assembly also provides a "functional style" notation where the same code
@@ -505,7 +505,7 @@ would be written as follows
 
 .. code::
 
-	mstore(0x80, add(mload(0x80), 3))
+    mstore(0x80, add(mload(0x80), 3))
 
 Functional style and instructional style can be mixed, but any opcode inside a
 functional style expression has to return exactly one stack slot (most of the opcodes do).
@@ -536,18 +536,18 @@ It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
-	contract c {
-		uint b;
-		function f(uint x) returns (uint r) {
-			assembly {
-				b pop // remove the offset, we know it is zero
-				sload
-				x
-				mul
-				=: r  // assign to return variable r
-			}
-		}
-	}
+    contract c {
+        uint b;
+        function f(uint x) returns (uint r) {
+            assembly {
+                b pop // remove the offset, we know it is zero
+                sload
+                x
+                mul
+                =: r  // assign to return variable r
+            }
+        }
+    }
 
 Labels
 ------
@@ -558,19 +558,19 @@ jumps easier. The following code computes an element in the Fibonacci series.
 
 .. code::
 
-	{
-		let n := calldataload(4)
-		let a := 1
-		let b := a
-	loop:
-		jumpi(loopend, eq(n, 0))
-		a add swap1
-		n := sub(n, 1)
-		jump(loop)
-	loopend:
-		mstore(0, a)
-		return(0, 0x20)
-	}
+    {
+        let n := calldataload(4)
+        let a := 1
+        let b := a
+    loop:
+        jumpi(loopend, eq(n, 0))
+        a add swap1
+        n := sub(n, 1)
+        jump(loop)
+    loopend:
+        mstore(0, a)
+        return(0, 0x20)
+    }
 
 Please note that automatically accessing stack variables can only work if the
 assembler knows the current stack height. This fails to work if the jump source
@@ -583,19 +583,19 @@ will have a wrong impression about the stack height at label `two`:
 
 .. code::
 
-	{
-		jump(two)
-		one:
-			// Here the stack height is 1 (because we pushed 7),
-			// but the assembler thinks it is 0 because it reads
-			// from top to bottom.
-			// Accessing stack variables here will lead to errors.
-			jump(three)
-		two:
-			7 // push something onto the stack
-			jump(one)
-		three:
-	}
+    {
+        jump(two)
+        one:
+            // Here the stack height is 1 (because we pushed 7),
+            // but the assembler thinks it is 0 because it reads
+            // from top to bottom.
+            // Accessing stack variables here will lead to errors.
+            jump(three)
+        two:
+            7 // push something onto the stack
+            jump(one)
+        three:
+    }
 
 
 Declaring Assembly-Local Variables
@@ -610,19 +610,19 @@ be just `0`, but it can also be a complex functional-style expression.
 
 .. code::
 
-	contract c {
-		function f(uint x) returns (uint b) {
-			assembly {
-				let v := add(x, 1)
-				mstore(0x80, v)
-				{
-					let y := add(sload(v), 1)
-					b := y
-				} // y is "deallocated" here
-				b := add(b, v)
-			} // v is "deallocated" here
-		}
-	}
+    contract c {
+        function f(uint x) returns (uint b) {
+            assembly {
+                let v := add(x, 1)
+                mstore(0x80, v)
+                {
+                    let y := add(sload(v), 1)
+                    b := y
+                } // y is "deallocated" here
+                b := add(b, v)
+            } // v is "deallocated" here
+        }
+    }
 
 
 Assignments
@@ -640,12 +640,12 @@ For both ways, the colon points to the name of the variable.
 
 .. code::
 
-	assembly {
-		let v := 0 // functional-style assignment as part of variable declaration
-		let g := add(v, 2)
-		sload(10)
-		=: v // instruction style assignment, puts the result of sload(10) into v
-	}
+    assembly {
+        let v := 0 // functional-style assignment as part of variable declaration
+        let g := add(v, 2)
+        sload(10)
+        =: v // instruction style assignment, puts the result of sload(10) into v
+    }
 
 
 Things to Avoid
@@ -681,6 +681,6 @@ arrays are pointers to memory arrays. The length of a dynamic array is stored at
 first slot of the array and then only the array elements follow.
 
 .. warning::
-	Statically-sized memory arrays do not have a length field, but it will be added soon
-	to allow better convertibility between statically- and dynamically-sized arrays, so
-	please do not rely on that.
+    Statically-sized memory arrays do not have a length field, but it will be added soon
+    to allow better convertibility between statically- and dynamically-sized arrays, so
+    please do not rely on that.
