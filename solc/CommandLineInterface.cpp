@@ -196,9 +196,9 @@ void CommandLineInterface::handleSignatureHashes(string const& _contract)
 
 void CommandLineInterface::handleMeta(DocumentationType _type, string const& _contract)
 {
-	std::string argName;
-	std::string suffix;
-	std::string title;
+	string argName;
+	string suffix;
+	string title;
 	switch(_type)
 	{
 	case DocumentationType::ABIInterface:
@@ -540,7 +540,7 @@ bool CommandLineInterface::processInput()
 			auto const& virt = redir.first;
 			if (longestPrefix > 0 && virt.length() <= longestPrefix)
 				continue;
-			if (virt.length() > _path.length() || !std::equal(virt.begin(), virt.end(), _path.begin()))
+			if (virt.length() > _path.length() || !equal(virt.begin(), virt.end(), _path.begin()))
 				continue;
 			string path = redir.second;
 			path.append(_path.begin() + virt.length(), _path.end());
@@ -551,13 +551,13 @@ bool CommandLineInterface::processInput()
 				continue;
 			}
 			boostPath = boost::filesystem::canonical(boostPath);
-			bool isAllowed = false;
+			bool isAllowed = m_compiler->searchAbsolutePath();
 			for (auto const& dir: m_allowedDirectories)
 			{
 				// If dir is a prefix of boostPath, we are fine.
 				if (
 					std::distance(dir.begin(), dir.end()) <= std::distance(boostPath.begin(), boostPath.end()) &&
-					std::equal(dir.begin(), dir.end(), boostPath.begin())
+ 					std::equal(dir.begin(), dir.end(), boostPath.begin())
 				)
 				{
 					isAllowed = true;

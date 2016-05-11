@@ -178,7 +178,7 @@ public:
 
 	/// @returns the list of errors that occured during parsing and type checking.
 	ErrorList const& errors() const { return m_errors; }
-
+	bool searchAbsolutePath() const { return m_searchAbsolutePath; }
 private:
 	/**
 	 * Information pertaining to one source unit, filled gradually during parsing and compilation.
@@ -228,6 +228,7 @@ private:
 
 	ReadFileCallback m_readFile;
 	bool m_parseSuccessful;
+	bool m_searchAbsolutePath = false;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
 	std::vector<Source const*> m_sourceOrder;

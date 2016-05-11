@@ -106,6 +106,7 @@ bool CompilerStack::parse()
 	for (auto const& s: m_sources)
 		sourcesToParse.push_back(s.first);
 	map<string, SourceUnit const*> sourceUnitsByName;
+	m_searchAbsolutePath = (sourcesToParse.size() == 1);
 	for (size_t i = 0; i < sourcesToParse.size(); ++i)
 	{
 		string const& path = sourcesToParse[i];
@@ -484,6 +485,8 @@ string CompilerStack::absolutePath(string const& _path, string const& _reference
 	using path = boost::filesystem::path;
 	path p(_path);
 	path result(_reference);
+	if (!result.has_parent_path() && m_searchAbsolutePath)
+		result = path(boost::filesystem::current_path() /= _reference);
 	result.remove_filename();
 	for (path::iterator it = p.begin(); it != p.end(); ++it)
 		if (*it == "..")
