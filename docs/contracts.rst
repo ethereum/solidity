@@ -84,7 +84,8 @@ This means that cyclic creation dependencies are impossible.
             // Only the creator can alter the name --
             // the comparison is possible since contracts
             // are implicitly convertible to addresses.
-            if (msg.sender == creator) name = newName;
+            if (msg.sender == creator)
+                name = newName;
         }
 
         function transfer(address newOwner) {
@@ -221,8 +222,12 @@ The next example is a bit more complex:
 ::
 
     contract complex {
-        struct Data { uint a; bytes3 b; mapping(uint => uint) map; }
-        mapping(uint => mapping(bool => Data[])) public data;
+        struct Data {
+            uint a;
+            bytes3 b;
+            mapping (uint => uint) map;
+        }
+        mapping (uint => mapping(bool => Data[])) public data;
     }
 
 It will generate a function of the following form::
@@ -260,7 +265,11 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // This means that if the owner calls this function, the
         // function is executed and otherwise, an exception is
         // thrown.
-        modifier onlyowner { if (msg.sender != owner) throw; _ }
+        modifier onlyowner {
+            if (msg.sender != owner)
+                throw;
+            _
+        }
     }
 
 
@@ -277,17 +286,24 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
     contract priced {
         // Modifiers can receive arguments:
-        modifier costs(uint price) { if (msg.value >= price) _ }
+        modifier costs(uint price) {
+            if (msg.value >= price) {
+                _
+            }
+        }
     }
 
 
     contract Register is priced, owned {
         mapping (address => bool) registeredAddresses;
         uint price;
+
         function Register(uint initialPrice) { price = initialPrice; }
+
         function register() costs(price) {
             registeredAddresses[msg.sender] = true;
         }
+
         function changePrice(uint _price) onlyowner {
             price = _price;
         }
