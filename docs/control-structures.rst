@@ -294,8 +294,11 @@ you really know what you are doing.
 		// 0x20 needs to be added to an array because the first slot contains the
 		// array length.
 		function sumAsm(uint[] _data) returns (uint o_sum) {
-			for (uint i = 0; i < _data.length; ++i)
-				assembly { o_sum := mload(add(add(_data, 0x20), i)) }
+			for (uint i = 0; i < _data.length; ++i) {
+				assembly {
+                    o_sum := mload(add(add(_data, 0x20), i))
+                }
+            }
 		}
 	}
 
