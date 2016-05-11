@@ -51,7 +51,7 @@ all function arguments have to be copied to memory.
 
 When calling functions
 of other contracts, the amount of Wei sent with the call and the gas can be specified::
-    
+
     contract InfoFeed {
       function info() returns (uint ret) { return 42; }
     }
