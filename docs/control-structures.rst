@@ -142,6 +142,12 @@ Assigning *to* a state variable always creates an independent copy. On the other
 
 .. index:: ! exception, ! throw
 
+Scoping
+=======
+
+.. index:: ! scoping
+
+
 Exceptions
 ==========
 
