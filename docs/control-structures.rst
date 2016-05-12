@@ -187,8 +187,8 @@ In addition to this, if a variable is declared, it will be initialized at the be
 As a result, the following code is legal, despite being poorly written.::
 
     function foo() returns (uint) {
-        uint bar = 5;
         // baz is implicitly initialized as 0
+        uint bar = 5;
         if (true) {
             bar += baz;
         }
