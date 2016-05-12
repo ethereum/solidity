@@ -150,7 +150,7 @@ Scoping and Declarations
 In Solidity, a variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
 This happens because Solidity inherits its scoping rules from JavaScript.
 This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
-As a result, the following code is illegal and cause the compiler to throw an error, `Identifier already declared.`::
+As a result, the following code is illegal and cause the compiler to throw an error, `Identifier already declared`::
 
     contract ScopingErrors {
         function scoping() {
@@ -185,7 +185,7 @@ As a result, the following code is illegal and cause the compiler to throw an er
     }
 
 In addition to this, if a variable is declared, it will be initialized at the beginning of the function to its default value.
-As a result, the following code is legal, despite being poorly written.::
+As a result, the following code is legal, despite being poorly written::
 
     function foo() returns (uint) {
         // baz is implicitly initialized as 0
