@@ -142,6 +142,63 @@ Assigning *to* a state variable always creates an independent copy. On the other
 
 .. index:: ! exception, ! throw
 
+Scoping and Declarations
+========================
+
+.. index:: ! scoping, ! declarations
+
+In Solidity, a variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
+This happens because Solidity inherits its scoping rules from JavaScript.
+This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
+As a result, the following code is illegal and cause the compiler to throw an error, `Identifier already declared`::
+
+    contract ScopingErrors {
+        function scoping() {
+            uint i = 0;
+
+            while (i++ < 1) {
+                uint same1 = 0;
+            }
+
+            while (i++ < 2) {
+                uint same1 = 0;// Illegal, second declaration of same1
+            }
+        }
+
+        function minimalScoping() {
+            {
+                uint same2 = 0;
+            }
+
+            {
+                uint same2 = 0;// Illegal, second declaration of same2
+            }
+        }
+
+        function forLoopScoping() {
+            for (uint same3 = 0; same3 < 1; same3++) {
+            }
+
+            for (uint same3 = 0; same3 < 1; same3++) {// Illegal, second declaration of same3
+            }
+        }
+    }
+
+In addition to this, if a variable is declared, it will be initialized at the beginning of the function to its default value.
+As a result, the following code is legal, despite being poorly written::
+
+    function foo() returns (uint) {
+        // baz is implicitly initialized as 0
+        uint bar = 5;
+        if (true) {
+            bar += baz;
+        }
+        else {
+            uint baz = 10;// never executes
+        }
+        return bar;// returns 5
+    }
+
 Exceptions
 ==========
 
