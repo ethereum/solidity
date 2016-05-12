@@ -154,21 +154,21 @@ As a result, the following code is illegal and cause the compiler to throw an er
     contract ScopingErrors {
         function scoping() {
             uint i = 0;
-    
+
             while (i++ < 1) {
                 uint same1 = 0;
             }
-    
+
             while (i++ < 2) {
                 uint same1 = 0;// Illegal, second declaration of same1
             }
         }
-    
+
         function minimalScoping() {
             {
                 uint same2 = 0;
             }
-    
+
             {
                 uint same2 = 0;// Illegal, second declaration of same2
             }
