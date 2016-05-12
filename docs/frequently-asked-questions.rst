@@ -713,6 +713,7 @@ In the case of a `contract A` calling a new instance of `contract B`, parenthese
 `new B` because `B.value` would refer to a member of `B` called `value`.
 You will need to make sure that you have both contracts aware of each other's presence.
 In this example::
+
     contract B {}
     contract A {
         address child;
