@@ -109,6 +109,7 @@ char const Token::m_tokenType[] =
 {
 	TOKEN_LIST(KT, KK)
 };
+
 int Token::parseSize(string::const_iterator _begin, string::const_iterator _end)
 {
 	try
@@ -121,6 +122,7 @@ int Token::parseSize(string::const_iterator _begin, string::const_iterator _end)
 		return -1;
 	}
 }
+
 tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(string const& _literal)
 {
 	auto positionM = find_if(_literal.begin(), _literal.end(), ::isdigit);
@@ -156,7 +158,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 				int n = parseSize(positionX + 1, _literal.end());
 				if (
 					0 <= m && m <= 256 &&
-					0 <= n && n <= 256 &&
+					8 <= n && n <= 256 &&
 					m + n > 0 &&
 					m + n <= 256 &&
 					m % 8 == 0 &&
@@ -171,6 +173,7 @@ tuple<Token::Value, unsigned int, unsigned int> Token::fromIdentifierOrKeyword(s
 		}
 		return make_tuple(Token::Identifier, 0, 0);
 	}
+
 	return make_tuple(keywordByName(_literal), 0, 0);
 }
 Token::Value Token::keywordByName(string const& _name)

@@ -6631,6 +6631,7 @@ BOOST_AUTO_TEST_CASE(delete_on_array_of_structs)
 	// This code interprets x as an array length and thus will go out of gas.
 	// neither of the two should throw due to out-of-bounds access
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+
 }
 
 BOOST_AUTO_TEST_CASE(internal_library_function)

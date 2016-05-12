@@ -26,6 +26,7 @@
 #include <string>
 #include <map>
 #include <boost/noncopyable.hpp>
+#include <boost/rational.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libsolidity/interface/Exceptions.h>
@@ -43,6 +44,7 @@ class FunctionType; // forward
 using TypePointer = std::shared_ptr<Type const>;
 using FunctionTypePointer = std::shared_ptr<FunctionType const>;
 using TypePointers = std::vector<TypePointer>;
+using rational = boost::rational<dev::bigint>;
 
 
 enum class DataLocation { Storage, CallData, Memory };
@@ -133,7 +135,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
+		Integer, RationalNumber, StringLiteral, Bool, FixedPoint, Array,
 		FixedBytes, Contract, Struct, Function, Enum, Tuple,
 		Mapping, TypeType, Modifier, Magic, Module
 	};
@@ -202,8 +204,9 @@ public:
 	virtual bool isValueType() const { return false; }
 	virtual unsigned sizeOnStack() const { return 1; }
 	/// @returns the mobile (in contrast to static) type corresponding to the given type.
-	/// This returns the corresponding integer type for IntegerConstantTypes and the pointer type
-	/// for storage reference types.
+	/// This returns the corresponding IntegerType or FixedPointType for RationalNumberType
+	/// and the pointer type for storage reference types.
+	/// Might return a null pointer if there is no fitting type.
 	virtual TypePointer mobileType() const { return shared_from_this(); }
 	/// @returns true if this is a non-value type and the data of this type is stored at the
 	/// given location.
@@ -309,20 +312,63 @@ private:
 };
 
 /**
- * Integer constants either literals or computed. Example expressions: 2, 2+10, ~10.
- * There is one distinct type per value.
+ * A fixed point type number (signed, unsigned).
  */
-class IntegerConstantType: public Type
+class FixedPointType: public Type
 {
 public:
-	virtual Category category() const override { return Category::IntegerConstant; }
+	enum class Modifier
+	{
+		Unsigned, Signed
+	};
+	virtual Category category() const override { return Category::FixedPoint; }
+
+	explicit FixedPointType(int _integerBits, int _fractionalBits, Modifier _modifier = Modifier::Unsigned);
+
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
+
+	virtual bool operator==(Type const& _other) const override;
+
+	virtual unsigned calldataEncodedSize(bool _padded = true) const override { return _padded ? 32 : (m_integerBits + m_fractionalBits) / 8; }
+	virtual unsigned storageBytes() const override { return (m_integerBits + m_fractionalBits) / 8; }
+	virtual bool isValueType() const override { return true; }
+
+	virtual std::string toString(bool _short) const override;
+
+	virtual TypePointer encodingType() const override { return shared_from_this(); }
+	virtual TypePointer interfaceType(bool) const override { return shared_from_this(); }
+
+	int numBits() const { return m_integerBits + m_fractionalBits; }
+	int integerBits() const { return m_integerBits; }
+	int fractionalBits() const { return m_fractionalBits; }
+	bool isSigned() const { return m_modifier == Modifier::Signed; }
+
+private:
+	int m_integerBits;
+	int m_fractionalBits;
+	Modifier m_modifier;
+};
+
+/**
+ * Integer and fixed point constants either literals or computed. 
+ * Example expressions: 2, 3.14, 2+10.2, ~10.
+ * There is one distinct type per value.
+ */
+class RationalNumberType: public Type
+{
+public:
+
+	virtual Category category() const override { return Category::RationalNumber; }
 
 	/// @returns true if the literal is a valid integer.
-	static bool isValidLiteral(Literal const& _literal);
-
-	explicit IntegerConstantType(Literal const& _literal);
-	explicit IntegerConstantType(bigint _value): m_value(_value) {}
-
+	static std::tuple<bool, rational> isValidLiteral(Literal const& _literal);
+	
+	explicit RationalNumberType(rational const& _value):
+		m_value(_value)
+	{}
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
@@ -339,9 +385,15 @@ public:
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> integerType() const;
+	/// @returns the smallest fixed type that can  hold the value or incurs the least precision loss. 
+	/// If the integer part does not fit, returns an empty pointer.
+	std::shared_ptr<FixedPointType const> fixedPointType() const;
+
+	/// @returns true if the value is not an integer.
+	bool isFractional() const { return m_value.denominator() != 1; }
 
 private:
-	bigint m_value;
+	rational m_value;
 };
 
 /**

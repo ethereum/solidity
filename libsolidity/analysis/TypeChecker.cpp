@@ -772,26 +772,51 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 		{
 			// Infer type from value.
 			solAssert(!var.typeName(), "");
-			if (
-				valueComponentType->category() == Type::Category::IntegerConstant &&
-				!dynamic_pointer_cast<IntegerConstantType const>(valueComponentType)->integerType()
-			)
-				fatalTypeError(_statement.initialValue()->location(), "Invalid integer constant " + valueComponentType->toString() + ".");
 			var.annotation().type = valueComponentType->mobileType();
+			if (!var.annotation().type)
+			{
+				if (valueComponentType->category() == Type::Category::RationalNumber)
+					fatalTypeError(
+						_statement.initialValue()->location(),
+						"Invalid rational " +
+						valueComponentType->toString() +
+						" (absolute value too large or divison by zero)."
+					);
+				else
+					solAssert(false, "");
+			}
 			var.accept(*this);
 		}
 		else
 		{
 			var.accept(*this);
 			if (!valueComponentType->isImplicitlyConvertibleTo(*var.annotation().type))
-				typeError(
-					_statement.location(),
-					"Type " +
-					valueComponentType->toString() +
-					" is not implicitly convertible to expected type " +
-					var.annotation().type->toString() +
-					"."
-				);
+			{
+				if (
+					valueComponentType->category() == Type::Category::RationalNumber &&
+					dynamic_cast<RationalNumberType const&>(*valueComponentType).isFractional() &&
+					valueComponentType->mobileType()
+				)
+					typeError(
+						_statement.location(),
+						"Type " +
+						valueComponentType->toString() +
+						" is not implicitly convertible to expected type " +
+						var.annotation().type->toString() +
+						". Try converting to type " +
+						valueComponentType->mobileType()->toString() +
+						" or use an explicit conversion." 
+					);
+				else
+					typeError(
+						_statement.location(),
+						"Type " +
+						valueComponentType->toString() +
+						" is not implicitly convertible to expected type " +
+						var.annotation().type->toString() +
+						"."
+					);
+			}
 		}
 	}
 	return false;
@@ -799,9 +824,9 @@ bool TypeChecker::visit(VariableDeclarationStatement const& _statement)
 
 void TypeChecker::endVisit(ExpressionStatement const& _statement)
 {
-	if (type(_statement.expression())->category() == Type::Category::IntegerConstant)
-		if (!dynamic_pointer_cast<IntegerConstantType const>(type(_statement.expression()))->integerType())
-			typeError(_statement.expression().location(), "Invalid integer constant.");
+	if (type(_statement.expression())->category() == Type::Category::RationalNumber)
+		if (!dynamic_cast<RationalNumberType const&>(*type(_statement.expression())).mobileType())
+			typeError(_statement.expression().location(), "Invalid rational number.");
 }
 
 bool TypeChecker::visit(Conditional const& _conditional)
@@ -1106,9 +1131,9 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 			auto const& argType = type(*arguments[i]);
 			if (functionType->takesArbitraryParameters())
 			{
-				if (auto t = dynamic_cast<IntegerConstantType const*>(argType.get()))
-					if (!t->integerType())
-						typeError(arguments[i]->location(), "Integer constant too large.");
+				if (auto t = dynamic_cast<RationalNumberType const*>(argType.get()))
+					if (!t->mobileType())
+						typeError(arguments[i]->location(), "Invalid rational number (too large or division by zero).");
 			}
 			else if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[i]))
 				typeError(
@@ -1341,9 +1366,12 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		else
 		{
 			expectType(*index, IntegerType(256));
-			if (auto integerType = dynamic_cast<IntegerConstantType const*>(type(*index).get()))
-				if (!actualType.isDynamicallySized() && actualType.length() <= integerType->literalValue(nullptr))
-					typeError(_access.location(), "Out of bounds array access.");
+			if (auto numberType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
+			{
+				if (!numberType->isFractional()) // error is reported above
+					if (!actualType.isDynamicallySized() && actualType.length() <= numberType->literalValue(nullptr))
+						typeError(_access.location(), "Out of bounds array access.");
+			}
 		}
 		resultType = actualType.baseType();
 		isLValue = actualType.location() != DataLocation::CallData;
@@ -1367,8 +1395,8 @@ bool TypeChecker::visit(IndexAccess const& _access)
 			resultType = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, typeType.actualType()));
 		else
 		{
-			index->accept(*this);
-			if (auto length = dynamic_cast<IntegerConstantType const*>(type(*index).get()))
+			expectType(*index, IntegerType(256));
+			if (auto length = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				resultType = make_shared<TypeType>(make_shared<ArrayType>(
 					DataLocation::Memory,
 					typeType.actualType(),
@@ -1387,7 +1415,7 @@ bool TypeChecker::visit(IndexAccess const& _access)
 		else
 		{
 			expectType(*index, IntegerType(256));
-			if (auto integerType = dynamic_cast<IntegerConstantType const*>(type(*index).get()))
+			if (auto integerType = dynamic_cast<RationalNumberType const*>(type(*index).get()))
 				if (bytesType.numBytes() <= integerType->literalValue(nullptr))
 					typeError(_access.location(), "Out of bounds array access.");
 		}
@@ -1492,16 +1520,33 @@ Declaration const& TypeChecker::dereference(UserDefinedTypeName const& _typeName
 void TypeChecker::expectType(Expression const& _expression, Type const& _expectedType)
 {
 	_expression.accept(*this);
-
 	if (!type(_expression)->isImplicitlyConvertibleTo(_expectedType))
-		typeError(
-			_expression.location(),
-			"Type " +
-			type(_expression)->toString() +
-			" is not implicitly convertible to expected type " +
-			_expectedType.toString() +
-			"."
-		);
+	{
+		if (
+			type(_expression)->category() == Type::Category::RationalNumber &&
+			dynamic_pointer_cast<RationalNumberType const>(type(_expression))->isFractional() &&
+			type(_expression)->mobileType()
+		)
+			typeError(
+				_expression.location(),
+				"Type " +
+				type(_expression)->toString() +
+				" is not implicitly convertible to expected type " +
+				_expectedType.toString() +
+				". Try converting to type " +
+				type(_expression)->mobileType()->toString() +
+				" or use an explicit conversion."
+			);
+		else
+			typeError(
+				_expression.location(),
+				"Type " +
+				type(_expression)->toString() +
+				" is not implicitly convertible to expected type " +
+				_expectedType.toString() +
+				"."
+			);
+	}		
 }
 
 void TypeChecker::requireLValue(Expression const& _expression)

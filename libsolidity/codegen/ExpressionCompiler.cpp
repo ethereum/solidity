@@ -281,11 +281,7 @@ bool ExpressionCompiler::visit(TupleExpression const& _tuple)
 bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _unaryOperation);
-	//@todo type checking and creating code for an operator should be in the same place:
-	// the operator should know how to convert itself and to which types it applies, so
-	// put this code together with "Type::acceptsBinary/UnaryOperator" into a class that
-	// represents the operator
-	if (_unaryOperation.annotation().type->category() == Type::Category::IntegerConstant)
+	if (_unaryOperation.annotation().type->category() == Type::Category::RationalNumber)
 	{
 		m_context << _unaryOperation.annotation().type->literalValue(nullptr);
 		return false;
@@ -360,7 +356,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 
 	if (c_op == Token::And || c_op == Token::Or) // special case: short-circuiting
 		appendAndOrOperatorCode(_binaryOperation);
-	else if (commonType.category() == Type::Category::IntegerConstant)
+	else if (commonType.category() == Type::Category::RationalNumber)
 		m_context << commonType.literalValue(nullptr);
 	else
 	{
@@ -370,7 +366,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		// for commutative operators, push the literal as late as possible to allow improved optimization
 		auto isLiteral = [](Expression const& _e)
 		{
-			return dynamic_cast<Literal const*>(&_e) || _e.annotation().type->category() == Type::Category::IntegerConstant;
+			return dynamic_cast<Literal const*>(&_e) || _e.annotation().type->category() == Type::Category::RationalNumber;
 		};
 		bool swap = m_optimize && Token::isCommutativeOp(c_op) && isLiteral(rightExpression) && !isLiteral(leftExpression);
 		if (swap)
@@ -1225,7 +1221,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	
 	switch (type->category())
 	{
-	case Type::Category::IntegerConstant:
+	case Type::Category::RationalNumber:
 	case Type::Category::Bool:
 		m_context << type->literalValue(&_literal);
 		break;
@@ -1305,6 +1301,9 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 {
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 	bool const c_isSigned = type.isSigned();
+
+	if (_type.category() == Type::Category::FixedPoint)
+		solAssert(false, "Not yet implemented - FixedPointType.");
 
 	switch (_operator)
 	{

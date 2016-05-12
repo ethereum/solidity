@@ -97,13 +97,20 @@ parseAnalyseAndReturnError(string const& _source, bool _reportWarnings = false)
 				return make_pair(sourceUnit, std::make_shared<Error::Type const>(currentError->type()));
 		}
 	}
+	catch (InternalCompilerError const& _e)
+	{
+		string message("Internal compiler error");
+		if (string const* description = boost::get_error_info<errinfo_comment>(_e))
+			message += ": " + *description;
+		BOOST_FAIL(message);
+	}
 	catch (Error const& _e)
 	{
 		return make_pair(sourceUnit, std::make_shared<Error::Type const>(_e.type()));
 	}
-	catch (Exception const& /*_exception*/)
+	catch (...)
 	{
-		return make_pair(sourceUnit, nullptr);
+		BOOST_FAIL("Unexpected exception.");
 	}
 	return make_pair(sourceUnit, nullptr);
 }
@@ -1330,15 +1337,6 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 	BOOST_CHECK(expectError(sourceCode) == Error::Type::TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(exp_operator_negative_exponent)
-{
-	char const* sourceCode = R"(
-		contract test {
-			function f() returns(uint d) { return 2 ** -3; }
-		})";
-	BOOST_CHECK(expectError(sourceCode) == Error::Type::TypeError);
-}
-
 BOOST_AUTO_TEST_CASE(exp_operator_exponent_too_big)
 {
 	char const* sourceCode = R"(
@@ -2229,18 +2227,6 @@ BOOST_AUTO_TEST_CASE(literal_strings)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(invalid_integer_literal_fraction)
-{
-	char const* text = R"(
-		contract Foo {
-			function f() {
-				var x = 1.20;
-			}
-		}
-	)";
-	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
-}
-
 BOOST_AUTO_TEST_CASE(invalid_integer_literal_exp)
 {
 	char const* text = R"(
@@ -2792,8 +2778,8 @@ BOOST_AUTO_TEST_CASE(inline_array_declaration_and_passing_implicit_conversion)
 					uint8 x = 7;
 					uint16 y = 8;
 					uint32 z = 9;
-					uint32[3] memory ending = [x, y, z]; 
-					return (ending[1]);                   
+					uint32[3] memory ending = [x, y, z];
+					return (ending[1]);
 				}
 			}
 	)";
@@ -3230,19 +3216,6 @@ BOOST_AUTO_TEST_CASE(int10abc_is_identifier)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(invalid_fixed_types)
-{
-	char const* text = R"(
-		contract test {
-			function f() {
-				fixed0x7 a = .3;
-				fixed99999999999999999999999999999999999999x7 b = 9.5;
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
-}
-
 BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
 {
 	char const* text = R"(
@@ -3251,6 +3224,36 @@ BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
 			function f() {
 				L.l.value;
 			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_fixed_types_0x7_mxn)
+{
+	char const* text = R"(
+		contract test {
+			fixed0x7 a = .3;
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_fixed_types_long_invalid_identifier)
+{
+	char const* text = R"(
+		contract test {
+			fixed99999999999999999999999999999999999999x7 b = 9.5;
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_fixed_types_7x8_mxn)
+{
+	char const* text = R"(
+		contract test {
+			fixed7x8 c = 3.12345678;
 		}
 	)";
 	BOOST_CHECK(!success(text));
@@ -3280,6 +3283,404 @@ BOOST_AUTO_TEST_CASE(invalid_fixed_type_long)
 		}
 	)";
 	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_int_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint128 a = 3;
+				int128 b = 4;
+				fixed c = b;
+				ufixed d = a;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_rational_int_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed c = 3;
+				ufixed d = 4;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_rational_fraction_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 4.5;
+				ufixed d = 2.5;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_int_implicit_conversion_from_fixed)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 4.5;
+				int b = a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_unary_operation)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed8x16 a = +3.25;
+				fixed8x16 b = -3.25;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(leading_zero_rationals_convert)
+{
+	char const* text = R"(
+		contract A {
+			function f() {
+				ufixed0x8 a = 0.5;
+				ufixed0x56 b = 0.0000000000000006661338147750939242541790008544921875;
+				fixed0x8 c = -0.5;
+				fixed0x56 d = -0.0000000000000006661338147750939242541790008544921875;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed248x8 a = 123456781234567979695948382928485849359686494864095409282048094275023098123.5;
+				ufixed0x256 b = 0.920890746623327805482905058466021565416131529487595827354393978494366605267637829135688384325135165352082715782143655824815685807141335814463015972119819459298455224338812271036061391763384038070334798471324635050876128428143374549108557403087615966796875;
+				ufixed0x256 c = 0.0000000000015198847363997979984922685411315294875958273543939784943666052676464653042434787697605517039455161817147718251801220885263595179331845639229818863564267318422845592626219390573301877339317935702714669975697814319204326238832436501979827880859375;
+				fixed248x8 d = -123456781234567979695948382928485849359686494864095409282048094275023098123.5;
+				fixed0x256 e = -0.93322335481643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
+				fixed0x256 g = -0.00011788606643744342575580035176794825198893968114429702091846411734101080123092162893656820177312738451291806995868682861328125;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_size)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed a = 11/4;
+				ufixed248x8 b = a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_invalid_implicit_conversion_lost_data)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed0x256 a = 1/3;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_valid_explicit_conversions)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed0x256 a = ufixed0x256(1/3);
+				ufixed0x248 b = ufixed0x248(1/3);
+				ufixed0x8 c = ufixed0x8(1/3);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_rational)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint[3.5] a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_array_declaration_with_fixed_type)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint[fixed(3.5)] a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_to_bytes_implicit_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				bytes32 c = 3.2;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_to_bytes_implicit_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 3.2;
+				bytes32 c = a;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(mapping_with_fixed_literal)
+{
+	char const* text = R"(
+		contract test {
+			mapping(ufixed8x248 => string) fixedString;
+			function f() {
+				fixedString[0.5] = "Half";
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_points_inside_structs)
+{
+	char const* text = R"(
+		contract test {
+			struct myStruct {
+				ufixed a;
+				int b;
+			}
+			myStruct a = myStruct(3.125, 3);
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_fixed_types)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed[3] memory a = [fixed(3.5), fixed(-4.25), fixed(967.125)];
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_rationals)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed8x8[4] memory a = [3.5, 4.125, 2.5, 4.0];
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_index_access)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint[] memory a;
+				a[.5];
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_to_fixed_literal_expression)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed8x8 a = 3.5 * 3;
+				ufixed8x8 b = 4 - 2.5;
+				ufixed8x8 c = 11 / 4;
+				ufixed16x240 d = 599 + 0.21875;
+				ufixed8x248 e = ufixed8x248(35.245 % 12.9);
+				ufixed8x248 f = ufixed8x248(1.2 % 2);
+				fixed g = 2 ** -2;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_as_exponent_value)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed g = 2 ** -2.2;
+				ufixed b = 3 ** 2.5;
+				ufixed24x24 b = 2 ** (1/2);
+				fixed40x40 c = 42 ** (-1/4);
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_point_casting_exponents)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				ufixed a = 3 ** ufixed(1.5);
+				ufixed b = 2 ** ufixed(1/2);
+				fixed c = 42 ** fixed(-1/4);
+				fixed d = 16 ** fixed(-0.33);
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(var_capable_of_holding_constant_rationals)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				var a = 0.12345678;
+				var b = 12345678.352;
+				var c = 0.00000009;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(var_and_rational_with_tuple)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				var (a, b) = (.5, 1/3);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(var_handle_divided_integers)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				var x = 1/3;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));	
+}
+
+BOOST_AUTO_TEST_CASE(rational_bitnot_unary_operation)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = ~3.56;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_bitor_binary_operation)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 1.56 | 3;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_bitxor_binary_operation)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 1.56 ^ 3;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(rational_bitand_binary_operation)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 1.56 & 3;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+BOOST_AUTO_TEST_CASE(zero_handling)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed8x8 a = 0;
+				ufixed8x8 b = 0;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
