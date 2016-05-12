@@ -53,7 +53,8 @@ with `.` are treated as absolute paths.
 
 To import a file `x` from the same directory as the current file, use `import "./x" as x;`.
 If you use `import "x" as x;` instead, a different file could be referenced
-(in a global "include directory").
+(in a global "include directory"). If you are importing from a parent directory, you
+can use either `../x` or `.././x`.
 
 It depends on the compiler (see below) how to actually resolve the paths.
 In general, the directory hierarchy does not need to strictly map onto your local
