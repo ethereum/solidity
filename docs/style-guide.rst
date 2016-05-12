@@ -363,7 +363,7 @@ Yes::
         address c,
         address d,
         address e,
-        address f,
+        address f
     ) {
         do_something;
     }
