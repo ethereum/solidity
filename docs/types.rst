@@ -28,7 +28,7 @@ Booleans
 
 `bool`: The possible values are constants `true` and `false`.
 
-Operators:  
+Operators:
 
 *  `!` (logical negation)
 *  `&&` (logical conjunction, "and")
@@ -45,10 +45,10 @@ Integers
 
 `int` / `uint`: Signed and unsigned integers of various sizes. Keywords `uint8` to `uint256` in steps of `8` (unsigned of 8 up to 256 bits) and `int8` to `int256`. `uint` and `int` are aliases for `uint256` and `int256`, respectively.
 
-Operators:  
+Operators:
 
-* Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)  
-* Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)  
+* Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)
+* Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)
 * Arithmetic operators: `+`, `-`, unary `-`, unary `+`, `*`, `/`, `%` (remainder), `**` (exponentiation)
 
 Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
@@ -61,7 +61,7 @@ Address
 
 `address`: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as base for all contracts.
 
-Operators:  
+Operators:
 
 * `<=`, `<`, `==`, `!=`, `>=` and `>`
 
@@ -109,12 +109,12 @@ All three functions `call`, `delegatecall` and `callcode` are very low-level fun
 Fixed-size byte arrays
 ----------------------
 
-`bytes1`, `bytes2`, `bytes3`, ..., `bytes32`. `byte` is an alias for `bytes1`.  
+`bytes1`, `bytes2`, `bytes3`, ..., `bytes32`. `byte` is an alias for `bytes1`.
 
-Operators:  
+Operators:
 
-* Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)  
-* Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)  
+* Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (evaluate to `bool`)
+* Bit operators: `&`, `|`, `^` (bitwise exclusive or), `~` (bitwise negation)
 * Index access: If `x` is of type `bytesI`, then `x[k]` for `0 <= k < I` returns the `k` th byte (read-only).
 
 Members:
@@ -125,7 +125,7 @@ Dynamically-sized byte array
 ----------------------------
 
 `bytes`:
-    Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!  
+    Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
 `string`:
     Dynamically-sized UTF8-encoded string, see :ref:`arrays`. Not a value-type!
 
@@ -140,7 +140,7 @@ number of bytes, always use one of `bytes1` to `bytes32` because they are much c
 Integer Literals
 -----------------
 
-Integer Literals are arbitrary precision integers until they are used together with a non-literal. In `var x = 1 - 2;`, for example, the value of `1 - 2` is `-1`, which is assigned to `x` and thus `x` receives the type `int8` -- the smallest type that contains `-1`, although the natural types of `1` and `2` are actually `uint8`.    
+Integer Literals are arbitrary precision integers until they are used together with a non-literal. In `var x = 1 - 2;`, for example, the value of `1 - 2` is `-1`, which is assigned to `x` and thus `x` receives the type `int8` -- the smallest type that contains `-1`, although the natural types of `1` and `2` are actually `uint8`.
 
 It is even possible to temporarily exceed the maximum of 256 bits as long as only integer literals are used for the computation: `var x = (0xffffffffffffffffffff * 0xffffffffffffffffffff) * 0;` Here, `x` will have the value `0` and thus the type `uint8`.
 

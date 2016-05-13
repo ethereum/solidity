@@ -139,10 +139,10 @@ with `c.someMethod.sendTransaction({from:eth.accounts[x], gas: 1000000});`
 That is, because they can change state, they have to have a gas
 payment sent along to get the work done.
 
-Get a contract to return its funds to you (not using selfdestruct(...)). 
+Get a contract to return its funds to you (not using selfdestruct(...)).
 ========================================================================
 
-This example demonstrates how to send funds from a contract to an address. 
+This example demonstrates how to send funds from a contract to an address.
 
 See `endowment_retriever <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
 
@@ -175,7 +175,7 @@ datastructure on top of it, for example the `iterable mapping <https://github.co
 Can I put arrays inside of a mapping? How do I make a mapping of a mapping?
 ===========================================================================
 
-Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping. 
+Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping.
 
 An example of this would be::
 
@@ -278,7 +278,7 @@ Is a constructor required?
 
 No. If there is no constructor, a generic one without arguments and no actions will be used.
 
-Are timestamps (now, block.timestamp) reliable? 
+Are timestamps (now, block.timestamp) reliable?
 ===============================================
 
 This depends on what you mean by "reliable".
@@ -327,7 +327,7 @@ should implement the fallback function as
 `function() { throw; }`
 
 this will cause all transactions to this contract that do not call an
-existing function to be reverted, so that all Ether is sent back. 
+existing function to be reverted, so that all Ether is sent back.
 
 Another use of the fallback function is to e.g. register that your
 contract received ether by using an event.
@@ -347,7 +347,7 @@ by `msg.data`.
 Can state variables be initialized in-line?
 ===========================================
 
-Yes, this is possible for all types (even for structs). However, for arrays it 
+Yes, this is possible for all types (even for structs). However, for arrays it
 should be noted that you must declare them as static memory arrays.
 
 Examples::
@@ -360,7 +360,7 @@ Examples::
 
         S public x = S(1, 2);
         string name = "Ada";
-        string[4] memory AdaArr = ["This", "is", "an", "array"];  
+        string[4] memory AdaArr = ["This", "is", "an", "array"];
     }
 
 
@@ -726,7 +726,7 @@ In this example::
 Can a contract function accept a two-dimensional array?
 =======================================================
 
-This is not yet implemented for external calls and dynamic arrays - 
+This is not yet implemented for external calls and dynamic arrays -
 you can only use one level of dynamic arrays.
 
 What is the relationship between bytes32 and string? Why is it that ‘bytes32 somevar = "stringliteral";’ works and what does the saved 32-byte hex value mean?

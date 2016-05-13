@@ -26,7 +26,7 @@ State variables are values which are permanently stored in contract storage.
   }
 
 See the :ref:`types` section for valid state variable types and
-:ref:`visibility-and-accessors` for possible choices for 
+:ref:`visibility-and-accessors` for possible choices for
 visibility.
 
 .. _structure-functions:
@@ -46,7 +46,7 @@ Functions are the executable units of code within a contract.
 
 :ref:`function-calls` can happen internally or externally
 and have different levels of visibility (:ref:`visibility-and-accessors`)
-towards other contracts. 
+towards other contracts.
 
 .. _structure-function-modifiers:
 
@@ -57,15 +57,15 @@ Function modifiers can be used to amend the semantics of functions in a declarat
 (see :ref:`modifiers` in contracts section).
 
 ::
-  
+
   contract Purchase {
     address public seller;
-    
+
     modifier onlySeller() { // Modifier
         if (msg.sender != seller) throw;
         _
     }
-    
+
     function abort() onlySeller { // Modifier usage
         // ...
     }
@@ -82,14 +82,14 @@ Events are convenience interfaces with the EVM logging facilities.
 
   contract SimpleAuction {
     event HighestBidIncreased(address bidder, uint amount); // Event
-    
+
     function bid() {
       // ...
       HighestBidIncreased(msg.sender, msg.value); // Triggering event
     }
   }
 
-See :ref:`events` in contracts section for information on how events are declared 
+See :ref:`events` in contracts section for information on how events are declared
 and can be used from within a dapp.
 
 .. _structure-structs-types:
@@ -97,7 +97,7 @@ and can be used from within a dapp.
 Structs Types
 =============
 
-Structs are custom defined types that can group several variables (see 
+Structs are custom defined types that can group several variables (see
 :ref:`structs` in types section).
 
 ::
@@ -116,11 +116,11 @@ Structs are custom defined types that can group several variables (see
 Enum Types
 ==========
 
-Enums can be used to create custom types with a finite set of values (see 
+Enums can be used to create custom types with a finite set of values (see
 :ref:`enums` in types section).
 
 ::
-  
+
   contract Purchase {
     enum State { Created, Locked, Inactive } // Enum
   }
