@@ -692,11 +692,11 @@ What happens to a struct's mapping when copying over a struct?
 
 This is a very interesting question. Suppose that we have a contract field set up like such::
 
-    struct user{
+    struct user {
         mapping(string => address) usedContracts;
     }
 
-    function somefunction{
+    function somefunction {
        user user1;
        user1.usedContracts["Hello"] = "World";
        user user2 = user1;

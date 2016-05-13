@@ -97,6 +97,8 @@ even though the instructions contained a jump in the beginning.
 
 .. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
 
+.. _commandline-compiler:
+
 ******************************
 Using the Commandline Compiler
 ******************************
