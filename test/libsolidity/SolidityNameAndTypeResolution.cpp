@@ -3688,8 +3688,7 @@ BOOST_AUTO_TEST_CASE(integer_and_fixed_interaction)
 	char const* text = R"(
 		contract test {
 			function f() {
-				uint128 a = uint128(1) + ufixed(2);
-				ufixed b = .5 * uint128(7);
+				ufixed a = uint128(1) + ufixed(2);
 			}
 		}
 	)";

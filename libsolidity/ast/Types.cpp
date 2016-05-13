@@ -274,18 +274,8 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
-		cout << endl;
-		cout << "Integer bits: " << m_bits << endl;
-		cout << "Fraction integer bits: " << convertTo.integerBits() << endl;
-		cout << "Integer signed: " << isSigned() << endl;
-		cout << "Fractional signed: " << convertTo.isSigned() << endl;
-		cout << "Unsigned convert?: " << bool(!convertTo.isSigned() || convertTo.integerBits() > m_bits) << endl;
-		cout << endl;
 		if (convertTo.integerBits() < m_bits || isAddress())
-		{
-			cout << "problem with the integer bits" << endl;
 			return false;
-		}	
 		else if (isSigned())
 			return convertTo.isSigned();
 		else
@@ -300,7 +290,8 @@ bool IntegerType::isExplicitlyConvertibleTo(Type const& _convertTo) const
 	return _convertTo.category() == category() ||
 		_convertTo.category() == Category::Contract ||
 		_convertTo.category() == Category::Enum ||
-		_convertTo.category() == Category::FixedBytes;
+		_convertTo.category() == Category::FixedBytes ||
+		_convertTo.category() == Category::FixedPoint;
 }
 
 TypePointer IntegerType::unaryOperatorResult(Token::Value _operator) const
@@ -344,23 +335,19 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		_other->category() != category()
 	)
 		return TypePointer();
-	auto commonType = dynamic_pointer_cast<IntegerType const>(Type::commonType(shared_from_this(), _other));
-
+	auto commonType = Type::commonType(shared_from_this(), _other); //might be a integer or fixed point
 	if (!commonType)
-	{
-		cout << "Not common type" << endl;
 		return TypePointer();
-	}
-	cout << "Integer binary operator: " << commonType->toString(false) << endl;
-	cout << "Token: " << string(Token::toString(_operator)) << endl;
+
 	// All integer types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
 	if (Token::isBooleanOp(_operator))
 		return TypePointer();
 	// Nothing else can be done with addresses
-	if (commonType->isAddress())
-		return TypePointer();
+	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
+		if (intType->isAddress())
+			return TypePointer();
 
 	return commonType;
 }
@@ -404,7 +391,6 @@ bool FixedPointType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 		else
 			return !convertTo.isSigned() || (convertTo.m_integerBits > m_integerBits);
 	}
-	
 	return false;
 }
 
@@ -455,7 +441,7 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 		&& _other->category() != Category::Integer
 	)
 		return TypePointer();
-	auto commonType = dynamic_pointer_cast<FixedPointType const>(Type::commonType(shared_from_this(), _other));
+	auto commonType = Type::commonType(shared_from_this(), _other); //might be fixed point or integer
 
 	if (!commonType)
 		return TypePointer();
@@ -465,8 +451,9 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 		return commonType;
 	if (Token::isBitOp(_operator) || Token::isBooleanOp(_operator))
 		return TypePointer();
-	if (Token::Exp == _operator)
-		return TypePointer();
+	if (auto fixType = dynamic_pointer_cast<FixedPointType const>(commonType))
+		if (Token::Exp == _operator)
+			return TypePointer();
 	return commonType;
 }
 
