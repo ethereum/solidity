@@ -117,9 +117,10 @@ Contract Related
 ----------------
 
 `this` (current contract's type):
-    the current contract, explicitly convertible to `address`
+    the current contract, explicitly convertible to :ref:`address`
+    
 `selfdestruct(address)`:
-    destroy the current contract, sending its funds to the given address
+    destroy the current contract, sending its funds to the given :ref:`address`
 
 Furthermore, all functions of the current contract are callable directly including the current function.
 
