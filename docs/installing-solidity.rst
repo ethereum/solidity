@@ -59,13 +59,13 @@ Set up Homebrew:
 
     brew update
     brew upgrade
-    
+
     brew install boost --c++11             # this takes a while
-    brew install cmake cryptopp miniupnpc leveldb gmp libmicrohttpd libjson-rpc-cpp 
+    brew install cmake cryptopp miniupnpc leveldb gmp libmicrohttpd libjson-rpc-cpp
     # For Mix IDE and Alethzero only
     brew install xz d-bus
     brew install homebrew/versions/v8-315
-    brew install llvm --HEAD --with-clang 
+    brew install llvm --HEAD --with-clang
     brew install qt5 --with-d-bus          # add --verbose if long waits with a stale screen drive you crazy as well
 
 Ubuntu
@@ -112,7 +112,7 @@ For Ubuntu 15.10 (Wily Werewolf) or newer, use the following command instead:
 .. code-block:: bash
 
     sudo apt-get -y install build-essential git cmake libboost-all-dev libgmp-dev libleveldb-dev libminiupnpc-dev libreadline-dev libncurses5-dev libcurl4-openssl-dev libcryptopp-dev libjsonrpccpp-dev libmicrohttpd-dev libjsoncpp-dev libedit-dev libz-dev
-    
+
 The reason for the change is that `libjsonrpccpp-dev` is available in the universe repository for newer versions of Ubuntu.
 
 Building
@@ -128,7 +128,7 @@ they relate only to Alethzero and Mix
     ./webthree-helpers/scripts/ethupdate.sh --no-push --simple-pull --project solidity # update Solidity repo
     ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity --all --cores 4 -DEVMJIT=0 # build Solidity and others
                                                                                 #enabling DEVMJIT on OS X will not build
-                                                                                #feel free to enable it on Linux 
+                                                                                #feel free to enable it on Linux
 
 If you opted to install Alethzero and Mix:
 

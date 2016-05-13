@@ -203,7 +203,7 @@ function finishes.
                 nextStage();
             // The other stages transition by transaction
         }
-        
+
         // Order of the modifiers matters here!
         function bid()
             timedTransitions
