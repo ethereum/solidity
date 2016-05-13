@@ -3683,6 +3683,45 @@ BOOST_AUTO_TEST_CASE(zero_handling)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(integer_and_fixed_interaction)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint128 a = uint128(1) + ufixed(2);
+				ufixed b = .5 * uint128(7);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(signed_rational_modulus)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				fixed a = 0.42578125 % -0.4271087646484375;
+				fixed b = .5 % a;
+				fixed c = a % b;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(one_divided_by_three_integer_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				uint a = 1/3;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

@@ -274,8 +274,18 @@ bool IntegerType::isImplicitlyConvertibleTo(Type const& _convertTo) const
 	else if (_convertTo.category() == Category::FixedPoint)
 	{
 		FixedPointType const& convertTo = dynamic_cast<FixedPointType const&>(_convertTo);
+		cout << endl;
+		cout << "Integer bits: " << m_bits << endl;
+		cout << "Fraction integer bits: " << convertTo.integerBits() << endl;
+		cout << "Integer signed: " << isSigned() << endl;
+		cout << "Fractional signed: " << convertTo.isSigned() << endl;
+		cout << "Unsigned convert?: " << bool(!convertTo.isSigned() || convertTo.integerBits() > m_bits) << endl;
+		cout << endl;
 		if (convertTo.integerBits() < m_bits || isAddress())
+		{
+			cout << "problem with the integer bits" << endl;
 			return false;
+		}	
 		else if (isSigned())
 			return convertTo.isSigned();
 		else
@@ -328,13 +338,21 @@ string IntegerType::toString(bool) const
 
 TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
-	if (_other->category() != Category::RationalNumber && _other->category() != category())
+	if (
+		_other->category() != Category::RationalNumber &&
+		_other->category() != Category::FixedPoint &&
+		_other->category() != category()
+	)
 		return TypePointer();
 	auto commonType = dynamic_pointer_cast<IntegerType const>(Type::commonType(shared_from_this(), _other));
 
 	if (!commonType)
+	{
+		cout << "Not common type" << endl;
 		return TypePointer();
-
+	}
+	cout << "Integer binary operator: " << commonType->toString(false) << endl;
+	cout << "Token: " << string(Token::toString(_operator)) << endl;
 	// All integer types can be compared
 	if (Token::isCompareOp(_operator))
 		return commonType;
