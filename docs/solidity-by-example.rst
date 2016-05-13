@@ -292,7 +292,7 @@ activate themselves.
     }
 
 Blind Auction
-================
+=============
 
 The previous open auction is extended to a blind auction
 in the following. The advantage of a blind auction is

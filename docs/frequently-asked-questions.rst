@@ -179,7 +179,7 @@ Mappings are already syntactically similar to arrays as they are, therefore it d
 
 An example of this would be::
 
-    contract c {
+    contract C {
         struct myStruct {
             uint someNumber;
             string someString;
@@ -218,7 +218,7 @@ Example::
 
     contract C {
         function f() returns (uint8[5]) {
-            string[4] memory AdaArr = ["This", "is", "an", "array"];
+            string[4] memory adaArr = ["This", "is", "an", "array"];
             return ([1, 2, 3, 4, 5]);
         }
     }
@@ -360,7 +360,7 @@ Examples::
 
         S public x = S(1, 2);
         string name = "Ada";
-        string[4] memory AdaArr = ["This", "is", "an", "array"];
+        string[4] memory adaArr = ["This", "is", "an", "array"];
     }
 
 
@@ -715,6 +715,8 @@ You will need to make sure that you have both contracts aware of each other's pr
 In this example::
 
     contract B {}
+
+
     contract A {
         address child;
 
@@ -758,21 +760,21 @@ Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
 
     contract C {
-      uint[20] x;
+        uint[20] x;
 
-      function f() {
-        g(x);
-        h(x);
-      }
+        function f() {
+            g(x);
+            h(x);
+        }
 
-      function g(uint[20] y) {
-        y[2] = 3;
-      }
+        function g(uint[20] y) {
+            y[2] = 3;
+        }
 
-      function h(uint[20] storage y) {
-        y[3] = 4;
-      }
-   }
+        function h(uint[20] storage y) {
+            y[3] = 4;
+        }
+    }
 
 The call to `g(x)` will not have an effect on `x` because it needs
 to create an independent copy of the storage value in memory

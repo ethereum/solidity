@@ -31,7 +31,7 @@ Internal Function Calls
 Functions of the current contract can be called directly ("internally"), also recursively, as seen in
 this nonsensical example::
 
-    contract c {
+    contract C {
         function g(uint a) returns (uint ret) { return f(); }
         function f() returns (uint ret) { return g(7) + f(); }
     }
@@ -55,6 +55,8 @@ of other contracts, the amount of Wei sent with the call and the gas can be spec
     contract InfoFeed {
         function info() returns (uint ret) { return 42; }
     }
+
+
     contract Consumer {
         InfoFeed feed;
         function setFeed(address addr) { feed = InfoFeed(addr); }
@@ -75,12 +77,14 @@ of unused parameters (especially return parameters) can be omitted.
 
 ::
 
-    contract c {
+    contract C {
         function f(uint key, uint value) { ... }
+
         function g() {
             // named arguments
             f({value: 2, key: 3});
         }
+
         // omitted parameters
         function func(uint k, uint) returns(uint) {
             return k;
@@ -212,7 +216,7 @@ In the following example, we show how `throw` can be used to easily revert an Et
 
     contract Sharer {
         function sendHalf(address addr) returns (uint balance) {
-            if (!addr.send(msg.value/2))
+            if (!addr.send(msg.value / 2))
                 throw; // also reverts the transfer to Sharer
             return this.balance;
         }
@@ -290,6 +294,7 @@ you really know what you are doing.
             for (uint i = 0; i < _data.length; ++i)
                 o_sum += _data[i];
         }
+
         // We know that we only access the array in bounds, so we can avoid the check.
         // 0x20 needs to be added to an array because the first slot contains the
         // array length.
@@ -536,7 +541,7 @@ It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
-    contract c {
+    contract C {
         uint b;
         function f(uint x) returns (uint r) {
             assembly {
@@ -610,7 +615,7 @@ be just `0`, but it can also be a complex functional-style expression.
 
 .. code::
 
-    contract c {
+    contract C {
         function f(uint x) returns (uint b) {
             assembly {
                 let v := add(x, 1)

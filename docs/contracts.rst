@@ -184,7 +184,7 @@ return parameter list for functions.
 
 ::
 
-    contract c {
+    contract C {
         function f(uint a) private returns (uint b) { return a + 1; }
         function setData(uint a) internal { data = a; }
         uint public data;
@@ -213,7 +213,7 @@ it is a state variable and if it is accessed externally
 
 ::
 
-    contract test {
+    contract Test {
         uint public data = 42;
     }
 
@@ -221,7 +221,7 @@ The next example is a bit more complex:
 
 ::
 
-    contract complex {
+    contract Complex {
         struct Data {
             uint a;
             bytes3 b;
@@ -254,8 +254,8 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
 ::
 
-    contract owned {
-        function owned() { owner = msg.sender; }
+    contract Owned {
+        function Owned() { owner = msg.sender; }
         address owner;
 
         // This contract only defines a modifier but does not use
@@ -265,7 +265,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // This means that if the owner calls this function, the
         // function is executed and otherwise, an exception is
         // thrown.
-        modifier onlyowner {
+        modifier onlyOwner {
             if (msg.sender != owner)
                 throw;
             _
@@ -273,18 +273,18 @@ inheritable properties of contracts and may be overridden by derived contracts.
     }
 
 
-    contract mortal is owned {
-        // This contract inherits the "onlyowner"-modifier from
-        // "owned" and applies it to the "close"-function, which
+    contract Mortal is Owned {
+        // This contract inherits the "onlyOwner"-modifier from
+        // "Owned" and applies it to the "close"-function, which
         // causes that calls to "close" only have an effect if
         // they are made by the stored owner.
-        function close() onlyowner {
+        function close() onlyOwner {
             selfdestruct(owner);
         }
     }
 
 
-    contract priced {
+    contract Priced {
         // Modifiers can receive arguments:
         modifier costs(uint price) {
             if (msg.value >= price) {
@@ -294,17 +294,17 @@ inheritable properties of contracts and may be overridden by derived contracts.
     }
 
 
-    contract Register is priced, owned {
+    contract Register is Priced, Owned {
         mapping (address => bool) registeredAddresses;
         uint price;
 
         function Register(uint initialPrice) { price = initialPrice; }
 
-        function register() costs(price) {
+        function Register() costs(price) {
             registeredAddresses[msg.sender] = true;
         }
 
-        function changePrice(uint _price) onlyowner {
+        function changePrice(uint _price) onlyOwner {
             price = _price;
         }
     }
@@ -521,8 +521,8 @@ Details are given in the following example.
 
 ::
 
-    contract owned {
-        function owned() { owner = msg.sender; }
+    contract Owned {
+        function Owned() { owner = msg.sender; }
         address owner;
     }
 
@@ -531,7 +531,7 @@ Details are given in the following example.
     // contracts can access all non-private members including
     // internal functions and state variables. These cannot be
     // accessed externally via `this`, though.
-    contract mortal is owned {
+    contract Mortal is Owned {
         function kill() {
             if (msg.sender == owner) selfdestruct(owner);
         }
@@ -553,11 +553,11 @@ Details are given in the following example.
      }
 
 
-    // Multiple inheritance is possible. Note that "owned" is
-    // also a base class of "mortal", yet there is only a single
-    // instance of "owned" (as for virtual inheritance in C++).
-    contract named is owned, mortal {
-        function named(bytes32 name) {
+    // Multiple inheritance is possible. Note that "Owned" is
+    // also a base class of "Mortal", yet there is only a single
+    // instance of "Owned" (as for virtual inheritance in C++).
+    contract Named is Owned, Mortal {
+        function Named(bytes32 name) {
             Config config = Config(0xd5f9d8d94886e70b06e474c3fb14fd43e2f23970);
             NameReg(config.lookup(1)).register(name);
         }
@@ -571,7 +571,7 @@ Details are given in the following example.
                 NameReg(config.lookup(1)).unregister();
                 // It is still possible to call a specific
                 // overridden function.
-                mortal.kill();
+                Mortal.kill();
             }
         }
     }
@@ -580,7 +580,7 @@ Details are given in the following example.
     // If a constructor takes an argument, it needs to be
     // provided in the header (or modifier-invocation-style at
     // the constructor of the derived contract (see below)).
-    contract PriceFeed is owned, mortal, named("GoldFeed") {
+    contract PriceFeed is Owned, Mortal, Named("GoldFeed") {
        function updateInfo(uint newInfo) {
           if (msg.sender == owner) info = newInfo;
        }
@@ -590,24 +590,24 @@ Details are given in the following example.
        uint info;
     }
 
-Note that above, we call `mortal.kill()` to "forward" the
+Note that above, we call `Mortal.kill()` to "forward" the
 destruction request. The way this is done is problematic, as
 seen in the following example::
 
-    contract mortal is owned {
+    contract Mortal is Owned {
         function kill() {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
 
-    contract Base1 is mortal {
-        function kill() { /* do cleanup 1 */ mortal.kill(); }
+    contract Base1 is Mortal {
+        function kill() { /* do cleanup 1 */ Mortal.kill(); }
     }
 
 
-    contract Base2 is mortal {
-        function kill() { /* do cleanup 2 */ mortal.kill(); }
+    contract Base2 is Mortal {
+        function kill() { /* do cleanup 2 */ Mortal.kill(); }
     }
 
 
@@ -619,19 +619,19 @@ derived override, but this function will bypass
 `Base1.kill`, basically because it does not even know about
 `Base1`.  The way around this is to use `super`::
 
-    contract mortal is owned {
+    contract Mortal is Owned {
         function kill() {
             if (msg.sender == owner) selfdestruct(owner);
         }
     }
 
 
-    contract Base1 is mortal {
+    contract Base1 is Mortal {
         function kill() { /* do cleanup 1 */ super.kill(); }
     }
 
 
-    contract Base2 is mortal {
+    contract Base2 is Mortal {
         function kill() { /* do cleanup 2 */ super.kill(); }
     }
 
@@ -644,7 +644,7 @@ call this function on one of its base contracts, it rather
 calls this function on the next base contract in the final
 inheritance graph, so it will call `Base2.kill()` (note that
 the final inheritance sequence is -- starting with the most
-derived contract: Final, Base1, Base2, mortal, owned).
+derived contract: Final, Base1, Base2, Mortal, Owned).
 The actual function that is called when using super is
 not known in the context of the class where it is used,
 although its type is known. This is similar for ordinary
@@ -716,13 +716,13 @@ Abstract Contracts
 
 Contract functions can lack an implementation as in the following example (note that the function declaration header is terminated by `;`)::
 
-    contract feline {
+    contract Feline {
         function utterance() returns (bytes32);
     }
 
 Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
 
-    contract Cat is feline {
+    contract Cat is Feline {
         function utterance() returns (bytes32) { return "miaow"; }
     }
 
@@ -836,7 +836,7 @@ custom types without the overhead of external function calls:
 
 ::
 
-    library bigint {
+    library BigInt {
         struct bigint {
             uint[] limbs;
         }
@@ -879,7 +879,8 @@ custom types without the overhead of external function calls:
 
 
     contract C {
-        using bigint for bigint.bigint;
+        using BigInt for BigInt.bigint;
+
         function f() {
             var x = bigint.fromUint(7);
             var y = bigint.fromUint(uint(-1));
