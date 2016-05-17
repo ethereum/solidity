@@ -296,7 +296,7 @@ void NameAndTypeResolver::linearizeBaseContracts(ContractDefinition& _contract)
 {
 	// order in the lists is from derived to base
 	// list of lists to linearize, the last element is the list of direct bases
-	list<list<ContractDefinition const*>> input(1, {});
+	list<list<ContractDefinition const*>> input(1, list<ContractDefinition const*>{});
 	for (ASTPointer<InheritanceSpecifier> const& baseSpecifier: _contract.baseContracts())
 	{
 		UserDefinedTypeName const& baseName = baseSpecifier->name();
