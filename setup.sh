@@ -26,8 +26,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
     brew install boost
     brew install cmake
-    brew install cryptopp
-    brew install gmp
     brew install jsoncpp
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
@@ -53,8 +51,6 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         cmake \
         git \
         libboost-all-dev \
-        libcryptopp-dev \
-        libgmp-dev \
         libjsoncpp-dev
 
     # And install the English language package and reconfigure the locales.
