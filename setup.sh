@@ -26,7 +26,14 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
     brew install boost
     brew install cmake
+    brew install cryptopp
+    brew install miniupnpc
+    brew install leveldb
+    brew install gmp
     brew install jsoncpp
+    brew install libmicrohttpd
+    brew install libjson-rpc-cpp
+    brew install homebrew/versions/llvm37
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
@@ -51,8 +58,37 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         cmake \
         git \
         libboost-all-dev \
+        libedit-dev \
+        libgmp-dev \
+        libleveldb-dev \
+        libminiupnpc-dev \
         libcurl4-openssl-dev \
-        libjsoncpp-dev
+        libcryptopp-dev \
+        libmicrohttpd-dev \
+        libjsoncpp-dev \
+        libjson-rpc-cpp-dev \
+        libz-dev \
+        llvm-3.7-dev \
+        opencl-headers
+
+    # The exception is libjson-rpc-cpp, which we have to build from source for
+    # reliable results.   The only binaries available for this package are those
+    # we made ourselves against the (now very old) v0.4.2 release, which are unreliable,
+    # so instead we build the latest release label (v0.6.0) from source, which works just
+    # fine.   We should update our PPA.
+    #
+    # See https://github.com/ethereum/webthree-umbrella/issues/513.
+    sudo apt-get -y install libargtable2-dev libedit-dev
+    git clone git://github.com/cinemast/libjson-rpc-cpp.git
+    cd libjson-rpc-cpp
+    git checkout v0.6.0
+    mkdir build
+    cd build
+    cmake ..
+    make
+    sudo make install
+    sudo ldconfig
+    cd ../..
 
     # And install the English language package and reconfigure the locales.
     # We really shouldn't need to do this, and should instead force our locales to "C"
