@@ -53,7 +53,6 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         cmake \
         git \
         libboost-all-dev \
-        libcurl4-openssl-dev \
         libcryptopp-dev \
         libgmp-dev \
         libjsoncpp-dev
