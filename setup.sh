@@ -52,7 +52,7 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         git \
         libboost-all-dev \
         libcurl4-openssl-dev \
-        libjsoncpp-dev \
+        libjsoncpp-dev
 
     # And install the English language package and reconfigure the locales.
     # We really shouldn't need to do this, and should instead force our locales to "C"
