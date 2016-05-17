@@ -6595,6 +6595,25 @@ BOOST_AUTO_TEST_CASE(inline_assembly_jumps)
 	BOOST_CHECK(callContractFunction("f()", u256(7)) == encodeArgs(u256(34)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_function_access)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			function g(uint y) { x = 2 * y; assembly { stop } }
+			function f(uint _x) {
+				assembly {
+					_x
+					jump(g)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(5)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(10)));
+}
+
 BOOST_AUTO_TEST_CASE(index_access_with_type_conversion)
 {
 	// Test for a bug where higher order bits cleanup was not done for array index access.

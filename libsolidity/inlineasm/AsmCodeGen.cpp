@@ -36,7 +36,8 @@ using namespace dev::solidity::assembly;
 
 struct GeneratorState
 {
-	explicit GeneratorState(ErrorList& _errors): errors(_errors) {}
+	GeneratorState(ErrorList& _errors, eth::Assembly& _assembly):
+		errors(_errors), assembly(_assembly) {}
 
 	void addError(Error::Type _type, std::string const& _description, SourceLocation const& _location = SourceLocation())
 	{
@@ -66,10 +67,10 @@ struct GeneratorState
 		return label != labels.end() ? &label->second : nullptr;
 	}
 
-	eth::Assembly assembly;
 	map<string, eth::AssemblyItem> labels;
 	vector<pair<string, int>> variables; ///< name plus stack height
 	ErrorList& errors;
+	eth::Assembly& assembly;
 };
 
 /**
@@ -267,7 +268,8 @@ private:
 bool assembly::CodeGenerator::typeCheck(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
 {
 	size_t initialErrorLen = m_errors.size();
-	GeneratorState state(m_errors);
+	eth::Assembly assembly;
+	GeneratorState state(m_errors, assembly);
 	(LabelOrganizer(state))(m_parsedData);
 	(CodeTransform(state, _identifierAccess))(m_parsedData);
 	return m_errors.size() == initialErrorLen;
@@ -275,9 +277,17 @@ bool assembly::CodeGenerator::typeCheck(assembly::CodeGenerator::IdentifierAcces
 
 eth::Assembly assembly::CodeGenerator::assemble(assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
 {
-	GeneratorState state(m_errors);
+	eth::Assembly assembly;
+	GeneratorState state(m_errors, assembly);
 	(LabelOrganizer(state))(m_parsedData);
 	(CodeTransform(state, _identifierAccess))(m_parsedData);
-	return state.assembly;
+	return assembly;
+}
+
+void assembly::CodeGenerator::assemble(eth::Assembly& _assembly, assembly::CodeGenerator::IdentifierAccess const& _identifierAccess)
+{
+	GeneratorState state(m_errors, _assembly);
+	(LabelOrganizer(state))(m_parsedData);
+	(CodeTransform(state, _identifierAccess))(m_parsedData);
 }
 
