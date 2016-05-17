@@ -44,7 +44,7 @@ API, this is done as follows::
     var MyContract = web3.eth.contract(abiArray);
     // deploy new contract
     var contractInstance = MyContract.new(
-      10,
+      10, 11,
       {from: myAccount, gas: 1000000}
     );
 
