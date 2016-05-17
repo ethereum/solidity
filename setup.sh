@@ -29,7 +29,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     brew install cryptopp
     brew install gmp
     brew install jsoncpp
-    brew install libjson-rpc-cpp
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
