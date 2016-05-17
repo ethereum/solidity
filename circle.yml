@@ -1,0 +1,18 @@
+#------------------------------------------------------------------------------
+# CircleCI configuration file for solidity.
+#
+# The documentation for solidity is hosted at:
+#
+# http://solidity.readthedocs.org
+#
+# (c) 2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
+
+dependencies:
+    override:
+        - sudo ./setup.sh
+test:
+    override:
+        - mkdir build
+        - cd build && cmake ..
+        - cd build && make
