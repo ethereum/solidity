@@ -461,7 +461,7 @@ stack. Also note that non-struct and non-array storage variable addresses occupy
 on the stack: One for the address and one for the byte offset inside the storage slot.
 In assignments (see below), we can even use local Solidity variables to assign to.
 
-Functions external to inline assembly can also be accessed: The assemble will
+Functions external to inline assembly can also be accessed: The assembly will
 push their entry label (with virtual function resolution applied). The calling semantics
 in solidity are:
 
