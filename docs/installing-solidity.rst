@@ -100,6 +100,12 @@ Now add all the rest:
     sudo add-apt-repository -y ppa:ethereum/ethereum-dev
     sudo apt-get -y update
     sudo apt-get -y upgrade
+    
+Then install Solidity:
+
+.. code-block:: bash
+
+    sudo apt-get -y install solc
 
 For Ubuntu 15.04 (Vivid Vervet) or older, use the following command to add the develop packages:
 
