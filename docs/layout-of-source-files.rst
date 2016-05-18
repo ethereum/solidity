@@ -88,7 +88,7 @@ the following in your source file:
 
 and then run the compiler as
 
-.. code-block:: shell
+.. code-block:: bash
 
   solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
 
