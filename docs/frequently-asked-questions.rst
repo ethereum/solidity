@@ -692,11 +692,11 @@ What happens to a struct's mapping when copying over a struct?
 
 This is a very interesting question. Suppose that we have a contract field set up like such::
 
-    struct user{
+    struct user {
         mapping(string => address) usedContracts;
     }
 
-    function somefunction{
+    function somefunction {
        user user1;
        user1.usedContracts["Hello"] = "World";
        user user2 = user1;
@@ -715,6 +715,8 @@ You will need to make sure that you have both contracts aware of each other's pr
 In this example::
 
     contract B {}
+
+
     contract A {
         address child;
 
@@ -758,21 +760,21 @@ Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
 
     contract C {
-      uint[20] x;
+        uint[20] x;
 
-      function f() {
-        g(x);
-        h(x);
-      }
+        function f() {
+            g(x);
+            h(x);
+        }
 
-      function g(uint[20] y) {
-        y[2] = 3;
-      }
+        function g(uint[20] y) {
+            y[2] = 3;
+        }
 
-      function h(uint[20] storage y) {
-        y[3] = 4;
-      }
-   }
+        function h(uint[20] storage y) {
+            y[3] = 4;
+        }
+    }
 
 The call to `g(x)` will not have an effect on `x` because it needs
 to create an independent copy of the storage value in memory

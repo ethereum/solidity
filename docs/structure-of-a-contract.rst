@@ -21,8 +21,8 @@ State variables are values which are permanently stored in contract storage.
 ::
 
   contract SimpleStorage {
-    uint storedData; // State variable
-    // ...
+      uint storedData; // State variable
+      // ...
   }
 
 See the :ref:`types` section for valid state variable types and
@@ -39,9 +39,9 @@ Functions are the executable units of code within a contract.
 ::
 
   contract SimpleAuction {
-    function bid() { // Function
-      // ...
-    }
+      function bid() { // Function
+          // ...
+      }
   }
 
 :ref:`function-calls` can happen internally or externally
@@ -59,16 +59,16 @@ Function modifiers can be used to amend the semantics of functions in a declarat
 ::
 
   contract Purchase {
-    address public seller;
+      address public seller;
 
-    modifier onlySeller() { // Modifier
-        if (msg.sender != seller) throw;
-        _
-    }
+      modifier onlySeller() { // Modifier
+          if (msg.sender != seller) throw;
+          _
+      }
 
-    function abort() onlySeller { // Modifier usage
-        // ...
-    }
+      function abort() onlySeller { // Modifier usage
+          // ...
+      }
   }
 
 .. _structure-events:
@@ -81,12 +81,12 @@ Events are convenience interfaces with the EVM logging facilities.
 ::
 
   contract SimpleAuction {
-    event HighestBidIncreased(address bidder, uint amount); // Event
+      event HighestBidIncreased(address bidder, uint amount); // Event
 
-    function bid() {
-      // ...
-      HighestBidIncreased(msg.sender, msg.value); // Triggering event
-    }
+      function bid() {
+          // ...
+          HighestBidIncreased(msg.sender, msg.value); // Triggering event
+      }
   }
 
 See :ref:`events` in contracts section for information on how events are declared
@@ -103,12 +103,12 @@ Structs are custom defined types that can group several variables (see
 ::
 
   contract Ballot {
-    struct Voter { // Struct
-      uint weight;
-      bool voted;
-      address delegate;
-      uint vote;
-    }
+      struct Voter { // Struct
+          uint weight;
+          bool voted;
+          address delegate;
+          uint vote;
+      }
   }
 
 .. _structure-enum-types:
@@ -122,5 +122,5 @@ Enums can be used to create custom types with a finite set of values (see
 ::
 
   contract Purchase {
-    enum State { Created, Locked, Inactive } // Enum
+      enum State { Created, Locked, Inactive } // Enum
   }

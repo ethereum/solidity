@@ -51,9 +51,11 @@ There are some types in Solidity's type system that have no counterpart in the s
         if (useB) f = b;
         return f(x);
       }
+
       function a(uint x) returns (uint z) {
         return x * x;
       }
+
       function b(uint x) returns (uint z) {
         return 2 * x;
       }

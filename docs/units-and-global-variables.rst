@@ -35,7 +35,7 @@ These suffixes cannot be applied to variables. If you want to
 interpret some input variable in e.g. days, you can do it in the following way::
 
     function f(uint start, uint daysAfter) {
-      if (now >= start + daysAfter * 1 days) { ... }
+        if (now >= start + daysAfter * 1 days) { ... }
     }
 
 Special Variables and Functions

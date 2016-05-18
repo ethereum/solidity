@@ -55,6 +55,8 @@ of other contracts, the amount of Wei sent with the call and the gas can be spec
     contract InfoFeed {
         function info() returns (uint ret) { return 42; }
     }
+
+
     contract Consumer {
         InfoFeed feed;
         function setFeed(address addr) { feed = InfoFeed(addr); }
@@ -77,10 +79,12 @@ of unused parameters (especially return parameters) can be omitted.
 
     contract c {
         function f(uint key, uint value) { ... }
+
         function g() {
             // named arguments
             f({value: 2, key: 3});
         }
+
         // omitted parameters
         function func(uint k, uint) returns(uint) {
             return k;
@@ -212,7 +216,7 @@ In the following example, we show how `throw` can be used to easily revert an Et
 
     contract Sharer {
         function sendHalf(address addr) returns (uint balance) {
-            if (!addr.send(msg.value/2))
+            if (!addr.send(msg.value / 2))
                 throw; // also reverts the transfer to Sharer
             return this.balance;
         }
@@ -290,6 +294,7 @@ you really know what you are doing.
             for (uint i = 0; i < _data.length; ++i)
                 o_sum += _data[i];
         }
+
         // We know that we only access the array in bounds, so we can avoid the check.
         // 0x20 needs to be added to an array because the first slot contains the
         // array length.
