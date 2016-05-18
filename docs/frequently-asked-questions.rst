@@ -2,7 +2,7 @@
 Frequently Asked Questions
 ###########################
 
-This list was originally compiled by [fivedogit](mailto:fivedogit@gmail.com).
+This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 
 
 ***************
@@ -179,7 +179,7 @@ Mappings are already syntactically similar to arrays as they are, therefore it d
 
 An example of this would be::
 
-    contract c {
+    contract C {
         struct myStruct {
             uint someNumber;
             string someString;
@@ -218,7 +218,7 @@ Example::
 
     contract C {
         function f() returns (uint8[5]) {
-            string[4] memory AdaArr = ["This", "is", "an", "array"];
+            string[4] memory adaArr = ["This", "is", "an", "array"];
             return ([1, 2, 3, 4, 5]);
         }
     }
@@ -360,7 +360,7 @@ Examples::
 
         S public x = S(1, 2);
         string name = "Ada";
-        string[4] memory AdaArr = ["This", "is", "an", "array"];
+        string[4] memory adaArr = ["This", "is", "an", "array"];
     }
 
 

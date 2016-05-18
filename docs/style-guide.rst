@@ -252,7 +252,7 @@ No::
     for (...) {
         ...;}
 
-For control structures who's body contains a single statement, omitting the
+For control structures whose body contains a single statement, omitting the
 braces is ok *if* the statement is contained on a single line.
 
 Yes::
@@ -365,14 +365,14 @@ Yes::
         address e,
         address f
     ) {
-        do_something;
+        doSomething();
     }
 
 No::
 
     function thisFunctionHasLotsOfArguments(address a, address b, address c,
         address d, address e, address f) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionHasLotsOfArguments(address a,
@@ -381,7 +381,7 @@ No::
                                             address d,
                                             address e,
                                             address f) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionHasLotsOfArguments(
@@ -391,7 +391,7 @@ No::
         address d,
         address e,
         address f) {
-        do_something;
+        doSomething();
     }
 
 If a long function declaration has modifiers, then each modifier should be
@@ -405,7 +405,7 @@ Yes::
         priced
         returns (address)
     {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(
@@ -418,7 +418,7 @@ Yes::
         priced
         returns (address)
     {
-        do_something;
+        doSomething();
     }
 
 No::
@@ -428,13 +428,13 @@ No::
                                           onlyowner
                                           priced
                                           returns (address) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
         public onlyowner priced returns (address)
     {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
@@ -442,10 +442,10 @@ No::
         onlyowner
         priced
         returns (address) {
-        do_something;
+        doSomething();
     }
 
-For constructor functions on inherited contracts who's bases require arguments,
+For constructor functions on inherited contracts whose bases require arguments,
 it is recommended to drop the base constructors onto new lines in the same
 manner as modifiers if the function declaration is long or hard to read.
 

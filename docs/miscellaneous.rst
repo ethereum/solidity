@@ -31,10 +31,10 @@ non-elementary type, the positions are found by adding an offset of `sha3(k . p)
 
 So for the following contract snippet::
 
-    contract c {
-      struct S { uint a; uint b; }
+    contract C {
+      struct s { uint a; uint b; }
       uint x;
-      mapping(uint => mapping(uint => S)) data;
+      mapping(uint => mapping(uint => s)) data;
     }
 
 The position of `data[4][9].b` is at `sha3(uint256(9) . sha3(uint256(4) . uint256(1))) + 1`.
@@ -97,6 +97,8 @@ even though the instructions contained a jump in the beginning.
 
 .. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
 
+.. _commandline-compiler:
+
 ******************************
 Using the Commandline Compiler
 ******************************
@@ -119,7 +121,7 @@ files reside, so things like `import "/etc/passwd";` only work if you add `=/` a
 
 If there are multiple matches due to remappings, the one with the longest common prefix is selected.
 
-If your contracts use [libraries](#libraries), you will notice that the bytecode contains substrings of the form `__LibraryName______`. You can use `solc` as a linker meaning that it will insert the library addresses for you at those points:
+If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form `__LibraryName______`. You can use `solc` as a linker meaning that it will insert the library addresses for you at those points:
 
 Either add `--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"` to your command to provide an address for each library or store the string in a file (one library per line) and run `solc` using `--libraries fileName`.
 
@@ -170,7 +172,7 @@ Global Variables
 - `sha3(...) returns (bytes32)`: compute the Ethereum-SHA3 hash of the (tightly packed) arguments
 - `sha256(...) returns (bytes32)`: compute the SHA256 hash of the (tightly packed) arguments
 - `ripemd160(...) returns (bytes20)`: compute RIPEMD of 256 the (tightly packed) arguments
-- `ecrecover(bytes32, uint8, bytes32, bytes32) returns (address)`: recover public key from elliptic curve signature
+- `ecrecover(bytes32, uint8, bytes32, bytes32) returns (address)`: recover address associated with the public key from elliptic curve signature
 - `addmod(uint x, uint y, uint k) returns (uint)`: compute `(x + y) % k` where the addition is performed with arbitrary precision and does not wrap around at `2**256`.
 - `mulmod(uint x, uint y, uint k) returns (uint)`: compute `(x * y) % k` where the multiplication is performed with arbitrary precision and does not wrap around at `2**256`.
 - `this` (current contract's type): the current contract, explicitly convertible to `address`
