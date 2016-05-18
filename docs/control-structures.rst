@@ -31,7 +31,7 @@ Internal Function Calls
 Functions of the current contract can be called directly ("internally"), also recursively, as seen in
 this nonsensical example::
 
-    contract c {
+    contract C {
         function g(uint a) returns (uint ret) { return f(); }
         function f() returns (uint ret) { return g(7) + f(); }
     }
@@ -77,7 +77,7 @@ of unused parameters (especially return parameters) can be omitted.
 
 ::
 
-    contract c {
+    contract C {
         function f(uint key, uint value) { ... }
 
         function g() {
@@ -541,7 +541,7 @@ It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
-    contract c {
+    contract C {
         uint b;
         function f(uint x) returns (uint r) {
             assembly {
@@ -615,7 +615,7 @@ be just `0`, but it can also be a complex functional-style expression.
 
 .. code::
 
-    contract c {
+    contract C {
         function f(uint x) returns (uint b) {
             assembly {
                 let v := add(x, 1)

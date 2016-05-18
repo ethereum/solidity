@@ -185,7 +185,7 @@ return parameter list for functions.
 
 ::
 
-    contract c {
+    contract C {
         function f(uint a) private returns (uint b) { return a + 1; }
         function setData(uint a) internal { data = a; }
         uint public data;
@@ -214,7 +214,7 @@ it is a state variable and if it is accessed externally
 
 ::
 
-    contract test {
+    contract Test {
         uint public data = 42;
     }
 
@@ -222,7 +222,7 @@ The next example is a bit more complex:
 
 ::
 
-    contract complex {
+    contract Complex {
         struct Data {
             uint a;
             bytes3 b;
@@ -266,7 +266,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
         // This means that if the owner calls this function, the
         // function is executed and otherwise, an exception is
         // thrown.
-        modifier onlyowner {
+        modifier onlyOwner {
             if (msg.sender != owner)
                 throw;
             _
@@ -275,11 +275,11 @@ inheritable properties of contracts and may be overridden by derived contracts.
 
 
     contract mortal is owned {
-        // This contract inherits the "onlyowner"-modifier from
+        // This contract inherits the "onlyOwner"-modifier from
         // "owned" and applies it to the "close"-function, which
         // causes that calls to "close" only have an effect if
         // they are made by the stored owner.
-        function close() onlyowner {
+        function close() onlyOwner {
             selfdestruct(owner);
         }
     }
@@ -305,7 +305,7 @@ inheritable properties of contracts and may be overridden by derived contracts.
             registeredAddresses[msg.sender] = true;
         }
 
-        function changePrice(uint _price) onlyowner {
+        function changePrice(uint _price) onlyOwner {
             price = _price;
         }
     }
@@ -717,13 +717,13 @@ Abstract Contracts
 
 Contract functions can lack an implementation as in the following example (note that the function declaration header is terminated by `;`)::
 
-    contract feline {
+    contract Feline {
         function utterance() returns (bytes32);
     }
 
 Such contracts cannot be compiled (even if they contain implemented functions alongside non-implemented functions), but they can be used as base contracts::
 
-    contract Cat is feline {
+    contract Cat is Feline {
         function utterance() returns (bytes32) { return "miaow"; }
     }
 
@@ -837,7 +837,7 @@ custom types without the overhead of external function calls:
 
 ::
 
-    library bigint {
+    library BigInt {
         struct bigint {
             uint[] limbs;
         }
@@ -880,7 +880,8 @@ custom types without the overhead of external function calls:
 
 
     contract C {
-        using bigint for bigint.bigint;
+        using BigInt for BigInt.bigint;
+
         function f() {
             var x = bigint.fromUint(7);
             var y = bigint.fromUint(uint(-1));

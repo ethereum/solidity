@@ -31,10 +31,10 @@ non-elementary type, the positions are found by adding an offset of `sha3(k . p)
 
 So for the following contract snippet::
 
-    contract c {
-      struct S { uint a; uint b; }
+    contract C {
+      struct s { uint a; uint b; }
       uint x;
-      mapping(uint => mapping(uint => S)) data;
+      mapping(uint => mapping(uint => s)) data;
     }
 
 The position of `data[4][9].b` is at `sha3(uint256(9) . sha3(uint256(4) . uint256(1))) + 1`.
