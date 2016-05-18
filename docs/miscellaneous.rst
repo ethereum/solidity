@@ -97,6 +97,8 @@ even though the instructions contained a jump in the beginning.
 
 .. index:: ! commandline compiler, compiler;commandline, ! solc, ! linker
 
+.. _commandline-compiler:
+
 ******************************
 Using the Commandline Compiler
 ******************************
@@ -119,7 +121,7 @@ files reside, so things like `import "/etc/passwd";` only work if you add `=/` a
 
 If there are multiple matches due to remappings, the one with the longest common prefix is selected.
 
-If your contracts use [libraries](#libraries), you will notice that the bytecode contains substrings of the form `__LibraryName______`. You can use `solc` as a linker meaning that it will insert the library addresses for you at those points:
+If your contracts use :ref:`libraries <libraries>`, you will notice that the bytecode contains substrings of the form `__LibraryName______`. You can use `solc` as a linker meaning that it will insert the library addresses for you at those points:
 
 Either add `--libraries "Math:0x12345678901234567890 Heap:0xabcdef0123456"` to your command to provide an address for each library or store the string in a file (one library per line) and run `solc` using `--libraries fileName`.
 

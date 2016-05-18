@@ -2,7 +2,7 @@
 Frequently Asked Questions
 ###########################
 
-This list was originally compiled by [fivedogit](mailto:fivedogit@gmail.com).
+This list was originally compiled by `fivedogit <mailto:fivedogit@gmail.com>`_.
 
 
 ***************
