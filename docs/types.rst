@@ -56,6 +56,8 @@ operators are :ref:`literals<integer_literals>` (or literal expressions).
 
 .. index:: address, balance, send, call, callcode, delegatecall
 
+.. _address:
+
 Address
 -------
 
