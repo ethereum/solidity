@@ -32,8 +32,8 @@ Functions of the current contract can be called directly ("internally"), also re
 this nonsensical example::
 
     contract c {
-      function g(uint a) returns (uint ret) { return f(); }
-      function f() returns (uint ret) { return g(7) + f(); }
+        function g(uint a) returns (uint ret) { return f(); }
+        function f() returns (uint ret) { return g(7) + f(); }
     }
 
 These function calls are translated into simple jumps inside the EVM. This has
@@ -51,14 +51,16 @@ all function arguments have to be copied to memory.
 
 When calling functions
 of other contracts, the amount of Wei sent with the call and the gas can be specified::
-    
+
     contract InfoFeed {
-      function info() returns (uint ret) { return 42; }
+        function info() returns (uint ret) { return 42; }
     }
+
+
     contract Consumer {
-      InfoFeed feed;
-      function setFeed(address addr) { feed = InfoFeed(addr); }
-      function callFeed() { feed.info.value(10).gas(800)(); }
+        InfoFeed feed;
+        function setFeed(address addr) { feed = InfoFeed(addr); }
+        function callFeed() { feed.info.value(10).gas(800)(); }
     }
 
 Note that the expression `InfoFeed(addr)` performs an explicit type conversion stating
@@ -76,15 +78,17 @@ of unused parameters (especially return parameters) can be omitted.
 ::
 
     contract c {
-      function f(uint key, uint value) { ... }
-      function g() {
-        // named arguments
-        f({value: 2, key: 3});
-      }
-      // omitted parameters
-      function func(uint k, uint) returns(uint) {
-        return k;
-      }
+        function f(uint key, uint value) { ... }
+
+        function g() {
+            // named arguments
+            f({value: 2, key: 3});
+        }
+
+        // omitted parameters
+        function func(uint k, uint) returns(uint) {
+            return k;
+        }
     }
 
 Order of Evaluation of Expressions
@@ -109,29 +113,31 @@ Destructuring Assignments and Returning Multiple Values
 Solidity internally allows tuple types, i.e. a list of objects of potentially different types whose size is a constant at compile-time. Those tuples can be used to return multiple values at the same time and also assign them to multiple variables (or LValues in general) at the same time::
 
     contract C {
-      uint[] data;
-      function f() returns (uint, bool, uint) {
-        return (7, true, 2);
-      }
-      function g() {
-        // Declares and assigns the variables. Specifying the type explicitly is not possible.
-        var (x, b, y) = f();
-        // Assigns to a pre-existing variable.
-        (x, y) = (2, 7);
-        // Common trick to swap values -- does not work for non-value storage types.
-        (x, y) = (y, x);
-        // Components can be left out (also for variable declarations).
-        // If the tuple ends in an empty component,
-        // the rest of the values are discarded.
-        (data.length,) = f(); // Sets the length to 7
-        // The same can be done on the left side.
-        (,data[3]) = f(); // Sets data[3] to 2
-        // Components can only be left out at the left-hand-side of assignments, with
-        // one exception:
-        (x,) = (1,);
-        // (1,) is the only way to specify a 1-component tuple, because (1) is
-        // equivalent to 1.
-      }
+        uint[] data;
+
+        function f() returns (uint, bool, uint) {
+            return (7, true, 2);
+        }
+
+        function g() {
+            // Declares and assigns the variables. Specifying the type explicitly is not possible.
+            var (x, b, y) = f();
+            // Assigns to a pre-existing variable.
+            (x, y) = (2, 7);
+            // Common trick to swap values -- does not work for non-value storage types.
+            (x, y) = (y, x);
+            // Components can be left out (also for variable declarations).
+            // If the tuple ends in an empty component,
+            // the rest of the values are discarded.
+            (data.length,) = f(); // Sets the length to 7
+            // The same can be done on the left side.
+            (,data[3]) = f(); // Sets data[3] to 2
+            // Components can only be left out at the left-hand-side of assignments, with
+            // one exception:
+            (x,) = (1,);
+            // (1,) is the only way to specify a 1-component tuple, because (1) is
+            // equivalent to 1.
+        }
     }
 
 Complications for Arrays and Structs
@@ -210,7 +216,7 @@ In the following example, we show how `throw` can be used to easily revert an Et
 
     contract Sharer {
         function sendHalf(address addr) returns (uint balance) {
-            if (!addr.send(msg.value/2))
+            if (!addr.send(msg.value / 2))
                 throw; // also reverts the transfer to Sharer
             return this.balance;
         }
@@ -244,8 +250,8 @@ arising when writing manual assembly by the following features:
 We now want to describe the inline assembly language in detail.
 
 .. warning::
-	Inline assembly is still a relatively new feature and might change if it does not prove useful,
-	so please try to keep up to date.
+    Inline assembly is still a relatively new feature and might change if it does not prove useful,
+    so please try to keep up to date.
 
 Example
 -------
@@ -256,23 +262,23 @@ idea is that assembly libraries will be used to enhance the language in such way
 
 .. code::
 
-	library GetCode {
-		function at(address _addr) returns (bytes o_code) {
-			assembly {
-				// retrieve the size of the code, this needs assembly
-				let size := extcodesize(_addr)
-				// allocate output byte array - this could also be done without assembly
-				// by using o_code = new bytes(size)
-				o_code := mload(0x40)
-				// new "memory end" including padding
-				mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
-				// store length in memory
-				mstore(o_code, size)
-				// actually retrieve the code, this needs assembly
-				extcodecopy(_addr, add(o_code, 0x20), 0, size)
-			}
-		}
-	}
+    library GetCode {
+        function at(address _addr) returns (bytes o_code) {
+            assembly {
+                // retrieve the size of the code, this needs assembly
+                let size := extcodesize(_addr)
+                // allocate output byte array - this could also be done without assembly
+                // by using o_code = new bytes(size)
+                o_code := mload(0x40)
+                // new "memory end" including padding
+                mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+                // store length in memory
+                mstore(o_code, size)
+                // actually retrieve the code, this needs assembly
+                extcodecopy(_addr, add(o_code, 0x20), 0, size)
+            }
+        }
+    }
 
 Inline assemmbly could also be beneficial in cases where the optimizer fails to produce
 efficient code. Please be aware that assembly is much more difficult to write because
@@ -281,21 +287,25 @@ you really know what you are doing.
 
 .. code::
 
-	library VectorSum {
-		// This function is less efficient because the optimizer currently fails to
-		// remove the bounds checks in array access.
-		function sumSolidity(uint[] _data) returns (uint o_sum) {
-			for (uint i = 0; i < _data.length; ++i)
-				o_sum += _data[i];
-		}
-		// We know that we only access the array in bounds, so we can avoid the check.
-		// 0x20 needs to be added to an array because the first slot contains the
-		// array length.
-		function sumAsm(uint[] _data) returns (uint o_sum) {
-			for (uint i = 0; i < _data.length; ++i)
-				assembly { o_sum := mload(add(add(_data, 0x20), i)) }
-		}
-	}
+    library VectorSum {
+        // This function is less efficient because the optimizer currently fails to
+        // remove the bounds checks in array access.
+        function sumSolidity(uint[] _data) returns (uint o_sum) {
+            for (uint i = 0; i < _data.length; ++i)
+                o_sum += _data[i];
+        }
+
+        // We know that we only access the array in bounds, so we can avoid the check.
+        // 0x20 needs to be added to an array because the first slot contains the
+        // array length.
+        function sumAsm(uint[] _data) returns (uint o_sum) {
+            for (uint i = 0; i < _data.length; ++i) {
+                assembly {
+                    o_sum := mload(add(add(_data, 0x20), i))
+                }
+            }
+        }
+    }
 
 Syntax
 ------
@@ -330,147 +340,147 @@ In the following, `mem[a...b)` signifies the bytes of memory starting at positio
 
 The opcodes `pushi` and `jumpdest` cannot be used directly.
 
-+-----------------------+------+---------------------------------------------------------------+
-| stop                  + `-`  | stop execution, identical to return(0,0)                      |
-+-----------------------+------+---------------------------------------------------------------+
-| add(x, y)             |      | x + y                                                         |
-+-----------------------+------+---------------------------------------------------------------+
-| sub(x, y)             |      | x - y                                                         |
-+-----------------------+------+---------------------------------------------------------------+
-| mul(x, y)             |      | x * y                                                         |
-+-----------------------+------+---------------------------------------------------------------+
-| div(x, y)             |      | x / y                                                         |
-+-----------------------+------+---------------------------------------------------------------+
-| sdiv(x, y)            |      | x / y, for signed numbers in two's complement                 |
-+-----------------------+------+---------------------------------------------------------------+
-| mod(x, y)             |      | x % y                                                         |
-+-----------------------+------+---------------------------------------------------------------+
-| smod(x, y)            |      | x % y, for signed numbers in two's complement                 |
-+-----------------------+------+---------------------------------------------------------------+
-| exp(x, y)             |      | x to the power of y                                           |
-+-----------------------+------+---------------------------------------------------------------+
-| not(x)                |      | ~x, every bit of x is negated                                 |
-+-----------------------+------+---------------------------------------------------------------+
-| lt(x, y)              |      | 1 if x < y, 0 otherwise                                       |
-+-----------------------+------+---------------------------------------------------------------+
-| gt(x, y)              |      | 1 if x > y, 0 otherwise                                       |
-+-----------------------+------+---------------------------------------------------------------+
-| slt(x, y)             |      |1 if x < y, 0 otherwise, for signed numbers in two's complement|
-+-----------------------+------+---------------------------------------------------------------+
-| sgt(x, y)             |      |1 if x > y, 0 otherwise, for signed numbers in two's complement|
-+-----------------------+------+---------------------------------------------------------------+
-| eq(x, y)              |      | 1 if x == y, 0 otherwise                                      |
-+-----------------------+------+---------------------------------------------------------------+
-| iszero(x)             |      | 1 if x == 0, 0 otherwise                                      |
-+-----------------------+------+---------------------------------------------------------------+
-| and(x, y)             |      | bitwise and of x and y                                        |
-+-----------------------+------+---------------------------------------------------------------+
-| or(x, y)              |      | bitwise or of x and y                                         |
-+-----------------------+------+---------------------------------------------------------------+
-| xor(x, y)             |      | bitwise xor of x and y                                        |
-+-----------------------+------+---------------------------------------------------------------+
-| byte(n, x)            |      | nth byte of x, where the most significant byte is the 0th byte|
-+-----------------------+------+---------------------------------------------------------------+
-| addmod(x, y, m)       |      | (x + y) % m with arbitrary precision arithmetics              |
-+-----------------------+------+---------------------------------------------------------------+
-| mulmod(x, y, m)       |      | (x * y) % m with arbitrary precision arithmetics              |
-+-----------------------+------+---------------------------------------------------------------+
-| signextend(i, x)      |      | sign extend from (i*8+7)th bit counting from least significant|
-+-----------------------+------+---------------------------------------------------------------+
-| sha3(p, n)            |      | keccak(mem[p...(p+n)))                                        |
-+-----------------------+------+---------------------------------------------------------------+
-| jump(label)           | `-`  | jump to label / code position                                 |
-+-----------------------+------+---------------------------------------------------------------+
-| jumpi(label, cond)    | `-`  | jump to label if cond is nonzero                              |
-+-----------------------+------+---------------------------------------------------------------+
-| pc                    |      | current position in code                                      |
-+-----------------------+------+---------------------------------------------------------------+
-| pop                   | `*`  | remove topmost stack slot                                     |
-+-----------------------+------+---------------------------------------------------------------+
-| dup1 ... dup16        |      | copy ith stack slot to the top (counting from top)            |
-+-----------------------+------+---------------------------------------------------------------+
-| swap1 ... swap1       | `*`  | swap topmost and ith stack slot below it                      |
-+-----------------------+------+---------------------------------------------------------------+
-| mload(p)              |      | mem[p..(p+32))                                                |
-+-----------------------+------+---------------------------------------------------------------+
-| mstore(p, v)          | `-`  | mem[p..(p+32)) := v                                           |
-+-----------------------+------+---------------------------------------------------------------+
-| mstore8(p, v)         | `-`  | mem[p] := v & 0xff    - only modifies a single byte           |
-+-----------------------+------+---------------------------------------------------------------+
-| sload(p)              |      | storage[p]                                                    |
-+-----------------------+------+---------------------------------------------------------------+
-| sstore(p, v)          | `-`  | storage[p] := v                                               |
-+-----------------------+------+---------------------------------------------------------------+
-| msize                 |      | size of memory, i.e. largest accessed memory index            |
-+-----------------------+------+---------------------------------------------------------------+
-| gas                   |      | gas still available to execution                              |
-+-----------------------+------+---------------------------------------------------------------+
-| address               |      | address of the current contract / execution context           |
-+-----------------------+------+---------------------------------------------------------------+
-| balance(a)            |      | wei balance at address a                                      |
-+-----------------------+------+---------------------------------------------------------------+
-| caller                |      | call sender (excluding delegatecall)                          |
-+-----------------------+------+---------------------------------------------------------------+
-| callvalue             |      | wei sent together with the current call                       |
-+-----------------------+------+---------------------------------------------------------------+
-| calldataload(p)       |      | call data starting from position p (32 bytes)                 |
-+-----------------------+------+---------------------------------------------------------------+
-| calldatasize          |      | size of call data in bytes                                    |
-+-----------------------+------+---------------------------------------------------------------+
-| calldatacopy(t, f, s) | `-`  | copy s bytes from calldata at position f to mem at position t |
-+-----------------------+------+---------------------------------------------------------------+
-| codesize              |      | size of the code of the current contract / execution context  |
-+-----------------------+------+---------------------------------------------------------------+
-| codecopy(t, f, s)     | `-`  | copy s bytes from code at position f to mem at position t     |
-+-----------------------+------+---------------------------------------------------------------+
-| extcodesize(a)        |      | size of the code at address a                                 |
-+-----------------------+------+---------------------------------------------------------------+
-|extcodecopy(a, t, f, s)| `-`  | like codecopy(t, f, s) but take code at address a             |
-+-----------------------+------+---------------------------------------------------------------+
-| create(v, p, s)       |      | create new contract with code mem[p..(p+s)) and send v wei    |
-|                       |      | and return the new address                                    |
-+-----------------------+------+---------------------------------------------------------------+
-| call(g, a, v, in,     |      | call contract at address a with input mem[in..(in+insize)]    |
-| insize, out, outsize) |      | providing g gas and v wei and output area                     |
-|                       |      | mem[out..(out+outsize)] returting 1 on error (out of gas)     |
-+-----------------------+------+---------------------------------------------------------------+
-| callcode(g, a, v, in, |      | identical to call but only use the code from a and stay       |
-| insize, out, outsize) |      | in the context of the current contract otherwise              |
-+-----------------------+------+---------------------------------------------------------------+
-| delegatecall(g, a, in,|      | identical to callcode but also keep `caller` and `callvalue`  |
-| insize, out, outsize) |      |                                                               |
-+-----------------------+------+---------------------------------------------------------------+
-| return(p, s)          | `*`  | end execution, return data mem[p..(p+s))                      |
-+-----------------------+------+---------------------------------------------------------------+
-| selfdestruct(a)       | `*`  | end execution, destroy current contract and send funds to a   |
-+-----------------------+------+---------------------------------------------------------------+
-| log0(p, s)            | `-`  | log without topics and data mem[p..(p+s))                     |
-+-----------------------+------+---------------------------------------------------------------+
-| log1(p, s, t1)        | `-`  | log with topic t1 and data mem[p..(p+s))                      |
-+-----------------------+------+---------------------------------------------------------------+
-| log2(p, s, t1, t2)    | `-`  | log with topics t1, t2 and data mem[p..(p+s))                 |
-+-----------------------+------+---------------------------------------------------------------+
-| log3(p, s, t1, t2, t3)| `-`  | log with topics t1, t2, t3 and data mem[p..(p+s))             |
-+-----------------------+------+---------------------------------------------------------------+
-| log4(p, s, t1, t2, t3,| `-`  | log with topics t1, t2, t3, t4 and data mem[p..(p+s))         |
-| t4)                   |      |                                                               |
-+-----------------------+------+---------------------------------------------------------------+
-| origin                |      | transaction sender                                            |
-+-----------------------+------+---------------------------------------------------------------+
-| gasprice              |      | gas price of the transaction                                  |
-+-----------------------+------+---------------------------------------------------------------+
-| blockhash(b)          |      |hash of block nr b - only for last 256 blocks excluding current|
-+-----------------------+------+---------------------------------------------------------------+
-| coinbase              |      | current mining beneficiary                                    |
-+-----------------------+------+---------------------------------------------------------------+
-| timestamp             |      | timestamp of the current block in seconds since the epoch     |
-+-----------------------+------+---------------------------------------------------------------+
-| number                |      | current block number                                          |
-+-----------------------+------+---------------------------------------------------------------+
-| difficulty            |      | difficulty of the current block                               |
-+-----------------------+------+---------------------------------------------------------------+
-| gaslimit              |      | block gas limit of the current block                          |
-+-----------------------+------+---------------------------------------------------------------+
++-------------------------+------+-----------------------------------------------------------------+
+| stop                    + `-`  | stop execution, identical to return(0,0)                        |
++-------------------------+------+-----------------------------------------------------------------+
+| add(x, y)               |      | x + y                                                           |
++-------------------------+------+-----------------------------------------------------------------+
+| sub(x, y)               |      | x - y                                                           |
++-------------------------+------+-----------------------------------------------------------------+
+| mul(x, y)               |      | x * y                                                           |
++-------------------------+------+-----------------------------------------------------------------+
+| div(x, y)               |      | x / y                                                           |
++-------------------------+------+-----------------------------------------------------------------+
+| sdiv(x, y)              |      | x / y, for signed numbers in two's complement                   |
++-------------------------+------+-----------------------------------------------------------------+
+| mod(x, y)               |      | x % y                                                           |
++-------------------------+------+-----------------------------------------------------------------+
+| smod(x, y)              |      | x % y, for signed numbers in two's complement                   |
++-------------------------+------+-----------------------------------------------------------------+
+| exp(x, y)               |      | x to the power of y                                             |
++-------------------------+------+-----------------------------------------------------------------+
+| not(x)                  |      | ~x, every bit of x is negated                                   |
++-------------------------+------+-----------------------------------------------------------------+
+| lt(x, y)                |      | 1 if x < y, 0 otherwise                                         |
++-------------------------+------+-----------------------------------------------------------------+
+| gt(x, y)                |      | 1 if x > y, 0 otherwise                                         |
++-------------------------+------+-----------------------------------------------------------------+
+| slt(x, y)               |      | 1 if x < y, 0 otherwise, for signed numbers in two's complement |
++-------------------------+------+-----------------------------------------------------------------+
+| sgt(x, y)               |      | 1 if x > y, 0 otherwise, for signed numbers in two's complement |
++-------------------------+------+-----------------------------------------------------------------+
+| eq(x, y)                |      | 1 if x == y, 0 otherwise                                        |
++-------------------------+------+-----------------------------------------------------------------+
+| iszero(x)               |      | 1 if x == 0, 0 otherwise                                        |
++-------------------------+------+-----------------------------------------------------------------+
+| and(x, y)               |      | bitwise and of x and y                                          |
++-------------------------+------+-----------------------------------------------------------------+
+| or(x, y)                |      | bitwise or of x and y                                           |
++-------------------------+------+-----------------------------------------------------------------+
+| xor(x, y)               |      | bitwise xor of x and y                                          |
++-------------------------+------+-----------------------------------------------------------------+
+| byte(n, x)              |      | nth byte of x, where the most significant byte is the 0th byte  |
++-------------------------+------+-----------------------------------------------------------------+
+| addmod(x, y, m)         |      | (x + y) % m with arbitrary precision arithmetics                |
++-------------------------+------+-----------------------------------------------------------------+
+| mulmod(x, y, m)         |      | (x * y) % m with arbitrary precision arithmetics                |
++-------------------------+------+-----------------------------------------------------------------+
+| signextend(i, x)        |      | sign extend from (i*8+7)th bit counting from least significant  |
++-------------------------+------+-----------------------------------------------------------------+
+| sha3(p, n)              |      | keccak(mem[p...(p+n)))                                          |
++-------------------------+------+-----------------------------------------------------------------+
+| jump(label)             | `-`  | jump to label / code position                                   |
++-------------------------+------+-----------------------------------------------------------------+
+| jumpi(label, cond)      | `-`  | jump to label if cond is nonzero                                |
++-------------------------+------+-----------------------------------------------------------------+
+| pc                      |      | current position in code                                        |
++-------------------------+------+-----------------------------------------------------------------+
+| pop                     | `*`  | remove topmost stack slot                                       |
++-------------------------+------+-----------------------------------------------------------------+
+| dup1 ... dup16          |      | copy ith stack slot to the top (counting from top)              |
++-------------------------+------+-----------------------------------------------------------------+
+| swap1 ... swap1         | `*`  | swap topmost and ith stack slot below it                        |
++-------------------------+------+-----------------------------------------------------------------+
+| mload(p)                |      | mem[p..(p+32))                                                  |
++-------------------------+------+-----------------------------------------------------------------+
+| mstore(p, v)            | `-`  | mem[p..(p+32)) := v                                             |
++-------------------------+------+-----------------------------------------------------------------+
+| mstore8(p, v)           | `-`  | mem[p] := v & 0xff    - only modifies a single byte             |
++-------------------------+------+-----------------------------------------------------------------+
+| sload(p)                |      | storage[p]                                                      |
++-------------------------+------+-----------------------------------------------------------------+
+| sstore(p, v)            | `-`  | storage[p] := v                                                 |
++-------------------------+------+-----------------------------------------------------------------+
+| msize                   |      | size of memory, i.e. largest accessed memory index              |
++-------------------------+------+-----------------------------------------------------------------+
+| gas                     |      | gas still available to execution                                |
++-------------------------+------+-----------------------------------------------------------------+
+| address                 |      | address of the current contract / execution context             |
++-------------------------+------+-----------------------------------------------------------------+
+| balance(a)              |      | wei balance at address a                                        |
++-------------------------+------+-----------------------------------------------------------------+
+| caller                  |      | call sender (excluding delegatecall)                            |
++-------------------------+------+-----------------------------------------------------------------+
+| callvalue               |      | wei sent together with the current call                         |
++-------------------------+------+-----------------------------------------------------------------+
+| calldataload(p)         |      | call data starting from position p (32 bytes)                   |
++-------------------------+------+-----------------------------------------------------------------+
+| calldatasize            |      | size of call data in bytes                                      |
++-------------------------+------+-----------------------------------------------------------------+
+| calldatacopy(t, f, s)   | `-`  | copy s bytes from calldata at position f to mem at position t   |
++-------------------------+------+-----------------------------------------------------------------+
+| codesize                |      | size of the code of the current contract / execution context    |
++-------------------------+------+-----------------------------------------------------------------+
+| codecopy(t, f, s)       | `-`  | copy s bytes from code at position f to mem at position t       |
++-------------------------+------+-----------------------------------------------------------------+
+| extcodesize(a)          |      | size of the code at address a                                   |
++-------------------------+------+-----------------------------------------------------------------+
+| extcodecopy(a, t, f, s) | `-`  | like codecopy(t, f, s) but take code at address a               |
++-------------------------+------+-----------------------------------------------------------------+
+| create(v, p, s)         |      | create new contract with code mem[p..(p+s)) and send v wei      |
+|                         |      | and return the new address                                      |
++-------------------------+------+-----------------------------------------------------------------+
+| call(g, a, v, in,       |      | call contract at address a with input mem[in..(in+insize)]      |
+| insize, out, outsize)   |      | providing g gas and v wei and output area                       |
+|                         |      | mem[out..(out+outsize)] returting 1 on error (out of gas)       |
++-------------------------+------+-----------------------------------------------------------------+
+| callcode(g, a, v, in,   |      | identical to call but only use the code from a and stay         |
+| insize, out, outsize)   |      | in the context of the current contract otherwise                |
++-------------------------+------+-----------------------------------------------------------------+
+| delegatecall(g, a, in,  |      | identical to callcode but also keep `caller` and `callvalue`    |
+| insize, out, outsize)   |      |                                                                 |
++-------------------------+------+-----------------------------------------------------------------+
+| return(p, s)            | `*`  | end execution, return data mem[p..(p+s))                        |
++-------------------------+------+-----------------------------------------------------------------+
+| selfdestruct(a)         | `*`  | end execution, destroy current contract and send funds to a     |
++-------------------------+------+-----------------------------------------------------------------+
+| log0(p, s)              | `-`  | log without topics and data mem[p..(p+s))                       |
++-------------------------+------+-----------------------------------------------------------------+
+| log1(p, s, t1)          | `-`  | log with topic t1 and data mem[p..(p+s))                        |
++-------------------------+------+-----------------------------------------------------------------+
+| log2(p, s, t1, t2)      | `-`  | log with topics t1, t2 and data mem[p..(p+s))                   |
++-------------------------+------+-----------------------------------------------------------------+
+| log3(p, s, t1, t2, t3)  | `-`  | log with topics t1, t2, t3 and data mem[p..(p+s))               |
++-------------------------+------+-----------------------------------------------------------------+
+| log4(p, s, t1, t2, t3,  | `-`  | log with topics t1, t2, t3, t4 and data mem[p..(p+s))           |
+| t4)                     |      |                                                                 |
++-------------------------+------+-----------------------------------------------------------------+
+| origin                  |      | transaction sender                                              |
++-------------------------+------+-----------------------------------------------------------------+
+| gasprice                |      | gas price of the transaction                                    |
++-------------------------+------+-----------------------------------------------------------------+
+| blockhash(b)            |      | hash of block nr b - only for last 256 blocks excluding current |
++-------------------------+------+-----------------------------------------------------------------+
+| coinbase                |      | current mining beneficiary                                      |
++-------------------------+------+-----------------------------------------------------------------+
+| timestamp               |      | timestamp of the current block in seconds since the epoch       |
++-------------------------+------+-----------------------------------------------------------------+
+| number                  |      | current block number                                            |
++-------------------------+------+-----------------------------------------------------------------+
+| difficulty              |      | difficulty of the current block                                 |
++-------------------------+------+-----------------------------------------------------------------+
+| gaslimit                |      | block gas limit of the current block                            |
++-------------------------+------+-----------------------------------------------------------------+
 
 Literals
 --------
@@ -482,7 +492,7 @@ Strings are stored left-aligned and cannot be longer than 32 bytes.
 
 .. code::
 
-	assembly { 2 3 add "abc" and }
+    assembly { 2 3 add "abc" and }
 
 Functional Style
 -----------------
@@ -492,7 +502,7 @@ adding `3` to the contents in memory at position `0x80` would be
 
 .. code::
 
-	3 0x80 mload add 0x80 mstore
+    3 0x80 mload add 0x80 mstore
 
 As it is often hard to see what the actual arguments for certain opcodes are,
 Solidity inline assembly also provides a "functional style" notation where the same code
@@ -500,7 +510,7 @@ would be written as follows
 
 .. code::
 
-	mstore(0x80, add(mload(0x80), 3))
+    mstore(0x80, add(mload(0x80), 3))
 
 Functional style and instructional style can be mixed, but any opcode inside a
 functional style expression has to return exactly one stack slot (most of the opcodes do).
@@ -531,18 +541,18 @@ It is planned that the stack height changes can be specified in inline assembly.
 
 .. code::
 
-	contract c {
-		uint b;
-		function f(uint x) returns (uint r) {
-			assembly {
-				b pop // remove the offset, we know it is zero
-				sload
-				x
-				mul
-				=: r  // assign to return variable r
-			}
-		}
-	}
+    contract c {
+        uint b;
+        function f(uint x) returns (uint r) {
+            assembly {
+                b pop // remove the offset, we know it is zero
+                sload
+                x
+                mul
+                =: r  // assign to return variable r
+            }
+        }
+    }
 
 Labels
 ------
@@ -553,19 +563,19 @@ jumps easier. The following code computes an element in the Fibonacci series.
 
 .. code::
 
-	{
-		let n := calldataload(4)
-		let a := 1
-		let b := a
-	loop:
-		jumpi(loopend, eq(n, 0))
-		a add swap1
-		n := sub(n, 1)
-		jump(loop)
-	loopend:
-		mstore(0, a)
-		return(0, 0x20)
-	}
+    {
+        let n := calldataload(4)
+        let a := 1
+        let b := a
+    loop:
+        jumpi(loopend, eq(n, 0))
+        a add swap1
+        n := sub(n, 1)
+        jump(loop)
+    loopend:
+        mstore(0, a)
+        return(0, 0x20)
+    }
 
 Please note that automatically accessing stack variables can only work if the
 assembler knows the current stack height. This fails to work if the jump source
@@ -578,19 +588,19 @@ will have a wrong impression about the stack height at label `two`:
 
 .. code::
 
-	{
-		jump(two)
-		one:
-			// Here the stack height is 1 (because we pushed 7),
-			// but the assembler thinks it is 0 because it reads
-			// from top to bottom.
-			// Accessing stack variables here will lead to errors.
-			jump(three)
-		two:
-			7 // push something onto the stack
-			jump(one)
-		three:
-	}
+    {
+        jump(two)
+        one:
+            // Here the stack height is 1 (because we pushed 7),
+            // but the assembler thinks it is 0 because it reads
+            // from top to bottom.
+            // Accessing stack variables here will lead to errors.
+            jump(three)
+        two:
+            7 // push something onto the stack
+            jump(one)
+        three:
+    }
 
 
 Declaring Assembly-Local Variables
@@ -605,19 +615,19 @@ be just `0`, but it can also be a complex functional-style expression.
 
 .. code::
 
-	contract c {
-		function f(uint x) returns (uint b) {
-			assembly {
-				let v := add(x, 1)
-				mstore(0x80, v)
-				{
-					let y := add(sload(v), 1)
-					b := y
-				} // y is "deallocated" here
-				b := add(b, v)
-			} // v is "deallocated" here
-		}
-	}
+    contract c {
+        function f(uint x) returns (uint b) {
+            assembly {
+                let v := add(x, 1)
+                mstore(0x80, v)
+                {
+                    let y := add(sload(v), 1)
+                    b := y
+                } // y is "deallocated" here
+                b := add(b, v)
+            } // v is "deallocated" here
+        }
+    }
 
 
 Assignments
@@ -635,12 +645,12 @@ For both ways, the colon points to the name of the variable.
 
 .. code::
 
-	assembly {
-		let v := 0 // functional-style assignment as part of variable declaration
-		let g := add(v, 2)
-		sload(10)
-		=: v // instruction style assignment, puts the result of sload(10) into v
-	}
+    assembly {
+        let v := 0 // functional-style assignment as part of variable declaration
+        let g := add(v, 2)
+        sload(10)
+        =: v // instruction style assignment, puts the result of sload(10) into v
+    }
 
 
 Things to Avoid
@@ -676,6 +686,6 @@ arrays are pointers to memory arrays. The length of a dynamic array is stored at
 first slot of the array and then only the array elements follow.
 
 .. warning::
-	Statically-sized memory arrays do not have a length field, but it will be added soon
-	to allow better convertibility between statically- and dynamically-sized arrays, so
-	please do not rely on that.
+    Statically-sized memory arrays do not have a length field, but it will be added soon
+    to allow better convertibility between statically- and dynamically-sized arrays, so
+    please do not rely on that.

@@ -139,10 +139,10 @@ with `c.someMethod.sendTransaction({from:eth.accounts[x], gas: 1000000});`
 That is, because they can change state, they have to have a gas
 payment sent along to get the work done.
 
-Get a contract to return its funds to you (not using selfdestruct(...)). 
+Get a contract to return its funds to you (not using selfdestruct(...)).
 ========================================================================
 
-This example demonstrates how to send funds from a contract to an address. 
+This example demonstrates how to send funds from a contract to an address.
 
 See `endowment_retriever <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
 
@@ -175,7 +175,7 @@ datastructure on top of it, for example the `iterable mapping <https://github.co
 Can I put arrays inside of a mapping? How do I make a mapping of a mapping?
 ===========================================================================
 
-Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping. 
+Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping.
 
 An example of this would be::
 
@@ -278,7 +278,7 @@ Is a constructor required?
 
 No. If there is no constructor, a generic one without arguments and no actions will be used.
 
-Are timestamps (now, block.timestamp) reliable? 
+Are timestamps (now, block.timestamp) reliable?
 ===============================================
 
 This depends on what you mean by "reliable".
@@ -327,7 +327,7 @@ should implement the fallback function as
 `function() { throw; }`
 
 this will cause all transactions to this contract that do not call an
-existing function to be reverted, so that all Ether is sent back. 
+existing function to be reverted, so that all Ether is sent back.
 
 Another use of the fallback function is to e.g. register that your
 contract received ether by using an event.
@@ -347,7 +347,7 @@ by `msg.data`.
 Can state variables be initialized in-line?
 ===========================================
 
-Yes, this is possible for all types (even for structs). However, for arrays it 
+Yes, this is possible for all types (even for structs). However, for arrays it
 should be noted that you must declare them as static memory arrays.
 
 Examples::
@@ -360,7 +360,7 @@ Examples::
 
         S public x = S(1, 2);
         string name = "Ada";
-        string[4] memory AdaArr = ["This", "is", "an", "array"];  
+        string[4] memory AdaArr = ["This", "is", "an", "array"];
     }
 
 
@@ -692,11 +692,11 @@ What happens to a struct's mapping when copying over a struct?
 
 This is a very interesting question. Suppose that we have a contract field set up like such::
 
-    struct user{
+    struct user {
         mapping(string => address) usedContracts;
     }
 
-    function somefunction{
+    function somefunction {
        user user1;
        user1.usedContracts["Hello"] = "World";
        user user2 = user1;
@@ -713,7 +713,10 @@ In the case of a `contract A` calling a new instance of `contract B`, parenthese
 `new B` because `B.value` would refer to a member of `B` called `value`.
 You will need to make sure that you have both contracts aware of each other's presence.
 In this example::
+
     contract B {}
+
+
     contract A {
         address child;
 
@@ -725,7 +728,7 @@ In this example::
 Can a contract function accept a two-dimensional array?
 =======================================================
 
-This is not yet implemented for external calls and dynamic arrays - 
+This is not yet implemented for external calls and dynamic arrays -
 you can only use one level of dynamic arrays.
 
 What is the relationship between bytes32 and string? Why is it that ‘bytes32 somevar = "stringliteral";’ works and what does the saved 32-byte hex value mean?
@@ -757,21 +760,21 @@ Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
 
     contract C {
-      uint[20] x;
+        uint[20] x;
 
-      function f() {
-        g(x);
-        h(x);
-      }
+        function f() {
+            g(x);
+            h(x);
+        }
 
-      function g(uint[20] y) {
-        y[2] = 3;
-      }
+        function g(uint[20] y) {
+            y[2] = 3;
+        }
 
-      function h(uint[20] storage y) {
-        y[3] = 4;
-      }
-   }
+        function h(uint[20] storage y) {
+            y[3] = 4;
+        }
+    }
 
 The call to `g(x)` will not have an effect on `x` because it needs
 to create an independent copy of the storage value in memory
