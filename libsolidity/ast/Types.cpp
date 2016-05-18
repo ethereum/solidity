@@ -346,9 +346,13 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 		return TypePointer();
 	// Nothing else can be done with addresses
 	if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
+	{
 		if (intType->isAddress())
 			return TypePointer();
-
+	}
+	else if (auto fixType = dynamic_pointer_cast<FixedPointType const>(commonType))
+		if (Token::Exp == _operator)
+			return TypePointer();
 	return commonType;
 }
 
@@ -436,9 +440,9 @@ string FixedPointType::toString(bool) const
 TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const
 {
 	if (
-		_other->category() != Category::RationalNumber 
-		&& _other->category() != category()
-		&& _other->category() != Category::Integer
+		_other->category() != Category::RationalNumber &&
+		_other->category() != category() &&
+		_other->category() != Category::Integer
 	)
 		return TypePointer();
 	auto commonType = Type::commonType(shared_from_this(), _other); //might be fixed point or integer
@@ -452,7 +456,12 @@ TypePointer FixedPointType::binaryOperatorResult(Token::Value _operator, TypePoi
 	if (Token::isBitOp(_operator) || Token::isBooleanOp(_operator))
 		return TypePointer();
 	if (auto fixType = dynamic_pointer_cast<FixedPointType const>(commonType))
+	{
 		if (Token::Exp == _operator)
+			return TypePointer();
+	}
+	else if (auto intType = dynamic_pointer_cast<IntegerType const>(commonType))
+		if (intType->isAddress())
 			return TypePointer();
 	return commonType;
 }
