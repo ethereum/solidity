@@ -118,7 +118,7 @@ Contract Related
 
 `this` (current contract's type):
     the current contract, explicitly convertible to :ref:`address`
-    
+
 `selfdestruct(address)`:
     destroy the current contract, sending its funds to the given :ref:`address`
 
