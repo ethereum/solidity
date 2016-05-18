@@ -21,7 +21,7 @@ At a global level, you can use import statements of the following form:
 
   import "filename";
 
-...will import all global symbols from "filename" (and symbols imported there) into the 
+...will import all global symbols from "filename" (and symbols imported there) into the
 current global scope (different than in ES6 but backwards-compatible for Solidity).
 
 ::
@@ -122,18 +122,18 @@ Single-line comments (`//`) and multi-line comments (`/*...*/`) are possible.
 ::
 
   // This is a single-line comment.
-  
+
   /*
-  This is a 
+  This is a
   multi-line comment.
   */
-  
+
 
 Additionally, there is another type of comment called a natspec comment,
 for which the documentation is not yet written. They are written with a
 triple slash (`///`) or a double asterisk block(`/** ... */`) and
-they should be used directly above function declarations or statements. 
+they should be used directly above function declarations or statements.
 You can use Doxygen-style tags inside these comments to document
-functions, annotate conditions for formal verification, and provide a 
+functions, annotate conditions for formal verification, and provide a
 **confirmation text** which is shown to users when they attempt to invoke a
 function.

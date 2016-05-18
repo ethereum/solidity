@@ -179,6 +179,7 @@ function finishes.
             AreWeDoneYet,
             Finished
         }
+
         // This is the current stage.
         Stages public stage = Stages.AcceptingBlindedBids;
 
@@ -188,9 +189,11 @@ function finishes.
             if (stage != _stage) throw;
             _
         }
+
         function nextStage() internal {
             stage = Stages(uint(stage) + 1);
         }
+
         // Perform timed transitions. Be sure to mention
         // this modifier first, otherwise the guards
         // will not take the new stage into account.
@@ -203,7 +206,7 @@ function finishes.
                 nextStage();
             // The other stages transition by transaction
         }
-        
+
         // Order of the modifiers matters here!
         function bid()
             timedTransitions
@@ -211,6 +214,7 @@ function finishes.
         {
             // We will not implement that here
         }
+
         function reveal()
             timedTransitions
             atStage(Stages.RevealBids)
@@ -227,6 +231,7 @@ function finishes.
             _
             nextStage();
         }
+
         function g()
             timedTransitions
             atStage(Stages.AnotherStage)
@@ -235,12 +240,14 @@ function finishes.
             // If you want to use `return` here,
             // you have to call `nextStage()` manually.
         }
+
         function h()
             timedTransitions
             atStage(Stages.AreWeDoneYet)
             transitionNext
         {
         }
+
         function i()
             timedTransitions
             atStage(Stages.Finished)
