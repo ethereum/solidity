@@ -11,13 +11,13 @@ which does not need any installation. If you want to use it
 without connection to the Internet, you can also just save the page
 locally or clone http://github.com/chriseth/browser-solidity.
 
-NPM / node.js
+npm / Node.js
 =============
 
 This is probably the most portable and most convenient way to install Solidity locally.
 
 A platform-independent JavaScript library is provided by compiling the C++ source
-into JavaScript using Emscripten for browser-solidity and there is also an NPM
+into JavaScript using Emscripten for browser-solidity and there is also an npm
 package available.
 
 To install it, simply use
@@ -26,8 +26,8 @@ To install it, simply use
 
     npm install solc
 
-Details about the usage of the nodejs package can be found in the
-`repository <https://github.com/chriseth/browser-solidity#nodejs-usage>`_.
+Details about the usage of the Node.js package can be found in the
+`repository <https://github.com/ethereum/solc-js>`_.
 
 Binary Packages
 ===============
