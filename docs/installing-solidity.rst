@@ -27,7 +27,7 @@ To install it, simply use
     npm install solc
 
 Details about the usage of the nodejs package can be found in the
-`repository <https://github.com/chriseth/browser-solidity#nodejs-usage>`_.
+`repository <https://github.com/ethereum/solc-js>`_.
 
 Binary Packages
 ===============
