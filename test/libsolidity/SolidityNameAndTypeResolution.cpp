@@ -3683,6 +3683,18 @@ BOOST_AUTO_TEST_CASE(zero_handling)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(missing_bool_conversion)
+{
+	char const* text = R"(
+		contract test {
+			function b(uint a) {
+				bool(a == 1);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(integer_and_fixed_interaction)
 {
 	char const* text = R"(
