@@ -4,7 +4,7 @@
 
 To get started you can find a basic introduction to the language in the [Solidity Documentation](https://solidity.readthedocs.org).
 
-You can start using [Solidity in your browser](https://ethereum.github.io/browser-solidity/) with no need to download or compile anything. This application only supports compilation - if you want to inject it into the blockchain, you have to use a client like [Geth](https://github.com/ethereum/go-ethereum/wiki) or [AlethZero](https://github.com/ethereum/alethzero).
+You can start using [Solidity in your browser](https://ethereum.github.io/browser-solidity/) with no need to download or compile anything.
 
 [Changelog](https://github.com/ethereum/wiki/wiki/Solidity-Changelog)
 
