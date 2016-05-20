@@ -24,20 +24,18 @@
 
 #include <ostream>
 #include <functional>
-#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libevmasm/Assembly.h>
 
 namespace dev {
 namespace solidity {
 
-class Compiler: private ASTConstVisitor
+class Compiler
 {
 public:
 	explicit Compiler(bool _optimize = false, unsigned _runs = 200):
 		m_optimize(_optimize),
-		m_optimizeRuns(_runs),
-		m_returnTag(m_context.newTag())
+		m_optimizeRuns(_runs)
 	{ }
 
 	void compileContract(
@@ -69,69 +67,11 @@ public:
 	eth::AssemblyItem functionEntryLabel(FunctionDefinition const& _function) const;
 
 private:
-	/// Registers the non-function objects inside the contract with the context and stores the basic
-	/// information about the contract like the AST annotations.
-	void initializeContext(
-		ContractDefinition const& _contract,
-		std::map<ContractDefinition const*, eth::Assembly const*> const& _compiledContracts
-	);
-	/// Adds the code that is run at creation time. Should be run after exchanging the run-time context
-	/// with a new and initialized context. Adds the constructor code.
-	void packIntoContractCreator(ContractDefinition const& _contract, CompilerContext const& _runtimeContext);
-	/// Appends state variable initialisation and constructor code.
-	void appendInitAndConstructorCode(ContractDefinition const& _contract);
-	void appendBaseConstructor(FunctionDefinition const& _constructor);
-	void appendConstructor(FunctionDefinition const& _constructor);
-	void appendFunctionSelector(ContractDefinition const& _contract);
-	/// Creates code that unpacks the arguments for the given function represented by a vector of TypePointers.
-	/// From memory if @a _fromMemory is true, otherwise from call data.
-	/// Expects source offset on the stack, which is removed.
-	void appendCalldataUnpacker(TypePointers const& _typeParameters, bool _fromMemory = false);
-	void appendReturnValuePacker(TypePointers const& _typeParameters, bool _isLibrary);
-
-	void registerStateVariables(ContractDefinition const& _contract);
-	void initializeStateVariables(ContractDefinition const& _contract);
-
-	virtual bool visit(VariableDeclaration const& _variableDeclaration) override;
-	virtual bool visit(FunctionDefinition const& _function) override;
-	virtual bool visit(InlineAssembly const& _inlineAssembly) override;
-	virtual bool visit(IfStatement const& _ifStatement) override;
-	virtual bool visit(WhileStatement const& _whileStatement) override;
-	virtual bool visit(ForStatement const& _forStatement) override;
-	virtual bool visit(Continue const& _continue) override;
-	virtual bool visit(Break const& _break) override;
-	virtual bool visit(Return const& _return) override;
-	virtual bool visit(Throw const& _throw) override;
-	virtual bool visit(VariableDeclarationStatement const& _variableDeclarationStatement) override;
-	virtual bool visit(ExpressionStatement const& _expressionStatement) override;
-	virtual bool visit(PlaceholderStatement const&) override;
-
-	/// Repeatedly visits all function which are referenced but which are not compiled yet.
-	void appendMissingFunctions();
-
-	/// Appends one layer of function modifier code of the current function, or the function
-	/// body itself if the last modifier was reached.
-	void appendModifierOrFunctionCode();
-
-	void appendStackVariableInitialisation(VariableDeclaration const& _variable);
-	void compileExpression(Expression const& _expression, TypePointer const& _targetType = TypePointer());
-
-	/// @returns the runtime assembly for clone contracts.
-	static eth::Assembly cloneRuntime();
-
 	bool const m_optimize;
 	unsigned const m_optimizeRuns;
 	CompilerContext m_context;
-	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly
+	size_t m_runtimeSub = size_t(-1); ///< Identifier of the runtime sub-assembly, if present.
 	CompilerContext m_runtimeContext;
-	std::vector<eth::AssemblyItem> m_breakTags; ///< tag to jump to for a "break" statement
-	std::vector<eth::AssemblyItem> m_continueTags; ///< tag to jump to for a "continue" statement
-	eth::AssemblyItem m_returnTag; ///< tag to jump to for a "return" statement
-	unsigned m_modifierDepth = 0;
-	FunctionDefinition const* m_currentFunction = nullptr;
-	unsigned m_stackCleanupForReturn = 0; ///< this number of stack elements need to be removed before jump to m_returnTag
-	// arguments for base constructors, filled in derived-to-base order
-	std::map<FunctionDefinition const*, std::vector<ASTPointer<Expression>> const*> m_baseArguments;
 };
 
 }
