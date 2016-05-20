@@ -16,8 +16,6 @@ Useful links
 
 * `Ethereum <https://ethereum.org>`_
 
-* `Browser-Based Compiler <https://chriseth.github.io/browser-solidity/>`_
-
 * `Changelog <https://github.com/ethereum/wiki/wiki/Solidity-Changelog>`_
 
 * `Story Backlog <https://www.pivotaltracker.com/n/projects/1189488>`_
@@ -27,6 +25,13 @@ Useful links
 * `Ethereum Stackexchange <https://ethereum.stackexchange.com/>`_
 
 * `Gitter Chat <https://gitter.im/ethereum/solidity/>`_
+
+Available IDE
+-------------
+* `Ethereum Studio <https://live.ether.camp/>`_
+
+* `Browser-Based Compiler <https://chriseth.github.io/browser-solidity/>`_
+
 
 Language Documentation
 ----------------------
