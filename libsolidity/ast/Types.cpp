@@ -923,19 +923,6 @@ bool FixedBytesType::operator==(Type const& _other) const
 	return other.m_bytes == m_bytes;
 }
 
-bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
-{
-	// conversion to integer is fine, but not to address
-	// this is an example of explicit conversions being not transitive (though implicit should be)
-	if (_convertTo.category() == category())
-	{
-		IntegerType const& convertTo = dynamic_cast<IntegerType const&>(_convertTo);
-		if (!convertTo.isAddress())
-			return true;
-	}
-	return isImplicitlyConvertibleTo(_convertTo);
-}
-
 u256 BoolType::literalValue(Literal const* _literal) const
 {
 	solAssert(_literal, "");

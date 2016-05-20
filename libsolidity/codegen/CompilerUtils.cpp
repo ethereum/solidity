@@ -323,18 +323,17 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		}
 		else
 		{
-			// clear lower-order bytes for conversion to shorter bytes - we always clean
+			// clear for conversion to longer bytes
 			solAssert(targetTypeCategory == Type::Category::FixedBytes, "Invalid type conversion requested.");
 			FixedBytesType const& targetType = dynamic_cast<FixedBytesType const&>(_targetType);
-			if (targetType.numBytes() < typeOnStack.numBytes())
+			if (targetType.numBytes() > typeOnStack.numBytes() || _cleanupNeeded)
 			{
-				if (targetType.numBytes() == 0)
-					m_context << Instruction::DUP1 << Instruction::XOR;
+				if (typeOnStack.numBytes() == 0)
+					m_context << Instruction::POP << u256(0);
 				else
 				{
-					m_context << (u256(1) << (256 - targetType.numBytes() * 8));
-					m_context << Instruction::DUP1 << Instruction::SWAP2;
-					m_context << Instruction::DIV << Instruction::MUL;
+					m_context << ((u256(1) << (256 - typeOnStack.numBytes() * 8)) - 1);
+					m_context << Instruction::NOT << Instruction::AND;
 				}
 			}
 		}
@@ -637,6 +636,10 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		}
 		break;
 	}
+	case Type::Category::Bool:
+		solAssert(_targetType == _typeOnStack, "Invalid conversion for bool.");
+		if (_cleanupNeeded)
+			m_context << Instruction::ISZERO << Instruction::ISZERO;
 	default:
 		// All other types should not be convertible to non-equal types.
 		solAssert(_typeOnStack == _targetType, "Invalid type conversion requested.");
