@@ -280,7 +280,7 @@ idea is that assembly libraries will be used to enhance the language in such way
         }
     }
 
-Inline assemmbly could also be beneficial in cases where the optimizer fails to produce
+Inline assembly could also be beneficial in cases where the optimizer fails to produce
 efficient code. Please be aware that assembly is much more difficult to write because
 the compiler does not perform checks, so you should use it for complex things only if
 you really know what you are doing.
