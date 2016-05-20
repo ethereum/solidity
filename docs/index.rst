@@ -16,8 +16,6 @@ Useful links
 
 * `Ethereum <https://ethereum.org>`_
 
-* `Browser-Based Compiler <https://chriseth.github.io/browser-solidity/>`_
-
 * `Changelog <https://github.com/ethereum/wiki/wiki/Solidity-Changelog>`_
 
 * `Story Backlog <https://www.pivotaltracker.com/n/projects/1189488>`_
@@ -27,6 +25,30 @@ Useful links
 * `Ethereum Stackexchange <https://ethereum.stackexchange.com/>`_
 
 * `Gitter Chat <https://gitter.im/ethereum/solidity/>`_
+
+Available Solidity Integrations
+-------------------------------
+* `Browser-Based Compiler <https://chriseth.github.io/browser-solidity/>`_
+	Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.	
+
+* `Ethereum Studio <https://live.ether.camp/>`_
+	Specialized web IDE that also provides shell access to a complete Ethereum environment.
+
+* `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
+	Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
+
+* `Mix IDE <https://github.com/ethereum/mix/>`_
+	Qt based IDE for designing, debugging and testing solidity smart contracts.
+
+* `Package for SublimeText — Solidity language syntax <https://packagecontrol.io/packages/Ethereum/>`_
+	Solidity syntax highlight for SublimeText editor.
+
+* `Atom Solidity package <https://github.com/gmtcreators/atom-solidity/>`_
+	Plugin for the atom editor that features syntax highlighting, compilation and a runtime environment (requires backend node).
+
+* `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
+	Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
+	
 
 Language Documentation
 ----------------------
