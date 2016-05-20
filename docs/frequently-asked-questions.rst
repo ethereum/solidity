@@ -30,7 +30,7 @@ there should be a `test contract <https://github.com/ethereum/solidity/blob/deve
 How do I compile contracts?
 =============================
 
-Probably the fastest way is the `online compiler <https://chriseth.github.io/browser-solidity/>`_.
+Probably the fastest way is the `online compiler <https://ethereum.github.io/browser-solidity/>`_.
 
 You can also use the `solc` binary which comes with cpp-ethereum to compile
 contracts or an emerging option is to use Mix, the IDE.
@@ -96,7 +96,7 @@ creator. Save it. Then `selfdestruct(creator);` to kill and return funds.
 
 Note that if you `import "mortal"` at the top of your contracts and declare
 `contract SomeContract is mortal { ...` and compile with a compiler that already
-has it (which includes `browser-solidity <https://chriseth.github.io/browser-solidity/>`_), then
+has it (which includes `browser-solidity <https://ethereum.github.io/browser-solidity/>`_), then
 `kill()` is taken care of for you. Once a contract is "mortal", then you can
 `contractname.kill.sendTransaction({from:eth.coinbase})`, just the same as my
 examples.

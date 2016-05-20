@@ -6,10 +6,10 @@ Browser-Solidity
 ================
 
 If you just want to try Solidity for small contracts, you
-can try `browser-solidity <https://chriseth.github.io/browser-solidity>`_
+can try `browser-solidity <https://ethereum.github.io/browser-solidity>`_
 which does not need any installation. If you want to use it
 without connection to the Internet, you can also just save the page
-locally or clone http://github.com/chriseth/browser-solidity.
+locally or clone http://github.com/ethereum/browser-solidity.
 
 npm / Node.js
 =============
@@ -27,7 +27,7 @@ To install it, simply use
     npm install solc
 
 Details about the usage of the Node.js package can be found in the
-`repository <https://github.com/ethereum/solc-js>`_.
+`solc-js repository <https://github.com/ethereum/solc-js>`_.
 
 Binary Packages
 ===============

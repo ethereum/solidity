@@ -63,14 +63,6 @@ Furthermore, anyone can send coins to each other without any need for
 registering with username and password - all you need is an Ethereum keypair.
 
 
-.. note::
-    This is not a nice example for browser-solidity.
-    If you use `browser-solidity <https://chriseth.github.io/browser-solidity>`_
-    to try this example, you cannot change the address where you call
-    functions from. So you will always be the "minter", you can mint coins and send
-    them somewhere, but you cannot impersonate someone else. This might change in
-    the future.
-
 .. Gist: ad490694f3e5b3de47ab
 
 ::
