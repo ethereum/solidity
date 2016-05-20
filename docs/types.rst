@@ -52,7 +52,7 @@ Operators:
 * Arithmetic operators: `+`, `-`, unary `-`, unary `+`, `*`, `/`, `%` (remainder), `**` (exponentiation)
 
 Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
-operators are :ref:`literals<integer_literals>` (or literal expressions).
+operators are :ref:`literals<rational_literals>` (or literal expressions).
 
 .. index:: address, balance, send, call, callcode, delegatecall
 
@@ -135,20 +135,60 @@ As a rule of thumb, use `bytes` for arbitrary-length raw byte data and `string`
 for arbitrary-length string (utf-8) data. If you can limit the length to a certain
 number of bytes, always use one of `bytes1` to `bytes32` because they are much cheaper.
 
-.. index:: literal, literal;integer
+.. index:: ! ufixed, ! fixed, ! fixed point number
 
-.. _integer_literals:
+Fixed Point Numbers
+-------------------
 
-Integer Literals
------------------
+**bold** COMING SOON... **bold**
 
-Integer Literals are arbitrary precision integers until they are used together with a non-literal. In `var x = 1 - 2;`, for example, the value of `1 - 2` is `-1`, which is assigned to `x` and thus `x` receives the type `int8` -- the smallest type that contains `-1`, although the natural types of `1` and `2` are actually `uint8`.
+.. index:: literal, literal;rational
 
-It is even possible to temporarily exceed the maximum of 256 bits as long as only integer literals are used for the computation: `var x = (0xffffffffffffffffffff * 0xffffffffffffffffffff) * 0;` Here, `x` will have the value `0` and thus the type `uint8`.
+.. _rational_literals:
+
+Rational and Integer Literals
+-----------------------------
+
+All number literals retain arbitrary precision until they are converted to a non-literal type (i.e. by
+using them together with a non-literal type). This means that computations do not overflow but also
+divisions do not truncate.
+
+For example, `(2**800 + 1) - 2**800` results in the constant `1` (of type `uint8`)
+although intermediate results would not even fit the machine word size. Furthermore, `.5 * 8` results
+in the integer `4` (although non-integers were used in between).
+
+If the result is not an integer,
+an appropriate `ufixed` or `fixed` type is used whose number of fractional bits is as large as
+required (approximating the rational number in the worst case).
+
+In `var x = 1/4;`, `x` will receive the type `ufixed0x8` while in `var x = 1/3` it will receive
+the type `ufixed0x256` because `1/3` is not finitely representable in binary and will thus be
+approximated.
+
+Any operator that can be applied to integers can also be applied to literal expressions as
+long as the operators are integers. If any of the two is fractional, bit operations are disallowed
+and exponentiation is disallowed if the exponent is fractional (because that might result in
+a non-rational number).
+
+.. note::
+    Most finite decimal fractions like `5.3743` are not finitely representable in binary. The correct type
+    for `5.3743` is `ufixed8x248` because that allows to best approximate the number. If you want to
+    use the number together with types like `ufixed` (i.e. `ufixed128x128`), you have to explicitly
+    specify the desired precision: `x + ufixed(5.3743)`.
 
 .. warning::
-    Divison on integer literals used to truncate in earlier versions, but it will actually convert into a rational number in the future, i.e. `1/2` is not equal to `0`, but to `0.5`.
+    Division on integer literals used to truncate in earlier versions, but it will now convert into a rational number, i.e. `5 / 2` is not equal to `2`, but to `2.5`.
 
+.. note::
+    Literal expressions are converted to a permanent type as soon as they are used with other
+    expressions. Even though we know that the value of the
+    expression assigned to `b` in the following example evaluates to an integer, it still
+    uses fixed point types (and not rational number literals) in between and so the code
+    does not compile
+
+::
+    uint128 a = 1;
+    uint128 b = 2.5 + a + 0.5;
 
 .. index:: literal, literal;string, string
 
