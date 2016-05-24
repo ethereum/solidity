@@ -113,7 +113,7 @@ For Ubuntu 15.10 (Wily Werewolf) or newer, use the following command instead:
 
     sudo apt-get -y install build-essential git cmake libboost-all-dev libgmp-dev libleveldb-dev libminiupnpc-dev libreadline-dev libncurses5-dev libcurl4-openssl-dev libcryptopp-dev libjsonrpccpp-dev libmicrohttpd-dev libjsoncpp-dev libedit-dev libz-dev
 
-The reason for the change is that `libjsonrpccpp-dev` is available in the universe repository for newer versions of Ubuntu.
+The reason for the change is that :code:`libjsonrpccpp-dev` is available in the universe repository for newer versions of Ubuntu.
 
 Building
 --------
@@ -147,7 +147,7 @@ you should fork Solidity and add your personal fork as a second remote:
     git remote add personal git@github.com:username/solidity.git
 
 Note that webthree-umbrella uses submodules, so solidity is its own git
-repository, but its settings are not stored in `.git/config`, but in
-`webthree-umbrella/.git/modules/solidity/config`.
+repository, but its settings are not stored in :code:`.git/config`, but in
+:code:`webthree-umbrella/.git/modules/solidity/config`.
 
 
