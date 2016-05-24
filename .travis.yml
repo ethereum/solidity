@@ -14,15 +14,30 @@ matrix:
         - os: linux
           dist: trusty
           sudo: required
+          env: TRAVIS_BUILD_TYPE=Debug
+        - os: linux
+          dist: trusty
+          sudo: required
+          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
         - os: osx
           osx_image: xcode7.1
+          env: TRAVIS_BUILD_TYPE=Debug
+        - os: osx
+          osx_image: xcode7.1
+          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
         - os: osx
           osx_image: xcode7.3
+          env: TRAVIS_BUILD_TYPE=Debug
+        - os: osx
+          osx_image: xcode7.3
+          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
+git:
+    depth: 2
 before_install:
     - ./setup.sh
 before_script:
     - mkdir build
     - cd build
-    - cmake ..
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
 script:
     - make
