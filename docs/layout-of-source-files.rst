@@ -28,13 +28,13 @@ current global scope (different than in ES6 but backwards-compatible for Solidit
 
   import * as symbolName from "filename";
 
-...creates a new global symbol `symbolName` whose members are all the global symbols from `"filename"`.
+...creates a new global symbol :code:`symbolName` whose members are all the global symbols from :code:`"filename"`.
 
 ::
 
   import {symbol1 as alias, symbol2} from "filename";
 
-...creates new global symbols `alias` and `symbol2` which reference `symbol1` and `symbol2` from `"filename"`, respectively.
+...creates new global symbols :code:`alias` and :code:`symbol2` which reference :code:`symbol1` and :code:`symbol2` from :code:`"filename"`, respectively.
 
 Another syntax is not part of ES6, but probably convenient:
 
@@ -42,17 +42,17 @@ Another syntax is not part of ES6, but probably convenient:
 
   import "filename" as symbolName;
 
-...is equivalent to `import * as symbolName from "filename";`.
+...is equivalent to :code:`import * as symbolName from "filename";`.
 
 Paths
 -----
 
-In the above, `filename` is always treated as a path with `/` as directory separator,
-`.` as the current and `..` as the parent directory. Path names that do not start
-with `.` are treated as absolute paths.
+In the above, :code:`filename` is always treated as a path with :code:`/` as directory separator,
+:code:`.` as the current and :code:`..` as the parent directory. Path names that do not start
+with :code:`.` are treated as absolute paths.
 
-To import a file `x` from the same directory as the current file, use `import "./x" as x;`.
-If you use `import "x" as x;` instead, a different file could be referenced
+To import a file :code:`x` from the same directory as the current file, use :code:`import "./x" as x;`.
+If you use :code:`import "x" as x;` instead, a different file could be referenced
 (in a global "include directory").
 
 It depends on the compiler (see below) how to actually resolve the paths.
@@ -64,22 +64,22 @@ Use in actual Compilers
 
 When the compiler is invoked, it is not only possible to specify how to
 discover the first element of a path, but it is possible to specify path prefix
-remappings so that e.g. `github.com/ethereum/dapp-bin/library` is remapped to
-`/usr/local/dapp-bin/library` and the compiler will read the files from there. If
+remappings so that e.g. :code:`github.com/ethereum/dapp-bin/library` is remapped to
+:code:`/usr/local/dapp-bin/library` and the compiler will read the files from there. If
 remapping keys are prefixes of each other, the longest is tried first. This
-allows for a "fallback-remapping" with e.g. `""` maps to
-`"/usr/local/include/solidity"`.
+allows for a "fallback-remapping" with e.g. :code:`""` maps to
+:code:`"/usr/local/include/solidity"`.
 
 **solc**:
 
-For solc (the commandline compiler), these remappings are provided as `key=value`
-arguments, where the `=value` part is optional (and defaults to key in that
+For solc (the commandline compiler), these remappings are provided as :code:`key=value`
+arguments, where the :code:`=value` part is optional (and defaults to key in that
 case). All remapping values that are regular files are compiled (including
 their dependencies). This mechanism is completely backwards-compatible (as long
 as no filename contains a =) and thus not a breaking change.
 
 So as an example, if you clone
-`github.com/ethereum/dapp-bin/` locally to `/usr/local/dapp-bin`, you can use
+:code:`github.com/ethereum/dapp-bin/` locally to :code:`/usr/local/dapp-bin`, you can use
 the following in your source file:
 
 ::
@@ -96,7 +96,7 @@ Note that solc only allows you to include files from certain directories:
 They have to be in the directory (or subdirectory) of one of the explicitly
 specified source files or in the directory (or subdirectory) of a remapping
 target. If you want to allow direct absolute includes, just add the
-remapping `=/`.
+remapping :code:`=/`.
 
 If there are multiple remappings that lead to a valid file, the remapping
 with the longest common prefix is chosen.
@@ -107,7 +107,7 @@ The `browser-based compiler <https://ethereum.github.io/browser-solidity>`_
 provides an automatic remapping for github and will also automatically retrieve
 the file over the network:
 You can import the iterable mapping by e.g.
-`import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;`.
+:code:`import "github.com/ethereum/dapp-bin/library/iterable_mapping.sol" as it_mapping;`.
 
 Other source code providers may be added in the future.
 
@@ -117,7 +117,7 @@ Other source code providers may be added in the future.
 Comments
 ========
 
-Single-line comments (`//`) and multi-line comments (`/*...*/`) are possible.
+Single-line comments (:code:`//`) and multi-line comments (:code:`/*...*/`) are possible.
 
 ::
 
@@ -131,7 +131,7 @@ Single-line comments (`//`) and multi-line comments (`/*...*/`) are possible.
 
 Additionally, there is another type of comment called a natspec comment,
 for which the documentation is not yet written. They are written with a
-triple slash (`///`) or a double asterisk block(`/** ... */`) and
+triple slash (:code:`///`) or a double asterisk block(:code:`/** ... */`) and
 they should be used directly above function declarations or statements.
 You can use Doxygen-style tags inside these comments to document
 functions, annotate conditions for formal verification, and provide a
