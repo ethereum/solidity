@@ -8,15 +8,15 @@ Control Structures
 ===================
 
 Most of the control structures from C/JavaScript are available in Solidity
-except for `switch` and `goto`. So
-there is: `if`, `else`, `while`, `for`, `break`, `continue`, `return`, `? :`, with
+except for :code:`switch` and :code:`goto`. So
+there is: :code:`if`, :code:`else`, :code:`while`, :code:`for`, :code:`break`, :code:`continue`, :code:`return`, :code:`? :`, with
 the usual semantics known from C / JavaScript.
 
 Parentheses can *not* be omitted for conditionals, but curly brances can be omitted
 around single-statement bodies.
 
 Note that there is no type conversion from non-boolean to boolean types as
-there is in C and JavaScript, so `if (1) { ... }` is *not* valid Solidity.
+there is in C and JavaScript, so :code:`if (1) { ... }` is *not* valid Solidity.
 
 .. index:: ! function;call, function;internal, function;external
 
@@ -44,7 +44,7 @@ contract can be called internally.
 External Function Calls
 -----------------------
 
-The expression `this.g(8);` is also a valid function call, but this time, the function
+The expression :code:`this.g(8);` is also a valid function call, but this time, the function
 will be called "externally", via a message call and not directly via jumps.
 Functions of other contracts have to be called externally. For an external call,
 all function arguments have to be copied to memory.
@@ -63,9 +63,9 @@ of other contracts, the amount of Wei sent with the call and the gas can be spec
         function callFeed() { feed.info.value(10).gas(800)(); }
     }
 
-Note that the expression `InfoFeed(addr)` performs an explicit type conversion stating
-that "we know that the type of the contract at the given address is `InfoFeed`" and
-this does not execute a constructor. We could also have used `function setFeed(InfoFeed _feed) { feed = _feed; }` directly.  Be careful about the fact that `feed.info.value(10).gas(800)`
+Note that the expression :code:`InfoFeed(addr)` performs an explicit type conversion stating
+that "we know that the type of the contract at the given address is :code:`InfoFeed`" and
+this does not execute a constructor. We could also have used :code:`function setFeed(InfoFeed _feed) { feed = _feed; }` directly.  Be careful about the fact that :code:`feed.info.value(10).gas(800)`
 only (locally) sets the value and amount of gas sent with the function call and only the
 parentheses at the end perform the actual call.
 
@@ -144,7 +144,7 @@ Complications for Arrays and Structs
 ------------------------------------
 
 The semantics of assignment are a bit more complicated for non-value types like arrays and structs.
-Assigning *to* a state variable always creates an independent copy. On the other hand, assigning to a local variable creates an independent copy only for elementary types, i.e. static types that fit into 32 bytes. If structs or arrays (including `bytes` and `string`) are assigned from a state variable to a local variable, the local variable holds a reference to the original state variable. A second assignment to the local variable does not modify the state but only changes the reference. Assignments to members (or elements) of the local variable *do* change the state.
+Assigning *to* a state variable always creates an independent copy. On the other hand, assigning to a local variable creates an independent copy only for elementary types, i.e. static types that fit into 32 bytes. If structs or arrays (including :code:`bytes` and :code:`string`) are assigned from a state variable to a local variable, the local variable holds a reference to the original state variable. A second assignment to the local variable does not modify the state but only changes the reference. Assignments to members (or elements) of the local variable *do* change the state.
 
 .. index:: ! exception, ! throw
 
@@ -156,7 +156,7 @@ Scoping and Declarations
 In Solidity, a variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
 This happens because Solidity inherits its scoping rules from JavaScript.
 This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
-As a result, the following code is illegal and cause the compiler to throw an error, `Identifier already declared`::
+As a result, the following code is illegal and cause the compiler to throw an error, :code:`Identifier already declared`::
 
     contract ScopingErrors {
         function scoping() {
@@ -208,11 +208,11 @@ As a result, the following code is legal, despite being poorly written::
 Exceptions
 ==========
 
-There are some cases where exceptions are thrown automatically (see below). You can use the `throw` instruction to throw an exception manually. The effect of an exception is that the currently executing call is stopped and reverted (i.e. all changes to the state and balances are undone) and the exception is also "bubbled up" through Solidity function calls (exceptions are `send` and the low-level functions `call`, `delegatecall` and `callcode`, those return `false` in case of an exception).
+There are some cases where exceptions are thrown automatically (see below). You can use the :code:`throw` instruction to throw an exception manually. The effect of an exception is that the currently executing call is stopped and reverted (i.e. all changes to the state and balances are undone) and the exception is also "bubbled up" through Solidity function calls (exceptions are :code:`send` and the low-level functions :code:`call`, :code:`delegatecall` and :code:`callcode`, those return :code:`false` in case of an exception).
 
 Catching exceptions is not yet possible.
 
-In the following example, we show how `throw` can be used to easily revert an Ether transfer and also how to check the return value of `send`::
+In the following example, we show how :code:`throw` can be used to easily revert an Ether transfer and also how to check the return value of :code:`send`::
 
     contract Sharer {
         function sendHalf(address addr) returns (uint balance) {
@@ -224,7 +224,7 @@ In the following example, we show how `throw` can be used to easily revert an Et
 
 Currently, there are three situations, where exceptions happen automatically in Solidity:
 
-1. If you access an array beyond its length (i.e. `x[i]` where `i >= x.length`)
+1. If you access an array beyond its length (i.e. :code:`x[i]` where :code:`i >= x.length`)
 2. If a function called via a message call does not finish properly (i.e. it runs out of gas or throws an exception itself).
 3. If a non-existent function on a library is called or Ether is sent to a library.
 
@@ -242,10 +242,10 @@ often hard to address the correct stack slot and provide arguments to opcodes at
 point on the stack. Solidity's inline assembly tries to facilitate that and other issues
 arising when writing manual assembly by the following features:
 
-* functional-style opcodes: `mul(1, add(2, 3))` instead of `push1 3 push1 2 add push1 1 mul`
-* assembly-local variables: `let x := add(2, 3)  let y := mload(0x40)  x := add(x, y)`
-* access to external variables: `function f(uint x) { assembly { x := sub(x, 1) } }`
-* labels: `let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))`
+* functional-style opcodes: :code:`mul(1, add(2, 3))` instead of :code:`push1 3 push1 2 add push1 1 mul`
+* assembly-local variables: :code:`let x := add(2, 3)  let y := mload(0x40)  x := add(x, y)`
+* access to external variables: :code:`function f(uint x) { assembly { x := sub(x, 1) } }`
+* labels: :code:`let x := 10  repeat: x := sub(x, 1) jumpi(repeat, eq(x, 0))`
 
 We now want to describe the inline assembly language in detail.
 
@@ -257,7 +257,7 @@ Example
 -------
 
 The following example provides library code to access the code of another contract and
-load it into a `bytes` variable. This is not possible at all with "plain Solidity" and the
+load it into a :code:`bytes` variable. This is not possible at all with "plain Solidity" and the
 idea is that assembly libraries will be used to enhance the language in such ways.
 
 .. code::
@@ -311,18 +311,18 @@ Syntax
 ------
 
 Inline assembly parses comments, literals and identifiers exactly as Solidity, so you can use the
-usual `//` and `/* */` comments. Inline assembly is initiated by `assembly { ... }` and inside
+usual :code:`//` and :code:`/* */` comments. Inline assembly is initiated by :code:`assembly { ... }` and inside
 these curly braces, the following can be used (see the later sections for more details)
 
- - literals, i.e. `0x123`, `42` or `"abc"` (strings up to 32 characters)
- - opcodes (in "instruction style"), e.g. `mload sload dup1 sstore`, for a list see below
- - opcode in functional style, e.g. `add(1, mlod(0))`
- - labels, e.g. `name:`
- - variable declarations, e.g. `let x := 7` or `let x := add(y, 3)`
- - identifiers (externals, labels or assembly-local variables), e.g. `jump(name)`, `3 x add`
- - assignments (in "instruction style"), e.g. `3 =: x`
- - assignments in functional style, e.g. `x := add(y, 3)`
- - blocks where local variables are scoped inside, e.g. `{ let x := 3 { let y := add(x, 1) } }`
+ - literals, i.e. :code:`0x123`, :code:`42` or :code:`"abc"` (strings up to 32 characters)
+ - opcodes (in "instruction style"), e.g. :code:`mload sload dup1 sstore`, for a list see below
+ - opcode in functional style, e.g. :code:`add(1, mlod(0))`
+ - labels, e.g. :code:`name:`
+ - variable declarations, e.g. :code:`let x := 7` or :code:`let x := add(y, 3)`
+ - identifiers (externals, labels or assembly-local variables), e.g. :code:`jump(name)`, :code:`3 x add`
+ - assignments (in "instruction style"), e.g. :code:`3 =: x`
+ - assignments in functional style, e.g. :code:`x := add(y, 3)`
+ - blocks where local variables are scoped inside, e.g. :code:`{ let x := 3 { let y := add(x, 1) } }`
 
 Opcodes
 -------
@@ -332,13 +332,13 @@ following list can be used as a reference of its opcodes.
 
 If an opcode takes arguments (always from the top of the stack), they are given in parentheses.
 Note that the order of arguments can be seed to be reversed in non-functional style (explained below).
-Opcodes marked with `-` do not push an item onto the stack, those marked with `*` are
+Opcodes marked with :code:`-` do not push an item onto the stack, those marked with :code:`*` are
 special and all others push exactly one item onte the stack.
 
-In the following, `mem[a...b)` signifies the bytes of memory starting at position `a` up to
-(excluding) position `b` and `storage[p]` signifies the storage contents at position `p`.
+In the following, :code:`mem[a...b)` signifies the bytes of memory starting at position :code:`a` up to
+(excluding) position :code:`b` and :code:`storage[p]` signifies the storage contents at position :code:`p`.
 
-The opcodes `pushi` and `jumpdest` cannot be used directly.
+The opcodes :code:`pushi` and :code:`jumpdest` cannot be used directly.
 
 +-------------------------+------+-----------------------------------------------------------------+
 | stop                    + `-`  | stop execution, identical to return(0,0)                        |
@@ -447,8 +447,8 @@ The opcodes `pushi` and `jumpdest` cannot be used directly.
 | callcode(g, a, v, in,   |      | identical to call but only use the code from a and stay         |
 | insize, out, outsize)   |      | in the context of the current contract otherwise                |
 +-------------------------+------+-----------------------------------------------------------------+
-| delegatecall(g, a, in,  |      | identical to callcode but also keep `caller` and `callvalue`    |
-| insize, out, outsize)   |      |                                                                 |
+| delegatecall(g, a, in,  |      | identical to callcode but also keep :code:`caller`              |
+| insize, out, outsize)   |      | and :code:`callvalue`                                           |
 +-------------------------+------+-----------------------------------------------------------------+
 | return(p, s)            | `*`  | end execution, return data mem[p..(p+s))                        |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -486,7 +486,7 @@ Literals
 --------
 
 You can use integer constants by typing them in decimal or hexadecimal notation and an
-appropriate `PUSHi` instruction will automatically be generated. The following creates code
+appropriate :code:`PUSHi` instruction will automatically be generated. The following creates code
 to add 2 and 3 resulting in 5 and then computes the bitwise and with the string "abc".
 Strings are stored left-aligned and cannot be longer than 32 bytes.
 
@@ -498,7 +498,7 @@ Functional Style
 -----------------
 
 You can type opcode after opcode in the same way they will end up in bytecode. For example
-adding `3` to the contents in memory at position `0x80` would be
+adding :code:`3` to the contents in memory at position :code:`0x80` would be
 
 .. code::
 
@@ -557,7 +557,7 @@ It is planned that the stack height changes can be specified in inline assembly.
 Labels
 ------
 
-Another problem in EVM assembly is that `jump` and `jumpi` use absolute addresses
+Another problem in EVM assembly is that :code:`jump` and :code:`jumpi` use absolute addresses
 which can change easily. Solidity inline assembly provides labels to make the use of
 jumps easier. The following code computes an element in the Fibonacci series.
 
@@ -584,7 +584,7 @@ you should just not access any stack variables (even assembly variables) in that
 
 Furthermore, the stack height analyser goes through the code opcode by opcode
 (and not according to control flow), so in the following case, the assembler
-will have a wrong impression about the stack height at label `two`:
+will have a wrong impression about the stack height at label :code:`two`:
 
 .. code::
 
@@ -606,12 +606,12 @@ will have a wrong impression about the stack height at label `two`:
 Declaring Assembly-Local Variables
 ----------------------------------
 
-You can use the `let` keyword to declare variables that are only visible in
-inline assembly and actually only in the current `{...}`-block. What happens
-is that the `let` instruction will create a new stack slot that is reserved
+You can use the :code:`let` keyword to declare variables that are only visible in
+inline assembly and actually only in the current :code:`{...}`-block. What happens
+is that the :code:`let` instruction will create a new stack slot that is reserved
 for the variable and automatically removed again when the end of the block
 is reached. You need to provide an initial value for the variable which can
-be just `0`, but it can also be a complex functional-style expression.
+be just :code:`0`, but it can also be a complex functional-style expression.
 
 .. code::
 
@@ -638,9 +638,9 @@ variables. Take care that when you assign to variables that point to
 memory or storage, you will only change the pointer and not the data.
 
 There are two kinds of assignments: Functional-style and instruction-style.
-For functionaly-style assignments (`variable := value`), you need to provide a value in a
+For functionaly-style assignments (:code:`variable := value`), you need to provide a value in a
 functional-style expression that results in exactly one stack value
-and for instruction-style (`=: variable`), the value is just taken from the stack top.
+and for instruction-style (:code:`=: variable`), the value is just taken from the stack top.
 For both ways, the colon points to the name of the variable.
 
 .. code::
@@ -669,7 +669,7 @@ Conventions in Solidity
 -----------------------
 
 In contrast to EVM assembly, Solidity knows types which are narrower than 256 bits,
-e.g. `uint24`. In order to make them more efficient, most arithmetic operations just
+e.g. :code:`uint24`. In order to make them more efficient, most arithmetic operations just
 treat them as 256 bit numbers and the higher-order bits are only cleaned at the
 point where it is necessary, i.e. just shortly before they are written to memory
 or before comparisons are performed. This means that if you access such a variable
@@ -677,11 +677,11 @@ from within inline assembly, you might have to manually clean the higher order b
 first.
 
 Solidity manages memory in a very simple way: There is a "free memory pointer"
-at position `0x40` in memory. If you want to allocate memory, just use the memory
+at position :code:`0x40` in memory. If you want to allocate memory, just use the memory
 from that point on and update the pointer accordingly.
 
 Elements in memory arrays in Solidity always occupy multiples of 32 bytes (yes, this is
-even true for `byte[]`, but not for `bytes` and `string`). Multi-dimensional memory
+even true for :code:`byte[]`, but not for :code:`bytes` and :code:`string`). Multi-dimensional memory
 arrays are pointers to memory arrays. The length of a dynamic array is stored at the
 first slot of the array and then only the array elements follow.
 
