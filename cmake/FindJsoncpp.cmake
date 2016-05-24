@@ -45,6 +45,6 @@ endif()
 # if all listed variables are TRUE, hide their existence from configuration view
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(jsoncpp DEFAULT_MSG
-	JSONCPP_INCLUDE_DIR JSONCPP_LIBRARY)
+	JSONCPP_LIBRARY JSONCPP_INCLUDE_DIR)
 mark_as_advanced (JSONCPP_INCLUDE_DIR JSONCPP_LIBRARY)
 

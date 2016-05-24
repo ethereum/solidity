@@ -1,59 +1,135 @@
-# Set necessary compile and link flags
+#------------------------------------------------------------------------------
+# EthCompilerSettings.cmake
+#
+# CMake file for cpp-ethereum project which specifies our compiler settings
+# for each supported platform and build configuration.
+#
+# See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/.
+#
+# Copyright (c) 2014-2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
 
-# C++11 check and activation
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+# Clang seeks to be command-line compatible with GCC as much as possible, so
+# most of our compiler settings are common between GCC and Clang.
+#
+# These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
+if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 
-	set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror -pedantic -DSHAREDLIB -fPIC ${CMAKE_CXX_FLAGS}")
-	if (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong -Wstack-protector")
-	endif()
-	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
-	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -DETH_RELEASE")
-	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG -DETH_RELEASE")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DETH_RELEASE")
-
-	execute_process(
-		COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-	if (NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
-		message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
-	endif ()
-
-elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-
+	# Use ISO C++11 standard language.
 	set(CMAKE_CXX_FLAGS -std=c++11)
+
+	# Enables all the warnings about constructions that some users consider questionable,
+	# and that are easy to avoid.  Also enable some extra warning flags that are not
+	# enabled by -Wall.   Finally, treat at warnings-as-errors, which forces developers
+	# to fix warnings as they arise, so they don't accumulate "to be fixed later".
 	add_compile_options(-Wall)
 	add_compile_options(-Wextra)
+	add_compile_options(-Werror)
+
+	# Disable warnings about unknown pragmas (which is enabled by -Wall).  I assume we have external
+	# dependencies (probably Boost) which have some of these.   Whatever the case, we shouldn't be
+	# disabling these globally.   Instead, we should pragma around just the problem #includes.
+	#
+	# TODO - Track down what breaks if we do NOT do this.
 	add_compile_options(-Wno-unknown-pragmas)
-	add_compile_options(-Wno-unused-function)			# Needed for sepc256k1
-	add_compile_options(-Wno-dangling-else)				# (clog, cwarn) macros
-	add_compile_options(-fPIC)
-	add_compile_options(-fstack-protector-strong)
-	add_compile_options(-fstack-protector)
+
+	# To get the code building on FreeBSD and Arch Linux we seem to need the following
+	# warning suppression to work around some issues in Boost headers.
+	#
+	# See the following reports:
+	#     https://github.com/ethereum/webthree-umbrella/issues/384
+	#     https://github.com/ethereum/webthree-helpers/pull/170
+	#
+	# The issue manifest as warnings-as-errors like the following:
+	#
+	#     /usr/local/include/boost/multiprecision/cpp_int.hpp:181:4: error:
+	#         right operand of shift expression '(1u << 63u)' is >= than the precision of the left operand
+	#
+	# -fpermissive is a pretty nasty way to address this.   It is described as follows:
+	#
+	#    Downgrade some diagnostics about nonconformant code from errors to warnings.
+	#    Thus, using -fpermissive will allow some nonconforming code to compile.
+	#
+	# NB: Have to use this form for the setting, so that it only applies to C++ builds.
+	# Applying -fpermissive to a C command-line (ie. secp256k1) gives a build error.
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
+
+	# Build everything as shared libraries (.so files)
 	add_definitions(-DSHAREDLIB)
+	
+	# If supported for the target machine, emit position-independent code, suitable for dynamic
+	# linking and avoiding any limit on the size of the global offset table.
+	add_compile_options(-fPIC)
 
-	# Playing it safe, by only enabling warnings-as-errors on OS X for now,
-	# not for Clang on Linux and other platforms.
-	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
-		add_compile_options(-Werror)
-	endif ()
-
-	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-		add_compile_options(-stdlib=libstdc++)
-		add_compile_options(-fcolor-diagnostics)
-		add_compile_options(-Qunused-arguments)
-		add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
-	endif()
-
-	if (EMSCRIPTEN)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0 -O3 -s LINKABLE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_DYNAMIC_EXECUTION=1")
-		add_definitions(-DETH_EMSCRIPTEN=1)
-	endif()
-
+	# Configuration-specific compiler settings.	
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -DETH_RELEASE")
 	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG -DETH_RELEASE")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DETH_RELEASE")
 
+	# Additional GCC-specific compiler settings.
+	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+
+		# Check that we've got GCC 4.7 or newer.
+		execute_process(
+			COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+		if (NOT (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7))
+			message(FATAL_ERROR "${PROJECT_NAME} requires g++ 4.7 or greater.")
+		endif ()
+
+		# Strong stack protection was only added in GCC 4.9.
+		# Use it if we have the option to do so.
+		# See https://lwn.net/Articles/584225/
+		if (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
+			add_compile_options(-fstack-protector-strong)
+			add_compile_options(-fstack-protector)
+		endif()
+
+	# Additional Clang-specific compiler settings.
+	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+
+		# Enable strong stack protection.
+		add_compile_options(-fstack-protector-strong)
+		add_compile_options(-fstack-protector)
+
+		# A couple of extra warnings suppressions which we seemingly
+		# need when building with Clang.
+		#
+		# TODO - Nail down exactly where these warnings are manifesting and
+		# try to suppress them in a more localized way.   Notes in this file
+		# indicate that the first is needed for sepc256k1 and that the
+		# second is needed for the (clog, cwarn) macros.  These will need
+		# testing on at least OS X and Ubuntu.
+		add_compile_options(-Wno-unused-function)
+		add_compile_options(-Wno-dangling-else)
+		
+		# Some Linux-specific Clang settings.  We don't want these for OS X.
+		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+		
+			# TODO - Is this even necessary?  Why?
+			# See http://stackoverflow.com/questions/19774778/when-is-it-necessary-to-use-use-the-flag-stdlib-libstdc.
+			add_compile_options(-stdlib=libstdc++)
+			
+			# Tell Boost that we're using Clang's libc++.   Not sure exactly why we need to do.
+			add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
+			
+			# Use fancy colors in the compiler diagnostics
+			add_compile_options(-fcolor-diagnostics)
+			
+			# See "How to silence unused command line argument error with clang without disabling it?"
+			# When using -Werror with clang, it transforms "warning: argument unused during compilation" messages
+			# into errors, which makes sense.
+			# http://stackoverflow.com/questions/21617158/how-to-silence-unused-command-line-argument-error-with-clang-without-disabling-i
+			add_compile_options(-Qunused-arguments)
+		endif()
+
+		if (EMSCRIPTEN)
+			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0 -O3 -s LINKABLE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_DYNAMIC_EXECUTION=1")
+			add_definitions(-DETH_EMSCRIPTEN=1)
+		endif()
+	endif()
+
+# The major alternative compiler to GCC/Clang is Microsoft's Visual C++ compiler, only available on Windows.
 elseif (DEFINED MSVC)
 
     add_compile_options(/MP)						# enable parallel compilation
@@ -71,6 +147,17 @@ elseif (DEFINED MSVC)
 	add_compile_options(-DNOMINMAX)					# undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
 	add_compile_options(-DMINIUPNP_STATICLIB)		# define miniupnp static library
 
+	# Always use Release variant of C++ runtime.
+	# We don't want to provide Debug variants of all dependencies. Some default
+	# flags set by CMake must be tweaked.
+	string(REPLACE "/MDd" "/MD" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+	string(REPLACE "/D_DEBUG" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+	string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+	string(REPLACE "/MDd" "/MD" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+	string(REPLACE "/D_DEBUG" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+	string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+	set_property(GLOBAL PROPERTY DEBUG_CONFIGURATIONS OFF)
+
 	# disable empty object file warning
 	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /ignore:4221")
 	# warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
@@ -83,6 +170,8 @@ elseif (DEFINED MSVC)
 		message("Forcing static linkage for MSVC.")
 		set(ETH_STATIC 1)
 	endif ()
+	
+# If you don't have GCC, Clang or VC++ then you are on your own.  Good luck!
 else ()
 	message(WARNING "Your compiler is not tested, if you run into any issues, we'd welcome any patches.")
 endif ()

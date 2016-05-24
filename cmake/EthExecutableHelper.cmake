@@ -43,6 +43,36 @@ macro(eth_add_executable EXECUTABLE)
 
 endmacro()
 
+macro(eth_simple_add_executable EXECUTABLE)
+	add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+
+	# Apple does not support statically linked binaries on OS X.   That means
+	# that we can only statically link against our external libraries, but
+	# we cannot statically link against the C++ runtime libraries and other
+	# platform libraries (as is possible on Windows and Alpine Linux) to produce
+	# an entirely transportable binary.
+	#
+	# See https://developer.apple.com/library/mac/qa/qa1118/_index.html for more info.
+	#
+	# GLIBC also appears not to support static linkage too, which probably means that
+	# Debian and Ubuntu will only be able to do partially-statically linked
+	# executables too, just like OS X.
+	#
+	# For OS X, at the time of writing, we are left with the following dynamically
+	# linked dependencies, of which curl and libz might still be fixable:
+	#
+	# /usr/lib/libc++.1.dylib
+	# /usr/lib/libSystem.B.dylib
+	# /usr/lib/libcurl.4.dylib
+	# /usr/lib/libz.1.dylib
+	#
+	if (STATIC_LINKING AND NOT APPLE)
+		set(CMAKE_EXE_LINKER_FLAGS "-static ${CMAKE_EXE_LINKER_FLAGS}")
+		set_target_properties(${EXECUTABLE} PROPERTIES LINK_SEARCH_START_STATIC 1)
+		set_target_properties(${EXECUTABLE} PROPERTIES LINK_SEARCH_END_STATIC 1)
+	endif()
+endmacro()
+
 macro(eth_copy_dll EXECUTABLE DLL)
 	# dlls must be unsubstitud list variable (without ${}) in format
 	# optimized;path_to_dll.dll;debug;path_to_dlld.dll

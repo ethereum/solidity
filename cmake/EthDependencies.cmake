@@ -13,21 +13,40 @@ function(eth_show_dependency DEP NAME)
 	endif()
 endfunction()
 
-# TODO - This here is a BIG PROBLEM!  For our Windows builds we don't have a real packaging system.
-# Instead we fake it by hosting ZIPs on our own server, and then unzipping them into a local
-# directory inside webthree-helpers.   That is ugly enough in itself, but it completely breaks
-# down when the have the repos as standalone, because the Boost libraries are huge (about 500Mb),
-# so downloading multiple copies of them is singularly unappealing.   Maybe it is time for us to
-# look at Chocolately right now?
-#
-# See https://github.com/ethereum/webthree-umbrella/issues/345.
-
 if (DEFINED MSVC)
 	# by defining CMAKE_PREFIX_PATH variable, cmake will look for dependencies first in our own repository before looking in system paths like /usr/local/ ...
 	# this must be set to point to the same directory as $ETH_DEPENDENCY_INSTALL_DIR in /extdep directory
-	set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../extdep/install/windows/x64")
+
+	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0)
+		set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../extdep/install/windows/x64")
+	else()
+		get_filename_component(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/../deps/install" ABSOLUTE)
+		set(ETH_DEPENDENCY_INSTALL_DIR
+			"${DEPS_DIR}/x64"					# Old location for deps.
+			"${DEPS_DIR}/win64"					# New location for deps.
+			"${DEPS_DIR}/win64/Release/share"	# LLVM shared cmake files.
+		)
+	endif()
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
+
+	# Qt5 requires opengl
+	# TODO it windows SDK is NOT FOUND, throw ERROR
+	# from https://github.com/rpavlik/cmake-modules/blob/master/FindWindowsSDK.cmake
+	find_package(WINDOWSSDK REQUIRED)
+	message(" - WindowsSDK dirs: ${WINDOWSSDK_DIRS}")
+	set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${WINDOWSSDK_DIRS})
 endif()
+
+# homebrew install directories for few of our dependencies
+set (CMAKE_PREFIX_PATH "/usr/local/opt/qt5" ${CMAKE_PREFIX_PATH})
+
+# setup directory for cmake generated files and include it globally
+# it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
+set(ETH_GENERATED_DIR "${PROJECT_BINARY_DIR}/gen")
+include_directories(${ETH_GENERATED_DIR})
+
+# boilerplate macros for some code editors
+add_definitions(-DETH_TRUE)
 
 # custom cmake scripts
 set(ETH_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR})
@@ -43,10 +62,8 @@ find_program(CTEST_COMMAND ctest)
 ## use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
-# TODO hanlde other msvc versions or it will fail find them
-	set(Boost_COMPILER -vc120)
 # use static boost libraries *.lib
 	set(Boost_USE_STATIC_LIBS ON)
 
@@ -59,6 +76,44 @@ elseif (UNIX)
 # use dynamic boost libraries *.dll
 	set(Boost_USE_STATIC_LIBS OFF)
 
+endif()
+
+set(STATIC_LINKING FALSE CACHE BOOL "Build static binaries")
+
+if (STATIC_LINKING)
+
+	set(Boost_USE_STATIC_LIBS ON)
+	set(Boost_USE_STATIC_RUNTIME ON)
+
+	set(OpenSSL_USE_STATIC_LIBS ON)
+
+	if (MSVC)
+		# TODO - Why would we need .a on Windows?  Maybe some Cygwin-ism.
+		# When I work through Windows static linkage, I will remove this,
+		# if that is possible.
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	elseif (APPLE)
+		# At the time of writing, we are still only PARTIALLY statically linked
+		# on OS X, with a mixture of statically linked external libraries where
+		# those are available, and dynamically linked where that is the only
+		# option we have.    Ultimately, the aim would be for everything except
+		# the runtime libraries to be statically linked.
+		#
+		# Still TODO:
+		# - jsoncpp
+		# - json-rpc-cpp
+		# - leveldb (which pulls in snappy, for the dylib at ;east)
+		# - miniupnp
+		# - gmp
+		#
+		# Two further libraries (curl and zlib) ship as dylibs with the platform
+		# but again we could build from source and statically link these too.
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib)
+	else()
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+	endif()
+
+	set(ETH_STATIC ON)
 endif()
 
 find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
