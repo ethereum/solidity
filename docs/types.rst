@@ -26,30 +26,30 @@ are used as function arguments or in assignments.
 Booleans
 --------
 
-:code:`bool`: The possible values are constants :code:`true` and :code:`false`.
+``bool``: The possible values are constants ``true`` and ``false``.
 
 Operators:
 
-*  :code:`!` (logical negation)
-*  :code:`&&` (logical conjunction, "and")
-*  :code:`||` (logical disjunction, "or")
-*  :code:`==` (equality)
-*  :code:`!=` (inequality)
+*  ``!`` (logical negation)
+*  ``&&`` (logical conjunction, "and")
+*  ``||`` (logical disjunction, "or")
+*  ``==`` (equality)
+*  ``!=`` (inequality)
 
-The operators :code:`||` and :code:`&&` apply the common short-circuiting rules. This means that in the expression :code:`f(x) || g(y)`, if :code:`f(x)` evaluates to :code:`true`, :code:`g(y)` will not be evaluated even if it may have side-effects.
+The operators ``||`` and ``&&`` apply the common short-circuiting rules. This means that in the expression ``f(x) || g(y)``, if ``f(x)`` evaluates to ``true``, ``g(y)`` will not be evaluated even if it may have side-effects.
 
 .. index:: ! uint, ! int, ! integer
 
 Integers
 --------
 
-:code:`int` / :code:`uint`: Signed and unsigned integers of various sizes. Keywords :code:`uint8` to :code:`uint256` in steps of :code:`8` (unsigned of 8 up to 256 bits) and :code:`int8` to :code:`int256`. :code:`uint` and :code:`int` are aliases for :code:`uint256` and :code:`int256`, respectively.
+``int`` / ``uint``: Signed and unsigned integers of various sizes. Keywords ``uint8`` to ``uint256`` in steps of ``8`` (unsigned of 8 up to 256 bits) and ``int8`` to ``int256``. ``uint`` and ``int`` are aliases for ``uint256`` and ``int256``, respectively.
 
 Operators:
 
-* Comparisons: :code:`<=`, :code:`<`, :code:`==`, :code:`!=`, :code:`>=`, :code:`>` (evaluate to :code:`bool`)
-* Bit operators: :code:`&`, :code:`|`, :code:`^` (bitwise exclusive or), :code:`~` (bitwise negation)
-* Arithmetic operators: :code:`+`, :code:`-`, unary :code:`-`, unary :code:`+`, :code:`*`, :code:`/`, :code:`%` (remainder), :code:`**` (exponentiation)
+* Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
+* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
+* Arithmetic operators: ``+``, ``-``, unary ``-``, unary ``+``, ``*``, ``/``, ``%`` (remainder), ``**`` (exponentiation)
 
 Division always truncates (it just maps to the DIV opcode of the EVM), but it does not truncate if both
 operators are :ref:`literals<rational_literals>` (or literal expressions).
@@ -61,19 +61,19 @@ operators are :ref:`literals<rational_literals>` (or literal expressions).
 Address
 -------
 
-:code:`address`: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as base for all contracts.
+``address``: Holds a 20 byte value (size of an Ethereum address). Address types also have members and serve as base for all contracts.
 
 Operators:
 
-* :code:`<=`, :code:`<`, :code:`==`, :code:`!=`, :code:`>=` and :code:`>`
+* ``<=``, ``<``, ``==``, ``!=``, ``>=`` and ``>``
 
 Members of Addresses
 ^^^^^^^^^^^^^^^^^^^^
 
-* :code:`balance` and :code:`send`
+* ``balance`` and ``send``
 
-It is possible to query the balance of an address using the property :code:`balance`
-and to send Ether (in units of wei) to an address using the :code:`send` function:
+It is possible to query the balance of an address using the property ``balance``
+and to send Ether (in units of wei) to an address using the ``send`` function:
 
 ::
 
@@ -82,12 +82,12 @@ and to send Ether (in units of wei) to an address using the :code:`send` functio
     if (x.balance < 10 && myAddress.balance >= 10) x.send(10);
 
 .. note::
-    If :code:`x` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the :code:`send` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted. In this case, :code:`send` returns :code:`false`.
+    If ``x`` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the ``send`` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted. In this case, ``send`` returns ``false``.
 
-* :code:`call`, :code:`callcode` and :code:`delegatecall`
+* ``call``, ``callcode`` and ``delegatecall``
 
 Furthermore, to interface with contracts that do not adhere to the ABI,
-the function :code:`call` is provided which takes an arbitrary number of arguments of any type. These arguments are padded to 32 bytes and concatenated. One exception is the case where the first argument is encoded to exactly four bytes. In this case, it is not padded to allow the use of function signatures here.
+the function ``call`` is provided which takes an arbitrary number of arguments of any type. These arguments are padded to 32 bytes and concatenated. One exception is the case where the first argument is encoded to exactly four bytes. In this case, it is not padded to allow the use of function signatures here.
 
 ::
 
@@ -95,15 +95,15 @@ the function :code:`call` is provided which takes an arbitrary number of argumen
     nameReg.call("register", "MyName");
     nameReg.call(bytes4(sha3("fun(uint256)")), a);
 
-:code:`call` returns a boolean indicating whether the invoked function terminated (:code:`true`) or caused an EVM exception (`false:code:`). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
+``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (`false:code:`). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
-In a similar way, the function `delegatecall:code:` can be used: The difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of `delegatecall:code:` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called `callcode:code:` was available that did not provide access to the original `msg.sender:code:` and `msg.value:code:` values.
+In a similar way, the function ``delegatecall`` can be used: The difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
-All three functions `call:code:`, `delegatecall:code:` and `callcode:code:` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
+All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-level functions and should only be used as a *last resort* as they break the type-safety of Solidity.
 
 .. note::
     All contracts inherit the members of address, so it is possible to query the balance of the
-    current contract using :code:`this.balance`.
+    current contract using ``this.balance``.
 
 .. index:: byte array, bytes32
 
@@ -111,29 +111,29 @@ All three functions `call:code:`, `delegatecall:code:` and `callcode:code:` are 
 Fixed-size byte arrays
 ----------------------
 
-:code:`bytes1`, :code:`bytes2`, :code:`bytes3`, ..., :code:`bytes32`. :code:`byte` is an alias for :code:`bytes1`.
+``bytes1``, ``bytes2``, ``bytes3``, ..., ``bytes32``. ``byte`` is an alias for ``bytes1``.
 
 Operators:
 
-* Comparisons: :code:`<=`, :code:`<`, :code:`==`, :code:`!=`, :code:`>=`, :code:`>` (evaluate to :code:`bool`)
-* Bit operators: :code:`&`, :code:`|`, :code:`^` (bitwise exclusive or), :code:`~` (bitwise negation)
-* Index access: If :code:`x` is of type :code:`bytesI`, then :code:`x[k]` for :code:`0 <= k < I` returns the :code:`k` th byte (read-only).
+* Comparisons: ``<=``, ``<``, ``==``, ``!=``, ``>=``, ``>`` (evaluate to ``bool``)
+* Bit operators: ``&``, ``|``, ``^`` (bitwise exclusive or), ``~`` (bitwise negation)
+* Index access: If ``x`` is of type ``bytesI``, then ``x[k]`` for ``0 <= k < I`` returns the ``k`` th byte (read-only).
 
 Members:
 
-* :code:`.length` yields the fixed length of the byte array (read-only).
+* ``.length`` yields the fixed length of the byte array (read-only).
 
 Dynamically-sized byte array
 ----------------------------
 
-:code:`bytes`:
+``bytes``:
     Dynamically-sized byte array, see :ref:`arrays`. Not a value-type!
-:code:`string`:
+``string``:
     Dynamically-sized UTF8-encoded string, see :ref:`arrays`. Not a value-type!
 
-As a rule of thumb, use :code:`bytes` for arbitrary-length raw byte data and :code:`string`
+As a rule of thumb, use ``bytes`` for arbitrary-length raw byte data and ``string``
 for arbitrary-length string (utf-8) data. If you can limit the length to a certain
-number of bytes, always use one of :code:`bytes1` to :code:`bytes32` because they are much cheaper.
+number of bytes, always use one of ``bytes1`` to ``bytes32`` because they are much cheaper.
 
 .. index:: ! ufixed, ! fixed, ! fixed point number
 
@@ -153,16 +153,16 @@ All number literals retain arbitrary precision until they are converted to a non
 using them together with a non-literal type). This means that computations do not overflow but also
 divisions do not truncate.
 
-For example, :code:`(2**800 + 1) - 2**800` results in the constant :code:`1` (of type :code:`uint8`)
-although intermediate results would not even fit the machine word size. Furthermore, :code:`.5 * 8` results
-in the integer :code:`4` (although non-integers were used in between).
+For example, ``(2**800 + 1) - 2**800`` results in the constant ``1`` (of type ``uint8``)
+although intermediate results would not even fit the machine word size. Furthermore, ``.5 * 8`` results
+in the integer ``4`` (although non-integers were used in between).
 
 If the result is not an integer,
-an appropriate :code:`ufixed` or :code:`fixed` type is used whose number of fractional bits is as large as
+an appropriate ``ufixed`` or ``fixed`` type is used whose number of fractional bits is as large as
 required (approximating the rational number in the worst case).
 
-In :code:`var x = 1/4;`, :code:`x` will receive the type :code:`ufixed0x8` while in :code:`var x = 1/3` it will receive
-the type :code:`ufixed0x256` because :code:`1/3` is not finitely representable in binary and will thus be
+In ``var x = 1/4;``, ``x`` will receive the type ``ufixed0x8`` while in ``var x = 1/3`` it will receive
+the type ``ufixed0x256`` because ``1/3`` is not finitely representable in binary and will thus be
 approximated.
 
 Any operator that can be applied to integers can also be applied to literal expressions as
@@ -171,18 +171,18 @@ and exponentiation is disallowed if the exponent is fractional (because that mig
 a non-rational number).
 
 .. note::
-    Most finite decimal fractions like :code:`5.3743` are not finitely representable in binary. The correct type
-    for :code:`5.3743` is :code:`ufixed8x248` because that allows to best approximate the number. If you want to
-    use the number together with types like :code:`ufixed` (i.e. :code:`ufixed128x128`), you have to explicitly
-    specify the desired precision: :code:`x + ufixed(5.3743)`.
+    Most finite decimal fractions like ``5.3743`` are not finitely representable in binary. The correct type
+    for ``5.3743`` is ``ufixed8x248`` because that allows to best approximate the number. If you want to
+    use the number together with types like ``ufixed`` (i.e. ``ufixed128x128``), you have to explicitly
+    specify the desired precision: ``x + ufixed(5.3743)``.
 
 .. warning::
-    Division on integer literals used to truncate in earlier versions, but it will now convert into a rational number, i.e. :code:`5 / 2` is not equal to :code:`2`, but to :code:`2.5`.
+    Division on integer literals used to truncate in earlier versions, but it will now convert into a rational number, i.e. ``5 / 2`` is not equal to ``2``, but to ``2.5``.
 
 .. note::
     Literal expressions are converted to a permanent type as soon as they are used with other
     expressions. Even though we know that the value of the
-    expression assigned to :code:`b` in the following example evaluates to an integer, it still
+    expression assigned to ``b`` in the following example evaluates to an integer, it still
     uses fixed point types (and not rational number literals) in between and so the code
     does not compile
 
@@ -196,7 +196,7 @@ a non-rational number).
 String Literals
 ---------------
 
-String Literals are written with double quotes (:code:`"abc"`). As with integer literals, their type can vary, but they are implicitly convertible to :code:`bytes` if they fit, to :code:`bytes` and to :code:`string`.
+String Literals are written with double quotes (``"abc"``). As with integer literals, their type can vary, but they are implicitly convertible to ``bytes`` if they fit, to ``bytes`` and to ``string``.
 
 .. index:: enum
 
@@ -250,8 +250,8 @@ Data location
 Every complex type, i.e. *arrays* and *structs*, has an additional
 annotation, the "data location", about whether it is stored in memory or in storage. Depending on the
 context, there is always a default, but it can be overridden by appending
-either :code:`storage` or :code:`memory` to the type. The default for function parameters (including return parameters) is :code:`memory`, the default for local variables is :code:`storage` and the location is forced
-to :code:`storage` for state variables (obviously).
+either ``storage`` or ``memory`` to the type. The default for function parameters (including return parameters) is ``memory``, the default for local variables is ``storage`` and the location is forced
+to ``storage`` for state variables (obviously).
 
 There is also a third data location, "calldata", which is a non-modifyable
 non-persistent area where function arguments are stored. Function parameters
@@ -316,23 +316,23 @@ For storage arrays, the element type can be arbitrary (i.e. also other
 arrays, mappings or structs). For memory arrays, it cannot be a mapping and
 has to be an ABI type if it is an argument of a publicly-visible function.
 
-An array of fixed size :code:`k` and element type :code:`T` is written as :code:`T[k]`,
-an array of dynamic size as :code:`T[]`. As an example, an array of 5 dynamic
-arrays of :code:`uint` is :code:`uint[][5]` (note that the notation is reversed when
+An array of fixed size ``k`` and element type ``T`` is written as ``T[k]``,
+an array of dynamic size as ``T[]``. As an example, an array of 5 dynamic
+arrays of ``uint`` is ``uint[][5]`` (note that the notation is reversed when
 compared to some other languages). To access the second uint in the
-third dynamic array, you use :code:`x[2][1]` (indices are zero-based and
-access works in the opposite way of the declaration, i.e. :code:`x[2]`
+third dynamic array, you use ``x[2][1]`` (indices are zero-based and
+access works in the opposite way of the declaration, i.e. ``x[2]``
 shaves off one level in the type from the right).
 
-Variables of type :code:`bytes` and :code:`string` are special arrays. A :code:`bytes` is similar to :code:`byte[]`,
-but it is packed tightly in calldata. :code:`string` is equal to :code:`bytes` but does not allow
+Variables of type ``bytes`` and ``string`` are special arrays. A ``bytes`` is similar to ``byte[]``,
+but it is packed tightly in calldata. ``string`` is equal to ``bytes`` but does not allow
 length or index access (for now).
 
-So :code:`bytes` should always be preferred over :code:`byte[]` because it is cheaper.
+So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
 
 .. note::
-    If you want to access the byte-representation of a string :code:`s`, use
-    :code:`bytes(s).length / bytes(s)[7] = x';`. Keep in mind
+    If you want to access the byte-representation of a string ``s``, use
+    ``bytes(s).length / bytes(s)[7] = x';``. Keep in mind
     that you are accessing the low-level bytes of the utf-8 representation,
     and not the individual characters!
 
@@ -341,9 +341,9 @@ So :code:`bytes` should always be preferred over :code:`byte[]` because it is ch
 Allocating Memory Arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Creating arrays with variable length in memory can be done using the :code:`new` keyword.
+Creating arrays with variable length in memory can be done using the ``new`` keyword.
 As opposed to storage arrays, it is **not** possible to resize memory arrays by assigning to
-the :code:`.length` member.
+the ``.length`` member.
 
 ::
 
@@ -363,19 +363,19 @@ Members
 ^^^^^^^
 
 **length**:
-    Arrays have a :code:`length` member to hold their number of elements.
+    Arrays have a ``length`` member to hold their number of elements.
     Dynamic arrays can be resized in storage (not in memory) by changing the
-    :code:`.length` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
+    ``.length`` member. This does not happen automatically when attempting to access elements outside the current length. The size of memory arrays is fixed (but dynamic, i.e. it can depend on runtime parameters) once they are created.
 **push**:
-     Dynamic storage arrays and :code:`bytes` (not :code:`string`) have a member function called :code:`push` that can be used to append an element at the end of the array. The function returns the new length.
+     Dynamic storage arrays and ``bytes`` (not ``string``) have a member function called ``push`` that can be used to append an element at the end of the array. The function returns the new length.
 
 .. warning::
     It is not yet possible to use arrays of arrays in external functions.
 
 .. warning::
     Due to limitations of the EVM, it is not possible to return
-    dynamic content from external function calls. The function :code:`f` in
-    :code:`contract C { function f() returns (uint[]) { ... } }` will return
+    dynamic content from external function calls. The function ``f`` in
+    ``contract C { function f() returns (uint[]) { ... } }`` will return
     something if called from web3.js, but not if called from Solidity.
 
     The only workaround for now is to use large statically-sized arrays.
@@ -511,21 +511,21 @@ members of the local variable actually write to the state.
 
 Of course, you can also directly access the members of the struct without
 assigning it to a local variable, as in
-:code:`campaigns[campaignID].amount = 0`.
+``campaigns[campaignID].amount = 0``.
 
 .. index:: !mapping
 
 Mappings
 ========
 
-Mapping types are declared as :code:`mapping _KeyType => _ValueType`, where
-:code:`_KeyType` can be almost any type except for a mapping and :code:`_ValueType`
+Mapping types are declared as ``mapping _KeyType => _ValueType``, where
+``_KeyType`` can be almost any type except for a mapping and ``_ValueType``
 can actually be any type, including mappings.
 
 Mappings can be seen as hashtables which are virtually initialized such that
 every possible key exists and is mapped to a value whose byte-representation is
 all zeros. The similarity ends here, though: The key data is not actually stored
-in a mapping, only its :code:`sha3` hash used to look up the value.
+in a mapping, only its ``sha3`` hash used to look up the value.
 
 Because of this, mappings do not have a length or a concept of a key or value being "set".
 
@@ -537,18 +537,18 @@ in internal functions).
 Operators Involving LValues
 ===========================
 
-If :code:`a` is an LValue (i.e. a variable or something that can be assigned to), the following operators are available as shorthands:
+If ``a`` is an LValue (i.e. a variable or something that can be assigned to), the following operators are available as shorthands:
 
-:code:`a += e` is equivalent to :code:`a = a + e`. The operators :code:`-=`, :code:`*=`, :code:`/=`, :code:`%=`, :code:`a |=`, :code:`&=` and :code:`^=` are defined accordingly. :code:`a++` and :code:`a--` are equivalent to :code:`a += 1` / :code:`a -= 1` but the expression itself still has the previous value of :code:`a`. In contrast, :code:`--a` and :code:`++a` have the same effect on :code:`a` but return the value after the change.
+``a += e`` is equivalent to ``a = a + e``. The operators ``-=``, ``*=``, ``/=``, ``%=``, ``a |=``, ``&=`` and ``^=`` are defined accordingly. ``a++`` and ``a--`` are equivalent to ``a += 1`` / ``a -= 1`` but the expression itself still has the previous value of ``a``. In contrast, ``--a`` and ``++a`` have the same effect on ``a`` but return the value after the change.
 
 delete
 ------
 
-:code:`delete a` assigns the initial value for the type to :code:`a`. I.e. for integers it is equivalent to :code:`a = 0`, but it can also be used on arrays, where it assigns a dynamic array of length zero or a static array of the same length with all elements reset. For structs, it assigns a struct with all members reset.
+``delete a`` assigns the initial value for the type to ``a``. I.e. for integers it is equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic array of length zero or a static array of the same length with all elements reset. For structs, it assigns a struct with all members reset.
 
-:code:`delete` has no effect on whole mappings (as the keys of mappings may be arbitrary and are generally unknown). So if you delete a struct, it will reset all members that are not mappings and also recurse into the members unless they are mappings. However, individual keys and what they map to can be deleted.
+``delete`` has no effect on whole mappings (as the keys of mappings may be arbitrary and are generally unknown). So if you delete a struct, it will reset all members that are not mappings and also recurse into the members unless they are mappings. However, individual keys and what they map to can be deleted.
 
-It is important to note that :code:`delete a` really behaves like an assignment to :code:`a`, i.e. it stores a new object in :code:`a`.
+It is important to note that ``delete a`` really behaves like an assignment to ``a``, i.e. it stores a new object in ``a``.
 
 ::
 
@@ -580,12 +580,12 @@ If an operator is applied to different types, the compiler tries to
 implicitly convert one of the operands to the type of the other (the same is
 true for assignments). In general, an implicit conversion between value-types
 is possible if it
-makes sense semantically and no information is lost: :code:`uint8` is convertible to
-:code:`uint16` and :code:`int128` to :code:`int256`, but :code:`int8` is not convertible to :code:`uint256`
-(because :code:`uint256` cannot hold e.g. :code:`-1`).
+makes sense semantically and no information is lost: ``uint8`` is convertible to
+``uint16`` and ``int128`` to ``int256``, but ``int8`` is not convertible to ``uint256``
+(because ``uint256`` cannot hold e.g. ``-1``).
 Furthermore, unsigned integers can be converted to bytes of the same or larger
-size, but not vice-versa. Any type that can be converted to :code:`uint160` can also
-be converted to :code:`address`.
+size, but not vice-versa. Any type that can be converted to ``uint160`` can also
+be converted to ``address``.
 
 Explicit Conversions
 --------------------
@@ -596,7 +596,7 @@ doing, an explicit type conversion is sometimes possible::
     int8 y = -3;
     uint x = uint(y);
 
-At the end of this code snippet, :code:`x` will have the value :code:`0xfffff..fd` (64 hex
+At the end of this code snippet, ``x`` will have the value ``0xfffff..fd`` (64 hex
 characters), which is -3 in two's complement representation of 256 bits.
 
 If a type is explicitly converted to a smaller type, higher-order bits are
@@ -619,12 +619,12 @@ expression that is assigned to the variable::
     uint20 x = 0x123;
     var y = x;
 
-Here, the type of :code:`y` will be :code:`uint20`. Using :code:`var` is not possible for function
+Here, the type of ``y`` will be ``uint20``. Using ``var`` is not possible for function
 parameters or return parameters.
 
 .. warning::
     The type is only deduced from the first assignment, so
-    the loop in the following snippet is infinite, as :code:`i` will have the type
-    :code:`uint8` and any value of this type is smaller than :code:`2000`.
-    :code:`for (var i = 0; i < 2000; i++) { ... }`
+    the loop in the following snippet is infinite, as ``i`` will have the type
+    ``uint8`` and any value of this type is smaller than ``2000``.
+    ``for (var i = 0; i < 2000; i++) { ... }``
 
