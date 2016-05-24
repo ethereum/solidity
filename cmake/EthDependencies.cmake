@@ -28,25 +28,7 @@ if (DEFINED MSVC)
 		)
 	endif()
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
-
-	# Qt5 requires opengl
-	# TODO it windows SDK is NOT FOUND, throw ERROR
-	# from https://github.com/rpavlik/cmake-modules/blob/master/FindWindowsSDK.cmake
-	find_package(WINDOWSSDK REQUIRED)
-	message(" - WindowsSDK dirs: ${WINDOWSSDK_DIRS}")
-	set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${WINDOWSSDK_DIRS})
 endif()
-
-# homebrew install directories for few of our dependencies
-set (CMAKE_PREFIX_PATH "/usr/local/opt/qt5" ${CMAKE_PREFIX_PATH})
-
-# setup directory for cmake generated files and include it globally
-# it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
-set(ETH_GENERATED_DIR "${PROJECT_BINARY_DIR}/gen")
-include_directories(${ETH_GENERATED_DIR})
-
-# boilerplate macros for some code editors
-add_definitions(-DETH_TRUE)
 
 # custom cmake scripts
 set(ETH_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR})
