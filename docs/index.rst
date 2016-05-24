@@ -8,7 +8,7 @@ crowdfunding, blind auctions, multi-signature wallets and more.
 
 .. note::
     The best way to try out Solidity right now is using the
-    `Browser-Based Compiler <https://chriseth.github.io/browser-solidity/>`_
+    `Browser-Based Compiler <https://ethereum.github.io/browser-solidity/>`_
     (it can take a while to load, please be patient).
 
 Useful links
@@ -28,7 +28,7 @@ Useful links
 
 Available Solidity Integrations
 -------------------------------
-* `Browser-Based Compiler <https://chriseth.github.io/browser-solidity/>`_
+* `Browser-Based Compiler <https://ethereum.github.io/browser-solidity/>`_
 	Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.	
 
 * `Ethereum Studio <https://live.ether.camp/>`_
@@ -60,7 +60,7 @@ and the :ref:`Ethereum Virtual Machine <the-ethereum-virtual-machine>`.
 The next section will explain several *features* of Solidity by giving
 useful :ref:`example contracts <voting>`
 Remember that you can always try out the contracts
-`in your browser <https://chriseth.github.io/browser-solidity>`_!
+`in your browser <https://ethereum.github.io/browser-solidity>`_!
 
 The last and most extensive section will cover all aspects of Solidity in depth.
 

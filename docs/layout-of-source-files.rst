@@ -103,7 +103,7 @@ with the longest common prefix is chosen.
 
 **browser-solidity**:
 
-The `browser-based compiler <https://chriseth.github.io/browser-solidity>`_
+The `browser-based compiler <https://ethereum.github.io/browser-solidity>`_
 provides an automatic remapping for github and will also automatically retrieve
 the file over the network:
 You can import the iterable mapping by e.g.
