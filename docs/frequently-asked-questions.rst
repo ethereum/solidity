@@ -32,7 +32,7 @@ How do I compile contracts?
 
 Probably the fastest way is the `online compiler <https://ethereum.github.io/browser-solidity/>`_.
 
-You can also use the `solc` binary which comes with cpp-ethereum to compile
+You can also use the :code:`solc` binary which comes with cpp-ethereum to compile
 contracts or an emerging option is to use Mix, the IDE.
 
 
@@ -89,22 +89,22 @@ If you want to deactivate your contracts, it is preferable to **disable** them b
 internal state which causes all functions to throw. This will make it impossible
 to use the contract and ether sent to the contract will be returned automatically.
 
-Now to answering the question: Inside a constructor, `msg.sender` is the
-creator. Save it. Then `selfdestruct(creator);` to kill and return funds.
+Now to answering the question: Inside a constructor, :code:`msg.sender` is the
+creator. Save it. Then :code:`selfdestruct(creator);` to kill and return funds.
 
 `example <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/05_greeter.sol>`_
 
-Note that if you `import "mortal"` at the top of your contracts and declare
-`contract SomeContract is mortal { ...` and compile with a compiler that already
+Note that if you :code:`import "mortal"` at the top of your contracts and declare
+:code:`contract SomeContract is mortal { ...` and compile with a compiler that already
 has it (which includes `browser-solidity <https://ethereum.github.io/browser-solidity/>`_), then
-`kill()` is taken care of for you. Once a contract is "mortal", then you can
-`contractname.kill.sendTransaction({from:eth.coinbase})`, just the same as my
+:code:`kill()` is taken care of for you. Once a contract is "mortal", then you can
+:code:`contractname.kill.sendTransaction({from:eth.coinbase})`, just the same as my
 examples.
 
 Store Ether in a contract
 =========================
 
-The trick is to create the contract with `{from:someaddress, value: web3.toWei(3,"ether")...}`
+The trick is to create the contract with :code:`{from:someaddress, value: web3.toWei(3,"ether")...}`
 
 See `endowment_retriever.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
 
@@ -116,26 +116,26 @@ See `value_incrementer.sol <https://github.com/fivedogit/solidity-baby-steps/blo
 Get contract address in Solidity
 ================================
 
-Short answer: The global variable `this` is the contract address.
+Short answer: The global variable :code:`this` is the contract address.
 
 See `basic_info_getter <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/15_basic_info_getter.sol>`_.
 
-Long answer: `this` is a variable representing the current contract.
+Long answer: :code:`this` is a variable representing the current contract.
 Its type is the type of the contract. Since any contract type basically inherits from the
-`address` type, `this` is always convertible to `address` and in this case contains
+:code:`address` type, :code:`this` is always convertible to :code:`address` and in this case contains
 its own address.
 
 What is the difference between a function marked constant and one that is not?
 ==============================================================================
 
-`constant` functions can perform some action and return a value, but cannot
+:code:`constant` functions can perform some action and return a value, but cannot
 change state (this is not yet enforced by the compiler). In other words, a
 constant function cannot save or update any variables within the contract or wider
-blockchain. These functions are called using `c.someFunction(...)` from
+blockchain. These functions are called using :code:`c.someFunction(...)` from
 geth or any other web3.js environment.
 
-"non-constant" functions (those lacking the `constant` specifier) must be called
-with `c.someMethod.sendTransaction({from:eth.accounts[x], gas: 1000000});`
+"non-constant" functions (those lacking the :code:`constant` specifier) must be called
+with :code:`c.someMethod.sendTransaction({from:eth.accounts[x], gas: 1000000});`
 That is, because they can change state, they have to have a gas
 payment sent along to get the work done.
 
@@ -150,8 +150,8 @@ What is a mapping and how do we use them?
 =========================================
 
 A mapping is very similar to a K->V hashmap.
-If you have a state variable of type `mapping (string -> uint) x;`, then you can
-access the value by `x["somekeystring"]`.
+If you have a state variable of type :code:`mapping (string -> uint) x;`, then you can
+access the value by :code:`x["somekeystring"]`.
 
 How can I get the length of a mapping?
 ======================================
@@ -161,7 +161,7 @@ and it is not possible to know which or how many values are "set". Actually,
 all values to all possible keys are set by default, they are just
 initialised with the zero value.
 
-In this sense, the attribute `length` for a mapping does not really apply.
+In this sense, the attribute :code:`length` for a mapping does not really apply.
 
 If you want to have a "sized mapping", you can use the iterable mapping
 (see below) or just a dynamically-sized array of structs.
@@ -198,7 +198,7 @@ Can you return an array or a string from a solidity function call?
 Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
 
 What is problematic, though, is returning any variably-sized data (e.g. a
-variably-sized array like `uint[]`) from a fuction **called from within Solidity**.
+variably-sized array like :code:`uint[]`) from a fuction **called from within Solidity**.
 This is a limitation of the EVM and will be solved with the next protocol update.
 
 Returning variably-sized data as part of an external transaction or call is fine.
@@ -239,8 +239,8 @@ The visibility specifiers do not only change the visibility but also
 the way functions can be called. In general, functions in the
 same contract can also be called internally (which is cheaper
 and allows for memory types to be passed by reference). This
-is done if you just use `f(1,2)`. If you use `this.f(1,2)`
-or `otherContract.f(1,2)`, the function is called externally.
+is done if you just use :code:`f(1,2)`. If you use :code:`this.f(1,2)`
+or :code:`otherContract.f(1,2)`, the function is called externally.
 
 Internal function calls have the advantage that you can use
 all Solidity types as parameters, but you have to stick to the
@@ -288,12 +288,12 @@ Unless someone really messes up the blockchain or the clock on
 your computer, you can make the following assumptions:
 
 You publish a transaction at a time X, this transaction contains same
-code that calls `now` and is included in a block whose timestamp is Y
+code that calls :code:`now` and is included in a block whose timestamp is Y
 and this block is included into the canonical chain (published) at a time Z.
 
-The value of `now` will be identical to Y and X <= Y <= Z.
+The value of :code:`now` will be identical to Y and X <= Y <= Z.
 
-Never use `now` or `block.hash` as a source of randomness, unless you know
+Never use :code:`now` or :code:`block.hash` as a source of randomness, unless you know
 what you are doing!
 
 Can a contract function return a struct?
@@ -324,7 +324,7 @@ a way to pull out Ether from a contract.
 If the contract is not meant to receive Ether with simple transfers, you
 should implement the fallback function as
 
-`function() { throw; }`
+:code:`function() { throw; }`
 
 this will cause all transactions to this contract that do not call an
 existing function to be reverted, so that all Ether is sent back.
@@ -333,7 +333,7 @@ Another use of the fallback function is to e.g. register that your
 contract received ether by using an event.
 
 *Attention*: If you implement the fallback function take care that it uses as
-little gas as possible, because `send()` will only supply a limited amount.
+little gas as possible, because :code:`send()` will only supply a limited amount.
 
 Is it possible to pass arguments to the fallback function?
 ==========================================================
@@ -342,7 +342,7 @@ The fallback function cannot take parameters.
 
 Under special circumstances, you can send data. If you take care
 that none of the other functions is invoked, you can access the data
-by `msg.data`.
+by :code:`msg.data`.
 
 Can state variables be initialized in-line?
 ===========================================
@@ -386,12 +386,12 @@ How do for loops work?
 
 Very similar to JavaScript. There is one point to watch out for, though:
 
-If you use `for (var i = 0; i < a.length; i ++) { a[i] = i; }`, then
-the type of `i` will be inferred only from `0`, whose type is `uint8`.
-This means that if `a` has more than `255` elements, your loop will
-not terminate because `i` can only hold values up to `255`.
+If you use :code:`for (var i = 0; i < a.length; i ++) { a[i] = i; }`, then
+the type of :code:`i` will be inferred only from :code:`0`, whose type is :code:`uint8`.
+This means that if :code:`a` has more than :code:`255` elements, your loop will
+not terminate because :code:`i` can only hold values up to :code:`255`.
 
-Better use `for (uint i = 0; i < a.length...`
+Better use :code:`for (uint i = 0; i < a.length...`
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
@@ -409,7 +409,7 @@ There are some string utility functions at `stringUtils.sol <https://github.com/
 which will be extended in the future.
 
 For now, if you want to modify a string (even when you only want to know its length),
-you should always convert it to a `bytes` first::
+you should always convert it to a :code:`bytes` first::
 
     contract C {
         string s;
@@ -450,7 +450,7 @@ When returning a value of say "uint" type, is it possible to return an "undefine
 
 This is not possible, because all types use up the full value range.
 
-You have the option to `throw` on error, which will also revert the whole
+You have the option to :code:`throw` on error, which will also revert the whole
 transaction, which might be a good idea if you ran into an unexpected
 situation.
 
@@ -545,14 +545,14 @@ Example::
         }
     }
 
-The function `append` can work both on `data1` and `data2` and its modifications will be
-stored permanently. If you remove the `storage` keyword, the default
-is to use `memory` for function arguments. This has the effect that
-at the point where `append(data1)` or `append(data2)` is called, an
+The function :code:`append` can work both on :code:`data1` and :code:`data2` and its modifications will be
+stored permanently. If you remove the :code:`storage` keyword, the default
+is to use :code:`memory` for function arguments. This has the effect that
+at the point where :code:`append(data1)` or :code:`append(data2)` is called, an
 independent copy of the state variable is created in memory and
-`append` operates on this copy (which does not support `.push` - but that
+:code:`append` operates on this copy (which does not support :code:`.push` - but that
 is another issue). The modifications to this independent copy do not
-carry back to `data1` or `data2`.
+carry back to :code:`data1` or :code:`data2`.
 
 A common mistake is to declare a local variable and assume that it will
 be created in memory, although it will be created in storage::
@@ -569,16 +569,16 @@ be created in memory, although it will be created in storage::
         }
     }
 
-The type of the local variable `x` is `uint[] storage`, but since
+The type of the local variable :code:`x` is :code:`uint[] storage`, but since
 storage is not dynamically allocated, it has to be assigned from
 a state variable before it can be used. So no space in storage will be
-allocated for `x`, but instead it functions only as an alias for
+allocated for :code:`x`, but instead it functions only as an alias for
 a pre-existing variable in storage.
 
-What will happen is that the compiler interprets `x` as a storage
-pointer and will make it point to the storage slot `0` by default.
-This has the effect that `someVariable` (which resides at storage
-slot `0`) is modified by `x.push(2)`.
+What will happen is that the compiler interprets :code:`x` as a storage
+pointer and will make it point to the storage slot :code:`0` by default.
+This has the effect that :code:`someVariable` (which resides at storage
+slot :code:`0`) is modified by :code:`x.push(2)`.
 
 The correct way to do this is the following::
 
@@ -598,11 +598,11 @@ Can a regular (i.e. non-contract) ethereum account be closed permanently like a 
 No. Non-contract accounts "exist" as long as the private key is known by
 someone or can be generated in some way.
 
-What is the difference between `bytes` and `byte[]`?
-====================================================
+What is the difference between :code:`bytes` and :code:`byte[]`?
+================================================================
 
-`bytes` is usually more efficient: When used as arguments to functions (i.e. in
-CALLDATA) or in memory, every single element of a `byte[]` is padded to 32
+:code:`bytes` is usually more efficient: When used as arguments to functions (i.e. in
+CALLDATA) or in memory, every single element of a :code:`byte[]` is padded to 32
 bytes which wastes 31 bytes per element.
 
 Is it possible to send a value while calling an overloaded function?
@@ -658,15 +658,15 @@ How do you create 2-dimensional arrays?
 
 See `2D_array.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/55_2D_array.sol>`_.
 
-Note that filling a 10x10 square of `uint8` + contract creation took more than `800,000`
-gas at the time of this writing. 17x17 took `2,000,000` gas. With the limit at
+Note that filling a 10x10 square of :code:`uint8` + contract creation took more than :code:`800,000`
+gas at the time of this writing. 17x17 took :code:`2,000,000` gas. With the limit at
 3.14 million... well, there’s a pretty low ceiling for what you can create right
 now.
 
 Note that merely "creating" the array is free, the costs are in filling it.
 
 Note2: Optimizing storage access can pull the gas costs down considerably, because
-32 `uint8` values can be stored in a single slot. The problem is that these optimizations
+32 :code:`uint8` values can be stored in a single slot. The problem is that these optimizations
 currently do not work across loops and also have a problem with bounds checking.
 You might get much better results in the future, though.
 
@@ -680,12 +680,12 @@ Every external function call in Solidity can be modified in two ways:
 
 This is done by "calling a function on the function":
 
-`f.gas(2).value(20)()` calls the modified function `f` and thereby sending 20
+:code:`f.gas(2).value(20)()` calls the modified function :code:`f` and thereby sending 20
 Wei and limiting the gas to 2 (so this function call will most likely go out of
 gas and return your 20 Wei).
 
-In the above example, the low-level function `call` is used to invoke another
-contract with `p.data` as payload and `p.amount` Wei is sent with that call.
+In the above example, the low-level function :code:`call` is used to invoke another
+contract with :code:`p.data` as payload and :code:`p.amount` Wei is sent with that call.
 
 What happens to a struct's mapping when copying over a struct?
 ==============================================================
@@ -709,8 +709,8 @@ How do I initialize a contract with only a specific amount of wei?
 ==================================================================
 
 Currently the approach is a little ugly, but there is little that can be done to improve it.
-In the case of a `contract A` calling a new instance of `contract B`, parentheses have to be used around
-`new B` because `B.value` would refer to a member of `B` called `value`.
+In the case of a :code:`contract A` calling a new instance of :code:`contract B`, parentheses have to be used around
+:code:`new B` because :code:`B.value` would refer to a member of :code:`B` called :code:`value`.
 You will need to make sure that you have both contracts aware of each other's presence.
 In this example::
 
@@ -734,20 +734,20 @@ you can only use one level of dynamic arrays.
 What is the relationship between bytes32 and string? Why is it that ‘bytes32 somevar = "stringliteral";’ works and what does the saved 32-byte hex value mean?
 ==============================================================================================================================================================
 
-The type `bytes32` can hold 32 (raw) bytes. In the assignment `bytes32 samevar = "stringliteral";`,
-the string literal is interpreted in its raw byte form and if you inspect `somevar` and
-see a 32-byte hex value, this is just `"stringliteral"` in hex.
+The type :code:`bytes32` can hold 32 (raw) bytes. In the assignment :code:`bytes32 samevar = "stringliteral";`,
+the string literal is interpreted in its raw byte form and if you inspect :code:`somevar` and
+see a 32-byte hex value, this is just :code:`"stringliteral"` in hex.
 
-The type `bytes` is similar, only that it can change its length.
+The type :code:`bytes` is similar, only that it can change its length.
 
-Finally, `string` is basically identical to `bytes` only that it is assumed
-to hold the utf-8 encoding of a real string. Since `string` stores the
+Finally, :code:`string` is basically identical to :code:`bytes` only that it is assumed
+to hold the utf-8 encoding of a real string. Since :code:`string` stores the
 data in utf-8 encoding it is quite expensive to compute the number of
 characters in the string (the encoding of some characters takes more
-than a single byte). Because of that, `string s; s.length` is not yet
-supported and not even index access `s[2]`. But if you want to access
+than a single byte). Because of that, :code:`string s; s.length` is not yet
+supported and not even index access :code:`s[2]`. But if you want to access
 the low-level byte encoding of the string, you can use
-`bytes(s).length` and `bytes(s)[2]` which will result in the number
+:code:`bytes(s).length` and :code:`bytes(s)[2]` which will result in the number
 of bytes in the utf-8 encoding of the string (not the number of
 characters) and the second byte (not character) of the utf-8 encoded
 string, respectively.
@@ -776,17 +776,17 @@ independent copies will be created::
         }
     }
 
-The call to `g(x)` will not have an effect on `x` because it needs
+The call to :code:`g(x)` will not have an effect on :code:`x` because it needs
 to create an independent copy of the storage value in memory
 (the default storage location is memory). On the other hand,
-`h(x)` successfully modifies `x` because only a reference
+:code:`h(x)` successfully modifies :code:`x` because only a reference
 and not a copy is passed.
 
 Sometimes, when I try to change the length of an array with ex: "arrayname.length = 7;" I get a compiler error "Value must be an lvalue". Why?
 ==============================================================================================================================================
 
 You can resize a dynamic array in storage (i.e. an array declared at the
-contract level) with `arrayname.length = <some new length>;`. If you get the
+contract level) with :code:`arrayname.length = <some new length>;`. If you get the
 "lvalue" error, you are probably doing one of two things wrong.
 
 1. You might be trying to resize an array in "memory", or
@@ -806,16 +806,16 @@ contract level) with `arrayname.length = <some new length>;`. If you get the
 might be used to declaring them in C or Java, but they are access as in
 C or Java.
 
-For example, `int8[][5] somearray;` are 5 dynamic `int8` arrays.
+For example, :code:`int8[][5] somearray;` are 5 dynamic :code:`int8` arrays.
 
-The reason for this is that `T[5]` is always an array of 5 `T`s,
-no matter whether `T` itself is an array or not (this is not the
+The reason for this is that :code:`T[5]` is always an array of 5 :code:`T`'s,
+no matter whether :code:`T` itself is an array or not (this is not the
 case in C or Java).
 
 Is it possible to return an array of strings ( string[] ) from a Solidity function?
 ===================================================================================
 
-Not yet, as this requires two levels of dynamic arrays (`string` is a dynamic array itself).
+Not yet, as this requires two levels of dynamic arrays (:code:`string` is a dynamic array itself).
 
 If you issue a call for an array, it is possible to retrieve the whole array? Or must you write a helper function for that?
 ===========================================================================================================================
@@ -842,9 +842,9 @@ After a successful CREATE operation's sub-execution, if the operation returns x,
 How do I use .send()?
 =====================
 
-If you want to send 20 Ether from a contract to the address `x`, you use `x.send(20 ether);`.
-Here, `x` can be a plain address or a contract. If the contract already explicitly defines
-a function `send` (and thus overwrites the special function), you can use `address(x).send(20 ether);`.
+If you want to send 20 Ether from a contract to the address :code:`x`, you use :code:`x.send(20 ether);`.
+Here, :code:`x` can be a plain address or a contract. If the contract already explicitly defines
+a function :code:`send` (and thus overwrites the special function), you can use :code:`address(x).send(20 ether);`.
 
 What does the following strange check do in the Custom Token contract?
 ======================================================================
@@ -855,7 +855,7 @@ What does the following strange check do in the Custom Token contract?
         throw;
 
 Integers in Solidity (and most other machine-related programming languages) are restricted to a certain range.
-For `uint256`, this is `0` up to `2**256 - 1`. If the result of some operation on those numbers
+For :code:`uint256`, this is :code:`0` up to :code:`2**256 - 1`. If the result of some operation on those numbers
 does not fit inside this range, it is truncated. These truncations can have
 `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so code like the one
 above is necessary to avoid certain attacks.
