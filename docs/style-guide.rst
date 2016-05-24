@@ -221,11 +221,11 @@ No::
         }
     }
 
-The same recommendations apply to the control structures `if`, `else`, `while`,
-and `for`.
+The same recommendations apply to the control structures :code:`if`, :code:`else`, :code:`while`,
+and :code:`for`.
 
 Additionally there should be a single space between the control structures
-`if`, `while`, and `for` and the parenthetic block representing the
+:code:`if`, :code:`while`, and :code:`for` and the parenthetic block representing the
 conditional, as well as a single space between the conditional parenthetic
 block and the opening brace.
 
@@ -268,7 +268,7 @@ No::
             value: 42
         }));
 
-For `if` blocks which have an `else` or `else if` clause, the `else` should be
+For :code:`if` blocks which have an :code:`else` or :code:`else if` clause, the :code:`else` should be
 placed on it's own line following the previous closing parenthesis.  The
 parenthesis for the else block should follow the same rules as the other
 conditional control structures.
