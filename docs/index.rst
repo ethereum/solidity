@@ -45,19 +45,19 @@ Available Solidity Integrations
     Solidity syntax highlighting for SublimeText editor.
 
 * `Atom Solidity package <https://github.com/gmtcreators/atom-solidity/>`_
-    Plugin for the atom editor that features syntax highlighting, compilation and a runtime environment (requires backend node).
+    Plugin for the Atom editor that features syntax highlighting, compilation and a runtime environment (requires backend node).
 
 * `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
-    Plugin for the atom editor that provides solidity linting
+    Plugin for the Atom editor that provides Solidity linting.
 
 * `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
     Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
 
 * `Emacs Solidity <https://github.com/ethereum/emacs-solidity/>`_
-    Plugin for the emacs editor providing syntax highlighting and compilation error reporting.
+    Plugin for the Emacs editor providing syntax highlighting and compilation error reporting.
 
-* `VIM Solidity <https://github.com/tomlion/vim-solidity/>`_
-    Plugin for the VIM editor providing syntax highlighting.
+* `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
+    Plugin for the Vim editor providing syntax highlighting.
 
 Language Documentation
 ----------------------
