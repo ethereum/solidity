@@ -140,7 +140,7 @@ number of bytes, always use one of `bytes1` to `bytes32` because they are much c
 Fixed Point Numbers
 -------------------
 
-**bold** COMING SOON... **bold**
+**COMING SOON...**
 
 .. index:: literal, literal;rational
 
@@ -187,6 +187,7 @@ a non-rational number).
     does not compile
 
 ::
+
     uint128 a = 1;
     uint128 b = 2.5 + a + 0.5;
 
