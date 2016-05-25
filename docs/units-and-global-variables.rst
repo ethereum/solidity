@@ -89,7 +89,7 @@ Mathematical and Cryptographic Functions
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
     compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``.
 ``sha3(...) returns (bytes32)``:
-    compute the Ethereum-SHA-3 hash of the (tightly packed) arguments
+    compute the Ethereum-SHA-3 (KECCAK-256) hash of the (tightly packed) arguments
 ``sha256(...) returns (bytes32)``:
     compute the SHA-256 hash of the (tightly packed) arguments
 ``ripemd160(...) returns (bytes20)``:
