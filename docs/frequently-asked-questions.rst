@@ -846,6 +846,9 @@ If you want to send 20 Ether from a contract to the address ``x``, you use ``x.s
 Here, ``x`` can be a plain address or a contract. If the contract already explicitly defines
 a function ``send`` (and thus overwrites the special function), you can use ``address(x).send(20 ether);``.
 
+Note that the call to ``send`` may fail in certain conditions, such as if you have insufficient funds, so you should always check the return value.
+``send`` returns ``true`` if the send was successful and ``false`` otherwise.
+
 What does the following strange check do in the Custom Token contract?
 ======================================================================
 
