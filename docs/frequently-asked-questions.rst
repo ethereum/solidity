@@ -376,8 +376,8 @@ to add guards, initialisation or cleanup functionality in a concise way.
 
 For examples, see the `features.sol <https://github.com/ethereum/dapp-bin/blob/master/library/features.sol>`_.
 
-How do ``struct``'s work?
-=========================
+How do structs work?
+====================
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
