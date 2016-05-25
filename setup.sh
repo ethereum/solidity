@@ -26,14 +26,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
     brew install boost
     brew install cmake
-    brew install cryptopp
-    brew install miniupnpc
-    brew install leveldb
-    brew install gmp
     brew install jsoncpp
-    brew install libmicrohttpd
-    brew install libjson-rpc-cpp
-    brew install homebrew/versions/llvm37
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
@@ -58,16 +51,7 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         cmake \
         git \
         libboost-all-dev \
-        libcurl4-openssl-dev \
-        libcryptopp-dev \
-        libgmp-dev \
-        libjsoncpp-dev \
-        libleveldb-dev \
-        libmicrohttpd-dev \
-        libminiupnpc-dev \
-        libz-dev \
-        llvm-3.7-dev \
-        opencl-headers
+        libjsoncpp-dev
 
     # And install the English language package and reconfigure the locales.
     # We really shouldn't need to do this, and should instead force our locales to "C"
