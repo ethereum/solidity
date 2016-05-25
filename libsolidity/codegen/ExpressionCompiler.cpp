@@ -360,8 +360,11 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		m_context << commonType.literalValue(nullptr);
 	else
 	{
-		bool cleanupNeeded = commonType.category() == Type::Category::Integer &&
-			(Token::isCompareOp(c_op) || c_op == Token::Div || c_op == Token::Mod);
+		bool cleanupNeeded = false;
+		if (Token::isCompareOp(c_op))
+			cleanupNeeded = true;
+		if (commonType.category() == Type::Category::Integer && (c_op == Token::Div || c_op == Token::Mod))
+			cleanupNeeded = true;
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
 		auto isLiteral = [](Expression const& _e)

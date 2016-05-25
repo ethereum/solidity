@@ -6775,6 +6775,24 @@ BOOST_AUTO_TEST_CASE(iszero_bnot_correct)
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(cleanup_bytes_types)
+{
+	// Checks that bytesXX types are properly cleaned before they are compared.
+	char const* sourceCode = R"(
+		contract C {
+			function f(bytes2 a, uint16 x) returns (uint) {
+				if (a != "ab") return 1;
+				if (x != 0x0102) return 2;
+				if (bytes3(x) != 0x0102) return 3;
+				return 0;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// We input longer data on purpose.
+	BOOST_CHECK(callContractFunction("f(bytes2,uint16)", string("abc"), u256(0x040102)) == encodeArgs(0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

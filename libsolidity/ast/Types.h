@@ -470,7 +470,6 @@ class BoolType: public Type
 public:
 	BoolType() {}
 	virtual Category category() const override { return Category::Bool; }
-	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
