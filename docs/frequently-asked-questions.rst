@@ -72,7 +72,7 @@ Contracts on the blockchain should have their original source
 code published if they are to be used by third parties.
 
 Does ``selfdestruct()`` free up space in the blockchain?
-============================================================
+========================================================
 
 It removes the contract bytecode and storage from the current block
 into the future, but since the blockchain stores every single block (i.e.
@@ -109,7 +109,7 @@ The trick is to create the contract with ``{from:someaddress, value: web3.toWei(
 See `endowment_retriever.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
 
 Use a non-constant function (req ``sendTransaction``) to increment a variable in a contract
-===============================================================================================
+===========================================================================================
 
 See `value_incrementer.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/20_value_incrementer.sol>`_.
 
@@ -126,7 +126,7 @@ Its type is the type of the contract. Since any contract type basically inherits
 its own address.
 
 What is the difference between a function marked ``constant`` and one that is not?
-======================================================================================
+==================================================================================
 
 ``constant`` functions can perform some action and return a value, but cannot
 change state (this is not yet enforced by the compiler). In other words, a
@@ -140,21 +140,21 @@ That is, because they can change state, they have to have a gas
 payment sent along to get the work done.
 
 Get a contract to return its funds to you (not using ``selfdestruct(...)``).
-================================================================================
+============================================================================
 
 This example demonstrates how to send funds from a contract to an address.
 
 See `endowment_retriever <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/30_endowment_retriever.sol>`_.
 
 What is a ``mapping`` and how do we use them?
-=================================================
+=============================================
 
 A mapping is very similar to a K->V hashmap.
 If you have a state variable of type ``mapping (string -> uint) x;``, then you can
 access the value by ``x["somekeystring"]``.
 
 How can I get the length of a ``mapping``?
-==============================================
+==========================================
 
 Mappings are a rather low-level data structure. It does not store the keys
 and it is not possible to know which or how many values are "set". Actually,
@@ -167,13 +167,13 @@ If you want to have a "sized mapping", you can use the iterable mapping
 (see below) or just a dynamically-sized array of structs.
 
 Are ``mapping``'s iterable?
-===============================
+===========================
 
 Mappings themselves are not iterable, but you can use a higher-level
 datastructure on top of it, for example the `iterable mapping <https://github.com/ethereum/dapp-bin/blob/master/library/iterable_mapping.sol>`_.
 
 Can I put arrays inside of a ``mapping``? How do I make a ``mapping`` of a ``mapping``?
-===================================================================================================
+=======================================================================================
 
 Mappings are already syntactically similar to arrays as they are, therefore it doesn't make much sense to store an array in them. Rather what you should do is create a mapping of a mapping.
 
@@ -193,7 +193,7 @@ An example of this would be::
     }
 
 Can you return an array or a ``string`` from a solidity function call?
-==========================================================================
+======================================================================
 
 Yes. See `array_receiver_and_returner.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/60_array_receiver_and_returner.sol>`_.
 
@@ -204,12 +204,12 @@ This is a limitation of the EVM and will be solved with the next protocol update
 Returning variably-sized data as part of an external transaction or call is fine.
 
 How do you represent ``double``/``float`` in Solidity?
-==============================================================
+======================================================
 
 This is not yet possible.
 
 Is it possible to in-line initialize an array like so: ``string[] myarray = ["a", "b"];``
-=============================================================================================
+=========================================================================================
 
 Yes. However it should be noted that this currently only works with statically sized memory arrays. You can even create an inline memory
 array in the return statement. Pretty cool, huh?
@@ -224,7 +224,7 @@ Example::
     }
 
 What are ``event``'s and why do we need them?
-=================================================
+=============================================
 
 Let us suppose that you need a contract to alert the outside world when
 something happens. The contract can fire an event, which can be listened to
@@ -279,7 +279,7 @@ Is a constructor required?
 No. If there is no constructor, a generic one without arguments and no actions will be used.
 
 Are timestamps (``now,`` ``block.timestamp``) reliable?
-===============================================================
+=======================================================
 
 This depends on what you mean by "reliable".
 In general, they are supplied by miners and are therefore vulnerable.
@@ -297,19 +297,19 @@ Never use ``now`` or ``block.hash`` as a source of randomness, unless you know
 what you are doing!
 
 Can a contract function return a ``struct``?
-================================================
+============================================
 
 Yes, but only in ``internal`` function calls.
 
 If I return an ``enum``, I only get integer values in web3.js. How to get the named values?
-===============================================================================================
+===========================================================================================
 
 Enums are not supported by the ABI, they are just supported by Solidity.
 You have to do the mapping yourself for now, we might provide some help
 later.
 
 What is the deal with ``function () { ... }`` inside Solidity contracts? How can a function not have a name?
-================================================================================================================
+============================================================================================================
 
 This function is called "fallback function" and it
 is called when someone just sent Ether to the contract without
@@ -369,7 +369,7 @@ Examples::
     }
 
 What is the ``modifier`` keyword?
-=====================================
+=================================
 
 Modifiers are a way to prepend or append code to a function in order
 to add guards, initialisation or cleanup functionality in a concise way.
@@ -377,7 +377,7 @@ to add guards, initialisation or cleanup functionality in a concise way.
 For examples, see the `features.sol <https://github.com/ethereum/dapp-bin/blob/master/library/features.sol>`_.
 
 How do ``struct``'s work?
-=============================
+=========================
 
 See `struct_and_for_loop_tester.sol <https://github.com/fivedogit/solidity-baby-steps/blob/master/contracts/65_struct_and_for_loop_tester.sol>`_.
 
@@ -403,7 +403,7 @@ utf-8 is recommended. Identifiers (variables, functions, ...) can only use
 ASCII.
 
 What are some examples of basic string manipulation (``substring``, ``indexOf``, ``charAt``, etc)?
-==============================================================================================================
+==================================================================================================
 
 There are some string utility functions at `stringUtils.sol <https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol>`_
 which will be extended in the future.
@@ -430,7 +430,7 @@ Can I concatenate two strings?
 You have to do it manually for now.
 
 Why is the low-level function ``.call()`` less favorable than instantiating a contract with a variable (``ContractB b;``) and executing its functions (``b.doSomething();``)?
-========================================================================================================================================================================================
+=============================================================================================================================================================================
 
 If you use actual functions, the compiler will tell you if the types
 or your arguments do not match, if the function does not exist
@@ -446,7 +446,7 @@ Is unused gas automatically refunded?
 Yes and it is immediate, i.e. done as part of the transaction.
 
 When returning a value of say ``uint`` type, is it possible to return an ``undefined`` or "null"-like value?
-====================================================================================================================
+============================================================================================================
 
 This is not possible, because all types use up the full value range.
 
@@ -496,7 +496,7 @@ you have to look in the overall transaction. This is also the reason why several
 block explorer do not show Ether sent between contracts correctly.
 
 What is the ``memory`` keyword? What does it do?
-====================================================
+================================================
 
 The Ethereum Virtual Machine has three areas where it can store items.
 
@@ -599,7 +599,7 @@ No. Non-contract accounts "exist" as long as the private key is known by
 someone or can be generated in some way.
 
 What is the difference between ``bytes`` and ``byte[]``?
-================================================================
+========================================================
 
 ``bytes`` is usually more efficient: When used as arguments to functions (i.e. in
 CALLDATA) or in memory, every single element of a ``byte[]`` is padded to 32
@@ -671,7 +671,7 @@ currently do not work across loops and also have a problem with bounds checking.
 You might get much better results in the future, though.
 
 What does ``p.recipient.call.value(p.amount)(p.data)`` do?
-==============================================================
+==========================================================
 
 Every external function call in Solidity can be modified in two ways:
 
@@ -688,7 +688,7 @@ In the above example, the low-level function ``call`` is used to invoke another
 contract with ``p.data`` as payload and ``p.amount`` Wei is sent with that call.
 
 What happens to a ``struct``'s mapping when copying over a ``struct``?
-==============================================================================
+======================================================================
 
 This is a very interesting question. Suppose that we have a contract field set up like such::
 
@@ -732,7 +732,7 @@ This is not yet implemented for external calls and dynamic arrays -
 you can only use one level of dynamic arrays.
 
 What is the relationship between ``bytes32`` and ``string``? Why is it that ``bytes32 somevar = "stringliteral";`` works and what does the saved 32-byte hex value mean?
-====================================================================================================================================================================================
+========================================================================================================================================================================
 
 The type ``bytes32`` can hold 32 (raw) bytes. In the assignment ``bytes32 samevar = "stringliteral";``,
 the string literal is interpreted in its raw byte form and if you inspect ``somevar`` and
@@ -754,7 +754,7 @@ string, respectively.
 
 
 Can a contract pass an array (static size) or string or ``bytes`` (dynamic size) to another contract?
-=========================================================================================================
+=====================================================================================================
 
 Sure. Take care that if you cross the memory / storage boundary,
 independent copies will be created::
@@ -783,7 +783,7 @@ to create an independent copy of the storage value in memory
 and not a copy is passed.
 
 Sometimes, when I try to change the length of an array with ex: ``arrayname.length = 7;`` I get a compiler error ``Value must be an lvalue``. Why?
-==========================================================================================================================================================
+==================================================================================================================================================
 
 You can resize a dynamic array in storage (i.e. an array declared at the
 contract level) with ``arrayname.length = <some new length>;``. If you get the
@@ -813,7 +813,7 @@ no matter whether ``T`` itself is an array or not (this is not the
 case in C or Java).
 
 Is it possible to return an array of strings (``string[]``) from a Solidity function?
-===========================================================================================
+=====================================================================================
 
 Not yet, as this requires two levels of dynamic arrays (``string`` is a dynamic array itself).
 
@@ -840,7 +840,7 @@ After a successful CREATE operation's sub-execution, if the operation returns x,
 
 
 How do I use ``.send()``?
-=============================
+=========================
 
 If you want to send 20 Ether from a contract to the address ``x``, you use ``x.send(20 ether);``.
 Here, ``x`` can be a plain address or a contract. If the contract already explicitly defines
