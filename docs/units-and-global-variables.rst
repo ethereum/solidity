@@ -54,7 +54,7 @@ Block and Transaction Properties
  - ``block.difficulty`` (``uint``): current block difficulty
  - ``block.gaslimit`` (``uint``): current block gaslimit
  - ``block.number`` (``uint``): current block number
- - ``block.blockhash`` (``function(uint) returns (bytes32)``): hash of the given block - only for 256 most recent blocks
+ - ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
  - ``block.timestamp`` (``uint``): current block timestamp
  - ``msg.data`` (``bytes``): complete calldata
  - ``msg.gas`` (``uint``): remaining gas
