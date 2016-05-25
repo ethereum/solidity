@@ -94,7 +94,7 @@ Mathematical and Cryptographic Functions
     compute the SHA-256 hash of the (tightly packed) arguments
 ``ripemd160(...) returns (bytes20)``:
     compute RIPEMD-160 hash of the (tightly packed) arguments
-``ecrecover(bytes32 data, uint8 v, bytes32 r, bytes32 s) returns (address)``:
+``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
     recover the address associated with the public key from elliptic curve signature
 
 In the above, "tightly packed" means that the arguments are concatenated without padding.
@@ -118,7 +118,7 @@ Address Related
 
 ``<address>.balance`` (``uint256``):
     balance of the address in Wei
-``<address>.send(uint256) returns (bool)``:
+``<address>.send(uint256 amount) returns (bool)``:
     send given amount of Wei to address, returns ``false`` on failure
 
 .. warning::
@@ -134,7 +134,7 @@ Contract Related
 ``this`` (current contract's type):
     the current contract, explicitly convertible to :ref:`address`
 
-``selfdestruct(address)``:
+``selfdestruct(address recipient)``:
     destroy the current contract, sending its funds to the given :ref:`address`
 
 Furthermore, all functions of the current contract are callable directly including the current function.
