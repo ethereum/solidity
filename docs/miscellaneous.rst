@@ -171,9 +171,9 @@ Global Variables
 - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
 - ``tx.gasprice`` (``uint``): gas price of the transaction
 - ``tx.origin`` (``address``): sender of the transaction (full call chain)
-- ``sha3(...) returns (bytes32)``: compute the Ethereum-SHA3 (KECCAK-256) hash of the (tightly packed) arguments
-- ``sha256(...) returns (bytes32)``: compute the SHA256 hash of the (tightly packed) arguments
-- ``ripemd160(...) returns (bytes20)``: compute RIPEMD of 256 the (tightly packed) arguments
+- ``sha3(...) returns (bytes32)``: compute the Ethereum-SHA-3 (KECCAK-256) hash of the (tightly packed) arguments
+- ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the (tightly packed) arguments
+- ``ripemd160(...) returns (bytes20)``: compute the RIPEMD-160 hash of the (tightly packed) arguments
 - ``ecrecover(bytes32, uint8, bytes32, bytes32) returns (address)``: recover address associated with the public key from elliptic curve signature
 - ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``
 - ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``
