@@ -48,7 +48,7 @@ namespace and are mainly used to provide information about the blockchain.
 
 
 Block and Transaction Properties
-------------------------------------
+--------------------------------
 
  - ``block.coinbase`` (``address``): current block miner's address
  - ``block.difficulty`` (``uint``): current block difficulty
