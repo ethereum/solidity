@@ -180,7 +180,7 @@ Global Variables
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
 - ``super``: the contract one level higher in the inheritance hierarchy
 - ``selfdestruct(address)``: destroy the current contract, sending its funds to the given address
-- ``<address>.balance``: balance of the address in Wei
+- ``<address>.balance`` (``uint256``): balance of the address in Wei
 - ``<address>.send(uint256) returns (bool)``: send given amount of Wei to address, returns ``false`` on failure.
 
 .. index:: visibility, public, private, external, internal
