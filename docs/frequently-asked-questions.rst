@@ -406,7 +406,7 @@ What are some examples of basic string manipulation (``substring``, ``indexOf``,
 ==================================================================================================
 
 There are some string utility functions at `stringUtils.sol <https://github.com/ethereum/dapp-bin/blob/master/library/stringUtils.sol>`_
-which will be extended in the future.
+which will be extended in the future. In addition, Arachnid has written `solidity-stringutils <https://github.com/Arachnid/solidity-stringutils>`_.
 
 For now, if you want to modify a string (even when you only want to know its length),
 you should always convert it to a ``bytes`` first::
