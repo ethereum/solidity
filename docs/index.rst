@@ -53,7 +53,7 @@ Available Solidity Integrations
 * `Emacs Solidity <https://github.com/ethereum/emacs-solidity/>`_
 	Plugin for the emacs editor providing syntax highlighting and compilation error reporting.
 
-* `VIM Solidity <https://github.com/ethereum/vim-solidity/>`_
+* `VIM Solidity <https://github.com/tomlion/vim-solidity/>`_
 	Plugin for the VIM editor providing syntax highlighting.
 
 Language Documentation
