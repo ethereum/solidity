@@ -28,6 +28,7 @@ Useful links
 
 Available Solidity Integrations
 -------------------------------
+
 * `Browser-Based Compiler <https://ethereum.github.io/browser-solidity/>`_
 	Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.	
 
@@ -41,14 +42,19 @@ Available Solidity Integrations
 	Qt based IDE for designing, debugging and testing solidity smart contracts.
 
 * `Package for SublimeText — Solidity language syntax <https://packagecontrol.io/packages/Ethereum/>`_
-	Solidity syntax highlight for SublimeText editor.
+	Solidity syntax highlighting for SublimeText editor.
 
 * `Atom Solidity package <https://github.com/gmtcreators/atom-solidity/>`_
 	Plugin for the atom editor that features syntax highlighting, compilation and a runtime environment (requires backend node).
 
 * `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
 	Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
-	
+
+* `Emacs Solidity <https://github.com/ethereum/emacs-solidity/>`_
+	Plugin for the emacs editor providing syntax highlighting and compilation error reporting.
+
+* `VIM Solidity <https://github.com/tomlion/vim-solidity/>`_
+	Plugin for the VIM editor providing syntax highlighting.
 
 Language Documentation
 ----------------------
