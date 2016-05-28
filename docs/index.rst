@@ -30,7 +30,7 @@ Available Solidity Integrations
 -------------------------------
 
 * `Browser-Based Compiler <https://ethereum.github.io/browser-solidity/>`_
-	Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.	
+	Browser-based IDE with integrated compiler and Solidity runtime environment without server-side components.
 
 * `Ethereum Studio <https://live.ether.camp/>`_
 	Specialized web IDE that also provides shell access to a complete Ethereum environment.
@@ -46,6 +46,9 @@ Available Solidity Integrations
 
 * `Atom Solidity package <https://github.com/gmtcreators/atom-solidity/>`_
 	Plugin for the atom editor that features syntax highlighting, compilation and a runtime environment (requires backend node).
+
+* `Atom Solidity Linter <https://atom.io/packages/linter-solidity>`_
+	Plugin for the atom editor that provides solidity linting
 
 * `Visual Studio Code extension <http://juan.blanco.ws/solidity-contracts-in-visual-studio-code/>`_
 	Solidity plugin for Microsoft Visual Studio Code that includes syntax highlighting and the Solidity compiler.
