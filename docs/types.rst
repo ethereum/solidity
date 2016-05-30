@@ -624,10 +624,10 @@ For convenience, it is not always necessary to explicitly specify the type of a
 variable, the compiler automatically infers it from the type of the first
 expression that is assigned to the variable::
 
-    uint20 x = 0x123;
+    uint24 x = 0x123;
     var y = x;
 
-Here, the type of ``y`` will be ``uint20``. Using ``var`` is not possible for function
+Here, the type of ``y`` will be ``uint24``. Using ``var`` is not possible for function
 parameters or return parameters.
 
 .. warning::
