@@ -24,6 +24,7 @@
 
 #include <string>
 #include <tuple>
+#include <fstream>
 #include "../TestHelper.h"
 #include <libethcore/ABI.h>
 #include <libethcore/SealEngine.h>
@@ -54,6 +55,33 @@ public:
 		if (g_logVerbosity != -1)
 			g_logVerbosity = 0;
 		//m_state.resetCurrent();
+		m_ipcSocket.open("/home/christian/.ethereum/geth.ipc");
+		rpcCall("personal_createAccount", {});
+	}
+
+	void rpcCall(std::string const& _methodName, std::vector<std::string> const& _args)
+	{
+		if (!m_ipcSocket)
+			BOOST_FAIL("Ethereum node unavailable.");
+		m_ipcSocket <<
+			"{\"jsonrpc\": \"2.0\", \"method\": \"" <<
+			_methodName <<
+			"\" \"params\": [";
+		for (size_t i = 0; i < _args.size(); ++i)
+		{
+			m_ipcSocket << "\"" << _args[i] << "\"";
+			if (i + 1 != _args.size())
+				m_ipcSocket << ", ";
+		}
+		m_ipcSocket << "], \"id\": \"" << m_rpcSequence << "\"}" << std::endl;
+		++m_rpcSequence;
+
+		if (!m_ipcSocket)
+			BOOST_FAIL("Ethereum node unavailable.");
+
+		std::string reply;
+		std::getline(m_ipcSocket, reply);
+		std::cout << "Reply: " << reply << std::endl;
 	}
 
 	bytes const& compileAndRunWithoutCheck(
@@ -291,6 +319,9 @@ protected:
 		m_output = std::move(res.output);
 		m_logs = executive.logs();
 	}
+
+	std::fstream m_ipcSocket;
+	size_t m_rpcSequence = 1;
 
 	std::unique_ptr<eth::SealEngineFace> m_sealEngine;
 	size_t m_optimizeRuns = 200;
