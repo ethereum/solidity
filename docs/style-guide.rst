@@ -163,7 +163,7 @@ Yes::
 
 No::
 
-    spam( ham[ 1 ], Coin( { name: "ham" } ) );`
+    spam( ham[ 1 ], Coin( { name: "ham" } ) );
 
 Immediately before a comma, semicolon:
 
@@ -221,11 +221,11 @@ No::
         }
     }
 
-The same recommendations apply to the control structures `if`, `else`, `while`,
-and `for`.
+The same recommendations apply to the control structures ``if``, ``else``, ``while``,
+and ``for``.
 
 Additionally there should be a single space between the control structures
-`if`, `while`, and `for` and the parenthetic block representing the
+``if``, ``while``, and ``for`` and the parenthetic block representing the
 conditional, as well as a single space between the conditional parenthetic
 block and the opening brace.
 
@@ -268,7 +268,7 @@ No::
             value: 42
         }));
 
-For `if` blocks which have an `else` or `else if` clause, the `else` should be
+For ``if`` blocks which have an ``else`` or ``else if`` clause, the ``else`` should be
 placed on it's own line following the previous closing parenthesis.  The
 parenthesis for the else block should follow the same rules as the other
 conditional control structures.

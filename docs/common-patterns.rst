@@ -17,7 +17,7 @@ to read the data, so will everyone else.
 
 You can restrict read access to your contract's state
 by **other contracts**. That is actually the default
-unless you declare make your state variables `public`.
+unless you declare make your state variables ``public``.
 
 Furthermore, you can restrict who can make modifications
 to your contract's state or call your contract's
@@ -140,11 +140,11 @@ Example
 =======
 
 In the following example,
-the modifier `atStage` ensures that the function can
+the modifier ``atStage`` ensures that the function can
 only be called at a certain stage.
 
 Automatic timed transitions
-are handled by the modifier `timeTransitions`, which
+are handled by the modifier ``timeTransitions``, which
 should be used for all functions.
 
 .. note::
@@ -154,7 +154,7 @@ should be used for all functions.
     it after the latter, so that the new stage is
     taken into account.
 
-Finally, the modifier `transitionNext` can be used
+Finally, the modifier ``transitionNext`` can be used
 to automatically go to the next stage when the
 function finishes.
 
