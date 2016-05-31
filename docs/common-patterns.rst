@@ -28,8 +28,6 @@ functions and this is what this page is about.
 The use of **function modifiers** makes these
 restrictions highly readable.
 
-.. {% include open_link gist="fe4ef267cbdeac151b98" %}
-
 ::
 
     contract AccessRestriction {
@@ -166,8 +164,6 @@ function finishes.
     can be skipped if the function itself uses
     return. If you want to do that, make sure
     to call nextStage manually from those functions.
-
-.. {% include open_link gist="0a221eaceb6d708bf271" %}
 
 ::
 
