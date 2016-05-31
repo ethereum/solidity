@@ -26,6 +26,7 @@
 #include <vector>
 #include <libevmasm/SourceLocation.h>
 #include <libsolidity/codegen/ArrayUtils.h>
+#include <libsolidity/ast/Types.h>
 
 namespace dev
 {

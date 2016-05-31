@@ -53,6 +53,8 @@ namespace solidity
 namespace test
 {
 
+using rational = boost::rational<dev::bigint>;
+
 class ExecutionFramework
 {
 
@@ -183,6 +185,12 @@ public:
 	static bytes encodeDyn(Arg const& _arg)
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
+	}
+	static u256 fixed(dev::bigint _numerator, dev::bigint _denominator, int _fixedBits)
+	{
+		rational _value = rational(dev::bigint(_numerator), dev::bigint(_denominator));
+		rational value = _value * boost::multiprecision::pow(bigint(2), _fixedBits);
+		return u256(value.numerator()/value.denominator());
 	}
 
 	class ContractInterface

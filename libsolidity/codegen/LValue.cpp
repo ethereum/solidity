@@ -179,9 +179,6 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 		m_context
 			<< Instruction::SWAP1 << Instruction::SLOAD << Instruction::SWAP1
 			<< u256(0x100) << Instruction::EXP << Instruction::SWAP1 << Instruction::DIV;
-		if (m_dataType->category() == Type::Category::FixedPoint)
-			// implementation should be very similar to the integer case.
-			solAssert(false, "Not yet implemented - FixedPointType.");
 		if (m_dataType->category() == Type::Category::FixedBytes)
 			m_context << (u256(0x1) << (256 - 8 * m_dataType->storageBytes())) << Instruction::MUL;
 		else if (
@@ -189,6 +186,12 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 			dynamic_cast<IntegerType const&>(*m_dataType).isSigned()
 		)
 			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;
+		else if (
+			m_dataType->category() == Type::Category::FixedPoint &&
+			dynamic_cast<FixedPointType const&>(*m_dataType).isSigned()
+		)
+			// implementation should be very similar to the integer case.
+			m_context << u256(m_dataType->storageBytes() - 1) << Instruction::SIGNEXTEND;		
 		else
 			m_context << ((u256(0x1) << (8 * m_dataType->storageBytes())) - 1) << Instruction::AND;
 	}
@@ -242,9 +245,17 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 					<< Instruction::DUP2
 					<< Instruction::MUL
 					<< Instruction::DIV;
-			else if (m_dataType->category() == Type::Category::FixedPoint)
+			else if (
+				m_dataType->category() == Type::Category::FixedPoint &&
+				dynamic_cast<FixedPointType const&>(*m_dataType).isSigned()
+			)
 				// implementation should be very similar to the integer case.
-				solAssert(false, "Not yet implemented - FixedPointType.");
+				m_context
+					<< (u256(1) << (8 * (32 - m_dataType->storageBytes())))
+					<< Instruction::SWAP1
+					<< Instruction::DUP2
+					<< Instruction::MUL
+					<< Instruction::DIV;
 			m_context  << Instruction::MUL << Instruction::OR;
 			// stack: value storage_ref updated_value
 			m_context << Instruction::SWAP1 << Instruction::SSTORE;

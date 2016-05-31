@@ -7075,6 +7075,351 @@ BOOST_AUTO_TEST_CASE(calling_nonexisting_contract_throws)
 	BOOST_CHECK(callContractFunction("h()") == encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(const_fixed_type_return)
+{
+	char const* sourceCode = R"(
+		contract C {
+			fixed public constant a = 3.5;
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(fixed(7,2,128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_explicit_conversion_shifting)
+{
+	char const* sourceCode = R"(
+		contract Test {
+			function A() returns (fixed a) {
+				a = fixed(1/3);
+			}
+			function B() returns (fixed0x248 b) {
+				b = fixed0x248(1/3);
+			}
+			function C() returns (fixed248x8 c) {
+				c = fixed248x8(1/3);
+			}
+			function D() returns (fixed8x248 d) {
+				d = fixed8x248(-0.125);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "Test");
+
+	BOOST_CHECK(callContractFunction("A()") == encodeArgs(fixed(1, 3, 128)));
+	BOOST_CHECK(callContractFunction("B()") == encodeArgs(fixed(1, 3, 248)));
+	BOOST_CHECK(callContractFunction("C()") == encodeArgs(fixed(1, 3, 8)));
+	BOOST_CHECK(callContractFunction("D()") == encodeArgs(fixed(-1, 8, 248)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_function_multi_return)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed a, fixed b, fixed c) {
+				(a, b, c) = (325.5, 450.25, 23924029.9375);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(
+		callContractFunction("f()") == encodeArgs(
+			fixed(651, 2, 128), 
+			fixed(1801, 4, 128), 
+			fixed(382784479, 16, 128)
+		)
+	);
+}
+
+BOOST_AUTO_TEST_CASE(negative_exponent)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed a) {
+				a = 2 ** -5;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(1, 32, 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_arguments)
+{
+	char const* sourceCode = R"(
+		contract B {
+			function callFixed(fixed a, fixed b) constant returns (fixed, fixed) {
+				return (a, b);
+			}
+		}
+
+		contract C {
+			B b = new B();
+			function f(fixed a, fixed b) returns (fixed, fixed) {
+				return (a, b);
+			}
+
+			function callFmem() returns (fixed a, fixed b) {
+				(a, b) = f(.25, .5);
+			}
+
+			function callDataloadB() returns (fixed a) {
+				(a, ) = b.callFixed(.5, .25);
+			}
+		}
+
+
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(fixed,fixed)", u256(fixed(1, 3, 128)), u256(fixed(1, 2, 128))) == encodeArgs(fixed(1, 3, 128), fixed(1, 2, 128)));
+}
+
+BOOST_AUTO_TEST_CASE(int_to_fixed_type)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint128 a) returns (ufixed b) {
+				b = a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint128)", u256(3)) == encodeArgs(fixed(3, 1, 128)));
+}
+
+BOOST_AUTO_TEST_CASE(boolean_operations_on_fixed_point){
+	char const* sourceCode = R"(
+		contract C {
+			function greater() returns (bool) {
+				ufixed a = 4.5;
+				uint128 b = 4;
+				if (a > b) {
+					return true;
+				}
+				return false;
+			}
+			function equal() returns (bool) {
+				ufixed a = 4;
+				uint128 b = 4;
+				if (b == a) {
+					return true;
+				}
+				return false;
+			}
+			function lessThan() returns (bool) {
+				ufixed a = 3.5;
+				uint128 b = 4;
+				if (a < b) {
+					return true;
+				}
+				return false;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("greater()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("equal()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("lessThan()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_addition)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function simpleAdd() returns (fixed) {
+				fixed a = 3.125;
+				fixed b = 2.5;
+				return (a + b);
+			}
+
+			function complexAdd() returns (fixed) {
+				fixed a = 3.125;
+				ufixed0x8 b = 0.5;
+				ufixed32x32 c = 35.25;
+				return (a + b + c);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("simpleAdd()") == encodeArgs(fixed(45, 8, 128)));
+	BOOST_CHECK(callContractFunction("complexAdd()") == encodeArgs(fixed(311, 8, 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_subtraction)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed) {
+				fixed a = 3.5;
+				fixed b = 32.25;
+				return (a - b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	cout << dev::fromBigEndian<u256>(callContractFunction("f()")) << endl;
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(-115, 4, 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function full() returns (ufixed) {
+				ufixed a = 55.5;
+				ufixed b = 2.25;
+				return (a * b);
+			}
+			function fullFractionSide() returns (ufixed0x256) {
+				ufixed0x256 a = ufixed0x256(2/9);
+				ufixed0x256 b = ufixed0x256(4/5);
+				return a * b;
+			}
+			function largerFractionSide() returns (ufixed32x192) {
+				ufixed32x192 a = ufixed24x184(8 + 1/3);
+				ufixed32x192 b = 3.5;
+				return a * b;
+			}
+			function largerIntSide() returns (ufixed184x32) {
+				ufixed184x24 a = 3000.125;
+				ufixed176x24 b = 2000.5;
+				return a * b;
+			}
+			function small() returns (ufixed16x32) {
+				ufixed0x8 a = 0.5;
+				ufixed16x32 b = 35.4609375;
+				return (a * b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	//because we don't have a decent rouding system implemented yet, this will have to do.
+	vector<uint8_t> fullFracBytes = {45,130,216,45,130,216,45,130,216,45,130,216,45,130,216,44,159,73,244,159,73,244,159,73,244,159,73,244,159,73,244,160};
+	vector<uint8_t> largeFracBytes = {0,0,0,0,0,0,0,29,42,170,170,170,170,170,170,170,170,170,170,170,127,255,255,255,255,255,255,255,255,255,255,0};
+	BOOST_CHECK(callContractFunction("full()") == encodeArgs(fixed(999, 8, 128)));
+	u256 a;
+	a = dev::fromBigEndian<u256>(callContractFunction("full()"));
+	cout << a << endl;
+    cout << "CAN YOU HEAR ME!?!?!?!" << endl;
+	BOOST_CHECK(callContractFunction("fullFractionSide()") == fullFracBytes);
+	BOOST_CHECK(callContractFunction("largerFractionSide()") == largeFracBytes);
+	BOOST_CHECK(callContractFunction("largerIntSide()") == encodeArgs(fixed(96028001, 16, 32)));
+	BOOST_CHECK(callContractFunction("small()") == encodeArgs(fixed(4539, 256, 32)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_division)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (fixed) {
+				fixed a = 42.125;
+				fixed b = 0.5;
+				return (a / b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(337,4,128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_modulus)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (ufixed) {
+				ufixed a = 2 % 1.25;
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(3, 4, 128)));
+}
+
+BOOST_AUTO_TEST_CASE(fixed_type_incrementing_decrementing)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function incPre() returns (ufixed) {
+				ufixed a = 1.25;
+				return ++a;
+			}
+			function decPre() returns (ufixed) {
+				ufixed a = 4.5;
+				return --a;
+			}
+			function incPost() returns (ufixed a) {
+				a = 1.25;
+				a++;
+				return a;
+			}
+			function decPost() returns (ufixed a) {
+				a = 4.5;
+				a--;
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("incPre()") == encodeArgs(fixed(9, 4, 128)));
+	BOOST_CHECK(callContractFunction("decPre()") == encodeArgs(fixed(7,2,128)));
+	BOOST_CHECK(callContractFunction("incPost()") == encodeArgs(fixed(9, 4, 128)));
+	BOOST_CHECK(callContractFunction("decPost()") == encodeArgs(fixed(7,2,128)));
+}
+
+BOOST_AUTO_TEST_CASE(var_and_fixed_one_third_equivalent)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bool) {
+				var a = 1/3;
+				ufixed0x256 b = ufixed0x256(1/3);
+				return (a == b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(for_and_while_loops_with_fixed) 
+{
+	char const* sourceCode = R"(
+		contract C {
+			function daWhile() returns (ufixed8x8) {
+				var i = 3.25;
+				while ( i < ufixed8x8(500/1)) {
+					i++;
+				}
+				return i;
+			}
+			function daFor() returns (ufixed8x8) {
+				for (var i = 3.25; i < ufixed8x8(500/1); i++) {
+					var j = i;
+				}
+				return i;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("daWhile()") == encodeArgs(fixed(977,4,8)));
+	BOOST_CHECK(callContractFunction("daFor()") == encodeArgs(fixed(977,4,8)));
+}
+
+BOOST_AUTO_TEST_CASE(inline_array_rationals_return)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (ufixed8x8[4]) {
+				ufixed8x8[4] memory a = [3.5, 4.125, 2.5, 4.0];
+				return a;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(7,2,8), fixed(33,8,8), fixed(5,2,8), fixed(4,1,8)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

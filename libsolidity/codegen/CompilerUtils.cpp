@@ -343,7 +343,6 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 		solAssert(targetTypeCategory == Type::Category::Integer || targetTypeCategory == Type::Category::Enum, "");
 		break;
 	case Type::Category::FixedPoint:
-		solAssert(false, "Not yet implemented - FixedPointType.");
 	case Type::Category::Integer:
 	case Type::Category::Contract:
 	case Type::Category::RationalNumber:
@@ -372,10 +371,36 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			);
 			//shift all integer bits onto the left side of the fixed type
 			FixedPointType const& targetFixedPointType = dynamic_cast<FixedPointType const&>(_targetType);
-			if (auto typeOnStack = dynamic_cast<IntegerType const*>(&_typeOnStack))
-				if (targetFixedPointType.integerBits() > typeOnStack->numBits())
-					cleanHigherOrderBits(*typeOnStack);
-			solAssert(false, "Not yet implemented - FixedPointType.");
+			if (auto intType = dynamic_cast<IntegerType const*>(&_typeOnStack))
+			{
+				if (targetFixedPointType.integerBits() > intType->numBits())
+					cleanHigherOrderBits(*intType);
+				u256 shiftFactor = u256(1) << (targetFixedPointType.fractionalBits());
+				m_context << shiftFactor << Instruction::MUL;
+			}
+			else if (auto rationalType = dynamic_cast<RationalNumberType const*>(&_typeOnStack))
+			{
+				if (
+					(
+						targetFixedPointType.integerBits() > rationalType->fixedPointType()->integerBits() || 
+						targetFixedPointType.fractionalBits() > rationalType->fixedPointType()->fractionalBits()
+					) && _cleanupNeeded
+				)
+					cleanHigherOrderBits(targetFixedPointType);
+				fixedPointShifting(*rationalType->fixedPointType(), targetFixedPointType);
+			}
+			else 
+			{
+				FixedPointType const& stackFixedType = dynamic_cast<FixedPointType const&>(_typeOnStack);
+				if (
+					targetFixedPointType.integerBits() > stackFixedType.integerBits() || 
+					targetFixedPointType.fractionalBits() > stackFixedType.fractionalBits()
+				)
+					cleanHigherOrderBits(stackFixedType);
+				else if (_cleanupNeeded)
+					cleanHigherOrderBits(targetFixedPointType);
+				fixedPointShifting(stackFixedType, targetFixedPointType);
+			}
 		}
 		else
 		{
@@ -821,6 +846,34 @@ void CompilerUtils::cleanHigherOrderBits(IntegerType const& _typeOnStack)
 		m_context << u256(_typeOnStack.numBits() / 8 - 1) << Instruction::SIGNEXTEND;
 	else
 		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << Instruction::AND;
+}
+
+void CompilerUtils::cleanHigherOrderBits(FixedPointType const& _typeOnStack)
+{
+	if (_typeOnStack.numBits() == 256)
+		return;
+	else if (_typeOnStack.isSigned())
+		m_context << u256(_typeOnStack.numBits() / 8 - 1) << Instruction::SIGNEXTEND;
+	else
+		m_context << ((u256(1) << _typeOnStack.numBits()) - 1) << Instruction::AND;
+}
+
+void CompilerUtils::fixedPointShifting(FixedPointType const& _stackType, FixedPointType const& _targetType)
+{
+	u256 shiftFactor;
+	int targetFractionalBits = _targetType.fractionalBits();
+	int stackFractionalBits = _stackType.fractionalBits();
+
+	if (stackFractionalBits > targetFractionalBits)
+	{
+		shiftFactor = (u256(1) << (stackFractionalBits - targetFractionalBits));
+		m_context << shiftFactor << Instruction::SWAP1 << Instruction::DIV;
+	}
+	else if (stackFractionalBits < targetFractionalBits)
+	{
+		shiftFactor = (u256(1) << (targetFractionalBits - stackFractionalBits));
+		m_context << shiftFactor << Instruction::MUL;
+	}
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const

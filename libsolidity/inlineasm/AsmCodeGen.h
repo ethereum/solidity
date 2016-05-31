@@ -55,7 +55,7 @@ public:
 	bool typeCheck(IdentifierAccess const& _identifierAccess = IdentifierAccess());
 	/// Performs code generation and @returns the result.
 	eth::Assembly assemble(IdentifierAccess const& _identifierAccess = IdentifierAccess());
-	/// Performs code generation and appends generated to to _assembly.
+	/// Performs code generation and appends generated to _assembly.
 	void assemble(eth::Assembly& _assembly, IdentifierAccess const& _identifierAccess = IdentifierAccess());
 
 private:
