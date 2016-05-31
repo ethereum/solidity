@@ -86,6 +86,12 @@ and to send Ether (in units of wei) to an address using the ``send`` function:
 .. note::
     If ``x`` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the ``send`` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted. In this case, ``send`` returns ``false``.
 
+.. warning::
+    There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1023
+    (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
+    to make safe Ether transfers, always check the return value of ``send`` or even better:
+    Use a pattern where the recipient withdraws the money.
+
 * ``call``, ``callcode`` and ``delegatecall``
 
 Furthermore, to interface with contracts that do not adhere to the ABI,
