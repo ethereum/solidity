@@ -121,6 +121,8 @@ Address Related
 ``<address>.send(uint256 amount) returns (bool)``:
     send given amount of Wei to address, returns ``false`` on failure
 
+For more information, see the section on :ref:`address`.
+
 .. warning::
     Since it is possible for calls to ``send`` to fail, such as
     if there are insufficient funds, it is good practice to
