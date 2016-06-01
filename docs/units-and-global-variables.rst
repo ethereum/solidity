@@ -124,9 +124,10 @@ Address Related
 For more information, see the section on :ref:`address`.
 
 .. warning::
-    Since it is possible for calls to ``send`` to fail, such as
-    if there are insufficient funds, it is good practice to
-    check the return value whenever calling ``send``.
+    There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1023
+    (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
+    to make safe Ether transfers, always check the return value of ``send`` or even better:
+    Use a pattern where the recipient withdraws the money.
 
 .. index:: this, selfdestruct
 
