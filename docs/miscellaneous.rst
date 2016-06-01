@@ -156,7 +156,7 @@ Unfortunately, there are some subtleties the compiler does not yet warn you abou
   2. Sending Ether can fail due to the call depth going above 1024. Since the caller is in total control of the call
      depth, they can force the transfer to fail, so make sure to always check the return value of ``send``. Better yet,
      write your contract using a pattern where the recipient can withdraw Ether instead.
-  2. Sending Ether can also fail because the recipient goes out of gas (either explicitly by using ``throw`` or
+  3. Sending Ether can also fail because the recipient goes out of gas (either explicitly by using ``throw`` or
      because the operation is just too expensive). If the return value of ``send`` is checked, this might provide a
      means for the recipient to block progress in the sending contract. Again, the best practise here is to use
      a "withdraw" pattern instead of a "send" pattern.
