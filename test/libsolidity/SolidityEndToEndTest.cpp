@@ -6793,6 +6793,25 @@ BOOST_AUTO_TEST_CASE(cleanup_bytes_types)
 	BOOST_CHECK(callContractFunction("f(bytes2,uint16)", string("abc"), u256(0x040102)) == encodeArgs(0));
 }
 
+BOOST_AUTO_TEST_CASE(skip_dynamic_types)
+{
+	// The EVM cannot provide access to dynamically-sized return values, so we have to skip them.
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint, uint[], uint) {
+				return (7, new uint[](2), 8);
+			}
+			function g() returns (uint, uint) {
+				// Previous implementation "moved" b to the second place and did not skip.
+				var (a, _, b) = this.f();
+				return (a, b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(7), u256(8)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
