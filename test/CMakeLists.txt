@@ -40,7 +40,7 @@ foreach(file ${SRC_LIST})
 	endforeach(test_raw)
 endforeach(file)
 
-file(GLOB HEADERS "*.h")
+file(GLOB HEADERS "*.h" "*/*.h")
 set(EXECUTABLE soltest)
 eth_simple_add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
