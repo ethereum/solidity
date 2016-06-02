@@ -72,7 +72,7 @@ Members of Addresses
 
 * ``balance`` and ``send``
 
-For a quick reference, see :ref:`balance` and :ref:`send`.
+For a quick reference, see :ref:`address_related`.
 
 It is possible to query the balance of an address using the property ``balance``
 and to send Ether (in units of wei) to an address using the ``send`` function:
