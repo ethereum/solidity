@@ -117,11 +117,9 @@ Address Related
 ---------------
 
 ``<address>.balance`` (``uint256``):
-    balance of the address in Wei
+    balance of the :ref:`address` in Wei
 ``<address>.send(uint256 amount) returns (bool)``:
-    send given amount of Wei to address, returns ``false`` on failure
-
-For more information, see the section on :ref:`address`.
+    send given amount of Wei to :ref:`address`, returns ``false`` on failure
 
 .. warning::
     There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1023
