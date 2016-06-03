@@ -36,13 +36,11 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     # OpenSUSE, Fedora, Arch Linux, Raspian, FreeBSD, etc.
 
     # Add additional PPAs which we need to be able to build cpp-ethereum on
-    # Ubuntu Trusty.  That includes our own PPAs, a PPA for getting CMake 3.x
-    # on Trusty, and the repository for LLVM.
+    # Ubuntu Trusty.  That includes our own PPAs and a PPA for getting CMake 3.x
+    # on Trusty.
     sudo add-apt-repository -y ppa:ethereum/ethereum
     sudo add-apt-repository -y ppa:ethereum/ethereum-dev
     sudo apt-add-repository -y ppa:george-edison55/cmake-3.x
-    sudo add-apt-repository -y "deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.7 main"
-    wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
     sudo apt-get -y update
 
     # Install binaries for nearly all of our dependencies
