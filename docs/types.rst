@@ -393,7 +393,7 @@ possible:
     }
 
 It is planned to remove this restriction in the future but currently creates
-some complications because of how arryes are passed in the ABI.
+some complications because of how arrays are passed in the ABI.
 
 .. index:: ! array;length, length, push, !array;push
 
