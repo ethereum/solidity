@@ -76,7 +76,7 @@ to compile Solidity on Ubuntu 16.04 (Xenial Xerus).
 
 One of the dependencies (Crypto++ Library, with version >= 5.6.2) can be
 installed either by adding the Ethereum PPA (Option 1) or by backporting
-``libcrypto++`` from Ubuntu Development to Ubuntu Xenial
+``libcrypto++`` from Ubuntu Development to Ubuntu Xenial (Option 2).
 
 .. note::
 
