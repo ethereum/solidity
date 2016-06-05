@@ -68,8 +68,30 @@ Set up Homebrew:
     brew install llvm --HEAD --with-clang
     brew install qt5 --with-d-bus          # add --verbose if long waits with a stale screen drive you crazy as well
 
-Ubuntu 16.04
-------------
+Ubuntu Trusty (14.04)
+---------------------
+
+Below are the instructions to install the minimal dependencies required
+to compile Solidity on Ubuntu 14.04 (Trusty Tahr).
+
+.. note::
+
+    These dependencies are not enough to compile the GUIs (Alethzero and Mix).
+
+.. code-block:: bash
+
+    sudo apt-get -y install build-essential git cmake libgmp-dev libboost-all-dev \
+        libjsoncpp-dev libleveldb-dev libcurl4-openssl-dev libminiupnpc-dev \
+        libmicrohttpd-dev
+    
+    sudo add-apt-repository -y ppa:ethereum/ethereum
+    sudo add-apt-repository -y ppa:ethereum/ethereum-dev
+    sudo apt-get -y update
+    sudo apt-get -y upgrade # this will update cmake to version 3.x
+    sudo apt-get -y install libcryptopp-dev libjson-rpc-cpp-dev
+
+Ubuntu Xenial (16.04)
+---------------------
 
 Below are the instructions to install the minimal dependencies required
 to compile Solidity on Ubuntu 16.04 (Xenial Xerus).
@@ -80,7 +102,7 @@ installed either by adding the Ethereum PPA (Option 1) or by backporting
 
 .. note::
 
-    These dependencies are not enough to compile the GUIs (Alethzero and Mix)
+    These dependencies are not enough to compile the GUIs (Alethzero and Mix).
 
 .. code-block:: bash
 
