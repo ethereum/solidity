@@ -2154,6 +2154,8 @@ BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
 			function f(uint) returns (string);
 			function g() {
 				var (x,) = this.f(2);
+				// we can assign to x but it is not usable.
+				bytes(x).length;
 			}
 		}
 	)";

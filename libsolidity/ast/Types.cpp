@@ -2037,29 +2037,20 @@ FunctionTypePointer FunctionType::asMemberFunction(bool _inLibrary, bool _bound)
 			location = Location::DelegateCall;
 	}
 
-	TypePointers returnParameterTypes;
-	vector<string> returnParameterNames;
-	if (location == Location::Internal)
+	TypePointers returnParameterTypes = m_returnParameterTypes;
+	if (location != Location::Internal)
 	{
-		returnParameterNames = m_returnParameterNames;
-		returnParameterTypes = m_returnParameterTypes;
-	}
-	else
-	{
-		// Removes dynamic types.
-		for (size_t i = 0; i < m_returnParameterTypes.size(); ++i)
-			if (!m_returnParameterTypes[i]->isDynamicallySized())
-			{
-				returnParameterTypes.push_back(m_returnParameterTypes[i]);
-				returnParameterNames.push_back(m_returnParameterNames[i]);
-			}
+		// Alter dynamic types to be non-accessible.
+		for (auto& param: returnParameterTypes)
+			if (param->isDynamicallySized())
+				param = make_shared<InaccessibleDynamicType>();
 	}
 
 	return make_shared<FunctionType>(
 		parameterTypes,
 		returnParameterTypes,
 		m_parameterNames,
-		returnParameterNames,
+		m_returnParameterNames,
 		location,
 		m_arbitraryParameters,
 		m_declaration,
