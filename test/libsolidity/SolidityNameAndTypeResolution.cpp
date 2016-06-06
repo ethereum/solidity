@@ -544,6 +544,21 @@ BOOST_AUTO_TEST_CASE(redeclare_implemented_abstract_function_as_abstract)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(implement_abstract_via_constructor)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract base { function foo(); }
+		contract foo is base { function foo() {} }
+	)";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseAndAnalyse(text), "Parsing and name resolving failed");
+	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->nodes();
+	BOOST_CHECK_EQUAL(nodes.size(), 2);
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	BOOST_CHECK(derived);
+	BOOST_CHECK(!derived->annotation().isFullyImplemented);
+}
+
 BOOST_AUTO_TEST_CASE(function_canonical_signature)
 {
 	ASTPointer<SourceUnit> sourceUnit;
