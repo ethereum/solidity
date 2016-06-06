@@ -32,7 +32,7 @@ using namespace dev;
 using namespace dev::solidity;
 
 
-bool TypeChecker::checkTypeRequirements(const ContractDefinition& _contract)
+bool TypeChecker::checkTypeRequirements(ContractDefinition const& _contract)
 {
 	try
 	{
@@ -174,6 +174,9 @@ void TypeChecker::checkContractAbstractFunctions(ContractDefinition const& _cont
 	for (ContractDefinition const* contract: boost::adaptors::reverse(_contract.annotation().linearizedBaseContracts))
 		for (FunctionDefinition const* function: contract->definedFunctions())
 		{
+			// Take constructors out of overload hierarchy
+			if (function->isConstructor())
+				continue;
 			auto& overloads = functions[function->name()];
 			FunctionTypePointer funType = make_shared<FunctionType>(*function);
 			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
