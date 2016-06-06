@@ -530,6 +530,12 @@ public:
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	std::vector<ASTPointer<ModifierInvocation>> const& modifiers() const { return m_functionModifiers; }
 	std::vector<ASTPointer<VariableDeclaration>> const& returnParameters() const { return m_returnParameters->parameters(); }
+
+	bool bodyIsNull () const
+	{
+		return nullptr == m_body;
+	}
+
 	Block const& body() const { return *m_body; }
 
 	virtual bool isVisibleInContract() const override
