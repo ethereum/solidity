@@ -775,8 +775,24 @@ void ContractCompiler::appendMissingFunctions()
 void ContractCompiler::appendModifierOrFunctionCode()
 {
 	solAssert(m_currentFunction, "");
-	if (m_modifierDepth >= m_currentFunction->modifiers().size())
-		m_currentFunction->body().accept(*this);
+
+#if 1
+	if (m_modifierDepth >= m_currentFunction->modifiers().size()){
+		if (false == m_currentFunction->bodyIsNull ()){
+			const Block &aBlock =m_currentFunction->body();
+			aBlock.accept(*this);
+		}
+		else{
+			// std::cout << "bodyIsNull" << std::endl;
+		}
+	}
+#else
+	// this crash anyway
+	if ((m_modifierDepth >= m_currentFunction->modifiers().size()) && (false == m_currentFunction->bodyIsNull ())){
+		const Block &aBlock =m_currentFunction->body();
+		aBlock.accept(*this);
+	}
+#endif
 	else
 	{
 		ASTPointer<ModifierInvocation> const& modifierInvocation = m_currentFunction->modifiers()[m_modifierDepth];
