@@ -48,22 +48,22 @@ namespace and are mainly used to provide information about the blockchain.
 
 
 Block and Transaction Properties
-------------------------------------
+--------------------------------
 
- - ``block.coinbase`` (``address``): current block miner's address
- - ``block.difficulty`` (``uint``): current block difficulty
- - ``block.gaslimit`` (``uint``): current block gaslimit
- - ``block.number`` (``uint``): current block number
- - ``block.blockhash`` (``function(uint) returns (bytes32)``): hash of the given block - only for 256 most recent blocks
- - ``block.timestamp`` (``uint``): current block timestamp
- - ``msg.data`` (``bytes``): complete calldata
- - ``msg.gas`` (``uint``): remaining gas
- - ``msg.sender`` (``address``): sender of the message (current call)
- - ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
- - ``msg.value`` (``uint``): number of wei sent with the message
- - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
- - ``tx.gasprice`` (``uint``): gas price of the transaction
- - ``tx.origin`` (``address``): sender of the transaction (full call chain)
+- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
+- ``block.coinbase`` (``address``): current block miner's address
+- ``block.difficulty`` (``uint``): current block difficulty
+- ``block.gaslimit`` (``uint``): current block gaslimit
+- ``block.number`` (``uint``): current block number
+- ``block.timestamp`` (``uint``): current block timestamp
+- ``msg.data`` (``bytes``): complete calldata
+- ``msg.gas`` (``uint``): remaining gas
+- ``msg.sender`` (``address``): sender of the message (current call)
+- ``msg.sig`` (``bytes4``): first four bytes of the calldata (i.e. function identifier)
+- ``msg.value`` (``uint``): number of wei sent with the message
+- ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
+- ``tx.gasprice`` (``uint``): gas price of the transaction
+- ``tx.origin`` (``address``): sender of the transaction (full call chain)
 
 .. note::
     The values of all members of ``msg``, including ``msg.sender`` and
@@ -89,12 +89,12 @@ Mathematical and Cryptographic Functions
 ``mulmod(uint x, uint y, uint k) returns (uint)``:
     compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``.
 ``sha3(...) returns (bytes32)``:
-    compute the Ethereum-SHA-3 hash of the (tightly packed) arguments
+    compute the Ethereum-SHA-3 (KECCAK-256) hash of the (tightly packed) arguments
 ``sha256(...) returns (bytes32)``:
     compute the SHA-256 hash of the (tightly packed) arguments
 ``ripemd160(...) returns (bytes20)``:
     compute RIPEMD-160 hash of the (tightly packed) arguments
-``ecrecover(bytes32 data, uint8 v, bytes32 r, bytes32 s) returns (address)``:
+``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``:
     recover the address associated with the public key from elliptic curve signature
 
 In the above, "tightly packed" means that the arguments are concatenated without padding.
@@ -111,6 +111,24 @@ same as ``sha3(uint16(0x12))``.
 
 It might be that you run into Out-of-Gas for ``sha256``, ``ripemd160`` or ``ecrecover`` on a *private blockchain*. The reason for this is that those are implemented as so-called precompiled contracts and these contracts only really exist after they received the first message (although their contract code is hardcoded). Messages to non-existing contracts are more expensive and thus the execution runs into an Out-of-Gas error. A workaround for this problem is to first send e.g. 1 Wei to each of the contracts before you use them in your actual contracts. This is not an issue on the official or test net.
 
+.. _address_related:
+
+Address Related
+---------------
+
+``<address>.balance`` (``uint256``):
+    balance of the :ref:`address` in Wei
+``<address>.send(uint256 amount) returns (bool)``:
+    send given amount of Wei to :ref:`address`, returns ``false`` on failure
+
+For more information, see the section on :ref:`address`.
+
+.. warning::
+    There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
+    (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
+    to make safe Ether transfers, always check the return value of ``send`` or even better:
+    Use a pattern where the recipient withdraws the money.
+
 .. index:: this, selfdestruct
 
 Contract Related
@@ -119,7 +137,7 @@ Contract Related
 ``this`` (current contract's type):
     the current contract, explicitly convertible to :ref:`address`
 
-``selfdestruct(address)``:
+``selfdestruct(address recipient)``:
     destroy the current contract, sending its funds to the given :ref:`address`
 
 Furthermore, all functions of the current contract are callable directly including the current function.

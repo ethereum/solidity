@@ -72,6 +72,8 @@ Members of Addresses
 
 * ``balance`` and ``send``
 
+For a quick reference, see :ref:`address_related`.
+
 It is possible to query the balance of an address using the property ``balance``
 and to send Ether (in units of wei) to an address using the ``send`` function:
 
@@ -84,6 +86,12 @@ and to send Ether (in units of wei) to an address using the ``send`` function:
 .. note::
     If ``x`` is a contract address, its code (more specifically: its fallback function, if present) will be executed together with the ``send`` call (this is a limitation of the EVM and cannot be prevented). If that execution runs out of gas or fails in any way, the Ether transfer will be reverted. In this case, ``send`` returns ``false``.
 
+.. warning::
+    There are some dangers in using ``send``: The transfer fails if the call stack depth is at 1024
+    (this can always be forced by the caller) and it also fails if the recipient runs out of gas. So in order
+    to make safe Ether transfers, always check the return value of ``send`` or even better:
+    Use a pattern where the recipient withdraws the money.
+
 * ``call``, ``callcode`` and ``delegatecall``
 
 Furthermore, to interface with contracts that do not adhere to the ABI,
@@ -95,7 +103,7 @@ the function ``call`` is provided which takes an arbitrary number of arguments o
     nameReg.call("register", "MyName");
     nameReg.call(bytes4(sha3("fun(uint256)")), a);
 
-``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (`false:code:`). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
+``call`` returns a boolean indicating whether the invoked function terminated (``true``) or caused an EVM exception (``false``). It is not possible to access the actual data returned (for this we would need to know the encoding and size in advance).
 
 In a similar way, the function ``delegatecall`` can be used: The difference is that only the code of the given address is used, all other aspects (storage, balance, ...) are taken from the current contract. The purpose of ``delegatecall`` is to use library code which is stored in another contract. The user has to ensure that the layout of storage in both contracts is suitable for delegatecall to be used. Prior to homestead, only a limited variant called ``callcode`` was available that did not provide access to the original ``msg.sender`` and ``msg.value`` values.
 
@@ -616,10 +624,10 @@ For convenience, it is not always necessary to explicitly specify the type of a
 variable, the compiler automatically infers it from the type of the first
 expression that is assigned to the variable::
 
-    uint20 x = 0x123;
+    uint24 x = 0x123;
     var y = x;
 
-Here, the type of ``y`` will be ``uint20``. Using ``var`` is not possible for function
+Here, the type of ``y`` will be ``uint24``. Using ``var`` is not possible for function
 parameters or return parameters.
 
 .. warning::

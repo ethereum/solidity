@@ -148,6 +148,26 @@ Pitfalls
 Unfortunately, there are some subtleties the compiler does not yet warn you about.
 
 - In ``for (var i = 0; i < arrayName.length; i++) { ... }``, the type of ``i`` will be ``uint8``, because this is the smallest type that is required to hold the value ``0``. If the array has more than 255 elements, the loop will not terminate.
+- If a contract receives Ether (without a function being called), the fallback function is executed. The contract can only rely
+  on the "gas stipend" (2300 gas) being available to it at that time. This stipend is not enough to access storage in any way.
+  To be sure that your contract can receive Ether in that way, check the gas requirements of the fallback function.
+- If you want to send ether using ``address.send``, there are certain details to be aware of:
+
+  1. If the recipient is a contract, it causes its fallback function to be executed which can in turn call back into the sending contract
+  2. Sending Ether can fail due to the call depth going above 1024. Since the caller is in total control of the call
+     depth, they can force the transfer to fail, so make sure to always check the return value of ``send``. Better yet,
+     write your contract using a pattern where the recipient can withdraw Ether instead.
+  3. Sending Ether can also fail because the recipient goes out of gas (either explicitly by using ``throw`` or
+     because the operation is just too expensive). If the return value of ``send`` is checked, this might provide a
+     means for the recipient to block progress in the sending contract. Again, the best practise here is to use
+     a "withdraw" pattern instead of a "send" pattern.
+
+- Loops that do not have a fixed number of iterations, e.g. loops that depends on storage values, have to be used carefully:
+  Due to the block gas limit, transactions can only consume a certain amount of gas. Either explicitly or just due to
+  normal operation, the number of iterations in a loop can grow beyond the block gas limit, which can cause the complete
+  contract to be stalled at a certain point. This does not apply at full extent to ``constant`` functions that are only executed
+  to read data from the blockchain. Still, such functions may be called by other contracts as part of on-chain operations
+  and stall those. Please be explicit about such cases in the documentation of your contracts.
 
 **********
 Cheatsheet
@@ -158,11 +178,11 @@ Cheatsheet
 Global Variables
 ================
 
+- ``block.blockhash(uint blockNumber) returns (bytes32)``: hash of the given block - only works for 256 most recent blocks
 - ``block.coinbase`` (``address``): current block miner's address
 - ``block.difficulty`` (``uint``): current block difficulty
 - ``block.gaslimit`` (``uint``): current block gaslimit
 - ``block.number`` (``uint``): current block number
-- ``block.blockhash`` (``function(uint) returns (bytes32)``): hash of the given block - only works for 256 most recent blocks
 - ``block.timestamp`` (``uint``): current block timestamp
 - ``msg.data`` (``bytes``): complete calldata
 - ``msg.gas`` (``uint``): remaining gas
@@ -171,17 +191,17 @@ Global Variables
 - ``now`` (``uint``): current block timestamp (alias for ``block.timestamp``)
 - ``tx.gasprice`` (``uint``): gas price of the transaction
 - ``tx.origin`` (``address``): sender of the transaction (full call chain)
-- ``sha3(...) returns (bytes32)``: compute the Ethereum-SHA3 hash of the (tightly packed) arguments
-- ``sha256(...) returns (bytes32)``: compute the SHA256 hash of the (tightly packed) arguments
-- ``ripemd160(...) returns (bytes20)``: compute RIPEMD of 256 the (tightly packed) arguments
-- ``ecrecover(bytes32, uint8, bytes32, bytes32) returns (address)``: recover address associated with the public key from elliptic curve signature
-- ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``.
-- ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``.
+- ``sha3(...) returns (bytes32)``: compute the Ethereum-SHA-3 (KECCAK-256) hash of the (tightly packed) arguments
+- ``sha256(...) returns (bytes32)``: compute the SHA-256 hash of the (tightly packed) arguments
+- ``ripemd160(...) returns (bytes20)``: compute the RIPEMD-160 hash of the (tightly packed) arguments
+- ``ecrecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) returns (address)``: recover address associated with the public key from elliptic curve signature
+- ``addmod(uint x, uint y, uint k) returns (uint)``: compute ``(x + y) % k`` where the addition is performed with arbitrary precision and does not wrap around at ``2**256``
+- ``mulmod(uint x, uint y, uint k) returns (uint)``: compute ``(x * y) % k`` where the multiplication is performed with arbitrary precision and does not wrap around at ``2**256``
 - ``this`` (current contract's type): the current contract, explicitly convertible to ``address``
 - ``super``: the contract one level higher in the inheritance hierarchy
-- ``selfdestruct(address)``: destroy the current contract, sending its funds to the given address
-- ``<address>.balance``: balance of the address in Wei
-- ``<address>.send(uint256) returns (bool)``: send given amount of Wei to address, returns ``false`` on failure.
+- ``selfdestruct(address recipient)``: destroy the current contract, sending its funds to the given address
+- ``<address>.balance`` (``uint256``): balance of the address in Wei
+- ``<address>.send(uint256 amount) returns (bool)``: send given amount of Wei to address, returns ``false`` on failure
 
 .. index:: visibility, public, private, external, internal
 
