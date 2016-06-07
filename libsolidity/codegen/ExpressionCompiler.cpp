@@ -1406,8 +1406,7 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 		break;
 	case Token::SHR:
-		m_context << Instruction::SWAP1 << u256(2) << Instruction::EXP << Instruction::DIV;
-		break;
+		// This is the >>> operator, which we disable here.
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown shift operator."));
 	}
