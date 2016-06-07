@@ -45,7 +45,7 @@ struct SourceLocation
 		end(_other.end),
 		sourceName(std::move(_other.sourceName))
 	{}
-	SourceLocation(SourceLocation const& _other) = default;
+	SourceLocation(SourceLocation const&) = default;
 	SourceLocation& operator=(SourceLocation const&) = default;
 	SourceLocation& operator=(SourceLocation&& _other) noexcept
 	{
