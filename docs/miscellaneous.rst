@@ -108,7 +108,7 @@ Using ``solc --help`` provides you with an explanation of all options. The compi
 If you only want to compile a single file, you run it as ``solc --bin sourceFile.sol`` and it will print the binary. Before you deploy your contract, activate the optimizer while compiling using ``solc --optimize --bin sourceFile.sol``. If you want to get some of the more advanced output variants of ``solc``, it is probably better to tell it to output everything to separate files using ``solc -o outputDirectory --bin --ast --asm sourceFile.sol``.
 
 The commandline compiler will automatically read imported files from the filesystem, but
-it is also possible to provide path redirects using ``prefix=path`` in the following way:
+it is also possible to provide path redirects using ``context:prefix=path`` in the following way:
 
 ::
 
@@ -120,6 +120,10 @@ find the file there, it will look at ``/usr/local/lib/fallback`` (the empty pref
 always matches). ``solc`` will not read files from the filesystem that lie outside of
 the remapping targets and outside of the directories where explicitly specified source
 files reside, so things like ``import "/etc/passwd";`` only work if you add ``=/`` as a remapping.
+
+You can restrict remappings to only certain source files by prefixing a context.
+
+The section on :ref:`import` provides more details on remappings.
 
 If there are multiple matches due to remappings, the one with the longest common prefix is selected.
 

@@ -63,6 +63,24 @@ CompilerStack::CompilerStack(bool _addStandardSources, ReadFileCallback const& _
 		addSources(StandardSources, true); // add them as libraries
 }
 
+void CompilerStack::setRemappings(vector<string> const& _remappings)
+{
+	vector<Remapping> remappings;
+	for (auto const& remapping: _remappings)
+	{
+		auto eq = find(remapping.begin(), remapping.end(), '=');
+		if (eq == remapping.end())
+			continue; // ignore
+		auto colon = find(remapping.begin(), eq, ':');
+		Remapping r;
+		r.context = colon == eq ? string() : string(remapping.begin(), colon);
+		r.prefix = colon == eq ? string(remapping.begin(), eq) : string(colon + 1, eq);
+		r.target = string(eq + 1, remapping.end());
+		remappings.push_back(r);
+	}
+	swap(m_remappings, remappings);
+}
+
 void CompilerStack::reset(bool _keepSources, bool _addStandardSources)
 {
 	m_parseSuccessful = false;
@@ -384,35 +402,70 @@ tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocati
 	return make_tuple(++startLine, ++startColumn, ++endLine, ++endColumn);
 }
 
-StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _path)
+StringMap CompilerStack::loadMissingSources(SourceUnit const& _ast, std::string const& _sourcePath)
 {
 	StringMap newSources;
 	for (auto const& node: _ast.nodes())
 		if (ImportDirective const* import = dynamic_cast<ImportDirective*>(node.get()))
 		{
-			string path = absolutePath(import->path(), _path);
-			import->annotation().absolutePath = path;
-			if (m_sources.count(path) || newSources.count(path))
+			string importPath = absolutePath(import->path(), _sourcePath);
+			// The current value of `path` is the absolute path as seen from this source file.
+			// We first have to apply remappings before we can store the actual absolute path
+			// as seen globally.
+			importPath = applyRemapping(importPath, _sourcePath);
+			import->annotation().absolutePath = importPath;
+			if (m_sources.count(importPath) || newSources.count(importPath))
 				continue;
-			string contents;
-			string errorMessage;
-			if (!m_readFile)
-				errorMessage = "File not supplied initially.";
+
+			ReadFileResult result{false, string("File not supplied initially.")};
+			if (m_readFile)
+				result = m_readFile(importPath);
+
+			if (result.success)
+				newSources[importPath] = result.contentsOrErrorMesage;
 			else
-				tie(contents, errorMessage) = m_readFile(path);
-			if (!errorMessage.empty())
 			{
 				auto err = make_shared<Error>(Error::Type::ParserError);
 				*err <<
 					errinfo_sourceLocation(import->location()) <<
-					errinfo_comment("Source not found: " + errorMessage);
+					errinfo_comment("Source \"" + importPath + "\" not found: " + result.contentsOrErrorMesage);
 				m_errors.push_back(std::move(err));
 				continue;
 			}
-			else
-				newSources[path] = contents;
 		}
 	return newSources;
+}
+
+string CompilerStack::applyRemapping(string const& _path, string const& _context)
+{
+	// Try to find the longest prefix match in all remappings that are active in the current context.
+	auto isPrefixOf = [](string const& _a, string const& _b)
+	{
+		if (_a.length() > _b.length())
+			return false;
+		return std::equal(_a.begin(), _a.end(), _b.begin());
+	};
+
+	size_t longestPrefix = 0;
+	string longestPrefixTarget;
+	for (auto const& redir: m_remappings)
+	{
+		// Skip if we already have a closer match.
+		if (longestPrefix > 0 && redir.prefix.length() <= longestPrefix)
+			continue;
+		// Skip if redir.context is not a prefix of _context
+		if (!isPrefixOf(redir.context, _context))
+			continue;
+		// Skip if the prefix does not match.
+		if (!isPrefixOf(redir.prefix, _path))
+			continue;
+
+		longestPrefix = redir.prefix.length();
+		longestPrefixTarget = redir.target;
+	}
+	string path = longestPrefixTarget;
+	path.append(_path.begin() + longestPrefix, _path.end());
+	return path;
 }
 
 void CompilerStack::resolveImports()
