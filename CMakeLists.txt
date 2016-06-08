@@ -35,7 +35,7 @@ if (NOT EMSCRIPTEN)
 	add_subdirectory(lllc)
 endif()
 
-if (TESTS AND NOT EMSCRIPTEN)
+if (TESTS AND NOT EMSCRIPTEN AND NOT WIN32)
 	add_subdirectory(test)
 endif()
 
