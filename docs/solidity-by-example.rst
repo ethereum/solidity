@@ -108,7 +108,7 @@ of votes.
             // `to` also delegated.
             // In general, such loops are very dangerous,
             // because if they run too long, they might
-            // need more gas that is available in a block.
+            // need more gas than is available in a block.
             // In this case, the delegation will not be executed,
             // but in other situations, such loops might
             // cause a contract to get "stuck" completely.
