@@ -275,7 +275,7 @@ public:
 		return Value(op + (BitOr - AssignBitOr));
 	}
 
-	static bool isBitOp(Value op) { return (BitOr <= op && op <= SHR) || op == BitNot; }
+	static bool isBitOp(Value op) { return (BitOr <= op && op <= BitAnd) || op == BitNot; }
 	static bool isBooleanOp(Value op) { return (Or <= op && op <= And) || op == Not; }
 	static bool isUnaryOp(Value op) { return (Not <= op && op <= Delete) || op == Add || op == Sub || op == After; }
 	static bool isCountOp(Value op) { return op == Inc || op == Dec; }

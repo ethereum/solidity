@@ -1360,6 +1360,8 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator)
 		break;
 	case Token::SAR:
 		break;
+	case Token::SHR:
+		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown shift operator."));
 	}
