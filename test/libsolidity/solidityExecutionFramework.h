@@ -26,6 +26,7 @@
 #include <tuple>
 #include <fstream>
 #include "../TestHelper.h"
+#include "../IPCSocket.h"
 #include <libethcore/ABI.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/State.h>
@@ -46,43 +47,27 @@ namespace test
 
 class ExecutionFramework
 {
+
 public:
 	ExecutionFramework():
-		m_state(0)
+		m_state(0),
+		m_socket("/home/wins/Ethereum/testnet/ethnode1/geth.ipc")
+		//m_socket("/media/www/STUFF/Ethereum/testnet/ethnode1/datadir/geth.ipc")
 	{
 		eth::NoProof::init();
 		m_sealEngine.reset(eth::ChainParams().createSealEngine());
 		if (g_logVerbosity != -1)
 			g_logVerbosity = 0;
-		//m_state.resetCurrent();
-		m_ipcSocket.open("/home/christian/.ethereum/geth.ipc");
-		rpcCall("personal_createAccount", {});
-	}
 
-	void rpcCall(std::string const& _methodName, std::vector<std::string> const& _args)
-	{
-		if (!m_ipcSocket)
-			BOOST_FAIL("Ethereum node unavailable.");
-		m_ipcSocket <<
-			"{\"jsonrpc\": \"2.0\", \"method\": \"" <<
-			_methodName <<
-			"\" \"params\": [";
-		for (size_t i = 0; i < _args.size(); ++i)
-		{
-			m_ipcSocket << "\"" << _args[i] << "\"";
-			if (i + 1 != _args.size())
-				m_ipcSocket << ", ";
-		}
-		m_ipcSocket << "], \"id\": \"" << m_rpcSequence << "\"}" << std::endl;
-		++m_rpcSequence;
-
-		if (!m_ipcSocket)
-			BOOST_FAIL("Ethereum node unavailable.");
-
-		std::string reply;
-		std::getline(m_ipcSocket, reply);
-		std::cout << "Reply: " << reply << std::endl;
-	}
+		string account = m_socket.personal_newAccount("qwerty");
+		m_socket.test_setChainParams(
+					"0x1000000000000000000000000000000000000000",
+					 account,
+					"1000000000000000000000000000000000000000000000"
+					);
+		m_socket.personal_unlockAccount(account, "qwerty", 10000);
+		m_sender = Address(account);
+	}	
 
 	bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
@@ -284,44 +269,38 @@ private:
 protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
-		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, m_envInfo, m_sealEngine.get());
-		eth::ExecutionResult res;
-		executive.setResultRecipient(res);
-		eth::Transaction t =
-			_isCreation ?
-				eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec()) :
-				eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
-		bytes transactionRLP = t.rlp();
-		try
-		{
-			// this will throw since the transaction is invalid, but it should nevertheless store the transaction
-			executive.initialize(&transactionRLP);
-			executive.execute();
-		}
-		catch (...) {}
+		RPCRequest::transactionData d;
+		d.data = "0x" + toHex(_data);
+		d.from = "0x" + toString(m_sender);
+		d.gas = toHex(m_gas, HexPrefix::Add);
+		d.gasPrice = toHex(m_gasPrice, HexPrefix::Add);
+		d.value = toHex(_value, HexPrefix::Add);
+		if (_isCreation)
+			d.to = "";
+		else
+			d.to = dev::toString(m_contractAddress);
+
+		string code = m_socket.eth_getCode(d.to, "latest");
+		string output = m_socket.eth_call(d, "latest");
+		string hash = m_socket.eth_sendTransaction(d);
+		m_socket.test_mineBlocks(1);
+		RPCRequest::transactionReceipt receipt;
+		receipt = m_socket.eth_getTransactionReceipt(hash);
+
 		if (_isCreation)
 		{
-			BOOST_REQUIRE(!executive.create(m_sender, _value, m_gasPrice, m_gas, &_data, m_sender));
-			m_contractAddress = executive.newAddress();
+			m_contractAddress = Address(receipt.contractAddress);
 			BOOST_REQUIRE(m_contractAddress);
-			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
+			string code = m_socket.eth_getCode(receipt.contractAddress, "latest");
+			BOOST_REQUIRE(code.size() > 2);
 		}
-		else
-		{
-			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-			BOOST_REQUIRE(!executive.call(m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas));
-		}
-		BOOST_REQUIRE(executive.go(/* DEBUG eth::Executive::simpleTrace() */));
-		m_state.noteSending(m_sender);
-		executive.finalize();
-		m_gasUsed = res.gasUsed;
-		m_output = std::move(res.output);
-		m_logs = executive.logs();
-	}
+		else	
+			BOOST_REQUIRE(code.size() > 2);
 
-	std::fstream m_ipcSocket;
-	size_t m_rpcSequence = 1;
+		m_gasUsed = u256(receipt.gasUsed);
+		m_output = fromHex(output, WhenError::Throw);
+		m_logs.clear();
+	}
 
 	std::unique_ptr<eth::SealEngineFace> m_sealEngine;
 	size_t m_optimizeRuns = 200;
@@ -337,6 +316,8 @@ protected:
 	bytes m_output;
 	eth::LogEntries m_logs;
 	u256 m_gasUsed;
+
+	RPCRequest m_socket;
 };
 
 }
