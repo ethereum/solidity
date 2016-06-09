@@ -20,7 +20,7 @@
  * Unit tests for the gas estimator.
  */
 
-#include <test/libsolidity/solidityExecutionFramework.h>
+#include <test/libsolidity/SolidityExecutionFramework.h>
 #include <libevmasm/GasMeter.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/PathGasMeter.h>

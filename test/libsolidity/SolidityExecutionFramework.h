@@ -39,7 +39,6 @@
 
 namespace dev
 {
-
 namespace solidity
 {
 namespace test
@@ -49,24 +48,7 @@ class ExecutionFramework
 {
 
 public:
-	ExecutionFramework():
-		m_state(0),
-		m_socket("/tmp/test/geth.ipc")
-	{
-		eth::NoProof::init();
-		m_sealEngine.reset(eth::ChainParams().createSealEngine());
-		if (g_logVerbosity != -1)
-			g_logVerbosity = 0;
-
-		string account = m_socket.personal_newAccount("qwerty");
-		m_socket.test_setChainParams(
-			"0x1000000000000000000000000000000000000000",
-			 account,
-			"1000000000000000000000000000000000000000000000"
-		);
-		m_socket.personal_unlockAccount(account, "qwerty", 10000);
-		m_sender = Address(account);
-	}	
+	ExecutionFramework();
 
 	bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
@@ -267,40 +249,9 @@ private:
 	}
 
 protected:
-	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
-	{
-		RPCRequest::transactionData d;
-		d.data = "0x" + toHex(_data);
-		d.from = "0x" + toString(m_sender);
-		d.gas = toHex(m_gas, HexPrefix::Add);
-		d.gasPrice = toHex(m_gasPrice, HexPrefix::Add);
-		d.value = toHex(_value, HexPrefix::Add);
-		if (_isCreation)
-			d.to = "";
-		else
-			d.to = dev::toString(m_contractAddress);
+	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
 
-		string code = m_socket.eth_getCode(d.to, "latest");
-		string output = m_socket.eth_call(d, "latest");
-		string hash = m_socket.eth_sendTransaction(d);
-		m_socket.test_mineBlocks(1);
-		RPCRequest::transactionReceipt receipt;
-		receipt = m_socket.eth_getTransactionReceipt(hash);
-
-		if (_isCreation)
-		{
-			m_contractAddress = Address(receipt.contractAddress);
-			BOOST_REQUIRE(m_contractAddress);
-			string code = m_socket.eth_getCode(receipt.contractAddress, "latest");
-			BOOST_REQUIRE(code.size() > 2);
-		}
-		else	
-			BOOST_REQUIRE(code.size() > 2);
-
-		m_gasUsed = u256(receipt.gasUsed);
-		m_output = fromHex(output, WhenError::Throw);
-		m_logs.clear();
-	}
+	RPCSession& m_rpc;
 
 	std::unique_ptr<eth::SealEngineFace> m_sealEngine;
 	size_t m_optimizeRuns = 200;
@@ -316,8 +267,6 @@ protected:
 	bytes m_output;
 	eth::LogEntries m_logs;
 	u256 m_gasUsed;
-
-	RPCRequest m_socket;
 };
 
 }

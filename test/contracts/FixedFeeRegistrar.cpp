@@ -33,7 +33,7 @@
 #endif
 
 #include <libdevcore/Hash.h>
-#include <test/libsolidity/solidityExecutionFramework.h>
+#include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;
 

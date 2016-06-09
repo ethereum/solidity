@@ -22,12 +22,17 @@
 #include <string>
 #include <stdio.h>
 #include <thread>
+#include <libdevcore/CommonData.h>
+#include <jsoncpp/json/reader.h>
+#include <jsoncpp/json/writer.h>
 #include "IPCSocket.h"
-using namespace std;
 
-IPCSocket::IPCSocket(string const& _path): m_address(_path)
+using namespace std;
+using namespace dev;
+
+IPCSocket::IPCSocket(string const& _path): m_path(_path)
 {
-	if (_path.length() > 108)
+	if (_path.length() >= sizeof(sockaddr_un::sun_path))
 		BOOST_FAIL("Error opening IPC: socket path is too long!");
 
 	struct sockaddr_un saun;
@@ -61,70 +66,60 @@ string IPCSocket::sendRequest(string const& _req)
 	return response;
 }
 
-string RPCRequest::eth_getCode(string const& _address, string const& _blockNumber)
+RPCSession& RPCSession::instance(const string& _path)
 {
-	return getReply("result\":", rpcCall("eth_getCode", { makeString(_address), makeString(_blockNumber) }));
+	static RPCSession session(_path);
+	BOOST_REQUIRE_EQUAL(session.m_ipcSocket.path(), _path);
+	return session;
 }
 
-RPCRequest::transactionReceipt RPCRequest::eth_getTransactionReceipt(string const& _transactionHash)
+string RPCSession::eth_getCode(string const& _address, string const& _blockNumber)
 {
-	transactionReceipt receipt;
-	string srpcCall = rpcCall("eth_getTransactionReceipt", { makeString(_transactionHash) });
-	receipt.gasUsed = getReply("gasUsed\":" , srpcCall);
-	receipt.contractAddress = getReply("contractAddress\":" , srpcCall);
+	return rpcCall("eth_getCode", { quote(_address), quote(_blockNumber) }).asString();
+}
+
+RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string const& _transactionHash)
+{
+	TransactionReceipt receipt;
+	Json::Value const result = rpcCall("eth_getTransactionReceipt", { quote(_transactionHash) });
+	BOOST_REQUIRE(!result.isNull());
+	receipt.gasUsed = result["gasUsed"].asString();
+	receipt.contractAddress = result["contractAddress"].asString();
 	return receipt;
 }
 
-string RPCRequest::eth_sendTransaction(transactionData const& _td)
+string RPCSession::eth_sendTransaction(TransactionData const& _td)
 {
-	string transaction = c_transaction;
-	std::map<string, string> replaceMap;
-	replaceMap["[FROM]"] = (_td.from.length() == 20) ? "0x" + _td.from : _td.from;
-	replaceMap["[TO]"] = (_td.to.length() == 20 || _td.to == "") ? "0x" + _td.to :  _td.to;
-	replaceMap["[GAS]"] = _td.gas;
-	replaceMap["[GASPRICE]"] = _td.gasPrice;
-	replaceMap["[VALUE]"] = _td.value;
-	replaceMap["[DATA]"] = _td.data;
-	parseString(transaction, replaceMap);
-	return getReply("result\":", rpcCall("eth_sendTransaction", { transaction }));
+	return rpcCall("eth_sendTransaction", { _td.toJson() }).asString();
 }
 
-string RPCRequest::eth_call(transactionData const& _td, string const& _blockNumber)
+string RPCSession::eth_call(TransactionData const& _td, string const& _blockNumber)
 {
-	string transaction = c_transaction;
-	std::map<string, string> replaceMap;
-	replaceMap["[FROM]"] = (_td.from.length() == 20) ? "0x" + _td.from : _td.from;
-	replaceMap["[TO]"] = (_td.to.length() == 20 || _td.to == "") ? "0x" + _td.to : _td.to;
-	replaceMap["[GAS]"] = _td.gas;
-	replaceMap["[GASPRICE]"] = _td.gasPrice;
-	replaceMap["[VALUE]"] = _td.value;
-	replaceMap["[DATA]"] = _td.data;
-	parseString(transaction, replaceMap);
-	return getReply("result\":", rpcCall("eth_call", { transaction, makeString(_blockNumber) }));
+	return rpcCall("eth_call", { _td.toJson(), quote(_blockNumber) }).asString();
 }
 
-string RPCRequest::eth_sendTransaction(string const& _transaction)
+string RPCSession::eth_sendTransaction(string const& _transaction)
 {
-	return getReply("result\":", rpcCall("eth_sendTransaction", { _transaction }));
+	return rpcCall("eth_sendTransaction", { _transaction }).asString();
 }
 
-string RPCRequest::eth_getBalance(string const& _address, string const& _blockNumber)
+string RPCSession::eth_getBalance(string const& _address, string const& _blockNumber)
 {
 	string address = (_address.length() == 20) ? "0x" + _address : _address;
-	return getReply("result\":", rpcCall("eth_getBalance", { makeString(address), makeString(_blockNumber) }));
+	return rpcCall("eth_getBalance", { quote(address), quote(_blockNumber) }).asString();
 }
 
-void RPCRequest::personal_unlockAccount(string const& _address, string const& _password, int _duration)
+void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
-	rpcCall("personal_unlockAccount", { makeString(_address), makeString(_password), to_string(_duration) });
+	rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) });
 }
 
-string RPCRequest::personal_newAccount(string const& _password)
+string RPCSession::personal_newAccount(string const& _password)
 {
-	return getReply("result\":", rpcCall("personal_newAccount", { makeString(_password) }));
+	return rpcCall("personal_newAccount", { quote(_password) }).asString();
 }
 
-void RPCRequest::test_setChainParams(string const& _author, string const& _account, string const& _balance)
+void RPCSession::test_setChainParams(string const& _author, string const& _account, string const& _balance)
 {
 	if (_account.size() < 40)
 		return;
@@ -137,18 +132,44 @@ void RPCRequest::test_setChainParams(string const& _author, string const& _accou
 	test_setChainParams(config);
 }
 
-void RPCRequest::test_setChainParams(string const& _config)
+void RPCSession::test_setChainParams(string const& _config)
 {
 	rpcCall("test_setChainParams", { _config });
 }
 
-void RPCRequest::test_mineBlocks(int _number)
+void RPCSession::test_rewindToBlock(size_t _blockNr)
 {
-	rpcCall("test_mineBlocks", { to_string(_number) });
-	std::this_thread::sleep_for(chrono::seconds(1));
+	rpcCall("test_rewindToBlock", { to_string(_blockNr) });
 }
 
-string RPCRequest::rpcCall(string const& _methodName, vector<string> const& _args)
+void RPCSession::test_mineBlocks(int _number)
+{
+	// Extremely complicated mechanism because sometimes the miner breaks and stops mining.
+	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+	u256 currentBlock = startBlock;
+	u256 targetBlock = startBlock + _number;
+	cout << "A" << endl;
+	for (size_t tries = 0; tries < 3 && startBlock < targetBlock; ++tries)
+	{
+		if (currentBlock == startBlock)
+		{
+			cout << "MINE" << endl;
+			rpcCall("test_mineBlocks", { (targetBlock - startBlock).str() }, true);
+		}
+		cout << "WOIT" << endl;
+		startBlock = currentBlock;
+		//@TODO do not use polling - but that would probably need a change to the test client
+		for (size_t polls = 0; polls < 10; ++polls)
+		{
+			currentBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+			if (currentBlock >= targetBlock)
+				return;
+			std::this_thread::sleep_for(chrono::milliseconds(1));
+		}
+	}
+}
+
+Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
 {
 	string request = "{\"jsonrpc\":\"2.0\",\"method\":\"" + _methodName + "\",\"params\":[";
 	for (size_t i = 0; i < _args.size(); ++i)
@@ -162,12 +183,39 @@ string RPCRequest::rpcCall(string const& _methodName, vector<string> const& _arg
 	++m_rpcSequence;
 
 	string reply = m_ipcSocket.sendRequest(request);
-	//cout << "Request: " << request << endl;
-	//cout << "Reply: " << reply << endl;
-	return reply;
+
+	cout << "Request: " << request << endl;
+	cout << "Reply: " << reply << endl;
+
+	Json::Value result;
+	Json::Reader().parse(reply, result, false);
+
+	if (result.isMember("error"))
+	{
+		if (_canFail)
+			return Json::Value();
+		BOOST_FAIL("Error on JSON-RPC call: " + result["error"].asString());
+	}
+	return result["result"];
 }
 
-void RPCRequest::parseString(string& _string, map<string, string> const& _varMap)
+RPCSession::RPCSession(const string& _path):
+	m_ipcSocket(_path)
+{
+	for (size_t i = 0; i < 1; ++i)
+	{
+		string account = personal_newAccount("");
+		personal_unlockAccount(account, "", 100000);
+		m_accounts.push_back(account);
+	}
+	test_setChainParams(
+		"0x1000000000000000000000000000000000000000",
+		m_accounts.front(),
+		"1000000000000000000000000000000000000000000000"
+	);
+}
+
+void RPCSession::parseString(string& _string, map<string, string> const& _varMap)
 {
 	std::vector<string> types;
 	for (std::map<std::string, std::string>::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)
@@ -184,15 +232,16 @@ void RPCRequest::parseString(string& _string, map<string, string> const& _varMap
 	}
 }
 
-string RPCRequest::getReply(string const& _what, string const& _arg)
+
+string RPCSession::TransactionData::toJson() const
 {
-	string reply = "";
-	size_t posStart = _arg.find(_what);
-	size_t posEnd = _arg.find(",", posStart);
-	if (posEnd == string::npos)
-		posEnd = _arg.find("}", posStart);
-	if (posStart != string::npos)
-		reply = _arg.substr(posStart + _what.length(), posEnd - posStart - _what.length());
-	reply.erase(std::remove(reply.begin(), reply.end(), '"'), reply.end());
-	return reply;
+	Json::Value json;
+	json["from"] = (from.length() == 20) ? "0x" + from : from;
+	json["to"] = (to.length() == 20 || to == "") ? "0x" + to :  to;
+	json["gas"] = gas;
+	json["gasprice"] = gasPrice;
+	json["value"] = value;
+	json["data"] = data;
+	return Json::FastWriter().write(json);
+
 }

@@ -25,70 +25,76 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <jsoncpp/json/value.h>
 #include <boost/test/unit_test.hpp>
 
-using namespace std;
-
-class IPCSocket
+class IPCSocket: public boost::noncopyable
 {
 public:
-	IPCSocket(string const& _address);
-	string sendRequest(string const& _req);
+	IPCSocket(std::string const& _path);
+	std::string sendRequest(std::string const& _req);
 	~IPCSocket() { close(m_socket); fclose(m_fp); }
 
-	static IPCSocket& instance();
+	std::string const& path() const { return m_path; }
 
 private:
 	FILE *m_fp;
-	string m_address;
+	std::string m_path;
 	int m_socket;
 
 };
 
-class RPCRequest
+class RPCSession: public boost::noncopyable
 {
 public:
-	struct transactionData
+	struct TransactionData
 	{
-		string from;
-		string to;
-		string gas;
-		string gasPrice;
-		string value;
-		string data;
+		std::string from;
+		std::string to;
+		std::string gas;
+		std::string gasPrice;
+		std::string value;
+		std::string data;
+
+		std::string toJson() const;
 	};
 
 	struct TransactionReceipt
 	{
-		string gasUsed;
-		string contractAddress;
+		std::string gasUsed;
+		std::string contractAddress;
 	};
 
-	RPCRequest(string const& _localSocketAddress): m_ipcSocket(_localSocketAddress) {}
-	string eth_getCode(string const& _address, string const& _blockNumber);
-	string eth_call(transactionData const& _td, string const& _blockNumber);
-	TransactionReceipt eth_getTransactionReceipt(string const& _transactionHash);
-	string eth_sendTransaction(transactionData const& _transactionData);
-	string eth_sendTransaction(string const& _transaction);
-	string eth_getBalance(string const& _address, string const& _blockNumber);
-	string personal_newAccount(string const& _password);
-	void personal_unlockAccount(string const& _address, string const& _password, int _duration);
-	void test_setChainParams(string const& _author, string const& _account, string const& _balance);
-	void test_setChainParams(string const& _config);
+	static RPCSession& instance(std::string const& _path);
+
+	std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
+	std::string eth_call(TransactionData const& _td, std::string const& _blockNumber);
+	TransactionReceipt eth_getTransactionReceipt(std::string const& _transactionHash);
+	std::string eth_sendTransaction(TransactionData const& _transactionData);
+	std::string eth_sendTransaction(std::string const& _transaction);
+	std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
+	std::string personal_newAccount(std::string const& _password);
+	void personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration);
+	void test_setChainParams(std::string const& _author, std::string const& _account, std::string const& _balance);
+	void test_setChainParams(std::string const& _config);
+	void test_rewindToBlock(size_t _blockNr);
 	void test_mineBlocks(int _number);
-	string rpcCall(string const& _methodName, vector<string> const& _args);
+	Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);
+
+	std::string const& account(size_t _id) const { return m_accounts.at(_id); }
 
 private:
-	inline string makeString(string const& _arg) { return "\"" + _arg + "\""; }
-	inline string getReply(string const& _what, string const& _arg);
-	/// Parse string replacing keywords to values
-	void parseString(string& _string, map<string, string> const& _varMap);
+	RPCSession(std::string const& _path);
+
+	inline std::string quote(std::string const& _arg) { return "\"" + _arg + "\""; }
+	/// Parse std::string replacing keywords to values
+	void parseString(std::string& _string, std::map<std::string, std::string> const& _varMap);
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
 
 	//Just working example of the node configuration file
-	string const c_genesisConfiguration = R"(
+	std::string const c_genesisConfiguration = R"(
 	{
 		"sealEngine": "NoProof",
 		"options": {
@@ -97,7 +103,8 @@ private:
 			"accountStartNonce": "0x",
 			"maximumExtraDataSize": "0x1000000",
 			"blockReward": "0x",
-			"registrar": ""
+			"registrar": "",
+			"allowFutureBlocks": "1"
 		},
 		"genesis": {
 			"author": "[AUTHOR]",
@@ -120,15 +127,6 @@ private:
 	}
 	)";
 
-	string const c_transaction = R"(
-	{
-		"from": "[FROM]",
-		"to": "[TO]",
-		"gas": "[GAS]",
-		"gasPrice": "[GASPRICE]",
-		"value": "[VALUE]",
-		"data": "[DATA]"
-	}
-	)";
+	std::vector<std::string> m_accounts;
 };
 

@@ -1,28 +1,10 @@
 cmake_policy(SET CMP0015 NEW)
 
 aux_source_directory(. SRC_LIST)
+aux_source_directory(contracts SRC_LIST)
+aux_source_directory(libsolidity SRC_LIST)
 
 get_filename_component(TESTS_DIR "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
-
-macro (add_sources)
-	file (RELATIVE_PATH _relPath ${TESTS_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-	foreach (_src ${ARGN})
-		if (_relPath)
-			list (APPEND SRC "${_relPath}/${_src}")
-		else()
-			list (APPEND SRC "${_src}")
-		endif()
-	endforeach()
-	if (_relPath)
-		# propagate SRCS to parent directory
-		set (SRC ${SRC} PARENT_SCOPE)
-	endif()
-endmacro()
-
-add_subdirectory(contracts)
-add_subdirectory(libsolidity)
-
-set(SRC_LIST ${SRC_LIST} ${SRC})
 
 # search for test names and create ctest tests
 enable_testing()
