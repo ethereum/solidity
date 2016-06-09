@@ -51,8 +51,7 @@ class ExecutionFramework
 public:
 	ExecutionFramework():
 		m_state(0),
-		m_socket("/home/wins/Ethereum/testnet/ethnode1/geth.ipc")
-		//m_socket("/media/www/STUFF/Ethereum/testnet/ethnode1/datadir/geth.ipc")
+		m_socket("/tmp/test/geth.ipc")
 	{
 		eth::NoProof::init();
 		m_sealEngine.reset(eth::ChainParams().createSealEngine());
@@ -61,10 +60,10 @@ public:
 
 		string account = m_socket.personal_newAccount("qwerty");
 		m_socket.test_setChainParams(
-					"0x1000000000000000000000000000000000000000",
-					 account,
-					"1000000000000000000000000000000000000000000000"
-					);
+			"0x1000000000000000000000000000000000000000",
+			 account,
+			"1000000000000000000000000000000000000000000000"
+		);
 		m_socket.personal_unlockAccount(account, "qwerty", 10000);
 		m_sender = Address(account);
 	}	
@@ -124,7 +123,8 @@ public:
 			"Computed values do not match.\nSolidity: " +
 				toHex(solidityResult) +
 				"\nC++:      " +
-				toHex(cppResult));
+				toHex(cppResult)
+		);
 	}
 
 	template <class CppFunction, class... Args>

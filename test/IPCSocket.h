@@ -36,6 +36,8 @@ public:
 	string sendRequest(string const& _req);
 	~IPCSocket() { close(m_socket); fclose(m_fp); }
 
+	static IPCSocket& instance();
+
 private:
 	FILE *m_fp;
 	string m_address;
@@ -56,7 +58,7 @@ public:
 		string data;
 	};
 
-	struct transactionReceipt
+	struct TransactionReceipt
 	{
 		string gasUsed;
 		string contractAddress;
@@ -65,7 +67,7 @@ public:
 	RPCRequest(string const& _localSocketAddress): m_ipcSocket(_localSocketAddress) {}
 	string eth_getCode(string const& _address, string const& _blockNumber);
 	string eth_call(transactionData const& _td, string const& _blockNumber);
-	transactionReceipt eth_getTransactionReceipt(string const& _transactionHash);
+	TransactionReceipt eth_getTransactionReceipt(string const& _transactionHash);
 	string eth_sendTransaction(transactionData const& _transactionData);
 	string eth_sendTransaction(string const& _transaction);
 	string eth_getBalance(string const& _address, string const& _blockNumber);
