@@ -130,6 +130,7 @@ Contents
    solidity-by-example.rst
    solidity-in-depth.rst
    security-considerations.rst
+   using-the-compiler.rst
    style-guide.rst
    common-patterns.rst
    contributing.rst
