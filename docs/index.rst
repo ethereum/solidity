@@ -92,6 +92,7 @@ Contents
    installing-solidity.rst
    solidity-by-example.rst
    solidity-in-depth.rst
+   using-the-compiler.rst
    style-guide.rst
    common-patterns.rst
    frequently-asked-questions.rst
