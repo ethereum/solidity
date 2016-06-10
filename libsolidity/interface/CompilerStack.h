@@ -75,14 +75,22 @@ enum class DocumentationType: uint8_t
 class CompilerStack: boost::noncopyable
 {
 public:
-	/// File reading callback, should return a pair of content and error message (exactly one nonempty)
-	/// for a given path.
-	using ReadFileCallback = std::function<std::pair<std::string, std::string>(std::string const&)>;
+	struct ReadFileResult
+	{
+		bool success;
+		std::string contentsOrErrorMesage;
+	};
+
+	/// File reading callback.
+	using ReadFileCallback = std::function<ReadFileResult(std::string const&)>;
 
 	/// Creates a new compiler stack.
 	/// @param _readFile callback to used to read files for import statements. Should return
 	/// @param _addStandardSources Adds standard sources if @a _addStandardSources.
 	explicit CompilerStack(bool _addStandardSources = true, ReadFileCallback const& _readFile = ReadFileCallback());
+
+	/// Sets path remappings in the format "context:prefix=target"
+	void setRemappings(std::vector<std::string> const& _remappings);
 
 	/// Resets the compiler to a state where the sources are not parsed or even removed.
 	void reset(bool _keepSources = false, bool _addStandardSources = true);
@@ -209,6 +217,7 @@ private:
 	/// @a m_readFile and stores the absolute paths of all imports in the AST annotations.
 	/// @returns the newly loaded sources.
 	StringMap loadMissingSources(SourceUnit const& _ast, std::string const& _path);
+	std::string applyRemapping(std::string const& _path, std::string const& _context);
 	void resolveImports();
 	/// Checks whether there are libraries with the same name, reports that as an error and
 	/// @returns false in this case.
@@ -226,7 +235,17 @@ private:
 	Contract const& contract(std::string const& _contractName = "") const;
 	Source const& source(std::string const& _sourceName = "") const;
 
+	struct Remapping
+	{
+		std::string context;
+		std::string prefix;
+		std::string target;
+	};
+
 	ReadFileCallback m_readFile;
+	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
+	/// "context:prefix=target"
+	std::vector<Remapping> m_remappings;
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;

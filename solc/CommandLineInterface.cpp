@@ -318,36 +318,31 @@ void CommandLineInterface::readInputFilesAndConfigureRemappings()
 		}
 	}
 	else
-		for (string const& infile: m_args["input-file"].as<vector<string>>())
+		for (string path: m_args["input-file"].as<vector<string>>())
 		{
-			auto eq = find(infile.begin(), infile.end(), '=');
-			if (eq != infile.end())
-			{
-				string target(eq + 1, infile.end());
-				m_remappings.push_back(make_pair(string(infile.begin(), eq), target));
-				m_allowedDirectories.push_back(boost::filesystem::path(target).remove_filename());
-			}
+			auto eq = find(path.begin(), path.end(), '=');
+			if (eq != path.end())
+				path = string(eq + 1, path.end());
 			else
 			{
-				auto path = boost::filesystem::path(infile);
-				if (!boost::filesystem::exists(path))
+				auto infile = boost::filesystem::path(path);
+				if (!boost::filesystem::exists(infile))
 				{
 					cerr << "Skipping non existant input file \"" << infile << "\"" << endl;
 					continue;
 				}
 
-				if (!boost::filesystem::is_regular_file(path))
+				if (!boost::filesystem::is_regular_file(infile))
 				{
 					cerr << "\"" << infile << "\" is not a valid file. Skipping" << endl;
 					continue;
 				}
 
-				m_sourceCodes[path.string()] = dev::contentsString(path.string());
-				m_allowedDirectories.push_back(boost::filesystem::canonical(path).remove_filename());
+				m_sourceCodes[infile.string()] = dev::contentsString(infile.string());
+				path = boost::filesystem::canonical(infile).string();
 			}
+			m_allowedDirectories.push_back(boost::filesystem::path(path).remove_filename());
 		}
-	// Add empty remapping to try the path itself.
-	m_remappings.push_back(make_pair(string(), string()));
 }
 
 bool CommandLineInterface::parseLibraryOption(string const& _input)
@@ -534,67 +529,42 @@ bool CommandLineInterface::processInput()
 		return link();
 	}
 
-	function<pair<string,string>(string const&)> fileReader = [this](string const& _path)
+	CompilerStack::ReadFileCallback fileReader = [this](string const& _path)
 	{
-		// Try to find the longest prefix match in all remappings. At the end, there will bean
-		// empty remapping so that we also try the path itself, but any file should be either
-		// in (a subdirectory of) the directory of an explicit source or a remapping target.
-		int errorLevel = 0;
-		size_t longestPrefix = 0;
-		string bestMatchPath;
-		for (auto const& redir: m_remappings)
+		auto boostPath = boost::filesystem::path(_path);
+		if (!boost::filesystem::exists(boostPath))
+			return CompilerStack::ReadFileResult{false, "File not found."};
+		boostPath = boost::filesystem::canonical(boostPath);
+		bool isAllowed = false;
+		for (auto const& allowedDir: m_allowedDirectories)
 		{
-			auto const& virt = redir.first;
-			if (longestPrefix > 0 && virt.length() <= longestPrefix)
-				continue;
-			if (virt.length() > _path.length() || !std::equal(virt.begin(), virt.end(), _path.begin()))
-				continue;
-			string path = redir.second;
-			path.append(_path.begin() + virt.length(), _path.end());
-			auto boostPath = boost::filesystem::path(path);
-			if (!boost::filesystem::exists(boostPath))
+			// If dir is a prefix of boostPath, we are fine.
+			if (
+				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(boostPath.begin(), boostPath.end()) &&
+				std::equal(allowedDir.begin(), allowedDir.end(), boostPath.begin())
+			)
 			{
-				errorLevel = max(errorLevel, 0);
-				continue;
-			}
-			boostPath = boost::filesystem::canonical(boostPath);
-			bool isAllowed = false;
-			for (auto const& dir: m_allowedDirectories)
-			{
-				// If dir is a prefix of boostPath, we are fine.
-				if (
-					std::distance(dir.begin(), dir.end()) <= std::distance(boostPath.begin(), boostPath.end()) &&
-					std::equal(dir.begin(), dir.end(), boostPath.begin())
-				)
-				{
-					isAllowed = true;
-					break;
-				}
-			}
-			if (!isAllowed)
-				errorLevel = max(errorLevel, 2);
-			else if (!boost::filesystem::is_regular_file(boostPath))
-				errorLevel = max(errorLevel, 1);
-			else
-			{
-				longestPrefix = virt.length();
-				bestMatchPath = path;
+				isAllowed = true;
+				break;
 			}
 		}
-		if (!bestMatchPath.empty())
-			return make_pair(m_sourceCodes[bestMatchPath] = dev::contentsString(bestMatchPath), string());
-		if (errorLevel == 0)
-			return make_pair(string(), string("File not found."));
-		else if (errorLevel == 1)
-			return make_pair(string(), string("Not a valid file."));
+		if (!isAllowed)
+			return CompilerStack::ReadFileResult{false, "File outside of allowed directories."};
+		else if (!boost::filesystem::is_regular_file(boostPath))
+			return CompilerStack::ReadFileResult{false, "Not a valid file."};
 		else
-			return make_pair(string(), string("File outside of allowed directories."));
+		{
+			auto contents = dev::contentsString(boostPath.string());
+			m_sourceCodes[boostPath.string()] = contents;
+			return CompilerStack::ReadFileResult{true, contents};
+		}
 	};
 
 	m_compiler.reset(new CompilerStack(m_args.count(g_argAddStandard) > 0, fileReader));
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
 	{
+		m_compiler->setRemappings(m_args["input-file"].as<vector<string>>());
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		// TODO: Perhaps we should not compile unless requested

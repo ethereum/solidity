@@ -142,6 +142,28 @@ BOOST_AUTO_TEST_CASE(name_clash_in_import)
 	BOOST_CHECK(c.compile());
 }
 
+BOOST_AUTO_TEST_CASE(remappings)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"s=s_1.4.6", "t=Tee"});
+	c.addSource("a", "import \"s/s.sol\"; contract A is S {}");
+	c.addSource("b", "import \"t/tee.sol\"; contract A is Tee {} ");
+	c.addSource("s_1.4.6/s.sol", "contract S {}");
+	c.addSource("Tee/tee.sol", "contract Tee {}");
+	BOOST_CHECK(c.compile());
+}
+
+BOOST_AUTO_TEST_CASE(context_dependent_remappings)
+{
+	CompilerStack c;
+	c.setRemappings(vector<string>{"a:s=s_1.4.6", "b:s=s_1.4.7"});
+	c.addSource("a/a.sol", "import \"s/s.sol\"; contract A is SSix {}");
+	c.addSource("b/b.sol", "import \"s/s.sol\"; contract B is SSeven {}");
+	c.addSource("s_1.4.6/s.sol", "contract SSix {} ");
+	c.addSource("s_1.4.7/s.sol", "contract SSeven {} ");
+	BOOST_CHECK(c.compile());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

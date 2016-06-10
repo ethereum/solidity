@@ -6,6 +6,8 @@ Source files can contain an arbitrary number of contract definitions and include
 
 .. index:: source file, ! import
 
+.. _import:
+
 Importing other Source Files
 ============================
 
@@ -68,15 +70,20 @@ remappings so that e.g. ``github.com/ethereum/dapp-bin/library`` is remapped to
 ``/usr/local/dapp-bin/library`` and the compiler will read the files from there. If
 remapping keys are prefixes of each other, the longest is tried first. This
 allows for a "fallback-remapping" with e.g. ``""`` maps to
-``"/usr/local/include/solidity"``.
+``"/usr/local/include/solidity"``. Furthermore, these remappings can
+depend on the context, which allows you to configure packages to
+import e.g. different versions of a library of the same name.
 
 **solc**:
 
-For solc (the commandline compiler), these remappings are provided as ``key=value``
-arguments, where the ``=value`` part is optional (and defaults to key in that
+For solc (the commandline compiler), these remappings are provided as
+``context:prefix=target`` arguments, where both the ``context:`` and the
+``=target`` parts are optional (where target defaults to prefix in that
 case). All remapping values that are regular files are compiled (including
 their dependencies). This mechanism is completely backwards-compatible (as long
-as no filename contains a =) and thus not a breaking change.
+as no filename contains = or :) and thus not a breaking change. All imports
+in files in or below the directory ``context`` that import a file that
+starts with ``prefix`` are redirected by replacing ``prefix`` by ``target``.
 
 So as an example, if you clone
 ``github.com/ethereum/dapp-bin/`` locally to ``/usr/local/dapp-bin``, you can use
@@ -91,6 +98,19 @@ and then run the compiler as
 .. code-block:: bash
 
   solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
+
+As a more complex example, suppose you rely on some module that uses a
+very old version of dapp-bin. That old version of dapp-bin is checked
+out at ``/usr/local/dapp-bin_old``, then you can use 
+
+.. code-block:: bash
+
+  solc module1:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ \
+       module2:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin_old/ \
+       source.sol
+
+so that all imports in ``module2`` point to the old version but imports
+in ``module1`` get the new version.
 
 Note that solc only allows you to include files from certain directories:
 They have to be in the directory (or subdirectory) of one of the explicitly

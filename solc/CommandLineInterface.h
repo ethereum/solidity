@@ -85,8 +85,6 @@ private:
 	boost::program_options::variables_map m_args;
 	/// map of input files to source code strings
 	std::map<std::string, std::string> m_sourceCodes;
-	/// list of path prefix remappings, e.g. github.com/ethereum -> /usr/local/ethereum
-	std::vector<std::pair<std::string, std::string>> m_remappings;
 	/// list of allowed directories to read files from
 	std::vector<boost::filesystem::path> m_allowedDirectories;
 	/// map of library names to addresses
