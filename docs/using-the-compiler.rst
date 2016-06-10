@@ -38,10 +38,11 @@ Standardized Input Description and Metadata Output
 **************************************************
 
 In order to ease source code verification of complex contracts that are spread across several files,
-there is a standardized for describing the relations between those files.
+there is a standardized way for describing the relations between those files.
 Furthermore, the compiler can generate a json file while compiling that includes
 the source, natspec comments and other metadata whose hash is included in the
-actual bytecode.
+actual bytecode. Specifically, the creation data for a contract has to begin with
+`push32 <metadata hash> pop`.
 
 There is some overlap between the input description and the metadata output
 and due to the fact that some fields are optional, the metadata can be used as
@@ -55,8 +56,8 @@ the compiler can still generate the metadata alongside the bytecode of each
 contract.
 
 The metadata standard is versioned. Future versions are only required to provide the "version" field,
-the two keys inside the "compiler" field. The field compiler.keccak should be the keccak hash
-of a binary of the compiler with the given version.
+the "language" field and the two keys inside the "compiler" field.
+The field compiler.keccak should be the keccak hash of a binary of the compiler with the given version.
 
 The example below is presented in a human-readable way. Properly formatted metadata
 should use quotes correctly, reduce whitespace to a minimum and sort the keys of all objects
@@ -67,7 +68,7 @@ Comments are of course not permitted and used here only for explanatory purposes
 Input Description
 -----------------
 
-The input description could change with each compiler version, but it
+The input description is language-specific and could change with each compiler version, but it
 should be backwards compatible if possible.
 
     {
@@ -109,7 +110,9 @@ that can be used to query a location of the binary (and whether the version is
 
     {
       version: "1",
+      language: "Solidity",
       compiler: {
+        commit: "55db20e32c97098d13230ab7500758e8e3b31d64",
         version: "soljson-2313-2016-12-12",
         keccak: "0x123..."
       },
