@@ -34,8 +34,6 @@ At the end of the voting time, ``winningProposal()``
 will return the proposal with the largest number
 of votes.
 
-.. Gist: 618560d3f740204d46a5
-
 ::
 
     /// @title Voting with delegation.
@@ -108,9 +106,17 @@ of votes.
 
             // Forward the delegation as long as
             // `to` also delegated.
-            while (voters[to].delegate != address(0) &&
-                   voters[to].delegate != msg.sender) {
-                       to = voters[to].delegate;
+            // In general, such loops are very dangerous,
+            // because if they run too long, they might
+            // need more gas than is available in a block.
+            // In this case, the delegation will not be executed,
+            // but in other situations, such loops might
+            // cause a contract to get "stuck" completely.
+            while (
+                voters[to].delegate != address(0) &&
+                voters[to].delegate != msg.sender
+            ) {
+                to = voters[to].delegate;
             }
 
             // We found a loop in the delegation, not allowed.
@@ -199,8 +205,6 @@ contract has to be called manually for the
 beneficiary to receive his money - contracts cannot
 activate themselves.
 
-.. {% include open_link gist="48cd2b65ff83bd04f7af" %}
-
 ::
 
     contract SimpleAuction {
@@ -214,6 +218,9 @@ activate themselves.
         // Current state of the auction.
         address public highestBidder;
         uint public highestBid;
+
+        // Allowed withdrawals of previous bids
+        mapping(address => uint) pendingReturns;
 
         // Set to true at the end, disallows any change
         bool ended;
@@ -258,11 +265,27 @@ activate themselves.
                 throw;
             }
             if (highestBidder != 0) {
-                highestBidder.send(highestBid);
+                // Sending back the money by simply using
+                // highestBidder.send(highestBid) is a security risk
+                // because it can be prevented by the caller by e.g.
+                // raising the call stack to 1023. It is always safer
+                // to let the recipient withdraw their money themselves. 
+                pendingReturns[highestBidder] += highestBid;
             }
             highestBidder = msg.sender;
             highestBid = msg.value;
             HighestBidIncreased(msg.sender, msg.value);
+        }
+
+        /// Withdraw a bid that was overbid.
+        function withdraw() {
+            var amount = pendingReturns[msg.sender];
+            // It is important to set this to zero because the recipient
+            // can call this function again as part of the receiving call
+            // before `send` returns.
+            pendingReturns[msg.sender] = 0;
+            if (!msg.sender.send(amount))
+                throw; // If anything fails, this will revert the changes above
         }
 
         /// End the auction and send the highest bid
@@ -274,9 +297,8 @@ activate themselves.
                 throw; // this function has already been called
             AuctionEnded(highestBidder, highestBid);
 
-            // We send all the money we have, because some
-            // of the refunds might have failed.
-            beneficiary.send(this.balance);
+            if (!beneficiary.send(highestBid))
+                throw;
             ended = true;
         }
 
@@ -328,8 +350,6 @@ Bidders can confuse competition by placing several
 high or low invalid bids.
 
 
-.. {% include open_link gist="70528429c2cd867dd1d6" %}
-
 ::
 
     contract BlindAuction {
@@ -348,6 +368,9 @@ high or low invalid bids.
 
         address public highestBidder;
         uint public highestBid;
+
+        // Allowed withdrawals of previous bids
+        mapping(address => uint) pendingReturns;
 
         event AuctionEnded(address winner, uint highestBid);
 
@@ -426,7 +449,8 @@ high or low invalid bids.
                 // the same deposit.
                 bid.blindedBid = 0;
             }
-            msg.sender.send(refund);
+            if (!msg.sender.send(refund))
+                throw;
         }
 
         // This is an "internal" function which means that it
@@ -440,11 +464,22 @@ high or low invalid bids.
             }
             if (highestBidder != 0) {
                 // Refund the previously highest bidder.
-                highestBidder.send(highestBid);
+                pendingReturns[highestBidder] += highestBid;
             }
             highestBid = value;
             highestBidder = bidder;
             return true;
+        }
+
+        /// Withdraw a bid that was overbid.
+        function withdraw() {
+            var amount = pendingReturns[msg.sender];
+            // It is important to set this to zero because the recipient
+            // can call this function again as part of the receiving call
+            // before `send` returns.
+            pendingReturns[msg.sender] = 0;
+            if (!msg.sender.send(amount))
+                throw; // If anything fails, this will revert the changes above
         }
 
         /// End the auction and send the highest bid
@@ -457,7 +492,8 @@ high or low invalid bids.
             AuctionEnded(highestBidder, highestBid);
             // We send all the money we have, because some
             // of the refunds might have failed.
-            beneficiary.send(this.balance);
+            if (!beneficiary.send(this.balance))
+                throw;
             ended = true;
         }
 
@@ -471,8 +507,6 @@ high or low invalid bids.
 ********************
 Safe Remote Purchase
 ********************
-
-.. {% include open_link gist="b16e8e76a423b7671e99" %}
 
 ::
 
@@ -521,8 +555,9 @@ Safe Remote Purchase
             inState(State.Created)
         {
             aborted();
-            seller.send(this.balance);
             state = State.Inactive;
+            if (!seller.send(this.balance))
+                throw;
         }
 
         /// Confirm the purchase as buyer.
@@ -545,9 +580,14 @@ Safe Remote Purchase
             inState(State.Locked)
         {
             itemReceived();
-            buyer.send(value); // We ignore the return value on purpose
-            seller.send(this.balance);
+            // It is important to change the state first because
+            // otherwise, the contracts called using `send` below
+            // can call in again here.
             state = State.Inactive;
+            // This actually allows both the buyer and the seller to
+            // block the refund.
+            if (!buyer.send(value) || !seller.send(this.balance))
+                throw;
         }
 
         function() {

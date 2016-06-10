@@ -14,8 +14,6 @@ right now, we will go into more detail later.
 Storage
 =======
 
-.. Gist: a4532ce30246847b371b
-
 ::
 
     contract SimpleStorage {
@@ -62,8 +60,6 @@ to implement a different issuance scheme).
 Furthermore, anyone can send coins to each other without any need for
 registering with username and password - all you need is an Ethereum keypair.
 
-
-.. Gist: ad490694f3e5b3de47ab
 
 ::
 
