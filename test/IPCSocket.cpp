@@ -148,24 +148,16 @@ void RPCSession::test_mineBlocks(int _number)
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
 	u256 currentBlock = startBlock;
 	u256 targetBlock = startBlock + _number;
-	cout << "A" << endl;
-	for (size_t tries = 0; tries < 3 && startBlock < targetBlock; ++tries)
+	cout << "MINE" << endl;
+	rpcCall("test_mineBlocks", { (targetBlock - startBlock).str() }, true);
+
+	//@TODO do not use polling - but that would probably need a change to the test client
+	for (size_t polls = 0; polls < 100; ++polls)
 	{
-		if (currentBlock == startBlock)
-		{
-			cout << "MINE" << endl;
-			rpcCall("test_mineBlocks", { (targetBlock - startBlock).str() }, true);
-		}
-		cout << "WOIT" << endl;
-		startBlock = currentBlock;
-		//@TODO do not use polling - but that would probably need a change to the test client
-		for (size_t polls = 0; polls < 10; ++polls)
-		{
-			currentBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-			if (currentBlock >= targetBlock)
-				return;
-			std::this_thread::sleep_for(chrono::milliseconds(1));
-		}
+		currentBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
+		if (currentBlock >= targetBlock)
+			return;
+		std::this_thread::sleep_for(chrono::milliseconds(10)); //it does not work faster then 10 ms
 	}
 }
 
@@ -194,7 +186,9 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	{
 		if (_canFail)
 			return Json::Value();
-		BOOST_FAIL("Error on JSON-RPC call: " + result["error"].asString());
+
+		Json::Value jsonError = result["error"];
+		BOOST_FAIL("Error on JSON-RPC call: " + jsonError["message"].asString());
 	}
 	return result["result"];
 }
