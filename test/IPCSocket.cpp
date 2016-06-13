@@ -144,12 +144,10 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
 
 void RPCSession::test_mineBlocks(int _number)
 {
-	// Extremely complicated mechanism because sometimes the miner breaks and stops mining.
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
 	u256 currentBlock = startBlock;
 	u256 targetBlock = startBlock + _number;
-	cout << "MINE" << endl;
-	rpcCall("test_mineBlocks", { (targetBlock - startBlock).str() }, true);
+	rpcCall("test_mineBlocks", { to_string(_number) }, true);
 
 	//@TODO do not use polling - but that would probably need a change to the test client
 	for (size_t polls = 0; polls < 100; ++polls)
@@ -159,6 +157,8 @@ void RPCSession::test_mineBlocks(int _number)
 			return;
 		std::this_thread::sleep_for(chrono::milliseconds(10)); //it does not work faster then 10 ms
 	}
+
+	BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
@@ -187,8 +187,7 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 		if (_canFail)
 			return Json::Value();
 
-		Json::Value jsonError = result["error"];
-		BOOST_FAIL("Error on JSON-RPC call: " + jsonError["message"].asString());
+		BOOST_FAIL("Error on JSON-RPC call: " + result["error"]["message"].asString());
 	}
 	return result["result"];
 }
