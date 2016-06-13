@@ -1553,7 +1553,7 @@ BOOST_AUTO_TEST_CASE(log0)
 							 "}\n";
 	compileAndRun(sourceCode);
 	callContractFunction("a()");
-	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
 	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 0);
@@ -1568,7 +1568,7 @@ BOOST_AUTO_TEST_CASE(log1)
 							 "}\n";
 	compileAndRun(sourceCode);
 	callContractFunction("a()");
-	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
 	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 1);
@@ -1584,7 +1584,7 @@ BOOST_AUTO_TEST_CASE(log2)
 							 "}\n";
 	compileAndRun(sourceCode);
 	callContractFunction("a()");
-	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
 	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 2);
@@ -1601,7 +1601,7 @@ BOOST_AUTO_TEST_CASE(log3)
 							 "}\n";
 	compileAndRun(sourceCode);
 	callContractFunction("a()");
-	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
 	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 3);
@@ -1618,7 +1618,7 @@ BOOST_AUTO_TEST_CASE(log4)
 							 "}\n";
 	compileAndRun(sourceCode);
 	callContractFunction("a()");
-	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
 	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 4);
@@ -1634,7 +1634,7 @@ BOOST_AUTO_TEST_CASE(log_in_constructor)
 							 "  }\n"
 							 "}\n";
 	compileAndRun(sourceCode);
-	BOOST_CHECK_EQUAL(m_logs.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
 	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 1);

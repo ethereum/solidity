@@ -39,7 +39,6 @@ ExecutionFramework::ExecutionFramework():
 	if (g_logVerbosity != -1)
 		g_logVerbosity = 0;
 
-	cout << "New Framework" << endl;
 	m_rpc.test_rewindToBlock(0);
 }
 
@@ -69,9 +68,18 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		BOOST_REQUIRE(m_contractAddress);
 		string code = m_rpc.eth_getCode(receipt.contractAddress, "latest");
 		BOOST_REQUIRE(code.size() > 2);
-		m_output = asBytes(code);
+		m_output = fromHex(code, WhenError::Throw);
 	}
 
 	m_gasUsed = u256(receipt.gasUsed);
 	m_logs.clear();
+	for (auto const& log: receipt.logEntries)
+	{
+		LogEntry entry;
+		entry.address = Address(log.address);
+		for (auto const& topic: log.topics)
+			entry.topics.push_back(h256(topic));
+		entry.data = fromHex(log.data, WhenError::Throw);
+		m_logs.push_back(entry);
+	}
 }

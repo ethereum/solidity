@@ -253,6 +253,13 @@ protected:
 
 	RPCSession& m_rpc;
 
+	struct LogEntry
+	{
+		Address address;
+		std::vector<h256> topics;
+		bytes data;
+	};
+
 	std::unique_ptr<eth::SealEngineFace> m_sealEngine;
 	size_t m_optimizeRuns = 200;
 	bool m_optimize = false;
@@ -265,7 +272,7 @@ protected:
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 100000000;
 	bytes m_output;
-	eth::LogEntries m_logs;
+	std::vector<LogEntry> m_logs;
 	u256 m_gasUsed;
 };
 

@@ -59,10 +59,17 @@ public:
 		std::string toJson() const;
 	};
 
+	struct LogEntry {
+		std::string address;
+		std::vector<std::string> topics;
+		std::string data;
+	};
+
 	struct TransactionReceipt
 	{
 		std::string gasUsed;
 		std::string contractAddress;
+		std::vector<LogEntry> logEntries;
 	};
 
 	static RPCSession& instance(std::string const& _path);

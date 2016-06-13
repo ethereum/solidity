@@ -85,6 +85,15 @@ RPCSession::TransactionReceipt RPCSession::eth_getTransactionReceipt(string cons
 	BOOST_REQUIRE(!result.isNull());
 	receipt.gasUsed = result["gasUsed"].asString();
 	receipt.contractAddress = result["contractAddress"].asString();
+	for (auto const& log: result["logs"])
+	{
+		LogEntry entry;
+		entry.address = log["address"].asString();
+		entry.data = log["data"].asString();
+		for (auto const& topic: log["topics"])
+			entry.topics.push_back(topic.asString());
+		receipt.logEntries.push_back(entry);
+	}
 	return receipt;
 }
 
@@ -174,10 +183,9 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	request += "],\"id\":" + to_string(m_rpcSequence) + "}";
 	++m_rpcSequence;
 
+	//cout << "Request: " << request << endl;
 	string reply = m_ipcSocket.sendRequest(request);
-
-	cout << "Request: " << request << endl;
-	cout << "Reply: " << reply << endl;
+	//cout << "Reply: " << reply << endl;
 
 	Json::Value result;
 	Json::Reader().parse(reply, result, false);
