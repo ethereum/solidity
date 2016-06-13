@@ -118,6 +118,12 @@ string RPCSession::eth_getBalance(string const& _address, string const& _blockNu
 	return rpcCall("eth_getBalance", { quote(address), quote(_blockNumber) }).asString();
 }
 
+string RPCSession::eth_getStorageRoot(string const& _address, string const& _blockNumber)
+{
+	string address = (_address.length() == 20) ? "0x" + _address : _address;
+	return rpcCall("eth_getStorageRoot", { quote(address), quote(_blockNumber) }).asString();
+}
+
 void RPCSession::personal_unlockAccount(string const& _address, string const& _password, int _duration)
 {
 	rpcCall("personal_unlockAccount", { quote(_address), quote(_password), to_string(_duration) });
@@ -154,15 +160,12 @@ void RPCSession::test_rewindToBlock(size_t _blockNr)
 void RPCSession::test_mineBlocks(int _number)
 {
 	u256 startBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-	u256 currentBlock = startBlock;
-	u256 targetBlock = startBlock + _number;
 	rpcCall("test_mineBlocks", { to_string(_number) }, true);
 
 	//@TODO do not use polling - but that would probably need a change to the test client
 	for (size_t polls = 0; polls < 100; ++polls)
 	{
-		currentBlock = fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString()));
-		if (currentBlock >= targetBlock)
+		if (fromBigEndian<u256>(fromHex(rpcCall("eth_blockNumber").asString())) >= startBlock + _number)
 			return;
 		std::this_thread::sleep_for(chrono::milliseconds(10)); //it does not work faster then 10 ms
 	}

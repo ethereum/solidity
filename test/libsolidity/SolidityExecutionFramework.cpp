@@ -83,3 +83,13 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		m_logs.push_back(entry);
 	}
 }
+
+u256 ExecutionFramework::balanceAt(Address const& _addr)
+{
+	return u256(m_rpc.eth_getBalance(toString(_addr), "latest"));
+}
+
+bool ExecutionFramework::storageEmpty(Address const& _addr)
+{
+	return h256(m_rpc.eth_getStorageRoot(toString(_addr), "latest")) == EmptySHA3;
+}

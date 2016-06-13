@@ -1541,7 +1541,7 @@ BOOST_AUTO_TEST_CASE(send_ether)
 	compileAndRun(sourceCode, amount + 1);
 	u160 address(23);
 	BOOST_CHECK(callContractFunction("a(address,uint256)", address, amount) == encodeArgs(1));
-	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
+	BOOST_CHECK_EQUAL(balanceAt(address), amount);
 }
 
 BOOST_AUTO_TEST_CASE(log0)
@@ -1571,7 +1571,7 @@ BOOST_AUTO_TEST_CASE(log1)
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
-	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(u256(2)));
 }
 
@@ -1587,7 +1587,7 @@ BOOST_AUTO_TEST_CASE(log2)
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
-	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
 	for (unsigned i = 0; i < 2; ++i)
 		BOOST_CHECK_EQUAL(m_logs[0].topics[i], h256(u256(i + 2)));
 }
@@ -1604,7 +1604,7 @@ BOOST_AUTO_TEST_CASE(log3)
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
-	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 3);
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 3);
 	for (unsigned i = 0; i < 3; ++i)
 		BOOST_CHECK_EQUAL(m_logs[0].topics[i], h256(u256(i + 2)));
 }
@@ -1621,7 +1621,7 @@ BOOST_AUTO_TEST_CASE(log4)
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
-	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 4);
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 4);
 	for (unsigned i = 0; i < 4; ++i)
 		BOOST_CHECK_EQUAL(m_logs[0].topics[i], h256(u256(i + 2)));
 }
@@ -1637,7 +1637,7 @@ BOOST_AUTO_TEST_CASE(log_in_constructor)
 	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(1)));
-	BOOST_CHECK_EQUAL(m_logs[0].topics.size(), 1);
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 1);
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(u256(2)));
 }
 
@@ -1654,7 +1654,7 @@ BOOST_AUTO_TEST_CASE(suicide)
 	u160 address(23);
 	BOOST_CHECK(callContractFunction("a(address)", address) == bytes());
 	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
-	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
+	BOOST_CHECK_EQUAL(balanceAt(address), amount);
 }
 
 BOOST_AUTO_TEST_CASE(selfdestruct)
@@ -1670,7 +1670,7 @@ BOOST_AUTO_TEST_CASE(selfdestruct)
 	u160 address(23);
 	BOOST_CHECK(callContractFunction("a(address)", address) == bytes());
 	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
-	BOOST_CHECK_EQUAL(m_state.balance(address), amount);
+	BOOST_CHECK_EQUAL(balanceAt(address), amount);
 }
 
 BOOST_AUTO_TEST_CASE(sha3)
@@ -2465,10 +2465,10 @@ BOOST_AUTO_TEST_CASE(use_std_lib)
 	u256 amount(130);
 	u160 address(23);
 	compileAndRun(sourceCode, amount, "Icarus");
-	u256 balanceBefore = m_state.balance(m_sender);
+	u256 balanceBefore = balanceAt(m_sender);
 	BOOST_CHECK(callContractFunction("kill()") == bytes());
 	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
-	BOOST_CHECK(m_state.balance(m_sender) > balanceBefore);
+	BOOST_CHECK(balanceAt(m_sender) > balanceBefore);
 }
 
 BOOST_AUTO_TEST_CASE(crazy_elementary_typenames_on_stack)
@@ -2876,7 +2876,7 @@ BOOST_AUTO_TEST_CASE(generic_call)
 	u160 const c_receiverAddress = m_contractAddress;
 	compileAndRun(sourceCode, 50, "sender");
 	BOOST_REQUIRE(callContractFunction("doSend(address)", c_receiverAddress) == encodeArgs(23));
-	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 50 - 2);
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 50 - 2);
 }
 
 BOOST_AUTO_TEST_CASE(generic_callcode)
@@ -2904,10 +2904,10 @@ BOOST_AUTO_TEST_CASE(generic_callcode)
 	BOOST_CHECK(callContractFunction("received()") == encodeArgs(23));
 	m_contractAddress = c_receiverAddress;
 	BOOST_CHECK(callContractFunction("received()") == encodeArgs(0));
-	BOOST_CHECK(m_state.storage(c_receiverAddress).empty());
-	BOOST_CHECK(!m_state.storage(c_senderAddress).empty());
-	BOOST_CHECK_EQUAL(m_state.balance(c_receiverAddress), 0);
-	BOOST_CHECK_EQUAL(m_state.balance(c_senderAddress), 50);
+	BOOST_CHECK(storageEmpty(c_receiverAddress));
+	BOOST_CHECK(!storageEmpty(c_senderAddress));
+	BOOST_CHECK_EQUAL(balanceAt(c_receiverAddress), 0);
+	BOOST_CHECK_EQUAL(balanceAt(c_senderAddress), 50);
 }
 
 BOOST_AUTO_TEST_CASE(generic_delegatecall)
@@ -2943,10 +2943,10 @@ BOOST_AUTO_TEST_CASE(generic_delegatecall)
 	BOOST_CHECK(callContractFunction("received()") == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("sender()") == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("value()") == encodeArgs(u256(0)));
-	BOOST_CHECK(m_state.storage(c_receiverAddress).empty());
-	BOOST_CHECK(!m_state.storage(c_senderAddress).empty());
-	BOOST_CHECK_EQUAL(m_state.balance(c_receiverAddress), 0);
-	BOOST_CHECK_EQUAL(m_state.balance(c_senderAddress), 50 + 11);
+	BOOST_CHECK(storageEmpty(c_receiverAddress));
+	BOOST_CHECK(!storageEmpty(c_senderAddress));
+	BOOST_CHECK_EQUAL(balanceAt(c_receiverAddress), 0);
+	BOOST_CHECK_EQUAL(balanceAt(c_senderAddress), 50 + 11);
 }
 
 BOOST_AUTO_TEST_CASE(library_call_in_homestead)
@@ -3073,9 +3073,9 @@ BOOST_AUTO_TEST_CASE(delete_removes_bytes_data)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("---", 7) == bytes());
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("del()", 7) == encodeArgs(true));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
@@ -3089,10 +3089,10 @@ BOOST_AUTO_TEST_CASE(copy_from_calldata_removes_bytes_data)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("set()", 1, 2, 3, 4, 5) == encodeArgs(true));
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	sendMessage(bytes(), false);
 	BOOST_CHECK(m_output == bytes());
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(copy_removes_bytes_data)
@@ -3107,9 +3107,9 @@ BOOST_AUTO_TEST_CASE(copy_removes_bytes_data)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("set()", 1, 2, 3, 4, 5) == encodeArgs(true));
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("reset()") == encodeArgs(true));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(bytes_inside_mappings)
@@ -3125,15 +3125,15 @@ BOOST_AUTO_TEST_CASE(bytes_inside_mappings)
 	// store a short byte array at 1 and a longer one at 2
 	BOOST_CHECK(callContractFunction("set(uint256)", 1, 2) == encodeArgs(true));
 	BOOST_CHECK(callContractFunction("set(uint256)", 2, 2, 3, 4, 5) == encodeArgs(true));
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	// copy shorter to longer
 	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 1, 2) == encodeArgs(true));
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	// copy empty to both
 	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 99, 1) == encodeArgs(true));
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("copy(uint256,uint256)", 99, 2) == encodeArgs(true));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(bytes_length_member)
@@ -3216,15 +3216,15 @@ BOOST_AUTO_TEST_CASE(struct_containing_bytes_copy_and_delete)
 	)";
 	compileAndRun(sourceCode);
 	string data = "123456789012345678901234567890123";
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("set(uint256,bytes,uint256)", 12, u256(data.length()), 13, data) == encodeArgs(true));
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("copy()") == encodeArgs(true));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("set(uint256,bytes,uint256)", 12, u256(data.length()), 13, data) == encodeArgs(true));
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("del()") == encodeArgs(true));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(struct_copy_via_local)
@@ -3496,11 +3496,11 @@ BOOST_AUTO_TEST_CASE(fixed_array_cleanup)
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("fill()") == bytes());
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("clear()") == bytes());
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(short_fixed_array_cleanup)
@@ -3517,11 +3517,11 @@ BOOST_AUTO_TEST_CASE(short_fixed_array_cleanup)
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("fill()") == bytes());
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("clear()") == bytes());
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(dynamic_array_cleanup)
@@ -3539,13 +3539,13 @@ BOOST_AUTO_TEST_CASE(dynamic_array_cleanup)
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("fill()") == bytes());
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("halfClear()") == bytes());
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("fullClear()") == bytes());
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(dynamic_multi_array_cleanup)
@@ -3565,11 +3565,11 @@ BOOST_AUTO_TEST_CASE(dynamic_multi_array_cleanup)
 		}
 	)";
 	compileAndRun(sourceCode);
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("fill()") == encodeArgs(8));
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("clear()") == bytes());
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(array_copy_storage_storage_dyn_dyn)
@@ -3594,7 +3594,7 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_dyn_dyn)
 	BOOST_CHECK(callContractFunction("setData1(uint256,uint256,uint256)", 0, 0, 0) == bytes());
 	BOOST_CHECK(callContractFunction("copyStorageStorage()") == bytes());
 	BOOST_CHECK(callContractFunction("getData2(uint256)", 0) == encodeArgs(0, 0));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(array_copy_storage_storage_static_static)
@@ -3775,7 +3775,7 @@ BOOST_AUTO_TEST_CASE(array_copy_storage_storage_struct)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(4, 5));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(array_push)
@@ -3992,9 +3992,9 @@ BOOST_AUTO_TEST_CASE(array_copy_including_mapping)
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(0x02000200));
 	// storage is not empty because we cannot delete the mappings
-	BOOST_CHECK(!m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(!storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("clear()") == encodeArgs(7));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base)
@@ -4204,7 +4204,7 @@ BOOST_AUTO_TEST_CASE(packed_storage_structs_delete)
 	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(overloaded_function_call_resolve_to_first)
@@ -5890,11 +5890,11 @@ BOOST_AUTO_TEST_CASE(short_strings)
 	compileAndRun(sourceCode, 0, "A");
 	BOOST_CHECK(callContractFunction("data1()") == encodeDyn(string("123")));
 	BOOST_CHECK(callContractFunction("lengthChange()") == encodeArgs(u256(0)));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("deleteElements()") == encodeArgs(u256(0)));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 	BOOST_CHECK(callContractFunction("copy()") == encodeArgs(u256(0)));
-	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+	BOOST_CHECK(storageEmpty(m_contractAddress));
 }
 
 BOOST_AUTO_TEST_CASE(calldata_offset)
@@ -5950,14 +5950,14 @@ BOOST_AUTO_TEST_CASE(reject_ether_sent_to_library)
 	compileAndRun(sourceCode, 0, "lib");
 	Address libraryAddress = m_contractAddress;
 	compileAndRun(sourceCode, 10, "c");
-	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 10);
-	BOOST_CHECK_EQUAL(m_state.balance(libraryAddress), 0);
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
+	BOOST_CHECK_EQUAL(balanceAt(libraryAddress), 0);
 	BOOST_CHECK(callContractFunction("f(address)", encodeArgs(u160(libraryAddress))) == encodeArgs(false));
-	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 10);
-	BOOST_CHECK_EQUAL(m_state.balance(libraryAddress), 0);
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
+	BOOST_CHECK_EQUAL(balanceAt(libraryAddress), 0);
 	BOOST_CHECK(callContractFunction("f(address)", encodeArgs(u160(m_contractAddress))) == encodeArgs(true));
-	BOOST_CHECK_EQUAL(m_state.balance(m_contractAddress), 10);
-	BOOST_CHECK_EQUAL(m_state.balance(libraryAddress), 0);
+	BOOST_CHECK_EQUAL(balanceAt(m_contractAddress), 10);
+	BOOST_CHECK_EQUAL(balanceAt(libraryAddress), 0);
 }
 
 BOOST_AUTO_TEST_CASE(multi_variable_declaration)

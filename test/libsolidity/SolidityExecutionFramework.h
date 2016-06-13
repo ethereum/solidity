@@ -251,6 +251,9 @@ private:
 protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
 
+	u256 balanceAt(Address const& _addr);
+	bool storageEmpty(Address const& _addr);
+
 	RPCSession& m_rpc;
 
 	struct LogEntry
