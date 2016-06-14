@@ -564,7 +564,8 @@ bool CommandLineInterface::processInput()
 	auto scannerFromSourceName = [&](string const& _sourceName) -> solidity::Scanner const& { return m_compiler->scanner(_sourceName); };
 	try
 	{
-		m_compiler->setRemappings(m_args["input-file"].as<vector<string>>());
+		if (m_args.count("input-file"))
+			m_compiler->setRemappings(m_args["input-file"].as<vector<string>>());
 		for (auto const& sourceCode: m_sourceCodes)
 			m_compiler->addSource(sourceCode.first, sourceCode.second);
 		// TODO: Perhaps we should not compile unless requested
