@@ -253,6 +253,7 @@ protected:
 
 	u256 balanceAt(Address const& _addr);
 	bool storageEmpty(Address const& _addr);
+	bool addressHasCode(Address const& _addr);
 
 	RPCSession& m_rpc;
 
@@ -263,7 +264,6 @@ protected:
 		bytes data;
 	};
 
-	std::unique_ptr<eth::SealEngineFace> m_sealEngine;
 	size_t m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
@@ -271,7 +271,6 @@ protected:
 	Address m_sender;
 	Address m_contractAddress;
 	eth::EnvInfo m_envInfo;
-	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 100000000;
 	bytes m_output;

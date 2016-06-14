@@ -1653,7 +1653,7 @@ BOOST_AUTO_TEST_CASE(suicide)
 	compileAndRun(sourceCode, amount);
 	u160 address(23);
 	BOOST_CHECK(callContractFunction("a(address)", address) == bytes());
-	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
+	BOOST_CHECK(!addressHasCode(m_contractAddress));
 	BOOST_CHECK_EQUAL(balanceAt(address), amount);
 }
 
@@ -1669,7 +1669,7 @@ BOOST_AUTO_TEST_CASE(selfdestruct)
 	compileAndRun(sourceCode, amount);
 	u160 address(23);
 	BOOST_CHECK(callContractFunction("a(address)", address) == bytes());
-	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
+	BOOST_CHECK(!addressHasCode(m_contractAddress));
 	BOOST_CHECK_EQUAL(balanceAt(address), amount);
 }
 
@@ -2467,7 +2467,7 @@ BOOST_AUTO_TEST_CASE(use_std_lib)
 	compileAndRun(sourceCode, amount, "Icarus");
 	u256 balanceBefore = balanceAt(m_sender);
 	BOOST_CHECK(callContractFunction("kill()") == bytes());
-	BOOST_CHECK(!m_state.addressHasCode(m_contractAddress));
+	BOOST_CHECK(!addressHasCode(m_contractAddress));
 	BOOST_CHECK(balanceAt(m_sender) > balanceBefore);
 }
 

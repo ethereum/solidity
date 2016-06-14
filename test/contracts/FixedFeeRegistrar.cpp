@@ -234,9 +234,9 @@ BOOST_AUTO_TEST_CASE(disown)
 	BOOST_CHECK(callContractFunction("setAddr(string,address)", u256(0x40), u256(124), u256(name.length()), name) == encodeArgs());
 	BOOST_CHECK(callContractFunction("setSubRegistrar(string,address)", u256(0x40), u256(125), u256(name.length()), name) == encodeArgs());
 
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x124)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x124)), 0);
 	BOOST_CHECK(callContractFunction("disown(string,address)", u256(0x40), u256(0x124), name.size(), name) == encodeArgs());
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x124)), m_fee);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x124)), m_fee);
 
 	BOOST_CHECK(callContractFunction("owner(string)", encodeDyn(name)) == encodeArgs(u256(0)));
 	BOOST_CHECK(callContractFunction("content(string)", encodeDyn(name)) == encodeArgs(u256(0)));

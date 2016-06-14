@@ -555,17 +555,17 @@ BOOST_AUTO_TEST_CASE(multisig_value_transfer)
 	BOOST_REQUIRE(callContractFunction("changeRequirement(uint256)", u256(3)) == encodeArgs());
 	// check that balance is and stays zero at destination address
 	h256 opHash("6244b4fa93f73e09db0ae52750095ca0364a76b72bc01723c97011fcb876cc9e");
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	m_sender = Address(0x12);
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	m_sender = Address(0x13);
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	m_sender = Address(0x14);
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
 	// now it should go through
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 100);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 100);
 }
 
 BOOST_AUTO_TEST_CASE(revoke_addOwner)
@@ -606,22 +606,22 @@ BOOST_AUTO_TEST_CASE(revoke_transaction)
 	// create a transaction
 	Address deployer = m_sender;
 	h256 opHash("6244b4fa93f73e09db0ae52750095ca0364a76b72bc01723c97011fcb876cc9e");
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	m_sender = Address(0x12);
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	m_sender = Address(0x13);
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	m_sender = Address(0x12);
 	BOOST_REQUIRE(callContractFunction("revoke(bytes32)", opHash) == encodeArgs());
 	m_sender = deployer;
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	m_sender = Address(0x14);
 	BOOST_REQUIRE(callContractFunction("execute(address,uint256,bytes)", h256(0x05), 100, 0x60, 0x00) == encodeArgs(opHash));
 	// now it should go through
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 100);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 100);
 }
 
 BOOST_AUTO_TEST_CASE(daylimit)
@@ -637,27 +637,27 @@ BOOST_AUTO_TEST_CASE(daylimit)
 	BOOST_REQUIRE(callContractFunction("changeRequirement(uint256)", u256(3)) == encodeArgs());
 
 	// try to send tx over daylimit
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	m_sender = Address(0x12);
 	BOOST_REQUIRE(
 		callContractFunction("execute(address,uint256,bytes)", h256(0x05), 150, 0x60, 0x00) !=
 		encodeArgs(u256(0))
 	);
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	// try to send tx under daylimit by stranger
 	m_sender = Address(0x77);
 	BOOST_REQUIRE(
 		callContractFunction("execute(address,uint256,bytes)", h256(0x05), 90, 0x60, 0x00) ==
 		encodeArgs(u256(0))
 	);
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 0);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 0);
 	// now send below limit by owner
 	m_sender = Address(0x12);
 	BOOST_REQUIRE(
 		callContractFunction("execute(address,uint256,bytes)", h256(0x05), 90, 0x60, 0x00) ==
 		encodeArgs(u256(0))
 	);
-	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 90);
+	BOOST_CHECK_EQUAL(balanceAt(Address(0x05)), 90);
 }
 
 BOOST_AUTO_TEST_CASE(daylimit_constructor)

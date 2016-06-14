@@ -30,12 +30,10 @@ using namespace dev::solidity::test;
 
 
 ExecutionFramework::ExecutionFramework():
-	m_rpc(RPCSession::instance("/tmp/test/geth.ipc")),
-	m_sender(m_rpc.account(0)),
-	m_state(0)
+	m_rpc(RPCSession::instance("/home/wins/Ethereum/testnet/ethnode1/geth.ipc")),
+	m_sender(m_rpc.account(0))
 {
 	eth::NoProof::init();
-	m_sealEngine.reset(eth::ChainParams().createSealEngine());
 	if (g_logVerbosity != -1)
 		g_logVerbosity = 0;
 
@@ -82,6 +80,12 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		entry.data = fromHex(log.data, WhenError::Throw);
 		m_logs.push_back(entry);
 	}
+}
+
+bool ExecutionFramework::addressHasCode(Address const& _addr)
+{
+	string code = m_rpc.eth_getCode(toString(_addr), "latest");
+	return !code.empty() && code != "0x";
 }
 
 u256 ExecutionFramework::balanceAt(Address const& _addr)
