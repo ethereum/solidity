@@ -5,6 +5,18 @@
 #
 # http://solidity.readthedocs.org
 #
+# TODO - Christian added a .travis.yml file to the development branch of
+# solidity too, but for a different purpose - verifying the Sphinx
+# documentation.  I have just overwritten that file for the purposes of this
+# branch for right now, but will have to work out some means of
+# consolidation.  Furthermore, there is another .travis.yml file which
+# Christian has made which currently lives in the root of webthree-umbrella,
+# but actually contains the automation for the Solidity Emscripten build,
+# which will also need consolidating into here somehow.
+#
+# See https://github.com/ethereum/solidity/blob/develop/.travis.yml
+# See https://github.com/ethereum/webthree-umbrella/blob/develop/.travis.yml
+#
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 

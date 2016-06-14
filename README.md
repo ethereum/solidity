@@ -4,9 +4,7 @@
 
 To get started you can find a basic introduction to the language in the [Solidity Documentation](https://solidity.readthedocs.org).
 
-You can start using [Solidity in your browser](https://chriseth.github.io/browser-solidity/) with no need to download or compile anything. This application only supports compilation - if you want to inject it into the blockchain, you have to use a client like [Geth](https://github.com/ethereum/go-ethereum/wiki) or [AlethZero](https://github.com/ethereum/alethzero).
-
-Also check out more documentations for [Solidity ABI](https://github.com/ethereum/wiki/wiki/Solidity,-Docs-and-ABI) and a crowdfunding [example contract](https://github.com/chriseth/cpp-ethereum/wiki/Crowdfunding-example-contract-in-Solidity) written in Solidity.
+You can start using [Solidity in your browser](https://ethereum.github.io/browser-solidity/) with no need to download or compile anything.
 
 [Changelog](https://github.com/ethereum/wiki/wiki/Solidity-Changelog)
 
@@ -20,16 +18,6 @@ See the [Wiki](https://github.com/ethereum/webthree-umbrella/wiki) for build ins
 
 ## How to Contribute
 
-### External Contributors
-
-I hereby place all my contributions in this codebase under an MIT
-licence, as specified [here](http://opensource.org/licenses/MIT).
-- *Name Surname* (**email@domain**)
-
-### Contribution guideline
-
-Please add yourself in the `@author` doxygen  section of the file your are adding/editing
-with the same wording as the one you listed yourself in the external contributors section above,
-only replacing the word **contribution** by **file**
-
-Please read [CodingStandards.txt](https://github.com/ethereum/webthree-umbrella/blob/develop/CodingStandards.txt) thoroughly before making alterations to the code base. Please do *NOT* use an editor that automatically reformats whitespace away from astylerc or the formatting guidelines as described in [CodingStandards.txt](https://github.com/ethereum/webthree-umbrella/blob/develop/CodingStandards.txt).
+This repository uses the same [coding style](https://github.com/ethereum/webthree-umbrella/blob/develop/CodingStandards.txt) as
+all of the cpp-ethereum projects. Please try to align with us in the gitter channel before making larger changes.
+Any contributions are welcome!

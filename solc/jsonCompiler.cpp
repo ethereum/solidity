@@ -132,26 +132,31 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 	CompilerStack::ReadFileCallback readCallback;
 	if (_readCallback)
 	{
-		readCallback = [=](string const& _path) -> pair<string, string>
+		readCallback = [=](string const& _path)
 		{
 			char* contents_c = nullptr;
 			char* error_c = nullptr;
 			_readCallback(_path.c_str(), &contents_c, &error_c);
-			string contents;
-			string error;
+			CompilerStack::ReadFileResult result;
+			result.success = true;
 			if (!contents_c && !error_c)
-				error = "File not found.";
+			{
+				result.success = false;
+				result.contentsOrErrorMesage = "File not found.";
+			}
 			if (contents_c)
 			{
-				contents = string(contents_c);
+				result.success = true;
+				result.contentsOrErrorMesage = string(contents_c);
 				free(contents_c);
 			}
 			if (error_c)
 			{
-				error = string(error_c);
+				result.success = false;
+				result.contentsOrErrorMesage = string(error_c);
 				free(error_c);
 			}
-			return make_pair(move(contents), move(error));
+			return result;
 		};
 	}
 	CompilerStack compiler(true, readCallback);

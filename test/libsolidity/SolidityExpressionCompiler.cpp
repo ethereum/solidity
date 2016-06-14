@@ -267,10 +267,10 @@ BOOST_AUTO_TEST_CASE(comparison)
 							 "}\n";
 	bytes code = compileFirstExpression(sourceCode);
 
-	bytes expectation({byte(Instruction::PUSH1), 0x1,
+	bytes expectation({byte(Instruction::PUSH1), 0x1, byte(Instruction::ISZERO), byte(Instruction::ISZERO),
 					   byte(Instruction::PUSH2), 0x11, 0xaa,
 					   byte(Instruction::PUSH2), 0x10, 0xaa,
-					   byte(Instruction::LT),
+					   byte(Instruction::LT), byte(Instruction::ISZERO), byte(Instruction::ISZERO),
 					   byte(Instruction::EQ),
 					   byte(Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());
@@ -296,7 +296,8 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 					   byte(Instruction::EQ),
 					   byte(Instruction::ISZERO), // after this we have 9 != 2
 					   byte(Instruction::JUMPDEST),
-					   byte(Instruction::PUSH1), 0x1,
+					   byte(Instruction::ISZERO), byte(Instruction::ISZERO),
+					   byte(Instruction::PUSH1), 0x1, byte(Instruction::ISZERO), byte(Instruction::ISZERO),
 					   byte(Instruction::EQ),
 					   byte(Instruction::ISZERO)});
 	BOOST_CHECK_EQUAL_COLLECTIONS(code.begin(), code.end(), expectation.begin(), expectation.end());

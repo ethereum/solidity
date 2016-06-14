@@ -25,7 +25,7 @@ solidity code.  The goal of this guide is *consistency*.  A quote from python's
 captures this concept well.
 
     A style guide is about consistency. Consistency with this style guide is important. Consistency within a project is more important. Consistency within one module or function is most important.
-    But most importantly: know when to be inconsistent -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask! 
+    But most importantly: know when to be inconsistent -- sometimes the style guide just doesn't apply. When in doubt, use your best judgment. Look at other examples and decide what looks best. And don't hesitate to ask!
 
 
 ***********
@@ -155,19 +155,27 @@ Whitespace in Expressions
 
 Avoid extraneous whitespace in the following  situations:
 
-* Immediately inside parenthesis, brackets or braces.
+Immediately inside parenthesis, brackets or braces.
 
-Yes: `spam(ham[1], Coin({name: "ham"}));`
+Yes::
 
-No: `spam( ham[ 1 ], Coin( { name: "ham" } ) );`
+    spam(ham[1], Coin({name: "ham"}));
 
-* Immediately before a comma, semicolon:
+No::
 
-Yes: `function spam(uint i, Coin coin);` 
+    spam( ham[ 1 ], Coin( { name: "ham" } ) );
 
-No: `function spam(uint i , Coin coin) ;`
+Immediately before a comma, semicolon:
 
-* More than one space around an assignment or other operator to align with
+Yes::
+
+    function spam(uint i, Coin coin);
+
+No::
+
+    function spam(uint i , Coin coin) ;
+
+More than one space around an assignment or other operator to align with
   another:
 
 Yes::
@@ -213,11 +221,11 @@ No::
         }
     }
 
-The same recommendations apply to the control structures `if`, `else`, `while`,
-and `for`.
+The same recommendations apply to the control structures ``if``, ``else``, ``while``,
+and ``for``.
 
 Additionally there should be a single space between the control structures
-`if`, `while`, and `for` and the parenthetic block representing the
+``if``, ``while``, and ``for`` and the parenthetic block representing the
 conditional, as well as a single space between the conditional parenthetic
 block and the opening brace.
 
@@ -244,7 +252,7 @@ No::
     for (...) {
         ...;}
 
-For control structures who's body contains a single statement, omitting the
+For control structures whose body contains a single statement, omitting the
 braces is ok *if* the statement is contained on a single line.
 
 Yes::
@@ -260,7 +268,7 @@ No::
             value: 42
         }));
 
-For `if` blocks which have an `else` or `else if` clause, the `else` should be
+For ``if`` blocks which have an ``else`` or ``else if`` clause, the ``else`` should be
 placed on it's own line following the previous closing parenthesis.  The
 parenthesis for the else block should follow the same rules as the other
 conditional control structures.
@@ -355,16 +363,16 @@ Yes::
         address c,
         address d,
         address e,
-        address f,
+        address f
     ) {
-        do_something;
+        doSomething();
     }
 
 No::
 
     function thisFunctionHasLotsOfArguments(address a, address b, address c,
         address d, address e, address f) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionHasLotsOfArguments(address a,
@@ -373,7 +381,7 @@ No::
                                             address d,
                                             address e,
                                             address f) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionHasLotsOfArguments(
@@ -383,7 +391,7 @@ No::
         address d,
         address e,
         address f) {
-        do_something;
+        doSomething();
     }
 
 If a long function declaration has modifiers, then each modifier should be
@@ -397,7 +405,7 @@ Yes::
         priced
         returns (address)
     {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(
@@ -410,7 +418,7 @@ Yes::
         priced
         returns (address)
     {
-        do_something;
+        doSomething();
     }
 
 No::
@@ -420,13 +428,13 @@ No::
                                           onlyowner
                                           priced
                                           returns (address) {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
         public onlyowner priced returns (address)
     {
-        do_something;
+        doSomething();
     }
 
     function thisFunctionNameIsReallyLong(address x, address y, address z)
@@ -434,10 +442,10 @@ No::
         onlyowner
         priced
         returns (address) {
-        do_something;
+        doSomething();
     }
 
-For constructor functions on inherited contracts who's bases require arguments,
+For constructor functions on inherited contracts whose bases require arguments,
 it is recommended to drop the base constructors onto new lines in the same
 manner as modifiers if the function declaration is long or hard to read.
 

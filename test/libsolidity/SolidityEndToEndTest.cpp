@@ -6595,6 +6595,25 @@ BOOST_AUTO_TEST_CASE(inline_assembly_jumps)
 	BOOST_CHECK(callContractFunction("f()", u256(7)) == encodeArgs(u256(34)));
 }
 
+BOOST_AUTO_TEST_CASE(inline_assembly_function_access)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint public x;
+			function g(uint y) { x = 2 * y; assembly { stop } }
+			function f(uint _x) {
+				assembly {
+					_x
+					jump(g)
+				}
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f(uint256)", u256(5)) == encodeArgs());
+	BOOST_CHECK(callContractFunction("x()") == encodeArgs(u256(10)));
+}
+
 BOOST_AUTO_TEST_CASE(index_access_with_type_conversion)
 {
 	// Test for a bug where higher order bits cleanup was not done for array index access.
@@ -6631,6 +6650,192 @@ BOOST_AUTO_TEST_CASE(delete_on_array_of_structs)
 	// This code interprets x as an array length and thus will go out of gas.
 	// neither of the two should throw due to out-of-bounds access
 	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+
+}
+
+BOOST_AUTO_TEST_CASE(internal_library_function)
+{
+	// tests that internal library functions can be called from outside
+	// and retain the same memory context (i.e. are pulled into the caller's code)
+	char const* sourceCode = R"(
+		library L {
+			function f(uint[] _data) internal {
+				_data[3] = 2;
+			}
+		}
+		contract C {
+			function f() returns (uint) {
+				uint[] memory x = new uint[](7);
+				x[3] = 8;
+				L.f(x);
+				return x[3];
+			}
+		}
+	)";
+	// This has to work without linking, because everything will be inlined.
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(internal_library_function_calling_private)
+{
+	// tests that internal library functions that are called from outside and that
+	// themselves call private functions are still able to (i.e. the private function
+	// also has to be pulled into the caller's code)
+	char const* sourceCode = R"(
+		library L {
+			function g(uint[] _data) private {
+				_data[3] = 2;
+			}
+			function f(uint[] _data) internal {
+				g(_data);
+			}
+		}
+		contract C {
+			function f() returns (uint) {
+				uint[] memory x = new uint[](7);
+				x[3] = 8;
+				L.f(x);
+				return x[3];
+			}
+		}
+	)";
+	// This has to work without linking, because everything will be inlined.
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(internal_library_function_bound)
+{
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint[] data; }
+			function f(S _s) internal {
+				_s.data[3] = 2;
+			}
+		}
+		contract C {
+			using L for L.S;
+			function f() returns (uint) {
+				L.S memory x;
+				x.data = new uint[](7);
+				x.data[3] = 8;
+				x.f();
+				return x.data[3];
+			}
+		}
+	)";
+	// This has to work without linking, because everything will be inlined.
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(internal_library_function_return_var_size)
+{
+	char const* sourceCode = R"(
+		library L {
+			struct S { uint[] data; }
+			function f(S _s) internal returns (uint[]) {
+				_s.data[3] = 2;
+				return _s.data;
+			}
+		}
+		contract C {
+			using L for L.S;
+			function f() returns (uint) {
+				L.S memory x;
+				x.data = new uint[](7);
+				x.data[3] = 8;
+				return x.f()[3];
+			}
+		}
+	)";
+	// This has to work without linking, because everything will be inlined.
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(2)));
+}
+
+BOOST_AUTO_TEST_CASE(iszero_bnot_correct)
+{
+	// A long time ago, some opcodes were renamed, which involved the opcodes
+	// "iszero" and "not".
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (bool) {
+				bytes32 x = 1;
+				assembly { x := not(x) }
+				if (x != ~bytes32(1)) return false;
+				assembly { x := iszero(x) }
+				if (x != bytes32(0)) return false;
+				return true;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(cleanup_bytes_types)
+{
+	// Checks that bytesXX types are properly cleaned before they are compared.
+	char const* sourceCode = R"(
+		contract C {
+			function f(bytes2 a, uint16 x) returns (uint) {
+				if (a != "ab") return 1;
+				if (x != 0x0102) return 2;
+				if (bytes3(x) != 0x0102) return 3;
+				return 0;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	// We input longer data on purpose.
+	BOOST_CHECK(callContractFunction("f(bytes2,uint16)", string("abc"), u256(0x040102)) == encodeArgs(0));
+}
+
+BOOST_AUTO_TEST_CASE(skip_dynamic_types)
+{
+	// The EVM cannot provide access to dynamically-sized return values, so we have to skip them.
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint, uint[], uint) {
+				return (7, new uint[](2), 8);
+			}
+			function g() returns (uint, uint) {
+				// Previous implementation "moved" b to the second place and did not skip.
+				var (a, _, b) = this.f();
+				return (a, b);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(7), u256(8)));
+}
+
+BOOST_AUTO_TEST_CASE(skip_dynamic_types_for_structs)
+{
+	// For accessors, the dynamic types are already removed in the external signature itself.
+	char const* sourceCode = R"(
+		contract C {
+			struct S {
+				uint x;
+				string a; // this is present in the accessor
+				uint[] b; // this is not present
+				uint y;
+			}
+			S public s;
+			function g() returns (uint, uint) {
+				s.x = 2;
+				s.a = "abc";
+				s.b = [7, 8, 9];
+				s.y = 6;
+				var (x, a, y) = this.s();
+				return (x, y);
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(2), u256(6)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

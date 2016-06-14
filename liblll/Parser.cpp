@@ -21,6 +21,10 @@
 
 #include "Parser.h"
 
+#if _MSC_VER
+#pragma warning(disable:4348)
+#endif
+
 #define BOOST_RESULT_OF_USE_DECLTYPE
 #define BOOST_SPIRIT_USE_PHOENIX_V3
 #include <boost/spirit/include/qi.hpp>

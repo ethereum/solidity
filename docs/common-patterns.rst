@@ -17,7 +17,7 @@ to read the data, so will everyone else.
 
 You can restrict read access to your contract's state
 by **other contracts**. That is actually the default
-unless you declare make your state variables `public`.
+unless you declare make your state variables ``public``.
 
 Furthermore, you can restrict who can make modifications
 to your contract's state or call your contract's
@@ -27,8 +27,6 @@ functions and this is what this page is about.
 
 The use of **function modifiers** makes these
 restrictions highly readable.
-
-.. {% include open_link gist="fe4ef267cbdeac151b98" %}
 
 ::
 
@@ -140,11 +138,11 @@ Example
 =======
 
 In the following example,
-the modifier `atStage` ensures that the function can
+the modifier ``atStage`` ensures that the function can
 only be called at a certain stage.
 
 Automatic timed transitions
-are handled by the modifier `timeTransitions`, which
+are handled by the modifier ``timeTransitions``, which
 should be used for all functions.
 
 .. note::
@@ -154,7 +152,7 @@ should be used for all functions.
     it after the latter, so that the new stage is
     taken into account.
 
-Finally, the modifier `transitionNext` can be used
+Finally, the modifier ``transitionNext`` can be used
 to automatically go to the next stage when the
 function finishes.
 
@@ -167,8 +165,6 @@ function finishes.
     return. If you want to do that, make sure
     to call nextStage manually from those functions.
 
-.. {% include open_link gist="0a221eaceb6d708bf271" %}
-
 ::
 
     contract StateMachine {
@@ -179,6 +175,7 @@ function finishes.
             AreWeDoneYet,
             Finished
         }
+
         // This is the current stage.
         Stages public stage = Stages.AcceptingBlindedBids;
 
@@ -188,9 +185,11 @@ function finishes.
             if (stage != _stage) throw;
             _
         }
+
         function nextStage() internal {
             stage = Stages(uint(stage) + 1);
         }
+
         // Perform timed transitions. Be sure to mention
         // this modifier first, otherwise the guards
         // will not take the new stage into account.
@@ -203,7 +202,7 @@ function finishes.
                 nextStage();
             // The other stages transition by transaction
         }
-        
+
         // Order of the modifiers matters here!
         function bid()
             timedTransitions
@@ -211,6 +210,7 @@ function finishes.
         {
             // We will not implement that here
         }
+
         function reveal()
             timedTransitions
             atStage(Stages.RevealBids)
@@ -227,6 +227,7 @@ function finishes.
             _
             nextStage();
         }
+
         function g()
             timedTransitions
             atStage(Stages.AnotherStage)
@@ -235,12 +236,14 @@ function finishes.
             // If you want to use `return` here,
             // you have to call `nextStage()` manually.
         }
+
         function h()
             timedTransitions
             atStage(Stages.AreWeDoneYet)
             transitionNext
         {
         }
+
         function i()
             timedTransitions
             atStage(Stages.Finished)

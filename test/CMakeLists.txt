@@ -40,9 +40,9 @@ foreach(file ${SRC_LIST})
 	endforeach(test_raw)
 endforeach(file)
 
-file(GLOB HEADERS "*.h")
+file(GLOB HEADERS "*.h" "*/*.h")
 set(EXECUTABLE soltest)
-add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+eth_simple_add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED Solidity::solidity Eth::ethereum Eth::ethcore)
 

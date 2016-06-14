@@ -6,18 +6,18 @@ Browser-Solidity
 ================
 
 If you just want to try Solidity for small contracts, you
-can try `browser-solidity <https://chriseth.github.io/browser-solidity>`_
+can try `browser-solidity <https://ethereum.github.io/browser-solidity>`_
 which does not need any installation. If you want to use it
 without connection to the Internet, you can also just save the page
-locally or clone http://github.com/chriseth/browser-solidity.
+locally or clone http://github.com/ethereum/browser-solidity.
 
-NPM / node.js
+npm / Node.js
 =============
 
 This is probably the most portable and most convenient way to install Solidity locally.
 
 A platform-independent JavaScript library is provided by compiling the C++ source
-into JavaScript using Emscripten for browser-solidity and there is also an NPM
+into JavaScript using Emscripten for browser-solidity and there is also an npm
 package available.
 
 To install it, simply use
@@ -26,8 +26,8 @@ To install it, simply use
 
     npm install solc
 
-Details about the usage of the nodejs package can be found in the
-`repository <https://github.com/chriseth/browser-solidity#nodejs-usage>`_.
+Details about the usage of the Node.js package can be found in the
+`solc-js repository <https://github.com/ethereum/solc-js>`_.
 
 Binary Packages
 ===============
@@ -59,76 +59,84 @@ Set up Homebrew:
 
     brew update
     brew upgrade
-    
+
     brew install boost --c++11             # this takes a while
-    brew install cmake cryptopp miniupnpc leveldb gmp libmicrohttpd libjson-rpc-cpp 
+    brew install cmake cryptopp miniupnpc leveldb gmp libmicrohttpd libjson-rpc-cpp
     # For Mix IDE and Alethzero only
     brew install xz d-bus
     brew install homebrew/versions/v8-315
-    brew install llvm --HEAD --with-clang 
+    brew install llvm --HEAD --with-clang
     brew install qt5 --with-d-bus          # add --verbose if long waits with a stale screen drive you crazy as well
 
-Ubuntu
-------
+Ubuntu Trusty (14.04)
+---------------------
 
-Below are the build instructions for the latest versions of Ubuntu. The best
-supported platform as of December 2014 is Ubuntu 14.04, 64 bit, with at least 2
-GB RAM. All our tests are done with this version. Community contributions for
-other versions are welcome!
-
-Install dependencies:
-
-Before you can build the source, you need several tools and dependencies for the application to get started.
-
-First, update your repositories. Not all packages are provided in the main
-Ubuntu repository, those you'll get from the Ethereum PPA and the LLVM archive.
+Below are the instructions to install the minimal dependencies required
+to compile Solidity on Ubuntu 14.04 (Trusty Tahr).
 
 .. note::
 
-    Ubuntu 14.04 users, you'll need the latest version of cmake. For this, use:
-    `sudo apt-add-repository ppa:george-edison55/cmake-3.x`
-
-Now add all the rest:
+    These dependencies are not enough to compile the GUIs (Alethzero and Mix).
 
 .. code-block:: bash
 
+    sudo apt-get -y install build-essential git cmake libgmp-dev libboost-all-dev \
+        libjsoncpp-dev libleveldb-dev libcurl4-openssl-dev libminiupnpc-dev \
+        libmicrohttpd-dev
+    
+    sudo add-apt-repository -y ppa:ethereum/ethereum
+    sudo add-apt-repository -y ppa:ethereum/ethereum-dev
     sudo apt-get -y update
-    sudo apt-get -y install language-pack-en-base
-    sudo dpkg-reconfigure locales
-    sudo apt-get -y install software-properties-common
+    sudo apt-get -y upgrade # this will update cmake to version 3.x
+    sudo apt-get -y install libcryptopp-dev libjson-rpc-cpp-dev
+
+Ubuntu Xenial (16.04)
+---------------------
+
+Below are the instructions to install the minimal dependencies required
+to compile Solidity on Ubuntu 16.04 (Xenial Xerus).
+
+One of the dependencies (Crypto++ Library, with version >= 5.6.2) can be
+installed either by adding the Ethereum PPA (Option 1) or by backporting
+``libcrypto++`` from Ubuntu Development to Ubuntu Xenial (Option 2).
+
+.. note::
+
+    These dependencies are not enough to compile the GUIs (Alethzero and Mix).
+
+.. code-block:: bash
+
+    sudo apt-get -y install build-essential git cmake libgmp-dev libboost-all-dev \
+        libjsoncpp-dev libleveldb-dev libcurl4-openssl-dev libminiupnpc-dev \
+        libjsonrpccpp-dev libmicrohttpd-dev
+    
+    # (Option 1) For those willing to add the Ethereum PPA:
     sudo add-apt-repository -y ppa:ethereum/ethereum
     sudo add-apt-repository -y ppa:ethereum/ethereum-dev
     sudo apt-get -y update
     sudo apt-get -y upgrade
-
-For Ubuntu 15.04 (Vivid Vervet) or older, use the following command to add the develop packages:
-
-.. code-block:: bash
-
-    sudo apt-get -y install build-essential git cmake libboost-all-dev libgmp-dev libleveldb-dev libminiupnpc-dev libreadline-dev libncurses5-dev libcurl4-openssl-dev libcryptopp-dev libjson-rpc-cpp-dev libmicrohttpd-dev libjsoncpp-dev libedit-dev libz-dev
-
-For Ubuntu 15.10 (Wily Werewolf) or newer, use the following command instead:
-
-.. code-block:: bash
-
-    sudo apt-get -y install build-essential git cmake libboost-all-dev libgmp-dev libleveldb-dev libminiupnpc-dev libreadline-dev libncurses5-dev libcurl4-openssl-dev libcryptopp-dev libjsonrpccpp-dev libmicrohttpd-dev libjsoncpp-dev libedit-dev libz-dev
+    sudo apt-get -y install libcryptopp-dev
     
-The reason for the change is that `libjsonrpccpp-dev` is available in the universe repository for newer versions of Ubuntu.
+    ## (Option 2) For those willing to backport libcrypto++:
+    #sudo apt-get -y install ubuntu-dev-tools
+    #sudo pbuilder create
+    #mkdir ubuntu
+    #cd ubuntu
+    #backportpackage --workdir=. --build --dont-sign libcrypto++
+    #sudo dpkg -i buildresult/libcrypto++6_*.deb buildresult/libcrypto++-dev_*.deb
+    #cd ..
 
 Building
 --------
 
-Run this if you plan on installing Solidity only, ignore errors at the end as
-they relate only to Alethzero and Mix
+Run this if you plan on installing Solidity only:
 
 .. code-block:: bash
 
     git clone --recursive https://github.com/ethereum/webthree-umbrella.git
     cd webthree-umbrella
     ./webthree-helpers/scripts/ethupdate.sh --no-push --simple-pull --project solidity # update Solidity repo
-    ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity --all --cores 4 -DEVMJIT=0 # build Solidity and others
-                                                                                #enabling DEVMJIT on OS X will not build
-                                                                                #feel free to enable it on Linux 
+    ./webthree-helpers/scripts/ethbuild.sh --no-git --project solidity --cores 4 -DEVMJIT=0 -DETHASHCL=0 # build Solidity only
 
 If you opted to install Alethzero and Mix:
 
@@ -147,7 +155,7 @@ you should fork Solidity and add your personal fork as a second remote:
     git remote add personal git@github.com:username/solidity.git
 
 Note that webthree-umbrella uses submodules, so solidity is its own git
-repository, but its settings are not stored in `.git/config`, but in
-`webthree-umbrella/.git/modules/solidity/config`.
+repository, but its settings are not stored in ``.git/config``, but in
+``webthree-umbrella/.git/modules/solidity/config``.
 
 
