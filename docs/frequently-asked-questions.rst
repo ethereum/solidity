@@ -863,6 +863,40 @@ does not fit inside this range, it is truncated. These truncations can have
 `serious consequences <https://en.bitcoin.it/wiki/Value_overflow_incident>`_, so code like the one
 above is necessary to avoid certain attacks.
 
+How the different exceptions behave?
+=========================================================================================
+
+::
+
+    contract C {
+        event StackDepthLimitReached(uint16 depth);
+        uint16 depthCounter = 0;
+        function callStackDepth() {
+            depthCounter++;
+            if (!this.call(0xba3dbad8)) {
+                StackDepthLimitReached(depthCounter);
+            }
+        }
+    
+        event InternalException(bool callResult);
+        function internalException() returns(bool) {
+            if (msg.sender == address(this)) {
+                throw;
+            }
+            InternalException(this.call(0xc10d9bbc));
+            return true;
+        }
+    
+        event InsufficientFunds(bool callResult);
+        function insufficientFunds() returns(bool) {
+            InsufficientFunds(this.call.value(1)());
+            return true;
+        }
+    }
+
+* `callStackDepth` will result in an `StackDepthLimitReached(1025)` event being emitted.
+* `internalException` will return true and emit `InternalException(false)`.
+* `insufficientFunds` will return true and emit `InsufficientFunds(false)`.
 
 More Questions?
 ===============
