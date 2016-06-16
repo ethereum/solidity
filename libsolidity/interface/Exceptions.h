@@ -49,6 +49,7 @@ public:
 		TypeError,
 		SyntaxError,
 		Why3TranslatorError,
+		InputError,
 		Warning
 	};
 

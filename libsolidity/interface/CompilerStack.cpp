@@ -63,6 +63,61 @@ CompilerStack::CompilerStack(bool _addStandardSources, ReadFileCallback const& _
 		addSources(StandardSources, true); // add them as libraries
 }
 
+bool CompilerStack::compileFromStandardizedInput(string const& _input)
+{
+	reset(false, false);
+
+	Json::Value input;
+	if (!Json::Reader().parse(_input, input, false))
+	{
+		auto err = make_shared<Error>(Error::Type::InputError);
+		*err <<
+			errinfo_comment("Error parsing standardized input.");
+		m_errors.push_back(std::move(err));
+		return false;
+	}
+	Json::Value const& sources = input["sources"];
+	for (auto const& source: sources.getMembers())
+		addSource(source, sources[source].asString());
+
+	Json::Value const& settings = input["settings"];
+	vector<string> remappings;
+	for (auto const& remapping: settings["remappings"])
+		remappings.push_back(remapping.asString());
+	setRemappings(remappings);
+
+	{
+		Json::Value optimizerSettings = settings.get("optimizer", Json::Value());
+		m_optimize = optimizerSettings.get("enabled", Json::Value(false)).asBool();
+		m_optimizeRuns = optimizerSettings.get("runs", Json::Value(200u)).asUInt();
+	}
+
+	map<string, h160> libraries;
+	{
+		Json::Value jsonLibraries = settings.get("libraries", Json::Value());
+		for (auto const& library: jsonLibraries.getMemberNames())
+			libraries[library] = h160(jsonLibraries[library].asString(), WhenError::Throw);
+	}
+
+	//@TODO document: Can accept wildcards
+	//@TODO document: plural
+	vector<string> compilationTargets;
+	{
+		Json::Value targets = settings.get("compilationTargets")
+	}
+	for (auto const& source: sources.getMembers())
+		addSource(source, sources[source]);
+
+	//@TODO unlinked linker files should be output as such
+	// What are the use-cases?
+	// only type check
+	// only extract documentation
+	// only extract list of all contracts / libraries
+
+
+	return false;
+}
+
 void CompilerStack::setRemappings(vector<string> const& _remappings)
 {
 	vector<Remapping> remappings;
@@ -226,6 +281,8 @@ vector<string> CompilerStack::contractNames() const
 
 bool CompilerStack::compile(bool _optimize, unsigned _runs)
 {
+	m_optimize = _optimize;
+	m_optimizeRuns = _runs;
 	if (!m_parseSuccessful)
 		if (!parse())
 			return false;
@@ -234,16 +291,18 @@ bool CompilerStack::compile(bool _optimize, unsigned _runs)
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->nodes())
 			if (auto contract = dynamic_cast<ContractDefinition const*>(node.get()))
-				compileContract(_optimize, _runs, *contract, compiledContracts);
+				compileContract(m_optimize, m_optimizeRuns, *contract, compiledContracts);
 	return true;
 }
 
 bool CompilerStack::compile(string const& _sourceCode, bool _optimize)
 {
+	m_optimize = _optimize;
+	m_optimizeRuns = 200;
 	return parse(_sourceCode) && compile(_optimize);
 }
 
-void CompilerStack::link(const std::map<string, h160>& _libraries)
+void CompilerStack::link(map<string, h160> const& _libraries)
 {
 	for (auto& contract: m_contracts)
 	{

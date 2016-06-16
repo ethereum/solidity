@@ -89,6 +89,10 @@ public:
 	/// @param _addStandardSources Adds standard sources if @a _addStandardSources.
 	explicit CompilerStack(bool _addStandardSources = true, ReadFileCallback const& _readFile = ReadFileCallback());
 
+	/// Sets all input parameters according to @a _input which conforms to the standardized input
+	/// format.
+	bool compileFromStandardizedInput(std::string const& _input);
+
 	/// Sets path remappings in the format "context:prefix=target"
 	void setRemappings(std::vector<std::string> const& _remappings);
 
@@ -163,6 +167,10 @@ public:
 	/// @param type The type of the documentation to get.
 	/// Can be one of 4 types defined at @c DocumentationType
 	std::string const& metadata(std::string const& _contractName, DocumentationType _type) const;
+
+	/// @returns the standardized metadata that can be verified against the bytecode and whose
+	/// keccak hash is included in the bytecode.
+	std::string verifierMetadata();
 
 	/// @returns the previously used scanner, useful for counting lines during error reporting.
 	Scanner const& scanner(std::string const& _sourceName = "") const;
@@ -246,6 +254,8 @@ private:
 	/// list of path prefix remappings, e.g. mylibrary: github.com/ethereum = /usr/local/ethereum
 	/// "context:prefix=target"
 	std::vector<Remapping> m_remappings;
+	bool m_optimize;
+	unsigned m_optimizeRuns;
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;
