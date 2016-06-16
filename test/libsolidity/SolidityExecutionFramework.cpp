@@ -116,5 +116,7 @@ u256 ExecutionFramework::balanceAt(Address const& _addr)
 
 bool ExecutionFramework::storageEmpty(Address const& _addr)
 {
-	return h256(m_rpc.eth_getStorageRoot(toString(_addr), "latest")) == EmptySHA3;
+	h256 root(m_rpc.eth_getStorageRoot(toString(_addr), "latest"));
+	BOOST_CHECK(root);
+	return root == EmptyTrie;
 }
