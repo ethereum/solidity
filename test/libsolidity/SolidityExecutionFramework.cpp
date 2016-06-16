@@ -20,6 +20,7 @@
  * Framework for executing Solidity contracts and testing them against C++ implementation.
  */
 
+#include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 
@@ -28,12 +29,33 @@ using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
 
+ExecutionFramework::boostArg::boostArg()
+{
+	size_t argc = boost::unit_test::framework::master_test_suite().argc;
+	char** argv = boost::unit_test::framework::master_test_suite().argv;
+	for (size_t i = 0; i < argc; i++)
+	{
+		string arg = argv[i];
+		if (arg == "--ipc" && i+1 < argc)
+		{
+			ipcPath = argv[i+1];
+			i++;
+		}
+	}
+	if (ipcPath.empty())
+		BOOST_FAIL("ERROR: ipcPath not set! (use --ipc <path>)");
+}
 
-ExecutionFramework::ExecutionFramework():
-	m_rpc(RPCSession::instance("/home/wins/Ethereum/testnet/ethnode1/geth.ipc")),
+ExecutionFramework::boostArg const& ExecutionFramework::getArgs()
+{
+	static boostArg boostArgs;
+	return boostArgs;
+}
+
+ExecutionFramework::ExecutionFramework() :
+	m_rpc(RPCSession::instance(getArgs().ipcPath)),
 	m_sender(m_rpc.account(0))
 {
-	eth::NoProof::init();
 	if (g_logVerbosity != -1)
 		g_logVerbosity = 0;
 

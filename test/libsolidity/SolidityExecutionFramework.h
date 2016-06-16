@@ -255,6 +255,13 @@ protected:
 	bool storageEmpty(Address const& _addr);
 	bool addressHasCode(Address const& _addr);
 
+	struct boostArg
+	{
+		boostArg();
+		std::string ipcPath;
+	};
+
+	boostArg const& getArgs();
 	RPCSession& m_rpc;
 
 	struct LogEntry
