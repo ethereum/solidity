@@ -742,10 +742,10 @@ only once at a specific address and their code is reused using the ``DELEGATECAL
 (``CALLCODE`` until Homestead)
 feature of the EVM. This means that if library functions are called, their code
 is executed in the context of the calling contract, i.e. ``this`` points to the
-calling contract and especially the storage from the calling contract can be
+calling contract, and especially the storage from the calling contract can be
 accessed. As a library is an isolated piece of source code, it can only access
 state variables of the calling contract if they are explicitly supplied (it
-would have to way to name them, otherwise).
+would have no way to name them, otherwise).
 
 Libraries can be seen as implicit base contracts of the contracts that use them.
 They will not be explicitly visible in the inheritance hierarchy, but calls
