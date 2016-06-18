@@ -52,6 +52,7 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		method["type"] = "function";
 		method["name"] = it.second->declaration().name();
 		method["constant"] = it.second->isConstant();
+		method["payable"] = it.second->isPayable();
 		method["inputs"] = populateParameters(
 			externalFunctionType->parameterNames(),
 			externalFunctionType->parameterTypeNames(_contractDef.isLibrary())

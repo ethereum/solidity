@@ -166,6 +166,7 @@ namespace solidity
 	K(Memory, "memory", 0)                                             \
 	K(Modifier, "modifier", 0)                                         \
 	K(New, "new", 0)                                                   \
+	K(Payable, "payable", 0)                                           \
 	K(Public, "public", 0)                                             \
 	K(Private, "private", 0)                                           \
 	K(Return, "return", 0)                                             \
@@ -228,7 +229,6 @@ namespace solidity
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
 	K(Of, "of", 0)                                                     \
-	K(Payable, "payable", 0)                                           \
 	K(Relocatable, "relocatable", 0)                                   \
 	K(Static, "static", 0)                                             \
 	K(Switch, "switch", 0)                                             \

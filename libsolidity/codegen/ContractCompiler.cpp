@@ -258,7 +258,15 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 		FunctionTypePointer const& functionType = it.second;
 		solAssert(functionType->hasDeclaration(), "");
 		CompilerContext::LocationSetter locationSetter(m_context, functionType->declaration());
+
 		m_context << callDataUnpackerEntryPoints.at(it.first);
+		if (!functionType->isPayable())
+		{
+			// Throw if function is not payable but call contained ether.
+			m_context << Instruction::CALLVALUE;
+			m_context.appendConditionalJumpTo(m_context.errorTag());
+		}
+
 		eth::AssemblyItem returnTag = m_context.pushNewTag();
 		m_context << CompilerUtils::dataStartOffset;
 		appendCalldataUnpacker(functionType->parameterTypes());

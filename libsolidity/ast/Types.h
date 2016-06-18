@@ -905,6 +905,7 @@ public:
 	}
 	bool hasDeclaration() const { return !!m_declaration; }
 	bool isConstant() const { return m_isConstant; }
+	bool isPayable() const { return m_isPayable; }
 	/// @return A shared pointer of an ASTString.
 	/// Can contain a nullptr in which case indicates absence of documentation
 	ASTPointer<ASTString> documentation() const;
@@ -942,6 +943,7 @@ private:
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
 	bool const m_bound = false; ///< true iff the function is called as arg1.fun(arg2, ..., argn)
 	bool m_isConstant = false;
+	bool m_isPayable = false;
 	Declaration const* m_declaration = nullptr;
 };
 
