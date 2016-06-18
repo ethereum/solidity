@@ -74,7 +74,15 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		);
 		abi.append(method);
 	}
-
+	if (_contractDef.fallbackFunction())
+	{
+		auto externalFunctionType = FunctionType(*_contractDef.fallbackFunction()).interfaceFunctionType();
+		solAssert(!!externalFunctionType, "");
+		Json::Value method;
+		method["type"] = "fallback";
+		method["constant"] = externalFunctionType->isConstant();
+		abi.append(method);
+	}
 	for (auto const& it: _contractDef.interfaceEvents())
 	{
 		Json::Value event;
