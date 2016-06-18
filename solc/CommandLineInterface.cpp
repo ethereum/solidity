@@ -78,6 +78,8 @@ static string const g_argCloneBinaryStr = "clone-bin";
 static string const g_argOpcodesStr = "opcodes";
 static string const g_argNatspecDevStr = "devdoc";
 static string const g_argNatspecUserStr = "userdoc";
+static string const g_argStructsStr = "structs";
+static string const g_argStateVariablesStr = "statevars";
 static string const g_argAddStandard = "add-std";
 static string const g_stdinFileName = "<stdin>";
 
@@ -92,7 +94,9 @@ static set<string> const g_combinedJsonArgs{
 	"asm",
 	"ast",
 	"userdoc",
-	"devdoc"
+	"devdoc",
+	"structs",
+	"statevars"
 };
 
 static void version()
@@ -119,6 +123,8 @@ static bool needsHumanTargetedStdout(po::variables_map const& _args)
 		g_argNatspecUserStr,
 		g_argAstJson,
 		g_argNatspecDevStr,
+		g_argStructsStr,
+		g_argStateVariablesStr,
 		g_argAsmStr,
 		g_argAsmJsonStr,
 		g_argOpcodesStr,
@@ -227,6 +233,16 @@ void CommandLineInterface::handleMeta(DocumentationType _type, string const& _co
 		argName = g_argNatspecDevStr;
 		suffix = ".docdev";
 		title = "Developer Documentation";
+		break;
+	case DocumentationType::Structs:
+		argName = g_argStructsStr;
+		suffix = ".structs";
+		title = "Contract Structs";
+		break;
+	case DocumentationType::StateVariables:
+		argName = g_argStateVariablesStr;
+		suffix = ".statevars";
+		title = "Contract State Variables";
 		break;
 	default:
 		// should never happen
@@ -457,6 +473,8 @@ Allowed options)",
 		(g_argSignatureHashes.c_str(), "Function signature hashes of the contracts.")
 		(g_argNatspecUserStr.c_str(), "Natspec user documentation of all contracts.")
 		(g_argNatspecDevStr.c_str(), "Natspec developer documentation of all contracts.")
+		(g_argStructsStr.c_str(), "Structs definitions of all contracts.")
+		(g_argStateVariablesStr.c_str(), "State Variables definitions of of all contracts.")
 		("formal", "Translated source suitable for formal analysis.");
 	desc.add(outputComponents);
 
@@ -662,6 +680,10 @@ void CommandLineInterface::handleCombinedJSON()
 			contractData["devdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);
 		if (requests.count("userdoc"))
 			contractData["userdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecUser);
+		if (requests.count("structs"))
+			contractData["structs"] = m_compiler->metadata(contractName, DocumentationType::Structs);
+		if (requests.count("statevars"))
+			contractData["statevars"] = m_compiler->metadata(contractName, DocumentationType::StateVariables);
 		output["contracts"][contractName] = contractData;
 	}
 
@@ -882,6 +904,8 @@ void CommandLineInterface::outputCompilationResults()
 		handleMeta(DocumentationType::ABISolidityInterface, contract);
 		handleMeta(DocumentationType::NatspecDev, contract);
 		handleMeta(DocumentationType::NatspecUser, contract);
+		handleMeta(DocumentationType::Structs, contract);
+		handleMeta(DocumentationType::StateVariables, contract);
 	} // end of contracts iteration
 
 	handleFormal();

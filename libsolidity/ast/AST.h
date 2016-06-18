@@ -321,6 +321,12 @@ public:
 	std::string const& devDocumentation() const;
 	void setDevDocumentation(std::string const& _devDocumentation);
 
+	std::string const& structsDocumentation() const;
+	void setStructsDocumentation(std::string const& _structsDocumentation);
+
+	std::string const& stateVariablesDocumentation() const;
+	void setStateVariablesDocumentation(std::string const& _stateVariablesDocumentation);
+
 	virtual TypePointer type() const override;
 
 	virtual ContractDefinitionAnnotation& annotation() const override;
@@ -333,6 +339,8 @@ private:
 	// parsed Natspec documentation of the contract.
 	std::string m_userDocumentation;
 	std::string m_devDocumentation;
+	std::string m_structsDocumentation;
+	std::string m_stateVariablesDocumentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;

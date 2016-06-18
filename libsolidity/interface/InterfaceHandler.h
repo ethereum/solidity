@@ -83,6 +83,16 @@ public:
 	/// @return             A string with the json representation
 	///                     of the contract's developer documentation
 	static std::string devDocumentation(ContractDefinition const& _contractDef);
+	/// Genereates the Structs documentation of the contract
+	/// @param _contractDef The contract definition
+	/// @return             A string with the json representation
+	///                     of the contract's structs documentation
+	static std::string structsDocumentation(ContractDefinition const& _contractDef);
+	/// Genereates the State Variables documentation of the contract
+	/// @param _contractDef The contract definition
+	/// @return             A string with the json representation
+	///                     of the contract's structs documentation
+	static std::string stateVariablesDocumentation(ContractDefinition const& _contractDef);
 
 private:
 	/// @returns concatenation of all content under the given tag name.

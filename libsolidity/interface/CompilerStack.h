@@ -64,7 +64,9 @@ enum class DocumentationType: uint8_t
 	NatspecUser = 1,
 	NatspecDev,
 	ABIInterface,
-	ABISolidityInterface
+	ABISolidityInterface,
+	Structs,
+	StateVariables
 };
 
 /**
@@ -211,6 +213,8 @@ private:
 		mutable std::unique_ptr<std::string const> solidityInterface;
 		mutable std::unique_ptr<std::string const> userDocumentation;
 		mutable std::unique_ptr<std::string const> devDocumentation;
+		mutable std::unique_ptr<std::string const> structsDocumentation;
+		mutable std::unique_ptr<std::string const> stateVariablesDocumentation;
 	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
