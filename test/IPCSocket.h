@@ -83,13 +83,15 @@ public:
 	std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber);
 	std::string personal_newAccount(std::string const& _password);
 	void personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration);
-	void test_setChainParams(std::string const& _author, std::string const& _account, std::string const& _balance);
+	void test_setChainParams(std::vector<std::string> const& _accounts);
 	void test_setChainParams(std::string const& _config);
 	void test_rewindToBlock(size_t _blockNr);
+	void test_modifyTimestamp(size_t _timestamp);
 	void test_mineBlocks(int _number);
 	Json::Value rpcCall(std::string const& _methodName, std::vector<std::string> const& _args = std::vector<std::string>(), bool _canFail = false);
 
 	std::string const& account(size_t _id) const { return m_accounts.at(_id); }
+	std::string const& accountCreateIfNotExists(size_t _id);
 
 private:
 	RPCSession(std::string const& _path);
@@ -100,40 +102,6 @@ private:
 
 	IPCSocket m_ipcSocket;
 	size_t m_rpcSequence = 1;
-
-	//Just working example of the node configuration file
-	std::string const c_genesisConfiguration = R"(
-	{
-		"sealEngine": "NoProof",
-		"options": {
-		},
-		"params": {
-			"accountStartNonce": "0x",
-			"maximumExtraDataSize": "0x1000000",
-			"blockReward": "0x",
-			"registrar": "",
-			"allowFutureBlocks": "1"
-		},
-		"genesis": {
-			"author": "[AUTHOR]",
-			"timestamp": "0x00",
-			"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-			"extraData": "0x",
-			"gasLimit": "0x1000000000000"
-		},
-		"accounts": {
-			"0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
-			"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
-			"0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
-			"0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-			"[ACCOUNT]": { "wei": "[BALANCE]" }
-		},
-		"network": {
-			"nodes": [
-					 ]
-		}
-	}
-	)";
 
 	std::vector<std::string> m_accounts;
 };

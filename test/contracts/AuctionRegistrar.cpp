@@ -285,8 +285,8 @@ protected:
 		}
 	};
 
-	u256 const m_biddingTime = u256(7 * 24 * 3600);
-	u256 const m_renewalInterval = u256(365 * 24 * 3600);
+	size_t const m_biddingTime = size_t(7 * 24 * 3600);
+	size_t const m_renewalInterval = size_t(365 * 24 * 3600);
 };
 
 }
@@ -304,7 +304,6 @@ BOOST_AUTO_TEST_CASE(reserve)
 	// Test that reserving works for long strings
 	deployRegistrar();
 	vector<string> names{"abcabcabcabcabc", "defdefdefdefdef", "ghighighighighighighighighighighighighighighi"};
-	m_sender = Address(0x123);
 
 	RegistrarInterface registrar(*this);
 
@@ -315,7 +314,7 @@ BOOST_AUTO_TEST_CASE(reserve)
 	for (auto const& name: names)
 	{
 		registrar.reserve(name);
-		BOOST_CHECK_EQUAL(registrar.owner(name), u160(0x123));
+		BOOST_CHECK_EQUAL(registrar.owner(name), u160(m_sender));
 	}
 }
 
@@ -324,14 +323,14 @@ BOOST_AUTO_TEST_CASE(double_reserve_long)
 	// Test that it is not possible to re-reserve from a different address.
 	deployRegistrar();
 	string name = "abcabcabcabcabcabcabcabcabcabca";
-	m_sender = Address(0x123);
 	RegistrarInterface registrar(*this);
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), u160(0x123));
+	BOOST_CHECK_EQUAL(registrar.owner(name), m_sender);
 
-	m_sender = Address(0x124);
+	sendEther(account(1), u256(10) * eth::ether);
+	m_sender = account(1);
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), u160(0x123));
+	BOOST_CHECK_EQUAL(registrar.owner(name), account(0));
 }
 
 BOOST_AUTO_TEST_CASE(properties)
@@ -341,14 +340,17 @@ BOOST_AUTO_TEST_CASE(properties)
 	RegistrarInterface registrar(*this);
 	string names[] = {"abcaeouoeuaoeuaoeu", "defncboagufra,fui", "ghagpyajfbcuajouhaeoi"};
 	size_t addr = 0x9872543;
+	size_t count = 1;
 	for (string const& name: names)
 	{
-		addr++;
-		size_t sender = addr + 10007;
-		m_sender = Address(sender);
+		m_sender = account(0);
+		sendEther(account(count), u256(20) * eth::ether);
+		m_sender = account(count);
+		auto sender = m_sender;
+		addr += count;
 		// setting by sender works
 		registrar.reserve(name);
-		BOOST_CHECK_EQUAL(registrar.owner(name), u160(sender));
+		BOOST_CHECK_EQUAL(registrar.owner(name), sender);
 		registrar.setAddress(name, addr, true);
 		BOOST_CHECK_EQUAL(registrar.addr(name), u160(addr));
 		registrar.setSubRegistrar(name, addr + 20);
@@ -357,14 +359,15 @@ BOOST_AUTO_TEST_CASE(properties)
 		BOOST_CHECK_EQUAL(registrar.content(name), h256(u256(addr + 90)));
 
 		// but not by someone else
-		m_sender = Address(h256(addr + 10007 - 1));
-		BOOST_CHECK_EQUAL(registrar.owner(name), u160(sender));
+		m_sender = account(count - 1);
+		BOOST_CHECK_EQUAL(registrar.owner(name), sender);
 		registrar.setAddress(name, addr + 1, true);
 		BOOST_CHECK_EQUAL(registrar.addr(name), u160(addr));
 		registrar.setSubRegistrar(name, addr + 20 + 1);
 		BOOST_CHECK_EQUAL(registrar.subRegistrar(name), u160(addr + 20));
 		registrar.setContent(name, h256(u256(addr + 90 + 1)));
 		BOOST_CHECK_EQUAL(registrar.content(name), h256(u256(addr + 90)));
+		count++;
 	}
 }
 
@@ -372,7 +375,6 @@ BOOST_AUTO_TEST_CASE(transfer)
 {
 	deployRegistrar();
 	string name = "abcaoeguaoucaeoduceo";
-	m_sender = Address(0x123);
 	RegistrarInterface registrar(*this);
 	registrar.reserve(name);
 	registrar.setContent(name, h256(u256(123)));
@@ -385,7 +387,7 @@ BOOST_AUTO_TEST_CASE(disown)
 {
 	deployRegistrar();
 	string name = "abcaoeguaoucaeoduceo";
-	m_sender = Address(0x123);
+
 	RegistrarInterface registrar(*this);
 	registrar.reserve(name);
 	registrar.setContent(name, h256(u256(123)));
@@ -394,11 +396,12 @@ BOOST_AUTO_TEST_CASE(disown)
 	BOOST_CHECK_EQUAL(registrar.name(u160(124)), name);
 
 	// someone else tries disowning
-	m_sender = Address(0x128);
+	sendEther(account(1), u256(10) * eth::ether);
+	m_sender = account(1);
 	registrar.disown(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
+	BOOST_CHECK_EQUAL(registrar.owner(name), account(0));
 
-	m_sender = Address(0x123);
+	m_sender = account(0);
 	registrar.disown(name);
 	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
 	BOOST_CHECK_EQUAL(registrar.addr(name), 0);
@@ -411,7 +414,7 @@ BOOST_AUTO_TEST_CASE(auction_simple)
 {
 	deployRegistrar();
 	string name = "x";
-	m_sender = Address(0x123);
+
 	RegistrarInterface registrar(*this);
 	// initiate auction
 	registrar.setNextValue(8);
@@ -421,68 +424,70 @@ BOOST_AUTO_TEST_CASE(auction_simple)
 	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_biddingTime + 10);
 	// trigger auction again
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
+	BOOST_CHECK_EQUAL(registrar.owner(name), m_sender);
 }
 
 BOOST_AUTO_TEST_CASE(auction_bidding)
 {
 	deployRegistrar();
 	string name = "x";
-	m_sender = Address(0x123);
+
+	unsigned startTime = 0x776347e2;
+	m_rpc.test_modifyTimestamp(startTime);
+
 	RegistrarInterface registrar(*this);
 	// initiate auction
 	registrar.setNextValue(8);
 	registrar.reserve(name);
 	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
 	// overbid self
-	m_envInfo.setTimestamp(m_biddingTime - 10);
+	m_rpc.test_modifyTimestamp(startTime + m_biddingTime - 10);
 	registrar.setNextValue(12);
 	registrar.reserve(name);
 	// another bid by someone else
-	m_sender = Address(0x124);
-	m_envInfo.setTimestamp(2 * m_biddingTime - 50);
+	sendEther(account(1), 10 * eth::ether);
+	m_sender = account(1);
+	m_rpc.test_modifyTimestamp(startTime + 2 * m_biddingTime - 50);
 	registrar.setNextValue(13);
 	registrar.reserve(name);
 	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
 	// end auction by first bidder (which is not highest) trying to overbid again (too late)
-	m_sender = Address(0x123);
-	m_envInfo.setTimestamp(4 * m_biddingTime);
+	m_sender = account(0);
+	m_rpc.test_modifyTimestamp(startTime + 4 * m_biddingTime);
 	registrar.setNextValue(20);
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0x124);
+	BOOST_CHECK_EQUAL(registrar.owner(name), account(1));
 }
 
 BOOST_AUTO_TEST_CASE(auction_renewal)
 {
 	deployRegistrar();
+
 	string name = "x";
 	RegistrarInterface registrar(*this);
+	size_t startTime = currentTimestamp();
 	// register name by auction
-	m_sender = Address(0x123);
 	registrar.setNextValue(8);
 	registrar.reserve(name);
-	m_envInfo.setTimestamp(4 * m_biddingTime);
+	m_rpc.test_modifyTimestamp(startTime + 4 * m_biddingTime);
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
+	BOOST_CHECK_EQUAL(registrar.owner(name), m_sender);
 
 	// try to re-register before interval end
-	m_sender = Address(0x222);
+	sendEther(account(1), 10 * eth::ether);
+	m_sender = account(1);
+	m_rpc.test_modifyTimestamp(currentTimestamp() + m_renewalInterval - 1);
 	registrar.setNextValue(80);
-	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_renewalInterval - 1);
 	registrar.reserve(name);
-	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_biddingTime);
-	// if there is a bug in the renewal logic, this would transfer the ownership to 0x222,
+	m_rpc.test_modifyTimestamp(currentTimestamp() + m_biddingTime);
+	// if there is a bug in the renewal logic, this would transfer the ownership to account(1),
 	// but if there is no bug, this will initiate the auction, albeit with a zero bid
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
+	BOOST_CHECK_EQUAL(registrar.owner(name), account(0));
 
-	m_envInfo.setTimestamp(m_envInfo.timestamp() + 2);
 	registrar.setNextValue(80);
 	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0x123);
-	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_biddingTime + 2);
-	registrar.reserve(name);
-	BOOST_CHECK_EQUAL(registrar.owner(name), 0x222);
+	BOOST_CHECK_EQUAL(registrar.owner(name), account(1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

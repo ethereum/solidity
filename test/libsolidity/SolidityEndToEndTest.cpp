@@ -1325,10 +1325,10 @@ BOOST_AUTO_TEST_CASE(blockchain)
 							 "    blockNumber = block.number;\n"
 							 "  }\n"
 							 "}\n";
-	m_envInfo.setAuthor(Address(0x123));
-	m_envInfo.setNumber(7);
+	BOOST_CHECK(m_rpc.rpcCall("miner_setEtherbase", {"\"0x1212121212121212121212121212121212121212\""}).asBool() == true);
+	m_rpc.test_mineBlocks(5);
 	compileAndRun(sourceCode, 27);
-	BOOST_CHECK(callContractFunctionWithValue("someInfo()", 28) == encodeArgs(28, 0x123, 7));
+	BOOST_CHECK(callContractFunctionWithValue("someInfo()", 28) == encodeArgs(28, u256("0x1212121212121212121212121212121212121212"), 7));
 }
 
 BOOST_AUTO_TEST_CASE(msg_sig)
@@ -1368,9 +1368,9 @@ BOOST_AUTO_TEST_CASE(now)
 							 "    val = now;\n"
 							 "  }\n"
 							 "}\n";
-	m_envInfo.setTimestamp(9);
+	m_rpc.test_modifyTimestamp(0x776347e2);
 	compileAndRun(sourceCode);
-	BOOST_CHECK(callContractFunction("someInfo()") == encodeArgs(true, 9));
+	BOOST_CHECK(callContractFunction("someInfo()") == encodeArgs(true, 0x776347e3));
 }
 
 BOOST_AUTO_TEST_CASE(type_conversions_cleanup)
@@ -2462,8 +2462,7 @@ BOOST_AUTO_TEST_CASE(use_std_lib)
 		contract Icarus is mortal { }
 	)";
 	m_addStandardSources = true;
-	u256 amount(130);
-	u160 address(23);
+	u256 amount(130 * eth::ether);
 	compileAndRun(sourceCode, amount, "Icarus");
 	u256 balanceBefore = balanceAt(m_sender);
 	BOOST_CHECK(callContractFunction("kill()") == bytes());
@@ -2567,7 +2566,7 @@ BOOST_AUTO_TEST_CASE(event)
 		BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(value)));
 		BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 3);
 		BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit(address,bytes32,uint256)")));
-		BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(m_sender));
+		BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(m_sender, h256::AlignRight));
 		BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(id));
 	}
 }
@@ -2624,7 +2623,7 @@ BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
 	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
 	BOOST_CHECK(m_logs[0].data == encodeArgs("abc"));
 	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 4);
-	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(m_sender));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(m_sender, h256::AlignRight));
 	BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(id));
 	BOOST_CHECK_EQUAL(m_logs[0].topics[2], h256(value));
 	BOOST_CHECK_EQUAL(m_logs[0].topics[3], h256(2));

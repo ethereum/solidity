@@ -134,17 +134,38 @@ string RPCSession::personal_newAccount(string const& _password)
 	return rpcCall("personal_newAccount", { quote(_password) }).asString();
 }
 
-void RPCSession::test_setChainParams(string const& _author, string const& _account, string const& _balance)
+void RPCSession::test_setChainParams(vector<string> const& _accounts)
 {
-	if (_account.size() < 40)
-		return;
-	string config = c_genesisConfiguration;
-	std::map<string, string> replaceMap;
-	replaceMap["[AUTHOR]"] = _author;
-	replaceMap["[ACCOUNT]"] = (_account[0] == '0' && _account[1] == 'x') ? _account.substr(2, 40) : _account;
-	replaceMap["[BALANCE]"] = _balance;
-	parseString(config, replaceMap);
-	test_setChainParams(config);
+	static std::string const c_configString = R"(
+	{
+		"sealEngine": "NoProof",
+		"params": {
+			"accountStartNonce": "0x",
+			"maximumExtraDataSize": "0x1000000",
+			"blockReward": "0x",
+			"allowFutureBlocks": "1"
+		},
+		"genesis": {
+			"author": "0000000000000010000000000000000000000000",
+			"timestamp": "0x00",
+			"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+			"extraData": "0x",
+			"gasLimit": "0x1000000000000"
+		},
+		"accounts": {
+			"0000000000000000000000000000000000000001": { "wei": "1", "precompiled": { "name": "ecrecover", "linear": { "base": 3000, "word": 0 } } },
+			"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
+			"0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
+			"0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } }
+		}
+	}
+	)";
+
+	Json::Value config;
+	BOOST_REQUIRE(Json::Reader().parse(c_configString, config));
+	for (auto const& account: _accounts)
+		config["accounts"][account]["wei"] = "0x100000000000000000000000000000000000000000";
+	test_setChainParams(Json::FastWriter().write(config));
 }
 
 void RPCSession::test_setChainParams(string const& _config)
@@ -171,6 +192,11 @@ void RPCSession::test_mineBlocks(int _number)
 	}
 
 	BOOST_FAIL("Error in test_mineBlocks: block mining timeout!");
+}
+
+void RPCSession::test_modifyTimestamp(size_t _timestamp)
+{
+	rpcCall("test_modifyTimestamp", { to_string(_timestamp) });
 }
 
 Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const& _args, bool _canFail)
@@ -203,39 +229,24 @@ Json::Value RPCSession::rpcCall(string const& _methodName, vector<string> const&
 	return result["result"];
 }
 
+string const& RPCSession::accountCreateIfNotExists(size_t _id)
+{
+	if (_id >= m_accounts.size())
+	{
+		m_accounts.push_back(personal_newAccount(""));
+		personal_unlockAccount(m_accounts.back(), "", 100000);
+	}
+	return m_accounts[_id];
+}
+
 RPCSession::RPCSession(const string& _path):
 	m_ipcSocket(_path)
 {
-	for (size_t i = 0; i < 1; ++i)
-	{
-		string account = personal_newAccount("");
-		personal_unlockAccount(account, "", 100000);
-		m_accounts.push_back(account);
-	}
-	test_setChainParams(
-		"0x1000000000000000000000000000000000000000",
-		m_accounts.front(),
-		"1000000000000000000000000000000000000000000000"
-	);
+	string account = personal_newAccount("");
+	personal_unlockAccount(account, "", 100000);
+	m_accounts.push_back(account);
+	test_setChainParams(m_accounts);
 }
-
-void RPCSession::parseString(string& _string, map<string, string> const& _varMap)
-{
-	std::vector<string> types;
-	for (std::map<std::string, std::string>::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)
-		types.push_back(it->first);
-
-	for (unsigned i = 0; i < types.size(); i++)
-	{
-		std::size_t pos = _string.find(types.at(i));
-		while (pos != std::string::npos)
-		{
-			_string.replace(pos, types.at(i).size(), _varMap.at(types.at(i)));
-			pos = _string.find(types.at(i));
-		}
-	}
-}
-
 
 string RPCSession::TransactionData::toJson() const
 {

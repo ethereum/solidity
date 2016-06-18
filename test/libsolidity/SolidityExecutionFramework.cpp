@@ -45,7 +45,8 @@ string getIPCSocketPath()
 		}
 	}
 	if (ipcPath.empty())
-		ipcPath = getenv("ETH_TEST_IPC");
+		if (auto path = getenv("ETH_TEST_IPC"))
+			ipcPath = path;
 	if (ipcPath.empty())
 		BOOST_FAIL("ERROR: ipcPath not set! (use --ipc <path>)");
 	return ipcPath;
@@ -86,7 +87,6 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		m_contractAddress = Address(receipt.contractAddress);
 		BOOST_REQUIRE(m_contractAddress);
 		string code = m_rpc.eth_getCode(receipt.contractAddress, "latest");
-		BOOST_REQUIRE(code.size() > 2);
 		m_output = fromHex(code, WhenError::Throw);
 	}
 
@@ -101,6 +101,31 @@ void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 
 		entry.data = fromHex(log.data, WhenError::Throw);
 		m_logs.push_back(entry);
 	}
+}
+
+void ExecutionFramework::sendEther(Address const& _to, u256 const& _value)
+{
+	RPCSession::TransactionData d;
+	d.data = "0x";
+	d.from = "0x" + toString(m_sender);
+	d.gas = toHex(m_gas, HexPrefix::Add);
+	d.gasPrice = toHex(m_gasPrice, HexPrefix::Add);
+	d.value = toHex(_value, HexPrefix::Add);
+	d.to = dev::toString(_to);
+
+	string txHash = m_rpc.eth_sendTransaction(d);
+	m_rpc.test_mineBlocks(1);
+}
+
+size_t ExecutionFramework::currentTimestamp()
+{
+	auto latestBlock = m_rpc.rpcCall("eth_getBlockByNumber", {"\"latest\"", "false"});
+	return size_t(u256(latestBlock.get("timestamp", "invalid").asString()));
+}
+
+Address ExecutionFramework::account(size_t _i)
+{
+	return Address(m_rpc.accountCreateIfNotExists(_i));
 }
 
 bool ExecutionFramework::addressHasCode(Address const& _addr)
