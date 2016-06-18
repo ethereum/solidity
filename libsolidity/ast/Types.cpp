@@ -1653,6 +1653,7 @@ TypePointer TupleType::closestTemporaryType(TypePointer const& _targetType) cons
 FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal):
 	m_location(_isInternal ? Location::Internal : Location::External),
 	m_isConstant(_function.isDeclaredConst()),
+	m_isPayable(_function.isPayable()),
 	m_declaration(&_function)
 {
 	TypePointers params;
