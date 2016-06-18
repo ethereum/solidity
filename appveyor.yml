@@ -18,6 +18,6 @@ install:
 before_build:
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" ..
+    - cmake -DTESTS=Off -G "Visual Studio 14 2015 Win64" ..
 build:
     project: C:\projects\solidity\build\solidity.sln

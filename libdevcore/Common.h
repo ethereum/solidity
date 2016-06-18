@@ -131,10 +131,17 @@ using u160Set = std::set<u160>;
 // Map types.
 using StringMap = std::map<std::string, std::string>;
 
+// Hash types.
+using StringHashMap = std::unordered_map<std::string, std::string>;
+
 // String types.
 using strings = std::vector<std::string>;
 // Fixed-length string types.
 using string32 = std::array<char, 32>;
+
+// Null/Invalid values for convenience.
+static const bytes NullBytes;
+extern const u256 Invalid256;
 
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)
@@ -155,6 +162,17 @@ inline u256 s2u(s256 _u)
     else
 		return u256(c_end + _u);
 }
+
+template <size_t n> inline u256 exp10()
+{
+	return exp10<n - 1>() * u256(10);
+}
+
+template <> inline u256 exp10<0>()
+{
+	return u256(1);
+}
+
 /// RAII utility class whose destructor calls a given function.
 class ScopeGuard
 {
