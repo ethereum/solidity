@@ -340,7 +340,7 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
 
 .. note::
     If you want to access the byte-representation of a string ``s``, use
-    ``bytes(s).length / bytes(s)[7] = x';``. Keep in mind
+    ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
     that you are accessing the low-level bytes of the utf-8 representation,
     and not the individual characters!
 
