@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(auction_simple)
 	registrar.reserve(name);
 	BOOST_CHECK_EQUAL(registrar.owner(name), 0);
 	// "wait" until auction end
-	m_envInfo.setTimestamp(m_envInfo.timestamp() + m_biddingTime + 10);
+	m_rpc.test_modifyTimestamp(currentTimestamp() + m_biddingTime + 10);
 	// trigger auction again
 	registrar.reserve(name);
 	BOOST_CHECK_EQUAL(registrar.owner(name), m_sender);

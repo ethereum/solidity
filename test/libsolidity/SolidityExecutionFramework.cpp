@@ -48,7 +48,7 @@ string getIPCSocketPath()
 		if (auto path = getenv("ETH_TEST_IPC"))
 			ipcPath = path;
 	if (ipcPath.empty())
-		BOOST_FAIL("ERROR: ipcPath not set! (use --ipc <path>)");
+		BOOST_FAIL("ERROR: ipcPath not set! (use --ipc <path> or the environment variable ETH_TEST_IPC)");
 	return ipcPath;
 }
 
