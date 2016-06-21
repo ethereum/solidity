@@ -66,7 +66,11 @@ public:
 		PathGasMeter meter(*m_compiler.assemblyItems());
 		GasMeter::GasConsumption gas = meter.estimateMax(0, state);
 		u256 bytecodeSize(m_compiler.runtimeObject().bytecode.size());
+		// costs for deployment
 		gas += bytecodeSize * schedule.createDataGas;
+		// costs for transaction
+		gas += gasForTransaction(m_compiler.object().bytecode, true);
+
 		BOOST_REQUIRE(!gas.isInfinite);
 		BOOST_CHECK(gas.value == m_gasUsed);
 	}
@@ -76,19 +80,30 @@ public:
 	void testRunTimeGas(string const& _sig, vector<bytes> _argumentVariants)
 	{
 		u256 gasUsed = 0;
+		GasMeter::GasConsumption gas;
 		FixedHash<4> hash(dev::sha3(_sig));
 		for (bytes const& arguments: _argumentVariants)
 		{
 			sendMessage(hash.asBytes() + arguments, false, 0);
 			gasUsed = max(gasUsed, m_gasUsed);
+			gas = max(gas, gasForTransaction(hash.asBytes() + arguments, false));
 		}
 
-		GasMeter::GasConsumption gas = GasEstimator::functionalEstimation(
+		gas += GasEstimator::functionalEstimation(
 			*m_compiler.runtimeAssemblyItems(),
 			_sig
 		);
 		BOOST_REQUIRE(!gas.isInfinite);
 		BOOST_CHECK(gas.value == m_gasUsed);
+	}
+
+	static GasMeter::GasConsumption gasForTransaction(bytes const& _data, bool _isCreation)
+	{
+		EVMSchedule schedule;
+		GasMeter::GasConsumption gas = _isCreation ? schedule.txCreateGas : schedule.txGas;
+		for (auto i: _data)
+			gas += i != 0 ? schedule.txDataNonZeroGas : schedule.txDataZeroGas;
+		return gas;
 	}
 
 protected:
