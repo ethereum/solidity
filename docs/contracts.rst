@@ -355,7 +355,7 @@ functions matches the given function identifier (or if no data was supplied at
 all).
 
 Furthermore, this function is executed whenever the contract receives plain
-Ether (witout data).  In such a context, there is very little gas available to
+Ether (without data).  In such a context, there is very little gas available to
 the function call, so it is important to make fallback functions as cheap as
 possible.
 
@@ -745,7 +745,7 @@ is executed in the context of the calling contract, i.e. ``this`` points to the
 calling contract and especially the storage from the calling contract can be
 accessed. As a library is an isolated piece of source code, it can only access
 state variables of the calling contract if they are explicitly supplied (it
-would have to way to name them, otherwise).
+would have no way to name them, otherwise).
 
 Libraries can be seen as implicit base contracts of the contracts that use them.
 They will not be explicitly visible in the inheritance hierarchy, but calls
