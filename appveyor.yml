@@ -1,0 +1,23 @@
+#------------------------------------------------------------------------------
+# Appveyor configuration file for solidity.
+#
+# The documentation for solidity is hosted at:
+#
+# http://solidity.readthedocs.org
+#
+# (c) 2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
+
+os: Visual Studio 2015
+configuration:
+    - Debug
+    - RelWithDebInfo
+install:
+    - git submodule update --init --recursive
+    - cmake -P deps\install_deps.cmake
+before_build:
+    - mkdir build
+    - cd build
+    - cmake -DTESTS=Off -G "Visual Studio 14 2015 Win64" ..
+build:
+    project: C:\projects\solidity\build\solidity.sln
