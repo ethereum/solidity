@@ -3750,6 +3750,31 @@ BOOST_AUTO_TEST_CASE(one_divided_by_three_integer_conversion)
 	BOOST_CHECK(!success(text));
 }
 
+BOOST_AUTO_TEST_CASE(unused_return_value)
+{
+	char const* text = R"(
+		contract test {
+			function g() returns (uint) {}
+			function f() {
+				g();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(unused_return_value_send)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				address(0x12).send(1);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

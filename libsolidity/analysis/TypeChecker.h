@@ -59,6 +59,9 @@ private:
 	/// Adds a new error to the list of errors.
 	void typeError(SourceLocation const& _location, std::string const& _description);
 
+	/// Adds a new warning to the list of errors.
+	void warning(SourceLocation const& _location, std::string const& _description);
+
 	/// Adds a new error to the list of errors and throws to abort type checking.
 	void fatalTypeError(SourceLocation const& _location, std::string const& _description);
 

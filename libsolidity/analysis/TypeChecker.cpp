@@ -830,6 +830,13 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 	if (type(_statement.expression())->category() == Type::Category::RationalNumber)
 		if (!dynamic_cast<RationalNumberType const&>(*type(_statement.expression())).mobileType())
 			typeError(_statement.expression().location(), "Invalid rational number.");
+
+	bool unusedReturnValue = true;
+	if (auto t = dynamic_cast<TupleType const*>(type(_statement.expression()).get()))
+		if (t->components().empty())
+			unusedReturnValue = false;
+	if (unusedReturnValue)
+		warning(_statement.location(), "Unused return value.");
 }
 
 bool TypeChecker::visit(Conditional const& _conditional)
@@ -1563,6 +1570,16 @@ void TypeChecker::requireLValue(Expression const& _expression)
 void TypeChecker::typeError(SourceLocation const& _location, string const& _description)
 {
 	auto err = make_shared<Error>(Error::Type::TypeError);
+	*err <<
+		errinfo_sourceLocation(_location) <<
+		errinfo_comment(_description);
+
+	m_errors.push_back(err);
+}
+
+void TypeChecker::warning(SourceLocation const& _location, string const& _description)
+{
+	auto err = make_shared<Error>(Error::Type::Warning);
 	*err <<
 		errinfo_sourceLocation(_location) <<
 		errinfo_comment(_description);
