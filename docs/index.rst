@@ -2,7 +2,7 @@ Solidity
 ========
 
 Solidity is a high-level language whose syntax is similar to that of JavaScript
-and it is designed to compile to code for the Ethereum Virtual Machine.
+and it is designed to compile the code for the Ethereum Virtual Machine.
 As you will see, it is quite easy to create contracts for voting,
 crowdfunding, blind auctions, multi-signature wallets and more.
 
