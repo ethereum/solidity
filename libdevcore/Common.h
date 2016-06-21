@@ -28,9 +28,12 @@
 #pragma warning(disable:4244)
 #endif
 
-#ifdef _MSC_VER
+#if _MSC_VER && _MSC_VER < 1900
+#pragma message("Compiling " __FILE__ " - and noexcept to throw")
 #define _ALLOW_KEYWORD_MACROS
 #define noexcept throw()
+#else
+#pragma message("Compiling " __FILE__ " - and doing nothing")
 #endif
 
 #ifdef __INTEL_COMPILER
@@ -45,16 +48,29 @@
 #include <functional>
 #include <string>
 #include <chrono>
+
+#if defined(__GNUC__)
 #pragma warning(push)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif // defined(__GNUC__)
+
+// See https://github.com/ethereum/libweb3core/commit/90680a8c25bfb48b24371b4abcacde56c181517c
+// See https://svn.boost.org/trac/boost/ticket/11328
+// Bob comment - perhaps we should just HARD FAIL here with Boost-1.58.00?
+// It is quite old now, and requiring end-users to use a newer Boost release is probably not unreasonable.
 #include <boost/version.hpp>
 #if (BOOST_VERSION == 105800)
 	#include "boost_multiprecision_number_compare_bug_workaround.hpp"
-#endif
+#endif // (BOOST_VERSION == 105800)
+
 #include <boost/multiprecision/cpp_int.hpp>
+
+#if defined(__GNUC__)
 #pragma warning(pop)
 #pragma GCC diagnostic pop
+#endif // defined(__GNUC__)
+
 #include "vector_ref.h"
 
 // CryptoPP defines byte in the global namespace, so must we.
@@ -124,10 +140,12 @@ using s256 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backe
 using u160 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 using s160 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
 using u512 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 512, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
+using s512 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<512, 512, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
 using u256s = std::vector<u256>;
 using u160s = std::vector<u160>;
 using u256Set = std::set<u256>;
 using u160Set = std::set<u160>;
+
 // Map types.
 using StringMap = std::map<std::string, std::string>;
 
@@ -183,4 +201,13 @@ public:
 private:
 	std::function<void(void)> m_f;
 };
+
+enum class WithExisting: int
+{
+	Trust = 0,
+	Verify,
+	Rescue,
+	Kill
+};
+
 }
