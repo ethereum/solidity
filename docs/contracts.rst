@@ -1004,7 +1004,7 @@ It is also possible to extend elementary types in that way::
 
         function replace(uint _old, uint _new) {
             // This performs the library function call
-            uint index = data.find(_old);
+            uint index = data.indexOf(_old);
             if (index == -1)
                 data.push(_new);
             else
