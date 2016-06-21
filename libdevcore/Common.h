@@ -29,11 +29,8 @@
 #endif
 
 #if _MSC_VER && _MSC_VER < 1900
-#pragma message("Compiling " __FILE__ " - and noexcept to throw")
 #define _ALLOW_KEYWORD_MACROS
 #define noexcept throw()
-#else
-#pragma message("Compiling " __FILE__ " - and doing nothing")
 #endif
 
 #ifdef __INTEL_COMPILER
