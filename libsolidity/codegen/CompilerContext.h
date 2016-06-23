@@ -132,6 +132,15 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
 
+	/// Appends inline assembly. @a _replacements are string-matching replacements that are performed
+	/// prior to parsing the inline assembly.
+	/// @param _localVariables assigns stack positions to variables with the last one being the stack top
+	void appendInlineAssembly(
+		std::string const& _assembly,
+		std::vector<std::string> const& _localVariables = std::vector<std::string>(),
+		std::map<std::string, std::string> const& _replacements = std::map<std::string, std::string>{}
+	);
+
 	/// Prepends "PUSH <compiler version number> POP"
 	void injectVersionStampIntoSub(size_t _subIndex);
 
