@@ -831,12 +831,21 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 		if (!dynamic_cast<RationalNumberType const&>(*type(_statement.expression())).mobileType())
 			typeError(_statement.expression().location(), "Invalid rational number.");
 
-	bool unusedReturnValue = true;
-	if (auto t = dynamic_cast<TupleType const*>(type(_statement.expression()).get()))
-		if (t->components().empty())
-			unusedReturnValue = false;
-	if (unusedReturnValue)
-		warning(_statement.location(), "Unused return value.");
+	if (auto call = dynamic_cast<FunctionCall const*>(&_statement.expression()))
+	{
+		if (auto callType = dynamic_cast<FunctionType const*>(type(call->expression()).get()))
+		{
+			using Location = FunctionType::Location;
+			Location location = callType->location();
+			if (
+				location == Location::Bare ||
+				location == Location::BareCallCode ||
+				location == Location::BareDelegateCall ||
+				location == Location::Send
+			)
+				warning(_statement.location(), "Return value of low-level calls not used.");
+		}
+	}
 }
 
 bool TypeChecker::visit(Conditional const& _conditional)

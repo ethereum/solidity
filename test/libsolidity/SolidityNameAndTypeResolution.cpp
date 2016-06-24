@@ -3760,7 +3760,7 @@ BOOST_AUTO_TEST_CASE(unused_return_value)
 			}
 		}
 	)";
-	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+	BOOST_CHECK(success(text));
 }
 
 BOOST_AUTO_TEST_CASE(unused_return_value_send)
@@ -3769,6 +3769,54 @@ BOOST_AUTO_TEST_CASE(unused_return_value_send)
 		contract test {
 			function f() {
 				address(0x12).send(1);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(unused_return_value_call)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				address(0x12).call("abc");
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(unused_return_value_call_value)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				address(0x12).call.value(2)("abc");
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(unused_return_value_callcode)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				address(0x12).callcode("abc");
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text, true) == Error::Type::Warning);
+}
+
+BOOST_AUTO_TEST_CASE(unused_return_value_delegatecall)
+{
+	char const* text = R"(
+		contract test {
+			function f() {
+				address(0x12).delegatecall("abc");
 			}
 		}
 	)";
