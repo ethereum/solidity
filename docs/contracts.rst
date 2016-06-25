@@ -883,8 +883,8 @@ custom types without the overhead of external function calls:
         using BigInt for BigInt.bigint;
 
         function f() {
-            var x = bigint.fromUint(7);
-            var y = bigint.fromUint(uint(-1));
+            var x = BigInt.fromUint(7);
+            var y = BigInt.fromUint(uint(-1));
             var z = x.add(y);
         }
     }
@@ -986,7 +986,7 @@ Let us rewrite the set example from the
 It is also possible to extend elementary types in that way::
 
     library Search {
-        function indexOf(uint[] storage self, uint value) {
+        function indexOf(uint[] storage self, uint value) returns (uint) {
             for (uint i = 0; i < self.length; i++)
                 if (self[i] == value) return i;
             return uint(-1);
@@ -1004,8 +1004,8 @@ It is also possible to extend elementary types in that way::
 
         function replace(uint _old, uint _new) {
             // This performs the library function call
-            uint index = data.find(_old);
-            if (index == -1)
+            uint index = data.indexOf(_old);
+            if (index == uint(-1))
                 data.push(_new);
             else
                 data[index] = _new;
