@@ -830,6 +830,22 @@ void TypeChecker::endVisit(ExpressionStatement const& _statement)
 	if (type(_statement.expression())->category() == Type::Category::RationalNumber)
 		if (!dynamic_cast<RationalNumberType const&>(*type(_statement.expression())).mobileType())
 			typeError(_statement.expression().location(), "Invalid rational number.");
+
+	if (auto call = dynamic_cast<FunctionCall const*>(&_statement.expression()))
+	{
+		if (auto callType = dynamic_cast<FunctionType const*>(type(call->expression()).get()))
+		{
+			using Location = FunctionType::Location;
+			Location location = callType->location();
+			if (
+				location == Location::Bare ||
+				location == Location::BareCallCode ||
+				location == Location::BareDelegateCall ||
+				location == Location::Send
+			)
+				warning(_statement.location(), "Return value of low-level calls not used.");
+		}
+	}
 }
 
 bool TypeChecker::visit(Conditional const& _conditional)
@@ -1563,6 +1579,16 @@ void TypeChecker::requireLValue(Expression const& _expression)
 void TypeChecker::typeError(SourceLocation const& _location, string const& _description)
 {
 	auto err = make_shared<Error>(Error::Type::TypeError);
+	*err <<
+		errinfo_sourceLocation(_location) <<
+		errinfo_comment(_description);
+
+	m_errors.push_back(err);
+}
+
+void TypeChecker::warning(SourceLocation const& _location, string const& _description)
+{
+	auto err = make_shared<Error>(Error::Type::Warning);
 	*err <<
 		errinfo_sourceLocation(_location) <<
 		errinfo_comment(_description);
