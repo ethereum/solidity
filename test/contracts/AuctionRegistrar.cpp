@@ -124,13 +124,19 @@ contract GlobalRegistrar is Registrar, AuctionSystem {
 	function onAuctionEnd(string _name) internal {
 		var auction = m_auctions[_name];
 		var record = m_toRecord[_name];
-		if (record.owner != 0)
-			record.owner.send(auction.sumOfBids - auction.highestBid / 100);
-		else
-			auction.highestBidder.send(auction.highestBid - auction.secondHighestBid);
+		var previousOwner = record.owner;
 		record.renewalDate = now + c_renewalInterval;
 		record.owner = auction.highestBidder;
 		Changed(_name);
+		if (previousOwner != 0) {
+			if (!record.owner.send(auction.sumOfBids - auction.highestBid / 100))
+				throw;
+		}
+		else
+		{
+			if (!auction.highestBidder.send(auction.highestBid - auction.secondHighestBid))
+				throw;
+		}
 	}
 
 	function reserve(string _name) external {
