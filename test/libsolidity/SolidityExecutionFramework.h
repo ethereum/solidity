@@ -26,7 +26,7 @@
 #include <tuple>
 #include <fstream>
 #include "../TestHelper.h"
-#include "../IPCSocket.h"
+#include "../RPCSession.h"
 #include <libethcore/ABI.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/State.h>

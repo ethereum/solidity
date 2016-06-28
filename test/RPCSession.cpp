@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file IPCSocket.cpp
+/** @file RPCSession.cpp
  * @author Dimtiry Khokhlov <dimitry@ethdev.com>
  * @date 2016
  */
@@ -25,7 +25,7 @@
 #include <libdevcore/CommonData.h>
 #include <jsoncpp/json/reader.h>
 #include <jsoncpp/json/writer.h>
-#include "IPCSocket.h"
+#include "RPCSession.h"
 
 using namespace std;
 using namespace dev;
