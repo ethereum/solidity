@@ -170,6 +170,11 @@ string const& ContractDefinition::userDocumentation() const
 	return m_userDocumentation;
 }
 
+string const& ContractDefinition::fullDocumentation() const
+{
+	return m_fullDocumentation;
+}
+
 void ContractDefinition::setDevDocumentation(string const& _devDocumentation)
 {
 	m_devDocumentation = _devDocumentation;
@@ -180,6 +185,10 @@ void ContractDefinition::setUserDocumentation(string const& _userDocumentation)
 	m_userDocumentation = _userDocumentation;
 }
 
+void ContractDefinition::setFullDocumentation(string const& _fullDocumentation)
+{
+	m_fullDocumentation = _fullDocumentation;
+}
 
 vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 {

@@ -1,0 +1,22 @@
+## {{ contract }}
+
+{% if title | length > 0 %}{{ title }}{% endif %}
+{% if author | length > 0 %}`(c) {{ author }}`{% endif %}
+
+{% for method_name, method in methods.iteritems() %}
+
+#### ```{{ method_name }}```
+
+    {% if method["params"] | length > 0 %}
+        {% for param_name, param_desc in method["params"].iteritems() %}
+* **{{ param_name }}**: {{ param_desc }}
+        {% endfor %}
+    {% endif %}
+
+{% if method["return"] | length > 0 %} **Return**: {{ method["return"] }} {% endif %}
+
+{{ method["details"] }}
+
+{% if method["notice"] | length > 0 %}**Notice:** `{{ method["notice"] }}`{% endif %}
+
+{% endfor %}

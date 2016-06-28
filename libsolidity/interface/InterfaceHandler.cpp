@@ -23,6 +23,8 @@ string InterfaceHandler::documentation(
 		return abiInterface(_contractDef);
 	case DocumentationType::ABISolidityInterface:
 		return ABISolidityInterface(_contractDef);
+    case DocumentationType::FullDocumentation:
+        return fullDocumentation(_contractDef);
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
@@ -231,6 +233,60 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 			if (!method.empty())
 				// add the function, only if we have any documentation to add
 				methods[it.second->externalSignature()] = method;
+		}
+	}
+	doc["methods"] = methods;
+
+	return Json::StyledWriter().write(doc);
+}
+
+string InterfaceHandler::fullDocumentation(ContractDefinition const& _contractDef)
+{
+	Json::Value doc;
+	Json::Value methods(Json::objectValue);
+
+	auto author = extractDoc(_contractDef.annotation().docTags, "author");
+	if (!author.empty())
+		doc["author"] = author;
+	auto title = extractDoc(_contractDef.annotation().docTags, "title");
+	if (!title.empty())
+		doc["title"] = title;
+	auto notice = extractDoc(_contractDef.annotation().docTags, "notice");
+	if (!notice.empty())
+		doc["notice"] = notice;
+
+	for (auto const& it: _contractDef.interfaceFunctions())
+	{
+		if (!it.second->hasDeclaration())
+			continue;
+		Json::Value method;
+		if (auto fun = dynamic_cast<FunctionDefinition const*>(&it.second->declaration()))
+		{
+			auto dev = extractDoc(fun->annotation().docTags, "dev");
+			if (!dev.empty())
+				method["details"] = Json::Value(dev);
+
+            auto notice = extractDoc(fun->annotation().docTags, "notice");
+			if (!notice.empty())
+				method["notice"] = Json::Value(notice);
+
+			auto author = extractDoc(fun->annotation().docTags, "author");
+			if (!author.empty())
+				method["author"] = author;
+
+			auto ret = extractDoc(fun->annotation().docTags, "return");
+			if (!ret.empty())
+				method["return"] = ret;
+
+			Json::Value params(Json::objectValue);
+			auto paramRange = fun->annotation().docTags.equal_range("param");
+			for (auto i = paramRange.first; i != paramRange.second; ++i)
+				params[i->second.paramName] = Json::Value(i->second.content);
+
+			if (!params.empty())
+				method["params"] = params;
+
+			methods[it.second->fullSignature()] = method;
 		}
 	}
 	doc["methods"] = methods;

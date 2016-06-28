@@ -1985,6 +1985,30 @@ string FunctionType::externalSignature() const
 	return ret + ")";
 }
 
+string FunctionType::fullSignature() const
+{
+	solAssert(m_declaration != nullptr, "Full signature of function needs declaration");
+
+	const bool _addDataLocation = false;
+
+	// Function name
+	string ret = m_declaration->name() + "(";
+	// Params types with names
+	const vector<string> params = parameterNames();
+	const vector<string> paramTypes = parameterTypeNames(_addDataLocation);
+	solAssert(params.size() == paramTypes.size(), "Inconsistent function params");
+	for (unsigned short i = 0; i < params.size(); ++i)
+		ret += paramTypes[i] + " " + params[i] + (i == params.size() - 1 ? "" : ", ");
+
+	ret += ") returns (";
+	// Return types
+	const vector<string> returns = returnParameterTypeNames(_addDataLocation);
+	for (vector<string>::const_iterator it = returns.cbegin(); it != returns.cend(); ++it)
+		ret += *it + (it + 1 == returns.cend() ? "" : ", ");
+
+	return ret + ")";
+}
+
 u256 FunctionType::externalIdentifier() const
 {
 	return FixedHash<4>::Arith(FixedHash<4>(dev::sha3(externalSignature())));

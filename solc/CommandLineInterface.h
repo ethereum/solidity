@@ -66,6 +66,7 @@ private:
 	void handleMeta(DocumentationType _type, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
 	void handleFormal();
+	void handleDocumentation(std::string const& _contract);
 
 	/// Fills @a m_sourceCodes initially and @a m_redirects.
 	void readInputFilesAndConfigureRemappings();
