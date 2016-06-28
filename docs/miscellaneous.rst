@@ -39,6 +39,22 @@ So for the following contract snippet::
 
 The position of ``data[4][9].b`` is at ``sha3(uint256(9) . sha3(uint256(4) . uint256(1))) + 1``.
 
+A web3.js example of getting storage values from a dynamic array::
+
+    contract C {
+        uint varA;
+        uint[] varB;
+        
+        function C() {
+            varA = 111;
+            varB[length++] == 222;
+        }
+    }
+    
+    var key = web3.sha3("0x0000000000000000000000000000000000000000000000000000000000000001", {encoding:"hex"});
+    var bn = web3.toBigNumber("0x" + key);
+    var result = web3.eth.getStorageAt(myContract, bn);
+
 *****************
 Esoteric Features
 *****************
