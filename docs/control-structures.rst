@@ -69,6 +69,18 @@ this does not execute a constructor. We could also have used ``function setFeed(
 only (locally) sets the value and amount of gas sent with the function call and only the
 parentheses at the end perform the actual call.
 
+.. warning::
+    Any interaction with another contract imposes a certain danger, especially
+    if the source code of the contract is not known in advance. The current
+    contract hands over control to the called contract and that might do
+    just about anything. Be prepared that it calls into other contracts of
+    your system and perhaps even back into the calling contract before your
+    call returns. This means
+    that the called contract can change state variables of the calling contract
+    via its functions. Write your functions in a way that e.g. calls to
+    external functions happen after any changes to state variables in your contract,
+    so your contract is not vulnerable to a recursive call exploit.
+
 Named Calls and Anonymous Function Parameters
 ---------------------------------------------
 

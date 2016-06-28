@@ -291,15 +291,32 @@ activate themselves.
         /// End the auction and send the highest bid
         /// to the beneficiary.
         function auctionEnd() {
+            // It is a good guideline to structure functions that interact
+            // with other contracts (i.e. they call functions or send Ether)
+            // into three phases:
+            // 1. checking conditions
+            // 2. performing actions (potentially changing conditions)
+            // 3. interacting with other contracts
+            // If these phases are mixed up, the other contract could call
+            // back into the current contract and modify the state or cause
+            // effects (ether payout) to be perfromed multiple times.
+            // If functions called internally include interaction with external
+            // contracts, they also have to be considered interaction with
+            // external contracts.
+
+            // 1. Conditions
             if (now <= auctionStart + biddingTime)
                 throw; // auction did not yet end
             if (ended)
                 throw; // this function has already been called
+
+            // 2. Effects
+            ended = true;
             AuctionEnded(highestBidder, highestBid);
 
+            // 3. Interaction
             if (!beneficiary.send(highestBid))
                 throw;
-            ended = true;
         }
 
         function () {
@@ -476,7 +493,8 @@ high or low invalid bids.
             var amount = pendingReturns[msg.sender];
             // It is important to set this to zero because the recipient
             // can call this function again as part of the receiving call
-            // before `send` returns.
+            // before `send` returns (see the remark above about
+            // conditions -> effects -> interaction).
             pendingReturns[msg.sender] = 0;
             if (!msg.sender.send(amount))
                 throw; // If anything fails, this will revert the changes above
@@ -490,11 +508,11 @@ high or low invalid bids.
             if (ended)
                 throw;
             AuctionEnded(highestBidder, highestBid);
+            ended = true;
             // We send all the money we have, because some
             // of the refunds might have failed.
             if (!beneficiary.send(this.balance))
                 throw;
-            ended = true;
         }
 
         function () {
