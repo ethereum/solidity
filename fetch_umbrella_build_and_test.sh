@@ -27,4 +27,14 @@ cmake .. -DGUI=0 -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE $OPTIONS
 make lllc solc soljson soltest
 
 
-./solidity/test/soltest
+# Test runs disabled for macos for now,
+# we need to find a way to install eth.
+if [[ "$OSTYPE" != "darwin"* ]]
+then
+  eth --test -d /tmp/test &
+  while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
+  
+  ./solidity/test/soltest --ipc /tmp/test/geth.ipc
+  pkill eth
+fi
+

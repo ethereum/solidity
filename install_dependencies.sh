@@ -65,7 +65,8 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         libmicrohttpd-dev \
         libminiupnpc-dev \
         libz-dev \
-        opencl-headers
+        opencl-headers \
+        eth
 
     # The exception is libjson-rpc-cpp, which we have to build from source for
     # reliable results.   The only binaries available for this package are those
