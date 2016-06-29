@@ -50,13 +50,13 @@ complete contract):
 
   // THIS CONTRACT CONTAINS A BUG - DO NOT USE
   contract Fund {
-    /// Mapping of ether shares of the contract.
-    mapping(address => uint) shares;
-    /// Withdraw your share.
-    function withdraw() {
-      if (msg.sender.send(shares[msg.sender]))
-        shares[msg.sender] = 0;
-    }
+      /// Mapping of ether shares of the contract.
+      mapping(address => uint) shares;
+      /// Withdraw your share.
+      function withdraw() {
+          if (msg.sender.send(shares[msg.sender]))
+              shares[msg.sender] = 0;
+      }
   }
 
 The problem is not too serious here because of the limited gas as part
@@ -71,17 +71,16 @@ outlined further below:
 ::
 
   contract Fund {
-    /// Mapping of ether shares of the contract.
-    mapping(address => uint) shares;
-    /// Withdraw your share.
-    function withdraw() {
-      var share = shares[msg.sender];
-      shares[msg.sender] = 0;
-      if (!msg.sender.send(share))
-        throw;
-    }
+      /// Mapping of ether shares of the contract.
+      mapping(address => uint) shares;
+      /// Withdraw your share.
+      function withdraw() {
+          var share = shares[msg.sender];
+          shares[msg.sender] = 0;
+          if (!msg.sender.send(share))
+              throw;
+      }
   }
-
 
 Note that re-entrancy is not only an effect of Ether transfer but of any
 function call on another contract. Furthermore, you also have to take
