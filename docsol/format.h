@@ -3,9 +3,10 @@
 
 #include <libsolidity/ast/AST.h>
 
+using namespace std;
 using namespace dev::solidity;
 
-std::string navigationMarkdown(ContractDefinition const& contract);
-std::string formatMarkdown(ContractDefinition const& contract);
+string navigationMarkdown(ContractDefinition const& contract);
+string formatMarkdown(ContractDefinition const& contract);
 
 #endif

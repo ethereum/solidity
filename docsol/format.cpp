@@ -2,42 +2,42 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 
-std::string extractDoc(std::multimap<std::string, DocTag> const& _tags,
-                       std::string const& _name)
+string extractDoc(multimap<string, DocTag> const& _tags,
+                  string const& _name)
 {
-    std::string value;
-	auto range = _tags.equal_range(_name);
-	for (auto i = range.first; i != range.second; ++i)
-		value += i->second.content;
-	return value;
+    string value;
+    auto range = _tags.equal_range(_name);
+    for (auto i = range.first; i != range.second; ++i)
+        value += i->second.content;
+    return value;
 }
 
-std::map<std::string,std::string>
-extractDocMap(std::multimap<std::string, DocTag> const& _tags,
-              std::string const& _name)
+map<string,string>
+extractDocMap(multimap<string, DocTag> const& _tags,
+              string const& _name)
 {
-    std::map<std::string,std::string> value;
-	auto range = _tags.equal_range(_name);
-	for (auto i = range.first; i != range.second; ++i)
-		value[i->second.paramName] = i->second.content;
+    map<string,string> value;
+    auto range = _tags.equal_range(_name);
+    for (auto i = range.first; i != range.second; ++i)
+        value[i->second.paramName] = i->second.content;
     return value;
 }
 
 
-std::string navigationMarkdown(ContractDefinition const& contract) {
-    std::stringstream md;
+string navigationMarkdown(ContractDefinition const& contract) {
+    stringstream md;
 
-    std::string lower_name = contract.name();
+    string lower_name = contract.name();
     boost::algorithm::to_lower(lower_name); 
 
     md << "* [" << contract.name() << "](#"
        << lower_name << (contract.isLibrary() ? "-library" : "")
-       << ")" << std::endl;
+       << ")" << endl;
     
     return md.str();
 }
 
-void formatMethod(std::stringstream &md, FunctionDefinition const& method) {
+void formatMethod(stringstream &md, FunctionDefinition const& method) {
     auto doc          = method.annotation().docTags; 
     auto param_vector = method.parameterList().parameters();
     auto return_vector= method.returnParameterList()->parameters();
@@ -46,7 +46,7 @@ void formatMethod(std::stringstream &md, FunctionDefinition const& method) {
     auto returns      = extractDoc(doc, "return");
     auto param_doc    = extractDocMap(doc, "param");
 
-    md << "```js" << std::endl << method.name() << "(";
+    md << "```js" << endl << method.name() << "(";
 
     for (auto param: param_vector)
         md << param->name() << (param == param_vector.back() ? "" : ", ");
@@ -59,52 +59,52 @@ void formatMethod(std::stringstream &md, FunctionDefinition const& method) {
                << (param == return_vector.back() ? "" : ", ");
     }
 
-    md << ")" << std::endl << "```" << std::endl
-       << desc << std::endl;
+    md << ")" << endl << "```" << endl
+       << desc << endl;
 
     if (!notice.empty())
-        md << std::endl << "**Notice:**" << notice << std::endl << std::endl;
+        md << endl << "**Notice:**" << notice << endl << endl;
  
     if (param_vector.size() > 0) {
-        md << "##### Parameters" << std::endl << std::endl;
+        md << "##### Parameters" << endl << endl;
 
         for (auto param: param_vector) {
             md << "1. `" << param->type()->canonicalName(false)
                << " " << param->name() << "` "
-               << param_doc[param->name()] << std::endl;
+               << param_doc[param->name()] << endl;
         }
         
-        md << std::endl;
+        md << endl;
     }
  
     if (return_vector.size() > 0) {
-        md << "##### Returns" << std::endl << std::endl;
+        md << "##### Returns" << endl << endl;
 
         for (auto param: return_vector) {
             md << "1. `" << param->type()->canonicalName(false)
                << " " << param->name() << "` - "
-               << returns << std::endl;
+               << returns << endl;
         }
  
-        md << std::endl;
+        md << endl;
     }
 }
 
-std::string formatMarkdown(ContractDefinition const& contract) {
-    std::stringstream md;
+string formatMarkdown(ContractDefinition const& contract) {
+    stringstream md;
     auto doc   = contract.annotation().docTags; 
     auto title = extractDoc(doc, "title");
     auto desc  = extractDoc(doc, "dev");
  
     md << "### " << contract.name()
-       << (contract.isLibrary() ? " `library`" : "") << std::endl
-       << title << std::endl << std::endl << desc << std::endl;
+       << (contract.isLibrary() ? " `library`" : "") << endl
+       << title << endl << endl << desc << endl;
 
     for (auto fun: contract.definedFunctions()) {
-        md  << "#### " << (fun->isConstructor() ? "Constructor" : fun->name()) << std::endl;
+        md  << "#### " << (fun->isConstructor() ? "Constructor" : fun->name()) << endl;
         formatMethod(md, *fun);
     }
 
-    md << std::endl << "---" << std::endl;
+    md << endl << "---" << endl;
     return md.str();
 }
