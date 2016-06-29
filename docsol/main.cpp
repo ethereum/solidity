@@ -24,7 +24,7 @@
 #include <iostream>
 
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
+#include <boost/program_options.hpp>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
@@ -34,6 +34,7 @@
 using namespace std;
 using namespace dev::solidity;
 using namespace boost::filesystem;
+using namespace boost::program_options;
 
 void find_packages(
         vector<path> &files,
@@ -80,14 +81,23 @@ void read_packages(
 
 int main(int argc, char** argv)
 {
-    if (argc < 2 || argc > 3)
+    options_description options("Allowed options");
+    options.add_options()
+        ("help", "print this message and exit")
+        ("include-path,I", value<vector<string>>()->composing(), "add the directory to the list of directories to be searched for Solidity files")
+        ("contract,C", value<string>(), "select contract by name")
+    ;
+    variables_map vm;
+    store(parse_command_line(argc, argv, options), vm);
+    notify(vm);
+
+    if (vm.count("help") || !vm.count("include-path"))
     {
-        cerr << "USAGE: " << *argv << " IMPORT_PATH [CONTRACT]" << endl;
+        cout << options << endl;
         return 1;
     }
 
-    vector<string> includes;
-    boost::split(includes, argv[1], boost::is_any_of(":"));
+    auto includes = vm["include-path"].as<vector<string>>();
     
     vector<path> package_files;
     find_packages(package_files, includes, ".sol");
@@ -109,9 +119,10 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc == 3)
+    if (vm.count("contract"))
     {
-        cout << formatMarkdown(solc.contractDefinition(argv[2])) << endl;
+        auto name = vm["contract"].as<string>();
+        cout << formatMarkdown(solc.contractDefinition(name)) << endl;
     }
     else
     {
