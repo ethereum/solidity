@@ -2,9 +2,10 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 
-string extractDoc(multimap<string, DocTag> const& _tags,
-                  string const& _name)
-{
+string extractDoc(
+        multimap<string, DocTag> const& _tags,
+        string const& _name
+) {
     string value;
     auto range = _tags.equal_range(_name);
     for (auto i = range.first; i != range.second; ++i)
@@ -12,10 +13,10 @@ string extractDoc(multimap<string, DocTag> const& _tags,
     return value;
 }
 
-map<string,string>
-extractDocMap(multimap<string, DocTag> const& _tags,
-              string const& _name)
-{
+map<string,string> extractDocMap(
+        multimap<string, DocTag> const& _tags,
+        string const& _name
+) {
     map<string,string> value;
     auto range = _tags.equal_range(_name);
     for (auto i = range.first; i != range.second; ++i)
@@ -24,7 +25,8 @@ extractDocMap(multimap<string, DocTag> const& _tags,
 }
 
 
-string navigationMarkdown(ContractDefinition const& contract) {
+string navigationMarkdown(ContractDefinition const& contract)
+{
     stringstream md;
 
     string lower_name = contract.name();
@@ -37,7 +39,8 @@ string navigationMarkdown(ContractDefinition const& contract) {
     return md.str();
 }
 
-void formatMethod(stringstream &md, FunctionDefinition const& method) {
+void formatMethod(stringstream &md, FunctionDefinition const& method)
+{
     auto doc          = method.annotation().docTags; 
     auto param_vector = method.parameterList().parameters();
     auto return_vector= method.returnParameterList()->parameters();
@@ -51,7 +54,8 @@ void formatMethod(stringstream &md, FunctionDefinition const& method) {
     for (auto param: param_vector)
         md << param->name() << (param == param_vector.back() ? "" : ", ");
 
-    if (return_vector.size() > 0) {
+    if (return_vector.size() > 0)
+    {
         md << ") returns (";
 
         for (auto param: return_vector)
@@ -65,32 +69,33 @@ void formatMethod(stringstream &md, FunctionDefinition const& method) {
     if (!notice.empty())
         md << endl << "**Notice:**" << notice << endl << endl;
  
-    if (param_vector.size() > 0) {
+    if (param_vector.size() > 0)
+    {
         md << "##### Parameters" << endl << endl;
 
-        for (auto param: param_vector) {
+        for (auto param: param_vector)
             md << "1. `" << param->type()->canonicalName(false)
                << " " << param->name() << "` "
                << param_doc[param->name()] << endl;
-        }
         
         md << endl;
     }
  
-    if (return_vector.size() > 0) {
+    if (return_vector.size() > 0)
+    {
         md << "##### Returns" << endl << endl;
 
-        for (auto param: return_vector) {
+        for (auto param: return_vector)
             md << "1. `" << param->type()->canonicalName(false)
                << " " << param->name() << "` - "
                << returns << endl;
-        }
  
         md << endl;
     }
 }
 
-string formatMarkdown(ContractDefinition const& contract) {
+string formatMarkdown(ContractDefinition const& contract)
+{
     stringstream md;
     auto doc   = contract.annotation().docTags; 
     auto title = extractDoc(doc, "title");
@@ -100,7 +105,8 @@ string formatMarkdown(ContractDefinition const& contract) {
        << (contract.isLibrary() ? " `library`" : "") << endl
        << title << endl << endl << desc << endl;
 
-    for (auto fun: contract.definedFunctions()) {
+    for (auto fun: contract.definedFunctions())
+    {
         md  << "#### " << (fun->isConstructor() ? "Constructor" : fun->name()) << endl;
         formatMethod(md, *fun);
     }

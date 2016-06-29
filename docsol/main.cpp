@@ -35,9 +35,11 @@ using namespace std;
 using namespace dev::solidity;
 using namespace boost::filesystem;
 
-void find_packages(vector<path> &files,
-                   vector<string> const& dirs,
-                   string const& ext) {
+void find_packages(
+        vector<path> &files,
+        vector<string> const& dirs,
+        string const& ext
+) {
     directory_iterator end_itr;
     for (auto dir: dirs) {
 
@@ -60,8 +62,10 @@ void find_packages(vector<path> &files,
     }
 }
 
-void read_packages(map<string, string> &sources,
-                   vector<path> const& source_files) {
+void read_packages(
+        map<string, string> &sources,
+        vector<path> const& source_files
+) {
     for (auto source: source_files) {
         stringstream full_name;
         full_name << source.parent_path().filename().string()
@@ -74,8 +78,10 @@ void read_packages(map<string, string> &sources,
     }
 }
 
-int main(int argc, char** argv) {
-    if (argc < 2 || argc > 3) {
+int main(int argc, char** argv)
+{
+    if (argc < 2 || argc > 3)
+    {
         cerr << "USAGE: " << *argv << " IMPORT_PATH [CONTRACT]" << endl;
         return 1;
     }
@@ -92,7 +98,8 @@ int main(int argc, char** argv) {
     CompilerStack solc;
     solc.addSources(sources);
 
-    if(!solc.parse()) {
+    if(!solc.parse())
+    {
         cerr << "Errors:" << endl;
         auto scannerFromSourceName = [&](string const& _sourceName) -> Scanner const& { return solc.scanner(_sourceName); };
         for (auto err: solc.errors())
@@ -102,9 +109,12 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    if (argc == 3) {
+    if (argc == 3)
+    {
         cout << formatMarkdown(solc.contractDefinition(argv[2])) << endl;
-    } else {
+    }
+    else
+    {
         for (auto name: solc.contractNames())
             cout << navigationMarkdown(solc.contractDefinition(name));
         cout << endl;
