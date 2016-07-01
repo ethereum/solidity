@@ -36,8 +36,8 @@ if (NOT EMSCRIPTEN)
 	add_subdirectory(lllc)
 endif()
 
-#if (TESTS AND NOT EMSCRIPTEN)
-#	add_subdirectory(test)
-#endif()
+if (TESTS AND NOT EMSCRIPTEN)
+	add_subdirectory(test)
+endif()
 
 # TODO installation and packaging rules
