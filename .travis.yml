@@ -5,9 +5,6 @@
 #
 # http://solidity.readthedocs.org
 #
-# TODO - Re-add Sphinx validation which was in this file until removed in
-# https://github.com/ethereum/solidity/commit/7cfd4d62e4f6dcea0ea3722f5ba4c6562674ba29.
-#
 # TODO - Merge with .travis.yml file which currently lives in the root of
 # webthree-umbrella, but actually contains the automation for the Solidity
 # Emscripten build, which will also need consolidating into here somehow.
@@ -25,22 +22,9 @@ matrix:
           dist: trusty
           sudo: required
           env: TRAVIS_BUILD_TYPE=Debug
-        - os: linux
-          dist: trusty
-          sudo: required
-          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
-        - os: osx
-          osx_image: xcode7.1
-          env: TRAVIS_BUILD_TYPE=Debug
-        - os: osx
-          osx_image: xcode7.1
-          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
         - os: osx
           osx_image: xcode7.3
           env: TRAVIS_BUILD_TYPE=Debug
-        - os: osx
-          osx_image: xcode7.3
-          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
 git:
     depth: 2
 before_install:
