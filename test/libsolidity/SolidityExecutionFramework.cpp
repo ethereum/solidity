@@ -1,0 +1,147 @@
+/*
+	This file is part of cpp-ethereum.
+
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+ * @author Christian <c@ethdev.com>
+ * @date 2016
+ * Framework for executing Solidity contracts and testing them against C++ implementation.
+ */
+
+#include <cstdlib>
+#include <boost/test/framework.hpp>
+#include <test/libsolidity/SolidityExecutionFramework.h>
+
+using namespace std;
+using namespace dev;
+using namespace dev::solidity;
+using namespace dev::solidity::test;
+
+string getIPCSocketPath()
+{
+	string ipcPath;
+
+	size_t argc = boost::unit_test::framework::master_test_suite().argc;
+	char** argv = boost::unit_test::framework::master_test_suite().argv;
+	for (size_t i = 0; i < argc; i++)
+	{
+		string arg = argv[i];
+		if (arg == "--ipc" && i + 1 < argc)
+		{
+			ipcPath = argv[i + 1];
+			i++;
+		}
+	}
+	if (ipcPath.empty())
+		if (auto path = getenv("ETH_TEST_IPC"))
+			ipcPath = path;
+	if (ipcPath.empty())
+		BOOST_FAIL("ERROR: ipcPath not set! (use --ipc <path> or the environment variable ETH_TEST_IPC)");
+	return ipcPath;
+}
+
+ExecutionFramework::ExecutionFramework() :
+	m_rpc(RPCSession::instance(getIPCSocketPath())),
+	m_sender(m_rpc.account(0))
+{
+	if (g_logVerbosity != -1)
+		g_logVerbosity = 0;
+
+	m_rpc.test_rewindToBlock(0);
+}
+
+void ExecutionFramework::sendMessage(bytes const& _data, bool _isCreation, u256 const& _value)
+{
+	RPCSession::TransactionData d;
+	d.data = "0x" + toHex(_data);
+	d.from = "0x" + toString(m_sender);
+	d.gas = toHex(m_gas, HexPrefix::Add);
+	d.gasPrice = toHex(m_gasPrice, HexPrefix::Add);
+	d.value = toHex(_value, HexPrefix::Add);
+	if (!_isCreation)
+	{
+		d.to = dev::toString(m_contractAddress);
+		BOOST_REQUIRE(m_rpc.eth_getCode(d.to, "latest").size() > 2);
+		// Use eth_call to get the output
+		m_output = fromHex(m_rpc.eth_call(d, "latest"), WhenError::Throw);
+	}
+
+	string txHash = m_rpc.eth_sendTransaction(d);
+	m_rpc.test_mineBlocks(1);
+	RPCSession::TransactionReceipt receipt(m_rpc.eth_getTransactionReceipt(txHash));
+
+	if (_isCreation)
+	{
+		m_contractAddress = Address(receipt.contractAddress);
+		BOOST_REQUIRE(m_contractAddress);
+		string code = m_rpc.eth_getCode(receipt.contractAddress, "latest");
+		m_output = fromHex(code, WhenError::Throw);
+	}
+
+	m_gasUsed = u256(receipt.gasUsed);
+	m_logs.clear();
+	for (auto const& log: receipt.logEntries)
+	{
+		LogEntry entry;
+		entry.address = Address(log.address);
+		for (auto const& topic: log.topics)
+			entry.topics.push_back(h256(topic));
+		entry.data = fromHex(log.data, WhenError::Throw);
+		m_logs.push_back(entry);
+	}
+}
+
+void ExecutionFramework::sendEther(Address const& _to, u256 const& _value)
+{
+	RPCSession::TransactionData d;
+	d.data = "0x";
+	d.from = "0x" + toString(m_sender);
+	d.gas = toHex(m_gas, HexPrefix::Add);
+	d.gasPrice = toHex(m_gasPrice, HexPrefix::Add);
+	d.value = toHex(_value, HexPrefix::Add);
+	d.to = dev::toString(_to);
+
+	string txHash = m_rpc.eth_sendTransaction(d);
+	m_rpc.test_mineBlocks(1);
+}
+
+size_t ExecutionFramework::currentTimestamp()
+{
+	auto latestBlock = m_rpc.rpcCall("eth_getBlockByNumber", {"\"latest\"", "false"});
+	return size_t(u256(latestBlock.get("timestamp", "invalid").asString()));
+}
+
+Address ExecutionFramework::account(size_t _i)
+{
+	return Address(m_rpc.accountCreateIfNotExists(_i));
+}
+
+bool ExecutionFramework::addressHasCode(Address const& _addr)
+{
+	string code = m_rpc.eth_getCode(toString(_addr), "latest");
+	return !code.empty() && code != "0x";
+}
+
+u256 ExecutionFramework::balanceAt(Address const& _addr)
+{
+	return u256(m_rpc.eth_getBalance(toString(_addr), "latest"));
+}
+
+bool ExecutionFramework::storageEmpty(Address const& _addr)
+{
+	h256 root(m_rpc.eth_getStorageRoot(toString(_addr), "latest"));
+	BOOST_CHECK(root);
+	return root == EmptyTrie;
+}
