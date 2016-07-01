@@ -279,6 +279,28 @@ eth::AssemblyItems const* CompilerStack::runtimeAssemblyItems(string const& _con
 	return currentContract.compiler ? &contract(_contractName).compiler->runtimeAssemblyItems() : nullptr;
 }
 
+string const* CompilerStack::sourceMapping(string const& _contractName) const
+{
+	Contract const& c = contract(_contractName);
+	if (!c.sourceMapping)
+	{
+		if (auto items = assemblyItems(_contractName))
+			c.sourceMapping.reset(new string(computeSourceMapping(*items)));
+	}
+	return c.sourceMapping.get();
+}
+
+string const* CompilerStack::runtimeSourceMapping(string const& _contractName) const
+{
+	Contract const& c = contract(_contractName);
+	if (!c.runtimeSourceMapping)
+	{
+		if (auto items = runtimeAssemblyItems(_contractName))
+			c.runtimeSourceMapping.reset(new string(computeSourceMapping(*items)));
+	}
+	return c.runtimeSourceMapping.get();
+}
+
 eth::LinkerObject const& CompilerStack::object(string const& _contractName) const
 {
 	return contract(_contractName).object;
@@ -313,6 +335,22 @@ Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _co
 		_outStream << "Contract not fully implemented" << endl;
 		return Json::Value();
 	}
+}
+
+vector<string> CompilerStack::sourceNames() const
+{
+	vector<string> names;
+	for (auto const& s: m_sources)
+		names.push_back(s.first);
+	return names;
+}
+
+map<string, unsigned> CompilerStack::sourceIndices() const
+{
+	map<string, unsigned> indices;
+	for (auto const& s: m_sources)
+		indices[s.first] = indices.size();
+	return indices;
 }
 
 string const& CompilerStack::interface(string const& _contractName) const
@@ -603,4 +641,77 @@ CompilerStack::Source const& CompilerStack::source(string const& _sourceName) co
 		BOOST_THROW_EXCEPTION(CompilerError() << errinfo_comment("Given source file not found."));
 
 	return it->second;
+}
+
+string CompilerStack::computeSourceMapping(eth::AssemblyItems const& _items) const
+{
+	string ret;
+	map<string, unsigned> sourceIndicesMap = sourceIndices();
+	int prevStart = -1;
+	int prevLength = -1;
+	int prevSourceIndex = -1;
+	char prevJump = 0;
+	for (auto const& item: _items)
+	{
+		if (!ret.empty())
+			ret += ";";
+
+		SourceLocation const& location = item.location();
+		int length = location.start != -1 && location.end != -1 ? location.end - location.start : -1;
+		int sourceIndex =
+			location.sourceName && sourceIndicesMap.count(*location.sourceName) ?
+			sourceIndicesMap.at(*location.sourceName) :
+			-1;
+		char jump = '-';
+		if (item.getJumpType() == eth::AssemblyItem::JumpType::IntoFunction)
+			jump = 'i';
+		else if (item.getJumpType() == eth::AssemblyItem::JumpType::OutOfFunction)
+			jump = 'o';
+
+		unsigned components = 4;
+		if (jump == prevJump)
+		{
+			components--;
+			if (sourceIndex == prevSourceIndex)
+			{
+				components--;
+				if (length == prevLength)
+				{
+					components--;
+					if (location.start == prevStart)
+						components--;
+				}
+			}
+		}
+
+		if (components-- > 0)
+		{
+			if (location.start != prevStart)
+				ret += std::to_string(location.start);
+			if (components-- > 0)
+			{
+				ret += ':';
+				if (length != prevLength)
+					ret += std::to_string(length);
+				if (components-- > 0)
+				{
+					ret += ':';
+					if (sourceIndex != prevSourceIndex)
+						ret += std::to_string(sourceIndex);
+					if (components-- > 0)
+					{
+						ret += ':';
+						if (jump != prevJump)
+							ret += jump;
+					}
+				}
+			}
+		}
+
+		prevStart = location.start;
+		prevLength = length;
+		prevSourceIndex = sourceIndex;
+		prevJump = jump;
+	}
+	return ret;
 }

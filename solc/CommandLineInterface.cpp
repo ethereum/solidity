@@ -86,6 +86,8 @@ static set<string> const g_combinedJsonArgs{
 	"bin",
 	"bin-runtime",
 	"clone-bin",
+	"srcmap",
+	"srcmap-runtime",
 	"opcodes",
 	"abi",
 	"interface",
@@ -658,6 +660,16 @@ void CommandLineInterface::handleCombinedJSON()
 			ostringstream unused;
 			contractData["asm"] = m_compiler->streamAssembly(unused, contractName, m_sourceCodes, true);
 		}
+		if (requests.count("srcmap"))
+		{
+			auto map = m_compiler->sourceMapping(contractName);
+			contractData["srcmap"] = map ? *map : "";
+		}
+		if (requests.count("srcmap-runtime"))
+		{
+			auto map = m_compiler->runtimeSourceMapping(contractName);
+			contractData["srcmap"] = map ? *map : "";
+		}
 		if (requests.count("devdoc"))
 			contractData["devdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);
 		if (requests.count("userdoc"))
@@ -665,12 +677,22 @@ void CommandLineInterface::handleCombinedJSON()
 		output["contracts"][contractName] = contractData;
 	}
 
+	bool needsSourceList = requests.count("ast") || requests.count("srcmap") || requests.count("srcmap-runtime");
+	if (needsSourceList)
+	{
+		// Indices into this array are used to abbreviate source names in source locations.
+		output["sourceList"] = Json::Value(Json::arrayValue);
+
+		for (auto const& source: m_compiler->sourceNames())
+			output["sourceList"].append(source);
+	}
+
 	if (requests.count("ast"))
 	{
 		output["sources"] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
 		{
-			ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
+			ASTJsonConverter converter(m_compiler->ast(sourceCode.first), m_compiler->sourceIndices());
 			output["sources"][sourceCode.first] = Json::Value(Json::objectValue);
 			output["sources"][sourceCode.first]["AST"] = converter.json();
 		}

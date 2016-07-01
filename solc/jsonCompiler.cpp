@@ -214,6 +214,10 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			contractData["opcodes"] = solidity::disassemble(compiler.object(contractName).bytecode);
 			contractData["functionHashes"] = functionHashes(compiler.contractDefinition(contractName));
 			contractData["gasEstimates"] = estimateGas(compiler, contractName);
+			auto sourceMap = compiler.sourceMapping(contractName);
+			contractData["srcmap"] = sourceMap ? *sourceMap : "";
+			auto runtimeSourceMap = compiler.sourceMapping(contractName);
+			contractData["srcmap-runtime"] = runtimeSourceMap ? *runtimeSourceMap : "";
 			ostringstream unused;
 			contractData["assembly"] = compiler.streamAssembly(unused, contractName, _sources, true);
 			output["contracts"][contractName] = contractData;
@@ -235,12 +239,13 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			output["formal"]["errors"] = errors;
 		}
 
+		// Indices into this array are used to abbreviate source names in source locations.
+		output["sourceList"] = Json::Value(Json::arrayValue);
+		for (auto const& source: compiler.sourceNames())
+			output["sourceList"].append(source);
 		output["sources"] = Json::Value(Json::objectValue);
-		for (auto const& source: _sources)
-		{
-			output["sources"][source.first] = Json::Value(Json::objectValue);
-			output["sources"][source.first]["AST"] = ASTJsonConverter(compiler.ast(source.first)).json();
-		}
+		for (auto const& source: compiler.sourceNames())
+			output["sources"][source]["AST"] = ASTJsonConverter(compiler.ast(source), compiler.sourceIndices()).json();
 	}
 
 	return Json::FastWriter().write(output);
