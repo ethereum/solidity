@@ -26,14 +26,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
     brew install boost
     brew install cmake
-    brew install cryptopp
-    brew install miniupnpc
-    brew install leveldb
-    brew install gmp
     brew install jsoncpp
-    brew install libmicrohttpd
-    brew install libjson-rpc-cpp
-    brew install homebrew/versions/llvm37
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
@@ -52,47 +45,13 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
     # Install binaries for nearly all of our dependencies
     sudo apt-get -y install \
-        python-sphinx \
         build-essential \
         cmake \
+        eth \
         git \
         libboost-all-dev \
-        libcurl4-openssl-dev \
-        libcryptopp-dev \
-        libgmp-dev \
         libjsoncpp-dev \
-        libleveldb-dev \
-        libmicrohttpd-dev \
-        libminiupnpc-dev \
-        libz-dev \
-        opencl-headers \
-        eth
-
-    # The exception is libjson-rpc-cpp, which we have to build from source for
-    # reliable results.   The only binaries available for this package are those
-    # we made ourselves against the (now very old) v0.4.2 release, which are unreliable,
-    # so instead we build the latest release label (v0.6.0) from source, which works just
-    # fine.   We should update our PPA.
-    #
-    # See https://github.com/ethereum/webthree-umbrella/issues/513
-    #
-    # Hmm.   Arachnid is still getting this issue on OS X, which already has v0.6.0, so
-    # it isn't as simple as just updating all our builds to that version, though that is
-    # sufficient for us to get CircleCI and TravisCI working.   We still haven't got to
-    # the bottom of this issue, and are going to need to debug it in some scenario where
-    # we can reproduce it 100%, which MIGHT end up being within our automation here, but
-    # against a build-from-source-with-extra-printfs() of v0.4.2.
-    sudo apt-get -y install libargtable2-dev libedit-dev
-    git clone git://github.com/cinemast/libjson-rpc-cpp.git
-    cd libjson-rpc-cpp
-    git checkout v0.6.0
-    mkdir build
-    cd build
-    cmake .. -DCOMPILE_TESTS=NO
-    make
-    sudo make install
-    sudo ldconfig
-    cd ../..
+        python-sphinx
 
     # And install the English language package and reconfigure the locales.
     # We really shouldn't need to do this, and should instead force our locales to "C"
