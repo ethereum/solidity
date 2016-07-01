@@ -23,11 +23,19 @@
 #include <cstdlib>
 #include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
+#include <libdevcore/TrieDB.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
+
+#if !defined(ETH_EMSCRIPTEN)
+namespace dev
+{
+	h256 const EmptyTrie = sha3(rlp(""));
+}
+#endif // ETH_EMSCRIPTEN
 
 string getIPCSocketPath()
 {
@@ -56,8 +64,8 @@ ExecutionFramework::ExecutionFramework() :
 	m_rpc(RPCSession::instance(getIPCSocketPath())),
 	m_sender(m_rpc.account(0))
 {
-	if (g_logVerbosity != -1)
-		g_logVerbosity = 0;
+	//if (g_logVerbosity != -1)
+	//	g_logVerbosity = 0;
 
 	m_rpc.test_rewindToBlock(0);
 }

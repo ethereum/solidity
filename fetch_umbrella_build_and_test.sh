@@ -7,6 +7,12 @@ then
   cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd ..
 fi
 
+OPTIONS=""
+if [[ "$OSTYPE" != "darwin"* ]]
+then
+  OPTIONS="-DCMAKE_C_COMPILER=/usr/lib/ccache/$CC -DCMAKE_CXX_COMPILER=/usr/lib/ccache/$CXX"
+fi
+
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE $OPTIONS

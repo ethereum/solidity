@@ -22,20 +22,18 @@
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include <tuple>
 #include <fstream>
 #include "../TestHelper.h"
 #include "../RPCSession.h"
 #include <libethcore/ABI.h>
-#include <libethcore/SealEngine.h>
-#include <libethereum/State.h>
-#include <libethereum/Executive.h>
-#include <libethereum/ChainParams.h>
-#include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/interface/Exceptions.h>
 #include <libethcore/BasicAuthority.h>
 #include <libethcore/SealEngine.h>
+#include <libevm/VMFace.h>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/interface/Exceptions.h>
 
 namespace dev
 {

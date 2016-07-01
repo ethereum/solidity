@@ -136,6 +136,14 @@ inline bytes toCompactBigEndian(byte _val, unsigned _min = 0)
 {
 	return (_min || _val) ? bytes{ _val } : bytes{};
 }
+
+/// Convenience function for conversion of a u256 to hex
+inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
+{
+	std::string str = toHex(toBigEndian(val));
+	return (prefix == HexPrefix::Add) ? "0x" + str : str;
+}
+
 // Algorithms for string and string-like collections.
 
 /// Escapes a string into the C-string representation.
