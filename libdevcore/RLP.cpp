@@ -20,414 +20,212 @@
  */
 
 #include "RLP.h"
-
-#include <vector>
-#include <array>
-#include <exception>
-#include <iostream>
-#include <iomanip>
-#include "vector_ref.h"
-#include "Exceptions.h"
-#include "FixedHash.h"
-
-
-
 using namespace std;
-namespace dev
-{
-
-class RLP;
-using RLPs = std::vector<RLP>;
-
-template <class _T> struct intTraits { static const unsigned maxSize = sizeof(_T); };
-template <> struct intTraits<u160> { static const unsigned maxSize = 20; };
-template <> struct intTraits<u256> { static const unsigned maxSize = 32; };
-template <> struct intTraits<bigint> { static const unsigned maxSize = ~(unsigned)0; };
-
-static const byte c_rlpMaxLengthBytes = 8;
-static const byte c_rlpDataImmLenStart = 0x80;
-static const byte c_rlpListStart = 0xc0;
-
-static const byte c_rlpDataImmLenCount = c_rlpListStart - c_rlpDataImmLenStart - c_rlpMaxLengthBytes;
-static const byte c_rlpDataIndLenZero = c_rlpDataImmLenStart + c_rlpDataImmLenCount - 1;
-static const byte c_rlpListImmLenCount = 256 - c_rlpListStart - c_rlpMaxLengthBytes;
-static const byte c_rlpListIndLenZero = c_rlpListStart + c_rlpListImmLenCount - 1;
-
-template <class T> struct Converter { static T convert(RLP const&, int) { BOOST_THROW_EXCEPTION(BadCast()); } };
-
-/**
- * @brief Class for interpreting Recursive Linear-Prefix Data.
- * @by Gav Wood, 2013
- *
- * Class for reading byte arrays of data in RLP format.
- */
-class RLP
-{
-public:
-	/// Conversion flags
-	enum
-	{
-		AllowNonCanon = 1,
-		ThrowOnFail = 4,
-		FailIfTooBig = 8,
-		FailIfTooSmall = 16,
-		Strict = ThrowOnFail | FailIfTooBig,
-		VeryStrict = ThrowOnFail | FailIfTooBig | FailIfTooSmall,
-		LaissezFaire = AllowNonCanon
-	};
-
-	using Strictness = int;
-
-	/// Construct a null node.
-	RLP() {}
-
-	/// Construct a node of value given in the bytes.
-	explicit RLP(bytesConstRef _d, Strictness _s = VeryStrict);
-
-	/// Construct a node of value given in the bytes.
-	explicit RLP(bytes const& _d, Strictness _s = VeryStrict): RLP(&_d, _s) {}
-
-	/// Construct a node to read RLP data in the bytes given.
-	RLP(byte const* _b, unsigned _s, Strictness _st = VeryStrict): RLP(bytesConstRef(_b, _s), _st) {}
-
-	/// Construct a node to read RLP data in the string.
-	explicit RLP(std::string const& _s, Strictness _st = VeryStrict): RLP(bytesConstRef((byte const*)_s.data(), _s.size()), _st) {}
-
-	/// The bare data of the RLP.
-	bytesConstRef data() const { return m_data; }
-
-	/// @returns true if the RLP is non-null.
-	explicit operator bool() const { return !isNull(); }
-
-	/// No value.
-	bool isNull() const { return m_data.size() == 0; }
-
-	/// Contains a zero-length string or zero-length list.
-	bool isEmpty() const { return !isNull() && (m_data[0] == c_rlpDataImmLenStart || m_data[0] == c_rlpListStart); }
-
-	/// String value.
-	bool isData() const { return !isNull() && m_data[0] < c_rlpListStart; }
-
-	/// List value.
-	bool isList() const { return !isNull() && m_data[0] >= c_rlpListStart; }
-
-	/// Integer value. Must not have a leading zero.
-	bool isInt() const;
-
-	/// @returns the number of items in the list, or zero if it isn't a list.
-	size_t itemCount() const { return isList() ? items() : 0; }
-	size_t itemCountStrict() const { if (!isList()) BOOST_THROW_EXCEPTION(BadCast()); return items(); }
-
-	/// @returns the number of bytes in the data, or zero if it isn't data.
-	size_t size() const { return isData() ? length() : 0; }
-	size_t sizeStrict() const { if (!isData()) BOOST_THROW_EXCEPTION(BadCast()); return length(); }
-
-	/// Equality operators; does best-effort conversion and checks for equality.
-	bool operator==(char const* _s) const { return isData() && toString() == _s; }
-	bool operator!=(char const* _s) const { return isData() && toString() != _s; }
-	bool operator==(std::string const& _s) const { return isData() && toString() == _s; }
-	bool operator!=(std::string const& _s) const { return isData() && toString() != _s; }
-	template <unsigned _N> bool operator==(FixedHash<_N> const& _h) const { return isData() && toHash<_N>() == _h; }
-	template <unsigned _N> bool operator!=(FixedHash<_N> const& _s) const { return isData() && toHash<_N>() != _s; }
-	bool operator==(unsigned const& _i) const { return isInt() && toInt<unsigned>() == _i; }
-	bool operator!=(unsigned const& _i) const { return isInt() && toInt<unsigned>() != _i; }
-	bool operator==(u256 const& _i) const { return isInt() && toInt<u256>() == _i; }
-	bool operator!=(u256 const& _i) const { return isInt() && toInt<u256>() != _i; }
-	bool operator==(bigint const& _i) const { return isInt() && toInt<bigint>() == _i; }
-	bool operator!=(bigint const& _i) const { return isInt() && toInt<bigint>() != _i; }
-
-	/// Subscript operator.
-	/// @returns the list item @a _i if isList() and @a _i < listItems(), or RLP() otherwise.
-	/// @note if used to access items in ascending order, this is efficient.
-	RLP operator[](size_t _i) const;
-
-	using element_type = RLP;
-
-	/// @brief Iterator class for iterating through items of RLP list.
-	class iterator
-	{
-		friend class RLP;
-
-	public:
-		using value_type = RLP;
-		using element_type = RLP;
-
-		iterator& operator++();
-		iterator operator++(int) { auto ret = *this; operator++(); return ret; }
-		RLP operator*() const { return RLP(m_currentItem); }
-		bool operator==(iterator const& _cmp) const { return m_currentItem == _cmp.m_currentItem; }
-		bool operator!=(iterator const& _cmp) const { return !operator==(_cmp); }
-
-	private:
-		iterator() {}
-		iterator(RLP const& _parent, bool _begin);
-
-		size_t m_remaining = 0;
-		bytesConstRef m_currentItem;
-	};
-
-	/// @brief Iterator into beginning of sub-item list (valid only if we are a list).
-	iterator begin() const { return iterator(*this, true); }
-
-	/// @brief Iterator into end of sub-item list (valid only if we are a list).
-	iterator end() const { return iterator(*this, false); }
-
-	template <class T> inline T convert(int _flags) const;
-
-	/// Best-effort conversion operators.
-	explicit operator std::string() const { return toString(); }
-	explicit operator bytes() const { return toBytes(); }
-	explicit operator RLPs() const { return toList(); }
-	explicit operator uint8_t() const { return toInt<uint8_t>(); }
-	explicit operator uint16_t() const { return toInt<uint16_t>(); }
-	explicit operator uint32_t() const { return toInt<uint32_t>(); }
-	explicit operator uint64_t() const { return toInt<uint64_t>(); }
-	explicit operator u160() const { return toInt<u160>(); }
-	explicit operator u256() const { return toInt<u256>(); }
-	explicit operator bigint() const { return toInt<bigint>(); }
-	template <unsigned N> explicit operator FixedHash<N>() const { return toHash<FixedHash<N>>(); }
-	template <class T, class U> explicit operator std::pair<T, U>() const { return toPair<T, U>(); }
-	template <class T> explicit operator std::vector<T>() const { return toVector<T>(); }
-	template <class T> explicit operator std::set<T>() const { return toSet<T>(); }
-	template <class T, size_t N> explicit operator std::array<T, N>() const { return toArray<T, N>(); }
-
-	/// Converts to bytearray. @returns the empty byte array if not a string.
-	bytes toBytes(int _flags = LaissezFaire) const { if (!isData()) { if (_flags & ThrowOnFail) BOOST_THROW_EXCEPTION(BadCast()); else return bytes(); } return bytes(payload().data(), payload().data() + length()); }
-	/// Converts to bytearray. @returns the empty byte array if not a string.
-	bytesConstRef toBytesConstRef(int _flags = LaissezFaire) const { if (!isData()) { if (_flags & ThrowOnFail) BOOST_THROW_EXCEPTION(BadCast()); else return bytesConstRef(); } return payload().cropped(0, length()); }
-	/// Converts to string. @returns the empty string if not a string.
-	std::string toString(int _flags = LaissezFaire) const { if (!isData()) { if (_flags & ThrowOnFail) BOOST_THROW_EXCEPTION(BadCast()); else return std::string(); } return payload().cropped(0, length()).toString(); }
-	/// Converts to string. @throws BadCast if not a string.
-	std::string toStringStrict() const { return toString(Strict); }
-
-	template <class T>
-	std::vector<T> toVector(int _flags = LaissezFaire) const
-	{
-		std::vector<T> ret;
-		if (isList())
-		{
-			ret.reserve(itemCount());
-			for (auto const& i: *this)
-				ret.push_back(i.convert<T>(_flags));
-		 }
-		else if (_flags & ThrowOnFail)
-			BOOST_THROW_EXCEPTION(BadCast());
-		 return ret;
-	}
-
-	template <class T>
-	std::set<T> toSet(int _flags = LaissezFaire) const
-	{
-		std::set<T> ret;
-		if (isList())
-			for (auto const& i: *this)
-				ret.insert(i.convert<T>(_flags));
-		else if (_flags & ThrowOnFail)
-			BOOST_THROW_EXCEPTION(BadCast());
-		return ret;
-	}
-
-	template <class T>
-	std::unordered_set<T> toUnorderedSet(int _flags = LaissezFaire) const
-	{
-		std::unordered_set<T> ret;
-		if (isList())
-			for (auto const& i: *this)
-				ret.insert(i.convert<T>(_flags));
-		else if (_flags & ThrowOnFail)
-			BOOST_THROW_EXCEPTION(BadCast());
-		return ret;
-	}
-
-	template <class T, class U>
-	std::pair<T, U> toPair(int _flags = Strict) const
-	{
-		std::pair<T, U> ret;
-		if (itemCountStrict() != 2)
-		{
-			if (_flags & ThrowOnFail)
-				BOOST_THROW_EXCEPTION(BadCast());
-			else
-				return ret;
-		}
-		ret.first = (*this)[0].convert<T>(_flags);
-		ret.second = (*this)[1].convert<U>(_flags);
-		return ret;
-	}
-
-	template <class T, size_t N>
-	std::array<T, N> toArray(int _flags = LaissezFaire) const
-	{
-		if (itemCountStrict() != N)
-		{
-			if (_flags & ThrowOnFail)
-				BOOST_THROW_EXCEPTION(BadCast());
-			else
-				return std::array<T, N>();
-		}
-		std::array<T, N> ret;
-		for (size_t i = 0; i < N; ++i)
-			ret[i] = operator[](i).convert<T>(_flags);
-		return ret;
-	}
-
-	/// Converts to int of type given; if isString(), decodes as big-endian bytestream. @returns 0 if not an int or string.
-	template <class _T = unsigned> _T toInt(int _flags = Strict) const
-	{
-		requireGood();
-		if ((!isInt() && !(_flags & AllowNonCanon)) || isList() || isNull())
-		{
-			if (_flags & ThrowOnFail)
-				BOOST_THROW_EXCEPTION(BadCast());
-			else
-				return 0;
-		}
-
-		auto p = payload();
-		if (p.size() > intTraits<_T>::maxSize && (_flags & FailIfTooBig))
-		{
-			if (_flags & ThrowOnFail)
-				BOOST_THROW_EXCEPTION(BadCast());
-			else
-				return 0;
-		}
-
-		return fromBigEndian<_T>(p);
-	}
-
-	template <class _N> _N toHash(int _flags = Strict) const
-	{
-		requireGood();
-		auto p = payload();
-		auto l = p.size();
-		if (!isData() || (l > _N::size && (_flags & FailIfTooBig)) || (l < _N::size && (_flags & FailIfTooSmall)))
-		{
-			if (_flags & ThrowOnFail)
-				BOOST_THROW_EXCEPTION(BadCast());
-			else
-				return _N();
-		}
-
-		_N ret;
-		size_t s = std::min<size_t>(_N::size, l);
-		memcpy(ret.data() + _N::size - s, p.data(), s);
-		return ret;
-	}
-
-	/// Converts to RLPs collection object. Useful if you need random access to sub items or will iterate over multiple times.
-	RLPs toList(int _flags = Strict) const;
-
-	/// @returns the data payload. Valid for all types.
-	bytesConstRef payload() const { auto l = length(); if (l > m_data.size()) BOOST_THROW_EXCEPTION(BadRLP()); return m_data.cropped(payloadOffset(), l); }
-
-	/// @returns the theoretical size of this item as encoded in the data.
-	/// @note Under normal circumstances, is equivalent to m_data.size() - use that unless you know it won't work.
-	size_t actualSize() const;
-
-private:
-	/// Disable construction from rvalue
-	explicit RLP(bytes const&&) {}
-
-	/// Throws if is non-canonical data (i.e. single byte done in two bytes that could be done in one).
-	void requireGood() const;
-
-	/// Single-byte data payload.
-	bool isSingleByte() const { return !isNull() && m_data[0] < c_rlpDataImmLenStart; }
-
-	/// @returns the amount of bytes used to encode the length of the data. Valid for all types.
-	unsigned lengthSize() const { if (isData() && m_data[0] > c_rlpDataIndLenZero) return m_data[0] - c_rlpDataIndLenZero; if (isList() && m_data[0] > c_rlpListIndLenZero) return m_data[0] - c_rlpListIndLenZero; return 0; }
-
-	/// @returns the size in bytes of the payload, as given by the RLP as opposed to as inferred from m_data.
-	size_t length() const;
-
-	/// @returns the number of bytes into the data that the payload starts.
-	size_t payloadOffset() const { return isSingleByte() ? 0 : (1 + lengthSize()); }
-
-	/// @returns the number of data items.
-	size_t items() const;
-
-	/// @returns the size encoded into the RLP in @a _data and throws if _data is too short.
-	static size_t sizeAsEncoded(bytesConstRef _data) { return RLP(_data, ThrowOnFail | FailIfTooSmall).actualSize(); }
-
-	/// Our byte data.
-	bytesConstRef m_data;
-
-	/// The list-indexing cache.
-	mutable size_t m_lastIndex = (size_t)-1;
-	mutable size_t m_lastEnd = 0;
-	mutable bytesConstRef m_lastItem;
-};
-
-template <> struct Converter<std::string> { static std::string convert(RLP const& _r, int _flags) { return _r.toString(_flags); } };
-template <> struct Converter<bytes> { static bytes convert(RLP const& _r, int _flags) { return _r.toBytes(_flags); } };
-template <> struct Converter<RLPs> { static RLPs convert(RLP const& _r, int _flags) { return _r.toList(_flags); } };
-template <> struct Converter<uint8_t> { static uint8_t convert(RLP const& _r, int _flags) { return _r.toInt<uint8_t>(_flags); } };
-template <> struct Converter<uint16_t> { static uint16_t convert(RLP const& _r, int _flags) { return _r.toInt<uint16_t>(_flags); } };
-template <> struct Converter<uint32_t> { static uint32_t convert(RLP const& _r, int _flags) { return _r.toInt<uint32_t>(_flags); } };
-template <> struct Converter<uint64_t> { static uint64_t convert(RLP const& _r, int _flags) { return _r.toInt<uint64_t>(_flags); } };
-template <> struct Converter<u160> { static u160 convert(RLP const& _r, int _flags) { return _r.toInt<u160>(_flags); } };
-template <> struct Converter<u256> { static u256 convert(RLP const& _r, int _flags) { return _r.toInt<u256>(_flags); } };
-template <> struct Converter<bigint> { static bigint convert(RLP const& _r, int _flags) { return _r.toInt<bigint>(_flags); } };
-template <unsigned N> struct Converter<FixedHash<N>> { static FixedHash<N> convert(RLP const& _r, int _flags) { return _r.toHash<FixedHash<N>>(_flags); } };
-template <class T, class U> struct Converter<std::pair<T, U>> { static std::pair<T, U> convert(RLP const& _r, int _flags) { return _r.toPair<T, U>(_flags); } };
-template <class T> struct Converter<std::vector<T>> { static std::vector<T> convert(RLP const& _r, int _flags) { return _r.toVector<T>(_flags); } };
-template <class T> struct Converter<std::set<T>> { static std::set<T> convert(RLP const& _r, int _flags) { return _r.toSet<T>(_flags); } };
-template <class T> struct Converter<std::unordered_set<T>> { static std::unordered_set<T> convert(RLP const& _r, int _flags) { return _r.toUnorderedSet<T>(_flags); } };
-template <class T, size_t N> struct Converter<std::array<T, N>> { static std::array<T, N> convert(RLP const& _r, int _flags) { return _r.toArray<T, N>(_flags); } };
-
-template <class T> inline T RLP::convert(int _flags) const { return Converter<T>::convert(*this, _flags); }
-
-/**
- * @brief Class for writing to an RLP bytestream.
- */
-class RLPStream
-{
-public:
-	/// Initializes empty RLPStream.
-	RLPStream() {}
-
-	/// Initializes the RLPStream as a list of @a _listItems items.
-	explicit RLPStream(size_t _listItems) { appendList(_listItems); }
-
-	~RLPStream() {}
-
-	/// Appends a list.
-	RLPStream& appendList(size_t _items);
-	RLPStream& appendList(bytesConstRef _rlp);
-	RLPStream& appendList(bytes const& _rlp) { return appendList(&_rlp); }
-	/// Appends raw (pre-serialised) RLP data. Use with caution.
-	RLPStream& appendRaw(bytesConstRef _rlp, size_t _itemCount = 1);
-
-	/// Read the byte stream.
-	bytes const& out() const { return m_out; }
-
-private:
-	void noteAppended(size_t _itemCount = 1);
-
-	/// Push the node-type byte (using @a _base) along with the item count @a _count.
-	/// @arg _count is number of characters for strings, data-bytes for ints, or items for lists.
-	void pushCount(size_t _count, byte _offset);
-
-	/// Push an integer as a raw big-endian byte-stream.
-	template <class _T> void pushInt(_T _i, size_t _br)
-	{
-		m_out.resize(m_out.size() + _br);
-		byte* b = &m_out.back();
-		for (; _i; _i >>= 8)
-			*(b--) = (byte)_i;
-	}
-
-	/// Our output byte stream.
-	bytes m_out;
-
-	std::vector<std::pair<size_t, size_t>> m_listStack;
-};
-}
-
-
 using namespace dev;
 
+bytes dev::RLPNull = rlp("");
+bytes dev::RLPEmptyList = rlpList();
 
+RLP::RLP(bytesConstRef _d, Strictness _s):
+	m_data(_d)
+{
+	if ((_s & FailIfTooBig) && actualSize() < _d.size())
+	{
+		if (_s & ThrowOnFail)
+			BOOST_THROW_EXCEPTION(OversizeRLP());
+		else
+			m_data.reset();
+	}
+	if ((_s & FailIfTooSmall) && actualSize() > _d.size())
+	{
+		if (_s & ThrowOnFail)
+			BOOST_THROW_EXCEPTION(UndersizeRLP());
+		else
+			m_data.reset();
+	}
+}
+
+RLP::iterator& RLP::iterator::operator++()
+{
+	if (m_remaining)
+	{
+		m_currentItem.retarget(m_currentItem.next().data(), m_remaining);
+		m_currentItem = m_currentItem.cropped(0, sizeAsEncoded(m_currentItem));
+		m_remaining -= std::min<size_t>(m_remaining, m_currentItem.size());
+	}
+	else
+		m_currentItem.retarget(m_currentItem.next().data(), 0);
+	return *this;
+}
+
+RLP::iterator::iterator(RLP const& _parent, bool _begin)
+{
+	if (_begin && _parent.isList())
+	{
+		auto pl = _parent.payload();
+		m_currentItem = pl.cropped(0, sizeAsEncoded(pl));
+		m_remaining = pl.size() - m_currentItem.size();
+	}
+	else
+	{
+		m_currentItem = _parent.data().cropped(_parent.data().size());
+		m_remaining = 0;
+	}
+}
+
+RLP RLP::operator[](size_t _i) const
+{
+	if (_i < m_lastIndex)
+	{
+		m_lastEnd = sizeAsEncoded(payload());
+		m_lastItem = payload().cropped(0, m_lastEnd);
+		m_lastIndex = 0;
+	}
+	for (; m_lastIndex < _i && m_lastItem.size(); ++m_lastIndex)
+	{
+		m_lastItem = payload().cropped(m_lastEnd);
+		m_lastItem = m_lastItem.cropped(0, sizeAsEncoded(m_lastItem));
+		m_lastEnd += m_lastItem.size();
+	}
+	return RLP(m_lastItem, ThrowOnFail | FailIfTooSmall);
+}
+
+RLPs RLP::toList(int _flags) const
+{
+	RLPs ret;
+	if (!isList())
+	{
+		if (_flags & ThrowOnFail)
+			BOOST_THROW_EXCEPTION(BadCast());
+		else
+			return ret;
+	}
+	for (auto const& i: *this)
+		ret.push_back(i);
+	return ret;
+}
+
+size_t RLP::actualSize() const
+{
+	if (isNull())
+		return 0;
+	if (isSingleByte())
+		return 1;
+	if (isData() || isList())
+		return payloadOffset() + length();
+	return 0;
+}
+
+void RLP::requireGood() const
+{
+	if (isNull())
+		BOOST_THROW_EXCEPTION(BadRLP());
+	byte n = m_data[0];
+	if (n != c_rlpDataImmLenStart + 1)
+		return;
+	if (m_data.size() < 2)
+		BOOST_THROW_EXCEPTION(BadRLP());
+	if (m_data[1] < c_rlpDataImmLenStart)
+		BOOST_THROW_EXCEPTION(BadRLP());
+}
+
+bool RLP::isInt() const
+{
+	if (isNull())
+		return false;
+	requireGood();
+	byte n = m_data[0];
+	if (n < c_rlpDataImmLenStart)
+		return !!n;
+	else if (n == c_rlpDataImmLenStart)
+		return true;
+	else if (n <= c_rlpDataIndLenZero)
+	{
+		if (m_data.size() <= 1)
+			BOOST_THROW_EXCEPTION(BadRLP());
+		return m_data[1] != 0;
+	}
+	else if (n < c_rlpListStart)
+	{
+		if (m_data.size() <= size_t(1 + n - c_rlpDataIndLenZero))
+			BOOST_THROW_EXCEPTION(BadRLP());
+		return m_data[1 + n - c_rlpDataIndLenZero] != 0;
+	}
+	else
+		return false;
+	return false;
+}
+
+size_t RLP::length() const
+{
+	if (isNull())
+		return 0;
+	requireGood();
+	size_t ret = 0;
+	byte const n = m_data[0];
+	if (n < c_rlpDataImmLenStart)
+		return 1;
+	else if (n <= c_rlpDataIndLenZero)
+		return n - c_rlpDataImmLenStart;
+	else if (n < c_rlpListStart)
+	{
+		if (m_data.size() <= size_t(n - c_rlpDataIndLenZero))
+			BOOST_THROW_EXCEPTION(BadRLP());
+		if (m_data.size() > 1)
+			if (m_data[1] == 0)
+				BOOST_THROW_EXCEPTION(BadRLP());
+		unsigned lengthSize = n - c_rlpDataIndLenZero;
+		if (lengthSize > sizeof(ret))
+			// We did not check, but would most probably not fit in our memory.
+			BOOST_THROW_EXCEPTION(UndersizeRLP());
+		// No leading zeroes.
+		if (!m_data[1])
+			BOOST_THROW_EXCEPTION(BadRLP());
+		for (unsigned i = 0; i < lengthSize; ++i)
+			ret = (ret << 8) | m_data[i + 1];
+		// Must be greater than the limit.
+		if (ret < c_rlpListStart - c_rlpDataImmLenStart - c_rlpMaxLengthBytes)
+			BOOST_THROW_EXCEPTION(BadRLP());
+	}
+	else if (n <= c_rlpListIndLenZero)
+		return n - c_rlpListStart;
+	else
+	{
+		unsigned lengthSize = n - c_rlpListIndLenZero;
+		if (m_data.size() <= lengthSize)
+			BOOST_THROW_EXCEPTION(BadRLP());
+		if (m_data.size() > 1)
+			if (m_data[1] == 0)
+				BOOST_THROW_EXCEPTION(BadRLP());
+		if (lengthSize > sizeof(ret))
+			// We did not check, but would most probably not fit in our memory.
+			BOOST_THROW_EXCEPTION(UndersizeRLP());
+		if (!m_data[1])
+			BOOST_THROW_EXCEPTION(BadRLP());
+		for (unsigned i = 0; i < lengthSize; ++i)
+			ret = (ret << 8) | m_data[i + 1];
+		if (ret < 0x100 - c_rlpListStart - c_rlpMaxLengthBytes)
+			BOOST_THROW_EXCEPTION(BadRLP());
+	}
+	// We have to be able to add payloadOffset to length without overflow.
+	// This rejects roughly 4GB-sized RLPs on some platforms.
+	if (ret >= std::numeric_limits<size_t>::max() - 0x100)
+		BOOST_THROW_EXCEPTION(UndersizeRLP());
+	return ret;
+}
+
+size_t RLP::items() const
+{
+	if (isList())
+	{
+		bytesConstRef d = payload();
+		size_t i = 0;
+		for (; d.size(); ++i)
+			d = d.cropped(sizeAsEncoded(d));
+		return i;
+	}
+	return 0;
+}
 
 RLPStream& RLPStream::appendRaw(bytesConstRef _s, size_t _itemCount)
 {
@@ -495,6 +293,52 @@ RLPStream& RLPStream::appendList(bytesConstRef _rlp)
 	return *this;
 }
 
+RLPStream& RLPStream::append(bytesConstRef _s, bool _compact)
+{
+	size_t s = _s.size();
+	byte const* d = _s.data();
+	if (_compact)
+		for (size_t i = 0; i < _s.size() && !*d; ++i, --s, ++d) {}
+
+	if (s == 1 && *d < c_rlpDataImmLenStart)
+		m_out.push_back(*d);
+	else
+	{
+		if (s < c_rlpDataImmLenCount)
+			m_out.push_back((byte)(s + c_rlpDataImmLenStart));
+		else
+			pushCount(s, c_rlpDataIndLenZero);
+		appendRaw(bytesConstRef(d, s), 0);
+	}
+	noteAppended();
+	return *this;
+}
+
+RLPStream& RLPStream::append(bigint _i)
+{
+	if (!_i)
+		m_out.push_back(c_rlpDataImmLenStart);
+	else if (_i < c_rlpDataImmLenStart)
+		m_out.push_back((byte)_i);
+	else
+	{
+		unsigned br = bytesRequired(_i);
+		if (br < c_rlpDataImmLenCount)
+			m_out.push_back((byte)(br + c_rlpDataImmLenStart));
+		else
+		{
+			auto brbr = bytesRequired(br);
+			if (c_rlpDataIndLenZero + brbr > 0xff)
+				BOOST_THROW_EXCEPTION(RLPException() << errinfo_comment("Number too large for RLP"));
+			m_out.push_back((byte)(c_rlpDataIndLenZero + brbr));
+			pushInt(br, brbr);
+		}
+		pushInt(_i, br);
+	}
+	noteAppended();
+	return *this;
+}
+
 void RLPStream::pushCount(size_t _count, byte _base)
 {
 	auto br = bytesRequired(_count);
@@ -504,7 +348,31 @@ void RLPStream::pushCount(size_t _count, byte _base)
 	pushInt(_count, br);
 }
 
-bytes dev::rlpList()
+static void streamOut(std::ostream& _out, dev::RLP const& _d, unsigned _depth = 0)
 {
-	return RLPStream(0).out();
+	if (_depth > 64)
+		_out << "<max-depth-reached>";
+	else if (_d.isNull())
+		_out << "null";
+	else if (_d.isInt())
+		_out << std::showbase << std::hex << std::nouppercase << _d.toInt<bigint>(RLP::LaissezFaire) << dec;
+	else if (_d.isData())
+		_out << escaped(_d.toString(), false);
+	else if (_d.isList())
+	{
+		_out << "[";
+		int j = 0;
+		for (auto i: _d)
+		{
+			_out << (j++ ? ", " : " ");
+			streamOut(_out, i, _depth + 1);
+		}
+		_out << " ]";
+	}
+}
+
+std::ostream& dev::operator<<(std::ostream& _out, RLP const& _d)
+{
+	streamOut(_out, _d);
+	return _out;
 }
