@@ -24,7 +24,9 @@
 
 #include <string>
 #include <tuple>
+#include <fstream>
 #include "../TestHelper.h"
+#include "../RPCSession.h"
 #include <libethcore/ABI.h>
 #include <libethcore/SealEngine.h>
 #include <libethereum/State.h>
@@ -37,7 +39,6 @@
 
 namespace dev
 {
-
 namespace solidity
 {
 namespace test
@@ -45,16 +46,9 @@ namespace test
 
 class ExecutionFramework
 {
+
 public:
-	ExecutionFramework():
-		m_state(0)
-	{
-		eth::NoProof::init();
-		m_sealEngine.reset(eth::ChainParams().createSealEngine());
-		if (g_logVerbosity != -1)
-			g_logVerbosity = 0;
-		//m_state.resetCurrent();
-	}
+	ExecutionFramework();
 
 	bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
@@ -111,7 +105,8 @@ public:
 			"Computed values do not match.\nSolidity: " +
 				toHex(solidityResult) +
 				"\nC++:      " +
-				toHex(cppResult));
+				toHex(cppResult)
+		);
 	}
 
 	template <class CppFunction, class... Args>
@@ -254,45 +249,26 @@ private:
 	}
 
 protected:
-	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
-	{
-		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, m_envInfo, m_sealEngine.get());
-		eth::ExecutionResult res;
-		executive.setResultRecipient(res);
-		eth::Transaction t =
-			_isCreation ?
-				eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec()) :
-				eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
-		bytes transactionRLP = t.rlp();
-		try
-		{
-			// this will throw since the transaction is invalid, but it should nevertheless store the transaction
-			executive.initialize(&transactionRLP);
-			executive.execute();
-		}
-		catch (...) {}
-		if (_isCreation)
-		{
-			BOOST_REQUIRE(!executive.create(m_sender, _value, m_gasPrice, m_gas, &_data, m_sender));
-			m_contractAddress = executive.newAddress();
-			BOOST_REQUIRE(m_contractAddress);
-			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-		}
-		else
-		{
-			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
-			BOOST_REQUIRE(!executive.call(m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas));
-		}
-		BOOST_REQUIRE(executive.go(/* DEBUG eth::Executive::simpleTrace() */));
-		m_state.noteSending(m_sender);
-		executive.finalize();
-		m_gasUsed = res.gasUsed;
-		m_output = std::move(res.output);
-		m_logs = executive.logs();
-	}
+	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0);
+	void sendEther(Address const& _to, u256 const& _value);
+	size_t currentTimestamp();
 
-	std::unique_ptr<eth::SealEngineFace> m_sealEngine;
+	/// @returns the (potentially newly created) _ith address.
+	Address account(size_t _i);
+
+	u256 balanceAt(Address const& _addr);
+	bool storageEmpty(Address const& _addr);
+	bool addressHasCode(Address const& _addr);
+
+	RPCSession& m_rpc;
+
+	struct LogEntry
+	{
+		Address address;
+		std::vector<h256> topics;
+		bytes data;
+	};
+
 	size_t m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
@@ -300,11 +276,10 @@ protected:
 	Address m_sender;
 	Address m_contractAddress;
 	eth::EnvInfo m_envInfo;
-	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 100000000;
 	bytes m_output;
-	eth::LogEntries m_logs;
+	std::vector<LogEntry> m_logs;
 	u256 m_gasUsed;
 };
 

@@ -10,7 +10,7 @@ Solidity is a statically typed language, which means that the type of each
 variable (state and local) needs to be specified (or at least known -
 see :ref:`type-deduction` below) at
 compile-time. Solidity provides several elementary types which can be combined
-to complex types.
+to form complex types.
 
 .. index:: ! value type, ! type;value
 
@@ -340,7 +340,7 @@ So ``bytes`` should always be preferred over ``byte[]`` because it is cheaper.
 
 .. note::
     If you want to access the byte-representation of a string ``s``, use
-    ``bytes(s).length / bytes(s)[7] = x';``. Keep in mind
+    ``bytes(s).length`` / ``bytes(s)[7] = 'x';``. Keep in mind
     that you are accessing the low-level bytes of the utf-8 representation,
     and not the individual characters!
 

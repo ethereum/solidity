@@ -5,22 +5,20 @@
 #
 # http://solidity.readthedocs.org
 #
-# TODO - Christian added a .travis.yml file to the development branch of
-# solidity too, but for a different purpose - verifying the Sphinx
-# documentation.  I have just overwritten that file for the purposes of this
-# branch for right now, but will have to work out some means of
-# consolidation.  Furthermore, there is another .travis.yml file which
-# Christian has made which currently lives in the root of webthree-umbrella,
-# but actually contains the automation for the Solidity Emscripten build,
-# which will also need consolidating into here somehow.
+# TODO - Re-add Sphinx validation which was in this file until removed in
+# https://github.com/ethereum/solidity/commit/7cfd4d62e4f6dcea0ea3722f5ba4c6562674ba29.
 #
-# See https://github.com/ethereum/solidity/blob/develop/.travis.yml
+# TODO - Merge with .travis.yml file which currently lives in the root of
+# webthree-umbrella, but actually contains the automation for the Solidity
+# Emscripten build, which will also need consolidating into here somehow.
+#
 # See https://github.com/ethereum/webthree-umbrella/blob/develop/.travis.yml
 #
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
 language: cpp
+cache: ccache
 matrix:
     include:
         - os: linux
@@ -46,10 +44,6 @@ matrix:
 git:
     depth: 2
 before_install:
-    - ./setup.sh
-before_script:
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
+    - ./install_dependencies.sh
 script:
-    - make
+    - ./fetch_umbrella_build_and_test.sh

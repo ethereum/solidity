@@ -355,7 +355,7 @@ functions matches the given function identifier (or if no data was supplied at
 all).
 
 Furthermore, this function is executed whenever the contract receives plain
-Ether (witout data).  In such a context, there is very little gas available to
+Ether (without data).  In such a context, there is very little gas available to
 the function call, so it is important to make fallback functions as cheap as
 possible.
 
@@ -742,10 +742,10 @@ only once at a specific address and their code is reused using the ``DELEGATECAL
 (``CALLCODE`` until Homestead)
 feature of the EVM. This means that if library functions are called, their code
 is executed in the context of the calling contract, i.e. ``this`` points to the
-calling contract and especially the storage from the calling contract can be
+calling contract, and especially the storage from the calling contract can be
 accessed. As a library is an isolated piece of source code, it can only access
 state variables of the calling contract if they are explicitly supplied (it
-would have to way to name them, otherwise).
+would have no way to name them, otherwise).
 
 Libraries can be seen as implicit base contracts of the contracts that use them.
 They will not be explicitly visible in the inheritance hierarchy, but calls
@@ -883,8 +883,8 @@ custom types without the overhead of external function calls:
         using BigInt for BigInt.bigint;
 
         function f() {
-            var x = bigint.fromUint(7);
-            var y = bigint.fromUint(uint(-1));
+            var x = BigInt.fromUint(7);
+            var y = BigInt.fromUint(uint(-1));
             var z = x.add(y);
         }
     }
@@ -986,7 +986,7 @@ Let us rewrite the set example from the
 It is also possible to extend elementary types in that way::
 
     library Search {
-        function indexOf(uint[] storage self, uint value) {
+        function indexOf(uint[] storage self, uint value) returns (uint) {
             for (uint i = 0; i < self.length; i++)
                 if (self[i] == value) return i;
             return uint(-1);
@@ -1004,8 +1004,8 @@ It is also possible to extend elementary types in that way::
 
         function replace(uint _old, uint _new) {
             // This performs the library function call
-            uint index = data.find(_old);
-            if (index == -1)
+            uint index = data.indexOf(_old);
+            if (index == uint(-1))
                 data.push(_new);
             else
                 data[index] = _new;

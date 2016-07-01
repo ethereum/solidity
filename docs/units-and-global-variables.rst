@@ -15,7 +15,7 @@ Time Units
 ==========
 
 Suffixes of ``seconds``, ``minutes``, ``hours``, ``days``, ``weeks`` and
-`years` after literal numbers can be used to convert between units of time where seconds are the base
+``years`` after literal numbers can be used to convert between units of time where seconds are the base
 unit and units are considered naively in the following way:
 
  * ``1 == 1 second``
