@@ -23,8 +23,8 @@
 #include <stdio.h>
 #include <thread>
 #include <libdevcore/CommonData.h>
-#include <jsoncpp/json/reader.h>
-#include <jsoncpp/json/writer.h>
+#include <json/reader.h>
+#include <json/writer.h>
 #include "RPCSession.h"
 
 using namespace std;

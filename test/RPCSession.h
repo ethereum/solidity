@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <jsoncpp/json/value.h>
+#include <json/value.h>
 #include <boost/test/unit_test.hpp>
 
 class IPCSocket: public boost::noncopyable
