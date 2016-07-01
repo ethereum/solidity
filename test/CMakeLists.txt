@@ -26,7 +26,7 @@ file(GLOB HEADERS "*.h" "*/*.h")
 set(EXECUTABLE soltest)
 eth_simple_add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Solidity::solidity Eth::ethereum Eth::ethcore)
+eth_use(${EXECUTABLE} REQUIRED Solidity::solidity Eth::ethcore)
 
 include_directories(BEFORE ..)
 target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
