@@ -23,19 +23,16 @@
 #include <cstdlib>
 #include <boost/test/framework.hpp>
 #include <test/libsolidity/SolidityExecutionFramework.h>
-#include <libdevcore/TrieDB.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
 
-#if !defined(ETH_EMSCRIPTEN)
-namespace dev
+namespace // anonymous
 {
 	h256 const EmptyTrie = sha3(rlp(""));
 }
-#endif // ETH_EMSCRIPTEN
 
 string getIPCSocketPath()
 {
