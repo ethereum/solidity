@@ -32,8 +32,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
     # the time being, which is good enough.   The cause of the breaks will go away
     # when we commit the repository reorg changes anyway.
+    cd ~
     curl -O https://builds.ethereum.org/cpp-binaries-data/release-1.2.9/cpp-ethereum-osx-elcapitan.zip
-    unzip -d ~/ cpp-ethereum-osx-elcapitan-v1.2.9.zip
+    unzip cpp-ethereum-osx-elcapitan-v1.2.9.zip
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
