@@ -24,9 +24,19 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     brew update
     brew upgrade
 
+    # TODO - The leveldb dependency is not intentional, and is due to incomplete
+    # dependency minimizations.  That is coming in through libdevcore/db.h.
     brew install boost
     brew install cmake
     brew install jsoncpp
+    brew install leveldb
+
+    # We should really 'brew update' our eth client here, but at the time of writing
+    # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
+    # the time being, which is good enough.   The cause of the breaks will go away
+    # when we commit the repository reorg changes anyway.
+    curl -O https://builds.ethereum.org/cpp-binaries-data/release-1.2.9/cpp-ethereum-osx-elcapitan.zip
+    unzip cpp-ethereum-osx-elcapitan-v1.2.9.zip
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
@@ -44,6 +54,9 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     sudo apt-get -y update
 
     # Install binaries for nearly all of our dependencies
+    #
+    # TODO - The leveldb dependency is not intentional, and is due to incomplete
+    # dependency minimizations.  That is coming in through libdevcore/db.h.
     sudo apt-get -y install \
         build-essential \
         cmake \
@@ -51,6 +64,7 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         git \
         libboost-all-dev \
         libjsoncpp-dev \
+        libleveldb-dev \
         python-sphinx
 
     # And install the English language package and reconfigure the locales.
