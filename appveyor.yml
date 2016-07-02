@@ -5,6 +5,9 @@
 #
 # http://solidity.readthedocs.org
 #
+# TODO - Tests currently disabled, because Tests-over-IPC code is using UNIX
+# sockets unconditionally at the time of writing.
+#
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
@@ -18,6 +21,6 @@ install:
 before_build:
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" ..
+    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=Off
 build:
     project: C:\projects\solidity\build\solidity.sln
