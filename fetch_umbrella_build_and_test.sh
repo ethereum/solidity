@@ -23,11 +23,7 @@ export ETHEREUM_TEST_PATH=$(pwd)/tests/
 
 if [[ "$OSTYPE" != "darwin"* ]]
   eth --test -d /tmp/test &
-then
-  ./ethbin/eth --test -d /tmp/test &
+  while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
+  ./test/soltest --ipc /tmp/test/geth.ipc
+  pkill eth
 fi
-
-while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
-  
-./test/soltest --ipc /tmp/test/geth.ipc
-pkill eth
