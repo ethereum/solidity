@@ -570,7 +570,7 @@ can actually be any type, including mappings.
 
 Mappings can be seen as hashtables which are virtually initialized such that
 every possible key exists and is mapped to a value whose byte-representation is
-all zeros. The similarity ends here, though: The key data is not actually stored
+all zeros: a type's :ref:`default value <default-value>`. The similarity ends here, though: The key data is not actually stored
 in a mapping, only its ``sha3`` hash used to look up the value.
 
 Because of this, mappings do not have a length or a concept of a key or value being "set".
