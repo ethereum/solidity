@@ -146,12 +146,12 @@ Complications for Arrays and Structs
 The semantics of assignment are a bit more complicated for non-value types like arrays and structs.
 Assigning *to* a state variable always creates an independent copy. On the other hand, assigning to a local variable creates an independent copy only for elementary types, i.e. static types that fit into 32 bytes. If structs or arrays (including ``bytes`` and ``string``) are assigned from a state variable to a local variable, the local variable holds a reference to the original state variable. A second assignment to the local variable does not modify the state but only changes the reference. Assignments to members (or elements) of the local variable *do* change the state.
 
-.. index:: ! exception, ! throw
+.. index:: ! scoping, declarations, default value
+
+.. _default-value:
 
 Scoping and Declarations
 ========================
-
-.. index:: ! scoping, ! declarations, ! default-value
 
 In Solidity, a variable which is declared is automatically assigned its default value. It will be assigned on contract
 initialization if it is a contract-level variable or at the beginning of a function call if it is a local variable.
@@ -212,6 +212,8 @@ As a result, the following code is legal, despite being poorly written::
         }
         return bar;// returns 5
     }
+
+.. index:: ! exception, ! throw
 
 Exceptions
 ==========
