@@ -6,14 +6,14 @@ While it is usually quite easy to build software that works as expected,
 it is much harder to check that nobody can use it in a way that was **not** anticipated.
 
 In Solidity, this is even more important because you can use smart contracts
-to handle tokens or even more valuable things and every execution of a smart
-contract happens in public as is mostly open source.
+to handle tokens or even more valuable things. Furthermore, every execution of a smart
+contract happens in public as it is mostly open source.
 
 Of course you always have to consider how much is at stake:
 You can compare a smart contract with a web service that is open to the
 public (and thus also to malicous actors) and perhaps even open source.
 If you only store your grocery list on that web service, you might not have
-take too much care, but if you manage your bank account using that web service,
+to take too much care, but if you manage your bank account using that web service,
 you should be more careful.
 
 This section will list some pitfalls and general security recommendations but
@@ -106,14 +106,23 @@ Sending and Receiving Ether
   To be sure that your contract can receive Ether in that way, check the gas requirements of the fallback function
   (for example in the "details" section in browser-solidity).
 
+- There is a way to forward more gas to the receiving contract using
+  ``addr.call.value(x)()``. This is essentially the same as ``addr.send(x)``,
+  only that it forwards all remaining gas and opens up the ability for the
+  recipient to perform more expensive actions. This might include calling back
+  into the sending contract or other state changes you might not have though of.
+  So it allows for great flexibility for honest users but also for malicious actors. 
+
 - If you want to send ether using ``address.send``, there are certain details to be aware of:
 
   1. If the recipient is a contract, it causes its fallback function to be executed which can in turn call back into the sending contract
   2. Sending Ether can fail due to the call depth going above 1024. Since the caller is in total control of the call
      depth, they can force the transfer to fail, so make sure to always check the return value of ``send``. Better yet,
      write your contract using a pattern where the recipient can withdraw Ether instead.
-  3. Sending Ether can also fail because the recipient runs out of gas (either explicitly by using ``throw`` or
-     because the operation is just too expensive). If the return value of ``send`` is checked, this might provide a
+  3. Sending Ether can also fail because the execution of the recipient contract
+     requires more than the allotted amount of gas (explicitly by using ``throw`` or
+     because the operation is just too expensive) - it "runs out of gas" (OOG).
+     If the return value of ``send`` is checked, this might provide a
      means for the recipient to block progress in the sending contract. Again, the best practise here is to use
      a "withdraw" pattern instead of a "send" pattern.
 
@@ -123,13 +132,17 @@ Callstack Depth
 External function calls can fail any time because they exceed the maximum
 call stack of 1024. In such situations, Solidity throws an exception.
 Malicious actors might be able to force the call stack to a high value
-before they interact with your contract. 
+before they interact with your contract.
+
+Note that ``.send()`` does **not** throw an exception if the call stack is
+depleted but rather returns ``false`` in that case. The low-level functions
+``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
 
 Minor Details
 =============
 
 - In ``for (var i = 0; i < arrayName.length; i++) { ... }``, the type of ``i`` will be ``uint8``, because this is the smallest type that is required to hold the value ``0``. If the array has more than 255 elements, the loop will not terminate.
-- The ``constant`` keyword is currently not enforced by the compiler.
+- The ``constant`` keyword for functions is currently not enforced by the compiler.
   Furthermore, it is not enforced by the EVM, so a contract function that "claims"
   to be constant might still cause changes to the state.
 - Types that do not occupy the full 32 bytes might contain "dirty higher order bits".
@@ -155,7 +168,7 @@ about source code quality of course apply: Limit the amount of local variables,
 the length of functions and so on. Document your functions so that others
 can see what your intention was and whether it is different than what the code does.
 
-Program in Checks-Effects-Interactions-way
+Use the Checks-Effects-Interactions pattern
 ===========================================
 
 Most functions will first perform some checks (who called the function,
@@ -182,8 +195,8 @@ of fail-safe-mechanism:
 
 You can add a function in your smart contract that performs some
 self-checks like "Has any Ether leaked?",
-"Is the sum of the tokens equal to the balance of the contract?" or simila things.
-Keep in mind that you cannot use too much gas for that, so help though off-chain
+"Is the sum of the tokens equal to the balance of the contract?" or similar things.
+Keep in mind that you cannot use too much gas for that, so help through off-chain
 computations might be needed there.
 
 If the self-check fails, the contract automatically switches into some kind
