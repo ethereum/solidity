@@ -153,13 +153,12 @@ Assigning *to* a state variable always creates an independent copy. On the other
 Scoping and Declarations
 ========================
 
-In Solidity, a variable which is declared is automatically assigned its default value. It will be assigned on contract
-initialization if it is a contract-level variable or at the beginning of a function call if it is a local variable.
-This is because the EVM must run deterministically so it would be inappropriate to initialize any variables to random garbage values.
+A variable which is declared will have an initial default value whose byte-representation is all zeros.
+This is because the EVM must run without undefined behaviour so it would be inappropriate to initialize any variables to random garbage values.
 The "default values" of variables are the typical "zero-state" of whatever the type is. For example, the default value for a ``bool``
-is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For statically-sized arrays and ``bytes``, each individual
+is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For statically-sized arrays and ``bytes1`` to ``bytes32``, each individual
 element will be initialized to the default value corresponding to its type. Finally, for dynamically-sized arrays, ``bytes``
-and ``strings``, the default value is a zero-length member of its respective type.
+and ``string``, the default value is an empty array or a zero-length member of its respective type.
 
 A variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
 This happens because Solidity inherits its scoping rules from JavaScript.
