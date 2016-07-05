@@ -113,6 +113,13 @@ All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-lev
     All contracts inherit the members of address, so it is possible to query the balance of the
     current contract using ``this.balance``.
 
+.. warning::
+    All these functions are low-level functions and should be used with care.
+    Specifically, any unknown contract might be malicious and if you call it, you
+    hand over control to that contract which could in turn call back into
+    your contract, so be prepared for changes to your state variables
+    when the call returns.
+
 .. index:: byte array, bytes32
 
 

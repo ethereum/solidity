@@ -356,7 +356,7 @@ all).
 
 Furthermore, this function is executed whenever the contract receives plain
 Ether (without data).  In such a context, there is very little gas available to
-the function call, so it is important to make fallback functions as cheap as
+the function call (to be precise, 2300 gas), so it is important to make fallback functions as cheap as
 possible.
 
 ::
