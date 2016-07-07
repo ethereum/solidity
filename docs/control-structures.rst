@@ -73,7 +73,10 @@ parentheses at the end perform the actual call.
     Any interaction with another contract imposes a potential danger, especially
     if the source code of the contract is not known in advance. The current
     contract hands over control to the called contract and that may potentially
-    do just about anything. Be prepared in case it calls into other contracts of
+    do just about anything. Even if the called contract inherits from a known parent contract,
+    the inheriting contract is only required to have a correct interface. The
+    implementation of the contract, however, can be completely arbitrary and thus,
+    pose a danger. In addition, be prepared in case it calls into other contracts of
     your system or even back into the calling contract before the first
     call returns. This means
     that the called contract can change state variables of the calling contract
