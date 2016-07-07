@@ -76,8 +76,8 @@ parentheses at the end perform the actual call.
     do just about anything. Be prepared in case it calls into other contracts of
     your system or even back into the calling contract before the first
     call returns. This means
-    that the called contract can change the state variables of the calling contract
-    via its functions. Write your functions in a way that such that, for example, calls to
+    that the called contract can change state variables of the calling contract
+    via its functions. Write your functions in a way that, for example, calls to
     external functions happen after any changes to state variables in your contract
     so your contract is not vulnerable to a recursive call exploit.
 

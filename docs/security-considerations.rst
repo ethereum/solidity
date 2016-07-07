@@ -129,7 +129,7 @@ Callstack Depth
 ===============
 
 External function calls can fail any time because they exceed the maximum
-call stack of 1023. In such situations, Solidity throws an exception.
+call stack of 1024. In such situations, Solidity throws an exception.
 Malicious actors might be able to force the call stack to a high value
 before they interact with your contract.
 
@@ -185,7 +185,7 @@ because of the re-entrancy problem explained above.
 Note that, also, calls to known contracts might in turn cause calls to
 unknown contracts, so it is probably better to just always apply this pattern.
 
-Include a Fail-safe Mode
+Include a Fail-Safe Mode
 ========================
 
 While making your system fully decentralised will remove any intermediary,
