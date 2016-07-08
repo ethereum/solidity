@@ -23,6 +23,10 @@ string InterfaceHandler::documentation(
 		return abiInterface(_contractDef);
 	case DocumentationType::ABISolidityInterface:
 		return ABISolidityInterface(_contractDef);
+	case DocumentationType::Structs:
+		return structsDocumentation(_contractDef);
+	case DocumentationType::StateVariables:
+		return stateVariablesDocumentation(_contractDef);
 	}
 
 	BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown documentation type"));
@@ -236,6 +240,53 @@ string InterfaceHandler::devDocumentation(ContractDefinition const& _contractDef
 	doc["methods"] = methods;
 
 	return Json::StyledWriter().write(doc);
+}
+
+string InterfaceHandler::structsDocumentation(ContractDefinition const& _contractDef)
+{
+	Json::Value structs(Json::arrayValue);
+
+	for (auto const& s: _contractDef.definedStructs())
+	{
+		Json::Value _struct;
+		Json::Value members(Json::arrayValue);
+
+		_struct["type"] = "struct";
+		_struct["name"] = s->name();
+
+		for (auto const& m: s->members())
+		{
+			Json::Value member;
+
+			member["type"] = m->annotation().type->canonicalName(false);
+			member["name"] = m->name();
+
+			members.append(member);
+		}
+
+		_struct["members"] = members;
+
+		structs.append(_struct);
+	}
+
+	return Json::StyledWriter().write(structs);
+}
+
+string InterfaceHandler::stateVariablesDocumentation(ContractDefinition const& _contractDef)
+{
+	Json::Value statevars(Json::arrayValue);
+
+	for (auto const& v: _contractDef.stateVariables())
+	{
+		Json::Value statevar;
+
+		statevar["type"] = v->annotation().type->canonicalName(false);
+		statevar["name"] = v->name();
+
+		statevars.append(statevar);
+	}
+
+	return Json::StyledWriter().write(statevars);
 }
 
 string InterfaceHandler::extractDoc(multimap<string, DocTag> const& _tags, string const& _name)

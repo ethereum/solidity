@@ -180,6 +180,26 @@ void ContractDefinition::setUserDocumentation(string const& _userDocumentation)
 	m_userDocumentation = _userDocumentation;
 }
 
+string const& ContractDefinition::structsDocumentation() const
+{
+	return m_structsDocumentation;
+}
+
+string const& ContractDefinition::stateVariablesDocumentation() const
+{
+	return m_stateVariablesDocumentation;
+}
+
+void ContractDefinition::setStructsDocumentation(string const& _structsDocumentation)
+{
+	m_structsDocumentation = _structsDocumentation;
+}
+
+void ContractDefinition::setStateVariablesDocumentation(string const& _stateVariablesDocumentation)
+{
+	m_stateVariablesDocumentation = _stateVariablesDocumentation;
+}
+
 
 vector<Declaration const*> const& ContractDefinition::inheritableMembers() const
 {

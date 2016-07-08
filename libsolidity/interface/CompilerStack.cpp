@@ -195,6 +195,8 @@ bool CompilerStack::parse()
 				TypeChecker typeChecker(m_errors);
 				if (typeChecker.checkTypeRequirements(*contract))
 				{
+					contract->setStructsDocumentation(InterfaceHandler::structsDocumentation(*contract));
+					contract->setStateVariablesDocumentation(InterfaceHandler::stateVariablesDocumentation(*contract));
 					contract->setDevDocumentation(InterfaceHandler::devDocumentation(*contract));
 					contract->setUserDocumentation(InterfaceHandler::userDocumentation(*contract));
 				}
@@ -345,6 +347,12 @@ string const& CompilerStack::metadata(string const& _contractName, Documentation
 		break;
 	case DocumentationType::ABISolidityInterface:
 		doc = &currentContract.solidityInterface;
+		break;
+	case DocumentationType::Structs:
+		doc = &currentContract.structsDocumentation;
+		break;
+	case DocumentationType::StateVariables:
+		doc = &currentContract.stateVariablesDocumentation;
 		break;
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
