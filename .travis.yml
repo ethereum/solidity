@@ -13,3 +13,4 @@ git:
     depth: 2
 before_install: ./install_dependencies.sh
 script: ./fetch_umbrella_build_and_test.sh
+cache: ccache
