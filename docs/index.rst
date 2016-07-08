@@ -59,6 +59,18 @@ Available Solidity Integrations
 * `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
     Plugin for the Vim editor providing syntax highlighting.
 
+Solidity Tools
+-------------------------------
+
+* `Solidity REPL <https://github.com/raineorshine/solidity-repl>`_
+    Try Solidity instantly with a command-line Solidity console.
+    
+* `solgraph <https://github.com/raineorshine/solgraph>`_
+    Visualize Solidity control flow and highlight potential security vulnerabilities.
+
+* `evmdis <https://github.com/Arachnid/evmdis>`_
+    EVM Disassembler that performs static analysis on the bytecode to provide a higher level of abstraction than raw EVM operations.
+
 Language Documentation
 ----------------------
 
