@@ -191,6 +191,8 @@ contract into a blind auction where it is not
 possible to see the actual bid until the bidding
 period ends.
 
+.. _simple_auction:
+
 Simple Open Auction
 ===================
 

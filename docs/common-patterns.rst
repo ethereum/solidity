@@ -2,6 +2,80 @@
 Common Patterns
 ###############
 
+.. index:: withdrawal
+
+*************************
+Withdrawal from Contracts
+*************************
+
+The recommended method of sending funds after an effect
+is with the withdrawal pattern. Although the most intuitive
+aethod of sending Ether as a result of an effect is a
+direct ``send`` call, this is not recommended as it
+introduces a potential security risk. You may read
+more about this on the :ref:`security_considerations` page.
+
+This is an example of the withdrawal pattern in practice in
+an Ether storage contract.
+
+::
+
+    contract WithdrawalPattern {
+
+        mapping (address => uint) etherStore;
+        mapping (address => uint) pendingReturns;
+
+        function sendEther(uint amount) {
+            if (amount < etherStore[msg.sender]) {
+                throw;
+            }
+            etherStore[msg.sender] -= amount;
+            pendingReturns[msg.sender] += amount;
+        }
+
+        function withdraw() {
+            uint amount = pendingReturns[msg.sender];
+            // It is important to zero the mapping entry
+            // before sending otherwise this could open
+            // the contract to a re-entrancy attack
+            pendingReturns[msg.sender] = 0;
+            if (!msg.sender.send(amount)) {
+                throw;
+            }
+        }
+
+        function () {
+            etherStore[msg.sender] += msg.value;
+        }
+    }
+
+This is as opposed to the more intuitive sending pattern.
+
+::
+
+    contract SendPattern {
+
+        mapping (address => uint) etherStore;
+
+        function sendEther(uint amount) {
+            if (amount < etherStore[msg.sender]) {
+                throw;
+            }
+            etherStore[msg.sender] -= amount;
+            if (!msg.sender.send(amount)) {
+                throw;
+            }
+        }
+
+        function () {
+            etherStore[msg.sender] += msg.value;
+        }
+    }
+
+An example of this pattern in a less contrived
+application can be found on the :ref:`simple_auction`
+example.
+
 .. index:: access;restricting
 
 ******************
