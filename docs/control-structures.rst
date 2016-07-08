@@ -161,14 +161,20 @@ Complications for Arrays and Structs
 The semantics of assignment are a bit more complicated for non-value types like arrays and structs.
 Assigning *to* a state variable always creates an independent copy. On the other hand, assigning to a local variable creates an independent copy only for elementary types, i.e. static types that fit into 32 bytes. If structs or arrays (including ``bytes`` and ``string``) are assigned from a state variable to a local variable, the local variable holds a reference to the original state variable. A second assignment to the local variable does not modify the state but only changes the reference. Assignments to members (or elements) of the local variable *do* change the state.
 
-.. index:: ! exception, ! throw
+.. index:: ! scoping, declarations, default value
+
+.. _default-value:
 
 Scoping and Declarations
 ========================
 
-.. index:: ! scoping, ! declarations
+A variable which is declared will have an initial default value whose byte-representation is all zeros.
+The "default values" of variables are the typical "zero-state" of whatever the type is. For example, the default value for a ``bool``
+is ``false``. The default value for the ``uint`` or ``int`` types is ``0``. For statically-sized arrays and ``bytes1`` to ``bytes32``, each individual
+element will be initialized to the default value corresponding to its type. Finally, for dynamically-sized arrays, ``bytes``
+and ``string``, the default value is an empty array or string.
 
-In Solidity, a variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
+A variable declared anywhere within a function will be in scope for the *entire function*, regardless of where it is declared.
 This happens because Solidity inherits its scoping rules from JavaScript.
 This is in contrast to many languages where variables are only scoped where they are declared until the end of the semantic block.
 As a result, the following code is illegal and cause the compiler to throw an error, ``Identifier already declared``::
@@ -219,6 +225,8 @@ As a result, the following code is legal, despite being poorly written::
         }
         return bar;// returns 5
     }
+
+.. index:: ! exception, ! throw
 
 Exceptions
 ==========
