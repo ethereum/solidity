@@ -126,7 +126,7 @@ Sending and Receiving Ether
      because the operation is just too expensive) - it "runs out of gas" (OOG).
      If the return value of ``send`` is checked, this might provide a
      means for the recipient to block progress in the sending contract. Again, the best practice here is to use
-     a "withdraw" pattern instead of a "send" pattern.
+     a :ref:`"withdraw" pattern instead of a "send" pattern <withdrawal_pattern>`.
 
 Callstack Depth
 ===============

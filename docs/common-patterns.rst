@@ -4,6 +4,8 @@ Common Patterns
 
 .. index:: withdrawal
 
+.. _withdrawal_pattern:
+
 *************************
 Withdrawal from Contracts
 *************************
