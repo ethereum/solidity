@@ -22,12 +22,21 @@ matrix:
           dist: trusty
           sudo: required
           env: TRAVIS_BUILD_TYPE=Debug
+          env: CMAKE_OPTIONS="-DCMAKE_C_COMPILER=/usr/lib/ccache/$CC -DCMAKE_CXX_COMPILER=/usr/lib/ccache/$CXX"
+          env: ETH_PATH="eth"
+          env: DOCS_COMMAND="cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .."
         - os: osx
           osx_image: xcode7.1
           env: TRAVIS_BUILD_TYPE=Debug
+          env: CMAKE_OPTIONS="-DCMAKE_C_COMPILER=/usr/lib/ccache/$CC -DCMAKE_CXX_COMPILER=/usr/lib/ccache/$CXX"
+          env: ETH_PATH="~/ethbin/eth"
+          env: DOCS_COMMAND=""
         - os: osx
           osx_image: xcode7.3
           env: TRAVIS_BUILD_TYPE=Debug
+          env: CMAKE_OPTIONS=""
+          env: ETH_PATH="~/ethbin/eth"
+          env: DOCS_COMMAND=""
 git:
     depth: 2
 branches:
@@ -43,20 +52,19 @@ before_script:
     - mkdir build
     - cd build
     - OPTIONS=""
-    - if [[ "$OSTYPE" != "darwin"* ]] then OPTIONS="-DCMAKE_C_COMPILER=/usr/lib/ccache/$CC -DCMAKE_CXX_COMPILER=/usr/lib/ccache/$CXX" fi
-    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE $OPTIONS
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE $CMAKE_OPTIONS
 script:
     # Build the code
     - cmake --build .
 
     # Run the tests
-    - if [[ "$OSTYPE" == "darwin"* ]] then ~/ethbin/eth --test -d /tmp/test & else eth --test -d /tmp/test & fi
+    - $ETH_PATH --test -d /tmp/test
     - while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
     - ./test/soltest --ipc /tmp/test/geth.ipc
     - pkill eth
 
     # Generate Sphinx documentation if we're running on Trusty.
-    - if [[ "$OSTYPE" != "darwin"* ]] then cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .. fi
+    - $DOCS_COMMAND
 
 #    - 7z a cpp-ethereum.zip eth/Debug/eth eth/Debug/*.so
     
