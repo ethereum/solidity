@@ -101,7 +101,7 @@ installed either by adding the Ethereum PPA (Option 1) or by backporting
     sudo apt-get -y update
     sudo apt-get -y upgrade
     sudo apt-get -y install libcryptopp-dev
-    
+
     ## (Option 2) For those willing to backport libcrypto++:
     #sudo apt-get -y install ubuntu-dev-tools
     #sudo pbuilder create
