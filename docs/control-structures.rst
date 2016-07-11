@@ -106,6 +106,43 @@ of unused parameters (especially return parameters) can be omitted.
         }
     }
 
+.. index:: ! new, contracts;creating
+
+.. _creating-contracts:
+
+Creating Contracts via new
+==========================
+
+A contract can create a new contract using the ``new`` keyword. The full
+code of the contract to be created has to be known and thus recursive
+creation-dependencies are now possible.
+
+::
+
+    contract D {
+        uint x;
+        function D(uint a) {
+            x = a;
+        }
+    }
+    contract C {
+        D d = new D(4); // will be executed as part of C's constructor
+
+        function createD(uint arg) {
+            D newD = new D(arg);
+        }
+
+        function createAndEndowD(uint arg, uint amount) {
+            // Send ether along with the creation
+            D newD = (new D).value(amount)(arg);
+        }
+    }
+
+As seen in the example, it is possible to forward Ether to the creation,
+but it is not possible to limit the amount of gas. If the creation fails
+(due to out-of-stack, not enough balance or other problems), an exception
+is thrown.
+
 Order of Evaluation of Expressions
 ==================================
 

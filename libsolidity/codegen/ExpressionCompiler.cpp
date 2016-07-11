@@ -533,6 +533,9 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			else
 				m_context << u256(0);
 			m_context << Instruction::CREATE;
+			// Check if zero (out of stack or not enough balance).
+			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			m_context.appendConditionalJumpTo(m_context.errorTag());
 			if (function.valueSet())
 				m_context << swapInstruction(1) << Instruction::POP;
 			break;
