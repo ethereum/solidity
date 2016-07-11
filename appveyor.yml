@@ -27,7 +27,7 @@ before_build:
     - cd %APPVEYOR_BUILD_FOLDER%
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" ..
+    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=Off
 build_script:
     # Build code
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS%
