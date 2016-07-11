@@ -56,7 +56,7 @@ script:
     - pkill eth
 
     # Generate Sphinx documentation if we're running on Trusty.
-    if [[ "$OSTYPE" != "darwin"* ]] then cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .. fi
+    - if [[ "$OSTYPE" != "darwin"* ]] then cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .. fi
 
 #    - 7z a cpp-ethereum.zip eth/Debug/eth eth/Debug/*.so
     
