@@ -28,6 +28,6 @@ matrix:
 git:
     depth: 2
 before_install:
-    - ./install_dependencies.sh
+    - ./install_deps.sh
 script:
-    - ./fetch_umbrella_build_and_test.sh
+    - ./docs_build_and_test.sh
