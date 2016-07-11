@@ -11,8 +11,8 @@ Withdrawal from Contracts
 *************************
 
 The recommended method of sending funds after an effect
-is with the withdrawal pattern. Although the most intuitive
-aethod of sending Ether as a result of an effect is a
+is using the withdrawal pattern. Although the most intuitive
+method of sending Ether, as a result of an effect, is a
 direct ``send`` call, this is not recommended as it
 introduces a potential security risk. You may read
 more about this on the :ref:`security_considerations` page.
@@ -28,7 +28,7 @@ an Ether storage contract.
         mapping (address => uint) pendingReturns;
 
         function sendEther(uint amount) {
-            if (amount < etherStore[msg.sender]) {
+            if (amount > etherStore[msg.sender]) {
                 throw;
             }
             etherStore[msg.sender] -= amount;
@@ -60,7 +60,7 @@ This is as opposed to the more intuitive sending pattern.
         mapping (address => uint) etherStore;
 
         function sendEther(uint amount) {
-            if (amount < etherStore[msg.sender]) {
+            if (amount > etherStore[msg.sender]) {
                 throw;
             }
             etherStore[msg.sender] -= amount;
