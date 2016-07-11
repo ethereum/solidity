@@ -33,15 +33,16 @@ build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS%
 
     # Create ZIP
-#    - cd %APPVEYOR_BUILD_FOLDER%
-#    - 7z a solidity.zip %APPVEYOR_BUILD_FOLDER%\build\bench\%CONFIGURATION%\bench.exe %APPVEYOR_BUILD_FOLDER%\build\eth\%CONFIGURATION%\eth.exe %APPVEYOR_BUILD_FOLDER%\build\ethkey\%CONFIGURATION%\ethkey.exe %APPVEYOR_BUILD_FOLDER%\build\ethminer\%CONFIGURATION%\ethminer.exe %APPVEYOR_BUILD_FOLDER%\build\ethvm\%CONFIGURATION%\ethvm.exe %APPVEYOR_BUILD_FOLDER%\build\rlp\%CONFIGURATION%\rlp.exe %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug\testeth.exe %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - 7z a solidity.zip %APPVEYOR_BUILD_FOLDER%\build\solc\%CONFIGURATION%\solc.exe %APPVEYOR_BUILD_FOLDER%\build\solc\%CONFIGURATION%\soltest.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
 
-#test_script:
-#    - cd %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%
-#    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
-#    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
-#    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-#    - testweb3core.exe
+test_script:
+    - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
+    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
+#    - eth.exe --test -d %TMP%/test
+#    - soltest.exe --ipc /tmp/test/geth.ipc
+#    - pkill eth
+    
 artifacts:
     - path: solidity.zip
       name: solidity-zip
