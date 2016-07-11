@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
-# Bash script for installing pre-requisite packages for cpp-ethereum on a
+# Bash script for installing pre-requisite packages for solidity on a
 # variety of Linux and other UNIX-derived platforms.
 #
 # This is an "infrastucture-as-code" alternative to the manual build
-# instructions pages which we previously maintained, first as Wiki pages
-# and later as readthedocs pages at http://ethdocs.org.
+# instructions pages which we previously maintained at:
+# http://solidity.readthedocs.io/en/latest/installing-solidity.html
 #
 # The aim of this script is to simplify things down to the following basic
 # flow for all supported operating systems:
@@ -29,15 +29,15 @@
 # also bring in support for Android, iOS, watchOS, tvOS, Tizen, Sailfish,
 # Maemo, MeeGo and Yocto.
 #
-# The documentation for cpp-ethereum is hosted at:
+# The documentation for solidity is hosted at:
 #
-# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+# http://solidity.readthedocs.io/en/latest/
 #
-# (c) 2016 cpp-ethereum contributors.
+# (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
 # Check for 'uname' and abort if it is not available.
-uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires 'uname' to identify the platform."; exit 1; }
+uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires 'uname' to identify the platform."; exit 1; }
 
 case $(uname -s) in
 
@@ -48,13 +48,13 @@ case $(uname -s) in
     Darwin)
         case $(sw_vers -productVersion | awk -F . '{print $1"."$2}') in
             10.10)
-                echo "Installing cpp-ethereum dependencies on OS X 10.10 Yosemite."
+                echo "Installing solidity dependencies on OS X 10.10 Yosemite."
                 ;;
             10.11)
-                echo "Installing cpp-ethereum dependencies on OS X 10.11 El Capitan."
+                echo "Installing solidity dependencies on OS X 10.11 El Capitan."
                 ;;
             10.12)
-                echo "Installing cpp-ethereum dependencies on macOS 10.12 Sierra."
+                echo "Installing solidity dependencies on macOS 10.12 Sierra."
                 echo ""
                 echo "NOTE - You are in unknown territory with this preview OS."
                 echo "Even Homebrew doesn't have official support yet, and there are"
@@ -70,20 +70,22 @@ case $(uname -s) in
         esac
 
         # Check for Homebrew install and abort if it is not installed.
-        brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires a Homebrew install.  See http://brew.sh."; exit 1; }
+        brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - solidity requires a Homebrew install.  See http://brew.sh."; exit 1; }
 
         brew update
         brew upgrade
         
         brew install boost
         brew install cmake
-        brew install cryptopp
-        brew install miniupnpc
-        brew install leveldb
-        brew install gmp
         brew install jsoncpp
-        brew install libmicrohttpd
-        brew install libjson-rpc-cpp
+
+        # We should really 'brew install' our eth client here, but at the time of writing
+        # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
+        # the time being, which is good enough.   The cause of the breaks will go away
+        # when we commit the repository reorg changes anyway.
+        cd ~
+        curl -O https://builds.ethereum.org/cpp-binaries-data/release-1.2.9/cpp-ethereum-osx-elcapitan.zip
+        unzip cpp-ethereum-osx-elcapitan-v1.2.9.zip
 
         ;;
 
@@ -92,10 +94,10 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
 
     FreeBSD)
-        echo "Installing cpp-ethereum dependencies on FreeBSD."
+        echo "Installing solidity dependencies on FreeBSD."
         echo "ERROR - 'install_deps.sh' doesn't have FreeBSD support yet."
         echo "Please let us know if you see this error message, and we can work out what is missing."
-        echo "At https://gitter.im/ethereum/cpp-ethereum-development."
+        echo "Drop us a message at https://gitter.im/ethereum/solidity."
         exit 1
         ;;
 
@@ -112,28 +114,15 @@ case $(uname -s) in
         
             Arch)
                 #Arch
-                echo "Installing cpp-ethereum dependencies on Arch Linux."
+                echo "Installing solidity dependencies on Arch Linux."
 
-                # The majority of our dependencies can be found in the
-                # Arch Linux official repositories.
+                # All our dependencies can be found in the Arch Linux official repositories.
                 # See https://wiki.archlinux.org/index.php/Official_repositories
                 sudo pacman -Sy \
                     base-devel \
                     boost \ 
                     cmake \
-                    crypto++ \
                     git \
-                    leveldb \
-                    libcl \
-                    libmicrohttpd \
-                    miniupnpc \
-                    opencl-headers
-
-                # The one exception is libjson-rpc-cpp, which comes from the
-                # ArchLinux User Repository (AUR).
-                # See https://aur.archlinux.org/.
-                yaourt -Sy libjson-rpc-cpp
-
                 ;;
 
 #------------------------------------------------------------------------------
@@ -142,11 +131,11 @@ case $(uname -s) in
 
             Alpine)
                 #Alpine
-                echo "Installing cpp-ethereum dependencies on Alpine Linux."
+                echo "Installing solidity dependencies on Alpine Linux."
                 echo "ERROR - 'install_deps.sh' doesn't have Alpine Linux support yet."
-                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
-                echo "If you would like to get 'install_deps.sh' working for AlpineLinux, that would be fantastic."
-                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
+                echo "If you would like to get 'install_deps.sh' working for Alpine Linux, that would be fantastic."
+                echo "Drop us a message at https://gitter.im/ethereum/solidity."
                 echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
                 exit 1
                 ;;
@@ -160,34 +149,34 @@ case $(uname -s) in
                 case $(lsb_release -cs) in
                     wheezy)
                         #wheezy
-                        echo "Installing cpp-ethereum dependencies on Debian Wheezy (7.x)."
+                        echo "Installing solidity dependencies on Debian Wheezy (7.x)."
                         echo "ERROR - 'install_deps.sh' doesn't have Debian Wheezy support yet."
-                        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                        echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
                         echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                        echo "Drop us a message at https://gitter.im/ethereum/solidity."
                         echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
                         exit 1
                         ;;
                     jessie)
                         #jessie
-                        echo "Installing cpp-ethereum dependencies on Debian Jesse (8.x)."
+                        echo "Installing solidity dependencies on Debian Jesse (8.x)."
                         ;;
                     stretch)
                         #stretch
-                        echo "Installing cpp-ethereum dependencies on Debian Stretch (9.x)."
+                        echo "Installing solidity dependencies on Debian Stretch (9.x)."
                         echo "ERROR - 'install_deps.sh' doesn't have Debian Stretch support yet."
-                        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                        echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
                         echo "If you would like to get 'install_deps.sh' working for Debian Stretch, that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                        echo "Drop us a message at https://gitter.im/ethereum/solidity."
                         exit 1
                         ;;
                     *)
                         #other Debian
-                        echo "Installing 'install_deps.sh' dependencies on unknown Debian version."
-                        echo "ERROR - Debian Jessie is the only Debian version which cpp-ethereum has been tested on."
+                        echo "Installing solidity dependencies on unknown Debian version."
+                        echo "ERROR - Debian Jessie is the only Debian version which solidity has been tested on."
                         echo "If you are using a different release and would like to get 'install_deps.sh'"
                         echo "working for that release that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                        echo "Drop us a message at https://gitter.im/ethereum/solidity."
                         exit 1
                         ;;
                 esac
@@ -201,47 +190,8 @@ case $(uname -s) in
                     gcc \
                     git \
                     libboost-all-dev \
-                    libcurl4-openssl-dev \
-                    libgmp-dev \
                     libjsoncpp-dev \
-                    libleveldb-dev \
-                    libmicrohttpd-dev \
-                    libminiupnpc-dev \
-                    libz-dev \
-                    mesa-common-dev \
-                    ocl-icd-libopencl1 \
-                    opencl-headers \
                     unzip
-
-                # All the Debian releases until Stretch have shipped with CryptoPP 5.6.1,
-                # but we need 5.6.2 or newer, so we build it from source.
-                #
-                # - https://packages.debian.org/wheezy/libcrypto++-dev (5.6.1)
-                # - https://packages.debian.org/jessie/libcrypto++-dev (5.6.1)
-                # - https://packages.debian.org/stretch/libcrypto++-dev (5.6.3)
-
-                mkdir cryptopp && cd cryptopp
-                wget https://www.cryptopp.com/cryptopp563.zip
-                unzip -a cryptopp563.zip
-                make dynamic
-                make libcryptopp.so
-                sudo make install PREFIX=/usr/local
-                cd ..
-
-                # Build libjsonrpccpp-v0.6.0 from source.
-                # Rationale for this is given in the Ubuntu comments lower down this file.
-
-                sudo apt-get -y install libargtable2-dev libedit-dev
-                git clone git://github.com/cinemast/libjson-rpc-cpp.git
-                cd libjson-rpc-cpp
-                git checkout v0.6.0
-                mkdir build
-                cd build
-                cmake .. -DCOMPILE_TESTS=NO
-                make
-                sudo make install
-                sudo ldconfig
-                cd ../..
 
                 ;;
 
@@ -251,7 +201,7 @@ case $(uname -s) in
 
             Fedora)
                 #Fedora
-                echo "Installing cpp-ethereum dependencies on Fedora."
+                echo "Installing solidity dependencies on Fedora."
 
                 # Install "normal packages"
                 # See https://fedoraproject.org/wiki/Package_management_system.
@@ -260,31 +210,10 @@ case $(uname -s) in
                     automake \
                     boost-devel \
                     cmake \
-                    cryptopp-devel \
-                    curl-devel \
                     gcc \
                     gcc-c++ \
                     git \
-                    gmp-devel \
-                    leveldb-devel \ 
-                    libtool \
-                    mesa-dri-drivers \
-                    miniupnpc-devel \
-                    snappy-devel
-
-                # Build libjsonrpccpp-v0.6.0 from source.
-                # Rationale for this is given in the Ubuntu comments lower down this file.
-                sudo apt-get -y install libargtable2-dev libedit-dev
-                git clone git://github.com/cinemast/libjson-rpc-cpp.git
-                cd libjson-rpc-cpp
-                git checkout v0.6.0
-                mkdir build
-                cd build
-                cmake .. -DCOMPILE_TESTS=NO
-                make
-                sudo make install
-                sudo ldconfig
-                cd ../..
+                    libtool
 
                 ;;
 
@@ -294,9 +223,9 @@ case $(uname -s) in
 
             "openSUSE project")
                 #openSUSE
-                echo "Installing cpp-ethereum dependencies on openSUSE."
+                echo "Installing solidity dependencies on openSUSE."
                 echo "ERROR - 'install_deps.sh' doesn't have openSUSE support yet."
-                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
                 echo "If you would like to get 'install_deps.sh' working for openSUSE, that would be fantastic."
                 echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
                 exit 1
@@ -321,27 +250,27 @@ case $(uname -s) in
                 case $(lsb_release -cs) in
                     trusty)
                         #trusty
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Trusty Tahr (14.04)."
+                        echo "Installing solidity dependencies on Ubuntu Trusty Tahr (14.04)."
                         ;;
                     utopic)
                         #utopic
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Utopic Unicorn (14.10)."
+                        echo "Installing solidity dependencies on Ubuntu Utopic Unicorn (14.10)."
                         ;;
                     vivid)
                         #vivid
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Vivid Vervet (15.04)."
+                        echo "Installing solidity dependencies on Ubuntu Vivid Vervet (15.04)."
                         ;;
                     wily)
                         #wily
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Wily Werewolf (15.10)."
+                        echo "Installing solidity dependencies on Ubuntu Wily Werewolf (15.10)."
                         ;;
                     xenial)
                         #xenial
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Xenial Xerus (16.04)."
+                        echo "Installing solidity dependencies on Ubuntu Xenial Xerus (16.04)."
                         ;;
                     yakkety)
                         #yakkety
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Yakkety Yak (16.10)."
+                        echo "Installing solidity dependencies on Ubuntu Yakkety Yak (16.10)."
                         echo ""
                         echo "NOTE - You are in unknown territory with this preview OS."
                         echo "We will need to update the Ethereum PPAs, work through build and runtime breaks, etc."
@@ -357,88 +286,13 @@ case $(uname -s) in
                         ;;
                 esac
 
-                # The Ethereum PPA is required for the handful of packages where we need newer versions than
-                # are shipped with Ubuntu itself.  We can likely minimize or remove the need for the PPA entirely
-                # as we switch more to a "build from source" model, as Pawel has recently done for LLVM in evmjit.
-                #
-                # See https://launchpad.net/~ethereum/+archive/ubuntu/ethereum
-                #
-                # The version of CMake which shipped with Trusty was too old for our codebase (we need 3.0.0 or newer),
-                # so the Ethereum PPA contains a newer release (3.2.2):
-                #
-                # - http://packages.ubuntu.com/trusty/cmake (2.8.12.2)
-                # - http://packages.ubuntu.com/wily/cmake (3.2.2)
-                # - http://packages.ubuntu.com/xenial/cmake (3.5.1)
-                # - http://packages.ubuntu.com/yakkety/cmake (3.5.2)
-                #
-                # All the Ubuntu releases until Yakkety have shipped with CryptoPP 5.6.1, but we need 5.6.2
-                # or newer.  Also worth of note is that the package name is libcryptopp in our PPA but
-                # libcrypto++ in the official repositories.
-                #
-                # - http://packages.ubuntu.com/trusty/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/wily/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/xenial/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/yakkety/libcrypto++-dev (5.6.3)
-                #
-                # NOTE - We actually want to remove the dependency in CryptoPP from our codebase entirely,
-                # which would make this versioning problem moot.
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/103
-
-                sudo add-apt-repository -y ppa:ethereum/ethereum
                 sudo apt-get -y update
                 sudo apt-get -y install \
                     build-essential \
                     cmake \
                     git \
                     libboost-all-dev \
-                    libcurl4-openssl-dev \
-                    libcryptopp-dev \
-                    libgmp-dev \
-                    libjsoncpp-dev \
-                    libleveldb-dev \
-                    libmicrohttpd-dev \
-                    libminiupnpc-dev \
-                    libz-dev \
-                    mesa-common-dev \
-                    ocl-icd-libopencl1 \
-                    opencl-headers
-
-                # The PPA also contains binaries for libjson-rpc-cpp-0.4.2, but we aren't actually using them.
-                # Again, I think that will have been a workaround for libjsonrpccpp-dev not being
-                # consistently available across Ubuntu releases.   Again, the package name differs
-                # between our PPA and the official package repositories.
-                #
-                # - Not available for Trusty.
-                # - http://packages.ubuntu.com/wily/libjsonrpccpp-dev (0.6.0-2)
-                # - http://packages.ubuntu.com/xenial/libjsonrpccpp-dev (0.6.0-2)
-                # - http://packages.ubuntu.com/yakkety/libjsonrpccpp-dev (0.6.0-2)
-                #
-                # Instead, we are building from source, grabbing the v0.6.0 tag from Github.
-                #
-                # That build-from-source appears to be an effective workaround for jsonrpcstub
-                # silent failures at least within TravisCI runs on Ubuntu Trusty, but ...
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/513
-                #
-                # Hmm.   Arachnid is still getting this issue on OS X, which already has v0.6.0, so
-                # it isn't as simple as just updating all our builds to that version, though that is
-                # sufficient for us to get CircleCI and TravisCI working.   We still haven't got to
-                # the bottom of this issue, and are going to need to debug it in some scenario where
-                # we can reproduce it 100%, which MIGHT end up being within our automation here, but
-                # against a build-from-source-with-extra-printfs() of v0.4.2.
-
-                sudo apt-get -y install libargtable2-dev libedit-dev
-                git clone git://github.com/cinemast/libjson-rpc-cpp.git
-                cd libjson-rpc-cpp
-                git checkout v0.6.0
-                mkdir build
-                cd build
-                cmake .. -DCOMPILE_TESTS=NO
-                make
-                sudo make install
-                sudo ldconfig
-                cd ../..
+                    libjsoncpp-dev
 
                 # And install the English language package and reconfigure the locales.
                 # We really shouldn't need to do this, and should instead force our locales to "C"
@@ -461,9 +315,9 @@ case $(uname -s) in
 
                 #other Linux
                 echo "ERROR - Unsupported or unidentified Linux distro."
-                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
                 echo "If you would like to get your distro working, that would be fantastic."
-                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                echo "Drop us a message at https://gitter.im/ethereum/solidity."
                 exit 1
                 ;;
         esac
@@ -478,8 +332,8 @@ case $(uname -s) in
     *)
         #other
         echo "ERROR - Unsupported or unidentified operating system."
-        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/ for manual instructions."
+        echo "See http://solidity.readthedocs.io/en/latest/installing-solidity.html for manual instructions."
         echo "If you would like to get your operating system working, that would be fantastic."
-        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+        echo "Drop us a message at https://gitter.im/ethereum/solidity."
         ;;
 esac
