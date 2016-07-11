@@ -33,8 +33,10 @@ build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS%
 
     # Create ZIP
+    #
+    # TODO - Add %APPVEYOR_BUILD_FOLDER%\build\solc\%CONFIGURATION%\soltest.exe, when that is buildable.
     - cd %APPVEYOR_BUILD_FOLDER%
-    - 7z a solidity.zip %APPVEYOR_BUILD_FOLDER%\build\solc\%CONFIGURATION%\solc.exe %APPVEYOR_BUILD_FOLDER%\build\solc\%CONFIGURATION%\soltest.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
+    - 7z a solidity.zip %APPVEYOR_BUILD_FOLDER%\build\solc\%CONFIGURATION%\solc.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
