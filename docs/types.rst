@@ -113,6 +113,13 @@ All three functions ``call``, ``delegatecall`` and ``callcode`` are very low-lev
     All contracts inherit the members of address, so it is possible to query the balance of the
     current contract using ``this.balance``.
 
+.. warning::
+    All these functions are low-level functions and should be used with care.
+    Specifically, any unknown contract might be malicious and if you call it, you
+    hand over control to that contract which could in turn call back into
+    your contract, so be prepared for changes to your state variables
+    when the call returns.
+
 .. index:: byte array, bytes32
 
 
@@ -570,7 +577,7 @@ can actually be any type, including mappings.
 
 Mappings can be seen as hashtables which are virtually initialized such that
 every possible key exists and is mapped to a value whose byte-representation is
-all zeros. The similarity ends here, though: The key data is not actually stored
+all zeros: a type's :ref:`default value <default-value>`. The similarity ends here, though: The key data is not actually stored
 in a mapping, only its ``sha3`` hash used to look up the value.
 
 Because of this, mappings do not have a length or a concept of a key or value being "set".

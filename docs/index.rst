@@ -3,7 +3,7 @@ Solidity
 
 Solidity is a high-level language whose syntax is similar to that of JavaScript
 and it is designed to compile to code for the Ethereum Virtual Machine.
-As you will see, it is quite easy to create contracts for voting,
+As you will see, it is possible to create contracts for voting,
 crowdfunding, blind auctions, multi-signature wallets and more.
 
 .. note::
@@ -59,6 +59,18 @@ Available Solidity Integrations
 * `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
     Plugin for the Vim editor providing syntax highlighting.
 
+Solidity Tools
+-------------------------------
+
+* `Solidity REPL <https://github.com/raineorshine/solidity-repl>`_
+    Try Solidity instantly with a command-line Solidity console.
+    
+* `solgraph <https://github.com/raineorshine/solgraph>`_
+    Visualize Solidity control flow and highlight potential security vulnerabilities.
+
+* `evmdis <https://github.com/Arachnid/evmdis>`_
+    EVM Disassembler that performs static analysis on the bytecode to provide a higher level of abstraction than raw EVM operations.
+
 Language Documentation
 ----------------------
 
@@ -92,6 +104,7 @@ Contents
    installing-solidity.rst
    solidity-by-example.rst
    solidity-in-depth.rst
+   security-considerations.rst
    style-guide.rst
    common-patterns.rst
    frequently-asked-questions.rst

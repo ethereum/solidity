@@ -145,34 +145,6 @@ Tips and Tricks
 * If you do **not** want your contracts to receive ether when called via ``send``, you can add a throwing fallback function ``function() { throw; }``.
 * Initialise storage structs with a single assignment: ``x = MyStruct({a: 1, b: 2});``
 
-********
-Pitfalls
-********
-
-Unfortunately, there are some subtleties the compiler does not yet warn you about.
-
-- In ``for (var i = 0; i < arrayName.length; i++) { ... }``, the type of ``i`` will be ``uint8``, because this is the smallest type that is required to hold the value ``0``. If the array has more than 255 elements, the loop will not terminate.
-- If a contract receives Ether (without a function being called), the fallback function is executed. The contract can only rely
-  on the "gas stipend" (2300 gas) being available to it at that time. This stipend is not enough to access storage in any way.
-  To be sure that your contract can receive Ether in that way, check the gas requirements of the fallback function.
-- If you want to send ether using ``address.send``, there are certain details to be aware of:
-
-  1. If the recipient is a contract, it causes its fallback function to be executed which can in turn call back into the sending contract
-  2. Sending Ether can fail due to the call depth going above 1024. Since the caller is in total control of the call
-     depth, they can force the transfer to fail, so make sure to always check the return value of ``send``. Better yet,
-     write your contract using a pattern where the recipient can withdraw Ether instead.
-  3. Sending Ether can also fail because the recipient runs out of gas (either explicitly by using ``throw`` or
-     because the operation is just too expensive). If the return value of ``send`` is checked, this might provide a
-     means for the recipient to block progress in the sending contract. Again, the best practise here is to use
-     a "withdraw" pattern instead of a "send" pattern.
-
-- Loops that do not have a fixed number of iterations, e.g. loops that depends on storage values, have to be used carefully:
-  Due to the block gas limit, transactions can only consume a certain amount of gas. Either explicitly or just due to
-  normal operation, the number of iterations in a loop can grow beyond the block gas limit, which can cause the complete
-  contract to be stalled at a certain point. This does not apply at full extent to ``constant`` functions that are only executed
-  to read data from the blockchain. Still, such functions may be called by other contracts as part of on-chain operations
-  and stall those. Please be explicit about such cases in the documentation of your contracts.
-
 **********
 Cheatsheet
 **********
