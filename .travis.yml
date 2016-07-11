@@ -23,11 +23,47 @@ matrix:
           sudo: required
           env: TRAVIS_BUILD_TYPE=Debug
         - os: osx
+          osx_image: xcode7.1
+          env: TRAVIS_BUILD_TYPE=Debug
+        - os: osx
           osx_image: xcode7.3
           env: TRAVIS_BUILD_TYPE=Debug
 git:
     depth: 2
+branches:
+    except:
+        - /solidity-appveyor-v[0-9]/
 before_install:
     - ./install_deps.sh
+before_script:
+    - cd ..
+    - git clone https://github.com/ethereum/tests.git
+    - export ETHEREUM_TEST_PATH=$(pwd)/tests/
+    - cd solidity
+    - mkdir build
+    - cd build
+    - OPTIONS=""
+    - if [[ "$OSTYPE" != "darwin"* ]] then OPTIONS="-DCMAKE_C_COMPILER=/usr/lib/ccache/$CC -DCMAKE_CXX_COMPILER=/usr/lib/ccache/$CXX" fi
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE $OPTIONS
 script:
-    - ./docs_build_and_test.sh
+    # Build the code
+    - cmake --build .
+
+    # Run the tests
+    - if [[ "$OSTYPE" == "darwin"* ]] then ~/ethbin/eth --test -d /tmp/test & else eth --test -d /tmp/test & fi
+    - while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
+    - ./test/soltest --ipc /tmp/test/geth.ipc
+    - pkill eth
+
+    # Generate Sphinx documentation if we're running on Trusty.
+    if [[ "$OSTYPE" != "darwin"* ]] then cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .. fi
+
+#    - 7z a cpp-ethereum.zip eth/Debug/eth eth/Debug/*.so
+    
+#deploy:
+#    provider: releases
+#    api_key: "GITHUB OAUTH TOKEN"
+#    file: cpp-ethereum.zip
+#    skip_cleanup: true
+#    on:
+#        tags: true

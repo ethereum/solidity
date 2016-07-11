@@ -11,16 +11,46 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+version: 0.3.5.{build}
+skip_tags: true
 os: Visual Studio 2015
 configuration:
     - Debug
-    - RelWithDebInfo
 install:
     - git submodule update --init --recursive
-    - cmake -P deps\install_deps.cmake
+    - install_deps.bat
+    - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
 before_build:
+    - cd ..
+    - git clone https://github.com/ethereum/tests.git
+    - set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
+    - cd %APPVEYOR_BUILD_FOLDER%
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=Off
-build:
-    project: C:\projects\solidity\build\solidity.sln
+    - cmake -G "Visual Studio 14 2015 Win64" ..
+build_script:
+    # Build code
+    - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS%
+
+    # Create ZIP
+#    - cd %APPVEYOR_BUILD_FOLDER%
+#    - 7z a solidity.zip %APPVEYOR_BUILD_FOLDER%\build\bench\%CONFIGURATION%\bench.exe %APPVEYOR_BUILD_FOLDER%\build\eth\%CONFIGURATION%\eth.exe %APPVEYOR_BUILD_FOLDER%\build\ethkey\%CONFIGURATION%\ethkey.exe %APPVEYOR_BUILD_FOLDER%\build\ethminer\%CONFIGURATION%\ethminer.exe %APPVEYOR_BUILD_FOLDER%\build\ethvm\%CONFIGURATION%\ethvm.exe %APPVEYOR_BUILD_FOLDER%\build\rlp\%CONFIGURATION%\rlp.exe %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug\testeth.exe %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
+
+#test_script:
+#    - cd %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%
+#    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
+#    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
+#    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
+#    - testweb3core.exe
+artifacts:
+    - path: solidity.zip
+      name: solidity-zip
+deploy:
+    release: solidity-appveyor-v$(appveyor_build_version)
+    description: 'Automated Appveyor release of solidity'
+    provider: GitHub
+    auth_token:
+        secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
+    artifact: solidity-zip
+    on:
+        branch: standalone_prior_to_splat
