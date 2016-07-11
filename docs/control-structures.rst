@@ -422,7 +422,7 @@ The opcodes ``pushi`` and ``jumpdest`` cannot be used directly.
 +-------------------------+------+-----------------------------------------------------------------+
 | dup1 ... dup16          |      | copy ith stack slot to the top (counting from top)              |
 +-------------------------+------+-----------------------------------------------------------------+
-| swap1 ... swap1         | `*`  | swap topmost and ith stack slot below it                        |
+| swap1 ... swap16        | `*`  | swap topmost and ith stack slot below it                        |
 +-------------------------+------+-----------------------------------------------------------------+
 | mload(p)                |      | mem[p..(p+32))                                                  |
 +-------------------------+------+-----------------------------------------------------------------+
@@ -661,7 +661,7 @@ variables. Take care that when you assign to variables that point to
 memory or storage, you will only change the pointer and not the data.
 
 There are two kinds of assignments: Functional-style and instruction-style.
-For functionaly-style assignments (``variable := value``), you need to provide a value in a
+For functional-style assignments (``variable := value``), you need to provide a value in a
 functional-style expression that results in exactly one stack value
 and for instruction-style (``=: variable``), the value is just taken from the stack top.
 For both ways, the colon points to the name of the variable.
