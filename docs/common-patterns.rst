@@ -22,32 +22,70 @@ an Ether storage contract.
 
 ::
 
-    contract WithdrawalPattern {
+    contract WithdrawalPatternAuction {
+        address public beneficiary;
+        uint public auctionStart;
+        uint public biddingTime;
 
-        mapping (address => uint) etherStore;
-        mapping (address => uint) pendingReturns;
+        address public highestBidder;
+        uint public highestBid;
 
-        function sendEther(uint amount) {
-            if (amount > etherStore[msg.sender]) {
-                throw;
-            }
-            etherStore[msg.sender] -= amount;
-            pendingReturns[msg.sender] += amount;
+        mapping(address => uint) pendingReturns;
+
+        bool ended;
+
+        function WithdrawalPatternAuction(
+            uint _biddingTime,
+            address _beneficiary
+        ) {
+            beneficiary = _beneficiary;
+            auctionStart = now;
+            biddingTime = _biddingTime;
         }
 
-        function withdraw() {
-            uint amount = pendingReturns[msg.sender];
-            // It is important to zero the mapping entry
-            // before sending otherwise this could open
-            // the contract to a re-entrancy attack
-            pendingReturns[msg.sender] = 0;
-            if (!msg.sender.send(amount)) {
+        function bid() {
+            if (now > auctionStart + biddingTime) {
                 throw;
             }
+            if (msg.value <= highestBid) {
+                throw;
+            }
+
+            // Note that funds for unsucessful
+            // bids are returned using the
+            // pendingReturns mapping
+            if (highestBidder != 0) {
+                pendingReturns[highestBidder] += highestBid;
+            }
+            highestBidder = msg.sender;
+            highestBid = msg.value;
+        }
+
+        // Withdraw a bid that was overbid.
+        function withdraw() {
+            var amount = pendingReturns[msg.sender];
+            // It is important to set this to zero because the recipient
+            // can call this function again as part of the receiving call
+            // before `send` returns.
+            pendingReturns[msg.sender] = 0;
+            if (!msg.sender.send(amount))
+                throw; // If anything fails, this will revert the changes above
+        }
+
+        function auctionEnd() {
+            if (now <= auctionStart + biddingTime)
+                throw;
+            if (ended)
+                throw;
+
+            ended = true;
+
+            if (!beneficiary.send(this.balance))
+                throw;
         }
 
         function () {
-            etherStore[msg.sender] += msg.value;
+            throw;
         }
     }
 
@@ -55,28 +93,66 @@ This is as opposed to the more intuitive sending pattern.
 
 ::
 
-    contract SendPattern {
+    contract SendPatternAuction {
+        address public beneficiary;
+        uint public auctionStart;
+        uint public biddingTime;
 
-        mapping (address => uint) etherStore;
+        address public highestBidder;
+        uint public highestBid;
 
-        function sendEther(uint amount) {
-            if (amount > etherStore[msg.sender]) {
+        bool ended;
+
+        function WithdrawalPatternAuction(
+            uint _biddingTime,
+            address _beneficiary
+        ) {
+            beneficiary = _beneficiary;
+            auctionStart = now;
+            biddingTime = _biddingTime;
+        }
+
+        function bid() {
+            if (now > auctionStart + biddingTime) {
                 throw;
             }
-            etherStore[msg.sender] -= amount;
-            if (!msg.sender.send(amount)) {
+            if (msg.value <= highestBid) {
                 throw;
             }
+
+            // Note that funds are
+            // immedietally sent back to
+            // unsucessful bidders
+            if (highestBidder != 0) {
+                msg.sender.send(amount);// DANGER - send is unchecked!
+            }
+            highestBidder = msg.sender;
+            highestBid = msg.value;
+        }
+
+        function auctionEnd() {
+            if (now <= auctionStart + biddingTime)
+                throw;
+            if (ended)
+                throw;
+
+            ended = true;
+
+            if (!beneficiary.send(this.balance))
+                throw;
         }
 
         function () {
-            etherStore[msg.sender] += msg.value;
+            throw;
         }
     }
 
-An example of this pattern in a less contrived
-application can be found on the :ref:`simple_auction`
-example.
+Notice that, in this example, an attacker could trap
+the previous highest bidder's funds in the contract
+by causing the execution of `send` to fail.
+
+The full auction example can be found at
+:ref:`simple_auction`.
 
 .. index:: access;restricting
 
