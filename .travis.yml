@@ -45,10 +45,11 @@ branches:
 before_install:
     - ./install_deps.sh
 before_script:
+    - cd %APPVEYOR_BUILD_FOLDER%
     - cd ..
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
-    - cd solidity
+    - cd %APPVEYOR_BUILD_FOLDER%
     - mkdir build
     - cd build
     - OPTIONS=""
@@ -58,15 +59,17 @@ script:
     - cmake --build .
 
     # Run the tests
-    - $ETH_PATH --test -d /tmp/test
-    - while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
-    - ./test/soltest --ipc /tmp/test/geth.ipc
-    - pkill eth
+    #- $ETH_PATH --test -d /tmp/test
+    #- while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
+    #- ./test/soltest --ipc /tmp/test/geth.ipc
+    #- pkill eth
 
     # Generate Sphinx documentation if we're running on Trusty.
-    - $DOCS_COMMAND
+    #- $DOCS_COMMAND
 
-#    - 7z a cpp-ethereum.zip eth/Debug/eth eth/Debug/*.so
+    # Create ZIP
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - zip solidity.zip %APPVEYOR_BUILD_FOLDER%/solc/%CONFIGURATION%/solc
     
 #deploy:
 #    provider: releases

@@ -85,7 +85,7 @@ case $(uname -s) in
         # when we commit the repository reorg changes anyway.
         cd ~
         curl -O https://builds.ethereum.org/cpp-binaries-data/release-1.2.9/cpp-ethereum-osx-elcapitan.zip
-        unzip cpp-ethereum-osx-elcapitan-v1.2.9.zip
+        unzip cpp-ethereum-osx-elcapitan.zip
 
         ;;
 
