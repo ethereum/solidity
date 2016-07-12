@@ -45,11 +45,10 @@ branches:
 before_install:
     - ./install_deps.sh
 before_script:
-    - cd %APPVEYOR_BUILD_FOLDER%
-    - cd ..
+    - cd ~
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
-    - cd %APPVEYOR_BUILD_FOLDER%
+    - cd solidity
     - mkdir build
     - cd build
     - OPTIONS=""
