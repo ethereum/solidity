@@ -45,14 +45,13 @@ branches:
 before_install:
     - ./install_deps.sh
 before_script:
-    - cd ~
+    - cd ..
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
     - cd solidity
     - mkdir build
     - cd build
-    - OPTIONS=""
-    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE $CMAKE_OPTIONS
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
 script:
     # Build the code
     - cmake --build .
