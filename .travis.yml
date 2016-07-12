@@ -66,8 +66,7 @@ script:
     #- $DOCS_COMMAND
 
     # Create ZIP
-    - cd %APPVEYOR_BUILD_FOLDER%
-    - zip solidity.zip %APPVEYOR_BUILD_FOLDER%/solc/%CONFIGURATION%/solc
+    - zip solidity.zip $TRAVIS_BUILD_DIR/build/solc/Debug/solc
     
 #deploy:
 #    provider: releases
