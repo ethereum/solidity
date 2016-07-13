@@ -67,23 +67,11 @@ void Why3Translator::fatalError(ASTNode const& _node, string const& _description
 	BOOST_THROW_EXCEPTION(FatalError());
 }
 
-void Why3Translator::appendPreface()
-{
-	m_lines.push_back(Line{R"(
-module UInt256
-	use import mach.int.Unsigned
-	type uint256
-	constant max_uint256: int = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-	clone export mach.int.Unsigned with
-		type t = uint256,
-		constant max = max_uint256
-end
-)", 0});
-}
-
 string Why3Translator::toFormalType(Type const& _type) const
 {
-	if (auto type = dynamic_cast<IntegerType const*>(&_type))
+	if (_type.category() == Type::Category::Bool)
+		return "bool";
+	else if (auto type = dynamic_cast<IntegerType const*>(&_type))
 	{
 		if (!type->isAddress() && !type->isSigned() && type->numBits() == 256)
 			return "uint256";
@@ -129,6 +117,7 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	if (m_seenContract)
 		error(_contract, "More than one contract not supported.");
 	m_seenContract = true;
+	m_currentContract.contract = &_contract;
 	if (_contract.isLibrary())
 		error(_contract, "Libraries not supported.");
 
@@ -141,20 +130,40 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	addLine("use import int.ComputerDivision");
 	addLine("use import mach.int.Unsigned");
 	addLine("use import UInt256");
-	addLine("exception Ret");
+	addLine("exception Revert");
+	addLine("exception Return");
 
-	addLine("type state = {");
-	indent();
-	m_stateVariables = _contract.stateVariables();
-	for (VariableDeclaration const* variable: m_stateVariables)
+	if (_contract.stateVariables().empty())
+		addLine("type state = ()");
+	else
 	{
-		string varType = toFormalType(*variable->annotation().type);
-		if (varType.empty())
-			fatalError(*variable, "Type not supported.");
-		addLine("mutable _" + variable->name() + ": ref " + varType);
+		addLine("type state = {");
+		indent();
+		m_currentContract.stateVariables = _contract.stateVariables();
+		for (VariableDeclaration const* variable: m_currentContract.stateVariables)
+		{
+			string varType = toFormalType(*variable->annotation().type);
+			if (varType.empty())
+				fatalError(*variable, "Type not supported for state variable.");
+			addLine("mutable _" + variable->name() + ": " + varType);
+		}
+		unindent();
+		addLine("}");
 	}
+
+	addLine("type account = {");
+	indent();
+	addLine("mutable balance: uint256;");
+	addLine("storage: state");
 	unindent();
 	addLine("}");
+
+	addLine("val external_call (this: account): bool");
+	indent();
+	addLine("ensures { result = false -> this = (old this) }");
+	addLine("writes { this }");
+	addSourceFromDocStrings(m_currentContract.contract->annotation());
+	unindent();
 
 	if (!_contract.baseContracts().empty())
 		error(*_contract.baseContracts().front(), "Inheritance not supported.");
@@ -172,10 +181,9 @@ bool Why3Translator::visit(ContractDefinition const& _contract)
 	return false;
 }
 
-void Why3Translator::endVisit(ContractDefinition const& _contract)
+void Why3Translator::endVisit(ContractDefinition const&)
 {
-	m_stateVariables.clear();
-	addSourceFromDocStrings(_contract.annotation());
+	m_currentContract.reset();
 	unindent();
 	addLine("end");
 }
@@ -207,7 +215,7 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 		m_localVariables[var->name()] = var;
 
 	add("let rec _" + _function.name());
-	add(" (state: state)");
+	add(" (this: account)");
 	for (auto const& param: _function.parameters())
 	{
 		string paramType = toFormalType(*param->annotation().type);
@@ -235,8 +243,19 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 	unindent();
 
 	addSourceFromDocStrings(_function.annotation());
+	if (!m_currentContract.contract)
+		error(_function, "Only functions inside contracts allowed.");
+	addSourceFromDocStrings(m_currentContract.contract->annotation());
+
+	if (_function.isDeclaredConst())
+		addLine("ensures { (old this) = this }");
+	else
+		addLine("writes { this }");
 
 	addLine("=");
+
+	// store the prestate in the case we need to revert
+	addLine("let prestate = {balance = this.balance; storage = " + copyOfStorage() + "} in ");
 
 	// initialise local variables
 	for (auto const& variable: _function.parameters())
@@ -259,7 +278,7 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 
 	_function.body().accept(*this);
 	add(";");
-	addLine("raise Ret");
+	addLine("raise Return");
 
 	string retVals;
 	for (auto const& variable: _function.returnParameters())
@@ -268,8 +287,14 @@ bool Why3Translator::visit(FunctionDefinition const& _function)
 			retVals += ", ";
 		retVals += "!_" + variable->name();
 	}
-	addLine("with Ret -> (" + retVals + ")");
-	newLine();
+	addLine("with Return -> (" + retVals + ") |");
+	string reversion = "     Revert -> this.balance <- prestate.balance; ";
+	for (auto const* variable: m_currentContract.stateVariables)
+		reversion += "this.storage._" + variable->name() + " <- prestate.storage._" + variable->name() + "; ";
+	//@TODO in case of reversion the return values are wrong - we need to change the
+	// return type to include a bool to signify if an exception was thrown.
+	reversion += "(" + retVals + ")";
+	addLine(reversion);
 	unindent();
 	addLine("end");
 	addLine("");
@@ -349,10 +374,17 @@ bool Why3Translator::visit(Return const& _node)
 		}
 		add("begin _" + params.front()->name() + " := ");
 		_node.expression()->accept(*this);
-		add("; raise Ret end");
+		add("; raise Return end");
 	}
 	else
-		add("raise Ret");
+		add("raise Return");
+	return false;
+}
+
+bool Why3Translator::visit(Throw const& _node)
+{
+	addSourceFromDocStrings(_node.annotation());
+	add("raise Revert");
 	return false;
 }
 
@@ -385,7 +417,8 @@ bool Why3Translator::visit(Assignment const& _node)
 		error(_node, "Compound assignment not supported.");
 
 	_node.leftHandSide().accept(*this);
-	add(" := ");
+
+	add(m_currentLValueIsRef ? " := " : " <- ");
 	_node.rightHandSide().accept(*this);
 
 	return false;
@@ -402,7 +435,7 @@ bool Why3Translator::visit(TupleExpression const& _node)
 bool Why3Translator::visit(UnaryOperation const& _unaryOperation)
 {
 	if (toFormalType(*_unaryOperation.annotation().type).empty())
-		error(_unaryOperation, "Type not supported.");
+		error(_unaryOperation, "Type not supported in unary operation.");
 
 	switch (_unaryOperation.getOperator())
 	{
@@ -512,6 +545,42 @@ bool Why3Translator::visit(FunctionCall const& _node)
 		add(")");
 		return false;
 	}
+	case FunctionType::Location::Bare:
+	{
+		if (!_node.arguments().empty())
+		{
+			error(_node, "Function calls with named arguments not supported.");
+			return true;
+		}
+
+		add("(");
+		indent();
+		add("let amount = 0 in ");
+		_node.expression().accept(*this);
+		addLine("if amount <= this.balance then");
+		indent();
+		addLine("let balance_precall = this.balance in");
+		addLine("begin");
+		indent();
+		addLine("this.balance <- this.balance - amount;");
+		addLine("if not (external_call this) then begin this.balance = balance_precall; false end else true");
+		unindent();
+		addLine("end");
+		unindent();
+		addLine("else false");
+
+		unindent();
+		add(")");
+		return false;
+	}
+	case FunctionType::Location::SetValue:
+	{
+		add("let amount = ");
+		solAssert(_node.arguments().size() == 1, "");
+		_node.arguments()[0]->accept(*this);
+		add(" in ");
+		return false;
+	}
 	default:
 		error(_node, "Only internal function calls supported.");
 		return true;
@@ -531,8 +600,17 @@ bool Why3Translator::visit(MemberAccess const& _node)
 		add(".length");
 		add(")");
 	}
+	else if (
+		_node.memberName() == "call" &&
+		*_node.expression().annotation().type == IntegerType(160, IntegerType::Modifier::Address)
+	)
+	{
+		// Do nothing, do not even visit the address because this will be an external call
+		//@TODO ensure that the expression itself does not have side-effects
+		return false;
+	}
 	else
-		error(_node, "Only read-only length access for arrays supported.");
+		error(_node, "Member access: Only call and array length supported.");
 	return false;
 }
 
@@ -568,13 +646,14 @@ bool Why3Translator::visit(Identifier const& _identifier)
 	{
 		bool isStateVar = isStateVariable(variable);
 		bool lvalue = _identifier.annotation().lValueRequested;
-		if (!lvalue)
-			add("!(");
 		if (isStateVar)
-			add("state.");
+			add("this.storage.");
+		else if (!lvalue)
+			add("!(");
 		add("_" + variable->name());
-		if (!lvalue)
+		if (!isStateVar && !lvalue)
 			add(")");
+		m_currentLValueIsRef = !isStateVar;
 	}
 	else
 		error(_identifier, "Not supported.");
@@ -608,12 +687,12 @@ bool Why3Translator::visit(Literal const& _literal)
 
 bool Why3Translator::isStateVariable(VariableDeclaration const* _var) const
 {
-	return contains(m_stateVariables, _var);
+	return contains(m_currentContract.stateVariables, _var);
 }
 
 bool Why3Translator::isStateVariable(string const& _name) const
 {
-	for (auto const& var: m_stateVariables)
+	for (auto const& var: m_currentContract.stateVariables)
 		if (var->name() == _name)
 			return true;
 	return false;
@@ -630,6 +709,23 @@ bool Why3Translator::isLocalVariable(VariableDeclaration const* _var) const
 bool Why3Translator::isLocalVariable(string const& _name) const
 {
 	return m_localVariables.count(_name);
+}
+
+string Why3Translator::copyOfStorage() const
+{
+	if (m_currentContract.stateVariables.empty())
+		return "()";
+	string ret = "{";
+	bool first = true;
+	for (auto const* variable: m_currentContract.stateVariables)
+	{
+		if (first)
+			first = false;
+		else
+			ret += "; ";
+		ret += "_" + variable->name() + " = this.storage._" + variable->name();
+	}
+	return ret + "}";
 }
 
 void Why3Translator::visitIndentedUnlessBlock(Statement const& _statement)
@@ -674,11 +770,10 @@ string Why3Translator::transformVariableReferences(string const& _annotation)
 		});
 		string varName(hash + 1, hashEnd);
 		if (isLocalVariable(varName))
-			ret += "(to_int !_" + varName + ")";
+			ret += "(!_" + varName + ")";
 		else if (isStateVariable(varName))
-			ret += "(to_int !(state._" + varName + "))";
-		else if (varName == "result") //@todo actually use the name of the return parameters
-			ret += "(to_int result)";
+			ret += "(this.storage._" + varName + ")";
+		//@todo return variables
 		else
 			ret.append(hash, hashEnd);
 
@@ -687,3 +782,16 @@ string Why3Translator::transformVariableReferences(string const& _annotation)
 	return ret;
 }
 
+void Why3Translator::appendPreface()
+{
+	m_lines.push_back(Line{R"(
+module UInt256
+	use import mach.int.Unsigned
+	type uint256
+	constant max_uint256: int = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+	clone export mach.int.Unsigned with
+		type t = uint256,
+		constant max = max_uint256
+end
+   )", 0});
+}
