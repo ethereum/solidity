@@ -85,7 +85,7 @@ This means that cyclic creation dependencies are impossible.
             // Only the creator can alter the name --
             // the comparison is possible since contracts
             // are implicitly convertible to addresses.
-            if (msg.sender == creator)
+            if (msg.sender == address(creator))
                 name = newName;
         }
 

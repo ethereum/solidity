@@ -640,7 +640,7 @@ words.  (for example:``MAX_BLOCKS``)
 Modifiers
 =========
 
-Function modifiers should use lowercase words separated by underscores.
+Use mixedCase.
 
 
 Avoiding Collisions

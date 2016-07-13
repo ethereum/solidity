@@ -129,7 +129,6 @@ namespace solidity
 	T(GreaterThan, ">", 7)                                             \
 	T(LessThanOrEqual, "<=", 7)                                        \
 	T(GreaterThanOrEqual, ">=", 7)                                     \
-	K(In, "in", 7)                                                     \
 	\
 	/* Unary operators. */                                             \
 	/* IsUnaryOp() relies on this block of enum values */              \
@@ -220,6 +219,7 @@ namespace solidity
 	K(Case, "case", 0)                                                 \
 	K(Catch, "catch", 0)                                               \
 	K(Final, "final", 0)                                               \
+	K(In, "in", 0)                                                     \
 	K(Inline, "inline", 0)                                             \
 	K(Let, "let", 0)                                                   \
 	K(Match, "match", 0)                                               \
@@ -267,7 +267,7 @@ public:
 	static bool isCommutativeOp(Value op) { return op == BitOr || op == BitXor || op == BitAnd ||
 				op == Add || op == Mul || op == Equal || op == NotEqual; }
 	static bool isArithmeticOp(Value op) { return Add <= op && op <= Exp; }
-	static bool isCompareOp(Value op) { return Equal <= op && op <= In; }
+	static bool isCompareOp(Value op) { return Equal <= op && op <= GreaterThanOrEqual; }
 
 	static Value AssignmentToBinaryOp(Value op)
 	{

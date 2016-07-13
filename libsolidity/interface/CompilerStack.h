@@ -142,6 +142,12 @@ public:
 	eth::AssemblyItems const* assemblyItems(std::string const& _contractName = "") const;
 	/// @returns runtime contract assembly items
 	eth::AssemblyItems const* runtimeAssemblyItems(std::string const& _contractName = "") const;
+	/// @returns the string that provides a mapping between bytecode and sourcecode or a nullptr
+	/// if the contract does not (yet) have bytecode.
+	std::string const* sourceMapping(std::string const& _contractName = "") const;
+	/// @returns the string that provides a mapping between runtime bytecode and sourcecode.
+	/// if the contract does not (yet) have bytecode.
+	std::string const* runtimeSourceMapping(std::string const& _contractName = "") const;
 	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is
 	/// returned by the constructor or the zero-h256 if the contract still needs to be linked or
 	/// does not have runtime code.
@@ -153,6 +159,11 @@ public:
 	/// Prerequisite: Successful compilation.
 	Json::Value streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap(), bool _inJsonFormat = false) const;
 
+	/// @returns the list of sources (paths) used
+	std::vector<std::string> sourceNames() const;
+	/// @returns a mapping assigning each source name its index inside the vector returned
+	/// by sourceNames().
+	std::map<std::string, unsigned> sourceIndices() const;
 	/// @returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
 	std::string const& interface(std::string const& _contractName = "") const;
@@ -196,9 +207,8 @@ private:
 	{
 		std::shared_ptr<Scanner> scanner;
 		std::shared_ptr<SourceUnit> ast;
-		std::string interface;
 		bool isLibrary = false;
-		void reset() { scanner.reset(); ast.reset(); interface.clear(); }
+		void reset() { scanner.reset(); ast.reset(); }
 	};
 
 	struct Contract
@@ -212,6 +222,8 @@ private:
 		mutable std::unique_ptr<std::string const> solidityInterface;
 		mutable std::unique_ptr<std::string const> userDocumentation;
 		mutable std::unique_ptr<std::string const> devDocumentation;
+		mutable std::unique_ptr<std::string const> sourceMapping;
+		mutable std::unique_ptr<std::string const> runtimeSourceMapping;
 	};
 
 	/// Loads the missing sources from @a _ast (named @a _path) using the callback
@@ -235,6 +247,8 @@ private:
 
 	Contract const& contract(std::string const& _contractName = "") const;
 	Source const& source(std::string const& _sourceName = "") const;
+
+	std::string computeSourceMapping(eth::AssemblyItems const& _items) const;
 
 	struct Remapping
 	{

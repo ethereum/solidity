@@ -21,9 +21,25 @@
  * Unit tests for the solidity expression compiler, testing the behaviour of the code.
  */
 
+#include <functional>
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
+
+#if defined(__GNUC__)
+#pragma warning(push)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif // defined(__GNUC__)
+
+#include <boost/thread.hpp>
+
+#if defined(__GNUC__)
+#pragma warning(pop)
+#pragma GCC diagnostic pop
+#endif // defined(__GNUC__)
+
+
 #include <libdevcore/Hash.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
@@ -2462,7 +2478,7 @@ BOOST_AUTO_TEST_CASE(use_std_lib)
 		contract Icarus is mortal { }
 	)";
 	m_addStandardSources = true;
-	u256 amount(130 * eth::ether);
+	u256 amount(130 * ether);
 	compileAndRun(sourceCode, amount, "Icarus");
 	u256 balanceBefore = balanceAt(m_sender);
 	BOOST_CHECK(callContractFunction("kill()") == bytes());
@@ -5921,9 +5937,9 @@ BOOST_AUTO_TEST_CASE(version_stamp_for_libraries)
 	m_optimize = true;
 	bytes runtimeCode = compileAndRun(sourceCode, 0, "lib");
 	BOOST_CHECK(runtimeCode.size() >= 8);
-	BOOST_CHECK_EQUAL(runtimeCode[0], int(eth::Instruction::PUSH6)); // might change once we switch to 1.x.x
+	BOOST_CHECK_EQUAL(runtimeCode[0], int(Instruction::PUSH6)); // might change once we switch to 1.x.x
 	BOOST_CHECK_EQUAL(runtimeCode[1], 3); // might change once we switch away from x.3.x
-	BOOST_CHECK_EQUAL(runtimeCode[7], int(eth::Instruction::POP));
+	BOOST_CHECK_EQUAL(runtimeCode[7], int(Instruction::POP));
 }
 
 BOOST_AUTO_TEST_CASE(contract_binary_dependencies)

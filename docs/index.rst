@@ -38,9 +38,6 @@ Available Solidity Integrations
 * `Visual Studio Extension <https://visualstudiogallery.msdn.microsoft.com/96221853-33c4-4531-bdd5-d2ea5acc4799/>`_
     Solidity plugin for Microsoft Visual Studio that includes the Solidity compiler.
 
-* `Mix IDE <https://github.com/ethereum/mix/>`_
-    Qt based IDE for designing, debugging and testing solidity smart contracts.
-
 * `Package for SublimeText — Solidity language syntax <https://packagecontrol.io/packages/Ethereum/>`_
     Solidity syntax highlighting for SublimeText editor.
 
@@ -58,6 +55,12 @@ Available Solidity Integrations
 
 * `Vim Solidity <https://github.com/tomlion/vim-solidity/>`_
     Plugin for the Vim editor providing syntax highlighting.
+
+Discontinued:
+
+* `Mix IDE <https://github.com/ethereum/mix/>`_
+    Qt based IDE for designing, debugging and testing solidity smart contracts.
+
 
 Solidity Tools
 -------------------------------

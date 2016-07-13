@@ -34,3 +34,7 @@ docs/utils/__pycache__
 
 # vim stuff
 *.swp
+
+# IDE files
+.idea
+browse.VC.db
