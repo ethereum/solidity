@@ -17,7 +17,7 @@
 language: cpp
 branches:
     except:
-        - /solidity-develop-windows-v[0-9]/
+        - /develop-v/
 matrix:
     include:
         - os: linux
@@ -30,8 +30,6 @@ matrix:
         - os: osx
           osx_image: xcode7.3
           env: TRAVIS_BUILD_TYPE=Debug
-cache:
-    - ccache
 git:
     depth: 2
 before_install:

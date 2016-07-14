@@ -31,7 +31,8 @@ build_script:
     # Create ZIP
     #
     # TODO - Add solc\%CONFIGURATION%\soltest.exe, when that is buildable.
-    - 7z a solidity-develop-windows.zip .\solc\%CONFIGURATION%\solc.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - 7z a solidity-develop-windows.zip .\build\solc\%CONFIGURATION%\solc.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
 
 #test_script:
 #    - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
@@ -44,8 +45,9 @@ artifacts:
     - path: solidity-develop-windows.zip
       name: solidity-develop-windows-zip
 deploy:
-    release: solidity-develop-windows-v$(APPVEYOR_BUILD_VERSION)
-    description: 'Development release of solidity at commit $(APPVEYOR_REPO_COMMIT).\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP)`.'
+    release: solidity-develop-v$(APPVEYOR_BUILD_VERSION)
+    tag: develop-v$(APPVEYOR_BUILD_VERSION)
+    description: 'Development release of solidity at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
