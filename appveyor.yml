@@ -43,7 +43,8 @@ artifacts:
 deploy:
     release: solidity-develop-v$(APPVEYOR_BUILD_VERSION)
     tag: develop-v$(APPVEYOR_BUILD_VERSION)
-    description: 'Development release of solidity at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
+    description: 'Development build of solidity at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
+    prerelease: true
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
