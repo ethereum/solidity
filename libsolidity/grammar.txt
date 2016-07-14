@@ -5,7 +5,7 @@ ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition 
 
 InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 StructDefinition = 'struct' Identifier '{'
-                     ( VariableDeclaration (';' VariableDeclaration)* )? '}
+                     ( VariableDeclaration (';' VariableDeclaration)* )? '}'
 StateVariableDeclaration = TypeName ( 'public' | 'inheritable' | 'private' )? Identifier ';'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
@@ -35,14 +35,20 @@ Continue = 'continue' ';'
 Break = 'break' ';'
 Return = 'return' Expression? ';'
 Throw = 'throw' Expression? ';'
-VariableDefinition = VariableDeclaration ( = Expression )? ';'
+VariableDefinition = VariableDeclaration ( '=' Expression )? ';'
 
 Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |
 			 MemberAccess | PrimaryExpression
 // The expression syntax is actually much more complicated
 Assignment = Expression (AssignmentOp Expression)
+BasicBinaryOperation = '|' | '^' | '&' | '<<' | '>>' | '>>>' | '+' | '-' | '*' | '/' | '%'
+AssignmentOp = BasicBinaryOperation '='
+UnaryOperation = '!' | '~' | '++' | '--' | 'delete'
+BinaryOperation = BasicBinaryOperation | '||' | '&&' | '**' |
+				  '==' | '!=' | '<' | '>' | '<=' | '>=' | 'in'
+
 FunctionCall = Expression '(' Expression ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
-IndexAccess = Expression '[' (Expresison)? ']'
+IndexAccess = Expression '[' (Expression)? ']'
 PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'
