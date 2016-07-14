@@ -23,12 +23,13 @@ matrix:
         - os: linux
           dist: trusty
           sudo: required
+          env: TRAVIS_BUILD_TYPE=Debug
         - os: osx
           osx_image: xcode7.1
+          env: TRAVIS_BUILD_TYPE=Debug
         - os: osx
           osx_image: xcode7.3
-env:
-    - TRAVIS_BUILD_TYPE=Debug
+          env: TRAVIS_BUILD_TYPE=Debug
 cache:
     - ccache
 git:
