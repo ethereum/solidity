@@ -32,17 +32,15 @@ matrix:
           env: TRAVIS_BUILD_TYPE=Debug
 git:
     depth: 2
-before_install:
+install:
     - ./install_deps.sh
 before_script:
     - mkdir build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
+    - make -j`getconf NPROCESSORS_ONLN`
+    - zip -j solidity-develop-$TRAVIS_OS_NAME.zip lllc/lllc solc/solc libdevcore/*.dylib libdevcore/*.so libevmasm/*.dylib libevmasm/*.so libsolidity/*.dylib libsolidity/*.so test/soltest
 script:
-    # Build the code
-    - make -j2
-
-    # Run the tests
     - ETH_PATH_FOR_linux="eth"
     - ETH_PATH_FOR_osx="~/ethbin/eth"
     - ETH_PATH_EXPRESSION_NAME=ETH_PATH_FOR_$TRAVIS_OS_NAME
@@ -51,16 +49,12 @@ script:
     - while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
     - ./test/soltest --ipc /tmp/test/geth.ipc
     - pkill eth
-
-    # Generate Sphinx documentation if we're running on Linux.
+after_success:
     - DOCS_COMMAND_FOR_linux="cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .."
     - DOCS_COMMAND_FOR_osx=""
     - DOCS_COMMAND_EXPRESSION_NAME=DOCS_COMMAND_FOR_$TRAVIS_OS_NAME
     - DOCS_COMMAND=$DOCS_COMMAND_EXPRESSION_NAME
     - eval $DOCS_COMMAND
-
-    # -j is "junk paths", because we don't want any directory substructure in the output ZIP.
-    - zip -j solidity-develop-$TRAVIS_OS_NAME.zip lllc/lllc solc/solc libdevcore/*.dylib libdevcore/*.so libevmasm/*.dylib libevmasm/*.so libsolidity/*.dylib libsolidity/*.so test/soltest
 deploy:
     provider: releases
     api_key:

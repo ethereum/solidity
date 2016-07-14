@@ -16,8 +16,8 @@ skip_tags: true
 os: Visual Studio 2015
 configuration:
     - Debug
+clone_depth: 2
 install:
-    - git submodule update --init --recursive
     - install_deps.bat
     - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
 before_build:
@@ -25,11 +25,7 @@ before_build:
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=Off
 build_script:
-    # Build code
-    - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS%
-
-    # Create ZIP
-    #
+    - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     # TODO - Add solc\%CONFIGURATION%\soltest.exe, when that is buildable.
     - cd %APPVEYOR_BUILD_FOLDER%
     - 7z a solidity-develop-windows.zip .\build\solc\%CONFIGURATION%\solc.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
