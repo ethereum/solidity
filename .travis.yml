@@ -47,13 +47,17 @@ script:
     - ETH_PATH_FOR_osx="~/ethbin/eth"
     - ETH_PATH_EXPRESSION_NAME=ETH_PATH_FOR_$TRAVIS_OS_NAME
     - ETH_PATH=$ETH_PATH_EXPRESSION_NAME
-    #- $ETH_PATH --test -d /tmp/test
-    #- while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
-    #- ./test/soltest --ipc /tmp/test/geth.ipc
-    #- pkill eth
+    - $ETH_PATH --test -d /tmp/test
+    - while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
+    - ./test/soltest --ipc /tmp/test/geth.ipc
+    - pkill eth
 
-    # Generate Sphinx documentation if we're running on Trusty.
-    #- $DOCS_COMMAND
+    # Generate Sphinx documentation if we're running on Linux.
+    - DOCS_COMMAND_FOR_linux="cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .."
+    - DOCS_COMMAND_FOR_osx=""
+    - DOCS_COMMAND_EXPRESSION_NAME=DOCS_COMMAND_FOR_$TRAVIS_OS_NAME
+    - DOCS_COMMAND=$DOCS_COMMAND_EXPRESSION_NAME
+    - eval $DOCS_COMMAND
 
     # -j is "junk paths", because we don't want any directory substructure in the output ZIP.
     - zip -j solidity-develop-$TRAVIS_OS_NAME.zip lllc/lllc solc/solc libdevcore/*.dylib libdevcore/*.so libevmasm/*.dylib libevmasm/*.so libsolidity/*.dylib libsolidity/*.so test/soltest
