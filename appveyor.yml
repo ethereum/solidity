@@ -21,10 +21,6 @@ install:
     - install_deps.bat
     - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
 before_build:
-    - cd ..
-    - git clone https://github.com/ethereum/tests.git
-    - set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
-    - cd %APPVEYOR_BUILD_FOLDER%
     - mkdir build
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=Off

@@ -37,10 +37,6 @@ git:
 before_install:
     - ./install_deps.sh
 before_script:
-    - cd ..
-    - git clone https://github.com/ethereum/tests.git
-    - export ETHEREUM_TEST_PATH=$(pwd)/tests/
-    - cd solidity
     - mkdir build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
