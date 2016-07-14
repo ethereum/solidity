@@ -15,33 +15,22 @@
 #------------------------------------------------------------------------------
 
 language: cpp
-cache: ccache
-matrix:
-    include:
-        - os: linux
-          dist: trusty
-          sudo: required
-          env: TRAVIS_BUILD_TYPE=Debug
-          env: CMAKE_OPTIONS="-DCMAKE_C_COMPILER=/usr/lib/ccache/$CC -DCMAKE_CXX_COMPILER=/usr/lib/ccache/$CXX"
-          env: ETH_PATH="eth"
-          env: DOCS_COMMAND="cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .."
-        - os: osx
-          osx_image: xcode7.1
-          env: TRAVIS_BUILD_TYPE=Debug
-          env: CMAKE_OPTIONS="-DCMAKE_C_COMPILER=/usr/lib/ccache/$CC -DCMAKE_CXX_COMPILER=/usr/lib/ccache/$CXX"
-          env: ETH_PATH="~/ethbin/eth"
-          env: DOCS_COMMAND=""
-        - os: osx
-          osx_image: xcode7.3
-          env: TRAVIS_BUILD_TYPE=Debug
-          env: CMAKE_OPTIONS=""
-          env: ETH_PATH="~/ethbin/eth"
-          env: DOCS_COMMAND=""
-git:
-    depth: 2
 branches:
     except:
         - /solidity-appveyor-v[0-9]/
+os:
+    - linux
+    - osx
+dist: trusty
+osx_image:
+    - xcode7.1
+    - xcode7.3
+env:
+    - TRAVIS_BUILD_TYPE=Debug
+cache:
+    - ccache
+git:
+    depth: 2
 before_install:
     - ./install_deps.sh
 before_script:
@@ -54,9 +43,12 @@ before_script:
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
 script:
     # Build the code
-    - cmake --build .
+    - make -j2
 
     # Run the tests
+    - ETH_PATH_linux="eth"
+    - ETH_PATH_osx="~/ethbin/eth"
+    - ETH_PATH=$(ETH_PATH_$(TRAVIS_OS_NAME))
     #- $ETH_PATH --test -d /tmp/test
     #- while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
     #- ./test/soltest --ipc /tmp/test/geth.ipc
@@ -65,13 +57,15 @@ script:
     # Generate Sphinx documentation if we're running on Trusty.
     #- $DOCS_COMMAND
 
-    # Create ZIP
-    - zip solidity.zip $TRAVIS_BUILD_DIR/build/solc/solc
-    
-#deploy:
-#    provider: releases
-#    api_key: "GITHUB OAUTH TOKEN"
-#    file: cpp-ethereum.zip
-#    skip_cleanup: true
-#    on:
-#        tags: true
+    # -j is "junk paths", because we don't want any directory substructure in the output ZIP.
+    - zip -j solidity-$TRAVIS_OS_NAME.zip lllc/lllc solc/solc libdevcore/*.dylib libdevcore/*.so libevmasm/*.dylib libevmasm/*.so libsolidity/*.dylib libsolidity/*.so test/soltest
+
+deploy:
+    provider: releases
+    api_key:
+        secure: HHcAWFjVNwf8b83KVQnEa172Eo7aur+scVCq4BzgPDXnF+v4GDXT7PAaXyWBwIyrFoIJduPCojsiIBP8QZwtjaKgnywnREjaLc0syTCLSeUHcp/+jPRdickvfgHJWG06sU7ZST8/HnGmoOqV/BUlGhHiqma1oJfGEJ6aaG4oza77ZYAxLPxwq9NOuTHVGJwlphcfeevcU3F0C/mxDEEMEz66lDolp4DCP5L4muHlrOCZ+HSjRwz5/anVNVWNO/nM1I0wmI2TRAS0RPzwClVD8iiGJHhZ/WdgenG4nosBG9UQjd/56LLKI25bIJijz/tpe89pCRUJtMYtcXR5C7w8Is05a1GMedBAiT7Bu35qHbpxJeqcw26DJL4U3+IeHfymXpK/E3RAj16bj+mtxxYSEzaae7obCm1rDA1LnPTI94kAea2ZNOUucDK5FaROX/uBXk422xrQTdJpEpg4TLa7GmQGdtyJC0OnzaOTXWg87lbVMq1PndDLE3STqXT5J/wj/WfUtXlN38x9aX7wwrmyCXY3WJ1zzShAgRO9YjRRosMBkahGDj5l75w9KX8yW3C5txcxjPVGSxQIl+bv9FPrBJmU1WOOPYQlHm92JQJus8BXXQCuhg3mEsZQfmGpgrS82NUB15V1nZB3xCXniKcKnQirzbRXLg8wjlPbT9DKGbc=
+    file: solidity-$TRAVIS_OS_NAME.zip
+    skip_cleanup: true
+    on:
+        repo: bobsummerwill/solidity
+        branch: standalone_prior_to_splat
