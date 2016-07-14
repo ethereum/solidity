@@ -9,7 +9,7 @@ StructDefinition = 'struct' Identifier '{'
 StateVariableDeclaration = TypeName ( 'public' | 'inheritable' | 'private' )? Identifier ';'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
-					 ( Identifier | 'constant' | 'external' | 'public' | 'inheritable' | 'private' )*
+                     ( Identifier | 'constant' | 'external' | 'public' | 'inheritable' | 'private' )*
                      ( 'returns' ParameterList )? Block
 
 EnumValue = Identifier
@@ -24,7 +24,7 @@ ArrayTypeName = TypeName '[' (Expression)? ']'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | Block |
-			( Continue | Break | Return | VariableDefinition | ExpressionStatement ) ';'
+            ( Continue | Break | Return | VariableDefinition | ExpressionStatement ) ';'
 
 ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
@@ -38,14 +38,14 @@ Throw = 'throw' Expression? ';'
 VariableDefinition = VariableDeclaration ( '=' Expression )? ';'
 
 Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |
-			 MemberAccess | PrimaryExpression
+             MemberAccess | PrimaryExpression
 // The expression syntax is actually much more complicated
 Assignment = Expression (AssignmentOp Expression)
 BasicBinaryOperation = '|' | '^' | '&' | '<<' | '>>' | '>>>' | '+' | '-' | '*' | '/' | '%'
-AssignmentOp = BasicBinaryOperation '='
+AssignmentOp = BasicBinaryOperation'='
 UnaryOperation = '!' | '~' | '++' | '--' | 'delete'
 BinaryOperation = BasicBinaryOperation | '||' | '&&' | '**' |
-				  '==' | '!=' | '<' | '>' | '<=' | '>=' | 'in'
+                  '==' | '!=' | '<' | '>' | '<=' | '>=' | 'in'
 
 FunctionCall = Expression '(' Expression ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
