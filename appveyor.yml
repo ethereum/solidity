@@ -24,7 +24,6 @@ before_build:
     - cd ..
     - git clone https://github.com/ethereum/tests.git
     - set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
-    - cd %APPVEYOR_BUILD_FOLDER%
     - mkdir build
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=Off
@@ -34,9 +33,8 @@ build_script:
 
     # Create ZIP
     #
-    # TODO - Add %APPVEYOR_BUILD_FOLDER%\build\solc\%CONFIGURATION%\soltest.exe, when that is buildable.
-    - cd %APPVEYOR_BUILD_FOLDER%
-    - 7z a solidity.zip %APPVEYOR_BUILD_FOLDER%\build\solc\%CONFIGURATION%\solc.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
+    # TODO - Add solc\%CONFIGURATION%\soltest.exe, when that is buildable.
+    - 7z a solidity-develop-windows.zip .\solc\%CONFIGURATION%\solc.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll"
 
 #test_script:
 #    - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
@@ -46,14 +44,14 @@ build_script:
 #    - pkill eth
     
 artifacts:
-    - path: solidity.zip
-      name: solidity-zip
+    - path: solidity-develop-windows.zip
+      name: solidity-develop-windows-zip
 deploy:
-    release: solidity-appveyor-v$(appveyor_build_version)
-    description: 'Automated Appveyor release of solidity'
+    release: solidity-develop-windows-v$(APPVEYOR_BUILD_VERSION)
+    description: 'Development release of solidity at commit $(APPVEYOR_REPO_COMMIT).\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP)`.'
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
-    artifact: solidity-zip
+    artifact: solidity-develop-windows-zip
     on:
         branch: standalone_prior_to_splat
