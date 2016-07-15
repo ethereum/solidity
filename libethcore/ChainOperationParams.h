@@ -23,7 +23,6 @@
 
 #include <libdevcore/Common.h>
 #include "Common.h"
-#include <libevmcore/EVMSchedule.h>
 
 namespace dev
 {
