@@ -22,19 +22,8 @@
 
 #pragma once
 
-#include <fstream>
-#include <functional>
-#include <set>
-#include <string>
-#include <tuple>
-
 #include "../TestHelper.h"
 #include "../RPCSession.h"
-
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/RLP.h>
-#include <libdevcore/SHA3.h>
 
 #include <libethcore/ABI.h>
 #include <libethcore/BasicAuthority.h>
