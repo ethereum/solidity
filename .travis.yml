@@ -48,7 +48,7 @@ script:
     - ETH_PATH_FOR_osx="../ethbin/eth"
     - ETH_PATH_EXPRESSION_NAME=ETH_PATH_FOR_$TRAVIS_OS_NAME
     - ETH_PATH=$ETH_PATH_EXPRESSION_NAME
-    - eval \$$ETH_PATH --test -d /tmp/test
+    - eval \$$ETH_PATH --bootstrap --test -d /tmp/test
     - while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
     - ./test/soltest --ipc /tmp/test/geth.ipc
     - pkill eth
