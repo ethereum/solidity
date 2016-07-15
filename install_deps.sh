@@ -289,10 +289,14 @@ case $(uname -s) in
                 sudo apt-get -y install \
                     build-essential \
                     cmake \
-                    eth \
                     git \
                     libboost-all-dev \
                     libjsoncpp-dev
+
+                # Install 'eth', for use in the Solidity Tests-over-IPC.
+                sudo add-apt-repository -y ppa:ethereum/ethereum
+                sudo apt-get -y update
+                sudo apt-get -y install cpp-ethereum
 
                 # And install the English language package and reconfigure the locales.
                 # We really shouldn't need to do this, and should instead force our locales to "C"
