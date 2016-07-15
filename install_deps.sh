@@ -79,6 +79,12 @@ case $(uname -s) in
         brew install cmake
         brew install jsoncpp
 
+        # What kind of Mac are we running on within Travis?
+        sw_vers
+        sysctl machdep.cpu.brand_string
+        sysctl hw.model
+        sysctl -n hw.memsize | awk '{print $0/1073741824" GB RAM"}'
+
         # We should really 'brew install' our eth client here, but at the time of writing
         # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
         # the time being, which is good enough.   The cause of the breaks will go away
