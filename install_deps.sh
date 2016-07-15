@@ -314,9 +314,9 @@ case $(uname -s) in
                     libjsoncpp-dev
 
                 # Install 'eth', for use in the Solidity Tests-over-IPC.
-                sudo add-apt-repository -y ppa:ethereum/ethereum
+                sudo add-apt-repository -y ppa:ethereum/ethereum-dev
                 sudo apt-get -y update
-                sudo apt-get -y install cpp-ethereum
+                sudo apt-get -y install eth
 
                 # And install the English language package and reconfigure the locales.
                 # We really shouldn't need to do this, and should instead force our locales to "C"
