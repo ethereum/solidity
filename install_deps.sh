@@ -95,8 +95,8 @@ case $(uname -s) in
         #
         # Bonus fun#2 - Travis image for Yosemite includes a gmp version which doesn't
         # like being updated, so we need to uninstall it first.
-        curl -O https://builds.ethereum.org/cpp-binaries-data/release-1.2.9/cpp-ethereum-osx-yosemite.zip
-        unzip cpp-ethereum-osx-yosemite.zip
+        curl -L -O https://github.com/bobsummerwill/cpp-ethereum/releases/download/develop-v1.2.9.267/cpp-ethereum-develop-osx-mavericks.zip
+        unzip cpp-ethereum-osx-mavericks.zip
         brew uninstall gmp
         brew install \
             cryptopp \
