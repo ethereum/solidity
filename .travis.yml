@@ -44,8 +44,10 @@ before_script:
     - make -j2
     - zip -j $TRAVIS_BUILD_DIR/solidity-develop-$ZIP_SUFFIX.zip lllc/lllc solc/solc libdevcore/*.dylib libdevcore/*.so libevmasm/*.dylib libevmasm/*.so libsolidity/*.dylib libsolidity/*.so test/soltest
 script:
+    - ls .
+    - ls ..
     - ETH_PATH_FOR_linux="eth"
-    - ETH_PATH_FOR_osx="../cpp-ethereum-develop-osx-mavericks/eth"
+    - ETH_PATH_FOR_osx="../eth"
     - ETH_PATH_EXPRESSION_NAME=ETH_PATH_FOR_$TRAVIS_OS_NAME
     - ETH_PATH=$ETH_PATH_EXPRESSION_NAME
     - eval \$$ETH_PATH --bootstrap --test -d /tmp/test
