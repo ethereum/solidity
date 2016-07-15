@@ -21,9 +21,11 @@
  * Unit tests for the solidity expression compiler, testing the behaviour of the code.
  */
 
+#include <functional>
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
+#include <libdevcore/Guards.h>
 #include <libdevcore/Hash.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
@@ -5921,9 +5923,9 @@ BOOST_AUTO_TEST_CASE(version_stamp_for_libraries)
 	m_optimize = true;
 	bytes runtimeCode = compileAndRun(sourceCode, 0, "lib");
 	BOOST_CHECK(runtimeCode.size() >= 8);
-	BOOST_CHECK_EQUAL(runtimeCode[0], int(eth::Instruction::PUSH6)); // might change once we switch to 1.x.x
+	BOOST_CHECK_EQUAL(runtimeCode[0], int(Instruction::PUSH6)); // might change once we switch to 1.x.x
 	BOOST_CHECK_EQUAL(runtimeCode[1], 3); // might change once we switch away from x.3.x
-	BOOST_CHECK_EQUAL(runtimeCode[7], int(eth::Instruction::POP));
+	BOOST_CHECK_EQUAL(runtimeCode[7], int(Instruction::POP));
 }
 
 BOOST_AUTO_TEST_CASE(contract_binary_dependencies)

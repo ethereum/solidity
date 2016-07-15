@@ -22,16 +22,15 @@
 
 #pragma once
 
+#include <functional>
+
 #include "../TestHelper.h"
 #include "../RPCSession.h"
 
+#include <libdevcrypto/Common.h>
 #include <libethcore/ABI.h>
-#include <libethcore/BasicAuthority.h>
-#include <libethcore/BlockHeader.h>
-#include <libethcore/ChainOperationParams.h>
-#include <libethcore/SealEngine.h>
-
-#include <libevmcore/Instruction.h>
+#include <libethcore/Common.h>
+#include <libevmasm/Instruction.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
