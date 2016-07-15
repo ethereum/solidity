@@ -291,6 +291,7 @@ case $(uname -s) in
                 sudo apt-get -y install \
                     build-essential \
                     cmake \
+                    eth \
                     git \
                     libboost-all-dev \
                     libjsoncpp-dev
