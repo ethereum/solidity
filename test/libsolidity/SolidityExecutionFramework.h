@@ -22,18 +22,32 @@
 
 #pragma once
 
+#include <fstream>
 #include <functional>
+#include <set>
 #include <string>
 #include <tuple>
-#include <fstream>
+
 #include "../TestHelper.h"
 #include "../RPCSession.h"
+
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonData.h>
+#include <libdevcore/RLP.h>
+#include <libdevcore/SHA3.h>
+
 #include <libethcore/ABI.h>
 #include <libethcore/BasicAuthority.h>
+#include <libethcore/BlockHeader.h>
+#include <libethcore/ChainOperationParams.h>
 #include <libethcore/SealEngine.h>
-#include <libevm/VMFace.h>
+
+#include <libevmcore/Instruction.h>
+
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
+
+
 
 namespace dev
 {
@@ -273,7 +287,6 @@ protected:
 	dev::solidity::CompilerStack m_compiler;
 	Address m_sender;
 	Address m_contractAddress;
-	eth::EnvInfo m_envInfo;
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 100000000;
 	bytes m_output;
