@@ -37,7 +37,6 @@ git:
     depth: 2
 install:
     - ./install_deps.sh
-    - cd $TRAVIS_BUILD_DIR
 before_script:
     - mkdir build
     - cd build
@@ -46,7 +45,7 @@ before_script:
     - zip -j solidity-develop-$ZIP_SUFFIX.zip lllc/lllc solc/solc libdevcore/*.dylib libdevcore/*.so libevmasm/*.dylib libevmasm/*.so libsolidity/*.dylib libsolidity/*.so test/soltest
 script:
     - ETH_PATH_FOR_linux="eth"
-    - ETH_PATH_FOR_osx="~/ethbin/eth"
+    - ETH_PATH_FOR_osx="./ethbin/eth"
     - ETH_PATH_EXPRESSION_NAME=ETH_PATH_FOR_$TRAVIS_OS_NAME
     - ETH_PATH=$ETH_PATH_EXPRESSION_NAME
     - eval \$$ETH_PATH --test -d /tmp/test
