@@ -86,8 +86,12 @@ case $(uname -s) in
         #
         # Bonus fun - the dylib paths aren't fixed up in the zip, so we need to globally
         # install the extra packages used by the eth runtime too.
+        #
+        # Bonus fun#2 - Travis image for Yosemite includes a gmp version which doesn't
+        # like being updated, so we need to unlink it first.
         curl -O https://builds.ethereum.org/cpp-binaries-data/release-1.2.9/cpp-ethereum-osx-elcapitan.zip
         unzip cpp-ethereum-osx-elcapitan.zip
+        brew unlink gmp
         brew install \
             cryptopp \
             gmp \
