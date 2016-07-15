@@ -37,6 +37,7 @@ git:
     depth: 2
 install:
     - ./install_deps.sh
+    - cd $TRAVIS_BUILD_DIR
 before_script:
     - mkdir build
     - cd build
