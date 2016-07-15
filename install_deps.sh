@@ -83,8 +83,18 @@ case $(uname -s) in
         # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
         # the time being, which is good enough.   The cause of the breaks will go away
         # when we commit the repository reorg changes anyway.
+        #
+        # Bonus fun - the dylib paths aren't fixed up in the zip, so we need to globally
+        # install the extra packages used by the eth runtime too.
         curl -O https://builds.ethereum.org/cpp-binaries-data/release-1.2.9/cpp-ethereum-osx-elcapitan.zip
         unzip cpp-ethereum-osx-elcapitan.zip
+        brew install \
+            cryptopp \
+            gmp \
+            leveldb \
+            libjson-rpc-cpp \
+            libmicrohttpd \
+            miniupnpc
 
         ;;
 
