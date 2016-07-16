@@ -83,7 +83,7 @@ case $(uname -s) in
         # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
         # the time being, which is good enough.   The cause of the breaks will go away
         # when we commit the repository reorg changes anyway.
-        curl -L -O https://github.com/bobsummerwill/cpp-ethereum/releases/download/develop-v1.2.9.280/cpp-ethereum-develop-osx-mavericks.zip
+        curl -L -O https://github.com/bobsummerwill/cpp-ethereum/releases/download/develop-v1.2.9.281/cpp-ethereum-develop-osx-mavericks.zip
         unzip cpp-ethereum-develop-osx-mavericks.zip
 
         ;;
