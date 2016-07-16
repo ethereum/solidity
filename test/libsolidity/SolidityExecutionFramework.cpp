@@ -22,8 +22,11 @@
 
 #include <cstdlib>
 #include <boost/test/framework.hpp>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
+
+
 
 using namespace std;
 using namespace dev;
