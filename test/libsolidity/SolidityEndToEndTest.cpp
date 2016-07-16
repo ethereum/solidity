@@ -2478,7 +2478,7 @@ BOOST_AUTO_TEST_CASE(use_std_lib)
 		contract Icarus is mortal { }
 	)";
 	m_addStandardSources = true;
-	u256 amount(130 * eth::ether);
+	u256 amount(130 * ether);
 	compileAndRun(sourceCode, amount, "Icarus");
 	u256 balanceBefore = balanceAt(m_sender);
 	BOOST_CHECK(callContractFunction("kill()") == bytes());

@@ -27,20 +27,28 @@
 #include "../TestHelper.h"
 #include "../RPCSession.h"
 
-#include <libdevcrypto/Common.h>
-#include <libethcore/ABI.h>
-#include <libethcore/Common.h>
+#include <libdevcore/ABI.h>
+#include <libdevcore/FixedHash.h>
 #include <libevmasm/Instruction.h>
 
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/Exceptions.h>
 
-
-
 namespace dev
 {
 namespace solidity
 {
+	/// An Ethereum address: 20 bytes.
+	/// @NOTE This is not endian-specific; it's just a bunch of bytes.
+	using Address = h160;
+
+	// The various denominations; here for ease of use where needed within code.
+	static const u256 ether = exp10<18>();
+	static const u256 finney = exp10<15>();
+	static const u256 szabo = exp10<12>();
+	static const u256 shannon = exp10<9>();
+	static const u256 wei = exp10<0>();
+
 namespace test
 {
 
@@ -275,7 +283,7 @@ protected:
 	dev::solidity::CompilerStack m_compiler;
 	Address m_sender;
 	Address m_contractAddress;
-	u256 const m_gasPrice = 100 * eth::szabo;
+	u256 const m_gasPrice = 100 * szabo;
 	u256 const m_gas = 100000000;
 	bytes m_output;
 	std::vector<LogEntry> m_logs;
