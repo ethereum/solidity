@@ -79,32 +79,12 @@ case $(uname -s) in
         brew install cmake
         brew install jsoncpp
 
-        # What kind of Mac are we running on within Travis?
-        sw_vers
-        sysctl machdep.cpu.brand_string
-        sysctl hw.model
-        sysctl -n hw.memsize | awk '{print $0/1073741824" GB RAM"}'
-
         # We should really 'brew install' our eth client here, but at the time of writing
         # the bottle is known broken, so we will just cheat and use a hardcoded ZIP for
         # the time being, which is good enough.   The cause of the breaks will go away
         # when we commit the repository reorg changes anyway.
-        #
-        # Bonus fun - the dylib paths aren't fixed up in the zip, so we need to globally
-        # install the extra packages used by the eth runtime too.
-        #
-        # Bonus fun#2 - Travis image for Yosemite includes a gmp version which doesn't
-        # like being updated, so we need to uninstall it first.
         curl -L -O https://github.com/bobsummerwill/cpp-ethereum/releases/download/develop-v1.2.9.275/cpp-ethereum-develop-osx-mavericks.zip
         unzip cpp-ethereum-develop-osx-mavericks.zip
-        brew uninstall gmp
-        brew install \
-            cryptopp \
-            gmp \
-            leveldb \
-            libjson-rpc-cpp \
-            libmicrohttpd \
-            miniupnpc
 
         ;;
 
