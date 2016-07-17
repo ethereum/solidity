@@ -36,15 +36,15 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 		BOOST_FAIL("Error opening IPC: socket path is too long!");
 
 	struct sockaddr_un saun;
+	memset(&saun, 0, sizeof(sockaddr_un));
 	saun.sun_family = AF_UNIX;
 	strcpy(saun.sun_path, _path.c_str());
+	saun.sun_len = sizeof(struct sockaddr_un);
 
 	if ((m_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
 		BOOST_FAIL("Error creating IPC socket object");
 
-	int len = sizeof(saun.sun_family) + strlen(saun.sun_path);
-
-	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), len) < 0)
+	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), saun.sun_len) < 0)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
 
 	m_fp = fdopen(m_socket, "r");
