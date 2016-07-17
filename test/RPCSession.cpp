@@ -39,7 +39,10 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 	memset(&saun, 0, sizeof(sockaddr_un));
 	saun.sun_family = AF_UNIX;
 	strcpy(saun.sun_path, _path.c_str());
+
+#if defined(__APPLE__)
 	saun.sun_len = sizeof(struct sockaddr_un);
+#endif //  defined(__APPLE__)
 
 	if ((m_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
 		BOOST_FAIL("Error creating IPC socket object");
