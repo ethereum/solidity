@@ -50,8 +50,7 @@ script:
     - ETH_PATH=$ETH_PATH_EXPRESSION_NAME
     - eval \$$ETH_PATH --test -d /tmp/test &
     - while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
-    - ETH_TEST_IPC=/tmp/test/geth.ipc
-    - ./test/soltest
+    - export ETH_TEST_IPC=/tmp/test/geth.ipc && ./test/soltest
     - pkill eth
 after_success:
     - DOCS_COMMAND_FOR_linux="cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd .."
