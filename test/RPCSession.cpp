@@ -40,6 +40,13 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 	saun.sun_family = AF_UNIX;
 	strcpy(saun.sun_path, _path.c_str());
 
+// http://idletechnology.blogspot.ca/2011/12/unix-domain-sockets-on-osx.html
+//
+// SUN_LEN() might be optimal, but it seemingly affects the portability,
+// with at least Android missing this macro.  Just using the sizeof() for
+// structure seemingly works, and would only have the side-effect of
+// sending larger-than-required packets over the socket.  Given that this
+// code is only used for unit-tests, that approach seems simpler.
 #if defined(__APPLE__)
 	saun.sun_len = sizeof(struct sockaddr_un);
 #endif //  defined(__APPLE__)
@@ -47,7 +54,7 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 	if ((m_socket = socket(AF_UNIX, SOCK_STREAM, 0)) < 0)
 		BOOST_FAIL("Error creating IPC socket object");
 
-	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), saun.sun_len) < 0)
+	if (connect(m_socket, reinterpret_cast<struct sockaddr const*>(&saun), sizeof(struct sockaddr_un)) < 0)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
 
 	m_fp = fdopen(m_socket, "r");
