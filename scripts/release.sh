@@ -71,7 +71,6 @@ cp libsolidity/*.$DLL_EXT  $ZIP_TEMP_DIR
 # and those files will just be missing on the target machines?
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    # Do we need boost dylibs here too?
     cp /usr/local/opt/jsoncpp/lib/libjsoncpp.1.dylib  $ZIP_TEMP_DIR
 fi
 
