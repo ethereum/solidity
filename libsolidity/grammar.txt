@@ -24,18 +24,18 @@ ArrayTypeName = TypeName ('[' Expression? ']')+
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | Block |
-            ( Continue | Break | Return | VariableDefinition | ExpressionStatement ) ';'
+            ( Continue | Break | Return | Throw | VariableDefinition | ExpressionStatement ) ';'
 
 ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
 VardefOrExprStmt = Variabledefinition | ExpressionStatement
 ForStatement = 'for' '(' (VardefOrExprStmt)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
-Continue = 'continue' ';'
-Break = 'break' ';'
-Return = 'return' Expression? ';'
-Throw = 'throw' Expression? ';'
-VariableDefinition = VariableDeclaration ( '=' Expression )? ';'
+Continue = 'continue'
+Break = 'break'
+Return = 'return' Expression?
+Throw = 'throw' Expression?
+VariableDefinition = VariableDeclaration ( '=' Expression )?
 
 Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |
              MemberAccess | PrimaryExpression
@@ -45,10 +45,10 @@ BasicBinaryOperation = '|' | '^' | '&' | '<<' | '>>' | '>>>' | '+' | '-' | '*' |
 AssignmentOp = BasicBinaryOperation'='
 UnaryOperation = '!' | '~' | '++' | '--' | 'delete'
 BinaryOperation = BasicBinaryOperation | '||' | '&&' | '**' |
-                  '==' | '!=' | '<' | '>' | '<=' | '>=' | 'in'
+                  '==' | '!=' | '<' | '>' | '<=' | '>='
 
-FunctionCall = Expression '(' Expression ( ',' Expression )* ')'
+FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
-IndexAccess = Expression '[' (Expression)? ']'
+IndexAccess = Identifier ('[' Expression? ']')+
 PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'
