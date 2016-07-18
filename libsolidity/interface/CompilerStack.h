@@ -124,8 +124,9 @@ public:
 	void link(std::map<std::string, h160> const& _libraries);
 
 	/// Tries to translate all source files into a language suitable for formal analysis.
+	/// @param _errors list to store errors - defaults to the internal error list.
 	/// @returns false on error.
-	bool prepareFormalAnalysis();
+	bool prepareFormalAnalysis(ErrorList* _errors = nullptr);
 	std::string const& formalTranslation() const { return m_formalTranslation; }
 
 	/// @returns the assembled object for a contract.
