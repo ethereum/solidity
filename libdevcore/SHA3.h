@@ -54,10 +54,6 @@ inline std::string sha3(std::string const& _input, bool _isNibbles) { return asS
 /// Calculate SHA3-256 MAC
 inline void sha3mac(bytesConstRef _secret, bytesConstRef _plain, bytesRef _output) { sha3(_secret.toBytes() + _plain.toBytes()).ref().populate(_output); }
 
-extern h256 EmptySHA3;
-
-extern h256 EmptyListSHA3;
-
 extern unsigned g_sha3Counter;
 
 }

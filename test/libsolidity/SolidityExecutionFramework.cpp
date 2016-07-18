@@ -23,7 +23,6 @@
 #include <cstdlib>
 #include <boost/test/framework.hpp>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/RLP.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 
@@ -35,7 +34,7 @@ using namespace dev::solidity::test;
 
 namespace // anonymous
 {
-	h256 const EmptyTrie = sha3(rlp(""));
+	h256 const EmptyTrie("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421");
 }
 
 string getIPCSocketPath()

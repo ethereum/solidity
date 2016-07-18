@@ -47,6 +47,9 @@ case $(uname -s) in
 
     Darwin)
         case $(sw_vers -productVersion | awk -F . '{print $1"."$2}') in
+            10.9)
+                echo "Installing solidity dependencies on OS X 10.9 Mavericks."
+                ;;
             10.10)
                 echo "Installing solidity dependencies on OS X 10.10 Yosemite."
                 ;;
@@ -64,7 +67,7 @@ case $(uname -s) in
                 ;;
             *)
                 echo "Unsupported macOS version."
-                echo "We only support Yosemite and El Capitan, with work-in-progress on Sierra."
+                echo "We only support Mavericks, Yosemite and El Capitan, with work-in-progress on Sierra."
                 exit 1
                 ;;
         esac
