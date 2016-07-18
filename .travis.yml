@@ -46,7 +46,7 @@ before_script:
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
     - make -j2
-    - ./scripts/release.sh $ZIP_SUFFIX
+    - ../scripts/release.sh $ZIP_SUFFIX
 script:
     - ETH_PATH_FOR_linux="eth"
     - ETH_PATH_FOR_osx="../eth"
