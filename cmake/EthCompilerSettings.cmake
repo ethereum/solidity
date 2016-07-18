@@ -13,6 +13,15 @@
 # most of our compiler settings are common between GCC and Clang.
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
+
+# Use ccache if available
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+	message("Using ccache")
+endif(CCACHE_FOUND)
+
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 
 	# Use ISO C++11 standard language.
@@ -88,9 +97,30 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# Additional Clang-specific compiler settings.
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
-		# Enable strong stack protection.
-		add_compile_options(-fstack-protector-strong)
 		add_compile_options(-fstack-protector)
+
+		# Enable strong stack protection only on Mac and only for OS X Yosemite
+		# or newer (AppleClang 7.0+).  We should be able to re-enable this setting
+		# on non-Apple Clang as well, if we can work out what expression to use for
+		# the version detection.
+		
+		# The fact that the version-reporting for AppleClang loses the original
+		# Clang versioning is rather annoying.  Ideally we could just have
+		# a single cross-platform "if version >= 3.4.1" check.
+		#
+		# There is debug text in the else clause below, to help us work out what
+		# such an expression should be, if we can get this running on a Trusty box
+		# with Clang.  Greg Colvin previously replicated the issue there too.
+		#
+		# See https://github.com/ethereum/webthree-umbrella/issues/594
+
+		if (APPLE)
+			if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0)
+				add_compile_options(-fstack-protector-strong)
+			endif()
+		else()
+			message(WARNING "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
+		endif()
 
 		# A couple of extra warnings suppressions which we seemingly
 		# need when building with Clang.
