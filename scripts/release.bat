@@ -26,7 +26,7 @@ REM
 REM Copyright (c) 2016 solidity contributors.
 REM ---------------------------------------------------------------------------
 
-CONFIGURATION=$1
+set CONFIGURATION=$1
 
 REM TODO - Add soltest\%CONFIGURATION%\soltest.exe, when that is buildable.
 7z a solidity-develop-windows.zip ^
