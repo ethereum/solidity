@@ -36,7 +36,7 @@ matrix:
 git:
     depth: 2
 install:
-    - ./install_deps.sh
+    - ./scripts/install_deps.sh
 before_script:
     - mkdir build
     - cd build
