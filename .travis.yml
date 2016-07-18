@@ -23,15 +23,19 @@ matrix:
         - os: linux
           dist: trusty
           sudo: required
-          env: TRAVIS_BUILD_TYPE=Debug
+          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
           env: ZIP_SUFFIX=ubuntu-trusty
         - os: osx
+          osx_image: beta-xcode6.2
+          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
+          env: ZIP_SUFFIX=osx-mavericks
+        - os: osx
           osx_image: xcode7.1
-          env: TRAVIS_BUILD_TYPE=Debug
+          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
           env: ZIP_SUFFIX=osx-yosemite
         - os: osx
           osx_image: xcode7.3
-          env: TRAVIS_BUILD_TYPE=Debug
+          env: TRAVIS_BUILD_TYPE=RelWithDebInfo
           env: ZIP_SUFFIX=osx-elcapitan
 git:
     depth: 2
