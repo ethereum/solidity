@@ -9,7 +9,7 @@
 # ETH_VERSION_SUFFIX
 #
 # example usage:
-# cmake -DETH_SOURCE_DIR=. -DETH_DST_DIR=build -DETH_BUILD_TYPE=Debug -DETH_BUILD_PLATFORM=mac -DETH_BUILD_NUMBER=45 -DETH_VERSION_SUFFIX="-rc1" -P scripts/buildinfo.cmake
+# cmake -DETH_SOURCE_DIR=. -DETH_DST_DIR=build -DETH_BUILD_TYPE=Debug -DETH_BUILD_PLATFORM=Darwin/appleclang -P scripts/buildinfo.cmake
 
 if (NOT ETH_BUILD_TYPE)
 	set(ETH_BUILD_TYPE "unknown")

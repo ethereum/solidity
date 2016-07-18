@@ -19,17 +19,7 @@ function(create_build_info NAME)
 		set(ETH_BUILD_COMPILER "unknown")
 	endif ()
 
-	if (EVMJIT)
-		set(ETH_BUILD_JIT_MODE "JIT")
-	else ()
-		set(ETH_BUILD_JIT_MODE "Interpreter")
-	endif ()
-
-	set(ETH_BUILD_PLATFORM "${ETH_BUILD_OS}/${ETH_BUILD_COMPILER}/${ETH_BUILD_JIT_MODE}")
-
-	if (PARANOID)
-		set(ETH_BUILD_PLATFORM "${ETH_BUILD_PLATFORM}/PARA")
-	endif ()
+	set(ETH_BUILD_PLATFORM "${ETH_BUILD_OS}/${ETH_BUILD_COMPILER}")
 
 	#cmake build type may be not speCified when using msvc
 	if (CMAKE_BUILD_TYPE)
@@ -45,12 +35,10 @@ function(create_build_info NAME)
 		-DETH_BUILD_TYPE="${_cmake_build_type}"
 		-DETH_BUILD_OS="${ETH_BUILD_OS}"
 		-DETH_BUILD_COMPILER="${ETH_BUILD_COMPILER}"
-		-DETH_BUILD_JIT_MODE="${ETH_BUILD_JIT_MODE}"
 		-DETH_BUILD_PLATFORM="${ETH_BUILD_PLATFORM}"
 		-DETH_BUILD_NUMBER="${BUILD_NUMBER}"
 		-DETH_VERSION_SUFFIX="${VERSION_SUFFIX}"
 		-DPROJECT_VERSION="${PROJECT_VERSION}"
-		-DETH_FATDB="${FATDB10}"
 		-P "${ETH_SCRIPTS_DIR}/buildinfo.cmake"
 		)
 	include_directories(BEFORE ${PROJECT_BINARY_DIR})
