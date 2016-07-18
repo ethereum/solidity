@@ -6,10 +6,10 @@ ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition 
 InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration (';' VariableDeclaration)* )? '}'
-StateVariableDeclaration = TypeName ( 'public' | 'inheritable' | 'private' )? Identifier ';'
+StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Identifier ';'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
-                     ( Identifier | 'constant' | 'external' | 'public' | 'inheritable' | 'private' )*
+                     ( Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? Block
 
 EnumValue = Identifier
