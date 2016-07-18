@@ -17,7 +17,8 @@
 language: cpp
 branches:
     except:
-        - /develop-v/
+        - /develop-v[0-9]/
+        - /untagged-[0-9]/
 matrix:
     include:
         - os: linux
