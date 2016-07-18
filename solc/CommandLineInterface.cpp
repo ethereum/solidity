@@ -531,17 +531,17 @@ bool CommandLineInterface::processInput()
 
 	CompilerStack::ReadFileCallback fileReader = [this](string const& _path)
 	{
-		auto boostPath = boost::filesystem::path(_path);
-		if (!boost::filesystem::exists(boostPath))
+		auto path = boost::filesystem::path(_path);
+		if (!boost::filesystem::exists(path))
 			return CompilerStack::ReadFileResult{false, "File not found."};
-		boostPath = boost::filesystem::canonical(boostPath);
+		auto canonicalPath = boost::filesystem::canonical(path);
 		bool isAllowed = false;
 		for (auto const& allowedDir: m_allowedDirectories)
 		{
 			// If dir is a prefix of boostPath, we are fine.
 			if (
-				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(boostPath.begin(), boostPath.end()) &&
-				std::equal(allowedDir.begin(), allowedDir.end(), boostPath.begin())
+				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
+				std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
 			)
 			{
 				isAllowed = true;
@@ -550,12 +550,12 @@ bool CommandLineInterface::processInput()
 		}
 		if (!isAllowed)
 			return CompilerStack::ReadFileResult{false, "File outside of allowed directories."};
-		else if (!boost::filesystem::is_regular_file(boostPath))
+		else if (!boost::filesystem::is_regular_file(canonicalPath))
 			return CompilerStack::ReadFileResult{false, "Not a valid file."};
 		else
 		{
-			auto contents = dev::contentsString(boostPath.string());
-			m_sourceCodes[boostPath.string()] = contents;
+			auto contents = dev::contentsString(canonicalPath.string());
+			m_sourceCodes[path.string()] = contents;
 			return CompilerStack::ReadFileResult{true, contents};
 		}
 	};
