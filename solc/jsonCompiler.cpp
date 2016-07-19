@@ -219,6 +219,22 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			output["contracts"][contractName] = contractData;
 		}
 
+		// Do not taint the internal error list
+		ErrorList formalErrors;
+		if (compiler.prepareFormalAnalysis(&formalErrors))
+			output["formal"]["why3"] = compiler.formalTranslation();
+		if (!formalErrors.empty())
+		{
+			Json::Value errors(Json::arrayValue);
+			for (auto const& error: formalErrors)
+				errors.append(formatError(
+					*error,
+					(error->type() == Error::Type::Warning) ? "Warning" : "Error",
+					scannerFromSourceName
+				));
+			output["formal"]["errors"] = errors;
+		}
+
 		output["sources"] = Json::Value(Json::objectValue);
 		for (auto const& source: _sources)
 		{

@@ -253,9 +253,11 @@ void CompilerStack::link(const std::map<string, h160>& _libraries)
 	}
 }
 
-bool CompilerStack::prepareFormalAnalysis()
+bool CompilerStack::prepareFormalAnalysis(ErrorList* _errors)
 {
-	Why3Translator translator(m_errors);
+	if (!_errors)
+		_errors = &m_errors;
+	Why3Translator translator(*_errors);
 	for (Source const* source: m_sourceOrder)
 		if (!translator.process(*source->ast))
 			return false;
