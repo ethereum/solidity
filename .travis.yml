@@ -46,7 +46,7 @@ cache:
 install:
     - ./scripts/install_deps.sh
 before_script:
-    - mkdir build
+    - mkdir -p build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
     - make -j2
