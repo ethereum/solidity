@@ -49,5 +49,12 @@ BinaryOperation = '|' | '^' | '&' | '<<' | '>>' | '+' | '-' | '*' | '/' | '%'
 FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
-IndexAccess = Identifier ('[' Expression? ']')+
+IndexAccess = Expression '[' Expression? ']'
 PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'
+
+ElementaryTypeName = 'address' | 'bool' | 'string'
+    | 'int' | int8 | int16 | int24 | int32 | int40 | int48 | int56 | int64 | int72 | int80 | int88 | int96 | int104 | int112 | int120 | int128 | int136 | int144 | int152 | int160 | int168 | int176 | int184 | int192 | int200 | int208 | int216 | int224 | int232 | int240 | int248 | int256
+    | 'uint' | uint8 | uint16 | uint24 | uint32 | uint40 | uint48 | uint56 | uint64 | uint72 | uint80 | uint88 | uint96 | uint104 | uint112 | uint120 | uint128 | uint136 | uint144 | uint152 | uint160 | uint168 | uint176 | uint184 | uint192 | uint200 | uint208 | uint216 | uint224 | uint232 | uint240 | uint248 | uint256
+    | 'byte' | 'bytes' | bytes1 | bytes2 | bytes3 | bytes4 | bytes5 | bytes6 | bytes7 | bytes8 | bytes9 | bytes10 | bytes11 | bytes12 | bytes13 | bytes14 | bytes15 | bytes16 | bytes17 | bytes18 | bytes19 | bytes20 | bytes21 | bytes22 | bytes23 | bytes24 | bytes25 | bytes26 | bytes27 | bytes28 | bytes29 | bytes30 | bytes31 | bytes32
+    | 'fixed'  | fixed0x8 | fixed0x16 | fixed0x24 | fixed0x32 | fixed0x40 | fixed0x48 | fixed0x56 | fixed0x64 | fixed0x72 | fixed0x80 | fixed0x88 | fixed0x96 | fixed0x104 | fixed0x112 | fixed0x120 | fixed0x128 | fixed0x136 | fixed0x144 | fixed0x152 | fixed0x160 | fixed0x168 | fixed0x176 | fixed0x184 | fixed0x192 | fixed0x200 | fixed0x208 | fixed0x216 | fixed0x224 | fixed0x232 | fixed0x240 | fixed0x248 | fixed0x256
+    | 'ufixed' | ufixed0x8 | ufixed0x16 | ufixed0x24 | ufixed0x32 | ufixed0x40 | ufixed0x48 | ufixed0x56 | ufixed0x64 | ufixed0x72 | ufixed0x80 | ufixed0x88 | ufixed0x96 | ufixed0x104 | ufixed0x112 | ufixed0x120 | ufixed0x128 | ufixed0x136 | ufixed0x144 | ufixed0x152 | ufixed0x160 | ufixed0x168 | ufixed0x176 | ufixed0x184 | ufixed0x192 | ufixed0x200 | ufixed0x208 | ufixed0x216 | ufixed0x224 | ufixed0x232 | ufixed0x240 | ufixed0x248 | ufixed0x256
