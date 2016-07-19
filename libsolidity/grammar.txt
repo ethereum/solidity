@@ -20,10 +20,10 @@ ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 VariableDeclaration = TypeName Identifier
 TypeName = ElementaryTypeName | Identifier | Mapping | ArrayTypeName
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
-ArrayTypeName = TypeName ('[' Expression? ']')+
+ArrayTypeName = TypeName '[' Expression? ']'
 
 Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | Block |
+Statement = IfStatement | WhileStatement | ForStatement | Block |
             ( Continue | Break | Return | Throw | VariableDefinition | ExpressionStatement ) ';'
 
 ExpressionStatement = Expression
@@ -34,18 +34,17 @@ ForStatement = 'for' '(' (VardefOrExprStmt)? ';' (Expression)? ';' (ExpressionSt
 Continue = 'continue'
 Break = 'break'
 Return = 'return' Expression?
-Throw = 'throw' Expression?
+Throw = 'throw'
 VariableDefinition = VariableDeclaration ( '=' Expression )?
 
 Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |
              MemberAccess | PrimaryExpression
 // The expression syntax is actually much more complicated
 Assignment = Expression (AssignmentOp Expression)
-BasicBinaryOperation = '|' | '^' | '&' | '<<' | '>>' | '>>>' | '+' | '-' | '*' | '/' | '%'
-AssignmentOp = BasicBinaryOperation'='
+AssignmentOp = '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%='
 UnaryOperation = '!' | '~' | '++' | '--' | 'delete'
-BinaryOperation = BasicBinaryOperation | '||' | '&&' | '**' |
-                  '==' | '!=' | '<' | '>' | '<=' | '>='
+BinaryOperation = '|' | '^' | '&' | '<<' | '>>' | '+' | '-' | '*' | '/' | '%'
+                  | '||' | '&&' | '**' | '==' | '!=' | '<' | '>' | '<=' | '>='
 
 FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
