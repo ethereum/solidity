@@ -1,48 +1,65 @@
 ContractDefinition = ( 'contract' | 'library' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
+
+Identifier = TBD
+InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition | FunctionDefinition | EnumDefinition
 
-InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
-StructDefinition = 'struct' Identifier '{'
-                     ( VariableDeclaration (';' VariableDeclaration)* )? '}
+
+Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |
+             MemberAccess | PrimaryExpression
+// The expression syntax is actually much more complicated
+
 StateVariableDeclaration = TypeName ( 'public' | 'inheritable' | 'private' )? Identifier ';'
+StructDefinition = 'struct' Identifier '{'
+                     ( VariableDeclaration (';' VariableDeclaration)* )? '}'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
 					 ( Identifier | 'constant' | 'external' | 'public' | 'inheritable' | 'private' )*
                      ( 'returns' ParameterList )? Block
-
-EnumValue = Identifier
 EnumDefinition = 'enum' '{' EnumValue (',' EnumValue)* '}'
+
+Assignment = Expression (AssignmentOp Expression)
+UnaryOperation = TBD
+BinaryOperation = TBD
+FunctionCall = Expression '(' Expression ( ',' Expression )* ')'
+NewExpression = 'new' Identifier
+IndexAccess = Expression '[' (Expression)? ']'
+MemberAccess = Expression '.' Identifier
+PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'
+
+TypeName = ElementaryTypeName | Identifier | Mapping | ArrayTypeName
+
+VariableDeclaration = TypeName Identifier
+
 ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
-VariableDeclaration = TypeName Identifier
-TypeName = ElementaryTypeName | Identifier | Mapping | ArrayTypeName
+Block = '{' Statement* '}'
+
+EnumValue = Identifier
+
+AssignmentOp = TBD
+
+NumberLiteral = TBD
+StringLiteral = TBD
+ElementaryTypeName = TBD
+
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
 ArrayTypeName = TypeName '[' (Expression)? ']'
 
-Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | Block |
-			( Continue | Break | Return | VariableDefinition | ExpressionStatement ) ';'
+Statement = Block | (( IfStatement | WhileStatement | ForStatement | Throw |
+		       Continue | Break | Return | VariableDefinition | ExpressionStatement ) ';')
 
-ExpressionStatement = Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
-VardefOrExprStmt = Variabledefinition | ExpressionStatement
 ForStatement = 'for' '(' (VardefOrExprStmt)? ';' (Expression)? ';' (ExpressionStatement)? ')' Statement
-Continue = 'continue' ';'
-Break = 'break' ';'
-Return = 'return' Expression? ';'
-Throw = 'throw' Expression? ';'
-VariableDefinition = VariableDeclaration ( = Expression )? ';'
+Throw = 'throw' Expression?
+Continue = 'continue'
+Break = 'break'
+Return = 'return' Expression?
+VariableDefinition = VariableDeclaration ( '=' Expression )?
+ExpressionStatement = Expression
 
-Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |
-			 MemberAccess | PrimaryExpression
-// The expression syntax is actually much more complicated
-Assignment = Expression (AssignmentOp Expression)
-FunctionCall = Expression '(' Expression ( ',' Expression )* ')'
-NewExpression = 'new' Identifier
-MemberAccess = Expression '.' Identifier
-IndexAccess = Expression '[' (Expresison)? ']'
-PrimaryExpression = Identifier | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'
+VardefOrExprStmt = Variabledefinition | ExpressionStatement
