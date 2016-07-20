@@ -55,7 +55,7 @@ IndexAccess = Expression '[' Expression? ']'
 PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'
 
 BooleanLiteral = 'true' | 'false'
-NumberLiteral = [0-9]+
+NumberLiteral = '0x'? [0-9]+
 StringLiteral = '"' [a-zA-Z_0-9]* '"'
 Identifier = [a-zA-Z_] [a-zA-Z_0-9]*
 
