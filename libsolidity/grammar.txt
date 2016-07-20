@@ -2,6 +2,7 @@ ContractDefinition = ('import' Imports ';')*
                      ( 'contract' | 'library' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
+
 Imports = StringLiteral ('as' Identifier)?
         | ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral
         | '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral
@@ -16,11 +17,12 @@ ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
                      ( Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' (ParameterList | TypeParameterList) )? Block
-EventDefinition = 'event' Identifier (ParameterList | TypeParameterList) ';'
+EventDefinition = 'event' Identifier (ParameterList | TypeParameterList | IndexedTypeParameterList) 'anonymous'? ';'
 
 EnumValue = Identifier
 EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
 
+IndexedTypeParameterList = '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
 TypeParameterList = '(' ( TypeName (',' TypeName)* )? ')'
 ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
