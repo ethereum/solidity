@@ -1,7 +1,7 @@
 ContractDefinition = ( 'contract' | 'library' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
-ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition | FunctionDefinition | EnumDefinition
+ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
 
 InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 StructDefinition = 'struct' Identifier '{'
@@ -11,6 +11,8 @@ ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
                      ( Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' (ParameterList | TypeParameterList) )? Block
+
+EventDefinition = 'event' Identifier (ParameterList | TypeParameterList) ';'
 
 EnumValue = Identifier
 EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
