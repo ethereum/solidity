@@ -151,6 +151,8 @@ Cheatsheet
 
 .. index:: precedence
 
+.. _order:
+
 Order of Precedence of Operators
 ================================
 
