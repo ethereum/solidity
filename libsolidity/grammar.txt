@@ -7,12 +7,15 @@ Imports = StringLiteral ('as' Identifier)?
         | ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral
         | '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral
 
-ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
+ContractPart = StateVariableDeclaration | UsingDeclaration
+             | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
 
 InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
+
+StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Identifier ';'
+UsingDeclaration = 'using' Identifier 'for' TypeName ';'
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
-StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Identifier ';'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
                      ( Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
