@@ -1,6 +1,11 @@
-ContractDefinition = ( 'contract' | 'library' ) Identifier
+ContractDefinition = ('import' Imports ';')*
+                     ( 'contract' | 'library' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
+Imports = StringLiteral ('as' Identifier)?
+        | ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral
+        | '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral
+
 ContractPart = StateVariableDeclaration | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
 
 InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
