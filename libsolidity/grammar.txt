@@ -10,10 +10,12 @@ StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Ident
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
                      ( Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
-                     ( 'returns' ParameterList )? Block
+                     ( 'returns' (ParameterList | TypeParameterList) )? Block
 
 EnumValue = Identifier
 EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
+
+TypeParameterList = '(' ( TypeName (',' TypeName)* )? ')'
 ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
