@@ -267,7 +267,7 @@ public:
 	static bool isCommutativeOp(Value op) { return op == BitOr || op == BitXor || op == BitAnd ||
 				op == Add || op == Mul || op == Equal || op == NotEqual; }
 	static bool isArithmeticOp(Value op) { return Add <= op && op <= Exp; }
-	static bool isCompareOp(Value op) { return Equal <= op && op <= In; }
+	static bool isCompareOp(Value op) { return Equal <= op && op <= GreaterThanOrEqual; }
 
 	static Value AssignmentToBinaryOp(Value op)
 	{
