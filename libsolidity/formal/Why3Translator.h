@@ -80,6 +80,7 @@ private:
 	virtual bool visit(IfStatement const& _node) override;
 	virtual bool visit(WhileStatement const& _node) override;
 	virtual bool visit(Return const& _node) override;
+	virtual bool visit(Throw const& _node) override;
 	virtual bool visit(VariableDeclarationStatement const& _node) override;
 	virtual bool visit(ExpressionStatement const&) override;
 	virtual bool visit(Assignment const& _node) override;
@@ -104,6 +105,9 @@ private:
 	bool isLocalVariable(VariableDeclaration const* _var) const;
 	bool isLocalVariable(std::string const& _name) const;
 
+	/// @returns a string representing an expression that is a copy of this.storage
+	std::string copyOfStorage() const;
+
 	/// Visits the givin statement and indents it unless it is a block
 	/// (which does its own indentation).
 	void visitIndentedUnlessBlock(Statement const& _statement);
@@ -117,7 +121,17 @@ private:
 	bool m_seenContract = false;
 	bool m_errorOccured = false;
 
-	std::vector<VariableDeclaration const*> m_stateVariables;
+	/// Metadata relating to the current contract
+	struct ContractMetadata
+	{
+		ContractDefinition const* contract = nullptr;
+		std::vector<VariableDeclaration const*> stateVariables;
+
+		void reset() { contract = nullptr; stateVariables.clear(); }
+	};
+
+	ContractMetadata m_currentContract;
+	bool m_currentLValueIsRef = false;
 	std::map<std::string, VariableDeclaration const*> m_localVariables;
 
 	struct Line
@@ -128,7 +142,6 @@ private:
 	std::vector<Line> m_lines;
 	ErrorList& m_errors;
 };
-
 
 }
 }
