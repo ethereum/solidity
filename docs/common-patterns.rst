@@ -201,6 +201,7 @@ function finishes.
                     now >= creationTime + 12 days)
                 nextStage();
             // The other stages transition by transaction
+            _
         }
 
         // Order of the modifiers matters here!
