@@ -138,6 +138,45 @@ Note that ``.send()`` does **not** throw an exception if the call stack is
 depleted but rather returns ``false`` in that case. The low-level functions
 ``.call()``, ``.callcode()`` and ``.delegatecall()`` behave in the same way.
 
+tx.origin
+=========
+
+Never use tx.origin for authorization. Let's say you have a wallet contract like this:
+
+::
+
+    contract TxUserWallet {  
+        address owner;
+
+        function TxUserWallet() {
+            owner = msg.sender;
+        }
+
+        function transfer(address dest, uint amount) {
+            if (tx.origin != owner) { throw; }
+            if (!dest.call.value(amount)()) throw;
+        }
+    }
+
+Now someone tricks you into sending ether to the address of this attack wallet:
+
+::
+
+    contract TxAttackWallet {  
+        address owner;
+
+        function TxAttackWallet() {
+            owner = msg.sender;
+        }
+
+        function() {
+            TxUserWallet(msg.sender).transfer(owner, msg.sender.balance);
+        }
+    }
+
+If your wallet had checked msg.sender for authorization, it would get the address of the attack wallet, instead of the owner address. But by checking tx.origin, it gets the original address that kicked off the transaction, which is still the owner address. The attack wallet instantly drains all your funds.
+
+
 Minor Details
 =============
 
