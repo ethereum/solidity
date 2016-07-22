@@ -7,12 +7,12 @@ Imports = StringLiteral ('as' Identifier)?
         | ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral
         | '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral
 
-ContractPart = StateVariableDeclaration | UsingDeclaration
+ContractPart = StateVariableDecOrDef | UsingDeclaration
              | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
 
 InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 
-StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Identifier ';'
+StateVariableDecOrDef = TypeName ( 'public' | 'internal' | 'private' )? Identifier ('=' Expression)? ';'
 UsingDeclaration = 'using' Identifier 'for' TypeName ';'
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
@@ -37,9 +37,9 @@ ArrayTypeName = TypeName '[' Expression? ']'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block |
-            ( Continue | Break | Return | Throw | VariableDefinition | ExpressionStatement ) ';'
+            ( Continue | Break | Return | Throw | VardefOrExprStmt ) ';'
 
-ExpressionStatement = Expression
+ExpressionStatement = Expression | VariableDefinition | Assignment | 'delete' Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
 WhileStatement = 'while' '(' Expression ')' Statement
 VardefOrExprStmt = VariableDefinition | ExpressionStatement
@@ -49,27 +49,31 @@ Break = 'break'
 Return = 'return' Expression?
 Throw = 'throw'
 VariableDefinition = VariableDeclaration ( '=' Expression )?
+Assignment = Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
 
-Expression = Assignment | UnaryOperation | BinaryOperation | FunctionCall | NewExpression | IndexAccess |
-             MemberAccess | PrimaryExpression
-// The expression syntax is actually much more complicated
-Assignment = Expression (AssignmentOp Expression)
-AssignmentOp = '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%='
-UnaryOperation = '!' | '~' | '++' | '--' | 'delete'
-BinaryOperation = '|' | '^' | '&' | '<<' | '>>' | '+' | '-' | '*' | '/' | '%'
-                  | '||' | '&&' | '**' | '==' | '!=' | '<' | '>' | '<=' | '>='
+Expression =
+  ('!' | '~' | '++' | '--') expression
+  | expression ('**' | '*' | '/' | '%') expression
+  | expression ('|' | '^' | '&' | '<<' | '>>') expression
+  | expression ('+' | '-') expression
+  | expression ('<=' | '>=' | '<' | '>') expression
+  | expression ('==' | '!=') expression
+  | expression ('&&' | '||') expression
+  | PrimaryExpression
+
+PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
+                  | FunctionCall | MemberAccess | IndexAccess | '(' Expression ')'
 
 FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
 MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
-PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral | ElementaryTypeName | '(' Expression ')'
 
 BooleanLiteral = 'true' | 'false'
 NumberLiteral = '0x'? [0-9]+ NumberUnit?
 NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
-StringLiteral = '"' (~('"' | '\\' | '\r' | '\n') | '\\' ('"' | '\\'))* '"';
+StringLiteral = '"' (~('"' | '\\' | '\r' | '\n') | '\\' ('"' | '\\'))* '"'
 Identifier = [a-zA-Z_] [a-zA-Z_0-9]*
 
 ElementaryTypeName = 'address' | 'bool' | 'string' | 'var'
