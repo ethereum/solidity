@@ -37,7 +37,7 @@ ArrayTypeName = TypeName '[' Expression? ']'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block |
-            ( Continue | Break | Return | Throw | VardefOrExprStmt ) ';'
+            ( Continue | Break | Return | Throw | VardefOrExprStmt | ExpressionStatement ) ';'
 
 ExpressionStatement = Expression | VariableDefinition | Assignment | 'delete' Expression
 IfStatement = 'if' '(' Expression ')' Statement ( 'else' Statement )?
@@ -51,18 +51,27 @@ Throw = 'throw'
 VariableDefinition = VariableDeclaration ( '=' Expression )?
 Assignment = Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
 
+// Precedence by order (see github.com/ethereum/solidity/pull/732)
 Expression =
-  ('!' | '~' | '++' | '--') expression
-  | expression ('**' | '*' | '/' | '%') expression
-  | expression ('|' | '^' | '&' | '<<' | '>>') expression
-  | expression ('+' | '-') expression
-  | expression ('<=' | '>=' | '<' | '>') expression
-  | expression ('==' | '!=') expression
-  | expression ('&&' | '||') expression
+  ( Expression ('++' | '--') | FunctionCall | IndexAccess | MemberAccess | '(' Expression ')' )
+  | ('++' | '--' | '+' | '-' | '!' | '~') Expression
+  | Expression '**' Expression
+  | Expression ('*' | '/' | '%') Expression
+  | Expression ('+' | '-') Expression
+  | Expression ('<<' | '>>' | '>>>')
+  | Expression '&' Expression
+  | Expression '^' Expression
+  | Expression '|' Expression
+  | Expression ('<' | '>' | '<=' | '>=') Expression
+  | Expression ('==' | '!=') Expression
+  | Expression '&&' Expression
+  | Expression '||' Expression
+  | Expression '?' Expression ':' Expression
+  | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '/=' | '%=') Expression
+  | Expression ',' Expression
   | PrimaryExpression
 
 PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
-                  | FunctionCall | MemberAccess | IndexAccess | '(' Expression ')'
 
 FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
