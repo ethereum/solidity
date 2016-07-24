@@ -86,6 +86,8 @@ static set<string> const g_combinedJsonArgs{
 	"bin",
 	"bin-runtime",
 	"clone-bin",
+	"srcmap",
+	"srcmap-runtime",
 	"opcodes",
 	"abi",
 	"interface",
@@ -531,17 +533,17 @@ bool CommandLineInterface::processInput()
 
 	CompilerStack::ReadFileCallback fileReader = [this](string const& _path)
 	{
-		auto boostPath = boost::filesystem::path(_path);
-		if (!boost::filesystem::exists(boostPath))
+		auto path = boost::filesystem::path(_path);
+		if (!boost::filesystem::exists(path))
 			return CompilerStack::ReadFileResult{false, "File not found."};
-		boostPath = boost::filesystem::canonical(boostPath);
+		auto canonicalPath = boost::filesystem::canonical(path);
 		bool isAllowed = false;
 		for (auto const& allowedDir: m_allowedDirectories)
 		{
 			// If dir is a prefix of boostPath, we are fine.
 			if (
-				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(boostPath.begin(), boostPath.end()) &&
-				std::equal(allowedDir.begin(), allowedDir.end(), boostPath.begin())
+				std::distance(allowedDir.begin(), allowedDir.end()) <= std::distance(canonicalPath.begin(), canonicalPath.end()) &&
+				std::equal(allowedDir.begin(), allowedDir.end(), canonicalPath.begin())
 			)
 			{
 				isAllowed = true;
@@ -550,12 +552,12 @@ bool CommandLineInterface::processInput()
 		}
 		if (!isAllowed)
 			return CompilerStack::ReadFileResult{false, "File outside of allowed directories."};
-		else if (!boost::filesystem::is_regular_file(boostPath))
+		else if (!boost::filesystem::is_regular_file(canonicalPath))
 			return CompilerStack::ReadFileResult{false, "Not a valid file."};
 		else
 		{
-			auto contents = dev::contentsString(boostPath.string());
-			m_sourceCodes[boostPath.string()] = contents;
+			auto contents = dev::contentsString(canonicalPath.string());
+			m_sourceCodes[path.string()] = contents;
 			return CompilerStack::ReadFileResult{true, contents};
 		}
 	};
@@ -658,6 +660,16 @@ void CommandLineInterface::handleCombinedJSON()
 			ostringstream unused;
 			contractData["asm"] = m_compiler->streamAssembly(unused, contractName, m_sourceCodes, true);
 		}
+		if (requests.count("srcmap"))
+		{
+			auto map = m_compiler->sourceMapping(contractName);
+			contractData["srcmap"] = map ? *map : "";
+		}
+		if (requests.count("srcmap-runtime"))
+		{
+			auto map = m_compiler->runtimeSourceMapping(contractName);
+			contractData["srcmap"] = map ? *map : "";
+		}
 		if (requests.count("devdoc"))
 			contractData["devdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);
 		if (requests.count("userdoc"))
@@ -665,12 +677,22 @@ void CommandLineInterface::handleCombinedJSON()
 		output["contracts"][contractName] = contractData;
 	}
 
+	bool needsSourceList = requests.count("ast") || requests.count("srcmap") || requests.count("srcmap-runtime");
+	if (needsSourceList)
+	{
+		// Indices into this array are used to abbreviate source names in source locations.
+		output["sourceList"] = Json::Value(Json::arrayValue);
+
+		for (auto const& source: m_compiler->sourceNames())
+			output["sourceList"].append(source);
+	}
+
 	if (requests.count("ast"))
 	{
 		output["sources"] = Json::Value(Json::objectValue);
 		for (auto const& sourceCode: m_sourceCodes)
 		{
-			ASTJsonConverter converter(m_compiler->ast(sourceCode.first));
+			ASTJsonConverter converter(m_compiler->ast(sourceCode.first), m_compiler->sourceIndices());
 			output["sources"][sourceCode.first] = Json::Value(Json::objectValue);
 			output["sources"][sourceCode.first]["AST"] = converter.json();
 		}

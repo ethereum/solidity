@@ -42,7 +42,11 @@ class ASTJsonConverter: public ASTConstVisitor
 {
 public:
 	/// Create a converter to JSON for the given abstract syntax tree.
-	explicit ASTJsonConverter(ASTNode const& _ast);
+	/// @a _sourceIndices is used to abbreviate source names in source locations.
+	explicit ASTJsonConverter(
+		ASTNode const& _ast,
+		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
+	);
 	/// Output the json representation of the AST to _stream.
 	void print(std::ostream& _stream);
 	Json::Value const& json();
@@ -118,9 +122,13 @@ public:
 private:
 	void process();
 	void addKeyValue(Json::Value& _obj, std::string const& _key, std::string const& _val);
-	void addJsonNode(std::string const& _nodeName,
-					 std::initializer_list<std::pair<std::string const, std::string const>> _list,
-					 bool _hasChildren);
+	void addJsonNode(
+		ASTNode const& _node,
+		std::string const& _nodeName,
+		std::initializer_list<std::pair<std::string const, std::string const>> _list,
+		bool _hasChildren
+	);
+	std::string sourceLocationToString(SourceLocation const& _location) const;
 	std::string type(Expression const& _expression);
 	std::string type(VariableDeclaration const& _varDecl);
 	inline void goUp()
@@ -132,8 +140,8 @@ private:
 	bool processed = false;
 	Json::Value m_astJson;
 	std::stack<Json::Value*> m_jsonNodePtrs;
-	std::string m_source;
 	ASTNode const* m_ast;
+	std::map<std::string, unsigned> const& m_sourceIndices;
 };
 
 }
