@@ -31,9 +31,10 @@ ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
 VariableDeclaration = TypeName Identifier
-TypeName = ElementaryTypeName | Identifier | Mapping | ArrayTypeName
+TypeName = ElementaryTypeName | Identifier StorageLocation? | Mapping | ArrayTypeName
 Mapping = 'mapping' '(' ElementaryTypeName '=>' TypeName ')'
-ArrayTypeName = TypeName '[' Expression? ']'
+ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
+StorageLocation = 'memory' | 'storage'
 
 Block = '{' Statement* '}'
 Statement = IfStatement | WhileStatement | ForStatement | Block |
