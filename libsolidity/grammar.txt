@@ -18,7 +18,7 @@ StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
-                     ( Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
+                     ( FunctionCall | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' (ParameterList | TypeParameterList) )? Block
 EventDefinition = 'event' Identifier (ParameterList | TypeParameterList | IndexedTypeParameterList) 'anonymous'? ';'
 
