@@ -273,15 +273,6 @@ BOOST_AUTO_TEST_CASE(const_function)
 	checkInterface(sourceCode, interface);
 }
 
-BOOST_AUTO_TEST_CASE(exclude_fallback_function)
-{
-	char const* sourceCode = "contract test { function() {} }";
-
-	char const* interface = "[]";
-
-	checkInterface(sourceCode, interface);
-}
-
 BOOST_AUTO_TEST_CASE(events)
 {
 	char const* sourceCode = "contract test {\n"
@@ -620,6 +611,25 @@ BOOST_AUTO_TEST_CASE(library_function)
 				{ "name": "f", "type": "test.StructType storage" }
 			],
 			"type" : "function"
+		}
+	]
+	)";
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(include_fallback_function)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function() {}
+		}
+	)";
+
+	char const* interface = R"(
+	[
+		{
+			"constant" : false,
+			"type" : "fallback"
 		}
 	]
 	)";
