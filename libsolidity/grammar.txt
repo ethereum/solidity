@@ -37,7 +37,7 @@ ArrayTypeName = TypeName StorageLocation? '[' Expression? ']'
 StorageLocation = 'memory' | 'storage'
 
 Block = '{' Statement* '}'
-Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement
+Statement = IfStatement | WhileStatement | ForStatement | Block | PlaceholderStatement |
             ( Continue | Break | Return | Throw | VardefOrExprStmt | ExpressionStatement ) ';'
 
 ExpressionStatement = Expression | VariableDefinition | Assignment | 'delete' Expression
