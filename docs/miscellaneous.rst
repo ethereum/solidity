@@ -207,6 +207,8 @@ The following is the order of precedence for operators, listed in order of evalu
 |            |                                     | ``>>=``, ``>>>=``, ``+=``, ``-=``, ``*=``, |
 |            |                                     | ``/=``, ``%=``                             |
 +------------+-------------------------------------+--------------------------------------------+
+| *16*       | Comma operator                      | ``,``                                      |
++------------+-------------------------------------+--------------------------------------------+
 
 .. index:: block, coinbase, difficulty, number, block;number, timestamp, block;timestamp, msg, data, gas, sender, value, now, gas price, origin, sha3, ripemd160, sha256, ecrecover, addmod, mulmod, cryptography, this, super, selfdestruct, balance, send
 
@@ -264,3 +266,4 @@ Modifiers
 - ``constant`` for functions: Disallows modification of state - this is not enforced yet.
 - ``anonymous`` for events: Does not store event signature as topic.
 - ``indexed`` for event parameters: Stores the parameter as topic.
+
