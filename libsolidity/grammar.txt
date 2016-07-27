@@ -1,11 +1,12 @@
-ContractDefinition = ('import' Imports ';')*
-                     ( 'contract' | 'library' ) Identifier
+SourceUnit = (ImportDirective ';')* ContractDefinition
+
+ContractDefinition = ( 'contract' | 'library' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
 
-Imports = StringLiteral ('as' Identifier)?
-        | ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral
-        | '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral
+ImportDirective = 'import' StringLiteral ('as' Identifier)?
+        | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral
+        | 'import' '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral
 
 ContractPart = StateVariableDecOrDef | UsingDeclaration
              | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
