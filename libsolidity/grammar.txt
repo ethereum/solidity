@@ -8,13 +8,13 @@ ImportDirective = 'import' StringLiteral ('as' Identifier)?
         | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral
         | 'import' '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral
 
-ContractPart = StateVariableDecOrDef | UsingDeclaration
+ContractPart = StateVariableDeclaration | UsingForDeclaration
              | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
 
 InheritanceSpecifier = Identifier ( '(' Expression ( ',' Expression )* ')' )?
 
-StateVariableDecOrDef = TypeName ( 'public' | 'internal' | 'private' )? Identifier ('=' Expression)? ';'
-UsingDeclaration = 'using' Identifier 'for' TypeName ';'
+StateVariableDeclaration = TypeName ( 'public' | 'internal' | 'private' )? Identifier ('=' Expression)? ';'
+UsingForDeclaration = 'using' Identifier 'for' ('*' | TypeName) ';'
 StructDefinition = 'struct' Identifier '{'
                      ( VariableDeclaration ';' (VariableDeclaration ';')* )? '}'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
