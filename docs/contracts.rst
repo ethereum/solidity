@@ -72,7 +72,7 @@ This means that cyclic creation dependencies are impossible.
         // This is the constructor which registers the
         // creator and the assigned name.
         function OwnedToken(bytes32 _name) {
-            owner = msg.sender;
+            owner = tx.origin;
             // We do an explicit type conversion from `address`
             // to `TokenCreator` and assume that the type of
             // the calling contract is TokenCreator, there is
@@ -91,7 +91,7 @@ This means that cyclic creation dependencies are impossible.
 
         function transfer(address newOwner) {
             // Only the current owner can transfer the token.
-            if (msg.sender != owner) return;
+            if (tx.origin != owner) return;
             // We also want to ask the creator if the transfer
             // is fine. Note that this calls a function of the
             // contract defined below. If the call fails (e.g.
