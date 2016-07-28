@@ -103,7 +103,10 @@ string InterfaceHandler::abiInterface(ContractDefinition const& _contractDef)
 		event["inputs"] = params;
 		abi.append(event);
 	}
-	return Json::FastWriter().write(abi);
+
+	Json::FastWriter writer;
+	writer.omitEndingLineFeed();
+	return writer.write(abi);
 }
 
 string InterfaceHandler::userDocumentation(ContractDefinition const& _contractDef)
