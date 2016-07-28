@@ -97,7 +97,7 @@ This means that cyclic creation dependencies are impossible.
             // contract defined below. If the call fails (e.g.
             // due to out-of-gas), the execution here stops
             // immediately.
-            if (creator.isTokenTransferOK(owner, newOwner))
+            if (creator.isTokenTransferOK(owner))
                 owner = newOwner;
         }
     }
@@ -120,12 +120,11 @@ This means that cyclic creation dependencies are impossible.
         }
 
         function isTokenTransferOK(
-            address currentOwner,
-            address newOwner
+            address currentOwner
         ) returns (bool ok) {
             // Check some arbitrary condition.
-            address tokenAddress = msg.sender;
-            return (sha3(newOwner) & 0xff) == (bytes20(tokenAddress) & 0xff);
+            address tokenOwner = tx.origin;
+            return (sha3(currentOwner) & 0xff) == (bytes20(tokenOwner) & 0xff);
         }
     }
 
