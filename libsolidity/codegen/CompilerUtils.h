@@ -104,6 +104,7 @@ public:
 	);
 
 	/// Zero-initialises (the data part of) an already allocated memory array.
+	/// Length has to be nonzero!
 	/// Stack pre: <length> <memptr>
 	/// Stack post: <updated_memptr>
 	void zeroInitialiseMemoryArray(ArrayType const& _type);
