@@ -32,6 +32,9 @@
 ZIP_SUFFIX=$1
 ZIP_TEMP_DIR=$(pwd)/build/zip/
 
+# There is an implicit assumption here that we HAVE to run from root directory.
+REPO_ROOT=$(pwd)
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
     DLL_EXT=dylib
 else
@@ -42,9 +45,9 @@ mkdir -p $ZIP_TEMP_DIR
 
 # Copy all the solidity executables into a temporary directory prior to ZIP creation
 
-cp build/lllc/lllc        $ZIP_TEMP_DIR
-cp build/solc/solc        $ZIP_TEMP_DIR
-cp build/soltest/soltest  $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/lllc/lllc        $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/solc/solc        $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/soltest/soltest  $ZIP_TEMP_DIR
 
 # Copy all the dynamic libraries into a temporary directory prior to ZIP creation.
 # There are a lot of these, and it would be great if we didn't have to worry about them.
@@ -55,9 +58,9 @@ cp build/soltest/soltest  $ZIP_TEMP_DIR
 # See https://developer.apple.com/library/mac/qa/qa1118/_index.html.
 # See https://github.com/ethereum/webthree-umbrella/issues/495.
 
-cp build/libdevcore/*.$DLL_EXT   $ZIP_TEMP_DIR
-cp build/libevmasm/*.$DLL_EXT    $ZIP_TEMP_DIR
-cp build/libsolidity/*.$DLL_EXT  $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/libdevcore/*.$DLL_EXT   $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/libevmasm/*.$DLL_EXT    $ZIP_TEMP_DIR
+cp $REPO_ROOT/build/libsolidity/*.$DLL_EXT  $ZIP_TEMP_DIR
 
 # For macOS, we also copy the dynamic libraries for our external dependencies.
 # When building from source on your own machine, these libraries will be installed
@@ -81,9 +84,9 @@ fi
 # being for kernel-level dylibs.
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    python $(pwd)/scripts/fix_homebrew_paths_in_standalone_zip.py $ZIP_TEMP_DIR
+    python $REPO_ROOT/scripts/fix_homebrew_paths_in_standalone_zip.py $ZIP_TEMP_DIR
 fi
 
 # And ZIP it all up, with a filename suffix passed in on the command-line.
 
-zip -j $(pwd)/solidity-develop-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*
+zip -j $REPO_ROOT/solidity-develop-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*

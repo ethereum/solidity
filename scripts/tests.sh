@@ -26,11 +26,14 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
+# There is an implicit assumption here that we HAVE to run from root directory.
+REPO_ROOT=$(pwd)
+
 # This conditional is only needed because we don't have a working Homebrew
 # install for `eth` at the time of writing, so we unzip the ZIP file locally
 # instead.  This will go away soon.
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    ETH_PATH="../eth"
+    ETH_PATH="$REPO_ROOT/eth"
 else
     ETH_PATH="eth"
 fi
@@ -41,9 +44,11 @@ fi
 #
 # But it doesn't work for at least some platforms.  We need to narrow down
 # which platforms that is for, and add a Github issue to track it.
-#
-# TODO - Missing error code handling here.
-eval \$$ETH_PATH --test -d /tmp/test &
+
+$ETH_PATH --test -d /tmp/test &
 while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
-ETH_TEST_IPC=/tmp/test/geth.ipc && ./test/soltest
+export ETH_TEST_IPC=/tmp/test/geth.ipc
+$REPO_ROOT/build/test/soltest
+ERROR_CODE=$?
 pkill eth
+exit $ERROR_CODE

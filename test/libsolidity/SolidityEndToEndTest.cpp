@@ -25,26 +25,12 @@
 #include <string>
 #include <tuple>
 #include <boost/test/unit_test.hpp>
-
-#if defined(__GNUC__)
-#pragma warning(push)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#endif // defined(__GNUC__)
-
-#include <boost/thread.hpp>
-
-#if defined(__GNUC__)
-#pragma warning(pop)
-#pragma GCC diagnostic pop
-#endif // defined(__GNUC__)
-
-
 #include <libdevcore/Hash.h>
 #include <libsolidity/interface/Exceptions.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
 using namespace std;
+using namespace std::placeholders;
 
 namespace dev
 {
