@@ -38,11 +38,7 @@ set -ev
 apt-get update
 apt-get -y install git-core
 
-if [ -z ${WORKSPACE} ]
-then
-	WORKSPACE=$(pwd)
-fi
-export WORKSPACE
+export WORKSPACE=/src
 
 # CryptoPP
 echo -en 'travis_fold:start:compiling_cryptopp\\r'
@@ -88,7 +84,7 @@ echo -en 'travis_fold:end:compiling_boost\\r'
 
 # Build dependent components and solidity itself
 echo -en 'travis_fold:start:compiling_solidity\\r'
-cd "$WORKSPACE/solidity"
+cd $WORKSPACE
 mkdir -p build
 cd build
 emcmake cmake \
@@ -127,4 +123,12 @@ emcmake cmake \
   -DETHASHCL=0 -DEVMJIT=0 -DETH_STATIC=1 -DSOLIDITY=1 -DFATDB=0 -DTESTS=0 -DTOOLS=0 \
   ..
 emmake make -j 4
+
+# TODO - This is a temporary solution to the permissions issue which we are seeing in TravisCI,
+# where this Emscripten build generates files which the main build then cannot delete.
+# Presumably different accounts being used?   This needs wrapping in some conditional, so we
+# can choose to build, or build-and-clean.
+cd ..
+rm -rf build
+
 echo -en 'travis_fold:end:compiling_solidity\\r'

@@ -70,38 +70,53 @@ matrix:
               - ZIP_SUFFIX=osx-elcapitan
 git:
     depth: 2
-cache:
-    ccache: false
-    directories:
-        - boost_1_57_0
-        - jsoncpp
-        - cryptopp
 install:
     - ./scripts/install_deps.sh
 before_script:
+    - ./scripts/build_emscripten.sh
     - mkdir -p build
       && cd build
       && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
       && make -j2
       && cd ..
       && ./scripts/release.sh $ZIP_SUFFIX
-    - cd $TRAVIS_BUILD_DIR && ./scripts/build_emscripten.sh
 script:
-    - ./scripts/tests.sh
+    # There are a variety of reliability issues with the Solidity unit-tests at the time of
+    # writing, so we're actually running them 5 times in a row, to try to flush all of these
+    # issues out as quickly as possible.  See https://github.com/ethereum/solidity/issues/769    
+    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
+    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
+    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
+    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
+    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
 after_success:
-    - ./scripts/docs.sh
+    - cd $TRAVIS_BUILD_DIR && ./scripts/docs.sh
 env:
     global:
         - ENCRYPTION_LABEL="296c219a3f41"
-deploy:
-    provider: releases
-    api_key:
-        secure: mGeDrlCbhPNQVqrk5wSqFZe/7C5HUIBWcZECJcFrEldN6ELj3a8mhDX9EWebidyFmZsf3ipKVMycJtXZHlH2kVZ0nZdRulq4bYhLiUFRaFQCHMW35dml5mxO/FPp+jhhZaylDUx+cI6AULbj8DvNFqSCfjx8qimRhJjRY4JHeG71N6g5+LU2/dA01D4Y97BUbQ5dYcmEyuEsriSpXOElIQIIv3+Q6MJNnLzxUA6EXsp4Qt3Qf3R1+EkI/RWOPbQsddpFNJBcBNOscCUFSZV3+ZK9E2RyHbPaL+Da4aJKVpgD7X1TFudq4PClMUTkg8CuJh/kvy9wkpaWyYHbLGQqu1vQ+NQ+vlTAKf8U+1xhC1IkX6nA+g4TlRksZRltRhpkBPnFoaQQGjD9eYyT1V/Htrn8Y/VGbYPBVa0GcEYXG5pDCBPz91RBpYwDcyUg9DEPNI6zYfQY8jA8xqtFwPX79Y22MDXIKhBskK00geuzh7Npy5Rnh4fLqVKMlffvYx3kwp444EFWtQ5jxbRCym2Th6EldkOM8Kble1JvixQtVb4s+DpTuwHCTrXZhwMuJpmwgRx52zyIsGrBPF3MOmdlwl+l0TD8UEJXt0JM1XSF1AROyYwXKDZQ9Qt4sd9ZKSWWaLJMEJf4kkZWYgTEI/FhOWlfshQCt8Z9S9r4fq2ywoo=
-    file: $TRAVIS_BUILD_DIR/solidity-develop-$ZIP_SUFFIX.zip
-    skip_cleanup: true
-    on:
-        repo: bobsummerwill/solidity
-        branch: standalone
+
+# This is the deploy target for the native build (Linux and macOS)
+# which generates development ZIPs per commit.  We are in agreement
+# that this is probably noisy overkill, so will want to renable this
+# functionality wrapped in some conditionals so that it only runs
+# when building the 'release' branch.
+#
+#deploy:
+#    provider: releases
+#    api_key:
+#        secure: mGeDrlCbhPNQVqrk5wSqFZe/7C5HUIBWcZECJcFrEldN6ELj3a8mhDX9EWebidyFmZsf3ipKVMycJtXZHlH2kVZ0nZdRulq4bYhLiUFRaFQCHMW35dml5mxO/FPp+jhhZaylDUx+cI6AULbj8DvNFqSCfjx8qimRhJjRY4JHeG71N6g5+LU2/dA01D4Y97BUbQ5dYcmEyuEsriSpXOElIQIIv3+Q6MJNnLzxUA6EXsp4Qt3Qf3R1+EkI/RWOPbQsddpFNJBcBNOscCUFSZV3+ZK9E2RyHbPaL+Da4aJKVpgD7X1TFudq4PClMUTkg8CuJh/kvy9wkpaWyYHbLGQqu1vQ+NQ+vlTAKf8U+1xhC1IkX6nA+g4TlRksZRltRhpkBPnFoaQQGjD9eYyT1V/Htrn8Y/VGbYPBVa0GcEYXG5pDCBPz91RBpYwDcyUg9DEPNI6zYfQY8jA8xqtFwPX79Y22MDXIKhBskK00geuzh7Npy5Rnh4fLqVKMlffvYx3kwp444EFWtQ5jxbRCym2Th6EldkOM8Kble1JvixQtVb4s+DpTuwHCTrXZhwMuJpmwgRx52zyIsGrBPF3MOmdlwl+l0TD8UEJXt0JM1XSF1AROyYwXKDZQ9Qt4sd9ZKSWWaLJMEJf4kkZWYgTEI/FhOWlfshQCt8Z9S9r4fq2ywoo=
+#    file: $TRAVIS_BUILD_DIR/solidity-develop-$ZIP_SUFFIX.zip
+#    skip_cleanup: true
+#    on:
+#        repo: bobsummerwill/solidity
+#        branch: standalone
+
+# This is the deploy target for the Emscripten build, which publishes
+# generated JS for particular Solidity commits into
+# https://github.com/ethereum/solc-bin/tree/gh-pages/bin
+# Disabled, but can be renamed when we have the "standalone" changes
+# published back into the 'develop' branch.
+#
 #deploy:
 #    provider: script
 #    script: scripts/travis-emscripten/publish_binary.sh
