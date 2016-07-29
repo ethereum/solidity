@@ -22,12 +22,20 @@
 
 #include <cstdlib>
 #include <boost/test/framework.hpp>
+#include <libdevcore/CommonIO.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
+
+
 
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
 using namespace dev::solidity::test;
+
+namespace // anonymous
+{
+	h256 const EmptyTrie("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421");
+}
 
 string getIPCSocketPath()
 {
@@ -56,9 +64,6 @@ ExecutionFramework::ExecutionFramework() :
 	m_rpc(RPCSession::instance(getIPCSocketPath())),
 	m_sender(m_rpc.account(0))
 {
-	if (g_logVerbosity != -1)
-		g_logVerbosity = 0;
-
 	m_rpc.test_rewindToBlock(0);
 }
 
