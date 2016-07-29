@@ -6837,6 +6837,20 @@ BOOST_AUTO_TEST_CASE(skip_dynamic_types_for_structs)
 	BOOST_CHECK(callContractFunction("g()") == encodeArgs(u256(2), u256(6)));
 }
 
+BOOST_AUTO_TEST_CASE(create_dynamic_array_with_zero_length)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() returns (uint) {
+				var a = new uint[][](0);
+				return 7;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(u256(7)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

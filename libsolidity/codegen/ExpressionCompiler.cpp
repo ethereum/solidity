@@ -792,15 +792,18 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 			utils().storeFreeMemoryPointer();
 			// Stack: memptr requested_length
 
+			// Check if length is zero
+			m_context << Instruction::DUP1 << Instruction::ISZERO;
+			auto skipInit = m_context.appendConditionalJump();
+
 			// We only have to initialise if the base type is a not a value type.
 			if (dynamic_cast<ReferenceType const*>(arrayType.baseType().get()))
 			{
 				m_context << Instruction::DUP2 << u256(32) << Instruction::ADD;
 				utils().zeroInitialiseMemoryArray(arrayType);
-				m_context << Instruction::POP;
 			}
-			else
-				m_context << Instruction::POP;
+			m_context << skipInit;
+			m_context << Instruction::POP;
 			break;
 		}
 		default:
