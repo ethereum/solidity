@@ -1177,6 +1177,64 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 	) == optimizedBytecode.cend());
 }
 
+BOOST_AUTO_TEST_CASE(inconsistency)
+{
+	// This is a test of a bug in the optimizer.
+	char const* sourceCode = R"(
+		contract Inconsistency {
+			struct Value {
+				uint badnum;
+				uint number;
+			}
+
+			struct Container {
+				uint[] valueIndices;
+				Value[] values;
+			}
+
+			Container[] containers;
+			uint[] valueIndices;
+			uint INDEX_ZERO = 0;
+			uint  debug;
+
+			// Called with params: containerIndex=0, valueIndex=0
+			function levelIII(uint containerIndex, uint valueIndex) private {
+				Container container = containers[containerIndex];
+				Value value = container.values[valueIndex];
+				debug = container.valueIndices[value.number];
+			}
+			function levelII() private {
+				for (uint i = 0; i < valueIndices.length; i++) {
+					levelIII(INDEX_ZERO, valueIndices[i]);
+				}
+			}
+
+			function trigger() public returns (uint) {
+				containers.length++;
+				Container container = containers[0];
+
+				container.values.push(Value({
+					badnum: 9000,
+					number: 0
+				}));
+
+				container.valueIndices.length++;
+				valueIndices.length++;
+
+				levelII();
+				return debug;
+			}
+
+			function DoNotCallButDoNotDelete() public {
+				levelII();
+				levelIII(1, 2);
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("trigger()");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
