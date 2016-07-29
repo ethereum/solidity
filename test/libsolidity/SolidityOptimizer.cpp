@@ -79,6 +79,8 @@ public:
 		bytes nonOptimizedOutput = callContractFunction(_sig, _arguments...);
 		m_contractAddress = m_optimizedContract;
 		bytes optimizedOutput = callContractFunction(_sig, _arguments...);
+		BOOST_CHECK_MESSAGE(!optimizedOutput.empty(), "No optimized output for " + _sig);
+		BOOST_CHECK_MESSAGE(!nonOptimizedOutput.empty(), "No un-optimized output for " + _sig);
 		BOOST_CHECK_MESSAGE(nonOptimizedOutput == optimizedOutput, "Computed values do not match."
 							"\nNon-Optimized: " + toHex(nonOptimizedOutput) +
 							"\nOptimized:     " + toHex(optimizedOutput));
@@ -176,7 +178,7 @@ BOOST_AUTO_TEST_CASE(identities)
 			}
 		})";
 	compileBothVersions(sourceCode);
-	compareVersions("f(uint256)", u256(0x12334664));
+	compareVersions("f(int256)", u256(0x12334664));
 }
 
 BOOST_AUTO_TEST_CASE(unused_expressions)
@@ -230,6 +232,7 @@ BOOST_AUTO_TEST_CASE(array_copy)
 			bytes2[] data1;
 			bytes5[] data2;
 			function f(uint x) returns (uint l, uint y) {
+				data1.length = msg.data.length;
 				for (uint i = 0; i < msg.data.length; ++i)
 					data1[i] = msg.data[i];
 				data2 = data1;
@@ -241,7 +244,7 @@ BOOST_AUTO_TEST_CASE(array_copy)
 	compileBothVersions(sourceCode);
 	compareVersions("f(uint256)", 0);
 	compareVersions("f(uint256)", 10);
-	compareVersions("f(uint256)", 36);
+	compareVersions("f(uint256)", 35);
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
@@ -346,7 +349,7 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 		}
 	)";
 	compileBothVersions(sourceCode);
-	compareVersions("f()", 7, "abc");
+	compareVersions("f(uint256,bytes32)", 7, "abc");
 
 	m_optimize = true;
 	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "test");
