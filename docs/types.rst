@@ -542,7 +542,8 @@ shown in the following example:
             Campaign c = campaigns[campaignID];
             if (c.amount < c.fundingGoal)
                 return false;
-            c.beneficiary.send(c.amount);
+            if (!c.beneficiary.send(c.amount))
+                throw;
             c.amount = 0;
             return true;
         }
