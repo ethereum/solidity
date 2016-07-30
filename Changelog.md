@@ -1,5 +1,8 @@
 ### 0.4.5 (unreleased)
 
+Features:
+ * Do-while loops: support for a C-style do{<block>}while(<expr>); control structure
+
 ### 0.4.4 (2016-10-31)
 
 Bugfixes:

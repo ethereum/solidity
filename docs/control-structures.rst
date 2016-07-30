@@ -2,14 +2,14 @@
 Expressions and Control Structures
 ##################################
 
-.. index:: if, else, while, for, break, continue, return, switch, goto
+.. index:: if, else, while, do/while, for, break, continue, return, switch, goto
 
 Control Structures
 ===================
 
 Most of the control structures from C or JavaScript are available in Solidity
 except for ``switch`` and ``goto``. So
-there is: ``if``, ``else``, ``while``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
+there is: ``if``, ``else``, ``while``, ``do``, ``for``, ``break``, ``continue``, ``return``, ``? :``, with
 the usual semantics known from C or JavaScript.
 
 Parentheses can *not* be omitted for conditionals, but curly brances can be omitted

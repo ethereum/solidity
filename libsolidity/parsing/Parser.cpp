@@ -722,6 +722,8 @@ ASTPointer<Statement> Parser::parseStatement()
 		return parseIfStatement(docString);
 	case Token::While:
 		return parseWhileStatement(docString);
+	case Token::Do:
+		return parseDoWhileStatement(docString);
 	case Token::For:
 		return parseForStatement(docString);
 	case Token::LBrace:
@@ -816,8 +818,23 @@ ASTPointer<WhileStatement> Parser::parseWhileStatement(ASTPointer<ASTString> con
 	expectToken(Token::RParen);
 	ASTPointer<Statement> body = parseStatement();
 	nodeFactory.setEndPositionFromNode(body);
-	return nodeFactory.createNode<WhileStatement>(_docString, condition, body);
+	return nodeFactory.createNode<WhileStatement>(_docString, condition, body, false);
 }
+
+ASTPointer<WhileStatement> Parser::parseDoWhileStatement(ASTPointer<ASTString> const& _docString)
+{
+	ASTNodeFactory nodeFactory(*this);
+	expectToken(Token::Do);
+	ASTPointer<Statement> body = parseStatement();
+	expectToken(Token::While);
+	expectToken(Token::LParen);
+	ASTPointer<Expression> condition = parseExpression();
+	expectToken(Token::RParen);
+	nodeFactory.markEndPosition();
+	expectToken(Token::Semicolon);
+	return nodeFactory.createNode<WhileStatement>(_docString, condition, body, true);
+}
+
 
 ASTPointer<ForStatement> Parser::parseForStatement(ASTPointer<ASTString> const& _docString)
 {
