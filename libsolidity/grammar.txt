@@ -73,7 +73,7 @@ Expression =
   | Expression? ',' Expression?
   | PrimaryExpression
 
-PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral | FunctionCall
+PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
 
 FunctionCall = Identifier '(' Expression? ( ',' Expression )* ')'
 NewExpression = 'new' Identifier
