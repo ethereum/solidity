@@ -20,15 +20,15 @@ StructDefinition = 'struct' Identifier '{'
 ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
                      ( FunctionCall | Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
-                     ( 'returns' (ParameterList | TypeParameterList) )? Block
-EventDefinition = 'event' Identifier (ParameterList | TypeParameterList | IndexedTypeParameterList) 'anonymous'? ';'
+                     ( 'returns' ParameterList )? Block
+EventDefinition = 'event' Identifier (ParameterList | IndexedTypeParameterList) 'anonymous'? ';'
 
 EnumValue = Identifier
 EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
 
 IndexedTypeParameterList = '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
-TypeParameterList = '(' ( TypeName (',' TypeName)* )? ')'
-ParameterList = '(' ( VariableDeclaration (',' VariableDeclaration)* )? ')'
+ParameterList =            '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
+
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
 VariableDeclaration = TypeName Identifier
