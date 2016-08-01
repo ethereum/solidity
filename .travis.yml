@@ -70,6 +70,15 @@ matrix:
               - ZIP_SUFFIX=osx-elcapitan
 git:
     depth: 2
+
+cache:
+    ccache: true
+    directories:
+        - boost_1_57_0
+        - jsoncpp
+        - cryptopp
+
+
 install:
     - ./scripts/install_deps.sh
 before_script:
