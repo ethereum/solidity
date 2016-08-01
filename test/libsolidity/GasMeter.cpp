@@ -21,6 +21,7 @@
  */
 
 #include <test/libsolidity/SolidityExecutionFramework.h>
+#include <libevmasm/EVMSchedule.h>
 #include <libevmasm/GasMeter.h>
 #include <libevmasm/KnownState.h>
 #include <libevmasm/PathGasMeter.h>
