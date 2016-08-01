@@ -36,12 +36,14 @@ matrix:
     include:
         - os: linux
           dist: trusty
+          sudo: required
           compiler: gcc
           env:
               - TRAVIS_BUILD_TYPE=RelWithDebInfo
               - ZIP_SUFFIX=ubuntu-trusty
         - os: linux
           dist: trusty
+          sudo: required
           compiler: gcc
           env:
               - JOB=docs
@@ -84,7 +86,7 @@ cache:
         - jsoncpp
 
 install:
-    - ./scripts/install_deps.sh
+    - test $JOB != default || ./scripts/install_deps.sh
 before_script:
     - test $JOB != emscripten || ./scripts/build_emscripten.sh
     - test $JOB != default || (mkdir -p build
