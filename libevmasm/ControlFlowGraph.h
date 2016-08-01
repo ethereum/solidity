@@ -116,7 +116,7 @@ private:
 
 	unsigned m_lastUsedId = 0;
 	AssemblyItems const& m_items;
-	bool m_joinKnowledge;
+	bool m_joinKnowledge = true;
 	std::map<BlockId, BasicBlock> m_blocks;
 };
 

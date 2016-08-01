@@ -282,6 +282,8 @@ BOOST_AUTO_TEST_CASE(storage_write_in_loops)
 	compareVersions("f(uint256)", 36);
 }
 
+// Test disabled with https://github.com/ethereum/solidity/pull/762
+// Information in joining branches is not retained anymore.
 BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 {
 	// This tests that the optimizer knows that we already have "z == sha3(y)" inside both branches.
@@ -315,7 +317,8 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 		if (_instr == Instruction::SHA3)
 			numSHA3s++;
 	});
-	BOOST_CHECK_EQUAL(1, numSHA3s);
+// TEST DISABLED - OPTIMIZER IS NOT EFFECTIVE ON THIS ONE ANYMORE
+//	BOOST_CHECK_EQUAL(1, numSHA3s);
 }
 
 BOOST_AUTO_TEST_CASE(store_tags_as_unions)
