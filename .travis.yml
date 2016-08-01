@@ -82,15 +82,9 @@ before_script:
       && ./scripts/release.sh $ZIP_SUFFIX
 script:
     # There are a variety of reliability issues with the Solidity unit-tests at the time of
-    # writing, so we're actually running them 5 times in a row, to try to flush all of these
+    # writing, so we're actually running them 3 times in a row, to try to flush all of these
     # issues out as quickly as possible.  See https://github.com/ethereum/solidity/issues/769    
-    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
-    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
-    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
-    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
-    - cd $TRAVIS_BUILD_DIR && ./scripts/tests.sh
-after_success:
-    - cd $TRAVIS_BUILD_DIR && ./scripts/docs.sh
+    - cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh)
 env:
     global:
         - ENCRYPTION_LABEL="296c219a3f41"

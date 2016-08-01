@@ -26,6 +26,8 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
+set -e
+
 # There is an implicit assumption here that we HAVE to run from root directory.
 REPO_ROOT=$(pwd)
 
@@ -59,7 +61,9 @@ while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
 # need to check if this command-line support works for Windows too, when we
 # have implemented IPC Sockets support at all for Windows.
 export ETH_TEST_IPC=/tmp/test/geth.ipc
-$REPO_ROOT/build/test/soltest
+"$REPO_ROOT"/build/test/soltest
 ERROR_CODE=$?
-pkill eth
+pkill eth || true
+sleep 4
+pgrep eth && pkill -9 eth || true
 exit $ERROR_CODE
