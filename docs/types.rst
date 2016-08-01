@@ -12,6 +12,9 @@ see :ref:`type-deduction` below) at
 compile-time. Solidity provides several elementary types which can be combined
 to form complex types.
 
+In addition, types can interact with each other in expressions containing
+operators. For a quick reference of the various operators, see :ref:`order`.
+
 .. index:: ! value type, ! type;value
 
 Value Types
