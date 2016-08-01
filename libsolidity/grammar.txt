@@ -1,12 +1,12 @@
-SourceUnit = (ImportDirective ';')* ContractDefinition
+SourceUnit = (ImportDirective | ContractDefinition)*
 
 ContractDefinition = ( 'contract' | 'library' ) Identifier
                      ( 'is' InheritanceSpecifier (',' InheritanceSpecifier )* )?
                      '{' ContractPart* '}'
 
-ImportDirective = 'import' StringLiteral ('as' Identifier)?
-        | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral
-        | 'import' '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral
+ImportDirective = 'import' StringLiteral ('as' Identifier)? ';'
+        | 'import' ('*' | Identifier) ('as' Identifier)? 'from' StringLiteral ';'
+        | 'import' '{' Identifier ('as' Identifier)? ( ',' Identifier ('as' Identifier)? )* '}' 'from' StringLiteral ';'
 
 ContractPart = StateVariableDeclaration | UsingForDeclaration
              | StructDefinition | ModifierDefinition | FunctionDefinition | EventDefinition | EnumDefinition
@@ -21,13 +21,13 @@ ModifierDefinition = 'modifier' Identifier ParameterList? Block
 FunctionDefinition = 'function' Identifier ParameterList
                      ( FunctionCall | Identifier | 'constant' | 'external' | 'public' | 'internal' | 'private' )*
                      ( 'returns' ParameterList )? Block
-EventDefinition = 'event' Identifier (ParameterList | IndexedTypeParameterList) 'anonymous'? ';'
+EventDefinition = 'event' Identifier IndexedParameterList 'anonymous'? ';'
 
 EnumValue = Identifier
 EnumDefinition = 'enum' Identifier '{' EnumValue? (',' EnumValue)* '}'
 
-IndexedTypeParameterList = '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
-ParameterList =            '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
+IndexedParameterList = '(' ( TypeName 'indexed'? Identifier? (',' TypeName 'indexed'? Identifier?)* )? ')'
+ParameterList =        '(' ( TypeName            Identifier? (',' TypeName            Identifier?)* )? ')'
 
 // semantic restriction: mappings and structs (recursively) containing mappings
 // are not allowed in argument lists
@@ -70,7 +70,7 @@ Expression =
   | Expression '||' Expression
   | Expression '?' Expression ':' Expression
   | Expression ('=' | '|=' | '^=' | '&=' | '<<=' | '>>=' | '+=' | '-=' | '*=' | '/=' | '%=') Expression
-  | Expression? (',' Expression)?
+  | Expression? (',' Expression)
   | PrimaryExpression
 
 PrimaryExpression = Identifier | BooleanLiteral | NumberLiteral | StringLiteral
@@ -81,7 +81,7 @@ MemberAccess = Expression '.' Identifier
 IndexAccess = Expression '[' Expression? ']'
 
 BooleanLiteral = 'true' | 'false'
-NumberLiteral = '0x'? [0-9]+ NumberUnit?
+NumberLiteral = '0x'? [0-9]+ (' ' NumberUnit)?
 NumberUnit = 'wei' | 'szabo' | 'finney' | 'ether'
            | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'years'
 StringLiteral = '"' ([^"\r\n\\] | '\\' .)* '"'
