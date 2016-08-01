@@ -85,8 +85,8 @@ echo -en 'travis_fold:end:compiling_boost\\r'
 # Build dependent components and solidity itself
 echo -en 'travis_fold:start:compiling_solidity\\r'
 cd $WORKSPACE
-mkdir -p build-emscripten
-cd build-emscripten
+mkdir -p build
+cd build
 emcmake cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DEMSCRIPTEN=1 \
@@ -125,6 +125,6 @@ emcmake cmake \
 emmake make -j 4
 
 cd ..
-cp build-emscripten/solc/soljson.js ./
+cp build/solc/soljson.js ./
 
 echo -en 'travis_fold:end:compiling_solidity\\r'
