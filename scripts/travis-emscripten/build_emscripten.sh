@@ -124,11 +124,8 @@ emcmake cmake \
   ..
 emmake make -j 4
 
-# TODO - This is a temporary solution to the permissions issue which we are seeing in TravisCI,
-# where this Emscripten build generates files which the main build then cannot delete.
-# Presumably different accounts being used?   This needs wrapping in some conditional, so we
-# can choose to build, or build-and-clean.
 cd ..
+cp build/solc/soljson.js ./
 rm -rf build
 
 echo -en 'travis_fold:end:compiling_solidity\\r'
