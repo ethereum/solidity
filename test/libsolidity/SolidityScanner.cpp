@@ -291,6 +291,46 @@ BOOST_AUTO_TEST_CASE(empty_comment)
 
 }
 
+BOOST_AUTO_TEST_CASE(valid_unicode_string_escape)
+{
+	Scanner scanner(CharStream("{ \"\\u00DAnicode\""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string("\xC3\x9Anicode", 8));
+}
+
+BOOST_AUTO_TEST_CASE(valid_unicode_string_escape_7f)
+{
+	Scanner scanner(CharStream("{ \"\\u007Fnicode\""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string("\x7Fnicode", 7));
+}
+
+BOOST_AUTO_TEST_CASE(valid_unicode_string_escape_7ff)
+{
+	Scanner scanner(CharStream("{ \"\\u07FFnicode\""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string("\xDF\xBFnicode", 8));
+}
+
+BOOST_AUTO_TEST_CASE(valid_unicode_string_escape_ffff)
+{
+	Scanner scanner(CharStream("{ \"\\uFFFFnicode\""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::StringLiteral);
+	BOOST_CHECK_EQUAL(scanner.currentLiteral(), std::string("\xEF\xBF\xBFnicode", 9));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_short_unicode_string_escape)
+{
+	Scanner scanner(CharStream("{ \"\\uFFnicode\""));
+	BOOST_CHECK_EQUAL(scanner.currentToken(), Token::LBrace);
+	BOOST_CHECK_EQUAL(scanner.next(), Token::Illegal);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
