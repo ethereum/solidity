@@ -86,7 +86,7 @@ string ASTJsonConverter::sourceLocationToString(SourceLocation const& _location)
 
 ASTJsonConverter::ASTJsonConverter(
 	ASTNode const& _ast,
-	map<string, unsigned> const& _sourceIndices
+	map<string, unsigned> _sourceIndices
 ): m_ast(&_ast), m_sourceIndices(_sourceIndices)
 {
 	Json::Value children(Json::arrayValue);

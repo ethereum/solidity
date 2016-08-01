@@ -45,7 +45,7 @@ public:
 	/// @a _sourceIndices is used to abbreviate source names in source locations.
 	explicit ASTJsonConverter(
 		ASTNode const& _ast,
-		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
+		std::map<std::string, unsigned> _sourceIndices = std::map<std::string, unsigned>()
 	);
 	/// Output the json representation of the AST to _stream.
 	void print(std::ostream& _stream);
@@ -141,7 +141,7 @@ private:
 	Json::Value m_astJson;
 	std::stack<Json::Value*> m_jsonNodePtrs;
 	ASTNode const* m_ast;
-	std::map<std::string, unsigned> const& m_sourceIndices;
+	std::map<std::string, unsigned> m_sourceIndices;
 };
 
 }
