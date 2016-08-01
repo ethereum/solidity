@@ -108,8 +108,8 @@ env:
 #    file: $TRAVIS_BUILD_DIR/solidity-develop-$ZIP_SUFFIX.zip
 #    skip_cleanup: true
 #    on:
-#        repo: bobsummerwill/solidity
-#        branch: standalone_changes
+#        repo: ethereum/solidity
+#        branch: develop
 
 # This is the deploy target for the Emscripten build, which publishes
 # generated JS for particular Solidity commits into
@@ -117,9 +117,9 @@ env:
 # Disabled, but can be renamed when we have the "standalone" changes
 # published back into the 'develop' branch.
 #
-#deploy:
-#    provider: script
-#    script: scripts/travis-emscripten/publish_binary.sh
-#    skip_cleanup: true
-#    on:
-#        branch: develop
+deploy:
+    provider: script
+    script: scripts/travis-emscripten/publish_binary.sh
+    skip_cleanup: true
+    on:
+        branch: develop
