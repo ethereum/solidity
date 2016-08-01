@@ -5,12 +5,6 @@
 #
 # http://solidity.readthedocs.org
 #
-# TODO - Merge with .travis.yml file which currently lives in the root of
-# webthree-umbrella, but actually contains the automation for the Solidity
-# Emscripten build, which will also need consolidating into here somehow.
-#
-# See https://github.com/ethereum/webthree-umbrella/blob/develop/.travis.yml
-#
 # ------------------------------------------------------------------------------
 # This file is part of cpp-ethereum.
 #
@@ -74,6 +68,8 @@ git:
 cache:
     ccache: true
     directories:
+        - build
+        - build-emscripten
         - boost_1_57_0
         - jsoncpp
         - cryptopp
