@@ -74,6 +74,7 @@ git:
 cache:
     ccache: true
     directories:
+        - build
         - boost_1_57_0
         - jsoncpp
         - cryptopp
