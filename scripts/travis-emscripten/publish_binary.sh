@@ -30,15 +30,11 @@
 
 set -e
 
-cd solidity
 VER=$(cat CMakeLists.txt | grep 'set(PROJECT_VERSION' | sed -e 's/.*set(PROJECT_VERSION "\(.*\)".*/\1/')
 test -n "$VER"
 VER="v$VER"
 COMMIT=$(git rev-parse --short HEAD)
 DATE=$(date --date="$(git log -1 --date=iso --format=%ad HEAD)" --utc +%F)
-cp build/solc/soljson.js "../soljson-$VER-$DATE-$COMMIT.js"
-cd ..
-
 
 ENCRYPTED_KEY_VAR="encrypted_${ENCRYPTION_LABEL}_key"
 ENCRYPTED_IV_VAR="encrypted_${ENCRYPTION_LABEL}_iv"
@@ -60,7 +56,8 @@ if ls ./bin/soljson-"$VER-$DATE"-*.js ./bin/soljson-*-"$COMMIT.js" > /dev/null
 then
   true
 else
-  cp ../soljson-*.js ./bin/
+  # This file is assumed to be the product of the build_emscripten.sh script.
+  cp ../soljson.js ./bin/"soljson-$VER-$DATE-$COMMIT.js"
   ./update-index.sh
   cd bin
   LATEST=$(ls -r soljson-v* | head -n 1)
