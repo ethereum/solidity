@@ -175,7 +175,7 @@ private:
 	inline void addLiteralChar(char c) { m_nextToken.literal.push_back(c); }
 	inline void addCommentLiteralChar(char c) { m_nextSkippedComment.literal.push_back(c); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
-	void addUnicodeChar(unsigned codepoint);
+	void addUnicodeAsUTF8(unsigned codepoint);
 	///@}
 
 	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }

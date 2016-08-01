@@ -196,7 +196,7 @@ bool Scanner::scanUnicode(unsigned & o_codepoint)
 }
 
 // This supports codepoints between 0000 and FFFF.
-void Scanner::addUnicodeChar(unsigned codepoint)
+void Scanner::addUnicodeAsUTF8(unsigned codepoint)
 {
 	if (codepoint <= 0x7f)
 		addLiteralChar(codepoint);
@@ -647,7 +647,7 @@ bool Scanner::scanEscape()
 		unsigned codepoint;
 		if (!scanUnicode(codepoint))
 			return false;
-		addUnicodeChar(codepoint);
+		addUnicodeAsUTF8(codepoint);
 		return true;
 	}
 	case 'x':
