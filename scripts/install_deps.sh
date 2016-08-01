@@ -298,7 +298,7 @@ case $(uname -s) in
                         ;;
                     *)
                         #other Ubuntu
-                        echo "ERROR - Unknown or unsupported Ubuntu version."
+                        echo "ERROR - Unknown or unsupported Ubuntu version (" $(lsb_release -cs) ")"
                         echo "We only support Trusty, Utopic, Vivid, Wily and Xenial, with work-in-progress on Yakkety."
                         exit 1
                         ;;
