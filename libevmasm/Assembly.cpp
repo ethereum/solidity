@@ -322,7 +322,8 @@ Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 			count++;
 
 		{
-			ControlFlowGraph cfg(m_items);
+			// Control flow graph that resets knowledge at path joins.
+			ControlFlowGraph cfg(m_items, false);
 			AssemblyItems optimisedItems;
 			for (BasicBlock const& block: cfg.optimisedBlocks())
 			{
