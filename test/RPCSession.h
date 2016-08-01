@@ -22,9 +22,13 @@
 #include <string>
 #include <stdio.h>
 #include <map>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
+#if defined(_WIN32)
+	#include "windows.h"
+#else
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <sys/un.h>
+#endif
 #include <json/value.h>
 #include <boost/test/unit_test.hpp>
 
@@ -33,14 +37,21 @@ class IPCSocket: public boost::noncopyable
 public:
 	IPCSocket(std::string const& _path);
 	std::string sendRequest(std::string const& _req);
+#if defined(_WIN32)
+	~IPCSocket() { CloseHandle(m_socket); }
+#else
 	~IPCSocket() { close(m_socket); fclose(m_fp); }
-
+#endif
 	std::string const& path() const { return m_path; }
 
-private:
-	FILE *m_fp;
+private:	
 	std::string m_path;
+#if defined(_WIN32)
+	HANDLE m_socket;
+#else
+	FILE *m_fp;
 	int m_socket;
+#endif
 
 };
 

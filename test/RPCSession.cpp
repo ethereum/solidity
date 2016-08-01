@@ -30,8 +30,30 @@
 using namespace std;
 using namespace dev;
 
+
 IPCSocket::IPCSocket(string const& _path): m_path(_path)
 {
+#if defined(_WIN32)
+	m_socket = CreateNamedPipe(
+		(LPCSTR)m_path.c_str(),	  // pipe name 
+		PIPE_ACCESS_DUPLEX,       // read/write access 
+		PIPE_TYPE_MESSAGE |       // message type pipe 
+		PIPE_READMODE_MESSAGE |   // message-read mode 
+		PIPE_WAIT,                // blocking mode 
+		PIPE_UNLIMITED_INSTANCES, // max. instances  
+		102400,					  // output buffer size 
+		102400,					  // input buffer size 
+		NMPWAIT_USE_DEFAULT_WAIT, // client time-out 
+		NULL);                    // default security attribute
+
+	if (INVALID_HANDLE_VALUE == m_socket)
+		BOOST_FAIL("Error creating IPC socket object: " + GetLastError());
+
+	BOOL bClientConnected = ConnectNamedPipe(m_socket, NULL);
+	if (FALSE == bClientConnected)
+		BOOST_FAIL("Error connecting to IPC socket: " << _path);
+
+#else
 	if (_path.length() >= sizeof(sockaddr_un::sun_path))
 		BOOST_FAIL("Error opening IPC: socket path is too long!");
 
@@ -58,10 +80,36 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
 
 	m_fp = fdopen(m_socket, "r");
+#endif
 }
 
 string IPCSocket::sendRequest(string const& _req)
 {
+#if defined(_WIN32)
+	DWORD cbBytes;
+	BOOL bResult = WriteFile(
+		m_socket,                // handle to pipe 
+		_req.c_str(),            // buffer to write from 
+		strlen(_req.c_str())+1,  // number of bytes to write, include the NULL 
+		&cbBytes,                // number of bytes written 
+		NULL);                   // not overlapped I/O
+
+	if ( (!bResult) || (strlen(_req.c_str())+1 != cbBytes))
+		BOOST_FAIL("Error sending IPC socket request");
+
+	char szBuffer[102400];
+	bResult = ReadFile( 
+		m_socket,             // handle to pipe 
+		szBuffer,             // buffer to receive data 
+		sizeof(szBuffer),     // size of buffer 
+		&cbBytes,             // number of bytes read 
+		NULL);                // not overlapped I/O 
+
+	if ((!bResult) || (0 == cbBytes))
+		BOOST_FAIL("Error reafing IPC socket reply");
+
+	return string(szBuffer);
+#else
 	send(m_socket, _req.c_str(), _req.length(), 0);
 
 	char c;
@@ -74,6 +122,7 @@ string IPCSocket::sendRequest(string const& _req)
 			break;
 	}
 	return response;
+#endif
 }
 
 RPCSession& RPCSession::instance(const string& _path)
