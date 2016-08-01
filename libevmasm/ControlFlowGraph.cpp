@@ -250,10 +250,11 @@ void ControlFlowGraph::gatherKnowledge()
 		KnownStatePointer state = item.state;
 		if (block.startState)
 		{
-			if (m_joinKnowledge)
-				state->reduceToCommonKnowledge(*block.startState, !item.blocksSeen.count(item.blockId));
-			else
+			// We call reduceToCommonKnowledge even in the non-join setting to get the correct
+			// sequence number
+			if (!m_joinKnowledge)
 				state->reset();
+			state->reduceToCommonKnowledge(*block.startState, !item.blocksSeen.count(item.blockId));
 			if (*state == *block.startState)
 				continue;
 		}
