@@ -86,7 +86,7 @@ cache:
         - jsoncpp
 
 install:
-    - test $JOB != default || ./scripts/install_deps.sh
+    - test $JOB != default -a $JOB != docs || ./scripts/install_deps.sh
 before_script:
     - test $JOB != emscripten || ./scripts/build_emscripten.sh
     - test $JOB != default || (mkdir -p build
