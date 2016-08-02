@@ -79,6 +79,8 @@ public:
 		bytes nonOptimizedOutput = callContractFunction(_sig, _arguments...);
 		m_contractAddress = m_optimizedContract;
 		bytes optimizedOutput = callContractFunction(_sig, _arguments...);
+		BOOST_CHECK_MESSAGE(!optimizedOutput.empty(), "No optimized output for " + _sig);
+		BOOST_CHECK_MESSAGE(!nonOptimizedOutput.empty(), "No un-optimized output for " + _sig);
 		BOOST_CHECK_MESSAGE(nonOptimizedOutput == optimizedOutput, "Computed values do not match."
 							"\nNon-Optimized: " + toHex(nonOptimizedOutput) +
 							"\nOptimized:     " + toHex(optimizedOutput));
@@ -176,7 +178,7 @@ BOOST_AUTO_TEST_CASE(identities)
 			}
 		})";
 	compileBothVersions(sourceCode);
-	compareVersions("f(uint256)", u256(0x12334664));
+	compareVersions("f(int256)", u256(0x12334664));
 }
 
 BOOST_AUTO_TEST_CASE(unused_expressions)
@@ -230,6 +232,7 @@ BOOST_AUTO_TEST_CASE(array_copy)
 			bytes2[] data1;
 			bytes5[] data2;
 			function f(uint x) returns (uint l, uint y) {
+				data1.length = msg.data.length;
 				for (uint i = 0; i < msg.data.length; ++i)
 					data1[i] = msg.data[i];
 				data2 = data1;
@@ -241,7 +244,7 @@ BOOST_AUTO_TEST_CASE(array_copy)
 	compileBothVersions(sourceCode);
 	compareVersions("f(uint256)", 0);
 	compareVersions("f(uint256)", 10);
-	compareVersions("f(uint256)", 36);
+	compareVersions("f(uint256)", 35);
 }
 
 BOOST_AUTO_TEST_CASE(function_calls)
@@ -279,6 +282,8 @@ BOOST_AUTO_TEST_CASE(storage_write_in_loops)
 	compareVersions("f(uint256)", 36);
 }
 
+// Test disabled with https://github.com/ethereum/solidity/pull/762
+// Information in joining branches is not retained anymore.
 BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 {
 	// This tests that the optimizer knows that we already have "z == sha3(y)" inside both branches.
@@ -312,7 +317,8 @@ BOOST_AUTO_TEST_CASE(retain_information_in_branches)
 		if (_instr == Instruction::SHA3)
 			numSHA3s++;
 	});
-	BOOST_CHECK_EQUAL(1, numSHA3s);
+// TEST DISABLED - OPTIMIZER IS NOT EFFECTIVE ON THIS ONE ANYMORE
+//	BOOST_CHECK_EQUAL(1, numSHA3s);
 }
 
 BOOST_AUTO_TEST_CASE(store_tags_as_unions)
@@ -346,7 +352,7 @@ BOOST_AUTO_TEST_CASE(store_tags_as_unions)
 		}
 	)";
 	compileBothVersions(sourceCode);
-	compareVersions("f()", 7, "abc");
+	compareVersions("f(uint256,bytes32)", 7, "abc");
 
 	m_optimize = true;
 	bytes optimizedBytecode = compileAndRun(sourceCode, 0, "test");
@@ -1172,6 +1178,64 @@ BOOST_AUTO_TEST_CASE(computing_constants)
 		constantWithZeros.cbegin(),
 		constantWithZeros.cend()
 	) == optimizedBytecode.cend());
+}
+
+BOOST_AUTO_TEST_CASE(inconsistency)
+{
+	// This is a test of a bug in the optimizer.
+	char const* sourceCode = R"(
+		contract Inconsistency {
+			struct Value {
+				uint badnum;
+				uint number;
+			}
+
+			struct Container {
+				uint[] valueIndices;
+				Value[] values;
+			}
+
+			Container[] containers;
+			uint[] valueIndices;
+			uint INDEX_ZERO = 0;
+			uint  debug;
+
+			// Called with params: containerIndex=0, valueIndex=0
+			function levelIII(uint containerIndex, uint valueIndex) private {
+				Container container = containers[containerIndex];
+				Value value = container.values[valueIndex];
+				debug = container.valueIndices[value.number];
+			}
+			function levelII() private {
+				for (uint i = 0; i < valueIndices.length; i++) {
+					levelIII(INDEX_ZERO, valueIndices[i]);
+				}
+			}
+
+			function trigger() public returns (uint) {
+				containers.length++;
+				Container container = containers[0];
+
+				container.values.push(Value({
+					badnum: 9000,
+					number: 0
+				}));
+
+				container.valueIndices.length++;
+				valueIndices.length++;
+
+				levelII();
+				return debug;
+			}
+
+			function DoNotCallButDoNotDelete() public {
+				levelII();
+				levelIII(1, 2);
+			}
+		}
+	)";
+	compileBothVersions(sourceCode);
+	compareVersions("trigger()");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,0 +1,76 @@
+#------------------------------------------------------------------------------
+# Appveyor configuration file for solidity.
+#
+# The documentation for solidity is hosted at:
+#
+# http://solidity.readthedocs.org
+#
+# TODO - Tests currently disabled, because Tests-over-IPC code is using UNIX
+# sockets unconditionally at the time of writing.
+#
+# ------------------------------------------------------------------------------
+# This file is part of cpp-ethereum.
+#
+# cpp-ethereum is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cpp-ethereum is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
+#
+# (c) 2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
+
+version: 0.3.5.{build}
+skip_tags: true
+os: Visual Studio 2015
+configuration:
+    - RelWithDebInfo
+cache: build
+install:
+    - git submodule update --init --recursive
+    - scripts/install_deps.bat
+    - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
+before_build:
+    - if not exist build mkdir build
+    - cd build
+    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=Off
+build_script:
+    - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - scripts\release.bat %CONFIGURATION%
+
+#test_script:
+#    - cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
+#    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
+#    - eth.exe --test -d %TMP%/test
+#    - soltest.exe --ipc /tmp/test/geth.ipc
+#    - pkill eth
+    
+artifacts:
+    - path: solidity-develop-windows.zip
+      name: solidity-develop-windows-zip
+
+# This is the deploy target for Windows
+# which generates development ZIPs per commit.  We are in agreement
+# that this is probably noisy overkill, so will want to renable this
+# functionality wrapped in some conditionals so that it only runs
+# when building the 'release' branch.
+#
+#deploy:
+#    release: solidity-develop-v$(APPVEYOR_BUILD_VERSION)
+#    tag: develop-v$(APPVEYOR_BUILD_VERSION)
+#    description: 'Development build of solidity at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
+#    prerelease: true
+#    provider: GitHub
+#    auth_token:
+#        secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
+#    artifact: solidity-develop-windows-zip
+#    on:
+#        branch: standalone_changes

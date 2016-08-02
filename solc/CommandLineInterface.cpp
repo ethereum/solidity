@@ -668,7 +668,7 @@ void CommandLineInterface::handleCombinedJSON()
 		if (requests.count("srcmap-runtime"))
 		{
 			auto map = m_compiler->runtimeSourceMapping(contractName);
-			contractData["srcmap"] = map ? *map : "";
+			contractData["srcmap-runtime"] = map ? *map : "";
 		}
 		if (requests.count("devdoc"))
 			contractData["devdoc"] = m_compiler->metadata(contractName, DocumentationType::NatspecDev);

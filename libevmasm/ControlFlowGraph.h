@@ -94,7 +94,11 @@ class ControlFlowGraph
 public:
 	/// Initializes the control flow graph.
 	/// @a _items has to persist across the usage of this class.
-	ControlFlowGraph(AssemblyItems const& _items): m_items(_items) {}
+	/// @a _joinKnowledge if true, reduces state knowledge to common base at the join of two paths
+	explicit ControlFlowGraph(AssemblyItems const& _items, bool _joinKnowledge = true):
+		m_items(_items),
+		m_joinKnowledge(_joinKnowledge)
+	{}
 	/// @returns vector of basic blocks in the order they should be used in the final code.
 	/// Should be called only once.
 	BasicBlocks optimisedBlocks();
@@ -112,6 +116,7 @@ private:
 
 	unsigned m_lastUsedId = 0;
 	AssemblyItems const& m_items;
+	bool m_joinKnowledge = true;
 	std::map<BlockId, BasicBlock> m_blocks;
 };
 
