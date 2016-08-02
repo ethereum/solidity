@@ -589,6 +589,40 @@ Because of this, mappings do not have a length or a concept of a key or value be
 Mappings are only allowed for state variables (or as storage reference types
 in internal functions).
 
+.. index:: ! after, rvalue
+
+Operators Involving RValues
+===========================
+
+.. _after:
+
+after
+-----
+
+``after a`` is syntactical shorthand for ``block.timestamp + a`` where ``a`` is an unsigned integer. It can make syntax clearer for a deposit-holding contract, for example.
+
+::
+    contract Deposit {
+
+        uint withdrawalTime;
+        address owner;
+
+        function Deposit(uint timeout) {
+            withdrawalTime = after timeout;// instead of block.timestamp + timeout
+            owner = msg.sender;
+        }
+
+        function withdraw() {
+            if (
+                !(msg.sender != owner &&
+                block.timestamp > withdrawalTime &&
+                owner.send(this.balance))
+            ) {
+                throw;
+            }
+        }
+    }
+
 .. index:: assignment, ! delete, lvalue
 
 Operators Involving LValues
