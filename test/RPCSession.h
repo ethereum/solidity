@@ -22,12 +22,32 @@
 #include <string>
 #include <stdio.h>
 #include <map>
+#if defined(_WIN32)
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#endif
 #include <json/value.h>
 #include <boost/test/unit_test.hpp>
 
+#if defined(_WIN32)
+class IPCSocket : public boost::noncopyable
+{
+public:
+	IPCSocket(std::string const& _path);
+	std::string sendRequest(std::string const& _req);
+	~IPCSocket() { fclose(m_fp); }
+
+	std::string const& path() const { return m_path; }
+
+private:
+	FILE *m_fp;
+	std::string m_path;
+	int m_socket;
+
+};
+#else
 class IPCSocket: public boost::noncopyable
 {
 public:
@@ -43,6 +63,7 @@ private:
 	int m_socket;
 
 };
+#endif
 
 class RPCSession: public boost::noncopyable
 {

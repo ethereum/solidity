@@ -32,6 +32,8 @@ using namespace dev;
 
 IPCSocket::IPCSocket(string const& _path): m_path(_path)
 {
+#if defined(_WIN32)
+#else
 	if (_path.length() >= sizeof(sockaddr_un::sun_path))
 		BOOST_FAIL("Error opening IPC: socket path is too long!");
 
@@ -48,10 +50,14 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 		BOOST_FAIL("Error connecting to IPC socket: " << _path);
 
 	m_fp = fdopen(m_socket, "r");
+#endif
 }
 
 string IPCSocket::sendRequest(string const& _req)
 {
+#if defined(_WIN32)
+	return "";
+#else
 	send(m_socket, _req.c_str(), _req.length(), 0);
 
 	char c;
@@ -64,6 +70,7 @@ string IPCSocket::sendRequest(string const& _req)
 			break;
 	}
 	return response;
+#endif
 }
 
 RPCSession& RPCSession::instance(const string& _path)
