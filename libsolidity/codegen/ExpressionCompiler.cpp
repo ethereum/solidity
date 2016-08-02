@@ -1397,6 +1397,11 @@ void ExpressionCompiler::appendShiftOperatorCode(Token::Value _operator, Type co
 	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
 	bool const c_isSigned = type.isSigned();
 
+	// shift with negative rvalue throws exception
+	// FIXME: include this only for signed rvalues
+	m_context << Instruction::DUP2 << (u256(1) << 255) << Instruction::AND << Instruction::ISZERO << Instruction::ISZERO;
+	m_context.appendConditionalJumpTo(m_context.errorTag());
+
 	switch (_operator)
 	{
 	case Token::SHL:
