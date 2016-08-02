@@ -216,7 +216,7 @@ string compile(StringMap const& _sources, bool _optimize, CStyleReadFileCallback
 			contractData["gasEstimates"] = estimateGas(compiler, contractName);
 			auto sourceMap = compiler.sourceMapping(contractName);
 			contractData["srcmap"] = sourceMap ? *sourceMap : "";
-			auto runtimeSourceMap = compiler.sourceMapping(contractName);
+			auto runtimeSourceMap = compiler.runtimeSourceMapping(contractName);
 			contractData["srcmap-runtime"] = runtimeSourceMap ? *runtimeSourceMap : "";
 			ostringstream unused;
 			contractData["assembly"] = compiler.streamAssembly(unused, contractName, _sources, true);
