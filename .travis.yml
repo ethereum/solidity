@@ -68,12 +68,11 @@ git:
 cache:
     ccache: true
     directories:
+        - cryptopp
+        - boost_1_57_0
         - build
         - build-emscripten
-        - boost_1_57_0
         - jsoncpp
-        - cryptopp
-
 
 install:
     - ./scripts/install_deps.sh
@@ -87,12 +86,33 @@ before_script:
       && ./scripts/release.sh $ZIP_SUFFIX
 script:
     # There are a variety of reliability issues with the Solidity unit-tests at the time of
-    # writing, so we're actually running them 3 times in a row, to try to flush all of these
-    # issues out as quickly as possible.  See https://github.com/ethereum/solidity/issues/769    
+    # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
+    # up to 3 times before giving up and declaring the tests as broken.
+    #
+    # We should aim to remove this "retry logic" as soon as we can, because it is a
+    # band-aid for issues which need solving at their root.  Some of those issues will be
+    # in Solidity's RPC setup and some will be in 'eth'.  It seems unlikely that Solidity
+    # itself is broken from the failure messages which we are seeing.
+    #
+    # More details on known issues at https://github.com/ethereum/solidity/issues/769    
     - cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh)
 env:
     global:
         - ENCRYPTION_LABEL="296c219a3f41"
+
+# This is the deploy target for the Emscripten build.
+# It publishes the JS file which was compiled as part of the earlier 'build_emscripten.sh'
+# step to https://github.com/ethereum/solc-bin/tree/gh-pages/bin.
+# Both the build and deploy steps for Emscripten are only run within the Ubuntu
+# configurations (not for macOS).  That is controlled by conditionals within the bash
+# scripts because TravisCI doesn't provide much in the way of conditional logic.
+
+deploy:
+    provider: script
+    script: scripts/release_emscripten.sh
+    skip_cleanup: true
+    on:
+        branch: develop
 
 # This is the deploy target for the native build (Linux and macOS)
 # which generates development ZIPs per commit.  We are in agreement
@@ -110,15 +130,3 @@ env:
 #        repo: ethereum/solidity
 #        branch: develop
 
-# This is the deploy target for the Emscripten build, which publishes
-# generated JS for particular Solidity commits into
-# https://github.com/ethereum/solc-bin/tree/gh-pages/bin
-# Disabled, but can be renamed when we have the "standalone" changes
-# published back into the 'develop' branch.
-#
-deploy:
-    provider: script
-    script: scripts/travis-emscripten/publish_binary.sh
-    skip_cleanup: true
-    on:
-        branch: develop
