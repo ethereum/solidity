@@ -361,7 +361,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	else
 	{
 		bool cleanupNeeded = false;
-		if (Token::isCompareOp(c_op))
+		if (Token::isCompareOp(c_op) || Token::isShiftOp(c_op))
 			cleanupNeeded = true;
 		if (commonType.category() == Type::Category::Integer && (c_op == Token::Div || c_op == Token::Mod))
 			cleanupNeeded = true;
