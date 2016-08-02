@@ -19,33 +19,35 @@
  * @date 2016
  */
 
-#include <string>
-#include <stdio.h>
-#include <map>
 #if defined(_WIN32)
+#include <windows.h>
+#include "libdevcore/UndefMacros.h"
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #endif
+
+#include <string>
+#include <stdio.h>
+#include <map>
 #include <json/value.h>
 #include <boost/test/unit_test.hpp>
 
 #if defined(_WIN32)
+const int c_buffsize = 5120000; //because windows pipe is broken and wont work as in examples. use larger buffer limit to receive whole package in one call
 class IPCSocket : public boost::noncopyable
 {
 public:
 	IPCSocket(std::string const& _path);
 	std::string sendRequest(std::string const& _req);
-	~IPCSocket() { fclose(m_fp); }
+	~IPCSocket() { CloseHandle(m_socket); }
 
 	std::string const& path() const { return m_path; }
 
 private:
-	FILE *m_fp;
 	std::string m_path;
-	int m_socket;
-
+	HANDLE  m_socket;
 };
 #else
 class IPCSocket: public boost::noncopyable
@@ -61,7 +63,6 @@ private:
 	FILE *m_fp;
 	std::string m_path;
 	int m_socket;
-
 };
 #endif
 

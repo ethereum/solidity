@@ -13,6 +13,8 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+
+	The Implementation originally from https://msdn.microsoft.com/en-us/library/windows/desktop/aa365592(v=vs.85).aspx
 */
 /** @file RPCSession.cpp
  * @author Dimtiry Khokhlov <dimitry@ethdev.com>
@@ -32,6 +34,19 @@ using namespace dev;
 
 IPCSocket::IPCSocket(string const& _path): m_path(_path)
 {
+	m_socket = CreateFile(
+		m_path.c_str(),   // pipe name
+		GENERIC_READ |  // read and write access
+		GENERIC_WRITE,
+		0,              // no sharing
+		NULL,           // default security attribute
+		OPEN_EXISTING,  // opens existing pipe
+		0,              // default attributes
+		NULL);          // no template file
+
+	if (m_socket == INVALID_HANDLE_VALUE)
+		BOOST_FAIL("Error creating IPC socket object");
+
 #if defined(_WIN32)
 #else
 	if (_path.length() >= sizeof(sockaddr_un::sun_path))
@@ -66,7 +81,36 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 string IPCSocket::sendRequest(string const& _req)
 {
 #if defined(_WIN32)
-	return "";
+	string returnStr;
+	DWORD cbWritten;
+	BOOL fSuccess = WriteFile(
+		m_socket,               // pipe handle
+		_req.c_str(),           // message
+		_req.size(),            // message length
+		&cbWritten,             // bytes written
+		NULL);                  // not overlapped
+
+	if (!fSuccess)
+		BOOST_FAIL("WriteFile to pipe failed");
+
+	DWORD  cbRead;
+	TCHAR  chBuf[c_buffsize];
+
+	// Read from the pipe.
+	fSuccess = ReadFile(
+		m_socket,  // pipe handle
+		chBuf,     // buffer to receive reply
+		c_buffsize,// size of buffer
+		&cbRead,   // number of bytes read
+		NULL);     // not overlapped
+
+	returnStr += chBuf;
+
+	if (!fSuccess)
+		BOOST_FAIL("ReadFile from pipe failed");
+
+	cerr << ".";  //Output for log activity
+	return returnStr;
 #else
 	send(m_socket, _req.c_str(), _req.length(), 0);
 

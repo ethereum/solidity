@@ -25,8 +25,6 @@
 #include <libdevcore/CommonIO.h>
 #include <test/libsolidity/SolidityExecutionFramework.h>
 
-
-
 using namespace std;
 using namespace dev;
 using namespace dev::solidity;
@@ -39,24 +37,13 @@ namespace // anonymous
 
 string getIPCSocketPath()
 {
-	string ipcPath;
-
-	size_t argc = boost::unit_test::framework::master_test_suite().argc;
-	char** argv = boost::unit_test::framework::master_test_suite().argv;
-	for (size_t i = 0; i < argc; i++)
-	{
-		string arg = argv[i];
-		if (arg == "--ipc" && i + 1 < argc)
-		{
-			ipcPath = argv[i + 1];
-			i++;
-		}
-	}
+	string ipcPath = dev::test::Options::get().ipcPath;
 	if (ipcPath.empty())
 		if (auto path = getenv("ETH_TEST_IPC"))
 			ipcPath = path;
 	if (ipcPath.empty())
 		BOOST_FAIL("ERROR: ipcPath not set! (use --ipc <path> or the environment variable ETH_TEST_IPC)");
+
 	return ipcPath;
 }
 
