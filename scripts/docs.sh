@@ -26,8 +26,7 @@
 # (c) 2016 solidity contributors.
 #------------------------------------------------------------------------------
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # We aren't building docs locally for macOS at the moment
-else
-    cd docs && sphinx-build -nW -b html -d _build/doctrees . _build/html && cd ..
-fi
+set -e
+cd docs
+sphinx-build -nW -b html -d _build/doctrees . _build/html
+cd ..
