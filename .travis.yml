@@ -38,13 +38,25 @@ matrix:
           dist: trusty
           sudo: required
           compiler: gcc
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - ZIP_SUFFIX=ubuntu-trusty
+        - os: linux
+          dist: trusty
+          sudo: required
+          compiler: gcc
+          env:
+              - JOB=docs
+        - os: linux
+          dist: trusty
+          sudo: required
+          compiler: gcc
           services:
               - docker
           before_install:
               - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
           env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
-              - ZIP_SUFFIX=ubuntu-trusty
+              - JOB=emscripten
         - os: osx
           osx_image: beta-xcode6.2
           env:
@@ -71,19 +83,18 @@ cache:
         - cryptopp
         - boost_1_57_0
         - build
-        - build-emscripten
         - jsoncpp
 
 install:
-    - ./scripts/install_deps.sh
+    - test $JOB != default || ./scripts/install_deps.sh
 before_script:
-    - ./scripts/build_emscripten.sh
-    - mkdir -p build
+    - test $JOB != emscripten || ./scripts/build_emscripten.sh
+    - test $JOB != default || (mkdir -p build
       && cd build
       && cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
       && make -j2
       && cd ..
-      && ./scripts/release.sh $ZIP_SUFFIX
+      && ./scripts/release.sh $ZIP_SUFFIX )
 script:
     # There are a variety of reliability issues with the Solidity unit-tests at the time of
     # writing (especially on macOS), so within TravisCI we will try to run the unit-tests
@@ -95,10 +106,12 @@ script:
     # itself is broken from the failure messages which we are seeing.
     #
     # More details on known issues at https://github.com/ethereum/solidity/issues/769    
-    - cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh)
+    - test $JOB != default || (cd $TRAVIS_BUILD_DIR && (./scripts/tests.sh || ./scripts/tests.sh || ./scripts/tests.sh) )
+    - test $JOB != docs || ./scripts/docs.sh
 env:
     global:
         - ENCRYPTION_LABEL="296c219a3f41"
+        - JOB=default
 
 # This is the deploy target for the Emscripten build.
 # It publishes the JS file which was compiled as part of the earlier 'build_emscripten.sh'
@@ -109,7 +122,7 @@ env:
 
 deploy:
     provider: script
-    script: scripts/release_emscripten.sh
+    script: test $JOB != emscripten || scripts/release_emscripten.sh
     skip_cleanup: true
     on:
         branch: develop
