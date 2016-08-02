@@ -202,6 +202,7 @@ case $(uname -s) in
                 # Install "normal packages"
                 sudo apt-get -y update
                 sudo apt-get -y install \
+                    python-sphinx \
                     build-essential \
                     cmake \
                     g++ \
@@ -306,6 +307,7 @@ case $(uname -s) in
 
                 sudo apt-get -y update
                 sudo apt-get -y install \
+                    python-sphinx \
                     build-essential \
                     cmake \
                     git \
