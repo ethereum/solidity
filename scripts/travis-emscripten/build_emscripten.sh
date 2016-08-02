@@ -90,8 +90,6 @@ cd build
 emcmake cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DEMSCRIPTEN=1 \
-  -DCMAKE_CXX_COMPILER=em++ \
-  -DCMAKE_C_COMPILER=emcc \
   -DBoost_FOUND=1 \
   -DBoost_USE_STATIC_LIBS=1 \
   -DBoost_USE_STATIC_RUNTIME=1 \
@@ -120,7 +118,7 @@ emcmake cmake \
   -DCRYPTOPP_INCLUDE_DIR="$WORKSPACE"/cryptopp/src/ \
   -DDev_DEVCORE_LIBRARY="$WORKSPACE"/solidity/build/libdevcore/libdevcore.a \
   -DEth_EVMASM_LIBRARY="$WORKSPACE"/solidity/build/libevmasm/libevmasm.a \
-  -DETHASHCL=0 -DEVMJIT=0 -DETH_STATIC=1 -DSOLIDITY=1 -DFATDB=0 -DTESTS=0 -DTOOLS=0 \
+  -DETH_STATIC=1 -DTESTS=0 \
   ..
 emmake make -j 4
 
