@@ -602,6 +602,7 @@ after
 ``after a`` is syntactical shorthand for ``block.timestamp + a`` where ``a`` is an unsigned integer. It can make syntax clearer for a deposit-holding contract, for example.
 
 ::
+
     contract Deposit {
 
         uint withdrawalTime;
@@ -635,7 +636,7 @@ If ``a`` is an LValue (i.e. a variable or something that can be assigned to), th
 delete
 ------
 
-``delete a`` assigns the :ref:`default-value <initial value>` for the type to ``a``. I.e. for integers it is equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic array of length zero or a static array of the same length with all elements reset. For structs, it assigns a struct with all members reset.
+``delete a`` assigns the :ref:`initial value <default-value>` for the type to ``a``. I.e. for integers it is equivalent to ``a = 0``, but it can also be used on arrays, where it assigns a dynamic array of length zero or a static array of the same length with all elements reset. For structs, it assigns a struct with all members reset.
 
 ``delete`` has no effect on whole mappings (as the keys of mappings may be arbitrary and are generally unknown). So if you delete a struct, it will reset all members that are not mappings and also recurse into the members unless they are mappings. However, individual keys and what they map to can be deleted.
 
