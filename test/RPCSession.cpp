@@ -34,6 +34,7 @@ using namespace dev;
 
 IPCSocket::IPCSocket(string const& _path): m_path(_path)
 {
+#if defined(_WIN32)
 	m_socket = CreateFile(
 		m_path.c_str(),   // pipe name
 		GENERIC_READ |  // read and write access
@@ -47,7 +48,6 @@ IPCSocket::IPCSocket(string const& _path): m_path(_path)
 	if (m_socket == INVALID_HANDLE_VALUE)
 		BOOST_FAIL("Error creating IPC socket object");
 
-#if defined(_WIN32)
 #else
 	if (_path.length() >= sizeof(sockaddr_un::sun_path))
 		BOOST_FAIL("Error opening IPC: socket path is too long!");
