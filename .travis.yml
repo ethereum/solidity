@@ -110,7 +110,7 @@ script:
     - test $JOB != docs || ./scripts/docs.sh
 env:
     global:
-        - ENCRYPTION_LABEL="296c219a3f41"
+        - ENCRYPTION_LABEL="6d4541b72666"
         - JOB=default
 
 # This is the deploy target for the Emscripten build.
