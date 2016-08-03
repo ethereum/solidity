@@ -52,16 +52,8 @@ $ETH_PATH --test -d /tmp/test &
 # is available and is ready for the unit-tests to start talking to it.
 while [ ! -S /tmp/test/geth.ipc ]; do sleep 2; done
 
-# TODO - It should be possible to set the IPC path with explicit parameters:
-# 
-#     ./test/soltest --ipc /tmp/test/geth.ipc
-#
-# But that doesn't work on macOS, so we're just using the cruder approach of
-# using an environment variable.  That works on Linux and macOS.   We will
-# need to check if this command-line support works for Windows too, when we
-# have implemented IPC Sockets support at all for Windows.
-export ETH_TEST_IPC=/tmp/test/geth.ipc
-"$REPO_ROOT"/build/test/soltest
+# And then run the Solidity unit-tests, pointing to that IPC endpoint.
+"$REPO_ROOT"/build/test/soltest --ipc /tmp/test/geth.ipc
 ERROR_CODE=$?
 pkill eth || true
 sleep 4
