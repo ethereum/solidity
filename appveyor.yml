@@ -32,6 +32,7 @@ skip_tags: true
 os: Visual Studio 2015
 configuration:
     - RelWithDebInfo
+cache: build
 install:
     - git submodule update --init --recursive
     - scripts/install_deps.bat
