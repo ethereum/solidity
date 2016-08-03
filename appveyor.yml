@@ -40,7 +40,7 @@ install:
 before_build:
     - if not exist build mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=Off
+    - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
     - msbuild solidity.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
