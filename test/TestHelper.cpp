@@ -28,7 +28,7 @@ Options::Options(int argc, char** argv)
 {
 	tArgc = 0;
 	tArgv = new char*[argc];
-	for (size_t i = 0; i < argc; i++)
+	for (auto i = 0; i < argc; i++)
 	{
 		string arg = argv[i];
 		if (arg == "--ipc" && i + 1 < argc)
