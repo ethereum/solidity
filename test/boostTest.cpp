@@ -25,17 +25,60 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable:4535) // calling _set_se_translator requires /EHa
-#endif
-#include <boost/test/included/unit_test.hpp>
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
 
-#pragma GCC diagnostic pop
+	#define BOOST_TEST_NO_MAIN
+	#if defined(_MSC_VER)
+	#pragma warning(push)
+	#pragma warning(disable:4535) // calling _set_se_translator requires /EHa
+	#endif
+	#include <boost/test/included/unit_test.hpp>
+	#if defined(_MSC_VER)
+	#pragma warning(pop)
+	#endif
 
-#include <test/TestHelper.h>
-using namespace boost::unit_test;
+	#pragma GCC diagnostic pop
 
+	#include <stdlib.h>
+	#include <boost/version.hpp>
+	#include "TestHelper.h"
+
+	using namespace boost::unit_test;
+
+	std::vector<char*> parameters;
+	static std::ostringstream strCout;
+	std::streambuf* oldCoutStreamBuf;
+	std::streambuf* oldCerrStreamBuf;
+
+	//Custom Boost Initialization
+	test_suite* fake_init_func(int argc, char* argv[])
+	{
+		//Required for boost. -nowarning
+		(void)argc;
+		(void)argv;
+		return 0;
+	}
+
+	//Custom Boost Unit Test Main
+	int main(int argc, char* argv[])
+	{
+		//Initialize options before boost reads it
+		dev::test::Options const& opt = dev::test::Options::get(argc, argv);
+		return unit_test_main(fake_init_func, opt.tArgc, opt.tArgv);
+	}
+
+	/*
+#else
+	#if defined(_MSC_VER)
+	#pragma warning(push)
+	#pragma warning(disable:4535) // calling _set_se_translator requires /EHa
+	#endif
+	#include <boost/test/included/unit_test.hpp>
+	#if defined(_MSC_VER)
+	#pragma warning(pop)
+	#endif
+
+	#pragma GCC diagnostic pop
+
+	#include <test/TestHelper.h>
+	using namespace boost::unit_test;
+#endif*/
