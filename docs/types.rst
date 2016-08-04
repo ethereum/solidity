@@ -216,6 +216,8 @@ String Literals
 
 String Literals are written with double quotes (``"abc"``). As with integer literals, their type can vary, but they are implicitly convertible to ``bytes1``, ..., ``bytes32`` if they fit, to ``bytes`` and to ``string``.
 
+String Literals support escape characters, such as ``\n``, ``\xNN`` and ``\uNNNN``. ``\xNN`` takes a hex value and inserts the appropriate byte, while ``\uNNNN`` takes a Unicode codepoint and inserts an UTF8 sequence.
+
 .. index:: enum
 
 .. _enums:
