@@ -7087,6 +7087,63 @@ BOOST_AUTO_TEST_CASE(calling_nonexisting_contract_throws)
 	BOOST_CHECK(callContractFunction("h()") == encodeArgs(u256(7)));
 }
 
+BOOST_AUTO_TEST_CASE(payable_accept_explicit_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function () payable { }
+		}
+	)";
+	compileAndRun(sourceCode, 27, "C");
+}
+
+
+BOOST_AUTO_TEST_CASE(payable_accept_explicit)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() payable returns (uint) {
+				return msg.value;
+			}
+			function() payable returns (uint) {
+				return msg.value;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs(u256(27)));
+	BOOST_CHECK(callContractFunctionWithValue("", 27) == encodeArgs(u256(27)));
+}
+
+BOOST_AUTO_TEST_CASE(non_payable_throw_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function() { }
+		}
+	)";
+	compileAndRun(sourceCode, 27, "C");
+}
+
+BOOST_AUTO_TEST_CASE(non_payable_throw)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string public a;
+			function f() returns (uint) {
+				return msg.value;
+			}
+			function() returns (uint) {
+				return msg.value;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunctionWithValue("f()", 27) == encodeArgs());
+	BOOST_CHECK(callContractFunctionWithValue("", 27) == encodeArgs());
+	BOOST_CHECK(callContractFunctionWithValue("a()", 27) == encodeArgs());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
